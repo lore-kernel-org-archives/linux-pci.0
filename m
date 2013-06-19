@@ -1,39 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29921 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750941Ab3FEAg1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Jun 2013 20:36:27 -0400
-Message-ID: <1370392712.4432.27.camel@ymzhang.sh.intel.com>
-Subject: Re: Subject : [ PATCH ]
- pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-From: Yanmin Zhang <yanmin_zhang@linux.intel.com>
-Reply-To: yanmin_zhang@linux.intel.com
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Liu, Joseph" <Joseph.Liu@emulex.com>,
-	"Zhang, LongX" <longx.zhang@intel.com>,
-	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Wed, 05 Jun 2013 08:38:32 +0800
-In-Reply-To: <CAErSpo5OMuW_fg4DYAqg=xcY8USDhC89Mgt66BwoSzss41UKMQ@mail.gmail.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
-	 <20130520224824.GA31740@google.com>
-	 <CF6E51640088844D9CADE5541A7C2FEB33EBE413@CMEXMB1.ad.emulex.com>
-	 <CAErSpo4kvEkUtYFXnoE8yDnHsUD8Z6EUrKaXaJ=yy4yMcJ0veA@mail.gmail.com>
-	 <CAErSpo5OMuW_fg4DYAqg=xcY8USDhC89Mgt66BwoSzss41UKMQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.free-electrons.com ([94.23.35.102]:42403 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934462Ab3FSQ4j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 12:56:39 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: [PATCHv3 08/11] arm: mvebu: the MPIC now provides MSI controller features
+Date: Wed, 19 Jun 2013 18:56:16 +0200
+Message-Id: <1371660979-21588-9-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-06-04 at 12:04 -0600, Bjorn Helgaas wrote:
-> I'm not sure where we are with this patch.  I think Joseph initially
-> reported a problem (though I haven't actually seen that), and this
-> patch fixed it, so it seems like there's something we want to do here.
-Yes, indeed. We checked Powerpc error handling and plan to use the
-similar method to deal with the issue.
+Adds the 'msi-controller' property to the main interrupt controller
+Device Tree node, to indicate that it can now behave as a MSI
+controller.
 
-Sorry for replying very late. I move to Android smartphone area and am
-very busy on many top issues.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-370-xp.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
+index bb6224c..9020478 100644
+--- a/arch/arm/boot/dts/armada-370-xp.dtsi
++++ b/arch/arm/boot/dts/armada-370-xp.dtsi
+@@ -52,6 +52,7 @@
+ 				#interrupt-cells = <1>;
+ 				#size-cells = <1>;
+ 				interrupt-controller;
++				msi-controller;
+ 			};
+ 
+ 			coherency-fabric@20200 {
+-- 
+1.8.1.2
 
