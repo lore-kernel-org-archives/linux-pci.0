@@ -1,120 +1,141 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVGz-BOq4LeZ-iNCAKqPF=Tzuq6uTZ=AAnO=8yMa22jYw@mail.gmail.com>
-References: <2737587.I0nULev1kj@vostro.rjw.lan>
-	<15269989.ojxutYs2L1@vostro.rjw.lan>
-	<51C71A27.1040600@gmail.com>
-	<CAE9FiQVGz-BOq4LeZ-iNCAKqPF=Tzuq6uTZ=AAnO=8yMa22jYw@mail.gmail.com>
-Date: Sun, 23 Jun 2013 13:29:19 -0700
-Message-ID: <CAE9FiQWf7_v0Mc2rdhg9ssk9NCFNqtv8LiCfayw00OqzbozvSw@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ACPI / dock / PCI: Synchronous handling of dock
- events for PCI devices
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:42344 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934462Ab3FSQ4b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 12:56:31 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: [PATCHv3 03/11] PCI: Introduce new MSI chip infrastructure
+Date: Wed, 19 Jun 2013 18:56:11 +0200
+Message-Id: <1371660979-21588-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 23, 2013 at 12:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sun, Jun 23, 2013 at 8:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> On 06/23/2013 05:25 AM, Rafael J. Wysocki wrote:
->>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>
->>> The interactions between the ACPI dock driver and the ACPI-based PCI
->>> hotplug (acpiphp) are currently problematic because of ordering
->>> issues during hot-remove operations.
->>>
->>> First of all, the current ACPI glue code expects that physical
->>> devices will always be deleted before deleting the companion ACPI
->>> device objects.  Otherwise, acpi_unbind_one() will fail with a
->>> warning message printed to the kernel log, for example:
->>>
->>> [  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
->>> [  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
->>> [  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
->>> [  180.013656]  port1: Oops, 'acpi_handle' corrupt
->>>
->> [...]
->>> @@ -597,15 +654,11 @@ register_hotplug_dock_device(acpi_handle
->>>                * ops
->>>                */
->>>               dd = find_dock_dependent_device(dock_station, handle);
->>> -             if (dd) {
->>> -                     dd->ops = ops;
->>> -                     dd->context = context;
->>> -                     dock_add_hotplug_device(dock_station, dd);
->>> -                     ret = 0;
->>> -             }
->>> +             if (dd)
->>> +                     return dock_init_hotplug(dd, ops, context,
->>> +                                              init, release);
->> Hi Rafael,
->>         Seems not an equivalent change. According to the comment just above the
->> code, we shouldn't return but continue here.
->> /*
->>  * An ATA bay can be in a dock and itself can be ejected
->>  * separately, so there are two 'dock stations' which need the
->>  * ops
->>  */
->
-> two dock stations:
-> Do you mean two dock station has same handle?
->
-> dock_add should add correctly flags for IS_DOCK and IS_ATA.
-> if one handle has _DCK and _GTF etc.
->
-> or do you mean there are two dependent devices with same handle?
-> like one is for acpiphp slot and one is for ATA?
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-related commit:
-commit 61b836958371c717d1e6d4fea1d2c512969ad20b
-Author: Shaohua Li <shaohua.li@intel.com>
-Date:   Thu Aug 28 10:07:14 2008 +0800
+The new struct msi_chip is used to associated an MSI controller with a
+PCI bus. It is automatically handed down from the root to its children
+during bus enumeration.
 
-    dock: fix for ATA bay in a dock station
+This patch provides default (weak) implementations for the architecture-
+specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
+and arch_msi_check_device()) which check if a PCI device's bus has an
+attached MSI chip and forward the call appropriately.
 
-    an ATA bay can be in a dock and itself can be ejected separately.
-    This patch handles such eject bay. Found by Holger.
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/msi.c   | 22 ++++++++++++++++++++++
+ drivers/pci/probe.c |  1 +
+ include/linux/msi.h | 11 +++++++++++
+ include/linux/pci.h |  1 +
+ 4 files changed, 35 insertions(+)
 
-    Signed-off-by: Shaohua Li <shaohua.li@intel.com>
-    Signed-off-by: Len Brown <len.brown@intel.com>
-@@ -618,16 +619,21 @@ register_hotplug_dock_device(acpi_handle handle, struct ac
-pi_dock_ops *ops,
-         * this would include the dock station itself
-         */
-        list_for_each_entry(dock_station, &dock_stations, sibiling) {
-+               /*
-+                * An ATA bay can be in a dock and itself can be ejected
-+                * seperately, so there are two 'dock stations' which need the
-+                * ops
-+                */
-                dd = find_dock_dependent_device(dock_station, handle);
-                if (dd) {
-                        dd->ops = ops;
-                        dd->context = context;
-                        dock_add_hotplug_device(dock_station, dd);
--                       return 0;
-+                       ret = 0;
-                }
-        }
-
--       return -EINVAL;
-+       return ret;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 4bc0c8f..dc357e9 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -32,6 +32,19 @@ static int pci_msi_enable = 1;
+ 
+ int default_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
++	struct msi_chip *chip = dev->bus->msi;
++
++	if (chip && chip->setup_irq) {
++		int err;
++
++		err = chip->setup_irq(chip, dev, desc);
++		if (err < 0)
++			return err;
++
++		irq_set_chip_data(desc->irq, chip);
++		return err;
++	}
++
+ 	return -EINVAL;
  }
+ 
+@@ -42,6 +55,10 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ 
+ void default_teardown_msi_irq(unsigned int irq)
+ {
++	struct msi_chip *chip = irq_get_chip_data(irq);
++
++	if (chip && chip->teardown_irq)
++		chip->teardown_irq(chip, irq);
+ }
+ 
+ void __weak arch_teardown_msi_irq(unsigned int irq)
+@@ -51,6 +68,11 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+ 
+ int default_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ {
++	struct msi_chip *chip = dev->bus->msi;
++
++	if (chip && chip->check_device)
++		return chip->check_device(chip, dev, nvec, type);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 70f10fa..c8591e4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -634,6 +634,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 
+ 	child->parent = parent;
+ 	child->ops = parent->ops;
++	child->msi = parent->msi;
+ 	child->sysdata = parent->sysdata;
+ 	child->bus_flags = parent->bus_flags;
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index e792a3f..e3a137d 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -71,4 +71,15 @@ int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+ 
++struct msi_chip {
++	struct module *owner;
++	struct device *dev;
++
++	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
++			 struct msi_desc *desc);
++	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
++	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
++			    int nvec, int type);
++};
++
+ #endif /* LINUX_MSI_H */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3a24e4f..7ffc012 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -432,6 +432,7 @@ struct pci_bus {
+ 	struct resource busn_res;	/* bus numbers routed to this bus */
+ 
+ 	struct pci_ops	*ops;		/* configuration access functions */
++	struct msi_chip	*msi;		/* MSI controller */
+ 	void		*sysdata;	/* hook for sys-specific extension */
+ 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
+ 
+-- 
+1.8.1.2
 
-so two doc station with different handle.
-
-and dependent devices in both...
-
-looks like Rafael's change can not handle this case anymore.
-
-Yinghai
