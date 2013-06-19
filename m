@@ -1,32 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from galig.ibb.waw.pl ([212.87.28.12]:46773 "EHLO poczta.ibb.waw.pl"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751256Ab3FYGre (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Jun 2013 02:47:34 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Tue, 25 Jun 2013 06:50:46 +0200
-From: Web Master <info@web.com>
-To: undisclosed-recipients:;
-Subject: Confirm your E-mail account
-Reply-To: <webupgrade101@dgoh.org>
-Message-ID: <46b32ebffaa83bd984117d07774ae1d5@ibb.waw.pl>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1880810.6jIKdDRiJm@vostro.rjw.lan>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
+	<CAN_LGv1itN=ADE-3LNCoBJFXmpWZffhQb6NQuoBzvONkX3brug@mail.gmail.com>
+	<CAN_LGv2Y6jebtNUQ1gJYfy8uG2pxtUjT1gqMPmL+6E7myELd3A@mail.gmail.com>
+	<1880810.6jIKdDRiJm@vostro.rjw.lan>
+Date: Wed, 19 Jun 2013 11:18:41 +0600
+Message-ID: <CAN_LGv0DUH3o6=iCBcQDEOLQ3n=O=GR5BSQU5dLs306YeLVL7w@mail.gmail.com>
+Subject: Re: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
+From: "Alexander E. Patrakov" <patrakov@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, alexdeucher@gmail.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-   Your mailbox has exceeded the 2GB limit set by our
-   webmaster, you are running 2.30GB you can not send or
-   receive new messages until you confirm your
-   account for upgrading. Complete the form below to enter
-   your account.
+2013/6/19 Rafael J. Wysocki <rjw@sisk.pl>:
+> OK, let's try to untangle this a bit.
+>
+> If you applyt patches [1/4] and [4/4] from the $subject series only, what
+> does remain unfixed?
 
-   Fill in the requested information and send e-mail to the following:
+[not tested, can do so in 12 hours if needed]
 
-   (1) E-mail:
-   (2) Username:
-   (3) Password:
-   (4) Confirm Password:
+I think there will be problems on undocking and/or on the second
+docking, as described in comments #6 - #8 of
+https://bugzilla.kernel.org/show_bug.cgi?id=59501
 
-   Thank you
-   system administrator.
+-- 
+Alexander E. Patrakov
