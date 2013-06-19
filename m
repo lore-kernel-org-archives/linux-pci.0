@@ -1,67 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:45588 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754868Ab3FQJbB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 05:31:01 -0400
-Received: by mail-pb0-f45.google.com with SMTP id mc8so2588856pbc.32
-        for <linux-pci@vger.kernel.org>; Mon, 17 Jun 2013 02:31:01 -0700 (PDT)
-From: Tushar Behera <tushar.behera@linaro.org>
-To: linux-kernel@vger.kernel.org
-Cc: thierry.reding@gmail.com, patches@linaro.org,
-	sachin.kamat@linaro.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH V2 6/6] pci: mvebu: Convert to use devm_ioremap_resource
-Date: Mon, 17 Jun 2013 14:46:13 +0530
-Message-Id: <1371460573-30004-1-git-send-email-tushar.behera@linaro.org>
-In-Reply-To: <1370864113-17895-14-git-send-email-tushar.behera@linaro.org>
-References: <1370864113-17895-14-git-send-email-tushar.behera@linaro.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:40294 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933666Ab3FSLmn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 07:42:43 -0400
+Date: Wed, 19 Jun 2013 13:42:40 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>
+Subject: Re: [PATCH v2 2/8] PCI: Add registry of MSI chips
+Message-ID: <20130619134240.3ffa8f7c@skate>
+In-Reply-To: <20130618224844.GC16134@google.com>
+References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1370536888-8871-3-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130618224844.GC16134@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 75096579c3ac ("lib: devres: Introduce devm_ioremap_resource()")
-introduced devm_ioremap_resource() and deprecated the use of
-devm_request_and_ioremap().
+Dear Bjorn Helgaas,
 
-While at it, modify mvebu_pcie_map_registers() to propagate error code.
+On Tue, 18 Jun 2013 16:48:44 -0600, Bjorn Helgaas wrote:
 
-Signed-off-by: Tushar Behera <tushar.behera@linaro.org>
-CC: linux-pci@vger.kernel.org
-CC: Bjorn Helgaas <bhelgaas@google.com>
----
-Changes for V2:
-* Return proper error code in mvebu_pcie_map_registers.
+> I don't really understand why the msi_chip_list lives here, since
+> nothing in drivers/pci/msi.c uses it.  Seems like maybe something
+> that could be in the OF code somewhere?
 
- drivers/pci/host/pci-mvebu.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Ok, I'll move this to drivers/of/, we'll see what Grant says about
+this. Will be part of v3.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 13a633b..8fc2a82 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -750,9 +750,9 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
- 
- 	ret = of_address_to_resource(np, 0, &regs);
- 	if (ret)
--		return NULL;
-+		return ERR_PTR(ret);
- 
--	return devm_request_and_ioremap(&pdev->dev, &regs);
-+	return devm_ioremap_resource(&pdev->dev, &regs);
- }
- 
- static int __init mvebu_pcie_probe(struct platform_device *pdev)
-@@ -842,9 +842,10 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 			continue;
- 
- 		port->base = mvebu_pcie_map_registers(pdev, child, port);
--		if (!port->base) {
-+		if (IS_ERR(port->base)) {
- 			dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
- 				port->port, port->lane);
-+			port->base = NULL;
- 			continue;
- 		}
- 
+Best regards,
+
+Thomas
 -- 
-1.7.9.5
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
