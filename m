@@ -1,79 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:25536 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752262Ab3FXCwS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Jun 2013 22:52:18 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>
-Cc: 'Arnd Bergmann' <arnd@arndb.de>,
-	'Jason Cooper' <jason@lakedaemon.net>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Tomasz Figa' <t.figa@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-References: <003901ce6e50$03d039a0$0b70ace0$@samsung.com>
- <201306211030.47440.arnd@arndb.de>
- <20130621141144.GP31667@titan.lakedaemon.net>
- <201306211614.49434.arnd@arndb.de>
-In-reply-to: <201306211614.49434.arnd@arndb.de>
-Subject: Re: [PATCH V10 0/4] PCIe support for Samsung Exynos5440 SoC
-Date: Mon, 24 Jun 2013 11:52:10 +0900
-Message-id: <007201ce7085$d2c4fed0$784efc70$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: =?UTF-8?q?Radim=20Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?q?Radim=20Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>
+Subject: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
+Date: Wed, 19 Jun 2013 20:56:14 +0200
+Message-Id: <1371668174-32115-1-git-send-email-rkrcmar@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 21, 2013 11:15 PM, Arnd Bergmann wrote:
-> On Friday 21 June 2013, Jason Cooper wrote:
-> > On Fri, Jun 21, 2013 at 10:30:47AM +0200, Arnd Bergmann wrote:
-> > > On Friday 21 June 2013, Thomas Petazzoni wrote:
-> > > > I am by far not an expert on how to solve merge strategies and so on,
-> > > > but to avoid conflicts at Linus's level while merging the arm-soc and
-> > > > pci trees, it would be better if this Samsung PCIe driver could go
-> > > > through arm-soc (with Bjorn ACK, of course), so that Arnd/Olof can
-> > > > make sure the ordering is correct with regard to the of/pci changes and
-> > > > the mvebu/pci driver.
+PCIe switch upstream port can be connected directly to the PCIe root bus
+in QEMU; ASPM does not expect this topology and dereferences NULL pointer
+when initializing.
 
-Yes, right.
-That is the reason why I based on 'linu-next' tree,
-instead of 'PCI' -next branch.
+I have not confirmed this can happen on real hardware, but it is presented
+as a feature in QEMU, so there is no reason to panic if we can recover.
 
+The dereference happens with topology defined by
+  -M q35 -device x3130-upstream,bus=pcie.0,id=upstream \
+  -device xio3130-downstream,bus=upstream,id=downstream,chassis=1
+where on line drivers/pci/pcie/aspm.c:530 (alloc_pcie_link_state+13):
+  		parent = pdev->bus->parent->self->link_state;
+"pdev->bus->parent->self == NULL", because "pdev->bus->parent" has no
+"->parent", hence no "->self".
 
-Bjorn Helgaas,
-Could you give your ACK?
-Thank you.
+Even though discouraged by QEMU documentation, one can set up even
+topology without the upstream port
+  -M q35 -device xio3130-downstream,bus=pcie.0,id=downstream,chassis=1
+so "pdev->bus->parent == NULL", because "pdev->bus" is the root bus.
+The patch checks for this too, because I do not like *NULL.
 
+Right now, PCIe switch has to connect to the root port
+  -M q35 -device ioh3420,bus=pcie.0,id=root.0 \
+  -device x3130-upstream,bus=root.0,id=upstream \
+  -device xio3130-downstream,bus=upstream,id=downstream,chassis=1
 
-Best regards,
-Jingoo Han
+Signed-off-by: Radim Krčmář <rkrcmar@redhat.com>
+---
+ drivers/pci/pcie/aspm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> > >
-> > > Yes, good point.
-> > >
-> > > The alternative would be that Bjorn also takes the PCI branch dependencies
-> > > that are already in arm-soc into his tree. Either way works, but I agree
-> > > that what you suggest would be simpler.
-> >
-> > Yes, that is why we did it this way.  It was my understanding based on
-> > previous comments by yourself and LinusW that you both had patches
-> > depending on (now called) mvebu/of_pci.  So we got it into arm-soc
-> > early so those branches could depend on it.
-> 
-> Right. I wasn't paying enough attention for the early merges that
-> Olof did.
-> 
-> 	Arnd
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 403a443..1ad1514 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -527,8 +527,8 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 	link->pdev = pdev;
+ 	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
+ 		struct pcie_link_state *parent;
+-		parent = pdev->bus->parent->self->link_state;
+-		if (!parent) {
++		if (!pdev->bus->parent || !pdev->bus->parent->self ||
++		    !(parent = pdev->bus->parent->self->link_state)) {
+ 			kfree(link);
+ 			return NULL;
+ 		}
+-- 
+1.8.1.4
 
