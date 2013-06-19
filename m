@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:42367 "EHLO
+Received: from mail.free-electrons.com ([94.23.35.102]:42319 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934462Ab3FSQ4e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 12:56:34 -0400
+	with ESMTP id S934462Ab3FSQ4Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 12:56:24 -0400
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Russell King <linux@arm.linux.org.uk>,
@@ -17,73 +17,81 @@ Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
 	Maen Suleiman <maen@marvell.com>,
 	Lior Amsalem <alior@marvell.com>,
 	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCHv3 05/11] irqchip: armada-370-xp: properly request resources
-Date: Wed, 19 Jun 2013 18:56:13 +0200
-Message-Id: <1371660979-21588-6-git-send-email-thomas.petazzoni@free-electrons.com>
+Subject: [PATCHv3 01/11] irqdomain: add irq_alloc_mapping() function
+Date: Wed, 19 Jun 2013 18:56:09 +0200
+Message-Id: <1371660979-21588-2-git-send-email-thomas.petazzoni@free-electrons.com>
 In-Reply-To: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
 References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of using of_iomap(), we now use of_address_to_resource(),
-request_mem_region() and ioremap(). This allows the corresponding I/O
-regions to be properly requested and visible in /proc/iomem.
-
-The main motivation for this change is that the introduction of the
-MSI support requires us to get the physical address of the main
-interrupt controller registers, so we will need the corresponding
-'struct resource' anyway.
-
-We also take this opportunity to change a panic() to BUG_ON(), in
-order to be consistent with the rest of the driver.
+This commit extends the irqdomain subsystem with an
+irq_alloc_mapping() function which allows to let the irqdomain code
+find an available hwirq number in the range [ 0 ; domain size ] for
+the given domain, and create a virq mapping for it.
 
 Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/irqchip/irq-armada-370-xp.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ include/linux/irqdomain.h |  2 ++
+ kernel/irq/irqdomain.c    | 32 ++++++++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
 
-diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
-index bb328a3..26adc74 100644
---- a/drivers/irqchip/irq-armada-370-xp.c
-+++ b/drivers/irqchip/irq-armada-370-xp.c
-@@ -248,12 +248,25 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
- static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 					     struct device_node *parent)
- {
-+	struct resource main_int_res, per_cpu_int_res;
- 	u32 control;
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 02f7658..5f9c3ff 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -195,6 +195,8 @@ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
+ extern unsigned int irq_find_mapping(struct irq_domain *host,
+ 				     irq_hw_number_t hwirq);
+ extern unsigned int irq_create_direct_mapping(struct irq_domain *host);
++extern unsigned int irq_alloc_mapping(struct irq_domain *host,
++				      irq_hw_number_t *hwirq);
+ extern int irq_create_strict_mappings(struct irq_domain *domain,
+ 				      unsigned int irq_base,
+ 				      irq_hw_number_t hwirq_base, int count);
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 836a0f7..be82d2e 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -375,6 +375,38 @@ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
+ EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
  
--	main_int_base = of_iomap(node, 0);
--	per_cpu_int_base = of_iomap(node, 1);
-+	BUG_ON(of_address_to_resource(node, 0, &main_int_res));
-+	BUG_ON(of_address_to_resource(node, 1, &per_cpu_int_res));
- 
-+	BUG_ON(!request_mem_region(main_int_res.start,
-+				   resource_size(&main_int_res),
-+				   node->full_name));
-+	BUG_ON(!request_mem_region(per_cpu_int_res.start,
-+				   resource_size(&per_cpu_int_res),
-+				   node->full_name));
+ /**
++ * irq_alloc_mapping() - Allocate an irq for mapping
++ * @domain: domain to allocate the irq for or NULL for default domain
++ * @hwirq:  reference to the returned hwirq
++ *
++ * This routine are used for irq controllers which can choose the
++ * hardware interrupt number from a range [ 0 ; domain size ], such as
++ * is often the case with PCI MSI controllers. The function will
++ * returned the allocated hwirq number in the hwirq pointer, and the
++ * corresponding virq number as the return value.
++ */
++unsigned int irq_alloc_mapping(struct irq_domain *domain,
++			       irq_hw_number_t *out_hwirq)
++{
++	irq_hw_number_t hwirq;
 +
-+	main_int_base = ioremap(main_int_res.start,
-+				resource_size(&main_int_res));
- 	BUG_ON(!main_int_base);
++	pr_debug("irq_alloc_mapping(0x%p)\n", domain);
 +
-+	per_cpu_int_base = ioremap(per_cpu_int_res.start,
-+				   resource_size(&per_cpu_int_res));
- 	BUG_ON(!per_cpu_int_base);
- 
- 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
-@@ -262,8 +275,7 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 		irq_domain_add_linear(node, (control >> 2) & 0x3ff,
- 				&armada_370_xp_mpic_irq_ops, NULL);
- 
--	if (!armada_370_xp_mpic_domain)
--		panic("Unable to add Armada_370_Xp MPIC irq domain (DT)\n");
-+	BUG_ON(!armada_370_xp_mpic_domain);
- 
- 	irq_set_default_host(armada_370_xp_mpic_domain);
- 
++	for (hwirq = 0; hwirq < domain->hwirq_max; hwirq++)
++		if (!irq_find_mapping(domain, hwirq))
++			break;
++
++	if (hwirq == domain->hwirq_max) {
++		pr_debug("-> no available hwirq found\n");
++		return 0;
++	}
++
++	*out_hwirq = hwirq;
++	return irq_create_mapping(domain, hwirq);
++}
++EXPORT_SYMBOL_GPL(irq_alloc_mapping);
++
++/**
+  * irq_create_mapping() - Map a hardware interrupt into linux irq space
+  * @domain: domain owning this hardware interrupt or NULL for default domain
+  * @hwirq: hardware irq number in that domain space
 -- 
 1.8.1.2
 
