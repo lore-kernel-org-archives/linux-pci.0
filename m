@@ -1,96 +1,287 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1370500156.4432.32.camel@ymzhang.sh.intel.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
- <20130520224824.GA31740@google.com> <CF6E51640088844D9CADE5541A7C2FEB33EBE413@CMEXMB1.ad.emulex.com>
- <CAErSpo4kvEkUtYFXnoE8yDnHsUD8Z6EUrKaXaJ=yy4yMcJ0veA@mail.gmail.com>
- <CAErSpo5OMuW_fg4DYAqg=xcY8USDhC89Mgt66BwoSzss41UKMQ@mail.gmail.com>
- <1370392712.4432.27.camel@ymzhang.sh.intel.com> <CAErSpo743raREgO4zJL0pONZyOTDBy7qLX9UZzCyRsLjBD31gQ@mail.gmail.com>
- <1370500156.4432.32.camel@ymzhang.sh.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 10 Jun 2013 11:24:50 -0600
-Message-ID: <CAErSpo7dS0OFrs1cWrOqz9M1z=6wC9h_+Js01cJC1An-Ae=Ztw@mail.gmail.com>
-Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-To: "yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>
-Cc: "Liu, Joseph" <Joseph.Liu@emulex.com>,
-	"Zhang, LongX" <longx.zhang@intel.com>,
-	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Alexander E. Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, alexdeucher@gmail.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: Re: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
+Date: Thu, 20 Jun 2013 21:06:30 +0200
+Message-ID: <1436701.V8egnZxOqz@vostro.rjw.lan>
+In-Reply-To: <CAN_LGv0DUH3o6=iCBcQDEOLQ3n=O=GR5BSQU5dLs306YeLVL7w@mail.gmail.com>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <1880810.6jIKdDRiJm@vostro.rjw.lan> <CAN_LGv0DUH3o6=iCBcQDEOLQ3n=O=GR5BSQU5dLs306YeLVL7w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I opened https://bugzilla.kernel.org/show_bug.cgi?id=59531 for this issue.
+On Wednesday, June 19, 2013 11:18:41 AM Alexander E. Patrakov wrote:
+> 2013/6/19 Rafael J. Wysocki <rjw@sisk.pl>:
+> > OK, let's try to untangle this a bit.
+> >
+> > If you applyt patches [1/4] and [4/4] from the $subject series only, what
+> > does remain unfixed?
+> 
+> [not tested, can do so in 12 hours if needed]
+> 
+> I think there will be problems on undocking and/or on the second
+> docking, as described in comments #6 - #8 of
+> https://bugzilla.kernel.org/show_bug.cgi?id=59501
 
-Unfortunately, I don't have an army of minions to assign things like this to.
+OK, I think I have something that might work.  It may not solve all problems,
+but maybe it helps a bit.  Unfortunately, I can't really test it, so please do
+if you can.
 
-It's easy to change the dev state from frozen to normal before calling
-the slot_reset() callback, but we first have to unravel what that
-means for pcie_portdrv_slot_reset(), which restores the device state
-if it is frozen.
+Please apply [1/4] and [4/4] and the one below and see what happens.
 
-Bjorn
+Thanks,
+Rafael
 
-On Thu, Jun 6, 2013 at 12:29 AM, Yanmin Zhang
-<yanmin_zhang@linux.intel.com> wrote:
-> On Wed, 2013-06-05 at 07:30 -0600, Bjorn Helgaas wrote:
->> On Tue, Jun 4, 2013 at 6:38 PM, Yanmin Zhang
->> <yanmin_zhang@linux.intel.com> wrote:
->> > On Tue, 2013-06-04 at 12:04 -0600, Bjorn Helgaas wrote:
->> >> I'm not sure where we are with this patch.  I think Joseph initially
->> >> reported a problem (though I haven't actually seen that), and this
->> >> patch fixed it, so it seems like there's something we want to do here.
->> > Yes, indeed. We checked Powerpc error handling and plan to use the
->> > similar method to deal with the issue.
->> >
->> > Sorry for replying very late. I move to Android smartphone area and am
->> > very busy on many top issues.
->>
->> OK.  Can you point us at a bugzilla or email archive of Joseph's
->> original problem report, or post it to this thread?  Then maybe
->> somebody else can pick it up and make progress on this.
->
-> Joseph sent email to my outlook emailbox. I changed it a little to delete company
-> sensitive product name.
->
-> ===========================Joseph's original email to me================
-> Hi Tom and Yanmin,
->
-> Hope this email can reach you well. I am working on a driver's PCI error recovery with AER. I have a question with one of my observations from platform AER driver's behavior. As your names and emails are listed to the PCIe AER driver coming with the kernel, I send this question to you:
->
-> During injecting AER Non-Correctable/Fatal error and PCIe error recovery process, I observed the following from our Low Level Driver (LLD):
->
-> 1. The LLD's error_detected() callback got called and the PCI channel state passed in as "pci_channel_io_frozen", as expected;
->
-> 2. The LLD's error_detected() callback function returned with PCI_ERS_RESULT_NEED_RESET, requesting a PCI slot reset;
->
-> 3. The LLD's slot_reset() callback got called and it attempted to re-initialize the device hardware for the recovery. However, the PCI slot state was still in "pci_channel_io_frozen" and the pci_channel_offline() helper routine returned 1. This is not expected, and it actually prevented LLD in performing needed access to memory mapped I/O space for preparing the device for recovery;
->
-> 4. Later, the LLD's resume() callback got called and the PCI slot state was set to "pci_channel_io_normal";
->
-> In the upstream Linux kernel 3.7.0's pci-error-recovery.txt, "STEP 4 Slot Reset", it stated after platform has performed PCI slot reset and then calls LLD's slot_reset() callback:
->
-> "This call gives drivers the chance to re-initialize the hardware (re-download firmware, etc.).  At this point, the driver may assume that the card is in a fresh state and is fully functional. The slot is unfrozen and the driver has full access to PCI config space, memory mapped I/O space and DMA. Interrupts (Legacy, MSI, or MSI-X) will also be available."
->
-> I looked into the kernel 3.7.0's AER driver's aerdrv_core.c and see that the PCI slot state was set to "pci_channel_io_frozen" on AER_FATAL serverity, and only set back to "pci_channel_io_normal" in report_resume() function. The PCI slot state was not set to "pci_channel_io_normal" when invoking report_slot_reset().
->
-> As a comparison, I also perform the EEH error recovery with the LLD driver on a PPC platform, which indeed set the PCI slot state to "pci_channel_io_normal" when calling LLD's slot_reset() callback function.
->
-> Can you please verify this platform AER driver's behavior is intended and will stay with the AER platform support, or it should be changed to be consistent with the PCI error recovery procedure described in the pci-error-recovery.txt documentation? I also noticed that before invoking the broadcast_error_message() function with "slot_reset", there is a comment in the 3.7.0 kernel source:
->
-> /*
->  * TODO: Should call platform-specific
->  * functions to reset slot before calling
->  * drivers' slot_reset callbacks?
->  */
-> And I do see that only the PCIe Link_Reset was performed, no PCI fundamental reset was performed even the LLD set the PCIe device's "pdev->needs_freset = 1", is this the area that later will be added for performing needed PCI hot reset or fundamental reset at this stage?
->
-> Your timely response is very appreciated. Thanks in advance and please let me know if you think I should redirect the question to someone else.
->
-> Best Regards,
-> Joseph Liu, Ph.D.
-> Senior Principal Engineer
-> Emulex Corporation
->
->
+
+---
+Rationale:
+	acpiphp_glue.c:disable_device() trims the underlying ACPI device objects
+	after removing the companion PCI devices, so the dock station code
+	doesn't need to trim them separately for the dependent devices handled
+	by acpiphp.
+
+	Moreover, acpiphp_glue.c is the only user of
+	[un]register_hotplug_dock_device(), so *all* devices on the
+	ds->hotplug_devices list are handled by acpiphp and ops is set for all
+	of them.
+
+	This means that (1) the ds->hotplug_devices list is not necessary (we
+	can always walk ds->dependent_devices instead and look for those that
+	have dd->ops set) and (2) we don't need to call
+	dock_remove_acpi_device(dd->handle) on eject for any of those devices,
+	because dd->ops->handler() is going to take care of the ACPI device
+	objects trimming for them anyway.
+
+	Taking the above into account make the following changes:
+	(1) Drop hotplug_devices from struct dock_station.
+	(2) Drop dock_{add|del}_hotplug_device()
+	(3) Make [un]register_hotplug_dock_device() [un]set 'ops' and
+	    'context' for the given device under ds->hp_lock.
+	(4) Add hot_remove_dock_devices() that walks ds->dependent_devices and
+	    either calls dd->ops->handler(), if present, or trims the underlying
+	    ACPI device object, otherwise.
+	(5) Replace hotplug_dock_devices(ds, ACPI_NOTIFY_EJECT_REQUEST) calls
+	    with hot_remove_dock_devices(ds).
+	(6) Rename hotplug_dock_devices() to hot_add_dock_devices() and make
+	    it only handle bus check and device check requests.  Make it walk
+	    ds->dependent_devices instead of ds->hotplug devices.
+	(7) Make dock_event() walk ds->dependent_devices (instead of
+	    ds->hotplug devices) under ds->hp_lock.
+---
+ drivers/acpi/dock.c |  111 ++++++++++++++++++++++++----------------------------
+ 1 file changed, 53 insertions(+), 58 deletions(-)
+
+Index: linux-pm/drivers/acpi/dock.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/dock.c
++++ linux-pm/drivers/acpi/dock.c
+@@ -66,7 +66,6 @@ struct dock_station {
+ 	spinlock_t dd_lock;
+ 	struct mutex hp_lock;
+ 	struct list_head dependent_devices;
+-	struct list_head hotplug_devices;
+ 
+ 	struct list_head sibling;
+ 	struct platform_device *dock_device;
+@@ -121,38 +120,6 @@ add_dock_dependent_device(struct dock_st
+ }
+ 
+ /**
+- * dock_add_hotplug_device - associate a hotplug handler with the dock station
+- * @ds: The dock station
+- * @dd: The dependent device struct
+- *
+- * Add the dependent device to the dock's hotplug device list
+- */
+-static void
+-dock_add_hotplug_device(struct dock_station *ds,
+-			struct dock_dependent_device *dd)
+-{
+-	mutex_lock(&ds->hp_lock);
+-	list_add_tail(&dd->hotplug_list, &ds->hotplug_devices);
+-	mutex_unlock(&ds->hp_lock);
+-}
+-
+-/**
+- * dock_del_hotplug_device - remove a hotplug handler from the dock station
+- * @ds: The dock station
+- * @dd: the dependent device struct
+- *
+- * Delete the dependent device from the dock's hotplug device list
+- */
+-static void
+-dock_del_hotplug_device(struct dock_station *ds,
+-			struct dock_dependent_device *dd)
+-{
+-	mutex_lock(&ds->hp_lock);
+-	list_del(&dd->hotplug_list);
+-	mutex_unlock(&ds->hp_lock);
+-}
+-
+-/**
+  * find_dock_dependent_device - get a device dependent on this dock
+  * @ds: the dock station
+  * @handle: the acpi_handle of the device we want
+@@ -342,40 +309,60 @@ static void dock_remove_acpi_device(acpi
+ }
+ 
+ /**
+- * hotplug_dock_devices - insert or remove devices on the dock station
+- * @ds: the dock station
+- * @event: either bus check or eject request
++ * hot_remove_dock_devices - Remove devices on a dock station.
++ * @ds: Dock station to remove devices for.
++ *
++ * For each device depending on @ds, if a dock event handler is registered,
++ * call it for the device, or trim the underlying ACPI device object otherwise.
++ *
++ * Dock event handlers are responsible for trimming the underlying ACPI device
++ * objects if present.
++ */
++static void hot_remove_dock_devices(struct dock_station *ds)
++{
++	struct dock_dependent_device *dd;
++
++	mutex_lock(&ds->hp_lock);
++
++	list_for_each_entry(dd, &ds->dependent_devices, list) {
++		if (dd->ops && dd->ops->handler)
++			dd->ops->handler(dd->handle, ACPI_NOTIFY_EJECT_REQUEST,
++					 dd->context);
++		else
++			dock_remove_acpi_device(dd->handle);
++	}
++
++	mutex_unlock(&ds->hp_lock);
++}
++
++/**
++ * hot_add_dock_devices - Insert devices on a dock station.
++ * @ds: Dock station to insert devices for.
+  *
+  * Some devices on the dock station need to have drivers called
+  * to perform hotplug operations after a dock event has occurred.
+  * Traverse the list of dock devices that have registered a
+  * hotplug handler, and call the handler.
+  */
+-static void hotplug_dock_devices(struct dock_station *ds, u32 event)
++static void hot_add_dock_devices(struct dock_station *ds, u32 event)
+ {
+ 	struct dock_dependent_device *dd;
+ 
+ 	mutex_lock(&ds->hp_lock);
+ 
+-	/*
+-	 * First call driver specific hotplug functions
+-	 */
+-	list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list)
++	/* First call driver specific hotplug event handlers. */
++	list_for_each_entry(dd, &ds->dependent_devices, list)
+ 		if (dd->ops && dd->ops->handler)
+ 			dd->ops->handler(dd->handle, event, dd->context);
+ 
+ 	/*
+-	 * Now make sure that an acpi_device is created for each
+-	 * dependent device, or removed if this is an eject request.
+-	 * This will cause acpi_drivers to be stopped/started if they
+-	 * exist
++	 * Now make sure that an acpi_device is created for each dependent
++	 * device.  That will cause scan handlers to attach to devices objects
++	 * or  acpi_drivers to be started if they exist.
+ 	 */
+-	list_for_each_entry(dd, &ds->dependent_devices, list) {
+-		if (event == ACPI_NOTIFY_EJECT_REQUEST)
+-			dock_remove_acpi_device(dd->handle);
+-		else
+-			dock_create_acpi_device(dd->handle);
+-	}
++	list_for_each_entry(dd, &ds->dependent_devices, list)
++		dock_create_acpi_device(dd->handle);
++
+ 	mutex_unlock(&ds->hp_lock);
+ }
+ 
+@@ -398,10 +385,14 @@ static void dock_event(struct dock_stati
+ 	if (num == DOCK_EVENT)
+ 		kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
+ 
+-	list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list)
++	mutex_lock(&ds->hp_lock);
++
++	list_for_each_entry(dd, &ds->dependent_devices, list)
+ 		if (dd->ops && dd->ops->uevent)
+ 			dd->ops->uevent(dd->handle, event, dd->context);
+ 
++	mutex_unlock(&ds->hp_lock);
++
+ 	if (num != DOCK_EVENT)
+ 		kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
+ }
+@@ -598,9 +589,10 @@ register_hotplug_dock_device(acpi_handle
+ 		 */
+ 		dd = find_dock_dependent_device(dock_station, handle);
+ 		if (dd) {
++			mutex_lock(&dock_station->hp_lock);
+ 			dd->ops = ops;
+ 			dd->context = context;
+-			dock_add_hotplug_device(dock_station, dd);
++			mutex_unlock(&dock_station->hp_lock);
+ 			ret = 0;
+ 		}
+ 	}
+@@ -623,8 +615,12 @@ void unregister_hotplug_dock_device(acpi
+ 
+ 	list_for_each_entry(dock_station, &dock_stations, sibling) {
+ 		dd = find_dock_dependent_device(dock_station, handle);
+-		if (dd)
+-			dock_del_hotplug_device(dock_station, dd);
++		if (dd) {
++			mutex_lock(&dock_station->hp_lock);
++			dd->ops = NULL;
++			dd->context = NULL;
++			mutex_unlock(&dock_station->hp_lock);
++		}
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(unregister_hotplug_dock_device);
+@@ -649,7 +645,7 @@ static int handle_eject_request(struct d
+ 	 */
+ 	dock_event(ds, event, UNDOCK_EVENT);
+ 
+-	hotplug_dock_devices(ds, ACPI_NOTIFY_EJECT_REQUEST);
++	hot_remove_dock_devices(ds);
+ 	undock(ds);
+ 	dock_lock(ds, 0);
+ 	eject_dock(ds);
+@@ -708,7 +704,7 @@ static void dock_notify(acpi_handle hand
+ 			}
+ 			atomic_notifier_call_chain(&dock_notifier_list,
+ 						   event, NULL);
+-			hotplug_dock_devices(ds, event);
++			hot_add_dock_devices(ds, event);
+ 			complete_dock(ds);
+ 			dock_event(ds, event, DOCK_EVENT);
+ 			dock_lock(ds, 1);
+@@ -953,7 +949,6 @@ static int __init dock_add(acpi_handle h
+ 	mutex_init(&dock_station->hp_lock);
+ 	spin_lock_init(&dock_station->dd_lock);
+ 	INIT_LIST_HEAD(&dock_station->sibling);
+-	INIT_LIST_HEAD(&dock_station->hotplug_devices);
+ 	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
+ 	INIT_LIST_HEAD(&dock_station->dependent_devices);
+ 
+
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
