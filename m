@@ -1,99 +1,112 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
-Date: Mon, 17 Jun 2013 14:54:49 +0200
-Message-ID: <1772508.cyctAa8VtK@vostro.rjw.lan>
-In-Reply-To: <27452260.5ySAzSUIS7@vostro.rjw.lan>
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <51BDEF7F.1070107@gmail.com> <27452260.5ySAzSUIS7@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Thu, 20 Jun 2013 16:12:24 +0900
+Message-id: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, June 17, 2013 01:39:04 PM Rafael J. Wysocki wrote:
-> On Monday, June 17, 2013 01:01:51 AM Jiang Liu wrote:
-> > On 06/16/2013 05:20 AM, Rafael J. Wysocki wrote:
-> > > On Saturday, June 15, 2013 10:17:42 PM Rafael J. Wysocki wrote:
-> > >> On Saturday, June 15, 2013 09:44:28 AM Jiang Liu wrote:
-> > [...]
-> > >> When it returns from unregister_hotplug_dock_device(), nothing prevents it
-> > >> from accessing whatever it wants, because ds->hp_lock is not used outside
-> > >> of the add/del and hotplug_dock_devices().  So, the actual role of
-> > >> ds->hp_lock (not the one that it is supposed to play, but the real one)
-> > >> is to prevent addition/deletion from happening when hotplug_dock_devices()
-> > >> is running.  [Yes, it does protect the list, but since the list is in fact
-> > >> unnecessary, that doesn't matter.]
-> > >>
-> > >>> If we simply use a flag to mark presence of registered callback, we 
-> > >>> can't achieve the second goal.
-> > >>
-> > >> I don't mean using the flag *alone*.
-> > >>
-> > >>> Take the sony laptop as an example. It has several PCI 
-> > >>> hotplug
-> > >>> slot associated with the dock station:
-> > >>> [   28.829316] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> > >>> notify on \_SB_.PCI0.RP07.LPMB
-> > >>> [   30.174964] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> > >>> notify on \_SB_.PCI0.RP07.LPMB.LPM0
-> > >>> [   30.174973] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> > >>> notify on \_SB_.PCI0.RP07.LPMB.LPM1
-> > >>> [   30.174979] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> > >>> notify on \_SB_.PCI0.RP07.LPMB.LPM2
-> > >>> [   30.174985] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> > >>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GFXA
-> > >>> [   30.175020] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> > >>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GHDA
-> > >>> [   30.175040] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> > >>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC0.DLAN
-> > >>> [   30.175050] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> > >>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC1.DODD
-> > >>> [   30.175060] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> > >>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC2.DUSB
-> > >>>
-> > >>> So it still has some race windows if we undock the station while 
-> > >>> repeatedly rescanning/removing
-> > >>> the PCI bus for \_SB_.PCI0.RP07.LPMB.LPM0 through sysfs interfaces.
-> > > 
-> > > Which sysfs interfaces do you mean, by the way?
-> > > 
-> > > If you mean "eject", then it takes acpi_scan_lock and hotplug_dock_devices()
-> > > should always be run under acpi_scan_lock too.  It isn't at the moment,
-> > > because write_undock() doesn't take acpi_scan_lock(), but this is an obvious
-> > > bug (so I'm going to send a patch to fix it in a while).
-> > > 
-> > > With that bug fixed, the possible race between acpi_eject_store() and
-> > > hotplug_dock_devices() should be prevented from happening, so perhaps we're
-> > > worrying about something that cannot happen?
-> > Hi Rafael,
-> > 	I mean the "remove" method of each PCI device, and the "power" method
-> > of PCI hotplug slot here.
-> > 	These methods may be used to remove P2P bridges with associated ACPIPHP
-> > hotplug slots, which in turn will cause invoking of
-> > unregister_hotplug_dock_device().
-> > 	So theoretical we may trigger the bug by undocking while repeatedly
-> > adding/removing P2P bridges with ACPIPHP hotplug slot through PCI
-> > "rescan" and "remove" sysfs interface,
-> 
-> Why don't we make these things take acpi_scan_lock upfront, then?
+Exynos5440 has two PCIe controllers which can be used as root complex
+for PCIe interface.
 
-Or perhaps (and maybe better) why don't we replace ds->hp_lock by another
-lock that will be acquired upper in the call chain so that
-dock_add_hotplug_device(), dock_del_hotplug_device(), hotplug_dock_devices()
-and dock_event() are all guaranteed to be called under that lock?
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++
+ arch/arm/boot/dts/exynos5440.dtsi         |   40 ++++++++++++++++++++++++++++-
+ 2 files changed, 47 insertions(+), 1 deletion(-)
 
-Rafael
-
-
+diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+index f32cd77..3d93804 100644
+--- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
++++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+@@ -65,4 +65,12 @@
+ 			clock-frequency = <50000000>;
+ 		};
+ 	};
++
++	pcie0@290000 {
++		reset-gpio = <&pin_ctrl 5 0>;
++	};
++
++	pcie1@2a0000 {
++		reset-gpio = <&pin_ctrl 22 0>;
++	};
+ };
+diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+index 03d40c0..6295eda 100644
+--- a/arch/arm/boot/dts/exynos5440.dtsi
++++ b/arch/arm/boot/dts/exynos5440.dtsi
+@@ -126,7 +126,7 @@
+ 		clock-names = "spi", "spi_busclk0";
+ 	};
+ 
+-	pinctrl {
++	pin_ctrl: pinctrl {
+ 		compatible = "samsung,exynos5440-pinctrl";
+ 		reg = <0xE0000 0x1000>;
+ 		interrupts = <0 37 0>, <0 38 0>, <0 39 0>, <0 40 0>,
+@@ -230,4 +230,42 @@
+ 		clocks = <&clock 24>;
+ 		clock-names = "usbhost";
+ 	};
++
++	pcie0@290000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x290000 0x1000
++			0x270000 0x1000
++			0x271000 0x40>;
++		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
++		clocks = <&clock 28>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
++			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 53>;
++	};
++
++	pcie1@2a0000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x2a0000 0x1000
++			0x272000 0x1000
++			0x271040 0x40>;
++		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
++		clocks = <&clock 29>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
++			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 56>;
++	};
+ };
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.10.4
+
+
