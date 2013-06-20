@@ -1,69 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate04.nvidia.com ([216.228.121.35]:11879 "EHLO
-	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751158Ab3FKEpX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 00:45:23 -0400
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: 'Thierry Reding' <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
-	Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Date: Tue, 11 Jun 2013 10:13:38 +0530
-Subject: RE: [PATCH V3 2/4] ARM: tegra: pcie: Add tegra3 support
-Message-ID: <C79B248886DD134989C8FF6B096A91AB91B616BEED@BGMAIL01.nvidia.com>
-References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
- <1370372252-4332-2-git-send-email-jagarwal@nvidia.com>
- <51AE3D3B.6080102@wwwdotorg.org> <20130610195028.GB25859@mithrandir>
-In-Reply-To: <20130610195028.GB25859@mithrandir>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mailout2.samsung.com ([203.254.224.25]:8199 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965291Ab3FTLEt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 07:04:49 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Arnd Bergmann' <arnd@arndb.de>
+Cc: 'Tomasz Figa' <tomasz.figa@gmail.com>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+References: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
+ <3250954.dVh4O1LchK@flatron> <00c501ce6d8f$af1bf900$0d53eb00$@samsung.com>
+ <201306201216.37248.arnd@arndb.de>
+In-reply-to: <201306201216.37248.arnd@arndb.de>
+Subject: Re: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Thu, 20 Jun 2013 20:04:47 +0900
+Message-id: <00d801ce6da5$fa792d80$ef6b8880$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> * PGP Signed by an unknown key
-> 
-> On Tue, Jun 04, 2013 at 01:17:15PM -0600, Stephen Warren wrote:
-> > On 06/04/2013 12:57 PM, Jay Agarwal wrote:
-> [...]
-> > >  struct tegra_pcie_port {
-> > > @@ -384,7 +408,7 @@ static int tegra_pcie_read_conf(struct pci_bus
-> *bus, unsigned int devfn,
-> > >  		struct tegra_pcie_port *port;
-> > >
-> > >  		list_for_each_entry(port, &pcie->ports, list) {
-> > > -			if (port->index + 1 == slot) {
-> > > +			if (port->index == slot) {
+On Thursday, June 20, 2013 7:17 PM, Arnd Bergmann wrote:
+> On Thursday 20 June 2013, Jingoo Han wrote:
+> > 2. patch adding label to the pinctrl node (which is a prerequisite) and
+> >     board-specific properties of PCIe nodes.
+> >    [PATCH] ARM: dts: Add pcie controller node for exynos5440-ssdk5440
 > >
-> > This and the equivalent change in tegra_pcie_write_conf() seem like a
-> > bug-fix unrelated to the addition of Tegra30 support. Hence, they
-> > should be a separate patch.
+> > arch/arm/boot/dts/exynos5440-ssdk5440.dts
+> > +
+> > +       pcie0@290000 {
+> > +               reset-gpio = <&pin_ctrl 5 0>;
+> > +       };
+> > +
+> > +       pcie1@2a0000 {
+> > +               reset-gpio = <&pin_ctrl 22 0>;
+> > +       };
+> >
+> > arch/arm/boot/dts/exynos5440.dtsi
+> > -       pinctrl {
+> > +       pin_ctrl: pinctrl {
+> >
 > 
-> What exactly is this change supposed to fix? The description doesn't provide
-> any details about why this is required. Furthermore this was done on
-> purpose to model the Tegra PCIe controller according to what typical Linux
-> systems provide.
+> Note that you don't really have to use a label, you can also refer
+> to the pinctrl node by its full path, which is just "/pinctrl"
+> or "/pinctrl@e0000".
 
-I have mentioned it in description as -> "Corrected logic in read/write config space to display right device number on bus 0"
+I see.
 
-> Device 0:00.0 is usually the root complex, and device 0:01.0, 0:02.0 etc are
-> the root ports. The change proposed above makes 0:00.0 the first root port,
-> therefore breaking what systems usually expect.
+But, I have a question.
+Using phandle has been the usual way to referring to a node. 
+Why do you want to do it differently?
+
+Best regards,
+Jingoo Han
+
 > 
-I was seeing root port 2 in cardhu being enumerated as pci_bus 0000:03, which I thought should be pci_bus 0000:02, so made this change.
+> 	Arnd
 
-> Thierry
-> 
-> * Unknown Key
-> * 0x7F3EB3A1
