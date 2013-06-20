@@ -1,30 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:47574 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757030Ab3FTQYn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 12:24:43 -0400
+Message-ID: <51C32CC7.5010109@wwwdotorg.org>
+Date: Thu, 20 Jun 2013 10:24:39 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <2737587.I0nULev1kj@vostro.rjw.lan>
-References: <2737587.I0nULev1kj@vostro.rjw.lan>
-Date: Sun, 23 Jun 2013 23:50:15 +0600
-Message-ID: <CAN_LGv3LZbp-7JE=Lxo+53GxWTQ_D6nJ=w+OnuQ3JkmWfXOhxg@mail.gmail.com>
-Subject: Re: [PATCH 0/3] ACPI / dock / PCI: Fix problems with dock and PCI hotplug
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
+	bhelgaas@google.com, ldewangan@nvidia.com, olof@lixom.net,
+	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
+	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH V1] ARM: dts: tegra: Modify pcie memory space size
+References: <1371712491-31070-1-git-send-email-jagarwal@nvidia.com>
+In-Reply-To: <1371712491-31070-1-git-send-email-jagarwal@nvidia.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/6/23 Rafael J. Wysocki <rjw@sisk.pl>:
-> Alexander, I've modified patch [3/3] a bit since you have tested it.
-> The modifications shouldn't affect the behavior, but if you could re-test it,
-> that would be great.
+On 06/20/2013 01:14 AM, Jay Agarwal wrote:
+> - decrease non-prefetch memory size to 128 MB
+> - increase prefetch memory size to 384 MB
+> - above change is done because most pcie devices
+>   prefetch memory size requirement is quite higher
+>   compared to non-prefetch memory space.
 
-Retested, everything works just as with the previous version of your patch.
+It's possible this change won't be suitable for all applications. People
+may simply need to adjust their DT based on what they want to connect.
+Still, this patch probably biases things in the correct way for now.
+Longer term, we might want to investigate dynamically sizing the windows
+in order to support arbitrary attached devices, in much the same way as
+the Marvell code does/will in order to conserve physical/bus address
+space for their multiple controllers.
 
---
-Alexander E. Patrakov
+However, this change allows me to correctly enumerate a particular GPU I
+have plugged into my Harmony board, and assign all the BARs, so:
+
+Tested-by: Stephen Warren <swarren@nvidia.com>
+
