@@ -1,53 +1,70 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51C3EFD2.7090803@wwwdotorg.org>
-Date: Fri, 21 Jun 2013 00:16:50 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
-	Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Subject: Re: [PATCH V1] ARM: dts: tegra: Modify pcie memory space size
-References: <1371712491-31070-1-git-send-email-jagarwal@nvidia.com> <51C32CC7.5010109@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91CF1615EC@BGMAIL01.nvidia.com>
-In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91CF1615EC@BGMAIL01.nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Tomasz Figa' <tomasz.figa@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>
+References: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
+ <20130620094835.3f1f34c2@skate> <00c301ce6d8b$d198b210$74ca1630$@samsung.com>
+ <20130620100013.6000458f@skate>
+In-reply-to: <20130620100013.6000458f@skate>
+Subject: Re: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Thu, 20 Jun 2013 17:40:13 +0900
+Message-id: <00c901ce6d91$c8382010$58a86030$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/20/2013 11:30 PM, Jay Agarwal wrote:
->> On 06/20/2013 01:14 AM, Jay Agarwal wrote:
->>> - decrease non-prefetch memory size to 128 MB
->>> - increase prefetch memory size to 384 MB
->>> - above change is done because most pcie devices
->>>   prefetch memory size requirement is quite higher
->>>   compared to non-prefetch memory space.
->>
->> It's possible this change won't be suitable for all applications. People may
->> simply need to adjust their DT based on what they want to connect.
->> Still, this patch probably biases things in the correct way for now.
->> Longer term, we might want to investigate dynamically sizing the windows
->> in order to support arbitrary attached devices, in much the same way as the
->> Marvell code does/will in order to conserve physical/bus address space for
->> their multiple controllers.
->>
->> However, this change allows me to correctly enumerate a particular GPU I
->> have plugged into my Harmony board, and assign all the BARs, so:
->>
->> Tested-by: Stephen Warren <swarren@nvidia.com>
->
-> Thierry,
-> Could you please integrate this change also to your branch if review is done. Please let me know once it is done.
+On Thursday, June 20, 2013 5:00 PM, Thomas Petazzoni wrote:
+> 
+> Dear Jingoo Han,
+> 
+> On Thu, 20 Jun 2013 16:57:32 +0900, Jingoo Han wrote:
+> 
+> > > > -	pinctrl {
+> > > > +	pin_ctrl: pinctrl {
+> > > >  		compatible = "samsung,exynos5440-pinctrl";
+> > >
+> > > I know I'm nitpicking, but isn't this change completely unrelated to
+> > > PCIe support?
+> >
+> > This change is related to PCIe support.
+> > Without this, I cannot use gpio binding.
+> >
+> > This change was guided by Thomas Abraham (Author of Samsung pinctrl).
+> > Also, it was confirmed by Kukjin Kim (Maintainer of Samsung SoC).
+> >
+> > Thank you for your caring. :)
+> 
+> I mean, the change is fine for sure, but it should maybe part of a
+> separate patch as it is more a fix than really the introduction of the
+> PCIe controller node, as the patch title suggests. This would also for
+> example allow this fix to be merged right now (for 3.11), regardless of
+> what happens for the rest of your PCIe patches.
+> 
+CC'ed Tomasz Figa
 
-I'm sure he will, but pinging after less than 24 hours is a little quick.
+
+OK, I see.
+I will separate this patch to two patches, as Tomasz Figa mentioned.
+(http://www.spinics.net/lists/linux-samsung-soc/msg19639.html)
+Thank you.
+
+
+Best regards,
+Jingoo Han
+
