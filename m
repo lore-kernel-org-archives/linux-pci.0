@@ -1,264 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:19271 "EHLO
-	mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359Ab3FTJgb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 05:36:31 -0400
-From: Tomasz Figa <t.figa@samsung.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Tomasz Figa' <tomasz.figa@gmail.com>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
+Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:42476 "EHLO
+	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965003Ab3FTL1Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 07:27:24 -0400
+Message-ID: <51C2E6E5.1050001@st.com>
+Date: Thu, 20 Jun 2013 16:56:29 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+MIME-Version: 1.0
+To: Jingoo Han <jg1.han@samsung.com>, 'Arnd Bergmann' <arnd@arndb.de>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
 	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	'Grant Likely' <grant.likely@secretlab.ca>,
 	'Andrew Murray' <andrew.murray@arm.com>,
 	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
 	'Thierry Reding' <thierry.reding@avionic-design.de>,
 	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
 	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
 	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
 	'Thomas Abraham' <thomas.abraham@linaro.org>
-Subject: Re: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung
- EXYNOS5440 SoC
-Date: Thu, 20 Jun 2013 11:36:20 +0200
-Message-id: <228629412.BqSshikCdN@amdc1227>
-In-reply-to: <00c501ce6d8f$af1bf900$0d53eb00$@samsung.com>
-References: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
- <3250954.dVh4O1LchK@flatron> <00c501ce6d8f$af1bf900$0d53eb00$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Subject: Re: [PATCH V4 1/3] pci: Add PCIe driver for Samsung Exynos
+References: <003601ce6756$444e8cd0$cceba670$@samsung.com> <2061566.hRLrhtBK6z@wuerfel> <000901ce6838$8b514720$a1f3d560$@samsung.com> <28355406.ThqqvnG0Yj@wuerfel> <51C2D260.6000303@st.com> <00d701ce6da5$10216ae0$306440a0$@samsung.com>
+In-Reply-To: <00d701ce6da5$10216ae0$306440a0$@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 20 of June 2013 17:25:12 Jingoo Han wrote:
-> On Thursday, June 20, 2013 5:04 PM, Tomasz Figa wrote:
-> > Hi Jingoo,
-> > 
-> > On Thursday 20 of June 2013 16:12:24 Jingoo Han wrote:
-> > > Exynos5440 has two PCIe controllers which can be used as root complex
-> > > for PCIe interface.
-> > > 
-> > > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> > > ---
-> > > 
-> > >  arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++
-> > >  arch/arm/boot/dts/exynos5440.dtsi         |   40
-> > > 
-> > > ++++++++++++++++++++++++++++- 2 files changed, 47 insertions(+), 1
-> > > deletion(-)
-> > > 
-> > > diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> > > b/arch/arm/boot/dts/exynos5440-ssdk5440.dts index f32cd77..3d93804
-> > > 100644
-> > > --- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> > > +++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> > > @@ -65,4 +65,12 @@
-> > > 
-> > >  			clock-frequency = <50000000>;
-> > >  		
-> > >  		};
-> > >  	
-> > >  	};
-> > > 
-> > > +
-> > > +	pcie0@290000 {
-> > > +		reset-gpio = <&pin_ctrl 5 0>;
-> > > +	};
-> > > +
-> > > +	pcie1@2a0000 {
-> > > +		reset-gpio = <&pin_ctrl 22 0>;
-> > > +	};
-> > > 
-> > >  };
-> > > 
-> > > diff --git a/arch/arm/boot/dts/exynos5440.dtsi
-> > > b/arch/arm/boot/dts/exynos5440.dtsi index 03d40c0..6295eda 100644
-> > > --- a/arch/arm/boot/dts/exynos5440.dtsi
-> > > +++ b/arch/arm/boot/dts/exynos5440.dtsi
-> > > @@ -126,7 +126,7 @@
-> > > 
-> > >  		clock-names = "spi", "spi_busclk0";
-> > >  	
-> > >  	};
-> > > 
-> > > -	pinctrl {
-> > > +	pin_ctrl: pinctrl {
-> > > 
-> > >  		compatible = "samsung,exynos5440-pinctrl";
-> > >  		reg = <0xE0000 0x1000>;
-> > >  		interrupts = <0 37 0>, <0 38 0>, <0 39 0>, <0 40 0>,
-> > > 
-> > > @@ -230,4 +230,42 @@
-> > > 
-> > >  		clocks = <&clock 24>;
-> > >  		clock-names = "usbhost";
-> > >  	
-> > >  	};
-> > 
-> > I think this patch should be split into two:
-> >  - patch adding just generlic PCIe nodes for Exynos5440,
-> >  - patch adding label to the pinctrl node (which is a prerequisite) and
-> > 
-> > board-specific properties of PCIe nodes.
-> 
-> Do you mean the following?
-> 
-> 1. patch adding just generlic PCIe nodes for Exynos5440
->     [PATCH] ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
-> 
-> arch/arm/boot/dts/exynos5440.dtsi
-> +
-> +	pcie@290000 {
-> +		compatible = "samsung,exynos5440-pcie";
-> +		reg = <0x290000 0x1000
-> +			0x270000 0x1000
-> +			0x271000 0x40>;
-> +		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-> +		clocks = <&clock 28>, <&clock 27>;
-> +		clock-names = "pcie", "pcie_bus";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /*
-> configuration space */ +			  0x81000000 0 0	  0x40001000 0 0x00010000  
-> /* downstream I/O */ +			  0x82000000 0 0x40011000 0x40011000 0
-> 0x1ffef000>; /* non-prefetchable memory */ +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 0>;
-> +		interrupt-map = <0x0 0 &gic 53>;
-> +	};
-> +
-> +	pcie@2a0000 {
-> +		compatible = "samsung,exynos5440-pcie";
-> +		reg = <0x2a0000 0x1000
-> +			0x272000 0x1000
-> +			0x271040 0x40>;
-> +		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
-> +		clocks = <&clock 29>, <&clock 27>;
-> +		clock-names = "pcie", "pcie_bus";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /*
-> configuration space */ +			  0x81000000 0 0	  0x60001000 0 0x00010000  
-> /* downstream I/O */ +			  0x82000000 0 0x60011000 0x60011000 0
-> 0x1ffef000>; /* non-prefetchable memory */ +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 0>;
-> +		interrupt-map = <0x0 0 &gic 56>;
-> +	};
-> 
-> 
-> 
-> 2. patch adding label to the pinctrl node (which is a prerequisite) and
->     board-specific properties of PCIe nodes.
->    [PATCH] ARM: dts: Add pcie controller node for exynos5440-ssdk5440
-> 
-> arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> +
-> +	pcie0@290000 {
-> +		reset-gpio = <&pin_ctrl 5 0>;
-> +	};
-> +
-> +	pcie1@2a0000 {
-> +		reset-gpio = <&pin_ctrl 22 0>;
-> +	};
-> 
-> arch/arm/boot/dts/exynos5440.dtsi
-> -	pinctrl {
-> +	pin_ctrl: pinctrl {
-> 
+Hi,
 
-Exactly.
+On 6/20/2013 4:28 PM, Jingoo Han wrote:
+> On Thursday, June 20, 2013 6:59 PM, Pratyush Anand wrote:
+>> On 6/13/2013 7:48 PM, Arnd Bergmann wrote:
+>>> On Thursday 13 June 2013 22:18:50 Jingoo Han wrote:
+>>>>> On Wednesday, June 12, 2013 8:23 PM, Arnd Bergmann wrote:
+>>>>>>> On Wednesday 12 June 2013 19:19:05 Jingoo Han wrote:
+>>>>>>>>> +
+>>>>>>>>> +/* synopsis specific PCIE configuration registers*/
+>>>>>>>>> +#define PCIE_PORT_LINK_CONTROL		0x710
+>>>>>>>>> +#define PORT_LINK_MODE_MASK		(0x3f << 16)
+>>>>>>>>> +#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
+>>>>>>>
+>>>>>>> Do you mean this is a "Synopsys" designware part? In that case it
+>>>>>>> should really not be called "exynos-pcie" but "designware-pcie"
+>>>>>>> and you should make sure that the driver makes no assumptions about
+>>>>>>> the platform. A lot of other platforms also use designware
+>>>>>>> parts and should be able to reuse this driver.
+>>>>>
+>>>>> Sorry, I don't think so.
+>>>>> Only core block is a "Synopsys" designware part IP block,
+>>>>> other parts are Exynos-specific.
+>>>>> So, it is hard to share with other PCIe IPs using synopsis core.
+>>> Just call it synopsys anyway and put a comment in to explain this.
+>>> That should be enough for the next person with a synopsys PCI core
+>>> to reuse your code and split out the exynos specific parts into a
+>>> separate file.
+>>>
+>>
+>> I agree to Arnd that this patch should be split. I had worked in past
+>> with SPEAr PCIe which also had designware PCIe IP. I see some code which
+>> will fit both in SPEAr as well as in exynos. Unfortunately, I was not
+>> able to get SPEAr driver pushed to mainline, as I moved to some other
+>> project and got heavily occupied.
+>
+> Oh, I see.
+>
+> How about this?
+> At the next PATCH v7, I will change the file name from 'pci-exynos.c'
+> to 'pci-designware.c', as Arnd mentioned.
+>
+> Then, when Spear or other platform using designware is submitted,
+> this 'pci-designware.c' will be split to two separate files such as
+> 'pci-designware.c' and 'pci-exynos.c'.
+>
 
-> > > +
-> > > +	pcie0@290000 {
-> > 
-> > Node naming looks incorrect here. The name should be as generic as
-> > possible, without any hardware-specific IDs, e.g. pcie, not pcie0. The
-> > @290000 suffix is enough to make the node unique.
-> 
-> I see. You are right.
-> I will fix it.
+For me it's OK. Let it go to mainline as Arnd mentioned.
+Please keep Mohit in mail chain, who might have some bandwidth to 
+further add and follow up for SPEAr on top of your patches.
 
-Thanks.
+Regards
+Pratyush
 
-Best regards,
-Tomasz
-
+>
 > Best regards,
 > Jingoo Han
-> 
-> > > +		compatible = "samsung,exynos5440-pcie";
-> > > +		reg = <0x290000 0x1000
-> > > +			0x270000 0x1000
-> > > +			0x271000 0x40>;
-> > > +		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-> > > +		clocks = <&clock 28>, <&clock 27>;
-> > > +		clock-names = "pcie", "pcie_bus";
-> > > +		#address-cells = <3>;
-> > > +		#size-cells = <2>;
-> > > +		device_type = "pci";
-> > > +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000
-> > 
-> > /*
-> > 
-> > > configuration space */ +			  0x81000000 0 0
-> > 
-> > 0x40001000 0 0x00010000
-> > 
-> > > /* downstream I/O */ +			  0x82000000 0 0x40011000
-> > 
-> > 0x40011000 0
-> > 
-> > > 0x1ffef000>; /* non-prefetchable memory */ +		#interrupt-cells =
-> > 
-> > <1>;
-> > 
-> > > +		interrupt-map-mask = <0 0 0 0>;
-> > > +		interrupt-map = <0x0 0 &gic 53>;
-> > > +	};
-> > > +
-> > > +	pcie1@2a0000 {
-> > 
-> > Same here.
-> > 
-> > Best regards,
-> > Tomasz
-> > 
-> > > +		compatible = "samsung,exynos5440-pcie";
-> > > +		reg = <0x2a0000 0x1000
-> > > +			0x272000 0x1000
-> > > +			0x271040 0x40>;
-> > > +		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
-> > > +		clocks = <&clock 29>, <&clock 27>;
-> > > +		clock-names = "pcie", "pcie_bus";
-> > > +		#address-cells = <3>;
-> > > +		#size-cells = <2>;
-> > > +		device_type = "pci";
-> > > +		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000
-> > 
-> > /*
-> > 
-> > > configuration space */ +			  0x81000000 0 0
-> > 
-> > 0x60001000 0 0x00010000
-> > 
-> > > /* downstream I/O */ +			  0x82000000 0 0x60011000
-> > 
-> > 0x60011000 0
-> > 
-> > > 0x1ffef000>; /* non-prefetchable memory */ +		#interrupt-cells =
-> > 
-> > <1>;
-> > 
-> > > +		interrupt-map-mask = <0 0 0 0>;
-> > > +		interrupt-map = <0x0 0 &gic 56>;
-> > > +	};
-> > > 
-> > >  };
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-samsung-soc" in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>>
+>> Last patch is here:
+>>
+>> https://patchwork.kernel.org/patch/1661441/
+>>
+>> Infact, these functions should be common to all arm platforms.
+>>
+>> sys_to_pcie
+>> cfg_read
+>> cfg_write
+>>
+>> Following functions should be common to all designware based driver (at
+>> least they are same in SPEAr)
+>>
+>> exynos_pcie_prog_viewport_cfg0
+>> exynos_pcie_prog_viewport_cfg1
+>> exynos_pcie_rd_other_conf
+>> exynos_pcie_wr_other_conf
+>> exynos_pcie_setup
+>> exynos_pcie_valid_config
+>> exynos_pcie_rd_conf
+>> exynos_pcie_wd_conf
+>> exynos_pcie_scan_bus
+>> exynos_pcie_map_irq
+>> add_pcie_port (after a bit of generalization)
+>> exynos_pcie_probe
+>> exynos_pcie_remove
+>>
+>>
+>>
+>> Following should be specific to exynos:
+>>
+>> exynos_pcie_rd_own_conf
+>> exynos_pcie_wr_own_conf
+>> exynos_pcie_link_up
+>> exynos_pcie_setup_rc
+>> exynos_pcie_assert_core_reset
+>> exynos_pcie_deassert_core_reset
+>> exynos_pcie_assert_phy_reset
+>> exynos_pcie_deassert_phy_reset
+>> exynos_pcie_init_phy
+>> exynos_pcie_assert_reset
+>> exynos_pcie_establish_link
+>> exynos_pcie_host_init
+>>
+>>
+>>
+>> struct pcie_port_info and struct pcie_port can also be standardized.
+>>
+>> Regards
+>> Pratyush
+>
+> .
+>
+
+
