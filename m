@@ -1,206 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39198 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751368Ab3FZN1F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 09:27:05 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: stable@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Arkadiusz Miskiewicz <arekm@maven.pl>,
-	Greg KH <gregkh@linuxfoundation.org>
-Subject: [3.9 stable PATCH] iommu/vt-d: add quirk for broken interrupt remapping on 55XX chipsets
-Date: Wed, 26 Jun 2013 09:26:35 -0400
-Message-Id: <1372253195-17053-1-git-send-email-nhorman@tuxdriver.com>
+Received: from eu1sys200aog103.obsmtp.com ([207.126.144.115]:57171 "EHLO
+	eu1sys200aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754512Ab3FTJ7z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 05:59:55 -0400
+Message-ID: <51C2D260.6000303@st.com>
+Date: Thu, 20 Jun 2013 15:28:56 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>
+Subject: Re: [PATCH V4 1/3] pci: Add PCIe driver for Samsung Exynos
+References: <003601ce6756$444e8cd0$cceba670$@samsung.com> <2061566.hRLrhtBK6z@wuerfel> <000901ce6838$8b514720$a1f3d560$@samsung.com> <28355406.ThqqvnG0Yj@wuerfel>
+In-Reply-To: <28355406.ThqqvnG0Yj@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A few years back intel published a spec update:
-http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+On 6/13/2013 7:48 PM, Arnd Bergmann wrote:
+> On Thursday 13 June 2013 22:18:50 Jingoo Han wrote:
+>> >On Wednesday, June 12, 2013 8:23 PM, Arnd Bergmann wrote:
+>>> > >On Wednesday 12 June 2013 19:19:05 Jingoo Han wrote:
+>>>> > > >+
+>>>> > > >+/* synopsis specific PCIE configuration registers*/
+>>>> > > >+#define PCIE_PORT_LINK_CONTROL		0x710
+>>>> > > >+#define PORT_LINK_MODE_MASK		(0x3f << 16)
+>>>> > > >+#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
+>>> > >
+>>> > >Do you mean this is a "Synopsys" designware part? In that case it
+>>> > >should really not be called "exynos-pcie" but "designware-pcie"
+>>> > >and you should make sure that the driver makes no assumptions about
+>>> > >the platform. A lot of other platforms also use designware
+>>> > >parts and should be able to reuse this driver.
+>> >
+>> >Sorry, I don't think so.
+>> >Only core block is a "Synopsys" designware part IP block,
+>> >other parts are Exynos-specific.
+>> >So, it is hard to share with other PCIe IPs using synopsis core.
+> Just call it synopsys anyway and put a comment in to explain this.
+> That should be enough for the next person with a synopsys PCI core
+> to reuse your code and split out the exynos specific parts into a
+> separate file.
+>
 
-For the 5520 and 5500 chipsets which contained an errata (specificially errata
-53), which noted that these chipsets can't properly do interrupt remapping, and
-as a result the recommend that interrupt remapping be disabled in bios.  While
-many vendors have a bios update to do exactly that, not all do, and of course
-not all users update their bios to a level that corrects the problem.  As a
-result, occasionally interrupts can arrive at a cpu even after affinity for that
-interrupt has be moved, leading to lost or spurrious interrupts (usually
-characterized by the message:
-kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+I agree to Arnd that this patch should be split. I had worked in past 
+with SPEAr PCIe which also had designware PCIe IP. I see some code which 
+will fit both in SPEAr as well as in exynos. Unfortunately, I was not 
+able to get SPEAr driver pushed to mainline, as I moved to some other 
+project and got heavily occupied.
 
-There have been several incidents recently of people seeing this error, and
-investigation has shown that they have system for which their BIOS level is such
-that this feature was not properly turned off.  As such, it would be good to
-give them a reminder that their systems are vulnurable to this problem.  For
-details of those that reported the problem, please see:
-https://bugzilla.redhat.com/show_bug.cgi?id=887006
+Last patch is here:
 
-[ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+https://patchwork.kernel.org/patch/1661441/
 
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-CC: Prarit Bhargava <prarit@redhat.com>
-CC: Don Zickus <dzickus@redhat.com>
-CC: Don Dutile <ddutile@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Asit Mallick <asit.k.mallick@intel.com>
-CC: David Woodhouse <dwmw2@infradead.org>
-CC: linux-pci@vger.kernel.org
-CC: Joerg Roedel <joro@8bytes.org>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Arkadiusz Miskiewicz <arekm@maven.pl>
-CC: Greg KH <gregkh@linuxfoundation.org>
-Signed-off-by: Joerg Roedel <joro@8bytes.org>
----
- arch/x86/include/asm/irq_remapping.h |  3 +++
- arch/x86/kernel/early-quirks.c       | 20 ++++++++++++++++++++
- drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
- drivers/iommu/irq_remapping.c        |  6 ++++++
- drivers/iommu/irq_remapping.h        |  2 ++
- 5 files changed, 41 insertions(+)
+Infact, these functions should be common to all arm platforms.
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 95fd352..b00bf09 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -23,11 +23,13 @@
- #define __X86_IRQ_REMAPPING_H
- 
- #include <asm/io_apic.h>
-+#include <linux/irq.h>
- 
- #ifdef CONFIG_IRQ_REMAP
- 
- extern void setup_irq_remapping_ops(void);
- extern int irq_remapping_supported(void);
-+extern void set_irq_remapping_broken(void);
- extern int irq_remapping_prepare(void);
- extern int irq_remapping_enable(void);
- extern void irq_remapping_disable(void);
-@@ -54,6 +56,7 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip);
- 
- static inline void setup_irq_remapping_ops(void) { }
- static inline int irq_remapping_supported(void) { return 0; }
-+static inline void set_irq_remapping_broken(void) { }
- static inline int irq_remapping_prepare(void) { return -ENODEV; }
- static inline int irq_remapping_enable(void) { return -ENODEV; }
- static inline void irq_remapping_disable(void) { }
-diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-index 3755ef4..94ab6b9 100644
---- a/arch/x86/kernel/early-quirks.c
-+++ b/arch/x86/kernel/early-quirks.c
-@@ -18,6 +18,7 @@
- #include <asm/apic.h>
- #include <asm/iommu.h>
- #include <asm/gart.h>
-+#include <asm/irq_remapping.h>
- 
- static void __init fix_hypertransport_config(int num, int slot, int func)
- {
-@@ -192,6 +193,21 @@ static void __init ati_bugs_contd(int num, int slot, int func)
- }
- #endif
- 
-+static void __init intel_remapping_check(int num, int slot, int func)
-+{
-+	u8 revision;
-+
-+	revision = read_pci_config_byte(num, slot, func, PCI_REVISION_ID);
-+
-+	/*
-+	 * Revision 0x13 of this chipset supports irq remapping
-+	 * but has an erratum that breaks its behavior, flag it as such
-+	 */
-+	if (revision == 0x13)
-+		set_irq_remapping_broken();
-+
-+}
-+
- #define QFLAG_APPLY_ONCE 	0x1
- #define QFLAG_APPLIED		0x2
- #define QFLAG_DONE		(QFLAG_APPLY_ONCE|QFLAG_APPLIED)
-@@ -221,6 +237,10 @@ static struct chipset early_qrk[] __initdata = {
- 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
- 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
- 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
-+	{ PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
-+	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
-+	{ PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
-+	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
- 	{}
- };
- 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index f3b8f23..5b19b2d 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -524,6 +524,16 @@ static int __init intel_irq_remapping_supported(void)
- 
- 	if (disable_irq_remap)
- 		return 0;
-+	if (irq_remap_broken) {
-+		WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
-+			   "This system BIOS has enabled interrupt remapping\n"
-+			   "on a chipset that contains an erratum making that\n"
-+			   "feature unstable.  To maintain system stability\n"
-+			   "interrupt remapping is being disabled.  Please\n"
-+			   "contact your BIOS vendor for an update\n");
-+		disable_irq_remap = 1;
-+		return 0;
-+	}
- 
- 	if (!dmar_ir_support())
- 		return 0;
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 7c11ff3..dcfea4e 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -18,6 +18,7 @@
- int irq_remapping_enabled;
- 
- int disable_irq_remap;
-+int irq_remap_broken;
- int disable_sourceid_checking;
- int no_x2apic_optout;
- 
-@@ -210,6 +211,11 @@ void __init setup_irq_remapping_ops(void)
- #endif
- }
- 
-+void set_irq_remapping_broken(void)
-+{
-+	irq_remap_broken = 1;
-+}
-+
- int irq_remapping_supported(void)
- {
- 	if (disable_irq_remap)
-diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-index ecb6376..90c4dae 100644
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -32,6 +32,7 @@ struct pci_dev;
- struct msi_msg;
- 
- extern int disable_irq_remap;
-+extern int irq_remap_broken;
- extern int disable_sourceid_checking;
- extern int no_x2apic_optout;
- extern int irq_remapping_enabled;
-@@ -89,6 +90,7 @@ extern struct irq_remap_ops amd_iommu_irq_ops;
- 
- #define irq_remapping_enabled 0
- #define disable_irq_remap     1
-+#define irq_remap_broken      0
- 
- #endif /* CONFIG_IRQ_REMAP */
- 
--- 
-1.8.1.4
+sys_to_pcie
+cfg_read
+cfg_write
 
+Following functions should be common to all designware based driver (at 
+least they are same in SPEAr)
+
+exynos_pcie_prog_viewport_cfg0
+exynos_pcie_prog_viewport_cfg1
+exynos_pcie_rd_other_conf
+exynos_pcie_wr_other_conf
+exynos_pcie_setup
+exynos_pcie_valid_config
+exynos_pcie_rd_conf
+exynos_pcie_wd_conf
+exynos_pcie_scan_bus
+exynos_pcie_map_irq
+add_pcie_port (after a bit of generalization)
+exynos_pcie_probe
+exynos_pcie_remove
+
+
+
+Following should be specific to exynos:
+
+exynos_pcie_rd_own_conf
+exynos_pcie_wr_own_conf
+exynos_pcie_link_up
+exynos_pcie_setup_rc
+exynos_pcie_assert_core_reset
+exynos_pcie_deassert_core_reset
+exynos_pcie_assert_phy_reset
+exynos_pcie_deassert_phy_reset
+exynos_pcie_init_phy
+exynos_pcie_assert_reset
+exynos_pcie_establish_link
+exynos_pcie_host_init
+
+
+
+struct pcie_port_info and struct pcie_port can also be standardized.
+
+Regards
+Pratyush
