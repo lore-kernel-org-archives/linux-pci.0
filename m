@@ -1,54 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:59458 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753079Ab3FDW53 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 18:57:29 -0400
-Received: by mail-ie0-f174.google.com with SMTP id aq17so1842671iec.19
-        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 15:57:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <2947055.dGtK2eC6Fm@vostro.rjw.lan>
-References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
-	<1369974092-11450-2-git-send-email-jiang.liu@huawei.com>
-	<2049081.aBp0De0oje@vostro.rjw.lan>
-	<2947055.dGtK2eC6Fm@vostro.rjw.lan>
-Date: Tue, 4 Jun 2013 15:57:28 -0700
-Message-ID: <CAE9FiQW4UynXesgv58YajV73VZHQLzFiD3M6Dq=7bXmCXDbCiQ@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Xudong Hao <xudong.hao@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:46046 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753085Ab3FTIAS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 04:00:18 -0400
+Date: Thu, 20 Jun 2013 10:00:13 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>
+Subject: Re: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Message-ID: <20130620100013.6000458f@skate>
+In-Reply-To: <00c301ce6d8b$d198b210$74ca1630$@samsung.com>
+References: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
+	<20130620094835.3f1f34c2@skate>
+	<00c301ce6d8b$d198b210$74ca1630$@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 4, 2013 at 3:49 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Wednesday, June 05, 2013 12:44:27 AM Rafael J. Wysocki wrote:
->> On Friday, May 31, 2013 12:21:30 PM Jiang Liu wrote:
->> > From: Yinghai Lu <yinghai@kernel.org>
->> >
->> > When sriov is enabled, VF could just start after PF in pci tree.
->> > like c1:00.0 will be PF, and c1:00.1 and after will be VF.
->> >
->> > acpi do have dev with same ADR. that will make them get glued
->> > wrongly.
->>
->> How exactly are they glued in that case?
->>
->> > Skip that if it is virtfn.
->>
->> That should be a bit more specific as far as I can say.  I don't see why a VF
->> would not have a valid ACPI device object corresponding to it.  Is there any
->> particular reason?
->
-> To be precise, I don't quite see why it is impossible or invalid for a VF to
-> have a corresponding ACPI device object.  It may not be the case on this
-> particular system, but why not in general?
+Dear Jingoo Han,
 
-at least for ioapic routing GSI, we should not mix VF to use other PF's
-setting.
+On Thu, 20 Jun 2013 16:57:32 +0900, Jingoo Han wrote:
 
-Yinghai
+> > > -	pinctrl {
+> > > +	pin_ctrl: pinctrl {
+> > >  		compatible = "samsung,exynos5440-pinctrl";
+> > 
+> > I know I'm nitpicking, but isn't this change completely unrelated to
+> > PCIe support?
+> 
+> This change is related to PCIe support.
+> Without this, I cannot use gpio binding.
+> 
+> This change was guided by Thomas Abraham (Author of Samsung pinctrl).
+> Also, it was confirmed by Kukjin Kim (Maintainer of Samsung SoC).
+> 
+> Thank you for your caring. :)
+
+I mean, the change is fine for sure, but it should maybe part of a
+separate patch as it is more a fix than really the introduction of the
+PCIe controller node, as the patch title suggests. This would also for
+example allow this fix to be merged right now (for 3.11), regardless of
+what happens for the rest of your PCIe patches.
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
