@@ -1,49 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:45640 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755387Ab3FEQgG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 12:36:06 -0400
-Message-ID: <51AF68F1.8080307@wwwdotorg.org>
-Date: Wed, 05 Jun 2013 10:36:01 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
-	bhelgaas@google.com, ldewangan@nvidia.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V4 2/4] ARM: tegra: pcie: Add tegra3 support
-References: <1370445221-17696-1-git-send-email-jagarwal@nvidia.com>
-In-Reply-To: <1370445221-17696-1-git-send-email-jagarwal@nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout4.samsung.com ([203.254.224.34]:12991 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863Ab3FTH5e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 03:57:34 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+References: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
+ <20130620094835.3f1f34c2@skate>
+In-reply-to: <20130620094835.3f1f34c2@skate>
+Subject: Re: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Thu, 20 Jun 2013 16:57:32 +0900
+Message-id: <00c301ce6d8b$d198b210$74ca1630$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/05/2013 09:13 AM, Jay Agarwal wrote:
-> - Make private data structure for each SoC
-> - Add required Tegra30 clocks and regulators
-> - Add Tegra30 specific code in enable controller
-> - Added Tegra30 specific properties in pci binding document
+On Thursday, June 20, 2013 4:49 PM, Thomas Petazzoni wrote:
+> 
+> Dear Jingoo Han,
+> 
+> On Thu, 20 Jun 2013 16:12:24 +0900, Jingoo Han wrote:
+> 
+> > -	pinctrl {
+> > +	pin_ctrl: pinctrl {
+> >  		compatible = "samsung,exynos5440-pinctrl";
+> 
+> I know I'm nitpicking, but isn't this change completely unrelated to
+> PCIe support?
 
-It's a bit odd to send an updated version of just some of the patches;
-reposting a whole series is much easier for the person applying the
-patches. However, hopefully Thierry can handle it in this case.
+This change is related to PCIe support.
+Without this, I cannot use gpio binding.
 
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+This change was guided by Thomas Abraham (Author of Samsung pinctrl).
+Also, it was confirmed by Kukjin Kim (Maintainer of Samsung SoC).
 
->  Required properties:
-> -- compatible: "nvidia,tegra20-pcie"
-> +- compatible: "nvidia,tegra20-pcie" "nvidia,tegra30-pcie"
+Thank you for your caring. :)
 
-perhaps add "or" between those two entries?
+Best regards,
+Jingoo Han
 
-> +- avdd-supply: Power supply for controller (1.05V) (not required for tegra20)
-...
-> +  "cml": The Tegra clock of that name (not required for tegra20)
+> 
+> Thomas
+> --
+> Thomas Petazzoni, Free Electrons
+> Kernel, drivers, real-time and embedded Linux
+> development, consulting, training and support.
+> http://free-electrons.com
 
-Tegra20 should be capitalized in both those two lines.
-
-I assume that Thierry can fix up these nits when he applies the patches,
-so you don't need to repost. Thierry can correct me if I'm wrong.
