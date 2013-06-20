@@ -1,179 +1,225 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 4 Jun 2013 21:56:42 -0400
-From: Chen Gong <gong.chen@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Betty Dall <betty.dall@hp.com>, rjw@sisk.pl, ying.huang@intel.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/3] ACPI/APEI: Force fatal AER severity when bus has
- been reset
-Message-ID: <20130605015642.GB27550@gchen.bj.intel.com>
-References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
- <1369924769-17183-3-git-send-email-betty.dall@hp.com>
- <20130604075336.GC20448@gchen.bj.intel.com>
- <20130604175434.GA6548@google.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8P1HSweYDcXXzwPJ"
-In-Reply-To: <20130604175434.GA6548@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:38012 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754012Ab3FTIZP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 04:25:15 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Tomasz Figa' <tomasz.figa@gmail.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+References: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
+ <3250954.dVh4O1LchK@flatron>
+In-reply-to: <3250954.dVh4O1LchK@flatron>
+Subject: RE: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Thu, 20 Jun 2013 17:25:12 +0900
+Message-id: <00c501ce6d8f$af1bf900$0d53eb00$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thursday, June 20, 2013 5:04 PM, Tomasz Figa wrote:
+> 
+> Hi Jingoo,
+> 
+> On Thursday 20 of June 2013 16:12:24 Jingoo Han wrote:
+> > Exynos5440 has two PCIe controllers which can be used as root complex
+> > for PCIe interface.
+> >
+> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> > ---
+> >  arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++
+> >  arch/arm/boot/dts/exynos5440.dtsi         |   40
+> > ++++++++++++++++++++++++++++- 2 files changed, 47 insertions(+), 1
+> > deletion(-)
+> >
+> > diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+> > b/arch/arm/boot/dts/exynos5440-ssdk5440.dts index f32cd77..3d93804
+> > 100644
+> > --- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+> > +++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+> > @@ -65,4 +65,12 @@
+> >  			clock-frequency = <50000000>;
+> >  		};
+> >  	};
+> > +
+> > +	pcie0@290000 {
+> > +		reset-gpio = <&pin_ctrl 5 0>;
+> > +	};
+> > +
+> > +	pcie1@2a0000 {
+> > +		reset-gpio = <&pin_ctrl 22 0>;
+> > +	};
+> >  };
+> > diff --git a/arch/arm/boot/dts/exynos5440.dtsi
+> > b/arch/arm/boot/dts/exynos5440.dtsi index 03d40c0..6295eda 100644
+> > --- a/arch/arm/boot/dts/exynos5440.dtsi
+> > +++ b/arch/arm/boot/dts/exynos5440.dtsi
+> > @@ -126,7 +126,7 @@
+> >  		clock-names = "spi", "spi_busclk0";
+> >  	};
+> >
+> > -	pinctrl {
+> > +	pin_ctrl: pinctrl {
+> >  		compatible = "samsung,exynos5440-pinctrl";
+> >  		reg = <0xE0000 0x1000>;
+> >  		interrupts = <0 37 0>, <0 38 0>, <0 39 0>, <0 40 0>,
+> > @@ -230,4 +230,42 @@
+> >  		clocks = <&clock 24>;
+> >  		clock-names = "usbhost";
+> >  	};
+> 
+> I think this patch should be split into two:
+>  - patch adding just generlic PCIe nodes for Exynos5440,
+>  - patch adding label to the pinctrl node (which is a prerequisite) and
+> board-specific properties of PCIe nodes.
 
---8P1HSweYDcXXzwPJ
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Do you mean the following?
 
-On Tue, Jun 04, 2013 at 11:54:34AM -0600, Bjorn Helgaas wrote:
-> Date:	Tue, 4 Jun 2013 11:54:34 -0600
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> To: Betty Dall <betty.dall@hp.com>, rjw@sisk.pl, ying.huang@intel.com,
->  linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
->  linux-pci@vger.kernel.org
-> Subject: Re: [PATCH v2 2/3] ACPI/APEI: Force fatal AER severity when bus
->  has been reset
-> User-Agent: Mutt/1.5.21 (2010-09-15)
->=20
-> On Tue, Jun 04, 2013 at 03:53:36AM -0400, Chen Gong wrote:
-> > On Thu, May 30, 2013 at 08:39:28AM -0600, Betty Dall wrote:
-> > > Date:	Thu, 30 May 2013 08:39:28 -0600
-> > > From: Betty Dall <betty.dall@hp.com>
-> > > To: rjw@sisk.pl, bhelgaas@google.com
-> > > Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
-> > >  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Betty Dall
-> > >  <betty.dall@hp.com>
-> > > Subject: [PATCH v2 2/3] ACPI/APEI: Force fatal AER severity when bus =
-has
-> > >  been reset
-> > > X-Mailer: git-send-email 1.7.7.6
-> > >=20
-> > > The CPER error record has a reset bit that indicates that the platform
-> > > has reset the bus. The reset bit can be set for any severity error
-> > > including recoverable.  From the AER code path's perspective,
-> > > any error is fatal if the bus has been reset. This patch upgrades the
-> > > severity of the AER recovery to AER_FATAL whenever the CPER error rec=
-ord
-> > > indicates that the bus has been reset.
-> > >=20
-> > > Changes since v1:
-> > > Fixed a typo in comment.
-> > >=20
-> > > Signed-off-by: Betty Dall <betty.dall@hp.com>
-> > > ---
-> > >=20
-> > >  drivers/acpi/apei/ghes.c |   21 ++++++++++++++++++++-
-> > >  1 files changed, 20 insertions(+), 1 deletions(-)
-> > >=20
-> > >=20
-> > > diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-> > > index d668a8a..1c67d5a 100644
-> > > --- a/drivers/acpi/apei/ghes.c
-> > > +++ b/drivers/acpi/apei/ghes.c
-> > > @@ -451,7 +451,26 @@ static void ghes_do_proc(struct ghes *ghes,
-> > >  				int aer_severity;
-> > >  				devfn =3D PCI_DEVFN(pcie_err->device_id.device,
-> > >  						  pcie_err->device_id.function);
-> > > -				aer_severity =3D cper_severity_to_aer(sev);
-> > > +				/*
-> > > +				 * Some Firmware First implementations
-> > > +				 * put the device in SBR to contain
-> > > +				 * the error. This is indicated by the
-> > > +				 * CPER Section Descriptor Flags reset
-> > > +				 * bit which means the component must
-> > > +				 * be re-initialized or re-enabled
-> > > +				 * prior to use. Promoting the AER
-> > > +				 * serverity to FATAL will cause the
-> > > +				 * AER code to link_reset and allow
-> > > +				 * drivers to reprogram their cards.
-> > > +				 */
-> > > +				if (gdata->flags & CPER_SEC_RESET)
-> > > +					aer_severity =3D cper_severity_to_aer(
-> > > +							CPER_SEV_FATAL);
-> > > +				else
-> > > +					aer_severity =3D
-> > > +						cper_severity_to_aer(sev);
-> > > +
-> > > +
-> >=20
-> > How about this?
-> >                                 if (gdata->flags & CPER_SEC_RESET)
-> >                                         sev =3D CPER_SEV_FATAL;
-> >                                 cper_severity_to_aer(sev);
->=20
-> No.  If the object is to make the severity AER_FATAL, you should just
-> do that.  You shouldn't fiddle around with the CPER severity, because
-> then you depend on the mapping performed by cper_severity_to_aer().
->=20
-> >=20
-> > >  				aer_recover_queue(pcie_err->device_id.segment,
-> > >  						  pcie_err->device_id.bus,
-> > >  						  devfn, aer_severity);
->=20
-> In other words, something like the patch below.  I don't really care
-> if you use the original "if" above that only sets aer_severity once,
-> or if you overwrite it as below.  I overwrote it because it doesn't
-> wrap as many lines.  ghes_do_proc() really should just call helpers
-> so the interesting code doesn't have to be indented three and four
-> tab stops.
->=20
->=20
-> ACPI/APEI: Force fatal AER severity when component has been reset
->    =20
-> The CPER error record has a reset bit that indicates that the platform has
-> reset the component.  The reset bit can be set for any severity error
-> including recoverable.  From the AER code path's perspective, any error is
-> fatal if the component has been reset. This patch upgrades the severity of
-> the AER recovery to AER_FATAL in this case.
->    =20
-> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-> index d668a8a..ab31551 100644
-> --- a/drivers/acpi/apei/ghes.c
-> +++ b/drivers/acpi/apei/ghes.c
-> @@ -449,9 +449,19 @@ static void ghes_do_proc(struct ghes *ghes,
->  			    pcie_err->validation_bits & CPER_PCIE_VALID_AER_INFO) {
->  				unsigned int devfn;
->  				int aer_severity;
-> +
->  				devfn =3D PCI_DEVFN(pcie_err->device_id.device,
->  						  pcie_err->device_id.function);
->  				aer_severity =3D cper_severity_to_aer(sev);
-> +
-> +				/*
-> +				 * If firmware reset the component to contain
-> +				 * the error, we must reinitialize it before
-> +				 * use, so treat it as a fatal AER error.
-> +				 */
-> +				if (gdata->flags & CPER_SEC_RESET)
-> +					aer_severity =3D AER_FATAL;
-> +
->  				aer_recover_queue(pcie_err->device_id.segment,
->  						  pcie_err->device_id.bus,
->  						  devfn, aer_severity);
->
+1. patch adding just generlic PCIe nodes for Exynos5440
+    [PATCH] ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
 
-The patch looks good to me.
+arch/arm/boot/dts/exynos5440.dtsi
++
++	pcie@290000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x290000 0x1000
++			0x270000 0x1000
++			0x271000 0x40>;
++		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
++		clocks = <&clock 28>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
++			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 53>;
++	};
++
++	pcie@2a0000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x2a0000 0x1000
++			0x272000 0x1000
++			0x271040 0x40>;
++		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
++		clocks = <&clock 29>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
++			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 56>;
++	};
 
---8P1HSweYDcXXzwPJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIcBAEBAgAGBQJRrpraAAoJEI01n1+kOSLHL1wQAJA61pJYqEONSGtNKgfOgDeR
-ULO42Ol8FW3A8rvBkTUR1QKD1L9gzmjRmWeupy2lEmxdQkeF7F7c/QljKdwAYkBF
-iKF0RfpWIOBWuuhafltA3djB7suzUiJ9NRKA9YhCDBN9qUaRBZ7k8MYASexvZGur
-SISy1hl29RnMZ4HFn8xRHafxsQJU0OWeIjGSuvQYOTb5vCb4eGKRvYejkPS/5Y7u
-2BYjpGuig/xW2Dh/81X3yK5+VF8RGldVA39WxKH07CqIvKztUKsCIGr9Cj8Txk2L
-6HMsgucaD5qSr4cq6XZHOwev8VvMHczJtYuK2bUo8cKCk1ziXUe1z7VIaJMJKXpT
-0XFg3cmxaR2FTCi3K54xUnK+KgwScLSGgxN4PXU5vCbYzK9qEhWvmC0LG2EaiNo2
-XhCmrPQHXlKclvFRyLsm+0zMCh/IUXoW434k877gpzGRXxPg9XS+L6lPEWtpac4r
-w7FgLwNWQUREa5jYf5LB01lIm87790qpYCdcRVs05xXPer25NBf27R/3lLBwGrnO
-rmW2psQlKoVhiJoGcvuyTr/Rn+TioBVwnc5OWqe0k1/xIyAlBSECZhoDpLB28sea
-afQSUczbMiEE0IEGKu+9G8FsQILsmudTYoJc0j7GHSvlLN9H8vcyVn1E31t4/Vbf
-8GdtnsFQ8sIvvvZG/2ly
-=+cqb
------END PGP SIGNATURE-----
+2. patch adding label to the pinctrl node (which is a prerequisite) and
+    board-specific properties of PCIe nodes.
+   [PATCH] ARM: dts: Add pcie controller node for exynos5440-ssdk5440
 
---8P1HSweYDcXXzwPJ--
+arch/arm/boot/dts/exynos5440-ssdk5440.dts
++
++	pcie0@290000 {
++		reset-gpio = <&pin_ctrl 5 0>;
++	};
++
++	pcie1@2a0000 {
++		reset-gpio = <&pin_ctrl 22 0>;
++	};
+
+arch/arm/boot/dts/exynos5440.dtsi
+-	pinctrl {
++	pin_ctrl: pinctrl {
+
+
+
+> 
+> > +
+> > +	pcie0@290000 {
+> 
+> Node naming looks incorrect here. The name should be as generic as
+> possible, without any hardware-specific IDs, e.g. pcie, not pcie0. The
+> @290000 suffix is enough to make the node unique.
+
+I see. You are right.
+I will fix it.
+
+
+Best regards,
+Jingoo Han
+
+> 
+> > +		compatible = "samsung,exynos5440-pcie";
+> > +		reg = <0x290000 0x1000
+> > +			0x270000 0x1000
+> > +			0x271000 0x40>;
+> > +		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
+> > +		clocks = <&clock 28>, <&clock 27>;
+> > +		clock-names = "pcie", "pcie_bus";
+> > +		#address-cells = <3>;
+> > +		#size-cells = <2>;
+> > +		device_type = "pci";
+> > +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000
+> /*
+> > configuration space */ +			  0x81000000 0 0
+> 0x40001000 0 0x00010000
+> > /* downstream I/O */ +			  0x82000000 0 0x40011000
+> 0x40011000 0
+> > 0x1ffef000>; /* non-prefetchable memory */ +		#interrupt-cells =
+> <1>;
+> > +		interrupt-map-mask = <0 0 0 0>;
+> > +		interrupt-map = <0x0 0 &gic 53>;
+> > +	};
+> > +
+> > +	pcie1@2a0000 {
+> 
+> Same here.
+> 
+> Best regards,
+> Tomasz
+> 
+> > +		compatible = "samsung,exynos5440-pcie";
+> > +		reg = <0x2a0000 0x1000
+> > +			0x272000 0x1000
+> > +			0x271040 0x40>;
+> > +		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
+> > +		clocks = <&clock 29>, <&clock 27>;
+> > +		clock-names = "pcie", "pcie_bus";
+> > +		#address-cells = <3>;
+> > +		#size-cells = <2>;
+> > +		device_type = "pci";
+> > +		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000
+> /*
+> > configuration space */ +			  0x81000000 0 0
+> 0x60001000 0 0x00010000
+> > /* downstream I/O */ +			  0x82000000 0 0x60011000
+> 0x60011000 0
+> > 0x1ffef000>; /* non-prefetchable memory */ +		#interrupt-cells =
+> <1>;
+> > +		interrupt-map-mask = <0 0 0 0>;
+> > +		interrupt-map = <0x0 0 &gic 56>;
+> > +	};
+> >  };
+
