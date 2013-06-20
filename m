@@ -1,53 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:62986 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752582Ab3FKWRN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 18:17:13 -0400
-Received: by mail-pd0-f176.google.com with SMTP id t12so4353451pdi.7
-        for <linux-pci@vger.kernel.org>; Tue, 11 Jun 2013 15:17:13 -0700 (PDT)
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-To: Stephen Warren <swarren@wwwdotorg.org>,
-	Jay Agarwal <jagarwal@nvidia.com>
-From: Mike Turquette <mturquette@linaro.org>
-In-Reply-To: <51AE3B18.9010604@wwwdotorg.org>
-Cc: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
-	bhelgaas@google.com, ldewangan@nvidia.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, pdeschrijver@nvidia.com,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	jtukkinen@nvidia.com, kthota@nvidia.com
-References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
- <51AE3B18.9010604@wwwdotorg.org>
-Message-ID: <20130611221709.8816.15602@quantum>
-Subject: Re: [PATCH V3 1/4] ARM: tegra30: clocks: Fix pciex clock registration
-Date: Tue, 11 Jun 2013 15:17:09 -0700
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:55213 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161182Ab3FTRBh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 13:01:37 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	xen-devel@lists.xensource.com,
+	virtualization@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] PCI: export three functions to support modular host bridge driver
+Date: Fri, 21 Jun 2013 01:01:03 +0800
+Message-Id: <1371747665-12768-2-git-send-email-liuj97@gmail.com>
+In-Reply-To: <1371747665-12768-1-git-send-email-liuj97@gmail.com>
+References: <1371747665-12768-1-git-send-email-liuj97@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Quoting Stephen Warren (2013-06-04 12:08:08)
-> On 06/04/2013 12:57 PM, Jay Agarwal wrote:
-> > Registering pciex as peripheral clock instead of fixed clock
-> > as tegra_perih_reset_assert(deassert) api of this clock api
-> > gives warning and ultimately does not succeed to assert(deassert).
-> > 
-> > Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
-> > ---
-> > Patch is based on remotes/gitorious_thierryreding_linux/tegra/next and should be applied on top of this.
-> 
-> For this change, Mike may as well apply it directly to the clock tree.
-> Thierry can then pick it up when he rebases his tegra/next tree.
-> 
-> That said, I don't think you should need any of the
-> TEGRA_CLK_DUPLICATE() entries; the PCIe driver should get its clocks
-> from device tree now, and hence the driver name in the clock
-> registration shouldn't be necessary. All of these TEGRA_CLK_DUPLICATE()
-> entries should be removed en mass sometime soon with luck. So, can you
-> simply leave the two TEGRA_CLK_DUPLICATE() entries untouched, rather
-> than changing them?
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Ping on this patch.  I can take it through my tree, but is there going
-to be rework based on Stephen's comments?
+The xen-pcifront host bridge driver could be built as a module,
+so export pci_create_root_bus(), pci_stop_and_remove_root_bus() and
+pci_set_host_bridge_release() to support modular host bridge drivers.
+This patch is a preparation for coming xen-pcifront refinement.
 
-Regards,
-Mike
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: xen-devel@lists.xensource.com
+Cc: virtualization@lists.linux-foundation.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/host-bridge.c | 1 +
+ drivers/pci/probe.c       | 1 +
+ drivers/pci/remove.c      | 7 +++++++
+ include/linux/pci.h       | 1 +
+ 4 files changed, 10 insertions(+)
+
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index a68dc61..6e390a6 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -34,6 +34,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 	bridge->release_fn = release_fn;
+ 	bridge->release_data = release_data;
+ }
++EXPORT_SYMBOL(pci_set_host_bridge_release);
+ 
+ static bool resource_contains(struct resource *res1, struct resource *res2)
+ {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 46ada5c..ed768d8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1801,6 +1801,7 @@ err_out:
+ 	kfree(b);
+ 	return NULL;
+ }
++EXPORT_SYMBOL(pci_create_root_bus);
+ 
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8fc54b7..f328668 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -147,3 +147,10 @@ void pci_remove_root_bus(struct pci_bus *bus)
+ 	/* remove the host bridge */
+ 	put_device(&host_bridge->dev);
+ }
++
++void pci_stop_and_remove_root_bus(struct pci_bus *bus)
++{
++	pci_stop_root_bus(bus);
++	pci_remove_root_bus(bus);
++}
++EXPORT_SYMBOL(pci_stop_and_remove_root_bus);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..f1229c7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -757,6 +757,7 @@ void pci_remove_bus(struct pci_bus *b);
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev);
+ void pci_stop_root_bus(struct pci_bus *bus);
+ void pci_remove_root_bus(struct pci_bus *bus);
++void pci_stop_and_remove_root_bus(struct pci_bus *bus);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ void pci_sort_breadthfirst(void);
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+-- 
+1.8.1.2
+
