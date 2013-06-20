@@ -1,106 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:59054 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030482Ab3FTS5M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 14:57:12 -0400
-Received: by mail-bk0-f50.google.com with SMTP id ik8so3086589bkc.9
-        for <linux-pci@vger.kernel.org>; Thu, 20 Jun 2013 11:57:11 -0700 (PDT)
-Date: Thu, 20 Jun 2013 20:57:08 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCHv3 02/11] pci: use weak functions for MSI arch-specific
- functions
-Message-ID: <20130620185707.GA8888@mithrandir>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1371660979-21588-3-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from 8bytes.org ([85.214.48.195]:35425 "EHLO mail.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756318Ab3FTQPn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Jun 2013 12:15:43 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.8bytes.org (Postfix) with SMTP id 6BC7112B0EE
+	for <linux-pci@vger.kernel.org>; Thu, 20 Jun 2013 18:15:41 +0200 (CEST)
+Date: Thu, 20 Jun 2013 18:15:38 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
+	stephen@networkplumber.org, linux-pci@vger.kernel.org,
+	ddutile@redhat.com, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 1/2] iommu: Quirked PCIe bridge test and search
+ function
+Message-ID: <20130620161538.GH3589@8bytes.org>
+References: <20130528183527.3318.5365.stgit@bling.home>
+ <20130528184020.3318.7800.stgit@bling.home>
+ <20130620135914.GS2575@8bytes.org>
+ <1371743091.32709.52.camel@ul30vt.home>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YiEDa0DAkWCtVeE4"
-In-Reply-To: <1371660979-21588-3-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1371743091.32709.52.camel@ul30vt.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Jun 20, 2013 at 09:44:51AM -0600, Alex Williamson wrote:
+> On Thu, 2013-06-20 at 15:59 +0200, Joerg Roedel wrote:
+> > On Tue, May 28, 2013 at 12:40:20PM -0600, Alex Williamson wrote:
+> > > +	if (!pci_is_root_bus(pdev->bus)) {
+> > > +		struct pci_dev *parent = pdev->bus->self;
+> > > +
+> > > +		if (pci_is_pcie(parent) &&
+> > > +		    pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
+> > > +			return true;
+> > > +	}
+> > 
+> > Hmm, that looks a bit dangerous.
+> 
+> How so?  The algorithm seems pretty simple and logical.
 
---YiEDa0DAkWCtVeE4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It is simple, but it is still a heuristic that may fail at some point,
+no?
 
-On Wed, Jun 19, 2013 at 06:56:10PM +0200, Thomas Petazzoni wrote:
-[...]
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 2c10752..4bc0c8f 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -30,19 +30,35 @@ static int pci_msi_enable =3D 1;
-> =20
->  /* Arch hooks */
-> =20
-> -#ifndef arch_msi_check_device
-> -int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-> +int default_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-> +{
-> +	return -EINVAL;
-> +}
-> +
-> +int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-> +{
-> +	return default_setup_msi_irq(dev, desc);
-> +}
-> +
-> +void default_teardown_msi_irq(unsigned int irq)
-> +{
-> +}
-> +
-> +void __weak arch_teardown_msi_irq(unsigned int irq)
-> +{
-> +	return default_teardown_msi_irq(irq);
-> +}
-> +
-> +int default_msi_check_device(struct pci_dev *dev, int nvec, int type)
->  {
->  	return 0;
->  }
-> -#endif
+> Actually, I believe Bjorn rejected the idea of a fixed list because this
+> problem is detectable.  He also doesn't want me messing with quirks to
+> pci_is_pcie() in PCI because he wants a 1:1 relation between that and
+> having a PCIe capability.  So, I'm stuck and this is where it's ended
+> up.  Thanks,
 
-I don't think keeping the default_*() for these three is necessary,
-given that they don't do anything and therefore no architecture is
-likely to call them when overriding.
+I think implementing such a list is much safer.
 
-Thierry
+Bjorn, why didn't you like that idea?
 
---YiEDa0DAkWCtVeE4
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
+	Joerg
 
-iQIcBAEBAgAGBQJRw1CCAAoJEN0jrNd/PrOh/5cP/RMt2Nl6st3Tjx863jrl8F1Y
-vJt44uOdPmwALHxy8hzkXnGKoMcSUnlqMkVlKHejAgbvyaI8eE7IX/zYCaLw4Cwm
-zg0zk13iuzXhY5qeeVCWeIcFZPm+uWHQHMcZPStHEf4toIESQdlzvCbHc2xAbBA4
-JZG6FmfSckfbOFDThgwtppW7YqyhnAicRZm20kQSZbVoVhBykAS5frb+wBy9t+w4
-sl84yqMO67MtQCLt2Zv2Kqa+rCXeRogJ7U0MNxX6YnbOPsIxcBYuWw8Pe6fWpNzc
-1O8jwxtpPrEkjB+KuENhSjbJJ/40FN0tuDzAYfQw4nD6qmoo1+ut9VnakdfIA93F
-3oyH+wUMvyxSQ1vU9EK7n+WVEyvHbAjSh4MjRMgvEZQY8KROnjIl/H2OgtmoPYXc
-o/x7EprrhycgQBUz9gDsISrcM9WtnnX/lRECDXhCWWjkWmD56mI+sI7f5Mzv5Vcb
-puPV6G06k5x4EofqwTQfrJQkKoq+ZnB3MFA1Pj3mekzkuPZTU3QVSmdFCRRgB2dG
-MqLiYu7Y8SCRLvrsw4jhpK/m50lTOuWjSUnNtrO8pfWBba1WJHlHbM5bW3iBxhIT
-PdPKQZeHfCwN/Ej6bS9rUfNdEgwyDS9WXiYAGFq5Icu3OfrxMXj2Fr848f3yZqZp
-rwYybOeQWE82g+sb3t0C
-=lPX3
------END PGP SIGNATURE-----
 
---YiEDa0DAkWCtVeE4--
