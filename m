@@ -1,47 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:44325 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753014Ab3FFQlp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 12:41:45 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>
-Subject: [PATCH v2 7/8] arm: mvebu: indicate that this platform supports MSI
-Date: Thu,  6 Jun 2013 18:41:27 +0200
-Message-Id: <1370536888-8871-8-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:51085 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030293Ab3FTRBl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 13:01:41 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	xen-devel@lists.xensource.com,
+	virtualization@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] PCI, xen-pcifront: use new PCI interfaces to simplify implementation
+Date: Fri, 21 Jun 2013 01:01:04 +0800
+Message-Id: <1371747665-12768-3-git-send-email-liuj97@gmail.com>
+In-Reply-To: <1371747665-12768-1-git-send-email-liuj97@gmail.com>
+References: <1371747665-12768-1-git-send-email-liuj97@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that all the pieces are in place, we can adjust the
-mach-mvebu/Kconfig file to indicate that this platform supports MSIs.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Use new PCI interfaces to simplify xen-pcifront implementation:
+1) Use pci_create_root_bus() instead of pci_scan_bus_parented()
+   because pci_scan_bus_parented() will be marked as __deprecated.
+   This also gets rid of a duplicated call to pci_bus_start_devices().
+2) Use pci_stop_and_remove_root_bus() instead of open-coded private
+   implementation.
+3) Use pci_set_host_bridge_release() to release data structures
+   associated with PCI root buses.
+
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: xen-devel@lists.xensource.com
+Cc: virtualization@lists.linux-foundation.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- arch/arm/mach-mvebu/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/xen-pcifront.c | 70 ++++++++++++++++++++--------------------------
+ 1 file changed, 30 insertions(+), 40 deletions(-)
 
-diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
-index 9eb63d7..36951b1 100644
---- a/arch/arm/mach-mvebu/Kconfig
-+++ b/arch/arm/mach-mvebu/Kconfig
-@@ -15,6 +15,7 @@ config ARCH_MVEBU
- 	select ARCH_REQUIRE_GPIOLIB
- 	select MIGHT_HAVE_PCI
- 	select PCI_QUIRKS if PCI
-+	select ARCH_SUPPORTS_MSI if PCI
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 966abc6..1b01960 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -25,11 +25,6 @@
+ #define INVALID_GRANT_REF (0)
+ #define INVALID_EVTCHN    (-1)
  
- if ARCH_MVEBU
+-struct pci_bus_entry {
+-	struct list_head list;
+-	struct pci_bus *bus;
+-};
+-
+ #define _PDEVB_op_active		(0)
+ #define PDEVB_op_active			(1 << (_PDEVB_op_active))
+ 
+@@ -47,12 +42,12 @@ struct pcifront_device {
+ 	struct xen_pci_sharedinfo *sh_info;
+ 	struct work_struct op_work;
+ 	unsigned long flags;
+-
+ };
+ 
+ struct pcifront_sd {
+ 	int domain;
+ 	struct pcifront_device *pdev;
++	struct resource busn_res;
+ };
+ 
+ static inline struct pcifront_device *
+@@ -67,6 +62,12 @@ static inline void pcifront_init_sd(struct pcifront_sd *sd,
+ {
+ 	sd->domain = domain;
+ 	sd->pdev = pdev;
++
++	/* Xen pci-backend doesn't export P2P bridges */
++	sd->busn_res.start = bus;
++	sd->busn_res.end = bus;
++	sd->busn_res.flags = IORESOURCE_BUS;
++	sd->busn_res.name = "PCI busn";
+ }
+ 
+ static DEFINE_SPINLOCK(pcifront_dev_lock);
+@@ -441,12 +442,19 @@ static int pcifront_scan_bus(struct pcifront_device *pdev,
+ 	return 0;
+ }
+ 
++static void pcifront_release_sd(struct pci_host_bridge *bridge)
++{
++	struct pcifront_sd *sd = bridge->release_data;
++
++	kfree(sd);
++}
++
+ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 				 unsigned int domain, unsigned int bus)
+ {
+ 	struct pci_bus *b;
+ 	struct pcifront_sd *sd = NULL;
+-	struct pci_bus_entry *bus_entry = NULL;
++	LIST_HEAD(resources);
+ 	int err = 0;
+ 
+ #ifndef CONFIG_PCI_DOMAINS
+@@ -463,16 +471,18 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 	dev_info(&pdev->xdev->dev, "Creating PCI Frontend Bus %04x:%02x\n",
+ 		 domain, bus);
+ 
+-	bus_entry = kmalloc(sizeof(*bus_entry), GFP_KERNEL);
+-	sd = kmalloc(sizeof(*sd), GFP_KERNEL);
+-	if (!bus_entry || !sd) {
++	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
++	if (!sd) {
+ 		err = -ENOMEM;
+ 		goto err_out;
+ 	}
+ 	pcifront_init_sd(sd, domain, bus, pdev);
+ 
+-	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+-				  &pcifront_bus_ops, sd);
++	pci_add_resource(&resources, &ioport_resource);
++	pci_add_resource(&resources, &iomem_resource);
++	pci_add_resource(&resources, &sd->busn_res);
++	b = pci_create_root_bus(&pdev->xdev->dev, bus, &pcifront_bus_ops,
++				sd, &resources);
+ 	if (!b) {
+ 		dev_err(&pdev->xdev->dev,
+ 			"Error creating PCI Frontend Bus!\n");
+@@ -480,9 +490,8 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 		goto err_out;
+ 	}
+ 
+-	bus_entry->bus = b;
+-
+-	list_add(&bus_entry->list, &pdev->root_buses);
++	pci_set_host_bridge_release(to_pci_host_bridge(b->bridge),
++				    pcifront_release_sd, sd);
+ 
+ 	/* pci_scan_bus_parented skips devices which do not have a have
+ 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+@@ -497,7 +506,6 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 	return err;
+ 
+ err_out:
+-	kfree(bus_entry);
+ 	kfree(sd);
+ 
+ 	return err;
+@@ -538,35 +546,17 @@ static int pcifront_rescan_root(struct pcifront_device *pdev,
+ 	return err;
+ }
+ 
+-static void free_root_bus_devs(struct pci_bus *bus)
+-{
+-	struct pci_dev *dev;
+-
+-	while (!list_empty(&bus->devices)) {
+-		dev = container_of(bus->devices.next, struct pci_dev,
+-				   bus_list);
+-		dev_dbg(&dev->dev, "removing device\n");
+-		pci_stop_and_remove_bus_device(dev);
+-	}
+-}
+-
+ static void pcifront_free_roots(struct pcifront_device *pdev)
+ {
+-	struct pci_bus_entry *bus_entry, *t;
++	struct pcifront_sd *sd;
++	struct pci_bus *bus, *temp;
+ 
+ 	dev_dbg(&pdev->xdev->dev, "cleaning up root buses\n");
+ 
+-	list_for_each_entry_safe(bus_entry, t, &pdev->root_buses, list) {
+-		list_del(&bus_entry->list);
+-
+-		free_root_bus_devs(bus_entry->bus);
+-
+-		kfree(bus_entry->bus->sysdata);
+-
+-		device_unregister(bus_entry->bus->bridge);
+-		pci_remove_bus(bus_entry->bus);
+-
+-		kfree(bus_entry);
++	list_for_each_entry_safe(bus, temp, &pci_root_buses, node) {
++		sd = bus->sysdata;
++		if (sd->pdev == pdev)
++			pci_stop_and_remove_root_bus(bus);
+ 	}
+ }
  
 -- 
 1.8.1.2
