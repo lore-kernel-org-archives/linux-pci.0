@@ -1,137 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVr-OWeqEHFXn0MjNiSD0WM=FNO_DFo6m9UbbG60uonpw@mail.gmail.com>
-References: <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
- <CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
- <CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
- <CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
- <20130401235256.GA31966@google.com> <CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
- <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
- <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
- <CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com>
- <CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com>
- <20130614141101.GA29452@google.com> <CAE9FiQVr-OWeqEHFXn0MjNiSD0WM=FNO_DFo6m9UbbG60uonpw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 14 Jun 2013 10:33:34 -0600
-Message-ID: <CAErSpo7grN-93zZfBJOHZH-pR1wDYrojTwt=B=++QqA0rPb3Rg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:33515 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965172Ab3FTJeF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 05:34:05 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V7 3/4] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Thu, 20 Jun 2013 18:34:03 +0900
+Message-id: <00cd01ce6d99$4daeac80$e90c0580$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 14, 2013 at 10:17 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Jun 14, 2013 at 7:11 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> Here are some of my notes from trying to sort this out, in chronological
->> order:
->>
->>     29594404 v3.7
->>       Bus scanned before requesting _OSC control
->>       pre-1.1 ath5k has ASPM disabled (works fine)
->>
->>     8c33f51d "request _OSC control before scanning bus"
->>
->>     19f949f5 v3.8
->>       _OSC control requested before scanning bus
->>       Now pre-1.1 ath5k has ASPM enabled and doesn't work
->>       https://bugzilla.kernel.org/show_bug.cgi?id=55211 opened
->>
->>     b8178f13 "revert 'request _OSC control before scanning bus' (8c33f51d)"
->>       Bus now scanned before requesting _OSC control (as in v3.7)
->>
->>     c1be5a5b v3.9
->>       pciehp claims slots first, even when both pciehp & acpiphp are
->>       built-in, because pciehp module_init precedes acpiphp module_init
->>       in link order
->>
->>     6037a803 "Convert acpiphp to be builtin only"
->>       This also adds "acpiphp.disable" boot option
->>
->>     3b63aaa7 "Do not use ACPI PCI subdriver mechanism"
->>       Now acpiphp claims slots first because we call
->>       acpiphp_enumerate_slots() from pcibios_add_bus() during PCI device
->>       enumeration.  This happens before pciehp, which still uses
->>       module_init.
->>
->>     f722406f v3.10-rc1
->>
->>     ........ "Revert reverting of 'request _OSC control before scanning bus' (b8178f13)"
->>       _OSC control requested before scanning bus (as in v3.8)
->>       pre-1.1 ath5k probably has ASPM enabled and doesn't work
->>
->>     ........ "Remove not needed check in disable aspm link"
->>       Now pci_disable_link_state() unconditionally disables ASPM,
->>       even when BIOS hasn't given us ASPM control
->>
->>
->> 1) The problem you're trying to fix is that when both acpiphp and
->> pciehp are supported for the same slot, acpiphp claims the slot first
->> and pciehp will not claim it.  I think this problem was introduced by
->> 3b63aaa7, which was merged after v3.9.  Therefore, v3.9 should work
->> correctly, and this regression appeared in v3.10-rc1.
->>
->> 2) As you say, acpiphp cannot be a module, so the user would have to
->> rebuild the kernel to remove it.  However, 6037a803 *did* add a
->> "acpiphp.disable" boot option, so that should be a workaround that
->> allows pciehp to claim the slot.
->
-> How about the same system that some slots need to be handled by acpiphp
-> and some others need to be handled by pciehp ?
->
-> for example: laptop that have dock that will need acpiphp, and also have
-> pci express card that need pciehp.
->
->>
->> 3) I think your "revert reverting" patch gets us back to the same
->> situation we had after 8c33f51d, i.e., Roman's pre-1.1 ath5k device
->> will have ASPM enabled and won't work.  I don't want to leave the tree
->> in this broken state, even though you intend to fix it in the next
->> patch.  If you can reorder your patches so the ASPM fix is first, that
->> would be better.
->
-> yes.
->
-> We could apply your patch in [1] at first, and revert the reverting.
-> and do not touch pcie_clear_aspm now.
->
->>
->> 4) Your "Remove not needed check in disable aspm link" patch makes
->> pci_disable_link_state() disable ASPM even when the OS doesn't have
->> permission to control ASPM.  I think this is a mistake.  I proposed a
->> similar change in [1], but Rafael and Matthew thought it was too
->> risky, and I agree.
->
-> before all those changes, and in current state:
-> quirk disable aspm is before _osc support and control are set.
+Exynos5440 has two PCIe controllers which can be used as root complex
+for PCIe interface.
 
-Can you please refer to specific function names?  I can't read your mind.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+---
+ arch/arm/boot/dts/exynos5440.dtsi |   38 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-You might be referring to quirk_disable_aspm_l0s().  This is a
-pci_fixup_final quirk that calls pci_disable_link_state().  In the
-current tree, we enumerate devices before requesting _OSC control.
-However, pci_fixup_final quirks are not run until the
-pci_apply_final_quirks() fs_initcall, which is after we request _OSC
-control.
+diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+index 03d40c0..68d05e9 100644
+--- a/arch/arm/boot/dts/exynos5440.dtsi
++++ b/arch/arm/boot/dts/exynos5440.dtsi
+@@ -230,4 +230,42 @@
+ 		clocks = <&clock 24>;
+ 		clock-names = "usbhost";
+ 	};
++
++	pcie@290000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x290000 0x1000
++			0x270000 0x1000
++			0x271000 0x40>;
++		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
++		clocks = <&clock 28>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
++			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 53>;
++	};
++
++	pcie@2a0000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x2a0000 0x1000
++			0x272000 0x1000
++			0x271040 0x40>;
++		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
++		clocks = <&clock 29>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
++			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 56>;
++	};
+ };
+-- 
+1.7.10.4
 
-As far as I can tell, we never call pci_disable_link_state() before
-calling pcie_no_aspm().
 
-> aka in pci_acpi_scan_root will allocate all link state struct, and quirk
-> call pci_disable_link_state, and later will _osc support or control can
-> not be set, pcie_no_aspm is called, can will block all aspm operation.
->
-> That is risky too?, why booting path quirk could do that, but driver
-> and hot-add quirk path can not do that ?
->
-> or we can have another pci_disable_link_state always work on quirk path only?
->
-> Yinghai
