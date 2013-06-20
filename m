@@ -1,63 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60037 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754942Ab3FRInw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 04:43:52 -0400
-Date: Tue, 18 Jun 2013 10:43:38 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 4/8] irqchip: armada-370-xp: implement MSI support
-Message-ID: <20130618104338.584098e1@skate>
-In-Reply-To: <20130612104207.GE30841@mithrandir>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1370536888-8871-5-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130612104207.GE30841@mithrandir>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from moutng.kundenserver.de ([212.227.17.10]:56351 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965153Ab3FTKBG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 06:01:06 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH V6 1/3] pci: Add PCIe driver for Samsung Exynos
+Date: Thu, 20 Jun 2013 12:00:57 +0200
+Cc: "'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	"'Grant Likely'" <grant.likely@secretlab.ca>,
+	"'Andrew Murray'" <andrew.murray@arm.com>,
+	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
+	"'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
+	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
+	Pratyush Anand <pratyush.anand@st.com>
+References: <00c001ce6d85$4613e530$d23baf90$@samsung.com>
+In-Reply-To: <00c001ce6d85$4613e530$d23baf90$@samsung.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201306201200.58057.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
-
-On Wed, 12 Jun 2013 12:42:40 +0200, Thierry Reding wrote:
-> On Thu, Jun 06, 2013 at 06:41:24PM +0200, Thomas Petazzoni wrote:
-> [...]
-> > @@ -292,6 +454,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
-> >  
-> >  #endif
-> >  
-> > +	armada_370_xp_msi_init(node);
-> > +
+On Thursday 20 June 2013, Jingoo Han wrote:
+> Exynos5440 has a PCIe controller which can be used as Root Complex.
+> This driver supports a PCIe controller as Root Complex mode.
 > 
-> So I see that you don't have access to the original platform device
-> here, but you could use of_find_device_by_node() to obtain it and pass
-> that into armada_370_xp_msi_init() in order to set the msi_chip.dev
-> field. Or you could do the lookup in armada_370_xp_msi_init() if you
-> don't need it for anything else in armada_370_xp_mpic_of_init().
+> Signed-off-by: Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
+> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
-As I replied to Grant, of_find_device_by_node() returns NULL, I believe
-because the all IRQ controller driver initialization is done pretty
-early, before the of_platform_populate() call is made, so there is no
-platform_device associated with the IRQ controller node at the time the
-armada_370_xp_mpic_of_init() function is called.
+The code looks good now.
 
-Do you see another approach, especially in relation to your comment on
-PATCH 2/8 ?
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-Best regards,
+>  .../devicetree/bindings/pci/exynos-pcie.txt        |   71 ++
+>  drivers/pci/host/Kconfig                           |    5 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-exynos.c                      | 1057 ++++++++++++++++++++
+>  4 files changed, 1134 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/exynos-pcie.txt
+>  create mode 100644 drivers/pci/host/pci-exynos.c
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+But please change the identifier to designware or synopsys as I
+asked you to.
+
+Have a look at http://permalink.gmane.org/gmane.linux.kernel.pci/18400
+
+This was an earlier submission for a PCIe host driver obviously
+based on the same IP block. I don't know why that driver never
+made it into the kernel, but if it gets submitted again, or another
+platform uses the same block, it should share most of your driver.
+
+Whatever is exynos specific then can be moved out to a separate
+file.
+
+> +Required properties:
+> +-compatible: should be "samsung,exynos5440-pcie"
+
+Please also add a generic string, e.g.
+
+- compatible: should contain "snps,dwc-pcie" to identify the
+  core, plus an identifier for the specific instance, such
+  as "samsung,exynos5440-pcie".
+
+> +
+> +static unsigned long global_io_offset;
+> +
+> +static int exynos_pcie_setup(int nr, struct pci_sys_data *sys)
+> +{
+> +	struct pcie_port *pp;
+> +
+> +	pp = sys_to_pcie(sys);
+> +
+> +	if (!pp)
+> +		return 0;
+> +
+> +	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+> +		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+> +		pci_ioremap_io(sys->io_offset, pp->io.start);
+> +		global_io_offset += SZ_64K;
+> +	}
+> +
+> +	sys->mem_offset = pp->mem.start - pp->config.mem_bus_addr;
+> +
+> +	pci_add_resource_offset(&sys->resources, &pp->io, sys->io_offset);
+> +	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
+> +
+> +	return 1;
+> +}
+
+Just noticed one detail here: the 'pci_add_resource_offset' for the
+I/O window should be inside of the 'if' clause, we must not annouce
+the I/O port range to the PCI core layer unless we have actually
+mapped it.
+
+	Arnd
