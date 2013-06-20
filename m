@@ -1,50 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14232 "EHLO mx1.redhat.com"
+Received: from gate.crashing.org ([63.228.1.57]:43263 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751418Ab3FDNUi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Jun 2013 09:20:38 -0400
-Date: Tue, 4 Jun 2013 15:14:52 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
- multiple-MSIs as requested
-Message-ID: <20130604131451.GA24385@dhcp-26-207.brq.redhat.com>
-References: <CAErSpo7onNaU5mquJ_a7kwGPgzs3Q_7U89__HT9DbJFkUX4fsQ@mail.gmail.com>
- <20130529083652.GA25971@dhcp-26-207.brq.redhat.com>
- <CAErSpo4EkXX-UoFLyni+ZpXaTmCRq5sJCqZ4FCt7fywpDyVWqw@mail.gmail.com>
- <CAErSpo6bjBEK=Ta=pVzwCBMfrqfe3jB-sEfv1Kz9mt9iakdeaA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo6bjBEK=Ta=pVzwCBMfrqfe3jB-sEfv1Kz9mt9iakdeaA@mail.gmail.com>
+	id S965663Ab3FTVkr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Jun 2013 17:40:47 -0400
+Message-ID: <1371764435.3944.30.camel@pasglop>
+Subject: Re: Masked MSIs expectations
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+Date: Fri, 21 Jun 2013 07:40:35 +1000
+In-Reply-To: <20130620133314.GR2575@8bytes.org>
+References: <1368086982.25488.165.camel@pasglop>
+	 <20130620133314.GR2575@8bytes.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 03, 2013 at 02:46:59PM -0600, Bjorn Helgaas wrote:
-> On Wed, May 29, 2013 at 2:58 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I pushed these with updates to
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/alexander-msi
+On Thu, 2013-06-20 at 15:33 +0200, Joerg Roedel wrote:
+> (In case this topic is still relevant)
 > 
-> Anybody want to ack the iommu/irq_remapping.c patch?  If so, I can
-> merge that branch into -next for v3.11.
+> On Thu, May 09, 2013 at 06:09:42PM +1000, Benjamin Herrenschmidt wrote:
+> > Do we provide drivers any guarantee to what happen if an MSI is shot
+> > while masked with disable_irq() or while not yet request_irq()'ed ?
+> > 
+> > Do we guarantee delivery (latched while masked), non-delivery, or
+> > undefined ?
+> 
+> I am not aware of any guarantees the kernel gives in this situation. I
+> think it would just drop the IRQ and print a "nobody cared" message.
 
-Konrad, Sebastian,
+Well, I was not necessarily talking about the kernel reaction here, my
+statement was high level, it could be that the interrupt controller
+latches it and "shoots" it as soon as enabled for example in some cases,
+or drops it in others.
 
-Any chance to take a look and patch 2/2?
+Also we wouldn't print a message in the kernel, we "lazy disable" edge
+interrupts, so we would just drop it.
 
-Thanks!
+> > I'm bringing up a piece of HW where if it happened, it won't be
+> > automatically sent to the CPU and can block further MSIs unless I
+> > explicitly either ditch it or force a resend when unmasking (at the PCI
+> > Express controller PIC level).
+> > 
+> > I'm tempted to just ditch anything that happened while masked, it would
+> > make everything easier on my side, but maybe drivers have different
+> > expectations (and of course an LSI would still shoot, that's not an
+> > issue, only MSIs are in question here).
+> > 
+> > I have cases of devices continuing to shoot one or two MSIs after kexec
+> > and before the new kernel takes over, causing a "loss" of any subsequent
+> > one unless I deal with that case one way or another.
+> 
+> I would also just ditch such IRQs that happen in that kexec case and
+> make sure that they will work again when the kexec-kernel device driver
+> wants to initialize them.
 
-> Bjorn
+Yes, in the kexec case it sounds obvious to just ditch anything, but I
+wanted to make sure of the general idea, ie, if the driver temporarily
+does disable_irq()/enable_irq() I can potentially ditch them all too,
+rather than "latch" them. 
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Anyway, I've done that, so far so good.
+
+Cheers,
+Ben.
+
+> 	Joerg
+> 
+
+
