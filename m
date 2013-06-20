@@ -1,106 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:37359 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752883Ab3FNOHV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Jun 2013 10:07:21 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: Re: [BUGFIX 5/9] ACPI, DOCK: kill redundant spin lock in dock device object
-Date: Fri, 14 Jun 2013 16:16:35 +0200
-Message-ID: <2066328.eBboj8Iu4P@vostro.rjw.lan>
-In-Reply-To: <51BB233B.3040009@gmail.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1490442.eFer0nddaj@vostro.rjw.lan> <51BB233B.3040009@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout2.samsung.com ([203.254.224.25]:22436 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752359Ab3FTHLp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 03:11:45 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V6 2/3] ARM: EXYNOS: Enable PCIe support for Exynos5440
+Date: Thu, 20 Jun 2013 16:11:42 +0900
+Message-id: <00c101ce6d85$6aab9230$4002b690$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 14, 2013 10:05:47 PM Jiang Liu wrote:
-> On 06/14/2013 02:28 AM, Rafael J. Wysocki wrote:
-> > On Friday, June 14, 2013 12:32:28 AM Jiang Liu wrote:
-> >> All dock device related data structures are created during driver
-> >> initialization, so kill the redundant spin lock in dock device object.
-> > 
-> > As a cleanup, it definitely makes sense, but does it fix anything?
-> > 
-> > Rafael
-> Patch 3-9 are code cleanup only, I will resend them as separate patchset
-> later.
+Enable PCIe support for Exynos5440 which has two PCIe controllers.
 
-Cool, thanks!
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ arch/arm/Kconfig             |    1 +
+ arch/arm/mach-exynos/Kconfig |    2 ++
+ 2 files changed, 3 insertions(+)
 
-Rafael
-
-
-> >> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> >> Cc: Shaohua Li <shaohua.li@intel.com>
-> >> Cc: Len Brown <lenb@kernel.org>
-> >> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> >> Cc: linux-acpi@vger.kernel.org
-> >> Cc: linux-kernel@vger.kernel.org
-> >> ---
-> >>  drivers/acpi/dock.c | 15 +++------------
-> >>  1 file changed, 3 insertions(+), 12 deletions(-)
-> >>
-> >> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-> >> index 8e578aa..cd2d5df 100644
-> >> --- a/drivers/acpi/dock.c
-> >> +++ b/drivers/acpi/dock.c
-> >> @@ -57,7 +57,6 @@ struct dock_station {
-> >>  	acpi_handle handle;
-> >>  	unsigned long last_dock_time;
-> >>  	u32 flags;
-> >> -	spinlock_t dd_lock;
-> >>  	struct mutex hp_lock;
-> >>  	struct task_struct *owner;
-> >>  	struct list_head dependent_devices;
-> >> @@ -107,10 +106,7 @@ add_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
-> >>  	dd->handle = handle;
-> >>  	INIT_LIST_HEAD(&dd->list);
-> >>  	INIT_LIST_HEAD(&dd->hotplug_list);
-> >> -
-> >> -	spin_lock(&ds->dd_lock);
-> >>  	list_add_tail(&dd->list, &ds->dependent_devices);
-> >> -	spin_unlock(&ds->dd_lock);
-> >>  
-> >>  	return 0;
-> >>  }
-> >> @@ -168,14 +164,10 @@ find_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
-> >>  {
-> >>  	struct dock_dependent_device *dd;
-> >>  
-> >> -	spin_lock(&ds->dd_lock);
-> >> -	list_for_each_entry(dd, &ds->dependent_devices, list) {
-> >> -		if (handle == dd->handle) {
-> >> -			spin_unlock(&ds->dd_lock);
-> >> +	list_for_each_entry(dd, &ds->dependent_devices, list)
-> >> +		if (handle == dd->handle)
-> >>  			return dd;
-> >> -		}
-> >> -	}
-> >> -	spin_unlock(&ds->dd_lock);
-> >> +
-> >>  	return NULL;
-> >>  }
-> >>  
-> >> @@ -964,7 +956,6 @@ static int __init dock_add(acpi_handle handle)
-> >>  	dock_station->last_dock_time = jiffies - HZ;
-> >>  
-> >>  	mutex_init(&dock_station->hp_lock);
-> >> -	spin_lock_init(&dock_station->dd_lock);
-> >>  	INIT_LIST_HEAD(&dock_station->sibling);
-> >>  	INIT_LIST_HEAD(&dock_station->hotplug_devices);
-> >>  	INIT_LIST_HEAD(&dock_station->dependent_devices);
-> >>
-> 
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 804f41d..098eaef 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -1427,6 +1427,7 @@ config PCI_HOST_ITE8152
+ 	select DMABOUNCE
+ 
+ source "drivers/pci/Kconfig"
++source "drivers/pci/pcie/Kconfig"
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+diff --git a/arch/arm/mach-exynos/Kconfig b/arch/arm/mach-exynos/Kconfig
+index 359af2c..f5f65b5 100644
+--- a/arch/arm/mach-exynos/Kconfig
++++ b/arch/arm/mach-exynos/Kconfig
+@@ -95,6 +95,8 @@ config SOC_EXYNOS5440
+ 	select ARCH_HAS_OPP
+ 	select HAVE_ARM_ARCH_TIMER
+ 	select AUTO_ZRELADDR
++	select MIGHT_HAVE_PCI
++	select PCI_DOMAINS if PCI
+ 	select PINCTRL_EXYNOS5440
+ 	select PM_OPP
+ 	help
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.10.4
+
+
