@@ -1,63 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:39410 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751622Ab3FMQfP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 12:35:15 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
-Date: Fri, 14 Jun 2013 00:32:23 +0800
-Message-Id: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:41278 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754512Ab3FTJ7t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 05:59:49 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+References: <00cb01ce6d99$0e932030$2bb96090$@samsung.com>
+In-reply-to: <00cb01ce6d99$0e932030$2bb96090$@samsung.com>
+Subject: Re: [PATCH V7 1/4] pci: Add PCIe driver for Samsung Exynos
+Date: Thu, 20 Jun 2013 18:59:46 +0900
+Message-id: <00cf01ce6d9c$e5870540$b0950fc0$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
-dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
-four bugs related to Sony VAIO VPCZ23A4R dock support.
-1) can't correctly detect hotplug slot for dock state
-2) resource leak on undocking
-3) resource allocation failure for dock devices
-4) one bug in intel_snd_hda driver
+On Thursday, June 20, 2013 6:32 PM, Jingoo Han wrote:
+> 
+> Exynos5440 has a PCIe controller which can be used as Root Complex.
+> This driver supports a PCIe controller as Root Complex mode.
+> 
+> Signed-off-by: Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
+> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> ---
+>  .../devicetree/bindings/pci/exynos-pcie.txt        |   71 ++
+>  drivers/pci/host/Kconfig                           |    5 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-exynos.c                      | 1057 ++++++++++++++++++++
+>  4 files changed, 1134 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/exynos-pcie.txt
+>  create mode 100644 drivers/pci/host/pci-exynos.c
 
-The first patch fixes issue 1, and the second patch fixes issue 2.
-These two patches, if accepted, should be material for stable branches
-too.
-Patch 3-9 are code improvement for ACPI and dock driver.
+Dear Bjorn Helgass,
 
-I have found the root cause for issue three, but still working on
-solutions, and seems can't be solve in short time. So please help 
-to review and test patches for issue 1) and 2) first.
+Would you review this patch?
+I have posted the Exynos PCIe patch for about 4 months.
+But, I have not received your reply.
+I need your feedback. :)
+Thank you.
 
-Hi Alexander, could you please help to test the whole patchset?
+Best regards,
+Jingoo Han
 
-Jiang Liu (9):
-  ACPI, DOCK: initialize dock subsystem before scanning PCI root buses
-  ACPIPHP: fix device destroying order issue when handling dock
-    notification
-  ACPI, DOCK: clean up unused module related code
-  ACPI, DOCK: avoid initializing acpi_dock_notifier_list multiple times
-  ACPI, DOCK: kill redundant spin lock in dock device object
-  ACPI, DOCK: mark initialization functions with __init
-  ACPI, DOCK: simplify implementation of dock_create_acpi_device()
-  ACPI: introduce several helper functions
-  ACPI: use new helper functions to simpilify code
-
- drivers/acpi/dock.c                | 193 +++++++++----------------------------
- drivers/acpi/internal.h            |   5 +
- drivers/acpi/scan.c                |  54 +++--------
- drivers/acpi/utils.c               |  74 ++++++++++++++
- drivers/pci/hotplug/acpiphp_glue.c |  47 ++++-----
- include/acpi/acpi_bus.h            |   5 +
- 6 files changed, 162 insertions(+), 216 deletions(-)
-
--- 
-1.8.1.2
 
