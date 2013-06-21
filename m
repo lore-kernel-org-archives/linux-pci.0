@@ -1,119 +1,101 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 4 Jun 2013 03:53:36 -0400
-From: Chen Gong <gong.chen@linux.intel.com>
-To: Betty Dall <betty.dall@hp.com>
-Cc: rjw@sisk.pl, bhelgaas@google.com, ying.huang@intel.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/3] ACPI/APEI: Force fatal AER severity when bus has
- been reset
-Message-ID: <20130604075336.GC20448@gchen.bj.intel.com>
-References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
- <1369924769-17183-3-git-send-email-betty.dall@hp.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="uXxzq0nDebZQVNAZ"
-In-Reply-To: <1369924769-17183-3-git-send-email-betty.dall@hp.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:55232 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423279Ab3FUQNP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 12:13:15 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	xen-devel@lists.xensource.com,
+	virtualization@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: [PATCH v2 3/3] PCI: kill pci_scan_bus_parented()
+Date: Sat, 22 Jun 2013 00:12:48 +0800
+Message-Id: <1371831169-17291-4-git-send-email-liuj97@gmail.com>
+In-Reply-To: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
+References: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Jiang Liu <jiang.liu@huawei.com>
 
---uXxzq0nDebZQVNAZ
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Now there's no caller of pci_scan_bus_parented(), so kill it.
 
-On Thu, May 30, 2013 at 08:39:28AM -0600, Betty Dall wrote:
-> Date:	Thu, 30 May 2013 08:39:28 -0600
-> From: Betty Dall <betty.dall@hp.com>
-> To: rjw@sisk.pl, bhelgaas@google.com
-> Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
->  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Betty Dall
->  <betty.dall@hp.com>
-> Subject: [PATCH v2 2/3] ACPI/APEI: Force fatal AER severity when bus has
->  been reset
-> X-Mailer: git-send-email 1.7.7.6
->=20
-> The CPER error record has a reset bit that indicates that the platform
-> has reset the bus. The reset bit can be set for any severity error
-> including recoverable.  From the AER code path's perspective,
-> any error is fatal if the bus has been reset. This patch upgrades the
-> severity of the AER recovery to AER_FATAL whenever the CPER error record
-> indicates that the bus has been reset.
->=20
-> Changes since v1:
-> Fixed a typo in comment.
->=20
-> Signed-off-by: Betty Dall <betty.dall@hp.com>
-> ---
->=20
->  drivers/acpi/apei/ghes.c |   21 ++++++++++++++++++++-
->  1 files changed, 20 insertions(+), 1 deletions(-)
->=20
->=20
-> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-> index d668a8a..1c67d5a 100644
-> --- a/drivers/acpi/apei/ghes.c
-> +++ b/drivers/acpi/apei/ghes.c
-> @@ -451,7 +451,26 @@ static void ghes_do_proc(struct ghes *ghes,
->  				int aer_severity;
->  				devfn =3D PCI_DEVFN(pcie_err->device_id.device,
->  						  pcie_err->device_id.function);
-> -				aer_severity =3D cper_severity_to_aer(sev);
-> +				/*
-> +				 * Some Firmware First implementations
-> +				 * put the device in SBR to contain
-> +				 * the error. This is indicated by the
-> +				 * CPER Section Descriptor Flags reset
-> +				 * bit which means the component must
-> +				 * be re-initialized or re-enabled
-> +				 * prior to use. Promoting the AER
-> +				 * serverity to FATAL will cause the
-> +				 * AER code to link_reset and allow
-> +				 * drivers to reprogram their cards.
-> +				 */
-> +				if (gdata->flags & CPER_SEC_RESET)
-> +					aer_severity =3D cper_severity_to_aer(
-> +							CPER_SEV_FATAL);
-> +				else
-> +					aer_severity =3D
-> +						cper_severity_to_aer(sev);
-> +
-> +
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Chris Metcalf <cmetcalf@tilera.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ arch/tile/kernel/pci.c |  3 ---
+ drivers/pci/probe.c    | 19 -------------------
+ include/linux/pci.h    |  2 --
+ 3 files changed, 24 deletions(-)
 
-How about this?
-                                if (gdata->flags & CPER_SEC_RESET)
-                                        sev =3D CPER_SEV_FATAL;
-                                cper_severity_to_aer(sev);
+diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+index 67237d3..936e087 100644
+--- a/arch/tile/kernel/pci.c
++++ b/arch/tile/kernel/pci.c
+@@ -309,9 +309,6 @@ int __init pcibios_init(void)
+ 			 *
+ 			 * It reads the PCI tree for this bus into the Linux
+ 			 * data structures.
+-			 *
+-			 * This is inlined in linux/pci.h and calls into
+-			 * pci_scan_bus_parented() in probe.c.
+ 			 */
+ 			pci_add_resource(&resources, &ioport_resource);
+ 			pci_add_resource(&resources, &iomem_resource);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ed768d8..af30772 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1901,25 +1901,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+-/* Deprecated; use pci_scan_root_bus() instead */
+-struct pci_bus *pci_scan_bus_parented(struct device *parent,
+-		int bus, struct pci_ops *ops, void *sysdata)
+-{
+-	LIST_HEAD(resources);
+-	struct pci_bus *b;
+-
+-	pci_add_resource(&resources, &ioport_resource);
+-	pci_add_resource(&resources, &iomem_resource);
+-	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
+-	if (b)
+-		pci_scan_child_bus(b);
+-	else
+-		pci_free_resource_list(&resources);
+-	return b;
+-}
+-EXPORT_SYMBOL(pci_scan_bus_parented);
+-
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+ 					void *sysdata)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f1229c7..41ec0a5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -720,8 +720,6 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+-				      struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+-- 
+1.8.1.2
 
->  				aer_recover_queue(pcie_err->device_id.segment,
->  						  pcie_err->device_id.bus,
->  						  devfn, aer_severity);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---uXxzq0nDebZQVNAZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRrZ0AAAoJEI01n1+kOSLHwt4P/AqOj+0I8PBmd/iSw2eGVTfe
-JkE98/yYegWKjmualxwEu0pyvO20a2BVVdezsmdXNuSF7L2SJQ7peA/Mdeb1/8CN
-aGXmcX2gX7r827SQKK0/ALwVh+pRXDUnGuEnRqI9xXIq0/q9cA2xFeUZNhRgvCbq
-vG2mfwc3dPXceXL5YdEEfznJdPBt7v7ICzKE3/SuBofO2xSG6f+1UyO/cPKlyBJt
-PL6nq0sIFec8K0uT4b9EYN5gwRRYjQgnbP3Jlk0ZEBuzzxOcmtM/FJ/Vm9Cnoid2
-nCzn723/PDsHH6pchic+m+qjhB4ENe0WY0dXDrMIbbpZunnsHC4mdup575asxSRu
-zIDxaUAw8vsdevRvXicQSpZ07x6vfF/AHIDiQT0LeYjGxf3dHbPFfBu6UpYDVG/g
-Rdd1UdWWeT3NdWAfEFSVruyk/8+ZqaGtV1mF3DYzuNDAAKZqzhjE2zyV4CzIhfx5
-AHOs9b4k7PPsDXbM9XOB95X+DHwvr2B3N1k6wZGqi3aZBLDZ7Dd9ZyNJD1Wn7cma
-fy6OdVp4FUDUvgXdzliIQNfAwvLbL6WOwvqg9rrgpwjj2mDkjAGMdMuEfnG0nWth
-xhb7z7H+lWO0Ud4zY+1NflfMTVXw3Syl1VbEnNIkYjToW8Qb75CMcP/38adV1iQb
-ds4fniplyOVBVj/S5x2i
-=iBO8
------END PGP SIGNATURE-----
-
---uXxzq0nDebZQVNAZ--
