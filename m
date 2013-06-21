@@ -1,72 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <51C0E73F.1060708@redhat.com>
-References: <20130530183955.14686.89444.stgit@bling.home> <20130618172819.GA16134@google.com>
- <1371579648.22681.209.camel@ul30vt.home> <CAErSpo5mRKhBYun_i=iFppmQ5+7ODCY7q=sehHjBXWqPRH=ZZw@mail.gmail.com>
- <1371594159.22659.34.camel@ul30vt.home> <51C0E73F.1060708@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Jun 2013 20:52:43 -0600
-Message-ID: <CAErSpo7ambrpYm6Lw5bfb5k83ZpHgMvcZxtohVJvo2iTLOF1EQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: Enable overrides for missing ACS capabilities
-To: Don Dutile <ddutile@redhat.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:52737 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161404Ab3FUGdk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 02:33:40 -0400
+Date: Fri, 21 Jun 2013 08:33:34 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: [PATCHv3 02/11] pci: use weak functions for MSI arch-specific
+ functions
+Message-ID: <20130621083334.281444c3@skate>
+In-Reply-To: <20130620185707.GA8888@mithrandir>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1371660979-21588-3-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130620185707.GA8888@mithrandir>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 18, 2013 at 5:03 PM, Don Dutile <ddutile@redhat.com> wrote:
-> On 06/18/2013 06:22 PM, Alex Williamson wrote:
->>
->> On Tue, 2013-06-18 at 15:31 -0600, Bjorn Helgaas wrote:
->>>
->>> On Tue, Jun 18, 2013 at 12:20 PM, Alex Williamson
->>> <alex.williamson@redhat.com>  wrote:
->>>>
->>>> On Tue, 2013-06-18 at 11:28 -0600, Bjorn Helgaas wrote:
->>>>>
->>>>> On Thu, May 30, 2013 at 12:40:19PM -0600, Alex Williamson wrote:
-> ...
->>>>> Who do you expect to decide whether to use this option?  I think it
->>>>> requires intimate knowledge of how the device works.
->>>>>
->>>>> I think the benefit of using the option is that it makes assignment of
->>>>> devices to guests more flexible, which will make it attractive to
->>>>> users.
->>>>> But most users have no way of knowing whether it's actually *safe* to
->>>>> use this.  So I worry that you're adding an easy way to pretend
->>>>> isolation
->>>>> exists when there's no good way of being confident that it actually
->>>>> does.
+Dear Thierry Reding,
 
-> ...
+On Thu, 20 Jun 2013 20:57:08 +0200, Thierry Reding wrote:
 
->>> I wonder if we should taint the kernel if this option is used (but not
->>> for specific devices added to pci_dev_acs_enabled[]).  It would also
->>> be nice if pci_dev_specific_acs_enabled() gave some indication in
->>> dmesg for the specific devices you're hoping to add to
->>> pci_dev_acs_enabled[].  It's not an enumeration-time quirk right now,
->>> so I'm not sure how we'd limit it to one message per device.
->>
->> Right, setup vs use and getting single prints is a lot of extra code.
->> Tainting is troublesome for support, Don had some objections when I
->> suggested the same to him.
->>
-> For RH GSS (Global Support Services), a 'taint' in the kernel printk means
-> RH doesn't support that system.  The 'non-support' due to 'taint' being
-> printed
-> out in this case may be incorrect -- RH may support that use, at least until
-> a more sufficient patched kernel is provided.
-> Thus my dissension that 'taint' be output.  WARN is ok. 'driver beware',
-> 'unleashed dog afoot'.... sure...
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > index 2c10752..4bc0c8f 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -30,19 +30,35 @@ static int pci_msi_enable = 1;
+> >  
+> >  /* Arch hooks */
+> >  
+> > -#ifndef arch_msi_check_device
+> > -int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> > +int default_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+> > +{
+> > +	return -EINVAL;
+> > +}
+> > +
+> > +int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+> > +{
+> > +	return default_setup_msi_irq(dev, desc);
+> > +}
+> > +
+> > +void default_teardown_msi_irq(unsigned int irq)
+> > +{
+> > +}
+> > +
+> > +void __weak arch_teardown_msi_irq(unsigned int irq)
+> > +{
+> > +	return default_teardown_msi_irq(irq);
+> > +}
+> > +
+> > +int default_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> >  {
+> >  	return 0;
+> >  }
+> > -#endif
+> 
+> I don't think keeping the default_*() for these three is necessary,
+> given that they don't do anything and therefore no architecture is
+> likely to call them when overriding.
 
-So ...  that's really a RH-specific support issue, and easily worked
-around by RH adding a patch that turns off tainting.
+Ok. I was just keeping them for the sake of consistency with the other
+calls that do have a default behavior, but if it's considered not
+useful, I'll get rid of them in v4.
 
-It still sounds like a good idea to me for upstream, where use of this
-option can very possibly lead to corruption or information leakage
-between devices the user claimed were isolated, but in fact were not.
+Thanks for your comments!
 
-Bjorn
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
