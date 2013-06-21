@@ -1,100 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:44317 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752807Ab3FFQlo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 12:41:44 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>
-Subject: [PATCH v2 6/8] pci: mvebu: add support for MSI
-Date: Thu,  6 Jun 2013 18:41:26 +0200
-Message-Id: <1370536888-8871-7-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from hqemgate04.nvidia.com ([216.228.121.35]:18123 "EHLO
+	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754159Ab3FUFau convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 01:30:50 -0400
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: 'Stephen Warren' <swarren@wwwdotorg.org>
+CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
+	Prashant Gaikwad <pgaikwad@nvidia.com>,
+	"mturquette@linaro.org" <mturquette@linaro.org>,
+	Peter De Schrijver <pdeschrijver@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Date: Fri, 21 Jun 2013 11:00:20 +0530
+Subject: RE: [PATCH V1] ARM: dts: tegra: Modify pcie memory space size
+Message-ID: <C79B248886DD134989C8FF6B096A91AB91CF1615EC@BGMAIL01.nvidia.com>
+References: <1371712491-31070-1-git-send-email-jagarwal@nvidia.com>
+ <51C32CC7.5010109@wwwdotorg.org>
+In-Reply-To: <51C32CC7.5010109@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds support for Message Signaled Interrupts in the
-Marvell PCIe host controller. The work is very simple: it simply gets
-a reference to the msi_chip associated to the PCIe controller thanks
-to the msi-parent DT property, and stores this reference in the
-pci_bus structure. This is enough to let the Linux PCI core use the
-functions of msi_chip to setup and teardown MSIs.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 13a633b..0dc30bd 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -11,6 +11,7 @@
- #include <linux/clk.h>
- #include <linux/module.h>
- #include <linux/mbus.h>
-+#include <linux/msi.h>
- #include <linux/slab.h>
- #include <linux/platform_device.h>
- #include <linux/of_address.h>
-@@ -107,6 +108,7 @@ struct mvebu_pcie_port;
- struct mvebu_pcie {
- 	struct platform_device *pdev;
- 	struct mvebu_pcie_port *ports;
-+	struct msi_chip *msi;
- 	struct resource io;
- 	struct resource realio;
- 	struct resource mem;
-@@ -690,6 +692,8 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	if (!bus)
- 		return NULL;
- 
-+	bus->msi = pcie->msi;
-+
- 	pci_scan_child_bus(bus);
- 
- 	return bus;
-@@ -755,6 +759,21 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
- 	return devm_request_and_ioremap(&pdev->dev, &regs);
- }
- 
-+static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
-+{
-+	struct device_node *msi_node;
-+
-+	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
-+				    "msi-parent", 0);
-+	if (!msi_node)
-+		return;
-+
-+	pcie->msi = msi_chip_find_by_of_node(msi_node);
-+
-+	if (pcie->msi)
-+		pcie->msi->dev = &pcie->pdev->dev;
-+}
-+
- static int __init mvebu_pcie_probe(struct platform_device *pdev)
- {
- 	struct mvebu_pcie *pcie;
-@@ -879,6 +898,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 		i++;
- 	}
- 
-+	mvebu_pcie_msi_enable(pcie);
-+
- 	mvebu_pcie_enable(pcie);
- 
- 	return 0;
--- 
-1.8.1.2
-
+> On 06/20/2013 01:14 AM, Jay Agarwal wrote:
+> > - decrease non-prefetch memory size to 128 MB
+> > - increase prefetch memory size to 384 MB
+> > - above change is done because most pcie devices
+> >   prefetch memory size requirement is quite higher
+> >   compared to non-prefetch memory space.
+> 
+> It's possible this change won't be suitable for all applications. People may
+> simply need to adjust their DT based on what they want to connect.
+> Still, this patch probably biases things in the correct way for now.
+> Longer term, we might want to investigate dynamically sizing the windows
+> in order to support arbitrary attached devices, in much the same way as the
+> Marvell code does/will in order to conserve physical/bus address space for
+> their multiple controllers.
+> 
+> However, this change allows me to correctly enumerate a particular GPU I
+> have plugged into my Harmony board, and assign all the BARs, so:
+> 
+> Tested-by: Stephen Warren <swarren@nvidia.com>
+> 
+Thierry,
+Could you please integrate this change also to your branch if review is done. Please let me know once it is done.
