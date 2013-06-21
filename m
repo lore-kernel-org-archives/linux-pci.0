@@ -1,42 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:57911 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752247Ab3FJNLT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 09:11:19 -0400
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id C53B11C00A9
-	for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2013 15:11:17 +0200 (CEST)
-Date: Mon, 10 Jun 2013 15:11:16 +0200
-From: Martin Mares <mj@ucw.cz>
-To: "David E. Box" <david.e.box@linux.intel.com>
-Cc: kristen.c.accardi@intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] lspci: Add L1 PM Substate capability reporting
-Message-ID: <mj+md-20130610.130955.16386.albireo@ucw.cz>
-References: <y>
- <1370553420-3437-1-git-send-email-david.e.box@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51C3D517.1080301@st.com>
+Date: Fri, 21 Jun 2013 09:52:47 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370553420-3437-1-git-send-email-david.e.box@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Tomasz Figa' <t.figa@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>
+Subject: Re: [PATCH V9 1/4] pci: Add PCIe driver for Samsung Exynos
+References: <002001ce6e2e$623d7970$26b86c50$@samsung.com>
+In-Reply-To: <002001ce6e2e$623d7970$26b86c50$@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+On 6/21/2013 8:51 AM, Jingoo Han wrote:
+> diff --git a/drivers/pci/host/pci-designware.c b/drivers/pci/host/pci-designware.c
+> new file mode 100644
+> index 0000000..f8558ff
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-designware.c
 
-> From: David Box <david.e.box@linux.intel.com>
-> 
-> The capabilities are several L1 substates that can enable lower power
-> consumption when a PCIe Link is idle.
+If you plan to send next version, then I would suggest to rename it as 
+pcie-designware.c, because synopsis pcie and pci controllers are different.
 
-Looks OK, but please reformat the code to follow coding style of the rest
-of the file.
+Regards
+Pratyush
 
-Also, could you please send me a test case? Preferably, it should be
-the output of `lspci -vvxxxx' of some device which reports the capability.
 
-				Have a nice fortnight
--- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-There is no place like ~
+
+
