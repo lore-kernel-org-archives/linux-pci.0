@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:52458 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965601Ab3FUD0O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 23:26:14 -0400
 From: Jingoo Han <jg1.han@samsung.com>
 To: 'Kukjin Kim' <kgene.kim@samsung.com>,
 	'Bjorn Helgaas' <bhelgaas@google.com>
@@ -14,14 +18,17 @@ Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
 	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
 	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
 	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Tomasz Figa' <t.figa@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
 	Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH V7 4/4] ARM: dts: Add pcie controller node for
+Subject: [PATCH V9 4/4] ARM: dts: Add pcie controller node for
  exynos5440-ssdk5440
-Date: Thu, 20 Jun 2013 18:35:09 +0900
-Message-id: <00ce01ce6d99$74e1ebf0$5ea5c3d0$@samsung.com>
+Date: Fri, 21 Jun 2013 12:26:13 +0900
+Message-id: <002401ce6e2f$14c20160$3e460420$@samsung.com>
 MIME-version: 1.0
 Content-type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 This patch adds pcie controller node for exynos5440-ssdk5440,
@@ -52,7 +59,7 @@ index f32cd77..ede7727 100644
 +	};
  };
 diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
-index 68d05e9..de31f0c 100644
+index 1ac4f5b..ff7f5d8 100644
 --- a/arch/arm/boot/dts/exynos5440.dtsi
 +++ b/arch/arm/boot/dts/exynos5440.dtsi
 @@ -126,7 +126,7 @@
