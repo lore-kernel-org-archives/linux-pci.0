@@ -1,69 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:51931 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965601Ab3FUDWr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 23:22:47 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+Received: from moutng.kundenserver.de ([212.227.17.8]:52969 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161061Ab3FUHco (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 03:32:44 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH V10 0/4] PCIe support for Samsung Exynos5440 SoC
+Date: Fri, 21 Jun 2013 09:31:58 +0200
+Cc: "'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
 	devicetree-discuss@lists.ozlabs.org,
 	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Tomasz Figa' <t.figa@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH V9 2/4] ARM: EXYNOS: Enable PCIe support for Exynos5440
-Date: Fri, 21 Jun 2013 12:22:21 +0900
-Message-id: <002101ce6e2e$8aafa180$a00ee480$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	"'Grant Likely'" <grant.likely@secretlab.ca>,
+	"'Andrew Murray'" <andrew.murray@arm.com>,
+	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
+	"'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
+	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
+	"'Tomasz Figa'" <t.figa@samsung.com>,
+	"'Pratyush Anand'" <pratyush.anand@st.com>,
+	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>
+References: <003901ce6e50$03d039a0$0b70ace0$@samsung.com>
+In-Reply-To: <003901ce6e50$03d039a0$0b70ace0$@samsung.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201306210931.58428.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable PCIe support for Exynos5440 which has two PCIe controllers.
+On Friday 21 June 2013, Jingoo Han wrote:
+> Changes between v9 and v10:
+>   * Changed the file name from 'pci-designware.c' to 'pcie-designware.c'
+>     guided by Pratyush Anand, because synopsis pcie and pci controllers
+>     are different.
+>   * Fixed the typos of document, reported by Sachin Kamat.
+> 
+> Changes between v8 and v9:
+>   * Changed the file name from 'exynos-pcie.txt' to 'designware-pcie.txt'.
+>   * Added 'snps,dw-pcie' string to compatible property.
+> 
+> Changes between v7 and v8:
+>   * Changed the file name from 'pci-exynos.c' to 'pci-designware.c',
+>     and added a generic string for compatible property to exynos-pcie.txt
+>   * Moved pci_add_resource_offset() for I/O space to the 'if' clause
+>   * Added Arnd's Acked-by
+> 
+> Changes between v6 and v7:
+>   * Split ARM DT patch to two patches
+>   * Fixed node naming
+>   * Added Arnd's Acked-by
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- arch/arm/Kconfig             |    1 +
- arch/arm/mach-exynos/Kconfig |    2 ++
- 2 files changed, 3 insertions(+)
+Ok, that takes care of all my comments.
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index ca30d75..421ce68 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1428,6 +1428,7 @@ config PCI_HOST_ITE8152
- 	select DMABOUNCE
- 
- source "drivers/pci/Kconfig"
-+source "drivers/pci/pcie/Kconfig"
- 
- source "drivers/pcmcia/Kconfig"
- 
-diff --git a/arch/arm/mach-exynos/Kconfig b/arch/arm/mach-exynos/Kconfig
-index 359af2c..f5f65b5 100644
---- a/arch/arm/mach-exynos/Kconfig
-+++ b/arch/arm/mach-exynos/Kconfig
-@@ -95,6 +95,8 @@ config SOC_EXYNOS5440
- 	select ARCH_HAS_OPP
- 	select HAVE_ARM_ARCH_TIMER
- 	select AUTO_ZRELADDR
-+	select MIGHT_HAVE_PCI
-+	select PCI_DOMAINS if PCI
- 	select PINCTRL_EXYNOS5440
- 	select PM_OPP
- 	help
--- 
-1.7.10.4
+Bjorn, are you still considering to merge this for 3.11 or have you
+closed your tree for the merge window? I think it would be good to get
+it in.
 
-
+	Arnd
