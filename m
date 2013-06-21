@@ -1,61 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f52.google.com ([209.85.128.52]:62484 "EHLO
-	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759056Ab3FMS0J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 14:26:09 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAN_LGv2ayCkO0rndkc5ahaW0S9ZH5SW5p=KcBL4o6TjFoZLmLQ@mail.gmail.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-	<CAN_LGv2ayCkO0rndkc5ahaW0S9ZH5SW5p=KcBL4o6TjFoZLmLQ@mail.gmail.com>
-Date: Fri, 14 Jun 2013 00:26:07 +0600
-Message-ID: <CAN_LGv25Z13QuXvB5EhLVm0jDG9pKCZ-di747-uhp81wZUpbPw@mail.gmail.com>
-Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.free-electrons.com ([94.23.35.102]:53078 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932206Ab3FUHXW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 03:23:22 -0400
+Date: Fri, 21 Jun 2013 09:23:18 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Russell King <linux@arm.linux.org.uk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: Re: [PATCHv3 07/11] arm: pci: add ->add_bus() and ->remove_bus()
+ hooks to hw_pci
+Message-ID: <20130621092318.410465eb@skate>
+In-Reply-To: <1371660979-21588-8-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1371660979-21588-8-git-send-email-thomas.petazzoni@free-electrons.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/6/13 Alexander E. Patrakov <patrakov@gmail.com>:
-> 2013/6/13 Jiang Liu <jiang.liu@huawei.com>:
->> Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
->> dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
->> four bugs related to Sony VAIO VPCZ23A4R dock support.
->> 1) can't correctly detect hotplug slot for dock state
->> 2) resource leak on undocking
->> 3) resource allocation failure for dock devices
->> 4) one bug in intel_snd_hda driver
->>
->> The first patch fixes issue 1, and the second patch fixes issue 2.
->> These two patches, if accepted, should be material for stable branches
->> too.
->> Patch 3-9 are code improvement for ACPI and dock driver.
->>
->> I have found the root cause for issue three, but still working on
->> solutions, and seems can't be solve in short time. So please help
->> to review and test patches for issue 1) and 2) first.
->>
->> Hi Alexander, could you please help to test the whole patchset?
->
-> Tested on top of 3.10-rc5, with no other patches applied.
-> Unfortunately, lockdep complains on the second docking attempt in the
-> initially-undocked case. Please see the attached dmesg output.
->
-> I have not tested the initially-docked case yet, will do that in 10 minutes.
+Russell,
 
-Tested. The device list is updated as expected if the radeon driver is
-blacklisted and there are no open fds to the audio card.
+On Wed, 19 Jun 2013 18:56:15 +0200, Thomas Petazzoni wrote:
+> Some PCI drivers may need to adjust the pci_bus structure after it has
+> been allocated by the Linux PCI core. The PCI core allows
+> architectures to implement the pcibios_add_bus() and
+> pcibios_remove_bus() for this purpose. This commit therefore extends
+> the hw_pci and pci_sys_data structures of the ARM PCI core to allow
+> PCI drivers to register ->add_bus() and ->remove_bus() in hw_pci,
+> which will get called when a bus is added or removed from the system.
+> 
+> This will be used for example by the Marvell PCIe driver to connect a
+> particular PCI bus with its corresponding MSI chip to handle Message
+> Signaled Interrupts.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  arch/arm/include/asm/mach/pci.h |  4 ++++
+>  arch/arm/kernel/bios32.c        | 16 ++++++++++++++++
+>  2 files changed, 20 insertions(+)
 
-If radeon is not blacklisted, I hit
-https://bugzilla.kernel.org/show_bug.cgi?id=59681 , but it is not a
-regression.
+Do you have any comments ? Any chance to get this merged for 3.11 ? It
+is independent of the previous patches of the patch series, so it can
+be merged independently.
 
---
-Alexander E. Patrakov
+Thanks!
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
