@@ -1,46 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:51977 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423177Ab3FUQNC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 12:13:02 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	xen-devel@lists.xensource.com,
-	virtualization@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/3] deprecate usage of pci_scan_bus_parented()
-Date: Sat, 22 Jun 2013 00:12:45 +0800
-Message-Id: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:20126 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030336Ab3FUHZy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 03:25:54 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Tomasz Figa' <t.figa@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V10 3/4] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Fri, 21 Jun 2013 16:25:51 +0900
+Message-id: <003c01ce6e50$8f55d890$ae0189b0$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Exynos5440 has two PCIe controllers which can be used as root complex
+for PCIe interface.
 
-This patch tries to deprecate usage of pci_scan_bus_parented().
-It applies to
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+---
+ arch/arm/boot/dts/exynos5440.dtsi |   38 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-V2:
-  Kill pci_scan_bus_parented() instead of marking it as deprecated
-
-
-Jiang Liu (3):
-  PCI: export three functions to support modular host bridge driver
-  PCI, xen-pcifront: use new PCI interfaces to simplify implementation
-  PCI: kill pci_scan_bus_parented()
-
- arch/tile/kernel/pci.c     |  3 --
- drivers/pci/host-bridge.c  |  1 +
- drivers/pci/probe.c        | 20 +-----------
- drivers/pci/remove.c       |  7 +++++
- drivers/pci/xen-pcifront.c | 76 +++++++++++++++++++++-------------------------
- include/linux/pci.h        |  3 +-
- 6 files changed, 44 insertions(+), 66 deletions(-)
-
+diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+index 03d40c0..1ac4f5b 100644
+--- a/arch/arm/boot/dts/exynos5440.dtsi
++++ b/arch/arm/boot/dts/exynos5440.dtsi
+@@ -230,4 +230,42 @@
+ 		clocks = <&clock 24>;
+ 		clock-names = "usbhost";
+ 	};
++
++	pcie@290000 {
++		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
++		reg = <0x290000 0x1000
++			0x270000 0x1000
++			0x271000 0x40>;
++		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
++		clocks = <&clock 28>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
++			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 53>;
++	};
++
++	pcie@2a0000 {
++		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
++		reg = <0x2a0000 0x1000
++			0x272000 0x1000
++			0x271040 0x40>;
++		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
++		clocks = <&clock 29>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
++			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 56>;
++	};
+ };
 -- 
-1.8.1.2
+1.7.10.4
+
 
