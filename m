@@ -1,94 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe001.messaging.microsoft.com ([207.46.163.24]:23477
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756922Ab3FCCXQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jun 2013 22:23:16 -0400
-From: Shane Huang <shane.huang@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Tejun Heo <tj@kernel.org>, Jean Delvare <khali@linux-fr.org>,
-	<linux-pci@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-	<linux-i2c@vger.kernel.org>, Shane Huang <shane.huang@amd.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH RESEND v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
-Date: Mon, 3 Jun 2013 18:24:55 +0800
-Message-ID: <1370255095-2525-1-git-send-email-shane.huang@amd.com>
+Received: from moutng.kundenserver.de ([212.227.126.171]:50355 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422679Ab3FUOQM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 10:16:12 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH V10 0/4] PCIe support for Samsung Exynos5440 SoC
+Date: Fri, 21 Jun 2013 16:14:49 +0200
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	"'Grant Likely'" <grant.likely@secretlab.ca>,
+	"'Andrew Murray'" <andrew.murray@arm.com>,
+	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
+	"'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
+	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
+	"'Tomasz Figa'" <t.figa@samsung.com>,
+	"'Pratyush Anand'" <pratyush.anand@st.com>,
+	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>
+References: <003901ce6e50$03d039a0$0b70ace0$@samsung.com> <201306211030.47440.arnd@arndb.de> <20130621141144.GP31667@titan.lakedaemon.net>
+In-Reply-To: <20130621141144.GP31667@titan.lakedaemon.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201306211614.49434.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To add AMD CZ SMBus controller device ID.
+On Friday 21 June 2013, Jason Cooper wrote:
+> On Fri, Jun 21, 2013 at 10:30:47AM +0200, Arnd Bergmann wrote:
+> > On Friday 21 June 2013, Thomas Petazzoni wrote:
+> > > I am by far not an expert on how to solve merge strategies and so on,
+> > > but to avoid conflicts at Linus's level while merging the arm-soc and
+> > > pci trees, it would be better if this Samsung PCIe driver could go
+> > > through arm-soc (with Bjorn ACK, of course), so that Arnd/Olof can
+> > > make sure the ordering is correct with regard to the of/pci changes and
+> > > the mvebu/pci driver.
+> > 
+> > Yes, good point.
+> > 
+> > The alternative would be that Bjorn also takes the PCI branch dependencies
+> > that are already in arm-soc into his tree. Either way works, but I agree
+> > that what you suggest would be simpler.
+> 
+> Yes, that is why we did it this way.  It was my understanding based on
+> previous comments by yourself and LinusW that you both had patches
+> depending on (now called) mvebu/of_pci.  So we got it into arm-soc
+> early so those branches could depend on it.
 
-Signed-off-by: Shane Huang <shane.huang@amd.com>
-Reviewed-by: Tejun Heo <tj@kernel.org>
-Reviewed-by: Jean Delvare <khali@linux-fr.org>
-Cc: stable@vger.kernel.org
----
- Documentation/i2c/busses/i2c-piix4 | 2 +-
- drivers/i2c/busses/Kconfig         | 1 +
- drivers/i2c/busses/i2c-piix4.c     | 3 ++-
- include/linux/pci_ids.h            | 1 +
- 4 files changed, 5 insertions(+), 2 deletions(-)
+Right. I wasn't paying enough attention for the early merges that
+Olof did.
 
-diff --git a/Documentation/i2c/busses/i2c-piix4 b/Documentation/i2c/busses/i2c-piix4
-index 1e6634f..a370b20 100644
---- a/Documentation/i2c/busses/i2c-piix4
-+++ b/Documentation/i2c/busses/i2c-piix4
-@@ -13,7 +13,7 @@ Supported adapters:
-   * AMD SP5100 (SB700 derivative found on some server mainboards)
-     Datasheet: Publicly available at the AMD website
-     http://support.amd.com/us/Embedded_TechDocs/44413.pdf
--  * AMD Hudson-2
-+  * AMD Hudson-2, CZ
-     Datasheet: Not publicly available
-   * Standard Microsystems (SMSC) SLC90E66 (Victory66) southbridge
-     Datasheet: Publicly available at the SMSC website http://www.smsc.com
-diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
-index 631736e..4faf02b 100644
---- a/drivers/i2c/busses/Kconfig
-+++ b/drivers/i2c/busses/Kconfig
-@@ -150,6 +150,7 @@ config I2C_PIIX4
- 	    ATI SB700/SP5100
- 	    ATI SB800
- 	    AMD Hudson-2
-+	    AMD CZ
- 	    Serverworks OSB4
- 	    Serverworks CSB5
- 	    Serverworks CSB6
-diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
-index 39ab78c..43c2e11 100644
---- a/drivers/i2c/busses/i2c-piix4.c
-+++ b/drivers/i2c/busses/i2c-piix4.c
-@@ -22,7 +22,7 @@
- 	Intel PIIX4, 440MX
- 	Serverworks OSB4, CSB5, CSB6, HT-1000, HT-1100
- 	ATI IXP200, IXP300, IXP400, SB600, SB700/SP5100, SB800
--	AMD Hudson-2
-+	AMD Hudson-2, CZ
- 	SMSC Victory66
- 
-    Note: we assume there can only be one device, with one or more
-@@ -522,6 +522,7 @@ static DEFINE_PCI_DEVICE_TABLE(piix4_ids) = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SMBUS) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
- 		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 22449c1..b10a5b4 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -571,6 +571,7 @@
- #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
- #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
- #define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
-+#define PCI_DEVICE_ID_AMD_CZ_SMBUS	0x790b
- 
- #define PCI_VENDOR_ID_TRIDENT		0x1023
- #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
--- 
-1.8.1.2
-
-
+	Arnd
