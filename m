@@ -1,90 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:42431 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756651Ab3FSQ4n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 12:56:43 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36280 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423328Ab3FUQNT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 12:13:19 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	xen-devel@lists.xensource.com,
+	virtualization@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCHv3 11/11] arm: mvebu: link PCIe controllers to the MSI controller
-Date: Wed, 19 Jun 2013 18:56:19 +0200
-Message-Id: <1371660979-21588-12-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v2 3/3] PCI: mark pci_scan_bus_parented() as __deprecated
+Date: Sat, 22 Jun 2013 00:12:49 +0800
+Message-Id: <1371831169-17291-5-git-send-email-liuj97@gmail.com>
+In-Reply-To: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
+References: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adjusts the Armada 370 and Armada XP PCIe controllers
-Device Tree informations to reference their MSI controller. In the
-case of this platform, the MSI controller is implemented by the MPIC.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Mark pci_scan_bus_parented() as __deprecated and clean up outdated
+comments.
+
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Chris Metcalf <cmetcalf@tilera.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- arch/arm/boot/dts/armada-370.dtsi        | 1 +
- arch/arm/boot/dts/armada-xp-mv78230.dtsi | 1 +
- arch/arm/boot/dts/armada-xp-mv78260.dtsi | 1 +
- arch/arm/boot/dts/armada-xp-mv78460.dtsi | 1 +
- 4 files changed, 4 insertions(+)
+ arch/tile/kernel/pci.c |  3 ---
+ drivers/pci/probe.c    | 19 -------------------
+ include/linux/pci.h    |  2 --
+ 3 files changed, 24 deletions(-)
 
-diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
-index fa3dfc6..a60018d 100644
---- a/arch/arm/boot/dts/armada-370.dtsi
-+++ b/arch/arm/boot/dts/armada-370.dtsi
-@@ -178,6 +178,7 @@
- 				#address-cells = <3>;
- 				#size-cells = <2>;
+diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+index 67237d3..936e087 100644
+--- a/arch/tile/kernel/pci.c
++++ b/arch/tile/kernel/pci.c
+@@ -309,9 +309,6 @@ int __init pcibios_init(void)
+ 			 *
+ 			 * It reads the PCI tree for this bus into the Linux
+ 			 * data structures.
+-			 *
+-			 * This is inlined in linux/pci.h and calls into
+-			 * pci_scan_bus_parented() in probe.c.
+ 			 */
+ 			pci_add_resource(&resources, &ioport_resource);
+ 			pci_add_resource(&resources, &iomem_resource);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ed768d8..af30772 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1901,25 +1901,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
  
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
-diff --git a/arch/arm/boot/dts/armada-xp-mv78230.dtsi b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-index f8eaa38..4a9a305 100644
---- a/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-@@ -91,6 +91,7 @@
- #address-cells = <3>;
- #size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
-diff --git a/arch/arm/boot/dts/armada-xp-mv78260.dtsi b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-index f4029f0..bc63783 100644
---- a/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-@@ -111,6 +111,7 @@
- 				#address-cells = <3>;
- 				#size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
-diff --git a/arch/arm/boot/dts/armada-xp-mv78460.dtsi b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-index c7b1f4d..77db2bc 100644
---- a/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-@@ -127,6 +127,7 @@
- 				#address-cells = <3>;
- 				#size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
+-/* Deprecated; use pci_scan_root_bus() instead */
+-struct pci_bus *pci_scan_bus_parented(struct device *parent,
+-		int bus, struct pci_ops *ops, void *sysdata)
+-{
+-	LIST_HEAD(resources);
+-	struct pci_bus *b;
+-
+-	pci_add_resource(&resources, &ioport_resource);
+-	pci_add_resource(&resources, &iomem_resource);
+-	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
+-	if (b)
+-		pci_scan_child_bus(b);
+-	else
+-		pci_free_resource_list(&resources);
+-	return b;
+-}
+-EXPORT_SYMBOL(pci_scan_bus_parented);
+-
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+ 					void *sysdata)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f1229c7..41ec0a5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -720,8 +720,6 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+-				      struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
 -- 
 1.8.1.2
 
