@@ -1,114 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:54595 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320Ab3FQUUO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 16:20:14 -0400
-Received: by mail-ie0-f179.google.com with SMTP id c10so7954187ieb.38
-        for <linux-pci@vger.kernel.org>; Mon, 17 Jun 2013 13:20:14 -0700 (PDT)
-Date: Mon, 17 Jun 2013 14:20:10 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Ingo Molnar <mingo@kernel.org>,
-	Donald Dutile <ddutile@redhat.com>,
-	Hannes Reinecke <hare@suse.de>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>, iommu@lists.linux-foundation.org
-Subject: Re: [PATCH v3, part2 17/20] PCI, iommu: use hotplug-safe iterators
- to walk PCI buses
-Message-ID: <20130617202010.GC7877@google.com>
-References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
- <1369583597-3801-18-git-send-email-jiang.liu@huawei.com>
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:53944 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952Ab3FUEKt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 00:10:49 -0400
+Received: by mail-oa0-f42.google.com with SMTP id n12so8926238oag.15
+        for <linux-pci@vger.kernel.org>; Thu, 20 Jun 2013 21:10:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1369583597-3801-18-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <002001ce6e2e$623d7970$26b86c50$@samsung.com>
+References: <002001ce6e2e$623d7970$26b86c50$@samsung.com>
+Date: Fri, 21 Jun 2013 09:40:48 +0530
+Message-ID: <CAK9yfHxCy0JcvsFHo8gERefdiZhxi1J8MNALe5-g6ooTGR-QjA@mail.gmail.com>
+Subject: Re: [PATCH V9 1/4] pci: Add PCIe driver for Samsung Exynos
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: Kukjin Kim <kgene.kim@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Surendranath Gurivireddy Balla <suren.reddy@samsung.com>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Thomas Abraham <thomas.abraham@linaro.org>,
+	Tomasz Figa <t.figa@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 26, 2013 at 11:53:14PM +0800, Jiang Liu wrote:
-> Enhance iommu drviers to use hotplug-safe iterators to walk
-> PCI buses.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Ingo Molnar <mingo@kernel.org>
-> Cc: Donald Dutile <ddutile@redhat.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>
-> Cc: iommu@lists.linux-foundation.org
-> Cc: linux-kernel@vger.kernel.org
+Hi Jingoo,
+
+Some small corrections inline.
+
+On 21 June 2013 08:51, Jingoo Han <jg1.han@samsung.com> wrote:
+> Exynos5440 has a PCIe controller which can be used as Root Complex.
+> This driver supports a PCIe controller as Root Complex mode.
+>
+> Signed-off-by: Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
+> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 > ---
->  drivers/iommu/amd_iommu.c | 4 +++-
->  drivers/iommu/dmar.c      | 6 ++++--
-
-The AMD and Intel IOMMU drivers are very different, and I would
-split this into a patch for each.
-
->  2 files changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-> index 21d02b0..eef7a7e 100644
-> --- a/drivers/iommu/amd_iommu.c
-> +++ b/drivers/iommu/amd_iommu.c
-> @@ -352,6 +352,7 @@ static int init_iommu_group(struct device *dev)
->  	struct iommu_dev_data *dev_data;
->  	struct iommu_group *group;
->  	struct pci_dev *dma_pdev;
-> +	struct pci_bus *b = NULL;
->  	int ret;
->  
->  	group = iommu_group_get(dev);
-> @@ -388,7 +389,7 @@ static int init_iommu_group(struct device *dev)
->  		 * the alias.  Be careful to also test the parent device if
->  		 * we think the alias is the root of the group.
->  		 */
-> -		bus = pci_find_bus(0, alias >> 8);
-> +		b = bus = pci_get_bus(0, alias >> 8);
->  		if (!bus)
->  			goto use_group;
->  
-> @@ -408,6 +409,7 @@ static int init_iommu_group(struct device *dev)
->  	dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
->  use_pdev:
->  	ret = use_pdev_iommu_group(dma_pdev, dev);
-> +	pci_bus_put(b);
->  	pci_dev_put(dma_pdev);
->  	return ret;
->  use_group:
-> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-> index a7967ce..7162787 100644
-> --- a/drivers/iommu/dmar.c
-> +++ b/drivers/iommu/dmar.c
-> @@ -67,12 +67,12 @@ static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
->  static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
->  					   struct pci_dev **dev, u16 segment)
->  {
-> -	struct pci_bus *bus;
-> +	struct pci_bus *b, *bus;
->  	struct pci_dev *pdev = NULL;
->  	struct acpi_dmar_pci_path *path;
->  	int count;
->  
-> -	bus = pci_find_bus(segment, scope->bus);
-> +	b = bus = pci_get_bus(segment, scope->bus);
->  	path = (struct acpi_dmar_pci_path *)(scope + 1);
->  	count = (scope->length - sizeof(struct acpi_dmar_device_scope))
->  		/ sizeof(struct acpi_dmar_pci_path);
-> @@ -97,6 +97,8 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
->  		count --;
->  		bus = pdev->subordinate;
->  	}
-> +	pci_bus_put(b);
+>  .../devicetree/bindings/pci/designware-pcie.txt    |   73 ++
+>  drivers/pci/host/Kconfig                           |    9 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-designware.c                  | 1057 ++++++++++++++++++++
+>  4 files changed, 1140 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/designware-pcie.txt
+>  create mode 100644 drivers/pci/host/pci-designware.c
+>
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> new file mode 100644
+> index 0000000..e4681e6
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -0,0 +1,73 @@
+> +* Synopsis Designware PCIe interface
 > +
->  	if (!pdev) {
->  		pr_warn("Device scope device [%04x:%02x:%02x.%02x] not found\n",
->  			segment, scope->bus, path->dev, path->fn);
-> -- 
-> 1.8.1.2
-> 
+> +Required properties:
+> +-compatible: should contain "snps,dw-pcie" to identify the
+> +       core, plus an identifier for the specific instance, such
+> +       as "samsung,exynos5440-pcie".
+> +-reg: base addresses and lengths of the pcie conteroller,
+
+s/conteroller/controller
+
+> +       the phy controller, additional register for the phy controller.
+> +- interrupts: interrupt values for level interrupt,
+> +       pulse interrupt, special interrupt.
+> +- clocks: from common clock binding: handle to pci clock.
+> +- clock-names: from common clock binding: Shall be "pcie", "pcie_bus".
+
+s/Shall be .../should be "pcie" and "pcie_bus".
+
+[snip]
+
+> +
+> +MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+> +MODULE_DESCRIPTION("Samsung PCIe host controller driver");
+> +MODULE_LICENSE("GPLv2");
+
+I think this should be "GPL v2"  (with a space between GPL and v2).
+
+
+-- 
+With warm regards,
+Sachin
