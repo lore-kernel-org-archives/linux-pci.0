@@ -1,59 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <51B6BEDB.3000509@jp.fujitsu.com>
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
- <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com>
- <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com>
- <51B6BEDB.3000509@jp.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Jun 2013 22:45:27 -0600
-Message-ID: <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	kexec@lists.infradead.org, ishii.hironobu@jp.fujitsu.com,
-	Don Dutile <ddutile@redhat.com>, bill.sumner@hp.com,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	Vivek Goyal <vgoyal@redhat.com>,
-	Haren Myneni <hbabu@us.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:44125 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965269Ab3FUH0R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 03:26:17 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Tomasz Figa' <t.figa@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V10 4/4] ARM: dts: Add pcie controller node for
+ exynos5440-ssdk5440
+Date: Fri, 21 Jun 2013 16:26:14 +0900
+Message-id: <003d01ce6e50$9c925d80$d5b71880$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Vivek, Haren; sorry I didn't think to add you earlier]
+This patch adds pcie controller node for exynos5440-ssdk5440,
+and also adds a phandle for pin controller node.
 
-On Tue, Jun 11, 2013 at 12:08 AM, Takao Indoh
-<indou.takao@jp.fujitsu.com> wrote:
-> (2013/06/11 11:20), Bjorn Helgaas wrote:
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+---
+ arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++++
+ arch/arm/boot/dts/exynos5440.dtsi         |    2 +-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
->> I'm not sure you need to reset legacy devices (or non-PCI devices)
->> yet, but the current hook isn't anchored anywhere -- it's just an
->> fs_initcall() that doesn't give the reader any clue about the
->> connection between the reset and the problem it's solving.
->>
->> If we do something like this patch, I think it needs to be done at the
->> point where we enable or disable the IOMMU.  That way, it's connected
->> to the important event, and there's a clue about how to make
->> corresponding fixes for other IOMMUs.
->
-> Ok. pci_iommu_init() is appropriate place to add this hook?
+diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+index f32cd77..ede7727 100644
+--- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
++++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+@@ -65,4 +65,12 @@
+ 			clock-frequency = <50000000>;
+ 		};
+ 	};
++
++	pcie@290000 {
++		reset-gpio = <&pin_ctrl 5 0>;
++	};
++
++	pcie@2a0000 {
++		reset-gpio = <&pin_ctrl 22 0>;
++	};
+ };
+diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+index 1ac4f5b..ff7f5d8 100644
+--- a/arch/arm/boot/dts/exynos5440.dtsi
++++ b/arch/arm/boot/dts/exynos5440.dtsi
+@@ -126,7 +126,7 @@
+ 		clock-names = "spi", "spi_busclk0";
+ 	};
+ 
+-	pinctrl {
++	pin_ctrl: pinctrl {
+ 		compatible = "samsung,exynos5440-pinctrl";
+ 		reg = <0xE0000 0x1000>;
+ 		interrupts = <0 37 0>, <0 38 0>, <0 39 0>, <0 40 0>,
+-- 
+1.7.10.4
 
-I looked at various IOMMU init places today, and it's far more
-complicated and varied than I had hoped.
 
-This reset scheme depends on enumerating PCI devices before we
-initialize the IOMMU used by those devices.  x86 works that way today,
-but not all architectures do (see the sparc pci_fire_pbm_init(), for
-example).  And I think conceptually, the IOMMU should be enumerated
-and initialized *before* the devices that use it.
-
-So I'm uncomfortable with that aspect of this scheme.
-
-It would be at least conceivable to reset the devices in the system
-kernel, before the kexec.  I know we want to do as little as possible
-in the crashing kernel, but it's at least a possibility, and it might
-be cleaner.
-
-Bjorn
