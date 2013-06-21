@@ -1,83 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:33089 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751113Ab3FYSPr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 14:15:47 -0400
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:41333 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422660Ab3FUNCg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 09:02:36 -0400
 MIME-Version: 1.0
-In-Reply-To: <1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com>
-Date: Tue, 25 Jun 2013 21:15:47 +0300
-Message-ID: <CAHp75Vd2Torku6zy2awLHRTed9mx94a6RAu+oHJYb+rVgZKBDQ@mail.gmail.com>
-Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+In-Reply-To: <1620890.UBBDKT8mbZ@vostro.rjw.lan>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
+	<1436701.V8egnZxOqz@vostro.rjw.lan>
+	<CAN_LGv2kZy_8SrKae5YUwHoUM+mf1OgH2HkAEtiC+ojKCFYSeg@mail.gmail.com>
+	<1620890.UBBDKT8mbZ@vostro.rjw.lan>
+Date: Fri, 21 Jun 2013 19:02:35 +0600
+Message-ID: <CAN_LGv1C7XPHTzXyFjJStffRE_BXxi5tNyJ4cV98RvPfbwFkGA@mail.gmail.com>
+Subject: Re: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
+From: "Alexander E. Patrakov" <patrakov@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, alexdeucher@gmail.com,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, x86@kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 7:22 PM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
+2013/6/21 Rafael J. Wysocki <rjw@sisk.pl>:
+> The thing below looks like a radeon problem?
+>
+> [   52.268389] ------------[ cut here ]------------
+> [   52.268395] WARNING: at drivers/gpu/drm/ttm/ttm_page_alloc_dma.c:533 ttm_dma_free_pool+0x101/0x110 [ttm]()
 
-> The acpiphp driver finds out whether the device is hotpluggable by checking
-> whether it has _RMV method behind it (and if it returns 1). However, at
-> least Acer Aspire S5 with Thunderbolt host router has this method placed
-> behind device called EPUP (endpoint upstream port?) and not directly behind
-> the root port as can be seen from the ASL code below:
+Yes. Let's ignore it for now, as it is a separate bug, likely a
+special case of https://bugzilla.kernel.org/show_bug.cgi?id=59681
 
-[]
+> But it looks like the removal actually succeeded.
 
+It did.
 
-> +static acpi_status pcihp_evaluate_rmv(acpi_handle handle, u32 lvl,
-> +                                     void *context, void **return_not_used)
-> +{
-> +       unsigned long long *removable = context;
-> +       unsigned long long value;
-> +       acpi_status status;
-> +
-> +       status = acpi_evaluate_integer(handle, "_RMV", NULL, &value);
-> +       if (ACPI_SUCCESS(status) && value) {
+> [   52.273103] pci_bus 0000:0b: busn_res: [bus 0b] is released
+> [   52.273732] pci_bus 0000:0c: busn_res: [bus 0c] is released
+> [   52.273816] pci_bus 0000:16: busn_res: [bus 16] is released
+>
+> Is the re-dock attempt included?  It doesn't seem to leave any trace ...
 
-So, there is a chance the caller gets back uninitialized *context.
-Let's assume that is by design.
+It is, and indeed it left no traces. See the followup when I attached
+the result of manually rescanning the bus - you have already commented
+on the deadlock there.
 
-> +               *removable = value;
-> +               return AE_CTRL_TERMINATE;
-> +       }
-> +       return AE_OK;
-> +}
-
-
-> +static bool pcihp_is_removable(acpi_handle handle, size_t depth)
-> +{
-> +       unsigned long long removable = 0;
-> +       acpi_status status;
-> +
-> +       status = pcihp_evaluate_rmv(handle, 0, &removable, NULL);
-> +       if ((status == AE_CTRL_TERMINATE) && removable)
-
-Here you already have removable not equal zero.
-
-Internal braces could be removed, but it's up top you.
-
-> +               return true;
-> +
-> +       acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, depth, pcihp_evaluate_rmv,
-> +                           NULL, &removable, NULL);
-> +       return !!removable;
-> +}
-
-
---
-With Best Regards,
-Andy Shevchenko
+-- 
+Alexander E. Patrakov
