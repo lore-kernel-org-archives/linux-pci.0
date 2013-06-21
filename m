@@ -1,51 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH] pci: Avoid unnecessary calls to work_on_cpu
-To: bhelgaas@google.com
-From: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 24 Jun 2013 13:05:01 -0700
-Message-ID: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:45070 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934693Ab3FUKZb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 06:25:31 -0400
+Received: by mail-bk0-f47.google.com with SMTP id jg1so3263300bkc.6
+        for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2013 03:25:29 -0700 (PDT)
+Date: Fri, 21 Jun 2013 12:25:27 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: [PATCHv3 09/11] pci: mvebu: add support for MSI
+Message-ID: <20130621102526.GG12441@manwe>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1371660979-21588-10-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="FwyhczKCDPOVeYh6"
+In-Reply-To: <1371660979-21588-10-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is meant to address the fact that we are making unnecessary calls
-to work_on_cpu.  To resolve this I have added a check to see if the current
-node is the correct node for the device before we decide to assign the probe
-task to another CPU.
 
-The advantages to this approach is that we can avoid reentrant calls to
-work_on_cpu.  In addition we should not make any calls to setup the work
-remotely in the case of a single node system that has NUMA enabled.
+--FwyhczKCDPOVeYh6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
----
+On Wed, Jun 19, 2013 at 06:56:17PM +0200, Thomas Petazzoni wrote:
+> This commit adds support for Message Signaled Interrupts in the
+> Marvell PCIe host controller. The work is very simple: it simply gets
+> a reference to the msi_chip associated to the PCIe controller thanks
+> to the msi-parent DT property, and stores this reference in the
+> pci_bus structure. This is enough to let the Linux PCI core use the
+> functions of msi_chip to setup and teardown MSIs.
+>=20
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  drivers/pci/host/pci-mvebu.c | 26 ++++++++++++++++++++++++++
+>  1 file changed, 26 insertions(+)
 
-This patch is based off of work I submitted in an earlier patch that I never
-heard back on.  The change was originally submitted in:
-  pci: Avoid reentrant calls to work_on_cpu
+Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
 
-I'm not sure what ever happened with that patch, however after reviewing it
-some myself I decided I could do without the change to the comments since they
-were unneeded.  As such I am resubmitting this as a much simpler patch that
-only adds the line of code needed to avoid calling work_on_cpu for every call
-to probe on an NUMA node specific device.
+--FwyhczKCDPOVeYh6
+Content-Type: application/pgp-signature
 
- drivers/pci/pci-driver.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 79277fb..7d81713 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -282,7 +282,7 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 	   its local memory on the right node without any need to
- 	   change it. */
- 	node = dev_to_node(&dev->dev);
--	if (node >= 0) {
-+	if ((node >= 0) && (node != numa_node_id())) {
- 		int cpu;
- 
- 		get_online_cpus();
+iQIcBAEBAgAGBQJRxCoWAAoJEN0jrNd/PrOhUTUP/idqAeuU8crEuXlyeAKEa6Va
+K5RjXXo/caYCsp/Hfvd7LM6qGQWL3Sihu908dEC0nAJa+TM3V7dOBjixFWA3ejV4
+flxY0ccfdqd+BXTRVg2gHrvywZmz+DuHvQhqInjpaK2h/GbBN/qih4dKtHbws15x
+plpFs//2lYDW2GIpUObVTq3I3bMsH0Fo90WZayjB1YasGwolWer74KHEvhEOjW6q
+HWwjNY34QGvBKyQKmVBuPBMJlI6OhRxIZBvh4JJNSEydwLv5XWDuoxB4OPuN5BQY
+KK+KN+7RXC9U7o0t+Fj0MvRz7I3yzlrU5TKpsmXGOApE5SDvKqfQ+ykqer1l60LK
+NnOnOf0PpC68jMT68lUw033hh6Pah5E12BezpmzZ8C7gQpCIjdE3NEujjnA7/UxP
+xQJIsNGLgK2zCMEjCmUCKwYErjhl41ak+Wdmf+w7lZRIBnmkouZEY4GljWnOLK0y
+U6kYLaGEPAHmUVSJcpV4Q1hBUswzXUSxcc2qBHDPRxbiJNLlFS1Y+vd1vLSvxJjY
+Idsub6zHd3Gik/GQp/Kqfh8k+GA5LS0AzthcXEhhOX9nrAaSSK4B1SSNarJywMiX
+n6RrfwMf1ZDVGh80GD6I7AXT/uFDHdm/ok+6NSgFrhFGZXAH7ELe4TKeiuI8rdNf
+GvscNWkWetTO3ofcryxb
+=pK6d
+-----END PGP SIGNATURE-----
 
+--FwyhczKCDPOVeYh6--
