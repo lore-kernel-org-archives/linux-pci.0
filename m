@@ -1,125 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:40783 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752591Ab3FNOEU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 10:04:20 -0400
-Message-ID: <51BB22D1.9070204@gmail.com>
-Date: Fri, 14 Jun 2013 22:04:01 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:53789 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751350Ab3FUKXs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 06:23:48 -0400
+Received: by mail-bk0-f45.google.com with SMTP id je9so3295732bkc.18
+        for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2013 03:23:47 -0700 (PDT)
+Date: Fri, 21 Jun 2013 12:23:44 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: [PATCHv3 07/11] arm: pci: add ->add_bus() and ->remove_bus()
+ hooks to hw_pci
+Message-ID: <20130621102343.GE12441@manwe>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1371660979-21588-8-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: Re: [BUGFIX 3/9] ACPI, DOCK: clean up unused module related code
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1371141152-9468-4-git-send-email-jiang.liu@huawei.com> <1841512.D0ScSNfNgy@vostro.rjw.lan>
-In-Reply-To: <1841512.D0ScSNfNgy@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="BQPnanjtCNWHyqYD"
+In-Reply-To: <1371660979-21588-8-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/14/2013 02:26 AM, Rafael J. Wysocki wrote:
-> On Friday, June 14, 2013 12:32:26 AM Jiang Liu wrote:
->> ACPI dock driver can't be built as a module any more, so clean up
->> module related code.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> Cc: Shaohua Li <shaohua.li@intel.com>
->> Cc: Len Brown <lenb@kernel.org>
->> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
->> Cc: linux-acpi@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
-> 
-> How exactly does this depend on [2/9]?  If it doesn't at all, it should go
-> after [1/9].
-> 
->> ---
->>  drivers/acpi/dock.c | 41 -----------------------------------------
->>  1 file changed, 41 deletions(-)
->>
->> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
->> index 79c8d9e..50e38b7 100644
->> --- a/drivers/acpi/dock.c
->> +++ b/drivers/acpi/dock.c
->> @@ -53,12 +53,6 @@ MODULE_PARM_DESC(immediate_undock, "1 (default) will cause the driver to "
->>  
->>  static struct atomic_notifier_head dock_notifier_list;
->>  
->> -static const struct acpi_device_id dock_device_ids[] = {
->> -	{"LNXDOCK", 0},
->> -	{"", 0},
->> -};
->> -MODULE_DEVICE_TABLE(acpi, dock_device_ids);
->> -
-> 
-> Don't we actually need the device IDs?
-Now dock driver could only be built as built-in, and it doesn't really
-bind to ACPI dock devices, so I think the device ids are not used any
-more. Not sure whether any userspace tool has dependency on the device
-IDs.
 
-> 
->>  struct dock_station {
->>  	acpi_handle handle;
->>  	unsigned long last_dock_time;
->> @@ -1013,30 +1007,6 @@ err_unregister:
->>  }
->>  
->>  /**
->> - * dock_remove - free up resources related to the dock station
->> - */
->> -static int dock_remove(struct dock_station *ds)
->> -{
->> -	struct dock_dependent_device *dd, *tmp;
->> -	struct platform_device *dock_device = ds->dock_device;
->> -
->> -	if (!dock_station_count)
->> -		return 0;
->> -
->> -	/* remove dependent devices */
->> -	list_for_each_entry_safe(dd, tmp, &ds->dependent_devices, list)
->> -		kfree(dd);
->> -
->> -	list_del(&ds->sibling);
->> -
->> -	/* cleanup sysfs */
->> -	sysfs_remove_group(&dock_device->dev.kobj, &dock_attribute_group);
->> -	platform_device_unregister(dock_device);
->> -
->> -	return 0;
->> -}
->> -
->> -/**
->>   * find_dock_and_bay - look for dock stations and bays
->>   * @handle: acpi handle of a device
->>   * @lvl: unused
->> @@ -1073,14 +1043,3 @@ int __init acpi_dock_init(void)
->>  		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
->>  	return 0;
->>  }
->> -
->> -static void __exit dock_exit(void)
->> -{
->> -	struct dock_station *tmp, *dock_station;
->> -
->> -	unregister_acpi_bus_notifier(&dock_acpi_notifier);
->> -	list_for_each_entry_safe(dock_station, tmp, &dock_stations, sibling)
->> -		dock_remove(dock_station);
->> -}
->> -
->> -module_exit(dock_exit);
-> 
-> The other changes look OK to me.
-Thanks for review.
+--BQPnanjtCNWHyqYD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> Thanks,
-> Rafael
-> 
-> 
+On Wed, Jun 19, 2013 at 06:56:15PM +0200, Thomas Petazzoni wrote:
+> Some PCI drivers may need to adjust the pci_bus structure after it has
+> been allocated by the Linux PCI core. The PCI core allows
+> architectures to implement the pcibios_add_bus() and
+> pcibios_remove_bus() for this purpose. This commit therefore extends
+> the hw_pci and pci_sys_data structures of the ARM PCI core to allow
+> PCI drivers to register ->add_bus() and ->remove_bus() in hw_pci,
+> which will get called when a bus is added or removed from the system.
+>=20
+> This will be used for example by the Marvell PCIe driver to connect a
+> particular PCI bus with its corresponding MSI chip to handle Message
+> Signaled Interrupts.
+>=20
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  arch/arm/include/asm/mach/pci.h |  4 ++++
+>  arch/arm/kernel/bios32.c        | 16 ++++++++++++++++
+>  2 files changed, 20 insertions(+)
 
+Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
+
+--BQPnanjtCNWHyqYD
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRxCmvAAoJEN0jrNd/PrOhtiwQAJjp2pfQqufQi2SHtQb4xWfq
+ETq9psPScpduWrPCJeRq2XFZPeNoe7K9fXtwNnQoZ/JdWoA3zNSCekytoZ3QaQl1
+buTE+gwNJqtQLAIJW87vJWTSIzuvYDs3G+LoD59ru3Nc50X2ue18gjG78wguAtb9
+wTzTKOOIxUislS3nNfMyxbBqzRLMmj2HspEfSqGJ6JBmOxPFV/5bdZZkQgIj2IPh
+GAPvtZZZneVCXMpMjxft0zM+eAjEgdtqYM/N/ySOU1bwi9uQ77QaNNeN3j9l1ctF
+Jds8CS5kA8/MAlHiOHhT4U0ULv7s0kPFGZuiJJ/JqnPMLEyrQx/r/IWgNIN8zS52
+m1YgUItHrx/++NLtzgCuAPOBeg1o1oGwkCTR5zpWba7Y4hCpBpqOEJsu41OS52p+
+OovPJOqMm4YugAnE6aqfEfAwE2bdGxOX1VLL9eOBHDGwBn9yZF/RbikF9JuJTMMF
+S89YN6soFoAS/j7EdFXXZnaEAS8HkMOxkYlEdTeErqQT836sX0QsP1G73rYzKKPk
+FHJyPHZ5/Aszrw8EPAGUPmMeDr88WsnWTDwZ86T0+Dhbwno6G97SOiU0eIRVrHbL
+XQmPBh4HmSk5uiBNaV2MpS/yAOtdvH3ZVrTJ42aPHeFBvzTX5Bg92TS4fxekphyH
+VIZdLLJRgfzSyUaLlf2q
+=f1ex
+-----END PGP SIGNATURE-----
+
+--BQPnanjtCNWHyqYD--
