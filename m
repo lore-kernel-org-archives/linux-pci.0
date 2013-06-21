@@ -1,53 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-Date: Fri, 14 Jun 2013 22:27:34 +0000
-Message-ID: <1371248853.2490.5.camel@x230>
-References: <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
-	 <CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
-	 <CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
-	 <CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
-	 <20130401235256.GA31966@google.com>
-	 <CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
-	 <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
-	 <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
-	 <CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com>
-	 <CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com>
-	 <20130614141101.GA29452@google.com>
-	 <CAE9FiQVr-OWeqEHFXn0MjNiSD0WM=FNO_DFo6m9UbbG60uonpw@mail.gmail.com>
-	 <CAErSpo7grN-93zZfBJOHZH-pR1wDYrojTwt=B=++QqA0rPb3Rg@mail.gmail.com>
-	 <CAE9FiQUO350kqrXB5=yQ-OxOeSJj4+P6WPg4gGgXxFEvfoLyng@mail.gmail.com>
-	 <CAErSpo6vEOw10YV=Sou6wjjSc2GWr-oX=Dvbt7Xt=RJKi4RELw@mail.gmail.com>
-	 <CAE9FiQWevd6ZNDdqGkqbLrGujKYuTiwibPAT+30VPpC_H-rLJA@mail.gmail.com>
-	 <CAErSpo66qtgg8=BqX+4sm4h1vXD5gR6aiH7hHK7gvz1x3rEQZA@mail.gmail.com>
-	 <CAE9FiQWxDhagFNAYc2eNDe_1jYtVTa5Azg0zifiprND5m3CmMw@mail.gmail.com>
-In-Reply-To: <CAE9FiQWxDhagFNAYc2eNDe_1jYtVTa5Azg0zifiprND5m3CmMw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:39327 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751350Ab3FUKYu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 06:24:50 -0400
+Received: by mail-bk0-f52.google.com with SMTP id d7so3267097bkh.39
+        for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2013 03:24:49 -0700 (PDT)
+Date: Fri, 21 Jun 2013 12:24:46 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: [PATCHv3 08/11] arm: mvebu: the MPIC now provides MSI controller
+ features
+Message-ID: <20130621102445.GF12441@manwe>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1371660979-21588-9-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="lIrNkN/7tmsD/ALM"
+In-Reply-To: <1371660979-21588-9-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRnJpLCAyMDEzLTA2LTE0IGF0IDE1OjE3IC0wNzAwLCBZaW5naGFpIEx1IHdyb3RlOg0KDQo+
-IGFmdGVyIHRob3NlIHR3byBwYXRjaGVzLCBpdCBhc3BtX2Rpc2FibGVkIGlzIHNldCwgdmlhIF9v
-c2MgZWFybHksDQo+IHByZS0xLjEgZGV2aWNlcyBhc3BtIHJlZ2lzdGVyIHdpbGwgYmUgdG91Y2hl
-ZCBldmVuIGFzcG1fZm9yY2UgaXMgbm90IHNwZWNpZmllZC4NCg0KSSBkb24ndCBmb2xsb3cuIFdl
-IHdlcmUgcHJldmlvdXNseSBhdXRvbWF0aWNhbGx5IGRpc2FibGluZyBBU1BNIG9uDQpwcmUtMS4x
-IGRldmljZXMgZXZlbiBpZiBfT1NDIGRpZG4ndCBnaXZlIHVzIGNvbnRyb2wuIEkndmUgY29uZmly
-bWVkIHRoYXQNCnRoaXMgd2FzIHRoZSB3cm9uZyB0aGluZyBmb3IgdXMgdG8gYmUgZG9pbmcsIGFu
-ZCBteSBwYXRjaCBjaGFuZ2VkIHRoZQ0KYmVoYXZpb3VyIHN1Y2ggdGhhdCBpZiB0aGUgZmlybXdh
-cmUgZW5hYmxlcyBBU1BNIG9uIGEgcHJlLTEuMSBkZXZpY2UgYW5kDQpyZWZ1c2VzIHRvIGdpdmUg
-dXMgY29udHJvbCB2aWEgX09TQyB3ZSB3aWxsIGxlYXZlIEFTUE0gZW5hYmxlZC4NCg0KLS0gDQpN
-YXR0aGV3IEdhcnJldHQgfCBtamc1OUBzcmNmLnVjYW0ub3JnDQo=
+
+--lIrNkN/7tmsD/ALM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Jun 19, 2013 at 06:56:16PM +0200, Thomas Petazzoni wrote:
+> Adds the 'msi-controller' property to the main interrupt controller
+> Device Tree node, to indicate that it can now behave as a MSI
+> controller.
+>=20
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  arch/arm/boot/dts/armada-370-xp.dtsi | 1 +
+>  1 file changed, 1 insertion(+)
+
+Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
+
+--lIrNkN/7tmsD/ALM
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRxCntAAoJEN0jrNd/PrOhRrQP/0vmPJoVefkWfpwqqW6tycXp
+juZmzKh64n4HteohJpvy0ML2jP81SCsm+HhGhz+Plxo9lyr/tSNnVVl6Lj9pUvjD
+uNAzB1ESBh+K179AqjtAQl3zgSoUU91q+xInKNmccLiv+yYXVJMSN0oGvh1zrO20
+ztfNQwc7wOo+iAcl8BExqWrGF8JIVA+Ocsbyzj9pD3PVie/hX19HQ5/rgh+JS6rz
+cyX4n5Ypj5Zcn7dcmOMPIMCRHrvMnxTa5UvTyNlwR2sjIfBUlq3qE4pSO4wmJmm5
+MOPrdVTMzO6lCiwJdBf987JAGnRT+6XIZIEs+xRC3DO8ZKLqsKvmkMjqDxikmgyg
+UI+bzIU3KfM1YVA+ZqwqaRfq9ncEgY5sp0LqZzTcfznA/Thu/sW33wk+tX8R/MP0
+CXQoNfmKGxRZR1o/sU7Ua1Oxe2Pt06B2sfqZswAVvQiXz5wyKbrJ3wEJuzpATjyO
+Ce2vpoolGh3G1FnuMeZgi2SMx3GWztH0JQtAmltWtb5h3qkQXHe3z8oIV/Bp9V7U
+S30oQxgWJZaEdvMXHnK37RqJhoIRe5qBj/ad+jvT+Iz/tOV9ujLOzw0Y0po751Id
+myHkYp7KHxD9dpKM1ywRRCkAFGdVatkn8B06qzVRHxHlpiyGJ43/aiGvZ7KDR77/
+f5jmI1yNAXZ9NYeZHulf
+=0Daz
+-----END PGP SIGNATURE-----
+
+--lIrNkN/7tmsD/ALM--
