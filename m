@@ -1,106 +1,324 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:49530 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511Ab3F1RAw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Jun 2013 13:00:52 -0400
-Received: by mail-ob0-f172.google.com with SMTP id wo10so2160922obc.17
-        for <linux-pci@vger.kernel.org>; Fri, 28 Jun 2013 10:00:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130628095138.D5B7BE0090@blue.fi.intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-2-git-send-email-mika.westerberg@linux.intel.com>
- <CAErSpo4Ks+8PPvpscWZE7LrRd-daOzV-kJi6Oim42A+nZnp3HQ@mail.gmail.com> <20130628095138.D5B7BE0090@blue.fi.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 28 Jun 2013 11:00:31 -0600
-Message-ID: <CAErSpo7pLoiaOeCbL1yLjdSbW7n0E8NMfkLGYpj8N=bvYBRN5w@mail.gmail.com>
-Subject: Re: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
-To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Tomasz Figa' <t.figa@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V10 0/4] PCIe support for Samsung Exynos5440 SoC
+Date: Fri, 21 Jun 2013 16:21:57 +0900
+Message-id: <003901ce6e50$03d039a0$0b70ace0$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 28, 2013 at 3:51 AM, Kirill A. Shutemov
-<kirill.shutemov@linux.intel.com> wrote:
-> Bjorn Helgaas wrote:
->> On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
->> <mika.westerberg@linux.intel.com> wrote:
->> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
->> >
->> > With Thunderbolt you can chain devices: connect a new devices to plugged
->> > one. In this case the slot is already enabled, but we still want to look
->> > for new devices behind it.
->> >
->> > We're going to reuse enable_device() for rescan for new devices on the
->> > enabled slot. Let's push the check up by stack.
->> >
->> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
->> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
->> > ---
->> >  drivers/pci/hotplug/acpiphp_glue.c | 5 ++---
->> >  1 file changed, 2 insertions(+), 3 deletions(-)
->> >
->> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> > index 59df857..b983e29 100644
->> > --- a/drivers/pci/hotplug/acpiphp_glue.c
->> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> > @@ -688,9 +688,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->> >         int num, max, pass;
->> >         LIST_HEAD(add_list);
->> >
->> > -       if (slot->flags & SLOT_ENABLED)
->> > -               goto err_exit;
->> > -
->> >         list_for_each_entry(func, &slot->funcs, sibling)
->> >                 acpiphp_bus_add(func);
->> >
->> > @@ -1242,6 +1239,8 @@ int acpiphp_enable_slot(struct acpiphp_slot *slot)
->> >                 goto err_exit;
->> >
->> >         if (get_slot_status(slot) == ACPI_STA_ALL) {
->> > +               if (slot->flags & SLOT_ENABLED)
->> > +                       goto err_exit;
->>
->> Why do we check for SLOT_ENABLED at all?  I think we're handling a Bus
->> Check notification, which means "re-enumerate on the device tree
->> starting from the notification point."  It doesn't say anything about
->> skipping the re-enumeration if we find a device that's already
->> enabled.
->>
->> It seems like we ought to just re-enumerate all the way down in case a
->> device was added farther down in the tree (which is what it sounds
->> like Thunderbolt is doing).
->
-> Currently (with patchset applied), we have two users of
-> acpiphp_enable_slot():
->
-> - /sys/bus/pci/slots/*/power
-> - ACPI_NOTIFY_BUS_CHECK in _handle_hotplug_event_func().
->
-> Both are not related to Thunderbolt.
->
-> Although, I think remove the check is good idea, I prefer to keep it
-> separate from Thunderbolt enabling patchset, since it will change sysfs
-> ABI a bit and can potentially affect othe ACPI PCI hotplug
-> implementations.
+Hi,
 
-I'll think about this some more, but if we can make a change that
-simplifies things and makes them more spec-compliant, and also happens
-to make Thunderbolt work, that sounds better than fixing Thunderbolt
-while leaving the wart there.
+This series of patches introduces PCIe support for Samsung Exynos5440,
+and is based on the latest 'linux-next' tree (20130620).
+These patches was tested with Intel e1000e LAN card on Exynos5440.
 
-If we only fix Thunderbolt, it just feels like we're adding to an
-ever-growing "deferred maintenance" list.
+This PATCH v10 follows:
+ * PATCH v9, sent on June, 21st 2013
+ * PATCH v8, sent on June, 20th 2013
+ * PATCH v7, sent on June, 20th 2013
+ * PATCH v6, sent on June, 20th 2013
+ * PATCH v5, sent on June, 13th 2013
+ * PATCH v4, sent on June, 12th 2013
+ * PATCH v3, sent on June, 6th 2013
+ * PATCH v2, sent on March, 23rd 2013
+ * PATCH v1, sent on March, 4th 2013
 
-Bjorn
+Changes between v9 and v10:
+  * Changed the file name from 'pci-designware.c' to 'pcie-designware.c'
+    guided by Pratyush Anand, because synopsis pcie and pci controllers
+    are different.
+  * Fixed the typos of document, reported by Sachin Kamat.
+
+Changes between v8 and v9:
+  * Changed the file name from 'exynos-pcie.txt' to 'designware-pcie.txt'.
+  * Added 'snps,dw-pcie' string to compatible property.
+
+Changes between v7 and v8:
+  * Changed the file name from 'pci-exynos.c' to 'pci-designware.c',
+    and added a generic string for compatible property to exynos-pcie.txt
+  * Moved pci_add_resource_offset() for I/O space to the 'if' clause
+  * Added Arnd's Acked-by
+
+Changes between v6 and v7:
+  * Split ARM DT patch to two patches
+  * Fixed node naming
+  * Added Arnd's Acked-by
+
+Changes between v5 and v6:
+  * Replaced phys_addr_t with u64 for physical addresses of regions
+  * Removed unnecessary inbound functions
+  * Added handling of io_offset, mem_offset as Arnd Bergmann guided
+  * Fixed calculating 'io' resource
+  * Removed module_exit() in order not to allow module unload
+
+Changes between v4 and v5:
+  * Used gpio binding in DT
+  * Increased the size of MEM region to 512 MB including CFG and IO regions in DT
+  * Reduced the size of CFG region to 4096 byte in DT
+  * Used the size of MEM region instead of hard-coded in_mem_size
+  * Fixed exynos_pcie_prog_viewport_{mem/io}_{outbound/inbound} functions
+    to use both translated addresses and untranslated addresses
+  * Replaced pci_add_resource_offset() with pci_add_resource()
+  * Added values from the DT individually to io_base, mem_base
+
+Changes between v3 and v4:
+  * Added support for multi domains as reviewed by Jason Gunthorpe,
+    and Arnd Bergmann.
+  * Fixed both MEM space and I/O space in DT.
+  * Removed redundant physical addresses from struct pcie_port,
+    added devm_ioremap_resource() to make add_pcie_port() simpler.
+  * Added clock names and clock enable/disable.
+
+Changes between v2 and v3:
+  * Rebased on the top of 3.10-rc4
+  * Updated names of PCIe PHY registers
+
+Changes between v1 and v2:
+  * Moved Exynos PCIe driver from arch/arm to drivers/pci/host.
+  * Added DT properties of PCI DT standard.
+
+
+Here is the lspci -vv output.
+
+0000:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        I/O behind bridge: 00001000-00001fff
+        Memory behind bridge: 40100000-401fffff
+        Prefetchable memory behind bridge: 40200000-402fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <64ns, L1 <2us
+                        ClockPM- Surprise- LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
+                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [100 v2] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [148 v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                        Status: NegoPending- InProgress-
+        Kernel driver in use: pcieport
+
+0000:01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 53
+        Region 0: Memory at 40180000 (32-bit, non-prefetchable) [size=128K]
+        Region 1: Memory at 40100000 (32-bit, non-prefetchable) [size=512K]
+        Region 2: I/O ports at 1000 [size=32]
+        Region 3: Memory at 401a0000 (32-bit, non-prefetchable) [size=16K]
+        [virtual] Expansion ROM at 40200000 [disabled] [size=256K]
+        Capabilities: [c8] Power Management version 2
+                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [e0] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #4, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
+                        ClockPM- Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
+                Vector table: BAR=3 offset=00000000
+                PBA: BAR=3 offset=00002000
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+        Capabilities: [140 v1] Device Serial Number 68-05-ca-ff-ff-11-5e-75
+        Kernel driver in use: e1000e
+
+0001:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        I/O behind bridge: 00000000-00000fff
+        Memory behind bridge: 60100000-601fffff
+        Prefetchable memory behind bridge: 60200000-602fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <64ns, L1 <2us
+                        ClockPM- Surprise- LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
+                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [100 v2] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [148 v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                        Status: NegoPending- InProgress-
+        Kernel driver in use: pcieport
+
+0001:01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 56
+        Region 0: Memory at 60180000 (32-bit, non-prefetchable) [size=128K]
+        Region 1: Memory at 60100000 (32-bit, non-prefetchable) [size=512K]
+        Region 2: I/O ports at 10000 [size=32]
+        Region 3: Memory at 601a0000 (32-bit, non-prefetchable) [size=16K]
+        [virtual] Expansion ROM at 60200000 [disabled] [size=256K]
+        Capabilities: [c8] Power Management version 2
+                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [e0] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #4, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
+                        ClockPM- Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
+                Vector table: BAR=3 offset=00000000
+                PBA: BAR=3 offset=00002000
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+        Capabilities: [140 v1] Device Serial Number 68-05-ca-ff-ff-18-44-c5
+        Kernel driver in use: e1000e
+
+
+Thank you.
+
+Best regards,
+Jingoo Han
+
+
+Jingoo Han (4):
+  pci: Add PCIe driver for Samsung Exynos
+  ARM: EXYNOS: Enable PCIe support for Exynos5440
+  ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
+  ARM: dts: Add pcie controller node for exynos5440-ssdk5440
+
+ arch/arm/boot/dts/exynos5440-ssdk5440.dts          |    8 ++++++
+ arch/arm/boot/dts/exynos5440.dtsi                  |   40 ++++++++++++++++++++++++++++-
+ arch/arm/Kconfig                                   |    1 +
+ arch/arm/mach-exynos/Kconfig                       |    2 ++
+ .../devicetree/bindings/pci/designware-pcie.txt    |   73 ++
+ drivers/pci/host/Kconfig                           |    9 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pcie-designware.c                 | 1057 ++++++++++++++++++++
+ 8 files changed, 1190 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/designware-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-designware.c
+-- 
+1.7.10.4
+
+
