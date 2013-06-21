@@ -1,63 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v3 08/27] x86, irq: kill create_irq()
-Date: Fri,  7 Jun 2013 15:30:54 -0700
-Message-Id: <1370644273-10495-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:52216 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030247Ab3FUDY2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 23:24:28 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Tomasz Figa' <t.figa@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V9 3/4] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Fri, 21 Jun 2013 12:24:26 +0900
+Message-id: <002301ce6e2e$d4fd8ae0$7ef8a0a0$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-create_irq() will return -1 when failing to allocate.
-create_irq_nr() will return 0 when failing to allocate.
+Exynos5440 has two PCIe controllers which can be used as root complex
+for PCIe interface.
 
-It only causes confusion.
-
-Now we have no user for create_irq(), so remove create_irq() for x86.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/x86/kernel/apic/io_apic.c | 15 ---------------
- 1 file changed, 15 deletions(-)
+ arch/arm/boot/dts/exynos5440.dtsi |   38 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 436fb38..70b6617 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2968,21 +2968,6 @@ unsigned int create_irq_nr(unsigned int from, int node)
- 	return __create_irqs(from, 1, node);
- }
- 
--int create_irq(void)
--{
--	int node = cpu_to_node(0);
--	unsigned int irq_want;
--	int irq;
--
--	irq_want = nr_irqs_gsi;
--	irq = create_irq_nr(irq_want, node);
--
--	if (irq == 0)
--		irq = -1;
--
--	return irq;
--}
--
- void destroy_irq(unsigned int irq)
- {
- 	struct irq_cfg *cfg = irq_get_chip_data(irq);
+diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+index 03d40c0..1ac4f5b 100644
+--- a/arch/arm/boot/dts/exynos5440.dtsi
++++ b/arch/arm/boot/dts/exynos5440.dtsi
+@@ -230,4 +230,42 @@
+ 		clocks = <&clock 24>;
+ 		clock-names = "usbhost";
+ 	};
++
++	pcie@290000 {
++		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
++		reg = <0x290000 0x1000
++			0x270000 0x1000
++			0x271000 0x40>;
++		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
++		clocks = <&clock 28>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
++			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 53>;
++	};
++
++	pcie@2a0000 {
++		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
++		reg = <0x2a0000 0x1000
++			0x272000 0x1000
++			0x271040 0x40>;
++		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
++		clocks = <&clock 29>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
++			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 56>;
++	};
+ };
 -- 
-1.8.1.4
+1.7.10.4
+
 
