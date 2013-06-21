@@ -1,51 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:45039 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753437Ab3FJXnL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 19:43:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130609153123.GD2245@breakpoint.cc>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-	<1370644273-10495-8-git-send-email-yinghai@kernel.org>
-	<20130609153123.GD2245@breakpoint.cc>
-Date: Mon, 10 Jun 2013 16:43:10 -0700
-Message-ID: <CAE9FiQU3FcuVUx5ZaOJWM+2cCakLThAXWzGopDKm88HFGW2i+Q@mail.gmail.com>
-Subject: Re: [PATCH v3 07/27] iommu, irq: Allocate irq_desc for dmar_msi with
- local node
-From: Yinghai Lu <yinghai@kernel.org>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Donald Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	xen-devel@lists.xensource.com,
+	virtualization@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/3] PCI: export three functions to support modular host bridge driver
+Date: Sat, 22 Jun 2013 00:12:46 +0800
+Message-Id: <1371831169-17291-2-git-send-email-liuj97@gmail.com>
+In-Reply-To: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
+References: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 9, 2013 at 8:31 AM, Sebastian Andrzej Siewior
-<sebastian@breakpoint.cc> wrote:
-> On Fri, Jun 07, 2013 at 03:30:53PM -0700, Yinghai Lu wrote:
->> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
->> index a7967ce..c09e60d 100644
->> --- a/drivers/iommu/dmar.c
->> +++ b/drivers/iommu/dmar.c
->> @@ -1273,7 +1273,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
->>       if (iommu->irq)
->>               return 0;
->>
->> -     irq = create_irq();
->> +     irq = create_irq_nr(0, iommu->node);
->>       if (!irq) {
->
-> This is okay. However you fix a bug here so you might want first fix the bug
-> with a Cc: stable tag and then do this.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-ok, will add cc to stable to two related patches.
+The xen-pcifront host bridge driver could be built as a module,
+so export pci_create_root_bus(), pci_stop_and_remove_root_bus() and
+pci_set_host_bridge_release() to support modular host bridge driver.
+It's a preparation for coming xen-pcifront refinement.
 
-Thanks
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: xen-devel@lists.xensource.com
+Cc: virtualization@lists.linux-foundation.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/host-bridge.c | 1 +
+ drivers/pci/probe.c       | 1 +
+ drivers/pci/remove.c      | 7 +++++++
+ include/linux/pci.h       | 1 +
+ 4 files changed, 10 insertions(+)
 
-Yinghai
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index a68dc61..6e390a6 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -34,6 +34,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 	bridge->release_fn = release_fn;
+ 	bridge->release_data = release_data;
+ }
++EXPORT_SYMBOL(pci_set_host_bridge_release);
+ 
+ static bool resource_contains(struct resource *res1, struct resource *res2)
+ {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 46ada5c..ed768d8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1801,6 +1801,7 @@ err_out:
+ 	kfree(b);
+ 	return NULL;
+ }
++EXPORT_SYMBOL(pci_create_root_bus);
+ 
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8fc54b7..f328668 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -147,3 +147,10 @@ void pci_remove_root_bus(struct pci_bus *bus)
+ 	/* remove the host bridge */
+ 	put_device(&host_bridge->dev);
+ }
++
++void pci_stop_and_remove_root_bus(struct pci_bus *bus)
++{
++	pci_stop_root_bus(bus);
++	pci_remove_root_bus(bus);
++}
++EXPORT_SYMBOL(pci_stop_and_remove_root_bus);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..f1229c7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -757,6 +757,7 @@ void pci_remove_bus(struct pci_bus *b);
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev);
+ void pci_stop_root_bus(struct pci_bus *bus);
+ void pci_remove_root_bus(struct pci_bus *bus);
++void pci_stop_and_remove_root_bus(struct pci_bus *bus);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ void pci_sort_breadthfirst(void);
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+-- 
+1.8.1.2
+
