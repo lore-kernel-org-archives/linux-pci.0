@@ -1,70 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:63440 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034Ab3FJTzQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 15:55:16 -0400
-Date: Mon, 10 Jun 2013 21:55:12 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Jay Agarwal <jagarwal@nvidia.com>
-Cc: linux@arm.linux.org.uk, swarren@wwwdotorg.org,
-	thierry.reding@avionic-design.de, bhelgaas@google.com,
-	ldewangan@nvidia.com, olof@lixom.net, hdoyu@nvidia.com,
-	pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V3 3/4] ARM: dts: tegra: Correct PCIe entry
-Message-ID: <20130610195511.GC25859@mithrandir>
-References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
- <1370372252-4332-3-git-send-email-jagarwal@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51C3EFD2.7090803@wwwdotorg.org>
+Date: Fri, 21 Jun 2013 00:16:50 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/Uq4LBwYP4y1W6pO"
-In-Reply-To: <1370372252-4332-3-git-send-email-jagarwal@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
+	Prashant Gaikwad <pgaikwad@nvidia.com>,
+	"mturquette@linaro.org" <mturquette@linaro.org>,
+	Peter De Schrijver <pdeschrijver@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Subject: Re: [PATCH V1] ARM: dts: tegra: Modify pcie memory space size
+References: <1371712491-31070-1-git-send-email-jagarwal@nvidia.com> <51C32CC7.5010109@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91CF1615EC@BGMAIL01.nvidia.com>
+In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91CF1615EC@BGMAIL01.nvidia.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 06/20/2013 11:30 PM, Jay Agarwal wrote:
+>> On 06/20/2013 01:14 AM, Jay Agarwal wrote:
+>>> - decrease non-prefetch memory size to 128 MB
+>>> - increase prefetch memory size to 384 MB
+>>> - above change is done because most pcie devices
+>>>   prefetch memory size requirement is quite higher
+>>>   compared to non-prefetch memory space.
+>>
+>> It's possible this change won't be suitable for all applications. People may
+>> simply need to adjust their DT based on what they want to connect.
+>> Still, this patch probably biases things in the correct way for now.
+>> Longer term, we might want to investigate dynamically sizing the windows
+>> in order to support arbitrary attached devices, in much the same way as the
+>> Marvell code does/will in order to conserve physical/bus address space for
+>> their multiple controllers.
+>>
+>> However, this change allows me to correctly enumerate a particular GPU I
+>> have plugged into my Harmony board, and assign all the BARs, so:
+>>
+>> Tested-by: Stephen Warren <swarren@nvidia.com>
+>
+> Thierry,
+> Could you please integrate this change also to your branch if review is done. Please let me know once it is done.
 
---/Uq4LBwYP4y1W6pO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Wed, Jun 05, 2013 at 12:27:31AM +0530, Jay Agarwal wrote:
-[...]
-> @@ -29,7 +29,7 @@
->  		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
->  			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
->  			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
-> -			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
-> +			  0x81000000 0 0          0x02000000 0 0x00100000   /* downstream I/O */
->  			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
->  			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
-
-That increases the I/O region size from 64 KiB to 1 MiB. Why is that
-necessary? I/O operations can only address 64 KiB, so I don't think
-adding more makes any sense.
-
-Thierry
-
---/Uq4LBwYP4y1W6pO
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRti8fAAoJEN0jrNd/PrOhxjgQAK+1wN9vDfIequNMrEXlvb6d
-Js6PT0otdyJqyYIOkyLDQWX0QxL14v/OKgI0zrcWoxD/IyYNAbEfLbPK9Eu0vTEv
-6rRGBzNLml1vg3DLctY07pkJ6reJGszQraqTSyRID98Hf/AfcHMAnjTU54jtvQ4j
-sS6Guay5XtYa+dR/3EhTIuVjv4lTPWX36DYKh2fiZeNQfKEZosnPoIVKZtWfTWHU
-ozdi8X24PK+5lLVeJpMgAD0/TzIOzzAFgvSqW/SdfLesIPUQk7oqk2WlHlZx75ni
-H9o0gujde9Fij2q3ySRNEvRiJAOMxNInGAmo9QyUPxJ928bP2x5FkFN7dcFseFZI
-UgPM42ZfZw+nluGQ+ILH153g/YyaSkhwY5tf01mWNe/BIgOqTQ0r0W67HuLCHm92
-PPqXwL1xrXpw2QUePolgdR7gHXDGRANlq8Q9yQ2xCiS/p2bSEhZxPlZ+0q7VMWdv
-TtM0RJHrL6N3C0O6Wwig004mjqR8/EidoVlB54rfI9Ig74RBr2i6oMx98H9AGmkG
-WLgCRHyEXLmF875NOz8Bz38MsFzXhQAlAfqV0Ufxuwvti4bWb14GjOyy5wOLfxpL
-vV16A/f3DDkIuLnkqmi/H9FdOii3xYyF8iyfQqGl7qvkayHEebHUaodiAYc/NDBy
-+f0h+yfoazYuRKpjrOU3
-=xmA8
------END PGP SIGNATURE-----
-
---/Uq4LBwYP4y1W6pO--
+I'm sure he will, but pinging after less than 24 hours is a little quick.
