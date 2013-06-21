@@ -1,90 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	linux-samsung-soc@vger.kernel.org,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Andrew Murray' <andrew.murray@arm.com>
-Subject: Re: [PATCH V4 3/3] ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
-Date: Wed, 12 Jun 2013 12:55:36 +0200
-Message-ID: <3532163.SqzZzxO4BR@wuerfel>
-In-Reply-To: <003801ce6756$6578ff80$306afe80$@samsung.com>
-References: <003801ce6756$6578ff80$306afe80$@samsung.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:44018 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945935Ab3FUTz3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 15:55:29 -0400
+Received: by mail-oa0-f45.google.com with SMTP id j1so10022913oag.32
+        for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2013 12:55:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAH9N0t_qrzLqeR6tZ8ykbFEzx0dZtCREjz9wCwCDTDDFwic6-Q@mail.gmail.com>
+References: <CAH9N0t_qrzLqeR6tZ8ykbFEzx0dZtCREjz9wCwCDTDDFwic6-Q@mail.gmail.com>
+Date: Fri, 21 Jun 2013 12:55:28 -0700
+Message-ID: <CAE9FiQWJV=NPn9yBX2nQ9z8hFc4_9tNHm5BWwsY4dG_h7yYmvA@mail.gmail.com>
+Subject: Re: PCIe Hotplug Script Automatization.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the update! A few comments again:
+On Fri, Jun 21, 2013 at 12:19 PM, Paulo Fortuna Carvalho
+<pricardofc@ipfn.ist.utl.pt> wrote:
+> pciehp is installed on system boot with modprobe pciehp pciehp_force=1.
+> acpiphp.ko is loaded with modprobe acpiphp but it gives an error message
+> saying that module acpiphp.ko does not exist although is there. Also if i
+> run dmesg it apears in the dmesg-print info.
+> Can you explain me the automatization mechanism?
 
-On Wednesday 12 June 2013 19:20:00 Jingoo Han wrote:
-> 
-> diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> index d55042b..efe7d39 100644
-> --- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> +++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> @@ -30,4 +30,12 @@
->                         clock-frequency = <50000000>;
->                 };
->         };
-> +
-> +       pcie0@40000000 {
-> +               reset-gpio = <5>;
-> +       };
-> +
-> +       pcie1@60000000 {
-> +               reset-gpio = <22>;
-> +       };
->  };
+What is kernel version ?
 
-As mentioned before, please use the gpio binding to pass gpio numbers.
+for v3.10-RC, acpiphp would get enabled always before pciehp.
+will need to have acpiphp.disable to skip that.
 
-> diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
-> index f6b1c89..2c15f9d 100644
-> --- a/arch/arm/boot/dts/exynos5440.dtsi
-> +++ b/arch/arm/boot/dts/exynos5440.dtsi
-> @@ -216,4 +216,42 @@
->                 clock-names = "rtc";
->                 status = "disabled";
->         };
-> +
-> +       pcie0@0x290000 {
-> +               compatible = "samsung,exynos5440-pcie";
-> +               reg = <0x290000 0x1000
-> +                       0x270000 0x1000
-> +                       0x271000 0x40>;
-> +               interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-> +               clocks = <&clock 28>, <&clock 27>;
-> +               clock-names = "pcie", "pcie_bus";
-> +               #address-cells = >;
-> +               #size-cells = <2>;
-> +               device_type = "pci";
-> +               ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
-> +                         0x81000000 0 0          0x40200000 0 0x00010000   /* downstream I/O */
-> +                         0x82000000 0 0x40210000 0x40210000 0 0x10000000>; /* non-prefetchable memory */
+when pciehp is loaded for pcie port, it will request msi irq to handle
+hotplug.
+when you put the card in and press the attension button.
+hotplug controller will generate one MSI.
+so pciehp will get enable the slot and scan the pci device.
+drivers core will load pci driver for new added pci cards.
 
-I think you did not reply to my question regarding the size of the
-memory space. Does it extend from 0x40210000 to 0x50210000,
-or from 0x40210000 to 0x50000000. You probably meant the latter
-but wrote the former. If not, please add a comment for clarification.
+So you need to make sure your have pciehp work properly.
 
-> +               #interrupt-cells = <1>;
-> +               interrupt-map-mask = <0 0 0 0>;
-> +               interrupt-map = <0x0 0 &gic 53>;
-> +       };
-
-So all PCI IntA interrupts are mapped to a single gic interrupt? That
-sounds like a bottleneck when you have a lot of devices on the bus.
-Do you have MSI support?
-
-	Arnd
+Yinghai
