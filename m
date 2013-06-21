@@ -1,41 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:34310 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751573Ab3FIDsI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Jun 2013 23:48:08 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH] PCI: Fix comment typo for pcie_pme_remove()
-Date: Sun, 9 Jun 2013 11:47:49 +0800
-Message-ID: <1370749669-20348-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:64709 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945950Ab3FUUTu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 16:19:50 -0400
+Received: by mail-ob0-f173.google.com with SMTP id wc20so8785110obb.4
+        for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2013 13:19:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAH9N0t_gPz_MBiBSbLpATD3j-+LgS=7jqNbtv3qqg6v8K76dzg@mail.gmail.com>
+References: <CAH9N0t_qrzLqeR6tZ8ykbFEzx0dZtCREjz9wCwCDTDDFwic6-Q@mail.gmail.com>
+	<CAE9FiQWJV=NPn9yBX2nQ9z8hFc4_9tNHm5BWwsY4dG_h7yYmvA@mail.gmail.com>
+	<CAH9N0t_gPz_MBiBSbLpATD3j-+LgS=7jqNbtv3qqg6v8K76dzg@mail.gmail.com>
+Date: Fri, 21 Jun 2013 13:19:49 -0700
+Message-ID: <CAE9FiQWXKJvhmmPHWX+v7EZdTkNWZAWgTtjibgsBVhWRYadoWg@mail.gmail.com>
+Subject: Re: PCIe Hotplug Script Automatization.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix trivial comment typo for pcie_pme_remove().
+On Fri, Jun 21, 2013 at 1:02 PM, Paulo Fortuna Carvalho
+<pricardofc@ipfn.ist.utl.pt> wrote:
+> Kernel version is 3.0.9-rt26.46.el6rt.x86_64.
+> Also at the moment im not loading acpiphp.ko module.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pcie/pme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+can you post boot log with "debug ignore_loglevel"?
 
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index 795db1f..e56e594 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -408,7 +408,7 @@ static int pcie_pme_resume(struct pcie_device *srv)
- 
- /**
-  * pcie_pme_remove - Prepare PCIe PME service device for removal.
-- * @srv - PCIe service device to resume.
-+ * @srv - PCIe service device to remove.
-  */
- static void pcie_pme_remove(struct pcie_device *srv)
- {
--- 
-1.7.1
-
-
+Yinghai
