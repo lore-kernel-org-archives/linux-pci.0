@@ -1,89 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:48112 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751285Ab3FZQcx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 12:32:53 -0400
-Received: by mail-ie0-f175.google.com with SMTP id a13so31246196iee.20
-        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 09:32:53 -0700 (PDT)
-Date: Wed, 26 Jun 2013 10:32:50 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Darren Hart <dvhart@linux.intel.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, peter.p.waskiewicz.jr@intel.com,
-	andriy.shevchenko@linux.intel.com, danders@circuitco.com,
-	vishal.l.verma@intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 7/8] pci: Add CircuitCo VENDOR ID and MinnowBoard DEVICE
- ID
-Message-ID: <20130626163250.GA29299@google.com>
-References: <cover.1372211451.git.dvhart@linux.intel.com>
- <83879b07cd4ce95f086420d1faa926c1692d63b4.1372211451.git.dvhart@linux.intel.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:45428 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965819Ab3FUM4j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Jun 2013 08:56:39 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Alexander E. Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, alexdeucher@gmail.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
+Date: Fri, 21 Jun 2013 15:06:01 +0200
+Message-ID: <4575839.Y4p5zUkCOQ@vostro.rjw.lan>
+In-Reply-To: <CAN_LGv1fHwGJ1TJNgNxN3r+rPbDiLum0hhRe4dVMaQPB-J-B-A@mail.gmail.com>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <CAN_LGv2kZy_8SrKae5YUwHoUM+mf1OgH2HkAEtiC+ojKCFYSeg@mail.gmail.com> <CAN_LGv1fHwGJ1TJNgNxN3r+rPbDiLum0hhRe4dVMaQPB-J-B-A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <83879b07cd4ce95f086420d1faa926c1692d63b4.1372211451.git.dvhart@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 06:53:27PM -0700, Darren Hart wrote:
-> Add CircuitCo's newly created VENDOR ID and their first board subsystem
-> ID for the MinnowBoard.
+On Friday, June 21, 2013 10:37:47 AM Alexander E. Patrakov wrote:
+> 2013/6/21 Alexander E. Patrakov <patrakov@gmail.com>:
+> > The initial dock went OK. The subsequent undock resulted in the blue
+> > led on the dock cable turning off quickly, but in PCI devices slowly,
+> > one-by-one, disappearing from the bus. Also, there were "acpi_handle
+> > corrupt" messages in dmesg. The subsequent dock resulted in no devices
+> > added to the bus. So - your patch is not a good replacement for
+> > patches 2 and 3 in the original series.
 > 
-> Signed-off-by: Darren Hart <dvhart@linux.intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: David Anders <danders@circuitco.com>
-> Cc: "H. Peter Anvin" <hpa@zytor.com>
-> Cc: Peter Waskiewicz <peter.p.waskiewicz.jr@intel.com>
-> Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  include/linux/pci_ids.h | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index c129162..b2879ce 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -149,6 +149,9 @@
->  #define PCI_DEVICE_ID_BERKOM_A4T		0xffa4
->  #define PCI_DEVICE_ID_BERKOM_SCITEL_QUADRO	0xffa8
->  
-> +#define PCI_VENDOR_ID_CIRCUITCO			0x1cc8
-> +#define PCI_DEVICE_ID_CIRCUITCO_MINNOWBOARD	0x0001
-> +
->  #define PCI_VENDOR_ID_COMPAQ		0x0e11
->  #define PCI_DEVICE_ID_COMPAQ_TOKENRING	0x0508
->  #define PCI_DEVICE_ID_COMPAQ_TACHYON	0xa0fc
-> -- 
-> 1.8.1.2
-> 
+> In this state, echo 1 > /sys/bus/pci/rescan resulted in a kernel BUG,
+> see the attached dmesg.
 
-Per conversation at [1], I merged the patch below to my pci/misc branch
-for v3.11:
+This one is much more interesting than the previous one.
 
-[1] https://lkml.kernel.org/r/6c27e79870ec93f7a8c6692d4bcfebaee589fa6b.1372211451.git.dvhart@linux.intel.com
+So first of all we have a deadlock related to the
+flush_workqueue(kacpi_notify_wq) in acpi_os_wait_events_complete().  I beleve
+it is related to the removal of a notify handler in cleanup_bridge().
+
+[  242.063120] INFO: task kworker/0:0:4 blocked for more than 120 seconds.
+[  242.063124] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  242.063126] kworker/0:0     D ffff8802540adf40     0     4      2 0x00000000
+[  242.063134] Workqueue: kacpi_hotplug _handle_hotplug_event_func
+[  242.063136]  ffff8802540d3828 0000000000000046 ffff8802540ae6d8 4ba25e032c97a1cb
+[  242.063139]  ffff8802540d3738 ffff8802540d3fd8 ffff8802540d3fd8 0000000000004000
+[  242.063142]  ffffffff81c11440 ffff8802540adf40 ffff8802540d3758 ffffffff8109cadb
+[  242.063145] Call Trace:
+[  242.063150]  [<ffffffff8109cadb>] ? add_lock_to_list.isra.20.constprop.37+0x7b/0xc0
+[  242.063152]  [<ffffffff8109fcc5>] ? __lock_acquire+0x1265/0x1ee0
+[  242.063156]  [<ffffffff8101020a>] ? save_stack_trace+0x2a/0x50
+[  242.063159]  [<ffffffff8165f764>] schedule+0x24/0x70
+[  242.063163]  [<ffffffff8165cab5>] schedule_timeout+0x205/0x260
+[  242.063165]  [<ffffffff810a1841>] ? mark_held_locks+0x61/0x150
+[  242.063169]  [<ffffffff81059deb>] ? flush_workqueue_prep_pwqs+0x6b/0x1b0
+[  242.063171]  [<ffffffff816611ab>] ? _raw_spin_unlock_irq+0x2b/0x60
+[  242.063174]  [<ffffffff810a1a35>] ? trace_hardirqs_on_caller+0x105/0x1d0
+[  242.063176]  [<ffffffff8165ea74>] wait_for_common+0x114/0x170
+[  242.063179]  [<ffffffff8165e195>] ? __mutex_unlock_slowpath+0xf5/0x1a0
+[  242.063182]  [<ffffffff810742a0>] ? try_to_wake_up+0x310/0x310
+[  242.063185]  [<ffffffff8165eae8>] wait_for_completion+0x18/0x20
+[  242.063187]  [<ffffffff8105abca>] flush_workqueue+0x1ca/0x6c0
+[  242.063190]  [<ffffffff8105aa00>] ? wq_cpumask_show+0x80/0x80
+[  242.063193]  [<ffffffff814380a5>] ? dev_vprintk_emit+0x55/0x70
+[  242.063196]  [<ffffffff813a0260>] ? handle_hotplug_event_func+0x80/0x80
+[  242.063199]  [<ffffffff813bfd67>] acpi_os_wait_events_complete+0x1c/0x1e
+[  242.063202]  [<ffffffff813d31e2>] acpi_remove_notify_handler+0x40/0x178
+[  242.063204]  [<ffffffff813a0ef8>] acpiphp_remove_slots+0x88/0x200
+[  242.063207]  [<ffffffff813a5c15>] acpi_pci_remove_bus+0x15/0x20
+[  242.063210]  [<ffffffff815335d9>] pcibios_remove_bus+0x9/0x10
+[  242.063215]  [<ffffffff81380881>] pci_remove_bus+0x41/0x60
+[  242.063217]  [<ffffffff813808eb>] pci_remove_bus_device+0x4b/0xe0
+[  242.063219]  [<ffffffff813808db>] pci_remove_bus_device+0x3b/0xe0
+[  242.063222]  [<ffffffff813808db>] pci_remove_bus_device+0x3b/0xe0
+[  242.063224]  [<ffffffff813808db>] pci_remove_bus_device+0x3b/0xe0
+[  242.063226]  [<ffffffff81380999>] pci_stop_and_remove_bus_device+0x19/0x20
+[  242.063229]  [<ffffffff813a1236>] acpiphp_disable_slot+0x86/0x140
+[  242.063231]  [<ffffffff813a1622>] _handle_hotplug_event_func+0x102/0x1e0
+[  242.063234]  [<ffffffff8105c2c2>] process_one_work+0x1c2/0x560
+[  242.063236]  [<ffffffff8105c257>] ? process_one_work+0x157/0x560
+[  242.063238]  [<ffffffff8105d1d6>] worker_thread+0x116/0x370
+[  242.063241]  [<ffffffff8105d0c0>] ? manage_workers.isra.20+0x2d0/0x2d0
+[  242.063243]  [<ffffffff81063a36>] kthread+0xd6/0xe0
+[  242.063245]  [<ffffffff816611ab>] ? _raw_spin_unlock_irq+0x2b/0x60
+[  242.063248]  [<ffffffff81063960>] ? __init_kthread_worker+0x70/0x70
+[  242.063251]  [<ffffffff8166856c>] ret_from_fork+0x7c/0xb0
+[  242.063253]  [<ffffffff81063960>] ? __init_kthread_worker+0x70/0x70
+[  242.063255] 4 locks held by kworker/0:0/4:
+[  242.063256]  #0:  (kacpi_hotplug){.+.+.+}, at: [<ffffffff8105c257>] process_one_work+0x157/0x560
+[  242.063262]  #1:  ((&hp_work->work)){+.+.+.}, at: [<ffffffff8105c257>] process_one_work+0x157/0x560
+[  242.063266]  #2:  (acpi_scan_lock){+.+.+.}, at: [<ffffffff813c3ac6>] acpi_scan_lock_acquire+0x12/0x14
+[  242.063272]  #3:  (&slot->crit_sect){+.+.+.}, at: [<ffffffff813a11d0>] acpiphp_disable_slot+0x20/0x140
+
+And that is the source of the subsequent re-dock failure (the event cannot be
+processed due to the workqueue being stuck).  I don't know why this happens at
+the moment, but I'm going to figure out.
+
+And the BUG is because we pass a NULL pointer to sysfs_create_bin_file()
+somewhere in pci_create_sysfs_dev_files(), but again I don't know why exactly
+at the moment.
+
+Let's communicate further in bug #59501.
+
+Thanks,
+Rafael
 
 
-commit 9f4de80a09667538e1162fdecff96ccb5bb354a8
-Author: Darren Hart <dvhart@linux.intel.com>
-Date:   Tue Jun 25 20:08:46 2013 -0600
-
-    PCI: Add CircuitCo vendor ID
-    
-    Add CircuitCo's newly created VENDOR ID
-    
-    [bhelgaas: sort, drop device ID (only used once)]
-    Signed-off-by: Darren Hart <dvhart@linux.intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index c129162..8b1aa7f 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2476,6 +2476,8 @@
- 
- #define PCI_VENDOR_ID_ASMEDIA		0x1b21
- 
-+#define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
-+
- #define PCI_VENDOR_ID_TEKRAM		0x1de1
- #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
- 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
