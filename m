@@ -1,312 +1,483 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Tomasz Figa' <t.figa@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH V8 0/3] PCIe support for Samsung Exynos5440 SoC
-Date: Thu, 20 Jun 2013 21:40:12 +0900
-Message-id: <00da01ce6db3$4ea4f490$ebeeddb0$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:47194 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750924Ab3FVVQb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 22 Jun 2013 17:16:31 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: linux-acpi@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/3] ACPI / dock / PCI: Synchronous handling of dock events for PCI devices
+Date: Sat, 22 Jun 2013 23:25:33 +0200
+Message-ID: <15269989.ojxutYs2L1@vostro.rjw.lan>
+In-Reply-To: <2737587.I0nULev1kj@vostro.rjw.lan>
+References: <2737587.I0nULev1kj@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This series of patches introduces PCIe support for Samsung Exynos5440,
-and is based on the latest 'linux-next' tree (20130619).
-These patches was tested with Intel e1000e LAN card on Exynos5440.
+The interactions between the ACPI dock driver and the ACPI-based PCI
+hotplug (acpiphp) are currently problematic because of ordering
+issues during hot-remove operations.
 
-This PATCH v8 follows:
- * PATCH v7, sent on June, 20th 2013
- * PATCH v6, sent on June, 20th 2013
- * PATCH v5, sent on June, 13th 2013
- * PATCH v4, sent on June, 12th 2013
- * PATCH v3, sent on June, 6th 2013
- * PATCH v2, sent on March, 23rd 2013
- * PATCH v1, sent on March, 4th 2013
+First of all, the current ACPI glue code expects that physical
+devices will always be deleted before deleting the companion ACPI
+device objects.  Otherwise, acpi_unbind_one() will fail with a
+warning message printed to the kernel log, for example:
 
-Changes between v7 and v8:
-  * Changed the file name from 'pci-exynos.c' to 'pci-designware.c',
-    and added a generic string for compatible property to exynos-pcie.txt
-  * Moved pci_add_resource_offset() for I/O space to the 'if' clause
-  * Added Arnd's Acked-by
+[  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
+[  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
+[  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
+[  180.013656]  port1: Oops, 'acpi_handle' corrupt
 
-Changes between v6 and v7:
-  * Split ARM DT patch to two patches
-  * Fixed node naming
-  * Added Arnd's Acked-by
+This means, in particular, that struct pci_dev objects have to
+be deleted before the struct acpi_device objects they are "glued"
+with.
 
-Changes between v5 and v6:
-  * Replaced phys_addr_t with u64 for physical addresses of regions
-  * Removed unnecessary inbound functions
-  * Added handling of io_offset, mem_offset as Arnd Bergmann guided
-  * Fixed calculating 'io' resource
-  * Removed module_exit() in order not to allow module unload
+Now, the following happens the during the undocking of an ACPI-based
+dock station:
+ 1) hotplug_dock_devices() invokes registered hotplug callbacks to
+    destroy physical devices associated with the ACPI device objects
+    depending on the dock station.  It calls dd->ops->handler() for
+    each of those device objects.
+ 2) For PCI devices dd->ops->handler() points to
+    handle_hotplug_event_func() that queues up a separate work item
+    to execute _handle_hotplug_event_func() for the given device and
+    returns immediately.  That work item will be executed later.
+ 3) hotplug_dock_devices() calls dock_remove_acpi_device() for each
+    device depending on the dock station.  This runs acpi_bus_trim()
+    for each of them, which causes the underlying ACPI device object
+    to be destroyed, but the work items queued up by
+    handle_hotplug_event_func() haven't been started yet.
+ 4) _handle_hotplug_event_func() queued up in step 2) are executed
+    and cause the above failure to happen, because the PCI devices
+    they handle do not have the companion ACPI device objects any
+    more (they have been deleted in step 3).
 
-Changes between v4 and v5:
-  * Used gpio binding in DT
-  * Increased the size of MEM region to 512 MB including CFG and IO regions in DT
-  * Reduced the size of CFG region to 4096 byte in DT
-  * Used the size of MEM region instead of hard-coded in_mem_size
-  * Fixed exynos_pcie_prog_viewport_{mem/io}_{outbound/inbound} functions
-    to use both translated addresses and untranslated addresses
-  * Replaced pci_add_resource_offset() with pci_add_resource()
-  * Added values from the DT individually to io_base, mem_base
+The possible breakage doesn't end here, though, because
+hotplug_dock_devices() may return before at least some of the
+_handle_hotplug_event_func() work items spawned by it have a
+chance to complete and then undock() will cause _DCK to be
+evaluated and that will cause the devices handled by the
+_handle_hotplug_event_func() to go away possibly while they are
+being accessed.
 
-Changes between v3 and v4:
-  * Added support for multi domains as reviewed by Jason Gunthorpe,
-    and Arnd Bergmann.
-  * Fixed both MEM space and I/O space in DT.
-  * Removed redundant physical addresses from struct pcie_port,
-    added devm_ioremap_resource() to make add_pcie_port() simpler.
-  * Added clock names and clock enable/disable.
+This means that dd->ops->handler() for PCI devices should not point
+to handle_hotplug_event_func().  Instead, it should point to a
+function that will do the work of _handle_hotplug_event_func()
+synchronously.  For this reason, introduce such a function,
+hotplug_event_func(), and modity acpiphp_dock_ops to point to
+it as the handler.
 
-Changes between v2 and v3:
-  * Rebased on the top of 3.10-rc4
-  * Updated names of PCIe PHY registers
+Unfortunately, however, this is not sufficient, because if the dock
+code were not changed further, hotplug_event_func() would now
+deadlock with hotplug_dock_devices() that called it, since it would
+run unregister_hotplug_dock_device() which in turn would attempt to
+acquire the dock station's hp_lock mutex already acquired by
+hotplug_dock_devices().
 
-Changes between v1 and v2:
-  * Moved Exynos PCIe driver from arch/arm to drivers/pci/host.
-  * Added DT properties of PCI DT standard.
+To resolve that deadlock use the observation that
+unregister_hotplug_dock_device() won't need to acquire hp_lock
+if PCI bridges the devices on the dock station depend on are
+prevented from being removed prematurely while the first loop in
+hotplug_dock_devices() is in progress.
 
+To make that possible, introduce a mechanism by which the callers of
+register_hotplug_dock_device() can provide "init" and "release"
+routines that will be executed, respectively, after the addition
+and removal of the physical device object associated with the
+given ACPI device handle.  Make acpiphp use two new functions,
+acpiphp_dock_init() and acpiphp_dock_release(), respectively,
+calling get_bridge() and put_bridge() on the PCI bridge holding the
+given device, respectively, for this purpose.
 
-Here is the lspci -vv output.
+In addition to that, remove the dock station's list of
+"hotplug devices" and make the dock code always walk the whole list
+of "dependent devices" instead in such a way that the loops in
+hotplug_dock_devices() and dock_event() (replacing the loops over
+"hotplug devices") will take references to the list entries that
+register_hotplug_dock_device() has been called for.  That prevents
+the "release" routines associated with those entries from being
+called while the given entry is being processed and for PCI
+devices this means that their bridges won't be removed (by a
+concurrent thread) while hotplug_event_func() handling them is
+being executed.
 
-0000:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        I/O behind bridge: 00001000-00001fff
-        Memory behind bridge: 40100000-401fffff
-        Prefetchable memory behind bridge: 40200000-402fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
-                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag+ RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <64ns, L1 <2us
-                        ClockPM- Surprise- LLActRep+ BwNot+
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [148 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Kernel driver in use: pcieport
+This change is based on two earlier patches from Jiang Liu.
 
-0000:01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
-        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 53
-        Region 0: Memory at 40180000 (32-bit, non-prefetchable) [size=128K]
-        Region 1: Memory at 40100000 (32-bit, non-prefetchable) [size=512K]
-        Region 2: I/O ports at 1000 [size=32]
-        Region 3: Memory at 401a0000 (32-bit, non-prefetchable) [size=16K]
-        [virtual] Expansion ROM at 40200000 [disabled] [size=256K]
-        Capabilities: [c8] Power Management version 2
-                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
-        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [e0] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-                LnkCap: Port #4, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
-                Vector table: BAR=3 offset=00000000
-                PBA: BAR=3 offset=00002000
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-        Capabilities: [140 v1] Device Serial Number 68-05-ca-ff-ff-11-5e-75
-        Kernel driver in use: e1000e
+References: https://bugzilla.kernel.org/show_bug.cgi?id=59501
+Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
+Tracked-down-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: 3.9+ <stable@vger.kernel.org>
+---
+ drivers/acpi/dock.c                |  152 +++++++++++++++++++++++++------------
+ drivers/pci/hotplug/acpiphp_glue.c |   46 +++++++----
+ include/acpi/acpi_drivers.h        |    4 
+ 3 files changed, 138 insertions(+), 64 deletions(-)
 
-0001:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        I/O behind bridge: 00000000-00000fff
-        Memory behind bridge: 60100000-601fffff
-        Prefetchable memory behind bridge: 60200000-602fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
-                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag+ RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <64ns, L1 <2us
-                        ClockPM- Surprise- LLActRep+ BwNot+
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [148 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Kernel driver in use: pcieport
-
-0001:01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
-        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 56
-        Region 0: Memory at 60180000 (32-bit, non-prefetchable) [size=128K]
-        Region 1: Memory at 60100000 (32-bit, non-prefetchable) [size=512K]
-        Region 2: I/O ports at 10000 [size=32]
-        Region 3: Memory at 601a0000 (32-bit, non-prefetchable) [size=16K]
-        [virtual] Expansion ROM at 60200000 [disabled] [size=256K]
-        Capabilities: [c8] Power Management version 2
-                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
-        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [e0] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-                LnkCap: Port #4, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
-                Vector table: BAR=3 offset=00000000
-                PBA: BAR=3 offset=00002000
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-        Capabilities: [140 v1] Device Serial Number 68-05-ca-ff-ff-18-44-c5
-        Kernel driver in use: e1000e
-
-
-Thank you.
-
-Best regards,
-Jingoo Han
-
-
-Jingoo Han (4):
-  pci: Add PCIe driver for Samsung Exynos
-  ARM: EXYNOS: Enable PCIe support for Exynos5440
-  ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
-  ARM: dts: Add pcie controller node for exynos5440-ssdk5440
-
- arch/arm/boot/dts/exynos5440-ssdk5440.dts          |    8 ++++++
- arch/arm/boot/dts/exynos5440.dtsi                  |   40 ++++++++++++++++++++++++++++-
- arch/arm/Kconfig                                   |    1 +
- arch/arm/mach-exynos/Kconfig                       |    2 ++
- .../devicetree/bindings/pci/exynos-pcie.txt        |   73 ++
- drivers/pci/host/Kconfig                           |    9 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-designware.c                  | 1057 ++++++++++++++++++++
- 8 files changed, 1190 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/pci/exynos-pcie.txt
- create mode 100644 drivers/pci/host/pci-designware.c
--- 
-1.7.10.4
-
+Index: linux-pm/drivers/acpi/dock.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/dock.c
++++ linux-pm/drivers/acpi/dock.c
+@@ -66,20 +66,21 @@ struct dock_station {
+ 	spinlock_t dd_lock;
+ 	struct mutex hp_lock;
+ 	struct list_head dependent_devices;
+-	struct list_head hotplug_devices;
+ 
+ 	struct list_head sibling;
+ 	struct platform_device *dock_device;
+ };
+ static LIST_HEAD(dock_stations);
+ static int dock_station_count;
++static DEFINE_MUTEX(hotplug_lock);
+ 
+ struct dock_dependent_device {
+ 	struct list_head list;
+-	struct list_head hotplug_list;
+ 	acpi_handle handle;
+-	const struct acpi_dock_ops *ops;
+-	void *context;
++	const struct acpi_dock_ops *hp_ops;
++	void *hp_context;
++	unsigned int hp_refcount;
++	void (*hp_release)(void *);
+ };
+ 
+ #define DOCK_DOCKING	0x00000001
+@@ -111,7 +112,6 @@ add_dock_dependent_device(struct dock_st
+ 
+ 	dd->handle = handle;
+ 	INIT_LIST_HEAD(&dd->list);
+-	INIT_LIST_HEAD(&dd->hotplug_list);
+ 
+ 	spin_lock(&ds->dd_lock);
+ 	list_add_tail(&dd->list, &ds->dependent_devices);
+@@ -121,35 +121,90 @@ add_dock_dependent_device(struct dock_st
+ }
+ 
+ /**
+- * dock_add_hotplug_device - associate a hotplug handler with the dock station
+- * @ds: The dock station
+- * @dd: The dependent device struct
+- *
+- * Add the dependent device to the dock's hotplug device list
+- */
+-static void
+-dock_add_hotplug_device(struct dock_station *ds,
+-			struct dock_dependent_device *dd)
+-{
+-	mutex_lock(&ds->hp_lock);
+-	list_add_tail(&dd->hotplug_list, &ds->hotplug_devices);
+-	mutex_unlock(&ds->hp_lock);
++ * dock_init_hotplug - Initialize a hotplug device on a docking station.
++ * @dd: Dock-dependent device.
++ * @ops: Dock operations to attach to the dependent device.
++ * @context: Data to pass to the @ops callbacks and @release.
++ * @init: Optional initialization routine to run after setting up context.
++ * @release: Optional release routine to run on removal.
++ */
++static int dock_init_hotplug(struct dock_dependent_device *dd,
++			     const struct acpi_dock_ops *ops, void *context,
++			     void (*init)(void *), void (*release)(void *))
++{
++	int ret = 0;
++
++	mutex_lock(&hotplug_lock);
++
++	if (dd->hp_context) {
++		ret = -EEXIST;
++	} else {
++		dd->hp_refcount = 1;
++		dd->hp_ops = ops;
++		dd->hp_context = context;
++		dd->hp_release = release;
++	}
++
++	if (!WARN_ON(ret) && init)
++		init(context);
++
++	mutex_unlock(&hotplug_lock);
++	return ret;
+ }
+ 
+ /**
+- * dock_del_hotplug_device - remove a hotplug handler from the dock station
+- * @ds: The dock station
+- * @dd: the dependent device struct
++ * dock_release_hotplug - Decrement hotplug reference counter of dock device.
++ * @dd: Dock-dependent device.
+  *
+- * Delete the dependent device from the dock's hotplug device list
++ * Decrement the reference counter of @dd and if 0, detach its hotplug
++ * operations from it, reset its context pointer and run the optional release
++ * routine if present.
+  */
+-static void
+-dock_del_hotplug_device(struct dock_station *ds,
+-			struct dock_dependent_device *dd)
++static void dock_release_hotplug(struct dock_dependent_device *dd)
+ {
+-	mutex_lock(&ds->hp_lock);
+-	list_del(&dd->hotplug_list);
+-	mutex_unlock(&ds->hp_lock);
++	void (*release)(void *) = NULL;
++	void *context = NULL;
++
++	mutex_lock(&hotplug_lock);
++
++	if (dd->hp_context && !--dd->hp_refcount) {
++		dd->hp_ops = NULL;
++		context = dd->hp_context;
++		dd->hp_context = NULL;
++		release = dd->hp_release;
++		dd->hp_release = NULL;
++	}
++
++	if (release && context)
++		release(context);
++
++	mutex_unlock(&hotplug_lock);
++}
++
++static void dock_hotplug_event(struct dock_dependent_device *dd, u32 event,
++			       bool uevent)
++{
++	acpi_notify_handler cb = NULL;
++	bool run = false;
++
++	mutex_lock(&hotplug_lock);
++
++	if (dd->hp_context) {
++		run = true;
++		dd->hp_refcount++;
++		if (dd->hp_ops)
++			cb = uevent ? dd->hp_ops->uevent : dd->hp_ops->handler;
++	}
++
++	mutex_unlock(&hotplug_lock);
++
++	if (!run)
++		return;
++
++	if (cb)
++		cb(dd->handle, event, dd->hp_context);
++
++	dock_release_hotplug(dd);
+ }
+ 
+ /**
+@@ -360,9 +415,8 @@ static void hotplug_dock_devices(struct
+ 	/*
+ 	 * First call driver specific hotplug functions
+ 	 */
+-	list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list)
+-		if (dd->ops && dd->ops->handler)
+-			dd->ops->handler(dd->handle, event, dd->context);
++	list_for_each_entry(dd, &ds->dependent_devices, list)
++		dock_hotplug_event(dd, event, false);
+ 
+ 	/*
+ 	 * Now make sure that an acpi_device is created for each
+@@ -398,9 +452,8 @@ static void dock_event(struct dock_stati
+ 	if (num == DOCK_EVENT)
+ 		kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
+ 
+-	list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list)
+-		if (dd->ops && dd->ops->uevent)
+-			dd->ops->uevent(dd->handle, event, dd->context);
++	list_for_each_entry(dd, &ds->dependent_devices, list)
++		dock_hotplug_event(dd, event, true);
+ 
+ 	if (num != DOCK_EVENT)
+ 		kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
+@@ -570,18 +623,22 @@ EXPORT_SYMBOL_GPL(unregister_dock_notifi
+  * @handle: the handle of the device
+  * @ops: handlers to call after docking
+  * @context: device specific data
++ * @init: Optional initialization routine to run after registration
++ * @release: Optional release routine to run on unregistration
+  *
+  * If a driver would like to perform a hotplug operation after a dock
+  * event, they can register an acpi_notifiy_handler to be called by
+  * the dock driver after _DCK is executed.
+  */
+-int
+-register_hotplug_dock_device(acpi_handle handle, const struct acpi_dock_ops *ops,
+-			     void *context)
++int register_hotplug_dock_device(acpi_handle handle,
++				 const struct acpi_dock_ops *ops, void *context,
++				 void (*init)(void *), void (*release)(void *))
+ {
+ 	struct dock_dependent_device *dd;
+ 	struct dock_station *dock_station;
+-	int ret = -EINVAL;
++
++	if (WARN_ON(!context))
++		return -EINVAL;
+ 
+ 	if (!dock_station_count)
+ 		return -ENODEV;
+@@ -597,15 +654,11 @@ register_hotplug_dock_device(acpi_handle
+ 		 * ops
+ 		 */
+ 		dd = find_dock_dependent_device(dock_station, handle);
+-		if (dd) {
+-			dd->ops = ops;
+-			dd->context = context;
+-			dock_add_hotplug_device(dock_station, dd);
+-			ret = 0;
+-		}
++		if (dd)
++			return dock_init_hotplug(dd, ops, context,
++						 init, release);
+ 	}
+-
+-	return ret;
++	return -EINVAL;
+ }
+ EXPORT_SYMBOL_GPL(register_hotplug_dock_device);
+ 
+@@ -623,8 +676,10 @@ void unregister_hotplug_dock_device(acpi
+ 
+ 	list_for_each_entry(dock_station, &dock_stations, sibling) {
+ 		dd = find_dock_dependent_device(dock_station, handle);
+-		if (dd)
+-			dock_del_hotplug_device(dock_station, dd);
++		if (dd) {
++			dock_release_hotplug(dd);
++			return;
++		}
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(unregister_hotplug_dock_device);
+@@ -953,7 +1008,6 @@ static int __init dock_add(acpi_handle h
+ 	mutex_init(&dock_station->hp_lock);
+ 	spin_lock_init(&dock_station->dd_lock);
+ 	INIT_LIST_HEAD(&dock_station->sibling);
+-	INIT_LIST_HEAD(&dock_station->hotplug_devices);
+ 	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
+ 	INIT_LIST_HEAD(&dock_station->dependent_devices);
+ 
+Index: linux-pm/include/acpi/acpi_drivers.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_drivers.h
++++ linux-pm/include/acpi/acpi_drivers.h
+@@ -123,7 +123,9 @@ extern int register_dock_notifier(struct
+ extern void unregister_dock_notifier(struct notifier_block *nb);
+ extern int register_hotplug_dock_device(acpi_handle handle,
+ 					const struct acpi_dock_ops *ops,
+-					void *context);
++					void *context,
++					void (*init)(void *),
++					void (*release)(void *));
+ extern void unregister_hotplug_dock_device(acpi_handle handle);
+ #else
+ static inline int is_dock_device(acpi_handle handle)
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -61,6 +61,7 @@ static DEFINE_MUTEX(bridge_mutex);
+ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
++static void hotplug_event_func(acpi_handle handle, u32 type, void *context);
+ static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
+ static void free_bridge(struct kref *kref);
+ 
+@@ -147,7 +148,7 @@ static int post_dock_fixups(struct notif
+ 
+ 
+ static const struct acpi_dock_ops acpiphp_dock_ops = {
+-	.handler = handle_hotplug_event_func,
++	.handler = hotplug_event_func,
+ };
+ 
+ /* Check whether the PCI device is managed by native PCIe hotplug driver */
+@@ -179,6 +180,20 @@ static bool device_is_managed_by_native_
+ 	return true;
+ }
+ 
++static void acpiphp_dock_init(void *data)
++{
++	struct acpiphp_func *func = data;
++
++	get_bridge(func->slot->bridge);
++}
++
++static void acpiphp_dock_release(void *data)
++{
++	struct acpiphp_func *func = data;
++
++	put_bridge(func->slot->bridge);
++}
++
+ /* callback routine to register each ACPI PCI slot object */
+ static acpi_status
+ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+@@ -298,7 +313,8 @@ register_slot(acpi_handle handle, u32 lv
+ 		 */
+ 		newfunc->flags &= ~FUNC_HAS_EJ0;
+ 		if (register_hotplug_dock_device(handle,
+-			&acpiphp_dock_ops, newfunc))
++			&acpiphp_dock_ops, newfunc,
++			acpiphp_dock_init, acpiphp_dock_release))
+ 			dbg("failed to register dock device\n");
+ 
+ 		/* we need to be notified when dock events happen
+@@ -1068,22 +1084,12 @@ static void handle_hotplug_event_bridge(
+ 	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
+ }
+ 
+-static void _handle_hotplug_event_func(struct work_struct *work)
++static void hotplug_event_func(acpi_handle handle, u32 type, void *context)
+ {
+-	struct acpiphp_func *func;
++	struct acpiphp_func *func = context;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+-	struct acpi_hp_work *hp_work;
+-	acpi_handle handle;
+-	u32 type;
+-
+-	hp_work = container_of(work, struct acpi_hp_work, work);
+-	handle = hp_work->handle;
+-	type = hp_work->type;
+-	func = (struct acpiphp_func *)hp_work->context;
+-
+-	acpi_scan_lock_acquire();
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+@@ -1116,6 +1122,18 @@ static void _handle_hotplug_event_func(s
+ 		warn("notify_handler: unknown event type 0x%x for %s\n", type, objname);
+ 		break;
+ 	}
++}
++
++static void _handle_hotplug_event_func(struct work_struct *work)
++{
++	struct acpi_hp_work *hp_work;
++	struct acpiphp_func *func;
++
++	hp_work = container_of(work, struct acpi_hp_work, work);
++	func = hp_work->context;
++	acpi_scan_lock_acquire();
++
++	hotplug_event_func(hp_work->handle, hp_work->type, func);
+ 
+ 	acpi_scan_lock_release();
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
 
