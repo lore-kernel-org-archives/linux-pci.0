@@ -1,131 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.missinglinkelectronics.com ([5.9.45.205]:60644 "EHLO
-	smtp.missinglinkelectronics.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752001Ab3FALad (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 07:30:33 -0400
-Message-ID: <51A9DB54.3090709@missinglinkelectronics.com>
-Date: Sat, 01 Jun 2013 13:30:28 +0200
-From: David Epping <david.epping@missinglinkelectronics.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: MSI-X capability display of pciutils
-References: <51A920C5.40209@missinglinkelectronics.com> <CAErSpo7CrajY0__m91yRMi0oo0CjrGdqWPYWxQx+rx5zz4F-qg@mail.gmail.com> <51A9333C.60902@missinglinkelectronics.com>
-In-Reply-To: <51A9333C.60902@missinglinkelectronics.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2737587.I0nULev1kj@vostro.rjw.lan>
+References: <2737587.I0nULev1kj@vostro.rjw.lan>
+From: Illya Klymov <xanf@xanf.me>
+Date: Sun, 23 Jun 2013 00:43:08 +0300
+Message-ID: <CALSWrKhdDAEPJE7xXcWx4ZqqJe-B+okyJfAwx=viR+saR0ZYkw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] ACPI / dock / PCI: Fix problems with dock and PCI hotplug
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+Hi, guys. Sorry for entering your talk
+I have a Sony Vaio SVZ1311Z9RXI and just tested your patched against
+3.10-rc7 and they work like a charm
+scenarios tested:
+- boot with dock
+- boot without dock, hotplug dock
+- dock / undock / redock
 
-I found a ECN and presentation by PCI-SIG. Both documents describe 
-exactly the scheme you pointed out.
-Seems I have been using an old or draft version. I will request the 
-current version right now.
+All devices tested to be working in all 3 cases:
+- video card
+- ethernet controller
+- blue ray drive
+- USB controller
 
-Thank you for your kind help and sorry for any confusion caused.
-Best regards,
-David
+Thank you a lot!
 
-On 01.06.2013 01:33, David Epping wrote:
-> On 01.06.2013 00:48, Bjorn Helgaas wrote:
->> On Fri, May 31, 2013 at 4:14 PM, David Epping
->> <david.epping@missinglinkelectronics.com>  wrote:
->>> Hello,
->>>
->>> I am inspecting the MSI-X setup of some PCIe devices and have questions
->>> about the output of lspci.
->>>
->>> It looks something like this:
->>> Capabilities: [50] MSI-X: Enable+ Count=32 Masked-
->>>      Vector table: BAR=0 offset=00002000
->>>      PBA: BAR=0 offset=00003000
->>>
->>> As far as I understand the PCI 3.0 specification MSI-X capabilities 
->>> define a
->>> 32 bit register for the upper address portion of the MSI target 
->>> addresses
->>> (at capability offset 4) and another 32 bit register pointing to the 
->>> BAR and
->>> inter-BAR offset for the table of lower address portions of the MSI 
->>> target
->>> addresses (at capability offset 8).
->>> Why are there two lines in the lspci output indicating some BAR and 
->>> offset?
->>> What do they mean?
->> My understanding is that there are three data structures here:
->>    1) The MSI-X Capability (Figure 6-10) in config space
->>    2) The "MSI-X Table" (Figure 6-11) in PCI memory space
->>    3) The "MSI-X PBA" (Pending Bit Array, Figure 6-12) in PCI memory 
->> space
->>
->> The "Vector table" line tells you how to find the "MSI-X Table," and
->> the "PBA" line tells you how to find the "MSI-X PBA" table.
->>
->> In MSI (not MSI-X), there is only one MSI target address, and it is in
->> the MSI capability.
->>
->> In MSI-X, each MSI-X vector can have its own target address, and those
->> addresses are not in the capability itself; they are stored in the
->> memory decoded by a BAR.
->>
->> In your case, you would read the bus address from BAR 0, and the
->> vector table should be at offsets 0x2000-0x21ff (32 16-byte entries)
->> from that address.  The PBA should be at offsets 0x3000-0x30ff (32
->> 8-byte entries).
->>
->> lspci will show you the BAR values, but it doesn't dump PCI memory
->> space, so you'd have to use /dev/mem or a tool like
->> http://cmp.felk.cvut.cz/~pisa/linux/rdwrmem.c to actually look at the
->> tables.
->>
->> Bjorn
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sun, Jun 23, 2013 at 12:19 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> Hi All,
 >
-> Bjorn,
+> Unfortunately, the Alexander's docking station for Sony VAIO VPCZ23A4R is
+> basically unusable with v3.10-rc6 and, as it turns out, there are multiple
+> problems with it.
 >
-> thank you for your quick reply.
+> First, the acpiphp initialization ordering has changed recently,
+> acpiphp_enumerate_slots() is now always run for the first time during the
+> initial ACPI namespace scan in acpi_scan_init() which has broken support
+> for PCI devices on ACPI-based docking stations, because the ACPI dock
+> subsystem has to be initialized *before* acpiphp_enumerate_slots() is first
+> run.
 >
-> So far the concepts of MSI and MSI-X are clear. I did not have the 
-> meaning of the PBA acronym, but now I know what it stands for.
-> I do however not see that reflected in the spec. As your figure 
-> references are off by one and I do not have the PBA figure, we should 
-> clarify the document used. I'm looking at PCI Local Bus Specification 
-> Revision 3.0 from August 2002.
+> Fix that, and it turns out that undocking actually doesn't work correctly
+> because of some synchronization problems between the dock driver, acpiphp
+> and the PCI core.  [That part was actually the most difficult to fix.]
 >
-> According to this document (and in case I'm reading it correctly) the 
-> pending bit is part of each MSI-X Vector Table entry (lowest bit in 
-> the address portion - section 6.8.2.6). The lspci source code and its 
-> output (and your explanation) however suggest that the pending bits 
-> are stored in a separate table.
-> In addition this specification document has the common upper address 
-> portion of each MSI target address at capability offset 4 and the BAR 
-> and intra-BAR offset at capability offset 8. The pciutils source code 
-> defines the later to be at 4 and uses offset 8 to derive the PBA.
+> Fix that, and you'll find that PCI resources are not allocated correctly
+> after undocking and re-docking (when initially docked).
 >
-> I wonder where our disconnect is. What is the title and revision of 
-> the document you are referring to?
-> Thanks again,
-> David
+> The three patches in this series make the Alexander's docking station kind
+> of usable, so if no one has objections, I'd like to put them on a fast track
+> to Linus.
 >
-> -- 
+> [1/3] Initialize ACPI dock subsystem before enumerating the PCI hierarchy
+>       (that also makes the dock driver non-modular).
+>
+> [2/3] Make acpiphp use the same rules for allocating PCI resources that are
+>       used at boot time.
+>
+> [3/3] Make acpiphp handle dock events synchronously (instead of spawning
+>       separate work items to handle them).  [The changelog of this patch
+>       is likely one of the longest I've ever written and it sort of looks
+>       like a crime story.]
+>
+> This series is mostly based on the work of Jiang Liu (thanks Gerry!) and
+> the Alexander's testing that we wouldn't have done much progress without
+> (thanks Alexander!).
+>
+> Alexander, I've modified patch [3/3] a bit since you have tested it.
+> The modifications shouldn't affect the behavior, but if you could re-test it,
+> that would be great.
+>
+> Thanks,
+> Rafael
+>
+>
+> --
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
+> --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-David Epping
-david.epping@missinglinkelectronics.com
-Skype: david.epping
-Mobile US: +1 (408) 4757-574
-Mobile DE: +49 (179) 9656-223
-
-Missing Link Electronics
-http://www.missinglinkelectronics.com
-Office DE: +49 (731) 802-3930
-Office US: +1  (408) 457-0700
-Skype: missing.link.electronics
-
