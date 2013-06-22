@@ -1,51 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:58880 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913Ab3FBICf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jun 2013 04:02:35 -0400
-Date: Sun, 2 Jun 2013 01:02:32 -0700
-From: Tejun Heo <tj@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Shane Huang <shane.huang@amd.com>,
-	Jean Delvare <khali@linux-fr.org>,
-	linux-i2c <linux-i2c@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
-Message-ID: <20130602080232.GC8286@mtj.dyndns.org>
-References: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
- <20130531081623.GB17241@mtj.dyndns.org>
- <CAErSpo4A_tuhsyErPOae5QgBdnUFK4f9kMitH0xUSnV6mYWYrA@mail.gmail.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:50513 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924Ab3FVVji (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 22 Jun 2013 17:39:38 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4A_tuhsyErPOae5QgBdnUFK4f9kMitH0xUSnV6mYWYrA@mail.gmail.com>
+In-Reply-To: <1409252.T5jEfLdPAg@vostro.rjw.lan>
+References: <2737587.I0nULev1kj@vostro.rjw.lan>
+	<1409252.T5jEfLdPAg@vostro.rjw.lan>
+Date: Sat, 22 Jun 2013 14:39:37 -0700
+Message-ID: <CAE9FiQUCovi1mMJrkbFBfr0em1B_gQKxYQSYha0d6-CpvMTAng@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ACPI / dock: Initialize ACPI dock subsystem upfront
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 31, 2013 at 01:24:57PM -0600, Bjorn Helgaas wrote:
-> On Fri, May 31, 2013 at 2:16 AM, Tejun Heo <tj@kernel.org> wrote:
-> > On Fri, May 31, 2013 at 04:12:30PM +0800, Shane Huang wrote:
-> >> To add AMD CZ SMBus controller device ID.
-> >>
-> >> Signed-off-by: Shane Huang <shane.huang@amd.com>
-> >
-> > All three patches look good to me.
-> >
-> >  Reviewed-by: Tejun Heo <tj@kernel.org>
-> >
-> > Both 2 and 3 are dependent on the first patch, so it probably would be
-> > a good idea to route them together (probably w/ stable cc'd).  Who
-> > wants these?  Bjorn?
-> 
-> The pci_ids.h change is fine with me.  I don't care how they're
-> routed.  If you want me to pick them up, maybe Shane could collect up
-> the acks & reviewed-bys and add the appropriate stable tags and resend
-> the series to me.
+On Sat, Jun 22, 2013 at 2:21 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Jiang Liu <jiang.liu@huawei.com>
+>
+> Commit 3b63aaa70e1 (PCI: acpiphp: Do not use ACPI PCI subdriver
+> mechanism) introduced an ACPI dock support regression, because it
+> changed the relative initialization order of the ACPI dock subsystem
+> and the ACPI-based PCI hotplug (acpiphp).
+>
+> Namely, the ACPI dock subsystem has to be initialized before
+> acpiphp_enumerate_slots() is first run, which after commit
+> 3b63aaa70e1 happens during the initial enumeration of the PCI
+> hierarchy triggered by the initial ACPI namespace scan in
+> acpi_scan_init().  For this reason, the dock subsystem has to be
+> initialized before the initial ACPI namespace scan in
+> acpi_scan_init().
+>
+> To make that happen, modify the ACPI dock subsystem to be
+> non-modular and add the invocation of its initialization routine,
+> acpi_dock_init(), to acpi_scan_init() directly before the initial
+> namespace scan.
+>
+> [rjw: Changelog, removal of dock_exit().]
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=59501
+> Reported-and-tested-by: Alexander E. Patrakov <patrakov@gmail.com>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: 3.9+ <stable@vger.kernel.org>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/acpi/dock.c     |   42 +-----------------------------------------
+>  drivers/acpi/internal.h |    5 +++++
+>  drivers/acpi/scan.c     |    1 +
+>  3 files changed, 7 insertions(+), 41 deletions(-)
+>
+> Index: linux-pm/drivers/acpi/dock.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/dock.c
+> +++ linux-pm/drivers/acpi/dock.c
+> @@ -994,30 +994,6 @@ err_unregister:
+>  }
+>
+>  /**
+> - * dock_remove - free up resources related to the dock station
+> - */
+> -static int dock_remove(struct dock_station *ds)
+> -{
+> -       struct dock_dependent_device *dd, *tmp;
+> -       struct platform_device *dock_device = ds->dock_device;
+> -
+> -       if (!dock_station_count)
+> -               return 0;
+> -
+> -       /* remove dependent devices */
+> -       list_for_each_entry_safe(dd, tmp, &ds->dependent_devices, list)
+> -               kfree(dd);
+> -
+> -       list_del(&ds->sibling);
+> -
+> -       /* cleanup sysfs */
+> -       sysfs_remove_group(&dock_device->dev.kobj, &dock_attribute_group);
+> -       platform_device_unregister(dock_device);
+> -
+> -       return 0;
+> -}
+> -
+> -/**
+>   * find_dock_and_bay - look for dock stations and bays
+>   * @handle: acpi handle of a device
+>   * @lvl: unused
+> @@ -1035,7 +1011,7 @@ find_dock_and_bay(acpi_handle handle, u3
+>         return AE_OK;
+>  }
+>
+> -static int __init dock_init(void)
+> +int __init acpi_dock_init(void)
+>  {
+>         if (acpi_disabled)
+>                 return 0;
+> @@ -1054,19 +1030,3 @@ static int __init dock_init(void)
+>                 ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
+>         return 0;
+>  }
+> -
+> -static void __exit dock_exit(void)
+> -{
+> -       struct dock_station *tmp, *dock_station;
+> -
+> -       unregister_acpi_bus_notifier(&dock_acpi_notifier);
+> -       list_for_each_entry_safe(dock_station, tmp, &dock_stations, sibling)
+> -               dock_remove(dock_station);
+> -}
+> -
+> -/*
+> - * Must be called before drivers of devices in dock, otherwise we can't know
+> - * which devices are in a dock
+> - */
+> -subsys_initcall(dock_init);
+> -module_exit(dock_exit);
 
-Yeah, let's go through Bjorn's tree and preferably with stable cc'd
-and targeted for for-3.10-rcX.  Shane?
+Finally that weird pair is gone.
 
-Thanks.
+Acked-by: Yinghai Lu <yinghai@kernel.org>
 
--- 
-tejun
+> Index: linux-pm/drivers/acpi/internal.h
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/internal.h
+> +++ linux-pm/drivers/acpi/internal.h
+> @@ -41,6 +41,11 @@ void acpi_container_init(void);
+>  #else
+>  static inline void acpi_container_init(void) {}
+>  #endif
+> +#ifdef CONFIG_ACPI_DOCK
+> +void acpi_dock_init(void);
+> +#else
+> +static inline void acpi_dock_init(void) {}
+> +#endif
+>  #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
+>  void acpi_memory_hotplug_init(void);
+>  #else
+> Index: linux-pm/drivers/acpi/scan.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/scan.c
+> +++ linux-pm/drivers/acpi/scan.c
+> @@ -2134,6 +2134,7 @@ int __init acpi_scan_init(void)
+>         acpi_cmos_rtc_init();
+>         acpi_container_init();
+>         acpi_memory_hotplug_init();
+> +       acpi_dock_init();
+>
+>         mutex_lock(&acpi_scan_lock);
+>         /*
+>
