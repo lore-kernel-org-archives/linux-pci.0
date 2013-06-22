@@ -1,38 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:41517 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919Ab3FDWIK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 18:08:10 -0400
-Received: by mail-ie0-f171.google.com with SMTP id s9so1775915iec.30
-        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 15:08:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6GBw4C3mXRrd_f=6GFnEwhH7tHcAkp+ib=HMwVPpc0=w@mail.gmail.com>
-References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
-	<1369974092-11450-2-git-send-email-jiang.liu@huawei.com>
-	<CAErSpo70u7oM07jcGA+E1MUHA4OWiJ1gQ8SuS7YCRuvGMxeaqA@mail.gmail.com>
-	<CAErSpo5YbhPtB9OtjkUrMo8OKkjFXzOxeR3Jc4dQU8eC9D45XQ@mail.gmail.com>
-	<CAE9FiQW=WM5v+VExCS0Od6gow7j4tTEOunECwqHP_hZduOETJw@mail.gmail.com>
-	<CAErSpo6GBw4C3mXRrd_f=6GFnEwhH7tHcAkp+ib=HMwVPpc0=w@mail.gmail.com>
-Date: Tue, 4 Jun 2013 15:08:09 -0700
-Message-ID: <CAE9FiQWBxm1bz2=gR_rho642qJVoWrxCSkc1YW-banwPBWXirg@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Xudong Hao <xudong.hao@intel.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: linux-acpi@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] ACPI / dock: Initialize ACPI dock subsystem upfront
+Date: Sat, 22 Jun 2013 23:21:35 +0200
+Message-ID: <1409252.T5jEfLdPAg@vostro.rjw.lan>
+In-Reply-To: <2737587.I0nULev1kj@vostro.rjw.lan>
+References: <2737587.I0nULev1kj@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 4, 2013 at 3:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Jun 4, 2013 at 3:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Well, I read that in the changelog, but that doesn't tell me what bad
-> things happen as a result.  Can you elaborate a little bit?  Does it
-> mean PM doesn't work, hotplug doesn't work, drivers can't bind to the
-> VFs correctly, the magic smoke comes out of the PF, or what?
+From: Jiang Liu <jiang.liu@huawei.com>
 
-no, I did not notice anything unusual except the binding message.
-as my platform have those PM disabled.
+Commit 3b63aaa70e1 (PCI: acpiphp: Do not use ACPI PCI subdriver
+mechanism) introduced an ACPI dock support regression, because it
+changed the relative initialization order of the ACPI dock subsystem
+and the ACPI-based PCI hotplug (acpiphp).
+
+Namely, the ACPI dock subsystem has to be initialized before
+acpiphp_enumerate_slots() is first run, which after commit
+3b63aaa70e1 happens during the initial enumeration of the PCI
+hierarchy triggered by the initial ACPI namespace scan in
+acpi_scan_init().  For this reason, the dock subsystem has to be
+initialized before the initial ACPI namespace scan in
+acpi_scan_init().
+
+To make that happen, modify the ACPI dock subsystem to be
+non-modular and add the invocation of its initialization routine,
+acpi_dock_init(), to acpi_scan_init() directly before the initial
+namespace scan.
+
+[rjw: Changelog, removal of dock_exit().]
+References: https://bugzilla.kernel.org/show_bug.cgi?id=59501
+Reported-and-tested-by: Alexander E. Patrakov <patrakov@gmail.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: 3.9+ <stable@vger.kernel.org>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/dock.c     |   42 +-----------------------------------------
+ drivers/acpi/internal.h |    5 +++++
+ drivers/acpi/scan.c     |    1 +
+ 3 files changed, 7 insertions(+), 41 deletions(-)
+
+Index: linux-pm/drivers/acpi/dock.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/dock.c
++++ linux-pm/drivers/acpi/dock.c
+@@ -994,30 +994,6 @@ err_unregister:
+ }
+ 
+ /**
+- * dock_remove - free up resources related to the dock station
+- */
+-static int dock_remove(struct dock_station *ds)
+-{
+-	struct dock_dependent_device *dd, *tmp;
+-	struct platform_device *dock_device = ds->dock_device;
+-
+-	if (!dock_station_count)
+-		return 0;
+-
+-	/* remove dependent devices */
+-	list_for_each_entry_safe(dd, tmp, &ds->dependent_devices, list)
+-		kfree(dd);
+-
+-	list_del(&ds->sibling);
+-
+-	/* cleanup sysfs */
+-	sysfs_remove_group(&dock_device->dev.kobj, &dock_attribute_group);
+-	platform_device_unregister(dock_device);
+-
+-	return 0;
+-}
+-
+-/**
+  * find_dock_and_bay - look for dock stations and bays
+  * @handle: acpi handle of a device
+  * @lvl: unused
+@@ -1035,7 +1011,7 @@ find_dock_and_bay(acpi_handle handle, u3
+ 	return AE_OK;
+ }
+ 
+-static int __init dock_init(void)
++int __init acpi_dock_init(void)
+ {
+ 	if (acpi_disabled)
+ 		return 0;
+@@ -1054,19 +1030,3 @@ static int __init dock_init(void)
+ 		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
+ 	return 0;
+ }
+-
+-static void __exit dock_exit(void)
+-{
+-	struct dock_station *tmp, *dock_station;
+-
+-	unregister_acpi_bus_notifier(&dock_acpi_notifier);
+-	list_for_each_entry_safe(dock_station, tmp, &dock_stations, sibling)
+-		dock_remove(dock_station);
+-}
+-
+-/*
+- * Must be called before drivers of devices in dock, otherwise we can't know
+- * which devices are in a dock
+- */
+-subsys_initcall(dock_init);
+-module_exit(dock_exit);
+Index: linux-pm/drivers/acpi/internal.h
+===================================================================
+--- linux-pm.orig/drivers/acpi/internal.h
++++ linux-pm/drivers/acpi/internal.h
+@@ -41,6 +41,11 @@ void acpi_container_init(void);
+ #else
+ static inline void acpi_container_init(void) {}
+ #endif
++#ifdef CONFIG_ACPI_DOCK
++void acpi_dock_init(void);
++#else
++static inline void acpi_dock_init(void) {}
++#endif
+ #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
+ void acpi_memory_hotplug_init(void);
+ #else
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -2134,6 +2134,7 @@ int __init acpi_scan_init(void)
+ 	acpi_cmos_rtc_init();
+ 	acpi_container_init();
+ 	acpi_memory_hotplug_init();
++	acpi_dock_init();
+ 
+ 	mutex_lock(&acpi_scan_lock);
+ 	/*
+
