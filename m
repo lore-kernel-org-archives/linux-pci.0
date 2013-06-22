@@ -1,93 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:46886 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755286Ab3FVDAt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 23:00:49 -0400
 MIME-Version: 1.0
-In-Reply-To: <2737587.I0nULev1kj@vostro.rjw.lan>
-References: <2737587.I0nULev1kj@vostro.rjw.lan>
-From: Illya Klymov <xanf@xanf.me>
-Date: Sun, 23 Jun 2013 00:43:08 +0300
-Message-ID: <CALSWrKhdDAEPJE7xXcWx4ZqqJe-B+okyJfAwx=viR+saR0ZYkw@mail.gmail.com>
-Subject: Re: [PATCH 0/3] ACPI / dock / PCI: Fix problems with dock and PCI hotplug
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
+References: <1367837311.15842.31.camel@pasglop>
+	<1370066593-22736-1-git-send-email-yinghai@kernel.org>
+Date: Fri, 21 Jun 2013 20:00:48 -0700
+Message-ID: <CAE9FiQUknj7bw_G5et=QDuUe-oGbEGAPeZVU=SZK2VeCgM_cAw@mail.gmail.com>
+Subject: Re: [PATCH v5 0/7] PCI: Change assign unassigned resources per root
+ bus bassis
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, guys. Sorry for entering your talk
-I have a Sony Vaio SVZ1311Z9RXI and just tested your patched against
-3.10-rc7 and they work like a charm
-scenarios tested:
-- boot with dock
-- boot without dock, hotplug dock
-- dock / undock / redock
+On Fri, May 31, 2013 at 11:03 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> BenH reported that there is some assign unassigned resource problem
+> in powerpc.
+>
+> It turns out after
+> | commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
+> | Date:   Thu Feb 23 19:23:29 2012 -0800
+> |
+> |    PCI: Retry on IORESOURCE_IO type allocations
+>
+> even the root bus does not have io port range, it will keep retrying
+> to realloc with mmio.
+>
+> After checking the code, found that we bound io port and mmio fail
+> path together.
+> First patch fix the problem, that will not make mmio fall back to must-only
+> when only have io port fail with must+optional.
+>
+> During we found the fix for that problem, found that we can separate assign
+> unassigned resources to per root bus.
+> that will make the code simple, also could reuse it for hotadd path.
+>
+> These patches are targeted to 3.11
+>
+> -v4: split first patch into 4 patches per Bjorn.
+> -v5: drop two patches that will pass root bus resource mask after we found
+>      simple and less intrusive way to fix the problem.
+>
+>  PCI: Don't let mmio fallback to must-only, if ioport fails with must+optional
+>  PCI: Don't use temp bus for pci_bus_release_bridge_resources
+>  PCI: Use pci_walk_bus to detect unassigned resources
+>  PCI: Introduce enable_local to prepare per root bus handling
+>  PCI: Split pci_assign_unassigned_resources to per root bus
+>  PCI: Enable pci bridge when it is needed
+>  PCI: Retry assign unassigned resources for hotadd root bus
 
-All devices tested to be working in all 3 cases:
-- video card
-- ethernet controller
-- blue ray drive
-- USB controller
+Hi, Bjorn,
 
-Thank you a lot!
+Can you put this patchset in pci/next for 3.11?
 
-On Sun, Jun 23, 2013 at 12:19 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> Hi All,
->
-> Unfortunately, the Alexander's docking station for Sony VAIO VPCZ23A4R is
-> basically unusable with v3.10-rc6 and, as it turns out, there are multiple
-> problems with it.
->
-> First, the acpiphp initialization ordering has changed recently,
-> acpiphp_enumerate_slots() is now always run for the first time during the
-> initial ACPI namespace scan in acpi_scan_init() which has broken support
-> for PCI devices on ACPI-based docking stations, because the ACPI dock
-> subsystem has to be initialized *before* acpiphp_enumerate_slots() is first
-> run.
->
-> Fix that, and it turns out that undocking actually doesn't work correctly
-> because of some synchronization problems between the dock driver, acpiphp
-> and the PCI core.  [That part was actually the most difficult to fix.]
->
-> Fix that, and you'll find that PCI resources are not allocated correctly
-> after undocking and re-docking (when initially docked).
->
-> The three patches in this series make the Alexander's docking station kind
-> of usable, so if no one has objections, I'd like to put them on a fast track
-> to Linus.
->
-> [1/3] Initialize ACPI dock subsystem before enumerating the PCI hierarchy
->       (that also makes the dock driver non-modular).
->
-> [2/3] Make acpiphp use the same rules for allocating PCI resources that are
->       used at boot time.
->
-> [3/3] Make acpiphp handle dock events synchronously (instead of spawning
->       separate work items to handle them).  [The changelog of this patch
->       is likely one of the longest I've ever written and it sort of looks
->       like a crime story.]
->
-> This series is mostly based on the work of Jiang Liu (thanks Gerry!) and
-> the Alexander's testing that we wouldn't have done much progress without
-> (thanks Alexander!).
->
-> Alexander, I've modified patch [3/3] a bit since you have tested it.
-> The modifications shouldn't affect the behavior, but if you could re-test it,
-> that would be great.
->
-> Thanks,
-> Rafael
->
->
-> --
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Found another pciehp will need this one two. the pcie bridge does not
+have io port range and it cause mmio get clear and retry.
+
+Thanks
+
+Yinghai
