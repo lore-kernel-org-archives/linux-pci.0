@@ -1,95 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH V3 3/3] ARM: dts: Add pcie controller node for Samsung
- EXYNOS5440 SoC
-Date: Fri, 07 Jun 2013 18:24:07 +0900
-Message-id: <000f01ce6360$c29c3370$47d49a50$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: "Alexander E. Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>, alexdeucher@gmail.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
+Date: Sun, 23 Jun 2013 23:52:32 +0200
+Message-ID: <1397053.iSJsVQ5uPZ@vostro.rjw.lan>
+In-Reply-To: <51C71AFA.4090102@gmail.com>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <4437606.laqX8rCptb@vostro.rjw.lan> <51C71AFA.4090102@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Exynos5440 has two PCIe controllers which can be used as root complex
-for PCIe interface.
+On Sunday, June 23, 2013 11:57:46 PM Jiang Liu wrote:
+> On 06/23/2013 03:59 AM, Rafael J. Wysocki wrote:
+> > On Saturday, June 22, 2013 10:47:24 AM Jiang Liu wrote:
+> >> On 06/22/2013 08:13 AM, Rafael J. Wysocki wrote:
+> >>> On Saturday, June 22, 2013 12:54:21 AM Jiang Liu wrote:
+> >>>> On 06/21/2013 03:06 AM, Rafael J. Wysocki wrote:
+> >>>>> On Wednesday, June 19, 2013 11:18:41 AM Alexander E. Patrakov wrote:
+> >>>>>> 2013/6/19 Rafael J. Wysocki <rjw@sisk.pl>:
+> >>>>>>> OK, let's try to untangle this a bit.
+> >>>>>>>
+> >>>>>>> If you applyt patches [1/4] and [4/4] from the $subject series only, what
+> >>>>>>> does remain unfixed?
+> >>>>>>
+> >>>>>> [not tested, can do so in 12 hours if needed]
+> >>>>>>
+> >>>>>> I think there will be problems on undocking and/or on the second
+> >>>>>> docking, as described in comments #6 - #8 of
+> >>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=59501
+> >>>>>
+> >>>>> OK, I think I have something that might work.  It may not solve all problems,
+> >>>>> but maybe it helps a bit.  Unfortunately, I can't really test it, so please do
+> >>>>> if you can.
+> >>>>>
+> >>>>> Please apply [1/4] and [4/4] and the one below and see what happens.
+> >>>>>
+> >>>>> Thanks,
+> >>>>> Rafael
+> >>>>>
+> >>>>>
+> >>>>> ---
+> >>>>> Rationale:
+> >>>>> 	acpiphp_glue.c:disable_device() trims the underlying ACPI device objects
+> >>>>> 	after removing the companion PCI devices, so the dock station code
+> >>>>> 	doesn't need to trim them separately for the dependent devices handled
+> >>>>> 	by acpiphp.
+> >>>>>
+> >>>>> 	Moreover, acpiphp_glue.c is the only user of
+> >>>>> 	[un]register_hotplug_dock_device(), so *all* devices on the
+> >>>>> 	ds->hotplug_devices list are handled by acpiphp and ops is set for all
+> >>>>> 	of them.
+> >>>> Hi Rafael,
+> >>>>     There's an ongoing patch to fix a disk bay hotplug regression, which
+> >>>> may add a second caller of register_hotplug_device(). Please refer to
+> >>>> bug 59871, and the proposed patch is at:
+> >>>> https://bugzilla.kernel.org/attachment.cgi?id=105581
+> >> Hi Rafael,
+> >>     You can find the proposed patch for ATA Bay hotplug at
+> >> https://bugzilla.kernel.org/attachment.cgi?id=105581
+> > 
+> > Well, maybe it'll have to be reworked slightly.
+> > 
+> > Which BZ entry is that?
+> Hi Rafael,
+> 	It's bug 59871, please refer to:
+> https://bugzilla.kernel.org/show_bug.cgi?id=59871
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++++
- arch/arm/boot/dts/exynos5440.dtsi         |   32 +++++++++++++++++++++++++++++
- 2 files changed, 40 insertions(+)
+OK, thanks!
 
-diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-index d55042b..efe7d39 100644
---- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-+++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-@@ -30,4 +30,12 @@
- 			clock-frequency = <50000000>;
- 		};
- 	};
-+
-+	pcie0@40000000 {
-+		reset-gpio = <5>;
-+	};
-+
-+	pcie1@60000000 {
-+		reset-gpio = <22>;
-+	};
- };
-diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
-index f6b1c89..ea37e94 100644
---- a/arch/arm/boot/dts/exynos5440.dtsi
-+++ b/arch/arm/boot/dts/exynos5440.dtsi
-@@ -216,4 +216,36 @@
- 		clock-names = "rtc";
- 		status = "disabled";
- 	};
-+
-+	pcie0@40000000 {
-+		compatible = "samsung,exynos5440-pcie";
-+		reg = <0x40000000 0x4000
-+			0x290000 0x1000
-+			0x270000 0x1000
-+			0x271000 0x40>;
-+		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		bus-range = <0x0 0xf>;
-+		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
-+			  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
-+			  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
-+	};
-+
-+	pcie1@60000000 {
-+		compatible = "samsung,exynos5440-pcie";
-+		reg = <0x60000000 0x4000
-+			0x2a0000 0x1000
-+			0x272000 0x1000
-+			0x271040 0x40>;
-+		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		bus-range = <0x0 0xf>;
-+		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00200000   /* configuration space */
-+			  0x81000000 0 0	  0x60200000 0 0x00004000   /* downstream I/O */
-+			  0x82000000 0 0	  0x60204000 0 0x10000000>; /* non-prefetchable memory */
-+	};
- };
--- 
-1.7.10.4
+I suppose it would be most convenient to simply add that patch to this
+patchset.
 
+Thanks,
+Rafael
