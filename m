@@ -1,93 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51B0B99C.4020009@gmail.com>
-Date: Fri, 07 Jun 2013 00:32:28 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: "Alexander E. Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>, alexdeucher@gmail.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
 	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>,
-	xen-devel <xen-devel@lists.xensource.com>
-Subject: Re: [PATCH v3, part1 04/10] PCI: mark pci_scan_bus_parented() as
- __deprecated
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-5-git-send-email-jiang.liu@huawei.com> <CAErSpo5bysp-s-twUWgZEyJD01skjW=vXkcQBYkn_TALP83r1g@mail.gmail.com>
-In-Reply-To: <CAErSpo5bysp-s-twUWgZEyJD01skjW=vXkcQBYkn_TALP83r1g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
+Date: Sun, 23 Jun 2013 23:51:08 +0200
+Message-ID: <4594257.0MqNgJk35h@vostro.rjw.lan>
+In-Reply-To: <51C71AFA.4090102@gmail.com>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <4437606.laqX8rCptb@vostro.rjw.lan> <51C71AFA.4090102@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu 06 Jun 2013 04:04:36 AM CST, Bjorn Helgaas wrote:
-> [+cc Konrad, Jeremy, xen-devel (users of interface you're deprecating)]
->
-> On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> Mark pci_scan_bus_parented() as __deprecated and clean up outdated
->> comments.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> Cc: Chris Metcalf <cmetcalf@tilera.com>
->> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->> Cc: Thierry Reding <thierry.reding@avionic-design.de>
->> Cc: linux-kernel@vger.kernel.org
->> Cc: linux-pci@vger.kernel.org
->> ---
->>  arch/tile/kernel/pci.c | 3 ---
->>  include/linux/pci.h    | 4 ++--
->>  2 files changed, 2 insertions(+), 5 deletions(-)
->>
->> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
->> index 67237d3..936e087 100644
->> --- a/arch/tile/kernel/pci.c
->> +++ b/arch/tile/kernel/pci.c
->> @@ -309,9 +309,6 @@ int __init pcibios_init(void)
->>                          *
->>                          * It reads the PCI tree for this bus into the Linux
->>                          * data structures.
->> -                        *
->> -                        * This is inlined in linux/pci.h and calls into
->> -                        * pci_scan_bus_parented() in probe.c.
->>                          */
->>                         pci_add_resource(&resources, &ioport_resource);
->>                         pci_add_resource(&resources, &iomem_resource);
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index b0f4a82..7b23fa0 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -720,8 +720,8 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->>  void pcibios_scan_specific_bus(int busn);
->>  struct pci_bus *pci_find_bus(int domain, int busnr);
->>  void pci_bus_add_devices(const struct pci_bus *bus);
->> -struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
->> -                                     struct pci_ops *ops, void *sysdata);
->> +struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
->> +                       int bus, struct pci_ops *ops, void *sysdata);
->>  struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
->>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->>                                     struct pci_ops *ops, void *sysdata,
->
-> I think this patch is a good idea, but I think we need to change the
-> only existing user of pci_scan_bus_parented() (pcifront_scan_root() in
-> drivers/pci/xen-pcifront.c) at the same time, so xen doesn't start
-> getting build warnings.  The deprecation warnings are really intended
-> for out-of-tree users that we aren't able to fix ourselves.
->
-> I'm getting this series queued up in
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/jiang-bus-lock-v3,
-> so if you want to send a patch just for xen, I can fold that in.
->
-> Bjorn
-Hi Bjorn,
-        I have posted a big patch for that, but still need help from 
-Xen experts to review it.
-Please refer to https://patchwork.kernel.org/patch/2578551/
-Thanks!
-Gerry
+On Sunday, June 23, 2013 11:57:46 PM Jiang Liu wrote:
+> On 06/23/2013 03:59 AM, Rafael J. Wysocki wrote:
+> > On Saturday, June 22, 2013 10:47:24 AM Jiang Liu wrote:
+> >> On 06/22/2013 08:13 AM, Rafael J. Wysocki wrote:
+> >>> On Saturday, June 22, 2013 12:54:21 AM Jiang Liu wrote:
+> >>>> On 06/21/2013 03:06 AM, Rafael J. Wysocki wrote:
+> >>>>> On Wednesday, June 19, 2013 11:18:41 AM Alexander E. Patrakov wrote:
+> >>>>>> 2013/6/19 Rafael J. Wysocki <rjw@sisk.pl>:
+> >>>>>>> OK, let's try to untangle this a bit.
+> >>>>>>>
+> >>>>>>> If you applyt patches [1/4] and [4/4] from the $subject series only, what
+> >>>>>>> does remain unfixed?
+> >>>>>>
+> >>>>>> [not tested, can do so in 12 hours if needed]
+> >>>>>>
+> >>>>>> I think there will be problems on undocking and/or on the second
+> >>>>>> docking, as described in comments #6 - #8 of
+> >>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=59501
+> >>>>>
+> >>>>> OK, I think I have something that might work.  It may not solve all problems,
+> >>>>> but maybe it helps a bit.  Unfortunately, I can't really test it, so please do
+> >>>>> if you can.
+> >>>>>
+> >>>>> Please apply [1/4] and [4/4] and the one below and see what happens.
+> >>>>>
+> >>>>> Thanks,
+> >>>>> Rafael
+> >>>>>
+> >>>>>
+> >>>>> ---
+> >>>>> Rationale:
+> >>>>> 	acpiphp_glue.c:disable_device() trims the underlying ACPI device objects
+> >>>>> 	after removing the companion PCI devices, so the dock station code
+> >>>>> 	doesn't need to trim them separately for the dependent devices handled
+> >>>>> 	by acpiphp.
+> >>>>>
+> >>>>> 	Moreover, acpiphp_glue.c is the only user of
+> >>>>> 	[un]register_hotplug_dock_device(), so *all* devices on the
+> >>>>> 	ds->hotplug_devices list are handled by acpiphp and ops is set for all
+> >>>>> 	of them.
+> >>>> Hi Rafael,
+> >>>>     There's an ongoing patch to fix a disk bay hotplug regression, which
+> >>>> may add a second caller of register_hotplug_device(). Please refer to
+> >>>> bug 59871, and the proposed patch is at:
+> >>>> https://bugzilla.kernel.org/attachment.cgi?id=105581
+> >> Hi Rafael,
+> >>     You can find the proposed patch for ATA Bay hotplug at
+> >> https://bugzilla.kernel.org/attachment.cgi?id=105581
+> > 
+> > Well, maybe it'll have to be reworked slightly.
+> > 
+> > Which BZ entry is that?
+> Hi Rafael,
+> 	It's bug 59871, please refer to:
+> https://bugzilla.kernel.org/show_bug.cgi?id=59871
+
+OK, thanks!
+
+I suppose it would be most convenient to simply add that patch to this
+patchset.
+
+Thanks,
+Rafael
+
