@@ -1,76 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 27 Jun 2013 16:09:40 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
-Message-ID: <20130627130940.GV9294@intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
- <20130625141556.2f9de7b1@jbarnes-desktop>
- <20130626121757.GP9294@intel.com>
- <CAErSpo6aQMtav89V8wyu+NZxro91o1MnB1ViG-4ExrCgLPKmjg@mail.gmail.com>
- <1372284901.30572.625.camel@ul30vt.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:38073 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354Ab3FWP5y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Jun 2013 11:57:54 -0400
+Message-ID: <51C71AFA.4090102@gmail.com>
+Date: Sun, 23 Jun 2013 23:57:46 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372284901.30572.625.camel@ul30vt.home>
-Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: "Alexander E. Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>, alexdeucher@gmail.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <2686036.58bcYhGNts@vostro.rjw.lan> <51C5103C.4030802@gmail.com> <4437606.laqX8rCptb@vostro.rjw.lan>
+In-Reply-To: <4437606.laqX8rCptb@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 04:15:01PM -0600, Alex Williamson wrote:
-> On Wed, 2013-06-26 at 14:59 -0600, Bjorn Helgaas wrote:
-> > [+cc Alex]
-> > 
-> > On Wed, Jun 26, 2013 at 6:17 AM, Mika Westerberg
-> > <mika.westerberg@linux.intel.com> wrote:
-> > > On Tue, Jun 25, 2013 at 02:15:56PM -0700, Jesse Barnes wrote:
-> > >> On Tue, 25 Jun 2013 19:22:10 +0300
-> > >> Mika Westerberg <mika.westerberg@linux.intel.com> wrote:
-> > >>
-> > >> > +   if (!(pci_probe & PCI_NOASSIGN_ROMS)) {
-> > >> > +           pr_info("Thunderbolt host router detected disabling ROMs\n");
-> > >> > +           pci_probe |= PCI_NOASSIGN_ROMS;
-> > >> > +   }
-> > >>
-> > >> I wonder if this should just be the default on x86?  Or do we allocate
-> > >> ROM space to address some other platform where we need it and the BIOS
-> > >> doesn't do it for the devices we care about?
-> > >
-> > > Good question. In our case it definitely helps to have pci=norom the
-> > > default. Can't tell if it might break something that depends on the current
-> > > behaviour.
-> > 
-> > I think the current default behavior is that if the BIOS has assigned
-> > the ROM BAR, we keep that assignment, and if it hasn't, we allocate
-> > MEM space for it.  And "pci=norom" means that we don't allocate MEM
-> > space for it, even if the BIOS hasn't assigned it.
-> > 
-> > "pci=norom" is only implemented on x86.  I think most other arches
-> > allocate MEM space for ROMs, with no way to turn that off.  PA-RISC
-> > seems to ignore ROMs (dino_fixup_bus()), but that looks like the
-> > exception.
-> >
-> > I'm slightly concerned that if we make the x86 default be "never
-> > assign space for ROMs unless the BIOS has done it," we might break
-> > virtualized guests that need access to ROMs.  Alex?
+On 06/23/2013 03:59 AM, Rafael J. Wysocki wrote:
+> On Saturday, June 22, 2013 10:47:24 AM Jiang Liu wrote:
+>> On 06/22/2013 08:13 AM, Rafael J. Wysocki wrote:
+>>> On Saturday, June 22, 2013 12:54:21 AM Jiang Liu wrote:
+>>>> On 06/21/2013 03:06 AM, Rafael J. Wysocki wrote:
+>>>>> On Wednesday, June 19, 2013 11:18:41 AM Alexander E. Patrakov wrote:
+>>>>>> 2013/6/19 Rafael J. Wysocki <rjw@sisk.pl>:
+>>>>>>> OK, let's try to untangle this a bit.
+>>>>>>>
+>>>>>>> If you applyt patches [1/4] and [4/4] from the $subject series only, what
+>>>>>>> does remain unfixed?
+>>>>>>
+>>>>>> [not tested, can do so in 12 hours if needed]
+>>>>>>
+>>>>>> I think there will be problems on undocking and/or on the second
+>>>>>> docking, as described in comments #6 - #8 of
+>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=59501
+>>>>>
+>>>>> OK, I think I have something that might work.  It may not solve all problems,
+>>>>> but maybe it helps a bit.  Unfortunately, I can't really test it, so please do
+>>>>> if you can.
+>>>>>
+>>>>> Please apply [1/4] and [4/4] and the one below and see what happens.
+>>>>>
+>>>>> Thanks,
+>>>>> Rafael
+>>>>>
+>>>>>
+>>>>> ---
+>>>>> Rationale:
+>>>>> 	acpiphp_glue.c:disable_device() trims the underlying ACPI device objects
+>>>>> 	after removing the companion PCI devices, so the dock station code
+>>>>> 	doesn't need to trim them separately for the dependent devices handled
+>>>>> 	by acpiphp.
+>>>>>
+>>>>> 	Moreover, acpiphp_glue.c is the only user of
+>>>>> 	[un]register_hotplug_dock_device(), so *all* devices on the
+>>>>> 	ds->hotplug_devices list are handled by acpiphp and ops is set for all
+>>>>> 	of them.
+>>>> Hi Rafael,
+>>>>     There's an ongoing patch to fix a disk bay hotplug regression, which
+>>>> may add a second caller of register_hotplug_device(). Please refer to
+>>>> bug 59871, and the proposed patch is at:
+>>>> https://bugzilla.kernel.org/attachment.cgi?id=105581
+>> Hi Rafael,
+>>     You can find the proposed patch for ATA Bay hotplug at
+>> https://bugzilla.kernel.org/attachment.cgi?id=105581
 > 
-> Yep, I'm more than slightly concerned by that too.  Whenever possible we
-> want to pass the ROM to the guest since it may end up being a boot
-> device or drivers within the guest may require it.  We can pass the ROM
-> to the guest from an image file, but that requires someplace from which
-> to dump the image, which is usually PCI sysfs.  Thanks,
+> Well, maybe it'll have to be reworked slightly.
+> 
+> Which BZ entry is that?
+Hi Rafael,
+	It's bug 59871, please refer to:
+https://bugzilla.kernel.org/show_bug.cgi?id=59871
+Regards!
+Gerry
 
-OK, then I guess changing the default is out of the question. We don't want
-to break things.
+> 
+> Rafael
+> 
+> 
+
