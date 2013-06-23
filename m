@@ -1,156 +1,209 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>
-Subject: Re: [PATCH V4 1/3] pci: Add PCIe driver for Samsung Exynos
-Date: Thu, 13 Jun 2013 16:18:47 +0200
-Message-ID: <28355406.ThqqvnG0Yj@wuerfel>
-In-Reply-To: <000901ce6838$8b514720$a1f3d560$@samsung.com>
-References: <003601ce6756$444e8cd0$cceba670$@samsung.com> <2061566.hRLrhtBK6z@wuerfel> <000901ce6838$8b514720$a1f3d560$@samsung.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:52149 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354Ab3FWPye (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Jun 2013 11:54:34 -0400
+Message-ID: <51C71A27.1040600@gmail.com>
+Date: Sun, 23 Jun 2013 23:54:15 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] ACPI / dock / PCI: Synchronous handling of dock events
+ for PCI devices
+References: <2737587.I0nULev1kj@vostro.rjw.lan> <15269989.ojxutYs2L1@vostro.rjw.lan>
+In-Reply-To: <15269989.ojxutYs2L1@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 13 June 2013 22:18:50 Jingoo Han wrote:
-> On Wednesday, June 12, 2013 8:23 PM, Arnd Bergmann wrote:
-> > On Wednesday 12 June 2013 19:19:05 Jingoo Han wrote:
-
-> > > +
-> > > +/* synopsis specific PCIE configuration registers*/
-> > > +#define PCIE_PORT_LINK_CONTROL		0x710
-> > > +#define PORT_LINK_MODE_MASK		(0x3f << 16)
-> > > +#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
-> > 
-> > Do you mean this is a "Synopsys" designware part? In that case it
-> > should really not be called "exynos-pcie" but "designware-pcie"
-> > and you should make sure that the driver makes no assumptions about
-> > the platform. A lot of other platforms also use designware
-> > parts and should be able to reuse this driver.
+On 06/23/2013 05:25 AM, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> Sorry, I don't think so.
-> Only core block is a "Synopsys" designware part IP block,
-> other parts are Exynos-specific.
-> So, it is hard to share with other PCIe IPs using synopsis core.
-
-Just call it synopsys anyway and put a comment in to explain this.
-That should be enough for the next person with a synopsys PCI core
-to reuse your code and split out the exynos specific parts into a
-separate file.
-
-> > I think you should not assume that the physical base address is a 32
-> > bit value. The hardware clearly supports "lower" and "upper" halves
-> > for the address window, so when resource_size_t is 64 bit, you should
-> > set the upper half accordingly. Since the hardware is always 64 bit,
-> > you can use a "u64" type rather than resource_size_t to simplify the
-> > code here.
+> The interactions between the ACPI dock driver and the ACPI-based PCI
+> hotplug (acpiphp) are currently problematic because of ordering
+> issues during hot-remove operations.
 > 
-> OK, I will replace "u32" with "u64".
-
-Not what I meant, please read it again.
-
-> > > +static void exynos_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
-> > > +{
-> > > +	u32 val;
-> > > +	void __iomem *dbi_base = pp->dbi_base;
-> > > +
-> > > +	/* Program viewport 1 : OUTBOUND : IO */
-> > > +	val = PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1;
-> > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
-> > > +	writel_rc(pp, PCIE_ATU_TYPE_IO, dbi_base + PCIE_ATU_CR1);
-> > > +	val = PCIE_ATU_ENABLE;
-> > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
-> > > +	writel_rc(pp, (u32)pp->io_base, dbi_base + PCIE_ATU_LOWER_BASE);
-> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
-> > > +	writel_rc(pp, (u32)(pp->io_base + pp->config.io_size - 1),
-> > > +			dbi_base + PCIE_ATU_LIMIT);
-> > > +	writel_rc(pp, (u32)pp->io_base, dbi_base + PCIE_ATU_LOWER_TARGET);
-> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-> > > +}
-> > 
-> > You don't actually map the I/O space anywhere into virtual memory.
-> > I think you need to call pci_ioremap_io with the pp->io_base at
-> > boot time.
+> First of all, the current ACPI glue code expects that physical
+> devices will always be deleted before deleting the companion ACPI
+> device objects.  Otherwise, acpi_unbind_one() will fail with a
+> warning message printed to the kernel log, for example:
 > 
-> Sorry, when pci_ioremap_io() is used, Exynos5440 hangs.
-> I don't know how to deal this.
-
-You have to call it, there is no way around that. You will have to debug
-this yourself, I'm sure there is an easy solution.
-
-> > 
-> > You hardcode the in_mem_size to 256 MB. Does that mean you only allow
-> > PCI bus master DMA on the first part of RAM? Shouldn't it get
-> > computed from the actual location and size of RAM?
+> [  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
+> [  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
+> [  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
+> [  180.013656]  port1: Oops, 'acpi_handle' corrupt
 > 
-> I will remove the hard-coded in_mem_size, instead use the size of MEM region.
+[...]
+> @@ -597,15 +654,11 @@ register_hotplug_dock_device(acpi_handle
+>  		 * ops
+>  		 */
+>  		dd = find_dock_dependent_device(dock_station, handle);
+> -		if (dd) {
+> -			dd->ops = ops;
+> -			dd->context = context;
+> -			dock_add_hotplug_device(dock_station, dd);
+> -			ret = 0;
+> -		}
+> +		if (dd)
+> +			return dock_init_hotplug(dd, ops, context,
+> +						 init, release);
+Hi Rafael,
+	Seems not an equivalent change.	According to the comment just above the
+code, we shouldn't return but continue here.
+/*
+ * An ATA bay can be in a dock and itself can be ejected
+ * separately, so there are two 'dock stations' which need the
+ * ops
+ */
 
-This should be system RAM, not the PCI memory space. What good would
-it be to have an inbound window that only redirects back to the bus?
+Regards!
+Gerry
 
-> > > +static void exynos_pcie_prog_viewport_io_inbound(struct pcie_port *pp)
-> > > +{
-> > > +	u32 val;
-> > > +	void __iomem *dbi_base = pp->dbi_base;
-> > > +	struct pcie_port_info *config = &pp->config;
-> > > +
-> > > +	/* Program viewport 1 : INBOUND : IO */
-> > > +	val = PCIE_ATU_REGION_INBOUND | PCIE_ATU_REGION_INDEX1;
-> > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
-> > > +	writel_rc(pp, PCIE_ATU_TYPE_IO, dbi_base + PCIE_ATU_CR1);
-> > > +	val = PCIE_ATU_ENABLE | PCIE_ATU_BAR_MODE_ENABLE;
-> > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
-> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_LOWER_BASE);
-> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
-> > > +	writel_rc(pp, config->in_mem_size - 1, dbi_base + PCIE_ATU_LIMIT);
-> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_LOWER_TARGET);
-> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-> > > +}
-> > 
-> > I don't understand what in inbound I/O access actually means. What
-> > does this do, is it for PCI target emulation?
+>  
+> -
+> -	return ret;
+> +	return -EINVAL;
+>  }
+>  EXPORT_SYMBOL_GPL(register_hotplug_dock_device);
+>  
+> @@ -623,8 +676,10 @@ void unregister_hotplug_dock_device(acpi
+>  
+>  	list_for_each_entry(dock_station, &dock_stations, sibling) {
+>  		dd = find_dock_dependent_device(dock_station, handle);
+> -		if (dd)
+> -			dock_del_hotplug_device(dock_station, dd);
+> +		if (dd) {
+> +			dock_release_hotplug(dd);
+> +			return;
+> +		}
+>  	}
+>  }
+>  EXPORT_SYMBOL_GPL(unregister_hotplug_dock_device);
+> @@ -953,7 +1008,6 @@ static int __init dock_add(acpi_handle h
+>  	mutex_init(&dock_station->hp_lock);
+>  	spin_lock_init(&dock_station->dd_lock);
+>  	INIT_LIST_HEAD(&dock_station->sibling);
+> -	INIT_LIST_HEAD(&dock_station->hotplug_devices);
+>  	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
+>  	INIT_LIST_HEAD(&dock_station->dependent_devices);
+>  
+> Index: linux-pm/include/acpi/acpi_drivers.h
+> ===================================================================
+> --- linux-pm.orig/include/acpi/acpi_drivers.h
+> +++ linux-pm/include/acpi/acpi_drivers.h
+> @@ -123,7 +123,9 @@ extern int register_dock_notifier(struct
+>  extern void unregister_dock_notifier(struct notifier_block *nb);
+>  extern int register_hotplug_dock_device(acpi_handle handle,
+>  					const struct acpi_dock_ops *ops,
+> -					void *context);
+> +					void *context,
+> +					void (*init)(void *),
+> +					void (*release)(void *));
+>  extern void unregister_hotplug_dock_device(acpi_handle handle);
+>  #else
+>  static inline int is_dock_device(acpi_handle handle)
+> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
+> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -61,6 +61,7 @@ static DEFINE_MUTEX(bridge_mutex);
+>  static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
+>  static void acpiphp_sanitize_bus(struct pci_bus *bus);
+>  static void acpiphp_set_hpp_values(struct pci_bus *bus);
+> +static void hotplug_event_func(acpi_handle handle, u32 type, void *context);
+>  static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
+>  static void free_bridge(struct kref *kref);
+>  
+> @@ -147,7 +148,7 @@ static int post_dock_fixups(struct notif
+>  
+>  
+>  static const struct acpi_dock_ops acpiphp_dock_ops = {
+> -	.handler = handle_hotplug_event_func,
+> +	.handler = hotplug_event_func,
+>  };
+>  
+>  /* Check whether the PCI device is managed by native PCIe hotplug driver */
+> @@ -179,6 +180,20 @@ static bool device_is_managed_by_native_
+>  	return true;
+>  }
+>  
+> +static void acpiphp_dock_init(void *data)
+> +{
+> +	struct acpiphp_func *func = data;
+> +
+> +	get_bridge(func->slot->bridge);
+> +}
+> +
+> +static void acpiphp_dock_release(void *data)
+> +{
+> +	struct acpiphp_func *func = data;
+> +
+> +	put_bridge(func->slot->bridge);
+> +}
+> +
+>  /* callback routine to register each ACPI PCI slot object */
+>  static acpi_status
+>  register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+> @@ -298,7 +313,8 @@ register_slot(acpi_handle handle, u32 lv
+>  		 */
+>  		newfunc->flags &= ~FUNC_HAS_EJ0;
+>  		if (register_hotplug_dock_device(handle,
+> -			&acpiphp_dock_ops, newfunc))
+> +			&acpiphp_dock_ops, newfunc,
+> +			acpiphp_dock_init, acpiphp_dock_release))
+>  			dbg("failed to register dock device\n");
+>  
+>  		/* we need to be notified when dock events happen
+> @@ -1068,22 +1084,12 @@ static void handle_hotplug_event_bridge(
+>  	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
+>  }
+>  
+> -static void _handle_hotplug_event_func(struct work_struct *work)
+> +static void hotplug_event_func(acpi_handle handle, u32 type, void *context)
+>  {
+> -	struct acpiphp_func *func;
+> +	struct acpiphp_func *func = context;
+>  	char objname[64];
+>  	struct acpi_buffer buffer = { .length = sizeof(objname),
+>  				      .pointer = objname };
+> -	struct acpi_hp_work *hp_work;
+> -	acpi_handle handle;
+> -	u32 type;
+> -
+> -	hp_work = container_of(work, struct acpi_hp_work, work);
+> -	handle = hp_work->handle;
+> -	type = hp_work->type;
+> -	func = (struct acpiphp_func *)hp_work->context;
+> -
+> -	acpi_scan_lock_acquire();
+>  
+>  	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+>  
+> @@ -1116,6 +1122,18 @@ static void _handle_hotplug_event_func(s
+>  		warn("notify_handler: unknown event type 0x%x for %s\n", type, objname);
+>  		break;
+>  	}
+> +}
+> +
+> +static void _handle_hotplug_event_func(struct work_struct *work)
+> +{
+> +	struct acpi_hp_work *hp_work;
+> +	struct acpiphp_func *func;
+> +
+> +	hp_work = container_of(work, struct acpi_hp_work, work);
+> +	func = hp_work->context;
+> +	acpi_scan_lock_acquire();
+> +
+> +	hotplug_event_func(hp_work->handle, hp_work->type, func);
+>  
+>  	acpi_scan_lock_release();
+>  	kfree(hp_work); /* allocated in handle_hotplug_event_func */
 > 
-> I reviewed the manual, and I will fix it.
-> I will add bus addresses and host physical addresses to
-> PCIE_ATU_LOWER_BASE/ PCIE_ATU_LOWER_TARGET.
- 
-You have not answered my question.
 
-> > > +static int exynos_pcie_setup(int nr, struct pci_sys_data *sys)
-> > > +{
-> > > +	struct pcie_port *pp;
-> > > +
-> > > +	pp = sys_to_pcie(sys);
-> > > +
-> > > +	if (!pp)
-> > > +		return 0;
-> > > +
-> > > +	pci_add_resource_offset(&sys->resources, &pp->io, sys->io_offset);
-> > > +	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
-> > > +
-> > > +	return 1;
-> > > +}
-> > 
-> > You don't actually set up io_offset and mem_offset, right?
-> 
-> OK, I will replace pci_add_resource_offset() with pci_add_resource().
-
-No, you have to set up the offsets.
-
-Please don't post another version until you actually understand what
-you need to do. If you don't understand the comments, ask back rather
-than picking a random interpretation.
-
-	Arnd
