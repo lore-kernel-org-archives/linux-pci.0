@@ -1,65 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: =?UTF-8?q?Radim=20Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Radim=20Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>
-Subject: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
-Date: Wed, 19 Jun 2013 20:56:14 +0200
-Message-Id: <1371668174-32115-1-git-send-email-rkrcmar@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:36958 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751408Ab3FWT5N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Jun 2013 15:57:13 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <51C71A27.1040600@gmail.com>
+References: <2737587.I0nULev1kj@vostro.rjw.lan>
+	<15269989.ojxutYs2L1@vostro.rjw.lan>
+	<51C71A27.1040600@gmail.com>
+Date: Sun, 23 Jun 2013 12:57:13 -0700
+Message-ID: <CAE9FiQVGz-BOq4LeZ-iNCAKqPF=Tzuq6uTZ=AAnO=8yMa22jYw@mail.gmail.com>
+Subject: Re: [PATCH 3/3] ACPI / dock / PCI: Synchronous handling of dock
+ events for PCI devices
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe switch upstream port can be connected directly to the PCIe root bus
-in QEMU; ASPM does not expect this topology and dereferences NULL pointer
-when initializing.
+On Sun, Jun 23, 2013 at 8:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> On 06/23/2013 05:25 AM, Rafael J. Wysocki wrote:
+>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>
+>> The interactions between the ACPI dock driver and the ACPI-based PCI
+>> hotplug (acpiphp) are currently problematic because of ordering
+>> issues during hot-remove operations.
+>>
+>> First of all, the current ACPI glue code expects that physical
+>> devices will always be deleted before deleting the companion ACPI
+>> device objects.  Otherwise, acpi_unbind_one() will fail with a
+>> warning message printed to the kernel log, for example:
+>>
+>> [  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
+>> [  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
+>> [  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
+>> [  180.013656]  port1: Oops, 'acpi_handle' corrupt
+>>
+> [...]
+>> @@ -597,15 +654,11 @@ register_hotplug_dock_device(acpi_handle
+>>                * ops
+>>                */
+>>               dd = find_dock_dependent_device(dock_station, handle);
+>> -             if (dd) {
+>> -                     dd->ops = ops;
+>> -                     dd->context = context;
+>> -                     dock_add_hotplug_device(dock_station, dd);
+>> -                     ret = 0;
+>> -             }
+>> +             if (dd)
+>> +                     return dock_init_hotplug(dd, ops, context,
+>> +                                              init, release);
+> Hi Rafael,
+>         Seems not an equivalent change. According to the comment just above the
+> code, we shouldn't return but continue here.
+> /*
+>  * An ATA bay can be in a dock and itself can be ejected
+>  * separately, so there are two 'dock stations' which need the
+>  * ops
+>  */
 
-I have not confirmed this can happen on real hardware, but it is presented
-as a feature in QEMU, so there is no reason to panic if we can recover.
+two dock stations:
+Do you mean two dock station has same handle?
 
-The dereference happens with topology defined by
-  -M q35 -device x3130-upstream,bus=pcie.0,id=upstream \
-  -device xio3130-downstream,bus=upstream,id=downstream,chassis=1
-where on line drivers/pci/pcie/aspm.c:530 (alloc_pcie_link_state+13):
-  		parent = pdev->bus->parent->self->link_state;
-"pdev->bus->parent->self == NULL", because "pdev->bus->parent" has no
-"->parent", hence no "->self".
+dock_add should add correctly flags for IS_DOCK and IS_ATA.
+if one handle has _DCK and _GTF etc.
 
-Even though discouraged by QEMU documentation, one can set up even
-topology without the upstream port
-  -M q35 -device xio3130-downstream,bus=pcie.0,id=downstream,chassis=1
-so "pdev->bus->parent == NULL", because "pdev->bus" is the root bus.
-The patch checks for this too, because I do not like *NULL.
+or do you mean there are two dependent devices with same handle?
+like one is for acpiphp slot and one is for ATA?
 
-Right now, PCIe switch has to connect to the root port
-  -M q35 -device ioh3420,bus=pcie.0,id=root.0 \
-  -device x3130-upstream,bus=root.0,id=upstream \
-  -device xio3130-downstream,bus=upstream,id=downstream,chassis=1
-
-Signed-off-by: Radim Krčmář <rkrcmar@redhat.com>
----
- drivers/pci/pcie/aspm.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 403a443..1ad1514 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -527,8 +527,8 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 	link->pdev = pdev;
- 	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
- 		struct pcie_link_state *parent;
--		parent = pdev->bus->parent->self->link_state;
--		if (!parent) {
-+		if (!pdev->bus->parent || !pdev->bus->parent->self ||
-+		    !(parent = pdev->bus->parent->self->link_state)) {
- 			kfree(link);
- 			return NULL;
- 		}
--- 
-1.8.1.4
-
+Yinghai
