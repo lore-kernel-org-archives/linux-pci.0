@@ -1,146 +1,112 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: linux-acpi@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"Alexander E . Patrakov" <patrakov@gmail.com>,
 	Jiang Liu <jiang.liu@huawei.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] ACPI / dock: Initialize ACPI dock subsystem upfront
-Date: Sat, 22 Jun 2013 23:21:35 +0200
-Message-ID: <1409252.T5jEfLdPAg@vostro.rjw.lan>
-In-Reply-To: <2737587.I0nULev1kj@vostro.rjw.lan>
-References: <2737587.I0nULev1kj@vostro.rjw.lan>
+	Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/3] ACPI / dock / PCI: Synchronous handling of dock events for PCI devices
+Date: Sun, 23 Jun 2013 11:59:41 +0200
+Message-ID: <1410772.iYNzcAkY0L@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQV7R5mQKEFx+JhE7E1MjWSSxe2+WeK0aN_hVh6sZJ2GdQ@mail.gmail.com>
+References: <2737587.I0nULev1kj@vostro.rjw.lan> <15269989.ojxutYs2L1@vostro.rjw.lan> <CAE9FiQV7R5mQKEFx+JhE7E1MjWSSxe2+WeK0aN_hVh6sZJ2GdQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Saturday, June 22, 2013 05:22:20 PM Yinghai Lu wrote:
+> On Sat, Jun 22, 2013 at 2:25 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > To resolve that deadlock use the observation that
+> > unregister_hotplug_dock_device() won't need to acquire hp_lock
+> > if PCI bridges the devices on the dock station depend on are
+> > prevented from being removed prematurely while the first loop in
+> > hotplug_dock_devices() is in progress.
+> >
+> > To make that possible, introduce a mechanism by which the callers of
+> > register_hotplug_dock_device() can provide "init" and "release"
+> > routines that will be executed, respectively, after the addition
+> > and removal of the physical device object associated with the
+> > given ACPI device handle.  Make acpiphp use two new functions,
+> > acpiphp_dock_init() and acpiphp_dock_release(), respectively,
+> > calling get_bridge() and put_bridge() on the PCI bridge holding the
+> > given device, respectively, for this purpose.
+> >
+> > In addition to that, remove the dock station's list of
+> > "hotplug devices" and make the dock code always walk the whole list
+> > of "dependent devices" instead in such a way that the loops in
+> > hotplug_dock_devices() and dock_event() (replacing the loops over
+> > "hotplug devices") will take references to the list entries that
+> > register_hotplug_dock_device() has been called for.  That prevents
+> > the "release" routines associated with those entries from being
+> > called while the given entry is being processed and for PCI
+> > devices this means that their bridges won't be removed (by a
+> > concurrent thread) while hotplug_event_func() handling them is
+> > being executed.
+> ..
+> > -static void
+> > -dock_del_hotplug_device(struct dock_station *ds,
+> > -                       struct dock_dependent_device *dd)
+> > +static void dock_release_hotplug(struct dock_dependent_device *dd)
+> >  {
+> > -       mutex_lock(&ds->hp_lock);
+> > -       list_del(&dd->hotplug_list);
+> > -       mutex_unlock(&ds->hp_lock);
+> > +       void (*release)(void *) = NULL;
+> > +       void *context = NULL;
+> > +
+> > +       mutex_lock(&hotplug_lock);
+> > +
+> > +       if (dd->hp_context && !--dd->hp_refcount) {
+> > +               dd->hp_ops = NULL;
+> > +               context = dd->hp_context;
+> > +               dd->hp_context = NULL;
+> > +               release = dd->hp_release;
+> > +               dd->hp_release = NULL;
+> > +       }
+> > +
+> > +       if (release && context)
+> > +               release(context);
+> > +
+> > +       mutex_unlock(&hotplug_lock);
+> > +}
+> > +
+> > +static void dock_hotplug_event(struct dock_dependent_device *dd, u32 event,
+> > +                              bool uevent)
+> > +{
+> > +       acpi_notify_handler cb = NULL;
+> > +       bool run = false;
+> > +
+> > +       mutex_lock(&hotplug_lock);
+> > +
+> > +       if (dd->hp_context) {
+> > +               run = true;
+> > +               dd->hp_refcount++;
+> > +               if (dd->hp_ops)
+> > +                       cb = uevent ? dd->hp_ops->uevent : dd->hp_ops->handler;
+> > +       }
+> > +
+> > +       mutex_unlock(&hotplug_lock);
+> > +
+> > +       if (!run)
+> > +               return;
+> > +
+> > +       if (cb)
+> > +               cb(dd->handle, event, dd->hp_context);
+> > +
+> > +       dock_release_hotplug(dd);
+> 
+> during DOCKING, dock_release_hotplug get called too?
 
-Commit 3b63aaa70e1 (PCI: acpiphp: Do not use ACPI PCI subdriver
-mechanism) introduced an ACPI dock support regression, because it
-changed the relative initialization order of the ACPI dock subsystem
-and the ACPI-based PCI hotplug (acpiphp).
+Yes, we need to drop down the refcount we've just bumped up.
 
-Namely, the ACPI dock subsystem has to be initialized before
-acpiphp_enumerate_slots() is first run, which after commit
-3b63aaa70e1 happens during the initial enumeration of the PCI
-hierarchy triggered by the initial ACPI namespace scan in
-acpi_scan_init().  For this reason, the dock subsystem has to be
-initialized before the initial ACPI namespace scan in
-acpi_scan_init().
-
-To make that happen, modify the ACPI dock subsystem to be
-non-modular and add the invocation of its initialization routine,
-acpi_dock_init(), to acpi_scan_init() directly before the initial
-namespace scan.
-
-[rjw: Changelog, removal of dock_exit().]
-References: https://bugzilla.kernel.org/show_bug.cgi?id=59501
-Reported-and-tested-by: Alexander E. Patrakov <patrakov@gmail.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: 3.9+ <stable@vger.kernel.org>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/dock.c     |   42 +-----------------------------------------
- drivers/acpi/internal.h |    5 +++++
- drivers/acpi/scan.c     |    1 +
- 3 files changed, 7 insertions(+), 41 deletions(-)
-
-Index: linux-pm/drivers/acpi/dock.c
-===================================================================
---- linux-pm.orig/drivers/acpi/dock.c
-+++ linux-pm/drivers/acpi/dock.c
-@@ -994,30 +994,6 @@ err_unregister:
- }
- 
- /**
-- * dock_remove - free up resources related to the dock station
-- */
--static int dock_remove(struct dock_station *ds)
--{
--	struct dock_dependent_device *dd, *tmp;
--	struct platform_device *dock_device = ds->dock_device;
--
--	if (!dock_station_count)
--		return 0;
--
--	/* remove dependent devices */
--	list_for_each_entry_safe(dd, tmp, &ds->dependent_devices, list)
--		kfree(dd);
--
--	list_del(&ds->sibling);
--
--	/* cleanup sysfs */
--	sysfs_remove_group(&dock_device->dev.kobj, &dock_attribute_group);
--	platform_device_unregister(dock_device);
--
--	return 0;
--}
--
--/**
-  * find_dock_and_bay - look for dock stations and bays
-  * @handle: acpi handle of a device
-  * @lvl: unused
-@@ -1035,7 +1011,7 @@ find_dock_and_bay(acpi_handle handle, u3
- 	return AE_OK;
- }
- 
--static int __init dock_init(void)
-+int __init acpi_dock_init(void)
- {
- 	if (acpi_disabled)
- 		return 0;
-@@ -1054,19 +1030,3 @@ static int __init dock_init(void)
- 		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
- 	return 0;
- }
--
--static void __exit dock_exit(void)
--{
--	struct dock_station *tmp, *dock_station;
--
--	unregister_acpi_bus_notifier(&dock_acpi_notifier);
--	list_for_each_entry_safe(dock_station, tmp, &dock_stations, sibling)
--		dock_remove(dock_station);
--}
--
--/*
-- * Must be called before drivers of devices in dock, otherwise we can't know
-- * which devices are in a dock
-- */
--subsys_initcall(dock_init);
--module_exit(dock_exit);
-Index: linux-pm/drivers/acpi/internal.h
-===================================================================
---- linux-pm.orig/drivers/acpi/internal.h
-+++ linux-pm/drivers/acpi/internal.h
-@@ -41,6 +41,11 @@ void acpi_container_init(void);
- #else
- static inline void acpi_container_init(void) {}
- #endif
-+#ifdef CONFIG_ACPI_DOCK
-+void acpi_dock_init(void);
-+#else
-+static inline void acpi_dock_init(void) {}
-+#endif
- #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
- void acpi_memory_hotplug_init(void);
- #else
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -2134,6 +2134,7 @@ int __init acpi_scan_init(void)
- 	acpi_cmos_rtc_init();
- 	acpi_container_init();
- 	acpi_memory_hotplug_init();
-+	acpi_dock_init();
- 
- 	mutex_lock(&acpi_scan_lock);
- 	/*
+Thanks,
+Rafael
 
