@@ -1,197 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:51085 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030293Ab3FTRBl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 13:01:41 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <liuj97@gmail.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	xen-devel@lists.xensource.com,
-	virtualization@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] PCI, xen-pcifront: use new PCI interfaces to simplify implementation
-Date: Fri, 21 Jun 2013 01:01:04 +0800
-Message-Id: <1371747665-12768-3-git-send-email-liuj97@gmail.com>
-In-Reply-To: <1371747665-12768-1-git-send-email-liuj97@gmail.com>
-References: <1371747665-12768-1-git-send-email-liuj97@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [Update][PATCH 3/3] ACPI / dock / PCI: Synchronous handling of dock events for PCI devices
+Date: Mon, 24 Jun 2013 02:40:22 +0200
+Message-ID: <5632059.07cB6QdEcB@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQUJh-u-yimuGpFiOO_-L7=+V-57W0Tn+cgR3ru=PQ+xvw@mail.gmail.com>
+References: <2737587.I0nULev1kj@vostro.rjw.lan> <1528326.6SFofebmNT@vostro.rjw.lan> <CAE9FiQUJh-u-yimuGpFiOO_-L7=+V-57W0Tn+cgR3ru=PQ+xvw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Sunday, June 23, 2013 04:04:52 PM Yinghai Lu wrote:
+> On Sun, Jun 23, 2013 at 2:42 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Sunday, June 23, 2013 01:29:19 PM Yinghai Lu wrote:
+> >> On Sun, Jun 23, 2013 at 12:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >> > On Sun, Jun 23, 2013 at 8:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> >> >> On 06/23/2013 05:25 AM, Rafael J. Wysocki wrote:
+> >> >>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> >>>
+> >> >>> The interactions between the ACPI dock driver and the ACPI-based PCI
+> >> >>> hotplug (acpiphp) are currently problematic because of ordering
+> >> >>> issues during hot-remove operations.
+> >> >>>
+> >> >>> First of all, the current ACPI glue code expects that physical
+> >> >>> devices will always be deleted before deleting the companion ACPI
+> >> >>> device objects.  Otherwise, acpi_unbind_one() will fail with a
+> >> >>> warning message printed to the kernel log, for example:
+> >> >>>
+> >> >>> [  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
+> >> >>> [  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
+> >> >>> [  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
+> >> >>> [  180.013656]  port1: Oops, 'acpi_handle' corrupt
+> >> >>>
+> >> >> [...]
+> >> >>> @@ -597,15 +654,11 @@ register_hotplug_dock_device(acpi_handle
+> >> >>>                * ops
+> >> >>>                */
+> >> >>>               dd = find_dock_dependent_device(dock_station, handle);
+> >> >>> -             if (dd) {
+> >> >>> -                     dd->ops = ops;
+> >> >>> -                     dd->context = context;
+> >> >>> -                     dock_add_hotplug_device(dock_station, dd);
+> >> >>> -                     ret = 0;
+> >> >>> -             }
+> >> >>> +             if (dd)
+> >> >>> +                     return dock_init_hotplug(dd, ops, context,
+> >> >>> +                                              init, release);
+> >> >> Hi Rafael,
+> >> >>         Seems not an equivalent change. According to the comment just above the
+> >> >> code, we shouldn't return but continue here.
+> >> >> /*
+> >> >>  * An ATA bay can be in a dock and itself can be ejected
+> >> >>  * separately, so there are two 'dock stations' which need the
+> >> >>  * ops
+> >> >>  */
+> >> >
+> >> > two dock stations:
+> >> > Do you mean two dock station has same handle?
+> >> >
+> >> > dock_add should add correctly flags for IS_DOCK and IS_ATA.
+> >> > if one handle has _DCK and _GTF etc.
+> >> >
+> >> > or do you mean there are two dependent devices with same handle?
+> >> > like one is for acpiphp slot and one is for ATA?
+> >>
+> >> related commit:
+> >> commit 61b836958371c717d1e6d4fea1d2c512969ad20b
+> >> Author: Shaohua Li <shaohua.li@intel.com>
+> >> Date:   Thu Aug 28 10:07:14 2008 +0800
+> >>
+> >>     dock: fix for ATA bay in a dock station
+> >>
+> >>     an ATA bay can be in a dock and itself can be ejected separately.
+> >>     This patch handles such eject bay. Found by Holger.
+> >>
+> >>     Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+> >>     Signed-off-by: Len Brown <len.brown@intel.com>
+> >> @@ -618,16 +619,21 @@ register_hotplug_dock_device(acpi_handle handle, struct ac
+> >> pi_dock_ops *ops,
+> >>          * this would include the dock station itself
+> >>          */
+> >>         list_for_each_entry(dock_station, &dock_stations, sibiling) {
+> >> +               /*
+> >> +                * An ATA bay can be in a dock and itself can be ejected
+> >> +                * seperately, so there are two 'dock stations' which need the
+> >> +                * ops
+> >> +                */
+> >>                 dd = find_dock_dependent_device(dock_station, handle);
+> >>                 if (dd) {
+> >>                         dd->ops = ops;
+> >>                         dd->context = context;
+> >>                         dock_add_hotplug_device(dock_station, dd);
+> >> -                       return 0;
+> >> +                       ret = 0;
+> >>                 }
+> >>         }
+> >>
+> >> -       return -EINVAL;
+> >> +       return ret;
+> >>  }
+> >>
+> >> so two doc station with different handle.
+> >>
+> >> and dependent devices in both...
+> >>
+> >> looks like Rafael's change can not handle this case anymore.
+> >
+> > Ah, I overlooked the fact that each dock station is on its own dependent_list
+> > and can also be on another dock station's dependent_list.  I'm not sure if that
+> > makes sense, but let's not break the backwards compatibility here.
+> 
+> wonder if dock_release_hotplug with second dock_station and dd will
+> have problem.
+> 
+> as first one dock_station/dd, could have hp_context release already,
+> then second one could all release(context) again....
+> 
+> so looks like dock_release_hotplug should go over dock_station/dd list
+> to clear hp_context in other dock_station/... if they are the same?
 
-Use new PCI interfaces to simplify xen-pcifront implementation:
-1) Use pci_create_root_bus() instead of pci_scan_bus_parented()
-   because pci_scan_bus_parented() will be marked as __deprecated.
-   This also gets rid of a duplicated call to pci_bus_start_devices().
-2) Use pci_stop_and_remove_root_bus() instead of open-coded private
-   implementation.
-3) Use pci_set_host_bridge_release() to release data structures
-   associated with PCI root buses.
+I'm not sure what you mean.  They are different dependent_device objects
+and each of them has its own context pointer, although they both will point to
+the same thing.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: xen-devel@lists.xensource.com
-Cc: virtualization@lists.linux-foundation.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/xen-pcifront.c | 70 ++++++++++++++++++++--------------------------
- 1 file changed, 30 insertions(+), 40 deletions(-)
+Both "init" and "release" will be called for each of them individually which
+for for acpiphp (which is the only user of that ATM) actually means "get" and
+"put", so it should be OK.
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 966abc6..1b01960 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -25,11 +25,6 @@
- #define INVALID_GRANT_REF (0)
- #define INVALID_EVTCHN    (-1)
- 
--struct pci_bus_entry {
--	struct list_head list;
--	struct pci_bus *bus;
--};
--
- #define _PDEVB_op_active		(0)
- #define PDEVB_op_active			(1 << (_PDEVB_op_active))
- 
-@@ -47,12 +42,12 @@ struct pcifront_device {
- 	struct xen_pci_sharedinfo *sh_info;
- 	struct work_struct op_work;
- 	unsigned long flags;
--
- };
- 
- struct pcifront_sd {
- 	int domain;
- 	struct pcifront_device *pdev;
-+	struct resource busn_res;
- };
- 
- static inline struct pcifront_device *
-@@ -67,6 +62,12 @@ static inline void pcifront_init_sd(struct pcifront_sd *sd,
- {
- 	sd->domain = domain;
- 	sd->pdev = pdev;
-+
-+	/* Xen pci-backend doesn't export P2P bridges */
-+	sd->busn_res.start = bus;
-+	sd->busn_res.end = bus;
-+	sd->busn_res.flags = IORESOURCE_BUS;
-+	sd->busn_res.name = "PCI busn";
- }
- 
- static DEFINE_SPINLOCK(pcifront_dev_lock);
-@@ -441,12 +442,19 @@ static int pcifront_scan_bus(struct pcifront_device *pdev,
- 	return 0;
- }
- 
-+static void pcifront_release_sd(struct pci_host_bridge *bridge)
-+{
-+	struct pcifront_sd *sd = bridge->release_data;
-+
-+	kfree(sd);
-+}
-+
- static int pcifront_scan_root(struct pcifront_device *pdev,
- 				 unsigned int domain, unsigned int bus)
- {
- 	struct pci_bus *b;
- 	struct pcifront_sd *sd = NULL;
--	struct pci_bus_entry *bus_entry = NULL;
-+	LIST_HEAD(resources);
- 	int err = 0;
- 
- #ifndef CONFIG_PCI_DOMAINS
-@@ -463,16 +471,18 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 	dev_info(&pdev->xdev->dev, "Creating PCI Frontend Bus %04x:%02x\n",
- 		 domain, bus);
- 
--	bus_entry = kmalloc(sizeof(*bus_entry), GFP_KERNEL);
--	sd = kmalloc(sizeof(*sd), GFP_KERNEL);
--	if (!bus_entry || !sd) {
-+	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
-+	if (!sd) {
- 		err = -ENOMEM;
- 		goto err_out;
- 	}
- 	pcifront_init_sd(sd, domain, bus, pdev);
- 
--	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
--				  &pcifront_bus_ops, sd);
-+	pci_add_resource(&resources, &ioport_resource);
-+	pci_add_resource(&resources, &iomem_resource);
-+	pci_add_resource(&resources, &sd->busn_res);
-+	b = pci_create_root_bus(&pdev->xdev->dev, bus, &pcifront_bus_ops,
-+				sd, &resources);
- 	if (!b) {
- 		dev_err(&pdev->xdev->dev,
- 			"Error creating PCI Frontend Bus!\n");
-@@ -480,9 +490,8 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 		goto err_out;
- 	}
- 
--	bus_entry->bus = b;
--
--	list_add(&bus_entry->list, &pdev->root_buses);
-+	pci_set_host_bridge_release(to_pci_host_bridge(b->bridge),
-+				    pcifront_release_sd, sd);
- 
- 	/* pci_scan_bus_parented skips devices which do not have a have
- 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
-@@ -497,7 +506,6 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 	return err;
- 
- err_out:
--	kfree(bus_entry);
- 	kfree(sd);
- 
- 	return err;
-@@ -538,35 +546,17 @@ static int pcifront_rescan_root(struct pcifront_device *pdev,
- 	return err;
- }
- 
--static void free_root_bus_devs(struct pci_bus *bus)
--{
--	struct pci_dev *dev;
--
--	while (!list_empty(&bus->devices)) {
--		dev = container_of(bus->devices.next, struct pci_dev,
--				   bus_list);
--		dev_dbg(&dev->dev, "removing device\n");
--		pci_stop_and_remove_bus_device(dev);
--	}
--}
--
- static void pcifront_free_roots(struct pcifront_device *pdev)
- {
--	struct pci_bus_entry *bus_entry, *t;
-+	struct pcifront_sd *sd;
-+	struct pci_bus *bus, *temp;
- 
- 	dev_dbg(&pdev->xdev->dev, "cleaning up root buses\n");
- 
--	list_for_each_entry_safe(bus_entry, t, &pdev->root_buses, list) {
--		list_del(&bus_entry->list);
--
--		free_root_bus_devs(bus_entry->bus);
--
--		kfree(bus_entry->bus->sysdata);
--
--		device_unregister(bus_entry->bus->bridge);
--		pci_remove_bus(bus_entry->bus);
--
--		kfree(bus_entry);
-+	list_for_each_entry_safe(bus, temp, &pci_root_buses, node) {
-+		sd = bus->sysdata;
-+		if (sd->pdev == pdev)
-+			pci_stop_and_remove_root_bus(bus);
- 	}
- }
- 
+Thanks,
+Rafael
+
+
 -- 
-1.8.1.2
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
