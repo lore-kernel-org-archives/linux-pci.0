@@ -1,106 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:56351 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965153Ab3FTKBG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 06:01:06 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH V6 1/3] pci: Add PCIe driver for Samsung Exynos
-Date: Thu, 20 Jun 2013 12:00:57 +0200
-Cc: "'Kukjin Kim'" <kgene.kim@samsung.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+Received: from mailout4.samsung.com ([203.254.224.34]:25536 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752262Ab3FXCwS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Jun 2013 22:52:18 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>
+Cc: 'Arnd Bergmann' <arnd@arndb.de>,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
 	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
 	devicetree-discuss@lists.ozlabs.org,
 	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	"'Grant Likely'" <grant.likely@secretlab.ca>,
-	"'Andrew Murray'" <andrew.murray@arm.com>,
-	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
-	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
-	"'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
-	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
-	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
-	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
-	Pratyush Anand <pratyush.anand@st.com>
-References: <00c001ce6d85$4613e530$d23baf90$@samsung.com>
-In-Reply-To: <00c001ce6d85$4613e530$d23baf90$@samsung.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201306201200.58057.arnd@arndb.de>
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Tomasz Figa' <t.figa@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+References: <003901ce6e50$03d039a0$0b70ace0$@samsung.com>
+ <201306211030.47440.arnd@arndb.de>
+ <20130621141144.GP31667@titan.lakedaemon.net>
+ <201306211614.49434.arnd@arndb.de>
+In-reply-to: <201306211614.49434.arnd@arndb.de>
+Subject: Re: [PATCH V10 0/4] PCIe support for Samsung Exynos5440 SoC
+Date: Mon, 24 Jun 2013 11:52:10 +0900
+Message-id: <007201ce7085$d2c4fed0$784efc70$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 20 June 2013, Jingoo Han wrote:
-> Exynos5440 has a PCIe controller which can be used as Root Complex.
-> This driver supports a PCIe controller as Root Complex mode.
+On Friday, June 21, 2013 11:15 PM, Arnd Bergmann wrote:
+> On Friday 21 June 2013, Jason Cooper wrote:
+> > On Fri, Jun 21, 2013 at 10:30:47AM +0200, Arnd Bergmann wrote:
+> > > On Friday 21 June 2013, Thomas Petazzoni wrote:
+> > > > I am by far not an expert on how to solve merge strategies and so on,
+> > > > but to avoid conflicts at Linus's level while merging the arm-soc and
+> > > > pci trees, it would be better if this Samsung PCIe driver could go
+> > > > through arm-soc (with Bjorn ACK, of course), so that Arnd/Olof can
+> > > > make sure the ordering is correct with regard to the of/pci changes and
+> > > > the mvebu/pci driver.
+
+Yes, right.
+That is the reason why I based on 'linu-next' tree,
+instead of 'PCI' -next branch.
+
+
+Bjorn Helgaas,
+Could you give your ACK?
+Thank you.
+
+
+Best regards,
+Jingoo Han
+
+> > >
+> > > Yes, good point.
+> > >
+> > > The alternative would be that Bjorn also takes the PCI branch dependencies
+> > > that are already in arm-soc into his tree. Either way works, but I agree
+> > > that what you suggest would be simpler.
+> >
+> > Yes, that is why we did it this way.  It was my understanding based on
+> > previous comments by yourself and LinusW that you both had patches
+> > depending on (now called) mvebu/of_pci.  So we got it into arm-soc
+> > early so those branches could depend on it.
 > 
-> Signed-off-by: Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
-> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> Right. I wasn't paying enough attention for the early merges that
+> Olof did.
+> 
+> 	Arnd
 
-The code looks good now.
-
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-
->  .../devicetree/bindings/pci/exynos-pcie.txt        |   71 ++
->  drivers/pci/host/Kconfig                           |    5 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-exynos.c                      | 1057 ++++++++++++++++++++
->  4 files changed, 1134 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/exynos-pcie.txt
->  create mode 100644 drivers/pci/host/pci-exynos.c
-
-But please change the identifier to designware or synopsys as I
-asked you to.
-
-Have a look at http://permalink.gmane.org/gmane.linux.kernel.pci/18400
-
-This was an earlier submission for a PCIe host driver obviously
-based on the same IP block. I don't know why that driver never
-made it into the kernel, but if it gets submitted again, or another
-platform uses the same block, it should share most of your driver.
-
-Whatever is exynos specific then can be moved out to a separate
-file.
-
-> +Required properties:
-> +-compatible: should be "samsung,exynos5440-pcie"
-
-Please also add a generic string, e.g.
-
-- compatible: should contain "snps,dwc-pcie" to identify the
-  core, plus an identifier for the specific instance, such
-  as "samsung,exynos5440-pcie".
-
-> +
-> +static unsigned long global_io_offset;
-> +
-> +static int exynos_pcie_setup(int nr, struct pci_sys_data *sys)
-> +{
-> +	struct pcie_port *pp;
-> +
-> +	pp = sys_to_pcie(sys);
-> +
-> +	if (!pp)
-> +		return 0;
-> +
-> +	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> +		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> +		pci_ioremap_io(sys->io_offset, pp->io.start);
-> +		global_io_offset += SZ_64K;
-> +	}
-> +
-> +	sys->mem_offset = pp->mem.start - pp->config.mem_bus_addr;
-> +
-> +	pci_add_resource_offset(&sys->resources, &pp->io, sys->io_offset);
-> +	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
-> +
-> +	return 1;
-> +}
-
-Just noticed one detail here: the 'pci_add_resource_offset' for the
-I/O window should be inside of the 'if' clause, we must not annouce
-the I/O port range to the PCI core layer unless we have actually
-mapped it.
-
-	Arnd
