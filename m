@@ -1,128 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@huawei.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <liuj97@gmail.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [BUGFIX 8/9] ACPI: introduce several helper functions
-Date: Fri, 14 Jun 2013 00:32:31 +0800
-Message-Id: <1371141152-9468-9-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [Update][PATCH 3/3] ACPI / dock / PCI: Synchronous handling of dock events for PCI devices
+Date: Mon, 24 Jun 2013 11:55:22 +0200
+Message-ID: <1508248.YJkd4pGgsJ@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQVATSK+apf0qmQPuf7SQuEuXx6Wm1GtdKuakMGsfZ8c9A@mail.gmail.com>
+References: <2737587.I0nULev1kj@vostro.rjw.lan> <5632059.07cB6QdEcB@vostro.rjw.lan> <CAE9FiQVATSK+apf0qmQPuf7SQuEuXx6Wm1GtdKuakMGsfZ8c9A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce several helper functions, which will be used to simplify code.
+On Sunday, June 23, 2013 09:34:09 PM Yinghai Lu wrote:
+> On Sun, Jun 23, 2013 at 5:40 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Sunday, June 23, 2013 04:04:52 PM Yinghai Lu wrote:
+> >> On Sun, Jun 23, 2013 at 2:42 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> ...
+> >> > Ah, I overlooked the fact that each dock station is on its own dependent_list
+> >> > and can also be on another dock station's dependent_list.  I'm not sure if that
+> >> > makes sense, but let's not break the backwards compatibility here.
+> >>
+> >> wonder if dock_release_hotplug with second dock_station and dd will
+> >> have problem.
+> >>
+> >> as first one dock_station/dd, could have hp_context release already,
+> >> then second one could all release(context) again....
+> >>
+> >> so looks like dock_release_hotplug should go over dock_station/dd list
+> >> to clear hp_context in other dock_station/... if they are the same?
+> >
+> > I'm not sure what you mean.  They are different dependent_device objects
+> > and each of them has its own context pointer, although they both will point to
+> > the same thing.
+> >
+> > Both "init" and "release" will be called for each of them individually which
+> > for for acpiphp (which is the only user of that ATM) actually means "get" and
+> > "put", so it should be OK.
+> 
+> yes, then hp_context can never be  the same, just the acpi handle is the same.
+> 
+> Acked-by: Yinghai Lu <yinghai@kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/acpi/utils.c    | 74 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/acpi/acpi_bus.h |  5 ++++
- 2 files changed, 79 insertions(+)
+Thanks!
 
-diff --git a/drivers/acpi/utils.c b/drivers/acpi/utils.c
-index 74437130..cb66fce 100644
---- a/drivers/acpi/utils.c
-+++ b/drivers/acpi/utils.c
-@@ -495,3 +495,77 @@ acpi_handle_printk(const char *level, acpi_handle handle, const char *fmt, ...)
- 	kfree(buffer.pointer);
- }
- EXPORT_SYMBOL(acpi_handle_printk);
-+
-+/**
-+ * acpi_evaluate_ej0: Evaluate _EJ0 method for hotplug operations
-+ * @handle: ACPI device handle
-+ *
-+ * Evaluate device's _EJ0 method for hotplug operations.
-+ */
-+acpi_status acpi_evaluate_ej0(acpi_handle handle)
-+{
-+	acpi_status status;
-+	union acpi_object arg;
-+	struct acpi_object_list arg_list;
-+
-+	arg.type = ACPI_TYPE_INTEGER;
-+	arg.integer.value = 1;
-+	arg_list.count = 1;
-+	arg_list.pointer = &arg;
-+	status = acpi_evaluate_object(handle, "_EJ0", &arg_list, NULL);
-+	if (status == AE_NOT_FOUND) {
-+		acpi_handle_warn(handle, "No _EJ0 support for device\n");
-+	} else if (ACPI_FAILURE(status)) {
-+		acpi_handle_warn(handle, "Eject failed (0x%x)\n", status);
-+	}
-+
-+	return status;
-+}
-+
-+/**
-+ * acpi_evaluate_lck: Evaluate _LCK method to lock/unlock device
-+ * @handle: ACPI device handle
-+ * @lock: lock device if non-zero, otherwise unlock device
-+ *
-+ * Evaluate device's _LCK method if present to lock/unlock device
-+ */
-+acpi_status acpi_evaluate_lck(acpi_handle handle, int lock)
-+{
-+	acpi_status status;
-+	union acpi_object arg;
-+	struct acpi_object_list arg_list;
-+
-+	arg_list.count = 1;
-+	arg_list.pointer = &arg;
-+	arg.type = ACPI_TYPE_INTEGER;
-+	arg.integer.value = !!lock;
-+	status = acpi_evaluate_object(handle, "_LCK", &arg_list, NULL);
-+	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-+		if (lock)
-+			acpi_handle_warn(handle,
-+				"Locking device failed (0x%x)\n", status);
-+		else
-+			acpi_handle_warn(handle,
-+				"Unlocking device failed (0x%x)\n", status);
-+	}
-+
-+	return status;
-+}
-+
-+/**
-+ * acpi_has_method: Check whether @handle has a method named @name
-+ * @handle: ACPI device handle
-+ * @name: name of object or method
-+ *
-+ * Check whether @handle has a method named @name.
-+ */
-+int acpi_has_method(acpi_handle handle, char *name)
-+{
-+	acpi_status status;
-+	acpi_handle tmp;
-+
-+	status = acpi_get_handle(handle, name, &tmp);
-+
-+	return ACPI_FAILURE(status) ? 0 : 1;
-+}
-+EXPORT_SYMBOL(acpi_has_method);
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 636c59f..5df5f89 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -56,6 +56,11 @@ acpi_evaluate_hotplug_ost(acpi_handle handle, u32 source_event,
- 
- acpi_status
- acpi_get_physical_device_location(acpi_handle handle, struct acpi_pld_info **pld);
-+
-+acpi_status acpi_evaluate_ej0(acpi_handle handle);
-+acpi_status acpi_evaluate_lck(acpi_handle handle, int lock);
-+int acpi_has_method(acpi_handle handle, char *name);
-+
- #ifdef CONFIG_ACPI
- 
- #include <linux/proc_fs.h>
+> BTW, thank you very much for the whole acpi scan rework.
+
+Well, no problem, it was necessary for a number of reasons.
+
+And honestly I think more along those lines is still needed. :-)
+
+For example, the discussion here shows how fragile the design of acpiphp is.
+Take hotplug_dock_devices() for instance.  It shouldn't even need to use those
+"handlers", because ideally acpi_bus_trim() should automatically trigger the
+removal of "physical" device objects depending on the stuff being trimmed.
+And analogously for acpi_bus_scan().
+
+The "trim" part should be possible to implement even now, because
+struct acpi_device contains a "remove" callback pointer (that was added for
+power resources IIRC), although perhaps it'll need to be called from
+acpi_bus_device_detach().  The "scan" part should be doable too if we add
+an "add child" callback to struct acpi_device, so that acpi_bus_device_attach()
+can use it to handle devices that don't have scan handlers or ACPI drivers
+(like PCI devices).
+
+Thanks,
+Rafael
+
+
 -- 
-1.8.1.2
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
