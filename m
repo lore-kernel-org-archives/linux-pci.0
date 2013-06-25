@@ -1,51 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:42072 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757286Ab3FEUJE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 16:09:04 -0400
-Date: Wed, 5 Jun 2013 22:08:07 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v3 -tip x86/apic 2/2] x86/MSI: Conserve interrupt
- resources when using multiple-MSIs
-Message-ID: <20130605200807.GA5198@breakpoint.cc>
-References: <cover.1368431413.git.agordeev@redhat.com>
- <924d05fe41fb93fdc2013680fb220d4b171de303.1368431413.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <924d05fe41fb93fdc2013680fb220d4b171de303.1368431413.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	x86@kernel.org
+Subject: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
+Date: Tue, 25 Jun 2013 19:22:09 +0300
+Message-Id: <1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 13, 2013 at 11:06:17AM +0200, Alexander Gordeev wrote:
-> Current multiple-MSI implementation does not take into account
-> actual number of requested MSIs and always rounds that number
-> to a closest power-of-two value. Yet, a number of MSIs a PCI
-> device could send (and therefore a number of messages a device
-> driver could request) may be a lesser power-of-two. As result,
-> resources allocated for extra MSIs just wasted.
-> 
-> This update takes advantage of 'msi_desc::nvec' field introduced
-> with generic MSI code to track number of requested and used MSIs.
-> As result, resources associated with interrupts are conserved.
-> Of those resources most noticeable are x86 interrupt vectors.
-> 
-> The initial version of this fix also consumed on IRTEs, but Jan
-> noticed that a malfunctioning PCI device might send a message
-> number it did not claim and thus refer an IRTE it does not own.
-> To avoid this security hole the old-way approach preserved and
-> as many IRTEs are reserved as the device could possibly send.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+The acpiphp driver finds out whether the device is hotpluggable by checking
+whether it has _RMV method behind it (and if it returns 1). However, at
+least Acer Aspire S5 with Thunderbolt host router has this method placed
+behind device called EPUP (endpoint upstream port?) and not directly behind
+the root port as can be seen from the ASL code below:
 
-This does not look all that bad.
+Device (RP05)
+{
+	...
+	Device (HRUP)
+	{
+		Name (_ADR, Zero)
+		Name (_PRW, Package (0x02)
+		{
+			0x09,
+			0x04
+		})
+		Device (HRDN)
+		{
+			Name (_ADR, 0x00040000)
+			Name (_PRW, Package (0x02)
+			{
+				0x09,
+				0x04
+			})
+			Device (EPUP)
+			{
+				Name (_ADR, Zero)
+				Method (_RMV, 0, NotSerialized)
+				{
+					Return (One)
+				}
+			}
+		}
+	}
 
-Sebastian
+If we want to support such machines we must look for the _RMV method a bit
+deeper in the hierarchy. Fix this by changing pcihp_is_ejectable() to check
+few more devices down from the root port.
+
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpi_pcihp.c | 53 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 48 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+index 2a47e82..2760954 100644
+--- a/drivers/pci/hotplug/acpi_pcihp.c
++++ b/drivers/pci/hotplug/acpi_pcihp.c
+@@ -408,21 +408,64 @@ got_one:
+ }
+ EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
+ 
++static acpi_status pcihp_evaluate_rmv(acpi_handle handle, u32 lvl,
++				      void *context, void **return_not_used)
++{
++	unsigned long long *removable = context;
++	unsigned long long value;
++	acpi_status status;
++
++	status = acpi_evaluate_integer(handle, "_RMV", NULL, &value);
++	if (ACPI_SUCCESS(status) && value) {
++		*removable = value;
++		return AE_CTRL_TERMINATE;
++	}
++	return AE_OK;
++}
++
++/*
++ * pcihp_is_removable - check if this device is removable
++ * @handle: ACPI handle of the device
++ * @depth: how deep in the hierarchy we look for the _RMV
++ *
++ * Look for _RMV method behind the device. @depth specifies how deep in the
++ * hierarchy we search.
++ *
++ * Returns %true if the device is removable, %false otherwise.
++ */
++static bool pcihp_is_removable(acpi_handle handle, size_t depth)
++{
++	unsigned long long removable = 0;
++	acpi_status status;
++
++	status = pcihp_evaluate_rmv(handle, 0, &removable, NULL);
++	if ((status == AE_CTRL_TERMINATE) && removable)
++		return true;
++
++	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, depth, pcihp_evaluate_rmv,
++			    NULL, &removable, NULL);
++	return !!removable;
++}
++
++/*
++ * Some BIOSes, like the one in Acer Aspire S5 places the _RMV method a bit
++ * deeper in the hierarhcy. So check at least 3 levels behind this device.
++ */
++#define PCIHP_RMV_MAX_DEPTH	3
++
+ static int pcihp_is_ejectable(acpi_handle handle)
+ {
+ 	acpi_status status;
+ 	acpi_handle tmp;
+-	unsigned long long removable;
++
+ 	status = acpi_get_handle(handle, "_ADR", &tmp);
+ 	if (ACPI_FAILURE(status))
+ 		return 0;
+ 	status = acpi_get_handle(handle, "_EJ0", &tmp);
+ 	if (ACPI_SUCCESS(status))
+ 		return 1;
+-	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+-	if (ACPI_SUCCESS(status) && removable)
+-		return 1;
+-	return 0;
++
++	return pcihp_is_removable(handle, PCIHP_RMV_MAX_DEPTH);
+ }
+ 
+ /**
+-- 
+1.8.3.1
+
