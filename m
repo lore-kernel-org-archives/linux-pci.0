@@ -1,48 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:37741 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752848Ab3FZW1A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 18:27:00 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo58bCG4=hwC73VY+nXPk9-dZUb5eWERZ_wTtAfrXtBVmg@mail.gmail.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
-	<CAErSpo58bCG4=hwC73VY+nXPk9-dZUb5eWERZ_wTtAfrXtBVmg@mail.gmail.com>
-Date: Wed, 26 Jun 2013 15:26:59 -0700
-Message-ID: <CAE9FiQW9xuu6WjH59td6Jve10kokoxU4mNqj4DRyg7beqBzHDA@mail.gmail.com>
-Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:41386 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751254Ab3FYJzy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 05:55:54 -0400
+Date: Tue, 25 Jun 2013 11:55:52 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Cc: Thierry Reding <thierry.reding@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: [PATCHv3 02/11] pci: use weak functions for MSI arch-specific
+ functions
+Message-ID: <20130625115552.7ebdad17@skate>
+In-Reply-To: <CAErSpo6Mm6kYZKN_n-fMRD2T1-F0sf9GStmOTA8tT0wVLedCgw@mail.gmail.com>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1371660979-21588-3-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130620185707.GA8888@mithrandir>
+	<CAErSpo6Mm6kYZKN_n-fMRD2T1-F0sf9GStmOTA8tT0wVLedCgw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 3:18 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
->> Thunderbolt PCI-to-PCI bridges typically use BIOS "assisted" enumeration.
->> This means that the BIOS will allocate bridge resources based on some
->> assumptions of a maximum Thunderbolt chain. It also disables native PCIe
->> hotplug of the root port where the Thunderbolt host router is connected.
+Dear Bjorn Helgaas,
 
-We should not need tricks in this patch after
+On Mon, 24 Jun 2013 19:52:45 -0600, Bjorn Helgaas wrote:
 
-https://patchwork.kernel.org/patch/2766521/
+> I agree; the whole point of __weak is to provide a "default"
+> implementation, so I hope you can just remove any empty default_*()
+> functions and fold the others into the arch_*() functions directly.
+> 
+> If there actually are callbacks from arch-specific strong functions
+> back to the stuff in the default_*() functions, that suggests that we
+> should refactor and rename that bit of functionality.
 
-[2/3] PCI / ACPI: Use boot-time resource allocation rules during hotplug
+There is one such case, as highlighted in the commit log of this patch:
 
-Thanks
+"""
+This is needed because the x86 Xen implementation of
+teardown_msi_irqs() needs to do some work, and then call the default
+implementation of this hook.
+"""
 
-Yinghai
+Any suggestion on how to solve this particular case?
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
