@@ -1,127 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:50265 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753599Ab3FNS0v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 14:26:51 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6vEOw10YV=Sou6wjjSc2GWr-oX=Dvbt7Xt=RJKi4RELw@mail.gmail.com>
-References: <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
-	<CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
-	<CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
-	<CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
-	<20130401235256.GA31966@google.com>
-	<CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
-	<CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
-	<CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
-	<CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com>
-	<CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com>
-	<20130614141101.GA29452@google.com>
-	<CAE9FiQVr-OWeqEHFXn0MjNiSD0WM=FNO_DFo6m9UbbG60uonpw@mail.gmail.com>
-	<CAErSpo7grN-93zZfBJOHZH-pR1wDYrojTwt=B=++QqA0rPb3Rg@mail.gmail.com>
-	<CAE9FiQUO350kqrXB5=yQ-OxOeSJj4+P6WPg4gGgXxFEvfoLyng@mail.gmail.com>
-	<CAErSpo6vEOw10YV=Sou6wjjSc2GWr-oX=Dvbt7Xt=RJKi4RELw@mail.gmail.com>
-Date: Fri, 14 Jun 2013 11:26:49 -0700
-Message-ID: <CAE9FiQWevd6ZNDdqGkqbLrGujKYuTiwibPAT+30VPpC_H-rLJA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	x86@kernel.org
+Subject: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
+Date: Tue, 25 Jun 2013 19:22:05 +0300
+Message-Id: <1372177330-28013-2-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 14, 2013 at 10:44 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Jun 14, 2013 at 10:57 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, Jun 14, 2013 at 9:33 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Fri, Jun 14, 2013 at 10:17 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>
->>> Can you please refer to specific function names?  I can't read your mind.
->>>
->>> You might be referring to quirk_disable_aspm_l0s().  This is a
->>> pci_fixup_final quirk that calls pci_disable_link_state().  In the
->>> current tree, we enumerate devices before requesting _OSC control.
->>> However, pci_fixup_final quirks are not run until the
->>> pci_apply_final_quirks() fs_initcall, which is after we request _OSC
->>> control.
->>>
->>> As far as I can tell, we never call pci_disable_link_state() before
->>> calling pcie_no_aspm().
->>
->> ok, you are right, that is not pci_disable_link_state.
->>
->> It is pcie_aspm_init_link_state ==> pcie_aspm_sanity_check in booting path
->> that disable aspm.  It has  "if (aspm_disabled)" in it, and it cause
->> the difference.
->
-> Yes, I agree, the pcie_aspm_init_link_state() path uses aspm_disabled
-> before we set it:
->
->     acpi_pci_root_add
->       pci_acpi_scan_root
->         pci_scan_child_bus
->           pci_scan_slot
->             pcie_aspm_init_link_state
->               pcie_aspm_sanity_check
->                 if (aspm_disabled)              # used before set
->                   ...
->       acpi_pci_osc_control_set
->       pcie_no_aspm
->         aspm_disabled = 1                       # set
->
-> That might mean we do some ASPM configuration during enumeration (in
-> pci_scan_slot()) even though the BIOS hasn't given us permission.  It
-> looks like we did that even in v3.7, since we did the enumeration
-> before the _OSC there as well.  That looks like a bug to me.
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-agreed. that means commits from Matthew Garrett
+With Thunderbolt you can chain devices: connect a new devices to plugged
+one. In this case the slot is already enabled, but we still want to look
+for new devices behind it.
 
-commit 4949be16822e92a18ea0cc1616319926628092ee
-Author: Matthew Garrett <mjg@redhat.com>
-Date:   Tue Mar 6 13:41:49 2012 -0500
+We're going to reuse enable_device() for rescan for new devices on the
+enabled slot. Let's push the check up by stack.
 
-    PCI: ignore pre-1.1 ASPM quirking when ASPM is disabled
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-commit c9651e70ad0aa499814817cbf3cc1d0b806ed3a1
-Author: Matthew Garrett <mjg@redhat.com>
-Date:   Tue Mar 27 10:17:41 2012 -0400
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 59df857..b983e29 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -688,9 +688,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 	int num, max, pass;
+ 	LIST_HEAD(add_list);
+ 
+-	if (slot->flags & SLOT_ENABLED)
+-		goto err_exit;
+-
+ 	list_for_each_entry(func, &slot->funcs, sibling)
+ 		acpiphp_bus_add(func);
+ 
+@@ -1242,6 +1239,8 @@ int acpiphp_enable_slot(struct acpiphp_slot *slot)
+ 		goto err_exit;
+ 
+ 	if (get_slot_status(slot) == ACPI_STA_ALL) {
++		if (slot->flags & SLOT_ENABLED)
++			goto err_exit;
+ 		/* configure all functions */
+ 		retval = enable_device(slot);
+ 		if (retval)
+-- 
+1.8.3.1
 
-    ASPM: Fix pcie devices with non-pcie children
-
-will only works when the user specify "aspm=off" in boot command line.
-
-(Roman's should have problem when he boot current linus tree with
-"aspm=off", as no one will disable aspm for the offending pci devices)
-
-To close the hole that Matthew' commits miss, that we should move _OSC
-support/control set ahead.
-
-For Roman's system it will have to fail, as BIOS enable prep-1.1 pcie devices
-aspm, and do not handle over control to OS, so os can not disable aspm link
-state for it.
-
-To workaround the problem in Roman's system, we can add pcie_aspm=force_off
-
-so we will have
-pcie_aspm=off
-pcie_aspm=force
-pcie_aspm=force_off
-
-What a mess!
-
->
-> I don't think the fact that we have been doing ASPM config during
-> enumeration before _OSC is an argument for dropping the check in
-> pci_disable_link_state().
-
-Agreed.
-
-Yinghai
