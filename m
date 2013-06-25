@@ -1,92 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:59882 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752788Ab3FZTzu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 15:55:50 -0400
-Received: by mail-oa0-f41.google.com with SMTP id n10so15626451oag.0
-        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 12:55:50 -0700 (PDT)
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:58666 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136Ab3FYQyz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 12:54:55 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h1so13771353oag.33
+        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 09:54:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <16740668.kbtKGAu32B@vostro.rjw.lan>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <3671062.GUfa7jqN3X@vostro.rjw.lan> <20130626194839.GA30260@google.com> <16740668.kbtKGAu32B@vostro.rjw.lan>
+In-Reply-To: <20130625184419.2bc14a71@skate>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1371660979-21588-3-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130620185707.GA8888@mithrandir> <CAErSpo6Mm6kYZKN_n-fMRD2T1-F0sf9GStmOTA8tT0wVLedCgw@mail.gmail.com>
+ <20130625115552.7ebdad17@skate> <CAErSpo67ogc6R=vk+dt0Y6OFvwtLTL57tHx1u1zTkqY9g4N_1w@mail.gmail.com>
+ <20130625184419.2bc14a71@skate>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Jun 2013 13:55:29 -0600
-Message-ID: <CAErSpo7qHU+iF+pOgpEiQmhcT52eGznjyGP3_yo9on04eqVAKg@mail.gmail.com>
-Subject: Re: [PATCH 0/6] Thunderbolt workarounds take 2
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Date: Tue, 25 Jun 2013 10:54:34 -0600
+Message-ID: <CAErSpo7HWkYkcGbpGe8ty=+NHh_BnnFvAVvwWb4s-prcKWo=eA@mail.gmail.com>
+Subject: Re: [PATCHv3 02/11] pci: use weak functions for MSI arch-specific functions
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 2:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Wednesday, June 26, 2013 01:48:39 PM Bjorn Helgaas wrote:
->> On Wed, Jun 26, 2013 at 02:45:40PM +0200, Rafael J. Wysocki wrote:
->> > On Wednesday, June 26, 2013 10:25:36 AM Mika Westerberg wrote:
->> > > On Wed, Jun 26, 2013 at 01:24:25AM +0200, Rafael J. Wysocki wrote:
->> > > > Would you please CC things touching ACPIPHP to linux-acpi?
->> > >
->> > > Sorry about that -- It wasn't listed in the output of get_maintainers.pl so
->> > > it kind of was forgotten.
->> > >
->> > > Do you want me to resend this series with linux-acpi@ included?
->> >
->> > No need, just please remember about that in the future.
->>
->> Maybe we should do the following?  That covers the following files under
->> drivers/pci:
->>
->>     drivers/pci/hotplug/pciehp_acpi.c
->>     drivers/pci/hotplug/acpi_pcihp.c
->>     drivers/pci/hotplug/acpiphp_glue.c
->>     drivers/pci/hotplug/acpiphp_core.c
->>     drivers/pci/hotplug/acpiphp_ibm.c
->>     drivers/pci/pcie/aer/aerdrv_acpi.c
->>     drivers/pci/pcie/portdrv_acpi.c
->>     drivers/pci/pci-acpi.c
->>
->>
->> commit 961e3992849e18f9ed6cbcac5c54fb29925341b3
->> Author: Bjorn Helgaas <bhelgaas@google.com>
->> Date:   Wed Jun 26 13:38:37 2013 -0600
->>
->>     MAINTAINERS: Add ACPI folks for ACPI-related things under drivers/pci
->>
->>     Add file patterns so get_maintainers.pl reports both PCI and ACPI folks
->>     for ACPI-related things in drivers/pci.
->>
->>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Tue, Jun 25, 2013 at 10:44 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> Dear Bjorn Helgaas,
 >
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-Added to my pci/misc branch for v3.11.
-
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index 3d7782b..ce65550 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -242,6 +242,9 @@ F:        drivers/acpi/
->>  F:   drivers/pnp/pnpacpi/
->>  F:   include/linux/acpi.h
->>  F:   include/acpi/
->> +F:   drivers/pci/*acpi*
->> +F:   drivers/pci/*/*acpi*
->> +F:   drivers/pci/*/*/*acpi*
+> On Tue, 25 Jun 2013 10:20:33 -0600, Bjorn Helgaas wrote:
+>
+>> > Any suggestion on how to solve this particular case?
 >>
->>  ACPI FAN DRIVER
->>  M:   Zhang Rui <rui.zhang@intel.com>
-> --
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
+>> Nope.  Just leave it as-is for that case and consolidate what you can.
+>
+> So I keep the weak arch_*() function and the strong default_*() for
+> this particular hook, and for all the other hooks, I only keep a weak
+> arch_*() function. Is this what you suggest for now?
+
+Yep, that sounds good.
+
+Bjorn
