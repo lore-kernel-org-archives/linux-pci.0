@@ -1,135 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1528326.6SFofebmNT@vostro.rjw.lan>
-References: <2737587.I0nULev1kj@vostro.rjw.lan>
-	<CAE9FiQVGz-BOq4LeZ-iNCAKqPF=Tzuq6uTZ=AAnO=8yMa22jYw@mail.gmail.com>
-	<CAE9FiQWf7_v0Mc2rdhg9ssk9NCFNqtv8LiCfayw00OqzbozvSw@mail.gmail.com>
-	<1528326.6SFofebmNT@vostro.rjw.lan>
-Date: Sun, 23 Jun 2013 16:04:52 -0700
-Message-ID: <CAE9FiQUJh-u-yimuGpFiOO_-L7=+V-57W0Tn+cgR3ru=PQ+xvw@mail.gmail.com>
-Subject: Re: [Update][PATCH 3/3] ACPI / dock / PCI: Synchronous handling of
- dock events for PCI devices
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <liuj97@gmail.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:35800 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751473Ab3FYD54 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Jun 2013 23:57:56 -0400
+Message-ID: <1372132661.30572.354.camel@ul30vt.home>
+Subject: Re: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Radim =?UTF-8?Q?Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Isaku Yamahata <yamahata@valinux.co.jp>
+Date: Mon, 24 Jun 2013 21:57:41 -0600
+In-Reply-To: <CAErSpo5m_6cJEBO56_uEAMbUjYL6pPwZ9dqz59RPBfZqCLuFBg@mail.gmail.com>
+References: <1371668174-32115-1-git-send-email-rkrcmar@redhat.com>
+	 <CAErSpo7O2YUUq-Ninu+BdmnrDGcU_h5=h=v1MBCoLorSDZW=Ow@mail.gmail.com>
+	 <1372129109.30572.335.camel@ul30vt.home>
+	 <CAErSpo5m_6cJEBO56_uEAMbUjYL6pPwZ9dqz59RPBfZqCLuFBg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 23, 2013 at 2:42 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Sunday, June 23, 2013 01:29:19 PM Yinghai Lu wrote:
->> On Sun, Jun 23, 2013 at 12:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> > On Sun, Jun 23, 2013 at 8:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> >> On 06/23/2013 05:25 AM, Rafael J. Wysocki wrote:
->> >>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> >>>
->> >>> The interactions between the ACPI dock driver and the ACPI-based PCI
->> >>> hotplug (acpiphp) are currently problematic because of ordering
->> >>> issues during hot-remove operations.
->> >>>
->> >>> First of all, the current ACPI glue code expects that physical
->> >>> devices will always be deleted before deleting the companion ACPI
->> >>> device objects.  Otherwise, acpi_unbind_one() will fail with a
->> >>> warning message printed to the kernel log, for example:
->> >>>
->> >>> [  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
->> >>> [  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
->> >>> [  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
->> >>> [  180.013656]  port1: Oops, 'acpi_handle' corrupt
->> >>>
->> >> [...]
->> >>> @@ -597,15 +654,11 @@ register_hotplug_dock_device(acpi_handle
->> >>>                * ops
->> >>>                */
->> >>>               dd = find_dock_dependent_device(dock_station, handle);
->> >>> -             if (dd) {
->> >>> -                     dd->ops = ops;
->> >>> -                     dd->context = context;
->> >>> -                     dock_add_hotplug_device(dock_station, dd);
->> >>> -                     ret = 0;
->> >>> -             }
->> >>> +             if (dd)
->> >>> +                     return dock_init_hotplug(dd, ops, context,
->> >>> +                                              init, release);
->> >> Hi Rafael,
->> >>         Seems not an equivalent change. According to the comment just above the
->> >> code, we shouldn't return but continue here.
->> >> /*
->> >>  * An ATA bay can be in a dock and itself can be ejected
->> >>  * separately, so there are two 'dock stations' which need the
->> >>  * ops
->> >>  */
->> >
->> > two dock stations:
->> > Do you mean two dock station has same handle?
->> >
->> > dock_add should add correctly flags for IS_DOCK and IS_ATA.
->> > if one handle has _DCK and _GTF etc.
->> >
->> > or do you mean there are two dependent devices with same handle?
->> > like one is for acpiphp slot and one is for ATA?
->>
->> related commit:
->> commit 61b836958371c717d1e6d4fea1d2c512969ad20b
->> Author: Shaohua Li <shaohua.li@intel.com>
->> Date:   Thu Aug 28 10:07:14 2008 +0800
->>
->>     dock: fix for ATA bay in a dock station
->>
->>     an ATA bay can be in a dock and itself can be ejected separately.
->>     This patch handles such eject bay. Found by Holger.
->>
->>     Signed-off-by: Shaohua Li <shaohua.li@intel.com>
->>     Signed-off-by: Len Brown <len.brown@intel.com>
->> @@ -618,16 +619,21 @@ register_hotplug_dock_device(acpi_handle handle, struct ac
->> pi_dock_ops *ops,
->>          * this would include the dock station itself
->>          */
->>         list_for_each_entry(dock_station, &dock_stations, sibiling) {
->> +               /*
->> +                * An ATA bay can be in a dock and itself can be ejected
->> +                * seperately, so there are two 'dock stations' which need the
->> +                * ops
->> +                */
->>                 dd = find_dock_dependent_device(dock_station, handle);
->>                 if (dd) {
->>                         dd->ops = ops;
->>                         dd->context = context;
->>                         dock_add_hotplug_device(dock_station, dd);
->> -                       return 0;
->> +                       ret = 0;
->>                 }
->>         }
->>
->> -       return -EINVAL;
->> +       return ret;
->>  }
->>
->> so two doc station with different handle.
->>
->> and dependent devices in both...
->>
->> looks like Rafael's change can not handle this case anymore.
->
-> Ah, I overlooked the fact that each dock station is on its own dependent_list
-> and can also be on another dock station's dependent_list.  I'm not sure if that
-> makes sense, but let's not break the backwards compatibility here.
+On Mon, 2013-06-24 at 21:35 -0600, Bjorn Helgaas wrote:
+> On Mon, Jun 24, 2013 at 8:58 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > On Mon, 2013-06-24 at 19:38 -0600, Bjorn Helgaas wrote:
+> >> [+cc Michael, Alex, Isaku]
+> >>
+> >> On Wed, Jun 19, 2013 at 12:56 PM, Radim Krčmář <rkrcmar@redhat.com> wrote:
+> >> > PCIe switch upstream port can be connected directly to the PCIe root bus
+> >> > in QEMU; ASPM does not expect this topology and dereferences NULL pointer
+> >> > when initializing.
+> >> >
+> >> > I have not confirmed this can happen on real hardware, but it is presented
+> >> > as a feature in QEMU, so there is no reason to panic if we can recover.
+> >>
+> >> This doesn't seem like a valid hardware topology to me.  If this *can*
+> >> occur on real hardware, we should fix it in Linux.  If not, maybe QEMU
+> >> should be changed to disallow it.
+> >
+> > I think a quad-port 82576 plugged into an express slot is likely the
+> > same topology.
+> 
+> I don't think that would be the same topology Radim described.  In
+> Radim's case, we have this:
+> 
+>   00:03.0 upstream port
+>   01:00.0 downstream port
+> 
+> and when we call alloc_pcie_link_state() for 01:00.0,
+> 
+>   pdev is 01:00.0
+>   pdev->bus is bus 01
+>   pdev->bus->parent is bus 00
+>   pdev->bus->parent->self (the bridge device leading to bus 00) is NULL
+> 
+> But in the case of a quad 82576 plugged into a slot, there would be a
+> root port or a downstream port leading to the slot's link, so my guess
+> is we'd have something like this (based on lspci output I found at
+> [1]):
+> 
+>   00:05.0 root port leading to slot (bridge to [bus 01-08])
+>   01:00.0 upstream port of switch on card (bridge to [bus 02-08])
+>   02:02.0 downstream port (bridge to [bus 03-05])
+>   02:04.0 downstream port (bridge to [bus 06-08])
+>   03:00.0 82576 port 0
+>   03:00.1 82576 port 1
+>   06:00.0 82576 port 2
+>   06:00.1 82576 port 3
+> 
+> So when we call alloc_pcie_link_state() for 02:02.0,
+> 
+>   pdev is 02:02.0
+>   pdev->bus is bus 02
+>   pdev->bus->parent is bus 01
+>   pdev->bus->parent->self (the bridge leading to bus 01) is 00:05.0
 
-wonder if dock_release_hotplug with second dock_station and dd will
-have problem.
 
-as first one dock_station/dd, could have hp_context release already,
-then second one could all release(context) again....
+Oops, I misread his statement.  I don't think an upstream port connected
+directly to a root complex is valid.  I thought he was having problems
+with an upstream port connected to a root port, which is obviously
+valid.  QEMU lets us attach nearly anything to the root complex, most of
+them aren't valid.  Thanks,
 
-so looks like dock_release_hotplug should go over dock_station/dd list
-to clear hp_context in other dock_station/... if they are the same?
+Alex
 
-Yinghai
