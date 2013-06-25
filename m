@@ -1,119 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:57362 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755911Ab3FEScZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 14:32:25 -0400
-Received: by mail-oa0-f54.google.com with SMTP id o17so1412384oag.41
-        for <linux-pci@vger.kernel.org>; Wed, 05 Jun 2013 11:32:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1369974092-11450-3-git-send-email-jiang.liu@huawei.com>
-References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com> <1369974092-11450-3-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Jun 2013 12:32:04 -0600
-Message-ID: <CAErSpo7QspthZ31WadyLx6aSD_JD=YWibpzcNv=GMX7kjttbqA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI: Hide remove and rescan sysfs interfaces for
- SR-IOV virtual functions
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Xudong Hao <xudong.hao@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
+Received: from mx1.redhat.com ([209.132.183.28]:49453 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751102Ab3FYVbO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Jun 2013 17:31:14 -0400
+Date: Tue, 25 Jun 2013 22:50:05 +0200
+From: Radim =?utf-8?B?S3LEjW3DocWZ?= <rkrcmar@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Isaku Yamahata <yamahata@valinux.co.jp>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
+Message-ID: <20130625205005.GA1716@hpx.cz>
+References: <1371668174-32115-1-git-send-email-rkrcmar@redhat.com>
+ <CAErSpo7O2YUUq-Ninu+BdmnrDGcU_h5=h=v1MBCoLorSDZW=Ow@mail.gmail.com>
+ <20130625112348.GA13722@redhat.com>
+ <CAErSpo7sH_TsN73LZWRFgO+RqAhzgdiTXR86xJ7Ojmno6QTY5w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAErSpo7sH_TsN73LZWRFgO+RqAhzgdiTXR86xJ7Ojmno6QTY5w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 30, 2013 at 10:21 PM, Jiang Liu <liuj97@gmail.com> wrote:
-> From: Jiang Liu <liuj97@gmail.com>
->
-> PCI devices for SR-IOV virtual functions should only be created/
-> destroyed by pci_enable_sriov()/pci_disable_sriov() because special
-> data structures are associated with SR-IOV virtual functions.
-> So hide hotplug related sysfs interfaces "remove" and "rescan" for
-> SR-IOV virtual functions, otherwise it may causes memory leakage
-> and other issues.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Donald Dutile <ddutile@redhat.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Cc: Ram Pai <linuxram@us.ibm.com>
+2013-06-25 11:17-0600, Bjorn Helgaas:
+> On Tue, Jun 25, 2013 at 5:23 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> > On Mon, Jun 24, 2013 at 07:38:45PM -0600, Bjorn Helgaas wrote:
+> >> [+cc Michael, Alex, Isaku]
+> >>
+> >> On Wed, Jun 19, 2013 at 12:56 PM, Radim Krčmář <rkrcmar@redhat.com> wrote:
+> >> > PCIe switch upstream port can be connected directly to the PCIe root bus
+> >> > in QEMU; ASPM does not expect this topology and dereferences NULL pointer
+> >> > when initializing.
+> >> >
+> >> > I have not confirmed this can happen on real hardware, but it is presented
+> >> > as a feature in QEMU, so there is no reason to panic if we can recover.
+> >>
+> >> This doesn't seem like a valid hardware topology to me.  If this *can*
+> >> occur on real hardware, we should fix it in Linux.  If not, maybe QEMU
+> >> should be changed to disallow it.
+> >
+> > I don't think it's a spec compliant topology either.
+> >
+> > Anything connected to an RC is either an integrated endpoint
+> > or a root port.
+> > There's no way to have an upstream port that is also
+> > an integrated endpoint or a root port - these are distinct
+> > device types.
+> >
+> > So I don't think Linux needs to support it.
+> >
+> > Having said that, there's all kind of broken hardware
+> > out there - crashing is not a friendly way to tell users
+> > that their hardware is not spec compliant.
+> > Maybe linux can print a friendly warning and ignore
+> > this port?
+> 
+> Indeed, that would be nicer.  I booted Win7 on the same config, and it
+> came up fine.  It did complain that it couldn't start the PCI-to-PCI
+> bridge driver on 00:03.0, the upstream port.
 
-Applied to my -next branch for v3.11, thanks!
+True, would something like
 
-> ---
->  drivers/pci/pci-sysfs.c | 30 ++++++++++++++++++++++++++++--
->  1 file changed, 28 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 5b4a9d9..403da60 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -325,6 +325,8 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
->         }
->         return count;
->  }
-> +struct device_attribute dev_rescan_attr = __ATTR(rescan, (S_IWUSR|S_IWGRP),
-> +                                                NULL, dev_rescan_store);
->
->  static void remove_callback(struct device *dev)
->  {
-> @@ -354,6 +356,8 @@ remove_store(struct device *dev, struct device_attribute *dummy,
->                 count = ret;
->         return count;
->  }
-> +struct device_attribute dev_remove_attr = __ATTR(remove, (S_IWUSR|S_IWGRP),
-> +                                                NULL, remove_store);
->
->  static ssize_t
->  dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
-> @@ -504,8 +508,6 @@ struct device_attribute pci_dev_attrs[] = {
->         __ATTR(broken_parity_status,(S_IRUGO|S_IWUSR),
->                 broken_parity_status_show,broken_parity_status_store),
->         __ATTR(msi_bus, 0644, msi_bus_show, msi_bus_store),
-> -       __ATTR(remove, (S_IWUSR|S_IWGRP), NULL, remove_store),
-> -       __ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_rescan_store),
->  #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
->         __ATTR(d3cold_allowed, 0644, d3cold_allowed_show, d3cold_allowed_store),
->  #endif
-> @@ -1463,6 +1465,29 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
->         return a->mode;
->  }
->
-> +static struct attribute *pci_dev_hp_attrs[] = {
-> +       &dev_remove_attr.attr,
-> +       &dev_rescan_attr.attr,
-> +       NULL,
-> +};
-> +
-> +static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
-> +                                               struct attribute *a, int n)
-> +{
-> +       struct device *dev = container_of(kobj, struct device, kobj);
-> +       struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +       if (pdev->is_virtfn)
-> +               return 0;
-> +
-> +       return a->mode;
-> +}
-> +
-> +static struct attribute_group pci_dev_hp_attr_group = {
-> +       .attrs = pci_dev_hp_attrs,
-> +       .is_visible = pci_dev_hp_attrs_are_visible,
-> +};
-> +
->  #ifdef CONFIG_PCI_IOV
->  static struct attribute *sriov_dev_attrs[] = {
->         &sriov_totalvfs_attr.attr,
-> @@ -1494,6 +1519,7 @@ static struct attribute_group pci_dev_attr_group = {
->
->  static const struct attribute_group *pci_dev_attr_groups[] = {
->         &pci_dev_attr_group,
-> +       &pci_dev_hp_attr_group,
->  #ifdef CONFIG_PCI_IOV
->         &sriov_dev_attr_group,
->  #endif
-> --
-> 1.8.1.2
->
+  printk(KERN_WARNING "pcie: %s connected directly to root bus[complex?]:"
+                      " aspm disabled\n", dev_name(pdev));
+
+be enough?
+
+> I'd like it if Linux could similarly tolerate that.  But since this is
+> a relatively low-priority issue, I'm going to hold out for a more
+> straightforward solution.  Checking for a null
+> "pdev->bus->parent->self" pointer is not very obvious.  I think we can
+> probably come up with a more direct check that reads better and
+> possibly even detects the issue at the upstream port, not the
+> downstream port.
+
+The check could be in pcie_aspm_init_link_state, where a "strange" VIA
+chipset is already being detected and using "pci_is_root_bus()" instead
+of "->self" is probably clearer as well.
+
+  	/* QEMU can connect upstream port directly to the root complex */
+  	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM &&
+  	    !pci_is_root_bus(pdev->bus->parent))
+  		return;
+
+If we were to check for the, even worse, downstream<->root complex,
+it would be "!pci_is_root_bus(pdev->bus)".
+
+Upstream port is a bit neglected in our aspm implementation, so
+refactoring might be required to get detection in it.
+
+> I opened a bugzilla for this issue:
+> https://bugzilla.kernel.org/show_bug.cgi?id=60111
+> 
+> Radim, can you please attach a complete dmesg log showing the oops,
+> i.e., console output with "ignore_loglevel" and lspci -vv output (have
+> to use your patch so it boots, I guess)?  I tried to reproduce it and
+> I know the problem is there, but I haven't quite found the right
+> recipe yet.
+
+Sorry, I have not mentioned that device must be connected to the switch,
+so "pci_scan_slot" does not end with "nr == 0", skipping the link setup.
+I connected the root disk; whole command for qemu-kvm 1.5:
+
+  qemu-kvm -m 2048 -M q35 -serial stdio -vnc :0 \
+  	-device x3130-upstream,bus=pcie.0,id=upstream \
+  	-device xio3130-downstream,bus=upstream,id=downstream,chassis=1 \
+  	-drive file=fc19.img,id=disk1,if=none,format=raw,media=disk,cache=none \
+  	-device virtio-blk-pci,bus=downstream,id=virtio-disk1,drive=disk1
+
+"pcie_aspm=off" should do exactly the same as patch.
+
+Both logs attached in bugzilla.
