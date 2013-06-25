@@ -1,118 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:51000 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751774Ab3FYXO5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Jun 2013 19:14:57 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
 	miles.j.penner@intel.com, bruce.w.allan@intel.com,
 	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	x86@kernel.org
-Subject: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
-Date: Tue, 25 Jun 2013 19:22:10 +0300
-Message-Id: <1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH 0/6] Thunderbolt workarounds take 2
+Date: Wed, 26 Jun 2013 01:24:25 +0200
+Message-ID: <12066786.EK0Z2aX1JA@vostro.rjw.lan>
 In-Reply-To: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
 References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thunderbolt PCI-to-PCI bridges typically use BIOS "assisted" enumeration.
-This means that the BIOS will allocate bridge resources based on some
-assumptions of a maximum Thunderbolt chain. It also disables native PCIe
-hotplug of the root port where the Thunderbolt host router is connected.
+On Tuesday, June 25, 2013 07:22:04 PM Mika Westerberg wrote:
+> Hi all,
+> 
+> This is the second iteration of the patches first posted here quite a while
+> ago:
+> 
+> 	https://lkml.org/lkml/2012/12/13/589
+> 
+> With Thunderbolt devices we might see pretty complex PCIe hierarchies that
+> the current ACPI hotplug code was not able to handle properly but instead
+> failed to scan the whole hierarchy. This series tries to address these
+> problems. In addition to that there's a possibility that only part of the
+> chain is disconnected so we don't want to leave behind stale PCI devices.
+> 
+> We have tested this on Acer Aspire S5 with the largest chain looking like
+> this:
+> 
+>   PC +--+ eSata Hub #0 +--+ eSata Hub #1 +--+ Apple Thunderbolt display +--+ Apple ethernet dongle
+> 
+> There are still problems with different device drivers because of the
+> surprise hotplug nature of Thunderbolt, causing occasional hangs and
+> failures that should be fixed per-driver later on (not addressed in this
+> series).
+> 
+> Currently Thunderbolt on Apple hardware like Macbooks is not yet supported
+> as they use some different mechanism than ACPI events to trigger hotplug
+> events.
+> 
+> The series is based on linux-pm.git/linux-next.
+> 
+> Kirill A. Shutemov (4):
+>   PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
+>   PCI: acpiphp: enable_device(): rescan even if no new devices on slot
+>   PCI: introduce pci_trim_stale_devices()
+>   PCI: acpiphp: check for new devices on enabled host
+> 
+> Mika Westerberg (2):
+>   PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
+>   x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
+> 
+>  arch/x86/pci/fixup.c               | 51 ++++++++++++++++++++++++
+>  drivers/pci/hotplug/acpi_pcihp.c   | 53 ++++++++++++++++++++++---
+>  drivers/pci/hotplug/acpiphp_glue.c | 79 +++++++++++++++++---------------------
+>  drivers/pci/remove.c               | 20 ++++++++++
+>  include/linux/pci.h                |  1 +
+>  5 files changed, 156 insertions(+), 48 deletions(-)
 
-In order to support this we must make sure that the kernel does not try to
-be too smart and resize / open the bridge windows during PCI enumeration.
-For example by default the kernel will add certain amount of space to the
-bridge memory/io windows (this is configurable via pci=hp[mem|io]size=xxx
-command line option). Eventually we run out of space that the BIOS has
-allocated.
+Would you please CC things touching ACPIPHP to linux-acpi?
 
-Also address space for expansion ROMs should not be allocated (BIOS does
-not execute them for Thunderbolt endpoints). If we don't prevent this the
-kernel might find expansion ROM associated with some endpoint and reopen
-the bridge window which the BIOS already closed leading again resource
-exhaustion.
-
-Fix this by adding a quirk that matches known Thunderbolt PCI-to-PCI
-bridges and in that case prevents allocation of expansion ROM resources and
-makes sure that the PCI core does not increase size of bridge windows.
-
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- arch/x86/pci/fixup.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
-
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index f5809fa..924822b 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -7,6 +7,8 @@
- #include <linux/pci.h>
- #include <linux/init.h>
- #include <linux/vgaarb.h>
-+#include <linux/acpi.h>
-+#include <linux/pci-acpi.h>
- #include <asm/pci_x86.h>
- 
- static void pci_fixup_i450nx(struct pci_dev *d)
-@@ -539,3 +541,52 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
-         }
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
-+
-+#ifdef CONFIG_ACPI
-+/*
-+ * BIOS assisted Thunderbolt PCI enumeration should handle all resource
-+ * allocation on behalf of OS.
-+ */
-+static void quirk_thunderbolt(struct pci_dev *dev)
-+{
-+	struct acpi_pci_root *root;
-+	acpi_handle handle;
-+
-+	handle = acpi_find_root_bridge_handle(dev);
-+	if (!handle)
-+		return;
-+
-+	root = acpi_pci_find_root(handle);
-+	if (!root)
-+		return;
-+
-+	/*
-+	 * Native PCIe hotplug should be disabled when BIOS assisted
-+	 * hotplug is in use.
-+	 */
-+	if (root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
-+		return;
-+
-+	/*
-+	 * Make sure that we don't allocate resources for expansion ROMs.
-+	 * This may accidentally increase the size of the bridge window
-+	 * causing us to run out of resources.
-+	 */
-+	if (!(pci_probe & PCI_NOASSIGN_ROMS)) {
-+		pr_info("Thunderbolt host router detected disabling ROMs\n");
-+		pci_probe |= PCI_NOASSIGN_ROMS;
-+	}
-+
-+	/*
-+	 * Don't add anything to the BIOS allocated bridge window size for
-+	 * the same reason.
-+	 */
-+	dev->is_hotplug_bridge = 0;
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1513, quirk_thunderbolt);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x151a, quirk_thunderbolt);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x151b, quirk_thunderbolt);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1547, quirk_thunderbolt);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1548, quirk_thunderbolt);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1549, quirk_thunderbolt);
-+#endif
--- 
-1.8.3.1
+Rafael
 
