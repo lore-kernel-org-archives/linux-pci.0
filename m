@@ -1,112 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 12 Jun 2013 23:23:10 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130612212308.GA27681@manwe>
-References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
- <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de>
- <516C46BC.2040707@wwwdotorg.org>
- <20130612122959.GA32444@manwe>
- <51B89D26.9070605@wwwdotorg.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:58363 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752691Ab3FYS5E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 14:57:04 -0400
+Received: by mail-ie0-f172.google.com with SMTP id 16so29069382iea.31
+        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 11:57:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
-In-Reply-To: <51B89D26.9070605@wwwdotorg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130625172608.GA11914@google.com>
+References: <20130625172608.GA11914@google.com>
+Date: Tue, 25 Jun 2013 11:57:03 -0700
+Message-ID: <CAE9FiQVN+iLTV0u0vsJMQyeeRg=oSudcn5EnKWAFSzD+-Uohfw@mail.gmail.com>
+Subject: Re: Changes for v3.11 merge window
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jun 25, 2013 at 10:26 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Below are the patches currently in my "next" branch, planned for
+> release in v3.11.  If I'm missing something important, let me know.
 
---k+w/mQv8wyuph6w0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+can you put this one in ?
+https://patchwork.kernel.org/patch/2647131/
 
-On Wed, Jun 12, 2013 at 10:09:10AM -0600, Stephen Warren wrote:
-> On 06/12/2013 06:30 AM, Thierry Reding wrote:
-> > On Mon, Apr 15, 2013 at 12:28:12PM -0600, Stephen Warren wrote:
-> >> On 04/03/2013 08:45 AM, Thierry Reding wrote:
-> >>> Move the PCIe driver from arch/arm/mach-tegra into the
-> >>> drivers/pci/host directory. The motivation is to collect
-> >>> various host controller drivers in the same location in order
-> >>> to facilitate refactoring.
-> >>>=20
-> >>> The Tegra PCIe driver has been largely rewritten, both in order
-> >>> to turn it into a proper platform driver and to add MSI (based
-> >>> on code by Krishna Kishore <kthota@nvidia.com>) as well as
-> >>> device tree support.
-> ...
-> >>> +static irqreturn_t tegra_pcie_msi_irq(int irq, void *data)
-> >> ...
-> >>> +	return IRQ_HANDLED;
-> >>=20
-> >> Shouldn't this function return IRQ_NONE if no MSI status bits
-> >> were found set?
-> >=20
-> > The IRQ isn't marked IRQF_SHARED, so I don't think this is needed.
->=20
-> Isn't it still useful to detect unexpected/stuck interrupts?
+[v5,1/7] PCI: Don't let mmio fallback to must-only, if ioport fails
+with must+optional
 
-Yes, you're right. I can't think of a nicer way to do it, though, so
-I'll go with a processed IRQ counter or a flag.
 
-> >>> +static int tegra_pcie_probe(struct platform_device *pdev)
-> >> ...
-> >>> +	pcibios_min_mem =3D 0;
-> >>=20
-> >> What does that mean/do? I wonder if that should be set to
-> >> 0x80000000 by the Tegra30 patches?
-> >=20
-> > ARM defines PCIBIOS_MIN_MEM to that variable. That macro in turn is
-> > only used by pci_bus_alloc_resource() AFAICT, which uses it to
-> > override the start of a resource when allocating if res->start =3D=3D
-> > 0. As such it designates a lower-bound of valid PCI memory
-> > addresses, so 0 on Tegra20 and 0x80000000 on Tegra30 don't seem
-> > like good values. Maybe we need to set them to the lowest of the
-> > prefetchable and non-prefetchable memory areas as defined in the
-> > DT?
-> >=20
-> > It doesn't currently seem to matter at all, though, since we never
-> > pass in a range that's 0, so the start address of resources can
-> > never be 0 and therefore PCIBIOS_MIN_MEM is never used.
->=20
-> Hmmm. I guess ignore it then. If the value won't ever be used, 0 is as
-> good a value as any?
+it will not just help powerpc case.
+also found that it is needed for one of 8 socket system that support pciehp
+but some root bus does not have ioport range allocated.
+in that case sriov does not work.
 
-Alright, I'll do that then.
+Thanks
 
-Thierry
-
---k+w/mQv8wyuph6w0
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRuOa8AAoJEN0jrNd/PrOh+bkP/jn3lGBiGbjNi027XeevREsp
-DkwcxH4QnBbAUP+pGCm319oquZuLiptR865uEx60r02QC2N+HpWBVtd/zcjfGs+x
-drQZ4SrEO53ZqSuWHxu1hZvWE2U1cmr6FfchKOD6KXhaURr8g4rlMQClu7fuGsgL
-22TD9m40R/0LasWk54/oYuFH+H1A/06dTiHYABgQGCK2YpXK/iyo4gAWqPgmuufU
-4VdTZLnmi50lGQqjOrMG4rdwI0FbKqut0c2eejXm5PgPEkUfG/OkryvIjmfR7IKw
-EKBolfOC1g6Uk0kRKSF4bOGhrHKN7sPyZRVzaMisAXpddlhb/ehsprrfM+J9BDfk
-sluOcOJsrCXinuSudHsTHlKbc5hP+cjkgOKqI1mmkGIKl34BBSvycThoi+kVj8rw
-LK3MyWK3xo3nG9Jinmdc3UaWLnZ+gCSbOOh1mSNtx9kx+u3ALAENJS0XwN71njoK
-BZB6JuM/jBn4nQ7+avMMB1D3BFx4KPy4vQvs0Usd1v+eqNjMkSOvXzCCMso8Idv3
-mheOhkI1PFhhZvHSfZ2SkG+pClA84vBqd+CJ5nXMfz4z5EYslV6//BgoWCKyXklN
-4cOI+1Ef05egOfYAAcNy4MvOmtedtuQih1I7NnqttTwYcxSePh4P/gXBrlEtBLcj
-mpF1VcqVjw32JldQNaCt
-=lrtv
------END PGP SIGNATURE-----
-
---k+w/mQv8wyuph6w0--
+Yinghai
