@@ -1,56 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:35005 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757714Ab3FTNdQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Jun 2013 09:33:16 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id 4B8D512B0EE
-	for <linux-pci@vger.kernel.org>; Thu, 20 Jun 2013 15:33:15 +0200 (CEST)
-Date: Thu, 20 Jun 2013 15:33:14 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Subject: Re: Masked MSIs expectations
-Message-ID: <20130620133314.GR2575@8bytes.org>
-References: <1368086982.25488.165.camel@pasglop>
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:51415 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424Ab3FYQUy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 12:20:54 -0400
+Received: by mail-oa0-f47.google.com with SMTP id m1so13830065oag.34
+        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 09:20:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1368086982.25488.165.camel@pasglop>
+In-Reply-To: <20130625115552.7ebdad17@skate>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1371660979-21588-3-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130620185707.GA8888@mithrandir> <CAErSpo6Mm6kYZKN_n-fMRD2T1-F0sf9GStmOTA8tT0wVLedCgw@mail.gmail.com>
+ <20130625115552.7ebdad17@skate>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 25 Jun 2013 10:20:33 -0600
+Message-ID: <CAErSpo67ogc6R=vk+dt0Y6OFvwtLTL57tHx1u1zTkqY9g4N_1w@mail.gmail.com>
+Subject: Re: [PATCHv3 02/11] pci: use weak functions for MSI arch-specific functions
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(In case this topic is still relevant)
+On Tue, Jun 25, 2013 at 3:55 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> Dear Bjorn Helgaas,
+>
+> On Mon, 24 Jun 2013 19:52:45 -0600, Bjorn Helgaas wrote:
+>
+>> I agree; the whole point of __weak is to provide a "default"
+>> implementation, so I hope you can just remove any empty default_*()
+>> functions and fold the others into the arch_*() functions directly.
+>>
+>> If there actually are callbacks from arch-specific strong functions
+>> back to the stuff in the default_*() functions, that suggests that we
+>> should refactor and rename that bit of functionality.
+>
+> There is one such case, as highlighted in the commit log of this patch:
+>
+> """
+> This is needed because the x86 Xen implementation of
+> teardown_msi_irqs() needs to do some work, and then call the default
+> implementation of this hook.
+> """
+>
+> Any suggestion on how to solve this particular case?
 
-On Thu, May 09, 2013 at 06:09:42PM +1000, Benjamin Herrenschmidt wrote:
-> Do we provide drivers any guarantee to what happen if an MSI is shot
-> while masked with disable_irq() or while not yet request_irq()'ed ?
-> 
-> Do we guarantee delivery (latched while masked), non-delivery, or
-> undefined ?
+Nope.  Just leave it as-is for that case and consolidate what you can.
 
-I am not aware of any guarantees the kernel gives in this situation. I
-think it would just drop the IRQ and print a "nobody cared" message.
-
-> I'm bringing up a piece of HW where if it happened, it won't be
-> automatically sent to the CPU and can block further MSIs unless I
-> explicitly either ditch it or force a resend when unmasking (at the PCI
-> Express controller PIC level).
-> 
-> I'm tempted to just ditch anything that happened while masked, it would
-> make everything easier on my side, but maybe drivers have different
-> expectations (and of course an LSI would still shoot, that's not an
-> issue, only MSIs are in question here).
-> 
-> I have cases of devices continuing to shoot one or two MSIs after kexec
-> and before the new kernel takes over, causing a "loss" of any subsequent
-> one unless I deal with that case one way or another.
-
-I would also just ditch such IRQs that happen in that kexec case and
-make sure that they will work again when the kexec-kernel device driver
-wants to initialize them.
-
-
-	Joerg
-
-
+Bjorn
