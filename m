@@ -1,60 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:44215 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785Ab3FZEU4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 00:20:56 -0400
-Received: by mail-oa0-f49.google.com with SMTP id n9so14106735oag.8
-        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 21:20:56 -0700 (PDT)
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:63157 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059Ab3FYSbw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 14:31:52 -0400
 MIME-Version: 1.0
-In-Reply-To: <20130620161538.GH3589@8bytes.org>
-References: <20130528183527.3318.5365.stgit@bling.home> <20130528184020.3318.7800.stgit@bling.home>
- <20130620135914.GS2575@8bytes.org> <1371743091.32709.52.camel@ul30vt.home> <20130620161538.GH3589@8bytes.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 25 Jun 2013 22:20:35 -0600
-Message-ID: <CAErSpo5_P9tPdmpq2XO-X-d5NUWFG8Nbm_byKOkd5d4b8UMcMQ@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] iommu: Quirked PCIe bridge test and search function
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20130625183123.GJ9294@intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+	<1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com>
+	<CAHp75Vd2Torku6zy2awLHRTed9mx94a6RAu+oHJYb+rVgZKBDQ@mail.gmail.com>
+	<20130625183123.GJ9294@intel.com>
+Date: Tue, 25 Jun 2013 21:31:52 +0300
+Message-ID: <CAHp75Vc8BauuBJcfqBzu_+6nUwEC-uD3z_RF5gT-3YhV0fjTqw@mail.gmail.com>
+Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 20, 2013 at 10:15 AM, Joerg Roedel <joro@8bytes.org> wrote:
-> On Thu, Jun 20, 2013 at 09:44:51AM -0600, Alex Williamson wrote:
->> On Thu, 2013-06-20 at 15:59 +0200, Joerg Roedel wrote:
->> > On Tue, May 28, 2013 at 12:40:20PM -0600, Alex Williamson wrote:
->> > > + if (!pci_is_root_bus(pdev->bus)) {
->> > > +         struct pci_dev *parent = pdev->bus->self;
->> > > +
->> > > +         if (pci_is_pcie(parent) &&
->> > > +             pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
->> > > +                 return true;
->> > > + }
->> >
->> > Hmm, that looks a bit dangerous.
+On Tue, Jun 25, 2013 at 9:31 PM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> On Tue, Jun 25, 2013 at 09:15:47PM +0300, Andy Shevchenko wrote:
+>> On Tue, Jun 25, 2013 at 7:22 PM, Mika Westerberg
+>> <mika.westerberg@linux.intel.com> wrote:
+
+[]
+
+>> > +static acpi_status pcihp_evaluate_rmv(acpi_handle handle, u32 lvl,
+>> > +                                     void *context, void **return_not_used)
+>> > +{
+>> > +       unsigned long long *removable = context;
+>> > +       unsigned long long value;
+>> > +       acpi_status status;
+>> > +
+>> > +       status = acpi_evaluate_integer(handle, "_RMV", NULL, &value);
+>> > +       if (ACPI_SUCCESS(status) && value) {
 >>
->> How so?  The algorithm seems pretty simple and logical.
+>> So, there is a chance the caller gets back uninitialized *context.
+>> Let's assume that is by design.
+>>
+>> > +               *removable = value;
+>> > +               return AE_CTRL_TERMINATE;
+>> > +       }
+>> > +       return AE_OK;
+>> > +}
+>>
+>>
+>> > +static bool pcihp_is_removable(acpi_handle handle, size_t depth)
+>> > +{
+>> > +       unsigned long long removable = 0;
+>> > +       acpi_status status;
+>> > +
+>> > +       status = pcihp_evaluate_rmv(handle, 0, &removable, NULL);
+>> > +       if ((status == AE_CTRL_TERMINATE) && removable)
+>>
+>> Here you already have removable not equal zero.
 >
-> It is simple, but it is still a heuristic that may fail at some point,
-> no?
->
->> Actually, I believe Bjorn rejected the idea of a fixed list because this
->> problem is detectable.  He also doesn't want me messing with quirks to
->> pci_is_pcie() in PCI because he wants a 1:1 relation between that and
->> having a PCIe capability.  So, I'm stuck and this is where it's ended
->> up.  Thanks,
->
-> I think implementing such a list is much safer.
->
-> Bjorn, why didn't you like that idea?
+> Hmm, removable is initialized to zero just few lines above... Did I miss
+> something obvious?
 
-Sorry, I can't remember, and I haven't been able to find the
-discussion where I said that.  I think the current patches are all in
-drivers/iommu, and if a list makes sense there, it's fine with me.
+Yes, that's correct, however, you already did this check when you call
+evaluate_rmv. Thus, second check '&& removable' is not needed.
 
-Bjorn
+--
+With Best Regards,
+Andy Shevchenko
