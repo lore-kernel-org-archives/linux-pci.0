@@ -1,108 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:43711 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752900Ab3FHBvi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 21:51:38 -0400
-Received: by mail-pb0-f48.google.com with SMTP id md4so5292447pbc.21
-        for <linux-pci@vger.kernel.org>; Fri, 07 Jun 2013 18:51:37 -0700 (PDT)
-Date: Fri, 7 Jun 2013 19:51:33 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: make PCI host bridge/bus creating and
- destroying logic symmetric
-Message-ID: <20130608015133.GB5874@google.com>
-References: <CAErSpo4AFxSqUfxbw60B8XVk3XxtYfRcLyWDy=yPb0fURV=BQg@mail.gmail.com>
- <1370538609-28903-1-git-send-email-jiang.liu@huawei.com>
- <1370538609-28903-2-git-send-email-jiang.liu@huawei.com>
- <CAE9FiQUDnU_DaXDKKnRh=VYQ6Y+FeWHsKB7rnN2Gn3d0EoGLPg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQUDnU_DaXDKKnRh=VYQ6Y+FeWHsKB7rnN2Gn3d0EoGLPg@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:53741 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752268Ab3FYQTY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Jun 2013 12:19:24 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	x86@kernel.org
+Subject: [PATCH 0/6] Thunderbolt workarounds take 2
+Date: Tue, 25 Jun 2013 19:22:04 +0300
+Message-Id: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 06, 2013 at 01:01:23PM -0700, Yinghai Lu wrote:
-> On Thu, Jun 6, 2013 at 10:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> > This patch makes PCI host bridge/bus creating and destroying logic
-> > symmetric by using device_initialize()/device_add()/device_del()/put_device()
-> > pairs as discussed in thread at:
-> > http://comments.gmane.org/gmane.linux.kernel.pci/22073
-> >
-> > It also fixes a bug in error recovery path in pci_create_root_bus()
-> > which may kfree() an in-use host bridge object.
-> >
-> > Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> > Cc: Yinghai Lu <yinghai@kernel.org>
-> > ---
-> >  drivers/pci/probe.c  | 92 +++++++++++++++++++++++-----------------------------
-> >  drivers/pci/remove.c |  3 +-
-> >  2 files changed, 42 insertions(+), 53 deletions(-)
-> >
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 2f81a0a..9e9cdfe 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > ...
-> > +static void pci_release_host_bridge_dev(struct device *dev)
-> > +{
-> > +       struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-> > +
-> > +       if (bridge->release_fn)
-> > +               bridge->release_fn(bridge);
-> > +
-> > +       pci_free_resource_list(&bridge->windows);
-> > +
-> > +       kfree(bridge);
-> > +}
-> > +
-> 
-> should split pci_release_host_bridge_dev renaming and moving to another patch.
+Hi all,
 
-I split the rename/move to another patch and added both to my
-pci/jiang-bus-lock-v3 branch.
+This is the second iteration of the patches first posted here quite a while
+ago:
 
-> > @@ -1726,30 +1722,21 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >                 goto err_out;
-> >
-> >         bridge->dev.parent = parent;
-> > -       bridge->dev.release = pci_release_bus_bridge_dev;
-> > -       dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> >         error = pcibios_root_bridge_prepare(bridge);
-> > -       if (error) {
-> > -               kfree(bridge);
-> > -               goto err_out;
-> > -       }
-> > +       if (error)
-> > +               goto bridge_dev_reg_err;
-> > +
-> > +       error = device_add(&bridge->dev);
-> > +       if (error)
-> > +               goto bridge_dev_reg_err;
-> >
-> > -       error = device_register(&bridge->dev);
-> > -       if (error) {
-> > -               kfree(bridge);
-> > -               goto err_out;
-> > -       }
+	https://lkml.org/lkml/2012/12/13/589
 
-I think this function would be better if we created the host bridge
-first, then the bus.  But your patch is an improvement, so we can look
-at doing that later.
+With Thunderbolt devices we might see pretty complex PCIe hierarchies that
+the current ACPI hotplug code was not able to handle properly but instead
+failed to scan the whole hierarchy. This series tries to address these
+problems. In addition to that there's a possibility that only part of the
+chain is disconnected so we don't want to leave behind stale PCI devices.
 
-> looks like we don't need to split device_register to device_del and put_device.
-> 
-> we can make root bus removal to use device_unregister too, in the patches,
+We have tested this on Acer Aspire S5 with the largest chain looking like
+this:
 
-If we can use device_register()/device_unregister() directly instead of
-splitting them into initialize/add/del/put, that would be awesome.
+  PC +--+ eSata Hub #0 +--+ eSata Hub #1 +--+ Apple Thunderbolt display +--+ Apple ethernet dongle
 
-Anyway, http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/jiang-bus-lock-v3
-is the current state of what I've got.  If you want to iterate on this some
-more and improve things, that's great.  But please start with what's on my
-branch and post your updates as a complete v4 because I did tweak some
-changelogs and code formatting, and I don't want to lose that work.
+There are still problems with different device drivers because of the
+surprise hotplug nature of Thunderbolt, causing occasional hangs and
+failures that should be fixed per-driver later on (not addressed in this
+series).
 
-Bjorn
+Currently Thunderbolt on Apple hardware like Macbooks is not yet supported
+as they use some different mechanism than ACPI events to trigger hotplug
+events.
+
+The series is based on linux-pm.git/linux-next.
+
+Kirill A. Shutemov (4):
+  PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
+  PCI: acpiphp: enable_device(): rescan even if no new devices on slot
+  PCI: introduce pci_trim_stale_devices()
+  PCI: acpiphp: check for new devices on enabled host
+
+Mika Westerberg (2):
+  PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
+  x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
+
+ arch/x86/pci/fixup.c               | 51 ++++++++++++++++++++++++
+ drivers/pci/hotplug/acpi_pcihp.c   | 53 ++++++++++++++++++++++---
+ drivers/pci/hotplug/acpiphp_glue.c | 79 +++++++++++++++++---------------------
+ drivers/pci/remove.c               | 20 ++++++++++
+ include/linux/pci.h                |  1 +
+ 5 files changed, 156 insertions(+), 48 deletions(-)
+
+-- 
+1.8.3.1
+
