@@ -1,63 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:50642 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751764Ab3FJPWv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 11:22:51 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
-Date: Mon, 10 Jun 2013 17:22:09 +0200
-Cc: "'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
-	linux-arm-kernel@lists.infradead.org,
-	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
-	linux-samsung-soc@vger.kernel.org,
-	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
-	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
-	linux-kernel@vger.kernel.org,
-	"'Grant Likely'" <grant.likely@secretlab.ca>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Andrew Murray'" <andrew.murray@arm.com>
-References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com> <201306071943.18407.arnd@arndb.de> <000001ce65b5$e45477f0$acfd67d0$@samsung.com>
-In-Reply-To: <000001ce65b5$e45477f0$acfd67d0$@samsung.com>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:55525 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490Ab3FYRfK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 13:35:10 -0400
+Received: by mail-oa0-f45.google.com with SMTP id j1so13855612oag.18
+        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 10:35:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201306101722.10146.arnd@arndb.de>
+In-Reply-To: <20130620125120.GP2575@8bytes.org>
+References: <CAErSpo7onNaU5mquJ_a7kwGPgzs3Q_7U89__HT9DbJFkUX4fsQ@mail.gmail.com>
+ <20130529083652.GA25971@dhcp-26-207.brq.redhat.com> <CAErSpo4EkXX-UoFLyni+ZpXaTmCRq5sJCqZ4FCt7fywpDyVWqw@mail.gmail.com>
+ <CAErSpo6bjBEK=Ta=pVzwCBMfrqfe3jB-sEfv1Kz9mt9iakdeaA@mail.gmail.com> <20130620125120.GP2575@8bytes.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 25 Jun 2013 11:34:49 -0600
+Message-ID: <CAErSpo5AD0aQtc-EWCQHcviXv-xyC=Gn6Lii8a5MdtFOvpe59w@mail.gmail.com>
+Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
+ multiple-MSIs as requested
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jan Beulich <JBeulich@suse.com>, Ingo Molnar <mingo@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 10 June 2013, Jingoo Han wrote:
-> On Saturday, June 08, 2013 2:43 AM, Arnd Bergmann wrote:
-> For multiple domains, how can I fix the DT properties?
+On Thu, Jun 20, 2013 at 6:51 AM, Joerg Roedel <joro@8bytes.org> wrote:
+> On Mon, Jun 03, 2013 at 02:46:59PM -0600, Bjorn Helgaas wrote:
+>> I pushed these with updates to
+>> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/alexander-msi
+>>
+>> Anybody want to ack the iommu/irq_remapping.c patch?  If so, I can
+>> merge that branch into -next for v3.11.
+>
+> Sorry for being unresponsive, things habe been pretty busy here :-(
+> The changes look good, you have my
+>
+> Acked-by: Joerg Roedel <joro@8bytes.org>
 
-Domains are a Linux concept, you have to pick a new domain number for each
-struct hw_pci you register.
- 
-> Current DT properties are as below:
-> 
-> +	pcie0@40000000 {
-> +		compatible = "samsung,exynos5440-pcie";
-> +		reg = <0x40000000 0x4000
-> +			0x290000 0x1000
-> +			0x270000 0x1000
-> +			0x271000 0x40>;
-> +		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
-> +			  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
-> +			  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
-> +	};
+No problem, thanks!  I added your ack and merged to my -next branch for v3.11.
 
-An unrelated comment: your first "reg" field seems to overlap with part
-of your configuration space. Is that intentional?
-
-Also, shouldn't your memory space end on a 256MB boundary, rather than
-extend up to 0x50203fff?
-
-	Arnd
+Bjorn
