@@ -1,94 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:53944 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751952Ab3FUEKt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 00:10:49 -0400
-Received: by mail-oa0-f42.google.com with SMTP id n12so8926238oag.15
-        for <linux-pci@vger.kernel.org>; Thu, 20 Jun 2013 21:10:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <002001ce6e2e$623d7970$26b86c50$@samsung.com>
-References: <002001ce6e2e$623d7970$26b86c50$@samsung.com>
-Date: Fri, 21 Jun 2013 09:40:48 +0530
-Message-ID: <CAK9yfHxCy0JcvsFHo8gERefdiZhxi1J8MNALe5-g6ooTGR-QjA@mail.gmail.com>
-Subject: Re: [PATCH V9 1/4] pci: Add PCIe driver for Samsung Exynos
-From: Sachin Kamat <sachin.kamat@linaro.org>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Kukjin Kim <kgene.kim@samsung.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Surendranath Gurivireddy Balla <suren.reddy@samsung.com>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Thomas Abraham <thomas.abraham@linaro.org>,
-	Tomasz Figa <t.figa@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	x86@kernel.org
+Subject: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
+Date: Tue, 25 Jun 2013 19:22:10 +0300
+Message-Id: <1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo,
+Thunderbolt PCI-to-PCI bridges typically use BIOS "assisted" enumeration.
+This means that the BIOS will allocate bridge resources based on some
+assumptions of a maximum Thunderbolt chain. It also disables native PCIe
+hotplug of the root port where the Thunderbolt host router is connected.
 
-Some small corrections inline.
+In order to support this we must make sure that the kernel does not try to
+be too smart and resize / open the bridge windows during PCI enumeration.
+For example by default the kernel will add certain amount of space to the
+bridge memory/io windows (this is configurable via pci=hp[mem|io]size=xxx
+command line option). Eventually we run out of space that the BIOS has
+allocated.
 
-On 21 June 2013 08:51, Jingoo Han <jg1.han@samsung.com> wrote:
-> Exynos5440 has a PCIe controller which can be used as Root Complex.
-> This driver supports a PCIe controller as Root Complex mode.
->
-> Signed-off-by: Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
-> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  .../devicetree/bindings/pci/designware-pcie.txt    |   73 ++
->  drivers/pci/host/Kconfig                           |    9 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-designware.c                  | 1057 ++++++++++++++++++++
->  4 files changed, 1140 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/designware-pcie.txt
->  create mode 100644 drivers/pci/host/pci-designware.c
->
-> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> new file mode 100644
-> index 0000000..e4681e6
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> @@ -0,0 +1,73 @@
-> +* Synopsis Designware PCIe interface
-> +
-> +Required properties:
-> +-compatible: should contain "snps,dw-pcie" to identify the
-> +       core, plus an identifier for the specific instance, such
-> +       as "samsung,exynos5440-pcie".
-> +-reg: base addresses and lengths of the pcie conteroller,
+Also address space for expansion ROMs should not be allocated (BIOS does
+not execute them for Thunderbolt endpoints). If we don't prevent this the
+kernel might find expansion ROM associated with some endpoint and reopen
+the bridge window which the BIOS already closed leading again resource
+exhaustion.
 
-s/conteroller/controller
+Fix this by adding a quirk that matches known Thunderbolt PCI-to-PCI
+bridges and in that case prevents allocation of expansion ROM resources and
+makes sure that the PCI core does not increase size of bridge windows.
 
-> +       the phy controller, additional register for the phy controller.
-> +- interrupts: interrupt values for level interrupt,
-> +       pulse interrupt, special interrupt.
-> +- clocks: from common clock binding: handle to pci clock.
-> +- clock-names: from common clock binding: Shall be "pcie", "pcie_bus".
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ arch/x86/pci/fixup.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-s/Shall be .../should be "pcie" and "pcie_bus".
-
-[snip]
-
-> +
-> +MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
-> +MODULE_DESCRIPTION("Samsung PCIe host controller driver");
-> +MODULE_LICENSE("GPLv2");
-
-I think this should be "GPL v2"  (with a space between GPL and v2).
-
-
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index f5809fa..924822b 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -7,6 +7,8 @@
+ #include <linux/pci.h>
+ #include <linux/init.h>
+ #include <linux/vgaarb.h>
++#include <linux/acpi.h>
++#include <linux/pci-acpi.h>
+ #include <asm/pci_x86.h>
+ 
+ static void pci_fixup_i450nx(struct pci_dev *d)
+@@ -539,3 +541,52 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
+         }
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
++
++#ifdef CONFIG_ACPI
++/*
++ * BIOS assisted Thunderbolt PCI enumeration should handle all resource
++ * allocation on behalf of OS.
++ */
++static void quirk_thunderbolt(struct pci_dev *dev)
++{
++	struct acpi_pci_root *root;
++	acpi_handle handle;
++
++	handle = acpi_find_root_bridge_handle(dev);
++	if (!handle)
++		return;
++
++	root = acpi_pci_find_root(handle);
++	if (!root)
++		return;
++
++	/*
++	 * Native PCIe hotplug should be disabled when BIOS assisted
++	 * hotplug is in use.
++	 */
++	if (root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
++		return;
++
++	/*
++	 * Make sure that we don't allocate resources for expansion ROMs.
++	 * This may accidentally increase the size of the bridge window
++	 * causing us to run out of resources.
++	 */
++	if (!(pci_probe & PCI_NOASSIGN_ROMS)) {
++		pr_info("Thunderbolt host router detected disabling ROMs\n");
++		pci_probe |= PCI_NOASSIGN_ROMS;
++	}
++
++	/*
++	 * Don't add anything to the BIOS allocated bridge window size for
++	 * the same reason.
++	 */
++	dev->is_hotplug_bridge = 0;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1513, quirk_thunderbolt);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x151a, quirk_thunderbolt);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x151b, quirk_thunderbolt);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1547, quirk_thunderbolt);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1548, quirk_thunderbolt);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1549, quirk_thunderbolt);
++#endif
 -- 
-With warm regards,
-Sachin
+1.8.3.1
+
