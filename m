@@ -1,138 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:57436 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934067Ab3FSCai (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 22:30:38 -0400
-Received: by mail-oa0-f45.google.com with SMTP id j1so5985649oag.18
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jun 2013 19:30:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1371595667.22659.53.camel@ul30vt.home>
-References: <20130607162732.7733.17758.stgit@bling.home> <20130607163441.7733.23221.stgit@bling.home>
- <20130618170926.GA9203@google.com> <1371580735.22681.216.camel@ul30vt.home>
- <CAErSpo75R26gqO=muqrR28igNkMay4NNRW-VJWPt3xQCqp1YBQ@mail.gmail.com> <1371595667.22659.53.camel@ul30vt.home>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:59730 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751907Ab3FYVPU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 17:15:20 -0400
+Received: by mail-ie0-f175.google.com with SMTP id a13so28848054iee.20
+        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 14:15:19 -0700 (PDT)
+Date: Tue, 25 Jun 2013 15:15:16 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Jun 2013 20:30:17 -0600
-Message-ID: <CAErSpo7Z9v1QPQZLpfNAUPiq3w4ZfmzS1PStJW+SgJ_DmjjFvg@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] pci: Fix flaw in pci_acs_enabled()
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 3/7] PCI: Use pci_walk_bus to detect unassigned
+ resources
+Message-ID: <20130625211516.GA8494@google.com>
+References: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
+ <1370066593-22736-3-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370066593-22736-3-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 18, 2013 at 4:47 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Tue, 2013-06-18 at 16:10 -0600, Bjorn Helgaas wrote:
->> On Tue, Jun 18, 2013 at 12:38 PM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > On Tue, 2013-06-18 at 11:09 -0600, Bjorn Helgaas wrote:
->> >> On Fri, Jun 07, 2013 at 10:34:41AM -0600, Alex Williamson wrote:
-> ...
->> >> >   * pci_acs_enabled - test ACS against required flags for a given device
->> >> >   * @pdev: device to test
->> >> > @@ -2364,8 +2377,7 @@ void pci_enable_acs(struct pci_dev *dev)
->> >> >   */
->> >> >  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
->> >>
->> >> I know you didn't change the *name* of this function, but I think it
->> >> would be easier to follow if you did change the name to something more
->> >> descriptive, e.g., something to do with the actual property you're
->> >> interested in, which has to do with routing peer-to-peer DMA.
->> >>
->> >> That property makes sense even for the excluded devices, while the
->> >> idea of an ACS capability that doesn't even exist is implicitly
->> >> enabled, really doesn't.
->> >
->> > I think we also don't want to put the complexity at the caller for
->> > understanding what capabilities are applicable to a given device.  It's
->> > also convenient to use the set of ACS flags.  Given that, the current
->> > naming came about.  It's a little awkward, but it's easy to use.
->> > Suggestions for a better name?
->>
->> 100% agreed the caller shouldn't have to worry about different device
->> types.  I was thinking something like "pci_enforces_peer_isolation()"
->> or "pci_peer_dma_routed_upstream()".  Or maybe it should be
->> "pci_dev_...()".
->
-> Ok, I'll play with those.  I'm worried that there are nuances to each
-> flag bit that don't all fit under such a broad description.
+On Fri, May 31, 2013 at 11:03:08PM -0700, Yinghai Lu wrote:
+> Per Bjorn, use pci_walk_bus instead of for_each_pci_dev or
+> calling pci_realloc_detect() recursively, that will make code more readable.
+> 
+> Per Bjorn, separate it from big patch that handing assign_unssigned per root bus.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/setup-bus.c |   46 +++++++++++++++++++++++++++++++---------------
+>  1 file changed, 31 insertions(+), 15 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -1427,30 +1427,46 @@ static bool __init pci_realloc_enabled(v
+>  	return pci_realloc_enable >= user_enabled;
+>  }
+>  
+> -static void __init pci_realloc_detect(void)
+> -{
+>  #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
+> -	struct pci_dev *dev = NULL;
+> +static int __init check_unassigned_resources(struct pci_dev *dev, void *data)
 
-It's true that they might be overly broad.  On the other hand, the set
-of flags we look for is always the same: PCI_ACS_SV | PCI_ACS_RR |
-PCI_ACS_CR | PCI_ACS_UF, so what's the point in making a completely
-general-purpose interface?  I'm not sure it's even worth passing the
-flags around if the code would be clearer without that.
+I'm not going to add a function named "check_*()" because the name gives no
+clue about what the return value means.  If it's a boolean function, the
+name should be something like a question that has a yes/no answer.
 
-> Do you want
-> to gate this series on a rename of an existing function?
-
-You put me in a bit of a tight spot :)  My #1 concern is correctness
-and maintainability.  Naming things so they're consistent with other
-code and make sense to other readers is a huge part of that.
-Unfortunately I don't have time to do any work myself, and my only
-tool is to apply patches or not.  But no, I don't want to gate a
-simple bug fix on other "cleanup" rework.
-
-> ...
->> >> Maybe something like (pidgin C):
->> >>
->> >>     if (PCI_EXP_TYPE_DOWNSTREAM || PCI_EXP_TYPE_ROOT_PORT)
->> >>       return pci_acs_flags_enabled(pdev, acs_flags);
->> >>
->> >>     if (!pdev->multifunction)
->> >>       return true;
->> >>
->> >>     acs_flags &= (PCI_ACS_RR | PCI_ACS_CR | ...);
->> >>     return pci_acs_flags_enabled(pdev, acs_flags);
->> >
->> > ...  Note that
->> > the above simplification incorrectly handles multifunction bridges or EC
->> > devices.
->>
->> Hmm...  What *is* the correct behavior for a bridge?  You return
->> "true," i.e., you're saying that a PCIe-to-PCI bridge will always
->> route peer-to-peer transactions from PCI devices upstream to its PCIe
->> link.  But that seems wrong: a PCI DMA transaction can target a peer
->> on the same PCI bus, and it's not even possible for the bridge to
->> validate the transaction or forward it upstream.
->>
->> I suspect the "ACS is never applicable to a PCI Express to PCI Bridge
->> Function" statement in 6.12.1 just means "it's impossible for ACS to
->> isolate the devices below the bridge from each other, so it would be
->> misleading to implement the capability."
->
-> Note that we never consider ACS to be enabled for a conventional PCI
-> device.  I suppose we could have cases where it's the only device on a
-> bus, but for the most part, it's not worth the trouble (it may be the
-> only device now, then a hotplug occurs).  So really saying the bridge
-> does or doesn't support ACS doesn't matter to the devices behind it.
-
-> What does matter is the fan-out of that isolation group of the
-> conventional devices beyond the bridge.  If the spec is indicating that
-> a bridge cannot do peer-to-peer with other devices  then all of the
-> conventional devices behind it are in an isolation domain so long as the
-> path between the bridge and the RC supports ACS.  If the bridge can do
-> peer-to-peer and it is a multifunction device, then the isolation domain
-> grows to include the other functions and subordinates of the other
-> functions.  I took the assumption that a bridge probably needs to
-> forward transaction upstream.  Do you have an alternate opinion?
-
-I think you're talking about a multi-function device with several
-PCIe-to-PCI bridges (e.g., Option A of Figure 1-4, p. 29, of the PCIe
-bridge spec 1.0), and the question is whether the bridge can forward a
-transaction between bus X and bus Y without forwarding it upstream.
-
-I don't see any mention of forwarding transactions between functions
-of a multi-ported bridge, so the conservative assumption would be that
-a bridge is allowed to do that.  I would expect a conventional
-multi-port PCI-PCI bridge to forward between functions, because in
-conventional PCI there would be no reason to forward it upstream, so
-I'd think PCIe-PCI bridges, at least those designed pre-ACS, would be
-similar.  And I don't think the ACS capability is expressive enough to
-say "peer-to-peer transactions between functions must be forwarded
-upstream, but peer-to-peer transactions below a single function may
-not be."
-
-Bjorn
+> +{
+> +	int i;
+> +	int *unassigned = data;
+>  
+> -	if (pci_realloc_enable != undefined)
+> -		return;
+> +	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+> +		struct resource *r = &dev->resource[i];
+>  
+> -	for_each_pci_dev(dev) {
+> -		int i;
+> +		/* Not assigned, or rejected by kernel ? */
+> +		if (r->flags && !r->start) {
+> +			(*unassigned)++;
+> +			return 1; /* return early from pci_walk_bus */
+> +		}
+> +	}
+>  
+> -		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+> -			struct resource *r = &dev->resource[i];
+> +	return 0;
+> +}
+>  
+> -			/* Not assigned, or rejected by kernel ? */
+> -			if (r->flags && !r->start) {
+> -				pci_realloc_enable = auto_enabled;
+> +static void  __init pci_realloc_detect(void)
+> +{
+> +	int unassigned = 0;
+> +	struct pci_bus *bus;
+>  
+> -				return;
+> -			}
+> +	if (pci_realloc_enable != undefined)
+> +		return;
+> +
+> +	list_for_each_entry(bus, &pci_root_buses, node) {
+> +		pci_walk_bus(bus, check_unassigned_resources, &unassigned);
+> +		if (unassigned) {
+> +			pci_realloc_enable = auto_enabled;
+> +			return;
+>  		}
+>  	}
+> -#endif
+>  }
+> +#else
+> +static void __init pci_realloc_detect(void)
+> +{
+> +}
+> +#endif
+>  
+>  /*
+>   * first try will not touch pci bridge res
