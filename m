@@ -1,74 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:57574 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563Ab3FNCJh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 22:09:37 -0400
-Message-ID: <51BA7B3D.1020402@huawei.com>
-Date: Fri, 14 Jun 2013 10:09:01 +0800
-From: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: "Rafael J . Wysocki" <rjw@sisk.pl>,
+Received: from mga14.intel.com ([143.182.124.37]:23443 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751005Ab3FYS1q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Jun 2013 14:27:46 -0400
+Date: Tue, 25 Jun 2013 21:31:23 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
-In-Reply-To: <CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the
+ hierarhcy
+Message-ID: <20130625183123.GJ9294@intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com>
+ <CAHp75Vd2Torku6zy2awLHRTed9mx94a6RAu+oHJYb+rVgZKBDQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAHp75Vd2Torku6zy2awLHRTed9mx94a6RAu+oHJYb+rVgZKBDQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/6/14 2:42, Yinghai Lu wrote:
-> On Thu, Jun 13, 2013 at 9:32 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->> Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
->> dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
->> four bugs related to Sony VAIO VPCZ23A4R dock support.
->> 1) can't correctly detect hotplug slot for dock state
->> 2) resource leak on undocking
->> 3) resource allocation failure for dock devices
->> 4) one bug in intel_snd_hda driver
->>
->> The first patch fixes issue 1, and the second patch fixes issue 2.
->> These two patches, if accepted, should be material for stable branches
->> too.
->> Patch 3-9 are code improvement for ACPI and dock driver.
->>
->> I have found the root cause for issue three, but still working on
->> solutions, and seems can't be solve in short time. So please help
->> to review and test patches for issue 1) and 2) first.
->
-> the 3) is about pci resource allocation?
-> because pcibios_add_bus is called too early?
->
-> If that is case, we should have something like attached patch for it.
->
-> With that, we will not need to worry about _OSC set for 3.10 etc.
->
-Hi Yinghai,
-    Seems not related to pcibios_add_bus(). According to my
-investigation, the issue is caused by difference in PCI resource
-assignment between boot time and runtime hotplug. On x86 platforms,
-it respects PCI resource assignment from BIOS and only reassign
-resources for unassigned BARs. But with acpiphp, it ignores BIOS
-resource assignment and reassign all resources by OS.
-    If we have enough resources, reassigning all PCI resources should
-work too, but may fail if we are under resource constraints. On the
-other handle, current PCI IOMM align algorithm may waste huge MMIO
-address space if we have some PCI devices with huge IOMM BAR.
-    On this Sony laptop, BIOS allocates limited IOMM resources for
-the dock station and the dock station has a gfx which has a 256MB
-IOMM BAR. So current acpiphp driver fails to allocate resources
-for most devices on the dock station.
-     Currently I'm trying to change acpiphp to respect BIOS resource 
-assignment by calling pcibios_survey_resource_bus(), as in pci_root.c.
-The other way is to change the IOMM resource allocation algorithm,
-but obviously it's much more risky of regressions if changing the
-algorithm.
-Regards!
-Gerry
+On Tue, Jun 25, 2013 at 09:15:47PM +0300, Andy Shevchenko wrote:
+> On Tue, Jun 25, 2013 at 7:22 PM, Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> 
+> > The acpiphp driver finds out whether the device is hotpluggable by checking
+> > whether it has _RMV method behind it (and if it returns 1). However, at
+> > least Acer Aspire S5 with Thunderbolt host router has this method placed
+> > behind device called EPUP (endpoint upstream port?) and not directly behind
+> > the root port as can be seen from the ASL code below:
+> 
+> []
+> 
+> 
+> > +static acpi_status pcihp_evaluate_rmv(acpi_handle handle, u32 lvl,
+> > +                                     void *context, void **return_not_used)
+> > +{
+> > +       unsigned long long *removable = context;
+> > +       unsigned long long value;
+> > +       acpi_status status;
+> > +
+> > +       status = acpi_evaluate_integer(handle, "_RMV", NULL, &value);
+> > +       if (ACPI_SUCCESS(status) && value) {
+> 
+> So, there is a chance the caller gets back uninitialized *context.
+> Let's assume that is by design.
+> 
+> > +               *removable = value;
+> > +               return AE_CTRL_TERMINATE;
+> > +       }
+> > +       return AE_OK;
+> > +}
+> 
+> 
+> > +static bool pcihp_is_removable(acpi_handle handle, size_t depth)
+> > +{
+> > +       unsigned long long removable = 0;
+> > +       acpi_status status;
+> > +
+> > +       status = pcihp_evaluate_rmv(handle, 0, &removable, NULL);
+> > +       if ((status == AE_CTRL_TERMINATE) && removable)
+> 
+> Here you already have removable not equal zero.
 
+Hmm, removable is initialized to zero just few lines above... Did I miss
+something obvious?
+
+> Internal braces could be removed, but it's up top you.
+
+I'll remove them in the next revision.
+
+Thanks.
