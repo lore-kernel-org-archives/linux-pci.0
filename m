@@ -1,43 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 5 Jun 2013 22:56:38 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
- multiple-MSIs as requested
-Message-ID: <20130605205638.GA5816@breakpoint.cc>
-References: <cover.1368431413.git.agordeev@redhat.com>
- <8575dc590b819892f366852fe50835efaf579f4f.1368431413.git.agordeev@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:63755 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751716Ab3FYRSE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 13:18:04 -0400
+Received: by mail-ob0-f176.google.com with SMTP id v19so12315444obq.21
+        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 10:18:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8575dc590b819892f366852fe50835efaf579f4f.1368431413.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130625112348.GA13722@redhat.com>
+References: <1371668174-32115-1-git-send-email-rkrcmar@redhat.com>
+ <CAErSpo7O2YUUq-Ninu+BdmnrDGcU_h5=h=v1MBCoLorSDZW=Ow@mail.gmail.com> <20130625112348.GA13722@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 25 Jun 2013 11:17:43 -0600
+Message-ID: <CAErSpo7sH_TsN73LZWRFgO+RqAhzgdiTXR86xJ7Ojmno6QTY5w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: =?UTF-8?B?UmFkaW0gS3LEjW3DocWZ?= <rkrcmar@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Isaku Yamahata <yamahata@valinux.co.jp>,
+	Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 13, 2013 at 11:05:48AM +0200, Alexander Gordeev wrote:
-> Note, although the existing 'msi_desc::multiple' field might seem
-> redundant, in fact in does not. In general case the number of MSIs a
-> PCI device is initialized with is not necessarily the closest power-
-> of-two value of the number of MSIs the device will send. Thus, in
-> theory it would not be always possible to derive the former from the
-> latter and we need to keep them both, to stress this corner case.
-> Besides, since 'msi_desc::multiple' is a bitfield, throwing it out
-> would not save us any space.
+On Tue, Jun 25, 2013 at 5:23 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> On Mon, Jun 24, 2013 at 07:38:45PM -0600, Bjorn Helgaas wrote:
+>> [+cc Michael, Alex, Isaku]
+>>
+>> On Wed, Jun 19, 2013 at 12:56 PM, Radim Krčmář <rkrcmar@redhat.com> wrote:
+>> > PCIe switch upstream port can be connected directly to the PCIe root bus
+>> > in QEMU; ASPM does not expect this topology and dereferences NULL pointer
+>> > when initializing.
+>> >
+>> > I have not confirmed this can happen on real hardware, but it is presented
+>> > as a feature in QEMU, so there is no reason to panic if we can recover.
+>>
+>> This doesn't seem like a valid hardware topology to me.  If this *can*
+>> occur on real hardware, we should fix it in Linux.  If not, maybe QEMU
+>> should be changed to disallow it.
+>
+> I don't think it's a spec compliant topology either.
+>
+> Anything connected to an RC is either an integrated endpoint
+> or a root port.
+> There's no way to have an upstream port that is also
+> an integrated endpoint or a root port - these are distinct
+> device types.
+>
+> So I don't think Linux needs to support it.
+>
+> Having said that, there's all kind of broken hardware
+> out there - crashing is not a friendly way to tell users
+> that their hardware is not spec compliant.
+> Maybe linux can print a friendly warning and ignore
+> this port?
 
-The last paragraph makes me curious. The only place where 'multiple' is set is
-in do_setup_msi_irqs() and this uses the next power of two for it. And since a
-device is not enabled twice, it is not overridden.
-So it should be possible to compute 'multiple' out of 'nvec' but it saves
-cycles not do to so. I agree to keep 'multiple' but your argument does not
-seem to make sense.
-While nitpicking, 'nvec' might deserve a better comment than 'number of
-messages' since it holds the number of allocated interrupts. :)
+Indeed, that would be nicer.  I booted Win7 on the same config, and it
+came up fine.  It did complain that it couldn't start the PCI-to-PCI
+bridge driver on 00:03.0, the upstream port.
 
-Sebastian
+I'd like it if Linux could similarly tolerate that.  But since this is
+a relatively low-priority issue, I'm going to hold out for a more
+straightforward solution.  Checking for a null
+"pdev->bus->parent->self" pointer is not very obvious.  I think we can
+probably come up with a more direct check that reads better and
+possibly even detects the issue at the upstream port, not the
+downstream port.
+
+I opened a bugzilla for this issue:
+https://bugzilla.kernel.org/show_bug.cgi?id=60111
+
+Radim, can you please attach a complete dmesg log showing the oops,
+i.e., console output with "ignore_loglevel" and lspci -vv output (have
+to use your patch so it boots, I guess)?  I tried to reproduce it and
+I know the problem is there, but I haven't quite found the right
+recipe yet.
+
+Bjorn
