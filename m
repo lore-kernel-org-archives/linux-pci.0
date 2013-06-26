@@ -1,76 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:50895 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754981Ab3FGRBI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 13:01:08 -0400
-Date: Fri, 7 Jun 2013 19:00:58 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>
-Subject: Re: [PATCH v2 0/8] MSI support for Marvell EBU PCIe driver
-Message-ID: <20130607190058.112d8d4a@skate>
-In-Reply-To: <20130607150814.GU23859@titan.lakedaemon.net>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130606185110.GP23859@titan.lakedaemon.net>
-	<20130607102304.3c42773b@skate>
-	<20130607150814.GU23859@titan.lakedaemon.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, x86@kernel.org
+In-Reply-To: <CAHp75Vesp=u+GqBM5RfG-s_BmEoLXZz-zp3+tsHYUsoSNv4XUQ@mail.gmail.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1372177330-28013-5-git-send-email-mika.westerberg@linux.intel.com>
+ <CAHp75Vesp=u+GqBM5RfG-s_BmEoLXZz-zp3+tsHYUsoSNv4XUQ@mail.gmail.com>
+Subject: Re: [PATCH 4/6] PCI: acpiphp: check for new devices on enabled host
+Message-Id: <20130626093930.DB6B6E0090@blue.fi.intel.com>
+Date: Wed, 26 Jun 2013 12:39:30 +0300 (EEST)
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Cooper,
-
-On Fri, 7 Jun 2013 11:08:14 -0400, Jason Cooper wrote:
-
-> > 1-3 through Bjorn, 4-5 through tglx, 6-8 through you.
-> > 
-> > The only problem that I see is that 'irqchip: armada-370-xp: implement
-> > MSI support' (which goes through tglx) has a build dependency on 'PCI:
-> > Add registry of MSI chips' (which goes through Bjorn). This is due to
-> > the IRQ controller using the msi_chip_add() function that is introduced
-> > earlier in the PCI core.
+Andy Shevchenko wrote:
+> On Tue, Jun 25, 2013 at 7:22 PM, Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
 > 
-> Yeah, that's what I was afraid of...
+> > Current acpiphp_check_bridge() implementation is pretty dumb:
+> >  - it enables the slot if it's not enabled and the slot status is
+> >    ACPI_STA_ALL;
+> >  - it disables the slot if it's enabled and slot is not in ACPI_STA_ALL
+> >    state.
+> >
+> > This behavior is not enough to handle Thunderbolt chaining case
+> > properly. We need to actually rescan for new devices even if a device
+> > has already in the slot.
+> >
+> > The new implementation disables and stops the slot if it's not in
+> > ACPI_STA_ALL state.
+> >
+> > For ACPI_STA_ALL state we first trim devices which don't respond and
+> > look for the ones after that. We do that even if slot already enabled
+> > (SLOT_ENABLED).
 > 
-> > How would you solve that?
+> Just a couple of nitpicks below.
 > 
-> Let me take a closer look at it later today or this weekend.  I just
-> wanted to make sure that we always defer to the appropriate maintainers
-> first, and merge all through arm-soc as a last resort.
+> >         list_for_each_entry(slot, &bridge->slots, node) {
+> > +               struct pci_bus *bus = slot->bridge->pci_bus;
+> > +               struct pci_dev *dev, *tmp;
+> > +               int retval;
+> > +
+> > +               mutex_lock(&slot->crit_sect);
+> 
+> Does it make sense to introduce a helper let's say
+> __acpiphp_check_slot() and put there all lines inside this mutex?
 
-Now that I think of it, there is no problem in fact. Until you apply the
-patch 'arm: mvebu: indicate that this platform supports MSI', which
-modifies Kconfig to say that mvebu supports MSI, there is no way for
-the user to enable CONFIG_PCI_MSI.
+No. Why?
 
-And since in the IRQ controller driver the MSI code is inside a #ifdef
-CONFIG_PCI_MSI, this driver will build perfectly fine, as long as 'arm:
-mvebu: indicate that this platform supports MSI' is not merged before
-'PCI: Add registry of MSI chips'.
+> > +               if (get_slot_status(slot) == ACPI_STA_ALL) {
+> > +                       /* remove stale devices if any */
+> > +                       list_for_each_entry_safe(dev, tmp,
+> > +                                       &bus->devices, bus_list) {
+> > +                               if (PCI_SLOT(dev->devfn) != slot->device)
+> > +                                       continue;
+> > +                               pci_trim_stale_devices(dev);
+> 
+> Perhaps
+> 
+>  list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
+>       if (PCI_SLOT(dev->devfn) == slot->device)
+>                 pci_trim_stale_devices(dev);
+>  }
 
-So we can perfectly let Bjorn take the three PCI patches, tglx take the
-two IRQ controller patches, and you take the ARM stuff. The only thing
-is that the ARM stuff should not surface until both the PCI patches and
-the IRQ controller patches have landed in mainline.
+Makes sense, thanks.
 
-But well, before even thinking of merging all this, I'd like to hear
-from Bjorn about what he thinks of those patches.
-
-Thanks!
-
-Thomas
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+ Kirill A. Shutemov
