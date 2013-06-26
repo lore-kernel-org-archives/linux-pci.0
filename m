@@ -1,224 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:56363 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752343Ab3FLLW5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 07:22:57 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>
-Subject: Re: [PATCH V4 1/3] pci: Add PCIe driver for Samsung Exynos
-Date: Wed, 12 Jun 2013 13:23:03 +0200
-Message-ID: <2061566.hRLrhtBK6z@wuerfel>
-In-Reply-To: <003601ce6756$444e8cd0$cceba670$@samsung.com>
-References: <003601ce6756$444e8cd0$cceba670$@samsung.com>
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:45812 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766Ab3FZEPW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 00:15:22 -0400
+Received: by mail-oa0-f41.google.com with SMTP id n10so14291490oag.28
+        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 21:15:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20120712050653.20439.11009.stgit@bling.home>
+References: <20120712050653.20439.11009.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 25 Jun 2013 22:15:01 -0600
+Message-ID: <CAErSpo7=p7HyUfw4AQ-oQpLvgMfBi5iPfB+Fvrb02FWVHd_FAg@mail.gmail.com>
+Subject: Re: [PATCH RFC] pci: ACS quirk for AMD southbridge
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <Joerg.Roedel@amd.com>,
+	andihartmann@01019freenet.de,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 12 June 2013 19:19:05 Jingoo Han wrote:
-
-> +
-> +struct pcie_port {
-> +	struct device		*dev;
-> +	u8			controller;
-> +	u8			root_bus_nr;
-> +	void __iomem		*dbi_base;
-> +	void __iomem		*elbi_base;
-> +	void __iomem		*phy_base;
-> +	void __iomem		*purple_base;
-> +	phys_addr_t		cfg0_base;
-> +	void __iomem		*va_cfg0_base;
-> +	phys_addr_t		cfg1_base;
-> +	void __iomem		*va_cfg1_base;
-> +	phys_addr_t		io_base;
-> +	phys_addr_t		mem_base;
-> +	spinlock_t		conf_lock;
-> +	struct resource		cfg;
-> +	struct resource		io;
-> +	struct resource		mem;
-> +	struct pcie_port_info	config;
-> +	struct clk		*clk;
-> +	struct clk		*bus_clk;
-> +	int			irq;
-> +	int			reset_gpio;
-> +};
-
-This looks much better now.
-
-> +
-> +/* synopsis specific PCIE configuration registers*/
-> +#define PCIE_PORT_LINK_CONTROL		0x710
-> +#define PORT_LINK_MODE_MASK		(0x3f << 16)
-> +#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
-
-Do you mean this is a "Synopsys" designware part? In that case it
-should really not be called "exynos-pcie" but "designware-pcie"
-and you should make sure that the driver makes no assumptions about
-the platform. A lot of other platforms also use designware
-parts and should be able to reuse this driver.
-
-> +static void exynos_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
+On Wed, Jul 11, 2012 at 11:18 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> We've confirmed that peer-to-peer between these devices is
+> not possible.  We can therefore claim that they support a
+> subset of ACS.
+>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Joerg Roedel <Joerg.Roedel@amd.com>
+> ---
+>
+> Two things about this patch make me a little nervous.  The
+> first is that I'd really like to have a pci_is_pcie() test
+> in pci_mf_no_p2p_acs_enabled(), but these devices don't
+> have a PCIe capability.  That means that if there was a
+> topology where these devices sit on a legacy PCI bus,
+> we incorrectly return that we're ACS safe here.  That leads
+> to my second problem, pciids seems to suggest that some of
+> these functions have been around for a while.  Is it just
+> this package that's peer-to-peer safe, or is it safe to
+> assume that any previous assembly of these functions is
+> also p2p safe.  Maybe we need to factor in device revs if
+> that uniquely identifies this package?
+>
+> Looks like another useful device to potentially quirk
+> would be:
+>
+> 00:15.0 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
+> 00:15.1 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
+> 00:15.2 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB900 PCI to PCI bridge (PCIE port 2)
+> 00:15.3 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB900 PCI to PCI bridge (PCIE port 3)
+>
+> 00:15.0 0604: 1002:43a0
+> 00:15.1 0604: 1002:43a1
+> 00:15.2 0604: 1002:43a2
+> 00:15.3 0604: 1002:43a3
+>
+>  drivers/pci/quirks.c |   29 +++++++++++++++++++++++++++++
+>  1 file changed, 29 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 4ebc865..2c84961 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3271,11 +3271,40 @@ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
+>         return pci_dev_get(dev);
+>  }
+>
+> +/*
+> + * Multifunction devices that do not support peer-to-peer between
+> + * functions can claim to support a subset of ACS.  Such devices
+> + * effectively enable request redirect (RR) and completion redirect (CR)
+> + * since all transactions are redirected to the upstream root complex.
+> + */
+> +static int pci_mf_no_p2p_acs_enabled(struct pci_dev *dev, u16 acs_flags)
 > +{
-> +	u32 val;
-> +	void __iomem *dbi_base = pp->dbi_base;
+> +       if (!dev->multifunction)
+> +               return -ENODEV;
 > +
-> +	/* Program viewport 0 : OUTBOUND : CFG0 */
-> +	val = PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0;
-> +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
-> +	writel_rc(pp, (u32)pp->cfg0_base, dbi_base + PCIE_ATU_LOWER_BASE);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
-> +	writel_rc(pp, (u32)pp->cfg0_base + pp->config.cfg0_size - 1,
-> +			dbi_base + PCIE_ATU_LIMIT);
-> +	writel_rc(pp, busdev, dbi_base + PCIE_ATU_LOWER_TARGET);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-> +	writel_rc(pp, PCIE_ATU_TYPE_CFG0, dbi_base + PCIE_ATU_CR1);
-> +	val = PCIE_ATU_ENABLE;
-> +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
+> +       /* Filter out flags not applicable to multifunction */
+> +       acs_flags &= (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC | PCI_ACS_DT);
+> +
+> +       return acs_flags & ~(PCI_ACS_RR | PCI_ACS_CR) ? 0 : 1;
 > +}
-
-I think you should not assume that the physical base address is a 32
-bit value. The hardware clearly supports "lower" and "upper" halves
-for the address window, so when resource_size_t is 64 bit, you should
-set the upper half accordingly. Since the hardware is always 64 bit,
-you can use a "u64" type rather than resource_size_t to simplify the
-code here.
-
-> +static void exynos_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
-> +{
-> +	u32 val;
-> +	void __iomem *dbi_base = pp->dbi_base;
 > +
-> +	/* Program viewport 0 : OUTBOUND : MEM */
-> +	val = PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0;
-> +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
-> +	writel_rc(pp, PCIE_ATU_TYPE_MEM, dbi_base + PCIE_ATU_CR1);
-> +	val = PCIE_ATU_ENABLE;
-> +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
-> +	writel_rc(pp, (u32)pp->mem_base, dbi_base + PCIE_ATU_LOWER_BASE);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
-> +	writel_rc(pp, (u32)(pp->mem_base + pp->config.mem_size - 1),
-> +			dbi_base + PCIE_ATU_LIMIT);
-> +	writel_rc(pp, (u32)pp->mem_base, dbi_base + PCIE_ATU_LOWER_TARGET);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-> +}
+>  static const struct pci_dev_acs_enabled {
+>         u16 vendor;
+>         u16 device;
+>         int (*acs_enabled)(struct pci_dev *dev, u16 acs_flags);
+>  } pci_dev_acs_enabled[] = {
+> +       /*
+> +        * AMD/ATI multifunction southbridge devices.  AMD has confirmed
+> +        * that peer-to-peer between these devices is not possible, so
+> +        * they do support a subset of ACS even though the capability is
+> +        * not exposed in config space.
+> +        */
+> +       { PCI_VENDOR_ID_ATI, 0x4385, pci_mf_no_p2p_acs_enabled },
+> +       { PCI_VENDOR_ID_ATI, 0x439c, pci_mf_no_p2p_acs_enabled },
+> +       { PCI_VENDOR_ID_ATI, 0x4383, pci_mf_no_p2p_acs_enabled },
+> +       { PCI_VENDOR_ID_ATI, 0x439d, pci_mf_no_p2p_acs_enabled },
+> +       { PCI_VENDOR_ID_ATI, 0x4384, pci_mf_no_p2p_acs_enabled },
+> +       { PCI_VENDOR_ID_ATI, 0x4399, pci_mf_no_p2p_acs_enabled },
+>         { 0 }
+>  };
+>
+>
 
-You probably should not assume that there is a 1:1 mapping between 
-bus addresses and host physical addresses, but rather read both
-values from the DT individually. With the ranges defined as
+I was looking for something else and found this old email.  This patch
+hasn't been applied and I haven't seen any discussion about it.  Is it
+still of interest?  It seems relevant to the current ACS discussion
+[1].
 
-       0x82000000 0 0x40210000 0x40210000 0 0x10000000>; /* non-prefetchable memory */
+If it's relevant, what's the topology?  Apparently they don't have a
+PCIe capability.  Is the upstream device a PCIe device (a downstream
+port or a root port)?  I assume anything downstream from these AMD
+devices (0x4385, 0x439c, etc.) is plain PCI (not PCIe)?
 
-the second and third cell should go into
-PCIE_ATU_UPPER_TARGET/PCIE_ATU_LOWER_TARGET, while the translated address
-(from the third cell) should go into PCIE_ATU_LOWER_BASE/PCIE_ATU_UPPER_BASE
+Bjorn
 
-The PCIE_ATU_LIMIT seems to correctly get translated from the last
-cell.
-
-> +static void exynos_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
-> +{
-> +	u32 val;
-> +	void __iomem *dbi_base = pp->dbi_base;
-> +
-> +	/* Program viewport 1 : OUTBOUND : IO */
-> +	val = PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1;
-> +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
-> +	writel_rc(pp, PCIE_ATU_TYPE_IO, dbi_base + PCIE_ATU_CR1);
-> +	val = PCIE_ATU_ENABLE;
-> +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
-> +	writel_rc(pp, (u32)pp->io_base, dbi_base + PCIE_ATU_LOWER_BASE);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
-> +	writel_rc(pp, (u32)(pp->io_base + pp->config.io_size - 1),
-> +			dbi_base + PCIE_ATU_LIMIT);
-> +	writel_rc(pp, (u32)pp->io_base, dbi_base + PCIE_ATU_LOWER_TARGET);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-> +}
-
-You don't actually map the I/O space anywhere into virtual memory.
-I think you need to call pci_ioremap_io with the pp->io_base at
-boot time.
-
-I think you mixed up the PCIE_ATU_LOWER_TARGET, it should really be 0,
-since all I/O port numbers have to be smaller than IO_SPACE_LIMIT.
-
-The first argument to pci_ioremap_io needs to be unique for each
-domain and you need to use it to calculate the io_offset you
-set in pci_sys_data->io_offset.
-
-> +static void exynos_pcie_prog_viewport_mem_inbound(struct pcie_port *pp)
-> +{
-> +	u32 val;
-> +	void __iomem *dbi_base = pp->dbi_base;
-> +	struct pcie_port_info *config = &pp->config;
-> +
-> +	/* Program viewport 0 : INBOUND : MEMORY */
-> +	val = PCIE_ATU_REGION_INBOUND | PCIE_ATU_REGION_INDEX0;
-> +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
-> +	writel_rc(pp, PCIE_ATU_TYPE_MEM, dbi_base + PCIE_ATU_CR1);
-> +	val = PCIE_ATU_ENABLE | PCIE_ATU_BAR_MODE_ENABLE;
-> +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_LOWER_BASE);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
-> +	writel_rc(pp, config->in_mem_size - 1, dbi_base + PCIE_ATU_LIMIT);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_LOWER_TARGET);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-> +}
-
-You hardcode the in_mem_size to 256 MB. Does that mean you only allow
-PCI bus master DMA on the first part of RAM? Shouldn't it get
-computed from the actual location and size of RAM?
-
-> +static void exynos_pcie_prog_viewport_io_inbound(struct pcie_port *pp)
-> +{
-> +	u32 val;
-> +	void __iomem *dbi_base = pp->dbi_base;
-> +	struct pcie_port_info *config = &pp->config;
-> +
-> +	/* Program viewport 1 : INBOUND : IO */
-> +	val = PCIE_ATU_REGION_INBOUND | PCIE_ATU_REGION_INDEX1;
-> +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
-> +	writel_rc(pp, PCIE_ATU_TYPE_IO, dbi_base + PCIE_ATU_CR1);
-> +	val = PCIE_ATU_ENABLE | PCIE_ATU_BAR_MODE_ENABLE;
-> +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_LOWER_BASE);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
-> +	writel_rc(pp, config->in_mem_size - 1, dbi_base + PCIE_ATU_LIMIT);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_LOWER_TARGET);
-> +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-> +}
-
-I don't understand what in inbound I/O access actually means. What
-does this do, is it for PCI target emulation?
-
-> +
-> +static int exynos_pcie_setup(int nr, struct pci_sys_data *sys)
-> +{
-> +	struct pcie_port *pp;
-> +
-> +	pp = sys_to_pcie(sys);
-> +
-> +	if (!pp)
-> +		return 0;
-> +
-> +	pci_add_resource_offset(&sys->resources, &pp->io, sys->io_offset);
-> +	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
-> +
-> +	return 1;
-> +}
-
-You don't actually set up io_offset and mem_offset, right?
-
-	Arnd
+[1] https://lkml.kernel.org/r/20130607163441.7733.23221.stgit@bling.home
