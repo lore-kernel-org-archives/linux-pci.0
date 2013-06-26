@@ -1,218 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:63273 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812Ab3FDNN1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 09:13:27 -0400
-Received: by mail-ie0-f173.google.com with SMTP id k13so421503iea.4
-        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 06:13:27 -0700 (PDT)
-Date: Tue, 4 Jun 2013 07:13:24 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Betty Dall <betty.dall@hp.com>
-Cc: rjw@sisk.pl, ying.huang@intel.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	gong.chen@linux.intel.com
-Subject: Re: [PATCH v2 1/3] PCI/AER: Fix incorrect return from
- aer_hest_parse()
-Message-ID: <20130604131324.GA4829@google.com>
-References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
- <1369924769-17183-2-git-send-email-betty.dall@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1369924769-17183-2-git-send-email-betty.dall@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 9/9] ACPI: simplify acpiphp driver with new interfaces
+Date: Thu, 27 Jun 2013 00:31:01 +0800
+Message-Id: <1372264261-17442-10-git-send-email-liuj97@gmail.com>
+In-Reply-To: <1372264261-17442-1-git-send-email-liuj97@gmail.com>
+References: <1372264261-17442-1-git-send-email-liuj97@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 30, 2013 at 08:39:27AM -0600, Betty Dall wrote:
-> The function aer_hest_parse() is called to determine if the given
-> PCI device is firmware first or not. The code loops through each
-> section of the HEST table to look for a match. The bug is that
-> the function always returns whether the last HEST section is firmware
-> first. The fix stops the iteration once the info.firmware_first
-> variable is set.  This is similar to how the function aer_hest_parse_aff()
-> stops the iteration.
-> 
-> Signed-off-by: Betty Dall <betty.dall@hp.com>
-> ---
-> 
->  drivers/pci/pcie/aer/aerdrv_acpi.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> index 5194a7d..39b8671 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> @@ -42,6 +42,9 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
->  	u8 bridge = 0;
->  	int ff = 0;
->  
-> +	if (info->firmware_first)
-> +		return 0;
-> +
->  	switch (hest_hdr->type) {
->  	case ACPI_HEST_TYPE_AER_ROOT_PORT:
->  		pcie_type = PCI_EXP_TYPE_ROOT_PORT;
+From: Jiang Liu <jiang.liu@huawei.com>
 
+Use new interfaces to simplify acpiphp driver.
 
-1) I think dev->__aer_firmware_first should be initialized somewhere in the
-pci_scan_single_device() path, e.g., maybe pci_init_capabilities().  It's
-known at device add-time and never changes, so there's no point in doing
-the lazy setup we do now.  That would let us get rid of
-__aer_firmware_first_valid, too (along with the pointless "__" prefix).
-This is just an observation, not a requirement for this patch set.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-acpi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/hotplug/acpiphp_glue.c | 30 ++++++++----------------------
+ 1 file changed, 8 insertions(+), 22 deletions(-)
 
-2) This is a band-aid that covers up the real problem, which is that we
-update info->firmware_first even for non-matching devices.  I think we
-should do something like the following instead:
-
-
-commit c67612f272f1792a08f012f1b5ca37d5cfde5de4
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Jun 3 16:49:12 2013 -0600
-
-    PCI/AER: Don't parse HEST table for non-PCIe devices
-    
-    AER is a PCIe-only capability, so there's no point in trying to match
-    a HEST PCIe structure with a non-PCIe device.
-    
-    Previously, a HEST global AER bridge entry (type 8) could incorrectly
-    match *any* bridge, even a legacy PCI-PCI bridge, and a non-global
-    HEST entry could match a legacy PCI device.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-index 5194a7d..4f798ab 100644
---- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-+++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-@@ -59,8 +59,7 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 59df857..a0a7133 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -201,7 +201,6 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	struct acpiphp_bridge *bridge = (struct acpiphp_bridge *)context;
+ 	struct acpiphp_slot *slot;
+ 	struct acpiphp_func *newfunc;
+-	acpi_handle tmp;
+ 	acpi_status status = AE_OK;
+ 	unsigned long long adr, sun;
+ 	int device, function, retval, found = 0;
+@@ -232,19 +231,19 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	newfunc->handle = handle;
+ 	newfunc->function = function;
  
- 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
- 	if (p->flags & ACPI_HEST_GLOBAL) {
--		if ((pci_is_pcie(info->pci_dev) &&
--		     pci_pcie_type(info->pci_dev) == pcie_type) || bridge)
-+		if ((pci_pcie_type(info->pci_dev) == pcie_type) || bridge)
- 			ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
- 	} else
- 		if (hest_match_pci(p, info->pci_dev))
-@@ -89,6 +88,9 @@ static void aer_set_firmware_first(struct pci_dev *pci_dev)
+-	if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &tmp)))
++	if (acpi_has_method(handle, "_EJ0"))
+ 		newfunc->flags = FUNC_HAS_EJ0;
  
- int pcie_aer_get_firmware_first(struct pci_dev *dev)
+-	if (ACPI_SUCCESS(acpi_get_handle(handle, "_STA", &tmp)))
++	if (acpi_has_method(handle, "_STA"))
+ 		newfunc->flags |= FUNC_HAS_STA;
+ 
+-	if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS0", &tmp)))
++	if (acpi_has_method(handle, "_PS0"))
+ 		newfunc->flags |= FUNC_HAS_PS0;
+ 
+-	if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS3", &tmp)))
++	if (acpi_has_method(handle, "_PS3"))
+ 		newfunc->flags |= FUNC_HAS_PS3;
+ 
+-	if (ACPI_SUCCESS(acpi_get_handle(handle, "_DCK", &tmp)))
++	if (acpi_has_method(handle, "_DCK"))
+ 		newfunc->flags |= FUNC_HAS_DCK;
+ 
+ 	status = acpi_evaluate_integer(handle, "_SUN", NULL, &sun);
+@@ -843,25 +842,14 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+  */
+ int acpiphp_eject_slot(struct acpiphp_slot *slot)
  {
-+	if (!pci_is_pcie(dev))
-+		return 0;
-+
- 	if (!dev->__aer_firmware_first_valid)
- 		aer_set_firmware_first(dev);
- 	return dev->__aer_firmware_first;
-
-commit 947da50270686b0d70f4bc2f7323ef7229489ecb
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Jun 3 15:42:00 2013 -0600
-
-    PCI/AER: Factor out HEST device type matching
-    
-    This factors out the matching of HEST structure type and PCIe device type
-    to improve readability.  No functional change.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-index 4f798ab..56e2d94 100644
---- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-+++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-@@ -29,6 +29,22 @@ static inline int hest_match_pci(struct acpi_hest_aer_common *p,
- 		 p->function == PCI_FUNC(pci->devfn));
- }
+-	acpi_status status;
+ 	struct acpiphp_func *func;
+-	struct acpi_object_list arg_list;
+-	union acpi_object arg;
  
-+static inline bool hest_match_type(struct acpi_hest_header *hest_hdr,
-+				   struct pci_dev *dev)
-+{
-+	u16 hest_type = hest_hdr->type;
-+	u8 pcie_type = pci_pcie_type(dev);
-+
-+	if ((hest_type == ACPI_HEST_TYPE_AER_ROOT_PORT &&
-+	     pcie_type == PCI_EXP_TYPE_ROOT_PORT) ||
-+	    (hest_type == ACPI_HEST_TYPE_AER_ENDPOINT &&
-+	     pcie_type == PCI_EXP_TYPE_ENDPOINT) ||
-+	    (hest_type == ACPI_HEST_TYPE_AER_BRIDGE &&
-+	     (dev->class >> 16) == PCI_BASE_CLASS_BRIDGE))
-+		return true;
-+	return false;
-+}
-+
- struct aer_hest_parse_info {
- 	struct pci_dev *pci_dev;
- 	int firmware_first;
-@@ -38,28 +54,11 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
- {
- 	struct aer_hest_parse_info *info = data;
- 	struct acpi_hest_aer_common *p;
--	u8 pcie_type = 0;
--	u8 bridge = 0;
- 	int ff = 0;
- 
--	switch (hest_hdr->type) {
--	case ACPI_HEST_TYPE_AER_ROOT_PORT:
--		pcie_type = PCI_EXP_TYPE_ROOT_PORT;
--		break;
--	case ACPI_HEST_TYPE_AER_ENDPOINT:
--		pcie_type = PCI_EXP_TYPE_ENDPOINT;
--		break;
--	case ACPI_HEST_TYPE_AER_BRIDGE:
--		if ((info->pci_dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
--			bridge = 1;
--		break;
--	default:
--		return 0;
--	}
+ 	list_for_each_entry(func, &slot->funcs, sibling) {
+ 		/* We don't want to call _EJ0 on non-existing functions. */
+ 		if ((func->flags & FUNC_HAS_EJ0)) {
+-			/* _EJ0 method take one argument */
+-			arg_list.count = 1;
+-			arg_list.pointer = &arg;
+-			arg.type = ACPI_TYPE_INTEGER;
+-			arg.integer.value = 1;
 -
- 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
- 	if (p->flags & ACPI_HEST_GLOBAL) {
--		if ((pci_pcie_type(info->pci_dev) == pcie_type) || bridge)
-+		if (hest_match_type(hest_hdr, info->pci_dev))
- 			ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
- 	} else
- 		if (hest_match_pci(p, info->pci_dev))
-
-commit e9f977a04d96a54c4f6aa0b831e725dab2154364
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Jun 3 19:47:27 2013 -0600
-
-    PCI/AER: Set dev->__aer_firmware_first only for matching devices
-    
-    Previously, we always updated info->firmware_first, even for HEST entries
-    that didn't match the device.  Therefore, if the last HEST descriptor was
-    a PCIe structure that didn't match the device, we always cleared
-    dev->__aer_firmware_first.
-    
-    Based-on-patch-by: Betty Dall <betty.dall@hp.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-index 56e2d94..2bedad8 100644
---- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-+++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-@@ -54,16 +54,16 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+-			status = acpi_evaluate_object(func->handle, "_EJ0", &arg_list, NULL);
+-			if (ACPI_FAILURE(status)) {
+-				warn("%s: _EJ0 failed\n", __func__);
++			if (ACPI_FAILURE(acpi_evaluate_ej0(func->handle)))
+ 				return -1;
+-			} else
++			else
+ 				break;
+ 		}
+ 	}
+@@ -1171,7 +1159,6 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+  */
+ void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
  {
- 	struct aer_hest_parse_info *info = data;
- 	struct acpi_hest_aer_common *p;
--	int ff = 0;
-+	int ff;
+-	acpi_handle dummy_handle;
+ 	struct acpiphp_bridge *bridge;
  
- 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
--	if (p->flags & ACPI_HEST_GLOBAL) {
-+	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
-+	if (p->flags & ACPI_HEST_GLOBAL)
- 		if (hest_match_type(hest_hdr, info->pci_dev))
--			ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
--	} else
-+			info->firmware_first = ff;
-+	else
- 		if (hest_match_pci(p, info->pci_dev))
--			ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
--	info->firmware_first = ff;
-+			info->firmware_first = ff;
+ 	if (acpiphp_disabled)
+@@ -1200,8 +1187,7 @@ void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
+ 	get_device(&bus->dev);
  
- 	return 0;
- }
+ 	if (!pci_is_root_bus(bridge->pci_bus) &&
+-	    ACPI_SUCCESS(acpi_get_handle(bridge->handle,
+-					"_EJ0", &dummy_handle))) {
++	    acpi_has_method(bridge->handle, "_EJ0")) {
+ 		dbg("found ejectable p2p bridge\n");
+ 		bridge->flags |= BRIDGE_HAS_EJ0;
+ 		bridge->func = acpiphp_bridge_handle_to_function(handle);
+-- 
+1.8.1.2
+
