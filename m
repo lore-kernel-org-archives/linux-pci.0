@@ -1,117 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:47228 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753602Ab3FGIXI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 04:23:08 -0400
-Date: Fri, 7 Jun 2013 10:23:04 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>
-Subject: Re: [PATCH v2 0/8] MSI support for Marvell EBU PCIe driver
-Message-ID: <20130607102304.3c42773b@skate>
-In-Reply-To: <20130606185110.GP23859@titan.lakedaemon.net>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130606185110.GP23859@titan.lakedaemon.net>
+Received: from mx1.redhat.com ([209.132.183.28]:56887 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751359Ab3FZSqa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 26 Jun 2013 14:46:30 -0400
+Message-ID: <1372272358.30572.560.camel@ul30vt.home>
+Subject: Re: [PATCH v2 1/2] iommu: Quirked PCIe bridge test and search
+ function
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>
+Date: Wed, 26 Jun 2013 12:45:58 -0600
+In-Reply-To: <CAErSpo5_P9tPdmpq2XO-X-d5NUWFG8Nbm_byKOkd5d4b8UMcMQ@mail.gmail.com>
+References: <20130528183527.3318.5365.stgit@bling.home>
+	 <20130528184020.3318.7800.stgit@bling.home>
+	 <20130620135914.GS2575@8bytes.org> <1371743091.32709.52.camel@ul30vt.home>
+	 <20130620161538.GH3589@8bytes.org>
+	 <CAErSpo5_P9tPdmpq2XO-X-d5NUWFG8Nbm_byKOkd5d4b8UMcMQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Cooper,
-
-On Thu, 6 Jun 2013 14:51:10 -0400, Jason Cooper wrote:
-> > Thierry Reding (1):
-> >   PCI: Introduce new MSI chip infrastructure
-> > 
-> > Thomas Petazzoni (7):
-> >   PCI: Add registry of MSI chips
-> >   irqchip: armada-370-xp: properly request resources
-> >   irqchip: armada-370-xp: implement MSI support
-> >   arm: mvebu: the MPIC now provides MSI controller features
-> >   pci: mvebu: add support for MSI
-> >   arm: mvebu: indicate that this platform supports MSI
-> >   arm: mvebu: link PCIe controllers to the MSI controller
-> > 
+On Tue, 2013-06-25 at 22:20 -0600, Bjorn Helgaas wrote:
+> On Thu, Jun 20, 2013 at 10:15 AM, Joerg Roedel <joro@8bytes.org> wrote:
+> > On Thu, Jun 20, 2013 at 09:44:51AM -0600, Alex Williamson wrote:
+> >> On Thu, 2013-06-20 at 15:59 +0200, Joerg Roedel wrote:
+> >> > On Tue, May 28, 2013 at 12:40:20PM -0600, Alex Williamson wrote:
+> >> > > + if (!pci_is_root_bus(pdev->bus)) {
+> >> > > +         struct pci_dev *parent = pdev->bus->self;
+> >> > > +
+> >> > > +         if (pci_is_pcie(parent) &&
+> >> > > +             pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
+> >> > > +                 return true;
+> >> > > + }
+> >> >
+> >> > Hmm, that looks a bit dangerous.
+> >>
+> >> How so?  The algorithm seems pretty simple and logical.
+> >
+> > It is simple, but it is still a heuristic that may fail at some point,
+> > no?
+> >
+> >> Actually, I believe Bjorn rejected the idea of a fixed list because this
+> >> problem is detectable.  He also doesn't want me messing with quirks to
+> >> pci_is_pcie() in PCI because he wants a 1:1 relation between that and
+> >> having a PCIe capability.  So, I'm stuck and this is where it's ended
+> >> up.  Thanks,
+> >
+> > I think implementing such a list is much safer.
+> >
+> > Bjorn, why didn't you like that idea?
 > 
-> Is there a reason why the following breakdown wouldn't work?
+> Sorry, I can't remember, and I haven't been able to find the
+> discussion where I said that.  I think the current patches are all in
+> drivers/iommu, and if a list makes sense there, it's fine with me.
 
-No, it should work. And it's actually possible with how the patches are
-organized currently.
+Here's the comment I remember
 
-> >  arch/arm/boot/dts/armada-370-xp.dtsi     |   1 +
-> >  arch/arm/boot/dts/armada-370.dtsi        |   1 +
-> >  arch/arm/boot/dts/armada-xp-mv78230.dtsi |   1 +
-> >  arch/arm/boot/dts/armada-xp-mv78260.dtsi |   1 +
-> >  arch/arm/boot/dts/armada-xp-mv78460.dtsi |   1 +
-> 
-> through mvebu/arm-soc
+https://bugzilla.kernel.org/show_bug.cgi?id=44881#c7
 
-Patches 5 and 8.
+        Comment #7 From Bjorn Helgaas 2012-08-23 15:58:39
+        [snip]
+        I doubt the upstream device is at fault.  More likely the
+        downstream device is really a PCIe device (a PCIe-to-PCI bridge)
+        but just fails to report a PCIe capability.  I think this
+        situation is likely too common to deal with via quirks, so we'll
+        have to figure out a way to just make this work.
 
-> 
-> >  arch/arm/mach-mvebu/Kconfig              |   1 +
-> 
-> through mvebu/arm-soc after the other three have landed (v3.11-rc1)
+Thanks,
+Alex
 
-Patch 7.
-
-> >  drivers/irqchip/irq-armada-370-xp.c      | 186 ++++++++++++++++++++++++++++++-
-> 
-> through tglx
-
-Patches 3 and 4.
-
-> 
-> >  drivers/pci/host/pci-mvebu.c             |  21 ++++
-> >  drivers/pci/msi.c                        |  59 +++++++++-
-> >  drivers/pci/probe.c                      |   1 +
-> >  include/linux/msi.h                      |  22 ++++
-> >  include/linux/pci.h                      |   1 +
-> 
-> through Bjorn
-
-Patches 1, 2 and 6.
-
-So as you can see, the patches are already broken down in a way that
-allows each maintainer to pick its part. But I admit I could probably
-reorder them in the following way:
-
- 1. PCI: Introduce new MSI chip infrastructure
- 2. PCI: Add registry of MSI chips
- 3. pci: mvebu: add support for MSI
- 4. irqchip: armada-370-xp: properly request resources
- 5. irqchip: armada-370-xp: implement MSI support
- 6. arm: mvebu: the MPIC now provides MSI controller features
- 7. arm: mvebu: link PCIe controllers to the MSI controller
- 8. arm: mvebu: indicate that this platform supports MSI
-
-1-3 through Bjorn, 4-5 through tglx, 6-8 through you.
-
-The only problem that I see is that 'irqchip: armada-370-xp: implement
-MSI support' (which goes through tglx) has a build dependency on 'PCI:
-Add registry of MSI chips' (which goes through Bjorn). This is due to
-the IRQ controller using the msi_chip_add() function that is introduced
-earlier in the PCI core.
-
-How would you solve that?
-
-In any case, at this point I'd like first to have the ACK from Bjorn
-Helgaas and Arnd Bergmann on the general approach.
-
-Best regards, 
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
