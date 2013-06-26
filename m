@@ -1,88 +1,35 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 10 Jun 2013 22:09:07 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Jay Agarwal <jagarwal@nvidia.com>, linux@arm.linux.org.uk,
-	bhelgaas@google.com, ldewangan@nvidia.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V4 2/4] ARM: tegra: pcie: Add tegra3 support
-Message-ID: <20130610200906.GD25859@mithrandir>
-References: <1370445221-17696-1-git-send-email-jagarwal@nvidia.com>
- <51AF68F1.8080307@wwwdotorg.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:4061 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368Ab3FZHVx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 26 Jun 2013 03:21:53 -0400
+Date: Wed, 26 Jun 2013 10:25:36 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [PATCH 0/6] Thunderbolt workarounds take 2
+Message-ID: <20130626072536.GN9294@intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <12066786.EK0Z2aX1JA@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="fXStkuK2IQBfcDe+"
-In-Reply-To: <51AF68F1.8080307@wwwdotorg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <12066786.EK0Z2aX1JA@vostro.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Jun 26, 2013 at 01:24:25AM +0200, Rafael J. Wysocki wrote:
+> Would you please CC things touching ACPIPHP to linux-acpi?
 
---fXStkuK2IQBfcDe+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Sorry about that -- It wasn't listed in the output of get_maintainers.pl so
+it kind of was forgotten.
 
-On Wed, Jun 05, 2013 at 10:36:01AM -0600, Stephen Warren wrote:
-> On 06/05/2013 09:13 AM, Jay Agarwal wrote:
-> > - Make private data structure for each SoC
-> > - Add required Tegra30 clocks and regulators
-> > - Add Tegra30 specific code in enable controller
-> > - Added Tegra30 specific properties in pci binding document
->=20
-> It's a bit odd to send an updated version of just some of the patches;
-> reposting a whole series is much easier for the person applying the
-> patches. However, hopefully Thierry can handle it in this case.
-
-Yes, I think I can handle it. It might be good to have Jay look at the
-final patches when I'm done, though, to make sure I haven't forgotten
-anything.
-
-> > diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.=
-txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
->=20
-> >  Required properties:
-> > -- compatible: "nvidia,tegra20-pcie"
-> > +- compatible: "nvidia,tegra20-pcie" "nvidia,tegra30-pcie"
->=20
-> perhaps add "or" between those two entries?
->=20
-> > +- avdd-supply: Power supply for controller (1.05V) (not required for t=
-egra20)
-> ...
-> > +  "cml": The Tegra clock of that name (not required for tegra20)
->=20
-> Tegra20 should be capitalized in both those two lines.
->=20
-> I assume that Thierry can fix up these nits when he applies the patches,
-> so you don't need to repost. Thierry can correct me if I'm wrong.
-
-I've found a few other nits that I can take care of myself when
-applying.
-
-Thierry
-
---fXStkuK2IQBfcDe+
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRtjJiAAoJEN0jrNd/PrOh3mcP/0f89iNTjFV7Hcu/CqXv9cm0
-cEIdW9/98jwXHQxvkhsKLjkH58khuvi9tTqlzkaNJ1tesUZMNGNsFXz/VyLioKlF
-+rR7XQD0bDhmDJmbrIzT6A2cXz0LttHSSzrisxG3gblyKop4jPW0nLsgOElC+Bfy
-Ih/dadL3mHjoatabXiBM8CgtEuAnbnH+NQndMaIY2pavBvT1JRQiiMR+LP1LnrsG
-5PORPybgvj9SkXNS8RdyDVGJw/CQQ0cGStKxzkRhp2Dp4PmoXKj3gO6XMWGx4Vzs
-ZMUemze+//25Pw3i+a34+P1kwmRxnoNjCDwn/H757KijgtGV17GtpNwPZgg4YfiE
-o1+dM/G4bob1xRGLsMkNw+QXzbH82RREYO+LycwP16pzBiIxbxTK8mMZQjmSK2KF
-pga2VIhfPxJoF9afVjiuqdm0W0LquUGknCNpBcdQ7CNjR4gGQPcrZQpmYqmagwY7
-Nn3DjViptoOybrKSpX9up0OwFV8QIZIX9TONXCJotdrXZV5avxX9nXWpNKejeoV2
-crYYftUufzvZFAO/4OufBNuQZlYN3G58giwcrNQ/gYyKgqxRPCd4aHfVaxCAXFt/
-xzBkMZ40Mo8U9ElRDFhfqdRXhUmah1jLcZkgLLConuDzUhhCWlU3GOPm/TFUobcd
-Yxi30/eOa66xNh3IVPW5
-=sA4U
------END PGP SIGNATURE-----
-
---fXStkuK2IQBfcDe+--
+Do you want me to resend this series with linux-acpi@ included?
