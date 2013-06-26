@@ -1,90 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:50892 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005Ab3FDXaF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 19:30:05 -0400
-Received: by mail-ob0-f175.google.com with SMTP id xn12so1514191obc.34
-        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 16:30:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.03.1306041911170.1686@linux.vnet.ibm.com>
-References: <alpine.LFD.2.03.1306041911170.1686@linux.vnet.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Jun 2013 17:29:44 -0600
-Message-ID: <CAErSpo41t6QDHJwoZcwp5pH7kzuLPb8xboHc3W6YixDad2BotA@mail.gmail.com>
-Subject: Re: [PATCH] pci: add pcibios_release_device
-To: Sebastian Ott <sebott@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39198 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751368Ab3FZN1F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 09:27:05 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: stable@vger.kernel.org
+Cc: Neil Horman <nhorman@tuxdriver.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Arkadiusz Miskiewicz <arekm@maven.pl>,
+	Greg KH <gregkh@linuxfoundation.org>
+Subject: [3.9 stable PATCH] iommu/vt-d: add quirk for broken interrupt remapping on 55XX chipsets
+Date: Wed, 26 Jun 2013 09:26:35 -0400
+Message-Id: <1372253195-17053-1-git-send-email-nhorman@tuxdriver.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 4, 2013 at 11:18 AM, Sebastian Ott
-<sebott@linux.vnet.ibm.com> wrote:
-> Hello Bjorn,
->
-> part of your feedback to the PCI support on s390 was to put some smarts in
-> the config space accessors and let the pci core do the scanning of pci
-> functions.
-> To get there I had to implement pcibios_add_device on s390 to do some arch
-> specific device initialization. During removal of the pci function I would
-> like to undo these steps. Would it be possible to have a couterpart of
-> pcibios_add_device - like the patch below:
->
->
-> pci: add pcibios_release_device
->
-> Platforms may want to provide architecture-specific functionality when
-> a pci device is released. Add a pcibios_release_device() call that
-> architectures can override to do so.
->
-> Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+A few years back intel published a spec update:
+http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
 
-Applied to pci/misc for v3.11.  Thanks!
+For the 5520 and 5500 chipsets which contained an errata (specificially errata
+53), which noted that these chipsets can't properly do interrupt remapping, and
+as a result the recommend that interrupt remapping be disabled in bios.  While
+many vendors have a bios update to do exactly that, not all do, and of course
+not all users update their bios to a level that corrects the problem.  As a
+result, occasionally interrupts can arrive at a cpu even after affinity for that
+interrupt has be moved, leading to lost or spurrious interrupts (usually
+characterized by the message:
+kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
 
-> ---
->  drivers/pci/pci.c   |   10 ++++++++++
->  drivers/pci/probe.c |    1 +
->  include/linux/pci.h |    1 +
->  3 files changed, 12 insertions(+)
->
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1335,6 +1335,16 @@ int __weak pcibios_add_device (struct pc
->  }
->
->  /**
-> + * pcibios_release_device - provide arch specific hooks when releasing device dev
-> + * @dev: the PCI device being released
-> + *
-> + * Permits the platform to provide architecture specific functionality when
-> + * devices are released. This is the default implementation. Architecture
-> + * implementations can override this.
-> + */
-> +void __weak pcibios_release_device(struct pci_dev *dev) {}
-> +
-> +/**
->   * pcibios_disable_device - disable arch specific PCI resources for device dev
->   * @dev: the PCI device to disable
->   *
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1132,6 +1132,7 @@ static void pci_release_dev(struct devic
->         pci_dev = to_pci_dev(dev);
->         pci_release_capabilities(pci_dev);
->         pci_release_of_node(pci_dev);
-> +       pcibios_release_device(pci_dev);
->         kfree(pci_dev);
->  }
->
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1643,6 +1643,7 @@ void pcibios_set_master(struct pci_dev *
->  int pcibios_set_pcie_reset_state(struct pci_dev *dev,
->                                  enum pcie_reset_state state);
->  int pcibios_add_device(struct pci_dev *dev);
-> +void pcibios_release_device(struct pci_dev *dev);
->
->  #ifdef CONFIG_PCI_MMCONFIG
->  void __init pci_mmcfg_early_init(void);
->
+There have been several incidents recently of people seeing this error, and
+investigation has shown that they have system for which their BIOS level is such
+that this feature was not properly turned off.  As such, it would be good to
+give them a reminder that their systems are vulnurable to this problem.  For
+details of those that reported the problem, please see:
+https://bugzilla.redhat.com/show_bug.cgi?id=887006
+
+[ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+CC: Prarit Bhargava <prarit@redhat.com>
+CC: Don Zickus <dzickus@redhat.com>
+CC: Don Dutile <ddutile@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Asit Mallick <asit.k.mallick@intel.com>
+CC: David Woodhouse <dwmw2@infradead.org>
+CC: linux-pci@vger.kernel.org
+CC: Joerg Roedel <joro@8bytes.org>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Arkadiusz Miskiewicz <arekm@maven.pl>
+CC: Greg KH <gregkh@linuxfoundation.org>
+Signed-off-by: Joerg Roedel <joro@8bytes.org>
+---
+ arch/x86/include/asm/irq_remapping.h |  3 +++
+ arch/x86/kernel/early-quirks.c       | 20 ++++++++++++++++++++
+ drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
+ drivers/iommu/irq_remapping.c        |  6 ++++++
+ drivers/iommu/irq_remapping.h        |  2 ++
+ 5 files changed, 41 insertions(+)
+
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 95fd352..b00bf09 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -23,11 +23,13 @@
+ #define __X86_IRQ_REMAPPING_H
+ 
+ #include <asm/io_apic.h>
++#include <linux/irq.h>
+ 
+ #ifdef CONFIG_IRQ_REMAP
+ 
+ extern void setup_irq_remapping_ops(void);
+ extern int irq_remapping_supported(void);
++extern void set_irq_remapping_broken(void);
+ extern int irq_remapping_prepare(void);
+ extern int irq_remapping_enable(void);
+ extern void irq_remapping_disable(void);
+@@ -54,6 +56,7 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip);
+ 
+ static inline void setup_irq_remapping_ops(void) { }
+ static inline int irq_remapping_supported(void) { return 0; }
++static inline void set_irq_remapping_broken(void) { }
+ static inline int irq_remapping_prepare(void) { return -ENODEV; }
+ static inline int irq_remapping_enable(void) { return -ENODEV; }
+ static inline void irq_remapping_disable(void) { }
+diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
+index 3755ef4..94ab6b9 100644
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -18,6 +18,7 @@
+ #include <asm/apic.h>
+ #include <asm/iommu.h>
+ #include <asm/gart.h>
++#include <asm/irq_remapping.h>
+ 
+ static void __init fix_hypertransport_config(int num, int slot, int func)
+ {
+@@ -192,6 +193,21 @@ static void __init ati_bugs_contd(int num, int slot, int func)
+ }
+ #endif
+ 
++static void __init intel_remapping_check(int num, int slot, int func)
++{
++	u8 revision;
++
++	revision = read_pci_config_byte(num, slot, func, PCI_REVISION_ID);
++
++	/*
++	 * Revision 0x13 of this chipset supports irq remapping
++	 * but has an erratum that breaks its behavior, flag it as such
++	 */
++	if (revision == 0x13)
++		set_irq_remapping_broken();
++
++}
++
+ #define QFLAG_APPLY_ONCE 	0x1
+ #define QFLAG_APPLIED		0x2
+ #define QFLAG_DONE		(QFLAG_APPLY_ONCE|QFLAG_APPLIED)
+@@ -221,6 +237,10 @@ static struct chipset early_qrk[] __initdata = {
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
+ 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
++	{ PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
++	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
++	{ PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
++	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
+ 	{}
+ };
+ 
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index f3b8f23..5b19b2d 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -524,6 +524,16 @@ static int __init intel_irq_remapping_supported(void)
+ 
+ 	if (disable_irq_remap)
+ 		return 0;
++	if (irq_remap_broken) {
++		WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
++			   "This system BIOS has enabled interrupt remapping\n"
++			   "on a chipset that contains an erratum making that\n"
++			   "feature unstable.  To maintain system stability\n"
++			   "interrupt remapping is being disabled.  Please\n"
++			   "contact your BIOS vendor for an update\n");
++		disable_irq_remap = 1;
++		return 0;
++	}
+ 
+ 	if (!dmar_ir_support())
+ 		return 0;
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 7c11ff3..dcfea4e 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -18,6 +18,7 @@
+ int irq_remapping_enabled;
+ 
+ int disable_irq_remap;
++int irq_remap_broken;
+ int disable_sourceid_checking;
+ int no_x2apic_optout;
+ 
+@@ -210,6 +211,11 @@ void __init setup_irq_remapping_ops(void)
+ #endif
+ }
+ 
++void set_irq_remapping_broken(void)
++{
++	irq_remap_broken = 1;
++}
++
+ int irq_remapping_supported(void)
+ {
+ 	if (disable_irq_remap)
+diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+index ecb6376..90c4dae 100644
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -32,6 +32,7 @@ struct pci_dev;
+ struct msi_msg;
+ 
+ extern int disable_irq_remap;
++extern int irq_remap_broken;
+ extern int disable_sourceid_checking;
+ extern int no_x2apic_optout;
+ extern int irq_remapping_enabled;
+@@ -89,6 +90,7 @@ extern struct irq_remap_ops amd_iommu_irq_ops;
+ 
+ #define irq_remapping_enabled 0
+ #define disable_irq_remap     1
++#define irq_remap_broken      0
+ 
+ #endif /* CONFIG_IRQ_REMAP */
+ 
+-- 
+1.8.1.4
+
