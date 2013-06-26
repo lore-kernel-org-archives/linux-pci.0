@@ -1,119 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:54873 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752372Ab3FZVaO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 17:30:14 -0400
+Received: by mail-ie0-f170.google.com with SMTP id e11so33243683iej.29
+        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 14:30:13 -0700 (PDT)
+Date: Wed, 26 Jun 2013 15:30:10 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Darren Hart <dvhart@linux.intel.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v3 20/27] x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
-Date: Fri,  7 Jun 2013 15:31:06 -0700
-Message-Id: <1370644273-10495-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	danders@circuitco.com, vishal.l.verma@intel.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 7/8] pci: Add CircuitCo VENDOR ID and MinnowBoard DEVICE
+ ID
+Message-ID: <20130626213010.GA31010@google.com>
+References: <cover.1372211451.git.dvhart@linux.intel.com>
+ <83879b07cd4ce95f086420d1faa926c1692d63b4.1372211451.git.dvhart@linux.intel.com>
+ <20130626163250.GA29299@google.com>
+ <1372266904.8177.83.camel@envy.home>
+ <CAErSpo6=1i76RRmJSUi+BpD9D0WrXaML4HkGLn0C=+6=ohB0uQ@mail.gmail.com>
+ <1372281416.2720.28.camel@envy.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372281416.2720.28.camel@envy.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It will free ioapic related irq_desc and also clear allocated_irqs bits.
+On Wed, Jun 26, 2013 at 02:16:56PM -0700, Darren Hart wrote:
+> On Wed, 2013-06-26 at 13:37 -0600, Bjorn Helgaas wrote:
+> > On Wed, Jun 26, 2013 at 11:15 AM, Darren Hart <dvhart@linux.intel.com> wrote:
+> > > On Wed, 2013-06-26 at 10:32 -0600, Bjorn Helgaas wrote:
+> > 
+> > >> +#define PCI_VENDOR_ID_CIRCUITCO              0x1cc8
+> > >> +
+> > >>  #define PCI_VENDOR_ID_TEKRAM         0x1de1
+> > >>  #define PCI_DEVICE_ID_TEKRAM_DC290   0xdc29
+> > >
+> > >
+> > > Thanks Bjorn. When I reuse this Subsystem ID and there is more than one
+> > > usage, I should send a patch to pci_ids.h adding it and replace the hex
+> > > value in all drivers with the new define. Is that right?
+> > 
+> > Yeah, that's what I was thinking.
+> > 
+> > But Peter's comment makes more sense to me now.  The spec refers to
+> > that config register as "Subsystem ID," not "Subsystem Device ID," but
+> > I was confused because most existing usage treats it as a device ID.
+> > For example, the field in struct pci_device_id is named "subdevice,"
+> > and all the existing #defines in pci_ids.h are of the form
+> > PCI_SUBDEVICE_ID_*.
+> > 
+> > Device IDs are pretty specific identifiers, so I was thinking that a
+> > "sub-device ID" would be even more specific.  Then it would make no
+> > sense to have a "sub-device ID" that was as generic as "MINNOWBOARD."
+> > But the register is actually *not* a "sub-device ID," and I can see
+> > that using the same Subsystem ID for all the devices on a board might
+> > make sense.
+> > 
+> > So I think the name PCI_DEVICE_ID_CIRCUITCO_MINNOWBOARD is a bit of a
+> > misnomer, and something like PCI_SUBSYSTEM_CIRCUITCO_MINNOWBOARD would
+> > make it more clear that it really isn't sharing the device ID space
+> > assigned to CircuitCo.  It would make perfect sense to have a Device
+> > ID, e.g., "PCI_DEVICE_ID_CIRCUIT_CO_xxx 0x0001," that has nothing to
+> > do with the Subsystem ID 0x0001.
+> > 
+> > If you want to do something like that (or even keep your original
+> > patch), I can put that in my -next branch.  Just let me know.
+> > 
+> > Bjorn
+> 
+> 
+> I would be happy to change DEVICE to SUBSYSTEM in the the pci_ids.h:
+> 
+> +#define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
+> +#define PCI_SUBSYSTEM_ID_CITCUITCO_MINNOWBOARD	0x0001
+> 
+> Would you like me to send another patch?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/include/asm/mpspec.h  |  1 +
- arch/x86/kernel/apic/io_apic.c | 42 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 43 insertions(+)
+No need.  I'll just apply the following patch.  Obviously your follow-on
+pch_gbe patch will need a corresponding change.
 
-diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
-index 11bb6ea..e70b7e5 100644
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -97,6 +97,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
- void __cpuinit generic_processor_info(int apicid, int version);
- #ifdef CONFIG_ACPI
- int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
-+int mp_unregister_ioapic(u32 gsi_base);
- extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- 				   u32 gsi);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index c581c4c..8a3fedf 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -256,6 +256,14 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
- 	irq_free_desc(at);
- }
- 
-+static void free_irqs(unsigned int from, int cnt)
-+{
-+	int i;
-+
-+	for (i = from; i < from + cnt; i++)
-+		free_irq_at(i, irq_get_chip_data(i));
-+}
-+
- static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
- {
- 	struct irq_desc *desc = irq_to_desc(at);
-@@ -329,6 +337,16 @@ static void __init reserve_ioapic_gsi_irq_extra(void)
- 	}
- }
- 
-+static void free_ioapic_gsi_irq_base(int idx)
-+{
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
-+	int irq_base = gsi_cfg->irq_base;
-+	int irq_cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
-+
-+	if (irq_base > 0)
-+		free_irqs(irq_base, irq_cnt);
-+}
-+
- static void alloc_ioapic_saved_registers(int idx)
- {
- 	if (ioapics[idx].saved_registers)
-@@ -342,6 +360,11 @@ static void alloc_ioapic_saved_registers(int idx)
- 		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
- }
- 
-+static void free_ioapic_saved_registers(int idx)
-+{
-+	kfree(ioapics[idx].saved_registers);
-+}
-+
- int __init arch_early_irq_init(void)
- {
- 	int node = cpu_to_node(0);
-@@ -3980,6 +4003,25 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	__mp_register_ioapic(id, address, gsi_base, false);
- }
- 
-+int mp_unregister_ioapic(u32 gsi_base)
-+{
-+	int idx;
-+
-+	idx = mp_find_ioapic(gsi_base);
-+	if (idx < 0)
-+		return -EINVAL;
-+
-+	free_ioapic_saved_registers(idx);
-+
-+	free_ioapic_gsi_irq_base(idx);
-+
-+	clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+	memset(&ioapics[idx], 0, sizeof(struct ioapic));
-+	ioapics[idx].mp_config.apicid = 0xff;
-+
-+	return 0;
-+}
-+
- /* Enable IOAPIC early just for system timer */
- void __init pre_init_apic_IRQ0(void)
- {
--- 
-1.8.1.4
+Let me know if it needs tweaking, or if you decide I was talking nonsense
+above.
 
+
+commit c2efb42ab6033388f3bbed2dbe0fb76f2402e04a
+Author: Darren Hart <dvhart@linux.intel.com>
+Date:   Tue Jun 25 20:08:46 2013 -0600
+
+    PCI: Add CircuitCo vendor ID and subsystem ID
+    
+    Add CircuitCo's newly created VENDOR ID and their first board subsystem
+    ID for the MinnowBoard.
+    
+    [bhelgaas: sort, change DEVICE_ID to SUBSYSTEM_ID]
+    Signed-off-by: Darren Hart <dvhart@linux.intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index c129162..4c7b349 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2476,6 +2476,9 @@
+ 
+ #define PCI_VENDOR_ID_ASMEDIA		0x1b21
+ 
++#define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
++#define PCI_SUBSYSTEM_ID_CIRCUITCO_MINNOWBOARD	0x0001
++
+ #define PCI_VENDOR_ID_TEKRAM		0x1de1
+ #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
+ 
