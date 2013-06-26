@@ -1,91 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:47256 "EHLO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752940Ab3FGAEJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 20:04:09 -0400
-Message-ID: <51B12375.5090508@fold.natur.cuni.cz>
-Date: Fri, 07 Jun 2013 02:04:05 +0200
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:65118 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752559Ab3FZTrm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 15:47:42 -0400
+Received: by mail-ie0-f169.google.com with SMTP id 10so32143732ied.14
+        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 12:47:41 -0700 (PDT)
 MIME-Version: 1.0
-To: Takashi Iwai <tiwai@suse.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Oliver Neukum <oneukum@suse.de>, Michal Marek <mmarek@suse.cz>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
-References: <s5h38vqjhk6.wl%tiwai@suse.de> <514A02E2.9030700@fold.natur.cuni.cz> <s5hobedq3nv.wl%tiwai@suse.de>
-In-Reply-To: <s5hobedq3nv.wl%tiwai@suse.de>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAErSpo4FNEVTkArbWKQnDxhMpR+sMEdQHjV=iYQZbD9j7e-pkw@mail.gmail.com>
+References: <20130626025001.GA25384@google.com>
+	<CAE9FiQXmP54PLSOYq17hi54ziDRM0fe+i0sRymz4+yeAxhT3-w@mail.gmail.com>
+	<CAErSpo7MELuvuR9stzrLydn78wxsKwMPE1+sCDVbFextd06j7Q@mail.gmail.com>
+	<CAE9FiQUWB5vFJ+m+UhQAc=q_BeH9U--o7r6_6Deq-KV1ycBC2w@mail.gmail.com>
+	<CAErSpo4FNEVTkArbWKQnDxhMpR+sMEdQHjV=iYQZbD9j7e-pkw@mail.gmail.com>
+Date: Wed, 26 Jun 2013 12:47:41 -0700
+Message-ID: <CAE9FiQXHGt06bmb1QcJsW9g18Cn=wbQpbCZZkqmcTUUcpgtN-w@mail.gmail.com>
+Subject: Re: Current open PCI defects
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Takashi Iwai wrote:
-> At Wed, 20 Mar 2013 19:41:38 +0100,
-> Martin Mokrejs wrote:
+On Wed, Jun 26, 2013 at 12:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jun 26, 2013 at 10:43 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, Jun 26, 2013 at 9:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Tue, Jun 25, 2013 at 11:51 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> On Tue, Jun 25, 2013 at 7:50 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>>> Here's a list of the current PCI defects open in https://bugzilla.kernel.org
+>>>>>
+>>>>> Hint: maintainers really like it when people take the initiative to
+>>>>> resolve open issues.
+>>>>>
+>>>>> Regressions (8 total):
+>>>>
+>>>>>   57961 ExpressCard hot-remove and hot-add not recognized by acpiphp
+>>>>
+>>>> for 3.9 stable:
+>>>> https://patchwork.kernel.org/patch/2676821/
+>>>>
+>>>> Greg, can you pick that for 3.9.8?
+>>>
+>>> That patch is already in Linus' tree and is marked correctly (AFAICS)
+>>> for 3.9 stable:
 >>
->> Hi Takashi,
->>   would you please describe your test system in more detail? How
->> about 'lspci -tv'? And 'lsusb -v' of the broken device?
-> 
-> I left the machine in my office, so I'll give details tomorrow.
-> It's a Realtek 5249 PCI-e card reader, and this appears as a PCI
-> device once when registered by pciehp.  At cold boot, it doesn't
-> appear in lspci.  It appears only when you insert the card.  Also,
-> this device is no USB.  It's supported by mfd/rtsx_pci driver in 3.9.
-> 
+>> Yes, but the one can not be applied to v3.9 cleanly.
+>> so at same time you have backporting for 3.9.
+>>
+>> Greg applied that for 3.9.5 but it has compile error, as v3.9 acpiphp is still
+>> able to be complied as module.
+>>
+>> Per your request, I respin that patch
+>>   https://patchwork.kernel.org/patch/2676821/
+>> that will call request_module("acpiphp") at first.
+>
+> Oh, right, I forgot that.  Then I'll just let you take care of sending
+> that to Greg in the correct format.
 
->> If I have Realtek MediaCardReader enabled in BIOS, no card in it, coldboot, and hot
->> insert an ExpressCard into the slot, the Realtek MediaCardReader pops up in dmesg as
->> a new PCI device. How about you?
-> 
-> The device is hotplugged only when the option of my patch is enabled,
-> i.e. overriding the surprise capability check.
-> 
->> My card does NOT show in lspci (maybe because I never plugged in a data card into it) but does show in lsusb:
-> 
-> So, it's a completely different case...
-> 
->>
->> Bus 002 Device 005: ID 0bda:0138 Realtek Semiconductor Corp. RTS5138 Card Reader Controller
->> Device Descriptor:
->>   bLength                18
->>   bDescriptorType         1
->>   bcdUSB               2.00
->>   bDeviceClass            0 (Defined at Interface level)
->>   bDeviceSubClass         0 
->>   bDeviceProtocol         0 
->>   bMaxPacketSize0        64
->>   idVendor           0x0bda Realtek Semiconductor Corp.
->>   idProduct          0x0138 RTS5138 Card Reader Controller
->>   bcdDevice           38.82
->>   iManufacturer           1 Generic
->>   iProduct                2 USB2.0-CRW
->>   iSerial                 3 20090516388200000
->>
->>
->> Can you try coldboot without a media card inserted before power up without
->> your patch and check whether the CardReader pops up after you plugin some
->> ExpressCard into an ExpressCardSlot (not the CardReader)? I presume it is
->> a laptop. ;-)
-> 
-> When you boot without the card, there is no PCI device.  Triggering
-> PCI bus rescan also doesn't expose it.  But, when you insert the card,
-> you'll get the notification in pciehp (seeing "Card present on Slot"
-> message), but pciehp doesn't do anything right now unless the
-> surprising bit is set.  The device may appear if you trigger the PCI
-> bus rescan at this moment, too, though.
-> 
->> 2. Is the hotplug broken also under acpiphp? And again, does it get detected
->> once you plugin some card into an ExpressCard slot?
-> 
-> acpiphp doesn't load on this machine.
+I sent that before.
 
-While we concluded above that I have a different card (USB-hooked Realtek card)
-I need since about 3.5 kernel pcie_aspm=off to get acpiphp working. It does not
-work for all express cards but maybe this will help you to get *acpiphp* recognize
-the slot? Note: the same kernel command line pcie_aspm=off breaks *pciehp* on
-my laptop, so don't forget to delete it from grub.conf if you want to stick
-with *pciehp* (if your hardware is prone to hit same bug like me:
-https://bugzilla.kernel.org/show_bug.cgi?id=59391 .
-
-Just in case you could switch to acpiphp. ;)
-Martin
+https://patchwork.kernel.org/patch/2676821/
