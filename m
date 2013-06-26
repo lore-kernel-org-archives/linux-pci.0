@@ -1,68 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:60064 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755499Ab3FFHfk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 03:35:40 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH -v5 6/8] PCI/IA64: add host bridge resource release for _CRS path
-Date: Thu, 6 Jun 2013 15:34:51 +0800
-Message-ID: <1370504093-14908-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
-References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7=p7HyUfw4AQ-oQpLvgMfBi5iPfB+Fvrb02FWVHd_FAg@mail.gmail.com>
+References: <20120712050653.20439.11009.stgit@bling.home> <CAErSpo7=p7HyUfw4AQ-oQpLvgMfBi5iPfB+Fvrb02FWVHd_FAg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 25 Jun 2013 22:22:00 -0600
+Message-ID: <CAErSpo6Xf=eF3xv=9CLmDYVMpWT6FSv634s8V-YfreiN6icDUA@mail.gmail.com>
+Subject: Re: [PATCH RFC] pci: ACS quirk for AMD southbridge
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	andihartmann@01019freenet.de,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Set IA64 host bridge release function to make sure root bridge
-related resources get freed during root bus removal.
+[fix Joerg's email address]
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/pci/pci.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 99a9f67..72a1957 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -369,6 +369,13 @@ static void __release_pci_root_info(struct pci_root_info *info)
- 	kfree(info);
- }
- 
-+static void release_pci_root_info(struct pci_host_bridge *bridge)
-+{
-+	struct pci_root_info *info = bridge->release_data;
-+
-+	__release_pci_root_info(info);
-+}
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -446,6 +453,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
- 	}
- 
-+	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
-+			release_pci_root_info, info);
- 	pci_scan_child_bus(pbus);
- 	return pbus;
- 
--- 
-1.7.1
-
-
+On Tue, Jun 25, 2013 at 10:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jul 11, 2012 at 11:18 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+>> We've confirmed that peer-to-peer between these devices is
+>> not possible.  We can therefore claim that they support a
+>> subset of ACS.
+>>
+>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>> Cc: Joerg Roedel <Joerg.Roedel@amd.com>
+>> ---
+>>
+>> Two things about this patch make me a little nervous.  The
+>> first is that I'd really like to have a pci_is_pcie() test
+>> in pci_mf_no_p2p_acs_enabled(), but these devices don't
+>> have a PCIe capability.  That means that if there was a
+>> topology where these devices sit on a legacy PCI bus,
+>> we incorrectly return that we're ACS safe here.  That leads
+>> to my second problem, pciids seems to suggest that some of
+>> these functions have been around for a while.  Is it just
+>> this package that's peer-to-peer safe, or is it safe to
+>> assume that any previous assembly of these functions is
+>> also p2p safe.  Maybe we need to factor in device revs if
+>> that uniquely identifies this package?
+>>
+>> Looks like another useful device to potentially quirk
+>> would be:
+>>
+>> 00:15.0 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
+>> 00:15.1 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
+>> 00:15.2 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB900 PCI to PCI bridge (PCIE port 2)
+>> 00:15.3 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB900 PCI to PCI bridge (PCIE port 3)
+>>
+>> 00:15.0 0604: 1002:43a0
+>> 00:15.1 0604: 1002:43a1
+>> 00:15.2 0604: 1002:43a2
+>> 00:15.3 0604: 1002:43a3
+>>
+>>  drivers/pci/quirks.c |   29 +++++++++++++++++++++++++++++
+>>  1 file changed, 29 insertions(+)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 4ebc865..2c84961 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -3271,11 +3271,40 @@ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
+>>         return pci_dev_get(dev);
+>>  }
+>>
+>> +/*
+>> + * Multifunction devices that do not support peer-to-peer between
+>> + * functions can claim to support a subset of ACS.  Such devices
+>> + * effectively enable request redirect (RR) and completion redirect (CR)
+>> + * since all transactions are redirected to the upstream root complex.
+>> + */
+>> +static int pci_mf_no_p2p_acs_enabled(struct pci_dev *dev, u16 acs_flags)
+>> +{
+>> +       if (!dev->multifunction)
+>> +               return -ENODEV;
+>> +
+>> +       /* Filter out flags not applicable to multifunction */
+>> +       acs_flags &= (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC | PCI_ACS_DT);
+>> +
+>> +       return acs_flags & ~(PCI_ACS_RR | PCI_ACS_CR) ? 0 : 1;
+>> +}
+>> +
+>>  static const struct pci_dev_acs_enabled {
+>>         u16 vendor;
+>>         u16 device;
+>>         int (*acs_enabled)(struct pci_dev *dev, u16 acs_flags);
+>>  } pci_dev_acs_enabled[] = {
+>> +       /*
+>> +        * AMD/ATI multifunction southbridge devices.  AMD has confirmed
+>> +        * that peer-to-peer between these devices is not possible, so
+>> +        * they do support a subset of ACS even though the capability is
+>> +        * not exposed in config space.
+>> +        */
+>> +       { PCI_VENDOR_ID_ATI, 0x4385, pci_mf_no_p2p_acs_enabled },
+>> +       { PCI_VENDOR_ID_ATI, 0x439c, pci_mf_no_p2p_acs_enabled },
+>> +       { PCI_VENDOR_ID_ATI, 0x4383, pci_mf_no_p2p_acs_enabled },
+>> +       { PCI_VENDOR_ID_ATI, 0x439d, pci_mf_no_p2p_acs_enabled },
+>> +       { PCI_VENDOR_ID_ATI, 0x4384, pci_mf_no_p2p_acs_enabled },
+>> +       { PCI_VENDOR_ID_ATI, 0x4399, pci_mf_no_p2p_acs_enabled },
+>>         { 0 }
+>>  };
+>>
+>>
+>
+> I was looking for something else and found this old email.  This patch
+> hasn't been applied and I haven't seen any discussion about it.  Is it
+> still of interest?  It seems relevant to the current ACS discussion
+> [1].
+>
+> If it's relevant, what's the topology?  Apparently they don't have a
+> PCIe capability.  Is the upstream device a PCIe device (a downstream
+> port or a root port)?  I assume anything downstream from these AMD
+> devices (0x4385, 0x439c, etc.) is plain PCI (not PCIe)?
+>
+> Bjorn
+>
+> [1] https://lkml.kernel.org/r/20130607163441.7733.23221.stgit@bling.home
