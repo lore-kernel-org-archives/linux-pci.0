@@ -1,58 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:8544 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851Ab3FLHMI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 03:12:08 -0400
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: 'Mike Turquette' <mturquette@linaro.org>,
-	Stephen Warren <swarren@wwwdotorg.org>
-CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
-	Prashant Gaikwad <pgaikwad@nvidia.com>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:59882 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752788Ab3FZTzu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 15:55:50 -0400
+Received: by mail-oa0-f41.google.com with SMTP id n10so15626451oag.0
+        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 12:55:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <16740668.kbtKGAu32B@vostro.rjw.lan>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <3671062.GUfa7jqN3X@vostro.rjw.lan> <20130626194839.GA30260@google.com> <16740668.kbtKGAu32B@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 26 Jun 2013 13:55:29 -0600
+Message-ID: <CAErSpo7qHU+iF+pOgpEiQmhcT52eGznjyGP3_yo9on04eqVAKg@mail.gmail.com>
+Subject: Re: [PATCH 0/6] Thunderbolt workarounds take 2
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Date: Wed, 12 Jun 2013 12:41:38 +0530
-Subject: RE: [PATCH V3 1/4] ARM: tegra30: clocks: Fix pciex clock
- registration
-Message-ID: <C79B248886DD134989C8FF6B096A91AB91CF1615C6@BGMAIL01.nvidia.com>
-References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
- <51AE3B18.9010604@wwwdotorg.org> <20130611221709.8816.15602@quantum>
-In-Reply-To: <20130611221709.8816.15602@quantum>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	"x86@kernel.org" <x86@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBRdW90aW5nIFN0ZXBoZW4gV2FycmVuICgyMDEzLTA2LTA0IDEyOjA4OjA4KQ0KPiA+IE9uIDA2
-LzA0LzIwMTMgMTI6NTcgUE0sIEpheSBBZ2Fyd2FsIHdyb3RlOg0KPiA+ID4gUmVnaXN0ZXJpbmcg
-cGNpZXggYXMgcGVyaXBoZXJhbCBjbG9jayBpbnN0ZWFkIG9mIGZpeGVkIGNsb2NrIGFzDQo+ID4g
-PiB0ZWdyYV9wZXJpaF9yZXNldF9hc3NlcnQoZGVhc3NlcnQpIGFwaSBvZiB0aGlzIGNsb2NrIGFw
-aSBnaXZlcw0KPiA+ID4gd2FybmluZyBhbmQgdWx0aW1hdGVseSBkb2VzIG5vdCBzdWNjZWVkIHRv
-IGFzc2VydChkZWFzc2VydCkuDQo+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogSmF5IEFnYXJ3
-YWwgPGphZ2Fyd2FsQG52aWRpYS5jb20+DQo+ID4gPiAtLS0NCj4gPiA+IFBhdGNoIGlzIGJhc2Vk
-IG9uIHJlbW90ZXMvZ2l0b3Jpb3VzX3RoaWVycnlyZWRpbmdfbGludXgvdGVncmEvbmV4dCBhbmQN
-Cj4gc2hvdWxkIGJlIGFwcGxpZWQgb24gdG9wIG9mIHRoaXMuDQo+ID4NCj4gPiBGb3IgdGhpcyBj
-aGFuZ2UsIE1pa2UgbWF5IGFzIHdlbGwgYXBwbHkgaXQgZGlyZWN0bHkgdG8gdGhlIGNsb2NrIHRy
-ZWUuDQo+ID4gVGhpZXJyeSBjYW4gdGhlbiBwaWNrIGl0IHVwIHdoZW4gaGUgcmViYXNlcyBoaXMg
-dGVncmEvbmV4dCB0cmVlLg0KPiA+DQo+ID4gVGhhdCBzYWlkLCBJIGRvbid0IHRoaW5rIHlvdSBz
-aG91bGQgbmVlZCBhbnkgb2YgdGhlDQo+ID4gVEVHUkFfQ0xLX0RVUExJQ0FURSgpIGVudHJpZXM7
-IHRoZSBQQ0llIGRyaXZlciBzaG91bGQgZ2V0IGl0cyBjbG9ja3MNCj4gPiBmcm9tIGRldmljZSB0
-cmVlIG5vdywgYW5kIGhlbmNlIHRoZSBkcml2ZXIgbmFtZSBpbiB0aGUgY2xvY2sNCj4gPiByZWdp
-c3RyYXRpb24gc2hvdWxkbid0IGJlIG5lY2Vzc2FyeS4gQWxsIG9mIHRoZXNlDQo+ID4gVEVHUkFf
-Q0xLX0RVUExJQ0FURSgpIGVudHJpZXMgc2hvdWxkIGJlIHJlbW92ZWQgZW4gbWFzcyBzb21ldGlt
-ZQ0KPiBzb29uDQo+ID4gd2l0aCBsdWNrLiBTbywgY2FuIHlvdSBzaW1wbHkgbGVhdmUgdGhlIHR3
-byBURUdSQV9DTEtfRFVQTElDQVRFKCkNCj4gPiBlbnRyaWVzIHVudG91Y2hlZCwgcmF0aGVyIHRo
-YW4gY2hhbmdpbmcgdGhlbT8NCj4gDQo+IFBpbmcgb24gdGhpcyBwYXRjaC4gIEkgY2FuIHRha2Ug
-aXQgdGhyb3VnaCBteSB0cmVlLCBidXQgaXMgdGhlcmUgZ29pbmcgdG8gYmUNCj4gcmV3b3JrIGJh
-c2VkIG9uIFN0ZXBoZW4ncyBjb21tZW50cz8NCg0KSGkgTWlrZSwNCkkgaGF2ZSB1cGxvYWRlZCBu
-ZXh0IHZlcnNpb24gVjQgb2YgdGhpcyBwYXRjaCBhZnRlciB0YWtpbmcgY2FyZSBvZiB0aGlzIGNv
-bW1lbnQuDQo=
+On Wed, Jun 26, 2013 at 2:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Wednesday, June 26, 2013 01:48:39 PM Bjorn Helgaas wrote:
+>> On Wed, Jun 26, 2013 at 02:45:40PM +0200, Rafael J. Wysocki wrote:
+>> > On Wednesday, June 26, 2013 10:25:36 AM Mika Westerberg wrote:
+>> > > On Wed, Jun 26, 2013 at 01:24:25AM +0200, Rafael J. Wysocki wrote:
+>> > > > Would you please CC things touching ACPIPHP to linux-acpi?
+>> > >
+>> > > Sorry about that -- It wasn't listed in the output of get_maintainers.pl so
+>> > > it kind of was forgotten.
+>> > >
+>> > > Do you want me to resend this series with linux-acpi@ included?
+>> >
+>> > No need, just please remember about that in the future.
+>>
+>> Maybe we should do the following?  That covers the following files under
+>> drivers/pci:
+>>
+>>     drivers/pci/hotplug/pciehp_acpi.c
+>>     drivers/pci/hotplug/acpi_pcihp.c
+>>     drivers/pci/hotplug/acpiphp_glue.c
+>>     drivers/pci/hotplug/acpiphp_core.c
+>>     drivers/pci/hotplug/acpiphp_ibm.c
+>>     drivers/pci/pcie/aer/aerdrv_acpi.c
+>>     drivers/pci/pcie/portdrv_acpi.c
+>>     drivers/pci/pci-acpi.c
+>>
+>>
+>> commit 961e3992849e18f9ed6cbcac5c54fb29925341b3
+>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>> Date:   Wed Jun 26 13:38:37 2013 -0600
+>>
+>>     MAINTAINERS: Add ACPI folks for ACPI-related things under drivers/pci
+>>
+>>     Add file patterns so get_maintainers.pl reports both PCI and ACPI folks
+>>     for ACPI-related things in drivers/pci.
+>>
+>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+Added to my pci/misc branch for v3.11.
+
+>> diff --git a/MAINTAINERS b/MAINTAINERS
+>> index 3d7782b..ce65550 100644
+>> --- a/MAINTAINERS
+>> +++ b/MAINTAINERS
+>> @@ -242,6 +242,9 @@ F:        drivers/acpi/
+>>  F:   drivers/pnp/pnpacpi/
+>>  F:   include/linux/acpi.h
+>>  F:   include/acpi/
+>> +F:   drivers/pci/*acpi*
+>> +F:   drivers/pci/*/*acpi*
+>> +F:   drivers/pci/*/*/*acpi*
+>>
+>>  ACPI FAN DRIVER
+>>  M:   Zhang Rui <rui.zhang@intel.com>
+> --
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
