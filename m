@@ -1,116 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21097 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512Ab3FNSHx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 14:07:53 -0400
-Date: Fri, 14 Jun 2013 14:07:19 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jeremy Fitzhardinge <jeremy@goop.org>,
-	xen-devel@lists.xensource.com,
-	virtualization@lists.linux-foundation.org
-Subject: Re: [RFC PATCH v2, part3 07/11] PCI, xen-pcifront: use new PCI
- interfaces to simplify implementation
-Message-ID: <20130614180719.GA21729@phenom.dumpdata.com>
-References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
- <1368719459-24800-8-git-send-email-jiang.liu@huawei.com>
- <20130607145024.GA16631@phenom.dumpdata.com>
- <20130607153822.GA24882@phenom.dumpdata.com>
- <51B20F57.7050100@gmail.com>
- <20130607170706.GB3730@phenom.dumpdata.com>
- <51B4B266.5010100@gmail.com>
- <20130610165801.GA24823@phenom.dumpdata.com>
- <51B607FE.3020108@gmail.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:30326 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267Ab3FZAyO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 20:54:14 -0400
+Message-ID: <51CA3B8F.4010909@huawei.com>
+Date: Wed, 26 Jun 2013 08:53:35 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51B607FE.3020108@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: Re: Changes for v3.11 merge window
+References: <20130625172608.GA11914@google.com>
+In-Reply-To: <20130625172608.GA11914@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 11, 2013 at 01:08:14AM +0800, Jiang Liu wrote:
-> On Tue 11 Jun 2013 12:58:01 AM CST, Konrad Rzeszutek Wilk wrote:
-> > On Mon, Jun 10, 2013 at 12:50:46AM +0800, Jiang Liu wrote:
-> >> On Sat 08 Jun 2013 01:07:06 AM CST, Konrad Rzeszutek Wilk wrote:
-> >>> On Sat, Jun 08, 2013 at 12:50:31AM +0800, Jiang Liu wrote:
-> >>>> On 06/07/2013 11:38 PM, Konrad Rzeszutek Wilk wrote:
-> >>>>> On Fri, Jun 07, 2013 at 10:50:24AM -0400, Konrad Rzeszutek Wilk wrote:
-> >>>>>> On Thu, May 16, 2013 at 11:50:55PM +0800, Jiang Liu wrote:
-> >>>>>>> Use new PCI interfaces to simplify xen-pcifront implementation:
-> >>>>>>> 1) Use pci_create_root_bus() instead of pci_scan_bus_parented()
-> >>>>>>>    because pci_scan_bus_parented() is marked as __deprecated.This
-> >>>>>>>    also gets rid of a duplicated call of pci_bus_start_devices().
-> >>>>>>> 2) Use pci_stop_root_bus() and pci_remove_root_bus() instead of
-> >>>>>>>    open-coded private implementation.
-> >>>>>>> 3) Use pci_set_host_bridge_release() to release data structures
-> >>>>>>>    associated with PCI root buses.
-> >>>>>>> 4) Use pci_bus_get()/pci_bus_put() to manage PCI root bus reference
-> >>>>>>>    count.
-> >>>>>>>
-> >>>>>>> This is also a preparation for coming PCI bus lock enhancement.
-> >>>>>
-> >>>>> With this patch from :
-> >>>>>
-> >>>>>  Merge branch 'pci_lock_v3' of https://github.com/jiangliu/linux into testing
-> >>>>>
-> >>>>>
-> >>>>> it blows up when detaching the device.
-> >>>> Hi Konrad,
-> >>>>    Thanks for testing! According to the log messages, this issue should
-> >>>> be related to pci bus reference counter management. Seems we have done
-> >>>> an extra(unbalanced) release of pci bus device.
-> >>>>    Will investigate it tomorrow!
-> >>>
-> >>> That is quite commendable that you are willing to look over this on
-> >>> the weekend but I am not going to be able to rerun this test until
-> >>> some time in the week. You could enjoy the weekend and just look at
-> >>> this during the week.
-> >>
-> >> Hi Konrad,
-> >>      We should have root-caused this bug, which is caused by
-> >> for_each_pci_root_bus().
-> >> Current implementation doesn't support root bus deletion when walking
-> >> PCI root
-> >> buses by for_each_pci_root_bus(). The reference counter
-> >> (pci_bus->dev.knode_class.n_ref)
-> >> becomes zero after returning from pci_remove_root_bus(), so it triggers
-> >> kref warnings
-> >> and double-free of klist_node object when we call
-> >> pci_get_next_root_bus() to get the
-> >> next PCI root bus.
-> >>      So we will first revert to  list_for_each_entry_safe(bus, temp,
-> >> &pci_root_buses, node)
-> >> and solve this issue in next version of for_each_pci_root_bus().
-> >
-> > That definitly solves the issue. Thanks!
-> >
-> > I used pci_lock_v3 of https://github.com/jiangliu/linux and the fix
-> > below.
-> >
-> > Is there a new patchset you are going to be posting or a git branch
-> > that I can look over?
-> >
-> > Thanks.
-> Hi Konrad,
->      Really appreciate your support! I will try to post a new version 
-> tomorrow,
-> but I think there won't be big changes except addressing some review
-> comments from you.
+Hi Bjorn,
+   It seems missing the patch in misc, https://patchwork.kernel.org/patch/2739861/
 
-I also get this:
+Thanks!
+Yijing
 
-ERROR: "pci_set_host_bridge_release" [drivers/pci/xen-pcifront.ko] undefined!
-ERROR: "pci_create_root_bus" [drivers/pci/xen-pcifront.ko] undefined!
-ERROR: "pci_remove_root_bus" [drivers/pci/xen-pcifront.ko] undefined!
-ERROR: "pci_stop_root_bus" [drivers/pci/xen-pcifront.ko] undefined!
+On 2013/6/26 1:26, Bjorn Helgaas wrote:
+> Below are the patches currently in my "next" branch, planned for
+> release in v3.11.  If I'm missing something important, let me know.
+> 
+> 
+> Alexander Gordeev (2):
+>       PCI: Allocate only as many MSI vectors as requested by driver
+>       x86/MSI: Conserve interrupt resources when using multiple-MSIs
+> 
+> Betty Dall (4):
+>       PCI/AER: Move AER severity defines to aer.h
+>       PCI/AER: Remove "extern" from function declarations
+>       ACPI / APEI: Force fatal AER severity when component has been reset
+>       PCI/AER: Reset link for devices below Root Port or Downstream Port
+> 
+> Bjorn Helgaas (18):
+>       PCI/ACPI: Check acpi_resource_to_address64() return value
+>       powerpc/PCI: Use PCI_UNKNOWN for unknown power state
+>       sparc/PCI: Use PCI_UNKNOWN for unknown power state
+>       PCI/ASPM: Warn when driver asks to disable ASPM, but we can't do it
+>       Merge branch 'pci/misc' into next
+>       Merge branch 'pci/kevin-bus-to-resource' into next
+>       Merge branch 'pci/misc' into next
+>       Merge branch 'pci/jiang-remove-global-list' into next
+>       Merge branch 'pci/shane-amd-ahci-i2c' into next
+>       Merge branch 'pci/alexander-msi' into next
+>       Merge branch 'pci/jiang-iov-fixes' into next
+>       PCI/AER: Don't parse HEST table for non-PCIe devices
+>       PCI/AER: Factor out HEST device type matching
+>       PCI/AER: Set dev->__aer_firmware_first only for matching devices
+>       Merge branch 'pci/betty-aer-v3' into next
+>       Merge branch 'pci/misc' into next
+>       PCI: Return early on allocation failures to unindent mainline code
+>       Merge branch 'pci/jiang-bus-lock-v3' into next
+> 
+> Gu Zheng (2):
+>       PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
+>       PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+> 
+> Jiang Liu (13):
+>       PCI: Introduce pci_bus_{get|put}() to manage PCI bus reference count
+>       PCI/ACPI: Combine duplicate adjacent "if" tests
+>       PCI/ACPI: Introduce "handle" local for economy of expression
+>       PCI/ACPI: Remove unused global list acpi_pci_roots
+>       PCI/ACPI: Use dev_printk(), acpi_handle_print(), pr_xxx() when possible
+>       PCI: Hide remove and rescan sysfs interfaces for SR-IOV virtual functions
+>       ia64/PCI: Clean up pci_scan_root_bus() usage
+>       PCI: Fix refcount issue in pci_create_root_bus() error recovery path
+>       PCI: Rename pci_release_bus_bridge_dev() to pci_release_host_bridge_dev()
+>       m68k/PCI: Remove redundant call of pci_bus_add_devices()
+>       unicore32/PCI: Remove redundant call of pci_bus_add_devices()
+>       PCI: Drop redundant setting of bus->is_added in virtfn_add_bus()
+>       PCI: Simplify IOV implementation and fix reference count races
+> 
+> Jingoo Han (1):
+>       PCI: Replace strict_strtoul() with kstrtoul()
+> 
+> Jon Mason (1):
+>       PCI: Work around Ivytown NTB BAR size issue
+> 
+> Kevin Hao (3):
+>       PCI: Add 0x prefix to BAR register position in __pci_read_base()
+>       PCI: Consolidate calls to pcibios_bus_to_resource() in __pci_read_base()
+>       PCI: Unset resource if initial BAR value is invalid
+> 
+> Libo Chen (1):
+>       PCI: Convert ioapic.c to module_pci_driver
+> 
+> Rafael J. Wysocki (1):
+>       PCI / ACPI / PM: Use correct power state strings in messages
+> 
+> Sebastian Ott (1):
+>       PCI: Add pcibios_release_device()
+> 
+> Shane Huang (3):
+>       PCI: Put Hudson-2 device IDs together
+>       ahci: Add AMD CZ SATA device ID
+>       i2c-piix4: Add AMD CZ SMBus device ID
+> 
+> Wang Sheng-Hui (1):
+>       PCI: Fix INTC comment typo for pci_swizzle_interrupt_pin()
+> 
+> Xudong Hao (1):
+>       PCI: Finish SR-IOV VF setup before adding the device
+> 
+> Yijing Wang (5):
+>       x86/PCI: Increase info->res_num before checking pci_use_crs
+>       PCI: Fix kerneldoc for pci_disable_link_state()
+>       PCI: Replace printks with appropriate pr_*()
+>       PCI: Fix comment typo for PCI_EXP_LNKCAP_CLKPM
+>       PCI: Fix comment typo for pcie_pme_remove()
+> 
+>  Documentation/i2c/busses/i2c-piix4 |   2 +-
+>  arch/ia64/sn/kernel/io_init.c      |  11 +---
+>  arch/m68k/platform/coldfire/pci.c  |   1 -
+>  arch/powerpc/kernel/pci_of_scan.c  |   5 +-
+>  arch/sparc/kernel/pci.c            |   5 +-
+>  arch/unicore32/kernel/pci.c        |   5 --
+>  arch/x86/pci/acpi.c                |   7 +--
+>  drivers/acpi/apei/ghes.c           |  10 ++++
+>  drivers/acpi/pci_root.c            | 101 +++++++++++++-------------------
+>  drivers/ata/ahci.c                 |   1 +
+>  drivers/char/agp/alpha-agp.c       |   2 +-
+>  drivers/char/agp/parisc-agp.c      |   2 +-
+>  drivers/i2c/busses/Kconfig         |   1 +
+>  drivers/i2c/busses/i2c-piix4.c     |   3 +-
+>  drivers/iommu/irq_remapping.c      |  12 ++--
+>  drivers/pci/bus.c                  |  15 +++++
+>  drivers/pci/ioapic.c               |  13 +----
+>  drivers/pci/iov.c                  |  65 +++++++++------------
+>  drivers/pci/msi.c                  |  10 +++-
+>  drivers/pci/pci-acpi.c             |  10 ++--
+>  drivers/pci/pci-sysfs.c            |  48 ++++++++++++----
+>  drivers/pci/pci.c                  |  12 +++-
+>  drivers/pci/pcie/aer/aerdrv.h      |   4 --
+>  drivers/pci/pcie/aer/aerdrv_acpi.c |  47 +++++++--------
+>  drivers/pci/pcie/aer/aerdrv_core.c |  17 +++---
+>  drivers/pci/pcie/aspm.c            |  29 +++++++---
+>  drivers/pci/pcie/pme.c             |   2 +-
+>  drivers/pci/probe.c                | 115 +++++++++++++++++++++++--------------
+>  drivers/pci/quirks.c               |  27 +++++++++
+>  drivers/scsi/megaraid.c            |   2 +-
+>  include/acpi/acpi_bus.h            |   1 -
+>  include/linux/aer.h                |  20 ++++---
+>  include/linux/msi.h                |   1 +
+>  include/linux/pci.h                |   6 +-
+>  include/linux/pci_ids.h            |   4 +-
+>  include/uapi/linux/pci_regs.h      |   2 +-
+>  36 files changed, 352 insertions(+), 266 deletions(-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
-when building it as a module.
+
+-- 
+Thanks!
+Yijing
+
