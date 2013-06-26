@@ -1,138 +1,116 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@huawei.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:55811 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752953Ab3FZXiT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 19:38:19 -0400
+Received: by mail-ob0-f169.google.com with SMTP id up14so71999obb.14
+        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 16:38:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1372177330-28013-3-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1372177330-28013-3-git-send-email-mika.westerberg@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 26 Jun 2013 17:37:58 -0600
+Message-ID: <CAErSpo4hvH08bNrObYODFVcwhhiGOj4cKntyJD6Aw6CjecgCow@mail.gmail.com>
+Subject: Re: [PATCH 2/6] PCI: acpiphp: enable_device(): rescan even if no new
+ devices on slot
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-acpi@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [BUGFIX v2 3/4] PCI, ACPI: fix device destroying order issue when handling dock notification
-Date: Sat, 15 Jun 2013 03:28:00 +0800
-Message-Id: <1371238081-32260-4-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current ACPI glue logic expects that physical devices are destroyed
-before destroying companion ACPI devices, otherwise it will break the
-ACPI unbind logic and cause following warning messages:
-[  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
-[  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
-[  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
-[  180.013656]  port1: Oops, 'acpi_handle' corrupt
-Please refer to https://bugzilla.kernel.org/attachment.cgi?id=104321
-for full log message.
+On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+>
+> pci_scan_slot() returns number of new devices connected *directly*
+> connected to the slot. Current enable_device() checks the return value
+> and stops if it doesn't see a new device.
+>
+> In Thunderbolt chaining case the new device can be deeper in hierarchy, so
+> do the rescan anyway.
+>
+> Because of that we must make sure that pcibios_resource_survey_bus() and
+> check_hotplug_bridge() get called only for a just found bus and not the
+> ones already added to the system. Failure to do so will lead to resource
+> conflicts.
+>
+> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c | 18 +++++++-----------
+>  1 file changed, 7 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index b983e29..80a6ea1 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -685,18 +685,13 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>         struct pci_dev *dev;
+>         struct pci_bus *bus = slot->bridge->pci_bus;
+>         struct acpiphp_func *func;
+> -       int num, max, pass;
+> +       int max, pass;
+>         LIST_HEAD(add_list);
+>
+>         list_for_each_entry(func, &slot->funcs, sibling)
+>                 acpiphp_bus_add(func);
+>
+> -       num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+> -       if (num == 0) {
+> -               /* Maybe only part of funcs are added. */
+> -               dbg("No new device found\n");
+> -               goto err_exit;
+> -       }
+> +       pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+>
+>         max = acpiphp_max_busnr(bus);
+>         for (pass = 0; pass < 2; pass++) {
 
-Above warning messages are caused by following scenario:
-1) acpi_dock_notifier_call() queues a task (T1) onto kacpi_hotplug_wq
-2) kacpi_hotplug_wq handles T1, which invokes acpi_dock_deferred_cb()
-   ->dock_notify()-> handle_eject_request()->hotplug_dock_devices()
-3) hotplug_dock_devices() first invokes registered hotplug callbacks to
-   destroy physical devices, then destroys all affected ACPI devices.
-   Everything seems perfect until now. But the acpiphp dock notification
-   handler will queue another task (T2) onto kacpi_hotplug_wq to really
-   destroy affected physical devices.
-4) kacpi_hotplug_wq finishes T1, and all affected ACPI devices have
-   been destroyed.
-5) kacpi_hotplug_wq handles T2, which destroys all affected physical
-   devices.
+I think this is two logical changes: the change below looks like it
+could by done by itself first, followed by the change above.
 
-So it breaks ACPI glue logic's expection because ACPI devices are destroyed
-in step 3 and physical devices are destroyed in step 5.
+> @@ -707,8 +702,11 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+>                                 max = pci_scan_bridge(bus, dev, max, pass);
+>                                 if (pass && dev->subordinate) {
+> -                                       check_hotplug_bridge(slot, dev);
+> -                                       pcibios_resource_survey_bus(dev->subordinate);
+> +                                       if (!dev->subordinate->is_added) {
+> +                                               check_hotplug_bridge(slot, dev);
+> +                                               pcibios_resource_survey_bus(
+> +                                                       dev->subordinate);
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org # 3.8+
----
- drivers/pci/hotplug/acpiphp_glue.c | 32 ++++++++++++++++++--------------
- 1 file changed, 18 insertions(+), 14 deletions(-)
+It's a shame that pcibios_resource_survey_bus() can't be called twice.
+ It would be nice if it were smart enough to notice on the second call
+that "oh, resources have already been assigned, so there's nothing
+more to be done."  Did you look to see whether that's feasible?
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 5d696f5..a65203b 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -61,6 +61,8 @@ static DEFINE_MUTEX(bridge_mutex);
- static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
-+static void _handle_hotplug_event_func(acpi_handle handle, u32 type,
-+				       void *context);
- static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
- static void free_bridge(struct kref *kref);
- 
-@@ -160,7 +162,7 @@ static void acpiphp_dock_put(void *data)
- }
- 
- static const struct acpi_dock_ops acpiphp_dock_ops = {
--	.handler = handle_hotplug_event_func,
-+	.handler = _handle_hotplug_event_func,
- 	.get = acpiphp_dock_get,
- 	.put = acpiphp_dock_put,
- };
-@@ -1080,22 +1082,13 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
- 	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
- }
- 
--static void _handle_hotplug_event_func(struct work_struct *work)
-+static void _handle_hotplug_event_func(acpi_handle handle, u32 type,
-+				       void *context)
- {
--	struct acpiphp_func *func;
-+	struct acpiphp_func *func = context;
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
- 				      .pointer = objname };
--	struct acpi_hp_work *hp_work;
--	acpi_handle handle;
--	u32 type;
--
--	hp_work = container_of(work, struct acpi_hp_work, work);
--	handle = hp_work->handle;
--	type = hp_work->type;
--	func = (struct acpiphp_func *)hp_work->context;
--
--	acpi_scan_lock_acquire();
- 
- 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
- 
-@@ -1128,7 +1121,18 @@ static void _handle_hotplug_event_func(struct work_struct *work)
- 		warn("notify_handler: unknown event type 0x%x for %s\n", type, objname);
- 		break;
- 	}
-+}
-+
-+static void _handle_hotplug_event_cb(struct work_struct *work)
-+{
-+	struct acpiphp_func *func;
-+	struct acpi_hp_work *hp_work;
- 
-+	hp_work = container_of(work, struct acpi_hp_work, work);
-+	func = (struct acpiphp_func *)hp_work->context;
-+	acpi_scan_lock_acquire();
-+	_handle_hotplug_event_func(hp_work->handle, hp_work->type,
-+				    hp_work->context);
- 	acpi_scan_lock_release();
- 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
- 	put_bridge(func->slot->bridge);
-@@ -1156,7 +1160,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
- 	 * don't deadlock on hotplug actions.
- 	 */
- 	get_bridge(func->slot->bridge);
--	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
-+	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_cb);
- }
- 
- /*
--- 
-1.8.1.2
-
+> +                                       }
+>                                         __pci_bus_size_bridges(dev->subordinate,
+>                                                                &add_list);
+>                                 }
+> @@ -742,8 +740,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>                 }
+>         }
+>
+> -
+> - err_exit:
+>         return 0;
+>  }
+>
+> --
+> 1.8.3.1
+>
