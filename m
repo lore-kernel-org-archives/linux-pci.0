@@ -1,47 +1,33 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: 'Thierry Reding' <thierry.reding@gmail.com>
-CC: Stephen Warren <swarren@wwwdotorg.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
-	Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Date: Tue, 11 Jun 2013 16:10:43 +0530
-Subject: RE: [PATCH V3 2/4] ARM: tegra: pcie: Add tegra3 support
-Message-ID: <C79B248886DD134989C8FF6B096A91AB91B616BEF3@BGMAIL01.nvidia.com>
-References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
- <1370372252-4332-2-git-send-email-jagarwal@nvidia.com>
- <51AE3D3B.6080102@wwwdotorg.org> <20130610195028.GB25859@mithrandir>
- <C79B248886DD134989C8FF6B096A91AB91B616BEED@BGMAIL01.nvidia.com>
- <20130611101610.GB932@manwe>
-In-Reply-To: <20130611101610.GB932@manwe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:20306 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751445Ab3FZDCT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Jun 2013 23:02:19 -0400
+Message-ID: <1372215737.30572.484.camel@ul30vt.home>
+Subject: Re: Current open PCI defects
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Tue, 25 Jun 2013 21:02:17 -0600
+In-Reply-To: <20130626025001.GA25384@google.com>
+References: <20130626025001.GA25384@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > I have mentioned it in description as -> "Corrected logic in read/write
-> config space to display right device number on bus 0"
-> >
-> > > Device 0:00.0 is usually the root complex, and device 0:01.0, 0:02.0
-> > > etc are the root ports. The change proposed above makes 0:00.0 the
-> > > first root port, therefore breaking what systems usually expect.
-> > >
-> > I was seeing root port 2 in cardhu being enumerated as pci_bus 0000:03,
-> which I thought should be pci_bus 0000:02, so made this change.
+On Tue, 2013-06-25 at 20:50 -0600, Bjorn Helgaas wrote:
+> Here's a list of the current PCI defects open in https://bugzilla.kernel.org
 > 
-> Yes, that's done on purpose to mirror what a typical PCI tree looks like, as I
-> already explained. So unless this fixes a real bug I'll just drop it while
-> applying.
+> Hint: maintainers really like it when people take the initiative to
+> resolve open issues.
+> 
+> Regressions (8 total):
+> 
+>   15388	After suspend to ram, laptop doesn't connect to the wired network. Sky2 error. Marvell 88E8036
+>   41622	[REGRESSION][BISECTED] Notebook crashes upon detecting the PCI subsystem with kernels >= 2.6.24-rc7
+>   42606	PCI I/O range not assigned under newer kernels
+>   44881	pci_find_upstream_pcie_bridge() warning
 
-Please apply V4 patch instead which does not contain this change along with taking care of other review comments.
+http://www.spinics.net/lists/linux-pci/msg23262.html
+
