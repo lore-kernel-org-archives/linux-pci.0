@@ -1,82 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53639 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751754Ab3FZVQ6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 26 Jun 2013 17:16:58 -0400
-Message-ID: <1372281416.2720.28.camel@envy.home>
-Subject: Re: [PATCH 7/8] pci: Add CircuitCo VENDOR ID and MinnowBoard DEVICE
- ID
-From: Darren Hart <dvhart@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	danders@circuitco.com, vishal.l.verma@intel.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Wed, 26 Jun 2013 14:16:56 -0700
-In-Reply-To: <CAErSpo6=1i76RRmJSUi+BpD9D0WrXaML4HkGLn0C=+6=ohB0uQ@mail.gmail.com>
-References: <cover.1372211451.git.dvhart@linux.intel.com>
-	 <83879b07cd4ce95f086420d1faa926c1692d63b4.1372211451.git.dvhart@linux.intel.com>
-	 <20130626163250.GA29299@google.com> <1372266904.8177.83.camel@envy.home>
-	 <CAErSpo6=1i76RRmJSUi+BpD9D0WrXaML4HkGLn0C=+6=ohB0uQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:60879 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751946Ab3FZC65 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 22:58:57 -0400
+Received: by mail-oa0-f45.google.com with SMTP id j1so14087920oag.4
+        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 19:58:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <51C32B64.1010608@gmail.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+ <1369583597-3801-2-git-send-email-jiang.liu@huawei.com> <20130617200639.GA7877@google.com>
+ <51C32B64.1010608@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 25 Jun 2013 20:58:36 -0600
+Message-ID: <CAErSpo7ZhVaj3OY-Eiw=bh+1fve_ZinP-rT_qN6h7OC=u=_RGQ@mail.gmail.com>
+Subject: Re: [PATCH v3, part2 01/20] PCI: introduce hotplug-safe PCI bus iterators
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-06-26 at 13:37 -0600, Bjorn Helgaas wrote:
-> On Wed, Jun 26, 2013 at 11:15 AM, Darren Hart <dvhart@linux.intel.com> wrote:
-> > On Wed, 2013-06-26 at 10:32 -0600, Bjorn Helgaas wrote:
-> 
-> >> +#define PCI_VENDOR_ID_CIRCUITCO              0x1cc8
-> >> +
-> >>  #define PCI_VENDOR_ID_TEKRAM         0x1de1
-> >>  #define PCI_DEVICE_ID_TEKRAM_DC290   0xdc29
-> >
-> >
-> > Thanks Bjorn. When I reuse this Subsystem ID and there is more than one
-> > usage, I should send a patch to pci_ids.h adding it and replace the hex
-> > value in all drivers with the new define. Is that right?
-> 
-> Yeah, that's what I was thinking.
-> 
-> But Peter's comment makes more sense to me now.  The spec refers to
-> that config register as "Subsystem ID," not "Subsystem Device ID," but
-> I was confused because most existing usage treats it as a device ID.
-> For example, the field in struct pci_device_id is named "subdevice,"
-> and all the existing #defines in pci_ids.h are of the form
-> PCI_SUBDEVICE_ID_*.
-> 
-> Device IDs are pretty specific identifiers, so I was thinking that a
-> "sub-device ID" would be even more specific.  Then it would make no
-> sense to have a "sub-device ID" that was as generic as "MINNOWBOARD."
-> But the register is actually *not* a "sub-device ID," and I can see
-> that using the same Subsystem ID for all the devices on a board might
-> make sense.
-> 
-> So I think the name PCI_DEVICE_ID_CIRCUITCO_MINNOWBOARD is a bit of a
-> misnomer, and something like PCI_SUBSYSTEM_CIRCUITCO_MINNOWBOARD would
-> make it more clear that it really isn't sharing the device ID space
-> assigned to CircuitCo.  It would make perfect sense to have a Device
-> ID, e.g., "PCI_DEVICE_ID_CIRCUIT_CO_xxx 0x0001," that has nothing to
-> do with the Subsystem ID 0x0001.
-> 
-> If you want to do something like that (or even keep your original
-> patch), I can put that in my -next branch.  Just let me know.
-> 
-> Bjorn
+On Thu, Jun 20, 2013 at 10:18 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> On 06/18/2013 04:06 AM, Bjorn Helgaas wrote:
+>> On Sun, May 26, 2013 at 11:52:58PM +0800, Jiang Liu wrote:
+>>> Introduce hotplug-safe PCI bus iterators as below, which hold a
+>>> reference on the returned PCI bus object.
+>>> bool pci_bus_exists(int domain, int busnr);
+>>> struct pci_bus *pci_get_bus(int domain, int busnr);
+>>> struct pci_bus *pci_get_next_bus(struct pci_bus *from);
+>>> struct pci_bus *pci_get_next_root_bus(struct pci_bus *from);
+>>> #define for_each_pci_bus(b) for (b = NULL; (b = pci_get_next_bus(b)); )
+>>> #define for_each_pci_root_bus(b)  \
+>>>              for (b = NULL; (b = pci_get_next_root_bus(b)); )
+>>>
+>>> The long-term goal is to remove hotplug-unsafe pci_find_bus(),
+>>> pci_find_next_bus() and the global pci_root_buses list.
+>>
+>> I think you should mark the unsafe interfaces as __deprecated so
+>> users will get compile-time warnings.
+>>
+>> I don't think pci_bus_exists() is a safe interface, because the value
+>> it returns may be incorrect before the caller can look at it.  The
+>> only safe thing would be to make it so we try to create the bus
+>> and return failure if it already exists.  Then the mutex can be in
+>> the code that creates the bus.
+>>
+>> I don't see any uses of for_each_pci_bus(), so please remove that.
+>>
+>> It sounds like we don't have a consensus on how to iterate over
+>> PCI root buses.  If you separate that from the pci_get_bus()
+>> changes, maybe we can at least move forward on the pci_get_bus()
+>> stuff.
+> Hi Bjorn and Yinghai,
+>     I have thought about the way to implement pci_for_each_root_bus()
+> again. And there are several possible ways here:
+> 1) Yinghai has a patch set implementing an iterator for PCI host
+> bridges, but we can't safely refer the PCI root bus associated with a
+> host bridge device because the host bridge doesn't hold a reference to
+> associated PCI root bus. So we need to find a safe way to refer the PCI
+> root bus associated with a PCI host bridge.
+> 2) Unexport pci_root_buses and convert it to klist, then we could walk
+> all root buses effectively. This solution is straight-forward, but it
+> may break out of tree drivers.
+> 3) Keep current implementation, which does waste some computation cycles:(
+>
+> So what's your thoughts about above solutions? Or any other suggestions?
+> Regards!
+> Gerry
 
+Iteration is generally the wrong approach because it doesn't fit well
+with hot plug.  I recognize that it may be impossible to fix all the
+places that currently iterate over root buses, so we may have to
+accept iteration at least in the short term.
 
-I would be happy to change DEVICE to SUBSYSTEM in the the pci_ids.h:
+Sometimes when we fix the things we *know* how to fix, it makes it
+easier to see how to fix the hard problem.  Your pci_bus ref counting
+fixes seem like a clear step forward, and I'd like to get them in
+ASAP, even if the root bus iteration isn't figured out yet.
 
-+#define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
-+#define PCI_SUBSYSTEM_ID_CITCUITCO_MINNOWBOARD	0x0001
+So my advice is, let's do the simple stuff we know how to do now, then
+worry about the harder stuff later.
 
-Would you like me to send another patch?
-
--- 
-Darren Hart
-Intel Open Source Technology Center
-Yocto Project - Technical Lead - Linux Kernel
-
+Bjorn
