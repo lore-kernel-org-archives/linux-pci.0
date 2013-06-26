@@ -1,46 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <51B7E1C7.9030004@gmail.com>
-References: <1370951543-15841-1-git-send-email-jiang.liu@huawei.com>
-	<CAN_LGv1hrLnYkPHycyyd35ZipWWznXM_0cdj8Rnh1WxiTZL=4A@mail.gmail.com>
-	<51B7170E.2060608@gmail.com>
-	<CAN_LGv26adLa5RBhwhCfvALFx78j4HdvzVH1PaAuhvWXSeqyMw@mail.gmail.com>
-	<51B73BAB.3030406@gmail.com>
-	<CAN_LGv3iwgp_8dkt1ouCD-FFGau3h7L25ORUW2J-rz30_4ZYTA@mail.gmail.com>
-	<51B7E1C7.9030004@gmail.com>
-Date: Thu, 13 Jun 2013 00:37:25 +0600
-Message-ID: <CAN_LGv3Cqw6gyhy3qDBeh9b1QmHpsQrJkZg-jRrLO2YOfvyLAA@mail.gmail.com>
-Subject: Re: [PATCH] ACPIPHP: fix device destroying order issue in handling
- dock notification
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:52510 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752014Ab3FZWfD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 26 Jun 2013 18:35:03 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
+Date: Thu, 27 Jun 2013 00:44:30 +0200
+Message-ID: <1606295.H1unv8GDgk@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQVCQKjPa1dVKhAubvD+d=rudOxLaRMYAr-GAC7eSSz09Q@mail.gmail.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <CAE9FiQW9xuu6WjH59td6Jve10kokoxU4mNqj4DRyg7beqBzHDA@mail.gmail.com> <CAE9FiQVCQKjPa1dVKhAubvD+d=rudOxLaRMYAr-GAC7eSSz09Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/6/12 Jiang Liu <liuj97@gmail.com>:
-> Hi Alexander,
->      In the initially-docked case, the failure is caused by an issue in
-> the intel sound card driver. Seems something is wrong with reference
-> count management and it never returns to zero on driver detach.
-> Could you please help to disable the Intel sound card driver and try
-> again?
+On Wednesday, June 26, 2013 03:31:18 PM Yinghai Lu wrote:
+> On Wed, Jun 26, 2013 at 3:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Wed, Jun 26, 2013 at 3:18 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
+> >> <mika.westerberg@linux.intel.com> wrote:
+> >>> Thunderbolt PCI-to-PCI bridges typically use BIOS "assisted" enumeration.
+> >>> This means that the BIOS will allocate bridge resources based on some
+> >>> assumptions of a maximum Thunderbolt chain. It also disables native PCIe
+> >>> hotplug of the root port where the Thunderbolt host router is connected.
+> >
+> > We should not need tricks in this patch after
+> >
+> > https://patchwork.kernel.org/patch/2766521/
+> >
+> > [2/3] PCI / ACPI: Use boot-time resource allocation rules during hotplug
+> >
+> 
+> BTW, Rafael, looks like that "boot-time" is not accurate here.
+> 
+> During acpi hotplug, firmare could do extra help for us like assign
+> some resources to pci device bars, so it is NOT "boot-time".
 
-I have discussed the problem with pulseaudio developers. According to
-my understanding (that may be wrong), we have a classic ABBA deadlock.
-The device will go away when its reference count goes to zero. The
-reference count will go to zero when there are no open fds. The mixer
-fd will be closed when it gets a -EIO, i.e. after the device goes
-away.
+Well, Linus has merged it already and besides "boot-time rules" need not
+mean "boot-time resources", right?
 
-If the above understanding is correct, I think that waiting for zero
-references should be at least questioned.
+Rafael
+
 
 -- 
-Alexander E. Patrakov
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
