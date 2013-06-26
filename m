@@ -1,92 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:18532 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751638Ab3FKGA1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 02:00:27 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Arnd Bergmann' <arnd@arndb.de>
-Cc: 'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	linux-arm-kernel@lists.infradead.org,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	linux-samsung-soc@vger.kernel.org,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	Jingoo Han <jg1.han@samsung.com>
-References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
- <201306071943.18407.arnd@arndb.de>
- <000001ce65b5$e45477f0$acfd67d0$@samsung.com>
- <201306101722.10146.arnd@arndb.de>
-In-reply-to: <201306101722.10146.arnd@arndb.de>
-Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung
- EXYNOS5440 SoC
-Date: Tue, 11 Jun 2013 15:00:25 +0900
-Message-id: <002e01ce6668$f785dc20$e6919460$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [PATCH 0/6] Thunderbolt workarounds take 2
+Date: Wed, 26 Jun 2013 22:01:49 +0200
+Message-ID: <16740668.kbtKGAu32B@vostro.rjw.lan>
+In-Reply-To: <20130626194839.GA30260@google.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <3671062.GUfa7jqN3X@vostro.rjw.lan> <20130626194839.GA30260@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, June 11, 2013 12:22 AM, Arnd Bergmann wrote:
-> On Monday 10 June 2013, Jingoo Han wrote:
-> > On Saturday, June 08, 2013 2:43 AM, Arnd Bergmann wrote:
-> > For multiple domains, how can I fix the DT properties?
+On Wednesday, June 26, 2013 01:48:39 PM Bjorn Helgaas wrote:
+> On Wed, Jun 26, 2013 at 02:45:40PM +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, June 26, 2013 10:25:36 AM Mika Westerberg wrote:
+> > > On Wed, Jun 26, 2013 at 01:24:25AM +0200, Rafael J. Wysocki wrote:
+> > > > Would you please CC things touching ACPIPHP to linux-acpi?
+> > > 
+> > > Sorry about that -- It wasn't listed in the output of get_maintainers.pl so
+> > > it kind of was forgotten.
+> > > 
+> > > Do you want me to resend this series with linux-acpi@ included?
+> > 
+> > No need, just please remember about that in the future.
 > 
-> Domains are a Linux concept, you have to pick a new domain number for each
-> struct hw_pci you register.
-
-Hi Arnd,
-
-Thank you for your reply.
-It is very helpful. :)
-
-I will set domain numbers for each struct hw_pci.
-
+> Maybe we should do the following?  That covers the following files under
+> drivers/pci:
 > 
-> > Current DT properties are as below:
-> >
-> > +	pcie0@40000000 {
-> > +		compatible = "samsung,exynos5440-pcie";
-> > +		reg = <0x40000000 0x4000
-> > +			0x290000 0x1000
-> > +			0x270000 0x1000
-> > +			0x271000 0x40>;
-> > +		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-> > +		#address-cells = <3>;
-> > +		#size-cells = <2>;
-> > +		device_type = "pci";
-> > +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
-> > +			  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
-> > +			  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
-> > +	};
+>     drivers/pci/hotplug/pciehp_acpi.c
+>     drivers/pci/hotplug/acpi_pcihp.c
+>     drivers/pci/hotplug/acpiphp_glue.c
+>     drivers/pci/hotplug/acpiphp_core.c
+>     drivers/pci/hotplug/acpiphp_ibm.c
+>     drivers/pci/pcie/aer/aerdrv_acpi.c
+>     drivers/pci/pcie/portdrv_acpi.c
+>     drivers/pci/pci-acpi.c
 > 
-> An unrelated comment: your first "reg" field seems to overlap with part
-> of your configuration space. Is that intentional?
-
-Yes, intentional.
-But, I will try to remove it.
-
 > 
-> Also, shouldn't your memory space end on a 256MB boundary, rather than
-> extend up to 0x50203fff?
-
-According to the manual of Exynos PCIe, each memory space for Exynos PCIe
-can support 512MB, including I/O, CFG regions.
-
-Is there any problem when over 256MB boundary is used?
-Please let me know. :)
-
-
-Best regards,
-Jingoo Han
-
+> commit 961e3992849e18f9ed6cbcac5c54fb29925341b3
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Wed Jun 26 13:38:37 2013 -0600
 > 
-> 	Arnd
+>     MAINTAINERS: Add ACPI folks for ACPI-related things under drivers/pci
+>     
+>     Add file patterns so get_maintainers.pl reports both PCI and ACPI folks
+>     for ACPI-related things in drivers/pci.
+>     
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 3d7782b..ce65550 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -242,6 +242,9 @@ F:	drivers/acpi/
+>  F:	drivers/pnp/pnpacpi/
+>  F:	include/linux/acpi.h
+>  F:	include/acpi/
+> +F:	drivers/pci/*acpi*
+> +F:	drivers/pci/*/*acpi*
+> +F:	drivers/pci/*/*/*acpi*
+>  
+>  ACPI FAN DRIVER
+>  M:	Zhang Rui <rui.zhang@intel.com>
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
