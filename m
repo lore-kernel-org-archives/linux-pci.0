@@ -1,86 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:33752 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755084Ab3FNCaQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 22:30:16 -0400
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:36995 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166Ab3FZHiR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 03:38:17 -0400
 MIME-Version: 1.0
-In-Reply-To: <51BA7B3D.1020402@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
-	<51BA7B3D.1020402@huawei.com>
-Date: Thu, 13 Jun 2013 19:30:14 -0700
-Message-ID: <CAE9FiQX-jCZYPyxeHCp2h-6qx1GMyQYuaTk5JwZR6H1t4jRg9g@mail.gmail.com>
-Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
+In-Reply-To: <20130625211516.GA8494@google.com>
+References: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
+	<1370066593-22736-3-git-send-email-yinghai@kernel.org>
+	<20130625211516.GA8494@google.com>
+Date: Wed, 26 Jun 2013 00:38:17 -0700
+Message-ID: <CAE9FiQWfmr+nDb8CH7OBiZFypStQyg_91E-6NWez0SdrPweewg@mail.gmail.com>
+Subject: Re: [PATCH v5 3/7] PCI: Use pci_walk_bus to detect unassigned resources
 From: Yinghai Lu <yinghai@kernel.org>
-To: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
-Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 13, 2013 at 7:09 PM, Jiang Liu (Gerry) <jiang.liu@huawei.com> wrote:
-> On 2013/6/14 2:42, Yinghai Lu wrote:
->>
->> On Thu, Jun 13, 2013 at 9:32 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->>>
->>> Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
->>> dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
->>> four bugs related to Sony VAIO VPCZ23A4R dock support.
->>> 1) can't correctly detect hotplug slot for dock state
->>> 2) resource leak on undocking
->>> 3) resource allocation failure for dock devices
->>> 4) one bug in intel_snd_hda driver
->>>
->>> The first patch fixes issue 1, and the second patch fixes issue 2.
->>> These two patches, if accepted, should be material for stable branches
->>> too.
->>> Patch 3-9 are code improvement for ACPI and dock driver.
->>>
->>> I have found the root cause for issue three, but still working on
->>> solutions, and seems can't be solve in short time. So please help
->>> to review and test patches for issue 1) and 2) first.
->>
->>
->> the 3) is about pci resource allocation?
->> because pcibios_add_bus is called too early?
->>
->> If that is case, we should have something like attached patch for it.
->>
->> With that, we will not need to worry about _OSC set for 3.10 etc.
->>
-> Hi Yinghai,
->    Seems not related to pcibios_add_bus(). According to my
-> investigation, the issue is caused by difference in PCI resource
-> assignment between boot time and runtime hotplug. On x86 platforms,
-> it respects PCI resource assignment from BIOS and only reassign
-> resources for unassigned BARs. But with acpiphp, it ignores BIOS
-> resource assignment and reassign all resources by OS.
->    If we have enough resources, reassigning all PCI resources should
-> work too, but may fail if we are under resource constraints. On the
-> other handle, current PCI IOMM align algorithm may waste huge MMIO
-> address space if we have some PCI devices with huge IOMM BAR.
->    On this Sony laptop, BIOS allocates limited IOMM resources for
-> the dock station and the dock station has a gfx which has a 256MB
-> IOMM BAR. So current acpiphp driver fails to allocate resources
-> for most devices on the dock station.
+On Tue, Jun 25, 2013 at 2:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> +static int __init check_unassigned_resources(struct pci_dev *dev, void *data)
+>
+> I'm not going to add a function named "check_*()" because the name gives no
+> clue about what the return value means.  If it's a boolean function, the
+> name should be something like a question that has a yes/no answer.
 
-Is it a regression?
+that prototype return int is required by pci_walk_bus().
 
->     Currently I'm trying to change acpiphp to respect BIOS resource
-> assignment by calling pcibios_survey_resource_bus(), as in pci_root.c.
-> The other way is to change the IOMM resource allocation algorithm,
-> but obviously it's much more risky of regressions if changing the
-> algorithm.
+drivers/pci/bus.c:void pci_walk_bus(struct pci_bus *top, int
+(*cb)(struct pci_dev *, void *)
 
-that is not going to help, need to increase bridge resource.
+return 1, will return early from pci_walk_bus().
 
-please check if BIOS have setup option about hotplug MMIO pad size.
+count_unassigned_resources() is not good name too, as we bail out early.
+find_unassigned_resources() is more weird, looks like it want to return resource
 
 Yinghai
