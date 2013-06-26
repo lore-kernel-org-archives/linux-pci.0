@@ -1,108 +1,129 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Arnd Bergmann' <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	linux-samsung-soc@vger.kernel.org,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	Jingoo Han <jg1.han@samsung.com>
-References: <003801ce6756$6578ff80$306afe80$@samsung.com>
- <3532163.SqzZzxO4BR@wuerfel>
-In-reply-to: <3532163.SqzZzxO4BR@wuerfel>
-Subject: Re: [PATCH V4 3/3] ARM: dts: Add pcie controller node for Samsung
- EXYNOS5440 SoC
-Date: Thu, 13 Jun 2013 14:34:14 +0900
-Message-id: <003a01ce67f7$a3fc7f60$ebf57e20$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+From: Yinghai Lu <yinghai@kernel.org>
+To: stable@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <jiang.liu@huawei.com>
+Cc: Gavin Guo <tuffkidtt@gmail.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3.9 stable] PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check
+Date: Wed, 26 Jun 2013 14:34:29 -0700
+Message-Id: <1372282469-7364-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <20130605223852.GA16729@kroah.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, June 12, 2013 7:56 PM, Arnd Bergmann wrote:
-> 
-> Thanks for the update! A few comments again:
-> 
-> On Wednesday 12 June 2013 19:20:00 Jingoo Han wrote:
-> >
-> > diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> > index d55042b..efe7d39 100644
-> > --- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> > +++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> > @@ -30,4 +30,12 @@
-> >                         clock-frequency = <50000000>;
-> >                 };
-> >         };
-> > +
-> > +       pcie0@40000000 {
-> > +               reset-gpio = <5>;
-> > +       };
-> > +
-> > +       pcie1@60000000 {
-> > +               reset-gpio = <22>;
-> > +       };
-> >  };
-> 
-> As mentioned before, please use the gpio binding to pass gpio numbers.
+Backporting for v3.9 for 3f327e39b4 (PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check).
 
-OK, I will use gpio binding.
+When a PCI host bridge device receives a Bus Check notification, we
+must re-enumerate starting with the bridge to discover changes (devices
+that have been added or removed).
 
-> 
-> > diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
-> > index f6b1c89..2c15f9d 100644
-> > --- a/arch/arm/boot/dts/exynos5440.dtsi
-> > +++ b/arch/arm/boot/dts/exynos5440.dtsi
-> > @@ -216,4 +216,42 @@
-> >                 clock-names = "rtc";
-> >                 status = "disabled";
-> >         };
-> > +
-> > +       pcie0@0x290000 {
-> > +               compatible = "samsung,exynos5440-pcie";
-> > +               reg = <0x290000 0x1000
-> > +                       0x270000 0x1000
-> > +                       0x271000 0x40>;
-> > +               interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-> > +               clocks = <&clock 28>, <&clock 27>;
-> > +               clock-names = "pcie", "pcie_bus";
-> > +               #address-cells = >;
-> > +               #size-cells = <2>;
-> > +               device_type = "pci";
-> > +               ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
-> > +                         0x81000000 0 0          0x40200000 0 0x00010000   /* downstream I/O */
-> > +                         0x82000000 0 0x40210000 0x40210000 0 0x10000000>; /* non-prefetchable memory */
-> 
-> I think you did not reply to my question regarding the size of the
-> memory space. Does it extend from 0x40210000 to 0x50210000,
-> or from 0x40210000 to 0x50000000. You probably meant the latter
-> but wrote the former. If not, please add a comment for clarification.
+Prior to 668192b678 ("PCI: acpiphp: Move host bridge hotplug to
+pci_root.c"), this happened in _handle_hotplug_event_bridge().  After that
+commit, _handle_hotplug_event_bridge() is not installed for host bridges,
+and the host bridge notify handler, _handle_hotplug_event_root() did not
+re-enumerate.
 
-OK, I see.
-It extends to 0x60000000. I will modify it.
+This patch adds re-enumeration to _handle_hotplug_event_root().
 
-> 
-> > +               #interrupt-cells = <1>;
-> > +               interrupt-map-mask = <0 0 0 0>;
-> > +               interrupt-map = <0x0 0 &gic 53>;
-> > +       };
-> 
-> So all PCI IntA interrupts are mapped to a single gic interrupt? That
-> sounds like a bottleneck when you have a lot of devices on the bus.
-> Do you have MSI support?
+This fixes cases where we don't notice the addition or removal of
+PCI devices, e.g., the PCI-to-USB ExpressCard in the bugzilla below.
 
-INTA, INTB, INTC, and INTD are mapped to a single gic interrupt.
-Exynos5440 PCIe has MSI support; however, MSI support patch will
-be posted later.
+-v1: Backport of 3f327e39b4 to v3.9 by Bjorn Helgaas <bhelgaas@google.com>
+-v2: use request_module("acpiphp") for acpiphp as module instead of built-in.
 
-> 
-> 	Arnd
+[bhelgaas: changelog, references]
+Reference: https://lkml.kernel.org/r/CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com
+Reference: https://bugzilla.kernel.org/show_bug.cgi?id=57961
+Reported-by: Gavin Guo <tuffkidtt@gmail.com>
+Tested-by: Gavin Guo <tuffkidtt@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+---
+ drivers/acpi/pci_root.c            |    7 ++++++-
+ drivers/pci/hotplug/acpiphp_glue.c |   14 ++++++++++++++
+ include/linux/pci-acpi.h           |    2 ++
+ 3 files changed, 22 insertions(+), 1 deletion(-)
+
+Index: linux-3.9.4/drivers/acpi/pci_root.c
+===================================================================
+--- linux-3.9.4.orig/drivers/acpi/pci_root.c
++++ linux-3.9.4/drivers/acpi/pci_root.c
+@@ -665,6 +665,7 @@ static void handle_root_bridge_removal(s
+ 		kfree(ej_event);
+ }
+ 
++void (*acpiphp_check_host_bridge)(acpi_handle handle);
+ static void _handle_hotplug_event_root(struct work_struct *work)
+ {
+ 	struct acpi_pci_root *root;
+@@ -687,7 +688,11 @@ static void _handle_hotplug_event_root(s
+ 		/* bus enumerate */
+ 		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
+ 				 (char *)buffer.pointer);
+-		if (!root)
++		if (root) {
++			request_module("acpiphp");
++			if (acpiphp_check_host_bridge)
++				acpiphp_check_host_bridge(handle);
++		} else
+ 			handle_root_bridge_insertion(handle);
+ 
+ 		break;
+Index: linux-3.9.4/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-3.9.4.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-3.9.4/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1122,6 +1122,18 @@ check_sub_bridges(acpi_handle handle, u3
+ 	return AE_OK ;
+ }
+ 
++static void __acpiphp_check_host_bridge(acpi_handle handle)
++{
++	struct acpiphp_bridge *bridge;
++
++	bridge = acpiphp_handle_to_bridge(handle);
++	if (bridge)
++		acpiphp_check_bridge(bridge);
++
++	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
++		ACPI_UINT32_MAX, check_sub_bridges, NULL, NULL, NULL);
++}
++
+ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ {
+ 	struct acpiphp_bridge *bridge;
+@@ -1305,6 +1317,7 @@ static struct acpi_pci_driver acpi_pci_h
+ int __init acpiphp_glue_init(void)
+ {
+ 	acpi_pci_register_driver(&acpi_pci_hp_driver);
++	acpiphp_check_host_bridge = __acpiphp_check_host_bridge;
+ 
+ 	return 0;
+ }
+@@ -1317,6 +1330,7 @@ int __init acpiphp_glue_init(void)
+  */
+ void  acpiphp_glue_exit(void)
+ {
++	acpiphp_check_host_bridge = NULL;
+ 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
+ }
+ 
+Index: linux-3.9.4/include/linux/pci-acpi.h
+===================================================================
+--- linux-3.9.4.orig/include/linux/pci-acpi.h
++++ linux-3.9.4/include/linux/pci-acpi.h
+@@ -43,6 +43,8 @@ static inline acpi_handle acpi_pci_get_b
+ }
+ #endif
+ 
++extern void (*acpiphp_check_host_bridge)(acpi_handle handle);
++
+ #ifdef CONFIG_ACPI_APEI
+ extern bool aer_acpi_firmware_first(void);
+ #else
 
