@@ -1,134 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:45371 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757582Ab3FTK6R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 06:58:17 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Arnd Bergmann' <arnd@arndb.de>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-References: <003601ce6756$444e8cd0$cceba670$@samsung.com>
- <2061566.hRLrhtBK6z@wuerfel> <000901ce6838$8b514720$a1f3d560$@samsung.com>
- <28355406.ThqqvnG0Yj@wuerfel> <51C2D260.6000303@st.com>
-In-reply-to: <51C2D260.6000303@st.com>
-Subject: Re: [PATCH V4 1/3] pci: Add PCIe driver for Samsung Exynos
-Date: Thu, 20 Jun 2013 19:58:14 +0900
-Message-id: <00d701ce6da5$10216ae0$306440a0$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:53639 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751754Ab3FZVQ6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 26 Jun 2013 17:16:58 -0400
+Message-ID: <1372281416.2720.28.camel@envy.home>
+Subject: Re: [PATCH 7/8] pci: Add CircuitCo VENDOR ID and MinnowBoard DEVICE
+ ID
+From: Darren Hart <dvhart@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	danders@circuitco.com, vishal.l.verma@intel.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 26 Jun 2013 14:16:56 -0700
+In-Reply-To: <CAErSpo6=1i76RRmJSUi+BpD9D0WrXaML4HkGLn0C=+6=ohB0uQ@mail.gmail.com>
+References: <cover.1372211451.git.dvhart@linux.intel.com>
+	 <83879b07cd4ce95f086420d1faa926c1692d63b4.1372211451.git.dvhart@linux.intel.com>
+	 <20130626163250.GA29299@google.com> <1372266904.8177.83.camel@envy.home>
+	 <CAErSpo6=1i76RRmJSUi+BpD9D0WrXaML4HkGLn0C=+6=ohB0uQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, June 20, 2013 6:59 PM, Pratyush Anand wrote:
-> On 6/13/2013 7:48 PM, Arnd Bergmann wrote:
-> > On Thursday 13 June 2013 22:18:50 Jingoo Han wrote:
-> >> >On Wednesday, June 12, 2013 8:23 PM, Arnd Bergmann wrote:
-> >>> > >On Wednesday 12 June 2013 19:19:05 Jingoo Han wrote:
-> >>>> > > >+
-> >>>> > > >+/* synopsis specific PCIE configuration registers*/
-> >>>> > > >+#define PCIE_PORT_LINK_CONTROL		0x710
-> >>>> > > >+#define PORT_LINK_MODE_MASK		(0x3f << 16)
-> >>>> > > >+#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
-> >>> > >
-> >>> > >Do you mean this is a "Synopsys" designware part? In that case it
-> >>> > >should really not be called "exynos-pcie" but "designware-pcie"
-> >>> > >and you should make sure that the driver makes no assumptions about
-> >>> > >the platform. A lot of other platforms also use designware
-> >>> > >parts and should be able to reuse this driver.
-> >> >
-> >> >Sorry, I don't think so.
-> >> >Only core block is a "Synopsys" designware part IP block,
-> >> >other parts are Exynos-specific.
-> >> >So, it is hard to share with other PCIe IPs using synopsis core.
-> > Just call it synopsys anyway and put a comment in to explain this.
-> > That should be enough for the next person with a synopsys PCI core
-> > to reuse your code and split out the exynos specific parts into a
-> > separate file.
+On Wed, 2013-06-26 at 13:37 -0600, Bjorn Helgaas wrote:
+> On Wed, Jun 26, 2013 at 11:15 AM, Darren Hart <dvhart@linux.intel.com> wrote:
+> > On Wed, 2013-06-26 at 10:32 -0600, Bjorn Helgaas wrote:
+> 
+> >> +#define PCI_VENDOR_ID_CIRCUITCO              0x1cc8
+> >> +
+> >>  #define PCI_VENDOR_ID_TEKRAM         0x1de1
+> >>  #define PCI_DEVICE_ID_TEKRAM_DC290   0xdc29
 > >
+> >
+> > Thanks Bjorn. When I reuse this Subsystem ID and there is more than one
+> > usage, I should send a patch to pci_ids.h adding it and replace the hex
+> > value in all drivers with the new define. Is that right?
 > 
-> I agree to Arnd that this patch should be split. I had worked in past
-> with SPEAr PCIe which also had designware PCIe IP. I see some code which
-> will fit both in SPEAr as well as in exynos. Unfortunately, I was not
-> able to get SPEAr driver pushed to mainline, as I moved to some other
-> project and got heavily occupied.
+> Yeah, that's what I was thinking.
+> 
+> But Peter's comment makes more sense to me now.  The spec refers to
+> that config register as "Subsystem ID," not "Subsystem Device ID," but
+> I was confused because most existing usage treats it as a device ID.
+> For example, the field in struct pci_device_id is named "subdevice,"
+> and all the existing #defines in pci_ids.h are of the form
+> PCI_SUBDEVICE_ID_*.
+> 
+> Device IDs are pretty specific identifiers, so I was thinking that a
+> "sub-device ID" would be even more specific.  Then it would make no
+> sense to have a "sub-device ID" that was as generic as "MINNOWBOARD."
+> But the register is actually *not* a "sub-device ID," and I can see
+> that using the same Subsystem ID for all the devices on a board might
+> make sense.
+> 
+> So I think the name PCI_DEVICE_ID_CIRCUITCO_MINNOWBOARD is a bit of a
+> misnomer, and something like PCI_SUBSYSTEM_CIRCUITCO_MINNOWBOARD would
+> make it more clear that it really isn't sharing the device ID space
+> assigned to CircuitCo.  It would make perfect sense to have a Device
+> ID, e.g., "PCI_DEVICE_ID_CIRCUIT_CO_xxx 0x0001," that has nothing to
+> do with the Subsystem ID 0x0001.
+> 
+> If you want to do something like that (or even keep your original
+> patch), I can put that in my -next branch.  Just let me know.
+> 
+> Bjorn
 
-Oh, I see.
 
-How about this?
-At the next PATCH v7, I will change the file name from 'pci-exynos.c'
-to 'pci-designware.c', as Arnd mentioned.
+I would be happy to change DEVICE to SUBSYSTEM in the the pci_ids.h:
 
-Then, when Spear or other platform using designware is submitted,
-this 'pci-designware.c' will be split to two separate files such as
-'pci-designware.c' and 'pci-exynos.c'.
++#define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
++#define PCI_SUBSYSTEM_ID_CITCUITCO_MINNOWBOARD	0x0001
 
+Would you like me to send another patch?
 
-Best regards,
-Jingoo Han
-
-> 
-> Last patch is here:
-> 
-> https://patchwork.kernel.org/patch/1661441/
-> 
-> Infact, these functions should be common to all arm platforms.
-> 
-> sys_to_pcie
-> cfg_read
-> cfg_write
-> 
-> Following functions should be common to all designware based driver (at
-> least they are same in SPEAr)
-> 
-> exynos_pcie_prog_viewport_cfg0
-> exynos_pcie_prog_viewport_cfg1
-> exynos_pcie_rd_other_conf
-> exynos_pcie_wr_other_conf
-> exynos_pcie_setup
-> exynos_pcie_valid_config
-> exynos_pcie_rd_conf
-> exynos_pcie_wd_conf
-> exynos_pcie_scan_bus
-> exynos_pcie_map_irq
-> add_pcie_port (after a bit of generalization)
-> exynos_pcie_probe
-> exynos_pcie_remove
-> 
-> 
-> 
-> Following should be specific to exynos:
-> 
-> exynos_pcie_rd_own_conf
-> exynos_pcie_wr_own_conf
-> exynos_pcie_link_up
-> exynos_pcie_setup_rc
-> exynos_pcie_assert_core_reset
-> exynos_pcie_deassert_core_reset
-> exynos_pcie_assert_phy_reset
-> exynos_pcie_deassert_phy_reset
-> exynos_pcie_init_phy
-> exynos_pcie_assert_reset
-> exynos_pcie_establish_link
-> exynos_pcie_host_init
-> 
-> 
-> 
-> struct pcie_port_info and struct pcie_port can also be standardized.
-> 
-> Regards
-> Pratyush
+-- 
+Darren Hart
+Intel Open Source Technology Center
+Yocto Project - Technical Lead - Linux Kernel
 
