@@ -1,71 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:27133 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752965Ab3FRIXN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 04:23:13 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 7/9] PCI: use pdev->pm_cap instead of pci_find_capability(..,PCI_CAP_ID_PM)
-Date: Tue, 18 Jun 2013 16:22:14 +0800
-Message-ID: <1371543734-14148-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:35743 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751754Ab3FZVOu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 17:14:50 -0400
+Received: by mail-ie0-f171.google.com with SMTP id qd12so32719058ieb.30
+        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 14:14:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130626201930.GA25309@kroah.com>
+References: <20130626025001.GA25384@google.com>
+	<CAE9FiQXmP54PLSOYq17hi54ziDRM0fe+i0sRymz4+yeAxhT3-w@mail.gmail.com>
+	<CAErSpo7MELuvuR9stzrLydn78wxsKwMPE1+sCDVbFextd06j7Q@mail.gmail.com>
+	<CAE9FiQUWB5vFJ+m+UhQAc=q_BeH9U--o7r6_6Deq-KV1ycBC2w@mail.gmail.com>
+	<CAErSpo4FNEVTkArbWKQnDxhMpR+sMEdQHjV=iYQZbD9j7e-pkw@mail.gmail.com>
+	<CAE9FiQXHGt06bmb1QcJsW9g18Cn=wbQpbCZZkqmcTUUcpgtN-w@mail.gmail.com>
+	<20130626201930.GA25309@kroah.com>
+Date: Wed, 26 Jun 2013 14:14:50 -0700
+Message-ID: <CAE9FiQVKMSSQ-JNbWQkfoKcUfhB2wHmq7vxRfvwzk90muybn2Q@mail.gmail.com>
+Subject: Re: Current open PCI defects
+From: Yinghai Lu <yinghai@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci pm cap register offset has been saved in pci_pm_init(),
-so we can use pdev->pm_cap instead of using pci_find_capability(..)
-here.
+On Wed, Jun 26, 2013 at 1:19 PM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Wed, Jun 26, 2013 at 12:47:41PM -0700, Yinghai Lu wrote:
+>> On Wed, Jun 26, 2013 at 12:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > On Wed, Jun 26, 2013 at 10:43 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> >> On Wed, Jun 26, 2013 at 9:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >>> On Tue, Jun 25, 2013 at 11:51 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> >>>> On Tue, Jun 25, 2013 at 7:50 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >>>>> Here's a list of the current PCI defects open in https://bugzilla.kernel.org
+>> >>>>>
+>> >>>>> Hint: maintainers really like it when people take the initiative to
+>> >>>>> resolve open issues.
+>> >>>>>
+>> >>>>> Regressions (8 total):
+>> >>>>
+>> >>>>>   57961 ExpressCard hot-remove and hot-add not recognized by acpiphp
+>> >>>>
+>> >>>> for 3.9 stable:
+>> >>>> https://patchwork.kernel.org/patch/2676821/
+>> >>>>
+>> >>>> Greg, can you pick that for 3.9.8?
+>> >>>
+>> >>> That patch is already in Linus' tree and is marked correctly (AFAICS)
+>> >>> for 3.9 stable:
+>> >>
+>> >> Yes, but the one can not be applied to v3.9 cleanly.
+>> >> so at same time you have backporting for 3.9.
+>> >>
+>> >> Greg applied that for 3.9.5 but it has compile error, as v3.9 acpiphp is still
+>> >> able to be complied as module.
+>> >>
+>> >> Per your request, I respin that patch
+>> >>   https://patchwork.kernel.org/patch/2676821/
+>> >> that will call request_module("acpiphp") at first.
+>> >
+>> > Oh, right, I forgot that.  Then I'll just let you take care of sending
+>> > that to Greg in the correct format.
+>>
+>> I sent that before.
+>>
+>> https://patchwork.kernel.org/patch/2676821/
+>
+> To stable@vger.kernel.org?  Did I comment on it, I can't seem to see it
+> anywhere here.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/pci.c    |    2 +-
- drivers/pci/quirks.c |    6 ++----
- 2 files changed, 3 insertions(+), 5 deletions(-)
+Not "to", it is "cc"
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a899d8b..1117f2c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -805,7 +805,7 @@ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state)
- {
- 	pci_power_t ret;
- 
--	if (!pci_find_capability(dev, PCI_CAP_ID_PM))
-+	if (!dev->pm_cap)
- 		return PCI_D0;
- 
- 	ret = platform_pci_choose_state(dev);
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7d68aee..422812b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1832,7 +1832,6 @@ static void quirk_e100_interrupt(struct pci_dev *dev)
- 	u16 command, pmcsr;
- 	u8 __iomem *csr;
- 	u8 cmd_hi;
--	int pm;
- 
- 	switch (dev->device) {
- 	/* PCI IDs taken from drivers/net/e100.c */
-@@ -1870,9 +1869,8 @@ static void quirk_e100_interrupt(struct pci_dev *dev)
- 	 * Check that the device is in the D0 power state. If it's not,
- 	 * there is no point to look any further.
- 	 */
--	pm = pci_find_capability(dev, PCI_CAP_ID_PM);
--	if (pm) {
--		pci_read_config_word(dev, pm + PCI_PM_CTRL, &pmcsr);
-+	if (dev->pm_cap) {
-+		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
- 		if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0)
- 			return;
- 	}
--- 
-1.7.1
-
-
+from: Yinghai Lu <yinghai@kernel.org>
+to: Bjorn Helgaas <bhelgaas@google.com>,
+ "Rafael J. Wysocki" <rjw@sisk.pl>,
+ Jiang Liu <jiang.liu@huawei.com>,
+ gregkh@linuxfoundation.org
+cc: Gavin Guo <tuffkidtt@gmail.com>,
+ linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ Yinghai Lu <yinghai@kernel.org>,
+ rafael.j.wysocki@intel.com,
+ stable@vger.kernel.org
+date: Wed, Jun 5, 2013 at 6:55 PM
+subject: [PATCH v3.9 stable] PCI: acpiphp: Re-enumerate devices when
+host bridge receives Bus Check
