@@ -1,74 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:48481 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752168Ab3FLNr0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Jun 2013 09:47:26 -0400
-Message-ID: <51B87BDF.1080101@eu.citrix.com>
-Date: Wed, 12 Jun 2013 14:47:11 +0100
-From: George Dunlap <george.dunlap@eu.citrix.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:38313 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751963Ab3FZCuF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 22:50:05 -0400
+Received: by mail-ie0-f169.google.com with SMTP id 10so30468961ied.0
+        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 19:50:04 -0700 (PDT)
+Received: from google.com ([172.29.124.56])
+        by mx.google.com with ESMTPSA id l9sm6352895igt.5.2013.06.25.19.50.03
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Tue, 25 Jun 2013 19:50:03 -0700 (PDT)
+Date: Tue, 25 Jun 2013 20:50:01 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Subject: Current open PCI defects
+Message-ID: <20130626025001.GA25384@google.com>
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: <xen-devel@lists.xensource.com>, <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
-References: <20130610202456.GA17822@phenom.dumpdata.com> <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com> <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com> <51B743EA.5020800@eu.citrix.com> <51B74B77.1000806@oracle.com> <51B74DA9.7060509@eu.citrix.com> <20130612134504.GG2918@phenom.dumpdata.com>
-In-Reply-To: <20130612134504.GG2918@phenom.dumpdata.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/06/13 14:45, Konrad Rzeszutek Wilk wrote:
-> On Tue, Jun 11, 2013 at 05:17:45PM +0100, George Dunlap wrote:
->> On 06/11/2013 05:08 PM, konrad wilk wrote:
->>> On 6/11/2013 11:36 AM, George Dunlap wrote:
->>>> On 06/10/2013 10:06 PM, Konrad Rzeszutek Wilk wrote:
->>>>> There are two tool-stack that can instruct the Xen PCI frontend
->>>>> and backend to change states: 'xm' (Python code with a daemon),
->>>>> and 'xl' (C library - does not keep state changes).
->>>>>
->>>>> With the 'xm', the path to disconnect a PCI device (xm pci-detach
->>>>> <guest> <BDF>)is:
->>>>>
->>>>> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)->
->>>>> 4(Connected)->5(Closing*).
->>>>>
->>>>> The * is for states that the tool-stack sets. For 'xl', it is similar:
->>>>>
->>>>> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
->>>>>
->>>>> Both of them also tear down the XenBus structure, so the backend
->>>>> state ends up going in the 3(Initialised) and calls
->>>>> pcifront_xenbus_remove.
->>>> So I looked a little bit into this; there are actually two different
->>>> states that happen as part of this handshake.  In order to disonnect a
->>>> *device*, xl signals using the *bus* state, like this:
->>>> * Wait for the *bus* to be in state 4(Connected)
->>>> * Set the *device* state to 5(Closing)
->>>> * Set the *bus* state to 7(Reconfiguring)
->>>> * Wait for the *bus* state to return to 4(Connected)
->>>>
->>>> So are all of these states you see the *bus* state?  And why would you
->>>> disconnect the whole pci bus if you're only removing one device?
->>> Correct. The stats I enumerated are *bus* states. Not per-device states.
->>> I presume (and I hadn't checked xm) that Xend has some logic to only
->>> disconnect the bus if all of the PCI devices have been disconnected. In
->>> 'xl' it does not do that.
->>>
->>> The testing I did was just with one PCI device.
->> Ah, OK -- I see now.  The problem is that the code in the Linux side
->> didn't know about the whole "4->7->8->4" thing to unplug a device.
->> In all likelihood, if you had used xm with two devices (so that the
->> bus didn't get disconnected), then you would have run across the
->> same error.
->>
->> So at least part of the problem *is* a bug in Linux.
-> Good! Bjorn, would you be OK Ack-ing the patch I sent (attached here
-> for reference) or putting it in your queue for Linus?
->
-> My plan would be to send it to Linus in the 3.11 merge window.
+Here's a list of the current PCI defects open in https://bugzilla.kernel.org
 
-One nit -- "to work with the 'xl' toolstack" -- didn't we theorize this 
-would also be broken with xm if you had two devices passed through?
+Hint: maintainers really like it when people take the initiative to
+resolve open issues.
 
-  -George
+Regressions (8 total):
+
+  15388	After suspend to ram, laptop doesn't connect to the wired network. Sky2 error. Marvell 88E8036
+  41622	[REGRESSION][BISECTED] Notebook crashes upon detecting the PCI subsystem with kernels >= 2.6.24-rc7
+  42606	PCI I/O range not assigned under newer kernels
+  44881	pci_find_upstream_pcie_bridge() warning
+  57331	pci_disable_link_state() doesn't disable L1
+  57961	ExpressCard hot-remove and hot-add not recognized by acpiphp
+  59311	14e4:16bc SD card slot not working on Acer Aspire One 756
+  59411	Several new kmemleaks related to acpiphp
+
+Others (31 total):
+
+  10461	PCI resource assignments fail due to poor allocation strategy
+  15508	pciehp failing to recognise expresscards after a suspend/resume cycle
+  16119	jmb38x recognized and works only if a card is plugged in during boot
+  16470	pci_raw_set_power_state does not return an error if power state fails to change.
+  24712	pciehp: resume problem: PCMCIA card insert not detected after resume
+  29922	irqpoll crash
+  29982	PCI Device conflicts with GART
+  35452	Devices not available after resume from suspend to RAM
+  40802	Kernel does not detect JMicron card reader unless a card is inserted when the PCI bus is scanned
+  42552	PCI BAR Conflicts with E820 Area
+  43041	Internal SD card reader is not working on Dell XPS L501x
+  43192	various ExpressCards are not recognized
+  43331	error updating BAR
+  44021	Internal SD card reader is not working on Dell XPS 17 L502X
+  47381	Screaming IRQ with Radeon HD4670 AGP / HDMI audio
+  48451	error reserving uninitialized BAR
+  50161	Dell Precision T5400 Workstation has incorrect CRS for PCI host bridge window
+  50671	bnx2: No interrupt was generated using MSI, switching to INTx mode
+  52211	"pci=nocrs" required to get BAR address assignment for SR-IOV capable card on IBM M4 x3650
+  52531	Unify pcibios_resource_survey(), etc
+  52591	xhci module fails when booting in UEFI mode
+  54411	kernel panic when parallel remove pci device triggered by sysfs/pci interface
+  54801	ExpressCard hotplug with acpiphp doesn't work unless pcie_aspm=force used
+  54921	pciehp/xhci ExpressCard failure on Dell Vostro 3550
+  54981	ExpressCard hotplug fails except with pcie_ports=native
+  57311	Unexpected return value of pci_dma_mapping_error() when process is killed by signal
+  57321	Using pci_reset_function() when doing unbind in parallel is problematic
+  59191	host bridge apertures not really enforced on PA-RISC ?
+  59391	pcie_aspm=off breaks pciehp on Dell Vostro 3550 (unlike pcie_aspm=compat)
+  59531	Error recovery slot_reset() callback called while device is frozen
+  60111	NULL pointer deref in ASPM alloc_pcie_link_state() on non-compliant topology
