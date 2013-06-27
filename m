@@ -1,73 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:45432 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755021Ab3FLRGA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 13:06:00 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAN_LGv0-gGMhJr8U8=sc-93e_MKVpy9TxG1MRAugtBVJP+CTrg@mail.gmail.com>
-References: <1370951543-15841-1-git-send-email-jiang.liu@huawei.com>
-	<CAN_LGv1hrLnYkPHycyyd35ZipWWznXM_0cdj8Rnh1WxiTZL=4A@mail.gmail.com>
-	<51B7170E.2060608@gmail.com>
-	<CAN_LGv26adLa5RBhwhCfvALFx78j4HdvzVH1PaAuhvWXSeqyMw@mail.gmail.com>
-	<51B73BAB.3030406@gmail.com>
-	<CAN_LGv3iwgp_8dkt1ouCD-FFGau3h7L25ORUW2J-rz30_4ZYTA@mail.gmail.com>
-	<51B7E1C7.9030004@gmail.com>
-	<CAN_LGv0-gGMhJr8U8=sc-93e_MKVpy9TxG1MRAugtBVJP+CTrg@mail.gmail.com>
-Date: Wed, 12 Jun 2013 23:05:59 +0600
-Message-ID: <CAN_LGv3YnBUBA2OCWmZNEBJNtP4ziQH44h0LWbnio0cj=Xm_fQ@mail.gmail.com>
-Subject: Re: [PATCH] ACPIPHP: fix device destroying order issue in handling
- dock notification
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 27 Jun 2013 16:09:40 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
+Message-ID: <20130627130940.GV9294@intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
+ <20130625141556.2f9de7b1@jbarnes-desktop>
+ <20130626121757.GP9294@intel.com>
+ <CAErSpo6aQMtav89V8wyu+NZxro91o1MnB1ViG-4ExrCgLPKmjg@mail.gmail.com>
+ <1372284901.30572.625.camel@ul30vt.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372284901.30572.625.camel@ul30vt.home>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/6/12 Alexander E. Patrakov <patrakov@gmail.com>:
-> 2013/6/12 Jiang Liu <liuj97@gmail.com>:
->> On Wed 12 Jun 2013 12:51:59 AM CST, Alexander E. Patrakov wrote:
->>> In the initially-docked case, it exhibits the following problem: when
->>> I press the undock button, only one PCI device disappears, and the
->>> "docked" LED does not turn off. Additionally, there is a hung task.
->> Hi Alexander,
->>      In the initially-docked case, the failure is caused by an issue in
->> the intel sound card driver. Seems something is wrong with reference
->> count management and it never returns to zero on driver detach.
->> Could you please help to disable the Intel sound card driver and try
->> again?
->>
->> I'm not familiar with Intel HDA driver,  so please help to fire another
->> bug for it.
->
-> Thanks for pointing the finger to snd-hda-intel. With that driver
-> blacklisted, the lspci output matches the expectations even after
-> undocking the initially-docked laptop. Redocking re-adds the devices,
-> too.
+On Wed, Jun 26, 2013 at 04:15:01PM -0600, Alex Williamson wrote:
+> On Wed, 2013-06-26 at 14:59 -0600, Bjorn Helgaas wrote:
+> > [+cc Alex]
+> > 
+> > On Wed, Jun 26, 2013 at 6:17 AM, Mika Westerberg
+> > <mika.westerberg@linux.intel.com> wrote:
+> > > On Tue, Jun 25, 2013 at 02:15:56PM -0700, Jesse Barnes wrote:
+> > >> On Tue, 25 Jun 2013 19:22:10 +0300
+> > >> Mika Westerberg <mika.westerberg@linux.intel.com> wrote:
+> > >>
+> > >> > +   if (!(pci_probe & PCI_NOASSIGN_ROMS)) {
+> > >> > +           pr_info("Thunderbolt host router detected disabling ROMs\n");
+> > >> > +           pci_probe |= PCI_NOASSIGN_ROMS;
+> > >> > +   }
+> > >>
+> > >> I wonder if this should just be the default on x86?  Or do we allocate
+> > >> ROM space to address some other platform where we need it and the BIOS
+> > >> doesn't do it for the devices we care about?
+> > >
+> > > Good question. In our case it definitely helps to have pci=norom the
+> > > default. Can't tell if it might break something that depends on the current
+> > > behaviour.
+> > 
+> > I think the current default behavior is that if the BIOS has assigned
+> > the ROM BAR, we keep that assignment, and if it hasn't, we allocate
+> > MEM space for it.  And "pci=norom" means that we don't allocate MEM
+> > space for it, even if the BIOS hasn't assigned it.
+> > 
+> > "pci=norom" is only implemented on x86.  I think most other arches
+> > allocate MEM space for ROMs, with no way to turn that off.  PA-RISC
+> > seems to ignore ROMs (dino_fixup_bus()), but that looks like the
+> > exception.
+> >
+> > I'm slightly concerned that if we make the x86 default be "never
+> > assign space for ROMs unless the BIOS has done it," we might break
+> > virtualized guests that need access to ROMs.  Alex?
+> 
+> Yep, I'm more than slightly concerned by that too.  Whenever possible we
+> want to pass the ROM to the guest since it may end up being a boot
+> device or drivers within the guest may require it.  We can pass the ROM
+> to the guest from an image file, but that requires someplace from which
+> to dump the image, which is usually PCI sysfs.  Thanks,
 
-> As for snd-hda-intel bug, I will file it later today and let you know.
-
-Actually, I debugged it further and want some input from you before
-filing. Here is the new information: the incomplete undocking and hung
-task does not appear if I test from a virtual console, not from an
-XFCE session. The obvious difference is that in the XFCE session some
-processes (the mixer applet and pulseaudio) keep the mixer device
-always open.
-
-I am not qualified enough to say what should happen if the user
-presses the undock button while a program has a to-be-undocked device
-open. Or, for that matter and for an analogy, if the user unplugs a
-USB sound card while it is playing.
-
-And in my case, this is going to be an issue not only because of the
-snd-hda-intel driver. Xorg would sometimes keep the DRM node of the
-Radeon card (that is in the dock station) open in addition to the
-onboard Intel card.
-
---
-Alexander E. Patrakov
+OK, then I guess changing the default is out of the question. We don't want
+to break things.
