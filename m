@@ -1,66 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:46046 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753085Ab3FTIAS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 04:00:18 -0400
-Date: Thu, 20 Jun 2013 10:00:13 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>
-Subject: Re: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung
- EXYNOS5440 SoC
-Message-ID: <20130620100013.6000458f@skate>
-In-Reply-To: <00c301ce6d8b$d198b210$74ca1630$@samsung.com>
-References: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
-	<20130620094835.3f1f34c2@skate>
-	<00c301ce6d8b$d198b210$74ca1630$@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx1.redhat.com ([209.132.183.28]:14955 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753914Ab3F0Wjw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 27 Jun 2013 18:39:52 -0400
+Subject: [PATCH v2 0/3] pci: ACS fixes & quirks
+To: bhelgaas@google.com
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
+	andihartmann@01019freenet.de, linux-kernel@vger.kernel.org
+Date: Thu, 27 Jun 2013 16:39:41 -0600
+Message-ID: <20130627222159.16564.38166.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jingoo Han,
+v2:
 
-On Thu, 20 Jun 2013 16:57:32 +0900, Jingoo Han wrote:
+Revised patch 1/ to match comments from Bjorn.  PCIe event collectors
+and PCIe-to-PCI bridges now indicate that they do not support ACS.
+I've reached out to try to get clarification on this, but I think it's
+reasonable to proceed with a conservative approach until then.  I also
+added PCI-to-PCIe bridges for the sake of being complete.  Also added
+more comments about the purpose and behavior of pci_acs_enabled().  If
+I've overlooked anything else that needs to be addressed, please let
+me know.
 
-> > > -	pinctrl {
-> > > +	pin_ctrl: pinctrl {
-> > >  		compatible = "samsung,exynos5440-pinctrl";
-> > 
-> > I know I'm nitpicking, but isn't this change completely unrelated to
-> > PCIe support?
-> 
-> This change is related to PCIe support.
-> Without this, I cannot use gpio binding.
-> 
-> This change was guided by Thomas Abraham (Author of Samsung pinctrl).
-> Also, it was confirmed by Kukjin Kim (Maintainer of Samsung SoC).
-> 
-> Thank you for your caring. :)
+Patch 2/ had no comments, it's unchanged.
 
-I mean, the change is fine for sure, but it should maybe part of a
-separate patch as it is more a fix than really the introduction of the
-PCIe controller node, as the patch title suggests. This would also for
-example allow this fix to be merged right now (for 3.11), regardless of
-what happens for the rest of your PCIe patches.
+Patch 3/ is added.  This was sent as an RFC nearly a year ago and
+Joerg confirmed for us that these devices do not support p2p on AMD
+systems with AMD IOMMU.  We can't simply use iommu_present() to test
+for an IOMMU because it's setup just after we need this function.  
+Instead we test for the ACPI IVRS table that describes the IOMMU.  It
+would probably suffice to skip an actual AMD IOMMU check, but I don't
+want it to later come bite us if these ASICs get re-used, maybe with
+a different IOMMU, and don't make the same guarantees.
 
-Best regards,
+Joerg, I was also curious back when we investigated this patch if the
+same rules hold true for these other southbridge devices:
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1002:43a0 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
+1002:43a1 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
+1002:43a2 SB900 PCI to PCI bridge (PCIE port 2)
+1002:43a3 SB900 PCI to PCI bridge (PCIE port 3)
+
+If you remember or have contacts to poke, I'd be happy to follow-up
+with another patch to add them.  Thanks,
+
+Alex
+
+---
+
+Alex Williamson (3):
+      pci: Fix flaw in pci_acs_enabled()
+      pci: Differentiate ACS controllable from enabled
+      pci: ACS quirk for AMD southbridge
+
+
+ drivers/pci/pci.c    |   93 +++++++++++++++++++++++++++++++++++++++++---------
+ drivers/pci/quirks.c |   50 +++++++++++++++++++++++++++
+ 2 files changed, 127 insertions(+), 16 deletions(-)
