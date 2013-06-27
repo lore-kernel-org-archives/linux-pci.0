@@ -1,71 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:1810 "EHLO
-	co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753050Ab3FCCWa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jun 2013 22:22:30 -0400
-From: Shane Huang <shane.huang@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Tejun Heo <tj@kernel.org>, Jean Delvare <khali@linux-fr.org>,
-	<linux-pci@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-	<linux-i2c@vger.kernel.org>, Shane Huang <shane.huang@amd.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH RESEND 2/3] ahci: add AMD CZ SATA device ID
-Date: Mon, 3 Jun 2013 18:24:10 +0800
-Message-ID: <1370255050-2358-1-git-send-email-shane.huang@amd.com>
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:38872 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753601Ab3F0Qys (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Jun 2013 12:54:48 -0400
+Received: by mail-oa0-f47.google.com with SMTP id m1so1133086oag.6
+        for <linux-pci@vger.kernel.org>; Thu, 27 Jun 2013 09:54:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130627163246.GZ9294@intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1372177330-28013-3-git-send-email-mika.westerberg@linux.intel.com>
+ <CAErSpo4hvH08bNrObYODFVcwhhiGOj4cKntyJD6Aw6CjecgCow@mail.gmail.com>
+ <20130627130229.GT9294@intel.com> <20130627163246.GZ9294@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 27 Jun 2013 10:54:27 -0600
+Message-ID: <CAErSpo5pi+bSDw7kb7J=C5VDpyGCPN=Z2zCWTPp+brfo+9iAGQ@mail.gmail.com>
+Subject: Re: [PATCH 2/6] PCI: acpiphp: enable_device(): rescan even if no new
+ devices on slot
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To add AMD CZ SATA controller device ID of IDE mode.
+On Thu, Jun 27, 2013 at 10:32 AM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> On Thu, Jun 27, 2013 at 04:02:29PM +0300, Mika Westerberg wrote:
+>> On Wed, Jun 26, 2013 at 05:37:58PM -0600, Bjorn Helgaas wrote:
+>> > > @@ -707,8 +702,11 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>> > >                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+>> > >                                 max = pci_scan_bridge(bus, dev, max, pass);
+>> > >                                 if (pass && dev->subordinate) {
+>> > > -                                       check_hotplug_bridge(slot, dev);
+>> > > -                                       pcibios_resource_survey_bus(dev->subordinate);
+>> > > +                                       if (!dev->subordinate->is_added) {
+>> > > +                                               check_hotplug_bridge(slot, dev);
+>> > > +                                               pcibios_resource_survey_bus(
+>> > > +                                                       dev->subordinate);
+>> >
+>> > It's a shame that pcibios_resource_survey_bus() can't be called twice.
+>> >  It would be nice if it were smart enough to notice on the second call
+>> > that "oh, resources have already been assigned, so there's nothing
+>> > more to be done."  Did you look to see whether that's feasible?
+>>
+>> I didn't but now that you mentioned I went and checked. I'm pretty sure we
+>> can handle it there in the next revision and drop this change.
+>
+> With following patch that fixes pcibios_resource_survey_bus() Thunderbolt
+> seems to be working just fine (and the quirk is gone).
+>
+> If it looks okay, I'll include it into the next iteration of the patches.
 
-Signed-off-by: Shane Huang <shane.huang@amd.com>
-Reviewed-by: Tejun Heo <tj@kernel.org>
-Cc: stable@vger.kernel.org
----
- drivers/ata/ahci.c      | 1 +
- drivers/pci/quirks.c    | 2 ++
- include/linux/pci_ids.h | 1 +
- 3 files changed, 4 insertions(+)
+That looks great, thanks a lot for exploring this!
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 751f1ea..548f1c3 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -310,6 +310,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 
- 	/* AMD */
- 	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
-+	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
- 	/* AMD is using RAID class only for ahci controllers */
- 	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7d68aee..5aced49 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1022,6 +1022,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_SATA, quirk
- DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_SATA, quirk_amd_ide_mode);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE, quirk_amd_ide_mode);
- DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE, quirk_amd_ide_mode);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SATA_IDE, quirk_amd_ide_mode);
-+DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SATA_IDE, quirk_amd_ide_mode);
- 
- /*
-  *	Serverworks CSB5 IDE does not fully support native mode
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index e0b5623..22449c1 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -570,6 +570,7 @@
- #define PCI_DEVICE_ID_AMD_HUDSON2_IDE		0x780c
- #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
- #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
-+#define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
- 
- #define PCI_VENDOR_ID_TRIDENT		0x1023
- #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
--- 
-1.8.1.2
-
-
+> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+> index 94919e3..db6b1ab 100644
+> --- a/arch/x86/pci/i386.c
+> +++ b/arch/x86/pci/i386.c
+> @@ -210,6 +210,8 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+>                 r = &dev->resource[idx];
+>                 if (!r->flags)
+>                         continue;
+> +               if (r->parent)  /* Already allocated */
+> +                       continue;
+>                 if (!r->start || pci_claim_resource(dev, idx) < 0) {
+>                         /*
+>                          * Something is wrong with the region.
+> @@ -318,6 +320,8 @@ static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
+>         r = &dev->resource[PCI_ROM_RESOURCE];
+>         if (!r->flags || !r->start)
+>                 return;
+> +       if (r->parent) /* Already allocated */
+> +               return;
+>
+>         if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
+>                 r->end -= r->start;
