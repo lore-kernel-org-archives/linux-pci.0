@@ -1,97 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <51B9467B.7080902@huawei.com>
-Date: Thu, 13 Jun 2013 12:11:39 +0800
-From: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:63920 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353Ab3F0R17 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Jun 2013 13:27:59 -0400
 MIME-Version: 1.0
+In-Reply-To: <CAErSpo4BCdgnUs8RzjugVWE4P7cTNGFOCdijjmUUb5suqw_-6A@mail.gmail.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+	<1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
+	<CAErSpo58bCG4=hwC73VY+nXPk9-dZUb5eWERZ_wTtAfrXtBVmg@mail.gmail.com>
+	<CAE9FiQW9xuu6WjH59td6Jve10kokoxU4mNqj4DRyg7beqBzHDA@mail.gmail.com>
+	<CAE9FiQVCQKjPa1dVKhAubvD+d=rudOxLaRMYAr-GAC7eSSz09Q@mail.gmail.com>
+	<CAErSpo68p7_0zsnBjD=sb14vs0QyCZuN+RTvib2-ZOYUiZn6pw@mail.gmail.com>
+	<CAE9FiQVm-gABPsh1-A8H+a0Prug7JMoQpwvKC2EKHpQVXOhzcA@mail.gmail.com>
+	<CAErSpo4BCdgnUs8RzjugVWE4P7cTNGFOCdijjmUUb5suqw_-6A@mail.gmail.com>
+Date: Thu, 27 Jun 2013 10:27:59 -0700
+Message-ID: <CAE9FiQXBtWESyVREYL67r9F5wK6xLBzHG30aAaif-SscdXi9yQ@mail.gmail.com>
+Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-References: <CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com> <CAE9FiQVqKag2TGah7x_1MAJ+c0UWgywgM_jKUoOnh+rq3bwBhg@mail.gmail.com> <CAE9FiQVMgdj5edbR4qZny29fV9-bW_We_G4Wpn_yruDLQZiQiQ@mail.gmail.com> <20130329032200.GA11990@google.com> <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com> <CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com> <CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com> <CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com> <20130401235256.GA31966@google.com> <CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com> <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com> <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com> <CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com> <CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com> <CAErSpo7gL3Ds9oq8ZZ4zdt1uHy9xbkWJE+Ja=-0QXFQECjr40A@mail.gmail.com>
-In-Reply-To: <CAErSpo7gL3Ds9oq8ZZ4zdt1uHy9xbkWJE+Ja=-0QXFQECjr40A@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-     I'm working on several acpiphp related bugfixes, and feel some
-are materials for 3.10 too. Actually we have identified four bugs
-related to dock station support on Sony VAIO VPCZ23A4R laptop.
-I will try to send out patchset to address these bugs tonight.
-Seems we really need to rethink about acpiphp and pciehp now.
-Regards!
-Gerry
-On 2013/6/13 11:50, Bjorn Helgaas wrote:
-> On Wed, Jun 12, 2013 at 1:41 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Wed, Jun 12, 2013 at 10:05 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> current code from acpi_pci_root_add we have
->>>>    1. pci_acpi_scan_root
->>>>           ==> pci devices enumeration and bus scanning.
->>>>               ==> pci_alloc_child_bus
->>>>                   ==> pcibios_add_bus
->>>>                       ==> acpi_pci_add_bus
->>>>                           ==> acpiphp_enumerate_slots
->>>>                               ==> ...==> register_slot
->>>>                                    ==> device_is_managed_by_native_pciehp
->>>>                                          ==> check osc_set with
->>>> OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
->>>>     2. _OSC set request
->>>>
->>>> so we always have acpiphp hotplug slot registered at first.
->>>>
->>>> so either we need to
->>>> A. revert reverting about _OSC
->>>> B. move pcibios_add_bus down to pci_bus_add_devices()
->>>>      as acpiphp and apci pci slot driver are some kind of drivers for pci_bus
->>>> C. A+B
+On Thu, Jun 27, 2013 at 9:00 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jun 26, 2013 at 5:56 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, Jun 26, 2013 at 3:55 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Wed, Jun 26, 2013 at 4:31 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> On Wed, Jun 26, 2013 at 3:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>>> On Wed, Jun 26, 2013 at 3:18 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>>>> On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
+>>>>>> <mika.westerberg@linux.intel.com> wrote:
+>>>>>>> Thunderbolt PCI-to-PCI bridges typically use BIOS "assisted" enumeration.
+>>>>>>> This means that the BIOS will allocate bridge resources based on some
+>>>>>>> assumptions of a maximum Thunderbolt chain. It also disables native PCIe
+>>>>>>> hotplug of the root port where the Thunderbolt host router is connected.
+>>>> ...
+>>>> During acpi hotplug, firmare could do extra help for us like assign
+>>>> some resources to pci device bars, so it is NOT "boot-time".
 >>>
->>> It doesn't surprise me at all that there are problems in the _OSC code
->>> and the acpiphp/pciehp interaction.  That whole area is a complete
->>> disaster.  It'd really be nice if somebody stepped up and reworked it
->>> so it makes sense.
->>>
->>> But this report is useless to me.  I don't have time to work out what
->>> the problem is and how it affects users and come up with a fix.
+>>> Really?  How can firmware assign BARs at hotplug-time?  I mean,
+>>> obviously firmware *can* write things to the BARs before giving the
+>>> device to the OS, but how would it know what to write?
 >>
->> effects: without fix the problem, user can not use pcie native hotplug
->> if their system's firmware support acpihp and pciehp.
->> And make it worse, that acpiphp have to be built-in, so they have no
->> way to blacklist acpiphp in config.
->>
->>>
->>> My advice is to simplify the path first, and worry about fixing the
->>> bug afterwards.  We've already done several iterations of fiddling
->>> with things, and I think all we're doing is playing "whack-a-mole" and
->>> pushing the bugs around from one place to another.
->>
->> We need to address regression at first.
->> my suggestion is : revert the reverting and apply my -v3 version that will fix
->> regression that Roman Yepishev met.
->>
->> please check attached two patches, hope it could save your some time.
+>> should be acpi code, or SMI code or even BMC firmware via sideband.
 >
-> OK, you're right.  It's not reasonable to do anything more than a
-> minimal fix when we're at -rc5.
->
-> Sigh.  I'll spend tomorrow trying to understand your patches and write
-> changelogs for you.
->
-> I think you're saying that in systems that support both acpiphp and
-> pciehp, we should be using pciehp, but we currently use acpiphp.  If
-> so, that's certainly a bug.  How serious is it?  Is it a disaster if
-> we use acpiphp until we can resolve this cleanly?  Are there a lot of
-> systems that claim to support acpiphp but it doesn't actually work?
->
-> Bjorn
->
-> .
->
+> How would that code (ACPI code (by which I assume you mean AML), SMI
+> code, BMC firmware) know what values to write to BARs?  Is it reading
+> the windows of upstream bridges from config space?  Is it assuming the
+> OS never changes the windows of bridges upstream from the Thunderbolt
+> controller?
 
+Kernel only try to change upstream bridge for pciehp during hot-add.
 
+for acpiphp, because could have other devices already there before hot-add,
+kernel does not try to expand the upstream bridge. size and assign only
+to the new added devices.
+
+>
+>>>  I assume the
+>>> OS owns the address space, and it can change the upstream bridge
+>>> windows or the BARs of another device on the bus at any time, subject
+>>> to the OS's own issues as far as quiescing or unbinding drivers, etc.,
+>>> but without coordinating with the BIOS.
+>>
+>> for thunderbolt or dock with acpiphp, then all children devices/bridges should
+>> not have drivers loaded yet.
+>
+> I said "upstream bridge windows or ... another device on the bus,"
+> i.e., I'm referring to devices other than the Thunderbolt controller.
+> I assume the OS is free to change resource assignments for those
+> non-Thunderbolt devices, and obviously those assignments affect what
+> is available for Thunderbolt.
+
+ok. that upstream one can not be touched from firmware.
