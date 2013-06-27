@@ -1,87 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:38872 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753601Ab3F0Qys (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Jun 2013 12:54:48 -0400
-Received: by mail-oa0-f47.google.com with SMTP id m1so1133086oag.6
-        for <linux-pci@vger.kernel.org>; Thu, 27 Jun 2013 09:54:47 -0700 (PDT)
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:62844 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab3F0BUZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 21:20:25 -0400
 MIME-Version: 1.0
-In-Reply-To: <20130627163246.GZ9294@intel.com>
+In-Reply-To: <1372177330-28013-3-git-send-email-mika.westerberg@linux.intel.com>
 References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-3-git-send-email-mika.westerberg@linux.intel.com>
- <CAErSpo4hvH08bNrObYODFVcwhhiGOj4cKntyJD6Aw6CjecgCow@mail.gmail.com>
- <20130627130229.GT9294@intel.com> <20130627163246.GZ9294@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 27 Jun 2013 10:54:27 -0600
-Message-ID: <CAErSpo5pi+bSDw7kb7J=C5VDpyGCPN=Z2zCWTPp+brfo+9iAGQ@mail.gmail.com>
+	<1372177330-28013-3-git-send-email-mika.westerberg@linux.intel.com>
+Date: Wed, 26 Jun 2013 18:20:24 -0700
+Message-ID: <CAE9FiQWy9E_s34DKOtoYcZoYTdgLCfwjiuSVPSk1ncpHYAWG0g@mail.gmail.com>
 Subject: Re: [PATCH 2/6] PCI: acpiphp: enable_device(): rescan even if no new
  devices on slot
+From: Yinghai Lu <yinghai@kernel.org>
 To: Mika Westerberg <mika.westerberg@linux.intel.com>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
 	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Miles J Penner <miles.j.penner@intel.com>,
 	Bruce Allan <bruce.w.allan@intel.com>,
 	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
+	"the arch/x86 maintainers" <x86@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 27, 2013 at 10:32 AM, Mika Westerberg
+On Tue, Jun 25, 2013 at 9:22 AM, Mika Westerberg
 <mika.westerberg@linux.intel.com> wrote:
-> On Thu, Jun 27, 2013 at 04:02:29PM +0300, Mika Westerberg wrote:
->> On Wed, Jun 26, 2013 at 05:37:58PM -0600, Bjorn Helgaas wrote:
->> > > @@ -707,8 +702,11 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->> > >                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
->> > >                                 max = pci_scan_bridge(bus, dev, max, pass);
->> > >                                 if (pass && dev->subordinate) {
->> > > -                                       check_hotplug_bridge(slot, dev);
->> > > -                                       pcibios_resource_survey_bus(dev->subordinate);
->> > > +                                       if (!dev->subordinate->is_added) {
->> > > +                                               check_hotplug_bridge(slot, dev);
->> > > +                                               pcibios_resource_survey_bus(
->> > > +                                                       dev->subordinate);
->> >
->> > It's a shame that pcibios_resource_survey_bus() can't be called twice.
->> >  It would be nice if it were smart enough to notice on the second call
->> > that "oh, resources have already been assigned, so there's nothing
->> > more to be done."  Did you look to see whether that's feasible?
->>
->> I didn't but now that you mentioned I went and checked. I'm pretty sure we
->> can handle it there in the next revision and drop this change.
+> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 >
-> With following patch that fixes pcibios_resource_survey_bus() Thunderbolt
-> seems to be working just fine (and the quirk is gone).
+> pci_scan_slot() returns number of new devices connected *directly*
+> connected to the slot. Current enable_device() checks the return value
+> and stops if it doesn't see a new device.
 >
-> If it looks okay, I'll include it into the next iteration of the patches.
+> In Thunderbolt chaining case the new device can be deeper in hierarchy, so
+> do the rescan anyway.
+>
+> Because of that we must make sure that pcibios_resource_survey_bus() and
+> check_hotplug_bridge() get called only for a just found bus and not the
+> ones already added to the system. Failure to do so will lead to resource
+> conflicts.
+>
+> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c | 18 +++++++-----------
+>  1 file changed, 7 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index b983e29..80a6ea1 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -685,18 +685,13 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>         struct pci_dev *dev;
+>         struct pci_bus *bus = slot->bridge->pci_bus;
+>         struct acpiphp_func *func;
+> -       int num, max, pass;
+> +       int max, pass;
+>         LIST_HEAD(add_list);
+>
+>         list_for_each_entry(func, &slot->funcs, sibling)
+>                 acpiphp_bus_add(func);
+>
+> -       num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+> -       if (num == 0) {
+> -               /* Maybe only part of funcs are added. */
+> -               dbg("No new device found\n");
+> -               goto err_exit;
+> -       }
+> +       pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+>
+>         max = acpiphp_max_busnr(bus);
+>         for (pass = 0; pass < 2; pass++) {
+> @@ -707,8 +702,11 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+>                                 max = pci_scan_bridge(bus, dev, max, pass);
+>                                 if (pass && dev->subordinate) {
+> -                                       check_hotplug_bridge(slot, dev);
+> -                                       pcibios_resource_survey_bus(dev->subordinate);
+> +                                       if (!dev->subordinate->is_added) {
+> +                                               check_hotplug_bridge(slot, dev);
+> +                                               pcibios_resource_survey_bus(
+> +                                                       dev->subordinate);
+> +                                       }
 
-That looks great, thanks a lot for exploring this!
+No,
+this change will totally disable calling
+check_hotplug_bridge/pcibios_resource_survey_bus()
 
-> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-> index 94919e3..db6b1ab 100644
-> --- a/arch/x86/pci/i386.c
-> +++ b/arch/x86/pci/i386.c
-> @@ -210,6 +210,8 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
->                 r = &dev->resource[idx];
->                 if (!r->flags)
->                         continue;
-> +               if (r->parent)  /* Already allocated */
-> +                       continue;
->                 if (!r->start || pci_claim_resource(dev, idx) < 0) {
->                         /*
->                          * Something is wrong with the region.
-> @@ -318,6 +320,8 @@ static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
->         r = &dev->resource[PCI_ROM_RESOURCE];
->         if (!r->flags || !r->start)
->                 return;
-> +       if (r->parent) /* Already allocated */
-> +               return;
+as pci_scan_bridge/pci_scan_child_bus will set dev->subordinate->is_added...
+
+Please note: recently is_added setting is moved early before
+pci_bus_add_devices...
+
+>                                         __pci_bus_size_bridges(dev->subordinate,
+>                                                                &add_list);
+>                                 }
+> @@ -742,8 +740,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>                 }
+>         }
 >
->         if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
->                 r->end -= r->start;
+> -
+> - err_exit:
+>         return 0;
+>  }
+>
+> --
+> 1.8.3.1
+>
