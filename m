@@ -1,131 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39648 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755418Ab3FFB4E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 21:56:04 -0400
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:56294 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752708Ab3F0TFD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Jun 2013 15:05:03 -0400
+MIME-Version: 1.0
+In-Reply-To: <1372177330-28013-5-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+	<1372177330-28013-5-git-send-email-mika.westerberg@linux.intel.com>
+Date: Thu, 27 Jun 2013 12:05:02 -0700
+Message-ID: <CAE9FiQVt4gCiz20SmJVP6d7tXOior5Ehg+-c_fG7wFsDUj7H4Q@mail.gmail.com>
+Subject: Re: [PATCH 4/6] PCI: acpiphp: check for new devices on enabled host
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>, gregkh@linuxfoundation.org
-Cc: Gavin Guo <tuffkidtt@gmail.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, rafael.j.wysocki@intel.com,
-	stable@vger.kernel.org
-Subject: [PATCH v3.9 stable] PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check
-Date: Wed,  5 Jun 2013 18:55:53 -0700
-Message-Id: <1370483753-2907-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <20130605223852.GA16729@kroah.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Ronciak <john.ronciak@intel.com>,
+	Miles J Penner <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"the arch/x86 maintainers" <x86@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a PCI host bridge device receives a Bus Check notification, we
-must re-enumerate starting with the bridge to discover changes (devices
-that have been added or removed).
+On Tue, Jun 25, 2013 at 9:22 AM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+>
+> Current acpiphp_check_bridge() implementation is pretty dumb:
+>  - it enables the slot if it's not enabled and the slot status is
+>    ACPI_STA_ALL;
+>  - it disables the slot if it's enabled and slot is not in ACPI_STA_ALL
+>    state.
+>
+> This behavior is not enough to handle Thunderbolt chaining case
+> properly. We need to actually rescan for new devices even if a device
+> has already in the slot.
+>
+> The new implementation disables and stops the slot if it's not in
+> ACPI_STA_ALL state.
+>
+> For ACPI_STA_ALL state we first trim devices which don't respond and
+> look for the ones after that. We do that even if slot already enabled
+> (SLOT_ENABLED).
 
-Prior to 668192b678 ("PCI: acpiphp: Move host bridge hotplug to
-pci_root.c"), this happened in _handle_hotplug_event_bridge().  After that
-commit, _handle_hotplug_event_bridge() is not installed for host bridges,
-and the host bridge notify handler, _handle_hotplug_event_root() did not
-re-enumerate.
+that is not right, some time BUS_CHECK is even sent root bus.
+in that case, stop all devices in slots and load driver again.
 
-This patch adds re-enumeration to _handle_hotplug_event_root().
+like you put one card in one slots, but all devices in other slots get stop
+and enable again.
 
-This fixes cases where we don't notice the addition or removal of
-PCI devices, e.g., the PCI-to-USB ExpressCard in the bugzilla below.
+Thanks
 
--v1: Backport of 3f327e39b4 to v3.9 by Bjorn Helgaas <bhelgaas@google.com>
--v2: use request_module("acpiphp") for acpiphp is as module instead of built-in
-     by Yinghai.
-
-[bhelgaas: changelog, references]
-Reference: https://lkml.kernel.org/r/CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com
-Reference: https://bugzilla.kernel.org/show_bug.cgi?id=57961
-Reported-by: Gavin Guo <tuffkidtt@gmail.com>
-Tested-by: Gavin Guo <tuffkidtt@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-CC: stable@vger.kernel.org	# v3.9+
----
- drivers/acpi/pci_root.c            |    7 ++++++-
- drivers/pci/hotplug/acpiphp_glue.c |   14 ++++++++++++++
- include/linux/pci-acpi.h           |    2 ++
- 3 files changed, 22 insertions(+), 1 deletion(-)
-
-Index: linux-3.9.4/drivers/acpi/pci_root.c
-===================================================================
---- linux-3.9.4.orig/drivers/acpi/pci_root.c
-+++ linux-3.9.4/drivers/acpi/pci_root.c
-@@ -665,6 +665,7 @@ static void handle_root_bridge_removal(s
- 		kfree(ej_event);
- }
- 
-+void (*acpiphp_check_host_bridge)(acpi_handle handle);
- static void _handle_hotplug_event_root(struct work_struct *work)
- {
- 	struct acpi_pci_root *root;
-@@ -687,7 +688,11 @@ static void _handle_hotplug_event_root(s
- 		/* bus enumerate */
- 		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
- 				 (char *)buffer.pointer);
--		if (!root)
-+		if (root) {
-+			request_module("acpiphp");
-+			if (acpiphp_check_host_bridge)
-+				acpiphp_check_host_bridge(handle);
-+		} else
- 			handle_root_bridge_insertion(handle);
- 
- 		break;
-Index: linux-3.9.4/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-3.9.4.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-3.9.4/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1122,6 +1122,18 @@ check_sub_bridges(acpi_handle handle, u3
- 	return AE_OK ;
- }
- 
-+static void __acpiphp_check_host_bridge(acpi_handle handle)
-+{
-+	struct acpiphp_bridge *bridge;
-+
-+	bridge = acpiphp_handle_to_bridge(handle);
-+	if (bridge)
-+		acpiphp_check_bridge(bridge);
-+
-+	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+		ACPI_UINT32_MAX, check_sub_bridges, NULL, NULL, NULL);
-+}
-+
- static void _handle_hotplug_event_bridge(struct work_struct *work)
- {
- 	struct acpiphp_bridge *bridge;
-@@ -1305,6 +1317,7 @@ static struct acpi_pci_driver acpi_pci_h
- int __init acpiphp_glue_init(void)
- {
- 	acpi_pci_register_driver(&acpi_pci_hp_driver);
-+	acpiphp_check_host_bridge = __acpiphp_check_host_bridge;
- 
- 	return 0;
- }
-@@ -1317,6 +1330,7 @@ int __init acpiphp_glue_init(void)
-  */
- void  acpiphp_glue_exit(void)
- {
-+	acpiphp_check_host_bridge = NULL;
- 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
- }
- 
-Index: linux-3.9.4/include/linux/pci-acpi.h
-===================================================================
---- linux-3.9.4.orig/include/linux/pci-acpi.h
-+++ linux-3.9.4/include/linux/pci-acpi.h
-@@ -43,6 +43,8 @@ static inline acpi_handle acpi_pci_get_b
- }
- #endif
- 
-+extern void (*acpiphp_check_host_bridge)(acpi_handle handle);
-+
- #ifdef CONFIG_ACPI_APEI
- extern bool aer_acpi_firmware_first(void);
- #else
+Yinghai
