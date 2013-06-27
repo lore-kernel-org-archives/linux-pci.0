@@ -1,141 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:42344 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934462Ab3FSQ4b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 12:56:31 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCHv3 03/11] PCI: Introduce new MSI chip infrastructure
-Date: Wed, 19 Jun 2013 18:56:11 +0200
-Message-Id: <1371660979-21588-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mx1.redhat.com ([209.132.183.28]:30098 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754458Ab3F0Wj5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 27 Jun 2013 18:39:57 -0400
+Subject: [PATCH v2 1/3] pci: Fix flaw in pci_acs_enabled()
+To: bhelgaas@google.com
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
+	andihartmann@01019freenet.de, linux-kernel@vger.kernel.org
+Date: Thu, 27 Jun 2013 16:39:48 -0600
+Message-ID: <20130627223948.16564.6654.stgit@bling.home>
+In-Reply-To: <20130627222159.16564.38166.stgit@bling.home>
+References: <20130627222159.16564.38166.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+The multifunction ACS rules do not apply to downstream ports.  Those
+should be tested regardless of whether they are single function or
+multifunciton.  The PCIe spec also fully specifies which PCIe types
+are subject to the multifunction rules and excludes event collectors
+and PCIe-to-PCI bridges entirely.  Document each rule to the section
+of the PCIe spec and provide overall documentation of the function.
 
-The new struct msi_chip is used to associated an MSI controller with a
-PCI bus. It is automatically handed down from the root to its children
-during bus enumeration.
-
-This patch provides default (weak) implementations for the architecture-
-specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
-and arch_msi_check_device()) which check if a PCI device's bus has an
-attached MSI chip and forward the call appropriately.
-
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/msi.c   | 22 ++++++++++++++++++++++
- drivers/pci/probe.c |  1 +
- include/linux/msi.h | 11 +++++++++++
- include/linux/pci.h |  1 +
- 4 files changed, 35 insertions(+)
+ drivers/pci/pci.c |   84 ++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 70 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 4bc0c8f..dc357e9 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -32,6 +32,19 @@ static int pci_msi_enable = 1;
- 
- int default_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (chip && chip->setup_irq) {
-+		int err;
-+
-+		err = chip->setup_irq(chip, dev, desc);
-+		if (err < 0)
-+			return err;
-+
-+		irq_set_chip_data(desc->irq, chip);
-+		return err;
-+	}
-+
- 	return -EINVAL;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a899d8b..d0c2b35 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2349,6 +2349,19 @@ void pci_enable_acs(struct pci_dev *dev)
+ 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
  }
  
-@@ -42,6 +55,10 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 
- void default_teardown_msi_irq(unsigned int irq)
- {
-+	struct msi_chip *chip = irq_get_chip_data(irq);
++static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
++{
++	int pos;
++	u16 ctrl;
 +
-+	if (chip && chip->teardown_irq)
-+		chip->teardown_irq(chip, irq);
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return false;
++
++	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
++	return (ctrl & acs_flags) == acs_flags;
++}
++
+ /**
+  * pci_acs_enabled - test ACS against required flags for a given device
+  * @pdev: device to test
+@@ -2356,36 +2369,79 @@ void pci_enable_acs(struct pci_dev *dev)
+  *
+  * Return true if the device supports the provided flags.  Automatically
+  * filters out flags that are not implemented on multifunction devices.
++ *
++ * Note that this interface checks the effective ACS capabilities of the
++ * device rather than the actual capabilities.  For instance, most single
++ * function endpoints are not required to support ACS because they have no
++ * opportunity for peer-to-peer access.  We therefore return 'true'
++ * regardless of whether the device exposes an ACS capability.  This makes
++ * it much easier for callers of this function to ignore the actual type
++ * or topology of the device when testing ACS support.
+  */
+ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+ {
+-	int pos, ret;
+-	u16 ctrl;
++	int ret;
+ 
+ 	ret = pci_dev_specific_acs_enabled(pdev, acs_flags);
+ 	if (ret >= 0)
+ 		return ret > 0;
+ 
++	/*
++	 * Conventional PCI and PCI-X devices never support ACS, either
++	 * effectively or actually.  The shared bus topology implies that
++	 * any device on the bus can receive or snoop DMA.
++	 */
+ 	if (!pci_is_pcie(pdev))
+ 		return false;
+ 
+-	/* Filter out flags not applicable to multifunction */
+-	if (pdev->multifunction)
++	switch (pci_pcie_type(pdev)) {
++	/*
++	 * PCI/X-to-PCIe bridges are not specifically mentioned by the spec,
++	 * but since their primary inteface is PCI/X, we conservatively
++	 * handle them as we would a non-PCIe device.
++	 */
++	case PCI_EXP_TYPE_PCIE_BRIDGE:
++	/*
++	 * PCIe 3.0, 6.12.1 excludes ACS on these devices.  "ACS is never
++	 * applicable... must never implement an ACS Extended Capability...".
++	 * This seems arbitrary, but we take a conservative interpretation
++	 * of this statement.
++	 */
++	case PCI_EXP_TYPE_PCI_BRIDGE:
++	case PCI_EXP_TYPE_RC_EC:
++		return false;
++	/*
++	 * PCIe 3.0, 6.12.1.1 specifies that downstream and root ports should
++	 * implement ACS in order to indicate their peer-to-peer capabilities,
++	 * regardless of whether they are single- or multi-function devices.
++	 */
++	case PCI_EXP_TYPE_DOWNSTREAM:
++	case PCI_EXP_TYPE_ROOT_PORT:
++		return pci_acs_flags_enabled(pdev, acs_flags);
++	/*
++	 * PCIe 3.0, 6.12.1.2 specifies ACS capabilities that should be
++	 * implemented by the remaining PCIe types to indicate peer-to-peer
++	 * capabilities, but only when they are part of a multifunciton
++	 * device.  The footnote for section 6.12 indicates the specific
++	 * PCIe types included here.
++	 */
++	case PCI_EXP_TYPE_ENDPOINT:
++	case PCI_EXP_TYPE_UPSTREAM:
++	case PCI_EXP_TYPE_LEG_END:
++	case PCI_EXP_TYPE_RC_END:
++		if (!pdev->multifunction)
++			break;
++
+ 		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
+ 			      PCI_ACS_EC | PCI_ACS_DT);
+ 
+-	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM ||
+-	    pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
+-	    pdev->multifunction) {
+-		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+-		if (!pos)
+-			return false;
+-
+-		pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+-		if ((ctrl & acs_flags) != acs_flags)
+-			return false;
++		return pci_acs_flags_enabled(pdev, acs_flags);
+ 	}
+ 
++	/*
++	 * PCIe 3.0, 6.12.1.3 specifies no ACS capabilties are applicable
++	 * to single function devices with the exception of downstream ports.
++	 */
+ 	return true;
  }
  
- void __weak arch_teardown_msi_irq(unsigned int irq)
-@@ -51,6 +68,11 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
- 
- int default_msi_check_device(struct pci_dev *dev, int nvec, int type)
- {
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (chip && chip->check_device)
-+		return chip->check_device(chip, dev, nvec, type);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 70f10fa..c8591e4 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -634,6 +634,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 
- 	child->parent = parent;
- 	child->ops = parent->ops;
-+	child->msi = parent->msi;
- 	child->sysdata = parent->sysdata;
- 	child->bus_flags = parent->bus_flags;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index e792a3f..e3a137d 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -71,4 +71,15 @@ int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev, int irq);
- 
-+struct msi_chip {
-+	struct module *owner;
-+	struct device *dev;
-+
-+	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
-+			 struct msi_desc *desc);
-+	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-+	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-+			    int nvec, int type);
-+};
-+
- #endif /* LINUX_MSI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3a24e4f..7ffc012 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -432,6 +432,7 @@ struct pci_bus {
- 	struct resource busn_res;	/* bus numbers routed to this bus */
- 
- 	struct pci_ops	*ops;		/* configuration access functions */
-+	struct msi_chip	*msi;		/* MSI controller */
- 	void		*sysdata;	/* hook for sys-specific extension */
- 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
- 
--- 
-1.8.1.2
 
