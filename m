@@ -1,95 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:37659 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753097Ab3FOCtI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 22:49:08 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: only WARN_ON() when pci_ioremap_bar() is called for io port BAR
-Date: Sat, 15 Jun 2013 10:44:04 +0800
-Message-Id: <1371264244-6007-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 27 Jun 2013 16:04:04 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Ronciak <john.ronciak@intel.com>,
+	Miles J Penner <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	the arch/x86 maintainers <x86@kernel.org>
+Subject: Re: [PATCH 2/6] PCI: acpiphp: enable_device(): rescan even if no new
+ devices on slot
+Message-ID: <20130627130404.GU9294@intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1372177330-28013-3-git-send-email-mika.westerberg@linux.intel.com>
+ <CAE9FiQWy9E_s34DKOtoYcZoYTdgLCfwjiuSVPSk1ncpHYAWG0g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQWy9E_s34DKOtoYcZoYTdgLCfwjiuSVPSk1ncpHYAWG0g@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ideally caller should check availability of IO BAR resource before
-calling pci_ioremap_bar(), but no caller doing that yet:(
-The WARN_ON() in function pci_ioremap_bar() is used to warn the caller
-if it's called for an IO port BAR, so disable it if OS fails to allocate
-resources for the BAR, otherwise it will generate heavy log messages as
-below (actually the last line of log message is enough for analysis):
-[  157.383390] ------------[ cut here ]------------
-[  157.383396] WARNING: at drivers/pci/pci.c:130 pci_ioremap_bar+0x69/0x70()
-[  157.383397] Modules linked in: ata_generic pata_acpi pata_marvell fuse zram(C) rfcomm bnep snd_hda_codec_hdmi snd_hda_codec_realtek rtsx_pci_ms rtsx_pci_sdmmc memstick mmc_core iTCO_wdt iTCO_vendor_support arc4 uvcvideo iwldvm videobuf2_vmalloc videobuf2_memops mac80211 qcserial videobuf2_core usb_wwan videodev media usbserial btusb bluetooth iwlwifi coretemp kvm_intel kvm sony_laptop cfg80211 snd_hda_intel snd_hda_codec rfkill i915 pcspkr r8169 joydev mii rtsx_pci snd_hwdep intel_agp snd_pcm intel_gtt i2c_algo_bit snd_page_alloc drm_kms_helper snd_timer drm lpc_ich snd agpgart i2c_i801 mfd_core sha256_ssse3 sha256_generic dm_crypt raid0 md_mod crc32_pclmul crc32c_intel ghash_clmulni_intel aesni_intel aes_x86_64 glue_helper lrw gf128mul ablk_helper cryptd xhci_hcd ehci_pci ehci_hcd dm_mirror dm_region_hash
-[  157.383462]  dm_log dm_mod [last unloaded: microcode]
-[  157.383469] CPU: 0 PID: 40 Comm: kworker/0:1 Tainted: G        WC   3.10.0-rc4 #7
-[  157.383473] Hardware name: Sony Corporation VPCZ23A4R/VAIO, BIOS R1013H5 05/21/2012
-[  157.383478] Workqueue: kacpi_hotplug _handle_hotplug_event_bridge
-[  157.383481]  ffffffff81a2a114 ffff880253d3f808 ffffffff8165aab8 ffff880253d3f848
-[  157.383487]  ffffffff8103c8cb ffff880253d3f828 ffff880253152800 ffff88022eb09000
-[  157.383494]  0000000000000000 ffff880253153000 0000000000000001 ffff880253d3f858
-[  157.383500] Call Trace:
-[  157.383507]  [<ffffffff8165aab8>] dump_stack+0x19/0x1b
-[  157.383513]  [<ffffffff8103c8cb>] warn_slowpath_common+0x6b/0xa0
-[  157.383519]  [<ffffffff8103c915>] warn_slowpath_null+0x15/0x20
-[  157.383524]  [<ffffffff813831e9>] pci_ioremap_bar+0x69/0x70
-[  157.383532]  [<ffffffffa0388bd6>] azx_first_init+0x56/0x600 [snd_hda_intel]
-[  157.383536]  [<ffffffff813868ef>] ? pci_get_domain_bus_and_slot+0x2f/0x70
-[  157.383540]  [<ffffffffa038ad25>] azx_probe+0x555/0x940 [snd_hda_intel]
-[  157.383543]  [<ffffffff810a1a1d>] ? trace_hardirqs_on+0xd/0x10
-[  157.383546]  [<ffffffff81384f66>] local_pci_probe+0x46/0x80
-[  157.383549]  [<ffffffff813857d9>] pci_device_probe+0xf9/0x120
-[  157.383549]  [<ffffffff813857d9>] pci_device_probe+0xf9/0x120
-[  157.383554]  [<ffffffff8143c2c6>] driver_probe_device+0x76/0x220
-[  157.383556]  [<ffffffff8143c56b>] __device_attach+0x4b/0x60
-[  157.383559]  [<ffffffff8143c520>] ? __driver_attach+0xb0/0xb0
-[  157.383561]  [<ffffffff8143a61c>] bus_for_each_drv+0x5c/0x90
-[  157.383564]  [<ffffffff8143c218>] device_attach+0x98/0xb0
-[  157.383566]  [<ffffffff8137d8d4>] pci_bus_add_device+0x34/0x60
-[  157.383569]  [<ffffffff8137d939>] pci_bus_add_devices+0x39/0xa0
-[  157.383571]  [<ffffffff8137d987>] pci_bus_add_devices+0x87/0xa0
-[  157.383573]  [<ffffffff8137d987>] pci_bus_add_devices+0x87/0xa0
-[  157.383575]  [<ffffffff8137d987>] pci_bus_add_devices+0x87/0xa0
-[  157.383577]  [<ffffffff8137d987>] pci_bus_add_devices+0x87/0xa0
-[  157.383580]  [<ffffffff816446b0>] enable_device+0x370/0x450
-[  157.383583]  [<ffffffff813a0f3a>] acpiphp_enable_slot+0xca/0x140
-[  157.383585]  [<ffffffff813a1167>] acpiphp_check_bridge+0x77/0x100
-[  157.383587]  [<ffffffff813a165d>] _handle_hotplug_event_bridge+0x13d/0x290
-[  157.383591]  [<ffffffff8105c212>] process_one_work+0x1c2/0x560
-[  157.383594]  [<ffffffff8105c1a7>] ? process_one_work+0x157/0x560
-[  157.383596]  [<ffffffff8105d126>] worker_thread+0x116/0x370
-[  157.383598]  [<ffffffff8105d010>] ? manage_workers.isra.20+0x2d0/0x2d0
-[  157.383601]  [<ffffffff81063986>] kthread+0xd6/0xe0
-[  157.383604]  [<ffffffff81660ccb>] ? _raw_spin_unlock_irq+0x2b/0x60
-[  157.383607]  [<ffffffff810638b0>] ? __init_kthread_worker+0x70/0x70
-[  157.383610]  [<ffffffff8166806c>] ret_from_fork+0x7c/0xb0
-[  157.383613]  [<ffffffff810638b0>] ? __init_kthread_worker+0x70/0x70
-[  157.383614] ---[ end trace f366acc9dc87b38a ]---
-[  157.383616] hda-intel 0000:16:00.1: ioremap error
+On Wed, Jun 26, 2013 at 06:20:24PM -0700, Yinghai Lu wrote:
+> On Tue, Jun 25, 2013 at 9:22 AM, Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> >
+> > pci_scan_slot() returns number of new devices connected *directly*
+> > connected to the slot. Current enable_device() checks the return value
+> > and stops if it doesn't see a new device.
+> >
+> > In Thunderbolt chaining case the new device can be deeper in hierarchy, so
+> > do the rescan anyway.
+> >
+> > Because of that we must make sure that pcibios_resource_survey_bus() and
+> > check_hotplug_bridge() get called only for a just found bus and not the
+> > ones already added to the system. Failure to do so will lead to resource
+> > conflicts.
+> >
+> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/pci/hotplug/acpiphp_glue.c | 18 +++++++-----------
+> >  1 file changed, 7 insertions(+), 11 deletions(-)
+> >
+> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> > index b983e29..80a6ea1 100644
+> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> > @@ -685,18 +685,13 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+> >         struct pci_dev *dev;
+> >         struct pci_bus *bus = slot->bridge->pci_bus;
+> >         struct acpiphp_func *func;
+> > -       int num, max, pass;
+> > +       int max, pass;
+> >         LIST_HEAD(add_list);
+> >
+> >         list_for_each_entry(func, &slot->funcs, sibling)
+> >                 acpiphp_bus_add(func);
+> >
+> > -       num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+> > -       if (num == 0) {
+> > -               /* Maybe only part of funcs are added. */
+> > -               dbg("No new device found\n");
+> > -               goto err_exit;
+> > -       }
+> > +       pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+> >
+> >         max = acpiphp_max_busnr(bus);
+> >         for (pass = 0; pass < 2; pass++) {
+> > @@ -707,8 +702,11 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+> >                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+> >                                 max = pci_scan_bridge(bus, dev, max, pass);
+> >                                 if (pass && dev->subordinate) {
+> > -                                       check_hotplug_bridge(slot, dev);
+> > -                                       pcibios_resource_survey_bus(dev->subordinate);
+> > +                                       if (!dev->subordinate->is_added) {
+> > +                                               check_hotplug_bridge(slot, dev);
+> > +                                               pcibios_resource_survey_bus(
+> > +                                                       dev->subordinate);
+> > +                                       }
+> 
+> No,
+> this change will totally disable calling
+> check_hotplug_bridge/pcibios_resource_survey_bus()
+> 
+> as pci_scan_bridge/pci_scan_child_bus will set dev->subordinate->is_added...
+> 
+> Please note: recently is_added setting is moved early before
+> pci_bus_add_devices...
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+OK, thanks.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a899d8b..9288161 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -127,7 +127,8 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
- 	 * Make sure the BAR is actually a memory resource, not an IO resource
- 	 */
- 	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM)) {
--		WARN_ON(1);
-+		if (pci_resource_flags(pdev, bar))
-+			WARN_ON(1);
- 		return NULL;
- 	}
- 	return ioremap_nocache(pci_resource_start(pdev, bar),
--- 
-1.8.1.2
-
+We will handle this in pcibios_resource_survey_bus() instead as suggested
+by Bjorn.
