@@ -1,68 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5436 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755384Ab3FCSlM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Jun 2013 14:41:12 -0400
-Message-ID: <51ACE340.1030406@redhat.com>
-Date: Mon, 03 Jun 2013 14:41:04 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Beno=EEt_Canet?= <benoit.canet@irqsave.net>
-CC: linux-pci@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com
-Subject: Re: [Qemu-devel] SR-IOV PF reset and QEMU VFs VFIO passthrough
-References: <20130601121320.GC5157@irqsave.net>
-In-Reply-To: <20130601121320.GC5157@irqsave.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <jiang.liu@huawei.com>
+Cc: Gavin Guo <tuffkidtt@gmail.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3.9 stable] PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check
+Date: Thu, 27 Jun 2013 16:24:20 -0700
+Message-Id: <1372375460-13350-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <20130605223852.GA16729@kroah.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/01/2013 08:13 AM, Benoît Canet wrote:
->
-> Hello,
->
-> I may have soon the PF driver of an SR-IOV card to code and make work with
-> QEMU/KVM so I have the following questions.
->
-> In an AMD64 setup where QEMU use VFIO to passthrough the VFs of an SR-IOV card
-> to a guest will the consequences of a PF FLR be handled fine by QEMU and the
-> guest ?
->
-the reset occurs long before the device is passed to the guest.
+Backporting for v3.9 for 3f327e39b4 (PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check).
 
-> I read that pci_reset_function would call pci_restore_state restoring the SR-IOV
-> configuration after the reset of the PF.
->
-correct.
+When a PCI host bridge device receives a Bus Check notification, we
+must re-enumerate starting with the bridge to discover changes (devices
+that have been added or removed).
 
-> The ways the hardware work means that the VFs would disappear and reappear in a
-> short lapse of time.
->
-Not sure your definitiion of 'disappear'.  If you mean: if I had another thread
-poking at the device, the device would appear to be removed, then come back (if os
-poking hasn't crashed from the device's lack of response).
-If you mean the VF gets entirely removed from the PCI tree, then no.
-A pci reset != hot unplug/plug.  The device remains in the device tree.
+Prior to 668192b678 ("PCI: acpiphp: Move host bridge hotplug to
+pci_root.c"), this happened in _handle_hotplug_event_bridge().  After that
+commit, _handle_hotplug_event_bridge() is not installed for host bridges,
+and the host bridge notify handler, _handle_hotplug_event_root() did not
+re-enumerate.
 
-> Will these events be handled by the kernel pci hotplug code ?
->
-'these events' ??? -- which events....
-FLR is currently done by libvirt & qemu/vfio to ensure assigned devices are quiesced
-as they are switched from host->guest domain, and guest->(back-to-)host domain.
+This patch adds re-enumeration to _handle_hotplug_event_root().
 
-> Given that the PF driver restore the PF config space after the reset will /sys
-The PF driver doesn't do the config space restore -- it's done in PCI core code.
+This fixes cases where we don't notice the addition or removal of
+PCI devices, e.g., the PCI-to-USB ExpressCard in the bugzilla below.
 
-> files used by QEMU disappear and reappear messing the QEMU VFIO passthrough or
-As stated above, the devices don't disappear from the device tree, so they don't
-get removed/added to the /sys(/bus/pci/...) files.
+-v1: Backport of 3f327e39b4 to v3.9 by Bjorn Helgaas <bhelgaas@google.com>
+-v2: use request_module("acpiphp") for acpiphp as module instead of built-in.
+-v3: Add missing EXPORT_SYMBOL found by Greg.
 
-> will it goes smoothly ?
->
-it goes smoothly today.... :-/
+[bhelgaas: changelog, references]
+Reference: https://lkml.kernel.org/r/CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com
+Reference: https://bugzilla.kernel.org/show_bug.cgi?id=57961
+Reported-by: Gavin Guo <tuffkidtt@gmail.com>
+Tested-by: Gavin Guo <tuffkidtt@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> Best regards
->
-> Benoît Canet
->
+---
+ drivers/acpi/pci_root.c            |    7 ++++++-
+ drivers/pci/hotplug/acpiphp_glue.c |   14 ++++++++++++++
+ include/linux/pci-acpi.h           |    2 ++
+ 3 files changed, 22 insertions(+), 1 deletion(-)
+
+Index: linux-3.9.4/drivers/acpi/pci_root.c
+===================================================================
+--- linux-3.9.4.orig/drivers/acpi/pci_root.c
++++ linux-3.9.4/drivers/acpi/pci_root.c
+@@ -665,6 +665,7 @@ static void handle_root_bridge_removal(s
+ 		kfree(ej_event);
+ }
+ 
++void (*acpiphp_check_host_bridge)(acpi_handle handle);
+ static void _handle_hotplug_event_root(struct work_struct *work)
+ {
+ 	struct acpi_pci_root *root;
+@@ -687,7 +688,11 @@ static void _handle_hotplug_event_root(s
+ 		/* bus enumerate */
+ 		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
+ 				 (char *)buffer.pointer);
+-		if (!root)
++		if (root) {
++			request_module("acpiphp");
++			if (acpiphp_check_host_bridge)
++				acpiphp_check_host_bridge(handle);
++		} else
+ 			handle_root_bridge_insertion(handle);
+ 
+ 		break;
+Index: linux-3.9.4/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-3.9.4.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-3.9.4/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1122,6 +1122,18 @@ check_sub_bridges(acpi_handle handle, u3
+ 	return AE_OK ;
+ }
+ 
++static void __acpiphp_check_host_bridge(acpi_handle handle)
++{
++	struct acpiphp_bridge *bridge;
++
++	bridge = acpiphp_handle_to_bridge(handle);
++	if (bridge)
++		acpiphp_check_bridge(bridge);
++
++	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
++		ACPI_UINT32_MAX, check_sub_bridges, NULL, NULL, NULL);
++}
++
+ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ {
+ 	struct acpiphp_bridge *bridge;
+@@ -1305,6 +1317,7 @@ static struct acpi_pci_driver acpi_pci_h
+ int __init acpiphp_glue_init(void)
+ {
+ 	acpi_pci_register_driver(&acpi_pci_hp_driver);
++	acpiphp_check_host_bridge = __acpiphp_check_host_bridge;
+ 
+ 	return 0;
+ }
+@@ -1317,6 +1330,7 @@ int __init acpiphp_glue_init(void)
+  */
+ void  acpiphp_glue_exit(void)
+ {
++	acpiphp_check_host_bridge = NULL;
+ 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
+ }
+ 
+Index: linux-3.9.4/include/linux/pci-acpi.h
+===================================================================
+--- linux-3.9.4.orig/include/linux/pci-acpi.h
++++ linux-3.9.4/include/linux/pci-acpi.h
+@@ -43,6 +43,8 @@ static inline acpi_handle acpi_pci_get_b
+ }
+ #endif
+ 
++extern void (*acpiphp_check_host_bridge)(acpi_handle handle);
++
+ #ifdef CONFIG_ACPI_APEI
+ extern bool aer_acpi_firmware_first(void);
+ #else
 
