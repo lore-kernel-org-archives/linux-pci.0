@@ -1,60 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 23/27] x86: Move declaration for mp_register_ioapic()
-Date: Fri,  7 Jun 2013 15:31:09 -0700
-Message-Id: <1370644273-10495-24-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41000 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754513Ab3F0WkB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 27 Jun 2013 18:40:01 -0400
+Subject: [PATCH v2 2/3] pci: Differentiate ACS controllable from enabled
+To: bhelgaas@google.com
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
+	andihartmann@01019freenet.de, linux-kernel@vger.kernel.org
+Date: Thu, 27 Jun 2013 16:39:54 -0600
+Message-ID: <20130627223954.16564.78400.stgit@bling.home>
+In-Reply-To: <20130627222159.16564.38166.stgit@bling.home>
+References: <20130627222159.16564.38166.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Address compiling problem that Fengguang report.
+We currently misinterpret that in order for an ACS feature to be
+enabled it must be set in the control field.  In reality, this means
+that the feature is not only enabled, but controllable.  Many of the
+ACS capability bits are not required if the device behaves by default
+in the way specified when both the capability and control bit are set
+and does not support or allow the alternate mode.  We therefore need
+to check the capabilities and mask out flags that are enabled but not
+controllable.  Egress control seems to be the only flag which is
+purely optional.
 
-Reported-by: Fengguang Wu <wfg@linux.intel.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- arch/x86/include/asm/mpspec.h | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ drivers/pci/pci.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
-index e70b7e5..13439c5 100644
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -95,10 +95,27 @@ static inline void early_reserve_e820_mpc_new(void) { }
- #endif
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d0c2b35..ae372ca 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2352,12 +2352,20 @@ void pci_enable_acs(struct pci_dev *dev)
+ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+ {
+ 	int pos;
+-	u16 ctrl;
++	u16 cap, ctrl;
  
- void __cpuinit generic_processor_info(int apicid, int version);
--#ifdef CONFIG_ACPI
+ 	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+ 	if (!pos)
+ 		return false;
+ 
++	/*
++	 * Except for egress control, capabilities are either required
++	 * or only required if controllable.  Features missing from the
++	 * capability field can therefore be assumed as hard-wired enabled.
++	 */
++	pci_read_config_word(pdev, pos + PCI_ACS_CAP, &cap);
++	acs_flags &= (cap | PCI_ACS_EC);
 +
-+#ifdef CONFIG_X86_IO_APIC
- int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
- int mp_unregister_ioapic(u32 gsi_base);
- extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
-+#else
-+static inline int __mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+					 bool hot)
-+{
-+	return 0;
-+}
-+static inline int mp_unregister_ioapic(u32 gsi_base)
-+{
-+	return 0;
-+}
-+static inline void mp_register_ioapic(int id, u32 address, u32 gsi_base)
-+{
-+}
-+#endif
-+
-+#ifdef CONFIG_ACPI
- extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- 				   u32 gsi);
- extern void mp_config_acpi_legacy_irqs(void);
--- 
-1.8.1.4
+ 	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+ 	return (ctrl & acs_flags) == acs_flags;
+ }
+@@ -2432,9 +2440,6 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+ 		if (!pdev->multifunction)
+ 			break;
+ 
+-		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
+-			      PCI_ACS_EC | PCI_ACS_DT);
+-
+ 		return pci_acs_flags_enabled(pdev, acs_flags);
+ 	}
+ 
 
