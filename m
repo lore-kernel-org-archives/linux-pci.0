@@ -1,63 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53050 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422864Ab3FUHWY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 03:22:24 -0400
-Date: Fri, 21 Jun 2013 09:22:20 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCHv3 05/11] irqchip: armada-370-xp: properly request
- resources
-Message-ID: <20130621092220.1b335f95@skate>
-In-Reply-To: <1371660979-21588-6-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1371660979-21588-6-git-send-email-thomas.petazzoni@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from hydra.sisk.pl ([212.160.235.94]:54419 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751064Ab3F1TzV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Jun 2013 15:55:21 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Ronciak <john.ronciak@intel.com>,
+	Miles J Penner <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	the arch/x86 maintainers <x86@kernel.org>
+Subject: Re: [PATCH 4/6] PCI: acpiphp: check for new devices on enabled host
+Date: Fri, 28 Jun 2013 22:04:53 +0200
+Message-ID: <2663158.JAQPAXHTm9@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQUQvVbcbWoBnSiNmtF6P_SHTqWYONzfa-WeQUDYPmvHYw@mail.gmail.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <20130628093319.D4DE6E0090@blue.fi.intel.com> <CAE9FiQUQvVbcbWoBnSiNmtF6P_SHTqWYONzfa-WeQUDYPmvHYw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thomas Gleixner,
+On Friday, June 28, 2013 09:22:32 AM Yinghai Lu wrote:
+> On Fri, Jun 28, 2013 at 2:33 AM, Kirill A. Shutemov
+> <kirill.shutemov@linux.intel.com> wrote:
+> > Yinghai Lu wrote:
+> >> On Tue, Jun 25, 2013 at 9:22 AM, Mika Westerberg
+> >> <mika.westerberg@linux.intel.com> wrote:
+> >> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> >> >
+> >> > Current acpiphp_check_bridge() implementation is pretty dumb:
+> >> >  - it enables the slot if it's not enabled and the slot status is
+> >> >    ACPI_STA_ALL;
+> >> >  - it disables the slot if it's enabled and slot is not in ACPI_STA_ALL
+> >> >    state.
+> >> >
+> >> > This behavior is not enough to handle Thunderbolt chaining case
+> >> > properly. We need to actually rescan for new devices even if a device
+> >> > has already in the slot.
+> >> >
+> >> > The new implementation disables and stops the slot if it's not in
+> >> > ACPI_STA_ALL state.
+> >> >
+> >> > For ACPI_STA_ALL state we first trim devices which don't respond and
+> >> > look for the ones after that. We do that even if slot already enabled
+> >> > (SLOT_ENABLED).
+> >>
+> >> that is not right, some time BUS_CHECK is even sent root bus.
+> >> in that case, stop all devices in slots and load driver again.
+> >>
+> >> like you put one card in one slots, but all devices in other slots get stop
+> >> and enable again.
+> >
+> > We don't stop enabled devices, we only stop and remove devices which don't
+> > respond.  See patch 3/6.
+> >
+> > I don't see how it's harmful. Do you?
+> 
+> then please check with disable_device to put back pci_dev ref,
+> also may need to trim corresponding acpi devices.
 
-On Wed, 19 Jun 2013 18:56:13 +0200, Thomas Petazzoni wrote:
-> Instead of using of_iomap(), we now use of_address_to_resource(),
-> request_mem_region() and ioremap(). This allows the corresponding I/O
-> regions to be properly requested and visible in /proc/iomem.
-> 
-> The main motivation for this change is that the introduction of the
-> MSI support requires us to get the physical address of the main
-> interrupt controller registers, so we will need the corresponding
-> 'struct resource' anyway.
-> 
-> We also take this opportunity to change a panic() to BUG_ON(), in
-> order to be consistent with the rest of the driver.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/irqchip/irq-armada-370-xp.c | 20 ++++++++++++++++----
->  1 file changed, 16 insertions(+), 4 deletions(-)
+That's correct.  Thunderbolt may not need that, but ACPI device objects need
+to be trimmed too in general.
 
-Any chance you could take this one for 3.11 ? It's independent of the
-rest of the patch series, and it would reduce the amount of code
-remaining to merge for the entire MSI feature.
+> so this patch is helping: multiple plug-in and remove?
+
+I think it helps the case when a Thunderbolt device is removed and we only
+get a bus check notify for the controller after the fact.
 
 Thanks,
+Rafael
 
-Thomas
+
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
