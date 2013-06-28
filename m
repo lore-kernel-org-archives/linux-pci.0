@@ -1,42 +1,139 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:36964 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751785Ab3FYVrK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 17:47:10 -0400
-Received: by mail-ob0-f181.google.com with SMTP id 16so12610203obc.26
-        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 14:47:09 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 10/10] ACPI: simplify acpiphp driver with new helper functions
+Date: Fri, 28 Jun 2013 20:42:51 +0200
+Message-ID: <1908581.jLjdVJokRn@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7DTioqp_atjr5NLfGk=afqgbdt=ZZerSzV=EJeR1WwLA@mail.gmail.com>
+References: <1372436683-31711-1-git-send-email-liuj97@gmail.com> <1372436683-31711-11-git-send-email-liuj97@gmail.com> <CAErSpo7DTioqp_atjr5NLfGk=afqgbdt=ZZerSzV=EJeR1WwLA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1372196295.3944.221.camel@pasglop>
-References: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
- <1370066593-22736-3-git-send-email-yinghai@kernel.org> <20130625211516.GA8494@google.com>
- <1372196295.3944.221.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 25 Jun 2013 15:46:49 -0600
-Message-ID: <CAErSpo7b7=E8uG-TzcNinE1F9QUX2xyC-WFGXKVv5svcrZ9aGQ@mail.gmail.com>
-Subject: Re: [PATCH v5 3/7] PCI: Use pci_walk_bus to detect unassigned resources
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 3:38 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Tue, 2013-06-25 at 15:15 -0600, Bjorn Helgaas wrote:
->> -     for_each_pci_dev(dev) {
->> > -             int i;
->> > +             /* Not assigned, or rejected by kernel ? */
->> > +             if (r->flags && !r->start) {
->> > +                     (*unassigned)++;
->> > +                     return 1; /* return early from pci_walk_bus */
->> > +             }
->> > +     }
->
-> BTW. I'm aware you didn't change that logic but ... it's somewhat broken
-> in the case where the aperture has an offset. You should compare
-> r->start with the offset, not with 0.
+On Friday, June 28, 2013 11:20:21 AM Bjorn Helgaas wrote:
+> On Fri, Jun 28, 2013 at 10:24 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> > From: Jiang Liu <jiang.liu@huawei.com>
+> >
+> > Use new helper functions to simplify acpiphp driver.
+> >
+> > Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> I assume this will be merged via linux-pm with the rest of the series.
 
-Yes, please fix that in a separate patch that contains only the bugfix.
+Yup, into 3.12.
+
+Thanks,
+Rafael
+
+
+> > Cc: Jiang Liu <liuj97@gmail.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Yinghai Lu <yinghai@kernel.org>
+> > Cc: Len Brown <lenb@kernel.org>
+> > Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> > Cc: Yijing Wang <wangyijing@huawei.com>
+> > Cc: linux-acpi@vger.kernel.org
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: linux-kernel@vger.kernel.org
+> > ---
+> >  drivers/pci/hotplug/acpiphp_glue.c | 30 ++++++++----------------------
+> >  1 file changed, 8 insertions(+), 22 deletions(-)
+> >
+> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> > index 59df857..a0a7133 100644
+> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> > @@ -201,7 +201,6 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+> >         struct acpiphp_bridge *bridge = (struct acpiphp_bridge *)context;
+> >         struct acpiphp_slot *slot;
+> >         struct acpiphp_func *newfunc;
+> > -       acpi_handle tmp;
+> >         acpi_status status = AE_OK;
+> >         unsigned long long adr, sun;
+> >         int device, function, retval, found = 0;
+> > @@ -232,19 +231,19 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+> >         newfunc->handle = handle;
+> >         newfunc->function = function;
+> >
+> > -       if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &tmp)))
+> > +       if (acpi_has_method(handle, "_EJ0"))
+> >                 newfunc->flags = FUNC_HAS_EJ0;
+> >
+> > -       if (ACPI_SUCCESS(acpi_get_handle(handle, "_STA", &tmp)))
+> > +       if (acpi_has_method(handle, "_STA"))
+> >                 newfunc->flags |= FUNC_HAS_STA;
+> >
+> > -       if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS0", &tmp)))
+> > +       if (acpi_has_method(handle, "_PS0"))
+> >                 newfunc->flags |= FUNC_HAS_PS0;
+> >
+> > -       if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS3", &tmp)))
+> > +       if (acpi_has_method(handle, "_PS3"))
+> >                 newfunc->flags |= FUNC_HAS_PS3;
+> >
+> > -       if (ACPI_SUCCESS(acpi_get_handle(handle, "_DCK", &tmp)))
+> > +       if (acpi_has_method(handle, "_DCK"))
+> >                 newfunc->flags |= FUNC_HAS_DCK;
+> >
+> >         status = acpi_evaluate_integer(handle, "_SUN", NULL, &sun);
+> > @@ -843,25 +842,14 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+> >   */
+> >  int acpiphp_eject_slot(struct acpiphp_slot *slot)
+> >  {
+> > -       acpi_status status;
+> >         struct acpiphp_func *func;
+> > -       struct acpi_object_list arg_list;
+> > -       union acpi_object arg;
+> >
+> >         list_for_each_entry(func, &slot->funcs, sibling) {
+> >                 /* We don't want to call _EJ0 on non-existing functions. */
+> >                 if ((func->flags & FUNC_HAS_EJ0)) {
+> > -                       /* _EJ0 method take one argument */
+> > -                       arg_list.count = 1;
+> > -                       arg_list.pointer = &arg;
+> > -                       arg.type = ACPI_TYPE_INTEGER;
+> > -                       arg.integer.value = 1;
+> > -
+> > -                       status = acpi_evaluate_object(func->handle, "_EJ0", &arg_list, NULL);
+> > -                       if (ACPI_FAILURE(status)) {
+> > -                               warn("%s: _EJ0 failed\n", __func__);
+> > +                       if (ACPI_FAILURE(acpi_evaluate_ej0(func->handle)))
+> >                                 return -1;
+> > -                       } else
+> > +                       else
+> >                                 break;
+> >                 }
+> >         }
+> > @@ -1171,7 +1159,6 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+> >   */
+> >  void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
+> >  {
+> > -       acpi_handle dummy_handle;
+> >         struct acpiphp_bridge *bridge;
+> >
+> >         if (acpiphp_disabled)
+> > @@ -1200,8 +1187,7 @@ void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
+> >         get_device(&bus->dev);
+> >
+> >         if (!pci_is_root_bus(bridge->pci_bus) &&
+> > -           ACPI_SUCCESS(acpi_get_handle(bridge->handle,
+> > -                                       "_EJ0", &dummy_handle))) {
+> > +           acpi_has_method(bridge->handle, "_EJ0")) {
+> >                 dbg("found ejectable p2p bridge\n");
+> >                 bridge->flags |= BRIDGE_HAS_EJ0;
+> >                 bridge->func = acpiphp_bridge_handle_to_function(handle);
+> > --
+> > 1.8.1.2
+> >
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
