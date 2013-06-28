@@ -1,102 +1,136 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <51C07E92.6090309@gmail.com>
-Date: Tue, 18 Jun 2013 23:36:50 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:60611 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755738Ab3F1RUl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Jun 2013 13:20:41 -0400
+Received: by mail-ob0-f171.google.com with SMTP id dn14so2245260obc.30
+        for <linux-pci@vger.kernel.org>; Fri, 28 Jun 2013 10:20:41 -0700 (PDT)
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+In-Reply-To: <1372436683-31711-11-git-send-email-liuj97@gmail.com>
+References: <1372436683-31711-1-git-send-email-liuj97@gmail.com> <1372436683-31711-11-git-send-email-liuj97@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 28 Jun 2013 11:20:21 -0600
+Message-ID: <CAErSpo7DTioqp_atjr5NLfGk=afqgbdt=ZZerSzV=EJeR1WwLA@mail.gmail.com>
+Subject: Re: [PATCH v3 10/10] ACPI: simplify acpiphp driver with new helper functions
+To: Jiang Liu <liuj97@gmail.com>
+Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <18797091.iPZsNWFGi1@vostro.rjw.lan> <51BDEF7F.1070107@gmail.com> <27452260.5ySAzSUIS7@vostro.rjw.lan>
-In-Reply-To: <27452260.5ySAzSUIS7@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/17/2013 07:39 PM, Rafael J. Wysocki wrote:
-> On Monday, June 17, 2013 01:01:51 AM Jiang Liu wrote:
->> On 06/16/2013 05:20 AM, Rafael J. Wysocki wrote:
->>> On Saturday, June 15, 2013 10:17:42 PM Rafael J. Wysocki wrote:
->>>> On Saturday, June 15, 2013 09:44:28 AM Jiang Liu wrote:
->> [...]
->>>> When it returns from unregister_hotplug_dock_device(), nothing prevents it
->>>> from accessing whatever it wants, because ds->hp_lock is not used outside
->>>> of the add/del and hotplug_dock_devices().  So, the actual role of
->>>> ds->hp_lock (not the one that it is supposed to play, but the real one)
->>>> is to prevent addition/deletion from happening when hotplug_dock_devices()
->>>> is running.  [Yes, it does protect the list, but since the list is in fact
->>>> unnecessary, that doesn't matter.]
->>>>
->>>>> If we simply use a flag to mark presence of registered callback, we 
->>>>> can't achieve the second goal.
->>>>
->>>> I don't mean using the flag *alone*.
->>>>
->>>>> Take the sony laptop as an example. It has several PCI 
->>>>> hotplug
->>>>> slot associated with the dock station:
->>>>> [   28.829316] acpiphp_glue: _handle_hotplug_event_func: Bus check 
->>>>> notify on \_SB_.PCI0.RP07.LPMB
->>>>> [   30.174964] acpiphp_glue: _handle_hotplug_event_func: Bus check 
->>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM0
->>>>> [   30.174973] acpiphp_glue: _handle_hotplug_event_func: Bus check 
->>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM1
->>>>> [   30.174979] acpiphp_glue: _handle_hotplug_event_func: Bus check 
->>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2
->>>>> [   30.174985] acpiphp_glue: _handle_hotplug_event_func: Bus check 
->>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GFXA
->>>>> [   30.175020] acpiphp_glue: _handle_hotplug_event_func: Bus check 
->>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GHDA
->>>>> [   30.175040] acpiphp_glue: _handle_hotplug_event_func: Bus check 
->>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC0.DLAN
->>>>> [   30.175050] acpiphp_glue: _handle_hotplug_event_func: Bus check 
->>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC1.DODD
->>>>> [   30.175060] acpiphp_glue: _handle_hotplug_event_func: Bus check 
->>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC2.DUSB
->>>>>
->>>>> So it still has some race windows if we undock the station while 
->>>>> repeatedly rescanning/removing
->>>>> the PCI bus for \_SB_.PCI0.RP07.LPMB.LPM0 through sysfs interfaces.
->>>
->>> Which sysfs interfaces do you mean, by the way?
->>>
->>> If you mean "eject", then it takes acpi_scan_lock and hotplug_dock_devices()
->>> should always be run under acpi_scan_lock too.  It isn't at the moment,t
->>> because write_undock() doesn't take acpi_scan_lock(), but this is an obvious
->>> bug (so I'm going to send a patch to fix it in a while).
->>>
->>> With that bug fixed, the possible race between acpi_eject_store() and
->>> hotplug_dock_devices() should be prevented from happening, so perhaps we're
->>> worrying about something that cannot happen?
->> Hi Rafael,
->> 	I mean the "remove" method of each PCI device, and the "power" method
->> of PCI hotplug slot here.
->> 	These methods may be used to remove P2P bridges with associated ACPIPHP
->> hotplug slots, which in turn will cause invoking of
->> unregister_hotplug_dock_device().
->> 	So theoretical we may trigger the bug by undocking while repeatedly
->> adding/removing P2P bridges with ACPIPHP hotplug slot through PCI
->> "rescan" and "remove" sysfs interface,
-> 
-> Why don't we make these things take acpi_scan_lock upfront, then?
-Hi Rafael,
-    Seems we can't rely on acpi_scan_lock here, it may cause another
-deadlock scenario:
-1) thread 1 acquired the acpi_scan_lock and tries to destroy all sysfs
-interfaces for PCI devices.
-2) thread 2 opens a PCI sysfs which then tries to acquire the
-acpi_scan_lock.
-Regards!
-Gerry
+On Fri, Jun 28, 2013 at 10:24 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Jiang Liu <jiang.liu@huawei.com>
+>
+> Use new helper functions to simplify acpiphp driver.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 
-> 
-> Rafael
-> 
-> 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
+I assume this will be merged via linux-pm with the rest of the series.
+
+> Cc: Jiang Liu <liuj97@gmail.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: Yijing Wang <wangyijing@huawei.com>
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c | 30 ++++++++----------------------
+>  1 file changed, 8 insertions(+), 22 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 59df857..a0a7133 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -201,7 +201,6 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+>         struct acpiphp_bridge *bridge = (struct acpiphp_bridge *)context;
+>         struct acpiphp_slot *slot;
+>         struct acpiphp_func *newfunc;
+> -       acpi_handle tmp;
+>         acpi_status status = AE_OK;
+>         unsigned long long adr, sun;
+>         int device, function, retval, found = 0;
+> @@ -232,19 +231,19 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+>         newfunc->handle = handle;
+>         newfunc->function = function;
+>
+> -       if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &tmp)))
+> +       if (acpi_has_method(handle, "_EJ0"))
+>                 newfunc->flags = FUNC_HAS_EJ0;
+>
+> -       if (ACPI_SUCCESS(acpi_get_handle(handle, "_STA", &tmp)))
+> +       if (acpi_has_method(handle, "_STA"))
+>                 newfunc->flags |= FUNC_HAS_STA;
+>
+> -       if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS0", &tmp)))
+> +       if (acpi_has_method(handle, "_PS0"))
+>                 newfunc->flags |= FUNC_HAS_PS0;
+>
+> -       if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS3", &tmp)))
+> +       if (acpi_has_method(handle, "_PS3"))
+>                 newfunc->flags |= FUNC_HAS_PS3;
+>
+> -       if (ACPI_SUCCESS(acpi_get_handle(handle, "_DCK", &tmp)))
+> +       if (acpi_has_method(handle, "_DCK"))
+>                 newfunc->flags |= FUNC_HAS_DCK;
+>
+>         status = acpi_evaluate_integer(handle, "_SUN", NULL, &sun);
+> @@ -843,25 +842,14 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+>   */
+>  int acpiphp_eject_slot(struct acpiphp_slot *slot)
+>  {
+> -       acpi_status status;
+>         struct acpiphp_func *func;
+> -       struct acpi_object_list arg_list;
+> -       union acpi_object arg;
+>
+>         list_for_each_entry(func, &slot->funcs, sibling) {
+>                 /* We don't want to call _EJ0 on non-existing functions. */
+>                 if ((func->flags & FUNC_HAS_EJ0)) {
+> -                       /* _EJ0 method take one argument */
+> -                       arg_list.count = 1;
+> -                       arg_list.pointer = &arg;
+> -                       arg.type = ACPI_TYPE_INTEGER;
+> -                       arg.integer.value = 1;
+> -
+> -                       status = acpi_evaluate_object(func->handle, "_EJ0", &arg_list, NULL);
+> -                       if (ACPI_FAILURE(status)) {
+> -                               warn("%s: _EJ0 failed\n", __func__);
+> +                       if (ACPI_FAILURE(acpi_evaluate_ej0(func->handle)))
+>                                 return -1;
+> -                       } else
+> +                       else
+>                                 break;
+>                 }
+>         }
+> @@ -1171,7 +1159,6 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+>   */
+>  void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
+>  {
+> -       acpi_handle dummy_handle;
+>         struct acpiphp_bridge *bridge;
+>
+>         if (acpiphp_disabled)
+> @@ -1200,8 +1187,7 @@ void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
+>         get_device(&bus->dev);
+>
+>         if (!pci_is_root_bus(bridge->pci_bus) &&
+> -           ACPI_SUCCESS(acpi_get_handle(bridge->handle,
+> -                                       "_EJ0", &dummy_handle))) {
+> +           acpi_has_method(bridge->handle, "_EJ0")) {
+>                 dbg("found ejectable p2p bridge\n");
+>                 bridge->flags |= BRIDGE_HAS_EJ0;
+>                 bridge->func = acpiphp_bridge_handle_to_function(handle);
+> --
+> 1.8.1.2
+>
