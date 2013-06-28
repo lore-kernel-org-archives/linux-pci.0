@@ -1,58 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:56043 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753796Ab3FJLuq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 07:50:46 -0400
-Received: by mail-pa0-f42.google.com with SMTP id rl6so4375404pac.1
-        for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2013 04:50:46 -0700 (PDT)
-From: Tushar Behera <tushar.behera@linaro.org>
-To: linux-kernel@vger.kernel.org
-Cc: thierry.reding@gmail.com, patches@linaro.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 13/15] pci: mvebu: Convert to use devm_ioremap_resource
-Date: Mon, 10 Jun 2013 17:05:11 +0530
-Message-Id: <1370864113-17895-14-git-send-email-tushar.behera@linaro.org>
-In-Reply-To: <1370864113-17895-1-git-send-email-tushar.behera@linaro.org>
-References: <1370864113-17895-1-git-send-email-tushar.behera@linaro.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:54411 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751017Ab3F1Tt4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Jun 2013 15:49:56 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [PATCH 3/6] PCI: introduce pci_trim_stale_devices()
+Date: Fri, 28 Jun 2013 21:59:26 +0200
+Message-ID: <2795933.HtOzpJWrsk@vostro.rjw.lan>
+In-Reply-To: <1372177330-28013-4-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <1372177330-28013-4-git-send-email-mika.westerberg@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 75096579c3ac ("lib: devres: Introduce devm_ioremap_resource()")
-introduced devm_ioremap_resource() and deprecated the use of
-devm_request_and_ioremap().
+On Tuesday, June 25, 2013 07:22:07 PM Mika Westerberg wrote:
+> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> 
+> The new function stops and removes the device if it doesn't respond.
+> If the device responds and it's a bus we apply the function to all
+> subdevices recursively.
+> 
+> It's useful for hotplug bus check case, when you need drop all unplugged
+> devices before looking for new ones.
+> 
+> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Signed-off-by: Tushar Behera <tushar.behera@linaro.org>
-CC: linux-pci@vger.kernel.org
-CC: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-mvebu.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+I think it'd be better to fold this into [4/6].  This way it would be clearer
+what that patch did.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 13a633b..e714876 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -752,7 +752,7 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
- 	if (ret)
- 		return NULL;
- 
--	return devm_request_and_ioremap(&pdev->dev, &regs);
-+	return devm_ioremap_resource(&pdev->dev, &regs);
- }
- 
- static int __init mvebu_pcie_probe(struct platform_device *pdev)
-@@ -842,9 +842,10 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 			continue;
- 
- 		port->base = mvebu_pcie_map_registers(pdev, child, port);
--		if (!port->base) {
-+		if (IS_ERR(port->base)) {
- 			dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
- 				port->port, port->lane);
-+			port->base = NULL;
- 			continue;
- 		}
- 
+Thanks,
+Rafael
+
+
+> ---
+>  drivers/pci/remove.c | 20 ++++++++++++++++++++
+>  include/linux/pci.h  |  1 +
+>  2 files changed, 21 insertions(+)
+> 
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 8fc54b7..77b7a64 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -112,6 +112,26 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+>  
+> +/**
+> + * pci_trim_stale_devices - remove stale device or any stale child
+> + */
+> +void pci_trim_stale_devices(struct pci_dev *dev)
+> +{
+> +	struct pci_bus *bus = dev->subordinate;
+> +	struct pci_dev *child, *tmp;
+> +	bool alive;
+> +	u32 l;
+> +
+> +	/* check if the device responds */
+> +	alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l, 0);
+> +	if (!alive)
+> +		pci_stop_and_remove_bus_device(dev);
+> +
+> +	if (alive && bus)
+> +		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
+> +			pci_trim_stale_devices(child);
+> +}
+> +
+>  void pci_stop_root_bus(struct pci_bus *bus)
+>  {
+>  	struct pci_dev *child, *tmp;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 3a24e4f..8f6e7a0 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -754,6 +754,7 @@ struct pci_dev *pci_dev_get(struct pci_dev *dev);
+>  void pci_dev_put(struct pci_dev *dev);
+>  void pci_remove_bus(struct pci_bus *b);
+>  void pci_stop_and_remove_bus_device(struct pci_dev *dev);
+> +void pci_trim_stale_devices(struct pci_dev *dev);
+>  void pci_stop_root_bus(struct pci_bus *bus);
+>  void pci_remove_root_bus(struct pci_bus *bus);
+>  void pci_setup_cardbus(struct pci_bus *bus);
+> 
 -- 
-1.7.9.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
