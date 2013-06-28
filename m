@@ -1,86 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:50488 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753345Ab3FZX2v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 19:28:51 -0400
-Received: by mail-ob0-f173.google.com with SMTP id wc20so65739obb.4
-        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 16:28:50 -0700 (PDT)
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:63368 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753912Ab3F1QWd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Jun 2013 12:22:33 -0400
 MIME-Version: 1.0
-In-Reply-To: <1372177330-28013-2-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <20130628093319.D4DE6E0090@blue.fi.intel.com>
 References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-2-git-send-email-mika.westerberg@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Jun 2013 17:28:30 -0600
-Message-ID: <CAErSpo4Ks+8PPvpscWZE7LrRd-daOzV-kJi6Oim42A+nZnp3HQ@mail.gmail.com>
-Subject: Re: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<1372177330-28013-5-git-send-email-mika.westerberg@linux.intel.com>
+	<CAE9FiQVt4gCiz20SmJVP6d7tXOior5Ehg+-c_fG7wFsDUj7H4Q@mail.gmail.com>
+	<20130628093319.D4DE6E0090@blue.fi.intel.com>
+Date: Fri, 28 Jun 2013 09:22:32 -0700
+Message-ID: <CAE9FiQUQvVbcbWoBnSiNmtF6P_SHTqWYONzfa-WeQUDYPmvHYw@mail.gmail.com>
+Subject: Re: [PATCH 4/6] PCI: acpiphp: check for new devices on enabled host
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
 	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Miles J Penner <miles.j.penner@intel.com>,
 	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
+	"the arch/x86 maintainers" <x86@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+On Fri, Jun 28, 2013 at 2:33 AM, Kirill A. Shutemov
+<kirill.shutemov@linux.intel.com> wrote:
+> Yinghai Lu wrote:
+>> On Tue, Jun 25, 2013 at 9:22 AM, Mika Westerberg
+>> <mika.westerberg@linux.intel.com> wrote:
+>> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+>> >
+>> > Current acpiphp_check_bridge() implementation is pretty dumb:
+>> >  - it enables the slot if it's not enabled and the slot status is
+>> >    ACPI_STA_ALL;
+>> >  - it disables the slot if it's enabled and slot is not in ACPI_STA_ALL
+>> >    state.
+>> >
+>> > This behavior is not enough to handle Thunderbolt chaining case
+>> > properly. We need to actually rescan for new devices even if a device
+>> > has already in the slot.
+>> >
+>> > The new implementation disables and stops the slot if it's not in
+>> > ACPI_STA_ALL state.
+>> >
+>> > For ACPI_STA_ALL state we first trim devices which don't respond and
+>> > look for the ones after that. We do that even if slot already enabled
+>> > (SLOT_ENABLED).
+>>
+>> that is not right, some time BUS_CHECK is even sent root bus.
+>> in that case, stop all devices in slots and load driver again.
+>>
+>> like you put one card in one slots, but all devices in other slots get stop
+>> and enable again.
 >
-> With Thunderbolt you can chain devices: connect a new devices to plugged
-> one. In this case the slot is already enabled, but we still want to look
-> for new devices behind it.
+> We don't stop enabled devices, we only stop and remove devices which don't
+> respond.  See patch 3/6.
 >
-> We're going to reuse enable_device() for rescan for new devices on the
-> enabled slot. Let's push the check up by stack.
->
-> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 59df857..b983e29 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -688,9 +688,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->         int num, max, pass;
->         LIST_HEAD(add_list);
->
-> -       if (slot->flags & SLOT_ENABLED)
-> -               goto err_exit;
-> -
->         list_for_each_entry(func, &slot->funcs, sibling)
->                 acpiphp_bus_add(func);
->
-> @@ -1242,6 +1239,8 @@ int acpiphp_enable_slot(struct acpiphp_slot *slot)
->                 goto err_exit;
->
->         if (get_slot_status(slot) == ACPI_STA_ALL) {
-> +               if (slot->flags & SLOT_ENABLED)
-> +                       goto err_exit;
+> I don't see how it's harmful. Do you?
 
-Why do we check for SLOT_ENABLED at all?  I think we're handling a Bus
-Check notification, which means "re-enumerate on the device tree
-starting from the notification point."  It doesn't say anything about
-skipping the re-enumeration if we find a device that's already
-enabled.
+then please check with disable_device to put back pci_dev ref,
+also may need to trim corresponding acpi devices.
 
-It seems like we ought to just re-enumerate all the way down in case a
-device was added farther down in the tree (which is what it sounds
-like Thunderbolt is doing).
+so this patch is helping: multiple plug-in and remove?
 
->                 /* configure all functions */
->                 retval = enable_device(slot);
->                 if (retval)
-> --
-> 1.8.3.1
->
+Yinghai
