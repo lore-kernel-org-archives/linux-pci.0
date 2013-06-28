@@ -1,66 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:49792 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756838Ab3FCKEK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2013 06:04:10 -0400
-Received: by mail-lb0-f180.google.com with SMTP id r10so3606453lbi.11
-        for <linux-pci@vger.kernel.org>; Mon, 03 Jun 2013 03:04:08 -0700 (PDT)
-Message-ID: <51AC6A14.2040908@cogentembedded.com>
-Date: Mon, 03 Jun 2013 14:04:04 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Shane Huang <shane.huang@amd.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
-	Jean Delvare <khali@linux-fr.org>, linux-pci@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH RESEND 2/3] ahci: add AMD CZ SATA device ID
-References: <1370255050-2358-1-git-send-email-shane.huang@amd.com>
-In-Reply-To: <1370255050-2358-1-git-send-email-shane.huang@amd.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:56641 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755101Ab3F1KFt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Jun 2013 06:05:49 -0400
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+In-Reply-To: <CAErSpo4Ks+8PPvpscWZE7LrRd-daOzV-kJi6Oim42A+nZnp3HQ@mail.gmail.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1372177330-28013-2-git-send-email-mika.westerberg@linux.intel.com>
+ <CAErSpo4Ks+8PPvpscWZE7LrRd-daOzV-kJi6Oim42A+nZnp3HQ@mail.gmail.com>
+Subject: Re: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in
+ enable_device()
+Message-Id: <20130628095138.D5B7BE0090@blue.fi.intel.com>
+Date: Fri, 28 Jun 2013 12:51:38 +0300 (EEST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+Bjorn Helgaas wrote:
+> On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> >
+> > With Thunderbolt you can chain devices: connect a new devices to plugged
+> > one. In this case the slot is already enabled, but we still want to look
+> > for new devices behind it.
+> >
+> > We're going to reuse enable_device() for rescan for new devices on the
+> > enabled slot. Let's push the check up by stack.
+> >
+> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/pci/hotplug/acpiphp_glue.c | 5 ++---
+> >  1 file changed, 2 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> > index 59df857..b983e29 100644
+> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> > @@ -688,9 +688,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+> >         int num, max, pass;
+> >         LIST_HEAD(add_list);
+> >
+> > -       if (slot->flags & SLOT_ENABLED)
+> > -               goto err_exit;
+> > -
+> >         list_for_each_entry(func, &slot->funcs, sibling)
+> >                 acpiphp_bus_add(func);
+> >
+> > @@ -1242,6 +1239,8 @@ int acpiphp_enable_slot(struct acpiphp_slot *slot)
+> >                 goto err_exit;
+> >
+> >         if (get_slot_status(slot) == ACPI_STA_ALL) {
+> > +               if (slot->flags & SLOT_ENABLED)
+> > +                       goto err_exit;
+> 
+> Why do we check for SLOT_ENABLED at all?  I think we're handling a Bus
+> Check notification, which means "re-enumerate on the device tree
+> starting from the notification point."  It doesn't say anything about
+> skipping the re-enumeration if we find a device that's already
+> enabled.
+> 
+> It seems like we ought to just re-enumerate all the way down in case a
+> device was added farther down in the tree (which is what it sounds
+> like Thunderbolt is doing).
 
-On 03-06-2013 14:24, Shane Huang wrote:
+Currently (with patchset applied), we have two users of
+acpiphp_enable_slot():
 
-> To add AMD CZ SATA controller device ID of IDE mode.
+- /sys/bus/pci/slots/*/power
+- ACPI_NOTIFY_BUS_CHECK in _handle_hotplug_event_func().
 
-> Signed-off-by: Shane Huang <shane.huang@amd.com>
-> Reviewed-by: Tejun Heo <tj@kernel.org>
-> Cc: stable@vger.kernel.org
-> ---
->   drivers/ata/ahci.c      | 1 +
->   drivers/pci/quirks.c    | 2 ++
->   include/linux/pci_ids.h | 1 +
->   3 files changed, 4 insertions(+)
+Both are not related to Thunderbolt.
 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 751f1ea..548f1c3 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -310,6 +310,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->
->   	/* AMD */
->   	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
-> +	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
->   	/* AMD is using RAID class only for ahci controllers */
->   	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
->   	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
-[...]
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index e0b5623..22449c1 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -570,6 +570,7 @@
->   #define PCI_DEVICE_ID_AMD_HUDSON2_IDE		0x780c
->   #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
->   #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
-> +#define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
+Although, I think remove the check is good idea, I prefer to keep it
+separate from Thunderbolt enabling patchset, since it will change sysfs
+ABI a bit and can potentially affect othe ACPI PCI hotplug
+implementations.
 
-    We don't add the device IDs to this file anymore. And if you added 
-it, why didn't you use it in ahci.c?
-
-MBR, Sergei
-
+-- 
+ Kirill A. Shutemov
