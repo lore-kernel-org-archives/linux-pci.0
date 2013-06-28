@@ -1,85 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:56509 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308Ab3FYDfm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jun 2013 23:35:42 -0400
-Received: by mail-oa0-f50.google.com with SMTP id k7so12730197oag.37
-        for <linux-pci@vger.kernel.org>; Mon, 24 Jun 2013 20:35:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1372129109.30572.335.camel@ul30vt.home>
-References: <1371668174-32115-1-git-send-email-rkrcmar@redhat.com>
- <CAErSpo7O2YUUq-Ninu+BdmnrDGcU_h5=h=v1MBCoLorSDZW=Ow@mail.gmail.com> <1372129109.30572.335.camel@ul30vt.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Jun 2013 21:35:21 -0600
-Message-ID: <CAErSpo5m_6cJEBO56_uEAMbUjYL6pPwZ9dqz59RPBfZqCLuFBg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: =?UTF-8?B?UmFkaW0gS3LEjW3DocWZ?= <rkrcmar@redhat.com>,
+Received: from mga02.intel.com ([134.134.136.20]:53474 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755138Ab3F1Jar (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Jun 2013 05:30:47 -0400
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Ronciak <john.ronciak@intel.com>,
+	Miles J Penner <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Isaku Yamahata <yamahata@valinux.co.jp>
-Content-Type: text/plain; charset=UTF-8
+	the arch/x86 maintainers <x86@kernel.org>
+In-Reply-To: <CAE9FiQVt4gCiz20SmJVP6d7tXOior5Ehg+-c_fG7wFsDUj7H4Q@mail.gmail.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1372177330-28013-5-git-send-email-mika.westerberg@linux.intel.com>
+ <CAE9FiQVt4gCiz20SmJVP6d7tXOior5Ehg+-c_fG7wFsDUj7H4Q@mail.gmail.com>
+Subject: Re: [PATCH 4/6] PCI: acpiphp: check for new devices on enabled host
+Message-Id: <20130628093319.D4DE6E0090@blue.fi.intel.com>
+Date: Fri, 28 Jun 2013 12:33:19 +0300 (EEST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 24, 2013 at 8:58 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Mon, 2013-06-24 at 19:38 -0600, Bjorn Helgaas wrote:
->> [+cc Michael, Alex, Isaku]
->>
->> On Wed, Jun 19, 2013 at 12:56 PM, Radim Krčmář <rkrcmar@redhat.com> wrote:
->> > PCIe switch upstream port can be connected directly to the PCIe root bus
->> > in QEMU; ASPM does not expect this topology and dereferences NULL pointer
->> > when initializing.
->> >
->> > I have not confirmed this can happen on real hardware, but it is presented
->> > as a feature in QEMU, so there is no reason to panic if we can recover.
->>
->> This doesn't seem like a valid hardware topology to me.  If this *can*
->> occur on real hardware, we should fix it in Linux.  If not, maybe QEMU
->> should be changed to disallow it.
->
-> I think a quad-port 82576 plugged into an express slot is likely the
-> same topology.
+Yinghai Lu wrote:
+> On Tue, Jun 25, 2013 at 9:22 AM, Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> >
+> > Current acpiphp_check_bridge() implementation is pretty dumb:
+> >  - it enables the slot if it's not enabled and the slot status is
+> >    ACPI_STA_ALL;
+> >  - it disables the slot if it's enabled and slot is not in ACPI_STA_ALL
+> >    state.
+> >
+> > This behavior is not enough to handle Thunderbolt chaining case
+> > properly. We need to actually rescan for new devices even if a device
+> > has already in the slot.
+> >
+> > The new implementation disables and stops the slot if it's not in
+> > ACPI_STA_ALL state.
+> >
+> > For ACPI_STA_ALL state we first trim devices which don't respond and
+> > look for the ones after that. We do that even if slot already enabled
+> > (SLOT_ENABLED).
+> 
+> that is not right, some time BUS_CHECK is even sent root bus.
+> in that case, stop all devices in slots and load driver again.
+> 
+> like you put one card in one slots, but all devices in other slots get stop
+> and enable again.
 
-I don't think that would be the same topology Radim described.  In
-Radim's case, we have this:
+We don't stop enabled devices, we only stop and remove devices which don't
+respond.  See patch 3/6.
 
-  00:03.0 upstream port
-  01:00.0 downstream port
+I don't see how it's harmful. Do you?
 
-and when we call alloc_pcie_link_state() for 01:00.0,
-
-  pdev is 01:00.0
-  pdev->bus is bus 01
-  pdev->bus->parent is bus 00
-  pdev->bus->parent->self (the bridge device leading to bus 00) is NULL
-
-But in the case of a quad 82576 plugged into a slot, there would be a
-root port or a downstream port leading to the slot's link, so my guess
-is we'd have something like this (based on lspci output I found at
-[1]):
-
-  00:05.0 root port leading to slot (bridge to [bus 01-08])
-  01:00.0 upstream port of switch on card (bridge to [bus 02-08])
-  02:02.0 downstream port (bridge to [bus 03-05])
-  02:04.0 downstream port (bridge to [bus 06-08])
-  03:00.0 82576 port 0
-  03:00.1 82576 port 1
-  06:00.0 82576 port 2
-  06:00.1 82576 port 3
-
-So when we call alloc_pcie_link_state() for 02:02.0,
-
-  pdev is 02:02.0
-  pdev->bus is bus 02
-  pdev->bus->parent is bus 01
-  pdev->bus->parent->self (the bridge leading to bus 01) is 00:05.0
-
-Bjorn
-
-[1] http://sourceforge.net/p/e1000/bugs/112/
+-- 
+ Kirill A. Shutemov
