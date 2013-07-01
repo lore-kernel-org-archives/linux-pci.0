@@ -1,78 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:9180 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932512Ab3GLCTz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 22:19:55 -0400
-Message-ID: <51DF67BD.6030706@huawei.com>
-Date: Fri, 12 Jul 2013 10:19:41 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail1.g1.pair.com ([66.39.3.162]:38132 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752974Ab3GAJYG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Jul 2013 05:24:06 -0400
+Date: Mon, 1 Jul 2013 17:24:00 +0800
+From: Sean Cross <xobs@kosagi.com>
+To: Alexander Shiyan <shc_work@mail.ru>
+Cc: devicetree-discuss@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Message-ID: <C89FF158E3384F0E90A288AE1A712972@kosagi.com>
+In-Reply-To: <1372665061.36667486@f35.mail.ru>
+References: <1372662947-27160-1-git-send-email-xobs@kosagi.com>
+ <1372662947-27160-4-git-send-email-xobs@kosagi.com>
+ <1372665061.36667486@f35.mail.ru>
+Subject: Re: [PATCH 3/4] PCI: Add driver for i.MX6 PCI Express
 MIME-Version: 1.0
-To: Paul Bolle <pebolle@tiscali.nl>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH -v2 3/3] PCI,pciehp: use PCIe DSN to identify device change
- during suspend
-References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>  <1373535825-49972-4-git-send-email-wangyijing@huawei.com> <1373553233.1349.15.camel@x61.thuisdomein>
-In-Reply-To: <1373553233.1349.15.camel@x61.thuisdomein>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/7/11 22:33, Paul Bolle wrote:
-> On Thu, 2013-07-11 at 17:43 +0800, Yijing Wang wrote:
-> [...]
->> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
->> index 1542735..f2eb214 100644
->> --- a/drivers/pci/hotplug/pciehp_core.c
->> +++ b/drivers/pci/hotplug/pciehp_core.c
-> [...]
->> @@ -315,6 +342,24 @@ static int pciehp_resume (struct pcie_device *dev)
->>  	if (status) {
->>  		if (list_empty(&pbus->devices))
->>  			pciehp_enable_slot(slot);
->> +
->> +		if (device_serial_number_changed(pbus)) {
->> +			/*
->> +			 * first power off slot, avoid the old driver
->> +			 * .remove() method touch the new hardware
->> +			 */
->> +			if (POWER_CTRL(ctrl)) {
->> +				retval = pciehp_power_off_slot(slot);
->> +				if (retval) {
->> +					ctrl_err(ctrl,
->> +						"Issue of Slot Disable command failed\n");
->> +					return 0;
->> +				}
->> +				msleep(1000);
->> +				pciehp_unconfigure_device(slot);
->> +				pciehp_enable_slot(slot);
->> +			}
->> +		}
->>  	} else if (!list_empty(&pbus->devices))
->>  		pciehp_disable_slot(slot);
->>  	
+On Monday, July 1, 2013 at 3:51 PM, Alexander Shiyan wrote:
+> > This adds a PCI Express port driver for the on-chip PCI Express port
+> > present on the i.MX6 SoC. It is based on the PCI Express driver available
+> > in the Freescale BSP.
+> > 
+> > Signed-off-by: Sean Cross <xobs@kosagi.com (mailto:xobs@kosagi.com)>
+> ...
+> > +++ b/Documentation/devicetree/bindings/pci/imx6q-pcie.txt
+> > @@ -0,0 +1,20 @@
+> > +* Freescale i.MX6Q PCI Express bridge
+> > +
+> > +Example (i.MX6Q)
+> > + pcie: pcie@01ffc000 {
+> > + compatible = "fsl,imx6q-pcie";
+> > + reg = <0x01ffc000 0x4000>,
+> > + <0x01000000 0x100000>,
+> > + <0x01100000 0xe00000>,
+> > + <0x01f00000 0xfc000>;
+> > + interrupts = <0 122 0x04>;
+> > + clocks = <&clks 186>, <&clks 189>, <&clks 196>,
+> > + <&clks 198>, <&clks 144>;
+> > + clock-names = "sata_ref", "pcie_ref_125m", "lvds1_sel",
+> > + "lvds1", "pcie_axi";
+> > + power-enable = <&gpio7 12 0>;
+> > + pcie-reset = <&gpio3 29 0>;
 > 
-> It was surprisingly hard to see why the patch wouldn't apply to v3.10.
-> It turns out the very last line of context is a line consisting of just
-> a single tab. And in v3.10 it is an empty line. 
 > 
-> Is that lone tab perhaps an editing mistake on your side?
+> 
+> Can this be replaced with regulator/reset API?
+I agree that power-enable might be better replaced with regulator API calls, and I'll rework this patch to incorporate a regulator.
 
-I will check this, thanks!
+I hadn't heard of the reset API before, and I note in the documentation that it says:
 
-> 
-> 
-> Paul Bolle
-> 
-> 
-> .
-> 
+    Reset signals for whole standalone chips are most likely better represented as
+    GPIOs, although there are likely to be exceptions to this rule.
 
+This is a reset line going directly to a PCIe slot, which I think counts as a "standalone chip".
 
--- 
-Thanks!
-Yijing
+> > + wake-up = <&gpio3 22 0>;
+> > + disable-endpoint = <&gpio2 16 0>;
+> > + };
+> 
+> 
+> 
+> --- 
+
 
