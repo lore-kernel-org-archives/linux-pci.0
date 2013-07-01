@@ -1,126 +1,204 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45676 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752633Ab3G2Vbi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Jul 2013 17:31:38 -0400
-Message-ID: <51F6DF35.40909@redhat.com>
-Date: Mon, 29 Jul 2013 17:31:33 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
-Subject: Re: [PATCH v2 3/3] PCI: Stop sriov after stop PF if PF's driver skip
- that
-References: <1374937868-24437-1-git-send-email-yinghai@kernel.org> <1374937868-24437-2-git-send-email-yinghai@kernel.org> <CAErSpo7xk-NGp+4ZFo-jnVnQSEomY=7=CXDSbZPzrhdjZ4zVSA@mail.gmail.com> <51F6D161.1040106@redhat.com> <51F6D9A2.8020403@intel.com>
-In-Reply-To: <51F6D9A2.8020403@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail.free-electrons.com ([94.23.35.102]:41124 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753975Ab3GANmt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 09:42:49 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
+Subject: [PATCHv4 03/11] pci: remove ARCH_SUPPORTS_MSI kconfig option
+Date: Mon,  1 Jul 2013 15:42:08 +0200
+Message-Id: <1372686136-1370-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/29/2013 05:07 PM, Alexander Duyck wrote:
-> On 07/29/2013 01:32 PM, Don Dutile wrote:
->> On 07/29/2013 03:58 PM, Bjorn Helgaas wrote:
->>> On Sat, Jul 27, 2013 at 9:11 AM, Yinghai Lu<yinghai@kernel.org>   wrote:
->>>> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
->>>> (PCI: Simplify IOV implementation and fix reference count races)
->>>> VF need to be removed via virtfn_remove to make sure ref to PF
->>>> is put back.
->>>>
->>>> Some driver (like ixgbe) does not call pci_disable_sriov() if
->>>> sriov is enabled via /sys/.../sriov_numvfs setting.
->>>> ixgbe does allow driver for PF get detached, but still have VFs
->>>> around.
->>>
->>> Is this something ixgbe should be doing differently?
->>>
->>> I'm not 100% sold on the idea of the VFs staying active after the
->>> driver releases the PF.  It seems asymmetric because I think the
->>> driver has to claim the PF to *enable* the VFs, but we don't disable
->>> them when releasing the PF.
->>>
->>> What's the use case for detaching the PF driver while the VFs are
->>> active?
->>>
->> VF's assigned to (KVM) guest (via device-assignment).
->> Virtually, it's as if the enet cable is unplugged to the VF in the
->> guest --
->> the device is still there (the PF wasn't unplugged, just the driver
->> de-configured).
->>
->> Pre-sysfs-based configuration, the std way to configure the VFs into
->> a system was to unload the PF driver, and reload it with a vf-enabling
->> parameter
->> (like max_vfs=<n>  in the case of ixgbe, igb).
->> Now, if someone unloaded the PF driver in the host, the unplanned removal
->> of the PF enabled the VF to crash the host (maybe AlexD can provide the
->> details how that occurred).
->> So, the solution was to 'pause' the VF operation and let packets drop
->> in the guest, and re-enable the VF operation if the PF driver was
->> re-configured.
->>
->> So, as I stated in previous postings, this patch is acceptable if
->> it doesn't cause a guest crash when a VF is assigned to a KVM guest.
->> If you tested this case, then please state as such in the posting.
->> If not, then can AlexD test this case ?
->>
->> - Don
->
-> I actually haven't done much with direct assignment to guests.  I
-> believe it was Greg who did that work to fix this issue.
->
-> I'm adding Jeff Kirsher to the CC.  Perhaps he can pull this patch into
-> a copy of the net tree and submit it to our validation team for testing
-> to see if they end up being able to reproduce the kernel panic issue
-> that was originally addressed by allowing the VFs to be persistent.
->
-I'd appreciate hearing Jeff's test results....
+Now that we have weak versions for each of the PCI MSI architecture
+functions, we can actually build the MSI support for all platforms,
+regardless of whether they provide or not architecture-specific
+versions of those functions. For this reason, the ARCH_SUPPORTS_MSI
+hidden kconfig boolean becomes useless, and this patch gets rid of it.
 
-> Thanks,
->
-> Alex
->
->>>> But how about PF get removed via /sys or pciehp finally?
->>>>
->>>> During hot-remove, VF will still hold one ref to PF and it
->>>> prevent PF to be removed.
->>>> That make the next hot-add fails, as old PF dev struct is still around.
->>>>
->>>> We need to add pci_disable_sriov() calling during stop PF .
->>>>
->>>> Need this one for v3.11
->>>
->>> Don had a concern that there might be a regression here ... I'm a bit
->>> confused on the details, but you guys need to come to agreement that
->>> this doesn't make things worse.
->>>
->>>> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
->>>> Cc: Jiang Liu<liuj97@gmail.com>
->>>> Cc: Alexander Duyck<alexander.h.duyck@intel.com>
->>>> Cc: Donald Dutile<ddutile@redhat.com>
->>>> Cc: Greg Rose<gregory.v.rose@intel.com>
->>>>
->>>> ---
->>>>    drivers/pci/remove.c |    2 ++
->>>>    1 file changed, 2 insertions(+)
->>>>
->>>> Index: linux-2.6/drivers/pci/remove.c
->>>> ===================================================================
->>>> --- linux-2.6.orig/drivers/pci/remove.c
->>>> +++ linux-2.6/drivers/pci/remove.c
->>>> @@ -25,6 +25,8 @@ static void pci_stop_dev(struct pci_dev
->>>>                   pci_proc_detach_device(dev);
->>>>                   pci_remove_sysfs_dev_files(dev);
->>>>                   device_del(&dev->dev);
->>>> +               /* remove VF, if PF driver skip that */
->>>> +               pci_disable_sriov(dev);
->>>>                   dev->is_added = 0;
->>>>           }
->>>>
->>
->
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: linux390@de.ibm.com
+Cc: linux-s390@vger.kernel.org
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: x86@kernel.org
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-mips@linux-mips.org
+Cc: David S. Miller <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+Cc: Chris Metcalf <cmetcalf@tilera.com>
+---
+ arch/arm/Kconfig     | 1 -
+ arch/ia64/Kconfig    | 1 -
+ arch/mips/Kconfig    | 2 --
+ arch/powerpc/Kconfig | 1 -
+ arch/s390/Kconfig    | 1 -
+ arch/sparc/Kconfig   | 1 -
+ arch/tile/Kconfig    | 1 -
+ arch/x86/Kconfig     | 1 -
+ drivers/pci/Kconfig  | 4 ----
+ 9 files changed, 13 deletions(-)
+
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 8ab5962..3413679 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -435,7 +435,6 @@ config ARCH_NETX
+ config ARCH_IOP13XX
+ 	bool "IOP13xx-based"
+ 	depends on MMU
+-	select ARCH_SUPPORTS_MSI
+ 	select CPU_XSC3
+ 	select NEED_MACH_MEMORY_H
+ 	select NEED_RET_TO_USER
+diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
+index 1a2b774..943d425 100644
+--- a/arch/ia64/Kconfig
++++ b/arch/ia64/Kconfig
+@@ -9,7 +9,6 @@ config IA64
+ 	select PCI if (!IA64_HP_SIM)
+ 	select ACPI if (!IA64_HP_SIM)
+ 	select PM if (!IA64_HP_SIM)
+-	select ARCH_SUPPORTS_MSI
+ 	select HAVE_UNSTABLE_SCHED_CLOCK
+ 	select HAVE_IDE
+ 	select HAVE_OPROFILE
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index 7a58ab9..96c1225 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -763,7 +763,6 @@ config CAVIUM_OCTEON_REFERENCE_BOARD
+ 	select SYS_HAS_CPU_CAVIUM_OCTEON
+ 	select SWAP_IO_SPACE
+ 	select HW_HAS_PCI
+-	select ARCH_SUPPORTS_MSI
+ 	select ZONE_DMA32
+ 	select USB_ARCH_HAS_OHCI
+ 	select USB_ARCH_HAS_EHCI
+@@ -799,7 +798,6 @@ config NLM_XLR_BOARD
+ 	select CEVT_R4K
+ 	select CSRC_R4K
+ 	select IRQ_CPU
+-	select ARCH_SUPPORTS_MSI
+ 	select ZONE_DMA32 if 64BIT
+ 	select SYNC_R4K
+ 	select SYS_HAS_EARLY_PRINTK
+diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+index c33e3ad..f9d9d8e 100644
+--- a/arch/powerpc/Kconfig
++++ b/arch/powerpc/Kconfig
+@@ -734,7 +734,6 @@ config PCI
+ 	default y if !40x && !CPM2 && !8xx && !PPC_83xx \
+ 		&& !PPC_85xx && !PPC_86xx && !GAMECUBE_COMMON
+ 	default PCI_QSPAN if !4xx && !CPM2 && 8xx
+-	select ARCH_SUPPORTS_MSI
+ 	select GENERIC_PCI_IOMAP
+ 	help
+ 	  Find out whether your system includes a PCI bus. PCI is the name of
+diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
+index da183c5..9a6225b 100644
+--- a/arch/s390/Kconfig
++++ b/arch/s390/Kconfig
+@@ -429,7 +429,6 @@ menuconfig PCI
+ 	bool "PCI support"
+ 	default n
+ 	depends on 64BIT
+-	select ARCH_SUPPORTS_MSI
+ 	select PCI_MSI
+ 	help
+ 	  Enable PCI support.
+diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
+index 9ac9f16..822e1a1 100644
+--- a/arch/sparc/Kconfig
++++ b/arch/sparc/Kconfig
+@@ -52,7 +52,6 @@ config SPARC32
+ 
+ config SPARC64
+ 	def_bool 64BIT
+-	select ARCH_SUPPORTS_MSI
+ 	select HAVE_FUNCTION_TRACER
+ 	select HAVE_FUNCTION_GRAPH_TRACER
+ 	select HAVE_FUNCTION_GRAPH_FP_TEST
+diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
+index 3aa3766..d2d519c 100644
+--- a/arch/tile/Kconfig
++++ b/arch/tile/Kconfig
+@@ -379,7 +379,6 @@ config PCI
+ 	select PCI_DOMAINS
+ 	select GENERIC_PCI_IOMAP
+ 	select TILE_GXIO_TRIO if TILEGX
+-	select ARCH_SUPPORTS_MSI if TILEGX
+ 	select PCI_MSI if TILEGX
+ 	---help---
+ 	  Enable PCI root complex support, so PCIe endpoint devices can
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 685692c..4229ce0 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -1999,7 +1999,6 @@ menu "Bus options (PCI etc.)"
+ config PCI
+ 	bool "PCI support"
+ 	default y
+-	select ARCH_SUPPORTS_MSI if (X86_LOCAL_APIC && X86_IO_APIC)
+ 	---help---
+ 	  Find out whether you have a PCI motherboard. PCI is the name of a
+ 	  bus system, i.e. the way the CPU talks to the other stuff inside
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index ac45398..3d4c061 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -1,13 +1,9 @@
+ #
+ # PCI configuration
+ #
+-config ARCH_SUPPORTS_MSI
+-	bool
+-
+ config PCI_MSI
+ 	bool "Message Signaled Interrupts (MSI and MSI-X)"
+ 	depends on PCI
+-	depends on ARCH_SUPPORTS_MSI
+ 	help
+ 	   This allows device drivers to enable MSI (Message Signaled
+ 	   Interrupts).  Message Signaled Interrupts enable a device to
+-- 
+1.8.1.2
 
