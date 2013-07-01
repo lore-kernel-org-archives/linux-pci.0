@@ -1,267 +1,318 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 4 Jul 2013 16:33:14 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH v2 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer
- Aspire S5
-Message-ID: <20130704133314.GO4898@intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
- <6828518.UobQ5xLxzT@vostro.rjw.lan>
- <20130704125337.GN4898@intel.com>
- <5332719.huZ9ItKWz0@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5332719.huZ9ItKWz0@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:41091 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753185Ab3GANmk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 09:42:40 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
+Subject: [PATCHv4 02/11] pci: use weak functions for MSI arch-specific functions
+Date: Mon,  1 Jul 2013 15:42:07 +0200
+Message-Id: <1372686136-1370-3-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 04, 2013 at 03:14:58PM +0200, Rafael J. Wysocki wrote:
-> On Thursday, July 04, 2013 03:53:38 PM Mika Westerberg wrote:
-> > On Thu, Jul 04, 2013 at 02:36:00PM +0200, Rafael J. Wysocki wrote:
-> > > On Thursday, July 04, 2013 11:58:44 AM Mika Westerberg wrote:
-> > > > On Wed, Jul 03, 2013 at 11:40:42PM +0200, Rafael J. Wysocki wrote:
-> > > > > On Wednesday, July 03, 2013 05:04:53 PM Mika Westerberg wrote:
-> > > > > > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> > > > > > 
-> > > > > > Correct ACPI PCI hotplug imeplementation should have _RMV method in a
-> > > > > > PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
-> > > > > > deeper in hierarchy:
-> > > > > > 
-> > > > > > Device (RP05)
-> > > > > > {
-> > > > > >    // ...
-> > > > > >    Device (HRUP)
-> > > > > >    {
-> > > > > >        // ...
-> > > > > >        Device (HRDN)
-> > > > > >        {
-> > > > > >            // ...
-> > > > > >            Device (EPUP)
-> > > > > >            {
-> > > > > >                // ...
-> > > > > >                Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
-> > > > > >                {
-> > > > > >                    Return (One)
-> > > > > >                }
-> > > > > >            }
-> > > > > >        }
-> > > > > >    }
-> > > > > > }
-> > > > > > 
-> > > > > > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> > > > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > > > > ---
-> > > > > >  drivers/pci/hotplug/acpi_pcihp.c | 13 +++++++++++++
-> > > > > >  1 file changed, 13 insertions(+)
-> > > > > > 
-> > > > > > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> > > > > > index 2a47e82..d92ebfb 100644
-> > > > > > --- a/drivers/pci/hotplug/acpi_pcihp.c
-> > > > > > +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> > > > > > @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
-> > > > > >  	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-> > > > > >  	if (ACPI_SUCCESS(status) && removable)
-> > > > > >  		return 1;
-> > > > > > +
-> > > > > > +	/*
-> > > > > > +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
-> > > > > > +	 *
-> > > > > > +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
-> > > > > > +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
-> > > > > > +	 * deeper in hierarchy.
-> > > > > > +	 */
-> > > > > > +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
-> > > > > > +			&removable);
-> > > > > 
-> > > > > Well, calling stuff like this directly from a general function is kind of ugly.
-> > > > > 
-> > > > > Can we use something like a quirk instead?  A DMI check or something?
-> > > > 
-> > > > Sure we can. How about something like the patch below?
-> > > 
-> > > Well, it goes into the right (to me) direction. :-)
-> > > 
-> > > Some comments below.
-> > > 
-> > > > From: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > > Subject: [PATCH] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
-> > > > 
-> > > > The acpiphp driver finds out whether the device is removable by checking
-> > > > whether it has _RMV method directly behind it (and if it returns 1).
-> > > > However, at least on Acer Aspire S5 with Thunderbolt host router has this
-> > > > method placed behind a device called EPUP (endpoint upstream port?) and not
-> > > > in the usual place expected by the acpiphp driver. The ASL code below shows
-> > > > how this is done on that machine:
-> > > > 
-> > > > Device (RP05)
-> > > > {
-> > > > 	...
-> > > > 	Device (HRUP)
-> > > > 	{
-> > > > 		Name (_ADR, Zero)
-> > > > 		Name (_PRW, Package (0x02)
-> > > > 		{
-> > > > 			0x09,
-> > > > 			0x04
-> > > > 		})
-> > > > 		Device (HRDN)
-> > > > 		{
-> > > > 			Name (_ADR, 0x00040000)
-> > > > 			Name (_PRW, Package (0x02)
-> > > > 			{
-> > > > 				0x09,
-> > > > 				0x04
-> > > > 			})
-> > > > 			Device (EPUP)
-> > > > 			{
-> > > > 				Name (_ADR, Zero)
-> > > > 				Method (_RMV, 0, NotSerialized)
-> > > > 				{
-> > > > 					Return (One)
-> > > > 				}
-> > > > 			}
-> > > > 		}
-> > > > 	}
-> > > > 	...
-> > > > 
-> > > > Fix this by adding a DMI quirk for the Acer Aspire S5 machine that gives an
-> > > > alternative path to the _RMV method.
-> > > > 
-> > > > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > > ---
-> > > >  drivers/pci/hotplug/acpi_pcihp.c | 57 ++++++++++++++++++++++++++++++++++++----
-> > > >  1 file changed, 52 insertions(+), 5 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> > > > index 2a47e82..99fccf3 100644
-> > > > --- a/drivers/pci/hotplug/acpi_pcihp.c
-> > > > +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> > > > @@ -33,6 +33,7 @@
-> > > >  #include <linux/acpi.h>
-> > > >  #include <linux/pci-acpi.h>
-> > > >  #include <linux/slab.h>
-> > > > +#include <linux/dmi.h>
-> > > >  
-> > > >  #define MY_NAME	"acpi_pcihp"
-> > > >  
-> > > > @@ -408,21 +409,67 @@ got_one:
-> > > >  }
-> > > >  EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
-> > > >  
-> > > > +/**
-> > > > + * pcihp_is_removable - is the given ACPI device removable
-> > > > + * @handle: ACPI handle of the device
-> > > > + *
-> > > > + * Try to find out whether the given ACPI device is removable by evaluating
-> > > > + * its _RMV and returning the result. If we can't find the _RMV directly
-> > > > + * under the device use system specific quirks to locate it.
-> > > > + */
-> > > > +static bool pcihp_is_removable(acpi_handle handle)
-> > > > +{
-> > > 
-> > > People are generally used to seeing DMI lists outside of functions.
-> > 
-> > OK.
-> > 
-> > > > +	static const struct dmi_system_id rmv_paths[] = {
-> > > > +		{
-> > > > +			/*
-> > > > +			 * On Acer Aspire S5 the _RMV method for the
-> > > > +			 * Thunderbolt host router upstream port is not
-> > > > +			 * located directly under the device but it is
-> > > > +			 * instead placed a bit deeper in the hierarchy.
-> > > > +			 */
-> > > > +			.ident = "Acer Aspire S5",
-> > > > +			.matches = {
-> > > > +				DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-> > > > +				DMI_MATCH(DMI_PRODUCT_NAME, "Aspire S5-391"),
-> > > > +			},
-> > > > +			.driver_data = "HRDN.EPUP._RMV",
-> > > 
-> > > Use .callback instead? ->
-> > > 
-> > > > +		},
-> > > > +		{ }
-> > > > +	};
-> > > > +	const struct dmi_system_id *id;
-> > > > +	unsigned long long removable;
-> > > > +	acpi_status status;
-> > > > +
-> > > > +	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-> > > > +	if (ACPI_SUCCESS(status))
-> > > > +		return !!removable;
-> > > > +
-> > > > +	/* Try system specific quirks */
-> > > > +	id = dmi_first_match(rmv_paths);
-> > > > +	if (id && id->driver_data) {
-> > > 
-> > > -> And here do
-> > > 
-> > > 	if (id && id->callback)
-> > > 		return id->callback(id);
-> > 
-> > There is a problem with the above that we can't pass an ACPI handle to the
-> > callback function.
-> 
-> Ah, right.
-> 
-> Well, you can do
-> 
-> 	if (id && id->driver_data) {
-> 		bool (*callback)(acpi_handle) = id->driver_data;
-> 
-> 		return callback(handle);
-> 	}
-> 
-> although it's a bit hackish.
+Until now, the MSI architecture-specific functions could be overloaded
+using a fairly complex set of #define and compile-time
+conditionals. In order to prepare for the introduction of the msi_chip
+infrastructure, it is desirable to switch all those functions to use
+the 'weak' mechanism. This commit converts all the architectures that
+were overidding those MSI functions to use the new strategy.
 
-I'm thinking that passing just the path from driver_data might be simpler
-in this case ;-) But I'm fine with changing it to be a callback as well.
+Note that we keep a separate, non-weak, function
+default_teardown_msi_irqs() for the default behavior of the
+arch_teardown_msi_irqs(), as the default behavior is needed by the Xen
+x86 PCI code.
 
-> > > 
-> > > > +		char path[64];
-> > > > +
-> > > > +		strlcpy(path, id->driver_data, sizeof(path));
-> 
-> BTW, why didn't you want to pass id->driver_data directly here?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: linux390@de.ibm.com
+Cc: linux-s390@vger.kernel.org
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: x86@kernel.org
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-mips@linux-mips.org
+Cc: David S. Miller <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+Cc: Chris Metcalf <cmetcalf@tilera.com>
+---
+ arch/mips/include/asm/pci.h    |  5 -----
+ arch/powerpc/include/asm/pci.h |  5 -----
+ arch/s390/include/asm/pci.h    |  4 ----
+ arch/x86/include/asm/pci.h     | 28 --------------------------
+ arch/x86/kernel/x86_init.c     | 21 ++++++++++++++++++++
+ drivers/pci/msi.c              | 45 +++++++++++++++++++-----------------------
+ include/linux/msi.h            |  7 ++++++-
+ 7 files changed, 47 insertions(+), 68 deletions(-)
 
-acpi_evaluate_integer() takes acpi_string as parameter which is 'char *',
-not 'const char *'.
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index b8e24fd..031f4c1 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -137,11 +137,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ 	return channel ? 15 : 14;
+ }
+ 
+-#ifdef CONFIG_CPU_CAVIUM_OCTEON
+-/* MSI arch hook for OCTEON */
+-#define arch_setup_msi_irqs arch_setup_msi_irqs
+-#endif
+-
+ extern char * (*pcibios_plat_setup)(char *str);
+ 
+ #ifdef CONFIG_OF
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 6653f27..95145a1 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -113,11 +113,6 @@ extern int pci_domain_nr(struct pci_bus *bus);
+ /* Decide whether to display the domain number in /proc */
+ extern int pci_proc_domain(struct pci_bus *bus);
+ 
+-/* MSI arch hooks */
+-#define arch_setup_msi_irqs arch_setup_msi_irqs
+-#define arch_teardown_msi_irqs arch_teardown_msi_irqs
+-#define arch_msi_check_device arch_msi_check_device
+-
+ struct vm_area_struct;
+ /* Map a range of PCI memory or I/O space for a device into user space */
+ int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
+index 6c18012..8641e8d 100644
+--- a/arch/s390/include/asm/pci.h
++++ b/arch/s390/include/asm/pci.h
+@@ -21,10 +21,6 @@ void pci_iounmap(struct pci_dev *, void __iomem *);
+ int pci_domain_nr(struct pci_bus *);
+ int pci_proc_domain(struct pci_bus *);
+ 
+-/* MSI arch hooks */
+-#define arch_setup_msi_irqs	arch_setup_msi_irqs
+-#define arch_teardown_msi_irqs	arch_teardown_msi_irqs
+-
+ #define ZPCI_BUS_NR			0	/* default bus number */
+ #define ZPCI_DEVFN			0	/* default device number */
+ 
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index d9e9e6c..8c61de0 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -100,29 +100,6 @@ static inline void early_quirks(void) { }
+ extern void pci_iommu_alloc(void);
+ 
+ #ifdef CONFIG_PCI_MSI
+-/* MSI arch specific hooks */
+-static inline int x86_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+-{
+-	return x86_msi.setup_msi_irqs(dev, nvec, type);
+-}
+-
+-static inline void x86_teardown_msi_irqs(struct pci_dev *dev)
+-{
+-	x86_msi.teardown_msi_irqs(dev);
+-}
+-
+-static inline void x86_teardown_msi_irq(unsigned int irq)
+-{
+-	x86_msi.teardown_msi_irq(irq);
+-}
+-static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
+-{
+-	x86_msi.restore_msi_irqs(dev, irq);
+-}
+-#define arch_setup_msi_irqs x86_setup_msi_irqs
+-#define arch_teardown_msi_irqs x86_teardown_msi_irqs
+-#define arch_teardown_msi_irq x86_teardown_msi_irq
+-#define arch_restore_msi_irqs x86_restore_msi_irqs
+ /* implemented in arch/x86/kernel/apic/io_apic. */
+ struct msi_desc;
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+@@ -130,11 +107,6 @@ void native_teardown_msi_irq(unsigned int irq);
+ void native_restore_msi_irqs(struct pci_dev *dev, int irq);
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 		  unsigned int irq_base, unsigned int irq_offset);
+-/* default to the implementation in drivers/lib/msi.c */
+-#define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
+-#define HAVE_DEFAULT_MSI_RESTORE_IRQS
+-void default_teardown_msi_irqs(struct pci_dev *dev);
+-void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+ #else
+ #define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 45a14db..a2b189c 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -116,6 +116,27 @@ struct x86_msi_ops x86_msi = {
+ 	.setup_hpet_msi		= default_setup_hpet_msi,
+ };
+ 
++/* MSI arch specific hooks */
++int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++{
++	return x86_msi.setup_msi_irqs(dev, nvec, type);
++}
++
++void arch_teardown_msi_irqs(struct pci_dev *dev)
++{
++	x86_msi.teardown_msi_irqs(dev);
++}
++
++void arch_teardown_msi_irq(unsigned int irq)
++{
++	x86_msi.teardown_msi_irq(irq);
++}
++
++void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
++{
++	x86_msi.restore_msi_irqs(dev, irq);
++}
++
+ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.init			= native_io_apic_init_mappings,
+ 	.read			= native_io_apic_read,
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 2c10752..289fbfd 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -30,20 +30,21 @@ static int pci_msi_enable = 1;
+ 
+ /* Arch hooks */
+ 
+-#ifndef arch_msi_check_device
+-int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+-	return 0;
++	return -EINVAL;
+ }
+-#endif
+ 
+-#ifndef arch_setup_msi_irqs
+-# define arch_setup_msi_irqs default_setup_msi_irqs
+-# define HAVE_DEFAULT_MSI_SETUP_IRQS
+-#endif
++void __weak arch_teardown_msi_irq(unsigned int irq)
++{
++}
+ 
+-#ifdef HAVE_DEFAULT_MSI_SETUP_IRQS
+-int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++{
++	return 0;
++}
++
++int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
+@@ -65,14 +66,11 @@ int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ 	return 0;
+ }
+-#endif
+ 
+-#ifndef arch_teardown_msi_irqs
+-# define arch_teardown_msi_irqs default_teardown_msi_irqs
+-# define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
+-#endif
+-
+-#ifdef HAVE_DEFAULT_MSI_TEARDOWN_IRQS
++/*
++ * We have a default implementation available as a separate non-weak
++ * function, as it is used by the Xen x86 PCI code
++ */
+ void default_teardown_msi_irqs(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
+@@ -86,15 +84,13 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
+ 			arch_teardown_msi_irq(entry->irq + i);
+ 	}
+ }
+-#endif
+ 
+-#ifndef arch_restore_msi_irqs
+-# define arch_restore_msi_irqs default_restore_msi_irqs
+-# define HAVE_DEFAULT_MSI_RESTORE_IRQS
+-#endif
++void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
++{
++	return default_teardown_msi_irqs(dev);
++}
+ 
+-#ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
+-void default_restore_msi_irqs(struct pci_dev *dev, int irq)
++void __weak arch_restore_msi_irqs(struct pci_dev *dev, int irq)
+ {
+ 	struct msi_desc *entry;
+ 
+@@ -111,7 +107,6 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+ 	if (entry)
+ 		write_msi_msg(irq, &entry->msg);
+ }
+-#endif
+ 
+ static void msi_set_enable(struct pci_dev *dev, int enable)
+ {
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 20c2d6d..c82ff8d 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -50,12 +50,17 @@ struct msi_desc {
+ };
+ 
+ /*
+- * The arch hook for setup up msi irqs
++ * The arch hooks to setup up msi irqs. Those functions are
++ * implemented as weak symbols so that they /can/ be overriden by
++ * architecture specific code if needed.
+  */
+ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
+ void arch_teardown_msi_irq(unsigned int irq);
+ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void arch_teardown_msi_irqs(struct pci_dev *dev);
+ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
++void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
++
++void default_teardown_msi_irqs(struct pci_dev *dev);
+ 
+ #endif /* LINUX_MSI_H */
+-- 
+1.8.1.2
 
-Doing:
-
-	.driver_data = "HRDN.EPUP._RMV",
-
-might place that string to a read-only area (as it is constant), if I
-understand C correctly. So even though I know that acpi_evaluate_interger()
-doesn't change the parameter, there's no guarantee that it doesn't do that
-in the future.
-
-> 
-> > > > +		status = acpi_evaluate_integer(handle, path, NULL, &removable);
-> > > > +		if (ACPI_SUCCESS(status))
-> > > > +			return !!removable;
-> > > > +	}
-> > > > +
-> > > > +	return false;
-> > > > +}
-> > > > +
-> 
-> Thanks,
-> Rafael
-> 
-> 
-> -- 
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
