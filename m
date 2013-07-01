@@ -1,64 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Shuah Khan <shuahkhan@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org,
-	virtualization@lists.linux-foundation.org, kvm@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, shuah.kh@samsung.com
-Subject: Re: [Announcement] Linux Plumbers ACPI/PM, PCI Microconference
-Date: Wed, 31 Jul 2013 23:17:36 +0200
-Message-ID: <7183196.Ov6Qetq3lO@vostro.rjw.lan>
-In-Reply-To: <CAKocOOPOqqS80D23z6xTVSNYYYWZ7ACg9MtSMz_hTqVA3Duo0w@mail.gmail.com>
-References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com> <1755363.sGc8nLIQOW@vostro.rjw.lan> <CAKocOOPOqqS80D23z6xTVSNYYYWZ7ACg9MtSMz_hTqVA3Duo0w@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:17972 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754462Ab3GAScO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Jul 2013 14:32:14 -0400
+Date: Mon, 1 Jul 2013 21:36:13 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in
+ enable_device()
+Message-ID: <20130701183612.GJ9294@intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <4600759.u0rXpSLd62@vostro.rjw.lan>
+ <20130701093217.GG9294@intel.com>
+ <1530651.ees8hXMYoR@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1530651.ees8hXMYoR@vostro.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 31, 2013 10:35:05 AM Shuah Khan wrote:
-> On Wed, Jul 31, 2013 at 5:40 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > Hi All,
-> >
-> > The original announcement didn't go to linux-pm, so again:
-> >
-> > On Tuesday, July 16, 2013 08:21:26 PM Myron Stowe wrote:
-> >> Linux Plumbers has approved an ACPI/PM, PCI microconference. The
-> >> overview page is here:
-> >>
-> >> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
-> >>
-> >> We would like to start receiving volunteers for presenting topics of
-> >> interest.  There is a lot of activity in these subsystems so please
-> >> respond by submitting presentation or discussion proposals that you
-> >> would be willing to cover for consideration.  You should also feel
-> >> free to submit ideas as proposals that others could cover.  The
-> >> instructions for submitting ideas should be at:
-> >>
-> >> http://www.linuxplumbersconf.org/2013/submitting-topic/
-> >
-> > If anyone who's going to attend the Linux Plumbers Conf this year is interested
-> > in any particular topic for discussion during the ACPI/PM+PCI uconf, please
-> > submit a formal topic proposal at:
-> >
-> > http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/proposals/new
-> >
-> > If you submit a topic, that doesn't mean you'll be expected to present anything
-> > (if accepted).  In fact, we are mostly interested in discussion topics and we'd
-> > like to know what is important to people.
-> >
-> > That said if you have a (short) presentation to make, please submit it too.
-> >
-> > We'll appreciate all submissions very much.
-> >
+On Mon, Jul 01, 2013 at 04:01:37PM +0200, Rafael J. Wysocki wrote:
+> > Given the fact that SLOT_ENABLED is only checked in acpiphp_enable_slot()
+> > (after this patch) and that /sys/bus/pci/slots/*/power uses SLOT_POWEREDON
+> > anyway, should we remove the whole flag?
 > 
-> What I have mind is a discussion topic for the Mini-conference, which
-> in-line with what you are asking for.
-> I will add it to the web.
+> Sure, if it is not necessary any more, we should remove it.
 
-Thank you!
+Well, there is one thing that changes due that. Once the flag is gone
+userspace can do 'echo 1 > /sys/bus/pci/slots/*/power' several times and
+the slot is always re-enumerated.
 
+If that is not acceptable we should probably move the SLOT_ENABLED check
+closer to acpiphp_core:enable_device() and drop it from here, so that we
+always re-enumerate on Bus Check event but userspace can only do enable
+once (we still re-enumerate on Bus Check).
