@@ -1,105 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:55911 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754888Ab3G2VUO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2013 17:20:14 -0400
-Received: by mail-ob0-f169.google.com with SMTP id wc20so4166326obb.14
-        for <linux-pci@vger.kernel.org>; Mon, 29 Jul 2013 14:20:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375131833.5297.14.camel@jekeller-desk1.amr.corp.intel.com>
-References: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
- <1375102331-23905-9-git-send-email-jeffrey.t.kirsher@intel.com>
- <CAErSpo5sVTveY54iodDuqLXqsUTqUXTfDLh14k3=okneHB+ikg@mail.gmail.com> <1375131833.5297.14.camel@jekeller-desk1.amr.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 29 Jul 2013 15:19:51 -0600
-Message-ID: <CAErSpo50X1cDSo-o8UU5jAJpRudFY3+oCFKS7DbOYMhpNVxSqA@mail.gmail.com>
-Subject: Re: [net-next 08/15] pci: expose pcie_link_speed and pcix_bus_speed arrays
-To: "Keller, Jacob E" <jacob.e.keller@intel.com>
-Cc: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	David Miller <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	"gospo@redhat.com" <gospo@redhat.com>,
-	"sassmann@redhat.com" <sassmann@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:41218 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754104Ab3GANnJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 09:43:09 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv4 11/11] arm: mvebu: link PCIe controllers to the MSI controller
+Date: Mon,  1 Jul 2013 15:42:16 +0200
+Message-Id: <1372686136-1370-12-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 29, 2013 at 3:03 PM, Keller, Jacob E
-<jacob.e.keller@intel.com> wrote:
-> On Mon, 2013-07-29 at 12:44 -0600, Bjorn Helgaas wrote:
->> On Mon, Jul 29, 2013 at 6:52 AM, Jeff Kirsher
->> <jeffrey.t.kirsher@intel.com> wrote:
->> > From: Jacob Keller <jacob.e.keller@intel.com>
->> >
->> > pcie_link_speed and pcix_bus_speed are arrays used by probe.c to correctly
->> > convert lnksta register values into the pci_bus_speed enum. These static arrays
->> > are useful outside probe for this purpose. This patch makes these defines into
->> > const arrays and exposes them with an extern header in linux/include/pci.h
->> >
->> > Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
->> > Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
->> > Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->> > ---
->> >  drivers/pci/probe.c | 4 ++--
->> >  include/linux/pci.h | 3 +++
->> >  2 files changed, 5 insertions(+), 2 deletions(-)
->> >
->> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> > index 46ada5c..496c5b0 100644
->> > --- a/drivers/pci/probe.c
->> > +++ b/drivers/pci/probe.c
->> > @@ -513,7 +513,7 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
->> >         return bridge;
->> >  }
->> >
->> > -static unsigned char pcix_bus_speed[] = {
->> > +const unsigned char pcix_bus_speed[] = {
->> >         PCI_SPEED_UNKNOWN,              /* 0 */
->> >         PCI_SPEED_66MHz_PCIX,           /* 1 */
->> >         PCI_SPEED_100MHz_PCIX,          /* 2 */
->> > @@ -532,7 +532,7 @@ static unsigned char pcix_bus_speed[] = {
->> >         PCI_SPEED_133MHz_PCIX_533       /* F */
->> >  };
->> >
->> > -static unsigned char pcie_link_speed[] = {
->> > +const unsigned char pcie_link_speed[] = {
->> >         PCI_SPEED_UNKNOWN,              /* 0 */
->> >         PCIE_SPEED_2_5GT,               /* 1 */
->> >         PCIE_SPEED_5_0GT,               /* 2 */
->> > diff --git a/include/linux/pci.h b/include/linux/pci.h
->> > index 0fd1f15..95ff993 100644
->> > --- a/include/linux/pci.h
->> > +++ b/include/linux/pci.h
->> > @@ -120,6 +120,9 @@ typedef int __bitwise pci_power_t;
->> >  /* Remember to update this when the list above changes! */
->> >  extern const char *pci_power_names[];
->> >
->> > +extern const unsigned char pcix_bus_speed[];
->> > +extern const unsigned char pcie_link_speed[];
->>
->> As far as I can tell, you didn't actually add anything that uses
->> pcix_bus_speed[].
->>
->
-> I mostly added this for consistency...
->
->> You added a pcie_link_speed[] use only in drivers/pci/pci.c; maybe
->> this extern declaration could go in drivers/pci/pci.h to limit its
->> visibility?
->
-> Pretty sure I use the pcie_link_speed in the ixgbe driver by including
-> the linux/pci.h header...  Check patch 11/15 of this series where I
-> actually use the values, so it would need to be in the linux/pci.h
-> header.
+This commit adjusts the Armada 370 and Armada XP PCIe controllers
+Device Tree informations to reference their MSI controller. In the
+case of this platform, the MSI controller is implemented by the MPIC.
 
-I'm not sure I was copied on patch 11/15.  I assume it might be
-"ixgbe: call pcie_get_mimimum_link to check if device has enough
-bandwidth", and I see that patch uses the pci_bus_speed enum, so the
-enum definitely needs to be in include/linux/pci.h.  But I don't see
-the pcie_link_speed[] reference.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-370.dtsi        | 1 +
+ arch/arm/boot/dts/armada-xp-mv78230.dtsi | 1 +
+ arch/arm/boot/dts/armada-xp-mv78260.dtsi | 1 +
+ arch/arm/boot/dts/armada-xp-mv78460.dtsi | 1 +
+ 4 files changed, 4 insertions(+)
 
-I did fetch your git tree and searched the diffs themselves but the
-only use I saw was in pcie_get_minimum_link() in drivers/pci/pci.c.
+diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
+index fa3dfc6..a60018d 100644
+--- a/arch/arm/boot/dts/armada-370.dtsi
++++ b/arch/arm/boot/dts/armada-370.dtsi
+@@ -178,6 +178,7 @@
+ 				#address-cells = <3>;
+ 				#size-cells = <2>;
+ 
++				msi-parent = <&mpic>;
+ 				bus-range = <0x00 0xff>;
+ 
+ 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
+diff --git a/arch/arm/boot/dts/armada-xp-mv78230.dtsi b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
+index f8eaa38..4a9a305 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78230.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
+@@ -91,6 +91,7 @@
+ #address-cells = <3>;
+ #size-cells = <2>;
+ 
++				msi-parent = <&mpic>;
+ 				bus-range = <0x00 0xff>;
+ 
+ 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
+diff --git a/arch/arm/boot/dts/armada-xp-mv78260.dtsi b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
+index f4029f0..bc63783 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78260.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
+@@ -111,6 +111,7 @@
+ 				#address-cells = <3>;
+ 				#size-cells = <2>;
+ 
++				msi-parent = <&mpic>;
+ 				bus-range = <0x00 0xff>;
+ 
+ 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
+diff --git a/arch/arm/boot/dts/armada-xp-mv78460.dtsi b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
+index c7b1f4d..77db2bc 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78460.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
+@@ -127,6 +127,7 @@
+ 				#address-cells = <3>;
+ 				#size-cells = <2>;
+ 
++				msi-parent = <&mpic>;
+ 				bus-range = <0x00 0xff>;
+ 
+ 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
+-- 
+1.8.1.2
 
-Bjorn
