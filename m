@@ -1,149 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:10550 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753281Ab3GIINI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Jul 2013 04:13:08 -0400
-Message-ID: <51DBC547.4040308@cn.fujitsu.com>
-Date: Tue, 09 Jul 2013 16:09:43 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Rafael <rjw@sisk.pl>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
-	Oliver Neukum <oneukum@suse.de>,
-	Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [PATCH 1/2] PCI: introduce PCIe Device Serial NUmber Capability
- support
-References: <1373356545-45944-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1373356545-45944-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:41103 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968Ab3GANmt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 09:42:49 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: [PATCHv4 04/11] PCI: Introduce new MSI chip infrastructure
+Date: Mon,  1 Jul 2013 15:42:09 +0200
+Message-Id: <1372686136-1370-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/09/2013 03:55 PM, Yijing Wang wrote:
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-> Introduce PCIe Ext Capability Device Serial Number support,
-> so we can use the unique device serial number to identify
-> the physical device. During system suspend, if the PCIe
-> device was removed and inserted a new same device, after
-> system resume there is no good way to identify it, maybe
-> Device Serial Number is a good choice if device support.
+The new struct msi_chip is used to associated an MSI controller with a
+PCI bus. It is automatically handed down from the root to its children
+during bus enumeration.
 
-Nice idea!
+This patch provides default (weak) implementations for the architecture-
+specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
+and arch_msi_check_device()) which check if a PCI device's bus has an
+attached MSI chip and forward the call appropriately.
 
-Regards,
-Gu
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/msi.c   | 22 ++++++++++++++++++++++
+ drivers/pci/probe.c |  1 +
+ include/linux/msi.h | 11 +++++++++++
+ include/linux/pci.h |  1 +
+ 4 files changed, 35 insertions(+)
 
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-
-
-Reviewed-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: Oliver Neukum <oneukum@suse.de>
-> Cc: Paul Bolle <pebolle@tiscali.nl>
-> Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/pci.c   |   33 +++++++++++++++++++++++++++++++++
->  drivers/pci/pci.h   |    1 +
->  drivers/pci/probe.c |    3 +++
->  include/linux/pci.h |    4 ++++
->  4 files changed, 41 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e37fea6..d08df2b 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2048,6 +2048,39 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
->  }
->  
->  /**
-> + * pci_get_dsn - get device serial number
-> + * @dev: the PCI device
-> + * @sn: saved device serial number
-> + */
-> +void pci_get_dsn(struct pci_dev *dev, u64 *sn)
-> +{
-> +	int pos;
-> +	u32 lo, hi;
-> +
-> +	if (!pci_is_pcie(dev))
-> +		goto out;
-> +
-> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
-> +	if (!pos)
-> +		goto out;
-> +
-> +	pci_read_config_dword(dev, pos + 4, &lo);
-> +	pci_read_config_dword(dev, pos + 8, &hi);
-> +	*sn = ((u64)hi << 32) | lo;
-> +	return;
-> +
-> +out:
-> +	*sn = 0;
-> +	return;
-> +}
-> +EXPORT_SYMBOL(pci_get_dsn);
-> +
-> +void pci_dsn_init(struct pci_dev *dev)
-> +{
-> +	return pci_get_dsn(dev, &dev->sn);
-> +}
-> +
-> +/**
->   * pci_configure_ari - enable or disable ARI forwarding
->   * @dev: the PCI device
->   *
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 68678ed..f626006 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -202,6 +202,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  		    struct resource *res, unsigned int reg);
->  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
->  void pci_configure_ari(struct pci_dev *dev);
-> +void pci_dsn_init(struct pci_dev *dev);
->  
->  /**
->   * pci_ari_enabled - query ARI forwarding status
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 46ada5c..d4c6e7e 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1322,6 +1322,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  	/* Power Management */
->  	pci_pm_init(dev);
->  
-> +	/* Device Serial Number */
-> +	pci_dsn_init(dev);
-> +
->  	/* Vital Product Data */
->  	pci_vpd_pci22_init(dev);
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 0fd1f15..59cd205 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -342,6 +342,7 @@ struct pci_dev {
->  	struct list_head msi_list;
->  	struct kset *msi_kset;
->  #endif
-> +	u64 sn;		/* device serieal number, 0 if not support */
->  	struct pci_vpd *vpd;
->  #ifdef CONFIG_PCI_ATS
->  	union {
-> @@ -995,6 +996,9 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
->  ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
->  int pci_vpd_truncate(struct pci_dev *dev, size_t size);
->  
-> +/* Device Serial Number */
-> +void pci_get_dsn(struct pci_dev *dev, u64 *sn);
-> +
->  /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
->  resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
->  void pci_bus_assign_resources(const struct pci_bus *bus);
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 289fbfd..62eb3d5 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -32,15 +32,37 @@ static int pci_msi_enable = 1;
+ 
+ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
++	struct msi_chip *chip = dev->bus->msi;
++
++	if (chip && chip->setup_irq) {
++		int err;
++
++		err = chip->setup_irq(chip, dev, desc);
++		if (err < 0)
++			return err;
++
++		irq_set_chip_data(desc->irq, chip);
++		return err;
++	}
++
+ 	return -EINVAL;
+ }
+ 
+ void __weak arch_teardown_msi_irq(unsigned int irq)
+ {
++	struct msi_chip *chip = irq_get_chip_data(irq);
++
++	if (chip && chip->teardown_irq)
++		chip->teardown_irq(chip, irq);
+ }
+ 
+ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ {
++	struct msi_chip *chip = dev->bus->msi;
++
++	if (chip && chip->check_device)
++		return chip->check_device(chip, dev, nvec, type);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 70f10fa..c8591e4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -634,6 +634,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 
+ 	child->parent = parent;
+ 	child->ops = parent->ops;
++	child->msi = parent->msi;
+ 	child->sysdata = parent->sysdata;
+ 	child->bus_flags = parent->bus_flags;
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index c82ff8d..5b357d92 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -63,4 +63,15 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
+ 
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+ 
++struct msi_chip {
++	struct module *owner;
++	struct device *dev;
++
++	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
++			 struct msi_desc *desc);
++	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
++	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
++			    int nvec, int type);
++};
++
+ #endif /* LINUX_MSI_H */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3a24e4f..7ffc012 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -432,6 +432,7 @@ struct pci_bus {
+ 	struct resource busn_res;	/* bus numbers routed to this bus */
+ 
+ 	struct pci_ops	*ops;		/* configuration access functions */
++	struct msi_chip	*msi;		/* MSI controller */
+ 	void		*sysdata;	/* hook for sys-specific extension */
+ 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
+ 
+-- 
+1.8.1.2
 
