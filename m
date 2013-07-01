@@ -1,139 +1,264 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 10/30] ACPI / hotplug / PCI: Refactor slot allocation code in register_slot()
-Date: Fri, 12 Jul 2013 01:49:13 +0200
-Message-ID: <9817058.VIV33rM5GL@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:41160 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753975Ab3GANnA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 09:43:00 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv4 07/11] irqchip: armada-370-xp: implement MSI support
+Date: Mon,  1 Jul 2013 15:42:12 +0200
+Message-Id: <1372686136-1370-8-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This commit introduces the support for the MSI interrupts in the
+armada-370-xp interrupt controller driver. It registers an MSI chip to
+the MSI chip registry, which will be used by the Marvell PCIe host
+controller driver.
 
-To make the code in register_slot() a bit easier to follow, change
-the way the slot allocation part is organized.  Drop one local
-variable that's not used any more after that modification.
+The MSI interrupts use the 16 high doorbells, and are therefore
+notified using IRQ1 of the main interrupt controller.
 
-This code change should not lead to any changes in behavior.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   74 ++++++++++++++++++-------------------
- 1 file changed, 36 insertions(+), 38 deletions(-)
+ .../devicetree/bindings/arm/armada-370-xp-mpic.txt |   3 +
+ drivers/irqchip/irq-armada-370-xp.c                | 141 ++++++++++++++++++++-
+ 2 files changed, 143 insertions(+), 1 deletion(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -285,7 +285,7 @@ static acpi_status register_slot(acpi_ha
- 	acpi_handle tmp;
- 	acpi_status status = AE_OK;
- 	unsigned long long adr, sun;
--	int device, function, retval, found = 0;
-+	int device, function, retval;
- 	struct pci_bus *pbus = bridge->pci_bus;
- 	struct pci_dev *pdev;
- 	u32 val;
-@@ -354,44 +354,49 @@ static acpi_status register_slot(acpi_ha
- 		if (slot->device == device) {
- 			if (slot->sun != sun)
- 				warn("sibling found, but _SUN doesn't match!\n");
--			found = 1;
--			break;
--		}
+diff --git a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+index 61df564..d74091a 100644
+--- a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
++++ b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+@@ -4,6 +4,8 @@ Marvell Armada 370 and Armada XP Interrupt Controller
+ Required properties:
+ - compatible: Should be "marvell,mpic"
+ - interrupt-controller: Identifies the node as an interrupt controller.
++- msi-controller: Identifies the node as an PCI Message Signaled
++  Interrupt controller.
+ - #interrupt-cells: The number of cells to define the interrupts. Should be 1.
+   The cell is the IRQ number
  
--	if (!found) {
--		slot = kzalloc(sizeof(struct acpiphp_slot), GFP_KERNEL);
--		if (!slot) {
--			status = AE_NO_MEMORY;
--			goto err_out;
-+			goto slot_found;
- 		}
+@@ -24,6 +26,7 @@ Example:
+               #address-cells = <1>;
+               #size-cells = <1>;
+               interrupt-controller;
++              msi-controller;
+               reg = <0xd0020a00 0x1d0>,
+                     <0xd0021070 0x58>;
+         };
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index 26adc74..04efe64 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -21,7 +21,10 @@
+ #include <linux/io.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
++#include <linux/of_pci.h>
+ #include <linux/irqdomain.h>
++#include <linux/slab.h>
++#include <linux/msi.h>
+ #include <asm/mach/arch.h>
+ #include <asm/exception.h>
+ #include <asm/smp_plat.h>
+@@ -51,12 +54,20 @@
+ #define IPI_DOORBELL_START                      (0)
+ #define IPI_DOORBELL_END                        (8)
+ #define IPI_DOORBELL_MASK                       0xFF
++#define PCI_MSI_DOORBELL_START                  (16)
++#define PCI_MSI_DOORBELL_NR                     (16)
++#define PCI_MSI_DOORBELL_END                    (32)
++#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
  
--		slot->bridge = bridge;
--		slot->device = device;
--		slot->sun = sun;
--		INIT_LIST_HEAD(&slot->funcs);
--		mutex_init(&slot->crit_sect);
-+	slot = kzalloc(sizeof(struct acpiphp_slot), GFP_KERNEL);
-+	if (!slot) {
-+		status = AE_NO_MEMORY;
-+		goto err;
+ static DEFINE_RAW_SPINLOCK(irq_controller_lock);
+ 
+ static void __iomem *per_cpu_int_base;
+ static void __iomem *main_int_base;
+ static struct irq_domain *armada_370_xp_mpic_domain;
++#ifdef CONFIG_PCI_MSI
++static struct irq_domain *armada_370_xp_msi_domain;
++static phys_addr_t msi_doorbell_addr;
++#endif
+ 
+ /*
+  * In SMP mode:
+@@ -87,6 +98,102 @@ static void armada_370_xp_irq_unmask(struct irq_data *d)
+ 				ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
+ }
+ 
++#ifdef CONFIG_PCI_MSI
++
++static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
++				       struct pci_dev *pdev,
++				       struct msi_desc *desc)
++{
++	struct msi_msg msg;
++	irq_hw_number_t hwirq;
++	int virq;
++
++	virq = irq_alloc_mapping(armada_370_xp_msi_domain, &hwirq);
++	if (!virq)
++		return -EINVAL;
++
++	irq_set_msi_desc(virq, desc);
++
++	msg.address_lo = msi_doorbell_addr;
++	msg.address_hi = 0;
++	msg.data = 0xf00 | (hwirq + 16);
++
++	write_msi_msg(virq, &msg);
++	return 0;
++}
++
++static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
++					   unsigned int irq)
++{
++	irq_dispose_mapping(irq);
++}
++
++static struct irq_chip armada_370_xp_msi_irq_chip = {
++	.name = "armada_370_xp_msi_irq",
++	.irq_enable = unmask_msi_irq,
++	.irq_disable = mask_msi_irq,
++	.irq_mask = mask_msi_irq,
++	.irq_unmask = unmask_msi_irq,
++};
++
++static int armada_370_xp_msi_map(struct irq_domain *domain, unsigned int virq,
++				 irq_hw_number_t hw)
++{
++	irq_set_chip_and_handler(virq, &armada_370_xp_msi_irq_chip,
++				 handle_simple_irq);
++	set_irq_flags(virq, IRQF_VALID);
++
++	return 0;
++}
++
++static const struct irq_domain_ops armada_370_xp_msi_irq_ops = {
++	.map = armada_370_xp_msi_map,
++};
++
++static int armada_370_xp_msi_init(struct device_node *node)
++{
++	struct msi_chip *msi_chip;
++	int ret;
++	u32 reg;
++
++	msi_chip = kzalloc(sizeof(*msi_chip), GFP_KERNEL);
++	if (!msi_chip)
++		return -ENOMEM;
++
++	armada_370_xp_msi_domain =
++		irq_domain_add_linear(NULL, PCI_MSI_DOORBELL_NR,
++				      &armada_370_xp_msi_irq_ops, NULL);
++	if (!armada_370_xp_msi_domain) {
++		kfree(msi_chip);
++		return -ENOMEM;
 +	}
- 
--		mutex_lock(&bridge_mutex);
--		list_add_tail(&slot->node, &bridge->slots);
--		mutex_unlock(&bridge_mutex);
--		bridge->nr_slots++;
-+	slot->bridge = bridge;
-+	slot->device = device;
-+	slot->sun = sun;
-+	INIT_LIST_HEAD(&slot->funcs);
-+	mutex_init(&slot->crit_sect);
- 
--		dbg("found ACPI PCI Hotplug slot %llu at PCI %04x:%02x:%02x\n",
--		    slot->sun, pci_domain_nr(pbus), pbus->number, device);
--		retval = acpiphp_register_hotplug_slot(slot);
--		if (retval) {
--			if (retval == -EBUSY)
--				warn("Slot %llu already registered by another "
--					"hotplug driver\n", slot->sun);
--			else
--				warn("acpiphp_register_hotplug_slot failed "
--					"(err code = 0x%x)\n", retval);
-+	mutex_lock(&bridge_mutex);
-+	list_add_tail(&slot->node, &bridge->slots);
-+	mutex_unlock(&bridge_mutex);
-+	bridge->nr_slots++;
- 
--			status = AE_OK;
--			goto err;
--		}
-+	dbg("found ACPI PCI Hotplug slot %llu at PCI %04x:%02x:%02x\n",
-+	    slot->sun, pci_domain_nr(pbus), pbus->number, device);
 +
-+	retval = acpiphp_register_hotplug_slot(slot);
-+	if (retval) {
-+		if (retval == -EBUSY)
-+			warn("Slot %llu already registered by another "
-+				"hotplug driver\n", slot->sun);
-+		else
-+			warn("acpiphp_register_hotplug_slot failed "
-+				"(err code = 0x%x)\n", retval);
++	msi_chip->of_node = node;
++	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
++	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
 +
-+		bridge->nr_slots--;
-+		mutex_lock(&bridge_mutex);
-+		list_del(&slot->node);
-+		mutex_unlock(&bridge_mutex);
-+		kfree(slot);
-+		status = AE_OK;
-+		goto err;
- 	}
++	ret = of_msi_chip_add(msi_chip);
++	if (ret < 0) {
++		irq_domain_remove(armada_370_xp_msi_domain);
++		kfree(msi_chip);
++		return ret;
++	}
++
++	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
++		| PCI_MSI_DOORBELL_MASK;
++
++	writel(reg, per_cpu_int_base +
++	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
++
++	/* Unmask IPI interrupt */
++	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
++
++	return 0;
++}
++#else
++static inline int armada_370_xp_msi_init(struct device_node *node) { return 0; }
++#endif
++
+ #ifdef CONFIG_SMP
+ static int armada_xp_set_affinity(struct irq_data *d,
+ 				  const struct cpumask *mask_val, bool force)
+@@ -214,12 +321,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ 		if (irqnr > 1022)
+ 			break;
  
-+ slot_found:
- 	newfunc->slot = slot;
- 	mutex_lock(&bridge_mutex);
- 	list_add_tail(&newfunc->sibling, &slot->funcs);
-@@ -435,13 +440,6 @@ static acpi_status register_slot(acpi_ha
- 	return AE_OK;
+-		if (irqnr > 0) {
++		if (irqnr > 1) {
+ 			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
+ 					irqnr);
+ 			handle_IRQ(irqnr, regs);
+ 			continue;
+ 		}
++
++#ifdef CONFIG_PCI_MSI
++		/* MSI handling */
++		if (irqnr == 1) {
++			u32 msimask, msinr;
++
++			msimask = readl_relaxed(per_cpu_int_base +
++						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
++				& PCI_MSI_DOORBELL_MASK;
++
++			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
++			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
++
++			for (msinr = PCI_MSI_DOORBELL_START;
++			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
++				int irq;
++
++				if (!(msimask & BIT(msinr)))
++					continue;
++
++				irq = irq_find_mapping(armada_370_xp_msi_domain,
++						       msinr - 16);
++				handle_IRQ(irq, regs);
++			}
++		}
++#endif
++
+ #ifdef CONFIG_SMP
+ 		/* IPI Handling */
+ 		if (irqnr == 0) {
+@@ -269,6 +403,9 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 				   resource_size(&per_cpu_int_res));
+ 	BUG_ON(!per_cpu_int_base);
  
-  err:
--	bridge->nr_slots--;
--	mutex_lock(&bridge_mutex);
--	list_del(&slot->node);
--	mutex_unlock(&bridge_mutex);
--	kfree(slot);
--
-- err_out:
- 	mutex_lock(&acpiphp_context_lock);
- 	context->func = NULL;
- 	acpiphp_put_context(context);
++	msi_doorbell_addr = main_int_res.start +
++		ARMADA_370_XP_SW_TRIG_INT_OFFS;
++
+ 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
+ 
+ 	armada_370_xp_mpic_domain =
+@@ -292,6 +429,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 
+ #endif
+ 
++	armada_370_xp_msi_init(node);
++
+ 	set_handle_irq(armada_370_xp_handle_irq);
+ 
+ 	return 0;
+-- 
+1.8.1.2
 
