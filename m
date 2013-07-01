@@ -1,153 +1,112 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH 1/2] ACPI / PCI: Make bus registration and unregistration symmetric
-Date: Mon, 08 Jul 2013 01:17:53 +0200
-Message-ID: <16760289.CnqI28LtUE@vostro.rjw.lan>
-In-Reply-To: <1468174.eo7i60DZFT@vostro.rjw.lan>
-References: <1468174.eo7i60DZFT@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:46102 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751171Ab3GAPL3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 11:11:29 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 1 Jul 2013 20:34:16 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 52209125804E
+	for <linux-pci@vger.kernel.org>; Mon,  1 Jul 2013 20:40:30 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r61FBjYb26542180
+	for <linux-pci@vger.kernel.org>; Mon, 1 Jul 2013 20:41:45 +0530
+Received: from d28av05.in.ibm.com (loopback [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r61FBJ94003519
+	for <linux-pci@vger.kernel.org>; Tue, 2 Jul 2013 01:11:21 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: weiyang@linux.vnet.ibm.com, linuxram@us.ibm.com,
+	shangw@linux.vnet.ibm.com
+Subject: [PATCH 1/4] PCI: optimize pci_bus_get_depth() by enumerating on pci bus hierachy
+Date: Mon,  1 Jul 2013 23:10:29 +0800
+Message-Id: <1372691432-6440-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Normally, on one pci bus there would be more devices than pci buses. When
+calculating the depth of pci bus, it would be more time efficient by
+enumerating through the child buses instead of the child devices.
 
-Since acpi_pci_slot_enumerate() and acpiphp_enumerate_slots() can get
-the ACPI device handle they need from bus->bridge, it is not
-necessary to pass that handle to them as an argument.
+Also by doing so, the code seems more self explaining. Previously, it go
+through the pci devices and check whether a bridge introduce a child bus or
+not, which needs more background knowledge to understand it.
 
-Drop the second argument of acpi_pci_slot_enumerate() and
-acpiphp_enumerate_slots(), rework them to obtain the ACPI handle
-from bus->bridge and make acpi_pci_add_bus() and
-acpi_pci_remove_bus() entirely symmetrical.
+This patch caculating the depth by enumerating on pci bus hierachy in an
+iterative way.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Reviewed-by: Ram Pai <linuxram@us.ibm.com>
+Reviewed-by: Xiao Guangrong <xiaoguangrong@linux.vnet.ibm.com>
+Reviewed-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 ---
- drivers/acpi/pci_slot.c            |   14 +++++++++-----
- drivers/pci/hotplug/acpiphp_glue.c |    7 ++++---
- drivers/pci/pci-acpi.c             |   16 ++++------------
- include/linux/pci-acpi.h           |   10 ++++------
- 4 files changed, 21 insertions(+), 26 deletions(-)
+ drivers/pci/setup-bus.c |   43 ++++++++++++++++++++++++++++++++-----------
+ 1 files changed, 32 insertions(+), 11 deletions(-)
 
-Index: linux-pm/drivers/acpi/pci_slot.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_slot.c
-+++ linux-pm/drivers/acpi/pci_slot.c
-@@ -159,12 +159,16 @@ register_slot(acpi_handle handle, u32 lv
- 	return AE_OK;
- }
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 16abaaa..b333f73 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1299,22 +1299,43 @@ static void pci_bus_dump_resources(struct pci_bus *bus)
  
--void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle)
-+void acpi_pci_slot_enumerate(struct pci_bus *bus)
+ static int __init pci_bus_get_depth(struct pci_bus *bus)
  {
--	mutex_lock(&slot_list_lock);
--	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
--			    register_slot, NULL, bus, NULL);
--	mutex_unlock(&slot_list_lock);
-+	acpi_handle handle = ACPI_HANDLE(bus->bridge);
+-	int depth = 0;
+-	struct pci_dev *dev;
++	int max_depth, depth;
++	struct pci_bus *parent, *curr;
++	struct list_head *node;
+ 
+-	list_for_each_entry(dev, &bus->devices, bus_list) {
+-		int ret;
+-		struct pci_bus *b = dev->subordinate;
+-		if (!b)
+-			continue;
++	/* no child? */
++	if (list_empty(&bus->children))
++		return 0;
+ 
+-		ret = pci_bus_get_depth(b);
+-		if (ret + 1 > depth)
+-			depth = ret + 1;
++	node = bus->children.next;
++	parent = bus;
++	max_depth = depth = 1;
 +
-+	if (handle) {
-+		mutex_lock(&slot_list_lock);
-+		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
-+				    register_slot, NULL, bus, NULL);
-+		mutex_unlock(&slot_list_lock);
-+	}
++	while (parent) {
++		/* hit the head, go back to parent level */
++		if (node == &parent->children) {
++			node = parent->node.next;
++			parent = parent->parent;
++			depth--;
++			continue;
++		}
++		curr = list_entry(node, struct pci_bus, node);
++		/* depth first */
++		if (!list_empty(&curr->children)) {
++			node = curr->children.next;
++			parent = curr;
++			depth++;
++			if (max_depth < depth)
++				max_depth = depth;
++		}
++		/* no child, go to the sibling */
++		else
++			node = curr->node.next;
+ 	}
+ 
+-	return depth;
++	return max_depth;
  }
- 
- void acpi_pci_slot_remove(struct pci_bus *bus)
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1169,15 +1169,16 @@ static void handle_hotplug_event_func(ac
-  * Create hotplug slots for the PCI bus.
-  * It should always return 0 to avoid skipping following notifiers.
-  */
--void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
-+void acpiphp_enumerate_slots(struct pci_bus *bus)
++
+ static int __init pci_get_max_depth(void)
  {
--	acpi_handle dummy_handle;
-+	acpi_handle handle, dummy_handle;
- 	struct acpiphp_bridge *bridge;
- 
- 	if (acpiphp_disabled)
- 		return;
- 
--	if (detect_ejectable_slots(handle) <= 0)
-+	handle = ACPI_HANDLE(bus->bridge);
-+	if (!handle || detect_ejectable_slots(handle) <= 0)
- 		return;
- 
- 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -290,24 +290,16 @@ static struct pci_platform_pm_ops acpi_p
- 
- void acpi_pci_add_bus(struct pci_bus *bus)
- {
--	acpi_handle handle = NULL;
--
--	if (bus->bridge)
--		handle = ACPI_HANDLE(bus->bridge);
--	if (acpi_pci_disabled || handle == NULL)
-+	if (acpi_pci_disabled || !bus->bridge)
- 		return;
- 
--	acpi_pci_slot_enumerate(bus, handle);
--	acpiphp_enumerate_slots(bus, handle);
-+	acpi_pci_slot_enumerate(bus);
-+	acpiphp_enumerate_slots(bus);
- }
- 
- void acpi_pci_remove_bus(struct pci_bus *bus)
- {
--	/*
--	 * bus->bridge->acpi_node.handle has already been reset to NULL
--	 * when acpi_pci_remove_bus() is called, so don't check ACPI handle.
--	 */
--	if (acpi_pci_disabled)
-+	if (acpi_pci_disabled || !bus->bridge)
- 		return;
- 
- 	acpiphp_remove_slots(bus);
-Index: linux-pm/include/linux/pci-acpi.h
-===================================================================
---- linux-pm.orig/include/linux/pci-acpi.h
-+++ linux-pm/include/linux/pci-acpi.h
-@@ -47,24 +47,22 @@ void acpi_pci_remove_bus(struct pci_bus
- 
- #ifdef	CONFIG_ACPI_PCI_SLOT
- void acpi_pci_slot_init(void);
--void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle);
-+void acpi_pci_slot_enumerate(struct pci_bus *bus);
- void acpi_pci_slot_remove(struct pci_bus *bus);
- #else
- static inline void acpi_pci_slot_init(void) { }
--static inline void acpi_pci_slot_enumerate(struct pci_bus *bus,
--					   acpi_handle handle) { }
-+static inline void acpi_pci_slot_enumerate(struct pci_bus *bus) { }
- static inline void acpi_pci_slot_remove(struct pci_bus *bus) { }
- #endif
- 
- #ifdef	CONFIG_HOTPLUG_PCI_ACPI
- void acpiphp_init(void);
--void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle);
-+void acpiphp_enumerate_slots(struct pci_bus *bus);
- void acpiphp_remove_slots(struct pci_bus *bus);
- void acpiphp_check_host_bridge(acpi_handle handle);
- #else
- static inline void acpiphp_init(void) { }
--static inline void acpiphp_enumerate_slots(struct pci_bus *bus,
--					   acpi_handle handle) { }
-+static inline void acpiphp_enumerate_slots(struct pci_bus *bus) { }
- static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
- static inline void acpiphp_check_host_bridge(acpi_handle handle) { }
- #endif
+ 	int depth = 0;
+-- 
+1.7.5.4
 
