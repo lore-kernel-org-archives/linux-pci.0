@@ -1,214 +1,205 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:57042 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970Ab3GCQmd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jul 2013 12:42:33 -0400
-Message-ID: <51D45454.6090701@gmail.com>
-Date: Thu, 04 Jul 2013 00:41:56 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org, Neil Horman <nhorman@tuxdriver.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	=?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>,
+	linux-pci@vger.kernel.org
+Subject: [ 16/26] iommu/vt-d: add quirk for broken interrupt remapping on 55XX chipsets
+Date: Mon,  1 Jul 2013 13:10:11 -0700
+Message-Id: <20130701200731.731148871@linuxfoundation.org>
+In-Reply-To: <20130701200729.872850414@linuxfoundation.org>
+References: <20130701200729.872850414@linuxfoundation.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Haicheng Li <haicheng.li@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Haicheng Li <haicheng.lee@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/3] PCI: Add hide_device support to pci subsystem.
-References: <1372864578-6925-1-git-send-email-haicheng.li@linux.intel.com> <CAErSpo5dR_2tUDFoFO49N3Ut569+6Cfosx8Q=91U_w-8mvFVkg@mail.gmail.com>
-In-Reply-To: <CAErSpo5dR_2tUDFoFO49N3Ut569+6Cfosx8Q=91U_w-8mvFVkg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/04/2013 12:09 AM, Bjorn Helgaas wrote:
-> On Wed, Jul 3, 2013 at 9:16 AM, Haicheng Li <haicheng.li@linux.intel.com> wrote:
->> With more and more SOCs having pci device integrated into chip (e.g. Intel
->> Atom series), it's useful to add an interface to cleanly hide pci devices from
->> pci device scanning, which is because:
->>
->> 1. phone or tablet OEMs may choose disabling some pci device in the SOC,
->>    such as camera ISP in Intel Atom Z2580 chip, and etc.
->> 2. if such disabled devices are not cleanly removed from pci device tree,
->>    then pci-core will still try to operate on the relative device control
->>    registers while S3 suspend and resume.
->> 3. so hiding such devices from early begining will not only reduce the kernel
->>    boot time, but also optimize the latency of system suspend and resume.
-> 
-> Normally the chip provides a way to disable devices by writing a
-> configuration register.  Then the device doesn't respond when Linux
-> enumerates devices, so nothing special is required in the kernel.
-> What's different about the Z2580?  I'd be surprised if Intel forgot to
-> include such a register.  Maybe the firmware just isn't smart enough
-> to disable the device?  If so, it would be better to fix the firmware
-> than to add kludges in the kernel.
-Agree, it would be great if chipset and firmware could cooperate to
-handle this issue. Otherwise the interface may be abused and causes
-trouble to PCI hotplug operations because the notation seg:bus:dev.func
-isn't reliable. The PCI bus number may reassigned by OS.
+3.9-stable review patch.  If anyone has any objections, please let me know.
 
-> 
->> To hide pci devices, just pass such parameters to kernel at boot stage:
->>         pci=hide=[<domain>:]<bus>:<slot>.<func>[; ...]
->>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: linux-pci@vger.kernel.org
->> Signed-off-by: Haicheng Li <haicheng.li@linux.intel.com>
->> ---
->>  drivers/pci/pci.c   |    2 ++
->>  drivers/pci/pci.h   |    2 ++
->>  drivers/pci/probe.c |   94 +++++++++++++++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 98 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index a899d8b..e228d00 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -3915,6 +3915,8 @@ static int __init pci_setup(char *str)
->>                                 pcie_bus_config = PCIE_BUS_PEER2PEER;
->>                         } else if (!strncmp(str, "pcie_scan_all", 13)) {
->>                                 pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
->> +                       } else if (!strncmp(str, "hide=", 5)) {
->> +                               pci_hide_devices(str + 5, strlen(str + 5));
->>                         } else {
->>                                 printk(KERN_ERR "PCI: Unknown option `%s'\n",
->>                                                 str);
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index d1182c4..783703a 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -317,4 +317,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->>  }
->>  #endif
->>
->> +void pci_hide_devices(const char *, size_t);
->> +
->>  #endif /* DRIVERS_PCI_H */
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 70f10fa..4223ef3 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -11,6 +11,7 @@
->>  #include <linux/cpumask.h>
->>  #include <linux/pci-aspm.h>
->>  #include <asm-generic/pci-bridge.h>
->> +#include <asm/setup.h>
->>  #include "pci.h"
->>
->>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
->> @@ -1352,10 +1353,103 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->>         pci_proc_attach_device(dev);
->>  }
->>
->> +static LIST_HEAD(pci_hidden_dev_list);
->> +struct pci_hidden_dev {
->> +       struct list_head list;
->> +       int domain_nr;
->> +       int devfn;
->> +       unsigned char bus_nr;
->> +};
->> +
->> +static void do_pci_hide_device(int domain_nr, unsigned char bus_nr, int devfn)
->> +{
->> +       struct pci_hidden_dev *d;
->> +
->> +       list_for_each_entry(d, &pci_hidden_dev_list, list)
->> +               if (devfn == d->devfn && bus_nr == d->bus_nr &&
->> +                               domain_nr == d->domain_nr)
->> +                       return;
->> +
->> +       d = kzalloc(sizeof(*d), GFP_KERNEL);
->> +       if (!d)
->> +               return;
->> +
->> +       d->domain_nr = domain_nr;
->> +       d->bus_nr = bus_nr;
->> +       d->devfn = devfn;
->> +
->> +       list_add_tail(&d->list, &pci_hidden_dev_list);
->> +}
->> +
->> +static bool init_hidden = true;
->> +
->> +#define PCI_HIDE_PARAM_SIZE COMMAND_LINE_SIZE
->> +static char pci_hide_param[PCI_HIDE_PARAM_SIZE] = {'\0'};
->> +
->> +static void parse_hidden_devices(void)
->> +{
->> +       char *p = pci_hide_param;
->> +       int seg, bus, slot, func, devfn, count;
->> +
->> +       /* parse pci.hide= command-line */
->> +       while (*p != '\0') {
->> +               count = 0;
->> +               if (sscanf(p, "%x:%x:%x.%x%n",
->> +                       &seg, &bus, &slot, &func, &count) != 4) {
->> +                       seg = 0;
->> +                       if (sscanf(p, "%x:%x.%x%n",
->> +                                       &bus, &slot, &func, &count) != 3) {
->> +                               /* Invalid format */
->> +                               printk(KERN_ERR "PCI: Can't parse "
->> +                                               "hide parameter: %s\n", p);
->> +                               break;
->> +                       }
->> +               }
->> +               p += count;
->> +               devfn = (slot << 3) | func;
->> +
->> +               do_pci_hide_device(seg, bus, devfn);
->> +               if (*p != ';') {
->> +                       /* End of param or invalid format */
->> +                       break;
->> +               }
->> +               p++;
->> +       }
->> +       init_hidden = false;
->> +}
->> +
->> +static bool is_device_hidden(struct pci_bus *bus, int devfn)
->> +{
->> +       struct pci_hidden_dev *d;
->> +
->> +       if (unlikely(init_hidden))
->> +               parse_hidden_devices();
->> +
->> +       list_for_each_entry(d, &pci_hidden_dev_list, list)
->> +               if (d->devfn == devfn && d->bus_nr == bus->number &&
->> +                               d->domain_nr == pci_domain_nr(bus))
->> +                       return true;
->> +
->> +       return false;
->> +}
->> +
->> +void pci_hide_devices(const char *str, size_t count)
->> +{
->> +       if (!str)
->> +               return;
->> +       if (count > PCI_HIDE_PARAM_SIZE - 1)
->> +               count = PCI_HIDE_PARAM_SIZE - 1;
->> +       strncpy(pci_hide_param, str, count);
->> +       pci_hide_param[count] = '\0';
->> +}
->> +
->>  struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
->>  {
->>         struct pci_dev *dev;
->>
->> +       if (unlikely(is_device_hidden(bus, devfn)))
->> +               return NULL;
->> +
->>         dev = pci_get_slot(bus, devfn);
->>         if (dev) {
->>                 pci_dev_put(dev);
->> --
->> 1.7.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+------------------
+
+From: Neil Horman <nhorman@tuxdriver.com>
+
+commit 03bbcb2e7e292838bb0244f5a7816d194c911d62 upstream.
+
+A few years back intel published a spec update:
+http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+
+For the 5520 and 5500 chipsets which contained an errata (specificially errata
+53), which noted that these chipsets can't properly do interrupt remapping, and
+as a result the recommend that interrupt remapping be disabled in bios.  While
+many vendors have a bios update to do exactly that, not all do, and of course
+not all users update their bios to a level that corrects the problem.  As a
+result, occasionally interrupts can arrive at a cpu even after affinity for that
+interrupt has be moved, leading to lost or spurrious interrupts (usually
+characterized by the message:
+kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+
+There have been several incidents recently of people seeing this error, and
+investigation has shown that they have system for which their BIOS level is such
+that this feature was not properly turned off.  As such, it would be good to
+give them a reminder that their systems are vulnurable to this problem.  For
+details of those that reported the problem, please see:
+https://bugzilla.redhat.com/show_bug.cgi?id=887006
+
+[ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+CC: Prarit Bhargava <prarit@redhat.com>
+CC: Don Zickus <dzickus@redhat.com>
+CC: Don Dutile <ddutile@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Asit Mallick <asit.k.mallick@intel.com>
+CC: David Woodhouse <dwmw2@infradead.org>
+CC: linux-pci@vger.kernel.org
+CC: Joerg Roedel <joro@8bytes.org>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+Signed-off-by: Joerg Roedel <joro@8bytes.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ arch/x86/include/asm/irq_remapping.h |    3 +++
+ arch/x86/kernel/early-quirks.c       |   20 ++++++++++++++++++++
+ drivers/iommu/intel_irq_remapping.c  |   10 ++++++++++
+ drivers/iommu/irq_remapping.c        |    6 ++++++
+ drivers/iommu/irq_remapping.h        |    2 ++
+ 5 files changed, 41 insertions(+)
+
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -23,11 +23,13 @@
+ #define __X86_IRQ_REMAPPING_H
+ 
+ #include <asm/io_apic.h>
++#include <linux/irq.h>
+ 
+ #ifdef CONFIG_IRQ_REMAP
+ 
+ extern void setup_irq_remapping_ops(void);
+ extern int irq_remapping_supported(void);
++extern void set_irq_remapping_broken(void);
+ extern int irq_remapping_prepare(void);
+ extern int irq_remapping_enable(void);
+ extern void irq_remapping_disable(void);
+@@ -54,6 +56,7 @@ void irq_remap_modify_chip_defaults(stru
+ 
+ static inline void setup_irq_remapping_ops(void) { }
+ static inline int irq_remapping_supported(void) { return 0; }
++static inline void set_irq_remapping_broken(void) { }
+ static inline int irq_remapping_prepare(void) { return -ENODEV; }
+ static inline int irq_remapping_enable(void) { return -ENODEV; }
+ static inline void irq_remapping_disable(void) { }
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -18,6 +18,7 @@
+ #include <asm/apic.h>
+ #include <asm/iommu.h>
+ #include <asm/gart.h>
++#include <asm/irq_remapping.h>
+ 
+ static void __init fix_hypertransport_config(int num, int slot, int func)
+ {
+@@ -192,6 +193,21 @@ static void __init ati_bugs_contd(int nu
+ }
+ #endif
+ 
++static void __init intel_remapping_check(int num, int slot, int func)
++{
++	u8 revision;
++
++	revision = read_pci_config_byte(num, slot, func, PCI_REVISION_ID);
++
++	/*
++	 * Revision 0x13 of this chipset supports irq remapping
++	 * but has an erratum that breaks its behavior, flag it as such
++	 */
++	if (revision == 0x13)
++		set_irq_remapping_broken();
++
++}
++
+ #define QFLAG_APPLY_ONCE 	0x1
+ #define QFLAG_APPLIED		0x2
+ #define QFLAG_DONE		(QFLAG_APPLY_ONCE|QFLAG_APPLIED)
+@@ -221,6 +237,10 @@ static struct chipset early_qrk[] __init
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
+ 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
++	{ PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
++	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
++	{ PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
++	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
+ 	{}
+ };
+ 
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -524,6 +524,16 @@ static int __init intel_irq_remapping_su
+ 
+ 	if (disable_irq_remap)
+ 		return 0;
++	if (irq_remap_broken) {
++		WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
++			   "This system BIOS has enabled interrupt remapping\n"
++			   "on a chipset that contains an erratum making that\n"
++			   "feature unstable.  To maintain system stability\n"
++			   "interrupt remapping is being disabled.  Please\n"
++			   "contact your BIOS vendor for an update\n");
++		disable_irq_remap = 1;
++		return 0;
++	}
+ 
+ 	if (!dmar_ir_support())
+ 		return 0;
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -18,6 +18,7 @@
+ int irq_remapping_enabled;
+ 
+ int disable_irq_remap;
++int irq_remap_broken;
+ int disable_sourceid_checking;
+ int no_x2apic_optout;
+ 
+@@ -210,6 +211,11 @@ void __init setup_irq_remapping_ops(void
+ #endif
+ }
+ 
++void set_irq_remapping_broken(void)
++{
++	irq_remap_broken = 1;
++}
++
+ int irq_remapping_supported(void)
+ {
+ 	if (disable_irq_remap)
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -32,6 +32,7 @@ struct pci_dev;
+ struct msi_msg;
+ 
+ extern int disable_irq_remap;
++extern int irq_remap_broken;
+ extern int disable_sourceid_checking;
+ extern int no_x2apic_optout;
+ extern int irq_remapping_enabled;
+@@ -89,6 +90,7 @@ extern struct irq_remap_ops amd_iommu_ir
+ 
+ #define irq_remapping_enabled 0
+ #define disable_irq_remap     1
++#define irq_remap_broken      0
+ 
+ #endif /* CONFIG_IRQ_REMAP */
+ 
+
 
