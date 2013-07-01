@@ -1,49 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:41089 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753237Ab3GANmk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 09:42:40 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 16/16] MAINTAINERS: Add myself as Tegra PCIe maintainer
-Date: Thu, 25 Jul 2013 10:53:30 -0700
-Message-Id: <1374774810-18459-17-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv4 01/11] irqdomain: add irq_alloc_mapping() function
+Date: Mon,  1 Jul 2013 15:42:06 +0200
+Message-Id: <1372686136-1370-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+This commit extends the irqdomain subsystem with an
+irq_alloc_mapping() function which allows to let the irqdomain code
+find an available hwirq number in the range [ 0 ; domain size ] for
+the given domain, and create a virq mapping for it.
 
-I'll be taking on maintainership of the Tegra PCIe driver since it's now
-moved out of arch/arm/mach-tegra.
-
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+ include/linux/irqdomain.h |  2 ++
+ kernel/irq/irqdomain.c    | 32 ++++++++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1dd9bf0..e32db7d 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6271,6 +6271,13 @@ F:	Documentation/PCI/
- F:	drivers/pci/
- F:	include/linux/pci*
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 02f7658..5f9c3ff 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -195,6 +195,8 @@ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
+ extern unsigned int irq_find_mapping(struct irq_domain *host,
+ 				     irq_hw_number_t hwirq);
+ extern unsigned int irq_create_direct_mapping(struct irq_domain *host);
++extern unsigned int irq_alloc_mapping(struct irq_domain *host,
++				      irq_hw_number_t *hwirq);
+ extern int irq_create_strict_mappings(struct irq_domain *domain,
+ 				      unsigned int irq_base,
+ 				      irq_hw_number_t hwirq_base, int count);
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 836a0f7..be82d2e 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -375,6 +375,38 @@ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
+ EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
  
-+PCI DRIVER FOR NVIDIA TEGRA
-+M:	Thierry Reding <thierry.reding@gmail.com>
-+L:	linux-tegra@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-+F:	drivers/pci/host/pci-tegra.c
+ /**
++ * irq_alloc_mapping() - Allocate an irq for mapping
++ * @domain: domain to allocate the irq for or NULL for default domain
++ * @hwirq:  reference to the returned hwirq
++ *
++ * This routine are used for irq controllers which can choose the
++ * hardware interrupt number from a range [ 0 ; domain size ], such as
++ * is often the case with PCI MSI controllers. The function will
++ * returned the allocated hwirq number in the hwirq pointer, and the
++ * corresponding virq number as the return value.
++ */
++unsigned int irq_alloc_mapping(struct irq_domain *domain,
++			       irq_hw_number_t *out_hwirq)
++{
++	irq_hw_number_t hwirq;
 +
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
++	pr_debug("irq_alloc_mapping(0x%p)\n", domain);
++
++	for (hwirq = 0; hwirq < domain->hwirq_max; hwirq++)
++		if (!irq_find_mapping(domain, hwirq))
++			break;
++
++	if (hwirq == domain->hwirq_max) {
++		pr_debug("-> no available hwirq found\n");
++		return 0;
++	}
++
++	*out_hwirq = hwirq;
++	return irq_create_mapping(domain, hwirq);
++}
++EXPORT_SYMBOL_GPL(irq_alloc_mapping);
++
++/**
+  * irq_create_mapping() - Map a hardware interrupt into linux irq space
+  * @domain: domain owning this hardware interrupt or NULL for default domain
+  * @hwirq: hardware irq number in that domain space
 -- 
-1.8.1.5
+1.8.1.2
 
