@@ -1,252 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7494 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754219Ab3GJWLM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 10 Jul 2013 18:11:12 -0400
-Subject: [RFC PATCH 2/2] iommu/intel: Make use of PCIe requester ID interface
-To: bhelgaas@google.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
-	iommu@lists.linux-foundation.org, acooks@gmail.com,
-	ddutile@redhat.com, dwmw2@infradead.org
-Date: Wed, 10 Jul 2013 16:10:45 -0600
-Message-ID: <20130710221045.3045.59854.stgit@bling.home>
-In-Reply-To: <20130710215954.3045.89568.stgit@bling.home>
-References: <20130710215954.3045.89568.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from stargate.chelsio.com ([67.207.112.58]:4065 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753462Ab3GAL2z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 07:28:55 -0400
+From: Vipul Pandya <vipul@chelsio.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, leedom@chelsio.com, tomreu@chelsio.com,
+	vipul@chelsio.com, divy@chelsio.com, dm@chelsio.com,
+	nirranjan@chelsio.com
+Subject: [PATCH] pci: Enable bus master till the FLR completes
+Date: Mon,  1 Jul 2013 16:52:17 +0530
+Message-Id: <1372677737-15485-1-git-send-email-vipul@chelsio.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This eliminates uses of pci_find_upstream_pcie_bridge() and
-incorporates DMA quirks into dma_ops path.
+From: Casey Leedom <leedom@chelsio.com>
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+T4 can wedge if there are DMAs in flight within the chip and Bus master has
+been disabled.  We need to have it on till the Function Level Reset completes.
+T4 can also suffer a Head Of Line blocking problem if MSI-X interrupts are
+disabled before the FLR has completed.
+
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
 ---
- drivers/iommu/intel-iommu.c |  164 +++++++++++++++++--------------------------
- 1 file changed, 64 insertions(+), 100 deletions(-)
+ drivers/pci/quirks.c | 91 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 91 insertions(+)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index b4f0e28..1e210e1 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1675,80 +1675,59 @@ static int domain_context_mapping_one(struct dmar_domain *domain, int segment,
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e85d230..6357ba1 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3208,6 +3208,95 @@ reset_complete:
  	return 0;
  }
  
--static int
--domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
--			int translation)
-+struct context_mapping_info {
-+	struct dmar_domain *domain;
-+	int translation;
-+};
-+
-+static int context_mapping(struct pci_dev *dev, u16 requester_id, void *data)
- {
--	int ret;
--	struct pci_dev *tmp, *parent;
-+	struct context_mapping_info *info = data;
-+	u8 bus = requester_id >> 8;
-+	u8 devfn = requester_id & 0xFF;
- 
--	ret = domain_context_mapping_one(domain, pci_domain_nr(pdev->bus),
--					 pdev->bus->number, pdev->devfn,
--					 translation);
--	if (ret)
--		return ret;
-+	return domain_context_mapping_one(info->domain, pci_domain_nr(dev->bus),
-+					  bus, devfn, info->translation);
-+}
- 
--	/* dependent device mapping */
--	tmp = pci_find_upstream_pcie_bridge(pdev);
--	if (!tmp)
--		return 0;
--	/* Secondary interface's bus number and devfn 0 */
--	parent = pdev->bus->self;
--	while (parent != tmp) {
--		ret = domain_context_mapping_one(domain,
--						 pci_domain_nr(parent->bus),
--						 parent->bus->number,
--						 parent->devfn, translation);
--		if (ret)
--			return ret;
--		parent = parent->bus->self;
--	}
--	if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
--		return domain_context_mapping_one(domain,
--					pci_domain_nr(tmp->subordinate),
--					tmp->subordinate->number, 0,
--					translation);
--	else /* this is a legacy PCI bridge */
--		return domain_context_mapping_one(domain,
--						  pci_domain_nr(tmp->bus),
--						  tmp->bus->number,
--						  tmp->devfn,
--						  translation);
-+static int domain_context_mapping(struct dmar_domain *domain,
-+				  struct pci_dev *pdev, int translation)
++/*
++ * Device-specific reset method for Chelsio T4-based adapters.
++ */
++static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
 +{
-+	struct context_mapping_info info = {
-+		.domain = domain,
-+		.translation = translation,
-+	};
++	u16 old_command;
++	u16 status, msix_flags;
++	int i, rc, msix_pos;
 +
-+	return pcie_for_each_requester(pdev, NULL, context_mapping, &info);
-+}
++	/*
++	 * If this isn't a Chelsio T4-based device, return -ENOTTY indicating
++	 * that we have no device-specific reset method.
++	 */
++	if ((dev->device & 0xf000) != 0x4000)
++		return -ENOTTY;
 +
-+static int is_context_mapped(struct pci_dev *dev, u16 requester_id, void *data)
-+{
-+	struct intel_iommu *iommu = data;
-+	u8 bus = requester_id >> 8;
-+	u8 devfn = requester_id & 0xFF;
++	/*
++	 * If this is the "probe" phase, return 0 indicating that we can
++	 * reset this device.
++	 */
++	if (probe)
++		return 0;
 +
-+	if (!device_context_mapped(iommu, bus, devfn))
-+		return 1; /* stop */
++	/*
++	 * T4 can wedge if their are DMAs in flight within the chip and Bus
++	 * master has been disabled.  We need to have it on till the Function
++	 * Level Reset completes.
++	 */
++	pci_read_config_word(dev, PCI_COMMAND, &old_command);
++	pci_write_config_word(dev, PCI_COMMAND,
++			      old_command | PCI_COMMAND_MASTER);
 +
-+	return 0;
- }
- 
- static int domain_context_mapped(struct pci_dev *pdev)
- {
--	int ret;
--	struct pci_dev *tmp, *parent;
- 	struct intel_iommu *iommu;
-+	int ret;
- 
--	iommu = device_to_iommu(pci_domain_nr(pdev->bus), pdev->bus->number,
--				pdev->devfn);
-+	iommu = device_to_iommu(pci_domain_nr(pdev->bus),
-+				pdev->bus->number, pdev->devfn);
- 	if (!iommu)
- 		return -ENODEV;
- 
--	ret = device_context_mapped(iommu, pdev->bus->number, pdev->devfn);
--	if (!ret)
--		return ret;
--	/* dependent device mapping */
--	tmp = pci_find_upstream_pcie_bridge(pdev);
--	if (!tmp)
-+	ret = pcie_for_each_requester(pdev, NULL, is_context_mapped, iommu);
-+	if (ret < 0)
- 		return ret;
--	/* Secondary interface's bus number and devfn 0 */
--	parent = pdev->bus->self;
--	while (parent != tmp) {
--		ret = device_context_mapped(iommu, parent->bus->number,
--					    parent->devfn);
--		if (!ret)
--			return ret;
--		parent = parent->bus->self;
--	}
--	if (pci_is_pcie(tmp))
--		return device_context_mapped(iommu, tmp->subordinate->number,
--					     0);
--	else
--		return device_context_mapped(iommu, tmp->bus->number,
--					     tmp->devfn);
++	/*
++	 * Perform the actual device function reset, saving and restoring
++	 * configuration information around the reset.
++	 */
++	pci_save_state(dev);
 +
-+	return (ret == 0);
- }
- 
- /* Returns a number of VTD pages, but aligned to MM page size */
-@@ -1986,15 +1965,12 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
- 
- 	segment = pci_domain_nr(pdev->bus);
- 
--	dev_tmp = pci_find_upstream_pcie_bridge(pdev);
--	if (dev_tmp) {
--		if (pci_is_pcie(dev_tmp)) {
--			bus = dev_tmp->subordinate->number;
--			devfn = 0;
--		} else {
--			bus = dev_tmp->bus->number;
--			devfn = dev_tmp->devfn;
--		}
-+	dev_tmp = pci_get_visible_pcie_requester(pdev, NULL);
-+	if (dev_tmp && dev_tmp != pdev) {
-+		u16 requester_id = pci_requester_id(dev_tmp, pdev);
-+		u8 bus = requester_id >> 8;
-+		u8 devfn = requester_id & 0xFF;
++	/*
++	 * T4 also suffers a Head-Of-Line blocking problem if MSI-X interrupts
++	 * are disabled when an MSI-X interrupt message needs to be delivered.
++	 * So we briefly re-enable MSI-X interrupts for the duration of the
++	 * FLR.  The pci_restore_state() below will restore the original
++	 * MSI-X state.
++	 */
++	msix_pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
++	pci_read_config_word(dev, msix_pos+PCI_MSIX_FLAGS, &msix_flags);
++	if ((msix_flags & PCI_MSIX_FLAGS_ENABLE) == 0)
++		pci_write_config_word(dev, msix_pos+PCI_MSIX_FLAGS,
++				      msix_flags |
++				      PCI_MSIX_FLAGS_ENABLE |
++				      PCI_MSIX_FLAGS_MASKALL);
 +
- 		spin_lock_irqsave(&device_domain_lock, flags);
- 		list_for_each_entry(info, &device_domain_list, global) {
- 			if (info->segment == segment &&
-@@ -3749,31 +3725,24 @@ int __init intel_iommu_init(void)
- 	return 0;
- }
- 
-+static int detach_requester(struct pci_dev *dev, u16 requester_id, void *data)
-+{
-+	struct intel_iommu *iommu = data;
-+	u8 bus = requester_id >> 8;
-+	u8 devfn = requester_id & 0xFF;
++	/*
++	 * This reset code is a copy of the guts of pcie_flr() because that's
++	 * not an exported function.
++	 */
 +
-+	iommu_detach_dev(iommu, bus, devfn);
-+	return 0;
++	/* Wait for Transaction Pending bit clean */
++	for (i = 0; i < 4; i++) {
++		if (i)
++			msleep((1 << (i - 1)) * 100);
++
++		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
++		if (!(status & PCI_EXP_DEVSTA_TRPND))
++			goto clear;
++	}
++
++	dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
++
++clear:
++	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
++	msleep(100);
++
++	/*
++	 * End of pcie_flr() code sequence.
++	 */
++
++	rc = 0;
++	pci_restore_state(dev);
++
++	/*
++	 * Restore the original PCI Configuration Space Command word (which
++	 * probably had Bus Master disabled).
++	 */
++	pci_write_config_word(dev, PCI_COMMAND, old_command);
++	return rc;
 +}
 +
- static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
- 					   struct pci_dev *pdev)
- {
--	struct pci_dev *tmp, *parent;
--
- 	if (!iommu || !pdev)
- 		return;
+ #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+ #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+ #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+@@ -3221,6 +3310,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+ 		reset_ivb_igd },
+ 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+ 		reset_intel_generic_dev },
++	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
++		reset_chelsio_generic_dev },
+ 	{ 0 }
+ };
  
--	/* dependent device detach */
--	tmp = pci_find_upstream_pcie_bridge(pdev);
--	/* Secondary interface's bus number and devfn 0 */
--	if (tmp) {
--		parent = pdev->bus->self;
--		while (parent != tmp) {
--			iommu_detach_dev(iommu, parent->bus->number,
--					 parent->devfn);
--			parent = parent->bus->self;
--		}
--		if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
--			iommu_detach_dev(iommu,
--				tmp->subordinate->number, 0);
--		else /* this is a legacy PCI bridge */
--			iommu_detach_dev(iommu, tmp->bus->number,
--					 tmp->devfn);
--	}
-+	/* XXX What if there's something else using his path? */
-+	pcie_for_each_requester(pdev, NULL, detach_requester, iommu);
- }
- 
- static void domain_remove_one_dev_info(struct dmar_domain *domain,
-@@ -4158,7 +4127,7 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
- static int intel_iommu_add_device(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
--	struct pci_dev *bridge, *dma_pdev = NULL;
-+	struct pci_dev *dma_pdev = NULL;
- 	struct iommu_group *group;
- 	int ret;
- 
-@@ -4166,16 +4135,11 @@ static int intel_iommu_add_device(struct device *dev)
- 			     pdev->bus->number, pdev->devfn))
- 		return -ENODEV;
- 
--	bridge = pci_find_upstream_pcie_bridge(pdev);
--	if (bridge) {
--		if (pci_is_pcie(bridge))
--			dma_pdev = pci_get_domain_bus_and_slot(
--						pci_domain_nr(pdev->bus),
--						bridge->subordinate->number, 0);
--		if (!dma_pdev)
--			dma_pdev = pci_dev_get(bridge);
--	} else
--		dma_pdev = pci_dev_get(pdev);
-+	dma_pdev = pci_get_visible_pcie_requester(pdev, NULL);
-+	if (!dma_pdev)
-+		return -EINVAL;
-+
-+	dma_pdev = pci_dev_get(dma_pdev);
- 
- 	/* Account for quirked devices */
- 	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
+-- 
+1.8.0
 
