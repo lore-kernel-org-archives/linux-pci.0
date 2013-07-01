@@ -1,94 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:56988 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751939Ab3G2SkP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2013 14:40:15 -0400
-Received: by mail-oa0-f49.google.com with SMTP id n16so2452997oag.36
-        for <linux-pci@vger.kernel.org>; Mon, 29 Jul 2013 11:40:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375102331-23905-10-git-send-email-jeffrey.t.kirsher@intel.com>
-References: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com> <1375102331-23905-10-git-send-email-jeffrey.t.kirsher@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 29 Jul 2013 12:39:54 -0600
-Message-ID: <CAErSpo4SML99Gs=oa9m_dS8Bum4WaE-9Jhxc0muRoEHXuKQMDg@mail.gmail.com>
-Subject: Re: [net-next 09/15] pci: move enum pcie_link_width into pci.h
-To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: David Miller <davem@davemloft.net>,
-	Jacob Keller <jacob.e.keller@intel.com>,
-	netdev <netdev@vger.kernel.org>, gospo@redhat.com,
-	sassmann@redhat.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:36609 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751171Ab3GAPLm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 11:11:42 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 2 Jul 2013 01:01:53 +1000
+Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id E5D292CE8044
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jul 2013 01:11:36 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r61EudpI64618618
+	for <linux-pci@vger.kernel.org>; Tue, 2 Jul 2013 00:56:40 +1000
+Received: from d23av02.au.ibm.com (loopback [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r61FBZ5c002367
+	for <linux-pci@vger.kernel.org>; Tue, 2 Jul 2013 01:11:36 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: weiyang@linux.vnet.ibm.com, linuxram@us.ibm.com,
+	shangw@linux.vnet.ibm.com
+Subject: [PATCH 4/4] PCI: fix the io resource alignment calculation in pbus_size_io()
+Date: Mon,  1 Jul 2013 23:10:32 +0800
+Message-Id: <1372691432-6440-5-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 29, 2013 at 6:52 AM, Jeff Kirsher
-<jeffrey.t.kirsher@intel.com> wrote:
-> From: Jacob Keller <jacob.e.keller@intel.com>
->
-> pcie_link_width is the enum used to define the link width values for a pcie
-> device. This enum should not be contained solely in pci_hotplug.h, and this
-> patch moves it next to pci_bus_speed in pci.h
->
-> Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
-> Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
-> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+In commit 462d9303 ("PCI: Align P2P windows using pcibios_window_alignment()"),
+it introduce a new method to calculate the window alignment of P2P bridge.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+When the io_window_1k is set,  the calculation for the io resource alignment
+is different from the original one. In the original logic before 462d9303,
+the alignment is no bigger than 4K even the io_window_1k is set. The logic
+introduced in 462d9303 will limit the alignment to 1k in this case.
 
-> ---
->  include/linux/pci.h         | 13 +++++++++++++
->  include/linux/pci_hotplug.h | 13 -------------
->  2 files changed, 13 insertions(+), 13 deletions(-)
->
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 95ff993..fc2d1fb 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -186,6 +186,19 @@ enum pci_bus_flags {
->         PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
->  };
->
-> +/* These values come from the PCI Express Spec */
-> +enum pcie_link_width {
-> +       PCIE_LNK_WIDTH_RESRV    = 0x00,
-> +       PCIE_LNK_X1             = 0x01,
-> +       PCIE_LNK_X2             = 0x02,
-> +       PCIE_LNK_X4             = 0x04,
-> +       PCIE_LNK_X8             = 0x08,
-> +       PCIE_LNK_X12            = 0x0C,
-> +       PCIE_LNK_X16            = 0x10,
-> +       PCIE_LNK_X32            = 0x20,
-> +       PCIE_LNK_WIDTH_UNKNOWN  = 0xFF,
-> +};
-> +
->  /* Based on the PCI Hotplug Spec, but some values are made up by us */
->  enum pci_bus_speed {
->         PCI_SPEED_33MHz                 = 0x00,
-> diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-> index 8db71dc..64e61e0 100644
-> --- a/include/linux/pci_hotplug.h
-> +++ b/include/linux/pci_hotplug.h
-> @@ -28,19 +28,6 @@
->  #ifndef _PCI_HOTPLUG_H
->  #define _PCI_HOTPLUG_H
->
-> -/* These values come from the PCI Express Spec */
-> -enum pcie_link_width {
-> -       PCIE_LNK_WIDTH_RESRV    = 0x00,
-> -       PCIE_LNK_X1             = 0x01,
-> -       PCIE_LNK_X2             = 0x02,
-> -       PCIE_LNK_X4             = 0x04,
-> -       PCIE_LNK_X8             = 0x08,
-> -       PCIE_LNK_X12            = 0x0C,
-> -       PCIE_LNK_X16            = 0x10,
-> -       PCIE_LNK_X32            = 0x20,
-> -       PCIE_LNK_WIDTH_UNKNOWN  = 0xFF,
-> -};
-> -
->  /**
->   * struct hotplug_slot_ops -the callbacks that the hotplug pci core can use
->   * @owner: The module owner of this structure
-> --
-> 1.7.11.7
->
+This patch fix this issue.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Reviewed-by: Ram Pai <linuxram@us.ibm.com>
+---
+ drivers/pci/setup-bus.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index bd0ce39d..5c60ca0 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -755,6 +755,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+  		return;
+ 
+ 	io_align = min_align = window_alignment(bus, IORESOURCE_IO);
++	/* Don't exceed 4KiB for windows requesting 1KiB alignment */
++	if (bus->self->io_window_1k && io_align == PCI_P2P_DEFAULT_IO_ALIGN_1K)
++		io_align = PCI_P2P_DEFAULT_IO_ALIGN;
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+-- 
+1.7.5.4
+
