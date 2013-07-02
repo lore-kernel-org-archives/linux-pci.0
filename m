@@ -1,90 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:38974 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753279Ab3GKX6r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Jul 2013 19:58:47 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 30/30] ACPI / hotplug / PCI: Clean up bridge_mutex usage
-Date: Fri, 12 Jul 2013 02:07:53 +0200
-Message-ID: <1556050.sitoT3kI8H@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20130702104406.4473EE0090@blue.fi.intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com> <20130702104406.4473EE0090@blue.fi.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 2 Jul 2013 11:09:19 -0600
+Message-ID: <CAErSpo7GQ8M1rpWnez+=SByR_wmyAnJH7wfqdY20ZcvXW9_90Q@mail.gmail.com>
+Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
+To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Jul 2, 2013 at 4:44 AM, Kirill A. Shutemov
+<kirill.shutemov@linux.intel.com> wrote:
+> Mika Westerberg wrote:
+>> The acpiphp driver finds out whether the device is hotpluggable by checking
+>> whether it has _RMV method behind it (and if it returns 1). However, at
+>> least Acer Aspire S5 with Thunderbolt host router has this method placed
+>> behind device called EPUP (endpoint upstream port?) and not directly behind
+>> the root port as can be seen from the ASL code below:
+>>
+>> Device (RP05)
+>> {
+>>       ...
+>>       Device (HRUP)
+>>       {
+>>               Name (_ADR, Zero)
+>>               Name (_PRW, Package (0x02)
+>>               {
+>>                       0x09,
+>>                       0x04
+>>               })
+>>               Device (HRDN)
+>>               {
+>>                       Name (_ADR, 0x00040000)
+>>                       Name (_PRW, Package (0x02)
+>>                       {
+>>                               0x09,
+>>                               0x04
+>>                       })
+>>                       Device (EPUP)
+>>                       {
+>>                               Name (_ADR, Zero)
+>>                               Method (_RMV, 0, NotSerialized)
+>>                               {
+>>                                       Return (One)
+>>                               }
+>>                       }
+>>               }
+>>       }
+>>
+>> If we want to support such machines we must look for the _RMV method a bit
+>> deeper in the hierarchy. Fix this by changing pcihp_is_ejectable() to check
+>> few more devices down from the root port.
+>
+> We found that this approach is broken. We've got false positive: host
+> bridge itself was detected as hotplugable slot %) I think it's not
+> acceptable.
+>
+> Mika has tried few more approaches, but we haven't found anything better
+> then hardcoded path like in original workaround patch[1]. It's not generic
+> at all, but safe from false positives.
+>
+> Any thoughts?
+>
+> [1] http://article.gmane.org/gmane.linux.kernel.pci/19102
 
-Do not acquire bridge_mutex around the addition of a slot to its
-bridge's list of slots and arount the addition of a function to
-its slot's list of functions, because that doesn't help anything
-right now (those lists are walked without any locking anyway).
+The changelog of this patch ([1]) says "Correct ACPI PCI hotplug
+implementation should have _RMV method in a PCI slot (device under pci
+bridge). In Acer Aspire S5 case we have it deeper in hierarchy ..."
 
-However, acquire bridge_mutex around the list walk in
-acpiphp_remove_slots() and use list_for_each_entry() there,
-because we terminate the walk as soon as we find the first matching
-entry.  This prevents that list walk from colliding with bridge
-addition and removal.
+This is exactly what I mean about acpiphp being brittle because of the
+assumptions it makes about the ACPI namespace.  Is there actually
+something in the spec that requires the _RMV method to be where
+pcihp_is_ejectable() expects it?
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+I'm not 100% dead-set against merging the workaround with hard-coded
+path, but I still don't think it's a good idea.  It "fixes" it for one
+particular machine, but there will likely be other machines that
+require similar fixes in the future.  It makes it harder for somebody
+to clean up the design later, because that person won't have an Aspire
+S5 to test.  It makes it less likely that somebody *will* clean it up
+later, because "everything is already working."
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -324,9 +324,7 @@ static acpi_status register_slot(acpi_ha
- 	INIT_LIST_HEAD(&slot->funcs);
- 	mutex_init(&slot->crit_sect);
- 
--	mutex_lock(&bridge_mutex);
- 	list_add_tail(&slot->node, &bridge->slots);
--	mutex_unlock(&bridge_mutex);
- 
- 	/* Register slots for ejectable funtions only. */
- 	if (acpi_pci_check_ejectable(pbus, handle)  || is_dock_device(handle)) {
-@@ -357,9 +355,7 @@ static acpi_status register_slot(acpi_ha
- 
-  slot_found:
- 	newfunc->slot = slot;
--	mutex_lock(&bridge_mutex);
- 	list_add_tail(&newfunc->sibling, &slot->funcs);
--	mutex_unlock(&bridge_mutex);
- 
- 	if (pci_bus_read_dev_vendor_id(pbus, PCI_DEVFN(device, function),
- 				       &val, 60*1000))
-@@ -997,17 +993,21 @@ void acpiphp_enumerate_slots(struct pci_
- /* Destroy hotplug slots associated with the PCI bus */
- void acpiphp_remove_slots(struct pci_bus *bus)
- {
--	struct acpiphp_bridge *bridge, *tmp;
-+	struct acpiphp_bridge *bridge;
- 
- 	if (acpiphp_disabled)
- 		return;
- 
--	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
-+	mutex_lock(&bridge_mutex);
-+	list_for_each_entry(bridge, &bridge_list, list)
- 		if (bridge->pci_bus == bus) {
-+			mutex_unlock(&bridge_mutex);
- 			cleanup_bridge(bridge);
- 			put_bridge(bridge);
--			break;
-+			return;
- 		}
-+
-+	mutex_unlock(&bridge_mutex);
- }
- 
- /**
+That's why my preference (given infinite resources) would be to rework
+acpiphp now, while people are interested and can test it.  I'm sure
+this would be a major redesign of acpiphp and its interaction with
+pciehp, but I think it's something we're going to have to do at some
+point.
 
+Bjorn
