@@ -1,116 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:57876 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751567Ab3G2Sp4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2013 14:45:56 -0400
-Received: by mail-oa0-f44.google.com with SMTP id l20so10373151oag.31
-        for <linux-pci@vger.kernel.org>; Mon, 29 Jul 2013 11:45:55 -0700 (PDT)
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:40191 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754326Ab3GBQlB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2013 12:41:01 -0400
+Received: by mail-ob0-f176.google.com with SMTP id v19so5723751obq.7
+        for <linux-pci@vger.kernel.org>; Tue, 02 Jul 2013 09:41:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1375102331-23905-11-git-send-email-jeffrey.t.kirsher@intel.com>
-References: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com> <1375102331-23905-11-git-send-email-jeffrey.t.kirsher@intel.com>
+In-Reply-To: <3216917.m2IEX2IHod@vostro.rjw.lan>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1530651.ees8hXMYoR@vostro.rjw.lan> <20130701183612.GJ9294@intel.com> <3216917.m2IEX2IHod@vostro.rjw.lan>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 29 Jul 2013 12:45:35 -0600
-Message-ID: <CAErSpo5sNTenU_soWzEqrvK6k8j-tcVbpWT12ekVWeF2j-1z1Q@mail.gmail.com>
-Subject: Re: [net-next 10/15] pci: Add function to obtain minimum link width
- and speed
-To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: David Miller <davem@davemloft.net>,
-	Jacob Keller <jacob.e.keller@intel.com>,
-	netdev <netdev@vger.kernel.org>, gospo@redhat.com,
-	sassmann@redhat.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Tue, 2 Jul 2013 10:40:39 -0600
+Message-ID: <CAErSpo7P5+Yc9r9RFMJPqOzGQ-CFr8RAW7ehgumTzhdxoYCF6Q@mail.gmail.com>
+Subject: Re: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 29, 2013 at 6:52 AM, Jeff Kirsher
-<jeffrey.t.kirsher@intel.com> wrote:
-> From: Jacob Keller <jacob.e.keller@intel.com>
+On Mon, Jul 1, 2013 at 7:29 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Monday, July 01, 2013 09:36:13 PM Mika Westerberg wrote:
+>> On Mon, Jul 01, 2013 at 04:01:37PM +0200, Rafael J. Wysocki wrote:
+>> > > Given the fact that SLOT_ENABLED is only checked in acpiphp_enable_slot()
+>> > > (after this patch) and that /sys/bus/pci/slots/*/power uses SLOT_POWEREDON
+>> > > anyway, should we remove the whole flag?
+>> >
+>> > Sure, if it is not necessary any more, we should remove it.
+>>
+>> Well, there is one thing that changes due that. Once the flag is gone
+>> userspace can do 'echo 1 > /sys/bus/pci/slots/*/power' several times and
+>> the slot is always re-enumerated.
+>>
+>> If that is not acceptable we should probably move the SLOT_ENABLED check
+>> closer to acpiphp_core:enable_device() and drop it from here, so that we
+>> always re-enumerate on Bus Check event but userspace can only do enable
+>> once (we still re-enumerate on Bus Check).
 >
-> A PCI Express device can potentially report a link width and speed which it will
-> not properly fulfill due to being plugged into a slower link higher in the
-> chain. This function walks up the PCI bus chain and calculates the minimum link
-> width and speed of this entire chain. This can be useful to enable a device to
-> determine if it has enough bandwidth for optimum functionality.
->
-> Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
-> Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
-> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> Yes, that sounds like the right thing to do.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Is it actually a problem if we re-enumerate every time userspace does
+'echo 1 > /sys/bus/pci/slots/*/power'?  I assume re-enumeration is a
+no-op if nothing has changed.
 
-> ---
->  drivers/pci/pci.c   | 43 +++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |  2 ++
->  2 files changed, 45 insertions(+)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e37fea6..c71e78c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3579,6 +3579,49 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
->  }
->
->  /**
-> + * pcie_get_minimum_link - determine minimum link settings of a PCI device
-> + * @dev: PCI device to query
-> + * @speed: storage for minimum speed
-> + * @width: storage for minimum width
-> + *
-> + * This function will walk up the PCI device chain and determine the minimum
-> + * link width and speed of the device.
-> + */
-> +int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-> +                         enum pcie_link_width *width)
-> +{
-> +       int ret;
-> +
-> +       *speed = PCI_SPEED_UNKNOWN;
-> +       *width = PCIE_LNK_WIDTH_UNKNOWN;
-> +
-> +       while (dev) {
-> +               u16 lnksta;
-> +               enum pci_bus_speed next_speed;
-> +               enum pcie_link_width next_width;
-> +
-> +               ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-> +               if (ret)
-> +                       return ret;
-> +
-> +               next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
-> +               next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
-> +                       PCI_EXP_LNKSTA_NLW_SHIFT;
-> +
-> +               if (next_speed < *speed)
-> +                       *speed = next_speed;
-> +
-> +               if (next_width < *width)
-> +                       *width = next_width;
-> +
-> +               dev = dev->bus->self;
-> +       }
-> +
-> +       return 0;
-> +}
-> +EXPORT_SYMBOL(pcie_get_minimum_link);
-> +
-> +/**
->   * pci_select_bars - Make BAR mask from the type of resource
->   * @dev: the PCI device for which BAR mask is made
->   * @flags: resource type mask to be selected
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index fc2d1fb..38994de 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -937,6 +937,8 @@ int pcie_get_readrq(struct pci_dev *dev);
->  int pcie_set_readrq(struct pci_dev *dev, int rq);
->  int pcie_get_mps(struct pci_dev *dev);
->  int pcie_set_mps(struct pci_dev *dev, int mps);
-> +int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-> +                         enum pcie_link_width *width);
->  int __pci_reset_function(struct pci_dev *dev);
->  int __pci_reset_function_locked(struct pci_dev *dev);
->  int pci_reset_function(struct pci_dev *dev);
-> --
-> 1.7.11.7
->
+Bjorn
