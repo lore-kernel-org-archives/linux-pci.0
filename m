@@ -1,87 +1,60 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 30/30] ACPI / hotplug / PCI: Get rid of check_sub_bridges()
-Date: Thu, 18 Jul 2013 01:36:56 +0200
-Message-ID: <2212556.JheKCNdYg0@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
+Date: Tue, 02 Jul 2013 22:29:12 +0200
+Message-ID: <4523014.G6VJLhZf81@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7P5+Yc9r9RFMJPqOzGQ-CFr8RAW7ehgumTzhdxoYCF6Q@mail.gmail.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <3216917.m2IEX2IHod@vostro.rjw.lan> <CAErSpo7P5+Yc9r9RFMJPqOzGQ-CFr8RAW7ehgumTzhdxoYCF6Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+On Tuesday, July 02, 2013 10:40:39 AM Bjorn Helgaas wrote:
+> On Mon, Jul 1, 2013 at 7:29 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Monday, July 01, 2013 09:36:13 PM Mika Westerberg wrote:
+> >> On Mon, Jul 01, 2013 at 04:01:37PM +0200, Rafael J. Wysocki wrote:
+> >> > > Given the fact that SLOT_ENABLED is only checked in acpiphp_enable_slot()
+> >> > > (after this patch) and that /sys/bus/pci/slots/*/power uses SLOT_POWEREDON
+> >> > > anyway, should we remove the whole flag?
+> >> >
+> >> > Sure, if it is not necessary any more, we should remove it.
+> >>
+> >> Well, there is one thing that changes due that. Once the flag is gone
+> >> userspace can do 'echo 1 > /sys/bus/pci/slots/*/power' several times and
+> >> the slot is always re-enumerated.
+> >>
+> >> If that is not acceptable we should probably move the SLOT_ENABLED check
+> >> closer to acpiphp_core:enable_device() and drop it from here, so that we
+> >> always re-enumerate on Bus Check event but userspace can only do enable
+> >> once (we still re-enumerate on Bus Check).
+> >
+> > Yes, that sounds like the right thing to do.
+> 
+> Is it actually a problem if we re-enumerate every time userspace does
+> 'echo 1 > /sys/bus/pci/slots/*/power'?  I assume re-enumeration is a
+> no-op if nothing has changed.
 
-Now that acpiphp_check_bridge() always enumerates devices behind the
-bridge, there is no need to do that for each sub-bridge anymore like
-it is done in the current ACPI-based PCI hotplug (ACPIPHP) code.
+Well, if it's a no-op in that case, then re-enumerating shouldn't be a problem,
+but is it a no-op?
 
-Given this we don't need check_sub_bridges() anymore, so drop that
-function completely.
+Rafael (who's not really sure)
 
-This also simplifies the ACPIPHP code a bit.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   25 -------------------------
- 1 file changed, 25 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -788,25 +788,6 @@ static void acpiphp_sanitize_bus(struct
-  * ACPI event handlers
-  */
- 
--static acpi_status
--check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
--{
--	struct acpiphp_bridge *bridge;
--	char objname[64];
--	struct acpi_buffer buffer = { .length = sizeof(objname),
--				      .pointer = objname };
--
--	bridge = acpiphp_handle_to_bridge(handle);
--	if (bridge) {
--		acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
--		dbg("%s: re-enumerating slots under %s\n",
--			__func__, objname);
--		acpiphp_check_bridge(bridge);
--		put_bridge(bridge);
--	}
--	return AE_OK ;
--}
--
- void acpiphp_check_host_bridge(acpi_handle handle)
- {
- 	struct acpiphp_bridge *bridge;
-@@ -816,9 +797,6 @@ void acpiphp_check_host_bridge(acpi_hand
- 		acpiphp_check_bridge(bridge);
- 		put_bridge(bridge);
- 	}
--
--	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
--		ACPI_UINT32_MAX, check_sub_bridges, NULL, NULL, NULL);
- }
- 
- static void hotplug_event(acpi_handle handle, u32 type, void *data)
-@@ -846,9 +824,6 @@ static void hotplug_event(acpi_handle ha
- 		dbg("%s: re-enumerating slots under %s\n", __func__, objname);
- 		if (bridge) {
- 			acpiphp_check_bridge(bridge);
--			acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
--					    ACPI_UINT32_MAX, check_sub_bridges,
--					    NULL, NULL, NULL);
- 		} else {
- 			struct acpiphp_slot *slot = func->slot;
- 
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
