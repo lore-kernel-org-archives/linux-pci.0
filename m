@@ -1,318 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:56333 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755899Ab3GOLwx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 07:52:53 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
-Subject: [PATCHv5 02/11] PCI: use weak functions for MSI arch-specific functions
-Date: Mon, 15 Jul 2013 13:52:38 +0200
-Message-Id: <1373889167-27878-3-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from [207.46.163.26] ([207.46.163.26]:50428 "EHLO
+	co9outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751120Ab3GBEyi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2013 00:54:38 -0400
+From: Zhu Richard-R65037 <r65037@freescale.com>
+To: Sean Cross <xobs@kosagi.com>,
+	Pratyush Anand <pratyush.anand@st.com>
+CC: "devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>, Mohit KUMAR <Mohit.KUMAR@st.com>
+Subject: RE: [PATCH 3/4] PCI: Add driver for i.MX6 PCI Express
+Date: Tue, 2 Jul 2013 04:53:22 +0000
+Message-ID: <0E83723C55F66F43A6041464FE31119D30C672@039-SN2MPN1-013.039d.mgd.msft.net>
+References: <1372662947-27160-1-git-send-email-xobs@kosagi.com>
+ <1372662947-27160-4-git-send-email-xobs@kosagi.com>
+ <51D15513.7020101@st.com> <2E3BDF14016345FA887E3BACAE05DADA@kosagi.com>
+In-Reply-To: <2E3BDF14016345FA887E3BACAE05DADA@kosagi.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Until now, the MSI architecture-specific functions could be overloaded
-using a fairly complex set of #define and compile-time
-conditionals. In order to prepare for the introduction of the msi_chip
-infrastructure, it is desirable to switch all those functions to use
-the 'weak' mechanism. This commit converts all the architectures that
-were overidding those MSI functions to use the new strategy.
-
-Note that we keep a separate, non-weak, function
-default_teardown_msi_irqs() for the default behavior of the
-arch_teardown_msi_irqs(), as the default behavior is needed by the Xen
-x86 PCI code.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: linux390@de.ibm.com
-Cc: linux-s390@vger.kernel.org
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-mips@linux-mips.org
-Cc: David S. Miller <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
-Cc: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/mips/include/asm/pci.h    |  5 -----
- arch/powerpc/include/asm/pci.h |  5 -----
- arch/s390/include/asm/pci.h    |  4 ----
- arch/x86/include/asm/pci.h     | 28 --------------------------
- arch/x86/kernel/x86_init.c     | 21 ++++++++++++++++++++
- drivers/pci/msi.c              | 45 +++++++++++++++++++-----------------------
- include/linux/msi.h            |  7 ++++++-
- 7 files changed, 47 insertions(+), 68 deletions(-)
-
-diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
-index fa8e0aa..f194c08 100644
---- a/arch/mips/include/asm/pci.h
-+++ b/arch/mips/include/asm/pci.h
-@@ -136,11 +136,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- 	return channel ? 15 : 14;
- }
- 
--#ifdef CONFIG_CPU_CAVIUM_OCTEON
--/* MSI arch hook for OCTEON */
--#define arch_setup_msi_irqs arch_setup_msi_irqs
--#endif
--
- extern char * (*pcibios_plat_setup)(char *str);
- 
- #ifdef CONFIG_OF
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index 6653f27..95145a1 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -113,11 +113,6 @@ extern int pci_domain_nr(struct pci_bus *bus);
- /* Decide whether to display the domain number in /proc */
- extern int pci_proc_domain(struct pci_bus *bus);
- 
--/* MSI arch hooks */
--#define arch_setup_msi_irqs arch_setup_msi_irqs
--#define arch_teardown_msi_irqs arch_teardown_msi_irqs
--#define arch_msi_check_device arch_msi_check_device
--
- struct vm_area_struct;
- /* Map a range of PCI memory or I/O space for a device into user space */
- int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
-diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
-index 6e577ba..262b91b 100644
---- a/arch/s390/include/asm/pci.h
-+++ b/arch/s390/include/asm/pci.h
-@@ -21,10 +21,6 @@ void pci_iounmap(struct pci_dev *, void __iomem *);
- int pci_domain_nr(struct pci_bus *);
- int pci_proc_domain(struct pci_bus *);
- 
--/* MSI arch hooks */
--#define arch_setup_msi_irqs	arch_setup_msi_irqs
--#define arch_teardown_msi_irqs	arch_teardown_msi_irqs
--
- #define ZPCI_BUS_NR			0	/* default bus number */
- #define ZPCI_DEVFN			0	/* default device number */
- 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index d9e9e6c..8c61de0 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -100,29 +100,6 @@ static inline void early_quirks(void) { }
- extern void pci_iommu_alloc(void);
- 
- #ifdef CONFIG_PCI_MSI
--/* MSI arch specific hooks */
--static inline int x86_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
--{
--	return x86_msi.setup_msi_irqs(dev, nvec, type);
--}
--
--static inline void x86_teardown_msi_irqs(struct pci_dev *dev)
--{
--	x86_msi.teardown_msi_irqs(dev);
--}
--
--static inline void x86_teardown_msi_irq(unsigned int irq)
--{
--	x86_msi.teardown_msi_irq(irq);
--}
--static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
--{
--	x86_msi.restore_msi_irqs(dev, irq);
--}
--#define arch_setup_msi_irqs x86_setup_msi_irqs
--#define arch_teardown_msi_irqs x86_teardown_msi_irqs
--#define arch_teardown_msi_irq x86_teardown_msi_irq
--#define arch_restore_msi_irqs x86_restore_msi_irqs
- /* implemented in arch/x86/kernel/apic/io_apic. */
- struct msi_desc;
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-@@ -130,11 +107,6 @@ void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev, int irq);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 		  unsigned int irq_base, unsigned int irq_offset);
--/* default to the implementation in drivers/lib/msi.c */
--#define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
--#define HAVE_DEFAULT_MSI_RESTORE_IRQS
--void default_teardown_msi_irqs(struct pci_dev *dev);
--void default_restore_msi_irqs(struct pci_dev *dev, int irq);
- #else
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 45a14db..a2b189c 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -116,6 +116,27 @@ struct x86_msi_ops x86_msi = {
- 	.setup_hpet_msi		= default_setup_hpet_msi,
- };
- 
-+/* MSI arch specific hooks */
-+int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	return x86_msi.setup_msi_irqs(dev, nvec, type);
-+}
-+
-+void arch_teardown_msi_irqs(struct pci_dev *dev)
-+{
-+	x86_msi.teardown_msi_irqs(dev);
-+}
-+
-+void arch_teardown_msi_irq(unsigned int irq)
-+{
-+	x86_msi.teardown_msi_irq(irq);
-+}
-+
-+void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
-+{
-+	x86_msi.restore_msi_irqs(dev, irq);
-+}
-+
- struct x86_io_apic_ops x86_io_apic_ops = {
- 	.init			= native_io_apic_init_mappings,
- 	.read			= native_io_apic_read,
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index aca7578..aa2f697 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -30,20 +30,21 @@ static int pci_msi_enable = 1;
- 
- /* Arch hooks */
- 
--#ifndef arch_msi_check_device
--int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
--	return 0;
-+	return -EINVAL;
- }
--#endif
- 
--#ifndef arch_setup_msi_irqs
--# define arch_setup_msi_irqs default_setup_msi_irqs
--# define HAVE_DEFAULT_MSI_SETUP_IRQS
--#endif
-+void __weak arch_teardown_msi_irq(unsigned int irq)
-+{
-+}
- 
--#ifdef HAVE_DEFAULT_MSI_SETUP_IRQS
--int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+{
-+	return 0;
-+}
-+
-+int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
- 	struct msi_desc *entry;
- 	int ret;
-@@ -65,14 +66,11 @@ int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 
- 	return 0;
- }
--#endif
- 
--#ifndef arch_teardown_msi_irqs
--# define arch_teardown_msi_irqs default_teardown_msi_irqs
--# define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
--#endif
--
--#ifdef HAVE_DEFAULT_MSI_TEARDOWN_IRQS
-+/*
-+ * We have a default implementation available as a separate non-weak
-+ * function, as it is used by the Xen x86 PCI code
-+ */
- void default_teardown_msi_irqs(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
-@@ -89,15 +87,13 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
- 			arch_teardown_msi_irq(entry->irq + i);
- 	}
- }
--#endif
- 
--#ifndef arch_restore_msi_irqs
--# define arch_restore_msi_irqs default_restore_msi_irqs
--# define HAVE_DEFAULT_MSI_RESTORE_IRQS
--#endif
-+void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
-+{
-+	return default_teardown_msi_irqs(dev);
-+}
- 
--#ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
--void default_restore_msi_irqs(struct pci_dev *dev, int irq)
-+void __weak arch_restore_msi_irqs(struct pci_dev *dev, int irq)
- {
- 	struct msi_desc *entry;
- 
-@@ -114,7 +110,6 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
- 	if (entry)
- 		write_msi_msg(irq, &entry->msg);
- }
--#endif
- 
- static void msi_set_enable(struct pci_dev *dev, int enable)
- {
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ee66f3a..18870b0 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -51,12 +51,17 @@ struct msi_desc {
- };
- 
- /*
-- * The arch hook for setup up msi irqs
-+ * The arch hooks to setup up msi irqs. Those functions are
-+ * implemented as weak symbols so that they /can/ be overriden by
-+ * architecture specific code if needed.
-  */
- int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
- void arch_teardown_msi_irq(unsigned int irq);
- int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void arch_teardown_msi_irqs(struct pci_dev *dev);
- int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
-+void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
-+
-+void default_teardown_msi_irqs(struct pci_dev *dev);
- 
- #endif /* LINUX_MSI_H */
--- 
-1.8.1.2
+SGkgQ3Jvc3M6DQpGaXJzdCBvZiBhbGwsIFRoYW5rcyBmb3IgeW91ciBlZmZvcnRzIHRvIHN1bW1p
+dCB0aGUgaW14IHBjaWUgc3VwcG9ydCBwYXRjaGVzLg0KSSBsb29rZWQgdGhyb3VnaCB5b3VyIHBh
+dGNoLXNldCwgYW5kIGhhdmUgc29tZSBjb25jZXJuczoNCiogUENJZSBkcml2ZXIgdXNlZCBpbiB0
+aGUgRlNMIGxpbnV4LTIuNi4zNSBCU1AsIGlzIG5vdCBnb29kIGVub3VnaCwNCkJhc2VkIG9uIHRo
+ZSBsYXRlc3QgRlNMIEJTUC4NCiogVGhlIFBDSWUgc3dpdGNoL01TSSBmZWF0dXJlcyBoYWQgYmVl
+biBzdXBwb3J0ZWQuDQoqIEluIG9yZGVyIHRvIHN1cHBvcnQgdGhlIDhNQiBtZW1vcnkgc3BhY2Ug
+c2l6ZSwgdGhlIG1lbSBsYXlvdXQgaGFkIGJlZW4gdXBkYXRlZCBhcyBsaXN0ZWQgYmVsb3csDQog
+b3RoZXJ3aXNlLCB0aGUgbWVtb3J5IHNwYWNlIHNpemUgcmVxdWlyZWQgYnkgUENJZSBFUCBkZXZp
+Y2Ugd291bGRuJ3QgbGFyZ2VyIHRoYW4gNE1CLg0KICAgICAgICAvKg0KICAgICAgICAgKiBpLk1Y
+NiBkZWZpbmVzIDE2TUIgaW4gdGhlIEFYSSBhZGRyZXNzIG1hcCBmb3IgUENJZS4NCiAgICAgICAg
+ICoNCiAgICAgICAgICogVGhhdCBhZGRyZXNzIHNwYWNlIGV4Y2VwdGVkIHRoZSBwY2llIHJlZ2lz
+dGVycyBpcw0KICAgICAgICAgKiBzcGxpdCBhbmQgZGVmaW5lZCBpbnRvIGRpZmZlcmVudCByZWdp
+b25zIGJ5IGlBVFUsDQogICAgICAgICAqIHdpdGggc2l6ZXMgYW5kIG9mZnNldHMgYXMgZm9sbG93
+czoNCiAgICAgICAgICoNCiAgICAgICAgICogUkM6DQogICAgICAgICAqIDB4MDEwMF8wMDAwIC0t
+LSAweDAxREZfRkZGRiAxNE1CIElPUkVTT1VSQ0VfTUVNDQogICAgICAgICAqIDB4MDFFMF8wMDAw
+IC0tLSAweDAxRUZfRkZGRiAxTUIgSU9SRVNPVVJDRV9JTw0KICAgICAgICAgKiAweDAxRjBfMDAw
+MCAtLS0gMHgwMUZGX0ZGRkYgMU1CIENmZyArIE1TSSArIFJlZ2lzdGVycw0KICAgICAgICAgKg0K
+ICAgICAgICAgKiBFUCAoZGVmYXVsdCB2YWx1ZSk6DQogICAgICAgICAqIDB4MDEwMF8wMDAwIC0t
+LSAweDAxRkZfQzAwMCAxNk1CIC0gMTZLQiBJT1JFU09VUkNFX01FTQ0KICAgICAgICAgKi8NCg0K
+KiBCVFcsIHRoZSBQQ0llIEVQIG1vZGUgaGFkIGJlZW4gdmVyaWZpZWQgdG9vLg0KDQpCZXN0IFJl
+Z2FyZHMNClJpY2hhcmQgWmh1DQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206
+IGxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktb3duZXJA
+dmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgU2VhbiBDcm9zcw0KU2VudDogVHVlc2RheSwg
+SnVseSAwMiwgMjAxMyAxMTo0NiBBTQ0KVG86IFByYXR5dXNoIEFuYW5kDQpDYzogZGV2aWNldHJl
+ZS1kaXNjdXNzQGxpc3RzLm96bGFicy5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxp
+bnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgQXJuZCBCZXJnbWFubjsgTW9oaXQg
+S1VNQVINClN1YmplY3Q6IFJlOiBbUEFUQ0ggMy80XSBQQ0k6IEFkZCBkcml2ZXIgZm9yIGkuTVg2
+IFBDSSBFeHByZXNzDQoNCk9uIE1vbmRheSwgSnVseSAxLCAyMDEzIGF0IDY6MDggUE0sIFByYXR5
+dXNoIEFuYW5kIHdyb3RlOg0KPiBPbiA3LzEvMjAxMyAxMjo0NSBQTSwgU2VhbiBDcm9zcyB3cm90
+ZToNCj4gPiBUaGlzIGFkZHMgYSBQQ0kgRXhwcmVzcyBwb3J0IGRyaXZlciBmb3IgdGhlIG9uLWNo
+aXAgUENJIEV4cHJlc3MgcG9ydCANCj4gPiBwcmVzZW50IG9uIHRoZSBpLk1YNiBTb0MuIEl0IGlz
+IGJhc2VkIG9uIHRoZSBQQ0kgRXhwcmVzcyBkcml2ZXIgDQo+ID4gYXZhaWxhYmxlIGluIHRoZSBG
+cmVlc2NhbGUgQlNQLg0KPiA+IA0KPiA+IFNpZ25lZC1vZmYtYnk6IFNlYW4gQ3Jvc3MgPHhvYnNA
+a29zYWdpLmNvbSAobWFpbHRvOnhvYnNAa29zYWdpLmNvbSk+DQo+ID4gLS0tDQo+IA0KPiANCj4g
+DQo+IC4uLg0KPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcGNpZS9wY2llLWlteC5j
+IA0KPiA+IGIvZHJpdmVycy9wY2kvcGNpZS9wY2llLWlteC5jIG5ldyBmaWxlIG1vZGUgMTAwNjQ0
+IGluZGV4IA0KPiA+IDAwMDAwMDAuLjY2NDY3OWUNCj4gPiAtLS0gL2Rldi9udWxsDQo+ID4gKysr
+IGIvZHJpdmVycy9wY2kvcGNpZS9wY2llLWlteC5jDQo+IA0KPiANCj4gDQo+IFNob3VsZCBnbyB0
+byBkcml2ZXJzL3BjaS9ob3N0Lw0KSSdsbCBwdWxsIGZyb20gYXJtLXNvYyByYXRoZXIgdGhhbiBm
+cm9tIExpbnVzJyB0cmVlIGFuZCBwbGFjZSB0aGUgZHJpdmVyIHRoZXJlIGluc3RlYWQuDQogDQo+
+ID4gQEAgLTAsMCArMSwxMDQ5IEBADQo+ID4gKy8qDQo+ID4gKyAqIGRyaXZlcnMvcGNpL3BjaWUv
+cGNpZS1pbXguYw0KPiA+ICsgKg0KPiANCj4gDQo+IA0KPiAuLi4NCj4gDQo+IA0KPiA+ICsjZGVm
+aW5lIEFUVV9SX0Jhc2VBZGRyZXNzIDB4OTAwDQo+ID4gKyNkZWZpbmUgUENJRV9QTF9pQVRVVlIg
+KEFUVV9SX0Jhc2VBZGRyZXNzICsgMHgwKSAjZGVmaW5lIA0KPiA+ICtQQ0lFX1BMX2lBVFVSQzEg
+KEFUVV9SX0Jhc2VBZGRyZXNzICsgMHg0KSAjZGVmaW5lIFBDSUVfUExfaUFUVVJDMiANCj4gPiAr
+KEFUVV9SX0Jhc2VBZGRyZXNzICsgMHg4KSAjZGVmaW5lIFBDSUVfUExfaUFUVVJMQkEgDQo+ID4g
+KyhBVFVfUl9CYXNlQWRkcmVzcyArIDB4QykgI2RlZmluZSBQQ0lFX1BMX2lBVFVSVUJBIA0KPiA+
+ICsoQVRVX1JfQmFzZUFkZHJlc3MgKyAweDEwKSAjZGVmaW5lIFBDSUVfUExfaUFUVVJMQSANCj4g
+PiArKEFUVV9SX0Jhc2VBZGRyZXNzICsgMHgxNCkgI2RlZmluZSBQQ0lFX1BMX2lBVFVSTFRBIA0K
+PiA+ICsoQVRVX1JfQmFzZUFkZHJlc3MgKyAweDE4KSAjZGVmaW5lIFBDSUVfUExfaUFUVVJVVEEg
+DQo+ID4gKyhBVFVfUl9CYXNlQWRkcmVzcyArIDB4MUMpDQo+IA0KPiANCj4gDQo+IEkgbWF5IGJl
+IHdyb25nLCBidXQgZnJvbSB0aGVzZSBvZmZzZXQgaXQgc2VlbXMgdG8gbWUgdGhhdCBpdCBpcyBT
+TlBTIA0KPiBjb250cm9sbGVyLiBJZiB5ZXMsIHRoZW4gcGxlYXNlIGdvIHRocm91Z2ggY29tbWVu
+dHMgb2YgIltQQVRDSCBWMS0xMCANCj4gMC80XSBQQ0llIHN1cHBvcnQgZm9yIFNhbXN1bmcgRXh5
+bm9zNTQ0MCBTb0MiDQoNCkV4eW5vczU0NDAgYXBwZWFycyB0byB1c2UgdGhlIHNhbWUgcG9ydCBs
+b2dpYyBjb250cm9sbGVyLiAgSG93ZXZlciwgdGhlIFBIWXMgYXJlIGRpZmZlcmVudC4gIEknbSBu
+b3QgZXhhY3RseSBjZXJ0YWluIHdoaWNoIGNvbW1lbnRzIHlvdSB3YW50IG1lIHRvIG5vdGljZSBp
+biB0aGF0IHNlcmllcyBvZiBwYXRjaHNldHMsIGJ1dCBJIHNlZSByZWZlcmVuY2VzIHRvIHNwbGl0
+dGluZyBFeHlub3Mtc3BlY2lmaWMgY29kZSBpbnRvIGl0cyBvd24gcHJvamVjdC4gIEJhc2VkIG9u
+IHRoYXQsIGl0IHNlZW1zIGxpa2UgdGhlIGJlc3QgYXBwcm9hY2ggd291bGQgYmUgdG86DQoNCiAg
+ICAxKSBNb3ZlIEV4eW5vcyBjb2RlIGludG8gaXRzIG93biBmaWxlLCBzYXksIHBjaWUtZXh5bm9z
+LmMuICBUaGlzIHdvdWxkIGxlYXZlIG9ubHkgU3lub3BzeXMtc3BlY2lmaWMgQVRDIGNvZGUgaW4g
+cGNpZS1kZXNpZ253YXJlLmMNCiAgICAyKSBSZW5hbWUgZ2VuZXJpYyBleHlub3MgZnVuY3Rpb25z
+IHRvIHJlZmxlY3QgdGhlIGZhY3QgdGhhdCB0aGV5J3JlIGRlc2lnbndhcmUtZ2VuZXJpYyBmdW5j
+dGlvbnMuDQogICAgMykgSGF2ZSBwY2llLWlteC5jIHJlZmVyZW5jZSB0aGlzIGdlbmVyaWMgZGVz
+aWdud2FyZSBBVEMgY29kZS4NCg0KSSdsbCByZXdvcmsgdGhlIHBhdGNoIGFuZCByZS1zdWJtaXQg
+aXQgZm9sbG93aW5nIHRoZXNlIHRocmVlIGNoYW5nZXMuDQoNCg0KLS0NClNlYW4gQ3Jvc3MNCg0K
+LS0NClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNj
+cmliZSBsaW51eC1wY2kiIGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdl
+ci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5v
+cmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQo=
 
