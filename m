@@ -1,305 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:33810 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753662Ab3G3DXn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2013 23:23:43 -0400
-Message-ID: <51F73108.4070905@huawei.com>
-Date: Tue, 30 Jul 2013 11:20:40 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
+Received: from hydra.sisk.pl ([212.160.235.94]:56950 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755512Ab3GBUbU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Jul 2013 16:31:20 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jon Mason <jdmason@kudzu.us>,
+Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>, Joe Jin <joe.jin@oracle.com>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-References: <1360036520-31032-1-git-send-email-wangyijing@huawei.com> <51A42137.9090908@huawei.com> <CAErSpo7iyiq6H-BsPNO0Nyc1SF+JteOzBqNQ+d_D=RYE_pdTEA@mail.gmail.com>
-In-Reply-To: <CAErSpo7iyiq6H-BsPNO0Nyc1SF+JteOzBqNQ+d_D=RYE_pdTEA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
+Date: Tue, 02 Jul 2013 22:40:56 +0200
+Message-ID: <1635199.U3MANZpM5C@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7GQ8M1rpWnez+=SByR_wmyAnJH7wfqdY20ZcvXW9_90Q@mail.gmail.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <20130702104406.4473EE0090@blue.fi.intel.com> <CAErSpo7GQ8M1rpWnez+=SByR_wmyAnJH7wfqdY20ZcvXW9_90Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/7/30 7:33, Bjorn Helgaas wrote:
-> On Mon, May 27, 2013 at 9:15 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Hi Bjorn and Jon,
->>    I'm sorry to disturb you. This patch is sent so long, but nobody seems had comment about it.
->> Do you have any comment with this patch?
->>
->> This patch try to update device mps in following case:
->> 1) target device under root port
->>    Because root port can split TLP, so target device mps greatr than root port mps is ok.
->>    But if root port mps greater than target device mps, it's bad, because target device cannot
->>    receive TLP payload size greater than its MPS. So if a target device under a root port, I think
->>    we should assign its mps greater than or equal root port mps.
->> 2) target device under non root port
->>    We assume the target device both is a transmitter and receiver, so the safest way is to assign target
->>    device mps equal to its parent device.
+On Tuesday, July 02, 2013 11:09:19 AM Bjorn Helgaas wrote:
+> On Tue, Jul 2, 2013 at 4:44 AM, Kirill A. Shutemov
+> <kirill.shutemov@linux.intel.com> wrote:
+> > Mika Westerberg wrote:
+> >> The acpiphp driver finds out whether the device is hotpluggable by checking
+> >> whether it has _RMV method behind it (and if it returns 1). However, at
+> >> least Acer Aspire S5 with Thunderbolt host router has this method placed
+> >> behind device called EPUP (endpoint upstream port?) and not directly behind
+> >> the root port as can be seen from the ASL code below:
+> >>
+> >> Device (RP05)
+> >> {
+> >>       ...
+> >>       Device (HRUP)
+> >>       {
+> >>               Name (_ADR, Zero)
+> >>               Name (_PRW, Package (0x02)
+> >>               {
+> >>                       0x09,
+> >>                       0x04
+> >>               })
+> >>               Device (HRDN)
+> >>               {
+> >>                       Name (_ADR, 0x00040000)
+> >>                       Name (_PRW, Package (0x02)
+> >>                       {
+> >>                               0x09,
+> >>                               0x04
+> >>                       })
+> >>                       Device (EPUP)
+> >>                       {
+> >>                               Name (_ADR, Zero)
+> >>                               Method (_RMV, 0, NotSerialized)
+> >>                               {
+> >>                                       Return (One)
+> >>                               }
+> >>                       }
+> >>               }
+> >>       }
+> >>
+> >> If we want to support such machines we must look for the _RMV method a bit
+> >> deeper in the hierarchy. Fix this by changing pcihp_is_ejectable() to check
+> >> few more devices down from the root port.
+> >
+> > We found that this approach is broken. We've got false positive: host
+> > bridge itself was detected as hotplugable slot %) I think it's not
+> > acceptable.
+> >
+> > Mika has tried few more approaches, but we haven't found anything better
+> > then hardcoded path like in original workaround patch[1]. It's not generic
+> > at all, but safe from false positives.
+> >
+> > Any thoughts?
+> >
+> > [1] http://article.gmane.org/gmane.linux.kernel.pci/19102
 > 
-> Thanks, I just started reviewing this patch, and your notes above are
-> exactly the question I was going to ask.  The comments in
-> pcie_bus_update_set() only tell me what the code does.  I can read the
-> C code just fine; what we need there is the explanation about *why* we
-> handle devices below root ports differently than others.  Maybe we can
-> adapt some of your notes as comments in the code.
-
-Hi Bjorn,
-   Thanks for your review and comments!
-
+> The changelog of this patch ([1]) says "Correct ACPI PCI hotplug
+> implementation should have _RMV method in a PCI slot (device under pci
+> bridge). In Acer Aspire S5 case we have it deeper in hierarchy ..."
 > 
-> Do you have references to the spec where it talks about this
-> difference?  I want to make sure we can rely on the fact that a root
-> port can accept TLPs larger than its MPS.
-
-PCIe Spec does not explicitly mention this issue, we can only get the message that
-root port/ root complex can split the TLP into smaller packets. For instance
-one 256B packet split into two 128B packet.
-
-I confirm this issue in my X86 machine and IA64 machine.
-1. I unload NIC driver to make sure the safety during  change the NIC MPS.
-2. Use setpci change NIC MPS to the max value it supports.
-3. Reload the NIC driver
-4. Ping and use scp cpoy large file bwtween machines. Result is ok.
-
-linux:/home/yijing # lspci -tv
- \-[0000:00]-+-00.0  Intel Corporation 5500 I/O Hub to ESI Port
-             +-01.0-[01]--+-00.0  Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet
-             |            \-00.1  Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet
-             +-03.0-[02]----00.0  Xilinx Corporation Default PCIe endpoint ID
-             +-07.0-[03]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
-             |            \-00.1  Intel Corporation 82576 Gigabit Network Connection
-             +-09.0-[04]----00.0  LSI Logic / Symbios Logic MegaRAID SAS 1078
-		................
-
-linux:/home/yijing # ifconfig
-eth1      Link encap:Ethernet  HWaddr 80:FB:06:AD:B2:FF
-          inet addr:128.5.160.31  Bcast:128.5.160.255  Mask:255.255.255.0
-          inet6 addr: fe80::82fb:6ff:fead:b2ff/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:2737201 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:2665883 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:3681912141 (3511.3 Mb)  TX bytes:3672206941 (3502.0 Mb)
-
-linux:/home/yijing # ethtool -i eth1
-driver: bnx2
-version: 2.2.3
-firmware-version: bc 4.6.4
-bus-info: 0000:01:00.1  ------------->device
-supports-statistics: yes
-supports-test: yes
-supports-eeprom-access: yes
-supports-register-dump: yes
-supports-priv-flags: no
-
-linux:/home/yijing # lspci -vvv -s 0000:00:01.0
-00:01.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 1 (rev 22) (prog-if 00 [Normal decode])
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 256 bytes
-	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-	I/O behind bridge: 0000f000-00000fff
-	Memory behind bridge: c0000000-c3ffffff
-	Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [40] Subsystem: Device 19e5:2008
-	Capabilities: [60] MSI: Enable- Count=1/2 Maskable+ 64bit-
-		Address: 00000000  Data: 0000
-		Masking: 00000000  Pending: 00000000
-	Capabilities: [90] Express (v2) Root Port (Slot+), MSI 00
-		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-			ExtTag+ RBE+ FLReset-
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-			MaxPayload 128 bytes, MaxReadReq 128 bytes         --------------------------->root port device, MPS is 128B
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <512ns, L1 <64us
-			ClockPM- Surprise+ LLActRep+ BwNot+
-		.........[snip].......
-
-
-linux:/home/yijing # lspci -vvv -s 01:00.1        ----------------->EP device, MPS change from 128B to 512B
-01:00.1 Ethernet controller: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet (rev 20)
-	Subsystem: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 256 bytes
-	Interrupt: pin B routed to IRQ 40
-	Region 0: Memory at c2000000 (64-bit, non-prefetchable) [size=32M]
-	Capabilities: [48] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
-	Capabilities: [50] Vital Product Data
-		Product Name: Broadcom NetXtreme II Ethernet Controller
-		Read-only fields:
-			[PN] Part number: BCM95706A0
-			[EC] Engineering changes: 220197-2
-			[SN] Serial number: 0123456789
-			[MN] Manufacture ID: 31 34 65 34
-			[RV] Reserved: checksum good, 31 byte(s) reserved
-		End
-	Capabilities: [58] MSI: Enable- Count=1/16 Maskable- 64bit+
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [a0] MSI-X: Enable+ Count=9 Masked-
-		Vector table: BAR=0 offset=0000c000
-		PBA: BAR=0 offset=0000e000
-	Capabilities: [ac] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 512 bytes, PhantFunc 0, Latency L0s <4us, L1 <64us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-		DevCtl:	Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+
-			MaxPayload 512 bytes, MaxReadReq 512 bytes  ---------------------------->EP device, MPS is 512B
-		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
-		LnkCap:	Port #0, Speed 2.5GT/s, Width x4, ASPM L0s L1, Latency L0 <2us, L1 <2us
-			ClockPM- Surprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-
- 		...............[snip].............
-
-linux:/home/yijing # scp yijing@128.5.160.28:/home/yijing/ISO/HUAWEI_Enterprise_Linux_B016.iso ./
-yijing@128.5.160.28's password:
-HUAWEI_Enterprise_Linux_B016.iso                                                                                                   100% 3318MB  53.5MB/s   01:02
-
-
-linux:/home/yijing # ping 128.5.64.144 -l 65530
-WARNING: probably, rcvbuf is not enough to hold preload.
-PING 128.5.64.144 (128.5.64.144) 56(84) bytes of data.
-64 bytes from 128.5.64.144: icmp_seq=1 ttl=126 time=9.12 ms
-64 bytes from 128.5.64.144: icmp_seq=2 ttl=126 time=9.11 ms
-64 bytes from 128.5.64.144: icmp_seq=3 ttl=126 time=10.0 ms
-64 bytes from 128.5.64.144: icmp_seq=4 ttl=126 time=10.0 ms
-64 bytes from 128.5.64.144: icmp_seq=5 ttl=126 time=10.0 ms
-64 bytes from 128.5.64.144: icmp_seq=6 ttl=126 time=10.1 ms
-64 bytes from 128.5.64.144: icmp_seq=7 ttl=126 time=7.66 ms
-64 bytes from 128.5.64.144: icmp_seq=8 ttl=126 time=7.94 ms
-64 bytes from 128.5.64.144: icmp_seq=9 ttl=126 time=59.3 ms
-64 bytes from 128.5.64.144: icmp_seq=10 ttl=126 time=7.97 ms
-64 bytes from 128.5.64.144: icmp_seq=11 ttl=126 time=9.68 ms
-64 bytes from 128.5.64.144: icmp_seq=12 ttl=126 time=8.21 ms
-64 bytes from 128.5.64.144: icmp_seq=13 ttl=126 time=7.95 ms
-64 bytes from 128.5.64.144: icmp_seq=14 ttl=126 time=8.04 ms
-64 bytes from 128.5.64.144: icmp_seq=15 ttl=126 time=7.77 ms
-
-
-
-
-
-
-
-
-
-
-
-
-
+> This is exactly what I mean about acpiphp being brittle because of the
+> assumptions it makes about the ACPI namespace.  Is there actually
+> something in the spec that requires the _RMV method to be where
+> pcihp_is_ejectable() expects it?
 > 
-> Bjorn
+> I'm not 100% dead-set against merging the workaround with hard-coded
+> path, but I still don't think it's a good idea.  It "fixes" it for one
+> particular machine, but there will likely be other machines that
+> require similar fixes in the future.  It makes it harder for somebody
+> to clean up the design later, because that person won't have an Aspire
+> S5 to test.  It makes it less likely that somebody *will* clean it up
+> later, because "everything is already working."
 > 
->> On 2013/2/5 11:55, Yijing Wang wrote:
->>> Currently we dont't update device's mps vaule when doing
->>> pci device hot-add. The hot-added device's mps will be set
->>> to default value (128B). But the upstream port device's mps
->>> may be larger than 128B which was set by firmware during
->>> system bootup. In this case the new added device may not
->>> work normally.
->>>
->>> The reference discussion at
->>> http://marc.info/?l=linux-pci&m=135420434508910&w=2
->>> and
->>> http://marc.info/?l=linux-pci&m=134815603407842&w=2
->>>
->>> Reported-by: Joe Jin <joe.jin@oracle.com>
->>> Reported-by: Yijing Wang <wangyijing@huawei.com>
->>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->>> Cc: Jon Mason <jdmason@kudzu.us>
->>> ---
->>>  drivers/pci/probe.c |   49 +++++++++++++++++++++++++++++++++++++++++++++++++
->>>  1 files changed, 49 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> index bbe4be7..57d9a5b 100644
->>> --- a/drivers/pci/probe.c
->>> +++ b/drivers/pci/probe.c
->>> @@ -1556,6 +1556,52 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->>>       return 0;
->>>  }
->>>
->>> +static int pcie_bus_update_set(struct pci_dev *dev, void *data)
->>> +{
->>> +     int mps, p_mps;
->>> +
->>> +     if (!pci_is_pcie(dev) || !dev->bus->self)
->>> +             return 0;
->>> +
->>> +     mps = pcie_get_mps(dev);
->>> +     p_mps = pcie_get_mps(dev->bus->self);
->>> +
->>> +     if (pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT) {
->>> +             /* update mps when current device mps is not equal to upstream mps */
->>> +             if (mps != p_mps)
->>> +                     goto update;
->>> +     } else {
->>> +             /* update mps when current device mps is smaller than upstream mps */
->>> +             if (mps < p_mps)
->>> +                     goto update;
->>> +     }
->>> +
->>> +     return 0;
->>> +
->>> +update:
->>> +     /* If current mpss is lager than upstream, use upstream mps to update
->>> +      * current mps, otherwise print warning info.
->>> +      */
->>> +     if ((128 << dev->pcie_mpss) >= p_mps)
->>> +             pcie_write_mps(dev, p_mps);
->>> +     else
->>> +             dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
->>> +                             "If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
->>> +                             mps, 128 << dev->pcie_mpss, p_mps);
->>> +     return 0;
->>> +}
->>> +
->>> +static void pcie_bus_update_setting(struct pci_bus *bus)
->>> +{
->>> +
->>> +     /*
->>> +      * After hot added a pci device, the device's mps will set to default
->>> +      * vaule(128 bytes). But the upstream port mps may be larger than 128B.
->>> +      * In this case, we should update this device's mps for better performance.
->>> +      */
->>> +     pci_walk_bus(bus, pcie_bus_update_set, NULL);
->>> +}
->>> +
->>>  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
->>>   * parents then children fashion.  If this changes, then this code will not
->>>   * work as designed.
->>> @@ -1566,6 +1612,9 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->>>
->>>       if (!pci_is_pcie(bus->self))
->>>               return;
->>> +
->>> +     /* update mps setting for newly hot added device */
->>> +     pcie_bus_update_setting(bus);
->>>
->>>       if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
->>>               return;
->>>
->>
->>
->> --
->> Thanks!
->> Yijing
->>
-> 
-> .
-> 
+> That's why my preference (given infinite resources) would be to rework
+> acpiphp now, while people are interested and can test it.
+
+Well, I have a plan to do just that, but quite frankly I'd prefer to make
+things physically work first and *then* to make them nicer.
+
+> I'm sure this would be a major redesign of acpiphp and its interaction with
+> pciehp, but I think it's something we're going to have to do at some
+> point.
+
+Yes, we need to do that pretty much as soon as reasonably possible, but let's
+not hold back changes allowing people to use their hardware with Linux because
+of that.  We very well may need to spend a couple of releases on it.
+
+Thanks,
+Rafael
 
 
 -- 
-Thanks!
-Yijing
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
