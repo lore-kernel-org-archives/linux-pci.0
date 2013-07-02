@@ -1,163 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:46135 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752066Ab3GXGa4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jul 2013 02:30:56 -0400
-Message-ID: <51EF7466.20703@jp.fujitsu.com>
-Date: Wed, 24 Jul 2013 15:29:58 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from mga14.intel.com ([143.182.124.37]:60256 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754860Ab3GBU1T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Jul 2013 16:27:19 -0400
+Date: Tue, 2 Jul 2013 23:31:17 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in
+ enable_device()
+Message-ID: <20130702203117.GT9294@intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+ <3216917.m2IEX2IHod@vostro.rjw.lan>
+ <CAErSpo7P5+Yc9r9RFMJPqOzGQ-CFr8RAW7ehgumTzhdxoYCF6Q@mail.gmail.com>
+ <4523014.G6VJLhZf81@vostro.rjw.lan>
 MIME-Version: 1.0
-To: bhelgaas@google.com
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	ishii.hironobu@jp.fujitsu.com, ddutile@redhat.com,
-	bill.sumner@hp.com, alex.williamson@redhat.com, vgoyal@redhat.com,
-	hbabu@us.ibm.com
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com> <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com> <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com> <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com> <51B93221.2040505@jp.fujitsu.com> <CAErSpo5tVK-Z3aOdMTzab-S8o5zLVtDOFQ8-LSYpUgbrJSsxuw@mail.gmail.com> <51BA7BB6.1080104@jp.fujitsu.com>
-In-Reply-To: <51BA7BB6.1080104@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4523014.G6VJLhZf81@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry for letting this discussion slide, I was busy on other works:-(
-Anyway, the summary of previous discussion is:
-- My patch adds new initcall(fs_initcall) to reset all PCIe endpoints on
-  boot. This expects PCI enumeration is done before IOMMU
-  initialization as follows.
-    (1) PCI enumeration
-    (2) fs_initcall ---> device reset
-    (3) IOMMU initialization
-- This works on x86, but does not work on other architecture because
-  IOMMU is initialized before PCI enumeration on some architectures. So,
-  device reset should be done where IOMMU is initialized instead of
-  initcall.
-- Or, as another idea, we can reset devices in first kernel(panic kernel)
+On Tue, Jul 02, 2013 at 10:29:12PM +0200, Rafael J. Wysocki wrote:
+> On Tuesday, July 02, 2013 10:40:39 AM Bjorn Helgaas wrote:
+> > On Mon, Jul 1, 2013 at 7:29 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > On Monday, July 01, 2013 09:36:13 PM Mika Westerberg wrote:
+> > >> On Mon, Jul 01, 2013 at 04:01:37PM +0200, Rafael J. Wysocki wrote:
+> > >> > > Given the fact that SLOT_ENABLED is only checked in acpiphp_enable_slot()
+> > >> > > (after this patch) and that /sys/bus/pci/slots/*/power uses SLOT_POWEREDON
+> > >> > > anyway, should we remove the whole flag?
+> > >> >
+> > >> > Sure, if it is not necessary any more, we should remove it.
+> > >>
+> > >> Well, there is one thing that changes due that. Once the flag is gone
+> > >> userspace can do 'echo 1 > /sys/bus/pci/slots/*/power' several times and
+> > >> the slot is always re-enumerated.
+> > >>
+> > >> If that is not acceptable we should probably move the SLOT_ENABLED check
+> > >> closer to acpiphp_core:enable_device() and drop it from here, so that we
+> > >> always re-enumerate on Bus Check event but userspace can only do enable
+> > >> once (we still re-enumerate on Bus Check).
+> > >
+> > > Yes, that sounds like the right thing to do.
+> > 
+> > Is it actually a problem if we re-enumerate every time userspace does
+> > 'echo 1 > /sys/bus/pci/slots/*/power'?  I assume re-enumeration is a
+> > no-op if nothing has changed.
+> 
+> Well, if it's a no-op in that case, then re-enumerating shouldn't be a problem,
+> but is it a no-op?
 
-Resetting devices in panic kernel is against kdump policy and seems not to
-be good idea. So I think adding reset code into iommu initialization is
-better. I'll post patches for that.
-
-Another discussion point is how to handle buggy devices. Resetting buggy
-devices makes system more unstable. One of ideas is using boot parameter
-so that user can choose to reset devices or not. An existed parameter
-"reset_devices" is not helpful for this purpose because it is always
-necessary for kdump and user cannot get rid of it. Introducing new boot
-parameter seems to be unpopular for maintainers. Any ideas?
-
-Thanks,
-Takao Indoh
-
-(2013/06/14 11:11), Takao Indoh wrote:
-> (2013/06/13 12:41), Bjorn Helgaas wrote:
->> On Wed, Jun 12, 2013 at 8:44 PM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
->>> (2013/06/12 13:45), Bjorn Helgaas wrote:
->>>> [+cc Vivek, Haren; sorry I didn't think to add you earlier]
->>>>
->>>> On Tue, Jun 11, 2013 at 12:08 AM, Takao Indoh
->>>> <indou.takao@jp.fujitsu.com> wrote:
->>>>> (2013/06/11 11:20), Bjorn Helgaas wrote:
->>>>
->>>>>> I'm not sure you need to reset legacy devices (or non-PCI devices)
->>>>>> yet, but the current hook isn't anchored anywhere -- it's just an
->>>>>> fs_initcall() that doesn't give the reader any clue about the
->>>>>> connection between the reset and the problem it's solving.
->>>>>>
->>>>>> If we do something like this patch, I think it needs to be done at the
->>>>>> point where we enable or disable the IOMMU.  That way, it's connected
->>>>>> to the important event, and there's a clue about how to make
->>>>>> corresponding fixes for other IOMMUs.
->>>>>
->>>>> Ok. pci_iommu_init() is appropriate place to add this hook?
->>>>
->>>> I looked at various IOMMU init places today, and it's far more
->>>> complicated and varied than I had hoped.
->>>>
->>>> This reset scheme depends on enumerating PCI devices before we
->>>> initialize the IOMMU used by those devices.  x86 works that way today,
->>>> but not all architectures do (see the sparc pci_fire_pbm_init(), for
->>>
->>> Sorry, could you tell me which part depends on architecture?
->>
->> Your patch works if PCIe devices are reset before the kdump kernel
->> enables the IOMMU.  On x86, this is possible because PCI enumeration
->> happens before the IOMMU initialization.  On sparc, the IOMMU is
->> initialized before PCI devices are enumerated, so there would still be
->> a window where ongoing DMA could cause an IOMMU error.
-> 
-> Ok, understood, thanks.
-> 
-> Hmmm, it seems to be difficult to find out method which is common to
-> all architectures. So, what I can do for now is introducing reset scheme
-> which is only for x86.
-> 
-> 1) Change this patch so that it work only on x86 platform. For example
->     call this reset code from x86_init.iommu.iommu_init() instead of
->     fs_initcall.
-> 
-> Or another idea is:
-> 
-> 2) Enumerate PCI devices in IOMMU layer. That is:
->     PCI layer
->       Just provide interface to reset given strcut pci_dev. Maybe
->       pci_reset_function() looks good for this purpose.
->     IOMMU layer
->       Determine which devices should be reset. On kernel boot, check if
->       IOMMU is already active or not, and if active, check IOMMU page
->       table and reset devices whose entry exists there.
-> 
->> Of course, it might be possible to reorganize the sparc code to to the
->> IOMMU init *after* it enumerates PCI devices.  But I think that change
->> would be hard to justify.
->>
->> And I think even on x86, it would be better if we did the IOMMU init
->> before PCI enumeration -- the PCI devices depend on the IOMMU, so
->> logically the IOMMU should be initialized first so the PCI devices can
->> be associated with it as they are enumerated.
-> 
-> So third idea is:
-> 
-> 3) Do reset before PCI enumeration(arch_initcall_sync or somewhere). We
->     need to implement new code to enumerate PCI devices and reset them
->     for this purpose.
-> 
-> Idea 2 is not difficult to implement, but one problem is that this
-> method may be dangerous. We need to scan IOMMU page table which is used
-> in previous kernel, but it may be broken. Idea 3 seems to be difficult
-> to implement...
-> 
-> 
->>
->>>> example).  And I think conceptually, the IOMMU should be enumerated
->>>> and initialized *before* the devices that use it.
->>>>
->>>> So I'm uncomfortable with that aspect of this scheme.
->>>>
->>>> It would be at least conceivable to reset the devices in the system
->>>> kernel, before the kexec.  I know we want to do as little as possible
->>>> in the crashing kernel, but it's at least a possibility, and it might
->>>> be cleaner.
->>>
->>> I bet this will be not accepted by kdump maintainer. Everything in panic
->>> kernel is unreliable.
->>
->> kdump is inherently unreliable.  The kdump kernel doesn't start from
->> an arbitrary machine state.  We don't expect it to tolerate all CPUs
->> running, for example.  Maybe it should be expected to tolerate PCI
->> devices running, either.
-> 
-> What I wanted to say is that any resources of first kernel are
-> unreliable. Under panic situation, struct pci_dev tree may be broken, or
-> pci_lock may be already hold by someone, etc. So, if we do this in first
-> kernel, maybe kdump needs its own code to enumerate PCI devices and
-> reset them.
-> 
-> Vivek?
-> 
-> Thanks,
-> Takao Indoh
-> 
-> 
-> 
-
-
+I can confirm that it's a no-op (at least for the Thunderbolt case).
+Basically we just scan for new devices and nothing is to be found.
