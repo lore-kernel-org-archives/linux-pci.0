@@ -1,141 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:56382 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755899Ab3GOLw4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 07:52:56 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCHv5 04/11] PCI: Introduce new MSI chip infrastructure
-Date: Mon, 15 Jul 2013 13:52:40 +0200
-Message-Id: <1373889167-27878-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:58045 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753052Ab3GBWzZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2013 18:55:25 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7oeYUWS+jaJqm-4i+tN0HuOZrrxZt7GDmeRSmj4pzYYQ@mail.gmail.com>
+References: <20121030040237.GA10472@google.com>
+	<1352003971-22278-1-git-send-email-yinghai@kernel.org>
+	<CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
+	<CAErSpo5Z57asEXbfesOjXMEPj4WM3YMbzQH3s-v_NBrnPNmuVQ@mail.gmail.com>
+	<CAErSpo4LS7ShCbeOm1s9ob1MjPfUSWn9J96UHRBP6van54swQA@mail.gmail.com>
+	<CAE9FiQV5x1S1BNHrXq0wMRDx7PD5BoCh3fOnq2vS_AOAGL8Rrw@mail.gmail.com>
+	<CAErSpo5vEb=63jGsqfau1G=f54oqq17pc3ZzcpzhL7hQrtYhng@mail.gmail.com>
+	<CAE9FiQUxxjZmd3C33_ujSeL1EjcKHHSoGusQwfBD+Zd=cwCDZA@mail.gmail.com>
+	<CAErSpo6qX3ih9DXLqxqJw141OAeTFu0YfSih6LyD0sd2gS-Vyg@mail.gmail.com>
+	<CAErSpo7oeYUWS+jaJqm-4i+tN0HuOZrrxZt7GDmeRSmj4pzYYQ@mail.gmail.com>
+Date: Tue, 2 Jul 2013 15:55:24 -0700
+Message-ID: <CAE9FiQWkecbt_+W1OGZNWk7MMaQZcNS-J2PkDvx6dxjaNKC32A@mail.gmail.com>
+Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
+ hot-add root bus
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=20cf3010ecc98d92fc04e08f3de3
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+--20cf3010ecc98d92fc04e08f3de3
+Content-Type: text/plain; charset=ISO-8859-1
 
-The new struct msi_chip is used to associated an MSI controller with a
-PCI bus. It is automatically handed down from the root to its children
-during bus enumeration.
+On Tue, Jul 2, 2013 at 2:31 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jan 9, 2013 at 11:39 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Wed, Jan 9, 2013 at 10:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+>>> the reason why we need to change those codes for x86, we want to make it support
+>>> pci root bus hotplug. So it would be reasonable for us to align other
+>>> platform to x86
+>>> changes after pci root bus hotplug change is completely done.
+>>
+>> OK, I opened https://bugzilla.kernel.org/show_bug.cgi?id=52531 as a
+>> way to keep track of this consistency issue ...
+>
+> What's your plan for this?  We desperately need more cross-arch
+> consistency in how we manage resources, and I'd like to make some
+> progress in this cycle.
 
-This patch provides default (weak) implementations for the architecture-
-specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
-and arch_msi_check_device()) which check if a PCI device's bus has an
-attached MSI chip and forward the call appropriately.
+Ok, will work on that.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/msi.c   | 27 +++++++++++++++++++++++++--
- drivers/pci/probe.c |  1 +
- include/linux/msi.h | 11 +++++++++++
- include/linux/pci.h |  1 +
- 4 files changed, 38 insertions(+), 2 deletions(-)
+but will on top of
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index aa2f697..d5b6378 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -32,16 +32,39 @@ static int pci_msi_enable = 1;
- 
- int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
--	return -EINVAL;
-+	struct msi_chip *chip = dev->bus->msi;
-+	int err;
-+
-+	if (!chip || !chip->setup_irq)
-+		return -EINVAL;
-+
-+	err = chip->setup_irq(chip, dev, desc);
-+	if (err < 0)
-+		return err;
-+
-+	irq_set_chip_data(desc->irq, chip);
-+
-+	return 0;
- }
- 
- void __weak arch_teardown_msi_irq(unsigned int irq)
- {
-+	struct msi_chip *chip = irq_get_chip_data(irq);
-+
-+	if (!chip || !chip->teardown_irq)
-+		return;
-+
-+	chip->teardown_irq(chip, irq);
- }
- 
- int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
- {
--	return 0;
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (!chip || !chip->check_device)
-+		return 0;
-+
-+	return chip->check_device(chip, dev, nvec, type);
- }
- 
- int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 46ada5c..b8eaa81 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -666,6 +666,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 
- 	child->parent = parent;
- 	child->ops = parent->ops;
-+	child->msi = parent->msi;
- 	child->sysdata = parent->sysdata;
- 	child->bus_flags = parent->bus_flags;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 18870b0..cbf5d05 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -64,4 +64,15 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
- 
- void default_teardown_msi_irqs(struct pci_dev *dev);
- 
-+struct msi_chip {
-+	struct module *owner;
-+	struct device *dev;
-+
-+	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
-+			 struct msi_desc *desc);
-+	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-+	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-+			    int nvec, int type);
-+};
-+
- #endif /* LINUX_MSI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..4044e3c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -433,6 +433,7 @@ struct pci_bus {
- 	struct resource busn_res;	/* bus numbers routed to this bus */
- 
- 	struct pci_ops	*ops;		/* configuration access functions */
-+	struct msi_chip	*msi;		/* MSI controller */
- 	void		*sysdata;	/* hook for sys-specific extension */
- 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
- 
--- 
-1.8.1.2
+[PATCH v5 0/7] PCI: Change assign unassigned resources per root bus bassis
+and attached.
 
+will resend them after v3.11-rc1 is out.
+
+Thanks
+
+Yinghai
+
+--20cf3010ecc98d92fc04e08f3de3
+Content-Type: application/octet-stream;
+	name="root_bus_ioport_skip_2_a.patch"
+Content-Disposition: attachment; filename="root_bus_ioport_skip_2_a.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hinp268n0
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IGNoZWNrIHBjaSBidXMgYWRkcmVzcyBmb3IgdW5hc3NpZ25l
+ZCByZXMKCldlIHNob3VsZCBjb21wYXJlIHJlcy0+c3RhcnQgd2l0aCByb290IGJ1cyB3aW5kb3cg
+b2Zmc2V0LgpPdGhlcndpc2Ugd2lsbCBoYXZlIHByb2JsZW0gd2l0aCBhcmNoIHRoYXQgc3VwcG9y
+dCBob3N0YnJpZGdlCnJlc291cmNlIG9mZnNldC4KCkJlbkggcG9pbnRlZCBvdXQgdGhhdCBkdXJp
+bmcgcmV2aWV3aW5nIHBhdGNoc2V0IHRoYXQgc2VwYXJhdGUKYXNzaWduIHVuYXNzaWduZWQgdG8g
+cGVyIHJvb3QgYnVzZXMuCgpBY2NvcmRpbmcgdG8gQmpvcm4sIGhhdmUgaXQgaW4gc2VwYXJhdGVk
+IHBhdGNoLgoKVXNlIHBjaWJpb3NfcmVzb3VyY2VfdG9fYnVzIHRvIGdldCByZWdpb24gYXQgZmly
+c3QsIGFuZCBjaGVjawpyZWdpb24uc3RhcnQgaW5zdGVhZC4KClN1Z2dlc3RlZC1ieTogQmVuamFt
+aW4gSGVycmVuc2NobWlkdCA8YmVuaEBrZXJuZWwuY3Jhc2hpbmcub3JnPgpTaWduZWQtb2ZmLWJ5
+OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZlcnMvcGNpL3NldHVw
+LWJ1cy5jIHwgICAgNyArKysrKystCiAxIGZpbGUgY2hhbmdlZCwgNiBpbnNlcnRpb25zKCspLCAx
+IGRlbGV0aW9uKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCj09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCisrKyBs
+aW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTE0MjAsOSArMTQyMCwxNCBAQCBz
+dGF0aWMgaW50IGNoZWNrX3VuYXNzaWduZWRfcmVzb3VyY2VzKHN0CiAKIAlmb3IgKGkgPSBQQ0lf
+SU9WX1JFU09VUkNFUzsgaSA8PSBQQ0lfSU9WX1JFU09VUkNFX0VORDsgaSsrKSB7CiAJCXN0cnVj
+dCByZXNvdXJjZSAqciA9ICZkZXYtPnJlc291cmNlW2ldOworCQlzdHJ1Y3QgcGNpX2J1c19yZWdp
+b24gcmVnaW9uOwogCiAJCS8qIE5vdCBhc3NpZ25lZCwgb3IgcmVqZWN0ZWQgYnkga2VybmVsID8g
+Ki8KLQkJaWYgKHItPmZsYWdzICYmICFyLT5zdGFydCkgeworCQlpZiAoIXItPmZsYWdzKQorCQkJ
+Y29udGludWU7CisKKwkJcGNpYmlvc19yZXNvdXJjZV90b19idXMoZGV2LCAmcmVnaW9uLCByKTsK
+KwkJaWYgKCFyZWdpb24uc3RhcnQpIHsKIAkJCSgqdW5hc3NpZ25lZCkrKzsKIAkJCXJldHVybiAx
+OyAvKiByZXR1cm4gZWFybHkgZnJvbSBwY2lfd2Fsa19idXMgKi8KIAkJfQo=
+--20cf3010ecc98d92fc04e08f3de3--
