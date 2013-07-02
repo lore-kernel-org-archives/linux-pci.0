@@ -1,97 +1,104 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 12 Jul 2013 16:01:59 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: Re: [RFC][PATCH 11/30] ACPI / hotplug / PCI: Register all devices
- under the given bridge
-Message-ID: <20130712130159.GJ4898@intel.com>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
- <3718119.FLASu5DBx8@vostro.rjw.lan>
- <1910839.UjS2m1ckUq@vostro.rjw.lan>
- <20130712115420.GH4898@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog101.obsmtp.com ([207.126.144.111]:37147 "EHLO
+	eu1sys200aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750832Ab3GBEml (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2013 00:42:41 -0400
+Message-ID: <51D25A13.9060006@st.com>
+Date: Tue, 2 Jul 2013 10:11:55 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130712115420.GH4898@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Sean Cross <xobs@kosagi.com>, Arnd Bergmann <arnd@arndb.de>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Cc: "devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 3/4] PCI: Add driver for i.MX6 PCI Express
+References: <1372662947-27160-1-git-send-email-xobs@kosagi.com> <1372662947-27160-4-git-send-email-xobs@kosagi.com> <51D15513.7020101@st.com> <2E3BDF14016345FA887E3BACAE05DADA@kosagi.com>
+In-Reply-To: <2E3BDF14016345FA887E3BACAE05DADA@kosagi.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 12, 2013 at 02:54:20PM +0300, Mika Westerberg wrote:
-> On Fri, Jul 12, 2013 at 01:50:29AM +0200, Rafael J. Wysocki wrote:
-> > @@ -1210,6 +1125,35 @@ void acpiphp_enumerate_slots(struct pci_
-> >  	 */
-> >  	get_device(&bus->dev);
-> >  
-> > +	if (!pci_is_root_bus(bridge->pci_bus)) {
-> > +		struct acpiphp_context *context;
-> > +
-> > +		/*
-> > +		 * This bridge should have been registered as a hotplug function
-> > +		 * under its parent, so the context has to be there.  If not, we
-> > +		 * are in deep goo.
-> > +		 */
-> > +		mutex_lock(&acpiphp_context_lock);
-> > +		context = acpiphp_get_context(handle);
-> > +		if (WARN_ON(!context || !context->func)) {
-> > +			mutex_unlock(&acpiphp_context_lock);
-> > +			put_device(&bus->dev);
-> > +			kfree(bridge);
-> > +			return;
-> > +		}
-> > +		bridge->context = context;
-> > +		context->bridge = bridge;
-> > +		/* Get a reference to the parent bridge. */
-> > +		get_bridge(context->func->slot->bridge);
-> > +		mutex_unlock(&acpiphp_context_lock);
-> > +	}
-> > +
-> > +	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
-> > +	if (ACPI_SUCCESS(status)) {
-> > +		dbg("found ejectable p2p bridge\n");
-> > +		bridge->flags |= BRIDGE_HAS_EJ0;
-> > +	}
-> > +
-> >  	/* must be added to the list prior to calling register_slot */
-> >  	mutex_lock(&bridge_mutex);
-> >  	list_add(&bridge->list, &bridge_list);
-> > @@ -1220,34 +1164,9 @@ void acpiphp_enumerate_slots(struct pci_
-> >  				     register_slot, NULL, bridge, NULL);
-> >  	if (ACPI_FAILURE(status)) {
-> >  		acpi_handle_err(bridge->handle, "failed to register slots\n");
-> > -		goto err;
-> > -	}
-> > -
-> > -	if (pci_is_root_bus(bridge->pci_bus))
-> > -		return;
-> > -
-> > -	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
-> > -	if (ACPI_SUCCESS(status)) {
-> > -		dbg("found ejectable p2p bridge\n");
-> > -		bridge->flags |= BRIDGE_HAS_EJ0;
-> > -	}
-> > -	if (context->handler_for_func) {
-> > -		/* Notify handler already installed. */
-> > -		get_bridge(context->func->slot->bridge);
-> > -		return;
-> > +		cleanup_bridge(bridge);
-> > +		put_bridge(bridge);
-> >  	}
-> > -
-> > -	/* install notify handler for P2P bridges */
-> > -	status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
-> > -					     handle_hotplug_event, NULL);
-> 
-> With this removed we now install notify handlers for the slot objects under
-> this bridge but not for the bridge itself.
-> 
-> In case of Thunderbolt the BIOS will send the event for the root port ACPI
-> device \_SB_.PCI0.RP05 and with the above change we don't handle it
-> anymore.
+On 7/2/2013 9:16 AM, Sean Cross wrote:
+>> >I may be wrong, but from these offset it seems to me that it is SNPS
+>> >controller. If yes, then please go through comments of
+>> >"[PATCH V1-10 0/4] PCIe support for Samsung Exynos5440 SoC"
+> Exynos5440 appears to use the same port logic controller.  However, the PHYs are different.  I'm not exactly certain which comments you want me to notice in that series of patchsets, but I see references to splitting Exynos-specific code into its own project.  Based on that, it seems like the best approach would be to:
+>
+>      1) Move Exynos code into its own file, say, pcie-exynos.c.  This would leave only Synopsys-specific ATC code in pcie-designware.c
+>      2) Rename generic exynos functions to reflect the fact that they're designware-generic functions.
+>      3) Have pcie-imx.c reference this generic designware ATC code.
+>
+> I'll rework the patch and re-submit it following these three changes.
 
-Actually there was a bug in patch [23/30] that caused this. Once that is
-fixed I can see that the notify handlers get correctly installed. I'll
-comment on that patch.
+Correct, Exactly these steps has to be done. But, Mohit might be doing 
+similar work, so it would be better to get consensus on what has to be done.
+
+IMO, there should be three categories of functions. May be arnd can 
+comment if we can do even something better.
+
+Group I: Initially, These functions should remain in pcie-designware.c 
+(offcourse by changing exynos tag to dw). Latter on, we can see if some 
+of them can even be moved to common pci layer.
+
+sys_to_pcie
+cfg_read
+cfg_write
+dw_pcie_prog_viewport_cfg0
+dw_pcie_prog_viewport_cfg1
+dw_pcie_prog_viewport_mem_outbound
+dw_pcie_prog_viewport_io_outbound
+dw_pcie_rd_other_conf
+dw_pcie_wr_other_conf
+dw_pcie_setup
+dw_pcie_valid_config
+dw_pcie_rd_conf
+dw_pcie_wd_conf
+dw_pcie_scan_bus
+dw_pcie_map_irq
+dw_pcie_setup_rc
+add_pcie_port (after a bit of generalization)
+dw_pcie_probe
+dw_pcie_remove
+
+
+Group II: These functions should still remain as dummy in 
+pcie-designware.c , and should be classified as __week. So, each 
+implementer of designware controller say Exynos/SPEAr/imx will have to 
+define their own function to super-seed default dummy definitions.
+
+dw_readl_rc
+dw_writel_rc
+dw_pcie_rd_own_conf
+dw_pcie_wr_own_conf
+dw_pcie_link_up
+dw_pcie_host_init (will contain all platform specific and phy 
+initialization)
+
+Group III: Functions specific to Exynos, which should move to pcie-exynos.c
+
+exynos_pcie_sideband_dbi_w_mode
+exynos_pcie_sideband_dbi_r_mode
+exynos_pcie_assert_core_reset
+exynos_pcie_deassert_core_reset
+exynos_pcie_assert_phy_reset
+exynos_pcie_deassert_phy_reset
+exynos_pcie_init_phy
+exynos_pcie_assert_reset
+exynos_pcie_establish_link
+
+
+@Mohit, See if you have BW then please take it further.
+
+arnd, are exynos patches applied to any branch of arm-soc git tree?
+
+Regards
+Pratyush
+
+
+
+
+
