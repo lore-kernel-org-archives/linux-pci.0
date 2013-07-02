@@ -1,232 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2112 "EHLO mx1.redhat.com"
+Received: from hydra.sisk.pl ([212.160.235.94]:56955 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754219Ab3GJWLF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 10 Jul 2013 18:11:05 -0400
-Subject: [RFC PATCH 1/2] pci: Create PCIe requester ID interface
-To: bhelgaas@google.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
-	iommu@lists.linux-foundation.org, acooks@gmail.com,
-	ddutile@redhat.com, dwmw2@infradead.org
-Date: Wed, 10 Jul 2013 16:10:39 -0600
-Message-ID: <20130710221039.3045.70542.stgit@bling.home>
-In-Reply-To: <20130710215954.3045.89568.stgit@bling.home>
-References: <20130710215954.3045.89568.stgit@bling.home>
+	id S1754906Ab3GBUjB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Jul 2013 16:39:01 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
+Date: Tue, 02 Jul 2013 22:48:37 +0200
+Message-ID: <1459525.3jRt3S4aX6@vostro.rjw.lan>
+In-Reply-To: <20130702174542.18099E0090@blue.fi.intel.com>
+References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <CAErSpo7GQ8M1rpWnez+=SByR_wmyAnJH7wfqdY20ZcvXW9_90Q@mail.gmail.com> <20130702174542.18099E0090@blue.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This provides interfaces for drivers to discover the visible PCIe
-requester ID for a device, for things like IOMMU setup, and iterate
-over the device chain from requestee to requester, including DMA
-quirks at each step.
+On Tuesday, July 02, 2013 08:45:42 PM Kirill A. Shutemov wrote:
+> Bjorn Helgaas wrote:
+> > On Tue, Jul 2, 2013 at 4:44 AM, Kirill A. Shutemov
+> > <kirill.shutemov@linux.intel.com> wrote:
+> > > Mika Westerberg wrote:
+> > >> The acpiphp driver finds out whether the device is hotpluggable by checking
+> > >> whether it has _RMV method behind it (and if it returns 1). However, at
+> > >> least Acer Aspire S5 with Thunderbolt host router has this method placed
+> > >> behind device called EPUP (endpoint upstream port?) and not directly behind
+> > >> the root port as can be seen from the ASL code below:
+> > >>
+> > >> Device (RP05)
+> > >> {
+> > >>       ...
+> > >>       Device (HRUP)
+> > >>       {
+> > >>               Name (_ADR, Zero)
+> > >>               Name (_PRW, Package (0x02)
+> > >>               {
+> > >>                       0x09,
+> > >>                       0x04
+> > >>               })
+> > >>               Device (HRDN)
+> > >>               {
+> > >>                       Name (_ADR, 0x00040000)
+> > >>                       Name (_PRW, Package (0x02)
+> > >>                       {
+> > >>                               0x09,
+> > >>                               0x04
+> > >>                       })
+> > >>                       Device (EPUP)
+> > >>                       {
+> > >>                               Name (_ADR, Zero)
+> > >>                               Method (_RMV, 0, NotSerialized)
+> > >>                               {
+> > >>                                       Return (One)
+> > >>                               }
+> > >>                       }
+> > >>               }
+> > >>       }
+> > >>
+> > >> If we want to support such machines we must look for the _RMV method a bit
+> > >> deeper in the hierarchy. Fix this by changing pcihp_is_ejectable() to check
+> > >> few more devices down from the root port.
+> > >
+> > > We found that this approach is broken. We've got false positive: host
+> > > bridge itself was detected as hotplugable slot %) I think it's not
+> > > acceptable.
+> > >
+> > > Mika has tried few more approaches, but we haven't found anything better
+> > > then hardcoded path like in original workaround patch[1]. It's not generic
+> > > at all, but safe from false positives.
+> > >
+> > > Any thoughts?
+> > >
+> > > [1] http://article.gmane.org/gmane.linux.kernel.pci/19102
+> > 
+> > The changelog of this patch ([1]) says "Correct ACPI PCI hotplug
+> > implementation should have _RMV method in a PCI slot (device under pci
+> > bridge). In Acer Aspire S5 case we have it deeper in hierarchy ..."
+> > 
+> > This is exactly what I mean about acpiphp being brittle because of the
+> > assumptions it makes about the ACPI namespace.  Is there actually
+> > something in the spec that requires the _RMV method to be where
+> > pcihp_is_ejectable() expects it?
+> 
+> Spec says that _RMV indicates the device which can be removed.
+> Rest, I believe, are assumptions: if the device is removable, then parent
+> must be a hotpluggable slot.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/search.c |  170 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    7 ++
- 2 files changed, 177 insertions(+)
+Where "hotpluggable slot" is a very weakly defined entity. :-)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index d0627fa..2cca84b 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -18,6 +18,176 @@ DECLARE_RWSEM(pci_bus_sem);
- EXPORT_SYMBOL_GPL(pci_bus_sem);
- 
- /*
-+ * pci_has_pcie_requester_id - Does @dev have a PCIe requester ID
-+ * @dev: device to test
-+ */
-+static bool pci_has_pcie_requester_id(struct pci_dev *dev)
-+{
-+	/*
-+	 * XXX There's no indicator of the bus type, conventional PCI vs
-+	 * PCI-X vs PCI-e, but we assume that a caller looking for a PCIe
-+	 * requester ID is a native PCIe based system (such as VT-d or
-+	 * AMD-Vi).  It's common that PCIe root complex devices do not
-+	 * include a PCIe capability, but we can assume they are PCIe
-+	 * devices based on their topology.
-+	 */
-+	if (pci_is_pcie(dev) || pci_is_root_bus(dev->bus))
-+		return true;
-+
-+	/*
-+	 * PCI-X devices have a requester ID, but the bridge may still take
-+	 * ownership of transactions and create a requester ID.  We therefore
-+	 * assume that the PCI-X requester ID is not the same one used on PCIe.
-+	 */
-+
-+#ifdef CONFIG_PCI_QUIRKS
-+	/*
-+	 * Quirk for PCIe-to-PCI bridges which do not expose a PCIe capability.
-+	 * If the device is a bridge, look to the next device upstream of it.
-+	 * If that device is PCIe and not a PCIe-to-PCI bridge, then by
-+	 * deduction, the device must be PCIe and therefore has a requester ID.
-+	 */
-+	if (dev->subordinate) {
-+		struct pci_dev *parent = dev->bus->self;
-+
-+		if (pci_is_pcie(parent) &&
-+		    pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
-+			return true;
-+	}
-+#endif
-+
-+	return false;
-+}
-+
-+/*
-+ * pci_has_visible_pcie_requester_id - Can @bridge see @dev's requester ID?
-+ * @dev: requester device
-+ * @bridge: upstream bridge (or NULL for root bus)
-+ */
-+static bool pci_has_visible_pcie_requester_id(struct pci_dev *dev,
-+					      struct pci_dev *bridge)
-+{
-+	/*
-+	 * The entire path must be tested, if any step does not have a
-+	 * requester ID, the chain is broken.  This allows us to support
-+	 * topologies with PCIe requester ID gaps, ex: PCIe-PCI-PCIe
-+	 */
-+	while (dev != bridge) {
-+		if (!pci_has_pcie_requester_id(dev))
-+			return false;
-+
-+		if (pci_is_root_bus(dev->bus))
-+			return !bridge; /* false if we don't hit @bridge */
-+
-+		dev = dev->bus->self;
-+	}
-+
-+	return true;
-+}
-+
-+/*
-+ * pci_get_visible_pcie_requester - Get requester for @requestee below @bridge
-+ * @requestee: requester device
-+ * @bridge: upstream bridge (or NULL for root bus)
-+ */
-+struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
-+					       struct pci_dev *bridge)
-+{
-+	struct pci_dev *requester = requestee;
-+
-+	while (requester != bridge) {
-+		requester = pci_get_dma_source(requester);
-+		pci_dev_put(requester); /* XXX skip ref cnt */
-+
-+		if (pci_has_visible_pcie_requester_id(requester, bridge))
-+			return requester;
-+
-+		if (pci_is_root_bus(requester->bus))
-+			return NULL; /* @bridge not parent to @requestee */
-+
-+		requester = requester->bus->self;
-+	}
-+
-+	return requester;
-+}
-+
-+#define PCI_REQUESTER_ID(dev)	(((dev)->bus->number << 8) | (dev)->devfn)
-+#define PCI_BRIDGE_REQUESTER_ID(dev)	((dev)->subordinate->number << 8)
-+
-+u16 pci_requester_id(struct pci_dev *requester, struct pci_dev *requestee)
-+{
-+	if ((requester == requestee) ||
-+	    (!pci_is_pcie(requester) && pci_is_root_bus(requester->bus)))
-+		return PCI_REQUESTER_ID(requester);
-+
-+	return PCI_BRIDGE_REQUESTER_ID(requester);
-+}
-+
-+static int pci_do_requester_callback(struct pci_dev *dev,
-+				     int (*fn)(struct pci_dev *,
-+					       u16 id, void *),
-+				     void *data)
-+{
-+	struct pci_dev *dma_dev;
-+	int ret;
-+
-+	ret = fn(dev, PCI_REQUESTER_ID(dev), data);
-+	if (ret)
-+		return ret;
-+
-+	dma_dev = pci_get_dma_source(dev);
-+	pci_dev_put(dma_dev); /* XXX skip ref cnt */
-+	if (dma_dev == dev)
-+		return 0;
-+
-+	return fn(dma_dev, PCI_REQUESTER_ID(dma_dev), data);
-+}
-+
-+/*
-+ * pcie_for_each_requester - Call callback @fn on each devices and DMA source
-+ *                           from @requestee to the PCIe requester ID visible
-+ *                           to @bridge.
-+ * @requestee: Starting device
-+ * @bridge: upstream bridge (or NULL for root bus)
-+ * @fn: callback function
-+ * @data: data to pass to callback
-+ */
-+int pcie_for_each_requester(struct pci_dev *requestee, struct pci_dev *bridge,
-+			    int (*fn)(struct pci_dev *, u16 id, void *),
-+			    void *data)
-+{
-+	struct pci_dev *requester;
-+	struct pci_dev *dev;
-+	int ret = 0;
-+
-+	requester = pci_get_visible_pcie_requester(requestee, bridge);
-+	if (!requester)
-+		return -EINVAL;
-+
-+	for (dev = requestee; dev != requester; dev = dev->bus->self) {
-+		ret = pci_do_requester_callback(dev, fn, data);
-+		if (ret)
-+			return ret;
-+
-+		if (pci_is_root_bus(dev->bus))
-+			return -EINVAL;
-+	}
-+
-+	/*
-+	 * If the requester is not the same as the requestee, then the
-+	 * requester is a bridge and uses the bridge requester ID.  However,
-+	 * an exception to this rule is if the bridge is a legacy PCI bridge
-+	 * attached to the root complex.  In this case, we handle it like
-+	 * any other device.
-+	 */
-+	if (requester != requestee &&
-+	    !(!pci_is_pcie(requester) && pci_is_root_bus(requester->bus)))
-+		return fn(requester, PCI_BRIDGE_REQUESTER_ID(requester), data);
-+
-+	return pci_do_requester_callback(requester, fn, data);
-+}
-+
-+/*
-  * find the upstream PCIe-to-PCI bridge of a PCI device
-  * if the device is PCIE, return NULL
-  * if the device isn't connected to a PCIe bridge (that is its parent is a
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3a24e4f..b33824d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1873,6 +1873,13 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
- }
- #endif
- 
-+struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
-+					       struct pci_dev *bridge);
-+u16 pci_requester_id(struct pci_dev *requester, struct pci_dev *requestee);
-+int pcie_for_each_requester(struct pci_dev *requestee, struct pci_dev *bridge,
-+			    int (*fn)(struct pci_dev *, u16 id, void *),
-+			    void *data);
-+
- /**
-  * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
-  * @pdev: the PCI device
+_RMV means: this device only supports surprise-style removal.  Moreover, it
+is mandatory for removable devices without _LCK or _EJx.  _RMV on one device
+doesn't actually mean anything for other devices.
 
+> It looks reasonable, but doesn't work in this case. And it's not obvious
+> how we can generalize the assumption to cover the case.
+> 
+> > I'm not 100% dead-set against merging the workaround with hard-coded
+> > path, but I still don't think it's a good idea.  It "fixes" it for one
+> > particular machine, but there will likely be other machines that
+> > require similar fixes in the future.  It makes it harder for somebody
+> > to clean up the design later, because that person won't have an Aspire
+> > S5 to test.  It makes it less likely that somebody *will* clean it up
+> > later, because "everything is already working."
+> > 
+> > That's why my preference (given infinite resources) would be to rework
+> > acpiphp now, while people are interested and can test it.  I'm sure
+> > this would be a major redesign of acpiphp and its interaction with
+> > pciehp, but I think it's something we're going to have to do at some
+> > point.
+> 
+> Basically, we run out of ideas. Any input is welcome! :)
+> 
+> For now we can post new version of patchset without the workaround and
+> come back later with workaround (or proper solution if we'll find any).
+> 
+> Does it work for you? Or you prefer everything in one patchset?
+
+Please post the current version of the patchset with as much of the feedback
+taken into account as possible without breaking functionality.
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
