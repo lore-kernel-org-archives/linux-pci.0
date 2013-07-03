@@ -1,72 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:64394 "EHLO mga03.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:16372 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753804Ab3G2Mwb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Jul 2013 08:52:31 -0400
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: davem@davemloft.net, bhelgaas@google.com
-Cc: Jacob Keller <jacob.e.keller@intel.com>, netdev@vger.kernel.org,
-	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: [net-next 08/15] pci: expose pcie_link_speed and pcix_bus_speed arrays
-Date: Mon, 29 Jul 2013 05:52:04 -0700
-Message-Id: <1375102331-23905-9-git-send-email-jeffrey.t.kirsher@intel.com>
-In-Reply-To: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
-References: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
+	id S932778Ab3GCOCf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Jul 2013 10:02:35 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Subject: [PATCH v2 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
+Date: Wed,  3 Jul 2013 17:04:53 +0300
+Message-Id: <1372860295-8306-7-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jacob Keller <jacob.e.keller@intel.com>
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-pcie_link_speed and pcix_bus_speed are arrays used by probe.c to correctly
-convert lnksta register values into the pci_bus_speed enum. These static arrays
-are useful outside probe for this purpose. This patch makes these defines into
-const arrays and exposes them with an extern header in linux/include/pci.h
+Correct ACPI PCI hotplug imeplementation should have _RMV method in a
+PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
+deeper in hierarchy:
 
-Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
-Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Device (RP05)
+{
+   // ...
+   Device (HRUP)
+   {
+       // ...
+       Device (HRDN)
+       {
+           // ...
+           Device (EPUP)
+           {
+               // ...
+               Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
+               {
+                   Return (One)
+               }
+           }
+       }
+   }
+}
+
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/pci/probe.c | 4 ++--
- include/linux/pci.h | 3 +++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/pci/hotplug/acpi_pcihp.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 46ada5c..496c5b0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -513,7 +513,7 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- 	return bridge;
+diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+index 2a47e82..d92ebfb 100644
+--- a/drivers/pci/hotplug/acpi_pcihp.c
++++ b/drivers/pci/hotplug/acpi_pcihp.c
+@@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
+ 	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+ 	if (ACPI_SUCCESS(status) && removable)
+ 		return 1;
++
++	/*
++	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
++	 *
++	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
++	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
++	 * deeper in hierarchy.
++	 */
++	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
++			&removable);
++	if (ACPI_SUCCESS(status) && removable)
++		return 1;
++
+ 	return 0;
  }
  
--static unsigned char pcix_bus_speed[] = {
-+const unsigned char pcix_bus_speed[] = {
- 	PCI_SPEED_UNKNOWN,		/* 0 */
- 	PCI_SPEED_66MHz_PCIX,		/* 1 */
- 	PCI_SPEED_100MHz_PCIX,		/* 2 */
-@@ -532,7 +532,7 @@ static unsigned char pcix_bus_speed[] = {
- 	PCI_SPEED_133MHz_PCIX_533	/* F */
- };
- 
--static unsigned char pcie_link_speed[] = {
-+const unsigned char pcie_link_speed[] = {
- 	PCI_SPEED_UNKNOWN,		/* 0 */
- 	PCIE_SPEED_2_5GT,		/* 1 */
- 	PCIE_SPEED_5_0GT,		/* 2 */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..95ff993 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -120,6 +120,9 @@ typedef int __bitwise pci_power_t;
- /* Remember to update this when the list above changes! */
- extern const char *pci_power_names[];
- 
-+extern const unsigned char pcix_bus_speed[];
-+extern const unsigned char pcie_link_speed[];
-+
- static inline const char *pci_power_name(pci_power_t state)
- {
- 	return pci_power_names[1 + (int) state];
 -- 
-1.7.11.7
+1.8.3.2
 
