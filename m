@@ -1,66 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41858 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753096Ab3GYHRn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 03:17:43 -0400
-Message-ID: <51F0D109.4050002@oracle.com>
-Date: Thu, 25 Jul 2013 15:17:29 +0800
-From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Reply-To: zhenzhong.duan@oracle.com
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:36981 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753143Ab3GCDiX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2013 23:38:23 -0400
+Received: by mail-oa0-f42.google.com with SMTP id j6so7528900oag.29
+        for <linux-pci@vger.kernel.org>; Tue, 02 Jul 2013 20:38:22 -0700 (PDT)
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>, bhelgaas@google.com,
-	Feng Jin <joe.jin@oracle.com>,
-	"x86@kernel.org >> \"x86@kernel.org\"" <x86@kernel.org>
-Subject: Re: [PATCH 3/3] msix restore code optimization for dom0
-References: <51EF453B.5070200@oracle.com> <20130724135555.GD2518@phenom.dumpdata.com>
-In-Reply-To: <20130724135555.GD2518@phenom.dumpdata.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAMo8BfK2AdgL+ekaG1g7tJKv8wc30w1qB2RpEc4CC5Z+FraFdw@mail.gmail.com>
+References: <20130702182942.28572.82708.stgit@bhelgaas-glaptop> <CAMo8BfK2AdgL+ekaG1g7tJKv8wc30w1qB2RpEc4CC5Z+FraFdw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 2 Jul 2013 21:38:02 -0600
+Message-ID: <CAErSpo69jnCs_5+M+2sc8rSx9JKGmbGx7vk+Gk3S1BkO+ykJDQ@mail.gmail.com>
+Subject: Re: [PATCH] xtensa/PCI: Mark pcibios_fixup_bus() as non-init
+To: Max Filippov <jcmvbkbc@gmail.com>
+Cc: Chris Zankel <chris@zankel.net>, linux-xtensa@linux-xtensa.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jul 2, 2013 at 7:26 PM, Max Filippov <jcmvbkbc@gmail.com> wrote:
+> Hi Bjorn,
+>
+> On Tue, Jul 2, 2013 at 10:29 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> pcibios_fixup_bus() is called by pci_scan_child_bus(), which is not marked
+>> __init.  Therefore, pcibios_fixup_bus() cannot be marked __init either.
+>>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  arch/xtensa/kernel/pci.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+>> index 126c188..56693dd 100644
+>> --- a/arch/xtensa/kernel/pci.c
+>> +++ b/arch/xtensa/kernel/pci.c
+>> @@ -197,7 +197,7 @@ static int __init pcibios_init(void)
+>>
+>>  subsys_initcall(pcibios_init);
+>>
+>> -void __init pcibios_fixup_bus(struct pci_bus *bus)
+>> +void pcibios_fixup_bus(struct pci_bus *bus)
+>>  {
+>>         if (bus->parent) {
+>>                 /* This is a subordinate bridge */
+>>
+>
+> Similar patch is already in the xtensa-linux/for_next branch:
+> https://github.com/czankel/xtensa-linux/commit/fd95ee7380ae973c6f11b897af6ef9d253a1df9e
 
-On 2013-07-24 21:55, Konrad Rzeszutek Wilk wrote:
-> On Wed, Jul 24, 2013 at 11:08:43AM +0800, Zhenzhong Duan wrote:
->> PHYSDEVOP_restore_msi is used to restore all msix entrys in one hypercall
->> in dom0. But it is called multi times in current code.
-> Couldn't the restore_msi_irqs instead check whether it has already
-> made the hypercall (perhaps by seeing if the MSI-X's are enabled?)
-> and if so don't do the hypercall?
-I think it's better to remove the for loop for dom0, also hard to know 
-when to clear hypercall count.
->
-> I think you are addressing the problem from a different viewpoint.
->
-> The problem is not with the API (the x86_msi one). The problem
-> is with the implementation (x86_msi.restore_msi_irq - specifically
-> the Xen one) having an side effect.
-We have x86_msi.restore_msi_irqs and no x86_msi.restore_msi_irq,if want to
-add x86_msi.restore_msi_irq, same hypercall need to be added accordingly.
->
->> This patch split arch_restore_msi_irqs into two functions.
->> Use arch_restore_msi_irq deal with one entry and avoid call hypercall multi
->> times in __pci_restore_msix_state.
-> But irregardless of how you address the problem, this in the MSI code
-> is a bit odd:
->
-> 	list_for_each_entry(entry, &dev->msi_list, list) {
-> 		arch_restore_msi_irqs(dev, entry->irq);
-> 	}
->
-> and if you collapse that and make the 'arch_restore_msi_irqs' be responsible
-> for doing all the heavy lifting.. That does seem an improvement on the API
-> and will make it inline with 'teardown_msi_irqs'.
->
-> So from that view I think it would be nicer?
-Yes, This patch just did that. There is 
-teardown_msi_irqs/teardown_msi_irq pair.
-But in current code, arch_restore_msi_irqs is used for one msix entry, 
-this is not consistent with
-its naming tradiition. So I changed default_restore_msi_irqs to deal 
-with all entrys and
-default_restore_msi_irq to deal with one entry for baremetal. For dom0, 
-we have
-PHYSDEVOP_restore_msi  to restore all msix entrys.
+Great, thanks!
