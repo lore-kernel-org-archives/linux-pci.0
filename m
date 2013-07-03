@@ -1,66 +1,28 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 6/30] ACPI / hotplug / PCI: Rework acpiphp_handle_to_bridge()
-Date: Thu, 18 Jul 2013 01:19:17 +0200
-Message-ID: <1809031.kCVl1K84Fl@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
+Date: Wed, 3 Jul 2013 19:29:00 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Subject: Re: [PATCH v2 0/8] Thunderbolt workarounds
+Message-ID: <20130703182900.GA29079@srcf.ucam.org>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Are there any plans to provide native support for the Thunderbolt 
+controller, rather than relying on system management mode?
 
-Using the hotplug context objects introduced previously rework the
-ACPI-based PCI hotplug (ACPIPHP) core code to get to acpiphp_bridge
-objects associated with hotplug bridges from those context objects
-rather than from the global list of hotplug bridges.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -454,18 +454,20 @@ static int detect_ejectable_slots(acpi_h
- 
- static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle)
- {
--	struct acpiphp_bridge *bridge;
-+	struct acpiphp_context *context;
-+	struct acpiphp_bridge *bridge = NULL;
- 
--	mutex_lock(&bridge_mutex);
--	list_for_each_entry(bridge, &bridge_list, list)
--		if (bridge->handle == handle) {
-+	mutex_lock(&acpiphp_context_lock);
-+	context = acpiphp_get_context(handle);
-+	if (context) {
-+		bridge = context->bridge;
-+		if (bridge)
- 			get_bridge(bridge);
--			mutex_unlock(&bridge_mutex);
--			return bridge;
--		}
--	mutex_unlock(&bridge_mutex);
- 
--	return NULL;
-+		acpiphp_put_context(context);
-+	}
-+	mutex_unlock(&acpiphp_context_lock);
-+	return bridge;
- }
- 
- static void cleanup_bridge(struct acpiphp_bridge *bridge)
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
