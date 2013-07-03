@@ -1,82 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 02/16] ARM: tegra: Move pmc.h to include/linux/tegra-pmc.h
-Date: Thu, 25 Jul 2013 10:53:16 -0700
-Message-Id: <1374774810-18459-3-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Subject: [PATCH v2 5/8] PCI: acpiphp: kill SLOT_ENABLED in favor of always re-enumerating the devices
+Date: Wed,  3 Jul 2013 17:04:52 +0300
+Message-Id: <1372860295-8306-6-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+The acpiphp driver checks SLOT_ENABLED flag only in aciphp_enable_slot() to
+prevent re-enumeration of the already enabled slot.  Because of that it is
+not possible to add new devices behind the slot later on (like it is the
+case with Thunderbolt devices).
 
-In preparation for moving the PCIe driver into the drivers/pci/host
-directory, this header, which contains prototypes that are required by
-the PCIe driver, needs to be moved to a globally visible location.
+Now, there are two places where acpiphp_enable_slot() gets called:
+ 1) On Bus Check event for a function (in case of a dock).
+ 2) When userpace enables a slot by writing '1' to
+    /sys/bus/pci/slots/*/power.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+In the first case it doesn't make sense to do the check because we are
+ought to re-enumerate the bus anyway and see if there are any new devices
+added farther in the hierarchy, according the the ACPI specification.
+
+The second case where userspace explicitly enables the device also doesn't
+need this check as we already check if the slot is powered on or off in
+power_on_slot() and don't do it twice.
+
+So get rid of the SLOT_ENABLED flag and always re-enumerate devices behind
+a slot when acpiphp_enable_slot() is called. In addition doing this allows
+userspace to simulate Bus Check event by writing '1' to the 'power' file
+under the slot.
+
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
-Changes in v2:
-- keep tegra_pmc_init() prototype in arch/arm/mach-tegra/pmc.h
-- move pmc.h to includex/linux/tegra-pmc.h
+ drivers/pci/hotplug/acpiphp.h      |  1 -
+ drivers/pci/hotplug/acpiphp_glue.c | 18 +-----------------
+ 2 files changed, 1 insertion(+), 18 deletions(-)
 
-Changes in v3:
-- update subject to match new location
-
- arch/arm/mach-tegra/pmc.h |  1 -
- include/linux/tegra-pmc.h | 23 +++++++++++++++++++++++
- 2 files changed, 23 insertions(+), 1 deletion(-)
- create mode 100644 include/linux/tegra-pmc.h
-
-diff --git a/arch/arm/mach-tegra/pmc.h b/arch/arm/mach-tegra/pmc.h
-index cdb08a1..e1c2df2 100644
---- a/arch/arm/mach-tegra/pmc.h
-+++ b/arch/arm/mach-tegra/pmc.h
-@@ -37,6 +37,5 @@ int tegra_pmc_cpu_power_on(int cpuid);
- int tegra_pmc_cpu_remove_clamping(int cpuid);
+diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+index 6fdd49c..ecc61b7 100644
+--- a/drivers/pci/hotplug/acpiphp.h
++++ b/drivers/pci/hotplug/acpiphp.h
+@@ -154,7 +154,6 @@ struct acpiphp_attention_info
+ /* slot flags */
  
- void tegra_pmc_init(void);
--void tegra_pmc_pcie_xclk_clamp(bool clamp);
+ #define SLOT_POWEREDON		(0x00000001)
+-#define SLOT_ENABLED		(0x00000002)
+ #define SLOT_MULTIFUNCTION	(0x00000004)
  
- #endif
-diff --git a/include/linux/tegra-pmc.h b/include/linux/tegra-pmc.h
-new file mode 100644
-index 0000000..b6296bf
---- /dev/null
-+++ b/include/linux/tegra-pmc.h
-@@ -0,0 +1,23 @@
-+/*
-+ * Copyright (C) 2012 NVIDIA CORPORATION. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ */
-+
-+#ifndef __LINUX_TEGRA_PMC_H
-+#define __LINUX_TEGRA_PMC_H
-+
-+void tegra_pmc_pcie_xclk_clamp(bool clamp);
-+
-+#endif
+ /* function flags */
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index c9ec06e..506f38f 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -304,7 +304,7 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 
+ 	if (pci_bus_read_dev_vendor_id(pbus, PCI_DEVFN(device, function),
+ 				       &val, 60*1000))
+-		slot->flags |= (SLOT_ENABLED | SLOT_POWEREDON);
++		slot->flags |= SLOT_POWEREDON;
+ 
+ 	if (is_dock_device(handle)) {
+ 		/* we don't want to call this device's _EJ0
+@@ -725,18 +725,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 
+ 	pci_bus_add_devices(bus);
+ 
+-	slot->flags |= SLOT_ENABLED;
+-	list_for_each_entry(func, &slot->funcs, sibling) {
+-		dev = pci_get_slot(bus, PCI_DEVFN(slot->device,
+-						  func->function));
+-		if (!dev) {
+-			/* Do not set SLOT_ENABLED flag if some funcs
+-			   are not added. */
+-			slot->flags &= (~SLOT_ENABLED);
+-			continue;
+-		}
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -782,8 +770,6 @@ static int disable_device(struct acpiphp_slot *slot)
+ 		acpiphp_bus_trim(func->handle);
+ 	}
+ 
+-	slot->flags &= (~SLOT_ENABLED);
+-
+ 	return 0;
+ }
+ 
+@@ -1229,8 +1215,6 @@ int acpiphp_enable_slot(struct acpiphp_slot *slot)
+ 		goto err_exit;
+ 
+ 	if (get_slot_status(slot) == ACPI_STA_ALL) {
+-		if (slot->flags & SLOT_ENABLED)
+-			goto err_exit;
+ 		/* configure all functions */
+ 		retval = enable_device(slot);
+ 		if (retval)
 -- 
-1.8.1.5
+1.8.3.2
 
