@@ -1,54 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog110.obsmtp.com ([207.126.144.129]:50786 "EHLO
-	eu1sys200aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752776Ab3GAJ6Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 05:58:25 -0400
-Message-ID: <51D15295.2000601@st.com>
-Date: Mon, 1 Jul 2013 15:27:41 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-MIME-Version: 1.0
-To: Sean Cross <xobs@kosagi.com>
-Cc: "devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>
-Subject: Re: [PATCH 2/4] ARM: Enable PCI Express on ARM
-References: <1372662947-27160-1-git-send-email-xobs@kosagi.com> <1372662947-27160-3-git-send-email-xobs@kosagi.com>
-In-Reply-To: <1372662947-27160-3-git-send-email-xobs@kosagi.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:19265 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752797Ab3GCPRi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Jul 2013 11:17:38 -0400
+From: Haicheng Li <haicheng.li@linux.intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: Haicheng Li <haicheng.lee@gmail.com>,
+	Haicheng Li <haicheng.li@linux.intel.com>,
+	Rob Landley <rob@landley.net>, linux-doc@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 2/3] doc: add the description for pci=hide kernel parameter.
+Date: Wed,  3 Jul 2013 23:16:17 +0800
+Message-Id: <1372864578-6925-2-git-send-email-haicheng.li@linux.intel.com>
+In-Reply-To: <1372864578-6925-1-git-send-email-haicheng.li@linux.intel.com>
+References: <1372864578-6925-1-git-send-email-haicheng.li@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/1/2013 12:45 PM, Sean Cross wrote:
-> Some ARM devices have PCI Express hardware, and should be able to take
-> advantage of PCI Express code present in the common driver files.  Enable
-> PCI Express on ARM, when PCI is available.
->
-> Signed-off-by: Sean Cross <xobs@kosagi.com>
-> ---
->   arch/arm/Kconfig |    2 ++
->   1 file changed, 2 insertions(+)
->
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> index 136f263..2f51f13 100644
-> --- a/arch/arm/Kconfig
-> +++ b/arch/arm/Kconfig
-> @@ -1418,6 +1418,8 @@ config PCI_HOST_ITE8152
->
->   source "drivers/pci/Kconfig"
->
-> +source "drivers/pci/pcie/Kconfig"
-> +
->
+Cc: Rob Landley <rob@landley.net>
+Cc: linux-doc@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Haicheng Li <haicheng.li@linux.intel.com>
+---
+ Documentation/kernel-parameters.txt |    2 ++
+ 1 file changed, 2 insertions(+)
 
-[PATCH V10 2/4] ARM: EXYNOS: Enable PCIe support for Exynos5440 does the 
-same thing.
-
-  source "drivers/pcmcia/Kconfig"
->
->   endmenu
->
-
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 2fe6e76..4da0834 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2359,6 +2359,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
+ 				only look for one device below a PCIe downstream
+ 				port.
++		hide=		Format: [<domain>:]<bus>:<slot>.<func>[; ...]
++				Specifies devices to hide from pci subsystem.
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+-- 
+1.7.9.5
 
