@@ -1,155 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24985 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933154Ab3GVViN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jul 2013 17:38:13 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:57925 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754965Ab3GCB0M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2013 21:26:12 -0400
+Received: by mail-ob0-f178.google.com with SMTP id fb19so6331741obc.23
+        for <linux-pci@vger.kernel.org>; Tue, 02 Jul 2013 18:26:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130702182942.28572.82708.stgit@bhelgaas-glaptop>
+References: <20130702182942.28572.82708.stgit@bhelgaas-glaptop>
+Date: Wed, 3 Jul 2013 05:26:12 +0400
+Message-ID: <CAMo8BfK2AdgL+ekaG1g7tJKv8wc30w1qB2RpEc4CC5Z+FraFdw@mail.gmail.com>
+Subject: Re: [PATCH] xtensa/PCI: Mark pcibios_fixup_bus() as non-init
+From: Max Filippov <jcmvbkbc@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 5/7] PCI: Split pci_assign_unassigned_resources to per root bus
-Date: Mon, 22 Jul 2013 14:37:16 -0700
-Message-Id: <1374529038-14311-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1374529038-14311-1-git-send-email-yinghai@kernel.org>
-References: <1374529038-14311-1-git-send-email-yinghai@kernel.org>
+Cc: Chris Zankel <chris@zankel.net>, linux-xtensa@linux-xtensa.org,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to split pci_assign_unassiged_resource to every root bus, so can
-have different retry for assign_unassigned per root bus
+Hi Bjorn,
 
-Also we need root bus hot add and booting path use same code.
+On Tue, Jul 2, 2013 at 10:29 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> pcibios_fixup_bus() is called by pci_scan_child_bus(), which is not marked
+> __init.  Therefore, pcibios_fixup_bus() cannot be marked __init either.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  arch/xtensa/kernel/pci.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+> index 126c188..56693dd 100644
+> --- a/arch/xtensa/kernel/pci.c
+> +++ b/arch/xtensa/kernel/pci.c
+> @@ -197,7 +197,7 @@ static int __init pcibios_init(void)
+>
+>  subsys_initcall(pcibios_init);
+>
+> -void __init pcibios_fixup_bus(struct pci_bus *bus)
+> +void pcibios_fixup_bus(struct pci_bus *bus)
+>  {
+>         if (bus->parent) {
+>                 /* This is a subordinate bridge */
+>
 
--v2: separate enable_local and pci_release_bridge_resources to
-     other patches requested by Bjorn.
+Similar patch is already in the xtensa-linux/for_next branch:
+https://github.com/czankel/xtensa-linux/commit/fd95ee7380ae973c6f11b897af6ef9d253a1df9e
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 62 ++++++++++++++++++++-----------------------------
- 1 file changed, 25 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index eddc6e1..19e619d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1315,21 +1315,6 @@ static int __init pci_bus_get_depth(struct pci_bus *bus)
- 
- 	return depth;
- }
--static int __init pci_get_max_depth(void)
--{
--	int depth = 0;
--	struct pci_bus *bus;
--
--	list_for_each_entry(bus, &pci_root_buses, node) {
--		int ret;
--
--		ret = pci_bus_get_depth(bus);
--		if (ret > depth)
--			depth = ret;
--	}
--
--	return depth;
--}
- 
- /*
-  * -1: undefined, will auto detect later
-@@ -1410,10 +1395,9 @@ static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
-  * second  and later try will clear small leaf bridge res
-  * will stop till to the max  deepth if can not find good one
-  */
--void __init
--pci_assign_unassigned_resources(void)
-+static void __init
-+pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- {
--	struct pci_bus *bus;
- 	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
- 	struct list_head *add_list = NULL;
-@@ -1424,17 +1408,17 @@ pci_assign_unassigned_resources(void)
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
- 	int pci_try_num = 1;
--	enum enable_type enable_local = pci_realloc_enable;
--
--	list_for_each_entry(bus, &pci_root_buses, node)
--		enable_local = pci_realloc_detect(bus, enable_local);
-+	enum enable_type enable_local;
- 
-+	/* don't realloc if asked to do so */
-+	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
- 	if (pci_realloc_enabled(enable_local)) {
--		int max_depth = pci_get_max_depth();
-+		int max_depth = pci_bus_get_depth(bus);
- 
- 		pci_try_num = max_depth + 1;
--		printk(KERN_DEBUG "PCI: max bus depth: %d pci_try_num: %d\n",
--			 max_depth, pci_try_num);
-+		dev_printk(KERN_DEBUG, &bus->dev,
-+			   "max bus depth: %d pci_try_num: %d\n",
-+			   max_depth, pci_try_num);
- 	}
- 
- again:
-@@ -1446,12 +1430,10 @@ again:
- 		add_list = &realloc_head;
- 	/* Depth first, calculate sizes and alignments of all
- 	   subordinate buses. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_size_bridges(bus, add_list);
-+	__pci_bus_size_bridges(bus, add_list);
- 
- 	/* Depth last, allocate resources and update the hardware. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_assign_resources(bus, add_list, &fail_head);
-+	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
- 		BUG_ON(!list_empty(add_list));
- 	tried_times++;
-@@ -1462,16 +1444,16 @@ again:
- 
- 	if (tried_times >= pci_try_num) {
- 		if (enable_local == undefined)
--			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
-+			dev_info(&bus->dev, "Some PCI device resources are unassigned, try booting with pci=realloc\n");
- 		else if (enable_local == auto_enabled)
--			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
-+			dev_info(&bus->dev, "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
- 
- 		free_list(&fail_head);
- 		goto enable_and_dump;
- 	}
- 
--	printk(KERN_DEBUG "PCI: No. %d try to assign unassigned res\n",
--			 tried_times + 1);
-+	dev_printk(KERN_DEBUG, &bus->dev,
-+		   "No. %d try to assign unassigned res\n", tried_times + 1);
- 
- 	/* third times and later will not check if it is leaf */
- 	if ((tried_times + 1) > 2)
-@@ -1502,12 +1484,18 @@ again:
- 
- enable_and_dump:
- 	/* Depth last, update the hardware. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pci_enable_bridges(bus);
-+	pci_enable_bridges(bus);
- 
- 	/* dump the resource on buses */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pci_bus_dump_resources(bus);
-+	pci_bus_dump_resources(bus);
-+}
-+
-+void __init pci_assign_unassigned_resources(void)
-+{
-+	struct pci_bus *root_bus;
-+
-+	list_for_each_entry(root_bus, &pci_root_buses, node)
-+		pci_assign_unassigned_root_bus_resources(root_bus);
- }
- 
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
 -- 
-1.8.1.4
-
+Thanks.
+-- Max
