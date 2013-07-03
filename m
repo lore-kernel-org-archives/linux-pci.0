@@ -1,44 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:42525 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754006Ab3GJOCV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 10 Jul 2013 10:02:21 -0400
-Message-ID: <51DD695C.6060209@ti.com>
-Date: Wed, 10 Jul 2013 19:32:04 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci: exynos: split into two parts such as Synopsys part
- and Exynos part
-References: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
-In-Reply-To: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Subject: [PATCH v2 2/8] PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
+Date: Wed,  3 Jul 2013 17:04:49 +0300
+Message-Id: <1372860295-8306-3-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-On Friday 05 July 2013 01:59 PM, Jingoo Han wrote:
-> Exynos PCIe IP consists of Synopsys specific part and Exynos
-> specific part. Only core block is a Synopsys designware part;
-> other parts are Exynos specific.
-> Also, the Synopsys designware part can be shared with other
-> platforms; thus, it can be split two parts such as Synopsys
-> designware part and Exynos specific part.
+With Thunderbolt you can chain devices: connect a new devices to plugged
+one. In this case the slot is already enabled, but we still want to look
+for new devices behind it.
 
-Thanks for doing that :-)
+We're going to reuse enable_device() for rescan for new devices on the
+enabled slot. Let's push the check up by stack.
 
-I'll be using the synopsys specific part as Jacinto6 also uses the same pcie
-core. Once I start implementing, I'll have some queries and comments ;-)
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-Cheers
-Kishon
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 59df857..b983e29 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -688,9 +688,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 	int num, max, pass;
+ 	LIST_HEAD(add_list);
+ 
+-	if (slot->flags & SLOT_ENABLED)
+-		goto err_exit;
+-
+ 	list_for_each_entry(func, &slot->funcs, sibling)
+ 		acpiphp_bus_add(func);
+ 
+@@ -1242,6 +1239,8 @@ int acpiphp_enable_slot(struct acpiphp_slot *slot)
+ 		goto err_exit;
+ 
+ 	if (get_slot_status(slot) == ACPI_STA_ALL) {
++		if (slot->flags & SLOT_ENABLED)
++			goto err_exit;
+ 		/* configure all functions */
+ 		retval = enable_device(slot);
+ 		if (retval)
+-- 
+1.8.3.2
+
