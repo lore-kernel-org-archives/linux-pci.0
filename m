@@ -1,140 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2484 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:16372 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751945Ab3GIUjs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Jul 2013 16:39:48 -0400
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 3/3] [SCSI] megaraid: Remove 64-bit DMA related dead code
-To: megaraidlinux@lsi.com, JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Tue, 09 Jul 2013 14:39:45 -0600
-Message-ID: <20130709203945.31676.74315.stgit@amt.stowe>
-In-Reply-To: <20130709203927.31676.35169.stgit@amt.stowe>
-References: <20130709203927.31676.35169.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S932661Ab3GCOCd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Jul 2013 10:02:33 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Subject: [PATCH v2 4/8] PCI: acpiphp: check for new devices on enabled host
+Date: Wed,  3 Jul 2013 17:04:51 +0300
+Message-Id: <1372860295-8306-5-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With the driver now setup for default 32-bit DMA capabilities, remove the
-64-bit DMA related dead code.
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Current acpiphp_check_bridge() implementation is pretty dumb:
+ - it enables the slot if it's not enabled and the slot status is
+   ACPI_STA_ALL;
+ - it disables the slot if it's enabled and slot is not in ACPI_STA_ALL
+   state.
+
+This behavior is not enough to handle Thunderbolt chaining case
+properly. We need to actually rescan for new devices even if a device
+has already in the slot.
+
+The new implementation disables and stops the slot if it's not in
+ACPI_STA_ALL state.
+
+For ACPI_STA_ALL state we first trim devices which don't respond. In order
+to support that we introduce a new function pci_trim_stale_devices() that
+goes through the child devices of a given bus, check if the device is gone
+and in that case stop and remove the device.
+
+Once we have trimmed the bus we start looking for any new devices that
+might have appeared on the bus. We do that even if the slot is already
+enabled (SLOT_ENABLED).
+
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
+ drivers/pci/hotplug/acpiphp_glue.c | 55 ++++++++++++++++++--------------------
+ drivers/pci/remove.c               | 20 ++++++++++++++
+ include/linux/pci.h                |  1 +
+ 3 files changed, 47 insertions(+), 29 deletions(-)
 
- drivers/scsi/megaraid.c |   45 +++++++++------------------------------------
- drivers/scsi/megaraid.h |    1 -
- 2 files changed, 9 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 316924c..58953ab 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -713,12 +713,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
- 			pthru->cdblen = cmd->cmd_len;
- 			memcpy(pthru->cdb, cmd->cmnd, cmd->cmd_len);
- 
--			if( adapter->has_64bit_addr ) {
--				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU64;
--			}
--			else {
--				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
--			}
-+			mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
- 
- 			scb->dma_direction = PCI_DMA_FROMDEVICE;
- 
-@@ -750,16 +745,9 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
- 			 * A little hack: 2nd bit is zero for all scsi read
- 			 * commands and is set for all scsi write commands
- 			 */
--			if( adapter->has_64bit_addr ) {
--				mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
--					MEGA_MBOXCMD_LWRITE64:
--					MEGA_MBOXCMD_LREAD64 ;
--			}
--			else {
--				mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
--					MEGA_MBOXCMD_LWRITE:
--					MEGA_MBOXCMD_LREAD ;
--			}
-+			mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
-+				MEGA_MBOXCMD_LWRITE:
-+				MEGA_MBOXCMD_LREAD ;
- 
- 			/*
- 			 * 6-byte READ(0x08) or WRITE(0x0A) cdb
-@@ -929,13 +917,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
- 					channel, target);
- 
- 			/* Initialize mailbox */
--			if( adapter->has_64bit_addr ) {
--				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU64;
--			}
--			else {
--				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
--			}
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 0f4da3b..c9ec06e 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -865,43 +865,40 @@ int acpiphp_eject_slot(struct acpiphp_slot *slot)
+  * Iterate over all slots under this bridge and make sure that if a
+  * card is present they are enabled, and if not they are disabled.
+  */
+-static int acpiphp_check_bridge(struct acpiphp_bridge *bridge)
++static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
+ {
+ 	struct acpiphp_slot *slot;
+-	int retval = 0;
+-	int enabled, disabled;
 -
-+			mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
- 			mbox->m_out.xferaddr = scb->pthru_dma_addr;
+-	enabled = disabled = 0;
  
+ 	list_for_each_entry(slot, &bridge->slots, node) {
+-		unsigned int status = get_slot_status(slot);
+-		if (slot->flags & SLOT_ENABLED) {
+-			if (status == ACPI_STA_ALL)
+-				continue;
+-			retval = acpiphp_disable_slot(slot);
+-			if (retval) {
+-				err("Error occurred in disabling\n");
+-				goto err_exit;
+-			} else {
+-				acpiphp_eject_slot(slot);
++		struct pci_bus *bus = slot->bridge->pci_bus;
++		struct pci_dev *dev, *tmp;
++		int retval;
++
++		mutex_lock(&slot->crit_sect);
++		/* wake up all functions */
++		retval = power_on_slot(slot);
++		if (retval)
++			goto unlock;
++
++		if (get_slot_status(slot) == ACPI_STA_ALL) {
++			/* remove stale devices if any */
++			list_for_each_entry_safe(dev, tmp, &bus->devices,
++						 bus_list) {
++				if (PCI_SLOT(dev->devfn) == slot->device)
++					pci_trim_stale_devices(dev);
+ 			}
+-			disabled++;
++
++			/* configure all functions */
++			retval = enable_device(slot);
++			if (retval)
++				power_off_slot(slot);
+ 		} else {
+-			if (status != ACPI_STA_ALL)
+-				continue;
+-			retval = acpiphp_enable_slot(slot);
+-			if (retval) {
+-				err("Error occurred in enabling\n");
+-				goto err_exit;
+-			}
+-			enabled++;
++			disable_device(slot);
++			power_off_slot(slot);
  		}
-@@ -1763,7 +1745,7 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
- 
- 	*len = 0;
- 
--	if (scsi_sg_count(cmd) == 1 && !adapter->has_64bit_addr) {
-+	if (scsi_sg_count(cmd) == 1) {
- 		sg = scsi_sglist(cmd);
- 		scb->dma_h_bulkdata = sg_dma_address(sg);
- 		*buf = (u32)scb->dma_h_bulkdata;
-@@ -1772,13 +1754,8 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
++unlock:
++		mutex_unlock(&slot->crit_sect);
  	}
+-
+-	dbg("%s: %d enabled, %d disabled\n", __func__, enabled, disabled);
+-
+- err_exit:
+-	return retval;
+ }
  
- 	scsi_for_each_sg(cmd, sg, sgcnt, idx) {
--		if (adapter->has_64bit_addr) {
--			scb->sgl64[idx].address = sg_dma_address(sg);
--			*len += scb->sgl64[idx].length = sg_dma_len(sg);
--		} else {
--			scb->sgl[idx].address = sg_dma_address(sg);
--			*len += scb->sgl[idx].length = sg_dma_len(sg);
--		}
-+		scb->sgl[idx].address = sg_dma_address(sg);
-+		*len += scb->sgl[idx].length = sg_dma_len(sg);
- 	}
+ static void acpiphp_set_hpp_values(struct pci_bus *bus)
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8fc54b7..77b7a64 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -112,6 +112,26 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
  
- 	/* Reset pointer and length fields */
-@@ -2076,10 +2053,7 @@ proc_show_config(struct seq_file *m, void *v)
- 
- 	if(adapter->flag & BOARD_64BIT)
- 		seq_puts(m, "Controller capable of 64-bit memory addressing\n");
--	if( adapter->has_64bit_addr )
--		seq_puts(m, "Controller using 64-bit memory addressing\n");
--	else
--		seq_puts(m, "Controller is not using 64-bit memory addressing\n");
-+	seq_puts(m, "Controller is not using 64-bit memory addressing\n");
- 
- 	seq_printf(m, "Base = %08lx, Irq = %d, ",
- 		   adapter->base, adapter->host->irq);
-@@ -4471,7 +4445,6 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	/* Set the Mode of addressing to 32 bit */
- 	pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
--	adapter->has_64bit_addr = 0;
- 		
- 	mutex_init(&adapter->int_mtx);
- 	init_completion(&adapter->int_waitq);
-diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
-index 4d0ce4e..17e449b 100644
---- a/drivers/scsi/megaraid.h
-+++ b/drivers/scsi/megaraid.h
-@@ -827,7 +827,6 @@ typedef struct {
- 
- #endif
- 
--	int	has_64bit_addr;		/* are we using 64-bit addressing */
- 	int	support_ext_cdb;
- 	int	boot_ldrv_enabled;
- 	int	boot_ldrv;
++/**
++ * pci_trim_stale_devices - remove stale device or any stale child
++ */
++void pci_trim_stale_devices(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->subordinate;
++	struct pci_dev *child, *tmp;
++	bool alive;
++	u32 l;
++
++	/* check if the device responds */
++	alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l, 0);
++	if (!alive)
++		pci_stop_and_remove_bus_device(dev);
++
++	if (alive && bus)
++		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
++			pci_trim_stale_devices(child);
++}
++
+ void pci_stop_root_bus(struct pci_bus *bus)
+ {
+ 	struct pci_dev *child, *tmp;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3a24e4f..8f6e7a0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -754,6 +754,7 @@ struct pci_dev *pci_dev_get(struct pci_dev *dev);
+ void pci_dev_put(struct pci_dev *dev);
+ void pci_remove_bus(struct pci_bus *b);
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev);
++void pci_trim_stale_devices(struct pci_dev *dev);
+ void pci_stop_root_bus(struct pci_bus *bus);
+ void pci_remove_root_bus(struct pci_bus *bus);
+ void pci_setup_cardbus(struct pci_bus *bus);
+-- 
+1.8.3.2
 
