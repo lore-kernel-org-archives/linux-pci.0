@@ -1,138 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:39137 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848Ab3G3EMt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jul 2013 00:12:49 -0400
-Message-ID: <51F73BB8.6090908@huawei.com>
-Date: Tue, 30 Jul 2013 12:06:16 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH -v3 3/3] PCI,pciehp: use PCIe DSN to identify device change
- during suspend
-References: <1373621543-54836-1-git-send-email-wangyijing@huawei.com> <1373621543-54836-4-git-send-email-wangyijing@huawei.com> <CAErSpo4XhONYq3CZnPKgdMD4V5o8fgFc=NGVUGgFz0y5zM3GyA@mail.gmail.com> <51F73730.9070402@huawei.com> <CAErSpo6Zw3Q=bzw6tAR70TCcXs1+UB9BNW3y7w8qNusT2c79tg@mail.gmail.com>
-In-Reply-To: <CAErSpo6Zw3Q=bzw6tAR70TCcXs1+UB9BNW3y7w8qNusT2c79tg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Subject: [PATCH v2 1/8] x86/PCI: prevent re-allocation of already existing bridge and ROM resources
+Date: Wed,  3 Jul 2013 17:04:48 +0300
+Message-Id: <1372860295-8306-2-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>
->> Hi Bjorn,
->>    I'm reworking this patch, but found some strange info about vpd serial number.
->> I have two x86 machines, they almost have the same hardware topology. But by lspci,
->> I found two different Broadcom BCM5709 NIC in different machine have the same vpd serial
->> number. If this is normal, vpd serial number seems to be useless for identify device change.
-> 
-> I wouldn't say it's completely useless.  If the VPD serial number
-> changes, we can be pretty confident that the card has changed.  It's
-> just that if the VPD serial number is unchanged, we might incorrectly
-> assume it's the same device.
-> 
-> But we currently *always* assume it's the same device, since we don't
-> look at serial numbers at all.  If we can detect some changes, that
-> should be an improvement over what we have today even though it's not
-> perfect.
+In hotplug case (especially with Thunderbolt enabled systems) we might need
+to call pcibios_resource_survey_bus() several times for a bus. The function
+ends up calling pci_claim_resource() for each bridge resource that then
+fails claiming that the resource exists already (which it does). Once this
+happens the resource is invalidated thus preventing devices behind the
+bridge to allocate their resources.
 
-Hmmm, Yes, different VPD serial number must comes from different device.
-Although the same serial number maybe not the same device.
+To fix this we do what has been done in pcibios_allocate_dev_resources()
+and check 'parent' of the given resource. If it is non-NULL it means that
+the resource has been allocated already and we can skip it. We do the same
+for ROM resources as well.
 
-I will send out the new version patchset soon.
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ arch/x86/pci/i386.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Thanks!
-Yijing.
-
-> 
->> The first machine:
->> linux:/home/yijing # lspci -vvv -s 0000:01:00.0
->> 01:00.0 Ethernet controller: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet (rev 20)
->>         Subsystem: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet
->>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->>         Latency: 0, Cache Line Size: 256 bytes
->>         Interrupt: pin A routed to IRQ 28
->>         Region 0: Memory at c0000000 (64-bit, non-prefetchable) [size=32M]
->>         Capabilities: [48] Power Management version 3
->>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
->>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
->>         Capabilities: [50] Vital Product Data
->>                 Product Name: Broadcom NetXtreme II Ethernet Controller
->>                 Read-only fields:
->>                         [PN] Part number: BCM95706A0
->>                         [EC] Engineering changes: 220197-2
->>                         [SN] Serial number: 0123456789
->>                         [MN] Manufacture ID: 31 34 65 34
->>                         [RV] Reserved: checksum good, 31 byte(s) reserved
->>                 End
->>         Capabilities: [58] MSI: Enable- Count=1/16 Maskable- 64bit+
->>                 Address: 0000000000000000  Data: 0000
->>         ..............[snip]...................
->>
->> The second machine:
->> linux-suse-vmdq:~/pciutils-3.2.0 # ./lspci -vvv -s 01:00.0
->> 01:00.0 Ethernet controller: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet (rev 20)
->>         Subsystem: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet
->>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->>         Latency: 0, Cache Line Size: 256 bytes
->>         Interrupt: pin A routed to IRQ 28
->>         Region 0: Memory at f6000000 (64-bit, non-prefetchable) [size=32M]
->>         Capabilities: [48] Power Management version 3
->>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
->>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
->>         Capabilities: [50] Vital Product Data
->>                 Product Name: Broadcom NetXtreme II Ethernet Controller
->>                 Read-only fields:
->>                         [PN] Part number: BCM95706A0
->>                         [EC] Engineering changes: 220197-2
->>                         [SN] Serial number: 0123456789
->>                         [MN] Manufacture ID: 31 34 65 34
->>                         [RV] Reserved: checksum good, 31 byte(s) reserved
->>                 End
->>         .......[snip]........
->>
->>
->>>
->>> Also, I think it's possible to use acpiphp for ExpressCard slots, and
->>> this patch doesn't help acpiphp detect card swaps.  I don't see any
->>> mention of suspend/resume in acpiphp, so I don't know if it does
->>> anything at all to detect card changes while suspended.  Maybe Rafael
->>> can shed some light?
->>>
->>> I put the first two patches on a pci/yijing-dsn-v3 branch while we
->>> work out the details of this one.
->>>
->>> Bjorn
->>>
->>>>         } else if (!list_empty(&pbus->devices)) {
->>>>                 pciehp_disable_slot(slot);
->>>>         }
->>>> --
->>>> 1.7.1
->>>>
->>>>
->>>
->>> .
->>>
->>
->>
->> --
->> Thanks!
->> Yijing
->>
-> 
-> .
-> 
-
-
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 94919e3..db6b1ab 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -210,6 +210,8 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ 		r = &dev->resource[idx];
+ 		if (!r->flags)
+ 			continue;
++		if (r->parent)	/* Already allocated */
++			continue;
+ 		if (!r->start || pci_claim_resource(dev, idx) < 0) {
+ 			/*
+ 			 * Something is wrong with the region.
+@@ -318,6 +320,8 @@ static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
+ 	r = &dev->resource[PCI_ROM_RESOURCE];
+ 	if (!r->flags || !r->start)
+ 		return;
++	if (r->parent) /* Already allocated */
++		return;
+ 
+ 	if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
+ 		r->end -= r->start;
 -- 
-Thanks!
-Yijing
+1.8.3.2
 
