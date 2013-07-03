@@ -1,65 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog103.obsmtp.com ([207.126.144.115]:57572 "EHLO
-	eu1sys200aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753493Ab3GAKI7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 06:08:59 -0400
-Message-ID: <51D15513.7020101@st.com>
-Date: Mon, 1 Jul 2013 15:38:19 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-MIME-Version: 1.0
-To: Sean Cross <xobs@kosagi.com>
-Cc: "devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>, Mohit KUMAR <Mohit.KUMAR@st.com>
-Subject: Re: [PATCH 3/4] PCI: Add driver for i.MX6 PCI Express
-References: <1372662947-27160-1-git-send-email-xobs@kosagi.com> <1372662947-27160-4-git-send-email-xobs@kosagi.com>
-In-Reply-To: <1372662947-27160-4-git-send-email-xobs@kosagi.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mga14.intel.com ([143.182.124.37]:10748 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752797Ab3GCPQ6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Jul 2013 11:16:58 -0400
+From: Haicheng Li <haicheng.li@linux.intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: Haicheng Li <haicheng.lee@gmail.com>,
+	Haicheng Li <haicheng.li@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 1/3] PCI: Add hide_device support to pci subsystem.
+Date: Wed,  3 Jul 2013 23:16:16 +0800
+Message-Id: <1372864578-6925-1-git-send-email-haicheng.li@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/1/2013 12:45 PM, Sean Cross wrote:
-> This adds a PCI Express port driver for the on-chip PCI Express port
-> present on the i.MX6 SoC.  It is based on the PCI Express driver available
-> in the Freescale BSP.
->
-> Signed-off-by: Sean Cross <xobs@kosagi.com>
-> ---
+With more and more SOCs having pci device integrated into chip (e.g. Intel
+Atom series), it's useful to add an interface to cleanly hide pci devices from
+pci device scanning, which is because:
 
-...
+1. phone or tablet OEMs may choose disabling some pci device in the SOC,
+   such as camera ISP in Intel Atom Z2580 chip, and etc.
+2. if such disabled devices are not cleanly removed from pci device tree,
+   then pci-core will still try to operate on the relative device control
+   registers while S3 suspend and resume.
+3. so hiding such devices from early begining will not only reduce the kernel
+   boot time, but also optimize the latency of system suspend and resume.
 
-> diff --git a/drivers/pci/pcie/pcie-imx.c b/drivers/pci/pcie/pcie-imx.c
-> new file mode 100644
-> index 0000000..664679e
-> --- /dev/null
-> +++ b/drivers/pci/pcie/pcie-imx.c
+To hide pci devices, just pass such parameters to kernel at boot stage:
+	pci=hide=[<domain>:]<bus>:<slot>.<func>[; ...]
 
-Should go to drivers/pci/host/
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Haicheng Li <haicheng.li@linux.intel.com>
+---
+ drivers/pci/pci.c   |    2 ++
+ drivers/pci/pci.h   |    2 ++
+ drivers/pci/probe.c |   94 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 98 insertions(+)
 
-> @@ -0,0 +1,1049 @@
-> +/*
-> + * drivers/pci/pcie/pcie-imx.c
-> + *
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a899d8b..e228d00 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3915,6 +3915,8 @@ static int __init pci_setup(char *str)
+ 				pcie_bus_config = PCIE_BUS_PEER2PEER;
+ 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
++			} else if (!strncmp(str, "hide=", 5)) {
++				pci_hide_devices(str + 5, strlen(str + 5));
+ 			} else {
+ 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+ 						str);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index d1182c4..783703a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -317,4 +317,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
+ #endif
+ 
++void pci_hide_devices(const char *, size_t);
++
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 70f10fa..4223ef3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -11,6 +11,7 @@
+ #include <linux/cpumask.h>
+ #include <linux/pci-aspm.h>
+ #include <asm-generic/pci-bridge.h>
++#include <asm/setup.h>
+ #include "pci.h"
+ 
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+@@ -1352,10 +1353,103 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	pci_proc_attach_device(dev);
+ }
+ 
++static LIST_HEAD(pci_hidden_dev_list);
++struct pci_hidden_dev {
++	struct list_head list;
++	int domain_nr;
++	int devfn;
++	unsigned char bus_nr;
++};
++
++static void do_pci_hide_device(int domain_nr, unsigned char bus_nr, int devfn)
++{
++	struct pci_hidden_dev *d;
++
++	list_for_each_entry(d, &pci_hidden_dev_list, list)
++		if (devfn == d->devfn && bus_nr == d->bus_nr &&
++				domain_nr == d->domain_nr)
++			return;
++
++	d = kzalloc(sizeof(*d), GFP_KERNEL);
++	if (!d)
++		return;
++
++	d->domain_nr = domain_nr;
++	d->bus_nr = bus_nr;
++	d->devfn = devfn;
++
++	list_add_tail(&d->list, &pci_hidden_dev_list);
++}
++
++static bool init_hidden = true;
++
++#define PCI_HIDE_PARAM_SIZE COMMAND_LINE_SIZE
++static char pci_hide_param[PCI_HIDE_PARAM_SIZE] = {'\0'};
++
++static void parse_hidden_devices(void)
++{
++	char *p = pci_hide_param;
++	int seg, bus, slot, func, devfn, count;
++
++	/* parse pci.hide= command-line */
++	while (*p != '\0') {
++		count = 0;
++		if (sscanf(p, "%x:%x:%x.%x%n",
++			&seg, &bus, &slot, &func, &count) != 4) {
++			seg = 0;
++			if (sscanf(p, "%x:%x.%x%n",
++					&bus, &slot, &func, &count) != 3) {
++				/* Invalid format */
++				printk(KERN_ERR "PCI: Can't parse "
++						"hide parameter: %s\n", p);
++				break;
++			}
++		}
++		p += count;
++		devfn = (slot << 3) | func;
++
++		do_pci_hide_device(seg, bus, devfn);
++		if (*p != ';') {
++			/* End of param or invalid format */
++			break;
++		}
++		p++;
++	}
++	init_hidden = false;
++}
++
++static bool is_device_hidden(struct pci_bus *bus, int devfn)
++{
++	struct pci_hidden_dev *d;
++
++	if (unlikely(init_hidden))
++		parse_hidden_devices();
++
++	list_for_each_entry(d, &pci_hidden_dev_list, list)
++		if (d->devfn == devfn && d->bus_nr == bus->number &&
++				d->domain_nr == pci_domain_nr(bus))
++			return true;
++
++	return false;
++}
++
++void pci_hide_devices(const char *str, size_t count)
++{
++	if (!str)
++		return;
++	if (count > PCI_HIDE_PARAM_SIZE - 1)
++		count = PCI_HIDE_PARAM_SIZE - 1;
++	strncpy(pci_hide_param, str, count);
++	pci_hide_param[count] = '\0';
++}
++
+ struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
+ {
+ 	struct pci_dev *dev;
+ 
++	if (unlikely(is_device_hidden(bus, devfn)))
++		return NULL;
++
+ 	dev = pci_get_slot(bus, devfn);
+ 	if (dev) {
+ 		pci_dev_put(dev);
+-- 
+1.7.9.5
 
-...
-
-
-> +#define ATU_R_BaseAddress 0x900
-> +#define PCIE_PL_iATUVR (ATU_R_BaseAddress + 0x0)
-> +#define PCIE_PL_iATURC1 (ATU_R_BaseAddress + 0x4)
-> +#define PCIE_PL_iATURC2 (ATU_R_BaseAddress + 0x8)
-> +#define PCIE_PL_iATURLBA (ATU_R_BaseAddress + 0xC)
-> +#define PCIE_PL_iATURUBA (ATU_R_BaseAddress + 0x10)
-> +#define PCIE_PL_iATURLA (ATU_R_BaseAddress + 0x14)
-> +#define PCIE_PL_iATURLTA (ATU_R_BaseAddress + 0x18)
-> +#define PCIE_PL_iATURUTA (ATU_R_BaseAddress + 0x1C)
-
-I may be wrong, but from these offset it seems to me that it is SNPS 
-controller. If yes, then please go through comments of
-"[PATCH V1-10 0/4] PCIe support for Samsung Exynos5440 SoC"
-
-Regards
-Pratyush
