@@ -1,44 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:51653 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757415Ab3GLJgu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2013 05:36:50 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, Don Dutile <ddutile@redhat.com>,
-	Paul Bolle <pebolle@tiscali.nl>, <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH -v3 0/3] Use PCIe DSN to improve pciehp_resume
-Date: Fri, 12 Jul 2013 17:32:20 +0800
-Message-ID: <1373621543-54836-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.free-electrons.com ([94.23.35.102]:56677 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753225Ab3GDUp3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jul 2013 16:45:29 -0400
+From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: [PATCH] PCI: PCIE: Rename option title to something less confusing
+Date: Thu,  4 Jul 2013 17:45:20 -0300
+Message-Id: <1372970720-14016-1-git-send-email-ezequiel.garcia@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v2->v3: add a wrap function pci_dsn_init, fix other typo error and git am error.
-		Thanks for Don Dutile and Paul Bolle 's review,comments and test.
-v1->v2: Modify pci_get_dsn to pci_device_serial_number,
-	    power off slot before remove the old device during resume to avoid
-		old .remove() method to touch new hardware.
-		Fix other typo and fail check problems.
-		Split the list_empty() guard into new patch.
-		Thanks for Bjorn's review and comments.
+The previous option title "PCI Express support" is confusing.
+The name seems to imply this option is required to get PCIe support,
+which is not true.
 
-This series applied to Bjorn's pci-next branch.
+Fix it to "PCI Express Port Bus support" which is more accurate.
 
-Yijing Wang (3):
-  PCI: introduce PCIe Device Serial Number Capability support
-  PCI,pciehp: avoid add a device already exist before suspend during
-    resume
-  PCI,pciehp: use PCIe DSN to identify device change during suspend
+Signed-off-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+---
+ drivers/pci/pcie/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/pci/hotplug/pciehp_core.c |   55 +++++++++++++++++++++++++++++++++++--
- drivers/pci/pci.c                 |   30 ++++++++++++++++++++
- drivers/pci/pci.h                 |    1 +
- drivers/pci/probe.c               |    2 +
- include/linux/pci.h               |    3 ++
- 5 files changed, 88 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+index 569f82f..a82e70a 100644
+--- a/drivers/pci/pcie/Kconfig
++++ b/drivers/pci/pcie/Kconfig
+@@ -2,7 +2,7 @@
+ # PCI Express Port Bus Configuration
+ #
+ config PCIEPORTBUS
+-	bool "PCI Express support"
++	bool "PCI Express Port Bus support"
+ 	depends on PCI
+ 	help
+ 	  This automatically enables PCI Express Port Bus support. Users can
+-- 
+1.8.1.5
 
