@@ -1,101 +1,228 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38449 "EHLO mx1.redhat.com"
+Received: from mga14.intel.com ([143.182.124.37]:19969 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754318Ab3G2Uco (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Jul 2013 16:32:44 -0400
-Message-ID: <51F6D161.1040106@redhat.com>
-Date: Mon, 29 Jul 2013 16:32:33 -0400
-From: Don Dutile <ddutile@redhat.com>
+	id S933661Ab3GDIxj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Jul 2013 04:53:39 -0400
+Date: Thu, 4 Jul 2013 11:58:44 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Subject: Re: [PATCH v2 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer
+ Aspire S5
+Message-ID: <20130704085844.GF4898@intel.com>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1372860295-8306-7-git-send-email-mika.westerberg@linux.intel.com>
+ <1444243.g9GbxN3NM0@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>
-Subject: Re: [PATCH v2 3/3] PCI: Stop sriov after stop PF if PF's driver skip
- that
-References: <1374937868-24437-1-git-send-email-yinghai@kernel.org> <1374937868-24437-2-git-send-email-yinghai@kernel.org> <CAErSpo7xk-NGp+4ZFo-jnVnQSEomY=7=CXDSbZPzrhdjZ4zVSA@mail.gmail.com>
-In-Reply-To: <CAErSpo7xk-NGp+4ZFo-jnVnQSEomY=7=CXDSbZPzrhdjZ4zVSA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444243.g9GbxN3NM0@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/29/2013 03:58 PM, Bjorn Helgaas wrote:
-> On Sat, Jul 27, 2013 at 9:11 AM, Yinghai Lu<yinghai@kernel.org>  wrote:
->> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
->> (PCI: Simplify IOV implementation and fix reference count races)
->> VF need to be removed via virtfn_remove to make sure ref to PF
->> is put back.
->>
->> Some driver (like ixgbe) does not call pci_disable_sriov() if
->> sriov is enabled via /sys/.../sriov_numvfs setting.
->> ixgbe does allow driver for PF get detached, but still have VFs
->> around.
->
-> Is this something ixgbe should be doing differently?
->
-> I'm not 100% sold on the idea of the VFs staying active after the
-> driver releases the PF.  It seems asymmetric because I think the
-> driver has to claim the PF to *enable* the VFs, but we don't disable
-> them when releasing the PF.
->
-> What's the use case for detaching the PF driver while the VFs are active?
->
-VF's assigned to (KVM) guest (via device-assignment).
-Virtually, it's as if the enet cable is unplugged to the VF in the guest --
-the device is still there (the PF wasn't unplugged, just the driver de-configured).
+On Wed, Jul 03, 2013 at 11:40:42PM +0200, Rafael J. Wysocki wrote:
+> On Wednesday, July 03, 2013 05:04:53 PM Mika Westerberg wrote:
+> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> > 
+> > Correct ACPI PCI hotplug imeplementation should have _RMV method in a
+> > PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
+> > deeper in hierarchy:
+> > 
+> > Device (RP05)
+> > {
+> >    // ...
+> >    Device (HRUP)
+> >    {
+> >        // ...
+> >        Device (HRDN)
+> >        {
+> >            // ...
+> >            Device (EPUP)
+> >            {
+> >                // ...
+> >                Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
+> >                {
+> >                    Return (One)
+> >                }
+> >            }
+> >        }
+> >    }
+> > }
+> > 
+> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/pci/hotplug/acpi_pcihp.c | 13 +++++++++++++
+> >  1 file changed, 13 insertions(+)
+> > 
+> > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+> > index 2a47e82..d92ebfb 100644
+> > --- a/drivers/pci/hotplug/acpi_pcihp.c
+> > +++ b/drivers/pci/hotplug/acpi_pcihp.c
+> > @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
+> >  	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+> >  	if (ACPI_SUCCESS(status) && removable)
+> >  		return 1;
+> > +
+> > +	/*
+> > +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
+> > +	 *
+> > +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
+> > +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
+> > +	 * deeper in hierarchy.
+> > +	 */
+> > +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
+> > +			&removable);
+> 
+> Well, calling stuff like this directly from a general function is kind of ugly.
+> 
+> Can we use something like a quirk instead?  A DMI check or something?
 
-Pre-sysfs-based configuration, the std way to configure the VFs into
-a system was to unload the PF driver, and reload it with a vf-enabling parameter
-(like max_vfs=<n> in the case of ixgbe, igb).
-Now, if someone unloaded the PF driver in the host, the unplanned removal
-of the PF enabled the VF to crash the host (maybe AlexD can provide the
-details how that occurred).
-So, the solution was to 'pause' the VF operation and let packets drop
-in the guest, and re-enable the VF operation if the PF driver was re-configured.
+Sure we can. How about something like the patch below?
 
-So, as I stated in previous postings, this patch is acceptable if
-it doesn't cause a guest crash when a VF is assigned to a KVM guest.
-If you tested this case, then please state as such in the posting.
-If not, then can AlexD test this case ?
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
 
-- Don
->> But how about PF get removed via /sys or pciehp finally?
->>
->> During hot-remove, VF will still hold one ref to PF and it
->> prevent PF to be removed.
->> That make the next hot-add fails, as old PF dev struct is still around.
->>
->> We need to add pci_disable_sriov() calling during stop PF .
->>
->> Need this one for v3.11
->
-> Don had a concern that there might be a regression here ... I'm a bit
-> confused on the details, but you guys need to come to agreement that
-> this doesn't make things worse.
->
->> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
->> Cc: Jiang Liu<liuj97@gmail.com>
->> Cc: Alexander Duyck<alexander.h.duyck@intel.com>
->> Cc: Donald Dutile<ddutile@redhat.com>
->> Cc: Greg Rose<gregory.v.rose@intel.com>
->>
->> ---
->>   drivers/pci/remove.c |    2 ++
->>   1 file changed, 2 insertions(+)
->>
->> Index: linux-2.6/drivers/pci/remove.c
->> ===================================================================
->> --- linux-2.6.orig/drivers/pci/remove.c
->> +++ linux-2.6/drivers/pci/remove.c
->> @@ -25,6 +25,8 @@ static void pci_stop_dev(struct pci_dev
->>                  pci_proc_detach_device(dev);
->>                  pci_remove_sysfs_dev_files(dev);
->>                  device_del(&dev->dev);
->> +               /* remove VF, if PF driver skip that */
->> +               pci_disable_sriov(dev);
->>                  dev->is_added = 0;
->>          }
->>
+The acpiphp driver finds out whether the device is removable by checking
+whether it has _RMV method directly behind it (and if it returns 1).
+However, at least on Acer Aspire S5 with Thunderbolt host router has this
+method placed behind a device called EPUP (endpoint upstream port?) and not
+in the usual place expected by the acpiphp driver. The ASL code below shows
+how this is done on that machine:
+
+Device (RP05)
+{
+	...
+	Device (HRUP)
+	{
+		Name (_ADR, Zero)
+		Name (_PRW, Package (0x02)
+		{
+			0x09,
+			0x04
+		})
+		Device (HRDN)
+		{
+			Name (_ADR, 0x00040000)
+			Name (_PRW, Package (0x02)
+			{
+				0x09,
+				0x04
+			})
+			Device (EPUP)
+			{
+				Name (_ADR, Zero)
+				Method (_RMV, 0, NotSerialized)
+				{
+					Return (One)
+				}
+			}
+		}
+	}
+	...
+
+Fix this by adding a DMI quirk for the Acer Aspire S5 machine that gives an
+alternative path to the _RMV method.
+
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpi_pcihp.c | 57 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 52 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+index 2a47e82..99fccf3 100644
+--- a/drivers/pci/hotplug/acpi_pcihp.c
++++ b/drivers/pci/hotplug/acpi_pcihp.c
+@@ -33,6 +33,7 @@
+ #include <linux/acpi.h>
+ #include <linux/pci-acpi.h>
+ #include <linux/slab.h>
++#include <linux/dmi.h>
+ 
+ #define MY_NAME	"acpi_pcihp"
+ 
+@@ -408,21 +409,67 @@ got_one:
+ }
+ EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
+ 
++/**
++ * pcihp_is_removable - is the given ACPI device removable
++ * @handle: ACPI handle of the device
++ *
++ * Try to find out whether the given ACPI device is removable by evaluating
++ * its _RMV and returning the result. If we can't find the _RMV directly
++ * under the device use system specific quirks to locate it.
++ */
++static bool pcihp_is_removable(acpi_handle handle)
++{
++	static const struct dmi_system_id rmv_paths[] = {
++		{
++			/*
++			 * On Acer Aspire S5 the _RMV method for the
++			 * Thunderbolt host router upstream port is not
++			 * located directly under the device but it is
++			 * instead placed a bit deeper in the hierarchy.
++			 */
++			.ident = "Acer Aspire S5",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "Aspire S5-391"),
++			},
++			.driver_data = "HRDN.EPUP._RMV",
++		},
++		{ }
++	};
++	const struct dmi_system_id *id;
++	unsigned long long removable;
++	acpi_status status;
++
++	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
++	if (ACPI_SUCCESS(status))
++		return !!removable;
++
++	/* Try system specific quirks */
++	id = dmi_first_match(rmv_paths);
++	if (id && id->driver_data) {
++		char path[64];
++
++		strlcpy(path, id->driver_data, sizeof(path));
++		status = acpi_evaluate_integer(handle, path, NULL, &removable);
++		if (ACPI_SUCCESS(status))
++			return !!removable;
++	}
++
++	return false;
++}
++
+ static int pcihp_is_ejectable(acpi_handle handle)
+ {
+ 	acpi_status status;
+ 	acpi_handle tmp;
+-	unsigned long long removable;
++
+ 	status = acpi_get_handle(handle, "_ADR", &tmp);
+ 	if (ACPI_FAILURE(status))
+ 		return 0;
+ 	status = acpi_get_handle(handle, "_EJ0", &tmp);
+ 	if (ACPI_SUCCESS(status))
+ 		return 1;
+-	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+-	if (ACPI_SUCCESS(status) && removable)
+-		return 1;
+-	return 0;
++	return pcihp_is_removable(handle);
+ }
+ 
+ /**
+-- 
+1.8.3.2
 
