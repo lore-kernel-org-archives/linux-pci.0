@@ -1,123 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21057 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933154Ab3GVVi0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jul 2013 17:38:26 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 7/7] PCI: Retry assign unassigned resources for hotadd root bus
-Date: Mon, 22 Jul 2013 14:37:18 -0700
-Message-Id: <1374529038-14311-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1374529038-14311-1-git-send-email-yinghai@kernel.org>
-References: <1374529038-14311-1-git-send-email-yinghai@kernel.org>
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:36732 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932143Ab3GDBP1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jul 2013 21:15:27 -0400
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 4 Jul 2013 06:40:09 +0530
+Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 64F073940043
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jul 2013 06:45:20 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r641FIaD27590674
+	for <linux-pci@vger.kernel.org>; Thu, 4 Jul 2013 06:45:18 +0530
+Received: from d28av04.in.ibm.com (loopback [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r641FLPF027691
+	for <linux-pci@vger.kernel.org>; Thu, 4 Jul 2013 11:15:21 +1000
+Date: Thu, 4 Jul 2013 09:15:20 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linuxram@us.ibm.com, shangw@linux.vnet.ibm.com
+Subject: Re: [PATCH 0/4] optimization/fix/cleanup in
+ pci_assign_unassigned_resources
+Message-ID: <20130704011520.GA7554@weiyang.vnet.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let root bus hotadd path use same code for booting path.
-As driver is not loaded yet, we could retry to make sure
-all pci devices get resources allocated.
-We need this as during hotadd, firmware could assign some bars before
-handle over.
+All,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/pci_root.c |  2 +-
- drivers/pci/setup-bus.c | 15 +++++++--------
- include/linux/pci.h     |  1 +
- 3 files changed, 9 insertions(+), 9 deletions(-)
+Any comment on these patch set is welcome~
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index faa1d29..ce04eb2 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -526,7 +526,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 
- 	if (system_state != SYSTEM_BOOTING) {
- 		pcibios_resource_survey_bus(root->bus);
--		pci_assign_unassigned_bus_resources(root->bus);
-+		pci_assign_unassigned_root_bus_resources(root->bus);
- 	}
- 
- 	pci_bus_add_devices(root->bus);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index bd90cc1..4e60c44 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1297,7 +1297,7 @@ static void pci_bus_dump_resources(struct pci_bus *bus)
- 	}
- }
- 
--static int __init pci_bus_get_depth(struct pci_bus *bus)
-+static int pci_bus_get_depth(struct pci_bus *bus)
- {
- 	int depth = 0;
- 	struct pci_dev *dev;
-@@ -1331,7 +1331,7 @@ enum enable_type {
- 	auto_enabled,
- };
- 
--static enum enable_type pci_realloc_enable __initdata = undefined;
-+static enum enable_type pci_realloc_enable = undefined;
- void __init pci_realloc_get_opt(char *str)
- {
- 	if (!strncmp(str, "off", 3))
-@@ -1339,13 +1339,13 @@ void __init pci_realloc_get_opt(char *str)
- 	else if (!strncmp(str, "on", 2))
- 		pci_realloc_enable = user_enabled;
- }
--static bool __init pci_realloc_enabled(enum enable_type enable)
-+static bool pci_realloc_enabled(enum enable_type enable)
- {
- 	return enable >= user_enabled;
- }
- 
- #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
--static int __init check_unassigned_resources(struct pci_dev *dev, void *data)
-+static int check_unassigned_resources(struct pci_dev *dev, void *data)
- {
- 	int i;
- 	int *unassigned = data;
-@@ -1368,7 +1368,7 @@ static int __init check_unassigned_resources(struct pci_dev *dev, void *data)
- 	return 0;
- }
- 
--static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
-+static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- 			 enum enable_type enable_local)
- {
- 	int unassigned = 0;
-@@ -1383,7 +1383,7 @@ static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
- 	return enable_local;
- }
- #else
--static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
-+static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- 			 enum enable_type enable_local)
- {
- 	return enable_local;
-@@ -1395,8 +1395,7 @@ static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
-  * second  and later try will clear small leaf bridge res
-  * will stop till to the max  deepth if can not find good one
-  */
--static void __init
--pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
-+void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- {
- 	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8cd1e6f..e494c90 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1003,6 +1003,7 @@ int pci_claim_resource(struct pci_dev *, int);
- void pci_assign_unassigned_resources(void);
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
- void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
-+void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
- void pdev_enable_device(struct pci_dev *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+Not sure those are reasonable or not?
+
+On Mon, Jul 01, 2013 at 11:10:28PM +0800, Wei Yang wrote:
+>Here is some patches do the optimization/fix/cleanup for the function
+>pci_assign_unassigned_resources().
+>
+>Wei Yang (4):
+>  PCI: optimize pci_bus_get_depth() by enumerating on pci bus hierachy
+>  PCI: add comment for pbus_size_mem() parameter
+>  PCI: trivial cleanup in pbus_size_io()
+>  PCI: fix the io resource alignment calculation in pbus_size_io()
+>
+> drivers/pci/setup-bus.c |   56 +++++++++++++++++++++++++++++++++++-----------
+> 1 files changed, 42 insertions(+), 14 deletions(-)
+>
+>-- 
+>1.7.5.4
+
 -- 
-1.8.1.4
+Richard Yang
+Help you, Help me
 
