@@ -1,342 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:52962 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875Ab3GaXJO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jul 2013 19:09:14 -0400
-Received: by mail-oa0-f47.google.com with SMTP id g12so2341394oah.20
-        for <linux-pci@vger.kernel.org>; Wed, 31 Jul 2013 16:09:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5B1eDxwZ+Uu=M5tWaunYEZj_en81RdXj1rdpanYqMcxw@mail.gmail.com>
-References: <51122D9A.6040002@cn.fujitsu.com> <518B7D65.9090408@cn.fujitsu.com>
- <CAErSpo5B1eDxwZ+Uu=M5tWaunYEZj_en81RdXj1rdpanYqMcxw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 31 Jul 2013 17:08:52 -0600
-Message-ID: <CAErSpo4egT9kru-Vr69PGorKS9t-3+ybv9fYLavNn3A=Z8BnPQ@mail.gmail.com>
-Subject: Re: pci-sysfs: queue sysfs rescan routine into workqueue to avoid
- potential deadlock situation
-To: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, x86@kernel.org
+Subject: [PATCH v2.1 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
+Date: Thu,  4 Jul 2013 17:29:51 +0300
+Message-Id: <1372948192-17913-1-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1656567.0oqS7xVYJ8@vostro.rjw.lan>
+References: <1656567.0oqS7xVYJ8@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 9, 2013 at 10:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, May 9, 2013 at 3:41 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
->> Hi Bjorn,
->>         Very sorry to disturb you. This patch was sent a long time ago, but we have not get
->> any feedback until now.
->> It is used to fix a potential deadlock situation when doing pci-hotplug via pci-sysfs.
->> In the first version we sent:
->> https://patchwork.kernel.org/patch/1912351/
->> replaced mutex_lock with mutex_trylock to avoid potential deadlock situation, but you suggested
->> that using a workqueue to queue these routines seems a good way to avoid the deadlock situation,
->> and this patch was followed your suggestion, can your split a while to review it? Or is there any
->> better way to fix this issue? Any comments is welcome! :)
->
-> No problem, thanks for reminding me about this.  I hadn't actually
-> forgotten about this patch, but it does seem like it's tangled up with
-> the whole pci_bus and pci_dev reference counting situation, so I was
-> hoping that if we could figure out a clean resolution to that, it
-> would make it more obvious what to do here.
+The acpiphp driver finds out whether the device is removable by checking
+whether it has _RMV method directly behind it (and if it returns 1).
+However, at least on Acer Aspire S5 with Thunderbolt host router has this
+method placed behind a device called EPUP (endpoint upstream port?) and not
+in the usual place expected by the acpiphp driver. The ASL code below shows
+how this is done on that machine:
 
-Gu, can you open a bugzilla for this (or include a URL here if a
-bugzilla already exists)?  Please include a recipe showing how to
-reproduce the problem and attach a transcript, e.g., a complete dmesg
-from which the portion below was extracted.  Thanks!
+Device (RP05)
+{
+	...
+	Device (HRUP)
+	{
+		Name (_ADR, Zero)
+		Name (_PRW, Package (0x02)
+		{
+			0x09,
+			0x04
+		})
+		Device (HRDN)
+		{
+			Name (_ADR, 0x00040000)
+			Name (_PRW, Package (0x02)
+			{
+				0x09,
+				0x04
+			})
+			Device (EPUP)
+			{
+				Name (_ADR, Zero)
+				Method (_RMV, 0, NotSerialized)
+				{
+					Return (One)
+				}
+			}
+		}
+	}
+	...
 
-Bjorn
+Fix this by adding a DMI quirk for the Acer Aspire S5 machine that gives an
+alternative path to the _RMV method.
 
->> On 02/06/2013 06:16 PM, Gu Zheng wrote:
->>
->>> There is a potential deadlock situation when we manipulate the pci-sysfs user
->>> interfaces from different bus hierarchy simultaneously, described as following:
->>>
->>> path1: sysfs remove device:             | path2: sysfs rescan device:
->>> sysfs_schedule_callback_work()          | sysfs_write_file()
->>>   remove_callback()                     |   flush_write_buffer()
->>> *1* mutex_lock(&pci_remove_rescan_mutex)|*2*  sysfs_get_active(attr_sd)
->>>       ...                               |     dev_attr_store()
->>>         device_remove_file()            |       dev_rescan_store()
->>>           ...                           |*4*
->>> mutex_lock(&pci_remove_rescan_mutex)
->>> *3*       sysfs_deactivate(sd)          |     ...
->>>             wait_for_completion()       |*5*  sysfs_put_active(attr_sd)
->>> *6* mutex_unlock(&pci_remove_rescan_mutex)
->>>
->>> If path1 first holds the pci_remove_rescan_mutex at *1*, then another path
->>> called path2 actived and runs to *2* before path1 runs to *3*, we now runs
->>> to a deadlock situation:
->>> Path1 holds the mutex waiting path2 to decrease sysfs_dirent's s_active
->>> counter at *5*, but path2 is blocked at *4* when trying to get the
->>> pci_remove_rescan_mutex. The mutex won't be put by path1 until it reach
->>> *6*, but it's now blocked at *3*.
->>>
->>> Under the suggestion of Bjorn, and base on Yinghai Lu's patch:
->>> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=277df390baeab7ba6aa136356b677a096c890c0c
->>>
->>> The circumvent approach is queuing the sysfs rescan routine into workqueue just
->>> like removal to avoid manipulating(remove/scan) the pci-tree at the same time.
->>>
->>>
->>> *dmesg ifno*:
->>> (snip)
->>> 1000e 0000:1c:00.0: eth9: Intel(R) PRO/1000 Network Connection
->>> sd 13:2:0:0: [sdb] Attached SCSI disk
->>> e1000e 0000:1c:00.0: eth9: MAC: 0, PHY: 4, PBA No: D50228-005
->>> e1000e 0000:1c:00.1: Disabling ASPM  L1
->>> e1000e 0000:1c:00.1: Interrupt Throttling Rate (ints/sec) set to dynamic
->>> conservative mode
->>> e1000e 0000:1c:00.1: irq 143 for MSI/MSI-X
->>> e1000e 0000:1c:00.1: eth10: (PCI Express:2.5GT/s:Width x4) 00:15:17:cd:96:bf
->>> e1000e 0000:1c:00.1: eth10: Intel(R) PRO/1000 Network Connection
->>> e1000e 0000:1c:00.1: eth10: MAC: 0, PHY: 4, PBA No: D50228-005
->>> INFO: task bash:62982 blocked for more than 120 seconds.
->>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->>> bash            D 0000000000000000     0 62982  62978 0x00000080
->>>  ffff88038b277db8 0000000000000082 ffff88038b277fd8 0000000000013940
->>>  ffff88038b276010 0000000000013940 0000000000013940 0000000000013940
->>>  ffff88038b277fd8 0000000000013940 ffff880377449e30 ffff8806e822c670
->>> Call Trace:
->>>  [<ffffffff8151ba79>] schedule+0x29/0x70
->>>  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
->>>  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
->>>  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
->>>  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
->>>  [<ffffffff81341800>] dev_attr_store+0x20/0x30
->>>  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
->>>  [<ffffffff81173d08>] vfs_write+0xc8/0x190
->>>  [<ffffffff81173ed1>] sys_write+0x51/0x90
->>>  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
->>> INFO: task bash:64141 blocked for more than 120 seconds.
->>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->>> bash            D ffffffff81610460     0 64141  64136 0x00000080
->>>  ffff8803540e9db8 0000000000000086 ffff8803540e9fd8 0000000000013940
->>>  ffff8803540e8010 0000000000013940 0000000000013940 0000000000013940
->>>  ffff8803540e9fd8 0000000000013940 ffff8807db338a10 ffff8806f09abc60
->>> Call Trace:
->>>  [<ffffffff8151ba79>] schedule+0x29/0x70
->>>  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
->>>  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
->>>  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
->>>  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
->>>  [<ffffffff81341800>] dev_attr_store+0x20/0x30
->>>  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
->>>  [<ffffffff81173d08>] vfs_write+0xc8/0x190
->>>  [<ffffffff81173ed1>] sys_write+0x51/0x90
->>>  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
->>> INFO: task kworker/u:3:64451 blocked for more than 120 seconds.
->>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->>> kworker/u:3     D ffffffff81610460     0 64451      2 0x00000080
->>>  ffff8807d51b7a30 0000000000000046 ffff8807d51b7fd8 0000000000013940
->>>  ffff8807d51b6010 0000000000013940 0000000000013940 0000000000013940
->>>  ffff8807d51b7fd8 0000000000013940 ffff8807db339420 ffff88037744b250
->>> Call Trace:
->>>  [<ffffffff8151ba79>] schedule+0x29/0x70
->>>  [<ffffffff81519ded>] schedule_timeout+0x19d/0x220
->>>  [<ffffffff81165f92>] ? __slab_free+0x1f2/0x2f0
->>>  [<ffffffff8151b8fe>] wait_for_common+0x11e/0x190
->>>  [<ffffffff8108a6e0>] ? try_to_wake_up+0x2c0/0x2c0
->>>  [<ffffffff8151ba4d>] wait_for_completion+0x1d/0x20
->>>  [<ffffffff811e53e8>] sysfs_addrm_finish+0xb8/0xd0
->>>  [<ffffffff811e4320>] ? sysfs_schedule_callback+0x1e0/0x1e0
->>>  [<ffffffff811e33f0>] sysfs_hash_and_remove+0x60/0xb0
->>>  [<ffffffff811e43c9>] sysfs_remove_file+0x39/0x50
->>>  [<ffffffff81342cb7>] device_remove_file+0x17/0x20
->>>  [<ffffffff8134505c>] bus_remove_device+0xdc/0x180
->>>  [<ffffffff81342eb0>] device_del+0x120/0x1d0
->>>  [<ffffffff81342f82>] device_unregister+0x22/0x60
->>>  [<ffffffff8127ade4>] pci_stop_bus_device+0x94/0xa0
->>>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
->>>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
->>>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
->>>  [<ffffffff8127af66>] pci_stop_and_remove_bus_device+0x16/0x30
->>>  [<ffffffff81282359>] remove_callback+0x29/0x40
->>>  [<ffffffff811e4344>] sysfs_schedule_callback_work+0x24/0x70
->>>  [<ffffffff81070009>] process_one_work+0x179/0x4b0
->>>  [<ffffffff8107210e>] worker_thread+0x12e/0x330
->>>  [<ffffffff81071fe0>] ? manage_workers+0x110/0x110
->>>  [<ffffffff8107705e>] kthread+0x9e/0xb0
->>>  [<ffffffff81525bc4>] kernel_thread_helper+0x4/0x10
->>>  [<ffffffff81076fc0>] ? kthread_freezable_should_stop+0x70/0x70
->>>  [<ffffffff81525bc0>] ? gs_change+0x13/0x13
->>>
->>>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
->>> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
->>> ---
->>>  drivers/pci/pci-sysfs.c |   92 +++++++++++++++++++++++++++++++++--------------
->>>  1 files changed, 65 insertions(+), 27 deletions(-)
->>>
->>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->>> index 9c6e9bb..e66b498 100644
->>> --- a/drivers/pci/pci-sysfs.c
->>> +++ b/drivers/pci/pci-sysfs.c
->>> @@ -285,21 +285,34 @@ msi_bus_store(struct device *dev, struct device_attribute
->>> *attr,
->>>  }
->>>
->>>  static DEFINE_MUTEX(pci_remove_rescan_mutex);
->>> +
->>> +static void bus_rescan_callback(struct device *dev)
->>> +{
->>> +     struct pci_bus *b = NULL;
->>> +
->>> +     mutex_lock(&pci_remove_rescan_mutex);
->>> +     while ((b = pci_find_next_bus(b)) != NULL)
->>> +             pci_rescan_bus(b);
->>> +     mutex_unlock(&pci_remove_rescan_mutex);
->>> +}
->>> +
->>>  static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
->>>                               size_t count)
->>>  {
->>> +     int err;
->>>       unsigned long val;
->>> -     struct pci_bus *b = NULL;
->>> +     struct device *dev = bus->dev_root;
->>>
->>>       if (strict_strtoul(buf, 0, &val) < 0)
->>>               return -EINVAL;
->>>
->>> -     if (val) {
->>> -             mutex_lock(&pci_remove_rescan_mutex);
->>> -             while ((b = pci_find_next_bus(b)) != NULL)
->>> -                     pci_rescan_bus(b);
->>> -             mutex_unlock(&pci_remove_rescan_mutex);
->>> -     }
->>> +     if (!val)
->>> +             return count;
->>> +
->>> +     err = device_schedule_callback(dev, bus_rescan_callback);
->>> +     if (err)
->>> +             return err;
->>> +
->>>       return count;
->>>  }
->>>
->>> @@ -308,21 +321,32 @@ struct bus_attribute pci_bus_attrs[] = {
->>>       __ATTR_NULL
->>>  };
->>>
->>> +static void dev_rescan_callback(struct device *dev)
->>> +{
->>> +     struct pci_dev *pdev = to_pci_dev(dev);
->>> +
->>> +     if (pdev->is_added) {
->>> +             mutex_lock(&pci_remove_rescan_mutex);
->>> +             pci_rescan_bus(pdev->bus);
->>> +             mutex_unlock(&pci_remove_rescan_mutex);
->>> +     }
->>> +}
->>> +
->>>  static ssize_t
->>>  dev_rescan_store(struct device *dev, struct device_attribute *attr,
->>>                const char *buf, size_t count)
->>>  {
->>> +     int err;
->>>       unsigned long val;
->>> -     struct pci_dev *pdev = to_pci_dev(dev);
->>>
->>>       if (strict_strtoul(buf, 0, &val) < 0)
->>>               return -EINVAL;
->>>
->>> -     if (val) {
->>> -             mutex_lock(&pci_remove_rescan_mutex);
->>> -             pci_rescan_bus(pdev->bus);
->>> -             mutex_unlock(&pci_remove_rescan_mutex);
->>> -     }
->>> +     if (!val)
->>> +             return count;
->>> +     err = device_schedule_callback(dev, dev_rescan_callback);
->>> +     if (err)
->>> +             return err;
->>>       return count;
->>>  }
->>>
->>> @@ -339,7 +363,7 @@ static ssize_t
->>>  remove_store(struct device *dev, struct device_attribute *dummy,
->>>            const char *buf, size_t count)
->>>  {
->>> -     int ret = 0;
->>> +     int err;
->>>       unsigned long val;
->>>
->>>       if (strict_strtoul(buf, 0, &val) < 0)
->>> @@ -348,31 +372,45 @@ remove_store(struct device *dev, struct device_attribute
->>> *dummy,
->>>       /* An attribute cannot be unregistered by one of its own methods,
->>>        * so we have to use this roundabout approach.
->>>        */
->>> -     if (val)
->>> -             ret = device_schedule_callback(dev, remove_callback);
->>> -     if (ret)
->>> -             count = ret;
->>> +     if (!val)
->>> +             return count;
->>> +
->>> +     err = device_schedule_callback(dev, remove_callback);
->>> +     if (err)
->>> +             return err;
->>> +
->>>       return count;
->>>  }
->>>
->>> +static void dev_bus_rescan_callback(struct device *dev)
->>> +{
->>> +     struct pci_bus *bus = to_pci_bus(dev);
->>> +
->>> +     mutex_lock(&pci_remove_rescan_mutex);
->>> +     if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
->>> +             pci_rescan_bus_bridge_resize(bus->self);
->>> +     else
->>> +             pci_rescan_bus(bus);
->>> +     mutex_unlock(&pci_remove_rescan_mutex);
->>> +}
->>> +
->>>  static ssize_t
->>>  dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
->>>                const char *buf, size_t count)
->>>  {
->>> +     int err;
->>>       unsigned long val;
->>> -     struct pci_bus *bus = to_pci_bus(dev);
->>>
->>>       if (strict_strtoul(buf, 0, &val) < 0)
->>>               return -EINVAL;
->>>
->>> -     if (val) {
->>> -             mutex_lock(&pci_remove_rescan_mutex);
->>> -             if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
->>> -                     pci_rescan_bus_bridge_resize(bus->self);
->>> -             else
->>> -                     pci_rescan_bus(bus);
->>> -             mutex_unlock(&pci_remove_rescan_mutex);
->>> -     }
->>> +     if (!val)
->>> +             return count;
->>> +
->>> +     err = device_schedule_callback(dev, dev_bus_rescan_callback);
->>> +     if (err)
->>> +             return err;
->>> +
->>>       return count;
->>>  }
->>>
->>> -- 1.7.7
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpi_pcihp.c | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
+
+diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+index 2a47e82..eae1511 100644
+--- a/drivers/pci/hotplug/acpi_pcihp.c
++++ b/drivers/pci/hotplug/acpi_pcihp.c
+@@ -33,6 +33,7 @@
+ #include <linux/acpi.h>
+ #include <linux/pci-acpi.h>
+ #include <linux/slab.h>
++#include <linux/dmi.h>
+ 
+ #define MY_NAME	"acpi_pcihp"
+ 
+@@ -408,11 +409,31 @@ got_one:
+ }
+ EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
+ 
++static const struct dmi_system_id pcihp_platform_quirks[] = {
++	{
++		/*
++		 * On Acer Aspire S5 the _RMV method for the
++		 * Thunderbolt host router upstream port is not
++		 * located directly under the device but it is
++		 * instead placed a bit deeper in the hierarchy.
++		 */
++		.ident = "Acer Aspire S5",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "Aspire S5-391"),
++		},
++		.driver_data = "HRDN.EPUP._RMV",
++	},
++	{ }
++};
++
+ static int pcihp_is_ejectable(acpi_handle handle)
+ {
+ 	acpi_status status;
+ 	acpi_handle tmp;
+ 	unsigned long long removable;
++	const struct dmi_system_id *id;
++
+ 	status = acpi_get_handle(handle, "_ADR", &tmp);
+ 	if (ACPI_FAILURE(status))
+ 		return 0;
+@@ -422,6 +443,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
+ 	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+ 	if (ACPI_SUCCESS(status) && removable)
+ 		return 1;
++
++	/*
++	 * Try to look if there is a platform specific method that we can
++	 * use to determine if the device is removable or not.
++	 */
++	id = dmi_first_match(pcihp_platform_quirks);
++	if (id && id->driver_data) {
++		status = acpi_evaluate_integer(handle, id->driver_data, NULL,
++					       &removable);
++		if (ACPI_SUCCESS(status) && removable)
++			return 1;
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+1.8.3.2
+
