@@ -1,124 +1,245 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:56950 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755512Ab3GBUbU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jul 2013 16:31:20 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 4 Jul 2013 15:53:38 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
 	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
-Date: Tue, 02 Jul 2013 22:40:56 +0200
-Message-ID: <1635199.U3MANZpM5C@vostro.rjw.lan>
-In-Reply-To: <CAErSpo7GQ8M1rpWnez+=SByR_wmyAnJH7wfqdY20ZcvXW9_90Q@mail.gmail.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <20130702104406.4473EE0090@blue.fi.intel.com> <CAErSpo7GQ8M1rpWnez+=SByR_wmyAnJH7wfqdY20ZcvXW9_90Q@mail.gmail.com>
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Subject: Re: [PATCH v2 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer
+ Aspire S5
+Message-ID: <20130704125337.GN4898@intel.com>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1444243.g9GbxN3NM0@vostro.rjw.lan>
+ <20130704085844.GF4898@intel.com>
+ <6828518.UobQ5xLxzT@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6828518.UobQ5xLxzT@vostro.rjw.lan>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 02, 2013 11:09:19 AM Bjorn Helgaas wrote:
-> On Tue, Jul 2, 2013 at 4:44 AM, Kirill A. Shutemov
-> <kirill.shutemov@linux.intel.com> wrote:
-> > Mika Westerberg wrote:
-> >> The acpiphp driver finds out whether the device is hotpluggable by checking
-> >> whether it has _RMV method behind it (and if it returns 1). However, at
-> >> least Acer Aspire S5 with Thunderbolt host router has this method placed
-> >> behind device called EPUP (endpoint upstream port?) and not directly behind
-> >> the root port as can be seen from the ASL code below:
-> >>
-> >> Device (RP05)
-> >> {
-> >>       ...
-> >>       Device (HRUP)
-> >>       {
-> >>               Name (_ADR, Zero)
-> >>               Name (_PRW, Package (0x02)
-> >>               {
-> >>                       0x09,
-> >>                       0x04
-> >>               })
-> >>               Device (HRDN)
-> >>               {
-> >>                       Name (_ADR, 0x00040000)
-> >>                       Name (_PRW, Package (0x02)
-> >>                       {
-> >>                               0x09,
-> >>                               0x04
-> >>                       })
-> >>                       Device (EPUP)
-> >>                       {
-> >>                               Name (_ADR, Zero)
-> >>                               Method (_RMV, 0, NotSerialized)
-> >>                               {
-> >>                                       Return (One)
-> >>                               }
-> >>                       }
-> >>               }
-> >>       }
-> >>
-> >> If we want to support such machines we must look for the _RMV method a bit
-> >> deeper in the hierarchy. Fix this by changing pcihp_is_ejectable() to check
-> >> few more devices down from the root port.
-> >
-> > We found that this approach is broken. We've got false positive: host
-> > bridge itself was detected as hotplugable slot %) I think it's not
-> > acceptable.
-> >
-> > Mika has tried few more approaches, but we haven't found anything better
-> > then hardcoded path like in original workaround patch[1]. It's not generic
-> > at all, but safe from false positives.
-> >
-> > Any thoughts?
-> >
-> > [1] http://article.gmane.org/gmane.linux.kernel.pci/19102
+On Thu, Jul 04, 2013 at 02:36:00PM +0200, Rafael J. Wysocki wrote:
+> On Thursday, July 04, 2013 11:58:44 AM Mika Westerberg wrote:
+> > On Wed, Jul 03, 2013 at 11:40:42PM +0200, Rafael J. Wysocki wrote:
+> > > On Wednesday, July 03, 2013 05:04:53 PM Mika Westerberg wrote:
+> > > > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> > > > 
+> > > > Correct ACPI PCI hotplug imeplementation should have _RMV method in a
+> > > > PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
+> > > > deeper in hierarchy:
+> > > > 
+> > > > Device (RP05)
+> > > > {
+> > > >    // ...
+> > > >    Device (HRUP)
+> > > >    {
+> > > >        // ...
+> > > >        Device (HRDN)
+> > > >        {
+> > > >            // ...
+> > > >            Device (EPUP)
+> > > >            {
+> > > >                // ...
+> > > >                Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
+> > > >                {
+> > > >                    Return (One)
+> > > >                }
+> > > >            }
+> > > >        }
+> > > >    }
+> > > > }
+> > > > 
+> > > > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > > ---
+> > > >  drivers/pci/hotplug/acpi_pcihp.c | 13 +++++++++++++
+> > > >  1 file changed, 13 insertions(+)
+> > > > 
+> > > > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+> > > > index 2a47e82..d92ebfb 100644
+> > > > --- a/drivers/pci/hotplug/acpi_pcihp.c
+> > > > +++ b/drivers/pci/hotplug/acpi_pcihp.c
+> > > > @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
+> > > >  	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+> > > >  	if (ACPI_SUCCESS(status) && removable)
+> > > >  		return 1;
+> > > > +
+> > > > +	/*
+> > > > +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
+> > > > +	 *
+> > > > +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
+> > > > +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
+> > > > +	 * deeper in hierarchy.
+> > > > +	 */
+> > > > +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
+> > > > +			&removable);
+> > > 
+> > > Well, calling stuff like this directly from a general function is kind of ugly.
+> > > 
+> > > Can we use something like a quirk instead?  A DMI check or something?
+> > 
+> > Sure we can. How about something like the patch below?
 > 
-> The changelog of this patch ([1]) says "Correct ACPI PCI hotplug
-> implementation should have _RMV method in a PCI slot (device under pci
-> bridge). In Acer Aspire S5 case we have it deeper in hierarchy ..."
+> Well, it goes into the right (to me) direction. :-)
 > 
-> This is exactly what I mean about acpiphp being brittle because of the
-> assumptions it makes about the ACPI namespace.  Is there actually
-> something in the spec that requires the _RMV method to be where
-> pcihp_is_ejectable() expects it?
+> Some comments below.
 > 
-> I'm not 100% dead-set against merging the workaround with hard-coded
-> path, but I still don't think it's a good idea.  It "fixes" it for one
-> particular machine, but there will likely be other machines that
-> require similar fixes in the future.  It makes it harder for somebody
-> to clean up the design later, because that person won't have an Aspire
-> S5 to test.  It makes it less likely that somebody *will* clean it up
-> later, because "everything is already working."
+> > From: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > Subject: [PATCH] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
+> > 
+> > The acpiphp driver finds out whether the device is removable by checking
+> > whether it has _RMV method directly behind it (and if it returns 1).
+> > However, at least on Acer Aspire S5 with Thunderbolt host router has this
+> > method placed behind a device called EPUP (endpoint upstream port?) and not
+> > in the usual place expected by the acpiphp driver. The ASL code below shows
+> > how this is done on that machine:
+> > 
+> > Device (RP05)
+> > {
+> > 	...
+> > 	Device (HRUP)
+> > 	{
+> > 		Name (_ADR, Zero)
+> > 		Name (_PRW, Package (0x02)
+> > 		{
+> > 			0x09,
+> > 			0x04
+> > 		})
+> > 		Device (HRDN)
+> > 		{
+> > 			Name (_ADR, 0x00040000)
+> > 			Name (_PRW, Package (0x02)
+> > 			{
+> > 				0x09,
+> > 				0x04
+> > 			})
+> > 			Device (EPUP)
+> > 			{
+> > 				Name (_ADR, Zero)
+> > 				Method (_RMV, 0, NotSerialized)
+> > 				{
+> > 					Return (One)
+> > 				}
+> > 			}
+> > 		}
+> > 	}
+> > 	...
+> > 
+> > Fix this by adding a DMI quirk for the Acer Aspire S5 machine that gives an
+> > alternative path to the _RMV method.
+> > 
+> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/pci/hotplug/acpi_pcihp.c | 57 ++++++++++++++++++++++++++++++++++++----
+> >  1 file changed, 52 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+> > index 2a47e82..99fccf3 100644
+> > --- a/drivers/pci/hotplug/acpi_pcihp.c
+> > +++ b/drivers/pci/hotplug/acpi_pcihp.c
+> > @@ -33,6 +33,7 @@
+> >  #include <linux/acpi.h>
+> >  #include <linux/pci-acpi.h>
+> >  #include <linux/slab.h>
+> > +#include <linux/dmi.h>
+> >  
+> >  #define MY_NAME	"acpi_pcihp"
+> >  
+> > @@ -408,21 +409,67 @@ got_one:
+> >  }
+> >  EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
+> >  
+> > +/**
+> > + * pcihp_is_removable - is the given ACPI device removable
+> > + * @handle: ACPI handle of the device
+> > + *
+> > + * Try to find out whether the given ACPI device is removable by evaluating
+> > + * its _RMV and returning the result. If we can't find the _RMV directly
+> > + * under the device use system specific quirks to locate it.
+> > + */
+> > +static bool pcihp_is_removable(acpi_handle handle)
+> > +{
 > 
-> That's why my preference (given infinite resources) would be to rework
-> acpiphp now, while people are interested and can test it.
+> People are generally used to seeing DMI lists outside of functions.
 
-Well, I have a plan to do just that, but quite frankly I'd prefer to make
-things physically work first and *then* to make them nicer.
+OK.
 
-> I'm sure this would be a major redesign of acpiphp and its interaction with
-> pciehp, but I think it's something we're going to have to do at some
-> point.
+> > +	static const struct dmi_system_id rmv_paths[] = {
+> > +		{
+> > +			/*
+> > +			 * On Acer Aspire S5 the _RMV method for the
+> > +			 * Thunderbolt host router upstream port is not
+> > +			 * located directly under the device but it is
+> > +			 * instead placed a bit deeper in the hierarchy.
+> > +			 */
+> > +			.ident = "Acer Aspire S5",
+> > +			.matches = {
+> > +				DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
+> > +				DMI_MATCH(DMI_PRODUCT_NAME, "Aspire S5-391"),
+> > +			},
+> > +			.driver_data = "HRDN.EPUP._RMV",
+> 
+> Use .callback instead? ->
+> 
+> > +		},
+> > +		{ }
+> > +	};
+> > +	const struct dmi_system_id *id;
+> > +	unsigned long long removable;
+> > +	acpi_status status;
+> > +
+> > +	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+> > +	if (ACPI_SUCCESS(status))
+> > +		return !!removable;
+> > +
+> > +	/* Try system specific quirks */
+> > +	id = dmi_first_match(rmv_paths);
+> > +	if (id && id->driver_data) {
+> 
+> -> And here do
+> 
+> 	if (id && id->callback)
+> 		return id->callback(id);
 
-Yes, we need to do that pretty much as soon as reasonably possible, but let's
-not hold back changes allowing people to use their hardware with Linux because
-of that.  We very well may need to spend a couple of releases on it.
+There is a problem with the above that we can't pass an ACPI handle to the
+callback function.
 
-Thanks,
-Rafael
+> 
+> > +		char path[64];
+> > +
+> > +		strlcpy(path, id->driver_data, sizeof(path));
+> > +		status = acpi_evaluate_integer(handle, path, NULL, &removable);
+> > +		if (ACPI_SUCCESS(status))
+> > +			return !!removable;
+> > +	}
+> > +
+> > +	return false;
+> > +}
+> > +
+> >  static int pcihp_is_ejectable(acpi_handle handle)
+> >  {
+> >  	acpi_status status;
+> >  	acpi_handle tmp;
+> > -	unsigned long long removable;
+> > +
+> >  	status = acpi_get_handle(handle, "_ADR", &tmp);
+> >  	if (ACPI_FAILURE(status))
+> >  		return 0;
+> >  	status = acpi_get_handle(handle, "_EJ0", &tmp);
+> >  	if (ACPI_SUCCESS(status))
+> >  		return 1;
+> > -	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+> > -	if (ACPI_SUCCESS(status) && removable)
+> > -		return 1;
+> 
+> I'd keep the above unchanged and simply add a "platform check" function.
 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+OK, thanks.
