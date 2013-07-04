@@ -1,69 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:35378 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751452Ab3GIWwT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 18:52:19 -0400
-Received: by mail-wi0-f179.google.com with SMTP id hj3so5675294wib.12
-        for <linux-pci@vger.kernel.org>; Tue, 09 Jul 2013 15:52:18 -0700 (PDT)
-Message-ID: <51DC941E.60007@gmail.com>
-Date: Tue, 09 Jul 2013 17:52:14 -0500
-From: Rob Herring <robherring2@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, x86@kernel.org
+Subject: Re: [PATCH v2.1 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
+Date: Fri, 05 Jul 2013 01:48:01 +0200
+Message-ID: <2539126.i7GjLNiDjm@vostro.rjw.lan>
+In-Reply-To: <1372948192-17913-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1656567.0oqS7xVYJ8@vostro.rjw.lan> <1372948192-17913-1-git-send-email-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCHv4 05/11] of: pci: add registry of MSI chips
-References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com> <1372686136-1370-6-git-send-email-thomas.petazzoni@free-electrons.com> <CAL_Jsq+h=y5SNo4qO5-5u_w8rW++9MKDZK8rASNjhtVcjh-iyQ@mail.gmail.com> <20130709160132.7f5e7a8e@skate>
-In-Reply-To: <20130709160132.7f5e7a8e@skate>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/09/2013 09:01 AM, Thomas Petazzoni wrote:
-> Rob,
+On Thursday, July 04, 2013 05:29:51 PM Mika Westerberg wrote:
+> The acpiphp driver finds out whether the device is removable by checking
+> whether it has _RMV method directly behind it (and if it returns 1).
+> However, at least on Acer Aspire S5 with Thunderbolt host router has this
+> method placed behind a device called EPUP (endpoint upstream port?) and not
+> in the usual place expected by the acpiphp driver. The ASL code below shows
+> how this is done on that machine:
 > 
-> On Tue, 9 Jul 2013 08:43:36 -0500, Rob Herring wrote:
+> Device (RP05)
+> {
+> 	...
+> 	Device (HRUP)
+> 	{
+> 		Name (_ADR, Zero)
+> 		Name (_PRW, Package (0x02)
+> 		{
+> 			0x09,
+> 			0x04
+> 		})
+> 		Device (HRDN)
+> 		{
+> 			Name (_ADR, 0x00040000)
+> 			Name (_PRW, Package (0x02)
+> 			{
+> 				0x09,
+> 				0x04
+> 			})
+> 			Device (EPUP)
+> 			{
+> 				Name (_ADR, Zero)
+> 				Method (_RMV, 0, NotSerialized)
+> 				{
+> 					Return (One)
+> 				}
+> 			}
+> 		}
+> 	}
+> 	...
 > 
->>> +int of_msi_chip_add(struct msi_chip *chip)
->>
->> Perhaps of_pci_msi_chip_add instead.
+> Fix this by adding a DMI quirk for the Acer Aspire S5 machine that gives an
+> alternative path to the _RMV method.
 > 
-> Sure, makes sense.
-> 
->>> +{
->>> +       struct msi_chip *c;
->>> +       list_for_each_entry(c, &msi_chip_list, list) {
->>
->> Need the safe variant here?
-> 
-> As suggested by Bjorn, I've changed this function to grab the
-> msi_chip_mutex while traversing the list.
-> 
-> Does your e-mail implies that the general approach seems ok? If so,
-> I'll resend an updated v5 version taking into account the comments
-> that I have received on this v4.
+> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Yes. Since it is only trivial comments, you can add my ack.
+This is fine by me and same for the other patches in the series.
 
-Acked-by: Rob Herring <rob.herring@calxeda.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Rob
-
+> ---
+>  drivers/pci/hotplug/acpi_pcihp.c | 34 ++++++++++++++++++++++++++++++++++
+>  1 file changed, 34 insertions(+)
 > 
-> Thanks!
+> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+> index 2a47e82..eae1511 100644
+> --- a/drivers/pci/hotplug/acpi_pcihp.c
+> +++ b/drivers/pci/hotplug/acpi_pcihp.c
+> @@ -33,6 +33,7 @@
+>  #include <linux/acpi.h>
+>  #include <linux/pci-acpi.h>
+>  #include <linux/slab.h>
+> +#include <linux/dmi.h>
+>  
+>  #define MY_NAME	"acpi_pcihp"
+>  
+> @@ -408,11 +409,31 @@ got_one:
+>  }
+>  EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
+>  
+> +static const struct dmi_system_id pcihp_platform_quirks[] = {
+> +	{
+> +		/*
+> +		 * On Acer Aspire S5 the _RMV method for the
+> +		 * Thunderbolt host router upstream port is not
+> +		 * located directly under the device but it is
+> +		 * instead placed a bit deeper in the hierarchy.
+> +		 */
+> +		.ident = "Acer Aspire S5",
+> +		.matches = {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "Aspire S5-391"),
+> +		},
+> +		.driver_data = "HRDN.EPUP._RMV",
+> +	},
+> +	{ }
+> +};
+> +
+>  static int pcihp_is_ejectable(acpi_handle handle)
+>  {
+>  	acpi_status status;
+>  	acpi_handle tmp;
+>  	unsigned long long removable;
+> +	const struct dmi_system_id *id;
+> +
+>  	status = acpi_get_handle(handle, "_ADR", &tmp);
+>  	if (ACPI_FAILURE(status))
+>  		return 0;
+> @@ -422,6 +443,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
+>  	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+>  	if (ACPI_SUCCESS(status) && removable)
+>  		return 1;
+> +
+> +	/*
+> +	 * Try to look if there is a platform specific method that we can
+> +	 * use to determine if the device is removable or not.
+> +	 */
+> +	id = dmi_first_match(pcihp_platform_quirks);
+> +	if (id && id->driver_data) {
+> +		status = acpi_evaluate_integer(handle, id->driver_data, NULL,
+> +					       &removable);
+> +		if (ACPI_SUCCESS(status) && removable)
+> +			return 1;
+> +	}
+> +
+>  	return 0;
+>  }
+>  
 > 
-> Thomas
-> 
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
