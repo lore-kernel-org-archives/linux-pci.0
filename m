@@ -1,114 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31859 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751572Ab3GYGwP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 02:52:15 -0400
-Message-ID: <51F0CB10.1070500@oracle.com>
-Date: Thu, 25 Jul 2013 14:52:00 +0800
-From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Reply-To: zhenzhong.duan@oracle.com
-MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>, bhelgaas@google.com,
-	Feng Jin <joe.jin@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Subject: Re: [PATCH 2/3] Refactor msi/msix restore code Part2
-References: <51EF451A.8050003@oracle.com> <20130724134622.GC2518@phenom.dumpdata.com>
-In-Reply-To: <20130724134622.GC2518@phenom.dumpdata.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail.free-electrons.com ([94.23.35.102]:52463 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750906Ab3GEWG7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jul 2013 18:06:59 -0400
+Date: Sat, 6 Jul 2013 00:06:55 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: Re: [PATCHv4 05/11] of: pci: add registry of MSI chips
+Message-ID: <20130706000655.00ae3659@skate>
+In-Reply-To: <CAErSpo5LqKbG=_Uw9eEfR-J0mD2Wg8oi_DdjEfPqgB_VxjouMg@mail.gmail.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1372686136-1370-6-git-send-email-thomas.petazzoni@free-electrons.com>
+	<CAErSpo5LqKbG=_Uw9eEfR-J0mD2Wg8oi_DdjEfPqgB_VxjouMg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Dear Bjorn Helgaas,
 
-On 2013-07-24 21:46, Konrad Rzeszutek Wilk wrote:
-> On Wed, Jul 24, 2013 at 11:08:10AM +0800, Zhenzhong Duan wrote:
->> xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
->> in dom0. It's better to do the same for default_restore_msi_irqs in baremetal.
->>
->> Move restore of mask in default_restore_msi_irqs, this could avoid mask
->> restored twice in dom0, once in hypercall, the other in kernel.
-> Why not remove the hypercall then?
-If removed, msi entry couldn't be restored, such as pci_reset_function 
-who will reset pci registers.
-> Or alter the function to detect
-> whether the restore of the mask has occurred?
-Then we need to add the check for dom0 only.
->
->> Without that, qlcnic driver calling pci_reset_function will lost interrupt
->> in dom0.
->>
->> Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
->> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
->> ---
->>   drivers/pci/msi.c |   17 ++++++++++++++---
->>   1 files changed, 14 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index 87223ae..922fb49 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
->>   #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
->>   void default_restore_msi_irqs(struct pci_dev *dev, int irq)
->>   {
->> +	int pos;
->> +	u16 control;
->>   	struct msi_desc *entry;
->>   
->>   	entry = NULL;
->> @@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
->>   		entry = irq_get_msi_desc(irq);
->>   	}
->>   
->> -	if (entry)
->> +	if (entry) {
->>   		write_msi_msg(irq, &entry->msg);
->> +		if (dev->msix_enabled) {
->> +			msix_mask_irq(entry, entry->masked);
->> +			readl(entry->mask_base);
->> +		} else {
->> +			pos = entry->msi_attrib.pos;
->> +			pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
->> +					     &control);
->> +			msi_mask_irq(entry, msi_capable_mask(control),
->> +				     entry->masked);
->> +		}
->> +	}
->>   }
->>   #endif
->>   
->> @@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
->>   	arch_restore_msi_irqs(dev, dev->irq);
->>   
->>   	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
->> -	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
-> Before this patch we had:
->
-> 	write_msi_msg(..)
-> 	pci_read_config_work(PCI_MSI_FLAGS, &control)
-> 	pci_write_config_dword(~msi_capable_mask(control) | entry->masked)
-> 	control &= ~_PCI_MSI_FLAGS_QSIZE;
-> 	control |= ...
-> 	pci_write_config_dword(PCI_MSI_FLAGS, control)
->
-> while with this you have now:
->
-> 	write_msi_msg(..)
-> 	pci_read_config_work(PCI_MSI_FLAGS, &_control)
-> 	pci_write_config_dword(~msi_capable_mask(_control) | entry->masked)
-> --> 	pci_read_config_work(PCI_MSI_FLAGS, &control)
-> 	control &= ~_PCI_MSI_FLAGS_QSIZE;
-> 	control |= ...
-> 	pci_write_config_dword(PCI_MSI_FLAGS, control)
->
-> see the problem? The 'control' value in __pci_restore_msi_state reads the
-> value _after_ it has been masked (which is now done in default_restore_msi_irqs).
->
-> Wouldn't that cause problems?
->
-pci_write_config_dword(~msi_capable_mask(_control) | entry->masked) restore per vector
-msi mask bits based on the support of PCI_MSI_FLAGS_MASKBIT. This is different from the
-global mask bit in PCI_MSI_FLAGS.
+On Fri, 5 Jul 2013 15:56:55 -0600, Bjorn Helgaas wrote:
 
+> > +int of_msi_chip_add(struct msi_chip *chip)
+> > +{
+> > +       if (! of_property_read_bool(chip->of_node, "msi-controller"))
+> 
+> The space between "! of_property..." is atypical.
+
+Indeed.
+
+
+> > +struct msi_chip *of_find_msi_chip_by_node(struct device_node *of_node)
+> > +{
+> > +       struct msi_chip *c;
+> 
+> Normally there's a blank line here.
+> 
+> The list traversal below isn't safe, is it?  A simultaneous remove,
+> e.g., of an MSI chip unrelated to the one we're looking up, might
+> change the list while we're traversing it.
+
+True, will fix!
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
