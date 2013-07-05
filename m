@@ -1,43 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:42712 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751386Ab3GAPLG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 11:11:06 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 2 Jul 2013 00:59:19 +1000
-Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 270842CE804A
-	for <linux-pci@vger.kernel.org>; Tue,  2 Jul 2013 01:11:01 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r61Eu41I6553880
-	for <linux-pci@vger.kernel.org>; Tue, 2 Jul 2013 00:56:04 +1000
-Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r61FB0p4029020
-	for <linux-pci@vger.kernel.org>; Tue, 2 Jul 2013 01:11:00 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: weiyang@linux.vnet.ibm.com, linuxram@us.ibm.com,
-	shangw@linux.vnet.ibm.com
-Subject: [PATCH 0/4] optimization/fix/cleanup in pci_assign_unassigned_resources
-Date: Mon,  1 Jul 2013 23:10:28 +0800
-Message-Id: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:52480 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750906Ab3GEWIT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jul 2013 18:08:19 -0400
+Date: Sat, 6 Jul 2013 00:08:16 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: Re: [PATCHv4 04/11] PCI: Introduce new MSI chip infrastructure
+Message-ID: <20130706000816.3affe558@skate>
+In-Reply-To: <CAErSpo4aodspFnC0uR87yYAgswQQdmU48uoX5NA43UZjbCpOuw@mail.gmail.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1372686136-1370-5-git-send-email-thomas.petazzoni@free-electrons.com>
+	<CAErSpo4aodspFnC0uR87yYAgswQQdmU48uoX5NA43UZjbCpOuw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Here is some patches do the optimization/fix/cleanup for the function
-pci_assign_unassigned_resources().
+Dear Bjorn Helgaas,
 
-Wei Yang (4):
-  PCI: optimize pci_bus_get_depth() by enumerating on pci bus hierachy
-  PCI: add comment for pbus_size_mem() parameter
-  PCI: trivial cleanup in pbus_size_io()
-  PCI: fix the io resource alignment calculation in pbus_size_io()
+On Fri, 5 Jul 2013 15:51:10 -0600, Bjorn Helgaas wrote:
 
- drivers/pci/setup-bus.c |   56 +++++++++++++++++++++++++++++++++++-----------
- 1 files changed, 42 insertions(+), 14 deletions(-)
+> > ---
+> >  drivers/pci/msi.c   | 22 ++++++++++++++++++++++
+> >  drivers/pci/probe.c |  1 +
+> >  include/linux/msi.h | 11 +++++++++++
+> >  include/linux/pci.h |  1 +
+> >  4 files changed, 35 insertions(+)
+> >
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > index 289fbfd..62eb3d5 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -32,15 +32,37 @@ static int pci_msi_enable = 1;
+> >
+> >  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+> >  {
+> > +       struct msi_chip *chip = dev->bus->msi;
+> > +
+> > +       if (chip && chip->setup_irq) {
+> > +               int err;
+> > +
+> > +               err = chip->setup_irq(chip, dev, desc);
+> > +               if (err < 0)
+> > +                       return err;
+> > +
+> > +               irq_set_chip_data(desc->irq, chip);
+> > +               return err;
+> > +       }
+> > +
+> >         return -EINVAL;
+> 
+> It's sub-optimal to indent the whole body of a function like this.  I
+> think this is a bit more readable:
+> 
+>     if (!chip || !chip->setup_irq)
+>         return -EINVAL
+> 
+>     err = chip->setup_irq(...);
+>     ...
+>     return err;
 
+Right.
+
+> The return value of ->setup_irq() (and hence of arch_setup_msi_irq())
+> is a bit unclear.  Apparently it can return negative values (errors)
+> or positive values (not sure what they mean), or zero (again, not
+> sure).  A comment would clear this up.
+
+Ok, I'll have to look into this. Maybe Thierry Redding can comment on
+this.
+
+> It might even be worth introducing a no-op chip with pointers to no-op
+> functions so we don't have to do these checks ("if (chip &&
+> chip->xxx)" everywhere.  I'm not sure if there's a Linux consensus on
+> that -- certainly there are many examples of code that *does* make
+> these checks everywhere -- so I'll ack it either way.
+
+Ok, I'll see if it makes the overall thing cleaner.
+
+
+> >  int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> >  {
+> > +       struct msi_chip *chip = dev->bus->msi;
+> > +
+> > +       if (chip && chip->check_device)
+> > +               return chip->check_device(chip, dev, nvec, type);
+> > +
+> 
+> These functions are poorly named.  They give no clue what
+> "check_device" means.  Are we checking that it exists, that it
+> supports some property, that it's enabled, ... ?
+
+Maybe Thierry Redding can comment on this one?
+
+Thanks,
+
+Thomas
 -- 
-1.7.5.4
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
