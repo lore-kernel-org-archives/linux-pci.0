@@ -1,57 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:39502 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751153Ab3GXSCd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jul 2013 14:02:33 -0400
-Received: by mail-ob0-f169.google.com with SMTP id up14so13884926obb.14
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jul 2013 11:02:31 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1374632701-20972-5-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1374632701-20972-1-git-send-email-shangw@linux.vnet.ibm.com> <1374632701-20972-5-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com>
+References: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 24 Jul 2013 12:02:11 -0600
-Message-ID: <CAErSpo7rXF9vf=BMT1LoLeHPRiyJxT2XWbroRjdt+DH8+4QOnA@mail.gmail.com>
-Subject: Re: [PATCH 04/11] PCI/hotplug: Needn't remove EEH cache again
-To: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Fri, 5 Jul 2013 17:36:01 -0600
+Message-ID: <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
+Subject: Re: [PATCH] pci: Avoid unnecessary calls to work_on_cpu
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+[+cc Rusty]
 
-On Tue, Jul 23, 2013 at 8:24 PM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
-> Since pcibios_release_device() called by pci_stop_and_remove_bus_device()
-> has removed the EEH cache, we needn't do that again.
+On Mon, Jun 24, 2013 at 2:05 PM, Alexander Duyck
+<alexander.h.duyck@intel.com> wrote:
+> This patch is meant to address the fact that we are making unnecessary calls
+> to work_on_cpu.  To resolve this I have added a check to see if the current
+> node is the correct node for the device before we decide to assign the probe
+> task to another CPU.
 >
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> The advantages to this approach is that we can avoid reentrant calls to
+> work_on_cpu.  In addition we should not make any calls to setup the work
+> remotely in the case of a single node system that has NUMA enabled.
 
-I'll be happy to merge this if you want, or since you have my Ack
-already, you can merge it with the rest of the series.  I didn't get
-the rest of the series, so I don't know if it depends on this.
+The description above makes it sound like this is just a minor
+performance enhancement, but I think the real reason you want this is
+to resolve the lockdep warning mentioned at [1].  That thread is long
+and confusing, so I'd like to see a bugzilla that distills out the
+useful details, and a synopsis in this changelog.
 
-Just let me know what you want me to do.
+[1] https://lkml.kernel.org/r/1368498506-25857-7-git-send-email-yinghai@kernel.org
 
+> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
 > ---
->  drivers/pci/hotplug/rpadlpar_core.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
 >
-> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-> index b29e20b..bb7af78 100644
-> --- a/drivers/pci/hotplug/rpadlpar_core.c
-> +++ b/drivers/pci/hotplug/rpadlpar_core.c
-> @@ -388,7 +388,6 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
->         /* Remove the EADS bridge device itself */
->         BUG_ON(!bus->self);
->         pr_debug("PCI: Now removing bridge device %s\n", pci_name(bus->self));
-> -       eeh_remove_bus_device(bus->self, true);
->         pci_stop_and_remove_bus_device(bus->self);
+> This patch is based off of work I submitted in an earlier patch that I never
+> heard back on.  The change was originally submitted in:
+>   pci: Avoid reentrant calls to work_on_cpu
 >
->         return 0;
-> --
-> 1.7.5.4
+> I'm not sure what ever happened with that patch, however after reviewing it
+> some myself I decided I could do without the change to the comments since they
+> were unneeded.  As such I am resubmitting this as a much simpler patch that
+> only adds the line of code needed to avoid calling work_on_cpu for every call
+> to probe on an NUMA node specific device.
 >
+>  drivers/pci/pci-driver.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 79277fb..7d81713 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -282,7 +282,7 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+>            its local memory on the right node without any need to
+>            change it. */
+>         node = dev_to_node(&dev->dev);
+> -       if (node >= 0) {
+> +       if ((node >= 0) && (node != numa_node_id())) {
+>                 int cpu;
+>
+>                 get_online_cpus();
+
+I think it's theoretically unsafe to use numa_node_id() while
+preemption is enabled.
+
+It seems a little strange to me that this "run the driver probe method
+on the correct node" code is in PCI.  I would think this behavior
+would be desirable for *all* bus types, not just PCI, so maybe it
+would make sense to do this up in device_attach() or somewhere
+similar.
+
+But Rusty added this (in 873392ca51), and he knows way more about this
+stuff than I do.
+
+Bjorn
