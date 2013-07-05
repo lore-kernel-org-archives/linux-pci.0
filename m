@@ -1,116 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:25841 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753087Ab3GAJ2T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Jul 2013 05:28:19 -0400
-Date: Mon, 1 Jul 2013 12:32:17 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in
- enable_device()
-Message-ID: <20130701093217.GG9294@intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <20130628095138.D5B7BE0090@blue.fi.intel.com>
- <CAErSpo7pLoiaOeCbL1yLjdSbW7n0E8NMfkLGYpj8N=bvYBRN5w@mail.gmail.com>
- <4600759.u0rXpSLd62@vostro.rjw.lan>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:57929 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018Ab3GEVvb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jul 2013 17:51:31 -0400
+Received: by mail-ob0-f176.google.com with SMTP id v19so3337822obq.7
+        for <linux-pci@vger.kernel.org>; Fri, 05 Jul 2013 14:51:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4600759.u0rXpSLd62@vostro.rjw.lan>
+In-Reply-To: <1372686136-1370-5-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1372686136-1370-5-git-send-email-thomas.petazzoni@free-electrons.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 5 Jul 2013 15:51:10 -0600
+Message-ID: <CAErSpo4aodspFnC0uR87yYAgswQQdmU48uoX5NA43UZjbCpOuw@mail.gmail.com>
+Subject: Re: [PATCHv4 04/11] PCI: Introduce new MSI chip infrastructure
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 28, 2013 at 08:54:45PM +0200, Rafael J. Wysocki wrote:
-> On Friday, June 28, 2013 11:00:31 AM Bjorn Helgaas wrote:
-> > On Fri, Jun 28, 2013 at 3:51 AM, Kirill A. Shutemov
-> > <kirill.shutemov@linux.intel.com> wrote:
-> > > Bjorn Helgaas wrote:
-> > >> On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
-> > >> <mika.westerberg@linux.intel.com> wrote:
-> > >> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> > >> >
-> > >> > With Thunderbolt you can chain devices: connect a new devices to plugged
-> > >> > one. In this case the slot is already enabled, but we still want to look
-> > >> > for new devices behind it.
-> > >> >
-> > >> > We're going to reuse enable_device() for rescan for new devices on the
-> > >> > enabled slot. Let's push the check up by stack.
-> > >> >
-> > >> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> > >> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > >> > ---
-> > >> >  drivers/pci/hotplug/acpiphp_glue.c | 5 ++---
-> > >> >  1 file changed, 2 insertions(+), 3 deletions(-)
-> > >> >
-> > >> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> > >> > index 59df857..b983e29 100644
-> > >> > --- a/drivers/pci/hotplug/acpiphp_glue.c
-> > >> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> > >> > @@ -688,9 +688,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
-> > >> >         int num, max, pass;
-> > >> >         LIST_HEAD(add_list);
-> > >> >
-> > >> > -       if (slot->flags & SLOT_ENABLED)
-> > >> > -               goto err_exit;
-> > >> > -
-> > >> >         list_for_each_entry(func, &slot->funcs, sibling)
-> > >> >                 acpiphp_bus_add(func);
-> > >> >
-> > >> > @@ -1242,6 +1239,8 @@ int acpiphp_enable_slot(struct acpiphp_slot *slot)
-> > >> >                 goto err_exit;
-> > >> >
-> > >> >         if (get_slot_status(slot) == ACPI_STA_ALL) {
-> > >> > +               if (slot->flags & SLOT_ENABLED)
-> > >> > +                       goto err_exit;
-> > >>
-> > >> Why do we check for SLOT_ENABLED at all?  I think we're handling a Bus
-> > >> Check notification, which means "re-enumerate on the device tree
-> > >> starting from the notification point."  It doesn't say anything about
-> > >> skipping the re-enumeration if we find a device that's already
-> > >> enabled.
-> > >>
-> > >> It seems like we ought to just re-enumerate all the way down in case a
-> > >> device was added farther down in the tree (which is what it sounds
-> > >> like Thunderbolt is doing).
-> > >
-> > > Currently (with patchset applied), we have two users of
-> > > acpiphp_enable_slot():
-> > >
-> > > - /sys/bus/pci/slots/*/power
-> > > - ACPI_NOTIFY_BUS_CHECK in _handle_hotplug_event_func().
-> > >
-> > > Both are not related to Thunderbolt.
-> > >
-> > > Although, I think remove the check is good idea, I prefer to keep it
-> > > separate from Thunderbolt enabling patchset, since it will change sysfs
-> > > ABI a bit and can potentially affect othe ACPI PCI hotplug
-> > > implementations.
-> > 
-> > I'll think about this some more, but if we can make a change that
-> > simplifies things and makes them more spec-compliant, and also happens
-> > to make Thunderbolt work, that sounds better than fixing Thunderbolt
-> > while leaving the wart there.
-> > 
-> > If we only fix Thunderbolt, it just feels like we're adding to an
-> > ever-growing "deferred maintenance" list.
-> 
-> I agree.
-> 
-> That change may be done in a separate patch, but it should be included in the
-> series.
+On Mon, Jul 1, 2013 at 7:42 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> From: Thierry Reding <thierry.reding@avionic-design.de>
+>
+> The new struct msi_chip is used to associated an MSI controller with a
+> PCI bus. It is automatically handed down from the root to its children
+> during bus enumeration.
+>
+> This patch provides default (weak) implementations for the architecture-
+> specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
+> and arch_msi_check_device()) which check if a PCI device's bus has an
+> attached MSI chip and forward the call appropriately.
+>
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-Given the fact that SLOT_ENABLED is only checked in acpiphp_enable_slot()
-(after this patch) and that /sys/bus/pci/slots/*/power uses SLOT_POWEREDON
-anyway, should we remove the whole flag?
+I'm OK with this patch in principle, but I do have a couple comments below.
+
+> ---
+>  drivers/pci/msi.c   | 22 ++++++++++++++++++++++
+>  drivers/pci/probe.c |  1 +
+>  include/linux/msi.h | 11 +++++++++++
+>  include/linux/pci.h |  1 +
+>  4 files changed, 35 insertions(+)
+>
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 289fbfd..62eb3d5 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -32,15 +32,37 @@ static int pci_msi_enable = 1;
+>
+>  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+>  {
+> +       struct msi_chip *chip = dev->bus->msi;
+> +
+> +       if (chip && chip->setup_irq) {
+> +               int err;
+> +
+> +               err = chip->setup_irq(chip, dev, desc);
+> +               if (err < 0)
+> +                       return err;
+> +
+> +               irq_set_chip_data(desc->irq, chip);
+> +               return err;
+> +       }
+> +
+>         return -EINVAL;
+
+It's sub-optimal to indent the whole body of a function like this.  I
+think this is a bit more readable:
+
+    if (!chip || !chip->setup_irq)
+        return -EINVAL
+
+    err = chip->setup_irq(...);
+    ...
+    return err;
+
+The return value of ->setup_irq() (and hence of arch_setup_msi_irq())
+is a bit unclear.  Apparently it can return negative values (errors)
+or positive values (not sure what they mean), or zero (again, not
+sure).  A comment would clear this up.
+
+It might even be worth introducing a no-op chip with pointers to no-op
+functions so we don't have to do these checks ("if (chip &&
+chip->xxx)" everywhere.  I'm not sure if there's a Linux consensus on
+that -- certainly there are many examples of code that *does* make
+these checks everywhere -- so I'll ack it either way.
+
+>  }
+>
+>  void __weak arch_teardown_msi_irq(unsigned int irq)
+>  {
+> +       struct msi_chip *chip = irq_get_chip_data(irq);
+> +
+> +       if (chip && chip->teardown_irq)
+> +               chip->teardown_irq(chip, irq);
+>  }
+>
+>  int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>  {
+> +       struct msi_chip *chip = dev->bus->msi;
+> +
+> +       if (chip && chip->check_device)
+> +               return chip->check_device(chip, dev, nvec, type);
+> +
+
+These functions are poorly named.  They give no clue what
+"check_device" means.  Are we checking that it exists, that it
+supports some property, that it's enabled, ... ?
+
+>         return 0;
+>  }
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 70f10fa..c8591e4 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -634,6 +634,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>
+>         child->parent = parent;
+>         child->ops = parent->ops;
+> +       child->msi = parent->msi;
+>         child->sysdata = parent->sysdata;
+>         child->bus_flags = parent->bus_flags;
+>
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index c82ff8d..5b357d92 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -63,4 +63,15 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
+>
+>  void default_teardown_msi_irqs(struct pci_dev *dev);
+>
+> +struct msi_chip {
+> +       struct module *owner;
+> +       struct device *dev;
+> +
+> +       int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+> +                        struct msi_desc *desc);
+> +       void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+> +       int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
+> +                           int nvec, int type);
+> +};
+> +
+>  #endif /* LINUX_MSI_H */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 3a24e4f..7ffc012 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -432,6 +432,7 @@ struct pci_bus {
+>         struct resource busn_res;       /* bus numbers routed to this bus */
+>
+>         struct pci_ops  *ops;           /* configuration access functions */
+> +       struct msi_chip *msi;           /* MSI controller */
+>         void            *sysdata;       /* hook for sys-specific extension */
+>         struct proc_dir_entry *procdir; /* directory entry in /proc/bus/pci */
+>
+> --
+> 1.8.1.2
+>
