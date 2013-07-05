@@ -1,185 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32757 "EHLO mga02.intel.com"
+Received: from gate.crashing.org ([63.228.1.57]:41764 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751427Ab3GVWdD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Jul 2013 18:33:03 -0400
-Message-ID: <51EDB31D.6090103@intel.com>
-Date: Mon, 22 Jul 2013 15:33:01 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
-MIME-Version: 1.0
+	id S1750906Ab3GEWhH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Jul 2013 18:37:07 -0400
+Message-ID: <1373063807.4446.10.camel@pasglop>
+Subject: Re: [PATCH 1/8] PCI: Add pcibios_stop_dev()
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Lai Jiangshan <laijs@cn.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: workqueue, pci: INFO: possible recursive locking detected
-References: <51E55B7D.2040209@linux.vnet.ibm.com> <51E66CCC.9010600@cn.fujitsu.com> <51E84EDC.5090502@linux.vnet.ibm.com> <51E89ABB.20808@cn.fujitsu.com> <51E8FF76.5030706@linux.vnet.ibm.com> <51ED1D02.80205@cn.fujitsu.com> <51ED51A2.6050909@linux.vnet.ibm.com> <CAErSpo4vbfctQwGzexEuLoGMh33oU1oJOM8bkuq4uk7EtkE0xw@mail.gmail.com>
-In-Reply-To: <CAErSpo4vbfctQwGzexEuLoGMh33oU1oJOM8bkuq4uk7EtkE0xw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Sat, 06 Jul 2013 08:36:47 +1000
+In-Reply-To: <CAErSpo7QGD99HM1fEcvGi-9h3HX6C8nu1mzJHnMMUKWTNO0vnw@mail.gmail.com>
+References: <1372993054-25730-1-git-send-email-shangw@linux.vnet.ibm.com>
+	 <1372993054-25730-2-git-send-email-shangw@linux.vnet.ibm.com>
+	 <CAErSpo7QGD99HM1fEcvGi-9h3HX6C8nu1mzJHnMMUKWTNO0vnw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/22/2013 02:38 PM, Bjorn Helgaas wrote:
-> [+cc Alex, Yinghai, linux-pci]
->
-> On Mon, Jul 22, 2013 at 9:37 AM, Srivatsa S. Bhat
-> <srivatsa.bhat@linux.vnet.ibm.com> wrote:
->> On 07/22/2013 05:22 PM, Lai Jiangshan wrote:
->>> On 07/19/2013 04:57 PM, Srivatsa S. Bhat wrote:
->>>> On 07/19/2013 07:17 AM, Lai Jiangshan wrote:
->>>>> On 07/19/2013 04:23 AM, Srivatsa S. Bhat wrote:
->>>>>> ---
->>>>>>
->>>>>>  kernel/workqueue.c |    6 ++++++
->>>>>>  1 file changed, 6 insertions(+)
->>>>>>
->>>>>>
->>>>>> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
->>>>>> index f02c4a4..07d9a67 100644
->>>>>> --- a/kernel/workqueue.c
->>>>>> +++ b/kernel/workqueue.c
->>>>>> @@ -4754,7 +4754,13 @@ long work_on_cpu(int cpu, long (*fn)(void *), void *arg)
->>>>>>  {
->>>>>>    struct work_for_cpu wfc = { .fn = fn, .arg = arg };
->>>>>>
->>>>>> +#ifdef CONFIG_LOCKDEP
->>>>>> +  static struct lock_class_key __key;
->>>>> Sorry, this "static" should be removed.
->>>>>
->>>> That didn't help either :-( Because it makes lockdep unhappy,
->>>> since the key isn't persistent.
->>>>
->>>> This is the patch I used:
->>>>
->>>> ---
->>>>
->>>> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
->>>> index f02c4a4..7967e3b 100644
->>>> --- a/kernel/workqueue.c
->>>> +++ b/kernel/workqueue.c
->>>> @@ -4754,7 +4754,13 @@ long work_on_cpu(int cpu, long (*fn)(void *), void *arg)
->>>>  {
->>>>      struct work_for_cpu wfc = { .fn = fn, .arg = arg };
->>>>
->>>> +#ifdef CONFIG_LOCKDEP
->>>> +    struct lock_class_key __key;
->>>> +    INIT_WORK_ONSTACK(&wfc.work, work_for_cpu_fn);
->>>> +    lockdep_init_map(&wfc.work.lockdep_map, "&wfc.work", &__key, 0);
->>>> +#else
->>>>      INIT_WORK_ONSTACK(&wfc.work, work_for_cpu_fn);
->>>> +#endif
->>>>      schedule_work_on(cpu, &wfc.work);
->>>>      flush_work(&wfc.work);
->>>>      return wfc.ret;
->>>>
->>>>
->>>> And here are the new warnings:
->>>>
->>>>
->>>> Block layer SCSI generic (bsg) driver version 0.4 loaded (major 252)
->>>> io scheduler noop registered
->>>> io scheduler deadline registered
->>>> io scheduler cfq registered (default)
->>>> BUG: key ffff881039557b98 not in .data!
->>>> ------------[ cut here ]------------
->>>> WARNING: CPU: 8 PID: 1 at kernel/lockdep.c:2987 lockdep_init_map+0x168/0x170()
->>> Sorry again.
->>>
->>> From 0096b9dac2282ec03d59a3f665b92977381a18ad Mon Sep 17 00:00:00 2001
->>> From: Lai Jiangshan <laijs@cn.fujitsu.com>
->>> Date: Mon, 22 Jul 2013 19:08:51 +0800
->>> Subject: [PATCH] [PATCH] workqueue: allow the function of work_on_cpu() can
->>>  call work_on_cpu()
->>>
->>> If the @fn call work_on_cpu() again, the lockdep will complain:
->>>
->>>> [ INFO: possible recursive locking detected ]
->>>> 3.11.0-rc1-lockdep-fix-a #6 Not tainted
->>>> ---------------------------------------------
->>>> kworker/0:1/142 is trying to acquire lock:
->>>>  ((&wfc.work)){+.+.+.}, at: [<ffffffff81077100>] flush_work+0x0/0xb0
->>>>
->>>> but task is already holding lock:
->>>>  ((&wfc.work)){+.+.+.}, at: [<ffffffff81075dd9>] process_one_work+0x169/0x610
->>>>
->>>> other info that might help us debug this:
->>>>  Possible unsafe locking scenario:
->>>>
->>>>        CPU0
->>>>        ----
->>>>   lock((&wfc.work));
->>>>   lock((&wfc.work));
->>>>
->>>>  *** DEADLOCK ***
->>> It is false-positive lockdep report. In this sutiation,
->>> the two "wfc"s of the two work_on_cpu() are different,
->>> they are both on stack. flush_work() can't be deadlock.
->>>
->>> To fix this, we need to avoid the lockdep checking in this case,
->>> But we don't want to change the flush_work(), so we use
->>> completion instead of flush_work() in the work_on_cpu().
->>>
->>> Reported-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
->>> Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
->>> ---
->> That worked, thanks a lot!
->>
->> Tested-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
->>
->> Regards,
->> Srivatsa S. Bhat
->>
->>>  kernel/workqueue.c |    5 ++++-
->>>  1 files changed, 4 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
->>> index f02c4a4..b021a45 100644
->>> --- a/kernel/workqueue.c
->>> +++ b/kernel/workqueue.c
->>> @@ -4731,6 +4731,7 @@ struct work_for_cpu {
->>>       long (*fn)(void *);
->>>       void *arg;
->>>       long ret;
->>> +     struct completion done;
->>>  };
->>>
->>>  static void work_for_cpu_fn(struct work_struct *work)
->>> @@ -4738,6 +4739,7 @@ static void work_for_cpu_fn(struct work_struct *work)
->>>       struct work_for_cpu *wfc = container_of(work, struct work_for_cpu, work);
->>>
->>>       wfc->ret = wfc->fn(wfc->arg);
->>> +     complete(&wfc->done);
->>>  }
->>>
->>>  /**
->>> @@ -4755,8 +4757,9 @@ long work_on_cpu(int cpu, long (*fn)(void *), void *arg)
->>>       struct work_for_cpu wfc = { .fn = fn, .arg = arg };
->>>
->>>       INIT_WORK_ONSTACK(&wfc.work, work_for_cpu_fn);
->>> +     init_completion(&wfc.done);
->>>       schedule_work_on(cpu, &wfc.work);
->>> -     flush_work(&wfc.work);
->>> +     wait_for_completion(&wfc.done);
->>>       return wfc.ret;
->>>  }
->>>  EXPORT_SYMBOL_GPL(work_on_cpu);
->>>
-> Isn't this for the same issue Alex and others have been working on?
->
-> It doesn't feel like we have consensus on how this should be fixed.
-> You're proposing a change to work_on_cpu(), Alex proposed a change to
-> pci_call_probe() [1], Yinghai proposed some changes to the PCI core
-> SR-IOV code and several drivers [2].
->
-> [1] https://lkml.kernel.org/r/20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com
-> [2] https://lkml.kernel.org/r/1368498506-25857-7-git-send-email-yinghai@kernel.org
+On Fri, 2013-07-05 at 12:49 -0600, Bjorn Helgaas wrote:
+> We already have pcibios_release_device() (just merged for v3.11).
+> Would that work for you?  I haven't seen your whole series, so I can't
+> tell whether you need something different.
 
-The solution I proposed was flawed due to possible preemption issues. 
-If this solution resolves the issue then I am fine with it as long as it
-doesn't introduce any new issues.
+Maybe... Gavin's original hook applies when the device is removed
+from the tree, your new hook when the refcount expires and the
+structure is about to be freed...
 
-Thanks,
+I *suspect* that's fine but I'll need to have a closer look (or wait
+for Gavin to be back from vacation :-)
 
-Alex
+BTW. One thing we do in EEH is that if we get an error and the driver
+for the device doesn't implement recovery, we simulate a hotplug.
+
+IE. We unplug the device (currently removing it), reset it (or the
+bus it's on, whatever applies, which lifts the fence established by
+the EEH hardware), and re-plug it.
+
+The current method really removes the device from the PCI subsystem,
+and "plugs" it back. IE. We rescan the slot, and might even end up
+re-assigning resources, which I'm not too fan about. It's also unclear
+what quirks gets called in that re-plug case, etc...
+
+I'm wondering whether it might be better to keep the pci_dev around,
+just mark it blocked for user access, unbind the driver, reset, restore
+the BARs to their original values, unblock and re-bind.
+
+What's your take on this ?
+
+Cheers,
+Ben.
+
+
