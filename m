@@ -1,99 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 7/30] ACPI / hotplug / PCI: Pass hotplug context objects to event handlers
-Date: Thu, 18 Jul 2013 01:19:59 +0200
-Message-ID: <12177707.iMaENA9NZf@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:33213 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932219Ab3GEDIR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Jul 2013 23:08:17 -0400
+Message-ID: <1372993680.4122.104.camel@pasglop>
+Subject: Re: [PATCH 1/8] PCI: Add pcibios_stop_dev()
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Date: Fri, 05 Jul 2013 13:08:00 +1000
+In-Reply-To: <1372993054-25730-2-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1372993054-25730-1-git-send-email-shangw@linux.vnet.ibm.com>
+	 <1372993054-25730-2-git-send-email-shangw@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Fri, 2013-07-05 at 10:57 +0800, Gavin Shan wrote:
+> When stopping and removing one specific PCI device, the platform
+> might need take some actions. One example is that EEH already had
+> eeh cache and eeh device attached to the PCI device, and we need
+> release eeh cache and device during the time. The patch introduces
+> hook pcibios_stop_dev() for the purpose.
 
-Modify handle_hotplug_event() to pass the entire context object
-(instead of its fields individually) to work functions started by it.
+Bjorn, any objection ? Ack ? Nack ? :-)
 
-This change makes the subsequent consolidation of the event handling
-work functions a bit more straightforward.
+I'd like to put that in my tree, it's part of a series that fixes a
+number of bugs with our hotplug and EEH code which I'd like to send
+to Linus soonish.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Cheers,
+Ben.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -989,6 +989,7 @@ void acpiphp_check_host_bridge(acpi_hand
- 
- static void _handle_hotplug_event_bridge(struct work_struct *work)
- {
-+	struct acpiphp_context *context;
- 	struct acpiphp_bridge *bridge;
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
-@@ -1000,7 +1001,8 @@ static void _handle_hotplug_event_bridge
- 	hp_work = container_of(work, struct acpi_hp_work, work);
- 	handle = hp_work->handle;
- 	type = hp_work->type;
--	bridge = (struct acpiphp_bridge *)hp_work->context;
-+	context = hp_work->context;
-+	bridge = context->bridge;
- 
- 	acpi_scan_lock_acquire();
- 
-@@ -1105,18 +1107,18 @@ static void hotplug_event_func(acpi_hand
- 
- static void _handle_hotplug_event_func(struct work_struct *work)
- {
-+	struct acpiphp_context *context;
- 	struct acpi_hp_work *hp_work;
--	struct acpiphp_func *func;
- 
- 	hp_work = container_of(work, struct acpi_hp_work, work);
--	func = hp_work->context;
-+	context = hp_work->context;
- 	acpi_scan_lock_acquire();
- 
--	hotplug_event_func(hp_work->handle, hp_work->type, func);
-+	hotplug_event_func(hp_work->handle, hp_work->type, context->func);
- 
- 	acpi_scan_lock_release();
- 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
--	put_bridge(func->slot->bridge);
-+	put_bridge(context->func->slot->bridge);
- }
- 
- /**
-@@ -1137,11 +1139,9 @@ static void handle_hotplug_event(acpi_ha
- 	if (context) {
- 		if (context->bridge) {
- 			get_bridge(context->bridge);
--			data = context->bridge;
- 			work_func = _handle_hotplug_event_bridge;
- 		} else if (context->func) {
- 			get_bridge(context->func->slot->bridge);
--			data = context->func;
- 			work_func = _handle_hotplug_event_func;
- 		}
- 		acpiphp_put_context(context);
-@@ -1157,7 +1157,7 @@ static void handle_hotplug_event(acpi_ha
- 	 * don't deadlock on hotplug actions.
- 	 */
- 	if (work_func)
--		alloc_acpi_hp_work(handle, type, data, work_func);
-+		alloc_acpi_hp_work(handle, type, context, work_func);
- }
- 
- /*
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/probe.c  |    4 ++++
+>  drivers/pci/remove.c |    2 ++
+>  include/linux/pci.h  |    1 +
+>  3 files changed, 7 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 70f10fa..7167dc4 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1669,6 +1669,10 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+>  {
+>  }
+>  
+> +void __weak pcibios_stop_dev(struct pci_dev *dev)
+> +{
+> +}
+> +
+>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+>  {
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 8fc54b7..e329efc 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -21,6 +21,8 @@ static void pci_stop_dev(struct pci_dev *dev)
+>  {
+>  	pci_pme_active(dev, false);
+>  
+> +	pcibios_stop_dev(dev);
+> +
+>  	if (dev->is_added) {
+>  		pci_proc_detach_device(dev);
+>  		pci_remove_sysfs_dev_files(dev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 3a24e4f..40df783 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -696,6 +696,7 @@ int no_pci_devices(void);
+>  void pcibios_resource_survey_bus(struct pci_bus *bus);
+>  void pcibios_add_bus(struct pci_bus *bus);
+>  void pcibios_remove_bus(struct pci_bus *bus);
+> +void pcibios_stop_dev(struct pci_dev *dev);
+>  void pcibios_fixup_bus(struct pci_bus *);
+>  int __must_check pcibios_enable_device(struct pci_dev *, int mask);
+>  /* Architecture specific versions may override this (weak) */
+
 
