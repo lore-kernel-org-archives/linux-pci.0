@@ -1,43 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 11 Jul 2013 08:11:44 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 3/8] PCI: acpiphp: enable_device(): rescan even if no
- new devices on slot
-Message-ID: <20130711051144.GF4898@intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372860295-8306-4-git-send-email-mika.westerberg@linux.intel.com>
- <1827270.u1sYdQ8l8y@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:58541 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019Ab3GEWt5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jul 2013 18:49:57 -0400
+Received: by mail-oa0-f44.google.com with SMTP id l10so3963898oag.17
+        for <linux-pci@vger.kernel.org>; Fri, 05 Jul 2013 15:49:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1827270.u1sYdQ8l8y@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1373063807.4446.10.camel@pasglop>
+References: <1372993054-25730-1-git-send-email-shangw@linux.vnet.ibm.com>
+ <1372993054-25730-2-git-send-email-shangw@linux.vnet.ibm.com>
+ <CAErSpo7QGD99HM1fEcvGi-9h3HX6C8nu1mzJHnMMUKWTNO0vnw@mail.gmail.com> <1373063807.4446.10.camel@pasglop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 5 Jul 2013 16:49:37 -0600
+Message-ID: <CAErSpo52hic4nb-RtTT+e1nhXFeuWUJWajEzMy3j6wzWHVaG4A@mail.gmail.com>
+Subject: Re: [PATCH 1/8] PCI: Add pcibios_stop_dev()
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 11, 2013 at 02:25:42AM +0200, Rafael J. Wysocki wrote:
-> On Wednesday, July 03, 2013 05:04:50 PM Mika Westerberg wrote:
-> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> > 
-> > pci_scan_slot() returns number of new devices connected *directly*
-> > connected to the slot. Current enable_device() checks the return value
-> > and stops if it doesn't see a new device.
-> > 
-> > In Thunderbolt chaining case the new device can be deeper in hierarchy, so
-> > do the rescan anyway.
-> > 
-> > Because of that we must make sure that pcibios_resource_survey_bus() and
-> > check_hotplug_bridge() get called only for a just found bus and not the
-> > ones already added to the system. Failure to do so will lead to resource
-> > conflicts.
-> 
-> Well, I wonder what we're doing to this end, because there's nothing in that
-> area in the patch?
+On Fri, Jul 5, 2013 at 4:36 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Fri, 2013-07-05 at 12:49 -0600, Bjorn Helgaas wrote:
+>> We already have pcibios_release_device() (just merged for v3.11).
+>> Would that work for you?  I haven't seen your whole series, so I can't
+>> tell whether you need something different.
+>
+> Maybe... Gavin's original hook applies when the device is removed
+> from the tree, your new hook when the refcount expires and the
+> structure is about to be freed...
 
-We forgot to update the changelog of this patch. The last paragraph should
-not be there.
+Yep, pcibios_release_device() is definitely at a different point.  I
+just want to avoid exposing too many points in the device lifetime to
+the arch, because it makes it so much harder to refactor things.
+
+> I *suspect* that's fine but I'll need to have a closer look (or wait
+> for Gavin to be back from vacation :-)
+>
+> BTW. One thing we do in EEH is that if we get an error and the driver
+> for the device doesn't implement recovery, we simulate a hotplug.
+>
+> IE. We unplug the device (currently removing it), reset it (or the
+> bus it's on, whatever applies, which lifts the fence established by
+> the EEH hardware), and re-plug it.
+>
+> The current method really removes the device from the PCI subsystem,
+> and "plugs" it back. IE. We rescan the slot, and might even end up
+> re-assigning resources, which I'm not too fan about. It's also unclear
+> what quirks gets called in that re-plug case, etc...
+>
+> I'm wondering whether it might be better to keep the pci_dev around,
+> just mark it blocked for user access, unbind the driver, reset, restore
+> the BARs to their original values, unblock and re-bind.
+
+Personally, I like the full hotplug approach, even though it will
+probably reassign resources, because it uses the standard paths that
+should be better-tested, and it's clear what should happen.
+Reassigning resources should be OK because we already have to do that
+for the non-error handling hot-add case.
+
+I know we have paths where we save config space, do a reset, and
+restore config space.  I don't like those because some quirks aren't
+applied and I don't believe restoring config space is sufficient to
+make the device safe to use.  There could be internal state that we
+aren't restoring.  It's also possible that a firmware update means the
+device is different than it was before the reset, e.g., BARs could be
+different types or sizes.
+
+Bjorn
