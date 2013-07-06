@@ -1,61 +1,39 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: [PATCH v2 8/8] PCI: acpiphp: sanitize acpiphp_get_[latch|adapter]_status()
-Date: Wed,  3 Jul 2013 17:04:55 +0300
-Message-Id: <1372860295-8306-9-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:38581 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751091Ab3GFA3n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Jul 2013 20:29:43 -0400
+Message-ID: <1373070567.4446.14.camel@pasglop>
+Subject: Re: [PATCH] pci: Avoid unnecessary calls to work_on_cpu
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Duyck <alexander.h.duyck@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Date: Sat, 06 Jul 2013 10:29:27 +1000
+In-Reply-To: <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
+References: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com>
+	 <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need for a temporary variable and all the tricks with ternary
-operators. Change the functions to be a bit more straightforward.
+On Fri, 2013-07-05 at 17:36 -0600, Bjorn Helgaas wrote:
+> It seems a little strange to me that this "run the driver probe method
+> on the correct node" code is in PCI.  I would think this behavior
+> would be desirable for *all* bus types, not just PCI, so maybe it
+> would make sense to do this up in device_attach() or somewhere
+> similar.
+> 
+> But Rusty added this (in 873392ca51), and he knows way more about this
+> stuff than I do.
 
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+I tend to agree... I can see this being useful on some of our non-PCI
+devices on power as well in fact.
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 506f38f..810ca4c 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1271,11 +1271,7 @@ u8 acpiphp_get_power_status(struct acpiphp_slot *slot)
-  */
- u8 acpiphp_get_latch_status(struct acpiphp_slot *slot)
- {
--	unsigned int sta;
--
--	sta = get_slot_status(slot);
--
--	return (sta & ACPI_STA_DEVICE_UI) ? 0 : 1;
-+	return !(get_slot_status(slot) & ACPI_STA_DEVICE_UI);
- }
- 
- 
-@@ -1285,9 +1281,5 @@ u8 acpiphp_get_latch_status(struct acpiphp_slot *slot)
-  */
- u8 acpiphp_get_adapter_status(struct acpiphp_slot *slot)
- {
--	unsigned int sta;
--
--	sta = get_slot_status(slot);
--
--	return (sta == 0) ? 0 : 1;
-+	return !!get_slot_status(slot);
- }
--- 
-1.8.3.2
+Cheers,
+Ben.
+
 
