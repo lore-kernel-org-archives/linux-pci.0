@@ -1,147 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:61995 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755133Ab3GTVlB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jul 2013 17:41:01 -0400
-Received: by mail-bk0-f44.google.com with SMTP id 6so2048978bkj.17
-        for <linux-pci@vger.kernel.org>; Sat, 20 Jul 2013 14:40:59 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH 1/2] ACPI / PCI: Make bus registration and unregistration symmetric
+Date: Mon, 08 Jul 2013 01:17:53 +0200
+Message-ID: <16760289.CnqI28LtUE@vostro.rjw.lan>
+In-Reply-To: <1468174.eo7i60DZFT@vostro.rjw.lan>
+References: <1468174.eo7i60DZFT@vostro.rjw.lan>
 MIME-Version: 1.0
-From: Tom Gundersen <teg@jklm.no>
-Date: Sat, 20 Jul 2013 23:40:38 +0200
-Message-ID: <CAG-2HqUUznNH3oM=qCnuQ6d6oGeuHeEiP_0+6FD96d8SewKoug@mail.gmail.com>
-Subject: [PATCH][pciutils] libpci: pci_id_lookup - add udev/hwdb support
-To: linux-pci@vger.kernel.org
-Cc: Tom Gundersen <teg@jklm.no>, systemd-devel@lists.freedesktop.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Small correction to the subject, it should have said:
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-[PATCH][pciutils] libpci: pci_id_lookup - add udev/hwdb support
+Since acpi_pci_slot_enumerate() and acpiphp_enumerate_slots() can get
+the ACPI device handle they need from bus->bridge, it is not
+necessary to pass that handle to them as an argument.
 
-On Sat, Jul 20, 2013 at 10:44 PM, Tom Gundersen <teg@jklm.no> wrote:
-> This lets you select hwdb support at compile time.
->
-> hwdb is an efficient hardware database shipped with recent versions of systemd/udev. It contains
-> among other sources pci.ids so querying hwdb rather than reading pci.ids directly should give
-> the same result.
->
-> Ideally Linux distros using systemd would like to not ship pci.ids, but use hwdb as the only source
-> of this information, which this patch allows.
->
-> Cc: systemd-devel@lists.freedesktop.org
->
-> ---
->  lib/configure    | 17 ++++++++++++++++
->  lib/names-hash.c | 59 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
->  2 files changed, 74 insertions(+), 2 deletions(-)
->
-> diff --git a/lib/configure b/lib/configure
-> index 4ae20d4..674d3ea 100755
-> --- a/lib/configure
-> +++ b/lib/configure
-> @@ -141,6 +141,23 @@ esac
->  echo >>$c '#define PCI_HAVE_PM_DUMP'
->  echo " dump"
->
-> +echo_n "Checking for udev hwdb support... "
-> +if [ "$HWDB" = yes -o "$HWDB" = no ] ; then
-> +       echo "$HWDB (set manually)"
-> +else
-> +       if [ -f /usr/include/libudev.h -o -f /usr/local/include/libudev.h ] ; then
-> +               HWDB=yes
-> +       else
-> +               HWDB=no
-> +       fi
-> +       echo "$HWDB (auto-detected)"
-> +fi
-> +if [ "$HWDB" = yes ] ; then
-> +       echo >>$c '#define PCI_HAVE_HWDB'
-> +       echo >>$m 'LIBUDEV=-ludev'
-> +       echo >>$m 'WITH_LIBS+=$(LIBUDEV)'
-> +fi
-> +
->  echo_n "Checking for zlib support... "
->  if [ "$ZLIB" = yes -o "$ZLIB" = no ] ; then
->         echo "$ZLIB (set manually)"
-> diff --git a/lib/names-hash.c b/lib/names-hash.c
-> index 33f3c11..9661d03 100644
-> --- a/lib/names-hash.c
-> +++ b/lib/names-hash.c
-> @@ -11,6 +11,11 @@
->  #include "internal.h"
->  #include "names.h"
->
-> +#ifdef PCI_HAVE_HWDB
-> +#include <libudev.h>
-> +#include <stdio.h>
-> +#endif
-> +
->  struct id_bucket {
->    struct id_bucket *next;
->    unsigned int full;
-> @@ -86,8 +91,58 @@ char
->  *pci_id_lookup(struct pci_access *a, int flags, int cat, int id1, int id2, int id3, int id4)
->  {
->    struct id_entry *n, *best;
-> -  u32 id12 = id_pair(id1, id2);
-> -  u32 id34 = id_pair(id3, id4);
-> +  u32 id12, id34;
-> +
-> +#ifdef PCI_HAVE_HWDB
-> +  if (!(flags & PCI_LOOKUP_SKIP_LOCAL))
-> +    {
-> +      char modalias[64];
-> +      const char *key = NULL;
-> +      struct udev *udev = udev_new();
-> +      struct udev_hwdb *hwdb = udev_hwdb_new(udev);
-> +      struct udev_list_entry *entry;
-> +
-> +      switch(cat)
-> +        {
-> +        case ID_VENDOR:
-> +          sprintf(modalias, "pci:v%08X*", id1);
-> +          key = "ID_VENDOR_FROM_DATABASE";
-> +          break;
-> +        case ID_DEVICE:
-> +          sprintf(modalias, "pci:v%08Xd%08X*", id1, id2);
-> +          key = "ID_MODEL_FROM_DATABASE";
-> +          break;
-> +        case ID_SUBSYSTEM:
-> +          sprintf(modalias, "pci:v%08Xd%08Xsv%08Xsd%08X*", id1, id2, id3, id4);
-> +          key = "ID_MODEL_FROM_DATABASE";
-> +          break;
-> +        case ID_GEN_SUBSYSTEM:
-> +          sprintf(modalias, "pci:v*d*sv%08Xsd%08X*", id1, id2);
-> +          key = "ID_MODEL_FROM_DATABASE";
-> +          break;
-> +        case ID_CLASS:
-> +          sprintf(modalias, "pci:v*d*sv*sd*bc%02X*", id1);
-> +          key = "ID_PCI_CLASS_FROM_DATABASE";
-> +          break;
-> +        case ID_SUBCLASS:
-> +          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02X*", id1, id2);
-> +          key = "ID_PCI_SUBCLASS_FROM_DATABASE";
-> +          break;
-> +        case ID_PROGIF:
-> +          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02Xi%02X*", id1, id2, id3);
-> +          key = "ID_PCI_INTERFACE_FROM_DATABASE";
-> +          break;
-> +        }
-> +
-> +      if (key)
-> +          udev_list_entry_foreach(entry, udev_hwdb_get_properties_list_entry(hwdb, modalias, 0))
-> +              if (strcmp(udev_list_entry_get_name(entry), key) == 0)
-> +                return udev_list_entry_get_value(entry);
-> +    }
-> +#endif
-> +
-> +  id12 = id_pair(id1, id2);
-> +  id34 = id_pair(id3, id4);
->
->    if (a->id_hash)
->      {
-> --
-> 1.8.3.3
->
+Drop the second argument of acpi_pci_slot_enumerate() and
+acpiphp_enumerate_slots(), rework them to obtain the ACPI handle
+from bus->bridge and make acpi_pci_add_bus() and
+acpi_pci_remove_bus() entirely symmetrical.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/pci_slot.c            |   14 +++++++++-----
+ drivers/pci/hotplug/acpiphp_glue.c |    7 ++++---
+ drivers/pci/pci-acpi.c             |   16 ++++------------
+ include/linux/pci-acpi.h           |   10 ++++------
+ 4 files changed, 21 insertions(+), 26 deletions(-)
+
+Index: linux-pm/drivers/acpi/pci_slot.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_slot.c
++++ linux-pm/drivers/acpi/pci_slot.c
+@@ -159,12 +159,16 @@ register_slot(acpi_handle handle, u32 lv
+ 	return AE_OK;
+ }
+ 
+-void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle)
++void acpi_pci_slot_enumerate(struct pci_bus *bus)
+ {
+-	mutex_lock(&slot_list_lock);
+-	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
+-			    register_slot, NULL, bus, NULL);
+-	mutex_unlock(&slot_list_lock);
++	acpi_handle handle = ACPI_HANDLE(bus->bridge);
++
++	if (handle) {
++		mutex_lock(&slot_list_lock);
++		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
++				    register_slot, NULL, bus, NULL);
++		mutex_unlock(&slot_list_lock);
++	}
+ }
+ 
+ void acpi_pci_slot_remove(struct pci_bus *bus)
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1169,15 +1169,16 @@ static void handle_hotplug_event_func(ac
+  * Create hotplug slots for the PCI bus.
+  * It should always return 0 to avoid skipping following notifiers.
+  */
+-void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
++void acpiphp_enumerate_slots(struct pci_bus *bus)
+ {
+-	acpi_handle dummy_handle;
++	acpi_handle handle, dummy_handle;
+ 	struct acpiphp_bridge *bridge;
+ 
+ 	if (acpiphp_disabled)
+ 		return;
+ 
+-	if (detect_ejectable_slots(handle) <= 0)
++	handle = ACPI_HANDLE(bus->bridge);
++	if (!handle || detect_ejectable_slots(handle) <= 0)
+ 		return;
+ 
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -290,24 +290,16 @@ static struct pci_platform_pm_ops acpi_p
+ 
+ void acpi_pci_add_bus(struct pci_bus *bus)
+ {
+-	acpi_handle handle = NULL;
+-
+-	if (bus->bridge)
+-		handle = ACPI_HANDLE(bus->bridge);
+-	if (acpi_pci_disabled || handle == NULL)
++	if (acpi_pci_disabled || !bus->bridge)
+ 		return;
+ 
+-	acpi_pci_slot_enumerate(bus, handle);
+-	acpiphp_enumerate_slots(bus, handle);
++	acpi_pci_slot_enumerate(bus);
++	acpiphp_enumerate_slots(bus);
+ }
+ 
+ void acpi_pci_remove_bus(struct pci_bus *bus)
+ {
+-	/*
+-	 * bus->bridge->acpi_node.handle has already been reset to NULL
+-	 * when acpi_pci_remove_bus() is called, so don't check ACPI handle.
+-	 */
+-	if (acpi_pci_disabled)
++	if (acpi_pci_disabled || !bus->bridge)
+ 		return;
+ 
+ 	acpiphp_remove_slots(bus);
+Index: linux-pm/include/linux/pci-acpi.h
+===================================================================
+--- linux-pm.orig/include/linux/pci-acpi.h
++++ linux-pm/include/linux/pci-acpi.h
+@@ -47,24 +47,22 @@ void acpi_pci_remove_bus(struct pci_bus
+ 
+ #ifdef	CONFIG_ACPI_PCI_SLOT
+ void acpi_pci_slot_init(void);
+-void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle);
++void acpi_pci_slot_enumerate(struct pci_bus *bus);
+ void acpi_pci_slot_remove(struct pci_bus *bus);
+ #else
+ static inline void acpi_pci_slot_init(void) { }
+-static inline void acpi_pci_slot_enumerate(struct pci_bus *bus,
+-					   acpi_handle handle) { }
++static inline void acpi_pci_slot_enumerate(struct pci_bus *bus) { }
+ static inline void acpi_pci_slot_remove(struct pci_bus *bus) { }
+ #endif
+ 
+ #ifdef	CONFIG_HOTPLUG_PCI_ACPI
+ void acpiphp_init(void);
+-void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle);
++void acpiphp_enumerate_slots(struct pci_bus *bus);
+ void acpiphp_remove_slots(struct pci_bus *bus);
+ void acpiphp_check_host_bridge(acpi_handle handle);
+ #else
+ static inline void acpiphp_init(void) { }
+-static inline void acpiphp_enumerate_slots(struct pci_bus *bus,
+-					   acpi_handle handle) { }
++static inline void acpiphp_enumerate_slots(struct pci_bus *bus) { }
+ static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
+ static inline void acpiphp_check_host_bridge(acpi_handle handle) { }
+ #endif
+
