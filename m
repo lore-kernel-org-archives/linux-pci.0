@@ -1,80 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31749 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754700Ab3G2Vrq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Jul 2013 17:47:46 -0400
-Message-ID: <51F6E2DE.6090605@redhat.com>
-Date: Mon, 29 Jul 2013 17:47:10 -0400
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH 2/2] ACPI / PCI: Consolidate acpiphp_enumerate_slots()
+Date: Mon, 08 Jul 2013 01:19:11 +0200
+Message-ID: <19086237.bL5tD5Jvfs@vostro.rjw.lan>
+In-Reply-To: <1468174.eo7i60DZFT@vostro.rjw.lan>
+References: <1468174.eo7i60DZFT@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-CC: Stefan Assmann <sassmann@kpanic.de>, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, yu.zhao@intel.com
-Subject: Re: return value for "if (!dev->is_physfn)"
-References: <51F24788.6010505@kpanic.de> <51F2A735.2010405@intel.com> <51F6D519.3010506@redhat.com> <51F6E14A.8070100@intel.com>
-In-Reply-To: <51F6E14A.8070100@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/29/2013 05:40 PM, Alexander Duyck wrote:
-> On 07/29/2013 01:48 PM, Don Dutile wrote:
->> On 07/26/2013 12:43 PM, Alexander Duyck wrote:
->>> On 07/26/2013 02:55 AM, Stefan Assmann wrote:
->>>> Looking at drivers/pci/iov.c I see at least 3 different return values
->>>> for if (!dev->is_physfn).
->>>>
->>>> sriov_enable() and pci_enable_sriov()
->>>> [...]
->>>>      if (!dev->is_physfn)
->>>>          return -ENODEV;
->>>> pci_num_vf() and pci_vfs_assigned()
->>>> [...]
->>>>      if (!dev->is_physfn)
->>>>          return 0;
->>>> pci_sriov_set_totalvfs() and pci_sriov_get_totalvfs()
->>>> [...]
->>>>      if (!dev->is_physfn)
->>>>          return -EINVAL;
->>>>
->>>> I'd like to make this consistently return one of the above. Question
->>>> is,
->>>> which one should it be? I'd lean towards -ENODEV, other opinions?
->>>>
->>>>     Stefan
->>>
->>> It all depends on how the results are meant to be interpreted.
->>>
->>> In the case of pci_num_vf and pci_vfs_assigned the return of 0 is
->>> preferred since there are no VFs if the device is not a physical
->>> function.  I really think pci_sriov_get_totalvfs should probably just
->>> return 0 as well since it is simply supposed to return the total number
->>> of VFs supported on the device and 0 would be valid in this case.  Also
->>> that way the behavior is consistent if CONFIG_PCI_IOV is enabled or
->>> disabled in the kernel.
->>>
->> +1. returning enosys hangs the caller (echo/cat of sysfs) IIRC.
->>
->>> As for the rest my preference is ENOSYS rather than EINVAL or ENODEV.
->>> The issue is that the SR-IOV functionality is not implemented for the
->>> device or in the OS when we return the error so it would make sense to
->>> return that as an error code in these cases.
->>>
->>> Thanks,
->>>
->>> Alex
->>>
->
-> I am pretty sure it is safe to return ENOSYS since that is the return
-> value used if you try to write to sriov_numvfs but do not have
-> sriov_configure defined.  That was one of the things that gave me the
-> idea since it points to incomplete support for SR-IOV and returns a
-> message along the lines of "echo: write error: Function not implemented"
-> when trying to update those values.
->
-> Thanks,
->
-> Alex
-yeah, but i have a strong recollection i wanted to do the same (rtn ENOSYS)
-but testing showed otherwise... :-/
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+The acpiphp_enumerate_slots() function is now split into two parts,
+acpiphp_enumerate_slots() proper and init_bridge_misc() which is
+only called by the former.  If these functions are combined,
+it is possible to make the code easier to follow and to clean up
+the error handling (to prevent memory leaks on error from
+happening in particular), so do that.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   94 ++++++++++++++++++-------------------
+ 1 file changed, 46 insertions(+), 48 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -363,46 +363,6 @@ static int detect_ejectable_slots(acpi_h
+ 	return found;
+ }
+ 
+-/* initialize miscellaneous stuff for both root and PCI-to-PCI bridge */
+-static void init_bridge_misc(struct acpiphp_bridge *bridge)
+-{
+-	acpi_status status;
+-
+-	/* must be added to the list prior to calling register_slot */
+-	mutex_lock(&bridge_mutex);
+-	list_add(&bridge->list, &bridge_list);
+-	mutex_unlock(&bridge_mutex);
+-
+-	/* register all slot objects under this bridge */
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, (u32)1,
+-				     register_slot, NULL, bridge, NULL);
+-	if (ACPI_FAILURE(status)) {
+-		mutex_lock(&bridge_mutex);
+-		list_del(&bridge->list);
+-		mutex_unlock(&bridge_mutex);
+-		return;
+-	}
+-
+-	/* install notify handler for P2P bridges */
+-	if (!pci_is_root_bus(bridge->pci_bus)) {
+-		if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
+-			status = acpi_remove_notify_handler(bridge->func->handle,
+-						ACPI_SYSTEM_NOTIFY,
+-						handle_hotplug_event_func);
+-			if (ACPI_FAILURE(status))
+-				err("failed to remove notify handler\n");
+-		}
+-		status = acpi_install_notify_handler(bridge->handle,
+-					     ACPI_SYSTEM_NOTIFY,
+-					     handle_hotplug_event_bridge,
+-					     bridge);
+-
+-		if (ACPI_FAILURE(status)) {
+-			err("failed to register interrupt notify handler\n");
+-		}
+-	}
+-}
+-
+ 
+ /* find acpiphp_func from acpiphp_bridge */
+ static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
+@@ -1171,8 +1131,9 @@ static void handle_hotplug_event_func(ac
+  */
+ void acpiphp_enumerate_slots(struct pci_bus *bus)
+ {
+-	acpi_handle handle, dummy_handle;
+ 	struct acpiphp_bridge *bridge;
++	acpi_handle handle;
++	acpi_status status;
+ 
+ 	if (acpiphp_disabled)
+ 		return;
+@@ -1200,15 +1161,52 @@ void acpiphp_enumerate_slots(struct pci_
+ 	 */
+ 	get_device(&bus->dev);
+ 
+-	if (!pci_is_root_bus(bridge->pci_bus) &&
+-	    ACPI_SUCCESS(acpi_get_handle(bridge->handle,
+-					"_EJ0", &dummy_handle))) {
+-		dbg("found ejectable p2p bridge\n");
+-		bridge->flags |= BRIDGE_HAS_EJ0;
+-		bridge->func = acpiphp_bridge_handle_to_function(handle);
++	/* must be added to the list prior to calling register_slot */
++	mutex_lock(&bridge_mutex);
++	list_add(&bridge->list, &bridge_list);
++	mutex_unlock(&bridge_mutex);
++
++	/* register all slot objects under this bridge */
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
++				     register_slot, NULL, bridge, NULL);
++	if (ACPI_FAILURE(status)) {
++		acpi_handle_err(bridge->handle, "failed to register slots\n");
++		goto err;
+ 	}
+ 
+-	init_bridge_misc(bridge);
++	if (pci_is_root_bus(bridge->pci_bus))
++		return;
++
++	/* install notify handler for P2P bridges */
++	status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
++					     handle_hotplug_event_bridge,
++					     bridge);
++	if (ACPI_FAILURE(status)) {
++		acpi_handle_err(bridge->handle,
++				"failed to register notify handler\n");
++		goto err;
++	}
++
++	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
++	if (ACPI_FAILURE(status))
++		return;
++
++	dbg("found ejectable p2p bridge\n");
++	bridge->flags |= BRIDGE_HAS_EJ0;
++	bridge->func = acpiphp_bridge_handle_to_function(bridge->handle);
++	if (bridge->func) {
++		status = acpi_remove_notify_handler(bridge->func->handle,
++						    ACPI_SYSTEM_NOTIFY,
++						    handle_hotplug_event_func);
++		if (ACPI_FAILURE(status))
++			acpi_handle_err(bridge->func->handle,
++					"failed to remove notify handler\n");
++	}
++	return;
++
++ err:
++	cleanup_bridge(bridge);
++	put_bridge(bridge);
+ }
+ 
+ /* Destroy hotplug slots associated with the PCI bus */
 
