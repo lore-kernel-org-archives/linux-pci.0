@@ -1,109 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kamal Mostafa <kamal@canonical.com>
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	kernel-team@lists.ubuntu.com
-Cc: linux-pci@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Luis Henriques <luis.henriques@canonical.com>
-Subject: [PATCH 021/145] xen/pcifront: Deal with toolstack missing 'XenbusStateClosing' state.
-Date: Wed, 17 Jul 2013 15:45:53 -0700
-Message-Id: <1374101277-7915-22-git-send-email-kamal@canonical.com>
-In-Reply-To: <1374101277-7915-1-git-send-email-kamal@canonical.com>
-References: <1374101277-7915-1-git-send-email-kamal@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:18364 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751648Ab3GHQRv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Jul 2013 12:17:51 -0400
+Message-ID: <1373300262.2602.22.camel@ul30vt.home>
+Subject: Re: [PATCH v2 0/3] pci: ACS fixes & quirks
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
+	andihartmann@01019freenet.de, linux-kernel@vger.kernel.org
+Date: Mon, 08 Jul 2013 10:17:42 -0600
+In-Reply-To: <20130627222159.16564.38166.stgit@bling.home>
+References: <20130627222159.16564.38166.stgit@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-3.8.13.5 -stable review patch.  If anyone has any objections, please let me know.
+Ping.  Comments?
 
-------------------
+On Thu, 2013-06-27 at 16:39 -0600, Alex Williamson wrote:
+> v2:
+> 
+> Revised patch 1/ to match comments from Bjorn.  PCIe event collectors
+> and PCIe-to-PCI bridges now indicate that they do not support ACS.
+> I've reached out to try to get clarification on this, but I think it's
+> reasonable to proceed with a conservative approach until then.  I also
+> added PCI-to-PCIe bridges for the sake of being complete.  Also added
+> more comments about the purpose and behavior of pci_acs_enabled().  If
+> I've overlooked anything else that needs to be addressed, please let
+> me know.
+> 
+> Patch 2/ had no comments, it's unchanged.
+> 
+> Patch 3/ is added.  This was sent as an RFC nearly a year ago and
+> Joerg confirmed for us that these devices do not support p2p on AMD
+> systems with AMD IOMMU.  We can't simply use iommu_present() to test
+> for an IOMMU because it's setup just after we need this function.  
+> Instead we test for the ACPI IVRS table that describes the IOMMU.  It
+> would probably suffice to skip an actual AMD IOMMU check, but I don't
+> want it to later come bite us if these ASICs get re-used, maybe with
+> a different IOMMU, and don't make the same guarantees.
+> 
+> Joerg, I was also curious back when we investigated this patch if the
+> same rules hold true for these other southbridge devices:
+> 
+> 1002:43a0 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
+> 1002:43a1 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
+> 1002:43a2 SB900 PCI to PCI bridge (PCIE port 2)
+> 1002:43a3 SB900 PCI to PCI bridge (PCIE port 3)
+> 
+> If you remember or have contacts to poke, I'd be happy to follow-up
+> with another patch to add them.  Thanks,
+> 
+> Alex
+> 
+> ---
+> 
+> Alex Williamson (3):
+>       pci: Fix flaw in pci_acs_enabled()
+>       pci: Differentiate ACS controllable from enabled
+>       pci: ACS quirk for AMD southbridge
+> 
+> 
+>  drivers/pci/pci.c    |   93 +++++++++++++++++++++++++++++++++++++++++---------
+>  drivers/pci/quirks.c |   50 +++++++++++++++++++++++++++
+>  2 files changed, 127 insertions(+), 16 deletions(-)
 
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 
-commit 098b1aeaf4d6149953b8f1f8d55c21d85536fbff upstream.
-
-There are two tool-stack that can instruct the Xen PCI frontend
-and backend to change states: 'xm' (Python code with a daemon),
-and 'xl' (C library - does not keep state changes).
-
-With the 'xm', the path to disconnect a single PCI device (xm pci-detach
-<guest> <BDF>) is:
-
-4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
-
-The * is for states that the tool-stack sets. For 'xl', it is similar:
-
-4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
-
-Both of them also tear down the XenBus structure, so the backend
-state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
-
-When a PCI device is plugged back in (xm pci-attach <guest> <BDF>)
-both of them follow the same pattern:
-
-2(InitWait*), 3(Initialized*), 4(Connected*)->4(Connected).
-
-[xen-pcifront ignores the 2,3 state changes and only acts when
-4 (Connected) has been reached]
-
-Note that this is for a _single_ PCI device. If there were two
-PCI devices and only one was disconnected 'xm' would show the same
-state changes.
-
-The problem is that git commit 3d925320e9e2de162bd138bf97816bda8c3f71be
-("xen/pcifront: Use Xen-SWIOTLB when initting if required") introduced
-a mechanism to initialize the SWIOTLB when the Xen PCI front moves to
-Connected state. It also had some aggressive seatbelt code check that
-would warn the user if one tried to change to Connected state without
-hitting first the Closing state:
-
- pcifront pci-0: PCI frontend already installed!
-
-However, that code can be relaxed and we can continue on working
-even if the frontend is instructed to be the 'Connected' state with
-no devices and then gets tickled to be in 'Connected' state again.
-
-In other words, this 4(Connected)->5(Closing)->4(Connected) state
-was expected, while 4(Connected)->.... anything but 5(Closing)->4(Connected)
-was not. This patch removes that aggressive check and allows
-Xen pcifront to work with the 'xl' toolstack (for one or more
-PCI devices) and with 'xm' toolstack (for more than two PCI
-devices).
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-[v2: Added in the description about two PCI devices]
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
----
- drivers/pci/xen-pcifront.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 966abc6..f7197a7 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -678,10 +678,9 @@ static int pcifront_connect_and_init_dma(struct pcifront_device *pdev)
- 	if (!pcifront_dev) {
- 		dev_info(&pdev->xdev->dev, "Installing PCI frontend\n");
- 		pcifront_dev = pdev;
--	} else {
--		dev_err(&pdev->xdev->dev, "PCI frontend already installed!\n");
-+	} else
- 		err = -EEXIST;
--	}
-+
- 	spin_unlock(&pcifront_dev_lock);
- 
- 	if (!err && !swiotlb_nr_tbl()) {
-@@ -848,7 +847,7 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
- 		goto out;
- 
- 	err = pcifront_connect_and_init_dma(pdev);
--	if (err) {
-+	if (err && err != -EEXIST) {
- 		xenbus_dev_fatal(pdev->xdev, err,
- 				 "Error setting up PCI Frontend");
- 		goto out;
--- 
-1.8.1.2
 
