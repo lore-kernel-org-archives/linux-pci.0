@@ -1,67 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 15/16] ARM: dts: tegra: Increase prefetchable PCI memory space
-Date: Thu, 25 Jul 2013 10:53:29 -0700
-Message-Id: <1374774810-18459-16-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from one.firstfloor.org ([193.170.194.197]:51348 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793Ab3GHEhG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jul 2013 00:37:06 -0400
+Date: Mon, 8 Jul 2013 06:37:03 +0200
+From: Andi Kleen <andi@firstfloor.org>
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Andi Kleen <andi@firstfloor.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] pci: Avoid unnecessary calls to work_on_cpu
+Message-ID: <20130708043703.GT6123@two.firstfloor.org>
+References: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com>
+ <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
+ <87wqp1esff.fsf@rustcorp.com.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87wqp1esff.fsf@rustcorp.com.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jay Agarwal <jagarwal@nvidia.com>
+> > But Rusty added this (in 873392ca51), and he knows way more about this
+> > stuff than I do.
+> 
+> Actually, I just stopped the code from playing cpumask games, which is
+> what it used to do.
 
-Instead of evenly splitting the 512 MiB area between prefetchable and
-non-prefetchable memory spaces, increase the prefetchable memory space
-to 384 MiB while at the same time decreasing the non-prefetchable memory
-space to 128 MiB. This is a more useful default as most PCIe devices
-require more prefetchable than non-prefetchable memory.
+You're right the numa_node_id() check ptimization is not 100% safe on preempt 
+kernels and should be probably removed. Also I agree it would probably
+make sense to move it up to the generic device layer (although I'm not
+sure that other bus types really care that much about NUMA locality)
 
-Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
-Tested-by: Stephen Warren <swarren@nvidia.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- arch/arm/boot/dts/tegra20.dtsi | 4 ++--
- arch/arm/boot/dts/tegra30.dtsi | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+None of it seems to be a fatal problem though, so it boils down to
+"if someone cares enough to write a patch"
 
-diff --git a/arch/arm/boot/dts/tegra20.dtsi b/arch/arm/boot/dts/tegra20.dtsi
-index ecd016a..3add9ac2 100644
---- a/arch/arm/boot/dts/tegra20.dtsi
-+++ b/arch/arm/boot/dts/tegra20.dtsi
-@@ -473,8 +473,8 @@
- 		ranges = <0x82000000 0 0x80000000 0x80000000 0 0x00001000   /* port 0 registers */
- 			  0x82000000 0 0x80001000 0x80001000 0 0x00001000   /* port 1 registers */
- 			  0x81000000 0 0          0x82000000 0 0x00010000   /* downstream I/O */
--			  0x82000000 0 0xa0000000 0xa0000000 0 0x10000000   /* non-prefetchable memory */
--			  0xc2000000 0 0xb0000000 0xb0000000 0 0x10000000>; /* prefetchable memory */
-+			  0x82000000 0 0xa0000000 0xa0000000 0 0x08000000   /* non-prefetchable memory */
-+			  0xc2000000 0 0xa8000000 0xa8000000 0 0x18000000>; /* prefetchable memory */
- 
- 		clocks = <&tegra_car TEGRA20_CLK_PEX>,
- 			 <&tegra_car TEGRA20_CLK_AFI>,
-diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
-index c8facca..d81c52e 100644
---- a/arch/arm/boot/dts/tegra30.dtsi
-+++ b/arch/arm/boot/dts/tegra30.dtsi
-@@ -35,8 +35,8 @@
- 			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
- 			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
- 			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
--			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
--			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
-+			  0x82000000 0 0x20000000 0x20000000 0 0x08000000   /* non-prefetchable memory */
-+			  0xc2000000 0 0x28000000 0x28000000 0 0x18000000>; /* prefetchable memory */
- 
- 		clocks = <&tegra_car TEGRA30_CLK_PCIE>,
- 			 <&tegra_car TEGRA30_CLK_AFI>,
--- 
-1.8.1.5
-
+-Andi
