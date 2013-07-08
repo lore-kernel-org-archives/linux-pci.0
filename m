@@ -1,148 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:51686 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073Ab3GaJUT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jul 2013 05:20:19 -0400
-Message-ID: <51F8D5C9.4020309@huawei.com>
-Date: Wed, 31 Jul 2013 17:15:53 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
+Received: from mail.free-electrons.com ([94.23.35.102]:59530 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751279Ab3GHOwK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jul 2013 10:52:10 -0400
+Date: Mon, 8 Jul 2013 16:51:49 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jon Mason <jdmason@kudzu.us>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>, Joe Jin <joe.jin@oracle.com>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-References: <1360036520-31032-1-git-send-email-wangyijing@huawei.com> <51A42137.9090908@huawei.com> <CAErSpo7iyiq6H-BsPNO0Nyc1SF+JteOzBqNQ+d_D=RYE_pdTEA@mail.gmail.com> <51F73108.4070905@huawei.com> <CAErSpo4mHTwqrW-yq_1BkjD0GyFtVYZRm9+eGfASJ_aJCOagjg@mail.gmail.com> <CAErSpo4xJk7bHQihtdN1UP+6Y17TOrBFhEsO_Zwyvz8iQMEXsw@mail.gmail.com>
-In-Reply-To: <CAErSpo4xJk7bHQihtdN1UP+6Y17TOrBFhEsO_Zwyvz8iQMEXsw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: Re: [PATCHv4 04/11] PCI: Introduce new MSI chip infrastructure
+Message-ID: <20130708165149.55499b8e@skate>
+In-Reply-To: <CAErSpo4aodspFnC0uR87yYAgswQQdmU48uoX5NA43UZjbCpOuw@mail.gmail.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1372686136-1370-5-git-send-email-thomas.petazzoni@free-electrons.com>
+	<CAErSpo4aodspFnC0uR87yYAgswQQdmU48uoX5NA43UZjbCpOuw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> PCIe Spec does not explicitly mention this issue, we can only get the message that
->>> root port/ root complex can split the TLP into smaller packets. For instance
->>> one 256B packet split into two 128B packet.
->>>
->>> I confirm this issue in my X86 machine and IA64 machine.
->>> 1. I unload NIC driver to make sure the safety during  change the NIC MPS.
->>> 2. Use setpci change NIC MPS to the max value it supports.
->>> 3. Reload the NIC driver
->>> 4. Ping and use scp cpoy large file bwtween machines. Result is ok.
+Dear Bjorn Helgaas,
+
+On Fri, 5 Jul 2013 15:51:10 -0600, Bjorn Helgaas wrote:
+
+> >  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+> >  {
+> > +       struct msi_chip *chip = dev->bus->msi;
+> > +
+> > +       if (chip && chip->setup_irq) {
+> > +               int err;
+> > +
+> > +               err = chip->setup_irq(chip, dev, desc);
+> > +               if (err < 0)
+> > +                       return err;
+> > +
+> > +               irq_set_chip_data(desc->irq, chip);
+> > +               return err;
+> > +       }
+> > +
+> >         return -EINVAL;
 > 
-> Just as a way to confirm that the MPS change is actually doing
-> something, I assume you observe a performance difference between
-> MPS=128 and MPS=512 on the NIC (and the root port MPS=128 in both
-> cases)?  Or maybe you can confirm with an analyzer that there are
-> actually 512-byte TLPs on the link?
-
-Hi Bjorn,
-   I didn't observe a performance difference between MPS=128 and MPS=512. I use ping $dest_ip -s 65500(large size packet)
-to test the different situations.
-
-1. root port MPS = 128, EP MPS = 256.
-
-root port --------Endpoint device
-00:01.0           01:00.1
-
-In this case, I use ping in the local machine, and result is ok.
-linux:~ # ping 128.5.160.28 -s 65500
-PING 128.5.160.28 (128.5.160.28) 65500(65528) bytes of data.
-65508 bytes from 128.5.160.28: icmp_seq=1 ttl=64 time=1.43 ms
-65508 bytes from 128.5.160.28: icmp_seq=2 ttl=64 time=1.42 ms
-65508 bytes from 128.5.160.28: icmp_seq=3 ttl=64 time=1.41 ms
-65508 bytes from 128.5.160.28: icmp_seq=4 ttl=64 time=1.37 ms
-65508 bytes from 128.5.160.28: icmp_seq=5 ttl=64 time=1.43 ms
-..........
-
- \-[0000:00]-+-00.0  Intel Corporation 5500 I/O Hub to ESI Port
-             +-01.0-[01]--+-00.0  Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet
-             |            \-00.1  Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet
-
-linux:~ # lspci -vvv -s 01:00.1
-01:00.1 Ethernet controller: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet (rev 20)
-............[snip].............
-	Capabilities: [ac] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 512 bytes, PhantFunc 0, Latency L0s <4us, L1 <64us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-		DevCtl:	Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-			MaxPayload 256 bytes, MaxReadReq 512 bytes
-
-linux:~ # lspci -vvv -s 00:01.0
-00:01.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 1 (rev 22) (prog-if 00 [Normal decode])
-...........[snip]..............
-	Capabilities: [90] Express (v2) Root Port (Slot+), MSI 00
-		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-			ExtTag+ RBE+ FLReset-
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-			MaxPayload 128 bytes, MaxReadReq 128 bytes
-
-
-2. root port MPS = 256, EP MPS = 128.
-In this case, use "ping $dest_ip -s 65500" to test, but result is fail.
-
-So I guess the packet size during ping is larger than 128, EP device discard these TLPs.
-
-I have no analyzer to catch the TLP packets. So I can not Guarantee this conclusion(EP MPS larger than Root port is 100% safe).
-
+> It's sub-optimal to indent the whole body of a function like this.  I
+> think this is a bit more readable:
 > 
-> I assume there are no AER or other errors logged by the root port?
-Yes, AER is not support in local machine.
-
-> The test you showed was a copy *to* the local machine, so the NIC
-> would have been doing DMA writes to memory.  I assume it works equally
-> well doing a copy *from* the local machine to another machine across
-> the network, where the NIC is doing DMA reads from memory?
-
-Yes, I tested in both copy direction, and result is ok.
-
-> The only mention I can find in the spec is sec 1.3.1, where it says "a
-> Root Complex is generally permitted to split a packet into smaller
-> packets when routing transactions peer-to-peer between hierarchy
-> domains ..."
+>     if (!chip || !chip->setup_irq)
+>         return -EINVAL
 > 
-> I'm not a hardware guy (I often wish I were :)), but here's how I
-> interpret that statement.  Let's take the following example:
+>     err = chip->setup_irq(...);
+>     ...
+>     return err;
 > 
->   00:01.0 Root port bridge to [bus 01] MPS=128
->   01:00.1 Endpoint MPS=512
+> The return value of ->setup_irq() (and hence of arch_setup_msi_irq())
+> is a bit unclear.  Apparently it can return negative values (errors)
+> or positive values (not sure what they mean), or zero (again, not
+> sure).  A comment would clear this up.
+
+I've changed ->setup_irq() to simply return 0 on success, and a
+negative error code on failure.
+
+Apparently, according to the default implementation
+of arch_msi_setup_irqs(), the arch_msi_setup_irq() hook is supposed to
+return:
+ * A negative value on error, the value being an error code that is
+   propagated to the caller.
+ * A positive value on some other errors, in which case the -ENOSPC
+   error value is returned. To me, it doesn't make a lot of sense, as
+   arch_msi_setup_irq() could just as well return -ENOSPC directly.
+ * A 0 value on success.
+
+> It might even be worth introducing a no-op chip with pointers to no-op
+> functions so we don't have to do these checks ("if (chip &&
+> chip->xxx)" everywhere.  I'm not sure if there's a Linux consensus on
+> that -- certainly there are many examples of code that *does* make
+> these checks everywhere -- so I'll ack it either way.
+
+The problem with this is that I'm not sure where in the PCI code this
+association to the default implementation should be done. And there are
+also two levels to take into account here:
+
+ * The PCI driver may not specify any msi_chip structure for a
+   particular pci_bus. This would have to be detected by the PCI core
+   when the bus is registered, and bus->msi would be set to the special
+   no-op msi_chip.
+
+ * The PCI driver may specify an msi_chip structure, but without
+   necessarily implementation all the methods. This could be solved by
+   offering a pci_msi_chip_assign(struct pci_bus *, struct msi_chip *)
+   function to be used by PCI drivers to assign their msi_chip to a
+   given pci_bus, and this function would fill in the missing msi_chip
+   operations with the default implementation.
+
+I am not sure it is really worth doing at this point, but I'm open to
+suggestions on this.
+
+> >  int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> >  {
+> > +       struct msi_chip *chip = dev->bus->msi;
+> > +
+> > +       if (chip && chip->check_device)
+> > +               return chip->check_device(chip, dev, nvec, type);
+> > +
 > 
->   00:02.0 Root Port bridge to [bus 02] MPS=256
->   00:03.0 Root Port bridge to [bus 03] MPS=128
->   02:00.0 Endpoint MPS=256
->   03:00.0 Endpoint MPS=128
-> 
-> If 02:00.0 (MPS=256) generates a DMA write destined for 03:00.0, it
-> may transmit a TLP with a data payload of 256 bytes, and 00:02.0
-> (MPS=256 also) will accept it.  The root complex may route the packet
-> to 00:03.0 (MPS=128), and here it would need to be split into two
-> 128-byte TLPs before being transmitted by 00:03.0 to 03:00.0
-> (MPS=128).
-> 
-> Your situation is basically 01:00.1 (MPS=512) doing a DMA write
-> destined for memory and sending a 512-byte TLP to 00:01.0 (MPS=128).
-> In this case, the root complex isn't doing any peer-to-peer routing
-> between hierarchy domains, so I don't think the statement in sec 1.3.1
-> applies.  So I don't understand why the root port would accept that
-> TLP.  I would think it would report a malformed TLP error.
+> These functions are poorly named.  They give no clue what
+> "check_device" means.  Are we checking that it exists, that it
+> supports some property, that it's enabled, ... ?
 
-Hmmm, PCIe Spec does not involve too much about MPS setting. So maybe different platform
-has different strategy.
+Well the naming clearly doesn't come from this commit. The
+arch_msi_check_device() hook was around before this commit, and the
+reason the operation is named ->check_device() is just because it used
+the same terminology as the existing arch_msi_check_device() call.
 
-Conservatively, as a improvement for mps setting after hotplug. I think update mps setting equal to its parent
-make sense. This is no harm to other devices, we only modify the hotplug device itself mps register.
+This hook is only used in one place, the PowerPC architecture, in
+arch/powerpc/kernel/msi.c, to actually check whether the given device
+supports MSI.
 
-So if you agree, I will update my patch ,only try to modify hotplug device mps, make them equal to its parent.
+I can rename if to arch_msi_device_supports_msi() and
+->device_supports_msi(), or arch_msi_device_has_msi() and
+->device_has_msi(), but that a change that relatively unrelated to this
+commit, I'd say.
 
-Thanks!
-Yijing.
+Here as well, I'm open to suggestions,
 
-
-
+Thomas
 -- 
-Thanks!
-Yijing
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
