@@ -1,91 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20960 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932525Ab3GLLBj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 12 Jul 2013 07:01:39 -0400
-Message-ID: <51DFA9CA.7010807@redhat.com>
-Date: Fri, 12 Jul 2013 03:01:30 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org, joro@8bytes.org,
-	andihartmann@01019freenet.de, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/3] pci: ACS fixes & quirks
-References: <20130627222159.16564.38166.stgit@bling.home> <1373300262.2602.22.camel@ul30vt.home>
-In-Reply-To: <1373300262.2602.22.camel@ul30vt.home>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail.free-electrons.com ([94.23.35.102]:58631 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213Ab3GHLXt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jul 2013 07:23:49 -0400
+Date: Mon, 8 Jul 2013 13:23:35 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: Re: [PATCHv4 05/11] of: pci: add registry of MSI chips
+Message-ID: <20130708132335.37ff4ad4@skate>
+In-Reply-To: <1372686136-1370-6-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1372686136-1370-6-git-send-email-thomas.petazzoni@free-electrons.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/08/2013 12:17 PM, Alex Williamson wrote:
-> Ping.  Comments?
->
-As I read the PCIe & SRIOV specs wrt ACS, this patch set appears
-to fix the nuances we have learned about whether a device (MFD or bridge)
-implements (the equiv. of) ACS, or not, as required (for secure, device assignment).
-Like the layering of which flag bits to check based on ACS control/enablement,
-so it de-complicated the per-PCIe-type checking in pci_acs_enabled().
+Grant, Rob,
 
-You can add my ack to the patch set...
+Would it be possible to get your feeling about the below patch? Are you
+ok with the idea of this msi_chip registry, based on device_node
+pointer? This is the last piece of this patch set that needs an
+approval in terms of general approach.
 
-Acked-by: Donald Dutile <ddutile@redhat.com>
+I am at Linaro Connect this week, so if you want to discuss this live,
+do not hesitate to ping me.
 
-ps -- I'll patch a kernel & test it out on a few knarly configs I have back in 
-the lab
-         when I back from vacation and report any issues I find, if any.
+Thanks a lot,
 
-> On Thu, 2013-06-27 at 16:39 -0600, Alex Williamson wrote:
->> v2:
->>
->> Revised patch 1/ to match comments from Bjorn.  PCIe event collectors
->> and PCIe-to-PCI bridges now indicate that they do not support ACS.
->> I've reached out to try to get clarification on this, but I think it's
->> reasonable to proceed with a conservative approach until then.  I also
->> added PCI-to-PCIe bridges for the sake of being complete.  Also added
->> more comments about the purpose and behavior of pci_acs_enabled().  If
->> I've overlooked anything else that needs to be addressed, please let
->> me know.
->>
->> Patch 2/ had no comments, it's unchanged.
->>
->> Patch 3/ is added.  This was sent as an RFC nearly a year ago and
->> Joerg confirmed for us that these devices do not support p2p on AMD
->> systems with AMD IOMMU.  We can't simply use iommu_present() to test
->> for an IOMMU because it's setup just after we need this function.
->> Instead we test for the ACPI IVRS table that describes the IOMMU.  It
->> would probably suffice to skip an actual AMD IOMMU check, but I don't
->> want it to later come bite us if these ASICs get re-used, maybe with
->> a different IOMMU, and don't make the same guarantees.
->>
->> Joerg, I was also curious back when we investigated this patch if the
->> same rules hold true for these other southbridge devices:
->>
->> 1002:43a0 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
->> 1002:43a1 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
->> 1002:43a2 SB900 PCI to PCI bridge (PCIE port 2)
->> 1002:43a3 SB900 PCI to PCI bridge (PCIE port 3)
->>
->> If you remember or have contacts to poke, I'd be happy to follow-up
->> with another patch to add them.  Thanks,
->>
->> Alex
->>
->> ---
->>
->> Alex Williamson (3):
->>        pci: Fix flaw in pci_acs_enabled()
->>        pci: Differentiate ACS controllable from enabled
->>        pci: ACS quirk for AMD southbridge
->>
->>
->>   drivers/pci/pci.c    |   93 +++++++++++++++++++++++++++++++++++++++++---------
->>   drivers/pci/quirks.c |   50 +++++++++++++++++++++++++++
->>   2 files changed, 127 insertions(+), 16 deletions(-)
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thomas
 
+On Mon,  1 Jul 2013 15:42:10 +0200, Thomas Petazzoni wrote:
+> This commit adds a very basic registry of msi_chip structures, so that
+> an IRQ controller driver can register an msi_chip, and a PCIe host
+> controller can find it, based on a 'struct device_node'.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  drivers/of/of_pci.c    | 40 ++++++++++++++++++++++++++++++++++++++++
+>  include/linux/msi.h    |  2 ++
+>  include/linux/of_pci.h | 12 ++++++++++++
+>  3 files changed, 54 insertions(+)
+> 
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 42c687a..f516632 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -89,3 +89,43 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+> +
+> +#ifdef CONFIG_PCI_MSI
+> +
+> +static LIST_HEAD(msi_chip_list);
+> +static DEFINE_MUTEX(msi_chip_mutex);
+> +
+> +int of_msi_chip_add(struct msi_chip *chip)
+> +{
+> +	if (! of_property_read_bool(chip->of_node, "msi-controller"))
+> +		return -EINVAL;
+> +
+> +	mutex_lock(&msi_chip_mutex);
+> +	list_add(&chip->list, &msi_chip_list);
+> +	mutex_unlock(&msi_chip_mutex);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(of_msi_chip_add);
+> +
+> +void of_msi_chip_remove(struct msi_chip *chip)
+> +{
+> +	mutex_lock(&msi_chip_mutex);
+> +	list_del(&chip->list);
+> +	mutex_unlock(&msi_chip_mutex);
+> +}
+> +EXPORT_SYMBOL_GPL(of_msi_chip_remove);
+> +
+> +struct msi_chip *of_find_msi_chip_by_node(struct device_node *of_node)
+> +{
+> +	struct msi_chip *c;
+> +	list_for_each_entry(c, &msi_chip_list, list) {
+> +		if (c->of_node == of_node)
+> +			return c;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +EXPORT_SYMBOL_GPL(of_find_msi_chip_by_node);
+> +
+> +#endif /* CONFIG_PCI_MSI */
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index 5b357d92..9e1a44b 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -66,6 +66,8 @@ void default_teardown_msi_irqs(struct pci_dev *dev);
+>  struct msi_chip {
+>  	struct module *owner;
+>  	struct device *dev;
+> +	struct device_node *of_node;
+> +	struct list_head list;
+>  
+>  	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+>  			 struct msi_desc *desc);
+> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> index 7a04826..99e4361 100644
+> --- a/include/linux/of_pci.h
+> +++ b/include/linux/of_pci.h
+> @@ -2,6 +2,7 @@
+>  #define __OF_PCI_H
+>  
+>  #include <linux/pci.h>
+> +#include <linux/msi.h>
+>  
+>  struct pci_dev;
+>  struct of_irq;
+> @@ -13,4 +14,15 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+>  int of_pci_get_devfn(struct device_node *np);
+>  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+>  
+> +#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+> +int of_msi_chip_add(struct msi_chip *chip);
+> +void of_msi_chip_remove(struct msi_chip *chip);
+> +struct msi_chip *of_find_msi_chip_by_node(struct device_node *of_node);
+> +#else
+> +static inline int of_msi_chip_add(struct msi_chip *chip) { return -EINVAL; }
+> +static inline void of_msi_chip_remove(struct msi_chip *chip) { }
+> +static inline struct msi_chip *
+> +of_find_msi_chip_by_node(struct device_node *of_node) { return NULL };
+> +#endif
+> +
+>  #endif
+
+
+
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
