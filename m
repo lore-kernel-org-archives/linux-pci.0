@@ -1,62 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys part and Exynos part
-Date: Wed, 24 Jul 2013 23:02:40 +0200
-Cc: "'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-References: <002801ce8376$a807dbf0$f81793d0$@samsung.com> <51EE22DF.6090902@ti.com> <001301ce8772$522dfc50$f689f4f0$@samsung.com>
-In-Reply-To: <001301ce8772$522dfc50$f689f4f0$@samsung.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:34447 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751812Ab3GHNZL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Jul 2013 09:25:11 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 1/3] ACPI / hotplug / PCI: Always return success after adding a function
+Date: Mon, 08 Jul 2013 15:28:35 +0200
+Message-ID: <1502675.WMZKWG2iox@vostro.rjw.lan>
+In-Reply-To: <5361579.8un1t1TCfk@vostro.rjw.lan>
+References: <1468174.eo7i60DZFT@vostro.rjw.lan> <5361579.8un1t1TCfk@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201307242302.40934.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 23 July 2013, Jingoo Han wrote:
-> > 
-> > Also I have one more query.
-> > In your dt binding, your pci address and cpu address is the same. But the pci
-> > address should start at 0x00000000 and end at 0xffffffff (for 32bit). Shouldn't
-> > the cpu address map to something within this range of pci address?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-The size is limited by the window available (e.g. 0x80000000-0x8FFFFFFF), it can
-never be the full 4GB on a 32 bit non-LPAE system. If you only care about memory
-space here (in practice you want at least also config space) that means you could
-either have an identity map
+When a new ACPIPHP function is added by register_slot() and the
+notify handler cannot be installed for it, register_slot() returns an
+error status without cleaning up, which causes the entire namespace
+walk in acpiphp_enumerate_slots() to be aborted, although it still
+may be possible to successfully install the function notify handler
+for other device objects under the given brigde.
 
-	<0x82000000 0 0x80000000 0x80000000 0 0x1fffffff>;
+To address this issue make register_slot() return success after
+a new function has been added, even if the addition of the notify
+handler for it has failed.
 
-or use bus address 0
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-	<0x82000000 0 0 0x80000000 0 0x1fffffff>;
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -335,10 +335,9 @@ register_slot(acpi_handle handle, u32 lv
+ 
+ 		if (ACPI_FAILURE(status))
+ 			err("failed to register interrupt notify handler\n");
+-	} else
+-		status = AE_OK;
++	}
+ 
+-	return status;
++	return AE_OK;
+ 
+  err_exit:
+ 	bridge->nr_slots--;
 
-but the length is always limited by the upstream bus.
-
-> Sorry, I cannot answer it exactly.
-> DT binding was confirmed by Arnd Bergmann.
-> He will answer it exactly.
-
-Normally you want the pci and cpu addresses to be the same, i.e. identity mapped.
-This simplifies PCI bus master DMA as it ensures that there is no aliasing between
-PCI memory space and RAM addresses visible to the host.
-
-If you know that there is never any RAM at CPU address 0, you can also make the
-PCI memory space be mapped from bus address 0, which has the advantage of allowing
-access to low PCI addresses, e.g. for legacy VGA output using the 0xa0000-0xbffff
-range, but it's less common. In particular on x86 there is always an identity
-mapping.
-
-The driver should be able to handle any mapping that can be described by the binding
-and is physically possible to be programmed into the translation windows.
-
-	Arnd
