@@ -1,87 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:47737 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753311Ab3G2OcK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2013 10:32:10 -0400
-Received: by mail-ob0-f169.google.com with SMTP id wc20so3185001obb.0
-        for <linux-pci@vger.kernel.org>; Mon, 29 Jul 2013 07:32:09 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Rusty Russell <rusty@rustcorp.com.au>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: "linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Andi Kleen" <andi@firstfloor.org>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] pci: Avoid unnecessary calls to work_on_cpu
+In-Reply-To: <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
+References: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com> <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
+Date: Mon, 08 Jul 2013 11:14:51 +0930
+Message-ID: <87wqp1esff.fsf@rustcorp.com.au>
 MIME-Version: 1.0
-In-Reply-To: <1374657972-2456-1-git-send-email-wangyijing@huawei.com>
-References: <1374657972-2456-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 29 Jul 2013 08:31:49 -0600
-Message-ID: <CAErSpo4jww8mX61-tw8aTXtv5TR2fCg_+6pfwPKHdwB=iL=mBA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: update NumVFs register properly during
- enable/disable sriov
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Don Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Don]
+Bjorn Helgaas <bhelgaas@google.com> writes:
+> [+cc Rusty]
+>
+> On Mon, Jun 24, 2013 at 2:05 PM, Alexander Duyck
+> <alexander.h.duyck@intel.com> wrote:
+>> This patch is meant to address the fact that we are making unnecessary calls
+>> to work_on_cpu.  To resolve this I have added a check to see if the current
+>> node is the correct node for the device before we decide to assign the probe
+>> task to another CPU.
+>>
+>> The advantages to this approach is that we can avoid reentrant calls to
+>> work_on_cpu.  In addition we should not make any calls to setup the work
+>> remotely in the case of a single node system that has NUMA enabled.
+>
+> The description above makes it sound like this is just a minor
+> performance enhancement, but I think the real reason you want this is
+> to resolve the lockdep warning mentioned at [1].  That thread is long
+> and confusing, so I'd like to see a bugzilla that distills out the
+> useful details, and a synopsis in this changelog.
+>
+> [1] https://lkml.kernel.org/r/1368498506-25857-7-git-send-email-yinghai@kernel.org
+>
+>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>> ---
+>>
+>> This patch is based off of work I submitted in an earlier patch that I never
+>> heard back on.  The change was originally submitted in:
+>>   pci: Avoid reentrant calls to work_on_cpu
+>>
+>> I'm not sure what ever happened with that patch, however after reviewing it
+>> some myself I decided I could do without the change to the comments since they
+>> were unneeded.  As such I am resubmitting this as a much simpler patch that
+>> only adds the line of code needed to avoid calling work_on_cpu for every call
+>> to probe on an NUMA node specific device.
+>>
+>>  drivers/pci/pci-driver.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 79277fb..7d81713 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -282,7 +282,7 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+>>            its local memory on the right node without any need to
+>>            change it. */
+>>         node = dev_to_node(&dev->dev);
+>> -       if (node >= 0) {
+>> +       if ((node >= 0) && (node != numa_node_id())) {
+>>                 int cpu;
+>>
+>>                 get_online_cpus();
+>
+> I think it's theoretically unsafe to use numa_node_id() while
+> preemption is enabled.
+>
+> It seems a little strange to me that this "run the driver probe method
+> on the correct node" code is in PCI.  I would think this behavior
+> would be desirable for *all* bus types, not just PCI, so maybe it
+> would make sense to do this up in device_attach() or somewhere
+> similar.
+>
+> But Rusty added this (in 873392ca51), and he knows way more about this
+> stuff than I do.
 
-On Wed, Jul 24, 2013 at 3:26 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Currently, we only update NumVFs register during sriov_enable().
-> This register should also be updated properly during sriov_disable.
-> Otherwise, we will get the stale "Number of VFs" info from lspci.
+Actually, I just stopped the code from playing cpumask games, which is
+what it used to do.
 
-Has this always been broken, or was it broken by a recent change?
+You want Andi and/or Greg KH:
 
-Can you post a transcript demonstrating what's going wrong?  Doesn't
-have to be in the changelog unless it's short, but just something to
-help reproduce the problem.
+commit d42c69972b853fd33a26c8c7405624be41a22136
+Author: Andi Kleen <ak@suse.de>
+Date:   Wed Jul 6 19:56:03 2005 +0200
 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/iov.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index de8ffac..6e4844b 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -286,7 +286,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->             (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
->                 return -EINVAL;
->
-> -       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
->         pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
->         pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
->         if (!offset || (nr_virtfn > 1 && !stride))
-> @@ -334,6 +333,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->                         return rc;
->         }
->
-> +       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
->         iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
->         pci_cfg_access_lock(dev);
->         pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> @@ -368,6 +368,7 @@ failed:
->         iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->         pci_cfg_access_lock(dev);
->         pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> +       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
->         ssleep(1);
->         pci_cfg_access_unlock(dev);
->
-> @@ -401,6 +402,7 @@ static void sriov_disable(struct pci_dev *dev)
->                 sysfs_remove_link(&dev->dev.kobj, "dep_link");
->
->         iov->num_VFs = 0;
-> +       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
->  }
->
->  static int sriov_init(struct pci_dev *dev, int pos)
-> --
-> 1.7.1
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    [PATCH] PCI: Run PCI driver initialization on local node
+    
+    Run PCI driver initialization on local node
+    
+    Instead of adding messy kmalloc_node()s everywhere run the
+    PCI driver probe on the node local to the device.
+    
+    This would not have helped for IDE, but should for
+    other more clean drivers that do more initialization in probe().
+    It won't help for drivers that do most of the work
+    on first open (like many network drivers)
+    
+    Signed-off-by: Andi Kleen <ak@suse.de>
+    Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+Cheers,
+Rusty.
