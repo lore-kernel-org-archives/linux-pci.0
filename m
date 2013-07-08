@@ -1,117 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
-Date: Thu, 18 Jul 2013 01:05:53 +0200
-Message-ID: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:45660 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447Ab3GHFNV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jul 2013 01:13:21 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	linux-kernel@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>
+References: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
+ <51D6A370.7060604@st.com> <002801ce7b98$e1520f60$a3f62e20$@samsung.com>
+In-reply-to: <002801ce7b98$e1520f60$a3f62e20$@samsung.com>
+Subject: Re: [PATCH] pci: exynos: split into two parts such as Synopsys part
+ and Exynos part
+Date: Mon, 08 Jul 2013 14:13:12 +0900
+Message-id: <002901ce7b99$d7e42930$87ac7b90$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
-
-Now the series has been rebased on top of current linux-pm.git/linux-next
-and tested on two systems with Thunderbolt.  Some changes have been made too. ->
-
-On Friday, July 12, 2013 01:34:20 AM Rafael J. Wysocki wrote:
-> Hi,
+On Monday, July 08, 2013 2:06 PM, Jingoo Han wrote:
+> On Friday, July 05, 2013 7:44 PM, Pratyush Anand wrote:
+> > On 7/5/2013 1:59 PM, Jingoo Han wrote:
+> > > Exynos PCIe IP consists of Synopsys specific part and Exynos
+> > > specific part. Only core block is a Synopsys designware part;
+> > > other parts are Exynos specific.
+> > > Also, the Synopsys designware part can be shared with other
+> > > platforms; thus, it can be split two parts such as Synopsys
+> > > designware part and Exynos specific part.
+> > >
+> >
+> > A quick and nice job :)
+> > Just few minor comments.
 > 
-> I've made some progress with my ACPIPHP rework since I posted the series last
-> time and here goes an update.
-> 
-> First off, the previous series was somewhat racy, which should be fixed now.
-> Apart from this there's quite some new material on top of the patches I posted
-> last time (or rather on top of their new versions) and I integrated the
-> Thunderbolt series from Mika with that.  As a result,
-> 
-> https://patchwork.kernel.org/patch/2817341/
-> 
-> is required to be applied.
-> 
-> Still untested, still based on 3.10 with ACPI+PM 3.11 material merged on top,
-> but this time I don't have any plans to add more patches to the series for the
-> time being.  Also 3.11-rc1 should be out in a couple of days, so I'll be able
-> to integrate this work with the previous cleanups series from Gerry and myself
-> on top of it.
-> 
-> I did my best not to change too much at a time and some steps add stuff that
-> is removed by the subsequent ones, so hopefully it is bisectable.
-> 
-> If anyone finds something questionable or outright bogus in these patches,
-> please let me know before it's too late. ;-)
-> 
-> [ 1/30] Make bus registration and unregistration symmetric.  [Resend]
-> [ 2/30] Consolidate acpiphp_enumerate_slots().  [Resend]
-> [ 3/30] Fix error code path in register_slot().  [Resend]
-> [ 4/30] Introduce hotplug context objects for ACPI device objects corresponding
->         to PCI hotplug devices.  [Update]
-> [ 5/30] Unified notify handler for hotplug events.  [Update]
-> [ 6/30] Drop acpiphp_handle_to_bridge() and use context objects instead of it.  [Update]
-> [ 7/30] Pass entire hotplug context objects (instead of their fields
->         individually) to event handling work functions.  [Update]
-> [ 8/30] Merge hotplug event handling functions.  [Update]
-> [ 9/30] Drop func field from struct acpiphp_bridge.
-> [10/30] Refactor slot allocation code in register_slot().
-> [11/30] Make acpiphp_enumerate_slots() to register all devices on the given bus
->         and install the notification handler for all of them.
-> [12/30] Drop sun field from struct acpiphp_slot.
-> [13/30] Use common slot count variable in register_slot().
+> Thank you.
+> Without your comment, it could be done. :)
 
--> The one above has been dropped, because it might cause regressions to appear
-on some systems, but that's not a big deal.
+Oops, it is a typo.
+Without your comment, it could 'NOT' be done. :)
 
-The numbering of the patches below has changed as a result, so the next one is
-[13/30] now and so on.
+Thank you for your comment.
+It is very helpful.
 
-> [14/30] Drop flags field from struct acpiphp_bridge.
-> [15/30] Embed function structure into struct acpiphp_context.
-> [16/30] Drop handle field from struct acpiphp_func.
-> [17/30] Drop handle field from struct acpiphp_bridge.
-> [18/30] Store parent bridge pointer in function objects and bus pointer in slot
->         objects.
-> [19/30] Rework ACPI namespace scanning and trimming routines.
-> [20/30] Drop redundant checks from check_hotplug_bridge().
-> [21/30] Consolidate slot disabling and ejecting
-> [22/30] Do not queue up event handling work items for non-hotplug events.
-> [23/30] Do not execute _PS0 and _PS3 directly.
-
-This one was fixed after Mika had reported a problem with it.
-
-> [24/30] Do not check SLOT_ENABLED in enable_device().  [Thunderbolt series]
-> [25/30] Allow slots without new devices to be rescanned.  [Thunderbolt series]
-> [26/30] Check for new devices on enabled slots.  [Thunderbolt series, TBD]
-
-This one was reworked to use acpi_bus_trim() on ACPI device objects
-corresponding to PCI devices being removed (it also uses _STA to check the
-status of those devices if available).
-
-> [27/30] Get rid of unused constands in acpiphp.h.  [Thunderbolt series]
-> [28/30] Sanitize acpiphp_get_(latch)|(adapter)_status().  [Thunderbolt series]
-> [29/30] Redefine enable_device() and disable_device() (rename and change to void).
-> [30/30] Clean up the usage of bridge_mutex.
-
-The one above is [29/30] now and we have added one more patch:
-
-[30/30] Drop check_sub_bridges() which isn't necessary any more.
-
-The updated patches follow.
-
-If you don't hate this stuff, I'll put it into linux-next over the weekend for
-further testing.
-
-Thanks,
-Rafael
+Best regards,
+Jingoo Han
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
