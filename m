@@ -1,56 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 26/30] ACPI / hotplug / PCI: Get rid of unused constants in acpiphp.h
-Date: Thu, 18 Jul 2013 01:33:35 +0200
-Message-ID: <1974915.VDAFJRxMt9@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:18660 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751945Ab3GIUjg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Jul 2013 16:39:36 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 1/3] [SCSI] megaraid: Remove 64-bit DMA_BIT_MASK capability
+To: megaraidlinux@lsi.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 09 Jul 2013 14:39:33 -0600
+Message-ID: <20130709203933.31676.88171.stgit@amt.stowe>
+In-Reply-To: <20130709203927.31676.35169.stgit@amt.stowe>
+References: <20130709203927.31676.35169.stgit@amt.stowe>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+If the megaraid device is 64-bit DMA capable then, once it is setup, any
+subsequent DMA allocations for "internal commands" would not be properly
+restricted due to megaraid_probe_one() having called pci_set_dma_mask() on
+pdev with DMA_BIT_MASK(64).  The driver attempts to solve this by using
+make_local_pdev() to dynamically create local pci_dev structures which are
+then set and used for allocating 32-bit address space restricted DMA
+buffers but I don't believe that the implementation works as intended.
 
-Drop some unused symbols from acpiphp.h and redefine SLOT_ENABLED
-(which is the only slot flag now) as 1.
+For a 64-bit DMA capable device, the "originating pdev" will have its
+'dma_mask' set to 0xffffffffffffffff after the driver attaches.
+Subsequently, when an internal command is initiated, make_local_pdev() is
+called.  make_local_pdev() uses the PCI's core to allocate a "local pdev"
+and then copies the "originating pdev" content into the newly allocated
+"local pdev".  As a result of copying the "originating pdev" content into
+the "local pdev", pdev->dev.dma_mask will be pointing back to the
+"originating pdev's" 'dma_mask' member, not the "local pdev's" as
+intended.  Thus, when make_local_pdev() calls pci_set_dma_mask() in an
+attempt to set the "local pdev's" DMA mask to 32 it will instead overwrite
+the "originating pdev's" DMA mask.  So, after any user initiated commands
+are issued, all subsequent DMA allocations will be 32-bit restricted from
+that point onward regardless of whether they are internal commands or
+otherwise.
 
-[rjw: Redefinition of SLOT_ENABLED, changelog]
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This patch fixes the issue by removing the setup of DMA_BIT_MASK to 64 in
+megaraid_probe_one(), leaving the driver setup for default 32-bit DMA
+capabilities, as it currently ends up in such a state anyway after any
+internal commands are initiated.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
-drivers/pci/hotplug/acpiphp.h | 4 ----
- drivers/pci/hotplug/acpiphp.h |    6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -154,16 +154,12 @@ struct acpiphp_attention_info
- 	struct module *owner;
- };
+ drivers/scsi/megaraid.c |   11 +++--------
+ 1 files changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 846f475..32cca61 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -4535,14 +4535,9 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	mcontroller[i].uid = (pci_bus << 8) | pci_dev_func;
  
--/* PCI bus bridge HID */
--#define ACPI_PCI_HOST_HID		"PNP0A03"
--
- /* ACPI _STA method value (ignore bit 4; battery present) */
- #define ACPI_STA_ALL			(0x0000000f)
  
- /* slot flags */
- 
--#define SLOT_ENABLED		(0x00000002)
--#define SLOT_MULTIFUNCTION	(0x00000004)
-+#define SLOT_ENABLED		(0x00000001)
- 
- /* function flags */
- 
+-	/* Set the Mode of addressing to 64 bit if we can */
+-	if ((adapter->flag & BOARD_64BIT) && (sizeof(dma_addr_t) == 8)) {
+-		pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
+-		adapter->has_64bit_addr = 1;
+-	} else  {
+-		pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+-		adapter->has_64bit_addr = 0;
+-	}
++	/* Set the Mode of addressing to 32 bit */
++	pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++	adapter->has_64bit_addr = 0;
+ 		
+ 	mutex_init(&adapter->int_mtx);
+ 	init_completion(&adapter->int_waitq);
 
