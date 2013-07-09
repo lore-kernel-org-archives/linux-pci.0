@@ -1,51 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:25705 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753649Ab3GIISZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 04:18:25 -0400
-Message-ID: <51DBC73E.7080401@huawei.com>
-Date: Tue, 9 Jul 2013 16:18:06 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: Re: [RFC][PATCH 6/8] ACPI / hotplug / PCI: Drop acpiphp_handle_to_bridge()
+Date: Wed, 10 Jul 2013 01:46:05 +0200
+Message-ID: <1584852.Uglv2uCyLO@vostro.rjw.lan>
+In-Reply-To: <20130709093726.GK4898@intel.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3804403.VVlzfJfUyu@vostro.rjw.lan> <20130709093726.GK4898@intel.com>
 MIME-Version: 1.0
-To: Paul Bolle <pebolle@tiscali.nl>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH 2/2] PCI,pciehp: avoid add a device already exist during
- pciehp_resume
-References: <1373356564-21668-1-git-send-email-wangyijing@huawei.com> <1373357261.1633.4.camel@x61.thuisdomein>
-In-Reply-To: <1373357261.1633.4.camel@x61.thuisdomein>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> In this case, we can improve it a little by add a guard
->> if (!list_empty(bus->devices)).
+On Tuesday, July 09, 2013 12:37:26 PM Mika Westerberg wrote:
+> On Tue, Jul 09, 2013 at 02:20:31AM +0200, Rafael J. Wysocki wrote:
+> > @@ -953,37 +937,49 @@ static void acpiphp_sanitize_bus(struct
+> >   * ACPI event handlers
+> >   */
+> >  
+> > -static acpi_status
+> > -check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+> > +static acpi_status check_sub_bridges(acpi_handle handle, u32 lvl, void *data,
+> > +				     void **rv)
+> >  {
+> > -	struct acpiphp_bridge *bridge;
+> > -	char objname[64];
+> > -	struct acpi_buffer buffer = { .length = sizeof(objname),
+> > -				      .pointer = objname };
+> > +	struct acpiphp_context *context = acpiphp_get_context(handle);
+> > +
+> > +	if (!context)
+> > +		return AE_OK;
+> >  
+> > -	bridge = acpiphp_handle_to_bridge(handle);
+> > -	if (bridge) {
+> > +	if (context->bridge) {
+> > +		struct acpiphp_bridge *bridge = context->bridge;
+> > +		char objname[64];
+> > +		struct acpi_buffer buffer = { .length = sizeof(objname),
+> > +					      .pointer = objname };
+> > +
+> > +		get_bridge(bridge);
+> >  		acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+> > -		dbg("%s: re-enumerating slots under %s\n",
+> > -			__func__, objname);
+> > +		dbg("%s: re-enumerating slots under %s\n", __func__, objname);
 > 
-> Great!
-> 
-> I'm currently trying to bisect another problem, but hope to test this
-> patch (and the preceding patch it apparently needs) in a few days.
-> Please feel free to prod me if you think testing is needed but I'm
-> taking to long to report back.
+> Although not related to this patch directly, how about using
+> acpi_handle_debug() or similar here?
 
-Hi Paul,
-   Thank you for helping test. Because I have no machine to test this case,
-so your test report is very important, it can help us going in the right way
-to solve this problem.
+Well, we don't have acpi_handle_debug() and I remember there was a reason why,
+but I can't recall what the reason was at the moment. :-)
 
-Thanks!
-Yijing.
-
-> 
-> 
-> .
-> 
-
-
+> >  		acpiphp_check_bridge(bridge);
+> >  		put_bridge(bridge);
+> >  	}
+> > +	acpiphp_put_context(context);
+> >  	return AE_OK ;
+> >  }
 -- 
-Thanks!
-Yijing
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
