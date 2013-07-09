@@ -1,80 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:35137 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753505Ab3GIANW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Jul 2013 20:13:22 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 3/8] ACPI / hotplug / PCI: Always return success after adding a function
+Date: Tue, 09 Jul 2013 02:17:34 +0200
+Message-ID: <3387129.165JytWxXq@vostro.rjw.lan>
+In-Reply-To: <26431283.HJCKsss0rt@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com>
-References: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 5 Jul 2013 17:36:01 -0600
-Message-ID: <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
-Subject: Re: [PATCH] pci: Avoid unnecessary calls to work_on_cpu
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rusty]
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Mon, Jun 24, 2013 at 2:05 PM, Alexander Duyck
-<alexander.h.duyck@intel.com> wrote:
-> This patch is meant to address the fact that we are making unnecessary calls
-> to work_on_cpu.  To resolve this I have added a check to see if the current
-> node is the correct node for the device before we decide to assign the probe
-> task to another CPU.
->
-> The advantages to this approach is that we can avoid reentrant calls to
-> work_on_cpu.  In addition we should not make any calls to setup the work
-> remotely in the case of a single node system that has NUMA enabled.
+When a new ACPIPHP function is added by register_slot() and the
+notify handler cannot be installed for it, register_slot() returns an
+error status without cleaning up, which causes the entire namespace
+walk in acpiphp_enumerate_slots() to be aborted, although it still
+may be possible to successfully install the function notify handler
+for other device objects under the given brigde.
 
-The description above makes it sound like this is just a minor
-performance enhancement, but I think the real reason you want this is
-to resolve the lockdep warning mentioned at [1].  That thread is long
-and confusing, so I'd like to see a bugzilla that distills out the
-useful details, and a synopsis in this changelog.
+To address this issue make register_slot() return success after
+a new function has been added, even if the addition of the notify
+handler for it has failed.
 
-[1] https://lkml.kernel.org/r/1368498506-25857-7-git-send-email-yinghai@kernel.org
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
-> ---
->
-> This patch is based off of work I submitted in an earlier patch that I never
-> heard back on.  The change was originally submitted in:
->   pci: Avoid reentrant calls to work_on_cpu
->
-> I'm not sure what ever happened with that patch, however after reviewing it
-> some myself I decided I could do without the change to the comments since they
-> were unneeded.  As such I am resubmitting this as a much simpler patch that
-> only adds the line of code needed to avoid calling work_on_cpu for every call
-> to probe on an NUMA node specific device.
->
->  drivers/pci/pci-driver.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 79277fb..7d81713 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -282,7 +282,7 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
->            its local memory on the right node without any need to
->            change it. */
->         node = dev_to_node(&dev->dev);
-> -       if (node >= 0) {
-> +       if ((node >= 0) && (node != numa_node_id())) {
->                 int cpu;
->
->                 get_online_cpus();
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -335,10 +335,9 @@ register_slot(acpi_handle handle, u32 lv
+ 
+ 		if (ACPI_FAILURE(status))
+ 			err("failed to register interrupt notify handler\n");
+-	} else
+-		status = AE_OK;
++	}
+ 
+-	return status;
++	return AE_OK;
+ 
+  err_exit:
+ 	bridge->nr_slots--;
 
-I think it's theoretically unsafe to use numa_node_id() while
-preemption is enabled.
-
-It seems a little strange to me that this "run the driver probe method
-on the correct node" code is in PCI.  I would think this behavior
-would be desirable for *all* bus types, not just PCI, so maybe it
-would make sense to do this up in device_attach() or somewhere
-similar.
-
-But Rusty added this (in 873392ca51), and he knows way more about this
-stuff than I do.
-
-Bjorn
