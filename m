@@ -1,182 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:38989 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753279Ab3GKX6u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Jul 2013 19:58:50 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 26/30] ACPI / hotplug / PCI: Check for new devices on enabled slots
-Date: Fri, 12 Jul 2013 02:04:26 +0200
-Message-ID: <2151956.sN7iU9NUtE@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1373348531-31893-1-git-send-email-zhen-hual@hp.com>
+References: <1373348531-31893-1-git-send-email-zhen-hual@hp.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 9 Jul 2013 10:49:49 -0600
+Message-ID: <CAErSpo6pCrzCOuthrgD_+oRyw7ZhqztVSi=ti336s2h5xeH_uA@mail.gmail.com>
+Subject: Re: [PATCH 1/1] ia64/pci: set mmio decoding on for some host bridge
+To: "Li, Zhen-Hua" <zhen-hual@hp.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Subject: 
+On Mon, Jul 8, 2013 at 11:42 PM, Li, Zhen-Hua <zhen-hual@hp.com> wrote:
+> On some IA64 platforms with intel PCI bridge, for example, HP BL890c i2
+> with  Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port,
+> when kernel tries to disable the mmio decoding on the PCI bridge devices,
+> kernel may crash.
+>
+> And in the comment of function quirk_mmio_always_on, it also says:
+> "But doing so (disable the mmio decoding) may cause problems on host bridge
+>  and perhaps other key system devices"
+>
+> So, for this PCI bridge,  dev->mmio_always_on bit should be set to 1.
+>
+> To avoid affecting the use of quirk_mmio_always_on, a new function is created.
+>
+> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+> ---
+>  drivers/pci/quirks.c    |   17 +++++++++++++++++
+>  include/linux/pci_ids.h |    1 +
+>  2 files changed, 18 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index e85d230..665af3e 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -44,6 +44,23 @@ static void quirk_mmio_always_on(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
+>                                 PCI_CLASS_BRIDGE_HOST, 8, quirk_mmio_always_on);
+>
+> +#ifdef CONFIG_IA64
+> +/*
+> + * On some IA64 platforms, for some intel PCI bridge devices, for example,
+> + * the Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port,
+> + * disable the mmio decoding on this device may cause system crash.
+> + * So dev->mmio_always_on bit should be set to 1.
+> + */
+> +static void quirk_mmio_on_intel_pcibridge(struct pci_dev *dev)
+> +{
+> +       dev->mmio_always_on = 1;
+> +}
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL,
+> +                       PCI_DEVICE_ID_INTEL_5520_5550_X58,
+> +                       PCI_CLASS_BRIDGE_PCI,
+> +                       8, quirk_mmio_on_intel_pcibridge);
+> +#endif
+> +
+>  /* The Mellanox Tavor device gives false positive parity errors
+>   * Mark this device with a broken_parity_status, to allow
+>   * PCI scanning code to "skip" this now blacklisted device.
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 3bed2e8..d8c60b7 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2742,6 +2742,7 @@
+>  #define PCI_DEVICE_ID_INTEL_LYNNFIELD_MC_CH2_RANK_REV2  0x2db2
+>  #define PCI_DEVICE_ID_INTEL_LYNNFIELD_MC_CH2_TC_REV2    0x2db3
+>  #define PCI_DEVICE_ID_INTEL_82855PM_HB 0x3340
+> +#define PCI_DEVICE_ID_INTEL_5520_5550_X58       0x3408
+>  #define PCI_DEVICE_ID_INTEL_IOAT_TBG4  0x3429
+>  #define PCI_DEVICE_ID_INTEL_IOAT_TBG5  0x342a
+>  #define PCI_DEVICE_ID_INTEL_IOAT_TBG6  0x342b
+> --
+> 1.7.10.4
+>
 
-The current implementation of acpiphp_check_bridge() is pretty dumb:
- - It enables a slot if it's not enabled and the slot status is
-   ACPI_STA_ALL.
- - It disables a slot if it's enabled and the slot status is not
-   ACPI_STA_ALL.
+You need to figure out what the problem is, not just avoid it.  It's
+very unlikely that the problem is something unique to ia64.  In fact,
+I think it's very doubtful that the problem is even something unique
+to the 5520 root ports.  My guess is there's something special about
+the system you're testing.
 
-This behavior is not sufficient to handle the Thunderbolt daisy
-chaining case properly, however, because in that case the bus
-behind the already enabled slot needs to be rescanned for new
-devices.
+Evidently you have traffic going to a device behind the root port at
+the same time as we're trying to read the root port's BARs.  Linux
+should not generate traffic like that while we're enumerating the root
+port.  Does the problem happen on a root port with an iLO behind it?
+Can you collect "lspci -vvv" output and identify the root port where
+the problem occurs?
 
-For this reason, modify acpiphp_check_bridge() so that slots are
-disabled and stopped if they are not in the ACPI_STA_ALL state.
-
-For slots in the ACPI_STA_ALL state devices that don't respond
-are trimmed using a new function, pci_trim_stale_devices(),
-introduced specifically for this purpose.  That function walks
-the given bus and checks each device on it.  If the device doesn't
-respond, it is assumed to be gone and removed.
-
-Once all of the stale device objects on the bus have been removed,
-we start looking for new devices that might have appeared on that
-bus.  We do that even if the slot is already enabled (SLOT_ENABLED).
-
-Moreover, make the bus check notification ignore SLOT_ENABLED and
-go for enable_device() directly if bridge is NULL, so that devices
-behind the slot are re-enumerated in that case too.
-
-[rjw: Rebased, modified the changelog]
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   49 +++++++++++++++----------------------
- drivers/pci/remove.c               |   20 +++++++++++++++
- include/linux/pci.h                |    1 
- 3 files changed, 42 insertions(+), 28 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -705,41 +705,30 @@ static unsigned int get_slot_status(stru
-  * Iterate over all slots under this bridge and make sure that if a
-  * card is present they are enabled, and if not they are disabled.
-  */
--static int acpiphp_check_bridge(struct acpiphp_bridge *bridge)
-+static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
- {
- 	struct acpiphp_slot *slot;
--	int retval = 0;
--	int enabled, disabled;
--
--	enabled = disabled = 0;
- 
- 	list_for_each_entry(slot, &bridge->slots, node) {
--		unsigned int status = get_slot_status(slot);
--		if (slot->flags & SLOT_ENABLED) {
--			if (status == ACPI_STA_ALL)
--				continue;
--
--			retval = acpiphp_disable_and_eject_slot(slot);
--			if (retval)
--				goto err_exit;
-+		struct pci_bus *bus = slot->bus;
-+		struct pci_dev *dev, *tmp;
-+
-+		mutex_lock(&slot->crit_sect);
-+		/* wake up all functions */
-+		if (get_slot_status(slot) == ACPI_STA_ALL) {
-+			/* remove stale devices if any */
-+			list_for_each_entry_safe(dev, tmp, &bus->devices,
-+						 bus_list)
-+				if (PCI_SLOT(dev->devfn) == slot->device)
-+					pci_trim_stale_devices(dev);
- 
--			disabled++;
-+			/* configure all functions */
-+			enable_device(slot);
- 		} else {
--			if (status != ACPI_STA_ALL)
--				continue;
--			retval = acpiphp_enable_slot(slot);
--			if (retval) {
--				err("Error occurred in enabling\n");
--				goto err_exit;
--			}
--			enabled++;
-+			disable_device(slot);
- 		}
-+		mutex_unlock(&slot->crit_sect);
- 	}
--
--	dbg("%s: %d enabled, %d disabled\n", __func__, enabled, disabled);
--
-- err_exit:
--	return retval;
- }
- 
- static void acpiphp_set_hpp_values(struct pci_bus *bus)
-@@ -840,7 +829,11 @@ static void hotplug_event(acpi_handle ha
- 					    ACPI_UINT32_MAX, check_sub_bridges,
- 					    NULL, NULL, NULL);
- 		} else {
--			acpiphp_enable_slot(func->slot);
-+			struct acpiphp_slot *slot = func->slot;
-+
-+			mutex_lock(&slot->crit_sect);
-+			enable_device(slot);
-+			mutex_unlock(&slot->crit_sect);
- 		}
- 		break;
- 
-Index: linux-pm/drivers/pci/remove.c
-===================================================================
---- linux-pm.orig/drivers/pci/remove.c
-+++ linux-pm/drivers/pci/remove.c
-@@ -112,6 +112,26 @@ void pci_stop_and_remove_bus_device(stru
- }
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
- 
-+/**
-+ * pci_trim_stale_devices - remove stale device or any stale child
-+ */
-+void pci_trim_stale_devices(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->subordinate;
-+	struct pci_dev *child, *tmp;
-+	bool alive;
-+	u32 l;
-+
-+	/* check if the device responds */
-+	alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l, 0);
-+	if (!alive)
-+		pci_stop_and_remove_bus_device(dev);
-+
-+	if (alive && bus)
-+		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
-+			pci_trim_stale_devices(child);
-+}
-+
- void pci_stop_root_bus(struct pci_bus *bus)
- {
- 	struct pci_dev *child, *tmp;
-Index: linux-pm/include/linux/pci.h
-===================================================================
---- linux-pm.orig/include/linux/pci.h
-+++ linux-pm/include/linux/pci.h
-@@ -754,6 +754,7 @@ struct pci_dev *pci_dev_get(struct pci_d
- void pci_dev_put(struct pci_dev *dev);
- void pci_remove_bus(struct pci_bus *b);
- void pci_stop_and_remove_bus_device(struct pci_dev *dev);
-+void pci_trim_stale_devices(struct pci_dev *dev);
- void pci_stop_root_bus(struct pci_bus *bus);
- void pci_remove_root_bus(struct pci_bus *bus);
- void pci_setup_cardbus(struct pci_bus *bus);
-
+Bjorn
