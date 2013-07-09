@@ -1,127 +1,305 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56301 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752926Ab3GBRmv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jul 2013 13:42:51 -0400
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-In-Reply-To: <CAErSpo7GQ8M1rpWnez+=SByR_wmyAnJH7wfqdY20ZcvXW9_90Q@mail.gmail.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com>
- <20130702104406.4473EE0090@blue.fi.intel.com>
- <CAErSpo7GQ8M1rpWnez+=SByR_wmyAnJH7wfqdY20ZcvXW9_90Q@mail.gmail.com>
-Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the
- hierarhcy
-Message-Id: <20130702174542.18099E0090@blue.fi.intel.com>
-Date: Tue,  2 Jul 2013 20:45:42 +0300 (EEST)
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 2/3] [SCSI] megaraid: Remove local pdev's
+To: megaraidlinux@lsi.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 09 Jul 2013 14:39:39 -0600
+Message-ID: <20130709203939.31676.34588.stgit@amt.stowe>
+In-Reply-To: <20130709203927.31676.35169.stgit@amt.stowe>
+References: <20130709203927.31676.35169.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas wrote:
-> On Tue, Jul 2, 2013 at 4:44 AM, Kirill A. Shutemov
-> <kirill.shutemov@linux.intel.com> wrote:
-> > Mika Westerberg wrote:
-> >> The acpiphp driver finds out whether the device is hotpluggable by checking
-> >> whether it has _RMV method behind it (and if it returns 1). However, at
-> >> least Acer Aspire S5 with Thunderbolt host router has this method placed
-> >> behind device called EPUP (endpoint upstream port?) and not directly behind
-> >> the root port as can be seen from the ASL code below:
-> >>
-> >> Device (RP05)
-> >> {
-> >>       ...
-> >>       Device (HRUP)
-> >>       {
-> >>               Name (_ADR, Zero)
-> >>               Name (_PRW, Package (0x02)
-> >>               {
-> >>                       0x09,
-> >>                       0x04
-> >>               })
-> >>               Device (HRDN)
-> >>               {
-> >>                       Name (_ADR, 0x00040000)
-> >>                       Name (_PRW, Package (0x02)
-> >>                       {
-> >>                               0x09,
-> >>                               0x04
-> >>                       })
-> >>                       Device (EPUP)
-> >>                       {
-> >>                               Name (_ADR, Zero)
-> >>                               Method (_RMV, 0, NotSerialized)
-> >>                               {
-> >>                                       Return (One)
-> >>                               }
-> >>                       }
-> >>               }
-> >>       }
-> >>
-> >> If we want to support such machines we must look for the _RMV method a bit
-> >> deeper in the hierarchy. Fix this by changing pcihp_is_ejectable() to check
-> >> few more devices down from the root port.
-> >
-> > We found that this approach is broken. We've got false positive: host
-> > bridge itself was detected as hotplugable slot %) I think it's not
-> > acceptable.
-> >
-> > Mika has tried few more approaches, but we haven't found anything better
-> > then hardcoded path like in original workaround patch[1]. It's not generic
-> > at all, but safe from false positives.
-> >
-> > Any thoughts?
-> >
-> > [1] http://article.gmane.org/gmane.linux.kernel.pci/19102
-> 
-> The changelog of this patch ([1]) says "Correct ACPI PCI hotplug
-> implementation should have _RMV method in a PCI slot (device under pci
-> bridge). In Acer Aspire S5 case we have it deeper in hierarchy ..."
-> 
-> This is exactly what I mean about acpiphp being brittle because of the
-> assumptions it makes about the ACPI namespace.  Is there actually
-> something in the spec that requires the _RMV method to be where
-> pcihp_is_ejectable() expects it?
+With the driver now setup for default 32-bit DMA capabilities, remove the
+broken make_local_pdev() implementation and usages.
 
-Spec says that _RMV indicates the device which can be removed.
-Rest, I believe, are assumptions: if the device is removable, then parent
-must be a hotpluggable slot.
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-It looks reasonable, but doesn't work in this case. And it's not obvious
-how we can generalize the assumption to cover the case.
+ drivers/scsi/megaraid.c |   98 ++++++++---------------------------------------
+ 1 files changed, 16 insertions(+), 82 deletions(-)
 
-> I'm not 100% dead-set against merging the workaround with hard-coded
-> path, but I still don't think it's a good idea.  It "fixes" it for one
-> particular machine, but there will likely be other machines that
-> require similar fixes in the future.  It makes it harder for somebody
-> to clean up the design later, because that person won't have an Aspire
-> S5 to test.  It makes it less likely that somebody *will* clean it up
-> later, because "everything is already working."
-> 
-> That's why my preference (given infinite resources) would be to rework
-> acpiphp now, while people are interested and can test it.  I'm sure
-> this would be a major redesign of acpiphp and its interaction with
-> pciehp, but I think it's something we're going to have to do at some
-> point.
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 32cca61..316924c 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -2023,29 +2023,6 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+ 	return FALSE;
+ }
+ 
+-static inline int
+-make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+-{
+-	*pdev = alloc_pci_dev();
+-
+-	if( *pdev == NULL ) return -1;
+-
+-	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
+-
+-	if( pci_set_dma_mask(*pdev, DMA_BIT_MASK(32)) != 0 ) {
+-		kfree(*pdev);
+-		return -1;
+-	}
+-
+-	return 0;
+-}
+-
+-static inline void
+-free_local_pdev(struct pci_dev *pdev)
+-{
+-	kfree(pdev);
+-}
+-
+ /**
+  * mega_allocate_inquiry()
+  * @dma_handle - handle returned for dma address
+@@ -2209,13 +2186,10 @@ proc_show_rebuild_rate(struct seq_file *m, void *v)
+ 	adapter_t	*adapter = m->private;
+ 	dma_addr_t	dma_handle;
+ 	caddr_t		inquiry;
+-	struct pci_dev	*pdev;
+-
+-	if( make_local_pdev(adapter, &pdev) != 0 )
+-		return 0;
++	struct pci_dev	*pdev = adapter->dev;
+ 
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
+-		goto free_pdev;
++		return 0;
+ 
+ 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
+ 		seq_puts(m, "Adapter inquiry failed.\n");
+@@ -2233,8 +2207,6 @@ proc_show_rebuild_rate(struct seq_file *m, void *v)
+ 
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+-free_pdev:
+-	free_local_pdev(pdev);
+ 	return 0;
+ }
+ 
+@@ -2252,14 +2224,11 @@ proc_show_battery(struct seq_file *m, void *v)
+ 	adapter_t	*adapter = m->private;
+ 	dma_addr_t	dma_handle;
+ 	caddr_t		inquiry;
+-	struct pci_dev	*pdev;
++	struct pci_dev	*pdev = adapter->dev;
+ 	u8	battery_status;
+ 
+-	if( make_local_pdev(adapter, &pdev) != 0 )
+-		return 0;
+-
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
+-		goto free_pdev;
++		return 0;
+ 
+ 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
+ 		seq_printf(m, "Adapter inquiry failed.\n");
+@@ -2308,8 +2277,6 @@ proc_show_battery(struct seq_file *m, void *v)
+ 
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+-free_pdev:
+-	free_local_pdev(pdev);
+ 	return 0;
+ }
+ 
+@@ -2357,18 +2324,15 @@ proc_show_pdrv(struct seq_file *m, adapter_t *adapter, int channel)
+ 	char		*scsi_inq;
+ 	dma_addr_t	scsi_inq_dma_handle;
+ 	caddr_t		inquiry;
+-	struct pci_dev	*pdev;
++	struct pci_dev	*pdev = adapter->dev;
+ 	u8	*pdrv_state;
+ 	u8	state;
+ 	int	tgt;
+ 	int	max_channels;
+ 	int	i;
+ 
+-	if( make_local_pdev(adapter, &pdev) != 0 )
+-		return 0;
+-
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
+-		goto free_pdev;
++		return 0;
+ 
+ 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
+ 		seq_puts(m, "Adapter inquiry failed.\n");
+@@ -2453,8 +2417,6 @@ free_pci:
+ 	pci_free_consistent(pdev, 256, scsi_inq, scsi_inq_dma_handle);
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+-free_pdev:
+-	free_local_pdev(pdev);
+ 	return 0;
+ }
+ 
+@@ -2533,17 +2495,14 @@ proc_show_rdrv(struct seq_file *m, adapter_t *adapter, int start, int end )
+ 	char		*disk_array;
+ 	dma_addr_t	disk_array_dma_handle;
+ 	caddr_t		inquiry;
+-	struct pci_dev	*pdev;
++	struct pci_dev	*pdev = adapter->dev;
+ 	u8	*rdrv_state;
+ 	int	num_ldrv;
+ 	u32	array_sz;
+ 	int	i;
+ 
+-	if( make_local_pdev(adapter, &pdev) != 0 )
+-		return 0;
+-
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
+-		goto free_pdev;
++		return 0;
+ 
+ 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
+ 		seq_puts(m, "Adapter inquiry failed.\n");
+@@ -2694,8 +2653,6 @@ free_pci:
+ 			disk_array_dma_handle);
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+-free_pdev:
+-	free_local_pdev(pdev);
+ 	return 0;
+ }
+ 
+@@ -3164,6 +3121,7 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 			return (-ENODEV);
+ 
+ 		adapter = hba_soft_state[adapno];
++		pdev = adapter->dev;
+ 
+ 		/*
+ 		 * Deletion of logical drive is a special case. The adapter
+@@ -3208,12 +3166,10 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 
+ 		/*
+ 		 * For all internal commands, the buffer must be allocated in
+-		 * <4GB address range
++		 * <4GB address range.
++		 *
++		 * Is it a passthru command or a DCMD
+ 		 */
+-		if( make_local_pdev(adapter, &pdev) != 0 )
+-			return -EIO;
+-
+-		/* Is it a passthru command or a DCMD */
+ 		if( uioc.uioc_rmbox[0] == MEGA_MBOXCMD_PASSTHRU ) {
+ 			/* Passthru commands */
+ 
+@@ -3221,10 +3177,8 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 					sizeof(mega_passthru),
+ 					&pthru_dma_hndl);
+ 
+-			if( pthru == NULL ) {
+-				free_local_pdev(pdev);
++			if( pthru == NULL )
+ 				return (-ENOMEM);
+-			}
+ 
+ 			/*
+ 			 * The user passthru structure
+@@ -3241,8 +3195,6 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 						sizeof(mega_passthru), pthru,
+ 						pthru_dma_hndl);
+ 
+-				free_local_pdev(pdev);
+-
+ 				return (-EFAULT);
+ 			}
+ 
+@@ -3260,8 +3212,6 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 							pthru,
+ 							pthru_dma_hndl);
+ 
+-					free_local_pdev(pdev);
+-
+ 					return (-ENOMEM);
+ 				}
+ 
+@@ -3331,8 +3281,6 @@ freemem_and_return:
+ 			pci_free_consistent(pdev, sizeof(mega_passthru),
+ 					pthru, pthru_dma_hndl);
+ 
+-			free_local_pdev(pdev);
+-
+ 			return rval;
+ 		}
+ 		else {
+@@ -3345,10 +3293,8 @@ freemem_and_return:
+ 				data = pci_alloc_consistent(pdev,
+ 						uioc.xferlen, &data_dma_hndl);
+ 
+-				if( data == NULL ) {
+-					free_local_pdev(pdev);
++				if( data == NULL )
+ 					return (-ENOMEM);
+-				}
+ 
+ 				uxferaddr = MBOX(uioc)->xferaddr;
+ 			}
+@@ -3367,8 +3313,6 @@ freemem_and_return:
+ 							uioc.xferlen,
+ 							data, data_dma_hndl);
+ 
+-					free_local_pdev(pdev);
+-
+ 					return (-EFAULT);
+ 				}
+ 			}
+@@ -3391,8 +3335,6 @@ freemem_and_return:
+ 							data_dma_hndl);
+ 				}
+ 
+-				free_local_pdev(pdev);
+-
+ 				return rval;
+ 			}
+ 
+@@ -3413,8 +3355,6 @@ freemem_and_return:
+ 						data_dma_hndl);
+ 			}
+ 
+-			free_local_pdev(pdev);
+-
+ 			return rval;
+ 		}
+ 
+@@ -4068,22 +4008,18 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, u8 tgt,
+ 	dma_addr_t	pthru_dma_handle;
+ 	megacmd_t	mc;
+ 	int		rval;
+-	struct pci_dev	*pdev;
++	struct pci_dev	*pdev = adapter->dev;
+ 
+ 
+ 	/*
+ 	 * For all internal commands, the buffer must be allocated in <4GB
+ 	 * address range
+ 	 */
+-	if( make_local_pdev(adapter, &pdev) != 0 ) return -1;
+-
+ 	pthru = pci_alloc_consistent(pdev, sizeof(mega_passthru),
+ 			&pthru_dma_handle);
+ 
+-	if( pthru == NULL ) {
+-		free_local_pdev(pdev);
++	if( pthru == NULL )
+ 		return -1;
+-	}
+ 
+ 	pthru->timeout = 2;
+ 	pthru->ars = 1;
+@@ -4117,8 +4053,6 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, u8 tgt,
+ 	pci_free_consistent(pdev, sizeof(mega_passthru), pthru,
+ 			pthru_dma_handle);
+ 
+-	free_local_pdev(pdev);
+-
+ 	return rval;
+ }
+ #endif
 
-Basically, we run out of ideas. Any input is welcome! :)
-
-For now we can post new version of patchset without the workaround and
-come back later with workaround (or proper solution if we'll find any).
-
-Does it work for you? Or you prefer everything in one patchset?
-
--- 
- Kirill A. Shutemov
