@@ -1,99 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:37707 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750902Ab3GXMsf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Jul 2013 08:48:35 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
-Date: Wed, 24 Jul 2013 14:58:38 +0200
-Message-ID: <6958813.eThhpoh5QO@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQURY5WFFJekPHV_s0HPi8uhKzSDOLSXHAkyLPf1=i8oAw@mail.gmail.com>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3215120.cRBBS5jciE@vostro.rjw.lan> <CAE9FiQURY5WFFJekPHV_s0HPi8uhKzSDOLSXHAkyLPf1=i8oAw@mail.gmail.com>
+Received: from mail-qe0-f50.google.com ([209.85.128.50]:37102 "EHLO
+	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237Ab3GIWMo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 18:12:44 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1373404695.18560.17.camel@dabdike>
+References: <20130709203927.31676.35169.stgit@amt.stowe>
+	<1373404695.18560.17.camel@dabdike>
+Date: Tue, 9 Jul 2013 15:12:43 -0700
+Message-ID: <CAHtARFHbEz8UQUjh5cPSFYDxqW93EmFz7aiQ=91hfkDj0fCWdQ@mail.gmail.com>
+Subject: Re: [PATCH 0/3] [SCSI] megaraid: Remove local (struct pci_dev) pdev's
+From: adam radford <aradford@gmail.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 23, 2013 07:20:53 PM Yinghai Lu wrote:
-> On Tue, Jul 23, 2013 at 2:39 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+On Tue, Jul 9, 2013 at 2:18 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Tue, 2013-07-09 at 14:39 -0600, Myron Stowe wrote:
+>> Is the "megaraid" driver still actively used and maintained?  I originally
+>> posted this series on 06.07.2013 and after receiving no comments, pinged
+>> the list again on 06.17.2013 and still received no comments/feedback.
+>>
+>> Trying again as I believe there is a real issue here, which I'd like
+>> confirmation on, and we really should remove the local copy/usage of
+>> 'struct pci_dev' that this driver currently maintains.
+>>
+>>
+>> While the megaraid device itself may be 64-bit DMA capable, 32-bit address
+>> restricted DMA buffers are apparently required for "internal commands" as
+>> is denoted by a couple of comments - "For all internal commands, the
+>> buffer must be allocated in <4GB address range" - within the driver.
+>>
+>> If the device is 64-bit DMA capable then, once it is setup, any subsequent
+>> DMA allocations for "internal commands" would not be properly restricted
+>> due to megaraid_probe_one() having called pci_set_dma_mask() on pdev with
+>> DMA_BIT_MASK(64).  The driver attempts to solve this by using
+>> make_local_pdev() to dynamically create local pci_dev structures which are
+>> then set and used for allocating 32-bit address space restricted DMA
+>> buffers[1] but I don't believe that the implementation works as intended.
+>>
+>>
+>> Assume that the megaraid device is 64-bit DMA capable.  While probing the
+>> device and attaching the megaraid driver, pci_set_dma_mask() is called
+>> with the "originating pdev" and a DMA_BIT_MASK of 64.  As a result, any
+>> subsequent dynamic DMA related allocations associated with the
+>> "originating pdev" will acquire 64-bit based buffers, which do not meet
+>> the addressing restrictions for internal commands.
+>>
+>>   megaraid_probe_one(struct pci_dev *pdev, ...)
+>>       ...
+>>       pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
+>>
+>> As mentioned, the driver attempts to solve this by using make_local_pdev()
+>> to dynamically create local pci_dev structures - "local pdev's" - which
+>> are set with a DMA_BIT_MASK of 32.
+>>
+>>   make_local_pdev
+>>       alloc_pci_dev
+>>       memcpy
+>>       pci_set_dma_mask
+>>           dma_set_mask
+>>               *dev->dma_mask = mask;
+>>
+>> The "local pdev" is then used in allocating a DMA buffer in an attempt to
+>> meet the < 4 GB restriction.
+>>
+>> For a 64-bit DMA capable device, the "originating pdev" will have its
+>> 'dma_mask' set to 0xffffffffffffffff after the driver attaches.
+>> Subsequently, when an internal command is initiated, make_local_pdev() is
+>> called.  make_local_pdev() uses the PCI's core to allocate a "local pdev"
+>> and then copies the "originating pdev" content into the newly allocated
+>> "local pdev".  As a result of copying the "originating pdev" content into
+>> the "local pdev", pdev->dev.dma_mask will be pointing back to the
+>> "originating pdev's" 'dma_mask' member, not the "local pdev's" as
+>> intended.  Thus, when make_local_pdev() calls pci_set_dma_mask() in an
+>> attempt to set the "local pdev's" DMA mask to 32 it will instead overwrite
+>> the "originating pdev's" DMA mask.  Thus, after any user initiated
+>> commands are issued, all subsequent DMA allocations will be 32-bit
+>> restricted from that point onward regardless of whether they are internal
+>> commands or otherwise.
+>>
+>>
+>> This patch fixes the issue by removing the setup of DMA_BIT_MASK to 64 in
+>> megaraid_probe_one(), leaving the driver with default 32-bit DMA
+>> capabilities, as it currently ends up in such a state anyway after any
+>> internal commands are initiated.
+>>
+>>
+>> [1] It seems strange that both mega_buffer/buf_dma_handle and
+>>     make_local_pdev() both exist for internal commands but this has been
+>>     the case for a long time - at least since 2.6.12-rc2.  Perhaps there
+>>     is some coalescing that could be done.
+>> ---
+>> Myron Stowe (3):
+>>       [SCSI] megaraid: Remove 64-bit DMA related dead code
+>>       [SCSI] megaraid: Remove local pdev's
+>>       [SCSI] megaraid: Remove 64-bit DMA_BIT_MASK capability
+>
+> Adam, you do drive by coding on this for LSI ... ack or reject, please.
+>
+> James
+>
+>
 
-[...]
+James,
 
-> [  102.631369] pci_host_bridge pci0000:00: freeing pci_host_bridge info
+I have just now located my box of MegaRAID Parallel SCSI controllers.
+I will review and test the patch series from Myron and respond by next Monday.
 
-By the way this looks fishy:
-
-> [  102.633091] ACPI: Device does not support D3cold
-> [  102.633915] ACPI: Device does not support D3cold
-> [  102.635221] ACPI: Device does not support D3cold
-> [  102.636103] ACPI: Device does not support D3cold
-> [  102.636902] ACPI: Device does not support D3cold
-> [  102.637685] ACPI: Device does not support D3cold
-> [  102.638467] ACPI: Device does not support D3cold
-> [  102.639631] ACPI: Device does not support D3cold
-> [  102.640472] ACPI: Device does not support D3cold
-> [  102.641310] ACPI: Device does not support D3cold
-> [  102.642105] ACPI: Device does not support D3cold
-> [  102.642928] ACPI: Device does not support D3cold
-> [  102.643725] ACPI: Device does not support D3cold
-> [  102.644544] ACPI: Device does not support D3cold
-> [  102.645344] ACPI: Device does not support D3cold
-> [  102.646126] ACPI: Device does not support D3cold
-> [  102.646902] ACPI: Device does not support D3cold
-> [  102.647677] ACPI: Device does not support D3cold
-> [  102.648485] ACPI: Device does not support D3cold
-> [  102.649269] ACPI: Device does not support D3cold
-> [  102.650065] ACPI: Device does not support D3cold
-> [  102.650822] ACPI: Device does not support D3cold
-> [  102.652483] ACPI: Device does not support D3cold
-> [  102.654157] ACPI: Device does not support D3cold
-> [  102.655803] ACPI: Device does not support D3cold
-> [  102.657419] ACPI: Device does not support D3cold
-> [  102.658528] ACPI: Device does not support D3cold
-> [  102.659255] ACPI: Device does not support D3cold
-> [  102.659973] ACPI: Device does not support D3cold
-> [  102.661807] ACPI: Device does not support D3cold
-> [  102.661925] ACPI: Device does not support D3cold
-> [  102.662047] ACPI: Device does not support D3cold
-> [  102.662148] ACPI: Device does not support D3cold
-> [  102.662258] ACPI: Device does not support D3cold
-> [  102.662374] ACPI: Device does not support D3cold
-> [  102.662486] ACPI: Device does not support D3cold
-> [  102.662597] ACPI: Device does not support D3cold
-> [  102.662711] ACPI: Device does not support D3cold
-> [  102.662814] ACPI: Device does not support D3cold
-> [  102.662918] ACPI: Device does not support D3cold
-> [  102.663019] ACPI: Device does not support D3cold
-
-Can you please check if it goes away with the patch below applied?
-
-> [  102.663039] ACPI: \_SB_.PCI0: No _EJ0 support for device
-
-
----
- drivers/acpi/device_pm.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -159,7 +159,8 @@ int acpi_device_set_power(struct acpi_de
- 	int result = 0;
- 	bool cut_power = false;
- 
--	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
-+	if (!device || !device->flags.power_manageable
-+	    || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
- 		return -EINVAL;
- 
- 	/* Make sure this is a valid target state */
-
+-Adam
