@@ -1,318 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:41091 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753185Ab3GANmk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 09:42:40 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:42517 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761Ab3GIQe2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 12:34:28 -0400
+Received: by mail-ob0-f170.google.com with SMTP id ef5so7316542obb.29
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jul 2013 09:34:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130708165149.55499b8e@skate>
+References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1372686136-1370-5-git-send-email-thomas.petazzoni@free-electrons.com>
+ <CAErSpo4aodspFnC0uR87yYAgswQQdmU48uoX5NA43UZjbCpOuw@mail.gmail.com> <20130708165149.55499b8e@skate>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 9 Jul 2013 10:34:08 -0600
+Message-ID: <CAErSpo6rDAdN4UVReYx7EAXuOtFutyPK-gT2Vd4j2OGEUCzNsQ@mail.gmail.com>
+Subject: Re: [PATCHv4 04/11] PCI: Introduce new MSI chip infrastructure
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Russell King <linux@arm.linux.org.uk>,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Rob Herring <rob.herring@calxeda.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
 	Maen Suleiman <maen@marvell.com>,
 	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
-Subject: [PATCHv4 02/11] pci: use weak functions for MSI arch-specific functions
-Date: Mon,  1 Jul 2013 15:42:07 +0200
-Message-Id: <1372686136-1370-3-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Thierry Reding <thierry.reding@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Until now, the MSI architecture-specific functions could be overloaded
-using a fairly complex set of #define and compile-time
-conditionals. In order to prepare for the introduction of the msi_chip
-infrastructure, it is desirable to switch all those functions to use
-the 'weak' mechanism. This commit converts all the architectures that
-were overidding those MSI functions to use the new strategy.
+On Mon, Jul 8, 2013 at 8:51 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> Dear Bjorn Helgaas,
+>
+> On Fri, 5 Jul 2013 15:51:10 -0600, Bjorn Helgaas wrote:
+>
+>> >  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+>> >  {
+>> > +       struct msi_chip *chip = dev->bus->msi;
+>> > +
+>> > +       if (chip && chip->setup_irq) {
+>> > +               int err;
+>> > +
+>> > +               err = chip->setup_irq(chip, dev, desc);
+>> > +               if (err < 0)
+>> > +                       return err;
+>> > +
+>> > +               irq_set_chip_data(desc->irq, chip);
+>> > +               return err;
+>> > +       }
+>> > +
+>> >         return -EINVAL;
+>>
+>> It's sub-optimal to indent the whole body of a function like this.  I
+>> think this is a bit more readable:
+>>
+>>     if (!chip || !chip->setup_irq)
+>>         return -EINVAL
+>>
+>>     err = chip->setup_irq(...);
+>>     ...
+>>     return err;
+>>
+>> The return value of ->setup_irq() (and hence of arch_setup_msi_irq())
+>> is a bit unclear.  Apparently it can return negative values (errors)
+>> or positive values (not sure what they mean), or zero (again, not
+>> sure).  A comment would clear this up.
+>
+> I've changed ->setup_irq() to simply return 0 on success, and a
+> negative error code on failure.
 
-Note that we keep a separate, non-weak, function
-default_teardown_msi_irqs() for the default behavior of the
-arch_teardown_msi_irqs(), as the default behavior is needed by the Xen
-x86 PCI code.
+Perfect.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: linux390@de.ibm.com
-Cc: linux-s390@vger.kernel.org
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-mips@linux-mips.org
-Cc: David S. Miller <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
-Cc: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/mips/include/asm/pci.h    |  5 -----
- arch/powerpc/include/asm/pci.h |  5 -----
- arch/s390/include/asm/pci.h    |  4 ----
- arch/x86/include/asm/pci.h     | 28 --------------------------
- arch/x86/kernel/x86_init.c     | 21 ++++++++++++++++++++
- drivers/pci/msi.c              | 45 +++++++++++++++++++-----------------------
- include/linux/msi.h            |  7 ++++++-
- 7 files changed, 47 insertions(+), 68 deletions(-)
+> Apparently, according to the default implementation
+> of arch_msi_setup_irqs(), the arch_msi_setup_irq() hook is supposed to
+> return:
+>  * A negative value on error, the value being an error code that is
+>    propagated to the caller.
+>  * A positive value on some other errors, in which case the -ENOSPC
+>    error value is returned. To me, it doesn't make a lot of sense, as
+>    arch_msi_setup_irq() could just as well return -ENOSPC directly.
+>  * A 0 value on success.
+>
+>> It might even be worth introducing a no-op chip with pointers to no-op
+>> functions so we don't have to do these checks ("if (chip &&
+>> chip->xxx)" everywhere.  I'm not sure if there's a Linux consensus on
+>> that -- certainly there are many examples of code that *does* make
+>> these checks everywhere -- so I'll ack it either way.
+>
+> The problem with this is that I'm not sure where in the PCI code this
+> association to the default implementation should be done. And there are
+> also two levels to take into account here:
+>
+>  * The PCI driver may not specify any msi_chip structure for a
+>    particular pci_bus. This would have to be detected by the PCI core
+>    when the bus is registered, and bus->msi would be set to the special
+>    no-op msi_chip.
+>
+>  * The PCI driver may specify an msi_chip structure, but without
+>    necessarily implementation all the methods. This could be solved by
+>    offering a pci_msi_chip_assign(struct pci_bus *, struct msi_chip *)
+>    function to be used by PCI drivers to assign their msi_chip to a
+>    given pci_bus, and this function would fill in the missing msi_chip
+>    operations with the default implementation.
+>
+> I am not sure it is really worth doing at this point, but I'm open to
+> suggestions on this.
 
-diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
-index b8e24fd..031f4c1 100644
---- a/arch/mips/include/asm/pci.h
-+++ b/arch/mips/include/asm/pci.h
-@@ -137,11 +137,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- 	return channel ? 15 : 14;
- }
- 
--#ifdef CONFIG_CPU_CAVIUM_OCTEON
--/* MSI arch hook for OCTEON */
--#define arch_setup_msi_irqs arch_setup_msi_irqs
--#endif
--
- extern char * (*pcibios_plat_setup)(char *str);
- 
- #ifdef CONFIG_OF
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index 6653f27..95145a1 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -113,11 +113,6 @@ extern int pci_domain_nr(struct pci_bus *bus);
- /* Decide whether to display the domain number in /proc */
- extern int pci_proc_domain(struct pci_bus *bus);
- 
--/* MSI arch hooks */
--#define arch_setup_msi_irqs arch_setup_msi_irqs
--#define arch_teardown_msi_irqs arch_teardown_msi_irqs
--#define arch_msi_check_device arch_msi_check_device
--
- struct vm_area_struct;
- /* Map a range of PCI memory or I/O space for a device into user space */
- int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
-diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
-index 6c18012..8641e8d 100644
---- a/arch/s390/include/asm/pci.h
-+++ b/arch/s390/include/asm/pci.h
-@@ -21,10 +21,6 @@ void pci_iounmap(struct pci_dev *, void __iomem *);
- int pci_domain_nr(struct pci_bus *);
- int pci_proc_domain(struct pci_bus *);
- 
--/* MSI arch hooks */
--#define arch_setup_msi_irqs	arch_setup_msi_irqs
--#define arch_teardown_msi_irqs	arch_teardown_msi_irqs
--
- #define ZPCI_BUS_NR			0	/* default bus number */
- #define ZPCI_DEVFN			0	/* default device number */
- 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index d9e9e6c..8c61de0 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -100,29 +100,6 @@ static inline void early_quirks(void) { }
- extern void pci_iommu_alloc(void);
- 
- #ifdef CONFIG_PCI_MSI
--/* MSI arch specific hooks */
--static inline int x86_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
--{
--	return x86_msi.setup_msi_irqs(dev, nvec, type);
--}
--
--static inline void x86_teardown_msi_irqs(struct pci_dev *dev)
--{
--	x86_msi.teardown_msi_irqs(dev);
--}
--
--static inline void x86_teardown_msi_irq(unsigned int irq)
--{
--	x86_msi.teardown_msi_irq(irq);
--}
--static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
--{
--	x86_msi.restore_msi_irqs(dev, irq);
--}
--#define arch_setup_msi_irqs x86_setup_msi_irqs
--#define arch_teardown_msi_irqs x86_teardown_msi_irqs
--#define arch_teardown_msi_irq x86_teardown_msi_irq
--#define arch_restore_msi_irqs x86_restore_msi_irqs
- /* implemented in arch/x86/kernel/apic/io_apic. */
- struct msi_desc;
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-@@ -130,11 +107,6 @@ void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev, int irq);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 		  unsigned int irq_base, unsigned int irq_offset);
--/* default to the implementation in drivers/lib/msi.c */
--#define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
--#define HAVE_DEFAULT_MSI_RESTORE_IRQS
--void default_teardown_msi_irqs(struct pci_dev *dev);
--void default_restore_msi_irqs(struct pci_dev *dev, int irq);
- #else
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 45a14db..a2b189c 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -116,6 +116,27 @@ struct x86_msi_ops x86_msi = {
- 	.setup_hpet_msi		= default_setup_hpet_msi,
- };
- 
-+/* MSI arch specific hooks */
-+int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	return x86_msi.setup_msi_irqs(dev, nvec, type);
-+}
-+
-+void arch_teardown_msi_irqs(struct pci_dev *dev)
-+{
-+	x86_msi.teardown_msi_irqs(dev);
-+}
-+
-+void arch_teardown_msi_irq(unsigned int irq)
-+{
-+	x86_msi.teardown_msi_irq(irq);
-+}
-+
-+void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
-+{
-+	x86_msi.restore_msi_irqs(dev, irq);
-+}
-+
- struct x86_io_apic_ops x86_io_apic_ops = {
- 	.init			= native_io_apic_init_mappings,
- 	.read			= native_io_apic_read,
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 2c10752..289fbfd 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -30,20 +30,21 @@ static int pci_msi_enable = 1;
- 
- /* Arch hooks */
- 
--#ifndef arch_msi_check_device
--int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
--	return 0;
-+	return -EINVAL;
- }
--#endif
- 
--#ifndef arch_setup_msi_irqs
--# define arch_setup_msi_irqs default_setup_msi_irqs
--# define HAVE_DEFAULT_MSI_SETUP_IRQS
--#endif
-+void __weak arch_teardown_msi_irq(unsigned int irq)
-+{
-+}
- 
--#ifdef HAVE_DEFAULT_MSI_SETUP_IRQS
--int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+{
-+	return 0;
-+}
-+
-+int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
- 	struct msi_desc *entry;
- 	int ret;
-@@ -65,14 +66,11 @@ int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 
- 	return 0;
- }
--#endif
- 
--#ifndef arch_teardown_msi_irqs
--# define arch_teardown_msi_irqs default_teardown_msi_irqs
--# define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
--#endif
--
--#ifdef HAVE_DEFAULT_MSI_TEARDOWN_IRQS
-+/*
-+ * We have a default implementation available as a separate non-weak
-+ * function, as it is used by the Xen x86 PCI code
-+ */
- void default_teardown_msi_irqs(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
-@@ -86,15 +84,13 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
- 			arch_teardown_msi_irq(entry->irq + i);
- 	}
- }
--#endif
- 
--#ifndef arch_restore_msi_irqs
--# define arch_restore_msi_irqs default_restore_msi_irqs
--# define HAVE_DEFAULT_MSI_RESTORE_IRQS
--#endif
-+void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
-+{
-+	return default_teardown_msi_irqs(dev);
-+}
- 
--#ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
--void default_restore_msi_irqs(struct pci_dev *dev, int irq)
-+void __weak arch_restore_msi_irqs(struct pci_dev *dev, int irq)
- {
- 	struct msi_desc *entry;
- 
-@@ -111,7 +107,6 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
- 	if (entry)
- 		write_msi_msg(irq, &entry->msg);
- }
--#endif
- 
- static void msi_set_enable(struct pci_dev *dev, int enable)
- {
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 20c2d6d..c82ff8d 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -50,12 +50,17 @@ struct msi_desc {
- };
- 
- /*
-- * The arch hook for setup up msi irqs
-+ * The arch hooks to setup up msi irqs. Those functions are
-+ * implemented as weak symbols so that they /can/ be overriden by
-+ * architecture specific code if needed.
-  */
- int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
- void arch_teardown_msi_irq(unsigned int irq);
- int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void arch_teardown_msi_irqs(struct pci_dev *dev);
- int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
-+void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
-+
-+void default_teardown_msi_irqs(struct pci_dev *dev);
- 
- #endif /* LINUX_MSI_H */
--- 
-1.8.1.2
+Sounds like it's not worth doing.  Thanks for checking into it.
 
+>> >  int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>> >  {
+>> > +       struct msi_chip *chip = dev->bus->msi;
+>> > +
+>> > +       if (chip && chip->check_device)
+>> > +               return chip->check_device(chip, dev, nvec, type);
+>> > +
+>>
+>> These functions are poorly named.  They give no clue what
+>> "check_device" means.  Are we checking that it exists, that it
+>> supports some property, that it's enabled, ... ?
+>
+> Well the naming clearly doesn't come from this commit. The
+> arch_msi_check_device() hook was around before this commit, and the
+> reason the operation is named ->check_device() is just because it used
+> the same terminology as the existing arch_msi_check_device() call.
+>
+> This hook is only used in one place, the PowerPC architecture, in
+> arch/powerpc/kernel/msi.c, to actually check whether the given device
+> supports MSI.
+>
+> I can rename if to arch_msi_device_supports_msi() and
+> ->device_supports_msi(), or arch_msi_device_has_msi() and
+> ->device_has_msi(), but that a change that relatively unrelated to this
+> commit, I'd say.
+>
+> Here as well, I'm open to suggestions,
+
+You're right, you didn't make that mess, so I guess it's OK if you
+don't clean it up here.  I spent a fair amount of time yesterday
+analyzing the return values, and lost interest before all became
+clear.  So I stand by my assertion that it is hard to read, but I'm OK
+with leaving it as-is for now.
+
+Bjorn
