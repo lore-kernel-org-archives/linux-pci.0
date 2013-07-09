@@ -1,71 +1,203 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 11 Jul 2013 08:41:22 -0700
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V2] pci: exynos: split into two parts such as Synopsys
- part and Exynos part
-Message-ID: <20130711154121.GC2198@dhcp-172-17-186-34.nvidia.com>
-References: <001201ce7dfa$716b3370$54419a50$@samsung.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:46257 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850Ab3GIW2D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 18:28:03 -0400
+Received: by mail-oa0-f54.google.com with SMTP id o6so8844250oag.27
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jul 2013 15:28:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="4jXrM3lyYWu4nBt5"
-In-Reply-To: <001201ce7dfa$716b3370$54419a50$@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1373356564-21668-1-git-send-email-wangyijing@huawei.com>
+References: <1373356564-21668-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 9 Jul 2013 16:27:42 -0600
+Message-ID: <CAErSpo51x7Q6cFnJ-8RfmikDh3FtCWyjy9tYouH=sjkXdNPo7Q@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI,pciehp: avoid add a device already exist during pciehp_resume
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jul 9, 2013 at 1:56 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Currently, pciehp_resume will call pciehp_enable_slot() to add
+> device if there is a device in the slot. But if the device was
+> present before suspend, it's no necessary to add again. Now in
+> such case, there is some uncomfortable message like
+>
+>     pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
+>         pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
+>
+> This problem was reported by Paul Bolle <pebolle@tiscali.nl>
+> The discussion link: http://comments.gmane.org/gmane.linux.kernel.pci/19876
+>
+> We can use PCIe Device Serial Number to identify the device if
+> device support DSN.
 
---4jXrM3lyYWu4nBt5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I think I like the idea of this, especially because the Microsoft PCI
+Hardware Compliance Test apparently requires DSN for hot-pluggable
+PCIe devices [1], so it should be pretty universal.
 
-On Thu, Jul 11, 2013 at 02:49:43PM +0900, Jingoo Han wrote:
-[...]
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-[...]
->  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
->  obj-$(CONFIG_PCIE_DW) += pcie-designware.o
-> +obj-$(CONFIG_PCI_EXYNOS) += pcie-exynos.o
+[1] http://www.techtalkz.com/microsoft-device-drivers-dtm/341362-dtm-pcihct-test-violates-pci-express-base-specification-revision-1-a.html
 
-I think we should keep these sorted alphabetically. Also Tegra and
-Marvell are PCIe controllers but they still use the pci- prefix instead
-of pcie-. Perhaps it'd be good to keep consistency here? I initially
-chose pci- because from a software point of view it doesn't matter all
-that much whether it's PCI or PCIe and because the drivers are part of
-the PCI subsystem. However if Exynos now uses the pcie- prefix it makes
-it look like Tegra and Marvell are plain old PCI.
+> currently:
+> 1. slot is empty before suspend, insert card during suspend.
+>         In this case, is safe, pciehp will add device by check adapter
+> status register in pciehp_resume.
 
-Thierry
+Your patch doesn't change anything here.
 
---4jXrM3lyYWu4nBt5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+> 2. slot is non empty before suspend, remove card during suspend.
+>         Also be safe, pciehp will remove device by check adapter
+> status register in pciehp_resume.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Your patch doesn't change anything here.  (But I think the driver
+.remove() method will try to poke at the non-existent device; see
+below.)
 
-iQIcBAEBAgAGBQJR3tIhAAoJEN0jrNd/PrOhCCMP/iGDcDc81Sii7T3D2sYloq4s
-uzIcMm0j0eVD2q6B3vPjZRSV7KiMMLxRHw3HeKGSlLc5xNXGquacI3uh2MImqe1K
-f6Zb6F52DvuzJ1c2Y2yWqzYTEA+X80T/zb2i0fM5R4dB4Ijf0V+R1dFpV0+IWR9x
-S2BJM9dHJ9xrWZ1tf6h+oBFPq0bq5QTNfB5V8j6GkG9SCC8fnvsfPTa8jh5zkv2k
-jiN28T4vAiRj8Xn67X47SZ3bfdvqBUQpKE9i35+F5pULF9K1d9oxqIRLzRMd7hw6
-TLpYv09h7fMhHjfOp9kGA9jf9CFbiIM795RmEfgEcsqoRX+wd0cltmGkb3Pt2Cai
-edB9RF6aXWO1CYrdDF4JRa3OyjZqlSgmWW0rHR6lBlyTFW57FK4OdFUe/wzBUOyD
-996hU8vi33vCkLwSKerKi1CC9qpoq7SVxGoB+JcGzBZIuZIQVjBkGssGPMLJhswf
-vFmujloMw62uSsw4Yb+T6+qYdxb+shKdlY7Ml7aX/RelhWO5K0FpKxCWa/cc6/UF
-i696/K1xFO9Xkm8sQa+bi9/Prql01p8bL+Hq+bymco/tIfC/rK2DsgoXHRPFHie0
-X23RiKHxUDMr1pOMiYjUG3a721Z4YdL86P6X8n57R5l3yDRYwKex+lN0AeSt+9O/
-R8YFMVAW6NYbfZiS72y5
-=ezQU
------END PGP SIGNATURE-----
+> 3. slot is non empty before suspend, remove card during suspend
+> and insert a new card.
+>         Now pciehp just call pciehp_enable_slot() roughly. We should
+> remove the old card firstly, then add the new card.
 
---4jXrM3lyYWu4nBt5--
+With your patch, I think we'll call the old driver's .remove() method
+on the new device.  This seems bad; see below.
+
+With your patch, if we remove and reinsert the same device while
+suspended, we do nothing because the DSN didn't change.  Previously we
+called pciehp_enable_slot().  I don't know if we need to do anything
+here or not.
+
+> 4. slot is non empty before suspend, no action during suspend.
+>         We should do nothing in pciehp_resume, but we call
+> pciehp_enable_slot(), so some uncomfortable messages show like above.
+> In this case, we can improve it a little by add a guard
+> if (!list_empty(bus->devices)).
+
+This is the common case.  Previously we called pciehp_enable_slot(),
+and with your patch we do nothing.  I think that seems sensible, but
+this part should be split into a separate patch.  That way we can keep
+the benefit of this change even if we trip over something with the
+other changes.
+
+> Reported-by: Paul Bolle <pebolle@tiscali.nl>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Paul Bolle <pebolle@tiscali.nl>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: Oliver Neukum <oneukum@suse.de>
+> Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/pci/hotplug/pciehp_core.c |   38 +++++++++++++++++++++++++++++++++---
+>  1 files changed, 34 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 7d72c5e..d01e093 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -291,6 +291,28 @@ static void pciehp_remove(struct pcie_device *dev)
+>  }
+>
+>  #ifdef CONFIG_PM
+> +
+> +/* If device support Device Serial Numner, use DSN
+
+s/support/supports/
+s/Numner/Number/
+Use conventional comment style:
+  /*
+   * If device ...
+   */
+
+> + * to identify the device
+> + */
+> +static bool device_in_slot_is_changed(struct pci_bus *pbus)
+> +{
+> +       u64 old_dsn, new_dsn;
+> +       struct pci_dev *pdev;
+> +
+> +       pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
+
+pci_get_slot() can fail.
+
+> +       old_dsn = pdev->sn;
+> +
+> +       /* get func 0 device serial number */
+> +       pci_get_dsn(pdev, &new_dsn);
+> +       pci_dev_put(pdev);
+> +
+> +       if (old_dsn != new_dsn)
+> +               return true;
+> +
+> +       return false;
+> +}
+> +
+>  static int pciehp_suspend (struct pcie_device *dev)
+>  {
+>         return 0;
+> @@ -300,6 +322,7 @@ static int pciehp_resume (struct pcie_device *dev)
+>  {
+>         struct controller *ctrl;
+>         struct slot *slot;
+> +       struct pci_bus *pbus = dev->port->subordinate;
+>         u8 status;
+>
+>         ctrl = get_service_data(dev);
+> @@ -311,10 +334,17 @@ static int pciehp_resume (struct pcie_device *dev)
+>
+>         /* Check if slot is occupied */
+>         pciehp_get_adapter_status(slot, &status);
+> -       if (status)
+> -               pciehp_enable_slot(slot);
+> -       else
+> -               pciehp_disable_slot(slot);
+> +       if (status) {
+> +               if (list_empty(&pbus->devices))
+> +                       pciehp_enable_slot(slot);
+> +               else if (device_in_slot_is_changed(pbus)) {
+> +                       pciehp_disable_slot(slot);
+
+pciehp_disable_slot() ultimately calls the .remove() method for the
+device that has already been removed.  That method is likely to poke
+at the device, which will do something unexpected because the new
+device is likely to be completely different.
+
+I think the call path is this:
+
+    pciehp_resume
+      pciehp_disable_slot
+        remove_board
+          pciehp_unconfigure_device
+            pci_stop_and_remove_bus_device
+              pci_stop_bus_device
+                pci_stop_dev
+                  device_del
+                    bus_remove_device
+                      device_release_driver
+                        __device_release_driver
+                          pci_device_remove     # pci_bus_type.remove
+                            dev->driver->remove
+
+I think we already had this problem for case 2 (card removed while
+suspended), but at least in that case, the driver .remove() method
+doesn't have a device to poke at, so it's less likely to do something
+bad.
+
+> +                       pciehp_enable_slot(slot);
+> +               }
+> +       } else {
+> +               if (!list_empty(&pbus->devices))
+> +                       pciehp_disable_slot(slot);
+> +       }
+>         return 0;
+>  }
+>  #endif /* PM */
+> --
+> 1.7.1
+>
+>
