@@ -1,68 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:54239 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752880Ab3GIJcA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Jul 2013 05:32:00 -0400
+Date: Tue, 9 Jul 2013 12:37:26 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 24/30] ACPI / hotplug / PCI: Do not check SLOT_ENABLED in enable_device()
-Date: Fri, 12 Jul 2013 02:02:23 +0200
-Message-ID: <2002219.smES9ylgeU@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: Re: [RFC][PATCH 6/8] ACPI / hotplug / PCI: Drop
+ acpiphp_handle_to_bridge()
+Message-ID: <20130709093726.GK4898@intel.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+ <3804403.VVlzfJfUyu@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3804403.VVlzfJfUyu@vostro.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+On Tue, Jul 09, 2013 at 02:20:31AM +0200, Rafael J. Wysocki wrote:
+> @@ -953,37 +937,49 @@ static void acpiphp_sanitize_bus(struct
+>   * ACPI event handlers
+>   */
+>  
+> -static acpi_status
+> -check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+> +static acpi_status check_sub_bridges(acpi_handle handle, u32 lvl, void *data,
+> +				     void **rv)
+>  {
+> -	struct acpiphp_bridge *bridge;
+> -	char objname[64];
+> -	struct acpi_buffer buffer = { .length = sizeof(objname),
+> -				      .pointer = objname };
+> +	struct acpiphp_context *context = acpiphp_get_context(handle);
+> +
+> +	if (!context)
+> +		return AE_OK;
+>  
+> -	bridge = acpiphp_handle_to_bridge(handle);
+> -	if (bridge) {
+> +	if (context->bridge) {
+> +		struct acpiphp_bridge *bridge = context->bridge;
+> +		char objname[64];
+> +		struct acpi_buffer buffer = { .length = sizeof(objname),
+> +					      .pointer = objname };
+> +
+> +		get_bridge(bridge);
+>  		acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+> -		dbg("%s: re-enumerating slots under %s\n",
+> -			__func__, objname);
+> +		dbg("%s: re-enumerating slots under %s\n", __func__, objname);
 
-With Thunderbolt you can daisy chain devices: connect new devices to
-an already plugged one.  In that case the "hotplug slot" is already
-enabled, but we still want to look for new PCI devices behind it.
+Although not related to this patch directly, how about using
+acpi_handle_debug() or similar here?
 
-Reuse enable_device() to scan for new PCI devices on enabled slots
-and push the SLOT_ENABLED check up into acpiphp_enable_slot().
-
-[rjw: Rebased, modified the changelog]
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-drivers/pci/hotplug/acpiphp_glue.c | 5 ++---
- drivers/pci/hotplug/acpiphp_glue.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -557,9 +557,6 @@ static int __ref enable_device(struct ac
- 	int num, max, pass;
- 	LIST_HEAD(add_list);
- 
--	if (slot->flags & SLOT_ENABLED)
--		goto err_exit;
--
- 	list_for_each_entry(func, &slot->funcs, sibling)
- 		acpiphp_bus_add(func_to_handle(func));
- 
-@@ -1036,11 +1033,14 @@ void acpiphp_remove_slots(struct pci_bus
-  */
- int acpiphp_enable_slot(struct acpiphp_slot *slot)
- {
--	int retval;
-+	int retval = 0;
- 
- 	mutex_lock(&slot->crit_sect);
-+
- 	/* configure all functions */
--	retval = enable_device(slot);
-+	if (!(slot->flags & SLOT_ENABLED))
-+		retval = enable_device(slot);
-+
- 	mutex_unlock(&slot->crit_sect);
- 	return retval;
- }
-
+>  		acpiphp_check_bridge(bridge);
+>  		put_bridge(bridge);
+>  	}
+> +	acpiphp_put_context(context);
+>  	return AE_OK ;
+>  }
