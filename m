@@ -1,116 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 10/16] ARM: tegra: Add Tegra30 PCIe support
-Date: Thu, 25 Jul 2013 10:53:24 -0700
-Message-Id: <1374774810-18459-11-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:14363 "EHLO
+	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185Ab3GIFpX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 01:45:23 -0400
+Message-ID: <51DBA312.7090908@hp.com>
+Date: Tue, 09 Jul 2013 13:43:46 +0800
+From: ZhenHua <zhen-hual@hp.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Li, Zhen-Hua" <zhen-hual@hp.com>
+Subject: Re: [PATCH 1/1] ia64/pci: set mmio decoding on for some host bridge
+References: <1373242613-4603-1-git-send-email-zhen-hual@hp.com> <CAErSpo6Kpw5VX5e5PUy8V4PdL6-rg14NdaXYOYHkAGm72GgHBg@mail.gmail.com>
+In-Reply-To: <CAErSpo6Kpw5VX5e5PUy8V4PdL6-rg14NdaXYOYHkAGm72GgHBg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+Hi Bjorn,
+Thank you for reviewing this patch. I have created a new one and sent it 
+out.
+And your questions are answered in that new wmail.
 
-Add the top-level pcie-controller node for the Tegra30 SoC. Tegra30 has
-three root ports that can use different lane layouts.
+Regards
+ZhenHua
 
-Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v5:
-- use symbolic constants for interrupts and clocks
-
- arch/arm/boot/dts/tegra30.dtsi | 70 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 70 insertions(+)
-
-diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
-index d8783f0..c8facca 100644
---- a/arch/arm/boot/dts/tegra30.dtsi
-+++ b/arch/arm/boot/dts/tegra30.dtsi
-@@ -16,6 +16,76 @@
- 		serial4 = &uarte;
- 	};
- 
-+	pcie-controller {
-+		compatible = "nvidia,tegra30-pcie";
-+		device_type = "pci";
-+		reg = <0x00003000 0x00000800   /* PADS registers */
-+		       0x00003800 0x00000200   /* AFI registers */
-+		       0x10000000 0x10000000>; /* configuration space */
-+		reg-names = "pads", "afi", "cs";
-+		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH   /* controller interrupt */
-+			      GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
-+		interrupt-names = "intr", "msi";
-+
-+		bus-range = <0x00 0xff>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
-+			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
-+			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
-+			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
-+			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
-+			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
-+
-+		clocks = <&tegra_car TEGRA30_CLK_PCIE>,
-+			 <&tegra_car TEGRA30_CLK_AFI>,
-+			 <&tegra_car TEGRA30_CLK_PCIEX>,
-+			 <&tegra_car TEGRA30_CLK_PLL_E>,
-+			 <&tegra_car TEGRA30_CLK_CML0>;
-+		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
-+		status = "disabled";
-+
-+		pci@1,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82000800 0 0x00000000 0 0x1000>;
-+			reg = <0x000800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@2,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001000 0 0x00001000 0 0x1000>;
-+			reg = <0x001000 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@3,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001800 0 0x00004000 0 0x1000>;
-+			reg = <0x001800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+	};
-+
- 	host1x {
- 		compatible = "nvidia,tegra30-host1x", "simple-bus";
- 		reg = <0x50000000 0x00024000>;
--- 
-1.8.1.5
+On 07/09/2013 04:35 AM, Bjorn Helgaas wrote:
+> On Sun, Jul 7, 2013 at 6:16 PM, Li, Zhen-Hua <zhen-hual@hp.com> wrote:
+>> On some IA64 platforms with intel PCI bridge, for example, HP BL890c i2
+>> with  Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port,
+>> when kernel tries to disable the mmio decoding on the PCI bridge devices,
+>> kernel may crash.
+>>
+>> And in the comment of function quirk_mmio_always_on, it also says:
+>> "But doing so (disable the mmio decoding) may cause problems on host bridge
+>>   and perhaps other key system devices"
+>>
+>> So, for these PCI bridges,  dev->mmio_always_on bit should be set to 1.
+>>
+>>
+>> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+>> ---
+>>   drivers/pci/quirks.c |   15 +++++++++++++++
+>>   1 file changed, 15 insertions(+)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index e85d230..24b8024 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -44,6 +44,21 @@ static void quirk_mmio_always_on(struct pci_dev *dev)
+>>   DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
+>>                                  PCI_CLASS_BRIDGE_HOST, 8, quirk_mmio_always_on);
+>>
+>> +#ifdef CONFIG_IA64
+>> +/*
+>> + * On some IA64 platforms, for some intel PCI bridge devices, for example,
+>> + * the Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port,
+>> + * disable the mmio decoding on these devices may cause system crash.
+>> + * So dev->mmio_always_on bit should be set to 1.
+>> + */
+>> +static void quirk_mmio_on_intel_pcibridge(struct pci_dev *dev)
+>> +{
+>> +       dev->mmio_always_on = 1;
+>> +}
+>> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
+>> +                       PCI_CLASS_BRIDGE_PCI, 8, quirk_mmio_on_intel_pcibridge);
+>> +#endif
+> The changelog and comment suggest an issue specific to Intel
+> 5520/5500/X58, but the patch sets mmio_always_on for *all* PCI
+> bridges.
+>
+> It claims to be specific to ia64 (and is only compiled there), but the
+> chipset is also used for x86.  You need to explain why the problem
+> only affects ia64.
+>
+> Bjorn
 
