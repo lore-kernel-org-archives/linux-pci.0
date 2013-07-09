@@ -1,113 +1,154 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
-Date: Wed, 24 Jul 2013 22:02:35 +0200
-Message-ID: <1393554.usuhpOuYgm@vostro.rjw.lan>
-In-Reply-To: <CAErSpo6z9CqCyLFbXpuJMtHHjLRNbo=gx87W_0_7TCHbvwrCRw@mail.gmail.com>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <6958813.eThhpoh5QO@vostro.rjw.lan> <CAErSpo6z9CqCyLFbXpuJMtHHjLRNbo=gx87W_0_7TCHbvwrCRw@mail.gmail.com>
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 2/8] ACPI / hotplug / PCI: Consolidate acpiphp_enumerate_slots()
+Date: Tue, 09 Jul 2013 02:16:21 +0200
+Message-ID: <2968184.45Unk7vAg9@vostro.rjw.lan>
+In-Reply-To: <26431283.HJCKsss0rt@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 24, 2013 10:06:01 AM Bjorn Helgaas wrote:
-> On Wed, Jul 24, 2013 at 6:58 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Tuesday, July 23, 2013 07:20:53 PM Yinghai Lu wrote:
-> >> On Tue, Jul 23, 2013 at 2:39 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >
-> > [...]
-> >
-> >> [  102.631369] pci_host_bridge pci0000:00: freeing pci_host_bridge info
-> >
-> > By the way this looks fishy:
-> >
-> >> [  102.633091] ACPI: Device does not support D3cold
-> 
-> This and other printks in that function don't give any clue what
-> device is involved, even though we have an acpi_device pointer.  It'd
-> be nice to fix that, too.
-
-As it turns out, I have that patch ready as well.  Appended for completeness.
-
-Thanks,
-Rafael
-
-
----
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / PM: Make messages in acpi_device_set_power() print device name
 
-Modify acpi_device_set_power() so that diagnostic messages printed by
-it to the kernel log always contain the name of the device to make it
-possible to identify the device if need be.  Also replace
-printk(KERN_WARNING ) with dev_warn() everywhere in that function.
+The acpiphp_enumerate_slots() function is now split into two parts,
+acpiphp_enumerate_slots() proper and init_bridge_misc() which is
+only called by the former.  If these functions are combined,
+it is possible to make the code easier to follow and to clean up
+the error handling (to prevent memory leaks on error from
+happening in particular), so do that.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/acpi/device_pm.c |   22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |   94 ++++++++++++++++++-------------------
+ 1 file changed, 46 insertions(+), 48 deletions(-)
 
-Index: linux-pm/drivers/acpi/device_pm.c
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
 ===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -166,20 +166,20 @@ int acpi_device_set_power(struct acpi_de
- 	/* Make sure this is a valid target state */
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -363,46 +363,6 @@ static int detect_ejectable_slots(acpi_h
+ 	return found;
+ }
  
- 	if (state == device->power.state) {
--		ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Device is already at %s\n",
-+		ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Device [%s] already in %s\n",
-+				  device->pnp.bus_id,
- 				  acpi_power_state_string(state)));
- 		return 0;
+-/* initialize miscellaneous stuff for both root and PCI-to-PCI bridge */
+-static void init_bridge_misc(struct acpiphp_bridge *bridge)
+-{
+-	acpi_status status;
+-
+-	/* must be added to the list prior to calling register_slot */
+-	mutex_lock(&bridge_mutex);
+-	list_add(&bridge->list, &bridge_list);
+-	mutex_unlock(&bridge_mutex);
+-
+-	/* register all slot objects under this bridge */
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, (u32)1,
+-				     register_slot, NULL, bridge, NULL);
+-	if (ACPI_FAILURE(status)) {
+-		mutex_lock(&bridge_mutex);
+-		list_del(&bridge->list);
+-		mutex_unlock(&bridge_mutex);
+-		return;
+-	}
+-
+-	/* install notify handler for P2P bridges */
+-	if (!pci_is_root_bus(bridge->pci_bus)) {
+-		if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
+-			status = acpi_remove_notify_handler(bridge->func->handle,
+-						ACPI_SYSTEM_NOTIFY,
+-						handle_hotplug_event_func);
+-			if (ACPI_FAILURE(status))
+-				err("failed to remove notify handler\n");
+-		}
+-		status = acpi_install_notify_handler(bridge->handle,
+-					     ACPI_SYSTEM_NOTIFY,
+-					     handle_hotplug_event_bridge,
+-					     bridge);
+-
+-		if (ACPI_FAILURE(status)) {
+-			err("failed to register interrupt notify handler\n");
+-		}
+-	}
+-}
+-
+ 
+ /* find acpiphp_func from acpiphp_bridge */
+ static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
+@@ -1171,8 +1131,9 @@ static void handle_hotplug_event_func(ac
+  */
+ void acpiphp_enumerate_slots(struct pci_bus *bus)
+ {
+-	acpi_handle handle, dummy_handle;
+ 	struct acpiphp_bridge *bridge;
++	acpi_handle handle;
++	acpi_status status;
+ 
+ 	if (acpiphp_disabled)
+ 		return;
+@@ -1200,15 +1161,52 @@ void acpiphp_enumerate_slots(struct pci_
+ 	 */
+ 	get_device(&bus->dev);
+ 
+-	if (!pci_is_root_bus(bridge->pci_bus) &&
+-	    ACPI_SUCCESS(acpi_get_handle(bridge->handle,
+-					"_EJ0", &dummy_handle))) {
+-		dbg("found ejectable p2p bridge\n");
+-		bridge->flags |= BRIDGE_HAS_EJ0;
+-		bridge->func = acpiphp_bridge_handle_to_function(handle);
++	/* must be added to the list prior to calling register_slot */
++	mutex_lock(&bridge_mutex);
++	list_add(&bridge->list, &bridge_list);
++	mutex_unlock(&bridge_mutex);
++
++	/* register all slot objects under this bridge */
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
++				     register_slot, NULL, bridge, NULL);
++	if (ACPI_FAILURE(status)) {
++		acpi_handle_err(bridge->handle, "failed to register slots\n");
++		goto err;
  	}
  
- 	if (!device->power.states[state].flags.valid) {
--		printk(KERN_WARNING PREFIX "Device does not support %s\n",
--		       acpi_power_state_string(state));
-+		dev_warn(&device->dev, "Power state %s not supported\n",
-+			 acpi_power_state_string(state));
- 		return -ENODEV;
- 	}
- 	if (device->parent && (state < device->parent->power.state)) {
--		printk(KERN_WARNING PREFIX
--			      "Cannot set device to a higher-powered"
--			      " state than parent\n");
-+		dev_warn(&device->dev, "Cannot transition to a higher-powered "
-+			 "state than parent\n");
- 		return -ENODEV;
- 	}
+-	init_bridge_misc(bridge);
++	if (pci_is_root_bus(bridge->pci_bus))
++		return;
++
++	/* install notify handler for P2P bridges */
++	status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
++					     handle_hotplug_event_bridge,
++					     bridge);
++	if (ACPI_FAILURE(status)) {
++		acpi_handle_err(bridge->handle,
++				"failed to register notify handler\n");
++		goto err;
++	}
++
++	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
++	if (ACPI_FAILURE(status))
++		return;
++
++	dbg("found ejectable p2p bridge\n");
++	bridge->flags |= BRIDGE_HAS_EJ0;
++	bridge->func = acpiphp_bridge_handle_to_function(bridge->handle);
++	if (bridge->func) {
++		status = acpi_remove_notify_handler(bridge->func->handle,
++						    ACPI_SYSTEM_NOTIFY,
++						    handle_hotplug_event_func);
++		if (ACPI_FAILURE(status))
++			acpi_handle_err(bridge->func->handle,
++					"failed to remove notify handler\n");
++	}
++	return;
++
++ err:
++	cleanup_bridge(bridge);
++	put_bridge(bridge);
+ }
  
-@@ -192,8 +192,8 @@ int acpi_device_set_power(struct acpi_de
- 
- 	if (state < device->power.state && state != ACPI_STATE_D0
- 	    && device->power.state >= ACPI_STATE_D3_HOT) {
--		printk(KERN_WARNING PREFIX
--			"Cannot transition to non-D0 state from D3\n");
-+		dev_warn(&device->dev,
-+			 "Cannot transition to non-D0 state from D3\n");
- 		return -ENODEV;
- 	}
- 
-@@ -220,10 +220,8 @@ int acpi_device_set_power(struct acpi_de
- 
-  end:
- 	if (result) {
--		printk(KERN_WARNING PREFIX
--			      "Device [%s] failed to transition to %s\n",
--			      device->pnp.bus_id,
--			      acpi_power_state_string(state));
-+		dev_warn(&device->dev, "Failed to change power state to %s\n",
-+			 acpi_power_state_string(state));
- 	} else {
- 		device->power.state = state;
- 		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
-
+ /* Destroy hotplug slots associated with the PCI bus */
