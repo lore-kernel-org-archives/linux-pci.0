@@ -1,88 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:38889 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757524Ab3GZM5S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 08:57:18 -0400
-Received: by mail-oa0-f50.google.com with SMTP id k7so7344765oag.37
-        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 05:57:17 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:6586 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752701Ab3GIH4L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 03:56:11 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH 1/2] PCI: introduce PCIe Device Serial NUmber Capability support
+Date: Tue, 9 Jul 2013 15:55:45 +0800
+Message-ID: <1373356545-45944-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo79rJZuEkJB+W0XGq-sKUDwTgrG5SVzJbFBqobLY2+nGQ@mail.gmail.com>
-References: <1374759098-6746-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo79rJZuEkJB+W0XGq-sKUDwTgrG5SVzJbFBqobLY2+nGQ@mail.gmail.com>
-Date: Fri, 26 Jul 2013 05:57:17 -0700
-Message-ID: <CAE9FiQUmetaXJ-=d3HV-AiaeEEh_ehdbT5E=Mrm7d7Z7y78Tng@mail.gmail.com>
-Subject: Re: [PATCH v6] PCI: Don't let mmio fallback to must-only, if ioport
- fails with must+optional
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 25, 2013 at 1:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Jul 25, 2013 at 7:31 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> BenH reported that there are assign unassigned resource problems
->> in powerpc.
->>
->> It turns out after
->> | commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
->> | Date:   Thu Feb 23 19:23:29 2012 -0800
->> |
->> |    PCI: Retry on IORESOURCE_IO type allocations
->>
->> even for root bus that does not have io port range, it will keep retrying
->> to realloc with mmio after mmio allocation work in first try already.
->>
->> Current retry logic is : try with must+optional at first, and if
->> it fails with any ioport or mmio, it will try must then try to extend
->> must with optional. The reassign will put extended mmio or pref mmio
->> in the middle of parent resource range.
->> That will prevent other sibling resources from getting must-have resources
->> or get extended properly.
->>
->> We can check fail type to see if can we need fall back to must-have
->> for it only, that will keep others type to keep resource to have
->> must+optional allocations.
->>
->> Separate three resource type checking if we need to release
->> assigned resource after requested + add_size try.
->> 1. if there is io port assign fail, will release assigned io port.
->> 2. if there is pref mmio assign fail, release assigned pref mmio.
->>    if assigned pref mmio's parent is non-pref mmio and there
->>    is non-pref mmio assign fail, will release that assigned pref mmio.
->> 3. if there is non-pref mmio assign fail or pref mmio assigned fail,
->>    will release assigned non-pref mmio.
->>
->> This will be become more often when we have x86 8 sockets or 32 sockets
->> system, and those systems will have one root bus per socket.
->> They will have some root buses that do not have ioport range or 32bit mmio.
->>
->> -v2: need to remove assigned entries from optional list too.
->> -v3: not just checking ioport related, requested by Bjorn.
->>
->> Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->
-> I forgot; is there a mailing list archive URL for this report?
+Introduce PCIe Ext Capability Device Serial Number support,
+so we can use the unique device serial number to identify
+the physical device. During system suspend, if the PCIe
+device was removed and inserted a new same device, after
+system resume there is no good way to identify it, maybe
+Device Serial Number is a good choice if device support.
 
-yes, should be
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/pci.c   |   33 +++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h   |    1 +
+ drivers/pci/probe.c |    3 +++
+ include/linux/pci.h |    4 ++++
+ 4 files changed, 41 insertions(+), 0 deletions(-)
 
-http://marc.info/?l=linux-pci&m=136941328913610&w=1
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e37fea6..d08df2b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2048,6 +2048,39 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
+ }
+ 
+ /**
++ * pci_get_dsn - get device serial number
++ * @dev: the PCI device
++ * @sn: saved device serial number
++ */
++void pci_get_dsn(struct pci_dev *dev, u64 *sn)
++{
++	int pos;
++	u32 lo, hi;
++
++	if (!pci_is_pcie(dev))
++		goto out;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
++	if (!pos)
++		goto out;
++
++	pci_read_config_dword(dev, pos + 4, &lo);
++	pci_read_config_dword(dev, pos + 8, &hi);
++	*sn = ((u64)hi << 32) | lo;
++	return;
++
++out:
++	*sn = 0;
++	return;
++}
++EXPORT_SYMBOL(pci_get_dsn);
++
++void pci_dsn_init(struct pci_dev *dev)
++{
++	return pci_get_dsn(dev, &dev->sn);
++}
++
++/**
+  * pci_configure_ari - enable or disable ARI forwarding
+  * @dev: the PCI device
+  *
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 68678ed..f626006 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -202,6 +202,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		    struct resource *res, unsigned int reg);
+ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
+ void pci_configure_ari(struct pci_dev *dev);
++void pci_dsn_init(struct pci_dev *dev);
+ 
+ /**
+  * pci_ari_enabled - query ARI forwarding status
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 46ada5c..d4c6e7e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1322,6 +1322,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	/* Power Management */
+ 	pci_pm_init(dev);
+ 
++	/* Device Serial Number */
++	pci_dsn_init(dev);
++
+ 	/* Vital Product Data */
+ 	pci_vpd_pci22_init(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..59cd205 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -342,6 +342,7 @@ struct pci_dev {
+ 	struct list_head msi_list;
+ 	struct kset *msi_kset;
+ #endif
++	u64 sn;		/* device serieal number, 0 if not support */
+ 	struct pci_vpd *vpd;
+ #ifdef CONFIG_PCI_ATS
+ 	union {
+@@ -995,6 +996,9 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+ int pci_vpd_truncate(struct pci_dev *dev, size_t size);
+ 
++/* Device Serial Number */
++void pci_get_dsn(struct pci_dev *dev, u64 *sn);
++
+ /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+ void pci_bus_assign_resources(const struct pci_bus *bus);
+-- 
+1.7.1
 
-title is: Resource assignment oddities
 
-
->
-> And did you say this should go to stable for v3.10+?  If that's the
-> case, this should probably go in my for-linus branch for v3.11 instead
-> of waiting for v3.12, right?
-
-Yes. You are right.
-
-BenH at last only hope it could backport to v3.10 for the distribution.
-
-Thanks
-
-Yinghai
