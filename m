@@ -1,78 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.mev.co.uk ([62.49.15.74]:56314 "EHLO mail.mev.co.uk"
+Received: from mga02.intel.com ([134.134.136.20]:44698 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932391Ab3GPPZe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 16 Jul 2013 11:25:34 -0400
-From: Ian Abbott <abbotti@mev.co.uk>
-To: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
-	driverdev-devel@linuxdriverproject.org,
-	linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	H Hartley Sweeten <hsweeten@visionengravers.com>,
-	Ian Abbott <abbotti@mev.co.uk>
-Subject: [PATCH 1/4] pci_ids.h: move PCI_VENDOR_ID_AMCC here
-Date: Tue, 16 Jul 2013 16:14:38 +0100
-Message-Id: <1373987681-18245-2-git-send-email-abbotti@mev.co.uk>
-In-Reply-To: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
-References: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
+	id S1753638Ab3GIOXM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Jul 2013 10:23:12 -0400
+Date: Tue, 9 Jul 2013 22:22:40 +0800
+From: Haicheng Li <haicheng.li@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Haicheng Li <haicheng.lee@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/3] PCI: Add hide_device support to pci subsystem.
+Message-ID: <20130709142239.GB5954@hli22-desktop>
+References: <1372864578-6925-1-git-send-email-haicheng.li@linux.intel.com>
+ <CAErSpo5dR_2tUDFoFO49N3Ut569+6Cfosx8Q=91U_w-8mvFVkg@mail.gmail.com>
+ <20130704045316.GC3244@hli22-desktop>
+ <CAErSpo73pzpK1-401m9+EOiV_t13KY_DQa9WDU+5Gq+LidGpYg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo73pzpK1-401m9+EOiV_t13KY_DQa9WDU+5Gq+LidGpYg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI_VENDOR_ID_AMCC is defined locally in
-"drivers/staging/comedi/comedidev.h" for a few comedi hardware drivers,
-namely "adl_pci9118", "addi_apci_1500" and "addi_apci_3120" (also
-"addi_apci_1710" but that is not currently built and will probably be
-removed soon).  Move the define into "include/linux/pci_ids.h" as it is
-shared by several drivers (albeit all comedi drivers currently).
+On Fri, Jul 05, 2013 at 11:28:40AM -0600, Bjorn Helgaas wrote:
+> >> > To hide pci devices, just pass such parameters to kernel at boot stage:
+> >> >         pci=hide=[<domain>:]<bus>:<slot>.<func>[; ...]
+> 
+> This doesn't seem generally useful to me.  It might be useful as a
+> development aid, and you can easily maintain it as an out-of-tree
+> patch for that.
 
-PCI_VENDOR_ID_AMCC happens to have the same value (0x10e8) as
-PCI_VENDOR_ID_ADDIDATA_OLD.  The vendor ID is actually assigned to
-Applied Micro Circuits Corporation and Addi-Data were using device IDs
-assigned by AMCC on some of their earlier PCI boards. The
-PCI_VENDOR_ID_ADDIDATA_OLD define is still being used by the "8250_pci"
-PCI serial board driver.
-
-Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
----
- drivers/staging/comedi/comedidev.h | 1 -
- include/linux/pci_ids.h            | 4 +++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/comedi/comedidev.h b/drivers/staging/comedi/comedidev.h
-index b75915f..9f4f73f 100644
---- a/drivers/staging/comedi/comedidev.h
-+++ b/drivers/staging/comedi/comedidev.h
-@@ -400,7 +400,6 @@ int comedi_driver_unregister(struct comedi_driver *);
-  */
- #define PCI_VENDOR_ID_KOLTER		0x1001
- #define PCI_VENDOR_ID_ICP		0x104c
--#define PCI_VENDOR_ID_AMCC		0x10e8
- #define PCI_VENDOR_ID_DT		0x1116
- #define PCI_VENDOR_ID_IOTECH		0x1616
- #define PCI_VENDOR_ID_CONTEC		0x1221
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 3bed2e8..9d99119 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1311,6 +1311,8 @@
- #define PCI_DEVICE_ID_IMS_TT128		0x9128
- #define PCI_DEVICE_ID_IMS_TT3D		0x9135
+That's fine, I can maintain it as out-of-tree patch:).
  
-+#define PCI_VENDOR_ID_AMCC		0x10e8
-+
- #define PCI_VENDOR_ID_INTERG		0x10ea
- #define PCI_DEVICE_ID_INTERG_1682	0x1682
- #define PCI_DEVICE_ID_INTERG_2000	0x2000
-@@ -2256,7 +2258,7 @@
- /*
-  * ADDI-DATA GmbH communication cards <info@addi-data.com>
-  */
--#define PCI_VENDOR_ID_ADDIDATA_OLD             0x10E8
-+#define PCI_VENDOR_ID_ADDIDATA_OLD             0x10E8	/* actually AMCC */
- #define PCI_VENDOR_ID_ADDIDATA                 0x15B8
- #define PCI_DEVICE_ID_ADDIDATA_APCI7500        0x7000
- #define PCI_DEVICE_ID_ADDIDATA_APCI7420        0x7001
--- 
-1.8.2.1
+Thank you for the review.
 
+> Bjorn
