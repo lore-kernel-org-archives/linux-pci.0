@@ -1,92 +1,618 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
-Date: Fri, 12 Jul 2013 01:34:20 +0200
-Message-ID: <3718119.FLASu5DBx8@vostro.rjw.lan>
-In-Reply-To: <26431283.HJCKsss0rt@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:47500 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752734Ab3GIULO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 16:11:14 -0400
+Received: by mail-ob0-f176.google.com with SMTP id v19so7422401obq.21
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jul 2013 13:11:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1373394474.2602.299.camel@ul30vt.home>
+References: <20130528183527.3318.5365.stgit@bling.home> <1373303240.2602.28.camel@ul30vt.home>
+ <20130708193436.GA31985@google.com> <1373316556.2602.140.camel@ul30vt.home>
+ <20130708215131.GA1168@google.com> <1373394474.2602.299.camel@ul30vt.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 9 Jul 2013 14:10:53 -0600
+Message-ID: <CAErSpo5bRU95sWqBiZjqcD3PMiv3n9ZVd+m52=mc0a7ZehY=hg@mail.gmail.com>
+Subject: Re: [PATCH v2 0/2] iommu/intel: Quirk non-compliant PCIe-to-PCI bridges
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tue, Jul 9, 2013 at 12:27 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Mon, 2013-07-08 at 15:51 -0600, Bjorn Helgaas wrote:
+>> On Mon, Jul 08, 2013 at 02:49:16PM -0600, Alex Williamson wrote:
+>> > On Mon, 2013-07-08 at 13:34 -0600, Bjorn Helgaas wrote:
+>> > > On Mon, Jul 08, 2013 at 11:07:20AM -0600, Alex Williamson wrote:
+>> > > > Joerg,
+>> > > >
+>> > > > Where do we stand on this series?  You had a concern that the heuristic
+>> > > > used in patch 1/ could be dangerous.  The suggestion for detecting the
+>> > > > issue was actually from Bjorn who replied with his rationale.  Do you
+>> > > > want to go in the direction of a fixed whitelist or do you agree that
+>> > > > even if the heuristic breaks it provides better behavior than what we
+>> > > > have now?  Thanks,
+>> > >
+>> > > I'm trying to take a step back and look at the overall design, not
+>> > > these specific patches.
+>> > >
+>> > > IOMMUs translate addresses based on their source, i.e., a PCIe
+>> > > requester ID.  This is made more complicated by the fact that some
+>> > > bridges "take ownership" (change the requester ID as they forward
+>> > > transactions upstream), as well as the fact that conventional PCI has
+>> > > no requester ID at all.  And some broken devices apparently generate
+>> > > DMA requests using the requester ID of another device.
+>> > >
+>> > > We currently deal with this using the pci_find_upstream_pcie_bridge()
+>> > > and pci_get_dma_source() interfaces, but I think there's too much
+>> > > assembly required by their users.  pci_find_upstream_pcie_bridge()
+>> > > callers normally loop through all the bridges between the "upstream
+>> > > PCIe bridge" and the device, checking for bridges that might take
+>> > > ownership.  They probably also ought to use pci_get_dma_source() to
+>> > > account for the broken devices, but most callers don't.
+>> > >
+>> > > Most of this is PCI-specific stuff that should be of interest to all
+>> > > IOMMU drivers, and the overall structure of calls and looping should
+>> > > be the same for all of them, so it would be nice to factor it out
+>> > > somehow.
+>> > >
+>> > > The attached patch is guaranteed not to even compile; it's just to
+>> > > make this idea more concrete.  The basic idea is that since the IOMMU
+>> > > driver wants to perform some action for each possible requester ID the
+>> > > IOMMU might see, PCI could provide an iterator
+>> > > ("pci_for_each_requester_id()") to do that.
+>> > >
+>> > > Bjorn
+>> > >
+>> > >
+>> > > commit afad51492c6672b96c2b0735600d5695e30f7180
+>> > > Author: Bjorn Helgaas <bhelgaas@google.com>
+>> > > Date:   Wed Jul 3 16:04:26 2013 -0600
+>> > >
+>> > >     pci-add-for-each-requester-id
+>> > >
+>> > > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+>> > > index d0627fa..380eb03 100644
+>> > > --- a/drivers/pci/search.c
+>> > > +++ b/drivers/pci/search.c
+>> > > @@ -17,6 +17,89 @@
+>> > >  DECLARE_RWSEM(pci_bus_sem);
+>> > >  EXPORT_SYMBOL_GPL(pci_bus_sem);
+>> > >
+>> > > +#define PCI_REQUESTER_ID(dev)    (((dev)->bus->number << 8) | (dev)->devfn)
+>> > > +#define PCI_BRIDGE_REQUESTER_ID(bridge)  ((bridge)->subordinate->number << 8)
+>> > > +
+>> > > +static inline bool pci_is_pcix(struct pci_dev *dev)
+>> > > +{
+>> > > + return !!pci_pcix_cap(dev);     /* XXX not implemented */
+>> > > +}
+>> > > +
+>> > > +static bool pci_bridge_may_take_ownership(struct pci_dev *bridge)
+>> > > +{
+>> > > + /*
+>> > > +  * A PCIe to PCI/PCI-X bridge may take ownership per PCIe Bridge
+>> > > +  * Spec v1.0, sec 2.3.
+>> > > +  */
+>> > > + if (pci_is_pcie(bridge) &&
+>> > > +     pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE)
+>> > > +         return true;
+>> >
+>> > Assume we still need a quirk here, PCIe-to-PCI bridges without a PCIe
+>> > capability are exactly what causes the current bug.
+>>
+>> Likely so.  We might be able to identify that as "secondary bus is not
+>> PCIe" or something.
+>>
+>> > > +
+>> > > + /*
+>> > > +  * A PCI-X to PCI-X bridge need not take ownership because there
+>> > > +  * are requester IDs on the secondary PCI-X bus.  However, if a PCI
+>> > > +  * device is added on the secondary bus, the bridge must revert to
+>> > > +  * being a PCI-X to PCI bridge, and it then *would* take ownership.
+>> > > +  * Assuming a PCI-X to PCI-X bridge takes ownership means we can
+>> > > +  * tolerate a future hot-add without having to change existing
+>> > > +  * IOMMU mappings.
+>> > > +  */
+>> > > + if (pci_is_pcix(bridge))
+>> > > +         return true;
+>> > > +
+>> > > + return false;
+>> > > +}
+>> > > +
+>> > > +static struct pci_dev *pci_bridge_to_dev(struct pci_bus *bus,
+>> > > +                                  struct pci_dev *dev)
+>> > > +{
+>> > > + struct pci_dev *bridge;
+>> > > + struct pci_bus *child_bus;
+>> > > + u8 secondary, subordinate, busn = dev->bus->number;
+>> > > +
+>> > > + if (dev->bus == bus)
+>> > > +         return dev;
+>> > > +
+>> > > + /*
+>> > > +  * There may be several devices on "bus".  Find the one that is a
+>> > > +  * bridge leading to "dev".
+>> > > +  */
+>> > > + list_for_each_entry(bridge, &bus->devices, bus_list) {
+>> > > +         child_bus = bridge->subordinate;
+>> > > +         if (child_bus) {
+>> > > +                 secondary = child_bus->busn_res.start;
+>> > > +                 subordinate = child_bus->busn_res.end;
+>> > > +                 if (secondary <= busn && busn <= subordinate)
+>> > > +                         return bridge;
+>> > > +         }
+>> > > + }
+>> > > + return NULL;
+>> > > +}
+>> > > +
+>> > > +int pci_for_each_requester_id(struct pci_dev *bridge, struct pci_dev *dev,
+>> > > +                       int (*fn)(struct pci_dev *, void *),
+>> >
+>> > u16 requester_id
+>> >
+>> > > +                       void *data)
+>> > > +{
+>> > > + int ret;
+>> > > +
+>> > > + dev = pci_get_dma_source(dev);  /* XXX ref count screwup */
+>> >
+>> > It's unfortunate that our dma quirk still seems to only get called for
+>> > the end device where we could have bridges that need it too.
+>>
+>> Sure, we can do that if necessary.
+>>
+>> I'm not trying to present this as any kind of finished solution.  The
+>> point is to figure out if we can make an interface that's a little
+>> more abstract so we can pull the PCI topology issues out of the IOMMU
+>> drivers, and I just thought something that looked like code would be
+>> more concrete and easier to discuss.
+>>
+>> > > +
+>> > > + while (bridge != dev) {
+>> >
+>> >
+>> > I'm having a hard time understanding this function since bridge is never
+>> > defined in any of the below sample code.  Would bridge be the root port
+>> > above a device?  And what about devices connected to the RC?  Seems like
+>> > we'd need to traverse up the bus first, so there's a bit of missing
+>> > magic.
+>>
+>> I was assuming that an IOMMU could be either at the root of a PCI
+>> hierarchy or buried farther down.  If that's true, the IOMMU driver
+>> might need to supply the top of the PCI hierarchy for which it
+>> translates.  That's what I'm trying to get at with the "bridge"
+>> argument.
+>>
+>> If the IOMMU is buried, I assumed there was no point in iterating over
+>> bridges upstream of the IOMMU because it wouldn't see requester IDs of
+>> those upstream bridges.  PCI wouldn't have any way to figure out how
+>> far up to go, hence the argument.
+>
+> I don't think that getting the bridge is going to be quite so simple.
+> VT-d can have multiple IOMMUs, each handling a specific device or
+> hierarchy.  One IOMMU per domain can be default IOMMU for any device not
+> otherwise specified.  The IOMMU is not a PCI enumerable device.  AMD-Vi
+> does have a PCI visible IOMMU, but it's an endpoint on the root complex,
+> not the top of a hierarchy.
 
-I've made some progress with my ACPIPHP rework since I posted the series last
-time and here goes an update.
+If the only possible topology is that the IOMMU sees transactions
+coming out of a device on a root bus, then a bridge parameter is
+unnecessary, and we can just look at every bridge between the root bus
+and the device.  I just didn't know whether that was the only possible
+topology.
 
-First off, the previous series was somewhat racy, which should be fixed now.
-Apart from this there's quite some new material on top of the patches I posted
-last time (or rather on top of their new versions) and I integrated the
-Thunderbolt series from Mika with that.  As a result,
+If an IOMMU can be placed such that it's like a PCIe switch that
+happens to translate DMA addresses before forwarding upstream, then we
+might want a bridge parameter that identifies the "downstream port" of
+the IOMMU or the upstream port of a switch below the IOMMU.  Otherwise
+we would generate requester IDs unnecessarily for bridges above the
+IOMMU.
 
-https://patchwork.kernel.org/patch/2817341/
+> I'm warming up to your approach, but I think I'd rather see something
+> like:
+>
+> struct pci_dev *pci_get_requester_id(struct pci_dev *pdev)
 
-is required to be applied.
+This returns a "pci_dev *", not a requester ID, so for bridges that
+can take ownership, this depends on there being a pci_dev on the
+secondary bus with dev/fn == 0.  Maybe that's always true; I'm not
+sure.
 
-Still untested, still based on 3.10 with ACPI+PM 3.11 material merged on top,
-but this time I don't have any plans to add more patches to the series for the
-time being.  Also 3.11-rc1 should be out in a couple of days, so I'll be able
-to integrate this work with the previous cleanups series from Gerry and myself
-on top of it.
+> {
+>         do {
+>                 /* Apply DMA quirks at every step */
+>                 pdev = pci_get_dma_source(pdev);
+>
+>                 /* Done for PCIe devices or broken bridges, PCI-X TBD */
+>                 if (pci_is_pcie(pdev) || /* broken pcie bridge test */)
+>                         break;
+>
+>         } while (!pci_is_root_bus(pdev->bus) && (pdev = pdev->bus->self));
+>
+>         return pdev;
 
-I did my best not to change too much at a time and some steps add stuff that
-is removed by the subsequent ones, so hopefully it is bisectable.
+I'm not sure it's sufficient to stop when we find a PCIe bridge.  For
+example, in this topology:
 
-If anyone finds something questionable or outright bogus in these patches,
-please let me know before it's too late. ;-)
+  00:1c.0 PCIe root port
+  01:00.0 PCIe-to-PCI bridge
+  02:00.0 PCI-to-PCIe reverse bridge
+  03:00.0 PCIe switch upstream port
+  04:00.0 PCIe switch downstream port
+  05:00.0 PCIe endpoint
 
-[ 1/30] Make bus registration and unregistration symmetric.  [Resend]
-[ 2/30] Consolidate acpiphp_enumerate_slots().  [Resend]
-[ 3/30] Fix error code path in register_slot().  [Resend]
-[ 4/30] Introduce hotplug context objects for ACPI device objects corresponding
-        to PCI hotplug devices.  [Update]
-[ 5/30] Unified notify handler for hotplug events.  [Update]
-[ 6/30] Drop acpiphp_handle_to_bridge() and use context objects instead of it.  [Update]
-[ 7/30] Pass entire hotplug context objects (instead of their fields
-        individually) to event handling work functions.  [Update]
-[ 8/30] Merge hotplug event handling functions.  [Update]
-[ 9/30] Drop func field from struct acpiphp_bridge.
-[10/30] Refactor slot allocation code in register_slot().
-[11/30] Make acpiphp_enumerate_slots() to register all devices on the given bus
-        and install the notification handler for all of them.
-[12/30] Drop sun field from struct acpiphp_slot.
-[13/30] Use common slot count variable in register_slot().
-[14/30] Drop flags field from struct acpiphp_bridge.
-[15/30] Embed function structure into struct acpiphp_context.
-[16/30] Drop handle field from struct acpiphp_func.
-[17/30] Drop handle field from struct acpiphp_bridge.
-[18/30] Store parent bridge pointer in function objects and bus pointer in slot
-        objects.
-[19/30] Rework ACPI namespace scanning and trimming routines.
-[20/30] Drop redundant checks from check_hotplug_bridge().
-[21/30] Consolidate slot disabling and ejecting
-[22/30] Do not queue up event handling work items for non-hotplug events.
-[23/30] Do not execute _PS0 and _PS3 directly.
-[24/30] Do not check SLOT_ENABLED in enable_device().  [Thunderbolt series]
-[25/30] Allow slots without new devices to be rescanned.  [Thunderbolt series]
-[26/30] Check for new devices on enabled slots.  [Thunderbolt series, TBD]
-[27/30] Get rid of unused constands in acpiphp.h.  [Thunderbolt series]
-[28/30] Sanitize acpiphp_get_(latch)|(adapter)_status().  [Thunderbolt series]
-[29/30] Redefine enable_device() and disable_device() (rename and change to void).
-[30/30] Clean up the usage of bridge_mutex.
+the IOMMU will only see requester IDs of 02:00.0, even though if we
+search up from 05:00.0 we find a PCIe device at 04:00.0.  Maybe this
+is too contrived, but reverse bridges are sometimes used on add-in
+cards so a new part can be used in older systems, e.g., in this case
+the add-in card would contain 02:00.0 and everything below it.
 
-Patch [26/30] seems to go over the top with dropping the non-responsive devices
-and it probaby needs some more thought.  Also the algorithm of bus checks and
-device checks may need to be improved in the future, but for the time being I
-think it is good enough.
+> }
+>
+>
+> /* Start with requester ID pdev and pdev->bus, this way we handle both peer
+>  * and parent requester IDs */
+> int pci_for_each_requester_id(struct pci_dev *pdev, struct pci_bus *bus,
+>                                      int (*fn)(struct pci_dev *, void *), void *data)
+> {
+>         struct pci_dev *tmp;
+>         int ret;
+>
+>         list_for_each_entry(tmp, &bus->devices, bus_list) {
+>                 if (pci_get_requester_id(tmp) == pdev) {
+>                         ret = fn(tmp, data);
 
-Comments welcome!
+What does the IOMMU driver supply for "bus"?  Presumably it doesn't
+supply "pdev->bus" because you're traversing downward
+("tmp->subordinate" below).
 
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>                         if (ret)
+>                                 ...
+>
+>                         if (tmp->subordinate) {
+>                                 ret = pci_for_each_requester_id(pdev, tmp->subordinate, fn);
+>                                 if (ret)
+>                                         ...
+>                         }
+>                 }
+>         }
+>
+>         return ret;
+> }
+>
+> Seems like that would be sufficient to leverage the intel-iommu changes
+> you've drafted.  Thanks,
+>
+> Alex
+>
+>> > > +         if (pci_bridge_may_take_ownership(bridge)) {
+>> > > +                 ret = fn(dev, PCI_BRIDGE_REQUESTER_ID(bridge), data);
+>> > > +                 if (ret)
+>> > > +                         return ret;
+>> > > +         }
+>> > > +         bridge = pci_bridge_to_dev(bridge->subordinate, dev);
+>> > > + }
+>> > > +
+>> > > + if (pci_is_pcie(dev) || pci_is_pcix(dev))
+>> > > +         return fn(dev, PCI_REQUESTER_ID(dev), data);
+>> > > +
+>> > > + /* Conventional PCI has no requester ID */
+>> > > + return 0;
+>> > > +}
+>> > > +
+>> > >  /*
+>> > >   * find the upstream PCIe-to-PCI bridge of a PCI device
+>> > >   * if the device is PCIE, return NULL
+>> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> > > index 3a24e4f..cbcc82f 100644
+>> > > --- a/include/linux/pci.h
+>> > > +++ b/include/linux/pci.h
+>> > > @@ -794,6 +794,8 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+>> > >  }
+>> > >  struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
+>> > >  int pci_dev_present(const struct pci_device_id *ids);
+>> > > +void pci_for_each_requester_id(struct pci_dev *bridge, struct pci_dev *dev,
+>> > > +                        int (*fn)(struct pci_dev *, void *), void *data);
+>> > >
+>> > >  int pci_bus_read_config_byte(struct pci_bus *bus, unsigned int devfn,
+>> > >                        int where, u8 *val);
+>> > >
+>> > > commit 6e770d7bf4ef95207df4ac4c42ef4406ff7bc54e
+>> > > Author: Bjorn Helgaas <bhelgaas@google.com>
+>> > > Date:   Wed Jul 3 12:02:15 2013 -0600
+>> > >
+>> > >     intel-iommu-upstream-pcie
+>> >
+>> > I assume this one would is also going to apply dma quirks to dma_ops,
+>> > which I'm all for.
+>> >
+>> > > diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+>> > > index b91564d..bdb6e6a 100644
+>> > > --- a/drivers/iommu/intel-iommu.c
+>> > > +++ b/drivers/iommu/intel-iommu.c
+>> > > @@ -1669,79 +1669,68 @@ static int domain_context_mapping_one(struct dmar_domain *domain, int segment,
+>> > >   return 0;
+>> > >  }
+>> > >
+>> > > +struct domain_context_info {
+>> > > + struct dmar_domain *domain;
+>> > > + struct pci_dev *dev;
+>> > > + int translation;
+>> > > + struct intel_iommu *iomumu;
+>> >
+>> > s/iomumu/iommu/
+>> >
+>> > > + bool mapped;
+>> > > +};
+>> > > +
+>> > > +static int context_mapping(struct pci_dev *dev, u16 requester_id, void *data)
+>> > > +{
+>> > > + struct domain_context_info *dev_info = data;
+>> > > + int segment = pci_domain_nr(data->dev);
+>> >
+>> > dev_info->dev
+>> >
+>> > > + u8 bus = data->requester_id >> 8;
+>> >
+>> > s/data->//
+>> >
+>> > > + u8 devfn = data->requester_id & 0xff;
+>> >
+>> > s/data->//
+>>
+>> I told you it wouldn't even compile :)  I'm only trying to present a
+>> possibility, not all the nitty-gritty details.
+>>
+>> > > +
+>> > > + return domain_context_mapping_one(data->domain, segment,
+>> > > +                                   bus, devfn, data->translation);
+>> > > +}
+>> > > +
+>> > >  static int domain_context_mapping(struct dmar_domain *domain,
+>> > >                             struct pci_dev *pdev, int translation)
+>> > >  {
+>> > > - int ret;
+>> > > - struct pci_dev *tmp, *parent;
+>> > > + struct domain_context_info data;
+>> > > + struct pci_dev *bridge;
+>> > >
+>> > > - ret = domain_context_mapping_one(domain, pci_domain_nr(pdev->bus),
+>> > > -                                  pdev->bus->number, pdev->devfn,
+>> > > -                                  translation);
+>> > > - if (ret)
+>> > > -         return ret;
+>> > > + data.domain = domain;
+>> > > + data.dev = pdev;
+>> > > + data.translation = translation;
+>> > > + bridge = xx;
+>> >
+>> > Darn, I was hoping you were going to reveal where bridge comes from.
+>> >
+>> > > + return pci_for_each_requester_id(bridge, pdev, context_mapping, &data);
+>> > > +}
+>> > >
+>> > > - /* dependent device mapping */
+>> > > - tmp = pci_find_upstream_pcie_bridge(pdev);
+>> > > - if (!tmp)
+>> > > -         return 0;
+>> > > - /* Secondary interface's bus number and devfn 0 */
+>> > > - parent = pdev->bus->self;
+>> > > - while (parent != tmp) {
+>> > > -         ret = domain_context_mapping_one(domain,
+>> > > -                                          pci_domain_nr(parent->bus),
+>> > > -                                          parent->bus->number,
+>> > > -                                          parent->devfn, translation);
+>> > > -         if (ret)
+>> > > -                 return ret;
+>> > > -         parent = parent->bus->self;
+>> > > - }
+>> > > - if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
+>> > > -         return domain_context_mapping_one(domain,
+>> > > -                                 pci_domain_nr(tmp->subordinate),
+>> > > -                                 tmp->subordinate->number, 0,
+>> > > -                                 translation);
+>> > > - else /* this is a legacy PCI bridge */
+>> > > -         return domain_context_mapping_one(domain,
+>> > > -                                           pci_domain_nr(tmp->bus),
+>> > > -                                           tmp->bus->number,
+>> > > -                                           tmp->devfn,
+>> > > -                                           translation);
+>> > > +static int is_context_mapped(struct pci_dev *dev, u16 requester_id, void *data)
+>> > > +{
+>> > > + struct domain_context_info *dev_info = data;
+>> > > + u8 bus = data->requester_id >> 8;
+>> > > + u8 devfn = data->requester_id & 0xff;
+>> > > + bool ret;
+>> > > +
+>> > > + ret = device_context_mapped(dev_info->iommu, bus, devfn);
+>> > > + if (!ret)
+>> > > +         dev_info->mapped = false;
+>> > > +
+>> > > + return 0;
+>> > >  }
+>> > >
+>> > >  static bool domain_context_mapped(struct pci_dev *pdev)
+>> > >  {
+>> > > - bool ret;
+>> > > - struct pci_dev *tmp, *parent;
+>> > > + struct domain_context_info data;
+>> > >   struct intel_iommu *iommu;
+>> > > + struct pci_dev *bridge;
+>> > >
+>> > >   iommu = device_to_iommu(pci_domain_nr(pdev->bus), pdev->bus->number,
+>> > >                           pdev->devfn);
+>> > >   if (!iommu)
+>> > >           return false;
+>> > >
+>> > > - ret = device_context_mapped(iommu, pdev->bus->number, pdev->devfn);
+>> > > - if (!ret)
+>> > > -         return false;
+>> > > - /* dependent device mapping */
+>> > > - tmp = pci_find_upstream_pcie_bridge(pdev);
+>> > > - if (!tmp)
+>> > > -         return true;
+>> > > - /* Secondary interface's bus number and devfn 0 */
+>> > > - parent = pdev->bus->self;
+>> > > - while (parent != tmp) {
+>> > > -         ret = device_context_mapped(iommu, parent->bus->number,
+>> > > -                                     parent->devfn);
+>> > > -         if (!ret)
+>> > > -                 return false;
+>> > > -         parent = parent->bus->self;
+>> > > - }
+>> > > - if (pci_is_pcie(tmp))
+>> > > -         return device_context_mapped(iommu, tmp->subordinate->number,
+>> > > -                                      0);
+>> > > - else
+>> > > -         return device_context_mapped(iommu, tmp->bus->number,
+>> > > -                                      tmp->devfn);
+>> > > + data.iommu = iommu;
+>> > > + data.mapped = true;
+>> > > + bridge = xx;
+>> > > + pci_for_each_requester_id(bridge, pdev, is_context_mapped, &data);
+>> > > + return data.mapped;
+>> > >  }
+>> > >
+>> > >  /* Returns a number of VTD pages, but aligned to MM page size */
+>> > > @@ -1961,6 +1950,27 @@ static struct dmar_domain *find_domain(struct pci_dev *pdev)
+>> > >   return NULL;
+>> > >  }
+>> > >
+>> > > +static int find_domain2(struct pci_dev *dev, u16 requester_id, void *data)
+>> > > +{
+>> > > + struct domain_context_info *dev_info = data;
+>> > > + int segment = pci_domain_nr(data->dev);
+>> > > + u8 bus = data->requester_id >> 8;
+>> > > + u8 devfn = data->requester_id & 0xff;
+>> > > + unsigned long flags;
+>> > > + struct device_domain_info *info;
+>> > > +
+>> > > + spin_lock_irqsave(&device_domain_lock, flags);
+>> > > + list_for_each_entry(info, &device_domain_list, global) {
+>> > > +         if (info->segment == segment &&
+>> > > +             info->bus == bus && info->devfn == devfn) {
+>> > > +                 data->domain = info->domain;
+>> > > +                 break;
+>> > > +         }
+>> > > + }
+>> > > + spin_unlock_irqrestore(&device_domain_lock, flags);
+>> > > + return 0;
+>> > > +}
+>> > > +
+>> > >  /* domain is initialized */
+>> > >  static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+>> > >  {
+>> > > @@ -1968,11 +1978,11 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+>> > >   struct intel_iommu *iommu;
+>> > >   struct dmar_drhd_unit *drhd;
+>> > >   struct device_domain_info *info, *tmp;
+>> > > - struct pci_dev *dev_tmp;
+>> > >   unsigned long flags;
+>> > >   int bus = 0, devfn = 0;
+>> > >   int segment;
+>> > >   int ret;
+>> > > + struct domain_context_info data;
+>> > >
+>> > >   domain = find_domain(pdev);
+>> > >   if (domain)
+>> > > @@ -1980,29 +1990,13 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+>> > >
+>> > >   segment = pci_domain_nr(pdev->bus);
+>> > >
+>> > > - dev_tmp = pci_find_upstream_pcie_bridge(pdev);
+>> > > - if (dev_tmp) {
+>> > > -         if (pci_is_pcie(dev_tmp)) {
+>> > > -                 bus = dev_tmp->subordinate->number;
+>> > > -                 devfn = 0;
+>> > > -         } else {
+>> > > -                 bus = dev_tmp->bus->number;
+>> > > -                 devfn = dev_tmp->devfn;
+>> > > -         }
+>> > > -         spin_lock_irqsave(&device_domain_lock, flags);
+>> > > -         list_for_each_entry(info, &device_domain_list, global) {
+>> > > -                 if (info->segment == segment &&
+>> > > -                     info->bus == bus && info->devfn == devfn) {
+>> > > -                         found = info->domain;
+>> > > -                         break;
+>> > > -                 }
+>> > > -         }
+>> > > -         spin_unlock_irqrestore(&device_domain_lock, flags);
+>> > > -         /* pcie-pci bridge already has a domain, uses it */
+>> > > -         if (found) {
+>> > > -                 domain = found;
+>> > > -                 goto found_domain;
+>> > > -         }
+>> > > + data.domain = NULL;
+>> > > + data.dev = pdev;
+>> > > + bridge = xx;
+>> > > + pci_for_each_requester_id(bridge, pdev, find_domain2, &data);
+>> > > + if (data.domain) {
+>> > > +         domain = data.domain;
+>> > > +         goto found_domain;
+>> > >   }
+>> > >
+>> > >   domain = alloc_domain();
+>> > > @@ -3734,31 +3728,29 @@ int __init intel_iommu_init(void)
+>> > >   return 0;
+>> > >  }
+>> > >
+>> > > +static int detach_requester(struct pci_dev *dev, u16 requester_id, void *data)
+>> > > +{
+>> > > + struct domain_context_info *dev_info = data;
+>> > > + struct intel_iommu *iommu = data->iommu;
+>> > > + u8 bus = data->requester_id >> 8;
+>> > > + u8 devfn = data->requester_id & 0xff;
+>> > > +
+>> > > + iommu_detach_dev(iommu, bus, devfn);
+>> > > + return 0;
+>> > > +}
+>> > > +
+>> > >  static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
+>> > >                                      struct pci_dev *pdev)
+>> > >  {
+>> > > - struct pci_dev *tmp, *parent;
+>> > > + struct domain_context_info data;
+>> > >
+>> > >   if (!iommu || !pdev)
+>> > >           return;
+>> > >
+>> > >   /* dependent device detach */
+>> > > - tmp = pci_find_upstream_pcie_bridge(pdev);
+>> > > - /* Secondary interface's bus number and devfn 0 */
+>> > > - if (tmp) {
+>> > > -         parent = pdev->bus->self;
+>> > > -         while (parent != tmp) {
+>> > > -                 iommu_detach_dev(iommu, parent->bus->number,
+>> > > -                                  parent->devfn);
+>> > > -                 parent = parent->bus->self;
+>> > > -         }
+>> > > -         if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
+>> > > -                 iommu_detach_dev(iommu,
+>> > > -                         tmp->subordinate->number, 0);
+>> > > -         else /* this is a legacy PCI bridge */
+>> > > -                 iommu_detach_dev(iommu, tmp->bus->number,
+>> > > -                                  tmp->devfn);
+>> > > - }
+>> > > + data.iommu = iommu;
+>> > > + bridge = xx;
+>> > > + pci_for_each_requester_id(bridge, pdev, detach_requester, &data);
+>> > >  }
+>> > >
+>> > >  static void domain_remove_one_dev_info(struct dmar_domain *domain,
+>> > > --
+>> > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> > > the body of a message to majordomo@vger.kernel.org
+>> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> >
+>> >
+>> >
+>
+>
+>
