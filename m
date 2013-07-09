@@ -1,186 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
-Date: Tue, 23 Jul 2013 23:39:06 +0200
-Message-ID: <3215120.cRBBS5jciE@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQVq3O45SOr9h6c5dBiAZs2Ry6z6L_irW8AE-fZ_1NmMXQ@mail.gmail.com>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan> <CAE9FiQVq3O45SOr9h6c5dBiAZs2Ry6z6L_irW8AE-fZ_1NmMXQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38230 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751945Ab3GIUjc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Jul 2013 16:39:32 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 0/3] [SCSI] megaraid: Remove local (struct pci_dev) pdev's
+To: megaraidlinux@lsi.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 09 Jul 2013 14:39:27 -0600
+Message-ID: <20130709203927.31676.35169.stgit@amt.stowe>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, July 22, 2013 11:49:45 PM Yinghai Lu wrote:
-> On Wed, Jul 17, 2013 at 4:05 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > Hi All,
-> >
-> > Now the series has been rebased on top of current linux-pm.git/linux-next
-> > and tested on two systems with Thunderbolt.  Some changes have been made too. ->
-> >
-> > On Friday, July 12, 2013 01:34:20 AM Rafael J. Wysocki wrote:
-> >> Hi,
-> >>
-> >> I've made some progress with my ACPIPHP rework since I posted the series last
-> >> time and here goes an update.
-> >>
-> >> First off, the previous series was somewhat racy, which should be fixed now.
-> >> Apart from this there's quite some new material on top of the patches I posted
-> >> last time (or rather on top of their new versions) and I integrated the
-> >> Thunderbolt series from Mika with that.  As a result,
-> >>
-> >> https://patchwork.kernel.org/patch/2817341/
-> >>
-> >> is required to be applied.
-> >>
-> >> Still untested, still based on 3.10 with ACPI+PM 3.11 material merged on top,
-> >> but this time I don't have any plans to add more patches to the series for the
-> >> time being.  Also 3.11-rc1 should be out in a couple of days, so I'll be able
-> >> to integrate this work with the previous cleanups series from Gerry and myself
-> >> on top of it.
-> >>
-> >> I did my best not to change too much at a time and some steps add stuff that
-> >> is removed by the subsequent ones, so hopefully it is bisectable.
-> >>
-> >> If anyone finds something questionable or outright bogus in these patches,
-> >> please let me know before it's too late. ;-)
-> >>
-> >> [ 1/30] Make bus registration and unregistration symmetric.  [Resend]
-> >> [ 2/30] Consolidate acpiphp_enumerate_slots().  [Resend]
-> >> [ 3/30] Fix error code path in register_slot().  [Resend]
-> >> [ 4/30] Introduce hotplug context objects for ACPI device objects corresponding
-> >>         to PCI hotplug devices.  [Update]
-> >> [ 5/30] Unified notify handler for hotplug events.  [Update]
-> >> [ 6/30] Drop acpiphp_handle_to_bridge() and use context objects instead of it.  [Update]
-> >> [ 7/30] Pass entire hotplug context objects (instead of their fields
-> >>         individually) to event handling work functions.  [Update]
-> >> [ 8/30] Merge hotplug event handling functions.  [Update]
-> >> [ 9/30] Drop func field from struct acpiphp_bridge.
-> >> [10/30] Refactor slot allocation code in register_slot().
-> >> [11/30] Make acpiphp_enumerate_slots() to register all devices on the given bus
-> >>         and install the notification handler for all of them.
-> >> [12/30] Drop sun field from struct acpiphp_slot.
-> >> [13/30] Use common slot count variable in register_slot().
-> >
-> > -> The one above has been dropped, because it might cause regressions to appear
-> > on some systems, but that's not a big deal.
-> >
-> > The numbering of the patches below has changed as a result, so the next one is
-> > [13/30] now and so on.
-> >
-> >> [14/30] Drop flags field from struct acpiphp_bridge.
-> >> [15/30] Embed function structure into struct acpiphp_context.
-> >> [16/30] Drop handle field from struct acpiphp_func.
-> >> [17/30] Drop handle field from struct acpiphp_bridge.
-> >> [18/30] Store parent bridge pointer in function objects and bus pointer in slot
-> >>         objects.
-> >> [19/30] Rework ACPI namespace scanning and trimming routines.
-> >> [20/30] Drop redundant checks from check_hotplug_bridge().
-> >> [21/30] Consolidate slot disabling and ejecting
-> >> [22/30] Do not queue up event handling work items for non-hotplug events.
-> >> [23/30] Do not execute _PS0 and _PS3 directly.
-> >
-> > This one was fixed after Mika had reported a problem with it.
-> >
-> >> [24/30] Do not check SLOT_ENABLED in enable_device().  [Thunderbolt series]
-> >> [25/30] Allow slots without new devices to be rescanned.  [Thunderbolt series]
-> >> [26/30] Check for new devices on enabled slots.  [Thunderbolt series, TBD]
-> >
-> > This one was reworked to use acpi_bus_trim() on ACPI device objects
-> > corresponding to PCI devices being removed (it also uses _STA to check the
-> > status of those devices if available).
-> >
-> >> [27/30] Get rid of unused constands in acpiphp.h.  [Thunderbolt series]
-> >> [28/30] Sanitize acpiphp_get_(latch)|(adapter)_status().  [Thunderbolt series]
-> >> [29/30] Redefine enable_device() and disable_device() (rename and change to void).
-> >> [30/30] Clean up the usage of bridge_mutex.
-> >
-> > The one above is [29/30] now and we have added one more patch:
-> >
-> > [30/30] Drop check_sub_bridges() which isn't necessary any more.
-> >
-> > The updated patches follow.
-> >
-> > If you don't hate this stuff, I'll put it into linux-next over the weekend for
-> > further testing.
-> 
-> pm/linux-next with those patches breaks acpi root bus hotplug.
-> it is kvm guest:
-> 
-> 10:~ # echo "PCI0 3" > /sys/kernel/debug/acpi/sci_notify
-> [   92.549508] ACPI: ACPI device name is <PCI0>, event code is <3>
-> [   92.552433] ACPI: Notify event is queued
-> 10:~ # [   92.554279] ACPI: \_SB_.PCI0: Device eject notify on
-> _handle_hotplug_event_root
-> [   92.677696] ACPI: Device 0000:00:03.0 -x-> \_SB_.PCI0.S03_
-> [   92.679229] ACPI: Device 0000:00:02.0 -x-> \_SB_.PCI0.VGA_
-> [   92.680684] ACPI: Device 0000:00:01.3 -x-> \_SB_.PCI0.PX13
-> [   92.682235] ata1.00: disabled
-> [   92.689000] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> [   92.690399] sd 0:0:0:0: [sda]
-> [   92.691133] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-> [   92.693151] sd 0:0:0:0: [sda] Stopping disk
-> [   92.694682] sd 0:0:0:0: [sda] START_STOP FAILED
-> [   92.696749] sd 0:0:0:0: [sda]
-> [   92.698157] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-> [   92.702852] ata2.00: disabled
-> [   92.711550] ACPI: Device 0000:00:01.0 -x-> \_SB_.PCI0.ISA_
-> [   92.713208] ACPI: Device pci0000:00 -x-> \_SB_.PCI0
-> [   92.713226]   acpi_pci_iommu_remove is called for \_SB_.PCI0 ffff88007ab3f1e0
-> [   92.713274]   acpi_pci_ioapic_remove is called for \_SB_.PCI0
-> ffff88007ab3f1e0
-> [   92.713345] pci 0000:00:00.0: freeing pci_dev info
-> [   92.713363] pci 0000:00:01.0: freeing pci_dev info
-> [   92.713366] pci 0000:00:01.1: freeing pci_dev info
-> [   92.713376] pci 0000:00:01.3: freeing pci_dev info
-> [   92.713380] pci 0000:00:02.0: freeing pci_dev info
-> [   92.713384] pci 0000:00:03.0: freeing pci_dev info
-> [   92.713396] pci_bus 0000:00: busn_res: [bus 00-ff] is released
-> [   92.713441] BUG: unable to handle kernel NULL pointer dereference
-> at           (null)
-> [   92.713446] IP: [<ffffffff81557910>]
-> acpiphp_unregister_hotplug_slot+0x20/0x60
+Is the "megaraid" driver still actively used and maintained?  I originally
+posted this series on 06.07.2013 and after receiving no comments, pinged
+the list again on 06.17.2013 and still received no comments/feedback.
 
-Ugh, stupid bug, sorry about it.  We try to unregister something that may have
-not been registered.
-
-Can you please check if the appended patch helps (on top of
-linux-pm.git/linux-next)?
-
-Rafael
+Trying again as I believe there is a real issue here, which I'd like
+confirmation on, and we really should remove the local copy/usage of
+'struct pci_dev' that this driver currently maintains.
 
 
+While the megaraid device itself may be 64-bit DMA capable, 32-bit address
+restricted DMA buffers are apparently required for "internal commands" as
+is denoted by a couple of comments - "For all internal commands, the
+buffer must be allocated in <4GB address range" - within the driver.
+
+If the device is 64-bit DMA capable then, once it is setup, any subsequent
+DMA allocations for "internal commands" would not be properly restricted
+due to megaraid_probe_one() having called pci_set_dma_mask() on pdev with
+DMA_BIT_MASK(64).  The driver attempts to solve this by using
+make_local_pdev() to dynamically create local pci_dev structures which are
+then set and used for allocating 32-bit address space restricted DMA
+buffers[1] but I don't believe that the implementation works as intended.
+
+
+Assume that the megaraid device is 64-bit DMA capable.  While probing the
+device and attaching the megaraid driver, pci_set_dma_mask() is called
+with the "originating pdev" and a DMA_BIT_MASK of 64.  As a result, any
+subsequent dynamic DMA related allocations associated with the
+"originating pdev" will acquire 64-bit based buffers, which do not meet
+the addressing restrictions for internal commands.
+
+  megaraid_probe_one(struct pci_dev *pdev, ...)
+      ...
+      pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
+
+As mentioned, the driver attempts to solve this by using make_local_pdev()
+to dynamically create local pci_dev structures - "local pdev's" - which
+are set with a DMA_BIT_MASK of 32.
+
+  make_local_pdev
+      alloc_pci_dev
+      memcpy
+      pci_set_dma_mask
+          dma_set_mask
+              *dev->dma_mask = mask;
+
+The "local pdev" is then used in allocating a DMA buffer in an attempt to
+meet the < 4 GB restriction.
+
+For a 64-bit DMA capable device, the "originating pdev" will have its
+'dma_mask' set to 0xffffffffffffffff after the driver attaches.
+Subsequently, when an internal command is initiated, make_local_pdev() is
+called.  make_local_pdev() uses the PCI's core to allocate a "local pdev"
+and then copies the "originating pdev" content into the newly allocated
+"local pdev".  As a result of copying the "originating pdev" content into
+the "local pdev", pdev->dev.dma_mask will be pointing back to the
+"originating pdev's" 'dma_mask' member, not the "local pdev's" as
+intended.  Thus, when make_local_pdev() calls pci_set_dma_mask() in an
+attempt to set the "local pdev's" DMA mask to 32 it will instead overwrite
+the "originating pdev's" DMA mask.  Thus, after any user initiated
+commands are issued, all subsequent DMA allocations will be 32-bit
+restricted from that point onward regardless of whether they are internal
+commands or otherwise.
+
+
+This patch fixes the issue by removing the setup of DMA_BIT_MASK to 64 in
+megaraid_probe_one(), leaving the driver with default 32-bit DMA
+capabilities, as it currently ends up in such a state anyway after any
+internal commands are initiated.
+
+
+[1] It seems strange that both mega_buffer/buf_dma_handle and
+    make_local_pdev() both exist for internal commands but this has been
+    the case for a long time - at least since 2.6.12-rc2.  Perhaps there
+    is some coalescing that could be done.
 ---
- drivers/pci/hotplug/acpiphp_glue.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Myron Stowe (3):
+      [SCSI] megaraid: Remove 64-bit DMA related dead code
+      [SCSI] megaraid: Remove local pdev's
+      [SCSI] megaraid: Remove 64-bit DMA_BIT_MASK capability
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -340,6 +340,7 @@ static acpi_status register_slot(acpi_ha
- 
- 		retval = acpiphp_register_hotplug_slot(slot, sun);
- 		if (retval) {
-+			slot->slot = NULL;
- 			bridge->nr_slots--;
- 			if (retval == -EBUSY)
- 				warn("Slot %llu already registered by another "
-@@ -429,7 +430,8 @@ static void cleanup_bridge(struct acpiph
- 					err("failed to remove notify handler\n");
- 			}
- 		}
--		acpiphp_unregister_hotplug_slot(slot);
-+		if (slot->slot)
-+			acpiphp_unregister_hotplug_slot(slot);
- 	}
- 
- 	mutex_lock(&bridge_mutex);
 
+ drivers/scsi/megaraid.c |  152 ++++++++---------------------------------------
+ drivers/scsi/megaraid.h |    1 
+ 2 files changed, 27 insertions(+), 126 deletions(-)
+
+-- 
