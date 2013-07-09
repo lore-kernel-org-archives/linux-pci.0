@@ -1,106 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51E7A0F8.9000308@mageia.org>
-Date: Thu, 18 Jul 2013 11:02:00 +0300
-From: Thomas Backlund <tmb@mageia.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:10550 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1753281Ab3GIINI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Jul 2013 04:13:08 -0400
+Message-ID: <51DBC547.4040308@cn.fujitsu.com>
+Date: Tue, 09 Jul 2013 16:09:43 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-To: Kamal Mostafa <kamal@canonical.com>
-CC: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	kernel-team@lists.ubuntu.com, Neil Horman <nhorman@tuxdriver.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	=?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>,
-	Luis Henriques <luis.henriques@canonical.com>
-Subject: Re: [PATCH 089/145] iommu/vt-d: add quirk for broken interrupt remapping
- on 55XX chipsets
-References: <1374101277-7915-1-git-send-email-kamal@canonical.com> <1374101277-7915-90-git-send-email-kamal@canonical.com>
-In-Reply-To: <1374101277-7915-90-git-send-email-kamal@canonical.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Rafael <rjw@sisk.pl>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
+	Oliver Neukum <oneukum@suse.de>,
+	Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH 1/2] PCI: introduce PCIe Device Serial NUmber Capability
+ support
+References: <1373356545-45944-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1373356545-45944-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-18.07.2013 01:47, Kamal Mostafa skrev:
-> 3.8.13.5 -stable review patch.  If anyone has any objections, please let me know.
->
-> ------------------
->
-> From: Neil Horman <nhorman@tuxdriver.com>
->
-> commit 03bbcb2e7e292838bb0244f5a7816d194c911d62 upstream.
->
-> A few years back intel published a spec update:
-> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
->
-> For the 5520 and 5500 chipsets which contained an errata (specificially errata
-> 53), which noted that these chipsets can't properly do interrupt remapping, and
-> as a result the recommend that interrupt remapping be disabled in bios.  While
-> many vendors have a bios update to do exactly that, not all do, and of course
-> not all users update their bios to a level that corrects the problem.  As a
-> result, occasionally interrupts can arrive at a cpu even after affinity for that
-> interrupt has be moved, leading to lost or spurrious interrupts (usually
-> characterized by the message:
-> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
->
-> There have been several incidents recently of people seeing this error, and
-> investigation has shown that they have system for which their BIOS level is such
-> that this feature was not properly turned off.  As such, it would be good to
-> give them a reminder that their systems are vulnurable to this problem.  For
-> details of those that reported the problem, please see:
-> https://bugzilla.redhat.com/show_bug.cgi?id=887006
->
-> [ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
->
-> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> CC: Prarit Bhargava <prarit@redhat.com>
-> CC: Don Zickus <dzickus@redhat.com>
-> CC: Don Dutile <ddutile@redhat.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Asit Mallick <asit.k.mallick@intel.com>
-> CC: David Woodhouse <dwmw2@infradead.org>
-> CC: linux-pci@vger.kernel.org
-> CC: Joerg Roedel <joro@8bytes.org>
-> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
-> Signed-off-by: Joerg Roedel <joro@8bytes.org>
-> Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+On 07/09/2013 03:55 PM, Yijing Wang wrote:
+
+> Introduce PCIe Ext Capability Device Serial Number support,
+> so we can use the unique device serial number to identify
+> the physical device. During system suspend, if the PCIe
+> device was removed and inserted a new same device, after
+> system resume there is no good way to identify it, maybe
+> Device Serial Number is a good choice if device support.
+
+Nice idea!
+
+Regards,
+Gu
+
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+
+
+Reviewed-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: Oliver Neukum <oneukum@suse.de>
+> Cc: Paul Bolle <pebolle@tiscali.nl>
+> Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Cc: linux-pci@vger.kernel.org
 > ---
->   arch/x86/include/asm/irq_remapping.h |  2 ++
->   arch/x86/kernel/early-quirks.c       | 20 ++++++++++++++++++++
->   drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
->   drivers/iommu/irq_remapping.c        |  6 ++++++
->   drivers/iommu/irq_remapping.h        |  2 ++
->   5 files changed, 40 insertions(+)
->
+>  drivers/pci/pci.c   |   33 +++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h   |    1 +
+>  drivers/pci/probe.c |    3 +++
+>  include/linux/pci.h |    4 ++++
+>  4 files changed, 41 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e37fea6..d08df2b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2048,6 +2048,39 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
+>  }
+>  
+>  /**
+> + * pci_get_dsn - get device serial number
+> + * @dev: the PCI device
+> + * @sn: saved device serial number
+> + */
+> +void pci_get_dsn(struct pci_dev *dev, u64 *sn)
+> +{
+> +	int pos;
+> +	u32 lo, hi;
+> +
+> +	if (!pci_is_pcie(dev))
+> +		goto out;
+> +
+> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
+> +	if (!pos)
+> +		goto out;
+> +
+> +	pci_read_config_dword(dev, pos + 4, &lo);
+> +	pci_read_config_dword(dev, pos + 8, &hi);
+> +	*sn = ((u64)hi << 32) | lo;
+> +	return;
+> +
+> +out:
+> +	*sn = 0;
+> +	return;
+> +}
+> +EXPORT_SYMBOL(pci_get_dsn);
+> +
+> +void pci_dsn_init(struct pci_dev *dev)
+> +{
+> +	return pci_get_dsn(dev, &dev->sn);
+> +}
+> +
+> +/**
+>   * pci_configure_ari - enable or disable ARI forwarding
+>   * @dev: the PCI device
+>   *
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 68678ed..f626006 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -202,6 +202,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>  		    struct resource *res, unsigned int reg);
+>  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
+>  void pci_configure_ari(struct pci_dev *dev);
+> +void pci_dsn_init(struct pci_dev *dev);
+>  
+>  /**
+>   * pci_ari_enabled - query ARI forwarding status
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 46ada5c..d4c6e7e 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1322,6 +1322,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>  	/* Power Management */
+>  	pci_pm_init(dev);
+>  
+> +	/* Device Serial Number */
+> +	pci_dsn_init(dev);
+> +
+>  	/* Vital Product Data */
+>  	pci_vpd_pci22_init(dev);
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 0fd1f15..59cd205 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -342,6 +342,7 @@ struct pci_dev {
+>  	struct list_head msi_list;
+>  	struct kset *msi_kset;
+>  #endif
+> +	u64 sn;		/* device serieal number, 0 if not support */
+>  	struct pci_vpd *vpd;
+>  #ifdef CONFIG_PCI_ATS
+>  	union {
+> @@ -995,6 +996,9 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+>  ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+>  int pci_vpd_truncate(struct pci_dev *dev, size_t size);
+>  
+> +/* Device Serial Number */
+> +void pci_get_dsn(struct pci_dev *dev, u64 *sn);
+> +
+>  /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+>  resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+>  void pci_bus_assign_resources(const struct pci_bus *bus);
 
-This patch introduces this warning on 3.8 series kernels:
-
-In file included from arch/x86/kernel/early-quirks.c:21:0:
-/kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:46:10: 
-varning: ”struct irq_data” deklarerad inuti parameterlista [aktiverat 
-som standard]
-/kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:46:10: 
-varning: dess scope-område är endast denna definition eller deklaration, 
-vilket troligen inte är vad du vill. [aktiverat som standard]
-/kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:50:17: 
-varning: ”struct msi_msg” deklarerad inuti parameterlista [aktiverat som 
-standard]
-
-
-You need to add this upstream fix too:
-
-commit 35d3d814cbd46a85bed97cd74ba97fbbb51e0ccd
-Author: Joerg Roedel <joro@8bytes.org>
-Date:   Fri Apr 19 20:34:55 2013 +0200
-
-     iommu: Fix compile warnings with forward declarations
-
-
---
-
-Thomas
 
