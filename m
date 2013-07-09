@@ -1,57 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:40342 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965378Ab3GLUyh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 12 Jul 2013 16:54:37 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: Re: [RFC][PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
-Date: Fri, 12 Jul 2013 23:04:26 +0200
-Message-ID: <5687298.pUqv2oM5bn@vostro.rjw.lan>
-In-Reply-To: <20130712131850.GL4898@intel.com>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <20130712131850.GL4898@intel.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:56795 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753680Ab3GIIUQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 04:20:16 -0400
+Message-ID: <51DBC7B1.4050600@huawei.com>
+Date: Tue, 9 Jul 2013 16:20:01 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Oliver Neukum <oneukum@suse.de>,
+	Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH 1/2] PCI: introduce PCIe Device Serial NUmber Capability
+ support
+References: <1373356545-45944-1-git-send-email-wangyijing@huawei.com> <51DBC547.4040308@cn.fujitsu.com>
+In-Reply-To: <51DBC547.4040308@cn.fujitsu.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, July 12, 2013 04:18:50 PM Mika Westerberg wrote:
-> On Fri, Jul 12, 2013 at 01:34:20AM +0200, Rafael J. Wysocki wrote:
-> > Hi,
-> > 
-> > I've made some progress with my ACPIPHP rework since I posted the series last
-> > time and here goes an update.
-> > 
-> > First off, the previous series was somewhat racy, which should be fixed now.
-> > Apart from this there's quite some new material on top of the patches I posted
-> > last time (or rather on top of their new versions) and I integrated the
-> > Thunderbolt series from Mika with that.  As a result,
-> > 
-> > https://patchwork.kernel.org/patch/2817341/
-> > 
-> > is required to be applied.
+On 2013/7/9 16:09, Gu Zheng wrote:
+> On 07/09/2013 03:55 PM, Yijing Wang wrote:
 > 
-> With the above mentioned patch applied + fix for patch [23/30], I tested
-> this series on Acer Aspire S5 and Intel DZ77RE-75K desktop and Thunderbolt
-> works just fine :-)
+>> Introduce PCIe Ext Capability Device Serial Number support,
+>> so we can use the unique device serial number to identify
+>> the physical device. During system suspend, if the PCIe
+>> device was removed and inserted a new same device, after
+>> system resume there is no good way to identify it, maybe
+>> Device Serial Number is a good choice if device support.
 > 
-> You can add
+> Nice idea!
 > 
-> Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Regards,
+> Gu
 > 
-> to the series.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> 
+> 
+> Reviewed-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
 
-Thanks a lot, that's really helpful!
+Thanks very much!
 
-Now I can rebase it on the previous cleanups and we'll see how that all
-together works on top of the Linus' current. :-)
+Yijing.
 
-> Nice cleanup!
 
+
+> 
+>> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+>> Cc: Oliver Neukum <oneukum@suse.de>
+>> Cc: Paul Bolle <pebolle@tiscali.nl>
+>> Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>> Cc: linux-pci@vger.kernel.org
+>> ---
+>>  drivers/pci/pci.c   |   33 +++++++++++++++++++++++++++++++++
+>>  drivers/pci/pci.h   |    1 +
+>>  drivers/pci/probe.c |    3 +++
+>>  include/linux/pci.h |    4 ++++
+>>  4 files changed, 41 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index e37fea6..d08df2b 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -2048,6 +2048,39 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
+>>  }
+>>  
+>>  /**
+>> + * pci_get_dsn - get device serial number
+>> + * @dev: the PCI device
+>> + * @sn: saved device serial number
+>> + */
+>> +void pci_get_dsn(struct pci_dev *dev, u64 *sn)
+>> +{
+>> +	int pos;
+>> +	u32 lo, hi;
+>> +
+>> +	if (!pci_is_pcie(dev))
+>> +		goto out;
+>> +
+>> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
+>> +	if (!pos)
+>> +		goto out;
+>> +
+>> +	pci_read_config_dword(dev, pos + 4, &lo);
+>> +	pci_read_config_dword(dev, pos + 8, &hi);
+>> +	*sn = ((u64)hi << 32) | lo;
+>> +	return;
+>> +
+>> +out:
+>> +	*sn = 0;
+>> +	return;
+>> +}
+>> +EXPORT_SYMBOL(pci_get_dsn);
+>> +
+>> +void pci_dsn_init(struct pci_dev *dev)
+>> +{
+>> +	return pci_get_dsn(dev, &dev->sn);
+>> +}
+>> +
+>> +/**
+>>   * pci_configure_ari - enable or disable ARI forwarding
+>>   * @dev: the PCI device
+>>   *
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index 68678ed..f626006 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -202,6 +202,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>>  		    struct resource *res, unsigned int reg);
+>>  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
+>>  void pci_configure_ari(struct pci_dev *dev);
+>> +void pci_dsn_init(struct pci_dev *dev);
+>>  
+>>  /**
+>>   * pci_ari_enabled - query ARI forwarding status
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 46ada5c..d4c6e7e 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1322,6 +1322,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>>  	/* Power Management */
+>>  	pci_pm_init(dev);
+>>  
+>> +	/* Device Serial Number */
+>> +	pci_dsn_init(dev);
+>> +
+>>  	/* Vital Product Data */
+>>  	pci_vpd_pci22_init(dev);
+>>  
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 0fd1f15..59cd205 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -342,6 +342,7 @@ struct pci_dev {
+>>  	struct list_head msi_list;
+>>  	struct kset *msi_kset;
+>>  #endif
+>> +	u64 sn;		/* device serieal number, 0 if not support */
+>>  	struct pci_vpd *vpd;
+>>  #ifdef CONFIG_PCI_ATS
+>>  	union {
+>> @@ -995,6 +996,9 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+>>  ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+>>  int pci_vpd_truncate(struct pci_dev *dev, size_t size);
+>>  
+>> +/* Device Serial Number */
+>> +void pci_get_dsn(struct pci_dev *dev, u64 *sn);
+>> +
+>>  /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+>>  resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+>>  void pci_bus_assign_resources(const struct pci_bus *bus);
+> 
+> 
+> 
+> .
+> 
+
+
+-- 
 Thanks!
+Yijing
 
