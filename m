@@ -1,71 +1,140 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "lan,Tianyu" <tianyu.lan@intel.com>, Len Brown <lenb@kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] PCI/ACPI: Change dev_info() to dev_dbg() in the acpi_pci_set_power_state()
-Date: Wed, 31 Jul 2013 01:31:33 +0200
-Message-ID: <3509301.e8ST4r5R4A@vostro.rjw.lan>
-In-Reply-To: <CAErSpo7XGa+t0g3Zp+4tXwS8JdAa5UonN7rt6dSZpEmDZuXP7w@mail.gmail.com>
-References: <1375151550-28632-1-git-send-email-tianyu.lan@intel.com> <8048720.q4LxpIqNkE@vostro.rjw.lan> <CAErSpo7XGa+t0g3Zp+4tXwS8JdAa5UonN7rt6dSZpEmDZuXP7w@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:2484 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751945Ab3GIUjs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Jul 2013 16:39:48 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 3/3] [SCSI] megaraid: Remove 64-bit DMA related dead code
+To: megaraidlinux@lsi.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 09 Jul 2013 14:39:45 -0600
+Message-ID: <20130709203945.31676.74315.stgit@amt.stowe>
+In-Reply-To: <20130709203927.31676.35169.stgit@amt.stowe>
+References: <20130709203927.31676.35169.stgit@amt.stowe>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 30, 2013 09:40:18 AM Bjorn Helgaas wrote:
-> On Tue, Jul 30, 2013 at 7:59 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Tuesday, July 30, 2013 10:32:30 AM tianyu.lan@intel.com wrote:
-> >> From: Lan Tianyu <tianyu.lan@intel.com>
-> >>
-> >> acpi_pci_set_power_state() produces log of device power state changing.
-> >> Now the log is produced by dev_info(). This seems make no sense when user
-> >> doesn't open debug option. So change it to dev_dbg() and prevent kernel
-> >> log from being.
-> >>
-> >> Reference: https://bugzilla.kernel.org/show_bug.cgi?id=60636
-> >> Suggested-by: Alan Stern <stern@rowland.harvard.edu>
-> >> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
-> >
-> > Bjorn, what do you think about this?
-> 
-> It's fine with me.  For information that I want in the dmesg log all
-> the time, with no special action from the user, I personally avoid
-> dev_dbg() because I can never figure out whether it's enabled or not.
-> But I don't use the information from this printk, so it's completely
-> up to you.  Just let me know what you want.  If you have other pending
-> changes to this file, you can take it, or I can put it in my tree.
+With the driver now setup for default 32-bit DMA capabilities, remove the
+64-bit DMA related dead code.
 
-Yes, I have one change to this file in my queue for 3.12, so I can take this
-patch.
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-Thanks,
-Rafael
+ drivers/scsi/megaraid.c |   45 +++++++++------------------------------------
+ drivers/scsi/megaraid.h |    1 -
+ 2 files changed, 9 insertions(+), 37 deletions(-)
 
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 316924c..58953ab 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -713,12 +713,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
+ 			pthru->cdblen = cmd->cmd_len;
+ 			memcpy(pthru->cdb, cmd->cmnd, cmd->cmd_len);
+ 
+-			if( adapter->has_64bit_addr ) {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU64;
+-			}
+-			else {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+-			}
++			mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+ 
+ 			scb->dma_direction = PCI_DMA_FROMDEVICE;
+ 
+@@ -750,16 +745,9 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
+ 			 * A little hack: 2nd bit is zero for all scsi read
+ 			 * commands and is set for all scsi write commands
+ 			 */
+-			if( adapter->has_64bit_addr ) {
+-				mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
+-					MEGA_MBOXCMD_LWRITE64:
+-					MEGA_MBOXCMD_LREAD64 ;
+-			}
+-			else {
+-				mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
+-					MEGA_MBOXCMD_LWRITE:
+-					MEGA_MBOXCMD_LREAD ;
+-			}
++			mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
++				MEGA_MBOXCMD_LWRITE:
++				MEGA_MBOXCMD_LREAD ;
+ 
+ 			/*
+ 			 * 6-byte READ(0x08) or WRITE(0x0A) cdb
+@@ -929,13 +917,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
+ 					channel, target);
+ 
+ 			/* Initialize mailbox */
+-			if( adapter->has_64bit_addr ) {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU64;
+-			}
+-			else {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+-			}
+-
++			mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+ 			mbox->m_out.xferaddr = scb->pthru_dma_addr;
+ 
+ 		}
+@@ -1763,7 +1745,7 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
+ 
+ 	*len = 0;
+ 
+-	if (scsi_sg_count(cmd) == 1 && !adapter->has_64bit_addr) {
++	if (scsi_sg_count(cmd) == 1) {
+ 		sg = scsi_sglist(cmd);
+ 		scb->dma_h_bulkdata = sg_dma_address(sg);
+ 		*buf = (u32)scb->dma_h_bulkdata;
+@@ -1772,13 +1754,8 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
+ 	}
+ 
+ 	scsi_for_each_sg(cmd, sg, sgcnt, idx) {
+-		if (adapter->has_64bit_addr) {
+-			scb->sgl64[idx].address = sg_dma_address(sg);
+-			*len += scb->sgl64[idx].length = sg_dma_len(sg);
+-		} else {
+-			scb->sgl[idx].address = sg_dma_address(sg);
+-			*len += scb->sgl[idx].length = sg_dma_len(sg);
+-		}
++		scb->sgl[idx].address = sg_dma_address(sg);
++		*len += scb->sgl[idx].length = sg_dma_len(sg);
+ 	}
+ 
+ 	/* Reset pointer and length fields */
+@@ -2076,10 +2053,7 @@ proc_show_config(struct seq_file *m, void *v)
+ 
+ 	if(adapter->flag & BOARD_64BIT)
+ 		seq_puts(m, "Controller capable of 64-bit memory addressing\n");
+-	if( adapter->has_64bit_addr )
+-		seq_puts(m, "Controller using 64-bit memory addressing\n");
+-	else
+-		seq_puts(m, "Controller is not using 64-bit memory addressing\n");
++	seq_puts(m, "Controller is not using 64-bit memory addressing\n");
+ 
+ 	seq_printf(m, "Base = %08lx, Irq = %d, ",
+ 		   adapter->base, adapter->host->irq);
+@@ -4471,7 +4445,6 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	/* Set the Mode of addressing to 32 bit */
+ 	pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+-	adapter->has_64bit_addr = 0;
+ 		
+ 	mutex_init(&adapter->int_mtx);
+ 	init_completion(&adapter->int_waitq);
+diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
+index 4d0ce4e..17e449b 100644
+--- a/drivers/scsi/megaraid.h
++++ b/drivers/scsi/megaraid.h
+@@ -827,7 +827,6 @@ typedef struct {
+ 
+ #endif
+ 
+-	int	has_64bit_addr;		/* are we using 64-bit addressing */
+ 	int	support_ext_cdb;
+ 	int	boot_ldrv_enabled;
+ 	int	boot_ldrv;
 
-> >> ---
-> >>  drivers/pci/pci-acpi.c | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> >> index c78cc43..fb3522957 100644
-> >> --- a/drivers/pci/pci-acpi.c
-> >> +++ b/drivers/pci/pci-acpi.c
-> >> @@ -210,7 +210,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> >>       }
-> >>
-> >>       if (!error)
-> >> -             dev_info(&dev->dev, "power state changed by ACPI to %s\n",
-> >> +             dev_dbg(&dev->dev, "power state changed by ACPI to %s\n",
-> >>                        acpi_power_state_string(state_conv[state]));
-> >>
-> >>       return error;
-> >>
-> > --
-> > I speak only for myself.
-> > Rafael J. Wysocki, Intel Open Source Technology Center.
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
