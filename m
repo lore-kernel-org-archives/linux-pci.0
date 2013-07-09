@@ -1,54 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ian Abbott <abbotti@mev.co.uk>
-To: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
-	driverdev-devel@linuxdriverproject.org,
-	linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	H Hartley Sweeten <hsweeten@visionengravers.com>,
-	Ian Abbott <abbotti@mev.co.uk>
-Subject: [PATCH 2/4] serial: 8250_pci: replace PCI_VENDOR_ID_ADDIDATA_OLD
-Date: Tue, 16 Jul 2013 16:14:39 +0100
-Message-Id: <1373987681-18245-3-git-send-email-abbotti@mev.co.uk>
-In-Reply-To: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
-References: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:25705 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753649Ab3GIISZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 04:18:25 -0400
+Message-ID: <51DBC73E.7080401@huawei.com>
+Date: Tue, 9 Jul 2013 16:18:06 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Paul Bolle <pebolle@tiscali.nl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: Re: [PATCH 2/2] PCI,pciehp: avoid add a device already exist during
+ pciehp_resume
+References: <1373356564-21668-1-git-send-email-wangyijing@huawei.com> <1373357261.1633.4.camel@x61.thuisdomein>
+In-Reply-To: <1373357261.1633.4.camel@x61.thuisdomein>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI_VENDOR_ID_ADDIDATA_OLD has the same value (0x10e8) as
-PCI_VENDOR_ID_AMCC in <linux/pci_ids.h>.  The vender ID is actually
-assigned to Applied Micro Circuits Corporation.  The 8250_pci driver
-uses PCI_VENDOR_ID_ADDIDATA_OLD in the lists of quirks and PCI IDs for
-the ADDI-DATA APCI-7800 card.  Change it to use the more accurate
-PCI_VENDOR_ID_AMCC.
+>> In this case, we can improve it a little by add a guard
+>> if (!list_empty(bus->devices)).
+> 
+> Great!
+> 
+> I'm currently trying to bisect another problem, but hope to test this
+> patch (and the preceding patch it apparently needs) in a few days.
+> Please feel free to prod me if you think testing is needed but I'm
+> taking to long to report back.
 
-Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
----
- drivers/tty/serial/8250/8250_pci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hi Paul,
+   Thank you for helping test. Because I have no machine to test this case,
+so your test report is very important, it can help us going in the right way
+to solve this problem.
 
-diff --git a/drivers/tty/serial/8250/8250_pci.c b/drivers/tty/serial/8250/8250_pci.c
-index c52948b..3e3d59b 100644
---- a/drivers/tty/serial/8250/8250_pci.c
-+++ b/drivers/tty/serial/8250/8250_pci.c
-@@ -1587,7 +1587,7 @@ static struct pci_serial_quirk pci_serial_quirks[] __refdata = {
- 	* ADDI-DATA GmbH communication cards <info@addi-data.com>
- 	*/
- 	{
--		.vendor         = PCI_VENDOR_ID_ADDIDATA_OLD,
-+		.vendor         = PCI_VENDOR_ID_AMCC,
- 		.device         = PCI_DEVICE_ID_ADDIDATA_APCI7800,
- 		.subvendor      = PCI_ANY_ID,
- 		.subdevice      = PCI_ANY_ID,
-@@ -4697,7 +4697,7 @@ static struct pci_device_id serial_pci_tbl[] = {
- 		0,
- 		pbn_b0_1_115200 },
- 
--	{	PCI_VENDOR_ID_ADDIDATA_OLD,
-+	{	PCI_VENDOR_ID_AMCC,
- 		PCI_DEVICE_ID_ADDIDATA_APCI7800,
- 		PCI_ANY_ID,
- 		PCI_ANY_ID,
+Thanks!
+Yijing.
+
+> 
+> 
+> .
+> 
+
+
 -- 
-1.8.2.1
+Thanks!
+Yijing
 
