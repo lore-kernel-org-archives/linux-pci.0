@@ -1,406 +1,366 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24211 "EHLO mx1.redhat.com"
+Received: from hydra.sisk.pl ([212.160.235.94]:35132 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933466Ab3GWXWT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Jul 2013 19:22:19 -0400
-Message-ID: <1374621703.15429.98.camel@ul30vt.home>
-Subject: Re: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
-	iommu@lists.linux-foundation.org, acooks@gmail.com,
-	ddutile@redhat.com, dwmw2@infradead.org
-Date: Tue, 23 Jul 2013 17:21:43 -0600
-In-Reply-To: <20130723223533.GB19765@google.com>
-References: <20130711204439.1701.90503.stgit@bling.home>
-	 <20130711210326.1701.56478.stgit@bling.home>
-	 <20130723223533.GB19765@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753485Ab3GIANU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Jul 2013 20:13:20 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 4/8] ACPI / hotplug / PCI: Hotplug context objects for bridges and functions
+Date: Tue, 09 Jul 2013 02:18:12 +0200
+Message-ID: <1541978.EJm27nSHDT@vostro.rjw.lan>
+In-Reply-To: <26431283.HJCKsss0rt@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-07-23 at 16:35 -0600, Bjorn Helgaas wrote:
-> On Thu, Jul 11, 2013 at 03:03:27PM -0600, Alex Williamson wrote:
-> > This provides interfaces for drivers to discover the visible PCIe
-> > requester ID for a device, for things like IOMMU setup, and iterate
-> 
-> IDs (plural)
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-How does a device can't have multiple requester IDs?  Reading below, I'm
-not sure we're on the same page for the purpose of this patch.
+When either a new hotplug brigde or a new hotplug function is added
+by the ACPI-based PCI hotplug (acpiphp) code, attach a context object
+to its ACPI handle to store hotplug-related information in it.  To
+start with, put the handle's bridge and function pointers into that
+object.  Count references to the context objects and drop them when
+they are not needed any more.
 
-> > over the device chain from requestee to requester, including DMA
-> > quirks at each step.
-> 
-> "requestee" doesn't make sense to me.  The "-ee" suffix added to a verb
-> normally makes a noun that refers to the object of the action.  So
-> "requestee" sounds like it means something like "target" or "responder,"
-> but that's not what you mean here.
+First of all, this makes it possible to find out if the given bridge
+has been registered as a function already in a much more
+straightforward way and acpiphp_bridge_handle_to_function() can be
+dropped (Yay!).
 
-Hmm, ok.  I figured a request-er makes a request on behalf of a
-request-ee.  Suggestions?
+This also will allow some more simplifications to be made going
+forward.
 
-> > Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >  drivers/pci/search.c |  198 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/pci.h  |    7 ++
-> >  2 files changed, 205 insertions(+)
-> > 
-> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> > index d0627fa..4759c02 100644
-> > --- a/drivers/pci/search.c
-> > +++ b/drivers/pci/search.c
-> > @@ -18,6 +18,204 @@ DECLARE_RWSEM(pci_bus_sem);
-> >  EXPORT_SYMBOL_GPL(pci_bus_sem);
-> >  
-> >  /*
-> > + * pci_has_pcie_requester_id - Does @dev have a PCIe requester ID
-> > + * @dev: device to test
-> > + */
-> > +static bool pci_has_pcie_requester_id(struct pci_dev *dev)
-> > +{
-> > +	/*
-> > +	 * XXX There's no indicator of the bus type, conventional PCI vs
-> > +	 * PCI-X vs PCI-e, but we assume that a caller looking for a PCIe
-> > +	 * requester ID is a native PCIe based system (such as VT-d or
-> > +	 * AMD-Vi).  It's common that PCIe root complex devices do not
-> > +	 * include a PCIe capability, but we can assume they are PCIe
-> > +	 * devices based on their topology.
-> > +	 */
-> > +	if (pci_is_pcie(dev) || pci_is_root_bus(dev->bus))
-> > +		return true;
-> > +
-> > +	/*
-> > +	 * PCI-X devices have a requester ID, but the bridge may still take
-> > +	 * ownership of transactions and create a requester ID.  We therefore
-> > +	 * assume that the PCI-X requester ID is not the same one used on PCIe.
-> > +	 */
-> > +
-> > +#ifdef CONFIG_PCI_QUIRKS
-> > +	/*
-> > +	 * Quirk for PCIe-to-PCI bridges which do not expose a PCIe capability.
-> > +	 * If the device is a bridge, look to the next device upstream of it.
-> > +	 * If that device is PCIe and not a PCIe-to-PCI bridge, then by
-> > +	 * deduction, the device must be PCIe and therefore has a requester ID.
-> > +	 */
-> > +	if (dev->subordinate) {
-> > +		struct pci_dev *parent = dev->bus->self;
-> > +
-> > +		if (pci_is_pcie(parent) &&
-> > +		    pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
-> > +			return true;
-> > +	}
-> > +#endif
-> > +
-> > +	return false;
-> > +}
-> > +
-> > +/*
-> > + * pci_has_visible_pcie_requester_id - Can @bridge see @dev's requester ID?
-> > + * @dev: requester device
-> > + * @bridge: upstream bridge (or NULL for root bus)
-> > + */
-> > +static bool pci_has_visible_pcie_requester_id(struct pci_dev *dev,
-> > +					      struct pci_dev *bridge)
-> > +{
-> > +	/*
-> > +	 * The entire path must be tested, if any step does not have a
-> > +	 * requester ID, the chain is broken.  This allows us to support
-> > +	 * topologies with PCIe requester ID gaps, ex: PCIe-PCI-PCIe
-> > +	 */
-> > +	while (dev != bridge) {
-> > +		if (!pci_has_pcie_requester_id(dev))
-> > +			return false;
-> > +
-> > +		if (pci_is_root_bus(dev->bus))
-> > +			return !bridge; /* false if we don't hit @bridge */
-> > +
-> > +		dev = dev->bus->self;
-> > +	}
-> > +
-> > +	return true;
-> > +}
-> > +
-> > +/*
-> > + * Legacy PCI bridges within a root complex (ex. Intel 82801) report
-> > + * a different requester ID than a standard PCIe-to-PCI bridge.  Instead
-> > + * of using (subordinate << 8 | 0) the use (bus << 8 | devfn), like a
-> 
-> s/the/they/
-> 
-> Did you learn about this empirically?  Intel spec?  I wonder if there's
-> some way to derive this from the PCIe specs.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |   10 ++
+ drivers/pci/hotplug/acpiphp_glue.c |  154 ++++++++++++++++++++++++++-----------
+ 2 files changed, 121 insertions(+), 43 deletions(-)
 
-It's in the current intel-iommu logic, pretty much anywhere it uses
-pci_find_upstream_pcie_bridge() it follows that up with a pci_is_pcie()
-check.  If it's PCIe, it uses a traditional PCIe-to-PCI bridge ID.  If
-it's a legacy PCI bridge it uses the bridge ID itself.
-
-static int
-domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
-                        int translation)
-{
-...
-        /* dependent device mapping */
-        tmp = pci_find_upstream_pcie_bridge(pdev);
-        if (!tmp)
-                return 0;
-...
-        if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
-                return domain_context_mapping_one(domain,
-                                        pci_domain_nr(tmp->subordinate),
-                                        tmp->subordinate->number, 0,
-                                        translation);
-        else /* this is a legacy PCI bridge */
-                return domain_context_mapping_one(domain,
-                                                  pci_domain_nr(tmp->bus),
-                                                  tmp->bus->number,
-                                                  tmp->devfn,
-                                                  translation);
-
-The 82801 reference is from looking at when this would actually happen
-on one of my own systems.
-
-
-> > + * standard PCIe endpoint.  This function detects them.
-> > + *
-> > + * XXX Is this Intel vendor ID specific?
-> > + */
-> > +static bool pci_bridge_uses_endpoint_requester(struct pci_dev *bridge)
-> > +{
-> > +	if (!pci_is_pcie(bridge) && pci_is_root_bus(bridge->bus))
-> > +		return true;
-> > +
-> > +	return false;
-> > +}
-> > +
-> > +#define PCI_REQUESTER_ID(dev)	(((dev)->bus->number << 8) | (dev)->devfn)
-> > +#define PCI_BRIDGE_REQUESTER_ID(dev)	((dev)->subordinate->number << 8)
-> > +
-> > +/*
-> > + * pci_get_visible_pcie_requester - Get requester and requester ID for
-> > + *                                  @requestee below @bridge
-> > + * @requestee: requester device
-> > + * @bridge: upstream bridge (or NULL for root bus)
-> > + * @requester_id: location to store requester ID or NULL
-> > + */
-> > +struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
-> > +					       struct pci_dev *bridge,
-> > +					       u16 *requester_id)
-> 
-> I'm not sure it makes sense to return a struct pci_dev here because
-> there's no requirement that a requester ID correspond to an actual
-> pci_dev.
-
-That's why this function is named get_.._requester instead of requester
-ID.  I believe there still has to be a struct pci_dev that does the
-request, but the requester ID for that device may not actually match.
-So I return both.  In a PCIe-to-PCI bridge case, the pci_dev is the
-bridge, but the requester ID is either the bridge bus|devfn or
-subordinate|0 depending on the topology.  If we want to support "ghost
-functions", we can return the real pci_dev and a ghost requester ID.
-
-I think if we used just a requester ID, it ends up being extremely
-difficult to pass that into anything else since we then have to search
-again for where that requester ID is rooted.
-
-> > +{
-> > +	struct pci_dev *requester = requestee;
-> > +
-> > +	while (requester != bridge) {
-> > +		requester = pci_get_dma_source(requester);
-> > +		pci_dev_put(requester); /* XXX skip ref cnt */
-> > +
-> > +		if (pci_has_visible_pcie_requester_id(requester, bridge))
-> 
-> If we acquire the "requester" pointer via a ref-counting interface,
-> it's illegal to use the pointer after dropping the reference, isn't it?
-> Maybe that's what you mean by the "XXX" comment.
-
-
-Yes, I was just following your RFC lead and didn't want to deal with
-reference counting until this approach had enough traction.
-
-
-> > +			break;
-> > +
-> > +		if (pci_is_root_bus(requester->bus))
-> > +			return NULL; /* @bridge not parent to @requestee */
-> > +
-> > +		requester = requester->bus->self;
-> > +	}
-> > +
-> > +	if (requester_id) {
-> > +		if (requester->bus != requestee->bus &&
-> > +		    !pci_bridge_uses_endpoint_requester(requester))
-> > +			*requester_id = PCI_BRIDGE_REQUESTER_ID(requester);
-> > +		else
-> > +			*requester_id = PCI_REQUESTER_ID(requester);
-> > +	}
-> > +
-> > +	return requester;
-> > +}
-> > +
-> > +static int pci_do_requester_callback(struct pci_dev **dev,
-> > +				     int (*fn)(struct pci_dev *,
-> > +					       u16 id, void *),
-> > +				     void *data)
-> > +{
-> > +	struct pci_dev *dma_dev;
-> > +	int ret;
-> > +
-> > +	ret = fn(*dev, PCI_REQUESTER_ID(*dev), data);
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	dma_dev = pci_get_dma_source(*dev);
-> > +	pci_dev_put(dma_dev); /* XXX skip ref cnt */
-> > +	if (dma_dev == *dev)
-> 
-> Same ref count question as above.
-> 
-> > +		return 0;
-> > +
-> > +	ret = fn(dma_dev, PCI_REQUESTER_ID(dma_dev), data);
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	*dev = dma_dev;
-> > +	return 0;
-> > +}
-> > +
-> > +/*
-> > + * pcie_for_each_requester - Call callback @fn on each devices and DMA source
-> > + *                           from @requestee to the PCIe requester ID visible
-> > + *                           to @bridge.
-> 
-> Transactions from a device may appear with one of several requester IDs,
-> but there's not necessarily an actual pci_dev for each ID, so I think the
-> caller reads better if it's "...for_each_requester_id()"
-
-Wouldn't you expect to pass a requester ID into a function with that
-name?  I'm pretty sure I had it named that at one point but thought the
-parameters made more sense this way.  I'll see if I can think of a
-better name.
-
-> The "Call X on each devices and DMA source from Y to the requester ID"
-> part doesn't quite make a sentence.
-
-
-Ok
-
-> > + * @requestee: Starting device
-> > + * @bridge: upstream bridge (or NULL for root bus)
-> 
-> You should say something about the significance of @bridge.  I think the
-> point is to call @fn for every possible requester ID @bridge could see for
-> transactions from @requestee.  This is a way to learn the requester IDs an
-> IOMMU at @bridge needs to be prepared for.
-
-I can add something.  @bridge is supposed to be for bridge-based IOMMUs.
-Essentially it's just a stopping point.  There might be PCI topology
-upstream of @bridge, but if you only want the requester ID seen by the
-bridge, you don't care.
-
-> > + * @fn: callback function
-> > + * @data: data to pass to callback
-> > + */
-> > +int pcie_for_each_requester(struct pci_dev *requestee, struct pci_dev *bridge,
-> > +			    int (*fn)(struct pci_dev *, u16 id, void *),
-> > +			    void *data)
-> > +{
-> > +	struct pci_dev *requester;
-> > +	struct pci_dev *dev = requestee;
-> > +	int ret = 0;
-> > +
-> > +	requester = pci_get_visible_pcie_requester(requestee, bridge, NULL);
-> > +	if (!requester)
-> > +		return -EINVAL;
-> > +
-> > +	do {
-> > +		ret = pci_do_requester_callback(&dev, fn, data);
-> > +		if (ret)
-> > +			return ret;
-> > +
-> > +		if (dev == requester)
-> > +			return 0;
-> > +
-> > +		/*
-> > +		 * We always consider root bus devices to have a visible
-> > +		 * requester ID, therefore this should never be true.
-> > +		 */
-> > +		BUG_ON(pci_is_root_bus(dev->bus));
-> 
-> What are we going to do if somebody hits this BUG_ON()?  If it's impossible
-> to hit, we should just remove it.  If it's possible to hit it in some weird
-> topology you didn't consider, we should see IOMMU faults for any requester
-> ID we neglected to map, and that fault would be a better debugging hint
-> than a BUG_ON() here.
-
-It's mostly for readability.  I've learned that we never what to look at
-dev->bus->self without first testing pci_is_root_bus(dev->bus), so if I
-was reading this code I'd stumble when I got here and spend too long
-looking around for the assumption that makes it not needed.  I suppose I
-could just make it a comment, but I thought why not make it official w/
-a BUG.
-
-> > +
-> > +		dev = dev->bus->self;
-> > +
-> > +	} while (dev != requester);
-> > +
-> > +	/*
-> > +	 * If we've made it here, @requester is a bridge upstream from
-> > +	 * @requestee.
-> > +	 */
-> > +	if (pci_bridge_uses_endpoint_requester(requester))
-> > +		return pci_do_requester_callback(&requester, fn, data);
-> > +
-> > +	return fn(requester, PCI_BRIDGE_REQUESTER_ID(requester), data);
-> > +}
-> > +
-> > +/*
-> >   * find the upstream PCIe-to-PCI bridge of a PCI device
-> >   * if the device is PCIE, return NULL
-> >   * if the device isn't connected to a PCIe bridge (that is its parent is a
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 3a24e4f..94e81d1 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -1873,6 +1873,13 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
-> >  }
-> >  #endif
-> >  
-> > +struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
-> > +					       struct pci_dev *bridge,
-> > +					       u16 *requester_id);
-> 
-> The structure of this interface implies that there is only one visible
-> requester ID, but the whole point of this patch is that a transaction from
-> @requestee may appear with one of several requester IDs.  So which one will
-> this return?
-
-I thought the point of this patch was to have an integrated interface
-for finding the requester ID and doing something across all devices with
-that requester ID and thereby remove pci_find_upstream_pcie_bridge(),
-provide a way to quirk broken PCIe-to-PCI bridge and quirk dma_ops for
-devices that use the wrong requester ID.  In what case does a device
-appear to have multiple requester IDs?  We have cases where devices use
-the wrong requester ID, but AFAIK they only use a single wrong requester
-ID.  Thanks,
-
-Alex
-
-> > +int pcie_for_each_requester(struct pci_dev *requestee, struct pci_dev *bridge,
-> > +			    int (*fn)(struct pci_dev *, u16 id, void *),
-> > +			    void *data);
-> > +
-> >  /**
-> >   * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
-> >   * @pdev: the PCI device
-> > 
-
-
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -49,6 +49,7 @@
+ #define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME , ## arg)
+ #define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME , ## arg)
+ 
++struct acpiphp_context;
+ struct acpiphp_bridge;
+ struct acpiphp_slot;
+ 
+@@ -77,6 +78,7 @@ struct acpiphp_bridge {
+ 	struct kref ref;
+ 	acpi_handle handle;
+ 
++	struct acpiphp_context *context;
+ 	/* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
+ 	struct acpiphp_func *func;
+ 
+@@ -119,6 +121,7 @@ struct acpiphp_slot {
+  * typically 8 objects per slot (i.e. for each PCI function)
+  */
+ struct acpiphp_func {
++	struct acpiphp_context *context;
+ 	struct acpiphp_slot *slot;	/* parent */
+ 
+ 	struct list_head sibling;
+@@ -129,6 +132,13 @@ struct acpiphp_func {
+ 	u32		flags;		/* see below */
+ };
+ 
++struct acpiphp_context {
++	struct kref kref;
++	acpi_handle handle;
++	struct acpiphp_func *func;
++	struct acpiphp_bridge *bridge;
++};
++
+ /*
+  * struct acpiphp_attention_info - device specific attention registration
+  *
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -79,6 +79,61 @@ is_pci_dock_device(acpi_handle handle, u
+ 	}
+ }
+ 
++static void acpiphp_context_handler(acpi_handle handle, void *context)
++{
++	/* Intentionally empty. */
++}
++
++static struct acpiphp_context *acpiphp_init_context(acpi_handle handle)
++{
++	struct acpiphp_context *context;
++	acpi_status status;
++
++	context = kzalloc(sizeof(*context), GFP_KERNEL);
++	if (!context)
++		return NULL;
++
++	context->handle = handle;
++	kref_init(&context->kref);
++	status = acpi_attach_data(handle, acpiphp_context_handler, context);
++	if (ACPI_FAILURE(status)) {
++		kfree(context);
++		return NULL;
++	}
++	return context;
++}
++
++static struct acpiphp_context *acpiphp_get_context(acpi_handle handle)
++{
++	struct acpiphp_context *context = NULL;
++	acpi_status status;
++	void *data;
++
++	status = acpi_get_data(handle, acpiphp_context_handler, &data);
++	if (ACPI_SUCCESS(status)) {
++		context = data;
++		kref_get(&context->kref);
++	} else if (status == AE_NOT_FOUND) {
++		context = acpiphp_init_context(handle);
++	}
++	return context;
++}
++
++static void acpiphp_release_context(struct kref *kref)
++{
++	struct acpiphp_context *context;
++
++	context = container_of(kref, struct acpiphp_context, kref);
++	WARN_ON(context->func || context->bridge);
++	acpi_detach_data(context->handle, acpiphp_context_handler);
++	kfree(context);
++}
++
++static void acpiphp_put_context(struct acpiphp_context *context)
++{
++	kref_put(&context->kref, acpiphp_release_context);
++}
++
+ static inline void get_bridge(struct acpiphp_bridge *bridge)
+ {
+ 	kref_get(&bridge->ref);
+@@ -91,6 +146,7 @@ static inline void put_bridge(struct acp
+ 
+ static void free_bridge(struct kref *kref)
+ {
++	struct acpiphp_context *context;
+ 	struct acpiphp_bridge *bridge;
+ 	struct acpiphp_slot *slot, *next;
+ 	struct acpiphp_func *func, *tmp;
+@@ -99,17 +155,24 @@ static void free_bridge(struct kref *kre
+ 
+ 	list_for_each_entry_safe(slot, next, &bridge->slots, node) {
+ 		list_for_each_entry_safe(func, tmp, &slot->funcs, sibling) {
++			context = func->context;
++			context->func = NULL;
+ 			kfree(func);
++			acpiphp_put_context(context);
+ 		}
+ 		kfree(slot);
+ 	}
+ 
+-	/* Release reference acquired by acpiphp_bridge_handle_to_function() */
++	/* Release reference acquired by acpiphp_enumerate_slots(). */
+ 	if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func)
+ 		put_bridge(bridge->func->slot->bridge);
++
+ 	put_device(&bridge->pci_bus->dev);
+ 	pci_dev_put(bridge->pci_dev);
++	context = bridge->context;
++	context->bridge = NULL;
+ 	kfree(bridge);
++	acpiphp_put_context(context);
+ }
+ 
+ /*
+@@ -195,10 +258,11 @@ static void acpiphp_dock_release(void *d
+ }
+ 
+ /* callback routine to register each ACPI PCI slot object */
+-static acpi_status
+-register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
++static acpi_status register_slot(acpi_handle handle, u32 lvl, void *data,
++				 void **rv)
+ {
+-	struct acpiphp_bridge *bridge = (struct acpiphp_bridge *)context;
++	struct acpiphp_bridge *bridge = (struct acpiphp_bridge *)data;
++	struct acpiphp_context *context;
+ 	struct acpiphp_slot *slot;
+ 	struct acpiphp_func *newfunc;
+ 	acpi_handle tmp;
+@@ -229,8 +293,20 @@ register_slot(acpi_handle handle, u32 lv
+ 	if (!newfunc)
+ 		return AE_NO_MEMORY;
+ 
++	context = acpiphp_get_context(handle);
++	if (!context) {
++		context = acpiphp_init_context(handle);
++		if (!context) {
++			acpi_handle_err(handle, "No hotplug context\n");
++			kfree(newfunc);
++			return AE_NOT_EXIST;
++		}
++	}
++
+ 	newfunc->handle = handle;
+ 	newfunc->function = function;
++	newfunc->context = context;
++	context->func = newfunc;
+ 
+ 	if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &tmp)))
+ 		newfunc->flags = FUNC_HAS_EJ0;
+@@ -268,8 +344,8 @@ register_slot(acpi_handle handle, u32 lv
+ 	if (!found) {
+ 		slot = kzalloc(sizeof(struct acpiphp_slot), GFP_KERNEL);
+ 		if (!slot) {
+-			kfree(newfunc);
+-			return AE_NO_MEMORY;
++			status = AE_NO_MEMORY;
++			goto err_out;
+ 		}
+ 
+ 		slot->bridge = bridge;
+@@ -293,7 +369,9 @@ register_slot(acpi_handle handle, u32 lv
+ 			else
+ 				warn("acpiphp_register_hotplug_slot failed "
+ 					"(err code = 0x%x)\n", retval);
+-			goto err_exit;
++
++			status = AE_OK;
++			goto err;
+ 		}
+ 	}
+ 
+@@ -339,15 +417,17 @@ register_slot(acpi_handle handle, u32 lv
+ 
+ 	return AE_OK;
+ 
+- err_exit:
++ err:
+ 	bridge->nr_slots--;
+ 	mutex_lock(&bridge_mutex);
+ 	list_del(&slot->node);
+ 	mutex_unlock(&bridge_mutex);
+ 	kfree(slot);
++ err_out:
++	context->func = NULL;
+ 	kfree(newfunc);
+-
+-	return AE_OK;
++	acpiphp_put_context(context);
++	return status;
+ }
+ 
+ 
+@@ -362,32 +442,6 @@ static int detect_ejectable_slots(acpi_h
+ 	return found;
+ }
+ 
+-
+-/* find acpiphp_func from acpiphp_bridge */
+-static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
+-{
+-	struct acpiphp_bridge *bridge;
+-	struct acpiphp_slot *slot;
+-	struct acpiphp_func *func = NULL;
+-
+-	mutex_lock(&bridge_mutex);
+-	list_for_each_entry(bridge, &bridge_list, list) {
+-		list_for_each_entry(slot, &bridge->slots, node) {
+-			list_for_each_entry(func, &slot->funcs, sibling) {
+-				if (func->handle == handle) {
+-					get_bridge(func->slot->bridge);
+-					mutex_unlock(&bridge_mutex);
+-					return func;
+-				}
+-			}
+-		}
+-	}
+-	mutex_unlock(&bridge_mutex);
+-
+-	return NULL;
+-}
+-
+-
+ static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle)
+ {
+ 	struct acpiphp_bridge *bridge;
+@@ -1130,6 +1184,7 @@ static void handle_hotplug_event_func(ac
+  */
+ void acpiphp_enumerate_slots(struct pci_bus *bus)
+ {
++	struct acpiphp_context *context;
+ 	struct acpiphp_bridge *bridge;
+ 	acpi_handle handle;
+ 	acpi_status status;
+@@ -1141,9 +1196,19 @@ void acpiphp_enumerate_slots(struct pci_
+ 	if (!handle || detect_ejectable_slots(handle) <= 0)
+ 		return;
+ 
++	context = acpiphp_get_context(handle);
++	if (!context) {
++		context = acpiphp_init_context(handle);
++		if (!context) {
++			acpi_handle_err(handle, "No hotplug context\n");
++			return;
++		}
++	}
++
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+ 	if (bridge == NULL) {
+-		err("out of memory\n");
++		acpi_handle_err(handle, "No memory for bridge object\n");
++		acpiphp_put_context(context);
+ 		return;
+ 	}
+ 
+@@ -1152,6 +1217,8 @@ void acpiphp_enumerate_slots(struct pci_
+ 	bridge->handle = handle;
+ 	bridge->pci_dev = pci_dev_get(bus->self);
+ 	bridge->pci_bus = bus;
++	bridge->context = context;
++	context->bridge = bridge;
+ 
+ 	/*
+ 	 * Grab a ref to the subordinate PCI bus in case the bus is
+@@ -1185,20 +1252,21 @@ void acpiphp_enumerate_slots(struct pci_
+ 				"failed to register notify handler\n");
+ 		goto err;
+ 	}
+-
+ 	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
+ 	if (ACPI_FAILURE(status))
+ 		return;
+ 
+ 	dbg("found ejectable p2p bridge\n");
+ 	bridge->flags |= BRIDGE_HAS_EJ0;
+-	bridge->func = acpiphp_bridge_handle_to_function(bridge->handle);
+-	if (bridge->func) {
+-		status = acpi_remove_notify_handler(bridge->func->handle,
+-						    ACPI_SYSTEM_NOTIFY,
++	if (context->func) {
++		get_bridge(context->func->slot->bridge);
++		bridge->func = context->func;
++		handle = context->handle;
++		WARN_ON(bridge->handle != handle);
++		status = acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 						    handle_hotplug_event_func);
+ 		if (ACPI_FAILURE(status))
+-			acpi_handle_err(bridge->func->handle,
++			acpi_handle_err(handle,
+ 					"failed to remove notify handler\n");
+ 	}
+ 	return;
 
