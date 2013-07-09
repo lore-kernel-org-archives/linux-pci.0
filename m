@@ -1,129 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51D6A370.7060604@st.com>
-Date: Fri, 5 Jul 2013 16:14:00 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:58841 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753167Ab3GIJZT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Jul 2013 05:25:19 -0400
+Date: Tue, 9 Jul 2013 12:30:45 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: Re: [RFC][PATCH 5/8] ACPI / hotplug / PCI: Unified notify handler
+ for hotplug events
+Message-ID: <20130709093045.GJ4898@intel.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+ <1475924.SZkPqZAdKY@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>, Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci: exynos: split into two parts such as Synopsys part
- and Exynos part
-References: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
-In-Reply-To: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1475924.SZkPqZAdKY@vostro.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/5/2013 1:59 PM, Jingoo Han wrote:
-> Exynos PCIe IP consists of Synopsys specific part and Exynos
-> specific part. Only core block is a Synopsys designware part;
-> other parts are Exynos specific.
-> Also, the Synopsys designware part can be shared with other
-> platforms; thus, it can be split two parts such as Synopsys
-> designware part and Exynos specific part.
->
+On Tue, Jul 09, 2013 at 02:19:04AM +0200, Rafael J. Wysocki wrote:
+> Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
+> +++ linux-pm/drivers/pci/hotplug/acpiphp.h
+> @@ -137,6 +137,7 @@ struct acpiphp_context {
+>  	acpi_handle handle;
+>  	struct acpiphp_func *func;
+>  	struct acpiphp_bridge *bridge;
+> +	bool handler_for_func:1;
 
-A quick and nice job :)
-Just few minor comments.
+Hmm, should it be just plain:
 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> Cc: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> ---
->   drivers/pci/host/Makefile          |    1 +
->   drivers/pci/host/pcie-designware.c |  907 +++++++-----------------------------
->   drivers/pci/host/pcie-designware.h |   72 +++
->   drivers/pci/host/pcie-exynos.c     |  619 ++++++++++++++++++++++++
->   4 files changed, 862 insertions(+), 737 deletions(-)
->   create mode 100644 drivers/pci/host/pcie-designware.h
->   create mode 100644 drivers/pci/host/pcie-exynos.c
->
+	bool handler_for_func;
 
-[...]
+? What's the reason using bitfields for bool?
 
-
-> -
-> -struct pcie_port {
-> -       struct device           *dev;
-> -       u8                      controller;
-> -       u8                      root_bus_nr;
-> -       void __iomem            *dbi_base;
-> -       void __iomem            *elbi_base;
-> -       void __iomem            *phy_base;
-> -       void __iomem            *purple_base;
-
-Just for knowledge, what is the purple_base. It might not be needed by 
-all vendors. Can we explain the name in comment or can give some generic 
-name?
-
-> -       u64                     cfg0_base;
-> -       void __iomem            *va_cfg0_base;
-> -       u64                     cfg1_base;
-> -       void __iomem            *va_cfg1_base;
-> -       u64                     io_base;
-> -       u64                     mem_base;
-> -       spinlock_t              conf_lock;
-> -       struct resource         cfg;
-> -       struct resource         io;
-> -       struct resource         mem;
-> -       struct pcie_port_info   config;
-> -       struct clk              *clk;
-> -       struct clk              *bus_clk;
-> -       int                     irq;
-> -       int                     reset_gpio;
-> -};
-> -
-
-[...]
-
-> -
-> -static inline void readl_rc(struct pcie_port *pp, void *dbi_base, u32 *val)
-> +static inline void dw_pcie_readl_rc(struct pcie_port *pp, void *dbi_base,
-> +                               u32 *val)
-
-dbi_base is part of pp. So why to pass 3 args?
-
->   {
-> -       exynos_pcie_sideband_dbi_r_mode(pp, true);
-> -       *val = readl(dbi_base);
-> -       exynos_pcie_sideband_dbi_r_mode(pp, false);
-> -       return;
-> +       if (pp->ops->readl_rc)
-> +               pp->ops->readl_rc(pp, dbi_base, val);
-
-ditto
-
-> +       else
-> +               *val = readl(dbi_base);
->   }
->
-> -static inline void writel_rc(struct pcie_port *pp, u32 val, void *dbi_base)
-> +static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val,
-> +                               void *dbi_base)
-
-ditto
-
->   {
-> -       exynos_pcie_sideband_dbi_w_mode(pp, true);
-> -       writel(val, dbi_base);
-> -       exynos_pcie_sideband_dbi_w_mode(pp, false);
-> -       return;
-> +       if (pp->ops->writel_rc)
-> +               pp->ops->writel_rc(pp, val, dbi_base);
-
-ditto
-
-> +       else
-> +               writel(val, dbi_base);
->   }
-
-
-Regards
-Pratyush
+>  };
