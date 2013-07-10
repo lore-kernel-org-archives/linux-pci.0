@@ -1,52 +1,232 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:53594 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:2112 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932206Ab3GDCWk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Jul 2013 22:22:40 -0400
-Date: Thu, 4 Jul 2013 10:22:15 +0800
-From: Haicheng Li <haicheng.li@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Haicheng Li <haicheng.lee@gmail.com>,
-	Rob Landley <rob@landley.net>, linux-doc@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/3] doc: add the description for pci=hide kernel
- parameter.
-Message-ID: <20130704022215.GA3244@hli22-desktop>
-References: <1372864578-6925-1-git-send-email-haicheng.li@linux.intel.com>
- <1372864578-6925-2-git-send-email-haicheng.li@linux.intel.com>
- <CAErSpo72XRbZYcepdHyhmY4oAqU1qLtCCXsEsyiCTvNCwvNktg@mail.gmail.com>
+	id S1754219Ab3GJWLF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 10 Jul 2013 18:11:05 -0400
+Subject: [RFC PATCH 1/2] pci: Create PCIe requester ID interface
+To: bhelgaas@google.com
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
+	iommu@lists.linux-foundation.org, acooks@gmail.com,
+	ddutile@redhat.com, dwmw2@infradead.org
+Date: Wed, 10 Jul 2013 16:10:39 -0600
+Message-ID: <20130710221039.3045.70542.stgit@bling.home>
+In-Reply-To: <20130710215954.3045.89568.stgit@bling.home>
+References: <20130710215954.3045.89568.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo72XRbZYcepdHyhmY4oAqU1qLtCCXsEsyiCTvNCwvNktg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 03, 2013 at 10:00:41AM -0600, Bjorn Helgaas wrote:
-> On Wed, Jul 3, 2013 at 9:16 AM, Haicheng Li <haicheng.li@linux.intel.com> wrote:
-> > Cc: Rob Landley <rob@landley.net>
-> > Cc: linux-doc@vger.kernel.org
-> > Cc: linux-pci@vger.kernel.org
-> > Signed-off-by: Haicheng Li <haicheng.li@linux.intel.com>
-> > ---
-> >  Documentation/kernel-parameters.txt |    2 ++
-> >  1 file changed, 2 insertions(+)
-> >
-> > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> > index 2fe6e76..4da0834 100644
-> > --- a/Documentation/kernel-parameters.txt
-> > +++ b/Documentation/kernel-parameters.txt
-> > @@ -2359,6 +2359,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-> >                 pcie_scan_all   Scan all possible PCIe devices.  Otherwise we
-> >                                 only look for one device below a PCIe downstream
-> >                                 port.
-> > +               hide=           Format: [<domain>:]<bus>:<slot>.<func>[; ...]
-> > +                               Specifies devices to hide from pci subsystem.
-> >
-> >         pcie_aspm=      [PCIE] Forcibly enable or disable PCIe Active State Power
-> >                         Management.
-> 
-> The documentation update should be in the same patch as the
-> functionality it adds.
+This provides interfaces for drivers to discover the visible PCIe
+requester ID for a device, for things like IOMMU setup, and iterate
+over the device chain from requestee to requester, including DMA
+quirks at each step.
 
-Okay, got it. thanks.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/search.c |  170 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    7 ++
+ 2 files changed, 177 insertions(+)
+
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index d0627fa..2cca84b 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -18,6 +18,176 @@ DECLARE_RWSEM(pci_bus_sem);
+ EXPORT_SYMBOL_GPL(pci_bus_sem);
+ 
+ /*
++ * pci_has_pcie_requester_id - Does @dev have a PCIe requester ID
++ * @dev: device to test
++ */
++static bool pci_has_pcie_requester_id(struct pci_dev *dev)
++{
++	/*
++	 * XXX There's no indicator of the bus type, conventional PCI vs
++	 * PCI-X vs PCI-e, but we assume that a caller looking for a PCIe
++	 * requester ID is a native PCIe based system (such as VT-d or
++	 * AMD-Vi).  It's common that PCIe root complex devices do not
++	 * include a PCIe capability, but we can assume they are PCIe
++	 * devices based on their topology.
++	 */
++	if (pci_is_pcie(dev) || pci_is_root_bus(dev->bus))
++		return true;
++
++	/*
++	 * PCI-X devices have a requester ID, but the bridge may still take
++	 * ownership of transactions and create a requester ID.  We therefore
++	 * assume that the PCI-X requester ID is not the same one used on PCIe.
++	 */
++
++#ifdef CONFIG_PCI_QUIRKS
++	/*
++	 * Quirk for PCIe-to-PCI bridges which do not expose a PCIe capability.
++	 * If the device is a bridge, look to the next device upstream of it.
++	 * If that device is PCIe and not a PCIe-to-PCI bridge, then by
++	 * deduction, the device must be PCIe and therefore has a requester ID.
++	 */
++	if (dev->subordinate) {
++		struct pci_dev *parent = dev->bus->self;
++
++		if (pci_is_pcie(parent) &&
++		    pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
++			return true;
++	}
++#endif
++
++	return false;
++}
++
++/*
++ * pci_has_visible_pcie_requester_id - Can @bridge see @dev's requester ID?
++ * @dev: requester device
++ * @bridge: upstream bridge (or NULL for root bus)
++ */
++static bool pci_has_visible_pcie_requester_id(struct pci_dev *dev,
++					      struct pci_dev *bridge)
++{
++	/*
++	 * The entire path must be tested, if any step does not have a
++	 * requester ID, the chain is broken.  This allows us to support
++	 * topologies with PCIe requester ID gaps, ex: PCIe-PCI-PCIe
++	 */
++	while (dev != bridge) {
++		if (!pci_has_pcie_requester_id(dev))
++			return false;
++
++		if (pci_is_root_bus(dev->bus))
++			return !bridge; /* false if we don't hit @bridge */
++
++		dev = dev->bus->self;
++	}
++
++	return true;
++}
++
++/*
++ * pci_get_visible_pcie_requester - Get requester for @requestee below @bridge
++ * @requestee: requester device
++ * @bridge: upstream bridge (or NULL for root bus)
++ */
++struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
++					       struct pci_dev *bridge)
++{
++	struct pci_dev *requester = requestee;
++
++	while (requester != bridge) {
++		requester = pci_get_dma_source(requester);
++		pci_dev_put(requester); /* XXX skip ref cnt */
++
++		if (pci_has_visible_pcie_requester_id(requester, bridge))
++			return requester;
++
++		if (pci_is_root_bus(requester->bus))
++			return NULL; /* @bridge not parent to @requestee */
++
++		requester = requester->bus->self;
++	}
++
++	return requester;
++}
++
++#define PCI_REQUESTER_ID(dev)	(((dev)->bus->number << 8) | (dev)->devfn)
++#define PCI_BRIDGE_REQUESTER_ID(dev)	((dev)->subordinate->number << 8)
++
++u16 pci_requester_id(struct pci_dev *requester, struct pci_dev *requestee)
++{
++	if ((requester == requestee) ||
++	    (!pci_is_pcie(requester) && pci_is_root_bus(requester->bus)))
++		return PCI_REQUESTER_ID(requester);
++
++	return PCI_BRIDGE_REQUESTER_ID(requester);
++}
++
++static int pci_do_requester_callback(struct pci_dev *dev,
++				     int (*fn)(struct pci_dev *,
++					       u16 id, void *),
++				     void *data)
++{
++	struct pci_dev *dma_dev;
++	int ret;
++
++	ret = fn(dev, PCI_REQUESTER_ID(dev), data);
++	if (ret)
++		return ret;
++
++	dma_dev = pci_get_dma_source(dev);
++	pci_dev_put(dma_dev); /* XXX skip ref cnt */
++	if (dma_dev == dev)
++		return 0;
++
++	return fn(dma_dev, PCI_REQUESTER_ID(dma_dev), data);
++}
++
++/*
++ * pcie_for_each_requester - Call callback @fn on each devices and DMA source
++ *                           from @requestee to the PCIe requester ID visible
++ *                           to @bridge.
++ * @requestee: Starting device
++ * @bridge: upstream bridge (or NULL for root bus)
++ * @fn: callback function
++ * @data: data to pass to callback
++ */
++int pcie_for_each_requester(struct pci_dev *requestee, struct pci_dev *bridge,
++			    int (*fn)(struct pci_dev *, u16 id, void *),
++			    void *data)
++{
++	struct pci_dev *requester;
++	struct pci_dev *dev;
++	int ret = 0;
++
++	requester = pci_get_visible_pcie_requester(requestee, bridge);
++	if (!requester)
++		return -EINVAL;
++
++	for (dev = requestee; dev != requester; dev = dev->bus->self) {
++		ret = pci_do_requester_callback(dev, fn, data);
++		if (ret)
++			return ret;
++
++		if (pci_is_root_bus(dev->bus))
++			return -EINVAL;
++	}
++
++	/*
++	 * If the requester is not the same as the requestee, then the
++	 * requester is a bridge and uses the bridge requester ID.  However,
++	 * an exception to this rule is if the bridge is a legacy PCI bridge
++	 * attached to the root complex.  In this case, we handle it like
++	 * any other device.
++	 */
++	if (requester != requestee &&
++	    !(!pci_is_pcie(requester) && pci_is_root_bus(requester->bus)))
++		return fn(requester, PCI_BRIDGE_REQUESTER_ID(requester), data);
++
++	return pci_do_requester_callback(requester, fn, data);
++}
++
++/*
+  * find the upstream PCIe-to-PCI bridge of a PCI device
+  * if the device is PCIE, return NULL
+  * if the device isn't connected to a PCIe bridge (that is its parent is a
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3a24e4f..b33824d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1873,6 +1873,13 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+ }
+ #endif
+ 
++struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
++					       struct pci_dev *bridge);
++u16 pci_requester_id(struct pci_dev *requester, struct pci_dev *requestee);
++int pcie_for_each_requester(struct pci_dev *requestee, struct pci_dev *bridge,
++			    int (*fn)(struct pci_dev *, u16 id, void *),
++			    void *data);
++
+ /**
+  * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+  * @pdev: the PCI device
+
