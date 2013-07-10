@@ -1,53 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:57925 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754965Ab3GCB0M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2013 21:26:12 -0400
-Received: by mail-ob0-f178.google.com with SMTP id fb19so6331741obc.23
-        for <linux-pci@vger.kernel.org>; Tue, 02 Jul 2013 18:26:12 -0700 (PDT)
+Received: from arroyo.ext.ti.com ([192.94.94.40]:42525 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754006Ab3GJOCV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 10 Jul 2013 10:02:21 -0400
+Message-ID: <51DD695C.6060209@ti.com>
+Date: Wed, 10 Jul 2013 19:32:04 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20130702182942.28572.82708.stgit@bhelgaas-glaptop>
-References: <20130702182942.28572.82708.stgit@bhelgaas-glaptop>
-Date: Wed, 3 Jul 2013 05:26:12 +0400
-Message-ID: <CAMo8BfK2AdgL+ekaG1g7tJKv8wc30w1qB2RpEc4CC5Z+FraFdw@mail.gmail.com>
-Subject: Re: [PATCH] xtensa/PCI: Mark pcibios_fixup_bus() as non-init
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chris Zankel <chris@zankel.net>, linux-xtensa@linux-xtensa.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Jingoo Han <jg1.han@samsung.com>
+CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pci: exynos: split into two parts such as Synopsys part
+ and Exynos part
+References: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
+In-Reply-To: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi,
 
-On Tue, Jul 2, 2013 at 10:29 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> pcibios_fixup_bus() is called by pci_scan_child_bus(), which is not marked
-> __init.  Therefore, pcibios_fixup_bus() cannot be marked __init either.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/xtensa/kernel/pci.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-> index 126c188..56693dd 100644
-> --- a/arch/xtensa/kernel/pci.c
-> +++ b/arch/xtensa/kernel/pci.c
-> @@ -197,7 +197,7 @@ static int __init pcibios_init(void)
->
->  subsys_initcall(pcibios_init);
->
-> -void __init pcibios_fixup_bus(struct pci_bus *bus)
-> +void pcibios_fixup_bus(struct pci_bus *bus)
->  {
->         if (bus->parent) {
->                 /* This is a subordinate bridge */
->
+On Friday 05 July 2013 01:59 PM, Jingoo Han wrote:
+> Exynos PCIe IP consists of Synopsys specific part and Exynos
+> specific part. Only core block is a Synopsys designware part;
+> other parts are Exynos specific.
+> Also, the Synopsys designware part can be shared with other
+> platforms; thus, it can be split two parts such as Synopsys
+> designware part and Exynos specific part.
 
-Similar patch is already in the xtensa-linux/for_next branch:
-https://github.com/czankel/xtensa-linux/commit/fd95ee7380ae973c6f11b897af6ef9d253a1df9e
+Thanks for doing that :-)
 
--- 
-Thanks.
--- Max
+I'll be using the synopsys specific part as Jacinto6 also uses the same pcie
+core. Once I start implementing, I'll have some queries and comments ;-)
+
+Cheers
+Kishon
