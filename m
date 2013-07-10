@@ -1,96 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:46444 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756696Ab3GYRUD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:20:03 -0400
-Received: by mail-ob0-f180.google.com with SMTP id eh20so2075887obb.39
-        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 10:20:01 -0700 (PDT)
-Date: Thu, 25 Jul 2013 11:19:58 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, joro@8bytes.org,
-	iommu@lists.linux-foundation.org, acooks@gmail.com,
-	dwmw2@infradead.org
-Subject: Re: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
-Message-ID: <20130725171958.GB9272@google.com>
-References: <20130711204439.1701.90503.stgit@bling.home>
- <20130711210326.1701.56478.stgit@bling.home>
- <20130723223533.GB19765@google.com>
- <51F03C1B.2070002@redhat.com>
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:56127 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752372Ab3GJBgN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 21:36:13 -0400
+Received: from /spool/local
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 10 Jul 2013 07:01:11 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 6FD8A1258051
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 07:05:22 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r6A1agkR29163542
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 07:06:42 +0530
+Received: from d28av05.in.ibm.com (loopback [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r6A1a78Y024705
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 11:36:08 +1000
+Date: Wed, 10 Jul 2013 09:36:06 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/4] PCI: optimize pci_bus_get_depth() by enumerating on
+ pci bus hierachy
+Message-ID: <20130710013606.GB6671@weiyang.vnet.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1372691432-6440-2-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CAErSpo4tejULHMTzSf31suh1jnU=9vx-u4PnV2EJfKBuWqeEkw@mail.gmail.com>
+ <20130709023846.GB7094@weiyang.vnet.ibm.com>
+ <CAErSpo4XqeY5XH3qpc2sKuec8BakUAQkjZKB9X3eKg2uFi6L6g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51F03C1B.2070002@redhat.com>
+In-Reply-To: <CAErSpo4XqeY5XH3qpc2sKuec8BakUAQkjZKB9X3eKg2uFi6L6g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 24, 2013 at 04:42:03PM -0400, Don Dutile wrote:
-> On 07/23/2013 06:35 PM, Bjorn Helgaas wrote:
-> >On Thu, Jul 11, 2013 at 03:03:27PM -0600, Alex Williamson wrote:
-> >>This provides interfaces for drivers to discover the visible PCIe
-> >>requester ID for a device, for things like IOMMU setup, and iterate
-> >
-> >IDs (plural)
-> >
-> a single device does not have multiple requester id's;
-> can have multiple tag-id's (that are ignored in this situation, but
-> can be used by switches for ordering purposes), but there's only 1/fcn
-> (except for those quirker pdevs!).
+On Tue, Jul 09, 2013 at 01:27:42PM -0600, Bjorn Helgaas wrote:
+>On Mon, Jul 8, 2013 at 8:38 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Mon, Jul 08, 2013 at 02:46:17PM -0600, Bjorn Helgaas wrote:
+>>>On Mon, Jul 1, 2013 at 9:10 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>>>> Normally, on one pci bus there would be more devices than pci buses. When
+>>>> calculating the depth of pci bus, it would be more time efficient by
+>>>> enumerating through the child buses instead of the child devices.
+>>>>
+>>>> Also by doing so, the code seems more self explaining. Previously, it go
+>>>> through the pci devices and check whether a bridge introduce a child bus or
+>>>> not, which needs more background knowledge to understand it.
+>>>>
+>>>> This patch caculating the depth by enumerating on pci bus hierachy in an
+>>>> iterative way.
+>>>
+>>>Your code does have the advantage of not being recursive, but the
+>>>original code is significantly shorter and, in my opinion, much more
+>>>readable.  This is not in a performance path, so I don't see any
+>>>advantage in optimizing.
+>>
+>> Thanks for your comments~
+>>
+>> Yes, this doesn't benefit a lot on the performance.
+>>
+>> The benefit of this code is not only the recursive approach, but on
+>> calculating the depth of pci bus tree by iterating on pci bus tree instead of
+>> the pci device tree.
+>>
+>> In my mind, there is less pci bus structrue than the pci device structure, and
+>> hope the code would be more self explaining for the audience by going through
+>> the pci bus tree to calculate the pci bus tree depth.
+>>
+>> My original code looks like below. Do you think this one is more friendly to
+>> the audience?
+>
+>Yes.
 
-Generally a device does not have multiple requester IDs, but the
-IOMMU may see one of several requester IDs for DMAs from a given
-device because bridges may take ownership of those transactions (sec
-3.6.1.1 of the VT-d spec).
+Thanks for your comment.
 
-Just to be clear, I envision this whole interface as being
-specifically for use by IOMMU drivers, so I'm only trying to provide
-what's necessary to build IOMMU mappings.
+If you agree, I will re-sent the patch with this recursive version.
 
-> >>+ * pci_get_visible_pcie_requester - Get requester and requester ID for
-> >>+ *                                  @requestee below @bridge
-> >>+ * @requestee: requester device
-> >>+ * @bridge: upstream bridge (or NULL for root bus)
-> >>+ * @requester_id: location to store requester ID or NULL
-> >>+ */
-> >>+struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
-> >>+					       struct pci_dev *bridge,
-> >>+					       u16 *requester_id)
-> >
-> >I'm not sure it makes sense to return a struct pci_dev here because
-> >there's no requirement that a requester ID correspond to an actual
-> >pci_dev.
-> >
-> well, I would expect the only callers would be for subsys (iommu's)
-> searching to find requester-id for a pdev, b/c if a pdev doesn't exist,
-> then the device (and requester-id) doesn't exist... :-/
+>
+>> @@ -1300,21 +1300,19 @@ static void pci_bus_dump_resources(struct pci_bus *bus)
+>>  static int __init pci_bus_get_depth(struct pci_bus *bus)
+>>  {
+>>         int depth = 0;
+>> -       struct pci_dev *dev;
+>> +       struct pci_bus *child_bus;
+>>
+>> -       list_for_each_entry(dev, &bus->devices, bus_list) {
+>> +       list_for_each_entry(child_bus, &bus->children, node){
+>>                 int ret;
+>> -               struct pci_bus *b = dev->subordinate;
+>> -               if (!b)
+>> -                       continue;
+>>
+>> -               ret = pci_bus_get_depth(b);
+>> +               ret = pci_bus_get_depth(child_bus);
+>>                 if (ret + 1 > depth)
+>>                         depth = ret + 1;
+>>         }
+>>
+>>         return depth;
+>>  }
+>>
+>> And yes again, this change will not bring much improvement for the performance.
+>> If this is not good, just ignore the code. :-)
+>>
+>>>
+>>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>>> Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+>>>> Reviewed-by: Ram Pai <linuxram@us.ibm.com>
+>>>> Reviewed-by: Xiao Guangrong <xiaoguangrong@linux.vnet.ibm.com>
+>>>> Reviewed-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+>>>> ---
+>>>>  drivers/pci/setup-bus.c |   43 ++++++++++++++++++++++++++++++++-----------
+>>>>  1 files changed, 32 insertions(+), 11 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>>>> index 16abaaa..b333f73 100644
+>>>> --- a/drivers/pci/setup-bus.c
+>>>> +++ b/drivers/pci/setup-bus.c
+>>>> @@ -1299,22 +1299,43 @@ static void pci_bus_dump_resources(struct pci_bus *bus)
+>>>>
+>>>>  static int __init pci_bus_get_depth(struct pci_bus *bus)
+>>>>  {
+>>>> -       int depth = 0;
+>>>> -       struct pci_dev *dev;
+>>>> +       int max_depth, depth;
+>>>> +       struct pci_bus *parent, *curr;
+>>>> +       struct list_head *node;
+>>>>
+>>>> -       list_for_each_entry(dev, &bus->devices, bus_list) {
+>>>> -               int ret;
+>>>> -               struct pci_bus *b = dev->subordinate;
+>>>> -               if (!b)
+>>>> -                       continue;
+>>>> +       /* no child? */
+>>>> +       if (list_empty(&bus->children))
+>>>> +               return 0;
+>>>>
+>>>> -               ret = pci_bus_get_depth(b);
+>>>> -               if (ret + 1 > depth)
+>>>> -                       depth = ret + 1;
+>>>> +       node = bus->children.next;
+>>>> +       parent = bus;
+>>>> +       max_depth = depth = 1;
+>>>> +
+>>>> +       while (parent) {
+>>>> +               /* hit the head, go back to parent level */
+>>>> +               if (node == &parent->children) {
+>>>> +                       node = parent->node.next;
+>>>> +                       parent = parent->parent;
+>>>> +                       depth--;
+>>>> +                       continue;
+>>>> +               }
+>>>> +               curr = list_entry(node, struct pci_bus, node);
+>>>> +               /* depth first */
+>>>> +               if (!list_empty(&curr->children)) {
+>>>> +                       node = curr->children.next;
+>>>> +                       parent = curr;
+>>>> +                       depth++;
+>>>> +                       if (max_depth < depth)
+>>>> +                               max_depth = depth;
+>>>> +               }
+>>>> +               /* no child, go to the sibling */
+>>>> +               else
+>>>> +                       node = curr->node.next;
+>>>>         }
+>>>>
+>>>> -       return depth;
+>>>> +       return max_depth;
+>>>>  }
+>>>> +
+>>>>  static int __init pci_get_max_depth(void)
+>>>>  {
+>>>>         int depth = 0;
+>>>> --
+>>>> 1.7.5.4
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> --
+>> Richard Yang
+>> Help you, Help me
+>>
 
-> >>+ * pcie_for_each_requester - Call callback @fn on each devices and DMA source
-> >>+ *                           from @requestee to the PCIe requester ID visible
-> >>+ *                           to @bridge.
-> >
-> >Transactions from a device may appear with one of several requester IDs,
-> >but there's not necessarily an actual pci_dev for each ID, so I think the
-> ditto above; have to have a pdev for each id....
+-- 
+Richard Yang
+Help you, Help me
 
-This *might* be true, but I don't think we should rely on it.  For
-example:
-
-  00:1c.0 PCIe to PCI bridge to [bus 01]
-  01:01.0 PCI endpoint
-
-The bridge will take ownership of DMA transactions from the 01:01.0
-endpoint.  An IOMMU on bus 00 will see a bridge-assigned requester
-ID of 01:00.0 (subordinate bus number, devfn zero), but there is no
-01:00.0 device.
-
-Maybe the rules of conventional PCI require a device zero (I don't
-remember), but even if they do, it's ugly to rely on that here
-because I don't think device 01:00.0 is relevant to mappings for
-device 01:01.0.
-
-Obviously we also have to be aware that 01:00.0 and 01:01.0 can't be
-isolated from each other, but I think that issue is separate from
-the question of what requester IDs have to be mapped to make 01:01.0
-work.
-
-Bjorn
