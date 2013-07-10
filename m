@@ -1,54 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:44335 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752476Ab3GEVLk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jul 2013 17:11:40 -0400
-Received: by mail-ie0-f171.google.com with SMTP id qd12so6304517ieb.30
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jul 2013 14:11:39 -0700 (PDT)
-Date: Fri, 5 Jul 2013 15:11:36 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Cc: linux-pci@vger.kernel.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH] PCI: PCIE: Rename option title to something less
- confusing
-Message-ID: <20130705211136.GA16551@google.com>
-References: <1372970720-14016-1-git-send-email-ezequiel.garcia@free-electrons.com>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:51448 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754419Ab3GJUu4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jul 2013 16:50:56 -0400
+Received: by mail-oa0-f51.google.com with SMTP id i4so10108300oah.24
+        for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 13:50:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372970720-14016-1-git-send-email-ezequiel.garcia@free-electrons.com>
+In-Reply-To: <1373477126220-681610.post@n7.nabble.com>
+References: <494703114.34959.1360492995961.JavaMail.mail@webmail19>
+ <CA+55aFyscOeZUPaYj_-QYgjADPD59+=c5aMvtpPEnd1tmpUGiA@mail.gmail.com> <1373477126220-681610.post@n7.nabble.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 10 Jul 2013 14:50:35 -0600
+Message-ID: <CAErSpo5YK=JKqjJZyd=QgOqqmCwFD5X-2CqvTn2N50_Bc6hBrw@mail.gmail.com>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+To: hyphop <email2tema@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Artem S. Tashkinov" <t.artem@lycos.com>,
+	Phillip Susi <psusi@ubuntu.com>,
+	Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+	Robert Hancock <hancockrwd@gmail.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, hendrik.haddorp@gmx.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 04, 2013 at 05:45:20PM -0300, Ezequiel Garcia wrote:
-> The previous option title "PCI Express support" is confusing.
-> The name seems to imply this option is required to get PCIe support,
-> which is not true.
-> 
-> Fix it to "PCI Express Port Bus support" which is more accurate.
-> 
-> Signed-off-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+[+cc previous cc list from lkml]
 
-Applied to pci/misc for v3.12, thanks!  I'll rebase and push this branch
-after v3.11-rc1 is released.
+On Wed, Jul 10, 2013 at 11:25 AM, hyphop <email2tema@gmail.com> wrote:
+> hello
+> i have same problem. low write speed after system sleep
+>
+> kernel 3.9.9
+>
+> i can see it HDD SATA & USB disks to
+>
+> i try to make another test
+>
+> before sleep i make  file /tmp/test ( /tmp mounted as tmpfs size=8G, i have
+> 16G memory in my system )
+>
+> dd if=/dev/zero bs=1M count=1000 of=/tmp/test
+>  ~ 3,2 GB/s
+> cryptsetup luksFormat /tmp/test
+> cryptsetup luksOpen /tmp/test test
+>
+> dd if=/dev/zero bs=1M count=1000 of=/dev/mapper/test
+>  ~ 465 GB/s good speed
+>
+> after sleep
+>
+> dd if=/dev/zero bs=1M count=1000 of=/dev/mapper/test
+>  ~ 5MB/s ooops (((( very slow
+>
+> but if write directly in /tmp i can see
+>
+> dd if=/dev/zero bs=1M count=1000 of=/tmp/test2
+>  ~ 3,2 GB/s
+>
+> I can see this is not hardware problem (NOT SATA OR USB) i think is kernel
+> BUG, i i dont have this problem on previous kernel 3.4
 
-> ---
->  drivers/pci/pcie/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-> index 569f82f..a82e70a 100644
-> --- a/drivers/pci/pcie/Kconfig
-> +++ b/drivers/pci/pcie/Kconfig
-> @@ -2,7 +2,7 @@
->  # PCI Express Port Bus Configuration
->  #
->  config PCIEPORTBUS
-> -	bool "PCI Express support"
-> +	bool "PCI Express Port Bus support"
->  	depends on PCI
->  	help
->  	  This automatically enables PCI Express Port Bus support. Users can
-> -- 
-> 1.8.1.5
-> 
+Thanks for this report.  Artem collected some of his info here:
+https://bugzilla.kernel.org/show_bug.cgi?id=53551 .  Hendrik Haddorp
+also reported seeing this issue there.
+
+Artem reported that Windows complains "The system firmware has changed
+the processor's memory type range registers (MTRRs) across a sleep
+state transition (S4). This can result in reduced resume performance."
+ If you have Windows on your system, does it complain the same way?
+
+Can you collect and attach complete dmesg and "lspci -vvv" logs, from
+both working and broken kernels, to the bugzilla?  Collect lspci logs
+both before and after the sleep; I think Artem saw some differences
+between those, and I'm not sure we completely ruled those out.
+
+If anybody can reproduce this reliably enough to bisect it, that would
+be a huge help.
+
+Bjorn
