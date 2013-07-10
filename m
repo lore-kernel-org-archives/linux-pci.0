@@ -1,160 +1,195 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30000 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755491Ab3GYNb4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 09:31:56 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:35729 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752372Ab3GJBeu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 21:34:50 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 10 Jul 2013 06:58:21 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 64A46E0055
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 07:04:31 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r6A1Yeb55177500
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 07:04:40 +0530
+Received: from d28av02.in.ibm.com (loopback [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r6A1Yhs2016472
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 11:34:44 +1000
+Date: Wed, 10 Jul 2013 09:34:42 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6] PCI: Don't let mmio fallback to must-only, if ioport fails with must+optional
-Date: Thu, 25 Jul 2013 06:31:38 -0700
-Message-Id: <1374759098-6746-1-git-send-email-yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
+ pbus_size_io()
+Message-ID: <20130710013442.GA6671@weiyang.vnet.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1372691432-6440-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CAErSpo5O6CdzSw3bQyuKXsP+H0deJtGL1kXU+ddf_reA+ECq6w@mail.gmail.com>
+ <20130709032019.GC7094@weiyang.vnet.ibm.com>
+ <CAErSpo76aKk_Nq=MuL6Rsf98+fTxXQe=bJ-wQOhosKSDoYC8Ew@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo76aKk_Nq=MuL6Rsf98+fTxXQe=bJ-wQOhosKSDoYC8Ew@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-BenH reported that there are assign unassigned resource problems
-in powerpc.
+On Tue, Jul 09, 2013 at 11:38:06AM -0600, Bjorn Helgaas wrote:
+>On Mon, Jul 8, 2013 at 9:20 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Mon, Jul 08, 2013 at 03:15:13PM -0600, Bjorn Helgaas wrote:
+>>>On Mon, Jul 1, 2013 at 9:10 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>>>> In commit 462d9303 ("PCI: Align P2P windows using pcibios_window_alignment()"),
+>>>> it introduce a new method to calculate the window alignment of P2P bridge.
+>>>>
+>>>> When the io_window_1k is set,  the calculation for the io resource alignment
+>>>> is different from the original one. In the original logic before 462d9303,
+>>>> the alignment is no bigger than 4K even the io_window_1k is set. The logic
+>>>> introduced in 462d9303 will limit the alignment to 1k in this case.
+>>>>
+>>>> This patch fix this issue.
+>>>>
+>>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>>> Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+>>>> Reviewed-by: Ram Pai <linuxram@us.ibm.com>
+>>>> ---
+>>>>  drivers/pci/setup-bus.c |    4 ++++
+>>>>  1 files changed, 4 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>>>> index bd0ce39d..5c60ca0 100644
+>>>> --- a/drivers/pci/setup-bus.c
+>>>> +++ b/drivers/pci/setup-bus.c
+>>>> @@ -755,6 +755,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+>>>>                 return;
+>>>>
+>>>>         io_align = min_align = window_alignment(bus, IORESOURCE_IO);
+>>>> +       /* Don't exceed 4KiB for windows requesting 1KiB alignment */
+>>>> +       if (bus->self->io_window_1k && io_align == PCI_P2P_DEFAULT_IO_ALIGN_1K)
+>>>> +               io_align = PCI_P2P_DEFAULT_IO_ALIGN;
+>>>
+>>>Please explain why we need this change, with some actual values that
+>>>show the problem.  We need to know what the problem is, not merely
+>>>that the code behaves differently than it did before 462d9303.
+>>
+>> Yep, sorry for not listing the exact problem value.
+>>
+>> Assume:
+>>         1. pcibios_window_alignment() return 1.
+>>         2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
+>>         3. one of the child device has an IO resource with size of 2K.
+>>
+>> Result comparison:
+>>
+>>                     Before 462d9303             After 462d9303
+>>     min_align       1k                          1k
+>>                                         |
+>>                              after loop |
+>>                                         V
+>>     min_align       2k                          2k
+>>                                         |
+>>                          check boundary |
+>>                                         V
+>>     min_align       2k                          1k
+>>
+>> In this case, with 462d9303 the min_align will be set back to 1k even one of
+>> the child require 2k alignment.
+>>
+>>>
+>>>It appears to me that this change will break the ability to use 1K
+>>>windows.  For example, assume a bridge that supports 1K windows.
+>>>Assume we're using the default pcibios_window_alignment().  Currently
+>>>window_alignment() on the secondary bus returns
+>>>PCI_P2P_DEFAULT_IO_ALIGN_1K (0x400, which is 1K), so io_align = 0x400.
+>>>
+>>>With your change, I think io_align will be bumped back up to 4K in
+>>>this case, so we'll lose the ability to allocate a 1K window.
+>>
+>> After applying the change:
+>>
+>> Assume:
+>>         1. pcibios_window_alignment() return 1.
+>>         2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
+>>         3. one of the child device has an IO resource with size of 2K.
+>
+>What happens if no child has an I/O resource larger than 1K?  Can we
+>allocate a 1K window with 1K alignment in that case?
+>
 
-It turns out after
-| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
-| Date:   Thu Feb 23 19:23:29 2012 -0800
-|
-|    PCI: Retry on IORESOURCE_IO type allocations
+Yes, it could. The result comparison would look like this.
+Since no child has an I/O resource larger than 1k, the min_align will remain
+1k after loop. And because io_align(4K) is larger than min_align(1k), the
+final min_align would be 1k.
 
-even for root bus that does not have io port range, it will keep retrying
-to realloc with mmio after mmio allocation work in first try already.
+In this case, the code from commit 462d9303 and my patch both works.
 
-Current retry logic is : try with must+optional at first, and if
-it fails with any ioport or mmio, it will try must then try to extend
-must with optional. The reassign will put extended mmio or pref mmio
-in the middle of parent resource range.
-That will prevent other sibling resources from getting must-have resources
-or get extended properly.
+ Result comparison:
+                     with  462d9303             with this patch
+     min_align       1k                          1k
+     io_align        1k                          4k
+                                         |
+                              after loop |
+                                         V
+     min_align       1k                          1k
+     io_align        1k                          4k
+                                         |
+                          check boundary |
+                                         V
+     min_align       1k                          1k
+     io_align        1k                          4k
 
-We can check fail type to see if can we need fall back to must-have
-for it only, that will keep others type to keep resource to have
-must+optional allocations.
+>> Result comparison:
+>>
+>>                     with  462d9303             with this patch
+>>     min_align       1k                          1k
+>>     io_align        1k                          4k
+>>                                         |
+>>                              after loop |
+>>                                         V
+>>     min_align       2k                          2k
+>>     io_align        1k                          4k
+>>                                         |
+>>                          check boundary |
+>>                                         V
+>>     min_align       1k                          2k
+>>     io_align        1k                          4k
+>>
+>> With this patch, in the same case as above, the min_align is 2k after
+>> calculation.
+>>
+>> In my mind, the min_align is the lower bound, io_align is the upper bound. The
+>> final result of min_align should be in this range.
+>>
+>> Is my understanding correct? or I missed something important?
+>>
+>>>
+>>>>         list_for_each_entry(dev, &bus->devices, bus_list) {
+>>>>                 int i;
+>>>>
+>>>> --
+>>>> 1.7.5.4
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>--
+>>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>the body of a message to majordomo@vger.kernel.org
+>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> --
+>> Richard Yang
+>> Help you, Help me
+>>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Separate three resource type checking if we need to release
-assigned resource after requested + add_size try.
-1. if there is io port assign fail, will release assigned io port.
-2. if there is pref mmio assign fail, release assigned pref mmio.
-   if assigned pref mmio's parent is non-pref mmio and there
-   is non-pref mmio assign fail, will release that assigned pref mmio.
-3. if there is non-pref mmio assign fail or pref mmio assigned fail,
-   will release assigned non-pref mmio.
+-- 
+Richard Yang
+Help you, Help me
 
-This will be become more often when we have x86 8 sockets or 32 sockets
-system, and those systems will have one root bus per socket.
-They will have some root buses that do not have ioport range or 32bit mmio.
-
--v2: need to remove assigned entries from optional list too.
--v3: not just checking ioport related, requested by Bjorn.
-
-Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Tested-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/setup-bus.c |   70 +++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 69 insertions(+), 1 deletion(-)
-
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -300,6 +300,48 @@ static void assign_requested_resources_s
- 	}
- }
- 
-+static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
-+{
-+	struct pci_dev_resource *fail_res;
-+	unsigned long mask = 0;
-+
-+	/* check failed type */
-+	list_for_each_entry(fail_res, fail_head, list)
-+		mask |= fail_res->flags;
-+
-+	/*
-+	 * one pref failed resource will set IORESOURCE_MEM,
-+	 * as we can allocate pref in non-pref range.
-+	 * Will release all asssigned non-pref sibling resources
-+	 * according to that bit.
-+	 */
-+	return mask & (IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH);
-+}
-+
-+static bool pci_need_to_release(unsigned long mask, struct resource *res)
-+{
-+	if (res->flags & IORESOURCE_IO)
-+		return !!(mask & IORESOURCE_IO);
-+
-+	/* check pref at first */
-+	if (res->flags & IORESOURCE_PREFETCH) {
-+		if (mask & IORESOURCE_PREFETCH)
-+			return true;
-+		/* count pref if its parent is non-pref */
-+		else if ((mask & IORESOURCE_MEM) &&
-+			 !(res->parent->flags & IORESOURCE_PREFETCH))
-+			return true;
-+		else
-+			return false;
-+	}
-+
-+	if (res->flags & IORESOURCE_MEM)
-+		return !!(mask & IORESOURCE_MEM);
-+
-+	/* should not get here */
-+	return false;
-+}
-+
- static void __assign_resources_sorted(struct list_head *head,
- 				 struct list_head *realloc_head,
- 				 struct list_head *fail_head)
-@@ -312,11 +354,24 @@ static void __assign_resources_sorted(st
- 	 *  if could do that, could get out early.
- 	 *  if could not do that, we still try to assign requested at first,
- 	 *    then try to reassign add_size for some resources.
-+	 *
-+	 * Separate three resource type checking if we need to release
-+	 *  assigned resource after requested + add_size try.
-+	 *	1. if there is io port assign fail, will release assigned
-+	 *	   io port.
-+	 *	2. if there is pref mmio assign fail, release assigned
-+	 *	   pref mmio.
-+	 *	   if assigned pref mmio's parent is non-pref mmio and there
-+	 *	   is non-pref mmio assign fail, will release that assigned
-+	 *	   pref mmio.
-+	 *	3. if there is non-pref mmio assign fail or pref mmio
-+	 *	   assigned fail, will release assigned non-pref mmio.
- 	 */
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
--	struct pci_dev_resource *dev_res;
-+	struct pci_dev_resource *dev_res, *tmp_res;
-+	unsigned long fail_type;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -348,6 +403,19 @@ static void __assign_resources_sorted(st
- 		return;
- 	}
- 
-+	/* check failed type */
-+	fail_type = pci_fail_res_type_mask(&local_fail_head);
-+	/* remove not need to be released assigned res from head list etc */
-+	list_for_each_entry_safe(dev_res, tmp_res, head, list)
-+		if (dev_res->res->parent &&
-+		    !pci_need_to_release(fail_type, dev_res->res)) {
-+			/* remove it from realloc_head list */
-+			remove_from_list(realloc_head, dev_res->res);
-+			remove_from_list(&save_head, dev_res->res);
-+			list_del(&dev_res->list);
-+			kfree(dev_res);
-+		}
-+
- 	free_list(&local_fail_head);
- 	/* Release assigned resource */
- 	list_for_each_entry(dev_res, head, list)
