@@ -1,246 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH v2 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
-Date: Thu, 04 Jul 2013 15:14:58 +0200
-Message-ID: <5332719.huZ9ItKWz0@vostro.rjw.lan>
-In-Reply-To: <20130704125337.GN4898@intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com> <6828518.UobQ5xLxzT@vostro.rjw.lan> <20130704125337.GN4898@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:1947 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755988Ab3GKJpn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 05:45:43 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH -v2 2/3] PCI,pciehp: avoid add a device already exist before suspend during resume
+Date: Thu, 11 Jul 2013 17:43:44 +0800
+Message-ID: <1373535825-49972-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
+References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 04, 2013 03:53:38 PM Mika Westerberg wrote:
-> On Thu, Jul 04, 2013 at 02:36:00PM +0200, Rafael J. Wysocki wrote:
-> > On Thursday, July 04, 2013 11:58:44 AM Mika Westerberg wrote:
-> > > On Wed, Jul 03, 2013 at 11:40:42PM +0200, Rafael J. Wysocki wrote:
-> > > > On Wednesday, July 03, 2013 05:04:53 PM Mika Westerberg wrote:
-> > > > > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> > > > > 
-> > > > > Correct ACPI PCI hotplug imeplementation should have _RMV method in a
-> > > > > PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
-> > > > > deeper in hierarchy:
-> > > > > 
-> > > > > Device (RP05)
-> > > > > {
-> > > > >    // ...
-> > > > >    Device (HRUP)
-> > > > >    {
-> > > > >        // ...
-> > > > >        Device (HRDN)
-> > > > >        {
-> > > > >            // ...
-> > > > >            Device (EPUP)
-> > > > >            {
-> > > > >                // ...
-> > > > >                Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
-> > > > >                {
-> > > > >                    Return (One)
-> > > > >                }
-> > > > >            }
-> > > > >        }
-> > > > >    }
-> > > > > }
-> > > > > 
-> > > > > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> > > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > > > ---
-> > > > >  drivers/pci/hotplug/acpi_pcihp.c | 13 +++++++++++++
-> > > > >  1 file changed, 13 insertions(+)
-> > > > > 
-> > > > > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> > > > > index 2a47e82..d92ebfb 100644
-> > > > > --- a/drivers/pci/hotplug/acpi_pcihp.c
-> > > > > +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> > > > > @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
-> > > > >  	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-> > > > >  	if (ACPI_SUCCESS(status) && removable)
-> > > > >  		return 1;
-> > > > > +
-> > > > > +	/*
-> > > > > +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
-> > > > > +	 *
-> > > > > +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
-> > > > > +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
-> > > > > +	 * deeper in hierarchy.
-> > > > > +	 */
-> > > > > +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
-> > > > > +			&removable);
-> > > > 
-> > > > Well, calling stuff like this directly from a general function is kind of ugly.
-> > > > 
-> > > > Can we use something like a quirk instead?  A DMI check or something?
-> > > 
-> > > Sure we can. How about something like the patch below?
-> > 
-> > Well, it goes into the right (to me) direction. :-)
-> > 
-> > Some comments below.
-> > 
-> > > From: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > Subject: [PATCH] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
-> > > 
-> > > The acpiphp driver finds out whether the device is removable by checking
-> > > whether it has _RMV method directly behind it (and if it returns 1).
-> > > However, at least on Acer Aspire S5 with Thunderbolt host router has this
-> > > method placed behind a device called EPUP (endpoint upstream port?) and not
-> > > in the usual place expected by the acpiphp driver. The ASL code below shows
-> > > how this is done on that machine:
-> > > 
-> > > Device (RP05)
-> > > {
-> > > 	...
-> > > 	Device (HRUP)
-> > > 	{
-> > > 		Name (_ADR, Zero)
-> > > 		Name (_PRW, Package (0x02)
-> > > 		{
-> > > 			0x09,
-> > > 			0x04
-> > > 		})
-> > > 		Device (HRDN)
-> > > 		{
-> > > 			Name (_ADR, 0x00040000)
-> > > 			Name (_PRW, Package (0x02)
-> > > 			{
-> > > 				0x09,
-> > > 				0x04
-> > > 			})
-> > > 			Device (EPUP)
-> > > 			{
-> > > 				Name (_ADR, Zero)
-> > > 				Method (_RMV, 0, NotSerialized)
-> > > 				{
-> > > 					Return (One)
-> > > 				}
-> > > 			}
-> > > 		}
-> > > 	}
-> > > 	...
-> > > 
-> > > Fix this by adding a DMI quirk for the Acer Aspire S5 machine that gives an
-> > > alternative path to the _RMV method.
-> > > 
-> > > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > ---
-> > >  drivers/pci/hotplug/acpi_pcihp.c | 57 ++++++++++++++++++++++++++++++++++++----
-> > >  1 file changed, 52 insertions(+), 5 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> > > index 2a47e82..99fccf3 100644
-> > > --- a/drivers/pci/hotplug/acpi_pcihp.c
-> > > +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> > > @@ -33,6 +33,7 @@
-> > >  #include <linux/acpi.h>
-> > >  #include <linux/pci-acpi.h>
-> > >  #include <linux/slab.h>
-> > > +#include <linux/dmi.h>
-> > >  
-> > >  #define MY_NAME	"acpi_pcihp"
-> > >  
-> > > @@ -408,21 +409,67 @@ got_one:
-> > >  }
-> > >  EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
-> > >  
-> > > +/**
-> > > + * pcihp_is_removable - is the given ACPI device removable
-> > > + * @handle: ACPI handle of the device
-> > > + *
-> > > + * Try to find out whether the given ACPI device is removable by evaluating
-> > > + * its _RMV and returning the result. If we can't find the _RMV directly
-> > > + * under the device use system specific quirks to locate it.
-> > > + */
-> > > +static bool pcihp_is_removable(acpi_handle handle)
-> > > +{
-> > 
-> > People are generally used to seeing DMI lists outside of functions.
-> 
-> OK.
-> 
-> > > +	static const struct dmi_system_id rmv_paths[] = {
-> > > +		{
-> > > +			/*
-> > > +			 * On Acer Aspire S5 the _RMV method for the
-> > > +			 * Thunderbolt host router upstream port is not
-> > > +			 * located directly under the device but it is
-> > > +			 * instead placed a bit deeper in the hierarchy.
-> > > +			 */
-> > > +			.ident = "Acer Aspire S5",
-> > > +			.matches = {
-> > > +				DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-> > > +				DMI_MATCH(DMI_PRODUCT_NAME, "Aspire S5-391"),
-> > > +			},
-> > > +			.driver_data = "HRDN.EPUP._RMV",
-> > 
-> > Use .callback instead? ->
-> > 
-> > > +		},
-> > > +		{ }
-> > > +	};
-> > > +	const struct dmi_system_id *id;
-> > > +	unsigned long long removable;
-> > > +	acpi_status status;
-> > > +
-> > > +	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-> > > +	if (ACPI_SUCCESS(status))
-> > > +		return !!removable;
-> > > +
-> > > +	/* Try system specific quirks */
-> > > +	id = dmi_first_match(rmv_paths);
-> > > +	if (id && id->driver_data) {
-> > 
-> > -> And here do
-> > 
-> > 	if (id && id->callback)
-> > 		return id->callback(id);
-> 
-> There is a problem with the above that we can't pass an ACPI handle to the
-> callback function.
+Currently, pciehp_resume() try to hot add device if the slot adapter
+status return true. But if there are already some devices exist,
+namely list_empty(bus->devices) return false. We should not add the device
+again, because the device add action will fail. Also print some uncomfortable
+messages like this:
+	pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
+	pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
 
-Ah, right.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/hotplug/pciehp_core.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-Well, you can do
-
-	if (id && id->driver_data) {
-		bool (*callback)(acpi_handle) = id->driver_data;
-
-		return callback(handle);
-	}
-
-although it's a bit hackish.
-
-> > 
-> > > +		char path[64];
-> > > +
-> > > +		strlcpy(path, id->driver_data, sizeof(path));
-
-BTW, why didn't you want to pass id->driver_data directly here?
-
-> > > +		status = acpi_evaluate_integer(handle, path, NULL, &removable);
-> > > +		if (ACPI_SUCCESS(status))
-> > > +			return !!removable;
-> > > +	}
-> > > +
-> > > +	return false;
-> > > +}
-> > > +
-
-Thanks,
-Rafael
-
-
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 7d72c5e..1542735 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -300,6 +300,7 @@ static int pciehp_resume (struct pcie_device *dev)
+ {
+ 	struct controller *ctrl;
+ 	struct slot *slot;
++	struct pci_bus *pbus = dev->port->subordinate;
+ 	u8 status;
+ 
+ 	ctrl = get_service_data(dev);
+@@ -311,10 +312,12 @@ static int pciehp_resume (struct pcie_device *dev)
+ 
+ 	/* Check if slot is occupied */
+ 	pciehp_get_adapter_status(slot, &status);
+-	if (status)
+-		pciehp_enable_slot(slot);
+-	else
++	if (status) {
++		if (list_empty(&pbus->devices))
++			pciehp_enable_slot(slot);
++	} else if (!list_empty(&pbus->devices))
+ 		pciehp_disable_slot(slot);
++
+ 	return 0;
+ }
+ #endif /* PM */
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.1
+
+
