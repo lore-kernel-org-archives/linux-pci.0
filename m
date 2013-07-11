@@ -1,105 +1,69 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 17/30] ACPI / hotplug / PCI: Drop handle field from struct acpiphp_bridge
+Date: Fri, 12 Jul 2013 01:56:14 +0200
+Message-ID: <2667716.Z7hGFDk2mK@vostro.rjw.lan>
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20130702104406.4473EE0090@blue.fi.intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com> <20130702104406.4473EE0090@blue.fi.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 2 Jul 2013 11:09:19 -0600
-Message-ID: <CAErSpo7GQ8M1rpWnez+=SByR_wmyAnJH7wfqdY20ZcvXW9_90Q@mail.gmail.com>
-Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
-To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 2, 2013 at 4:44 AM, Kirill A. Shutemov
-<kirill.shutemov@linux.intel.com> wrote:
-> Mika Westerberg wrote:
->> The acpiphp driver finds out whether the device is hotpluggable by checking
->> whether it has _RMV method behind it (and if it returns 1). However, at
->> least Acer Aspire S5 with Thunderbolt host router has this method placed
->> behind device called EPUP (endpoint upstream port?) and not directly behind
->> the root port as can be seen from the ASL code below:
->>
->> Device (RP05)
->> {
->>       ...
->>       Device (HRUP)
->>       {
->>               Name (_ADR, Zero)
->>               Name (_PRW, Package (0x02)
->>               {
->>                       0x09,
->>                       0x04
->>               })
->>               Device (HRDN)
->>               {
->>                       Name (_ADR, 0x00040000)
->>                       Name (_PRW, Package (0x02)
->>                       {
->>                               0x09,
->>                               0x04
->>                       })
->>                       Device (EPUP)
->>                       {
->>                               Name (_ADR, Zero)
->>                               Method (_RMV, 0, NotSerialized)
->>                               {
->>                                       Return (One)
->>                               }
->>                       }
->>               }
->>       }
->>
->> If we want to support such machines we must look for the _RMV method a bit
->> deeper in the hierarchy. Fix this by changing pcihp_is_ejectable() to check
->> few more devices down from the root port.
->
-> We found that this approach is broken. We've got false positive: host
-> bridge itself was detected as hotplugable slot %) I think it's not
-> acceptable.
->
-> Mika has tried few more approaches, but we haven't found anything better
-> then hardcoded path like in original workaround patch[1]. It's not generic
-> at all, but safe from false positives.
->
-> Any thoughts?
->
-> [1] http://article.gmane.org/gmane.linux.kernel.pci/19102
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-The changelog of this patch ([1]) says "Correct ACPI PCI hotplug
-implementation should have _RMV method in a PCI slot (device under pci
-bridge). In Acer Aspire S5 case we have it deeper in hierarchy ..."
+The handle field in struct acpiphp_bridge is only used by
+acpiphp_enumerate_slots(), but in that function the local handle
+variable can be used instead, so make that happen and drop handle
+from struct acpiphp_bridge.
 
-This is exactly what I mean about acpiphp being brittle because of the
-assumptions it makes about the ACPI namespace.  Is there actually
-something in the spec that requires the _RMV method to be where
-pcihp_is_ejectable() expects it?
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    1 -
+ drivers/pci/hotplug/acpiphp_glue.c |    5 ++---
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-I'm not 100% dead-set against merging the workaround with hard-coded
-path, but I still don't think it's a good idea.  It "fixes" it for one
-particular machine, but there will likely be other machines that
-require similar fixes in the future.  It makes it harder for somebody
-to clean up the design later, because that person won't have an Aspire
-S5 to test.  It makes it less likely that somebody *will* clean it up
-later, because "everything is already working."
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -76,7 +76,6 @@ struct acpiphp_bridge {
+ 	struct list_head list;
+ 	struct list_head slots;
+ 	struct kref ref;
+-	acpi_handle handle;
+ 
+ 	struct acpiphp_context *context;
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1107,7 +1107,6 @@ void acpiphp_enumerate_slots(struct pci_
+ 
+ 	INIT_LIST_HEAD(&bridge->slots);
+ 	kref_init(&bridge->ref);
+-	bridge->handle = handle;
+ 	bridge->pci_dev = pci_dev_get(bus->self);
+ 	bridge->pci_bus = bus;
+ 
+@@ -1147,10 +1146,10 @@ void acpiphp_enumerate_slots(struct pci_
+ 	mutex_unlock(&bridge_mutex);
+ 
+ 	/* register all slot objects under this bridge */
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
+ 				     register_slot, NULL, bridge, NULL);
+ 	if (ACPI_FAILURE(status)) {
+-		acpi_handle_err(bridge->handle, "failed to register slots\n");
++		acpi_handle_err(handle, "failed to register slots\n");
+ 		cleanup_bridge(bridge);
+ 		put_bridge(bridge);
+ 	}
 
-That's why my preference (given infinite resources) would be to rework
-acpiphp now, while people are interested and can test it.  I'm sure
-this would be a major redesign of acpiphp and its interaction with
-pciehp, but I think it's something we're going to have to do at some
-point.
-
-Bjorn
