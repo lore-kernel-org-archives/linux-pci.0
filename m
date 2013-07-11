@@ -1,28 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:60416 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757559Ab3GaUiS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jul 2013 16:38:18 -0400
-Date: Wed, 31 Jul 2013 13:38:14 -0700 (PDT)
-Message-Id: <20130731.133814.377746703102635548.davem@davemloft.net>
-To: jeffrey.t.kirsher@intel.com
-Cc: bhelgaas@google.com, netdev@vger.kernel.org, gospo@redhat.com,
-	sassmann@redhat.com, linux-pci@vger.kernel.org
-Subject: Re: [net-next v2 00/15][pull request] Intel Wired LAN Driver
- Updates
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1375264777-13595-1-git-send-email-jeffrey.t.kirsher@intel.com>
-References: <1375264777-13595-1-git-send-email-jeffrey.t.kirsher@intel.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 9/30] ACPI / hotplug / PCI: Drop func field from struct acpiphp_bridge
+Date: Fri, 12 Jul 2013 01:48:29 +0200
+Message-ID: <1373592235.k3EqceHhFF@vostro.rjw.lan>
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Date: Wed, 31 Jul 2013 02:59:22 -0700
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> This series contains updates to ixgbe and pci.
-...
->   git://git.kernel.org/pub/scm/linux/kernel/git/jkirsher/net-next master
+Since the func pointer in struct acpiphp_context can always be used
+instead of the func pointer in struct acpiphp_bridge, drop the
+latter.
 
-Looks good, pulled, thanks Jeff.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    2 --
+ drivers/pci/hotplug/acpiphp_glue.c |    3 +--
+ 2 files changed, 1 insertion(+), 4 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -79,8 +79,6 @@ struct acpiphp_bridge {
+ 	acpi_handle handle;
+ 
+ 	struct acpiphp_context *context;
+-	/* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
+-	struct acpiphp_func *func;
+ 
+ 	int nr_slots;
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -181,7 +181,7 @@ static void free_bridge(struct kref *kre
+ 	context = bridge->context;
+ 	/* Release the reference acquired by acpiphp_enumerate_slots(). */
+ 	if (context->handler_for_func)
+-		put_bridge(bridge->func->slot->bridge);
++		put_bridge(context->func->slot->bridge);
+ 
+ 	put_device(&bridge->pci_bus->dev);
+ 	pci_dev_put(bridge->pci_dev);
+@@ -1235,7 +1235,6 @@ void acpiphp_enumerate_slots(struct pci_
+ 	}
+ 	if (context->handler_for_func) {
+ 		/* Notify handler already installed. */
+-		bridge->func = context->func;
+ 		get_bridge(context->func->slot->bridge);
+ 		return;
+ 	}
+
