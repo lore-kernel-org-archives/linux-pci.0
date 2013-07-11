@@ -1,102 +1,113 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:39026 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756657Ab3GKX64 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Jul 2013 19:58:56 -0400
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH v2 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
-Date: Fri, 19 Jul 2013 14:18:41 +0200
-Message-ID: <5137167.kOnaWbA4s1@vostro.rjw.lan>
-In-Reply-To: <51E8B923.5090201@gmail.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com> <1444243.g9GbxN3NM0@vostro.rjw.lan> <51E8B923.5090201@gmail.com>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 19/30] ACPI / hotplug / PCI: Rework namespace scanning and trimming routines
+Date: Fri, 12 Jul 2013 01:57:58 +0200
+Message-ID: <7159825.56C6kpKbiy@vostro.rjw.lan>
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 18, 2013 09:57:23 PM Robert Hancock wrote:
-> On 07/03/2013 03:40 PM, Rafael J. Wysocki wrote:
-> > On Wednesday, July 03, 2013 05:04:53 PM Mika Westerberg wrote:
-> >> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> >>
-> >> Correct ACPI PCI hotplug imeplementation should have _RMV method in a
-> >> PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
-> >> deeper in hierarchy:
-> >>
-> >> Device (RP05)
-> >> {
-> >>     // ...
-> >>     Device (HRUP)
-> >>     {
-> >>         // ...
-> >>         Device (HRDN)
-> >>         {
-> >>             // ...
-> >>             Device (EPUP)
-> >>             {
-> >>                 // ...
-> >>                 Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
-> >>                 {
-> >>                     Return (One)
-> >>                 }
-> >>             }
-> >>         }
-> >>     }
-> >> }
-> >>
-> >> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> >> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> >> ---
-> >>   drivers/pci/hotplug/acpi_pcihp.c | 13 +++++++++++++
-> >>   1 file changed, 13 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> >> index 2a47e82..d92ebfb 100644
-> >> --- a/drivers/pci/hotplug/acpi_pcihp.c
-> >> +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> >> @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
-> >>   	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-> >>   	if (ACPI_SUCCESS(status) && removable)
-> >>   		return 1;
-> >> +
-> >> +	/*
-> >> +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
-> >> +	 *
-> >> +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
-> >> +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
-> >> +	 * deeper in hierarchy.
-> >> +	 */
-> >> +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
-> >> +			&removable);
-> >
-> > Well, calling stuff like this directly from a general function is kind of ugly.
-> >
-> > Can we use something like a quirk instead?  A DMI check or something?
-> 
-> Presumably this device functions under Windows so clearly Windows is 
-> capable of dealing with this case, so we should too.
-> 
-> There are way too many of these silly DMI checks in the kernel - we 
-> should be way more hesitant to add more of them. They're almost 
-> guaranteed to be incomplete. I would say they should be avoided whenever 
-> possible unless there's some reason why a general workaround can't be used.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This horse is already dead. :-)
+The acpiphp_bus_trim() and acpiphp_bus_add() functions need not
+return error codes that are never checked, so redefine them and
+simplify them a bit.
 
-Please check the series I posted the day before yesterday.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   52 +++++++++----------------------------
+ 1 file changed, 13 insertions(+), 39 deletions(-)
 
-Thanks,
-Rafael
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -552,53 +552,27 @@ static unsigned char acpiphp_max_busnr(s
+ 	return max;
+ }
+ 
+-
+ /**
+- * acpiphp_bus_add - add a new bus to acpi subsystem
+- * @func: acpiphp_func of the bridge
++ * acpiphp_bus_trim - Trim device objects in an ACPI namespace subtree.
++ * @handle: ACPI device object handle to start from.
+  */
+-static int acpiphp_bus_add(struct acpiphp_func *func)
++static void acpiphp_bus_trim(acpi_handle handle)
+ {
+-	acpi_handle handle = func_to_handle(func);
+-	struct acpi_device *device;
+-	int ret_val;
+-
+-	if (!acpi_bus_get_device(handle, &device)) {
+-		dbg("bus exists... trim\n");
+-		/* this shouldn't be in here, so remove
+-		 * the bus then re-add it...
+-		 */
+-		acpi_bus_trim(device);
+-	}
+-
+-	ret_val = acpi_bus_scan(handle);
+-	if (!ret_val)
+-		ret_val = acpi_bus_get_device(handle, &device);
+-
+-	if (ret_val)
+-		dbg("error adding bus, %x\n", -ret_val);
++	struct acpi_device *adev = NULL;
+ 
+-	return ret_val;
++	acpi_bus_get_device(handle, &adev);
++	if (adev)
++		acpi_bus_trim(adev);
+ }
+ 
+-
+ /**
+- * acpiphp_bus_trim - trim a bus from acpi subsystem
+- * @handle: handle to acpi namespace
++ * acpiphp_bus_add - Scan ACPI namespace subtree.
++ * @handle: ACPI object handle to start the scan from.
+  */
+-static int acpiphp_bus_trim(acpi_handle handle)
++static void acpiphp_bus_add(acpi_handle handle)
+ {
+-	struct acpi_device *device;
+-	int retval;
+-
+-	retval = acpi_bus_get_device(handle, &device);
+-	if (retval) {
+-		dbg("acpi_device not found\n");
+-		return retval;
+-	}
+-
+-	acpi_bus_trim(device);
+-	return 0;
++	acpiphp_bus_trim(handle);
++	acpi_bus_scan(handle);
+ }
+ 
+ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
+@@ -661,7 +635,7 @@ static int __ref enable_device(struct ac
+ 		goto err_exit;
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling)
+-		acpiphp_bus_add(func);
++		acpiphp_bus_add(func_to_handle(func));
+ 
+ 	num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+ 	if (num == 0) {
 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
