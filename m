@@ -1,62 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 27/30] ACPI / hotplug / PCI: Sanitize acpiphp_get_(latch)|(adapter)_status()
-Date: Thu, 18 Jul 2013 01:34:22 +0200
-Message-ID: <1471580.IUgOB8bMx5@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38986 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755864Ab3GKVDu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Jul 2013 17:03:50 -0400
+Subject: [RFC PATCH v2 0/2] pci/iommu: PCIe requester ID interface
+To: bhelgaas@google.com
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
+	iommu@lists.linux-foundation.org, acooks@gmail.com,
+	ddutile@redhat.com, dwmw2@infradead.org
+Date: Thu, 11 Jul 2013 15:03:18 -0600
+Message-ID: <20130711204439.1701.90503.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+v2: second pass at refining the interface.  Rolled pci_requester_id
+into pci_get_visible_pcie_requester.  Fixed some bus walk issues.
 
-There is no need for a temporary variable and all the tricks with
-ternary operators in acpiphp_get_(latch)|(adapter)_status(). Change
-those functions to be a bit more straightforward.
+Another obscure issue that I forgot to mention that this should fix
+is gaps in requester IDs.  If you had:
 
-[rjw: Changelog]
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+ ---pcie--->[pcie2pci]---pci--->[pci2pcie]---pcie--->[endpoint]
+
+I think the current code would try to use the endpoint requester id and
+fail.  This code will use the pcie2pci->secondary as the requester id.
+This may not even be that obscure of a bug if a PCIe ASIC is soldered
+to a pci2pcie bridge to make a compatible conventional PCI card.
+
+The diffstat for pci improves a bit when we remove:
+pci_find_upstream_pci_bridge:
+
+ drivers/iommu/intel-iommu.c         |  164 ++++++++++-----------------
+ drivers/iommu/intel_irq_remapping.c |    2 
+ drivers/pci/search.c                |  215 +++++++++++++++++++++++++++++++-----
+ include/linux/pci.h                 |   16 +-
+ 4 files changed, 260 insertions(+), 137 deletions(-)
+
+Comments?  Thanks,
+
+Alex
+
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1107,11 +1107,7 @@ u8 acpiphp_get_power_status(struct acpip
-  */
- u8 acpiphp_get_latch_status(struct acpiphp_slot *slot)
- {
--	unsigned int sta;
--
--	sta = get_slot_status(slot);
--
--	return (sta & ACPI_STA_DEVICE_UI) ? 0 : 1;
-+	return !(get_slot_status(slot) & ACPI_STA_DEVICE_UI);
- }
- 
- 
-@@ -1121,9 +1117,5 @@ u8 acpiphp_get_latch_status(struct acpip
-  */
- u8 acpiphp_get_adapter_status(struct acpiphp_slot *slot)
- {
--	unsigned int sta;
--
--	sta = get_slot_status(slot);
--
--	return (sta == 0) ? 0 : 1;
-+	return !!get_slot_status(slot);
- }
+Alex Williamson (2):
+      pci: Create PCIe requester ID interface
+      iommu/intel: Make use of PCIe requester ID interface
 
+
+ drivers/iommu/intel-iommu.c         |  164 +++++++++++------------------
+ drivers/iommu/intel_irq_remapping.c |    2 
+ drivers/pci/search.c                |  198 +++++++++++++++++++++++++++++++++++
+ include/linux/pci.h                 |    7 +
+ 4 files changed, 270 insertions(+), 101 deletions(-)
