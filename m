@@ -1,69 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 17/30] ACPI / hotplug / PCI: Drop handle field from struct acpiphp_bridge
-Date: Fri, 12 Jul 2013 01:56:14 +0200
-Message-ID: <2667716.Z7hGFDk2mK@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:1926 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610Ab3GKJph (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 05:45:37 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v2 0/3] Use PCIe DSN to improve pciehp_resume
+Date: Thu, 11 Jul 2013 17:43:42 +0800
+Message-ID: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+v1->v2: Modify pci_get_dsn to pci_device_serial_number,
+	    power off slot before remove the old device during resume to avoid
+		old .remove() method to touch new hardware.
+		Fix other typo and fail check problems.
+		Split the list_empty() guard into new patch.
+		
 
-The handle field in struct acpiphp_bridge is only used by
-acpiphp_enumerate_slots(), but in that function the local handle
-variable can be used instead, so make that happen and drop handle
-from struct acpiphp_bridge.
+Yijing Wang (3):
+  PCI: introduce PCIe Device Serial Number Capability support
+  PCI,pciehp: avoid add a device already exist before suspend during
+    resume
+  PCI,pciehp: use PCIe DSN to identify device change during suspend
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |    1 -
- drivers/pci/hotplug/acpiphp_glue.c |    5 ++---
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/pci/hotplug/pciehp_core.c |   54 ++++++++++++++++++++++++++++++++++--
+ drivers/pci/pci.c                 |   27 ++++++++++++++++++
+ drivers/pci/probe.c               |    2 +
+ include/linux/pci.h               |    3 ++
+ 4 files changed, 83 insertions(+), 3 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -76,7 +76,6 @@ struct acpiphp_bridge {
- 	struct list_head list;
- 	struct list_head slots;
- 	struct kref ref;
--	acpi_handle handle;
- 
- 	struct acpiphp_context *context;
- 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1107,7 +1107,6 @@ void acpiphp_enumerate_slots(struct pci_
- 
- 	INIT_LIST_HEAD(&bridge->slots);
- 	kref_init(&bridge->ref);
--	bridge->handle = handle;
- 	bridge->pci_dev = pci_dev_get(bus->self);
- 	bridge->pci_bus = bus;
- 
-@@ -1147,10 +1146,10 @@ void acpiphp_enumerate_slots(struct pci_
- 	mutex_unlock(&bridge_mutex);
- 
- 	/* register all slot objects under this bridge */
--	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
- 				     register_slot, NULL, bridge, NULL);
- 	if (ACPI_FAILURE(status)) {
--		acpi_handle_err(bridge->handle, "failed to register slots\n");
-+		acpi_handle_err(handle, "failed to register slots\n");
- 		cleanup_bridge(bridge);
- 		put_bridge(bridge);
- 	}
 
