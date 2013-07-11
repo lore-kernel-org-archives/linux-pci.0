@@ -1,58 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:47554 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932179Ab3GZOF2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Jul 2013 10:05:28 -0400
-Message-ID: <1374847288.9200.8.camel@pasglop>
-Subject: Re: [PATCH] PCI: Add quirk for setting valid class for FSL PCI host
- bridge
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chunhe Lan <Chunhe.Lan@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Anton Vorontsov <avorontsov@ru.mvista.com>
-Date: Sat, 27 Jul 2013 00:01:28 +1000
-In-Reply-To: <CAErSpo4xftQjwKHsenuKuEvT10iOa+DuiYfSyJYLhp=ObcDZsQ@mail.gmail.com>
-References: <1374823418-1550-1-git-send-email-Chunhe.Lan@freescale.com>
-	 <CAErSpo4xftQjwKHsenuKuEvT10iOa+DuiYfSyJYLhp=ObcDZsQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 1/30] ACPI / PCI: Make bus registration and unregistration symmetric
+Date: Fri, 12 Jul 2013 01:36:39 +0200
+Message-ID: <1905568.XLLEjHpcAs@vostro.rjw.lan>
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-07-26 at 07:07 -0600, Bjorn Helgaas wrote:
-> 
-> 1.  This looks an awful lot like quirk_fsl_pcie_head().
-> quirk_fsl_pcie_head() is currently a HEADER quirk, but that runs
-> *after* pci_setup_device(), where dev->class is used.  I suspect this
-> should be an EARLY quirk instead.  But this quirk has a long history
-> as a HEADER quirk, and I'm sure many people have tested it, so I don't
-> know what's going on.
-> 
-> 2.  I assume the Freescale vendor ID might be used for devices other
-> than bridges, so I doubt it would be correct to overwrite the class
-> for *every* Freescale device as you're doing here.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-That wouldn't be the first time we need a quirk like that, it looks like
-HW folks love playing with the class codes in stupid ways.
+Since acpi_pci_slot_enumerate() and acpiphp_enumerate_slots() can get
+the ACPI device handle they need from bus->bridge, it is not
+necessary to pass that handle to them as an argument.
 
-I remember once trying to change the FSP header quirk to an early quirk
-and breaking something else doing so ... At some point I ran out of time
-debugging that stuff and put it on my TODO list ... you know the file
-you open in O_APPEND mode :-) That was a year ago or so...
+Drop the second argument of acpi_pci_slot_enumerate() and
+acpiphp_enumerate_slots(), rework them to obtain the ACPI handle
+from bus->bridge and make acpi_pci_add_bus() and
+acpi_pci_remove_bus() entirely symmetrical.
 
-So yes, something is fishy here and in need of a better fix, and at this
-stage I'd say FSL folks should sort it out. These things need to be
-early quirks and if that breaks something we need to know what and why.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/pci_slot.c            |   14 +++++++++-----
+ drivers/pci/hotplug/acpiphp_glue.c |    7 ++++---
+ drivers/pci/pci-acpi.c             |   16 ++++------------
+ include/linux/pci-acpi.h           |   10 ++++------
+ 4 files changed, 21 insertions(+), 26 deletions(-)
 
-Also we tend to have them in arch/powerpc next to the relevant driver
-code... that quirks.c file is just a mess and certainly not the right
-place for something like that.
-
-Cheers,
-Ben.
-
+Index: linux-pm/drivers/acpi/pci_slot.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_slot.c
++++ linux-pm/drivers/acpi/pci_slot.c
+@@ -159,12 +159,16 @@ register_slot(acpi_handle handle, u32 lv
+ 	return AE_OK;
+ }
+ 
+-void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle)
++void acpi_pci_slot_enumerate(struct pci_bus *bus)
+ {
+-	mutex_lock(&slot_list_lock);
+-	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
+-			    register_slot, NULL, bus, NULL);
+-	mutex_unlock(&slot_list_lock);
++	acpi_handle handle = ACPI_HANDLE(bus->bridge);
++
++	if (handle) {
++		mutex_lock(&slot_list_lock);
++		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
++				    register_slot, NULL, bus, NULL);
++		mutex_unlock(&slot_list_lock);
++	}
+ }
+ 
+ void acpi_pci_slot_remove(struct pci_bus *bus)
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1169,15 +1169,16 @@ static void handle_hotplug_event_func(ac
+  * Create hotplug slots for the PCI bus.
+  * It should always return 0 to avoid skipping following notifiers.
+  */
+-void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
++void acpiphp_enumerate_slots(struct pci_bus *bus)
+ {
+-	acpi_handle dummy_handle;
++	acpi_handle handle, dummy_handle;
+ 	struct acpiphp_bridge *bridge;
+ 
+ 	if (acpiphp_disabled)
+ 		return;
+ 
+-	if (detect_ejectable_slots(handle) <= 0)
++	handle = ACPI_HANDLE(bus->bridge);
++	if (!handle || detect_ejectable_slots(handle) <= 0)
+ 		return;
+ 
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -290,24 +290,16 @@ static struct pci_platform_pm_ops acpi_p
+ 
+ void acpi_pci_add_bus(struct pci_bus *bus)
+ {
+-	acpi_handle handle = NULL;
+-
+-	if (bus->bridge)
+-		handle = ACPI_HANDLE(bus->bridge);
+-	if (acpi_pci_disabled || handle == NULL)
++	if (acpi_pci_disabled || !bus->bridge)
+ 		return;
+ 
+-	acpi_pci_slot_enumerate(bus, handle);
+-	acpiphp_enumerate_slots(bus, handle);
++	acpi_pci_slot_enumerate(bus);
++	acpiphp_enumerate_slots(bus);
+ }
+ 
+ void acpi_pci_remove_bus(struct pci_bus *bus)
+ {
+-	/*
+-	 * bus->bridge->acpi_node.handle has already been reset to NULL
+-	 * when acpi_pci_remove_bus() is called, so don't check ACPI handle.
+-	 */
+-	if (acpi_pci_disabled)
++	if (acpi_pci_disabled || !bus->bridge)
+ 		return;
+ 
+ 	acpiphp_remove_slots(bus);
+Index: linux-pm/include/linux/pci-acpi.h
+===================================================================
+--- linux-pm.orig/include/linux/pci-acpi.h
++++ linux-pm/include/linux/pci-acpi.h
+@@ -47,24 +47,22 @@ void acpi_pci_remove_bus(struct pci_bus
+ 
+ #ifdef	CONFIG_ACPI_PCI_SLOT
+ void acpi_pci_slot_init(void);
+-void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle);
++void acpi_pci_slot_enumerate(struct pci_bus *bus);
+ void acpi_pci_slot_remove(struct pci_bus *bus);
+ #else
+ static inline void acpi_pci_slot_init(void) { }
+-static inline void acpi_pci_slot_enumerate(struct pci_bus *bus,
+-					   acpi_handle handle) { }
++static inline void acpi_pci_slot_enumerate(struct pci_bus *bus) { }
+ static inline void acpi_pci_slot_remove(struct pci_bus *bus) { }
+ #endif
+ 
+ #ifdef	CONFIG_HOTPLUG_PCI_ACPI
+ void acpiphp_init(void);
+-void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle);
++void acpiphp_enumerate_slots(struct pci_bus *bus);
+ void acpiphp_remove_slots(struct pci_bus *bus);
+ void acpiphp_check_host_bridge(acpi_handle handle);
+ #else
+ static inline void acpiphp_init(void) { }
+-static inline void acpiphp_enumerate_slots(struct pci_bus *bus,
+-					   acpi_handle handle) { }
++static inline void acpiphp_enumerate_slots(struct pci_bus *bus) { }
+ static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
+ static inline void acpiphp_check_host_bridge(acpi_handle handle) { }
+ #endif
 
