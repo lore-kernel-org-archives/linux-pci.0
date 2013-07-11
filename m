@@ -1,70 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:54428 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752816Ab3GaQfH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jul 2013 12:35:07 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 3/8] PCI: acpiphp: enable_device(): rescan even if no new devices on slot
+Date: Fri, 12 Jul 2013 00:48:55 +0200
+Message-ID: <4143023.cHEf6DNHsh@vostro.rjw.lan>
+In-Reply-To: <20130711051144.GF4898@intel.com>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com> <1827270.u1sYdQ8l8y@vostro.rjw.lan> <20130711051144.GF4898@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1755363.sGc8nLIQOW@vostro.rjw.lan>
-References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
-	<1755363.sGc8nLIQOW@vostro.rjw.lan>
-Date: Wed, 31 Jul 2013 10:35:05 -0600
-Message-ID: <CAKocOOPOqqS80D23z6xTVSNYYYWZ7ACg9MtSMz_hTqVA3Duo0w@mail.gmail.com>
-Subject: Re: [Announcement] Linux Plumbers ACPI/PM, PCI Microconference
-From: Shuah Khan <shuahkhan@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org,
-	virtualization@lists.linux-foundation.org, kvm@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, shuah.kh@samsung.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 31, 2013 at 5:40 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> Hi All,
->
-> The original announcement didn't go to linux-pm, so again:
->
-> On Tuesday, July 16, 2013 08:21:26 PM Myron Stowe wrote:
->> Linux Plumbers has approved an ACPI/PM, PCI microconference. The
->> overview page is here:
->>
->> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
->>
->> We would like to start receiving volunteers for presenting topics of
->> interest.  There is a lot of activity in these subsystems so please
->> respond by submitting presentation or discussion proposals that you
->> would be willing to cover for consideration.  You should also feel
->> free to submit ideas as proposals that others could cover.  The
->> instructions for submitting ideas should be at:
->>
->> http://www.linuxplumbersconf.org/2013/submitting-topic/
->
-> If anyone who's going to attend the Linux Plumbers Conf this year is interested
-> in any particular topic for discussion during the ACPI/PM+PCI uconf, please
-> submit a formal topic proposal at:
->
-> http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/proposals/new
->
-> If you submit a topic, that doesn't mean you'll be expected to present anything
-> (if accepted).  In fact, we are mostly interested in discussion topics and we'd
-> like to know what is important to people.
->
-> That said if you have a (short) presentation to make, please submit it too.
->
-> We'll appreciate all submissions very much.
->
+On Thursday, July 11, 2013 08:11:44 AM Mika Westerberg wrote:
+> On Thu, Jul 11, 2013 at 02:25:42AM +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, July 03, 2013 05:04:50 PM Mika Westerberg wrote:
+> > > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> > > 
+> > > pci_scan_slot() returns number of new devices connected *directly*
+> > > connected to the slot. Current enable_device() checks the return value
+> > > and stops if it doesn't see a new device.
+> > > 
+> > > In Thunderbolt chaining case the new device can be deeper in hierarchy, so
+> > > do the rescan anyway.
+> > > 
+> > > Because of that we must make sure that pcibios_resource_survey_bus() and
+> > > check_hotplug_bridge() get called only for a just found bus and not the
+> > > ones already added to the system. Failure to do so will lead to resource
+> > > conflicts.
+> > 
+> > Well, I wonder what we're doing to this end, because there's nothing in that
+> > area in the patch?
+> 
+> We forgot to update the changelog of this patch. The last paragraph should
+> not be there.
 
-What I have mind is a discussion topic for the Mini-conference, which
-in-line with what you are asking for.
-I will add it to the web. Thanks for pinging me on this.
+Yeah, I noticed that later.  Never mind. :-)
 
--- Shuah
 
-Shuah Khan, Linux Kernel Developer - Open Source Group Samsung Research
-America (Silicon Valley) shuah.kh@samsung.com | (970) 672-0658
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
