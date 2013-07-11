@@ -1,81 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:35405 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756835Ab3GYRyE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:54:04 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 04/16] ARM: tegra: tamonten: Add PCIe support
-Date: Thu, 25 Jul 2013 10:53:18 -0700
-Message-Id: <1374774810-18459-5-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 3/30] ACPI / hotplug / PCI: Always return success after adding a function
+Date: Fri, 12 Jul 2013 01:38:39 +0200
+Message-ID: <59726852.ZdEFxTYbzn@vostro.rjw.lan>
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Add properties common to all Tamonten-derived boards to the Tamonten
-DTSI and add the fixed 1.05 V regulator.
+When a new ACPIPHP function is added by register_slot() and the
+notify handler cannot be installed for it, register_slot() returns an
+error status without cleaning up, which causes the entire namespace
+walk in acpiphp_enumerate_slots() to be aborted, although it still
+may be possible to successfully install the function notify handler
+for other device objects under the given brigde.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+To address this issue make register_slot() return success after
+a new function has been added, even if the addition of the notify
+handler for it has failed.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
-Changes in v2:
-- add properties common to all Tamonten boards
-- add fixed 1.05 V regulator
+ drivers/pci/hotplug/acpiphp_glue.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
- arch/arm/boot/dts/tegra20-tamonten.dtsi | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
-
-diff --git a/arch/arm/boot/dts/tegra20-tamonten.dtsi b/arch/arm/boot/dts/tegra20-tamonten.dtsi
-index c54faae..5ee674b 100644
---- a/arch/arm/boot/dts/tegra20-tamonten.dtsi
-+++ b/arch/arm/boot/dts/tegra20-tamonten.dtsi
-@@ -366,7 +366,7 @@
- 					regulator-always-on;
- 				};
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -335,10 +335,9 @@ register_slot(acpi_handle handle, u32 lv
  
--				ldo0 {
-+				pci_clk_reg: ldo0 {
- 					regulator-name = "vdd_ldo0,vddio_pex_clk";
- 					regulator-min-microvolt = <3300000>;
- 					regulator-max-microvolt = <3300000>;
-@@ -467,6 +467,11 @@
- 		nvidia,sys-clock-req-active-high;
- 	};
+ 		if (ACPI_FAILURE(status))
+ 			err("failed to register interrupt notify handler\n");
+-	} else
+-		status = AE_OK;
++	}
  
-+	pcie-controller {
-+		pex-clk-supply = <&pci_clk_reg>;
-+		vdd-supply = <&pci_vdd_reg>;
-+	};
-+
- 	usb@c5008000 {
- 		status = "okay";
- 	};
-@@ -509,5 +514,15 @@
- 			regulator-max-microvolt = <5000000>;
- 			regulator-always-on;
- 		};
-+
-+		pci_vdd_reg: regulator@1 {
-+			compatible = "regulator-fixed";
-+			reg = <1>;
-+			regulator-name = "vdd_1v05";
-+			regulator-min-microvolt = <1050000>;
-+			regulator-max-microvolt = <1050000>;
-+			gpio = <&pmic 2 0>;
-+			enable-active-high;
-+		};
- 	};
- };
--- 
-1.8.1.5
+-	return status;
++	return AE_OK;
+ 
+  err_exit:
+ 	bridge->nr_slots--;
 
