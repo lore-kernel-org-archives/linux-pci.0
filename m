@@ -1,73 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:59042 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756553Ab3GZLuC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 07:50:02 -0400
-Date: Fri, 26 Jul 2013 07:49:40 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv5 08/11] ARM: pci: add ->add_bus() and ->remove_bus()
- hooks to hw_pci
-Message-ID: <20130726114940.GD29916@titan.lakedaemon.net>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130725165659.GB27802@dhcp-172-17-186-34.nvidia.com>
- <20130726101305.22a5c892@skate>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:50292 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755882Ab3GKJoh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 05:44:37 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH -v2 3/3] PCI,pciehp: use PCIe DSN to identify device change during suspend
+Date: Thu, 11 Jul 2013 17:43:45 +0800
+Message-ID: <1373535825-49972-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
+References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130726101305.22a5c892@skate>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 10:13:05AM +0200, Thomas Petazzoni wrote:
-> Dear Thierry Reding,
-> 
-> On Thu, 25 Jul 2013 09:57:00 -0700, Thierry Reding wrote:
-> > On Mon, Jul 15, 2013 at 01:52:44PM +0200, Thomas Petazzoni wrote:
-> > > Some PCI drivers may need to adjust the pci_bus structure after it has
-> > > been allocated by the Linux PCI core. The PCI core allows
-> > > architectures to implement the pcibios_add_bus() and
-> > > pcibios_remove_bus() for this purpose. This commit therefore extends
-> > > the hw_pci and pci_sys_data structures of the ARM PCI core to allow
-> > > PCI drivers to register ->add_bus() and ->remove_bus() in hw_pci,
-> > > which will get called when a bus is added or removed from the system.
-> > > 
-> > > This will be used for example by the Marvell PCIe driver to connect a
-> > > particular PCI bus with its corresponding MSI chip to handle Message
-> > > Signaled Interrupts.
-> > > 
-> > > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > > Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
-> > > ---
-> > >  arch/arm/include/asm/mach/pci.h |  4 ++++
-> > >  arch/arm/kernel/bios32.c        | 16 ++++++++++++++++
-> > >  2 files changed, 20 insertions(+)
-> > 
-> > Hi Russell,
-> > 
-> > Can we have your Acked-by on this patch so that it can be moved to a
-> > stable branch along with some of the other patches in this branch that
-> > both Marvell and Tegra PCIe drivers need?
-> 
-> I've pinged Russell a few times about this patch already, but haven't
-> received feedback from him. Do you think I can just go ahead and submit
-> the patch to Russell's patch system, after fixing the minor nits you
-> mentioned?
+If device was removed from slot and reinsert a new device during
+suspend, pciehp can not identify the physical device change now.
+So the old driver .resume() method will be called for the new device,
+this is bad. If device support device serial number capability,
+we can identify this by DSN. So the reasonable way is first remove
+the old device, then enable the new device.
 
-When you do that, please ask Russell to place it in a publicly
-accessible, stable topic branch for us to base off of.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/hotplug/pciehp_core.c |   45 +++++++++++++++++++++++++++++++++++++
+ 1 files changed, 45 insertions(+), 0 deletions(-)
 
-thx,
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 1542735..f2eb214 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -296,11 +296,38 @@ static int pciehp_suspend (struct pcie_device *dev)
+ 	return 0;
+ }
+ 
++/*
++ * check the func 0 device serial number is changed,
++ * if device does not support device serial number,
++ * return false.
++ */
++static bool device_serial_number_changed(struct pci_bus *pbus)
++{
++	u64 old_dsn, new_dsn;
++	struct pci_dev *pdev;
++
++	pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
++	if (!pdev)
++		return false;
++
++	old_dsn = pdev->sn;
++
++	/* get func 0 device serial number */
++	new_dsn = pci_device_serial_number(pdev);
++	pci_dev_put(pdev);
++
++	if (old_dsn != new_dsn)
++		return true;
++
++	return false;
++}
++
+ static int pciehp_resume (struct pcie_device *dev)
+ {
+ 	struct controller *ctrl;
+ 	struct slot *slot;
+ 	struct pci_bus *pbus = dev->port->subordinate;
++	int retval = 0;
+ 	u8 status;
+ 
+ 	ctrl = get_service_data(dev);
+@@ -315,6 +342,24 @@ static int pciehp_resume (struct pcie_device *dev)
+ 	if (status) {
+ 		if (list_empty(&pbus->devices))
+ 			pciehp_enable_slot(slot);
++
++		if (device_serial_number_changed(pbus)) {
++			/*
++			 * first power off slot, avoid the old driver
++			 * .remove() method touch the new hardware
++			 */
++			if (POWER_CTRL(ctrl)) {
++				retval = pciehp_power_off_slot(slot);
++				if (retval) {
++					ctrl_err(ctrl,
++						"Issue of Slot Disable command failed\n");
++					return 0;
++				}
++				msleep(1000);
++				pciehp_unconfigure_device(slot);
++				pciehp_enable_slot(slot);
++			}
++		}
+ 	} else if (!list_empty(&pbus->devices))
+ 		pciehp_disable_slot(slot);
+ 	
+-- 
+1.7.1
 
-Jason.
+
