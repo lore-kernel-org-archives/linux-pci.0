@@ -1,119 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65449 "EHLO mx1.redhat.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:43776 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757798Ab3GWPeR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Jul 2013 11:34:17 -0400
-Message-ID: <51EEA26E.50700@redhat.com>
-Date: Tue, 23 Jul 2013 11:34:06 -0400
-From: Don Dutile <ddutile@redhat.com>
+	id S1755342Ab3GKIff (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Jul 2013 04:35:35 -0400
+Message-ID: <51DE6E46.3030204@ti.com>
+Date: Thu, 11 Jul 2013 14:05:18 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Greg Rose <gregory.v.rose@intel.com>
-Subject: Re: [PATCH] PCI: Stop sriov before remove PF
-References: <1374261258-23036-1-git-send-email-yinghai@kernel.org> <1374261258-23036-3-git-send-email-yinghai@kernel.org> <51E9B3C7.1010409@intel.com> <CAE9FiQXUgSVO8h=+JTY-giQ_jz9DryOXDsFJJeMT-y1J9Sv+fA@mail.gmail.com> <51E9CA2F.5050307@intel.com>
-In-Reply-To: <51E9CA2F.5050307@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Jingoo Han <jg1.han@samsung.com>
+CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"'Pratyush Anand'" <pratyush.anand@st.com>,
+	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
+	<linux-kernel@vger.kernel.org>,
+	Seungwon Jeon <tgih.jun@samsung.com>,
+	"'Yulgon Kim'" <yulgon.kim@samsung.com>
+Subject: Re: [PATCH V2] pci: exynos: split into two parts such as Synopsys
+ part and Exynos part
+References: <001201ce7dfa$716b3370$54419a50$@samsung.com> <51DE5359.90905@ti.com> <000001ce7e05$13ab4210$3b01c630$@samsung.com>
+In-Reply-To: <000001ce7e05$13ab4210$3b01c630$@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/19/2013 07:22 PM, Alexander Duyck wrote:
-> On 07/19/2013 03:44 PM, Yinghai Lu wrote:
->> On Fri, Jul 19, 2013 at 2:46 PM, Alexander Duyck
->> <alexander.h.duyck@intel.com>  wrote:
->>> On 07/19/2013 12:14 PM, Yinghai Lu wrote:
->>>> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
->>>> (PCI: Simplify IOV implementation and fix reference count races)
->>>> VF need to be removed via virtfn_remove to make sure ref to PF
->>>> is put back.
->>>>
->>>> Some driver (like ixgbe) does not call pci_disable_sriov() if
->>>> sriov is enabled via /sys/.../sriov_numvfs setting.
->>>> ixgbe does allow driver for PF get detached, but still have VFs
->>>> around.
->>>>
->>>> But how about PF get removed via /sys or pciehp?
->>>>
->>>> During hot-remove, VF will still hold one ref to PF and it
->>>> prevent PF to be removed.
->>>> That make the next hot-add fails, as old PF dev struct is still around.
->>>>
->>>> We need to add pci_disable_sriov() calling during pci dev removing.
->>>>
->>>> Need this one for v3.11
->>>>
->>>> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
->>>> Cc: Jiang Liu<liuj97@gmail.com>
->>>> Cc: Alexander Duyck<alexander.h.duyck@intel.com>
->>>> Cc: Donald Dutile<ddutile@redhat.com>
->>>> Cc: Greg Rose<gregory.v.rose@intel.com>
->>>>
->>>> ---
->>>>   drivers/pci/remove.c |    3 +++
->>>>   1 file changed, 3 insertions(+)
->>>>
->>>> Index: linux-2.6/drivers/pci/remove.c
->>>> ===================================================================
->>>> --- linux-2.6.orig/drivers/pci/remove.c
->>>> +++ linux-2.6/drivers/pci/remove.c
->>>> @@ -34,6 +34,9 @@ static void pci_stop_dev(struct pci_dev
->>>>
->>>>   static void pci_destroy_dev(struct pci_dev *dev)
->>>>   {
->>>> +     /* remove VF, if PF driver skip that */
->>>> +     pci_disable_sriov(dev);
->>>> +
->>>>        down_write(&pci_bus_sem);
->>>>        list_del(&dev->bus_list);
->>>>        up_write(&pci_bus_sem);
->>>>
->>> How are you able to hot-remove the PF if the VFs are still holding
->>> references to it?
->> usually pci_stop_and_remove_bus_device always successfully, and
->> power get turned off for that card.
->
-> I'm not an expert in this area, but that doesn't seem right.  How is it
-> you can remove a device if there are still outstanding references to
-> it?  Is this one of those cases where we have to succeed because the
-> system is removing the device and there is nothing we can do to stop it?
->
->>> The issue I see with this patch is that if the PF has any VFs direct
->>> assigned, hot plug removing the PF will cause the guests containing
->>> those VFs to panic.
->> Then you should make guest support hotplug or suprise removal.
->>
->> If the guest does panic because it does support hotplug, that is right behavior.
->>
->> Just like in bare metal machine, if it does not support hotplug, and user would
->> know what is going to happen if he remove one pcie card.
->>
->> Thanks
->>
->> Yinghai
->
-> I suspect that is much easier said than done.  We probably need somebody
-> familiar with the KVM side of things to address the feasibility of
-> something like that.  I believe it was Greg and Don that worked on the
-> original patches that made it so that we could leave the VFs in place on
-> driver removal.  They would likely have a better answer as to why it is
-> preferable to leave the VFs in place than panic a non-compliant guest.
+Hi,
 
-The virtual effect of leaving the VFs in place was the equivalent of unplugging
-the cable from the VF device in the guest. When the PF driver was reloaded, it
-caused the virtual effect of the network cable being reconnected.  Before that
-patch set (in ixgbe & igb), a PF driver unload in the host would result in the VF
-assigned to KVM a guest caused a *host crash*.
-So, start up a KVM (linux) guest, hot-remove the PF with a VF
-assigned to a guest, and with these patches applied, ensure the host doesn't crash.
-if it does crash, that's a regression that can't be tolerated, and this patch (set)
-will need further work.
-- Don
+On Thursday 11 July 2013 12:35 PM, Jingoo Han wrote:
+> On Thursday, July 11, 2013 3:40 PM, Kishon Vijay Abraham I wrote:
+>> On Thursday 11 July 2013 11:19 AM, Jingoo Han wrote:
+>>>
+>>>  drivers/pci/host/Makefile          |    1 +
+>>>  drivers/pci/host/pcie-designware.c |  963 +++++++++---------------------------
+>>>  drivers/pci/host/pcie-designware.h |   71 +++
+>>>  drivers/pci/host/pcie-exynos.c     |  523 ++++++++++++++++++++
+>>>  4 files changed, 822 insertions(+), 736 deletions(-)
+>>>  create mode 100644 drivers/pci/host/pcie-designware.h
+>>>  create mode 100644 drivers/pci/host/pcie-exynos.c
+>>>
+>>> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+>>> index 086d850..7e59864 100644
+>>> --- a/drivers/pci/host/Makefile
+>>> +++ b/drivers/pci/host/Makefile
+>>> @@ -1,2 +1,3 @@
+>>>  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+>>>  obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+>>> +obj-$(CONFIG_PCI_EXYNOS) += pcie-exynos.o
+>>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> [...]
+>>
+>> How about making this a separate driver in itself that does all the
+>> configurations for designware core? By this I mean we can have a separate dt
+>> node (child node of soc specific wrapper), that will have all the configuration
+>> space/IO space and memory space. pci_common_init/dw_pcie_host_init should be
+>> done in this driver.
+>> We just need to think about a way of passing the ops (since that looks like
+>> very much needed because of the sideband bits you have to enable before
+>> reading/writing).
+>>
+> 
+> CC'ed Seungwon Jeon(DW-MMC Maintainer), Yulgon Kim (DW-USB Developer)
+> 
+> 
+> Um, maybe you mean dwc3 usb driver (./drivers/usb/dwc3/)'?
+> 
+> But, I referenced dw mmc driver (./drivers/mmc/host/dw_mmc*.c).
+> 
+> Now, Exynos PCIe driver, Spear PCIe driver[1], and i.MX PCIe driver[2]
+> are submitted to PCIe mailing-list, these are using designware PCIe core.
+> 
+> There are many differences between Exynos PCIe and Spear PCIe.
+> Also, for Exynos PCIe, platform specific part will be changed more.
+> 
+> Thus, the dw mmc driver model looked more suitable.
 
->
-> Thanks,
->
-> Alex
+Alright. I'll go ahead with a similar implementation then.
 
+Thanks
+Kishon
