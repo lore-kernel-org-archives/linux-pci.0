@@ -1,153 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41317 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752587Ab3G3CKx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2013 22:10:53 -0400
-Message-ID: <51F7208D.60604@oracle.com>
-Date: Tue, 30 Jul 2013 10:10:21 +0800
-From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Reply-To: zhenzhong.duan@oracle.com
-MIME-Version: 1.0
-To: linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>
-CC: bhelgaas@google.com,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Feng Jin <joe.jin@oracle.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Subject: [PATCH 3/3 v2] Update x86_msi.restore_msi_irqs API param
-Content-Type: text/plain; charset=GB2312
+Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:63452 "EHLO
+	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933222Ab3GKOd4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 10:33:56 -0400
+Message-ID: <1373553233.1349.15.camel@x61.thuisdomein>
+Subject: Re: [PATCH -v2 3/3] PCI,pciehp: use PCIe DSN to identify device
+ change during suspend
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Rafael <rjw@sisk.pl>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Date: Thu, 11 Jul 2013 16:33:53 +0200
+In-Reply-To: <1373535825-49972-4-git-send-email-wangyijing@huawei.com>
+References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
+	 <1373535825-49972-4-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change x86_msi.restore_msi_irqs(struct pci_dev *dev, int irq) to
-x86_msi.restore_msi_irqs(struct pci_dev *dev)
+On Thu, 2013-07-11 at 17:43 +0800, Yijing Wang wrote:
+[...]
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 1542735..f2eb214 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+[...]
+> @@ -315,6 +342,24 @@ static int pciehp_resume (struct pcie_device *dev)
+>  	if (status) {
+>  		if (list_empty(&pbus->devices))
+>  			pciehp_enable_slot(slot);
+> +
+> +		if (device_serial_number_changed(pbus)) {
+> +			/*
+> +			 * first power off slot, avoid the old driver
+> +			 * .remove() method touch the new hardware
+> +			 */
+> +			if (POWER_CTRL(ctrl)) {
+> +				retval = pciehp_power_off_slot(slot);
+> +				if (retval) {
+> +					ctrl_err(ctrl,
+> +						"Issue of Slot Disable command failed\n");
+> +					return 0;
+> +				}
+> +				msleep(1000);
+> +				pciehp_unconfigure_device(slot);
+> +				pciehp_enable_slot(slot);
+> +			}
+> +		}
+>  	} else if (!list_empty(&pbus->devices))
+>  		pciehp_disable_slot(slot);
+>  	
 
->From its naming, restore_msi_irqs is used to restore multiple msix irqs,
-param 'int irq' is unneeded. This could make code looks consistent in vm
-and bare metal.
+It was surprisingly hard to see why the patch wouldn't apply to v3.10.
+It turns out the very last line of context is a line consisting of just
+a single tab. And in v3.10 it is an empty line. 
 
-Dom0 msix restore code could be optimized a bit with this change.
+Is that lone tab perhaps an editing mistake on your side?
 
-Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
----
- arch/x86/include/asm/pci.h      |    8 ++++----
- arch/x86/include/asm/x86_init.h |    2 +-
- arch/x86/pci/xen.c              |    2 +-
- drivers/pci/msi.c               |   17 ++++++++++++-----
- 4 files changed, 18 insertions(+), 11 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index d9e9e6c..40cbea4 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -115,9 +115,9 @@ static inline void x86_teardown_msi_irq(unsigned int irq)
- {
- 	x86_msi.teardown_msi_irq(irq);
- }
--static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
-+static inline void x86_restore_msi_irqs(struct pci_dev *dev)
- {
--	x86_msi.restore_msi_irqs(dev, irq);
-+	x86_msi.restore_msi_irqs(dev);
- }
- #define arch_setup_msi_irqs x86_setup_msi_irqs
- #define arch_teardown_msi_irqs x86_teardown_msi_irqs
-@@ -127,14 +127,14 @@ static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
- struct msi_desc;
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void native_teardown_msi_irq(unsigned int irq);
--void native_restore_msi_irqs(struct pci_dev *dev, int irq);
-+void native_restore_msi_irqs(struct pci_dev *dev);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 		  unsigned int irq_base, unsigned int irq_offset);
- /* default to the implementation in drivers/lib/msi.c */
- #define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
- #define HAVE_DEFAULT_MSI_RESTORE_IRQS
- void default_teardown_msi_irqs(struct pci_dev *dev);
--void default_restore_msi_irqs(struct pci_dev *dev, int irq);
-+void default_restore_msi_irqs(struct pci_dev *dev);
- #else
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 828a156..f58a9c7 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -180,7 +180,7 @@ struct x86_msi_ops {
- 			       u8 hpet_id);
- 	void (*teardown_msi_irq)(unsigned int irq);
- 	void (*teardown_msi_irqs)(struct pci_dev *dev);
--	void (*restore_msi_irqs)(struct pci_dev *dev, int irq);
-+	void (*restore_msi_irqs)(struct pci_dev *dev);
- 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
- };
- 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 48e8461..cdd869f 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -337,7 +337,7 @@ out:
- 	return ret;
- }
- 
--static void xen_initdom_restore_msi_irqs(struct pci_dev *dev, int irq)
-+static void xen_initdom_restore_msi_irqs(struct pci_dev *dev)
- {
- 	int ret = 0;
- 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 922fb49..d4ccfeb 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -214,7 +214,7 @@ void unmask_msi_irq(struct irq_data *data)
- #endif /* CONFIG_GENERIC_HARDIRQS */
- 
- #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
--void default_restore_msi_irqs(struct pci_dev *dev, int irq)
-+static void default_restore_msi_irq(struct pci_dev *dev, int irq)
- {
- 	int pos;
- 	u16 control;
-@@ -244,6 +244,15 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
- 		}
- 	}
- }
-+
-+void default_restore_msi_irqs(struct pci_dev *dev)
-+{
-+	struct msi_desc *entry;
-+
-+	list_for_each_entry(entry, &dev->msi_list, list) {
-+		default_restore_msi_irq(dev, entry->irq);
-+	}
-+}
- #endif
- 
- void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-@@ -416,7 +425,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 
- 	pci_intx_for_msi(dev, 0);
- 	msi_set_enable(dev, 0);
--	arch_restore_msi_irqs(dev, dev->irq);
-+	arch_restore_msi_irqs(dev);
- 
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
- 	control &= ~PCI_MSI_FLAGS_QSIZE;
-@@ -440,9 +449,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
- 	control |= PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL;
- 	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, control);
- 
--	list_for_each_entry(entry, &dev->msi_list, list) {
--		arch_restore_msi_irqs(dev, entry->irq);
--	}
-+	arch_restore_msi_irqs(dev);
- 
- 	control &= ~PCI_MSIX_FLAGS_MASKALL;
- 	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, control);
--- 
-1.7.3
+Paul Bolle
 
