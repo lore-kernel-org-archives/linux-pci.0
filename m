@@ -1,98 +1,192 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:45279 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750780Ab3GXCPt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 22:15:49 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUX7Dx5Z8zgx94bQ5vWTRsExarzG6WB_iuGj1jWkurc4w@mail.gmail.com>
-References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
-	<51EF3570.7030608@huawei.com>
-	<CAE9FiQUX7Dx5Z8zgx94bQ5vWTRsExarzG6WB_iuGj1jWkurc4w@mail.gmail.com>
-Date: Tue, 23 Jul 2013 19:15:48 -0700
-Message-ID: <CAE9FiQVBfx_nyyna-9Xn+769fqqmMMMiNUwcacf4dA1iaZj6jw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix hotplug remove with sriov again
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=90e6ba6e901cf2439a04e2387c2b
-Sender: linux-pci-owner@vger.kernel.org
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 16/30] ACPI / hotplug / PCI: Drop handle field from struct acpiphp_func
+Date: Fri, 12 Jul 2013 01:55:34 +0200
+Message-ID: <1415979.zL9GvHn6uE@vostro.rjw.lan>
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---90e6ba6e901cf2439a04e2387c2b
-Content-Type: text/plain; charset=ISO-8859-1
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Tue, Jul 23, 2013 at 7:04 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Jul 23, 2013 at 7:01 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Hi Yinghai,
->>    It seems to have the the same problem in acpiphp,
->>
->> diable_device(..):
->>
->>         while ((pdev = dev_in_slot(slot))) {
->>                 pci_stop_and_remove_bus_device(pdev);
->>                 pci_dev_put(pdev);
->>         }
->>
->>
->> static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
->> {
->>         struct pci_bus *bus = slot->bridge->pci_bus;
->>         struct pci_dev *dev;
->>         struct pci_dev *ret = NULL;
->>
->>         down_read(&pci_bus_sem);
->>         list_for_each_entry(dev, &bus->devices, bus_list)
->>                 if (PCI_SLOT(dev->devfn) == slot->device) {
->>                         ret = pci_dev_get(dev);
->>                         break;
->>                 }
->>         up_read(&pci_bus_sem);
->>
->
-> acpiphp is ok.
->
-> dev_in_slot will restart from bus->devices again every time.
+The ACPI handle stored in struct acpiphp_func is also stored in the
+struct acpiphp_context object containing it and it is trivial to get
+from a struct acpiphp_func pointer to the handle field of the outer
+struct acpiphp_context.
 
-Actually I had another version to fix the problem, but I did not even
-try to compile
-and to test it after i figured out that mlx4_core like to VF get stopped before
-PF's driver.
+Hence, the handle field of struct acpiphp_func is redundant, so drop
+it and provide a helper function, func_to_handle(), allowing it
+users to get the ACPI handle for the given struct acpiphp_func
+pointer.
 
-Thanks
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    6 ++++-
+ drivers/pci/hotplug/acpiphp_glue.c |   42 ++++++++++++++++++++++---------------
+ 2 files changed, 30 insertions(+), 18 deletions(-)
 
-Yinghai
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -117,7 +117,6 @@ struct acpiphp_func {
+ 
+ 	struct list_head sibling;
+ 	struct notifier_block nb;
+-	acpi_handle	handle;
+ 
+ 	u8		function;	/* pci function# */
+ 	u32		flags;		/* see below */
+@@ -135,6 +134,11 @@ static inline struct acpiphp_context *fu
+ 	return container_of(func, struct acpiphp_context, func);
+ }
+ 
++static inline acpi_handle func_to_handle(struct acpiphp_func *func)
++{
++	return func_to_context(func)->handle;
++}
++
+ /*
+  * struct acpiphp_attention_info - device specific attention registration
+  *
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -295,7 +295,6 @@ static acpi_status register_slot(acpi_ha
+ 		return AE_NOT_EXIST;
+ 	}
+ 	newfunc = &context->func;
+-	newfunc->handle = handle;
+ 	newfunc->function = function;
+ 	mutex_unlock(&acpiphp_context_lock);
+ 
+@@ -436,12 +435,14 @@ static void cleanup_bridge(struct acpiph
+ 
+ 	list_for_each_entry(slot, &bridge->slots, node) {
+ 		list_for_each_entry(func, &slot->funcs, sibling) {
+-			if (is_dock_device(func->handle)) {
+-				unregister_hotplug_dock_device(func->handle);
++			acpi_handle handle = func_to_handle(func);
++
++			if (is_dock_device(handle)) {
++				unregister_hotplug_dock_device(handle);
+ 				unregister_dock_notifier(&func->nb);
+ 			}
+ 			if (!(func->flags & FUNC_HAS_DCK)) {
+-				status = acpi_remove_notify_handler(func->handle,
++				status = acpi_remove_notify_handler(handle,
+ 							ACPI_SYSTEM_NOTIFY,
+ 							handle_hotplug_event);
+ 				if (ACPI_FAILURE(status))
+@@ -469,7 +470,8 @@ static int power_on_slot(struct acpiphp_
+ 	list_for_each_entry(func, &slot->funcs, sibling) {
+ 		if (func->flags & FUNC_HAS_PS0) {
+ 			dbg("%s: executing _PS0\n", __func__);
+-			status = acpi_evaluate_object(func->handle, "_PS0", NULL, NULL);
++			status = acpi_evaluate_object(func_to_handle(func),
++						      "_PS0", NULL, NULL);
+ 			if (ACPI_FAILURE(status)) {
+ 				warn("%s: _PS0 failed\n", __func__);
+ 				retval = -1;
+@@ -501,7 +503,8 @@ static int power_off_slot(struct acpiphp
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling) {
+ 		if (func->flags & FUNC_HAS_PS3) {
+-			status = acpi_evaluate_object(func->handle, "_PS3", NULL, NULL);
++			status = acpi_evaluate_object(func_to_handle(func),
++						      "_PS3", NULL, NULL);
+ 			if (ACPI_FAILURE(status)) {
+ 				warn("%s: _PS3 failed\n", __func__);
+ 				retval = -1;
+@@ -555,10 +558,11 @@ static unsigned char acpiphp_max_busnr(s
+  */
+ static int acpiphp_bus_add(struct acpiphp_func *func)
+ {
++	acpi_handle handle = func_to_handle(func);
+ 	struct acpi_device *device;
+ 	int ret_val;
+ 
+-	if (!acpi_bus_get_device(func->handle, &device)) {
++	if (!acpi_bus_get_device(handle, &device)) {
+ 		dbg("bus exists... trim\n");
+ 		/* this shouldn't be in here, so remove
+ 		 * the bus then re-add it...
+@@ -566,9 +570,9 @@ static int acpiphp_bus_add(struct acpiph
+ 		acpi_bus_trim(device);
+ 	}
+ 
+-	ret_val = acpi_bus_scan(func->handle);
++	ret_val = acpi_bus_scan(handle);
+ 	if (!ret_val)
+-		ret_val = acpi_bus_get_device(func->handle, &device);
++		ret_val = acpi_bus_get_device(handle, &device);
+ 
+ 	if (ret_val)
+ 		dbg("error adding bus, %x\n", -ret_val);
+@@ -610,7 +614,8 @@ static void acpiphp_set_acpi_region(stru
+ 		params[1].type = ACPI_TYPE_INTEGER;
+ 		params[1].integer.value = 1;
+ 		/* _REG is optional, we don't care about if there is failure */
+-		acpi_evaluate_object(func->handle, "_REG", &arg_list, NULL);
++		acpi_evaluate_object(func_to_handle(func), "_REG", &arg_list,
++				     NULL);
+ 	}
+ }
+ 
+@@ -751,9 +756,8 @@ static int disable_device(struct acpiphp
+ 		pci_dev_put(pdev);
+ 	}
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling) {
+-		acpiphp_bus_trim(func->handle);
+-	}
++	list_for_each_entry(func, &slot->funcs, sibling)
++		acpiphp_bus_trim(func_to_handle(func));
+ 
+ 	slot->flags &= (~SLOT_ENABLED);
+ 
+@@ -775,17 +779,20 @@ static int disable_device(struct acpiphp
+  */
+ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+ {
+-	acpi_status status;
+ 	unsigned long long sta = 0;
+-	u32 dvid;
+ 	struct acpiphp_func *func;
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling) {
+ 		if (func->flags & FUNC_HAS_STA) {
+-			status = acpi_evaluate_integer(func->handle, "_STA", NULL, &sta);
++			acpi_status status;
++
++			status = acpi_evaluate_integer(func_to_handle(func),
++						       "_STA", NULL, &sta);
+ 			if (ACPI_SUCCESS(status) && sta)
+ 				break;
+ 		} else {
++			u32 dvid;
++
+ 			pci_bus_read_config_dword(slot->bridge->pci_bus,
+ 						  PCI_DEVFN(slot->device,
+ 							    func->function),
+@@ -820,7 +827,8 @@ int acpiphp_eject_slot(struct acpiphp_sl
+ 			arg.type = ACPI_TYPE_INTEGER;
+ 			arg.integer.value = 1;
+ 
+-			status = acpi_evaluate_object(func->handle, "_EJ0", &arg_list, NULL);
++			status = acpi_evaluate_object(func_to_handle(func),
++						      "_EJ0", &arg_list, NULL);
+ 			if (ACPI_FAILURE(status)) {
+ 				warn("%s: _EJ0 failed\n", __func__);
+ 				return -1;
 
---90e6ba6e901cf2439a04e2387c2b
-Content-Type: application/octet-stream; name="fix_cx3_hotplug_1x.patch"
-Content-Disposition: attachment; filename="fix_cx3_hotplug_1x.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hjhweggi0
-
-LS0tCiBkcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9wY2kuYyB8ICAgMjEgKysrKysrKysrKysr
-KysrKysrLS0tCiAxIGZpbGUgY2hhbmdlZCwgMTggaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMo
-LSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfcGNpLmMKPT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfcGNp
-LmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9wY2kuYwpAQCAtNzYs
-MTIgKzc2LDI4IEBAIGludCBwY2llaHBfY29uZmlndXJlX2RldmljZShzdHJ1Y3Qgc2xvdAogCXJl
-dHVybiAwOwogfQogCisvKiByZXR1cm4gb25lIGRldmljZSBvbiBidXMsIGFjcXVpcmluZyBhIHJl
-ZmVyZW5jZSBvbiBpdCAqLworc3RhdGljIHN0cnVjdCBwY2lfZGV2ICpvbmVfZGV2X29uX2J1cyhz
-dHJ1Y3QgcGNpX2J1cyAqYnVzKQoreworCXN0cnVjdCBwY2lfZGV2ICpkZXY7CisJc3RydWN0IHBj
-aV9kZXYgKnJldCA9IE5VTEw7CisKKwlkb3duX3JlYWQoJnBjaV9idXNfc2VtKTsKKwlsaXN0X2Zv
-cl9lYWNoX2VudHJ5KGRldiwgJmJ1cy0+ZGV2aWNlcywgYnVzX2xpc3QpIHsKKwkJcmV0ID0gcGNp
-X2Rldl9nZXQoZGV2KTsKKwkJYnJlYWs7CisJfQorCXVwX3JlYWQoJnBjaV9idXNfc2VtKTsKKwor
-CXJldHVybiByZXQ7Cit9CisKIGludCBwY2llaHBfdW5jb25maWd1cmVfZGV2aWNlKHN0cnVjdCBz
-bG90ICpwX3Nsb3QpCiB7CiAJaW50IHJldCwgcmMgPSAwOwogCXU4IGJjdGwgPSAwOwogCXU4IHBy
-ZXNlbmNlID0gMDsKLQlzdHJ1Y3QgcGNpX2RldiAqZGV2LCAqdGVtcDsKKwlzdHJ1Y3QgcGNpX2Rl
-diAqZGV2OwogCXN0cnVjdCBwY2lfYnVzICpwYXJlbnQgPSBwX3Nsb3QtPmN0cmwtPnBjaWUtPnBv
-cnQtPnN1Ym9yZGluYXRlOwogCXUxNiBjb21tYW5kOwogCXN0cnVjdCBjb250cm9sbGVyICpjdHJs
-ID0gcF9zbG90LT5jdHJsOwpAQCAtOTIsOCArMTA4LDcgQEAgaW50IHBjaWVocF91bmNvbmZpZ3Vy
-ZV9kZXZpY2Uoc3RydWN0IHNsbwogCWlmIChyZXQpCiAJCXByZXNlbmNlID0gMDsKIAotCWxpc3Rf
-Zm9yX2VhY2hfZW50cnlfc2FmZShkZXYsIHRlbXAsICZwYXJlbnQtPmRldmljZXMsIGJ1c19saXN0
-KSB7Ci0JCXBjaV9kZXZfZ2V0KGRldik7CisJd2hpbGUgKGRldiA9IG9uZV9kZXZfb25fYnVzKHBh
-cmVudCkpIHsKIAkJaWYgKGRldi0+aGRyX3R5cGUgPT0gUENJX0hFQURFUl9UWVBFX0JSSURHRSAm
-JiBwcmVzZW5jZSkgewogCQkJcGNpX3JlYWRfY29uZmlnX2J5dGUoZGV2LCBQQ0lfQlJJREdFX0NP
-TlRST0wsICZiY3RsKTsKIAkJCWlmIChiY3RsICYgUENJX0JSSURHRV9DVExfVkdBKSB7Cg==
---90e6ba6e901cf2439a04e2387c2b--
