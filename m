@@ -1,83 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:46220 "EHLO mail1.g1.pair.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752862Ab3GAHkF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Jul 2013 03:40:05 -0400
-From: Sean Cross <xobs@kosagi.com>
-To: devicetree-discuss@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Sean Cross <xobs@kosagi.com>
-Subject: [PATCH 1/4] ARM i.MX6q: Add descriptors for LVDS clocks
-Date: Mon,  1 Jul 2013 07:15:44 +0000
-Message-Id: <1372662947-27160-2-git-send-email-xobs@kosagi.com>
-In-Reply-To: <1372662947-27160-1-git-send-email-xobs@kosagi.com>
-References: <1372662947-27160-1-git-send-email-xobs@kosagi.com>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:42226 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756598Ab3GKUbp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 16:31:45 -0400
+Received: by mail-la0-f51.google.com with SMTP id fq12so7181143lab.10
+        for <linux-pci@vger.kernel.org>; Thu, 11 Jul 2013 13:31:44 -0700 (PDT)
+Message-ID: <51DF162C.50203@openvz.org>
+Date: Fri, 12 Jul 2013 00:31:40 +0400
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: =?ISO-8859-1?Q?Toralf_F=F6rster?= <toralf.foerster@gmx.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>
+Subject: Re: 3.10: disabling already-disabled device
+References: <51DEFE6F.7040507@gmx.de> <CAErSpo72dcMW26yF35feuoy=RJnPorZxX9x==N6E89gsxBpkuw@mail.gmail.com>
+In-Reply-To: <CAErSpo72dcMW26yF35feuoy=RJnPorZxX9x==N6E89gsxBpkuw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are two general-purpose LVDS clocks available on the i.MX6.  Add
-clock descriptors for both of these clocks, as well as selectors to be
-able to generate various external signals.
+ >  Pid: 1363, comm: kworker/u:73 Not tainted 3.9.0-rc2+ #27
+It's not 3.10
 
-Signed-off-by: Sean Cross <xobs@kosagi.com>
----
- .../devicetree/bindings/clock/imx6q-clock.txt      |    4 ++++
- arch/arm/mach-imx/clk-imx6q.c                      |   13 +++++++++++--
- 2 files changed, 15 insertions(+), 2 deletions(-)
+That pci_disable_device() was replaced with pci_clear_master() in
+4e0855dff094b0d56d6b5b271e0ce7851cc1e063 3.9-rc3 and accidentially
+dropped in merge commit e5f2ef7ab4690d2e8faaf5fd203c5ecd70c3abaf in 3.10-rc1
+see http://lkml.kernel.org/r/20130612194408.8680.66934.email-sent-by-dnelson@teal
 
-diff --git a/Documentation/devicetree/bindings/clock/imx6q-clock.txt b/Documentation/devicetree/bindings/clock/imx6q-clock.txt
-index 6deb6fd..b2b4acb 100644
---- a/Documentation/devicetree/bindings/clock/imx6q-clock.txt
-+++ b/Documentation/devicetree/bindings/clock/imx6q-clock.txt
-@@ -208,6 +208,10 @@ clocks and IDs.
- 	pll4_post_div		193
- 	pll5_post_div		194
- 	pll5_video_div		195
-+	lvds1_sel		196
-+	lvds2_sel		197
-+	lvds1			198
-+	lvds2			199
- 
- Examples:
- 
-diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
-index 4e3148c..f0c0591 100644
---- a/arch/arm/mach-imx/clk-imx6q.c
-+++ b/arch/arm/mach-imx/clk-imx6q.c
-@@ -204,7 +204,9 @@ static const char *vdo_axi_sels[]	= { "axi", "ahb", };
- static const char *vpu_axi_sels[]	= { "axi", "pll2_pfd2_396m", "pll2_pfd0_352m", };
- static const char *cko1_sels[]	= { "pll3_usb_otg", "pll2_bus", "pll1_sys", "pll5_video_div",
- 				    "dummy", "axi", "enfc", "ipu1_di0", "ipu1_di1", "ipu2_di0",
--				    "ipu2_di1", "ahb", "ipg", "ipg_per", "ckil", "pll4_post_div", };
-+				    "ipu2_di1", "ahb", "ipg", "ipg_per", "ckil", "pll4_audio", };
-+static const char *lvds1_sels[] = { "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "pll4_audio", "pll5_video", "pll8_mlb", "enet_ref", "pcie_ref", "sata_ref", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "lvds1", "lvds2", };
-+static const char *lvds2_sels[] = { "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "pll4_audio", "pll5_video", "pll8_mlb", "enet_ref", "pcie_ref", "sata_ref", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "lvds1", "lvds2", };
- 
- enum mx6q_clks {
- 	dummy, ckil, ckih, osc, pll2_pfd0_352m, pll2_pfd1_594m, pll2_pfd2_396m,
-@@ -238,7 +240,8 @@ enum mx6q_clks {
- 	pll4_audio, pll5_video, pll8_mlb, pll7_usb_host, pll6_enet, ssi1_ipg,
- 	ssi2_ipg, ssi3_ipg, rom, usbphy1, usbphy2, ldb_di0_div_3_5, ldb_di1_div_3_5,
- 	sata_ref, sata_ref_100m, pcie_ref, pcie_ref_125m, enet_ref, usbphy1_gate,
--	usbphy2_gate, pll4_post_div, pll5_post_div, pll5_video_div, clk_max
-+	usbphy2_gate, pll4_post_div, pll5_post_div, pll5_video_div,
-+	lvds1_sel, lvds2_sel, lvds1, lvds2, clk_max
- };
- 
- static struct clk *clk[clk_max];
-@@ -360,6 +363,12 @@ int __init mx6q_clocks_init(void)
- 	clk[pll5_post_div] = clk_register_divider_table(NULL, "pll5_post_div", "pll5_video", CLK_SET_RATE_PARENT, base + 0xa0, 19, 2, 0, post_div_table, &imx_ccm_lock);
- 	clk[pll5_video_div] = clk_register_divider_table(NULL, "pll5_video_div", "pll5_post_div", CLK_SET_RATE_PARENT, base + 0x170, 30, 2, 0, video_div_table, &imx_ccm_lock);
- 
-+	clk[lvds1_sel]        = imx_clk_mux("lvds1_sel",	base + 0x160, 0, 5, lvds1_sels,		ARRAY_SIZE(lvds1_sels));
-+	clk[lvds2_sel]        = imx_clk_mux("lvds2_sel",	base + 0x160, 0, 5, lvds2_sels,		ARRAY_SIZE(lvds2_sels));
-+
-+	clk[lvds1] = imx_clk_gate("lvds1", "dummy", base + 0x160, 10);
-+	clk[lvds2] = imx_clk_gate("lvds2", "dummy", base + 0x160, 11);
-+
- 	np = of_find_compatible_node(NULL, NULL, "fsl,imx6q-ccm");
- 	base = of_iomap(np, 0);
- 	WARN_ON(!base);
--- 
-1.7.9.5
+Bjorn Helgaas wrote:
+> [+cc Konstantin, Rafael, e1000 list]
+>
+> Thanks for the report; hopefully the folks I cc'd will have some ideas.
+>
+> On Thu, Jul 11, 2013 at 12:50 PM, Toralf Förster<toralf.foerster@gmx.de>  wrote:
+>> Found this today in the log at a 3.10.0 kernel at a 32 bit stable Gentoo
+>> at a ThinkPad T420 :
+>>
+>> Jul 10 19:22:17 n22 kernel: PM: Entering mem sleep
+>> Jul 10 19:22:17 n22 kernel: Suspending console(s) (use no_console_suspend to debug)
+>> Jul 10 19:22:17 n22 kernel: sd 0:0:0:0: [sda] Synchronizing SCSI cache
+>> Jul 10 19:22:17 n22 kernel: sd 0:0:0:0: [sda] Stopping disk
+>> Jul 10 19:22:17 n22 kernel: ------------[ cut here ]------------
+>> Jul 10 19:22:17 n22 kernel: WARNING: at drivers/pci/pci.c:1397 pci_disable_device+0x85/0x90()
+>> Jul 10 19:22:17 n22 kernel: Hardware name: 4180F65
+>> Jul 10 19:22:17 n22 kernel: Device e1000e
+>> Jul 10 19:22:17 n22 kernel: disabling already-disabled device
+>> Jul 10 19:22:17 n22 kernel: Modules linked in: dm_mod i915 sr_mod coretemp acpi_cpufreq cdrom mperf cfbfillrect cfbimgblt i2c_algo_bit cfbcopyarea intel_agp fbcon intel_gtt bitblit softcursor hid_cherry hid_generic font psmouse evdev usbhid hid video drm_kms_helper drm agpgart thermal wmi processor thinkpad_acpi tpm_tis thermal_sys tpm i2c_i801 nvram e1000e battery i2c_core hwmon tpm_bios 8250_pci fb ac button fbdev 8250_core ptp serial_core pps_core [last unloaded: microcode]
+>> Jul 10 19:22:17 n22 kernel: Pid: 1363, comm: kworker/u:73 Not tainted 3.9.0-rc2+ #27
+>> Jul 10 19:22:17 n22 kernel: Call Trace:
+>> Jul 10 19:22:17 n22 kernel: [<c1034b72>] warn_slowpath_common+0x72/0xa0
+>> Jul 10 19:22:17 n22 kernel: [<c12384a5>] ? pci_disable_device+0x85/0x90
+>> Jul 10 19:22:17 n22 kernel: [<c12384a5>] ? pci_disable_device+0x85/0x90
+>> Jul 10 19:22:17 n22 kernel: [<c1034c43>] warn_slowpath_fmt+0x33/0x40
+>> Jul 10 19:22:17 n22 kernel: [<c12384a5>] pci_disable_device+0x85/0x90
+>> Jul 10 19:22:17 n22 kernel: [<f856dcda>] __e1000_shutdown+0x2ba/0x7e0 [e1000e]
+>> Jul 10 19:22:17 n22 kernel: [<c139b4af>] ? klist_next+0x2f/0xd0
+>> Jul 10 19:22:17 n22 kernel: [<c12456b0>] ? release_pcie_device+0x20/0x20
+>> Jul 10 19:22:17 n22 kernel: [<f856e260>] e1000_suspend+0x20/0x50 [e1000e]
+>> Jul 10 19:22:17 n22 kernel: [<c123afdc>] pci_pm_suspend+0x5c/0x120
+>> Jul 10 19:22:17 n22 kernel: [<c12a81f1>] dpm_run_callback.isra.4+0x31/0x60
+>> Jul 10 19:22:17 n22 kernel: [<c12aa4de>] ? pm_wakeup_pending+0xde/0x170
+>> Jul 10 19:22:17 n22 kernel: [<c123af80>] ? pci_pm_freeze+0xb0/0xb0
+>> Jul 10 19:22:17 n22 kernel: [<c12a8420>] __device_suspend+0xc0/0x180
+>> Jul 10 19:22:17 n22 kernel: [<c12a891f>] async_suspend+0x1f/0x90
+>> Jul 10 19:22:17 n22 kernel: [<c105afb8>] async_run_entry_fn+0x38/0x140
+>> Jul 10 19:22:17 n22 kernel: [<c104ecb5>] process_one_work+0x105/0x300
+>> Jul 10 19:22:17 n22 kernel: [<c104d835>] ? start_worker+0x25/0x30
+>> Jul 10 19:22:17 n22 kernel: [<c105027c>] ? manage_workers+0x1ac/0x2c0
+>> Jul 10 19:22:17 n22 kernel: [<c105048a>] worker_thread+0xfa/0x2e0
+>> Jul 10 19:22:17 n22 kernel: [<c1050390>] ? manage_workers+0x2c0/0x2c0
+>> Jul 10 19:22:17 n22 kernel: [<c1054ca4>] kthread+0x94/0xa0
+>> Jul 10 19:22:17 n22 kernel: [<c13af6b7>] ret_from_kernel_thread+0x1b/0x28
+>> Jul 10 19:22:17 n22 kernel: [<c1054c10>] ? flush_kthread_work+0xd0/0xd0
+>> Jul 10 19:22:17 n22 kernel: ---[ end trace 3ee05c9da496cc06 ]---
+>> Jul 10 19:22:17 n22 kernel: i915 0000:00:02.0: power state changed by ACPI to D3hot
+>> Jul 10 19:22:17 n22 kernel: PM: suspend of devices complete after 719.702 msecs
+>>
+>> --
+>> MfG/Sincerely
+>> Toralf Förster
+>> pgp finger print: 7B1A 07F4 EC82 0F90 D4C2 8936 872A E508 7DB6 9DA3
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
