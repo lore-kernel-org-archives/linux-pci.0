@@ -1,52 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:56435 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756089Ab3GOLxB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 07:53:01 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv5 09/11] ARM: mvebu: the MPIC now provides MSI controller features
-Date: Mon, 15 Jul 2013 13:52:45 +0200
-Message-Id: <1373889167-27878-10-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:41639 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755850Ab3GKIyv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Jul 2013 04:54:51 -0400
+Message-ID: <51DE72CC.9050001@ti.com>
+Date: Thu, 11 Jul 2013 14:24:36 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: Jingoo Han <jg1.han@samsung.com>
+CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V2] pci: exynos: split into two parts such as Synopsys
+ part and Exynos part
+References: <001201ce7dfa$716b3370$54419a50$@samsung.com>
+In-Reply-To: <001201ce7dfa$716b3370$54419a50$@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds the 'msi-controller' property to the main interrupt controller
-Device Tree node, to indicate that it can now behave as a MSI
-controller.
+Hi,
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
----
- arch/arm/boot/dts/armada-370-xp.dtsi | 1 +
- 1 file changed, 1 insertion(+)
+On Thursday 11 July 2013 11:19 AM, Jingoo Han wrote:
+> Exynos PCIe IP consists of Synopsys specific part and Exynos
+> specific part. Only core block is a Synopsys designware part;
+> other parts are Exynos specific.
+> Also, the Synopsys designware part can be shared with other
+> platforms; thus, it can be split two parts such as Synopsys
+> designware part and Exynos specific part.
+> 
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> Cc: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> ---
+.
+.
+<snip>
+.
+.
+> +
+> +/* Exynos PCIe driver does not allow module unload */
 
-diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
-index 90b1176..ac0bbc0 100644
---- a/arch/arm/boot/dts/armada-370-xp.dtsi
-+++ b/arch/arm/boot/dts/armada-370-xp.dtsi
-@@ -56,6 +56,7 @@
- 				#interrupt-cells = <1>;
- 				#size-cells = <1>;
- 				interrupt-controller;
-+				msi-controller;
- 			};
- 
- 			coherency-fabric@20200 {
--- 
-1.8.1.2
+Just curious, why is this restriction?
 
+Thanks
+Kishon
