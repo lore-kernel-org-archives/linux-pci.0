@@ -1,61 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 13/16] ARM: tegra: Fix Beaver's PCIe lane configuration
-Date: Thu, 25 Jul 2013 10:53:27 -0700
-Message-Id: <1374774810-18459-14-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:58347 "EHLO
+	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755631Ab3GKOWP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 10:22:15 -0400
+Message-ID: <1373552533.1349.4.camel@x61.thuisdomein>
+Subject: Re: [PATCH -v2 1/3] PCI: introduce PCIe Device Serial Number
+ Capability support
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Rafael <rjw@sisk.pl>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
+Date: Thu, 11 Jul 2013 16:22:13 +0200
+In-Reply-To: <1373535825-49972-2-git-send-email-wangyijing@huawei.com>
+References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
+	 <1373535825-49972-2-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Warren <swarren@nvidia.com>
+On Thu, 2013-07-11 at 17:43 +0800, Yijing Wang wrote:
+> Introduce PCIe Ext Capability Device Serial Number support,
+> so we can use the unique device serial number to identify
+> the physical device. During system suspend, if the PCIe
+> device was removed and inserted a new same device, after
+> system resume there is no good way to identify it, maybe
+> Device Serial Number is a good choice if device support.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/pci.c   |   27 +++++++++++++++++++++++++++
+>  drivers/pci/probe.c |    2 ++
+>  include/linux/pci.h |    3 +++
+>  3 files changed, 32 insertions(+), 0 deletions(-)
+>
+[...] 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 0fd1f15..10d190b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -342,6 +342,7 @@ struct pci_dev {
+>  	struct list_head msi_list;
+>  	struct kset *msi_kset;
+>  #endif
+> +	u64 sn;		/* device serieal number, 0 if not support */
 
-Beaver's PCIe lane configuration most closely matches x2 x2 x2 rather
-than x4 x1 x1, since clocks 0 and 2 are used, and lanes 0 and 5 are used,
-and the only way those align is with a x2 x2 x2 configuration.
+Typo: serieal
 
-Also, disable root port 1; there's nothing connected to it. Root port 0
-is the on-board PCIe Ethernet, and port 2 is the mini-PCIe slot.
+>  	struct pci_vpd *vpd;
+>  #ifdef CONFIG_PCI_ATS
+>  	union {
 
-Signed-off-by: Stephen Warren <swarren@nvidia.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- arch/arm/boot/dts/tegra30-beaver.dts | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+[...]
 
-diff --git a/arch/arm/boot/dts/tegra30-beaver.dts b/arch/arm/boot/dts/tegra30-beaver.dts
-index 4d9fa31..e1dd644 100644
---- a/arch/arm/boot/dts/tegra30-beaver.dts
-+++ b/arch/arm/boot/dts/tegra30-beaver.dts
-@@ -18,16 +18,16 @@
- 
- 		pci@1,0 {
- 			status = "okay";
--			nvidia,num-lanes = <4>;
-+			nvidia,num-lanes = <2>;
- 		};
- 
- 		pci@2,0 {
--			status = "okay";
--			nvidia,num-lanes = <1>;
-+			nvidia,num-lanes = <2>;
- 		};
- 
- 		pci@3,0 {
--			nvidia,num-lanes = <1>;
-+			status = "okay";
-+			nvidia,num-lanes = <2>;
- 		};
- 	};
- 
--- 
-1.8.1.5
+
+Paul Bolle
 
