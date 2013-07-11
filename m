@@ -1,33 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 3 Jul 2013 21:41:23 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH v2 0/8] Thunderbolt workarounds
-Message-ID: <20130703184123.GC4898@intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
- <20130703182900.GA29079@srcf.ucam.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:39041 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756574Ab3GKX7A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Jul 2013 19:59:00 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 12/30] ACPI / hotplug / PCI: Drop sun field from struct acpiphp_slot
+Date: Fri, 12 Jul 2013 01:51:35 +0200
+Message-ID: <2141941.XUL7llpgGZ@vostro.rjw.lan>
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130703182900.GA29079@srcf.ucam.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 03, 2013 at 07:29:00PM +0100, Matthew Garrett wrote:
-> Are there any plans to provide native support for the Thunderbolt 
-> controller, rather than relying on system management mode?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I believe there are some to implement a native Thunderbolt controller
-driver but I don't know the details. 
+If the slot unique number is passed as an additional argument to
+acpiphp_register_hotplug_slot(), the slot field in struct
+acpiphp_slot is not necessary and may be dropped, so make that
+happen.
 
-Bruce Allan and Miles Penner (who are CC'd here) might have a better answer
-for you.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    4 +---
+ drivers/pci/hotplug/acpiphp_core.c |    5 +++--
+ drivers/pci/hotplug/acpiphp_glue.c |    7 +++----
+ 3 files changed, 7 insertions(+), 9 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -106,8 +106,6 @@ struct acpiphp_slot {
+ 	struct mutex crit_sect;
+ 
+ 	u8		device;		/* pci device# */
+-
+-	unsigned long long sun;		/* ACPI _SUN (slot unique number) */
+ 	u32		flags;		/* see below */
+ };
+ 
+@@ -180,7 +178,7 @@ struct acpiphp_attention_info
+ /* acpiphp_core.c */
+ int acpiphp_register_attention(struct acpiphp_attention_info*info);
+ int acpiphp_unregister_attention(struct acpiphp_attention_info *info);
+-int acpiphp_register_hotplug_slot(struct acpiphp_slot *slot);
++int acpiphp_register_hotplug_slot(struct acpiphp_slot *slot, unsigned int sun);
+ void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
+ 
+ /* acpiphp_glue.c */
+Index: linux-pm/drivers/pci/hotplug/acpiphp_core.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_core.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_core.c
+@@ -290,7 +290,8 @@ static void release_slot(struct hotplug_
+ }
+ 
+ /* callback routine to initialize 'struct slot' for each slot */
+-int acpiphp_register_hotplug_slot(struct acpiphp_slot *acpiphp_slot)
++int acpiphp_register_hotplug_slot(struct acpiphp_slot *acpiphp_slot,
++				  unsigned int sun)
+ {
+ 	struct slot *slot;
+ 	int retval = -ENOMEM;
+@@ -317,7 +318,7 @@ int acpiphp_register_hotplug_slot(struct
+ 	slot->hotplug_slot->info->adapter_status = acpiphp_get_adapter_status(slot->acpi_slot);
+ 
+ 	acpiphp_slot->slot = slot;
+-	snprintf(name, SLOT_NAME_SIZE, "%llu", slot->acpi_slot->sun);
++	snprintf(name, SLOT_NAME_SIZE, "%u", sun);
+ 
+ 	retval = pci_hp_register(slot->hotplug_slot,
+ 					acpiphp_slot->bridge->pci_bus,
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -354,16 +354,15 @@ static acpi_status register_slot(acpi_ha
+ 		if (ACPI_FAILURE(status))
+ 			sun = bridge->nr_slots;
+ 
+-		slot->sun = sun;
+ 		dbg("found ACPI PCI Hotplug slot %llu at PCI %04x:%02x:%02x\n",
+-		    slot->sun, pci_domain_nr(pbus), pbus->number, device);
++		    sun, pci_domain_nr(pbus), pbus->number, device);
+ 
+-		retval = acpiphp_register_hotplug_slot(slot);
++		retval = acpiphp_register_hotplug_slot(slot, sun);
+ 		if (retval) {
+ 			bridge->nr_slots--;
+ 			if (retval == -EBUSY)
+ 				warn("Slot %llu already registered by another "
+-					"hotplug driver\n", slot->sun);
++					"hotplug driver\n", sun);
+ 			else
+ 				warn("acpiphp_register_hotplug_slot failed "
+ 					"(err code = 0x%x)\n", retval);
+
