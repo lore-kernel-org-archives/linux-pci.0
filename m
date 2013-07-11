@@ -1,97 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:56320 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756053Ab3GOLwv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 07:52:51 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv5 01/11] irqdomain: add irq_alloc_mapping() function
-Date: Mon, 15 Jul 2013 13:52:37 +0200
-Message-Id: <1373889167-27878-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 7/30] ACPI / hotplug / PCI: Pass hotplug context objects to event handlers
+Date: Fri, 12 Jul 2013 01:45:41 +0200
+Message-ID: <1557800.QvsP0qdoD8@vostro.rjw.lan>
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit extends the irqdomain subsystem with an
-irq_alloc_mapping() function which allows to let the irqdomain code
-find an available hwirq number in the range [ 0 ; domain size ] for
-the given domain, and create a virq mapping for it.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Modify handle_hotplug_event() to pass the entire context object
+(instead of its fields individually) to work functions started by it.
+
+This change makes the subsequent consolidation of the event handling
+work functions a bit more straightforward.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- include/linux/irqdomain.h |  2 ++
- kernel/irq/irqdomain.c    | 32 ++++++++++++++++++++++++++++++++
- 2 files changed, 34 insertions(+)
+ drivers/pci/hotplug/acpiphp_glue.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index c983ed1..1ffa336 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -195,6 +195,8 @@ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
- extern unsigned int irq_find_mapping(struct irq_domain *host,
- 				     irq_hw_number_t hwirq);
- extern unsigned int irq_create_direct_mapping(struct irq_domain *host);
-+extern unsigned int irq_alloc_mapping(struct irq_domain *host,
-+				      irq_hw_number_t *hwirq);
- extern int irq_create_strict_mappings(struct irq_domain *domain,
- 				      unsigned int irq_base,
- 				      irq_hw_number_t hwirq_base, int count);
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 706724e..b9ddb94 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -375,6 +375,38 @@ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
- EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1011,6 +1011,7 @@ void acpiphp_check_host_bridge(acpi_hand
+ 
+ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ {
++	struct acpiphp_context *context;
+ 	struct acpiphp_bridge *bridge;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+@@ -1022,7 +1023,8 @@ static void _handle_hotplug_event_bridge
+ 	hp_work = container_of(work, struct acpi_hp_work, work);
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+-	bridge = (struct acpiphp_bridge *)hp_work->context;
++	context = hp_work->context;
++	bridge = context->bridge;
+ 
+ 	acpi_scan_lock_acquire();
+ 
+@@ -1127,18 +1129,18 @@ static void hotplug_event_func(acpi_hand
+ 
+ static void _handle_hotplug_event_func(struct work_struct *work)
+ {
++	struct acpiphp_context *context;
+ 	struct acpi_hp_work *hp_work;
+-	struct acpiphp_func *func;
+ 
+ 	hp_work = container_of(work, struct acpi_hp_work, work);
+-	func = hp_work->context;
++	context = hp_work->context;
+ 	acpi_scan_lock_acquire();
+ 
+-	hotplug_event_func(hp_work->handle, hp_work->type, func);
++	hotplug_event_func(hp_work->handle, hp_work->type, context->func);
+ 
+ 	acpi_scan_lock_release();
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
+-	put_bridge(func->slot->bridge);
++	put_bridge(context->func->slot->bridge);
+ }
  
  /**
-+ * irq_alloc_mapping() - Allocate an irq for mapping
-+ * @domain: domain to allocate the irq for or NULL for default domain
-+ * @hwirq:  reference to the returned hwirq
-+ *
-+ * This routine are used for irq controllers which can choose the
-+ * hardware interrupt number from a range [ 0 ; domain size ], such as
-+ * is often the case with PCI MSI controllers. The function will
-+ * returned the allocated hwirq number in the hwirq pointer, and the
-+ * corresponding virq number as the return value.
-+ */
-+unsigned int irq_alloc_mapping(struct irq_domain *domain,
-+			       irq_hw_number_t *out_hwirq)
-+{
-+	irq_hw_number_t hwirq;
-+
-+	pr_debug("irq_alloc_mapping(0x%p)\n", domain);
-+
-+	for (hwirq = 0; hwirq < domain->hwirq_max; hwirq++)
-+		if (!irq_find_mapping(domain, hwirq))
-+			break;
-+
-+	if (hwirq == domain->hwirq_max) {
-+		pr_debug("-> no available hwirq found\n");
-+		return 0;
-+	}
-+
-+	*out_hwirq = hwirq;
-+	return irq_create_mapping(domain, hwirq);
-+}
-+EXPORT_SYMBOL_GPL(irq_alloc_mapping);
-+
-+/**
-  * irq_create_mapping() - Map a hardware interrupt into linux irq space
-  * @domain: domain owning this hardware interrupt or NULL for default domain
-  * @hwirq: hardware irq number in that domain space
--- 
-1.8.1.2
+@@ -1159,11 +1161,9 @@ static void handle_hotplug_event(acpi_ha
+ 	if (context) {
+ 		if (context->bridge) {
+ 			get_bridge(context->bridge);
+-			data = context->bridge;
+ 			work_func = _handle_hotplug_event_bridge;
+ 		} else if (context->func) {
+ 			get_bridge(context->func->slot->bridge);
+-			data = context->func;
+ 			work_func = _handle_hotplug_event_func;
+ 		}
+ 		acpiphp_put_context(context);
+@@ -1179,7 +1179,7 @@ static void handle_hotplug_event(acpi_ha
+ 	 * don't deadlock on hotplug actions.
+ 	 */
+ 	if (work_func)
+-		alloc_acpi_hp_work(handle, type, data, work_func);
++		alloc_acpi_hp_work(handle, type, context, work_func);
+ }
+ 
+ /*
 
