@@ -1,67 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:39177 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979Ab3GXJ01 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jul 2013 05:26:27 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH] PCI: update NumVFs register properly during enable/disable sriov
-Date: Wed, 24 Jul 2013 17:26:12 +0800
-Message-ID: <1374657972-2456-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1373537953.9708.25.camel@x61.thuisdomein>
+Subject: Re: [PATCH 2/2] PCI,pciehp: avoid add a device already exist during
+ pciehp_resume
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Rafael <rjw@sisk.pl>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Date: Thu, 11 Jul 2013 12:19:13 +0200
+In-Reply-To: <51DE2C98.5030803@huawei.com>
+References: <1373356564-21668-1-git-send-email-wangyijing@huawei.com>
+	 <1373357261.1633.4.camel@x61.thuisdomein> <51DE2C98.5030803@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, we only update NumVFs register during sriov_enable().
-This register should also be updated properly during sriov_disable.
-Otherwise, we will get the stale "Number of VFs" info from lspci.
+Yijing,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/iov.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+On Thu, 2013-07-11 at 11:55 +0800, Yijing Wang wrote:
+> Can you provide the lspci -vvv and lspci -xxxx info messages ?
+> I want to confirm your hardware information which cause your resume error.
+> You can get these messages in any kernel version, that's ok.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index de8ffac..6e4844b 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -286,7 +286,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	    (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
- 		return -EINVAL;
- 
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
- 	if (!offset || (nr_virtfn > 1 && !stride))
-@@ -334,6 +333,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 			return rc;
- 	}
- 
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
- 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-@@ -368,6 +368,7 @@ failed:
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
- 
-@@ -401,6 +402,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
- 
- 	iov->num_VFs = 0;
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
- }
- 
- static int sriov_init(struct pci_dev *dev, int pos)
--- 
-1.7.1
+Would it be sufficient to send that information just for the two pcie
+ports on my laptop, and the wireless card that is present in one of
+those two ports?
 
+And would it be OK to send that information off list?
+
+> When you suspend and resume the system, the wireless card is always
+> present in pcie slot, right?
+
+Yes. I actually wouldn't even know how to remove it. I only discovered
+my wireless card was in a pcie slot because of the error messages at
+resume (which started a few releases ago, I think v3.7).
+
+
+Paul Bolle
 
