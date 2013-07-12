@@ -1,74 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:47861 "EHLO hydra.sisk.pl"
+Received: from mx1.redhat.com ([209.132.183.28]:43761 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934243Ab3GQX1X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Jul 2013 19:27:23 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 16/30] ACPI / hotplug / PCI: Drop handle field from struct acpiphp_bridge
-Date: Thu, 18 Jul 2013 01:26:03 +0200
-Message-ID: <1728714.uO2ItaqRg9@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
+	id S1752136Ab3GLGnT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Jul 2013 02:43:19 -0400
+Message-ID: <51DF6D35.9030409@redhat.com>
+Date: Thu, 11 Jul 2013 22:43:01 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Rafael <rjw@sisk.pl>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
+Subject: Re: [PATCH -v2 1/3] PCI: introduce PCIe Device Serial Number Capability
+ support
+References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com> <1373535825-49972-2-git-send-email-wangyijing@huawei.com> <51DE8032.4040808@redhat.com> <51DF5DFC.3090107@huawei.com>
+In-Reply-To: <51DF5DFC.3090107@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 07/11/2013 09:38 PM, Yijing Wang wrote:
+> Hi Don,
+>     Thanks for your review and comments very much!
+>
+>>> +    dev->sn = pci_device_serial_number(dev);
+>>> +
+>> Finally, 'the comment below':
+>> I know you were following Bjorn's suggestion, which I thought
+>> was an improvement, but why not do above assignment in pci_device_serial_number() ?
+>
+> I don't do assignment in pci_device_serial_number() because pci_device_serial_number()
+> is an EXPORT_SYMBOL, and will be used to get dsn for non-scaned device, for example:
+>
+> 1. we have pcie device in slot before suspend.
+> 2. we removed the device during suspend.
+> 3. we reinserted a new device during suspend.
+> 4. we should check the device change during resume, so we
+> try to use pcie device serial number to identify changes.
+> But the pci_dev structure maybe the old stale data. So
+> I prefer to get dsn by return.
+>
+> what about this:
+>
+> static void pci_init_capabilities(struct pci_dev *dev)
+>      ........
+>      pci_dsn_init(dev);
+>      ..........
+>
+>
+> void pci_dsn_init(dev)
+> {
+>      dev->sn = pci_device_serial_number(dev);
+> }
+>
+>
+>
+Looks good!  I think that meets all the uses (use in init, post-suspend).
+- Don
 
-The handle field in struct acpiphp_bridge is only used by
-acpiphp_enumerate_slots(), but in that function the local handle
-variable can be used instead, so make that happen and drop handle
-from struct acpiphp_bridge.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |    1 -
- drivers/pci/hotplug/acpiphp_glue.c |    5 ++---
- 2 files changed, 2 insertions(+), 4 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -77,7 +77,6 @@ struct acpiphp_bridge {
- 	struct list_head list;
- 	struct list_head slots;
- 	struct kref ref;
--	acpi_handle handle;
- 
- 	struct acpiphp_context *context;
- 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1084,7 +1084,6 @@ void acpiphp_enumerate_slots(struct pci_
- 
- 	INIT_LIST_HEAD(&bridge->slots);
- 	kref_init(&bridge->ref);
--	bridge->handle = handle;
- 	bridge->pci_dev = pci_dev_get(bus->self);
- 	bridge->pci_bus = bus;
- 
-@@ -1124,10 +1123,10 @@ void acpiphp_enumerate_slots(struct pci_
- 	mutex_unlock(&bridge_mutex);
- 
- 	/* register all slot objects under this bridge */
--	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
- 				     register_slot, NULL, bridge, NULL);
- 	if (ACPI_FAILURE(status)) {
--		acpi_handle_err(bridge->handle, "failed to register slots\n");
-+		acpi_handle_err(handle, "failed to register slots\n");
- 		cleanup_bridge(bridge);
- 		put_bridge(bridge);
- 	}
+>> See above....
+>> - Don
+>>
+>>>        /* Vital Product Data */
+>>>        pci_vpd_pci22_init(dev);
+>>>
+>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>> index 0fd1f15..10d190b 100644
+>>> --- a/include/linux/pci.h
+>>> +++ b/include/linux/pci.h
+>>> @@ -342,6 +342,7 @@ struct pci_dev {
+>>>        struct list_head msi_list;
+>>>        struct kset *msi_kset;
+>>>    #endif
+>>> +    u64 sn;        /* device serieal number, 0 if not support */
+>>>        struct pci_vpd *vpd;
+>>>    #ifdef CONFIG_PCI_ATS
+>>>        union {
+>>> @@ -995,6 +996,8 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+>>>    ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+>>>    int pci_vpd_truncate(struct pci_dev *dev, size_t size);
+>>>
+>>> +u64 pci_device_serial_number(struct pci_dev *dev);
+>>> +
+>>>    /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+>>>    resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+>>>    void pci_bus_assign_resources(const struct pci_bus *bus);
+>>
+>>
+>> .
+>>
+>
+>
 
