@@ -1,60 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:51185 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933706Ab3GWUTv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 16:19:51 -0400
-Date: Tue, 23 Jul 2013 17:19:42 -0300
-From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:51653 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757415Ab3GLJgu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2013 05:36:50 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tushar Behera <tushar.behera@linaro.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>, patches@linaro.org,
-	sachin.kamat@linaro.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH V2 6/6] pci: mvebu: Convert to use devm_ioremap_resource
-Message-ID: <20130723201941.GB11373@localhost>
-References: <1370864113-17895-14-git-send-email-tushar.behera@linaro.org>
- <1371460573-30004-1-git-send-email-tushar.behera@linaro.org>
- <CAErSpo7hHSmO6euUtJABLB-xeK9u+J2h6z905e5DrcZv5gZoEA@mail.gmail.com>
+CC: <linux-kernel@vger.kernel.org>, Don Dutile <ddutile@redhat.com>,
+	Paul Bolle <pebolle@tiscali.nl>, <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v3 0/3] Use PCIe DSN to improve pciehp_resume
+Date: Fri, 12 Jul 2013 17:32:20 +0800
+Message-ID: <1373621543-54836-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo7hHSmO6euUtJABLB-xeK9u+J2h6z905e5DrcZv5gZoEA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 23, 2013 at 12:38:28PM -0600, Bjorn Helgaas wrote:
-> [+cc Thomas]
-> 
-> On Mon, Jun 17, 2013 at 3:16 AM, Tushar Behera <tushar.behera@linaro.org> wrote:
-> > Commit 75096579c3ac ("lib: devres: Introduce devm_ioremap_resource()")
-> > introduced devm_ioremap_resource() and deprecated the use of
-> > devm_request_and_ioremap().
-> >
-> > While at it, modify mvebu_pcie_map_registers() to propagate error code.
-> >
-> > Signed-off-by: Tushar Behera <tushar.behera@linaro.org>
-> > CC: linux-pci@vger.kernel.org
-> > CC: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
+v2->v3: add a wrap function pci_dsn_init, fix other typo error and git am error.
+		Thanks for Don Dutile and Paul Bolle 's review,comments and test.
+v1->v2: Modify pci_get_dsn to pci_device_serial_number,
+	    power off slot before remove the old device during resume to avoid
+		old .remove() method to touch new hardware.
+		Fix other typo and fail check problems.
+		Split the list_empty() guard into new patch.
+		Thanks for Bjorn's review and comments.
 
-Acked-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>A
+This series applied to Bjorn's pci-next branch.
 
-> Thomas has a bunch of mvebu patches in the pipeline, so I assume he
-> will incorporate this if appropriate.  I don't want to put it in my
-> tree and cause conflicts with his changes.  Let me know if I should do
-> something else here.
-> 
+Yijing Wang (3):
+  PCI: introduce PCIe Device Serial Number Capability support
+  PCI,pciehp: avoid add a device already exist before suspend during
+    resume
+  PCI,pciehp: use PCIe DSN to identify device change during suspend
 
-We have the MBus DT patches, to say the least.
-Not sure if it conflicts with this and how we should handle it in that
-case.
+ drivers/pci/hotplug/pciehp_core.c |   55 +++++++++++++++++++++++++++++++++++--
+ drivers/pci/pci.c                 |   30 ++++++++++++++++++++
+ drivers/pci/pci.h                 |    1 +
+ drivers/pci/probe.c               |    2 +
+ include/linux/pci.h               |    3 ++
+ 5 files changed, 88 insertions(+), 3 deletions(-)
 
-Jason, any ideas?
--- 
-Ezequiel García, Free Electrons
-Embedded Linux, Kernel and Android Engineering
-http://free-electrons.com
+
