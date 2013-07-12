@@ -1,95 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:49311 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932356Ab3GPNQJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2013 09:16:09 -0400
-Date: Tue, 16 Jul 2013 09:15:47 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv5 00/11] MSI support for Marvell EBU PCIe driver
-Message-ID: <20130716131547.GC12062@titan.lakedaemon.net>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <51E4167B.4000208@wwwdotorg.org>
- <20130716104347.045a612a@skate>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:51667 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757416Ab3GLJgu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2013 05:36:50 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, Don Dutile <ddutile@redhat.com>,
+	Paul Bolle <pebolle@tiscali.nl>, <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH -v3 3/3] PCI,pciehp: use PCIe DSN to identify device change during suspend
+Date: Fri, 12 Jul 2013 17:32:23 +0800
+Message-ID: <1373621543-54836-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1373621543-54836-1-git-send-email-wangyijing@huawei.com>
+References: <1373621543-54836-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130716104347.045a612a@skate>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 16, 2013 at 10:43:47AM +0200, Thomas Petazzoni wrote:
-> Dear Stephen Warren,
-> 
-> On Mon, 15 Jul 2013 09:34:19 -0600, Stephen Warren wrote:
-> 
-> > > This patch set is intended for merging in 3.12, so the respective
-> > > maintainers of the different areas are invited to review/ack the
-> > > patches, see below for the details. This set of patches applies on top
-> > > of 3.11-rc1.
-> > 
-> > Thomas, who is going to merge this series?
-> 
-> I don't know. There are quite a few build dependencies in there:
-> 
->  * PATCH 7 build depends on PATCH 1 and PATCH 5, and obviously depends
->    on PATCH 6.
-> 
->  * PATCH 2 to 5 really are one thing, they depend on each other.
-> 
->  * PATCH 10 build depends on PATCH 5 and PATCH 8.
-> 
-> A quick diagram of the dependencies, best viewed with a fixed-size font
-> mailer.
-> 
-> kernel/irq/irqdomain    drivers/pci        arch/arm/kernel
->      patch 1           patch 2, 3, 4           patch 8
->         ||                  ||                   ||
->         ||                  \/                   \/
->         ||               drivers/of   ==> drivers/pci/host
->         ||                patch 5           patch 10
->         ||                  ||
->         \\__________________//
->                   ||
->                   \/
->             drivers/irqchip
->               patch 6, 7
+If device was removed from slot and reinsert a new device during
+suspend, pciehp can not identify the physical device change now.
+So the old driver .resume() method will be called for the new device,
+this is bad. If device support device serial number capability,
+we can identify this by DSN. So the reasonable way is first remove
+the old device, then enable the new device.
 
-Well, that got more complicated.  :(  No cookie for you.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/hotplug/pciehp_core.c |   45 +++++++++++++++++++++++++++++++++++++
+ 1 files changed, 45 insertions(+), 0 deletions(-)
 
-> Patches 9 and 11 are DT patches, so they are not mentioned in this
-> diagram.
-> 
-> Normally tegra would require 1, 2, 3, 4, 5 and 8, so ideally, with
-> the respective maintainers ACKs, Jason Cooper could take them in a
-> specific topic stable branch that would not be rebased, on top of which
-> both the Marvell work and Tegra work could be done.
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 7fe9dbd..bc47f8e 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -296,11 +296,38 @@ static int pciehp_suspend (struct pcie_device *dev)
+ 	return 0;
+ }
+ 
++/*
++ * check the func 0 device serial number is changed,
++ * if device does not support device serial number,
++ * return false.
++ */
++static bool device_serial_number_changed(struct pci_bus *pbus)
++{
++	u64 old_dsn, new_dsn;
++	struct pci_dev *pdev;
++
++	pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
++	if (!pdev)
++		return false;
++
++	old_dsn = pdev->sn;
++
++	/* get func 0 device serial number */
++	new_dsn = pci_device_serial_number(pdev);
++	pci_dev_put(pdev);
++
++	if (old_dsn != new_dsn)
++		return true;
++
++	return false;
++}
++
+ static int pciehp_resume (struct pcie_device *dev)
+ {
+ 	struct controller *ctrl;
+ 	struct slot *slot;
+ 	struct pci_bus *pbus = dev->port->subordinate;
++	int retval = 0;
+ 	u8 status;
+ 
+ 	ctrl = get_service_data(dev);
+@@ -315,6 +342,24 @@ static int pciehp_resume (struct pcie_device *dev)
+ 	if (status) {
+ 		if (list_empty(&pbus->devices))
+ 			pciehp_enable_slot(slot);
++
++		if (device_serial_number_changed(pbus)) {
++			/*
++			 * first power off slot, avoid the old driver
++			 * .remove() method touch the new hardware
++			 */
++			if (POWER_CTRL(ctrl)) {
++				retval = pciehp_power_off_slot(slot);
++				if (retval) {
++					ctrl_err(ctrl,
++						"Issue of Slot Disable command failed\n");
++					return 0;
++				}
++				msleep(1000);
++				pciehp_unconfigure_device(slot);
++				pciehp_enable_slot(slot);
++			}
++		}
+ 	} else if (!list_empty(&pbus->devices)) {
+ 		pciehp_disable_slot(slot);
+ 	}
+-- 
+1.7.1
 
-After my recent discussions with tglx, here's my proposal:
 
-- rmk creates a dedicated topic branch with patch 8
-
-- Bjorn creates a dedicated topic branch based on rmk's with 2, 3, 4, 5,
-  and 10
-
-- tglx creates a dedicated topic branch based on Bjorn's with 1, 6, 7
-
-- I take 9 and 11.
-
-For Tegra, tglx can tag patch 1 for merging.  Tegra will 'adopt' patch
-10, but that shouldn't hurt anything.
-
-thx,
-
-Jason.
