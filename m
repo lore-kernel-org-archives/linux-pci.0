@@ -1,85 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41984 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751308Ab3GSVqs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Jul 2013 17:46:48 -0400
-Message-ID: <51E9B3C7.1010409@intel.com>
-Date: Fri, 19 Jul 2013 14:46:47 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 24/30] ACPI / hotplug / PCI: Do not check SLOT_ENABLED in enable_device()
+Date: Fri, 12 Jul 2013 02:02:23 +0200
+Message-ID: <2002219.smES9ylgeU@vostro.rjw.lan>
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>,
-	Donald Dutile <ddutile@redhat.com>,
-	Greg Rose <gregory.v.rose@intel.com>
-Subject: Re: [PATCH] PCI: Stop sriov before remove PF
-References: <1374261258-23036-1-git-send-email-yinghai@kernel.org> <1374261258-23036-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1374261258-23036-3-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/19/2013 12:14 PM, Yinghai Lu wrote:
-> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
-> (PCI: Simplify IOV implementation and fix reference count races)
-> VF need to be removed via virtfn_remove to make sure ref to PF
-> is put back.
-> 
-> Some driver (like ixgbe) does not call pci_disable_sriov() if
-> sriov is enabled via /sys/.../sriov_numvfs setting.
-> ixgbe does allow driver for PF get detached, but still have VFs
-> around.
-> 
-> But how about PF get removed via /sys or pciehp?
-> 
-> During hot-remove, VF will still hold one ref to PF and it
-> prevent PF to be removed.
-> That make the next hot-add fails, as old PF dev struct is still around.
-> 
-> We need to add pci_disable_sriov() calling during pci dev removing.
-> 
-> Need this one for v3.11
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Jiang Liu <liuj97@gmail.com>
-> Cc: Alexander Duyck <alexander.h.duyck@intel.com>
-> Cc: Donald Dutile <ddutile@redhat.com>
-> Cc: Greg Rose <gregory.v.rose@intel.com>
-> 
-> ---
->  drivers/pci/remove.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> Index: linux-2.6/drivers/pci/remove.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/remove.c
-> +++ linux-2.6/drivers/pci/remove.c
-> @@ -34,6 +34,9 @@ static void pci_stop_dev(struct pci_dev
->  
->  static void pci_destroy_dev(struct pci_dev *dev)
->  {
-> +	/* remove VF, if PF driver skip that */
-> +	pci_disable_sriov(dev);
-> +
->  	down_write(&pci_bus_sem);
->  	list_del(&dev->bus_list);
->  	up_write(&pci_bus_sem);
-> 
+From: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
 
-How are you able to hot-remove the PF if the VFs are still holding
-references to it?
+With Thunderbolt you can daisy chain devices: connect new devices to
+an already plugged one.  In that case the "hotplug slot" is already
+enabled, but we still want to look for new PCI devices behind it.
 
-The issue I see with this patch is that if the PF has any VFs direct
-assigned, hot plug removing the PF will cause the guests containing
-those VFs to panic.
+Reuse enable_device() to scan for new PCI devices on enabled slots
+and push the SLOT_ENABLED check up into acpiphp_enable_slot().
 
-Thanks,
+[rjw: Rebased, modified the changelog]
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+drivers/pci/hotplug/acpiphp_glue.c | 5 ++---
+ drivers/pci/hotplug/acpiphp_glue.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Alex
-
-
-
-Thanks,
-
-Alex
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -557,9 +557,6 @@ static int __ref enable_device(struct ac
+ 	int num, max, pass;
+ 	LIST_HEAD(add_list);
+ 
+-	if (slot->flags & SLOT_ENABLED)
+-		goto err_exit;
+-
+ 	list_for_each_entry(func, &slot->funcs, sibling)
+ 		acpiphp_bus_add(func_to_handle(func));
+ 
+@@ -1036,11 +1033,14 @@ void acpiphp_remove_slots(struct pci_bus
+  */
+ int acpiphp_enable_slot(struct acpiphp_slot *slot)
+ {
+-	int retval;
++	int retval = 0;
+ 
+ 	mutex_lock(&slot->crit_sect);
++
+ 	/* configure all functions */
+-	retval = enable_device(slot);
++	if (!(slot->flags & SLOT_ENABLED))
++		retval = enable_device(slot);
++
+ 	mutex_unlock(&slot->crit_sect);
+ 	return retval;
+ }
 
