@@ -1,140 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:52545 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754946Ab3GTUoy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jul 2013 16:44:54 -0400
-Received: by mail-wg0-f43.google.com with SMTP id z11so4724749wgg.34
-        for <linux-pci@vger.kernel.org>; Sat, 20 Jul 2013 13:44:53 -0700 (PDT)
-From: Tom Gundersen <teg@jklm.no>
-To: linux-pci@vger.kernel.org
-Cc: Tom Gundersen <teg@jklm.no>, systemd-devel@lists.freedesktop.org
-Subject: [PATCH][pciutils] lspci: pci_id_lookup - add udev/hwdb support
-Date: Sat, 20 Jul 2013 22:44:40 +0200
-Message-Id: <1374353080-15837-1-git-send-email-teg@jklm.no>
+Received: from mga03.intel.com ([143.182.124.21]:18429 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933013Ab3GLNNY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Jul 2013 09:13:24 -0400
+Date: Fri, 12 Jul 2013 16:18:50 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: Re: [RFC][PATCH 0/30] ACPI / hotplug / PCI: Major rework +
+ Thunderbolt workarounds
+Message-ID: <20130712131850.GL4898@intel.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+ <3718119.FLASu5DBx8@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This lets you select hwdb support at compile time.
+On Fri, Jul 12, 2013 at 01:34:20AM +0200, Rafael J. Wysocki wrote:
+> Hi,
+> 
+> I've made some progress with my ACPIPHP rework since I posted the series last
+> time and here goes an update.
+> 
+> First off, the previous series was somewhat racy, which should be fixed now.
+> Apart from this there's quite some new material on top of the patches I posted
+> last time (or rather on top of their new versions) and I integrated the
+> Thunderbolt series from Mika with that.  As a result,
+> 
+> https://patchwork.kernel.org/patch/2817341/
+> 
+> is required to be applied.
 
-hwdb is an efficient hardware database shipped with recent versions of systemd/udev. It contains
-among other sources pci.ids so querying hwdb rather than reading pci.ids directly should give
-the same result.
+With the above mentioned patch applied + fix for patch [23/30], I tested
+this series on Acer Aspire S5 and Intel DZ77RE-75K desktop and Thunderbolt
+works just fine :-)
 
-Ideally Linux distros using systemd would like to not ship pci.ids, but use hwdb as the only source
-of this information, which this patch allows.
+You can add
 
-Cc: systemd-devel@lists.freedesktop.org
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
----
- lib/configure    | 17 ++++++++++++++++
- lib/names-hash.c | 59 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 74 insertions(+), 2 deletions(-)
+to the series.
 
-diff --git a/lib/configure b/lib/configure
-index 4ae20d4..674d3ea 100755
---- a/lib/configure
-+++ b/lib/configure
-@@ -141,6 +141,23 @@ esac
- echo >>$c '#define PCI_HAVE_PM_DUMP'
- echo " dump"
- 
-+echo_n "Checking for udev hwdb support... "
-+if [ "$HWDB" = yes -o "$HWDB" = no ] ; then
-+	echo "$HWDB (set manually)"
-+else
-+	if [ -f /usr/include/libudev.h -o -f /usr/local/include/libudev.h ] ; then
-+		HWDB=yes
-+	else
-+		HWDB=no
-+	fi
-+	echo "$HWDB (auto-detected)"
-+fi
-+if [ "$HWDB" = yes ] ; then
-+	echo >>$c '#define PCI_HAVE_HWDB'
-+	echo >>$m 'LIBUDEV=-ludev'
-+	echo >>$m 'WITH_LIBS+=$(LIBUDEV)'
-+fi
-+
- echo_n "Checking for zlib support... "
- if [ "$ZLIB" = yes -o "$ZLIB" = no ] ; then
- 	echo "$ZLIB (set manually)"
-diff --git a/lib/names-hash.c b/lib/names-hash.c
-index 33f3c11..9661d03 100644
---- a/lib/names-hash.c
-+++ b/lib/names-hash.c
-@@ -11,6 +11,11 @@
- #include "internal.h"
- #include "names.h"
- 
-+#ifdef PCI_HAVE_HWDB
-+#include <libudev.h>
-+#include <stdio.h>
-+#endif
-+
- struct id_bucket {
-   struct id_bucket *next;
-   unsigned int full;
-@@ -86,8 +91,58 @@ char
- *pci_id_lookup(struct pci_access *a, int flags, int cat, int id1, int id2, int id3, int id4)
- {
-   struct id_entry *n, *best;
--  u32 id12 = id_pair(id1, id2);
--  u32 id34 = id_pair(id3, id4);
-+  u32 id12, id34;
-+
-+#ifdef PCI_HAVE_HWDB
-+  if (!(flags & PCI_LOOKUP_SKIP_LOCAL))
-+    {
-+      char modalias[64];
-+      const char *key = NULL;
-+      struct udev *udev = udev_new();
-+      struct udev_hwdb *hwdb = udev_hwdb_new(udev);
-+      struct udev_list_entry *entry;
-+
-+      switch(cat)
-+        {
-+        case ID_VENDOR:
-+          sprintf(modalias, "pci:v%08X*", id1);
-+          key = "ID_VENDOR_FROM_DATABASE";
-+          break;
-+        case ID_DEVICE:
-+          sprintf(modalias, "pci:v%08Xd%08X*", id1, id2);
-+          key = "ID_MODEL_FROM_DATABASE";
-+          break;
-+        case ID_SUBSYSTEM:
-+          sprintf(modalias, "pci:v%08Xd%08Xsv%08Xsd%08X*", id1, id2, id3, id4);
-+          key = "ID_MODEL_FROM_DATABASE";
-+          break;
-+        case ID_GEN_SUBSYSTEM:
-+          sprintf(modalias, "pci:v*d*sv%08Xsd%08X*", id1, id2);
-+          key = "ID_MODEL_FROM_DATABASE";
-+          break;
-+        case ID_CLASS:
-+          sprintf(modalias, "pci:v*d*sv*sd*bc%02X*", id1);
-+          key = "ID_PCI_CLASS_FROM_DATABASE";
-+          break;
-+        case ID_SUBCLASS:
-+          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02X*", id1, id2);
-+          key = "ID_PCI_SUBCLASS_FROM_DATABASE";
-+          break;
-+        case ID_PROGIF:
-+          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02Xi%02X*", id1, id2, id3);
-+          key = "ID_PCI_INTERFACE_FROM_DATABASE";
-+          break;
-+        }
-+
-+      if (key)
-+          udev_list_entry_foreach(entry, udev_hwdb_get_properties_list_entry(hwdb, modalias, 0))
-+              if (strcmp(udev_list_entry_get_name(entry), key) == 0)
-+                return udev_list_entry_get_value(entry);
-+    }
-+#endif
-+
-+  id12 = id_pair(id1, id2);
-+  id34 = id_pair(id3, id4);
- 
-   if (a->id_hash)
-     {
--- 
-1.8.3.3
-
+Nice cleanup!
