@@ -1,98 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:59086 "EHLO comal.ext.ti.com"
+Received: from hydra.sisk.pl ([212.160.235.94]:40342 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751935Ab3GWGaI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Jul 2013 02:30:08 -0400
-Message-ID: <51EE22DF.6090902@ti.com>
-Date: Tue, 23 Jul 2013 11:59:51 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+	id S965378Ab3GLUyh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Jul 2013 16:54:37 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: Re: [RFC][PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
+Date: Fri, 12 Jul 2013 23:04:26 +0200
+Message-ID: <5687298.pUqv2oM5bn@vostro.rjw.lan>
+In-Reply-To: <20130712131850.GL4898@intel.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <20130712131850.GL4898@intel.com>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: "'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
- part and Exynos part
-References: <002801ce8376$a807dbf0$f81793d0$@samsung.com> <51ED49D6.9050209@ti.com> <000701ce8741$fe47deb0$fad79c10$@samsung.com>
-In-Reply-To: <000701ce8741$fe47deb0$fad79c10$@samsung.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Friday, July 12, 2013 04:18:50 PM Mika Westerberg wrote:
+> On Fri, Jul 12, 2013 at 01:34:20AM +0200, Rafael J. Wysocki wrote:
+> > Hi,
+> > 
+> > I've made some progress with my ACPIPHP rework since I posted the series last
+> > time and here goes an update.
+> > 
+> > First off, the previous series was somewhat racy, which should be fixed now.
+> > Apart from this there's quite some new material on top of the patches I posted
+> > last time (or rather on top of their new versions) and I integrated the
+> > Thunderbolt series from Mika with that.  As a result,
+> > 
+> > https://patchwork.kernel.org/patch/2817341/
+> > 
+> > is required to be applied.
+> 
+> With the above mentioned patch applied + fix for patch [23/30], I tested
+> this series on Acer Aspire S5 and Intel DZ77RE-75K desktop and Thunderbolt
+> works just fine :-)
+> 
+> You can add
+> 
+> Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> 
+> to the series.
 
-On Tuesday 23 July 2013 06:44 AM, Jingoo Han wrote:
-> On Tuesday, July 23, 2013 12:04 AM, Kishon Vijay Abraham I wrote:
->> On Thursday 18 July 2013 10:51 AM, Jingoo Han wrote:
->>> Exynos PCIe IP consists of Synopsys specific part and Exynos
->>> specific part. Only core block is a Synopsys designware part;
->>> other parts are Exynos specific.
->>> Also, the Synopsys designware part can be shared with other
->>> platforms; thus, it can be split two parts such as Synopsys
->>> designware part and Exynos specific part.
->>
->> some more queries and comments..
-> 
-.
-.
-<snip>
-.
-.
->>> +			of_pci_range_to_resource(&range, np, &pp->cfg);
->>> +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
->>> +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
->>> +		}
->>> +	}
->>> +
->>> +	pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
->>> +				resource_size(&pp->cfg));
->>
->> Why is configuraion space divided into two?
-> 
-> Sorry, I don't know the exact reason. :(
-> Pratyush Anand may know about this.
-> Pratyush Anand, could you answer the question?
-> 
-> Also, if you find some problems, please let me know.
-> 
-> 
->> Why should it be same as dbi_base?
->> AFAIK, jacinto6 has a dedicated configuration/io/memory space that is entirely
->> different from dbi_base.
-> 
-> According to the Synopsys designware PCIe datasheet,
-> in chapter 5.1.1 Register Space Layout,
-> 'Port Logic Registers' are placed between (config space 0x0 + 0x700)
-> and (config space 0x0 + 0xFFF).
-> 'dbi_base' is used for reading/writing 'Port Logic Registers'.
-> Exynos are using 'dbi_base' like this. Thus, the base addresses of
-> both 'dbi_base' and configuration/io/memory space are same.
-> 
-> Just now, I looked at Spear PCIe driver.
-> However, in the case of Spear, the base address of configuration/io/memory
-> space is defined as 0x80000000. The base address of 'Port Logic Registers'
-> is defined as 0xb1000000.
-> I think that the situation of 'jacinto6' is similar with Spear, right?
-> 
-> Then, I will move pp->dbi_base mapping code from pcie-designware.c
-> to pci-exynos.c.
+Thanks a lot, that's really helpful!
 
-I think you need not move this to exynos (since registers in dbi_base is common
-for all platforms) but modify the pcie-designware.c to use different address
-space for dbi_base. In your case, you'll duplicate the address space for
-dbi_base and configuration space.
+Now I can rebase it on the previous cleanups and we'll see how that all
+together works on top of the Linus' current. :-)
 
-Also I have one more query.
-In your dt binding, your pci address and cpu address is the same. But the pci
-address should start at 0x00000000 and end at 0xffffffff (for 32bit). Shouldn't
-the cpu address map to something within this range of pci address?
+> Nice cleanup!
 
-Thanks
-Kishon
+Thanks!
+
