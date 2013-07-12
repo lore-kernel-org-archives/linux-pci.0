@@ -1,68 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:60431 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756584Ab3G3Pkj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jul 2013 11:40:39 -0400
-Received: by mail-oa0-f54.google.com with SMTP id o6so440416oag.13
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jul 2013 08:40:39 -0700 (PDT)
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:42508 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932884Ab3GLRPi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2013 13:15:38 -0400
+Date: Fri, 12 Jul 2013 10:15:30 -0700
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V2] pci: exynos: split into two parts such as Synopsys
+ part and Exynos part
+Message-ID: <20130712171529.GA9620@dhcp-172-17-186-34.nvidia.com>
+References: <001201ce7dfa$716b3370$54419a50$@samsung.com>
+ <20130711154121.GC2198@dhcp-172-17-186-34.nvidia.com>
+ <000301ce7e8e$4b7d9420$e278bc60$@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <8048720.q4LxpIqNkE@vostro.rjw.lan>
-References: <1375151550-28632-1-git-send-email-tianyu.lan@intel.com> <8048720.q4LxpIqNkE@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 30 Jul 2013 09:40:18 -0600
-Message-ID: <CAErSpo7XGa+t0g3Zp+4tXwS8JdAa5UonN7rt6dSZpEmDZuXP7w@mail.gmail.com>
-Subject: Re: [PATCH] PCI/ACPI: Change dev_info() to dev_dbg() in the acpi_pci_set_power_state()
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "lan,Tianyu" <tianyu.lan@intel.com>, Len Brown <lenb@kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="wRRV7LY7NUeQGEoC"
+In-Reply-To: <000301ce7e8e$4b7d9420$e278bc60$@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 30, 2013 at 7:59 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Tuesday, July 30, 2013 10:32:30 AM tianyu.lan@intel.com wrote:
->> From: Lan Tianyu <tianyu.lan@intel.com>
->>
->> acpi_pci_set_power_state() produces log of device power state changing.
->> Now the log is produced by dev_info(). This seems make no sense when user
->> doesn't open debug option. So change it to dev_dbg() and prevent kernel
->> log from being.
->>
->> Reference: https://bugzilla.kernel.org/show_bug.cgi?id=60636
->> Suggested-by: Alan Stern <stern@rowland.harvard.edu>
->> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
->
-> Bjorn, what do you think about this?
 
-It's fine with me.  For information that I want in the dmesg log all
-the time, with no special action from the user, I personally avoid
-dev_dbg() because I can never figure out whether it's enabled or not.
-But I don't use the information from this printk, so it's completely
-up to you.  Just let me know what you want.  If you have other pending
-changes to this file, you can take it, or I can put it in my tree.
+--wRRV7LY7NUeQGEoC
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Bjorn
+On Fri, Jul 12, 2013 at 08:28:05AM +0900, Jingoo Han wrote:
+> On Friday, July 12, 2013 12:41 AM, Thierry Reding wrote:
+> > On Thu, Jul 11, 2013 at 02:49:43PM +0900, Jingoo Han wrote:
+> > [...]
+> > > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> > [...]
+> > >  obj-$(CONFIG_PCI_MVEBU) +=3D pci-mvebu.o
+> > >  obj-$(CONFIG_PCIE_DW) +=3D pcie-designware.o
+> > > +obj-$(CONFIG_PCI_EXYNOS) +=3D pcie-exynos.o
+> >=20
+> > I think we should keep these sorted alphabetically. Also Tegra and
+> > Marvell are PCIe controllers but they still use the pci- prefix instead
+> > of pcie-. Perhaps it'd be good to keep consistency here? I initially
+> > chose pci- because from a software point of view it doesn't matter all
+> > that much whether it's PCI or PCIe and because the drivers are part of
+> > the PCI subsystem. However if Exynos now uses the pcie- prefix it makes
+> > it look like Tegra and Marvell are plain old PCI.
+> >=20
+>=20
+> Hi Thierry,
+>=20
+> I initially chose 'pci-' prefix such as 'pci-designware.c'.
+>=20
+> However, Pratyush Anand suggested as below:
+> "I would suggest to rename it as pcie-designware.c,
+> because synopsis pcie and pci controllers are different."
+>=20
+> If you have a good idea, please give it to me. :)
 
->> ---
->>  drivers/pci/pci-acpi.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
->> index c78cc43..fb3522957 100644
->> --- a/drivers/pci/pci-acpi.c
->> +++ b/drivers/pci/pci-acpi.c
->> @@ -210,7 +210,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->>       }
->>
->>       if (!error)
->> -             dev_info(&dev->dev, "power state changed by ACPI to %s\n",
->> +             dev_dbg(&dev->dev, "power state changed by ACPI to %s\n",
->>                        acpi_power_state_string(state_conv[state]));
->>
->>       return error;
->>
-> --
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
+Alternatively the plain old PCI variant could be suffixed -legacy or
+similar, but I guess pcie- as a prefix works okay in this case.
+
+However I still think you should sort them properly:
+
+	obj-$(CONFIG_PCIE_DW) +=3D pcie-designware.o
+	obj-$(CONFIG_PCI_EXYNOS) +=3D pci-exynos.o
+	obj-$(CONFIG_PCI_MVEBU) +=3D pci-mvebu.o
+
+Thierry
+
+--wRRV7LY7NUeQGEoC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJR4DmxAAoJEN0jrNd/PrOhGOQP/imUsGAyq5MAn4zc9TdGO3hP
+bMgEV2mNaq+VQp7y8BmV+LOaFQW4JfPZQBV0P+De75dce2eO7ZoYq8wIObXGLxt7
+9AcZOMSJFeyUixJ9WzP24ZpHJSej7kwytMPGgATphdRBS7epOMSvZTT7jwW9sfQL
+ajzmcGpYDh7gH1kW7WrGhpfcrQ/9AdhM5PoswgSHw//HCENNpXgpZrcHHacvDZD9
+/YU9U4bzQXnAjKZ641fAZUKh0VOhJVrdeSWQATCIB2aQ1jKCJKYa3uiEjftiQRtK
+oJJJAJF+5+8ZzNkzDerBAPmLBhzonPrkjXUryY5J5zA3a31jG5sEwZmcmauGlExx
+y3ajrFYdQ8JR4da/JTuc6Epnrixi7JSiCBuC8fwKE8uhhGje3TlDkgBlaPjgzPrP
+w6KS2XySrlW87slBFztakY+e9rL2pzoMb3VUxsDlTslSD4jO3dNPYa69uSSjT5bd
+LdqnkLvfE7OZLaTM16MHIs03CWNamd5zikfaUcQtAGjtjdjo2uen8fUdViDG8AZQ
+rpJvJkiwrZ/aqWAWCirjPIiWb5Xupn+RpMzY8U16e14NioDJoLWmwacqKhtBPo1/
+09Msm/2Ffev79pNEGTX05FwdgFGLd9s6m2Bjqwx8XY/uQOEkdlv8DjTlkQy/o5Li
+OPjO4ADhaF1QVHP0wqXv
+=tPL6
+-----END PGP SIGNATURE-----
+
+--wRRV7LY7NUeQGEoC--
