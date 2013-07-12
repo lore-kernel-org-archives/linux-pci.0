@@ -1,206 +1,157 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:40507
-	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757607Ab3GZXB1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 19:01:27 -0400
-Message-ID: <51F2FDF4.6060706@chelsio.com>
-Date: Fri, 26 Jul 2013 15:53:40 -0700
-From: Casey Leedom <leedom@chelsio.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [RFC][PATCH 29/30] ACPI / hotplug / PCI: Redefine enable_device() and disable_device()
+Date: Fri, 12 Jul 2013 02:07:12 +0200
+Message-ID: <1861925.09IjznyiJI@vostro.rjw.lan>
+In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Vipul Pandya <vipul@chelsio.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	tomreu@chelsio.com, divy@chelsio.com, dm@chelsio.com,
-	nirranjan@chelsio.com
-Subject: Re: [PATCH] pci: Enable bus master till the FLR completes
-References: <1372677737-15485-1-git-send-email-vipul@chelsio.com> <CAErSpo7bxZKWqdR2MCOvz4=n_pO=u59KSsHZzJMBoN8qQ+E+Dw@mail.gmail.com>
-In-Reply-To: <CAErSpo7bxZKWqdR2MCOvz4=n_pO=u59KSsHZzJMBoN8qQ+E+Dw@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the review comments. I'll work with Vipul to get these 
-properly incorporated. Answers to your comments are inline below:
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+Notice that functions enable_device() and disable_device() cannot
+fail and their return values are ignored in the majority of places,
+so redefine them as void and use the opportunity to change their
+names to enable_slot() and disable_slot(), respectively, which much
+better reflects what they do.
 
-On 07/26/13 15:27, Bjorn Helgaas wrote:
-> On Mon, Jul 1, 2013 at 5:22 AM, Vipul Pandya <vipul@chelsio.com> wrote:
->> From: Casey Leedom <leedom@chelsio.com>
->>
->> T4 can wedge if there are DMAs in flight within the chip and Bus master has
->> been disabled.  We need to have it on till the Function Level Reset completes.
->> T4 can also suffer a Head Of Line blocking problem if MSI-X interrupts are
->> disabled before the FLR has completed.
->>
->> Signed-off-by: Casey Leedom <leedom@chelsio.com>
->> ---
->>   drivers/pci/quirks.c | 91 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->>   1 file changed, 91 insertions(+)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index e85d230..6357ba1 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -3208,6 +3208,95 @@ reset_complete:
->>          return 0;
->>   }
->>
->> +/*
->> + * Device-specific reset method for Chelsio T4-based adapters.
->> + */
->> +static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
->> +{
->> +       u16 old_command;
->> +       u16 status, msix_flags;
->> +       int i, rc, msix_pos;
->> +
->> +       /*
->> +        * If this isn't a Chelsio T4-based device, return -ENOTTY indicating
->> +        * that we have no device-specific reset method.
->> +        */
->> +       if ((dev->device & 0xf000) != 0x4000)
->> +               return -ENOTTY;
->> +
->> +       /*
->> +        * If this is the "probe" phase, return 0 indicating that we can
->> +        * reset this device.
->> +        */
->> +       if (probe)
->> +               return 0;
->> +
->> +       /*
->> +        * T4 can wedge if their are DMAs in flight within the chip and Bus
->> +        * master has been disabled.  We need to have it on till the Function
->> +        * Level Reset completes.
->> +        */
->> +       pci_read_config_word(dev, PCI_COMMAND, &old_command);
->> +       pci_write_config_word(dev, PCI_COMMAND,
->> +                             old_command | PCI_COMMAND_MASTER);
->> +
->> +       /*
->> +        * Perform the actual device function reset, saving and restoring
->> +        * configuration information around the reset.
->> +        */
->> +       pci_save_state(dev);
->> +
->> +       /*
->> +        * T4 also suffers a Head-Of-Line blocking problem if MSI-X interrupts
->> +        * are disabled when an MSI-X interrupt message needs to be delivered.
->> +        * So we briefly re-enable MSI-X interrupts for the duration of the
->> +        * FLR.  The pci_restore_state() below will restore the original
->> +        * MSI-X state.
->> +        */
->> +       msix_pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> dev->msix_cap contains the capability offset already.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   33 ++++++++++++---------------------
+ 1 file changed, 12 insertions(+), 21 deletions(-)
 
-Thanks. I didn't know about that.
-
->> +       pci_read_config_word(dev, msix_pos+PCI_MSIX_FLAGS, &msix_flags);
->> +       if ((msix_flags & PCI_MSIX_FLAGS_ENABLE) == 0)
->> +               pci_write_config_word(dev, msix_pos+PCI_MSIX_FLAGS,
->> +                                     msix_flags |
->> +                                     PCI_MSIX_FLAGS_ENABLE |
->> +                                     PCI_MSIX_FLAGS_MASKALL);
->> +
->> +       /*
->> +        * This reset code is a copy of the guts of pcie_flr() because that's
->> +        * not an exported function.
->> +        */
->> +
->> +       /* Wait for Transaction Pending bit clean */
->> +       for (i = 0; i < 4; i++) {
->> +               if (i)
->> +                       msleep((1 << (i - 1)) * 100);
->> +
->> +               pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
->> +               if (!(status & PCI_EXP_DEVSTA_TRPND))
->> +                       goto clear;
->> +       }
-> This is at least the fifth copy of this loop:
->
->    pcie_flr()
->    pci_af_flr()
->    bnx2x_do_flr()
->    reset_intel_82599_sfp_virtfn()
->
-> Can we factor this out and just implement it once?  Maybe even make it
-> smart enough to look at the PCIe DEVSTA if it exists, and fall back to
-> using PCI_AF_STATUS register if *it* exists?
-
-Should such a task be taken up in the patch we're trying to submit or 
-should it be a follow on patch? I had thought that, in general, patches 
-were supposed to essentially do "one thing." Thanks for your insight on 
-this.
-
->> +
->> +       dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
->> +
->> +clear:
->> +       pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
->> +       msleep(100);
->> +
->> +       /*
->> +        * End of pcie_flr() code sequence.
->> +        */
->> +
->> +       rc = 0;
->> +       pci_restore_state(dev);
->> +
->> +       /*
->> +        * Restore the original PCI Configuration Space Command word (which
->> +        * probably had Bus Master disabled).
-> Why was Bus Master probably originally disabled?  I don't see anything
-> in the pci_reset_function() path that would have disabled it before
-> getting to this function.
->
-> But I don't think you need the comment anyway.  "Probably had Bus
-> Master disabled" isn't anything one can rely on.
-
-Sorry, I probably should have included our example. In this case it's 
-coming from KVM's kvm_free_assigned_device() routine which calls 
-pci_reset_function() where we do:
-
-/*
-* both INTx and MSI are disabled after the Interrupt Disable bit
-* is set and the Bus Master bit is cleared.
-*/
-pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
-
-rc = pci_dev_reset(dev, 0);
-
-The pci_dev_reset(dev, 0) eventually dives into pcie_flr() where the 
-Function Level Reset is performed — with Bus Master cleared by 
-pci_reset_function() as above.
-
-I'm happy to enhance the comment with this information since I'm a 
-comment maven.
-
->> +        */
->> +       pci_write_config_word(dev, PCI_COMMAND, old_command);
->> +       return rc;
-> "rc" appears useless.
-
-I agree. I was probably trying to follow coding styles as slavishly as 
-possible with some intermediate coding efforts and didn't see that the 
-final result had made "rc" pointless.
-
-Casey
-
->> +}
->> +
->>   #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
->>   #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
->>   #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
->> @@ -3221,6 +3310,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->>                  reset_ivb_igd },
->>          { PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
->>                  reset_intel_generic_dev },
->> +       { PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
->> +               reset_chelsio_generic_dev },
->>          { 0 }
->>   };
->>
->> --
->> 1.8.0
->>
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -543,13 +543,13 @@ static void check_hotplug_bridge(struct
+ }
+ 
+ /**
+- * enable_device - enable, configure a slot
++ * enable_slot - enable, configure a slot
+  * @slot: slot to be enabled
+  *
+  * This function should be called per *physical slot*,
+  * not per each slot object in ACPI namespace.
+  */
+-static int __ref enable_device(struct acpiphp_slot *slot)
++static void __ref enable_slot(struct acpiphp_slot *slot)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *bus = slot->bus;
+@@ -567,6 +567,7 @@ static int __ref enable_device(struct ac
+ 		list_for_each_entry(dev, &bus->devices, bus_list) {
+ 			if (PCI_SLOT(dev->devfn) != slot->device)
+ 				continue;
++
+ 			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+ 			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+ 				max = pci_scan_bridge(bus, dev, max, pass);
+@@ -605,8 +606,6 @@ static int __ref enable_device(struct ac
+ 			continue;
+ 		}
+ 	}
+-
+-	return 0;
+ }
+ 
+ /* return first device in slot, acquiring a reference on it */
+@@ -628,16 +627,16 @@ static struct pci_dev *dev_in_slot(struc
+ }
+ 
+ /**
+- * disable_device - disable a slot
++ * disable_slot - disable a slot
+  * @slot: ACPI PHP slot
+  */
+-static int disable_device(struct acpiphp_slot *slot)
++static void disable_slot(struct acpiphp_slot *slot)
+ {
+ 	struct acpiphp_func *func;
+ 	struct pci_dev *pdev;
+ 
+ 	/*
+-	 * enable_device() enumerates all functions in this device via
++	 * enable_slot() enumerates all functions in this device via
+ 	 * pci_scan_slot(), whether they have associated ACPI hotplug
+ 	 * methods (_EJ0, etc.) or not.  Therefore, we remove all functions
+ 	 * here.
+@@ -651,8 +650,6 @@ static int disable_device(struct acpiphp
+ 		acpiphp_bus_trim(func_to_handle(func));
+ 
+ 	slot->flags &= (~SLOT_ENABLED);
+-
+-	return 0;
+ }
+ 
+ 
+@@ -723,9 +720,9 @@ static void acpiphp_check_bridge(struct
+ 					pci_trim_stale_devices(dev);
+ 
+ 			/* configure all functions */
+-			enable_device(slot);
++			enable_slot(slot);
+ 		} else {
+-			disable_device(slot);
++			disable_slot(slot);
+ 		}
+ 		mutex_unlock(&slot->crit_sect);
+ 	}
+@@ -832,7 +829,7 @@ static void hotplug_event(acpi_handle ha
+ 			struct acpiphp_slot *slot = func->slot;
+ 
+ 			mutex_lock(&slot->crit_sect);
+-			enable_device(slot);
++			enable_slot(slot);
+ 			mutex_unlock(&slot->crit_sect);
+ 		}
+ 		break;
+@@ -1019,16 +1016,13 @@ void acpiphp_remove_slots(struct pci_bus
+  */
+ int acpiphp_enable_slot(struct acpiphp_slot *slot)
+ {
+-	int retval = 0;
+-
+ 	mutex_lock(&slot->crit_sect);
+-
+ 	/* configure all functions */
+ 	if (!(slot->flags & SLOT_ENABLED))
+-		retval = enable_device(slot);
++		enable_slot(slot);
+ 
+ 	mutex_unlock(&slot->crit_sect);
+-	return retval;
++	return 0;
+ }
+ 
+ /**
+@@ -1045,9 +1039,7 @@ int acpiphp_disable_and_eject_slot(struc
+ 	mutex_lock(&slot->crit_sect);
+ 
+ 	/* unconfigure all functions */
+-	retval = disable_device(slot);
+-	if (retval)
+-		goto err_exit;
++	disable_slot(slot);
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling) {
+ 		/* We don't want to call _EJ0 on non-existing functions. */
+@@ -1070,7 +1062,6 @@ int acpiphp_disable_and_eject_slot(struc
+ 		}
+ 	}
+ 
+- err_exit:
+ 	mutex_unlock(&slot->crit_sect);
+ 	return retval;
+ }
 
