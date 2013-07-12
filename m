@@ -1,126 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:34005 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753105Ab3GPIaG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2013 04:30:06 -0400
-Date: Tue, 16 Jul 2013 10:29:50 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Russell King <linux@arm.linux.org.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCHv5 08/11] ARM: pci: add ->add_bus() and ->remove_bus()
- hooks to hw_pci
-Message-ID: <20130716102950.6a7023ae@skate>
-In-Reply-To: <1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:58641 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932650Ab3GLRbM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2013 13:31:12 -0400
+Date: Fri, 12 Jul 2013 10:31:02 -0700
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
+Subject: Re: [PATCH V2] pci: exynos: split into two parts such as Synopsys
+ part and Exynos part
+Message-ID: <20130712173101.GA9677@dhcp-172-17-186-34.nvidia.com>
+References: <001201ce7dfa$716b3370$54419a50$@samsung.com>
+ <51DFD3F3.9050704@ti.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="SLDf9lqlvOQaIe6s"
+In-Reply-To: <51DFD3F3.9050704@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Russell,
 
-Would it be possible to have your opinion on the below patch? It has
-already been sent on June, 19th and July, 1st, and I'd really like to
-see it merged for 3.12, as part of this series enabling MSI support for
-the Marvell PCIe driver.
+--SLDf9lqlvOQaIe6s
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks!
+On Fri, Jul 12, 2013 at 03:31:23PM +0530, Kishon Vijay Abraham I wrote:
+> Hi,
+>=20
+> On Thursday 11 July 2013 11:19 AM, Jingoo Han wrote:
+[...]
+> >  	/* set the number of lines as 4 */
+> > -	readl_rc(pp, dbi_base + PCIE_PORT_LINK_CONTROL, &val);
+> > +	dw_pcie_readl_rc(pp, dbi_base + PCIE_PORT_LINK_CONTROL, &val);
+> >  	val &=3D ~PORT_LINK_MODE_MASK;
+> >  	val |=3D PORT_LINK_MODE_4_LANES;
+> > -	writel_rc(pp, val, dbi_base + PCIE_PORT_LINK_CONTROL);
+> > +	dw_pcie_writel_rc(pp, val, dbi_base + PCIE_PORT_LINK_CONTROL);
+>=20
+> I guess here we need to make this configurable. In Jacinto6 this can be e=
+ither
+> single lane or double lane. Maybe we should have a dt property to specify=
+ the
+> number of lanes?
 
-Thomas
+On Tegra we use nvidia,num-lanes to specify the lane count for each
+port. Perhaps standardizing on a generic num-lanes property would make
+sense? Cc'ing devicetree-discuss mailing list, maybe somebody can
+provide some guidance.
 
-On Mon, 15 Jul 2013 13:52:44 +0200, Thomas Petazzoni wrote:
-> Some PCI drivers may need to adjust the pci_bus structure after it has
-> been allocated by the Linux PCI core. The PCI core allows
-> architectures to implement the pcibios_add_bus() and
-> pcibios_remove_bus() for this purpose. This commit therefore extends
-> the hw_pci and pci_sys_data structures of the ARM PCI core to allow
-> PCI drivers to register ->add_bus() and ->remove_bus() in hw_pci,
-> which will get called when a bus is added or removed from the system.
-> 
-> This will be used for example by the Marvell PCIe driver to connect a
-> particular PCI bus with its corresponding MSI chip to handle Message
-> Signaled Interrupts.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
-> ---
->  arch/arm/include/asm/mach/pci.h |  4 ++++
->  arch/arm/kernel/bios32.c        | 16 ++++++++++++++++
->  2 files changed, 20 insertions(+)
-> 
-> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> index a1c90d7..487155c 100644
-> --- a/arch/arm/include/asm/mach/pci.h
-> +++ b/arch/arm/include/asm/mach/pci.h
-> @@ -36,6 +36,8 @@ struct hw_pci {
->  					  resource_size_t start,
->  					  resource_size_t size,
->  					  resource_size_t align);
-> +	void            (*add_bus)(struct pci_bus *bus);
-> +	void            (*remove_bus)(struct pci_bus *bus);
->  };
->  
->  /*
-> @@ -63,6 +65,8 @@ struct pci_sys_data {
->  					  resource_size_t start,
->  					  resource_size_t size,
->  					  resource_size_t align);
-> +	void            (*add_bus)(struct pci_bus *bus);
-> +	void            (*remove_bus)(struct pci_bus *bus);
->  	void		*private_data;	/* platform controller private data	*/
->  };
->  
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index 261fcc8..530e59d 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -363,6 +363,20 @@ void pcibios_fixup_bus(struct pci_bus *bus)
->  }
->  EXPORT_SYMBOL(pcibios_fixup_bus);
->  
-> +void pcibios_add_bus(struct pci_bus *bus)
-> +{
-> +	struct pci_sys_data *sys = bus->sysdata;
-> +	if (sys->add_bus)
-> +		sys->add_bus(bus);
-> +}
-> +
-> +void pcibios_remove_bus(struct pci_bus *bus)
-> +{
-> +	struct pci_sys_data *sys = bus->sysdata;
-> +	if (sys->remove_bus)
-> +		sys->remove_bus(bus);
-> +}
-> +
->  /*
->   * Swizzle the device pin each time we cross a bridge.  If a platform does
->   * not provide a swizzle function, we perform the standard PCI swizzling.
-> @@ -464,6 +478,8 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  		sys->swizzle = hw->swizzle;
->  		sys->map_irq = hw->map_irq;
->  		sys->align_resource = hw->align_resource;
-> +		sys->add_bus        = hw->add_bus;
-> +		sys->remove_bus     = hw->remove_bus;
->  		INIT_LIST_HEAD(&sys->resources);
->  
->  		if (hw->private_data)
+Thierry
 
+--SLDf9lqlvOQaIe6s
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+iQIcBAEBAgAGBQJR4D1VAAoJEN0jrNd/PrOhb+8P/R9XTnmRnagQbeovzw36VZeY
+UFkIARUXseo9iQj6FHp+WjgQMwYV9PEe2r97NPOD2DAWTe/qIXJVfQdMBAUPjFgJ
+oueXtJIu9iG7QIKNxPI/tqTKVgQWkE+8FvxQfaH1oHZZ9ydMEn/WevP2f6jY+ZK8
+1YMCzaG6aem4QtHe6g2B56yHZafxOi59vYIVooGKmdMkyh25cnRVzm4/5K7aBV+Y
+s97UAbeeWc86qaXoTVkdIjyu57Pdv6fNqFeDRG8r3oSRMTRsgKQuUcy+rEUpGCaX
+wrATPfy82/jCAio0wKULPoxHxkoNFowf3pBl+fO/id0609Ul93OzbKWA+QavTHFq
+y9liN8BfRWA5FUjEzAelJPrxK3kc4HHTx55dsl9P71Tw4gMjwUJlD2NJrXmMcbzD
+JoJXXSGqAKVJFXp4+lp+O8KKmTvGNag8CpWsOIEgKIiJaaYNlvsMsM3OwyFq35GM
+9BoFUfB/X5eeHh1+jwr+ql7dcDnaLryoZQtLw8Ojx7NlRVivs/D8TKojxcOBfVtV
+CFm+hKjnly5yViBNwg4nwLxtfw7+7EYGuM4vSESPJspvCqUQQjZDA9/n01DDPlY1
+1Kc7BgPDV/Gx76A2Wt3qgsanJL2SrNzeRpPlC3sJwaNhID7XfIWNh43SLDWOeQT1
+d6feosqRes5b5GqnBe77
+=RM/u
+-----END PGP SIGNATURE-----
+
+--SLDf9lqlvOQaIe6s--
