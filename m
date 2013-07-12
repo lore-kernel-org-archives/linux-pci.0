@@ -1,48 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:17869 "EHLO mail1.g1.pair.com"
+Received: from mga11.intel.com ([192.55.52.93]:59687 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752801Ab3GAHkC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Jul 2013 03:40:02 -0400
-From: Sean Cross <xobs@kosagi.com>
-To: devicetree-discuss@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Sean Cross <xobs@kosagi.com>
-Subject: [PATCH 0/4] Add PCI Express to i.MX6
-Date: Mon,  1 Jul 2013 07:15:43 +0000
-Message-Id: <1372662947-27160-1-git-send-email-xobs@kosagi.com>
+	id S932834Ab3GLLsx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Jul 2013 07:48:53 -0400
+Date: Fri, 12 Jul 2013 14:54:20 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: Re: [RFC][PATCH 11/30] ACPI / hotplug / PCI: Register all devices
+ under the given bridge
+Message-ID: <20130712115420.GH4898@intel.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+ <3718119.FLASu5DBx8@vostro.rjw.lan>
+ <1910839.UjS2m1ckUq@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1910839.UjS2m1ckUq@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset adds a PCI Express driver for the Freescale i.MX6 series of 
-SoCs.  It is based on the BSP driver, available from Freescale
-athttp://git.freescale.com/git/cgit.cgi/imx/linux-2.6-imx.git
+On Fri, Jul 12, 2013 at 01:50:29AM +0200, Rafael J. Wysocki wrote:
+> @@ -1210,6 +1125,35 @@ void acpiphp_enumerate_slots(struct pci_
+>  	 */
+>  	get_device(&bus->dev);
+>  
+> +	if (!pci_is_root_bus(bridge->pci_bus)) {
+> +		struct acpiphp_context *context;
+> +
+> +		/*
+> +		 * This bridge should have been registered as a hotplug function
+> +		 * under its parent, so the context has to be there.  If not, we
+> +		 * are in deep goo.
+> +		 */
+> +		mutex_lock(&acpiphp_context_lock);
+> +		context = acpiphp_get_context(handle);
+> +		if (WARN_ON(!context || !context->func)) {
+> +			mutex_unlock(&acpiphp_context_lock);
+> +			put_device(&bus->dev);
+> +			kfree(bridge);
+> +			return;
+> +		}
+> +		bridge->context = context;
+> +		context->bridge = bridge;
+> +		/* Get a reference to the parent bridge. */
+> +		get_bridge(context->func->slot->bridge);
+> +		mutex_unlock(&acpiphp_context_lock);
+> +	}
+> +
+> +	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
+> +	if (ACPI_SUCCESS(status)) {
+> +		dbg("found ejectable p2p bridge\n");
+> +		bridge->flags |= BRIDGE_HAS_EJ0;
+> +	}
+> +
+>  	/* must be added to the list prior to calling register_slot */
+>  	mutex_lock(&bridge_mutex);
+>  	list_add(&bridge->list, &bridge_list);
+> @@ -1220,34 +1164,9 @@ void acpiphp_enumerate_slots(struct pci_
+>  				     register_slot, NULL, bridge, NULL);
+>  	if (ACPI_FAILURE(status)) {
+>  		acpi_handle_err(bridge->handle, "failed to register slots\n");
+> -		goto err;
+> -	}
+> -
+> -	if (pci_is_root_bus(bridge->pci_bus))
+> -		return;
+> -
+> -	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
+> -	if (ACPI_SUCCESS(status)) {
+> -		dbg("found ejectable p2p bridge\n");
+> -		bridge->flags |= BRIDGE_HAS_EJ0;
+> -	}
+> -	if (context->handler_for_func) {
+> -		/* Notify handler already installed. */
+> -		get_bridge(context->func->slot->bridge);
+> -		return;
+> +		cleanup_bridge(bridge);
+> +		put_bridge(bridge);
+>  	}
+> -
+> -	/* install notify handler for P2P bridges */
+> -	status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
+> -					     handle_hotplug_event, NULL);
 
-This patchset does the following:
+With this removed we now install notify handlers for the slot objects under
+this bridge but not for the bridge itself.
 
-    1) Add general-purpose LVDS clocks to drive the bus
-    2) Enable PCI Express on ARM
-    3) Add the pcie-imx driver
-    4) Add device tree bindings for imx6qdl.dtsi
+In case of Thunderbolt the BIOS will send the event for the root port ACPI
+device \_SB_.PCI0.RP05 and with the above change we don't handle it
+anymore.
 
-Sean Cross (4):
-  ARM i.MX6q: Add descriptors for LVDS clocks
-  ARM: Enable PCI Express on ARM
-  PCI: Add driver for i.MX6 PCI Express
-  ARM i.MX6: Add PCI Express to device tree
-
- .../devicetree/bindings/clock/imx6q-clock.txt      |    4 +
- .../devicetree/bindings/pci/imx6q-pcie.txt         |   20 +
- arch/arm/Kconfig                                   |    2 +
- arch/arm/boot/dts/imx6qdl.dtsi                     |   12 +
- arch/arm/mach-imx/Kconfig                          |    1 +
- arch/arm/mach-imx/clk-imx6q.c                      |   13 +-
- drivers/pci/pcie/Kconfig                           |   10 +
- drivers/pci/pcie/Makefile                          |    2 +
- drivers/pci/pcie/pcie-imx.c                        | 1049 ++++++++++++++++++++
- 9 files changed, 1111 insertions(+), 2 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/imx6q-pcie.txt
- create mode 100644 drivers/pci/pcie/pcie-imx.c
-
--- 
-1.7.9.5
-
+> -	if (ACPI_SUCCESS(status))
+> -		return;
+> -
+> -	acpi_handle_err(bridge->handle, "failed to register notify handler\n");
+> -
+> - err:
+> -	cleanup_bridge(bridge);
+> -	put_bridge(bridge);
+>  }
