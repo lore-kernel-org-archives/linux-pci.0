@@ -1,76 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12505 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757764Ab3GOO5y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Jul 2013 10:57:54 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-acpi@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>, Len Brown <lenb@kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"Myron Stowe" <mstowe@redhat.com>, linux-pci@vger.kernel.org
-Subject: [PATCH] acpi, acpi_pci_irq_enable must return an error if ACPI cannot map an IRQ.
-Date: Mon, 15 Jul 2013 10:57:40 -0400
-Message-Id: <1373900260-1599-1-git-send-email-prarit@redhat.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:29376 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932194Ab3GLBjY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 21:39:24 -0400
+Message-ID: <51DF5DFC.3090107@huawei.com>
+Date: Fri, 12 Jul 2013 09:38:04 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Don Dutile <ddutile@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>
+Subject: Re: [PATCH -v2 1/3] PCI: introduce PCIe Device Serial Number Capability
+ support
+References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com> <1373535825-49972-2-git-send-email-wangyijing@huawei.com> <51DE8032.4040808@redhat.com>
+In-Reply-To: <51DE8032.4040808@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Driver probe's currently do the following
+Hi Don,
+   Thanks for your review and comments very much!
 
-	pci_enable_device();
-	/* ... do some other init stuff, and eventually call ... */
-	request_irq();
+>> +    dev->sn = pci_device_serial_number(dev);
+>> +
+> Finally, 'the comment below':
+> I know you were following Bjorn's suggestion, which I thought
+> was an improvement, but why not do above assignment in pci_device_serial_number() ?
 
-After pci_enable_device() is called it is assumed that the device's irq
-value (pci_dev->irq) has been appropriately set on success.  This value
-is passed into the request_irq() call.
+I don't do assignment in pci_device_serial_number() because pci_device_serial_number()
+is an EXPORT_SYMBOL, and will be used to get dsn for non-scaned device, for example:
 
-In the case that ACPI is used to determine the irq value, it is possible
-that the ACPI IRQ look up for a specific device fails and success is
-returned by pci_enable_device().
+1. we have pcie device in slot before suspend.
+2. we removed the device during suspend.
+3. we reinserted a new device during suspend.
+4. we should check the device change during resume, so we
+try to use pcie device serial number to identify changes.
+But the pci_dev structure maybe the old stale data. So
+I prefer to get dsn by return.
 
-The call sequence is:
+what about this:
 
-pci_enable_device();
-	-> pci_enable_device_flags();
-		->do_pci_enable_device();
-			-> pcibios_enable_device() which, if the device
-			   does not use MSI calls
-			   -> pcibios_enable_irq() which maps to
-			      acpi_pci_irq_enable()
-				-> acpi_pci_irq_lookup()
+static void pci_init_capabilities(struct pci_dev *dev)
+    ........
+    pci_dsn_init(dev);
+    ..........
 
-If acpi_pci_irq_lookup() cannot map the device's IRQ value it returns NULL
-as an error.  The error is returned to acpi_pci_irq_enable(), but is not
-propagated further.  This can result in the driver returning success for
-pci_enable_device() and the driver probe attempting to call request_irq()
-with dev->irq = 0.
 
-This patch modifies acpi_pci_irq_enable() to return an error in the case
-that an entry is not found in the ACPI tables.
+void pci_dsn_init(dev)
+{
+    dev->sn = pci_device_serial_number(dev);
+}
 
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-Cc: Len Brown <lenb@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>
-Cc: "Myron Stowe" <mstowe@redhat.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/acpi/pci_irq.c |    1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 41c5e1b..9681847 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -430,6 +430,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		} else {
- 			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
- 				 pin_name(pin));
-+			return -ENOENT;
- 		}
- 
- 		return 0;
+
+> See above....
+> - Don
+> 
+>>       /* Vital Product Data */
+>>       pci_vpd_pci22_init(dev);
+>>
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 0fd1f15..10d190b 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -342,6 +342,7 @@ struct pci_dev {
+>>       struct list_head msi_list;
+>>       struct kset *msi_kset;
+>>   #endif
+>> +    u64 sn;        /* device serieal number, 0 if not support */
+>>       struct pci_vpd *vpd;
+>>   #ifdef CONFIG_PCI_ATS
+>>       union {
+>> @@ -995,6 +996,8 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+>>   ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+>>   int pci_vpd_truncate(struct pci_dev *dev, size_t size);
+>>
+>> +u64 pci_device_serial_number(struct pci_dev *dev);
+>> +
+>>   /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+>>   resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+>>   void pci_bus_assign_resources(const struct pci_bus *bus);
+> 
+> 
+> .
+> 
+
+
 -- 
-1.7.9.3
+Thanks!
+Yijing
 
