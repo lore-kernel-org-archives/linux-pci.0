@@ -1,105 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:59620 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:20960 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759242Ab3GaJ7r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 31 Jul 2013 05:59:47 -0400
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: davem@davemloft.net, bhelgaas@google.com
-Cc: Jacob Keller <jacob.e.keller@intel.com>, netdev@vger.kernel.org,
-	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: [net-next v2 10/15] PCI: Add function to obtain minimum link width and speed
-Date: Wed, 31 Jul 2013 02:59:32 -0700
-Message-Id: <1375264777-13595-11-git-send-email-jeffrey.t.kirsher@intel.com>
-In-Reply-To: <1375264777-13595-1-git-send-email-jeffrey.t.kirsher@intel.com>
-References: <1375264777-13595-1-git-send-email-jeffrey.t.kirsher@intel.com>
+	id S932525Ab3GLLBj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Jul 2013 07:01:39 -0400
+Message-ID: <51DFA9CA.7010807@redhat.com>
+Date: Fri, 12 Jul 2013 03:01:30 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org, joro@8bytes.org,
+	andihartmann@01019freenet.de, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/3] pci: ACS fixes & quirks
+References: <20130627222159.16564.38166.stgit@bling.home> <1373300262.2602.22.camel@ul30vt.home>
+In-Reply-To: <1373300262.2602.22.camel@ul30vt.home>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jacob Keller <jacob.e.keller@intel.com>
+On 07/08/2013 12:17 PM, Alex Williamson wrote:
+> Ping.  Comments?
+>
+As I read the PCIe & SRIOV specs wrt ACS, this patch set appears
+to fix the nuances we have learned about whether a device (MFD or bridge)
+implements (the equiv. of) ACS, or not, as required (for secure, device assignment).
+Like the layering of which flag bits to check based on ACS control/enablement,
+so it de-complicated the per-PCIe-type checking in pci_acs_enabled().
 
-A PCI Express device can potentially report a link width and speed which it will
-not properly fulfill due to being plugged into a slower link higher in the
-chain. This function walks up the PCI bus chain and calculates the minimum link
-width and speed of this entire chain. This can be useful to enable a device to
-determine if it has enough bandwidth for optimum functionality.
+You can add my ack to the patch set...
 
-Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
-Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
----
- drivers/pci/pci.c   | 43 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |  2 ++
- 2 files changed, 45 insertions(+)
+Acked-by: Donald Dutile <ddutile@redhat.com>
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e37fea6..c71e78c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3579,6 +3579,49 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
- }
- 
- /**
-+ * pcie_get_minimum_link - determine minimum link settings of a PCI device
-+ * @dev: PCI device to query
-+ * @speed: storage for minimum speed
-+ * @width: storage for minimum width
-+ *
-+ * This function will walk up the PCI device chain and determine the minimum
-+ * link width and speed of the device.
-+ */
-+int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-+			  enum pcie_link_width *width)
-+{
-+	int ret;
-+
-+	*speed = PCI_SPEED_UNKNOWN;
-+	*width = PCIE_LNK_WIDTH_UNKNOWN;
-+
-+	while (dev) {
-+		u16 lnksta;
-+		enum pci_bus_speed next_speed;
-+		enum pcie_link_width next_width;
-+
-+		ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-+		if (ret)
-+			return ret;
-+
-+		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
-+		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
-+			PCI_EXP_LNKSTA_NLW_SHIFT;
-+
-+		if (next_speed < *speed)
-+			*speed = next_speed;
-+
-+		if (next_width < *width)
-+			*width = next_width;
-+
-+		dev = dev->bus->self;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(pcie_get_minimum_link);
-+
-+/**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-  * @flags: resource type mask to be selected
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a0bf22d..2edbee6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -934,6 +934,8 @@ int pcie_get_readrq(struct pci_dev *dev);
- int pcie_set_readrq(struct pci_dev *dev, int rq);
- int pcie_get_mps(struct pci_dev *dev);
- int pcie_set_mps(struct pci_dev *dev, int mps);
-+int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-+			  enum pcie_link_width *width);
- int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
--- 
-1.7.11.7
+ps -- I'll patch a kernel & test it out on a few knarly configs I have back in 
+the lab
+         when I back from vacation and report any issues I find, if any.
+
+> On Thu, 2013-06-27 at 16:39 -0600, Alex Williamson wrote:
+>> v2:
+>>
+>> Revised patch 1/ to match comments from Bjorn.  PCIe event collectors
+>> and PCIe-to-PCI bridges now indicate that they do not support ACS.
+>> I've reached out to try to get clarification on this, but I think it's
+>> reasonable to proceed with a conservative approach until then.  I also
+>> added PCI-to-PCIe bridges for the sake of being complete.  Also added
+>> more comments about the purpose and behavior of pci_acs_enabled().  If
+>> I've overlooked anything else that needs to be addressed, please let
+>> me know.
+>>
+>> Patch 2/ had no comments, it's unchanged.
+>>
+>> Patch 3/ is added.  This was sent as an RFC nearly a year ago and
+>> Joerg confirmed for us that these devices do not support p2p on AMD
+>> systems with AMD IOMMU.  We can't simply use iommu_present() to test
+>> for an IOMMU because it's setup just after we need this function.
+>> Instead we test for the ACPI IVRS table that describes the IOMMU.  It
+>> would probably suffice to skip an actual AMD IOMMU check, but I don't
+>> want it to later come bite us if these ASICs get re-used, maybe with
+>> a different IOMMU, and don't make the same guarantees.
+>>
+>> Joerg, I was also curious back when we investigated this patch if the
+>> same rules hold true for these other southbridge devices:
+>>
+>> 1002:43a0 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
+>> 1002:43a1 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
+>> 1002:43a2 SB900 PCI to PCI bridge (PCIE port 2)
+>> 1002:43a3 SB900 PCI to PCI bridge (PCIE port 3)
+>>
+>> If you remember or have contacts to poke, I'd be happy to follow-up
+>> with another patch to add them.  Thanks,
+>>
+>> Alex
+>>
+>> ---
+>>
+>> Alex Williamson (3):
+>>        pci: Fix flaw in pci_acs_enabled()
+>>        pci: Differentiate ACS controllable from enabled
+>>        pci: ACS quirk for AMD southbridge
+>>
+>>
+>>   drivers/pci/pci.c    |   93 +++++++++++++++++++++++++++++++++++++++++---------
+>>   drivers/pci/quirks.c |   50 +++++++++++++++++++++++++++
+>>   2 files changed, 127 insertions(+), 16 deletions(-)
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
