@@ -1,128 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:35828 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756506Ab3GKUJe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 16:09:34 -0400
-Received: by mail-oa0-f50.google.com with SMTP id k7so11808159oag.23
-        for <linux-pci@vger.kernel.org>; Thu, 11 Jul 2013 13:09:33 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 12 Jul 2013 16:01:59 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: Re: [RFC][PATCH 11/30] ACPI / hotplug / PCI: Register all devices
+ under the given bridge
+Message-ID: <20130712130159.GJ4898@intel.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+ <3718119.FLASu5DBx8@vostro.rjw.lan>
+ <1910839.UjS2m1ckUq@vostro.rjw.lan>
+ <20130712115420.GH4898@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <51DE8032.4040808@redhat.com>
-References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
- <1373535825-49972-2-git-send-email-wangyijing@huawei.com> <51DE8032.4040808@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 11 Jul 2013 14:09:11 -0600
-Message-ID: <CAErSpo50ni41TiscZDVpg8wMFK2wgWmS1sySfNTs8X9JA7Mmkw@mail.gmail.com>
-Subject: Re: [PATCH -v2 1/3] PCI: introduce PCIe Device Serial Number
- Capability support
-To: Don Dutile <ddutile@redhat.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130712115420.GH4898@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 11, 2013 at 3:51 AM, Don Dutile <ddutile@redhat.com> wrote:
-> On 07/11/2013 05:43 AM, Yijing Wang wrote:
->>
->> Introduce PCIe Ext Capability Device Serial Number support,
->> so we can use the unique device serial number to identify
->> the physical device. During system suspend, if the PCIe
->> device was removed and inserted a new same device, after
->> system resume there is no good way to identify it, maybe
->> Device Serial Number is a good choice if device support.
->>
->> Signed-off-by: Yijing Wang<wangyijing@huawei.com>
->> ---
->>   drivers/pci/pci.c   |   27 +++++++++++++++++++++++++++
->>   drivers/pci/probe.c |    2 ++
->>   include/linux/pci.h |    3 +++
->>   3 files changed, 32 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index e37fea6..2e855b5 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -2048,6 +2048,33 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
->>   }
->>
->>   /**
->> + * pci_device_serial_number - get device serial number
->> + * @dev: the PCI device
->> + *
->> + * return the device serial number if device support,
->> + * otherwise return 0.
->> + */
->> +u64 pci_device_serial_number(struct pci_dev *dev)
->
-> See comment below:
-> void  pci_device_serial_number(struct pci_dev *dev)
->
->
->> +{
->> +       int pos;
->> +       u64 sn;
->> +       u32 lo, hi;
->> +
->> +       if (!pci_is_pcie(dev))
->> +               return 0;
->> +
->
-> See comment below:
-> if (!pci_is_pcie(dev)) {
->         dev->sn = 0;
->         return;
->
-> }
->>
->> +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
->> +       if (!pos)
->> +               return 0;
->> +
->> +       pci_read_config_dword(dev, pos + 4,&lo);
->> +       pci_read_config_dword(dev, pos + 8,&hi);
->> +       sn = ((u64)hi<<  32) | lo;
->
-> See comment below:
->         dev->sn = ((u64)hi<<  32) | lo;
->         return;
->
->> +       return sn;
->> +}
->> +EXPORT_SYMBOL(pci_device_serial_number);
->> +
->> +/**
->>    * pci_configure_ari - enable or disable ARI forwarding
->>    * @dev: the PCI device
->>    *
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 46ada5c..c4c1a2b 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1322,6 +1322,8 @@ static void pci_init_capabilities(struct pci_dev
->> *dev)
->>         /* Power Management */
->>         pci_pm_init(dev);
->>
->> +       dev->sn = pci_device_serial_number(dev);
->> +
->
-> Finally, 'the comment below':
-> I know you were following Bjorn's suggestion, which I thought
-> was an improvement, but why not do above assignment in
-> pci_device_serial_number() ?
-> See above....
+On Fri, Jul 12, 2013 at 02:54:20PM +0300, Mika Westerberg wrote:
+> On Fri, Jul 12, 2013 at 01:50:29AM +0200, Rafael J. Wysocki wrote:
+> > @@ -1210,6 +1125,35 @@ void acpiphp_enumerate_slots(struct pci_
+> >  	 */
+> >  	get_device(&bus->dev);
+> >  
+> > +	if (!pci_is_root_bus(bridge->pci_bus)) {
+> > +		struct acpiphp_context *context;
+> > +
+> > +		/*
+> > +		 * This bridge should have been registered as a hotplug function
+> > +		 * under its parent, so the context has to be there.  If not, we
+> > +		 * are in deep goo.
+> > +		 */
+> > +		mutex_lock(&acpiphp_context_lock);
+> > +		context = acpiphp_get_context(handle);
+> > +		if (WARN_ON(!context || !context->func)) {
+> > +			mutex_unlock(&acpiphp_context_lock);
+> > +			put_device(&bus->dev);
+> > +			kfree(bridge);
+> > +			return;
+> > +		}
+> > +		bridge->context = context;
+> > +		context->bridge = bridge;
+> > +		/* Get a reference to the parent bridge. */
+> > +		get_bridge(context->func->slot->bridge);
+> > +		mutex_unlock(&acpiphp_context_lock);
+> > +	}
+> > +
+> > +	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
+> > +	if (ACPI_SUCCESS(status)) {
+> > +		dbg("found ejectable p2p bridge\n");
+> > +		bridge->flags |= BRIDGE_HAS_EJ0;
+> > +	}
+> > +
+> >  	/* must be added to the list prior to calling register_slot */
+> >  	mutex_lock(&bridge_mutex);
+> >  	list_add(&bridge->list, &bridge_list);
+> > @@ -1220,34 +1164,9 @@ void acpiphp_enumerate_slots(struct pci_
+> >  				     register_slot, NULL, bridge, NULL);
+> >  	if (ACPI_FAILURE(status)) {
+> >  		acpi_handle_err(bridge->handle, "failed to register slots\n");
+> > -		goto err;
+> > -	}
+> > -
+> > -	if (pci_is_root_bus(bridge->pci_bus))
+> > -		return;
+> > -
+> > -	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
+> > -	if (ACPI_SUCCESS(status)) {
+> > -		dbg("found ejectable p2p bridge\n");
+> > -		bridge->flags |= BRIDGE_HAS_EJ0;
+> > -	}
+> > -	if (context->handler_for_func) {
+> > -		/* Notify handler already installed. */
+> > -		get_bridge(context->func->slot->bridge);
+> > -		return;
+> > +		cleanup_bridge(bridge);
+> > +		put_bridge(bridge);
+> >  	}
+> > -
+> > -	/* install notify handler for P2P bridges */
+> > -	status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
+> > -					     handle_hotplug_event, NULL);
+> 
+> With this removed we now install notify handlers for the slot objects under
+> this bridge but not for the bridge itself.
+> 
+> In case of Thunderbolt the BIOS will send the event for the root port ACPI
+> device \_SB_.PCI0.RP05 and with the above change we don't handle it
+> anymore.
 
-pci_device_serial_number() would then have the side-effect of saving
-the result somewhere, and callers would have to know where to look.
-Personally, I think it's simpler to return the serial number directly
-and avoid the side-effect, but maybe this is just bike-shedding.
-
-As long as we are bike-shedding, I'd just drop "sn" and do:
-
-    return ((u64)hi << 32) | lo;
-
-And of course, you need spaces before "&hi" and "&lo" in the
-pci_read_config_dword() calls.
+Actually there was a bug in patch [23/30] that caused this. Once that is
+fixed I can see that the notify handlers get correctly installed. I'll
+comment on that patch.
