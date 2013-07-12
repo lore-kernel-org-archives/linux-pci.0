@@ -1,66 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54239 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752880Ab3GIJcA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Jul 2013 05:32:00 -0400
-Date: Tue, 9 Jul 2013 12:37:26 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: Re: [RFC][PATCH 6/8] ACPI / hotplug / PCI: Drop
- acpiphp_handle_to_bridge()
-Message-ID: <20130709093726.GK4898@intel.com>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
- <3804403.VVlzfJfUyu@vostro.rjw.lan>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:3598 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932385Ab3GLBzU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 21:55:20 -0400
+Message-ID: <51DF61FB.9000501@huawei.com>
+Date: Fri, 12 Jul 2013 09:55:07 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3804403.VVlzfJfUyu@vostro.rjw.lan>
+To: Paul Bolle <pebolle@tiscali.nl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>
+Subject: Re: [PATCH -v2 1/3] PCI: introduce PCIe Device Serial Number Capability
+ support
+References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>  <1373535825-49972-2-git-send-email-wangyijing@huawei.com> <1373552533.1349.4.camel@x61.thuisdomein>
+In-Reply-To: <1373552533.1349.4.camel@x61.thuisdomein>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 09, 2013 at 02:20:31AM +0200, Rafael J. Wysocki wrote:
-> @@ -953,37 +937,49 @@ static void acpiphp_sanitize_bus(struct
->   * ACPI event handlers
->   */
->  
-> -static acpi_status
-> -check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
-> +static acpi_status check_sub_bridges(acpi_handle handle, u32 lvl, void *data,
-> +				     void **rv)
->  {
-> -	struct acpiphp_bridge *bridge;
-> -	char objname[64];
-> -	struct acpi_buffer buffer = { .length = sizeof(objname),
-> -				      .pointer = objname };
-> +	struct acpiphp_context *context = acpiphp_get_context(handle);
-> +
-> +	if (!context)
-> +		return AE_OK;
->  
-> -	bridge = acpiphp_handle_to_bridge(handle);
-> -	if (bridge) {
-> +	if (context->bridge) {
-> +		struct acpiphp_bridge *bridge = context->bridge;
-> +		char objname[64];
-> +		struct acpi_buffer buffer = { .length = sizeof(objname),
-> +					      .pointer = objname };
-> +
-> +		get_bridge(bridge);
->  		acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-> -		dbg("%s: re-enumerating slots under %s\n",
-> -			__func__, objname);
-> +		dbg("%s: re-enumerating slots under %s\n", __func__, objname);
 
-Although not related to this patch directly, how about using
-acpi_handle_debug() or similar here?
+>>
+> [...] 
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 0fd1f15..10d190b 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -342,6 +342,7 @@ struct pci_dev {
+>>  	struct list_head msi_list;
+>>  	struct kset *msi_kset;
+>>  #endif
+>> +	u64 sn;		/* device serieal number, 0 if not support */
+> 
+> Typo: serieal
 
->  		acpiphp_check_bridge(bridge);
->  		put_bridge(bridge);
->  	}
-> +	acpiphp_put_context(context);
->  	return AE_OK ;
->  }
+
+Thanks very much! Will update.
+
+
+> 
+>>  	struct pci_vpd *vpd;
+>>  #ifdef CONFIG_PCI_ATS
+>>  	union {
+> 
+> [...]
+> 
+> 
+> Paul Bolle
+> 
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
