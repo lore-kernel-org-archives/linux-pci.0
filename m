@@ -1,115 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 18 Jul 2013 06:37:39 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Thomas Backlund <tmb@mageia.org>
-Cc: Kamal Mostafa <kamal@canonical.com>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, kernel-team@lists.ubuntu.com,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>,
-	Luis Henriques <luis.henriques@canonical.com>
-Subject: Re: [PATCH 089/145] iommu/vt-d: add quirk for broken interrupt
- remapping on 55XX chipsets
-Message-ID: <20130718103739.GA3626@hmsreliant.think-freely.org>
-References: <1374101277-7915-1-git-send-email-kamal@canonical.com>
- <1374101277-7915-90-git-send-email-kamal@canonical.com>
- <51E7A0F8.9000308@mageia.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH] PCI / hotplug / ACPI: Get rid of check_sub_bridges()
+Date: Sat, 13 Jul 2013 23:47:26 +0200
+Message-ID: <3395919.UaDiFX78Zn@vostro.rjw.lan>
+In-Reply-To: <1373735399-28055-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1373735399-28055-1-git-send-email-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <51E7A0F8.9000308@mageia.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 18, 2013 at 11:02:00AM +0300, Thomas Backlund wrote:
-> 18.07.2013 01:47, Kamal Mostafa skrev:
-> >3.8.13.5 -stable review patch.  If anyone has any objections, please let me know.
-> >
-> >------------------
-> >
-> >From: Neil Horman <nhorman@tuxdriver.com>
-> >
-> >commit 03bbcb2e7e292838bb0244f5a7816d194c911d62 upstream.
-> >
-> >A few years back intel published a spec update:
-> >http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
-> >
-> >For the 5520 and 5500 chipsets which contained an errata (specificially errata
-> >53), which noted that these chipsets can't properly do interrupt remapping, and
-> >as a result the recommend that interrupt remapping be disabled in bios.  While
-> >many vendors have a bios update to do exactly that, not all do, and of course
-> >not all users update their bios to a level that corrects the problem.  As a
-> >result, occasionally interrupts can arrive at a cpu even after affinity for that
-> >interrupt has be moved, leading to lost or spurrious interrupts (usually
-> >characterized by the message:
-> >kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
-> >
-> >There have been several incidents recently of people seeing this error, and
-> >investigation has shown that they have system for which their BIOS level is such
-> >that this feature was not properly turned off.  As such, it would be good to
-> >give them a reminder that their systems are vulnurable to this problem.  For
-> >details of those that reported the problem, please see:
-> >https://bugzilla.redhat.com/show_bug.cgi?id=887006
-> >
-> >[ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
-> >
-> >Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> >CC: Prarit Bhargava <prarit@redhat.com>
-> >CC: Don Zickus <dzickus@redhat.com>
-> >CC: Don Dutile <ddutile@redhat.com>
-> >CC: Bjorn Helgaas <bhelgaas@google.com>
-> >CC: Asit Mallick <asit.k.mallick@intel.com>
-> >CC: David Woodhouse <dwmw2@infradead.org>
-> >CC: linux-pci@vger.kernel.org
-> >CC: Joerg Roedel <joro@8bytes.org>
-> >CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> >CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
-> >Signed-off-by: Joerg Roedel <joro@8bytes.org>
-> >Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
-> >---
-> >  arch/x86/include/asm/irq_remapping.h |  2 ++
-> >  arch/x86/kernel/early-quirks.c       | 20 ++++++++++++++++++++
-> >  drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
-> >  drivers/iommu/irq_remapping.c        |  6 ++++++
-> >  drivers/iommu/irq_remapping.h        |  2 ++
-> >  5 files changed, 40 insertions(+)
-> >
+On Saturday, July 13, 2013 08:09:59 PM Mika Westerberg wrote:
+> Now that acpiphp_check_bridge() always enumerates devices behind the
+> bridge, there is no need to do that for each sub-bridge anymore like it is
+> done in the current ACPI-based PCI hotplug code. Given this we don't need
+> check_sub_bridges() anymore and can drop the function completely.
 > 
-> This patch introduces this warning on 3.8 series kernels:
+> This also simplifies the ACPIPHP code a bit.
 > 
-> In file included from arch/x86/kernel/early-quirks.c:21:0:
-> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:46:10:
-> varning: ”struct irq_data” deklarerad inuti parameterlista
-> [aktiverat som standard]
-> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:46:10:
-> varning: dess scope-område är endast denna definition eller
-> deklaration, vilket troligen inte är vad du vill. [aktiverat som
-> standard]
-> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:50:17:
-> varning: ”struct msi_msg” deklarerad inuti parameterlista [aktiverat
-> som standard]
-> 
-> 
-> You need to add this upstream fix too:
-> 
-> commit 35d3d814cbd46a85bed97cd74ba97fbbb51e0ccd
-> Author: Joerg Roedel <joro@8bytes.org>
-> Date:   Fri Apr 19 20:34:55 2013 +0200
-> 
->     iommu: Fix compile warnings with forward declarations
-> 
-I submited a 3.9 backport that included that fix to -stable over a week ago, you
-should just be able to use that if you want.
-Neil
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+> This applies on top of v3.10 with Rafael's ACPIPHP + Thunderbolt series
+> applied:
+>
 
+OK, I added it to my bleeding-edge branch along with this series:
+
+> 	http://www.spinics.net/lists/linux-acpi/msg44480.html
+
+rebased on top of some previous ACPI cleanup commits.  I needed to make some
+changes in the process (and fixed up some breakage reported by the auto build
+testing), hopefully I didn't break anything.  If you're in an adventurous mood,
+testing would be welcome. ;-)  [That already includes the majority of 3.11
+material from Linus, though, so unexpected breakage elsewhere may happen.]
+
+Thanks,
+Rafael
+
+
+>  drivers/pci/hotplug/acpiphp_glue.c | 25 -------------------------
+>  1 file changed, 25 deletions(-)
 > 
-> --
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 62e09af..741504a 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -760,25 +760,6 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
+>   * ACPI event handlers
+>   */
+>  
+> -static acpi_status
+> -check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+> -{
+> -	struct acpiphp_bridge *bridge;
+> -	char objname[64];
+> -	struct acpi_buffer buffer = { .length = sizeof(objname),
+> -				      .pointer = objname };
+> -
+> -	bridge = acpiphp_handle_to_bridge(handle);
+> -	if (bridge) {
+> -		acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+> -		dbg("%s: re-enumerating slots under %s\n",
+> -			__func__, objname);
+> -		acpiphp_check_bridge(bridge);
+> -		put_bridge(bridge);
+> -	}
+> -	return AE_OK ;
+> -}
+> -
+>  void acpiphp_check_host_bridge(acpi_handle handle)
+>  {
+>  	struct acpiphp_bridge *bridge;
+> @@ -788,9 +769,6 @@ void acpiphp_check_host_bridge(acpi_handle handle)
+>  		acpiphp_check_bridge(bridge);
+>  		put_bridge(bridge);
+>  	}
+> -
+> -	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
+> -		ACPI_UINT32_MAX, check_sub_bridges, NULL, NULL, NULL);
+>  }
+>  
+>  static void hotplug_event(acpi_handle handle, u32 type, void *data)
+> @@ -818,9 +796,6 @@ static void hotplug_event(acpi_handle handle, u32 type, void *data)
+>  		dbg("%s: re-enumerating slots under %s\n", __func__, objname);
+>  		if (bridge) {
+>  			acpiphp_check_bridge(bridge);
+> -			acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
+> -					    ACPI_UINT32_MAX, check_sub_bridges,
+> -					    NULL, NULL, NULL);
+>  		} else {
+>  			struct acpiphp_slot *slot = func->slot;
+>  
 > 
-> Thomas
-> 
-> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
