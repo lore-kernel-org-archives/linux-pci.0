@@ -1,85 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:36013 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932244Ab3GOPeX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 11:34:23 -0400
+Message-ID: <51E4167B.4000208@wwwdotorg.org>
+Date: Mon, 15 Jul 2013 09:34:19 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 06/16] ARM: tegra: harmony: Initialize PCIe from DT
-Date: Thu, 25 Jul 2013 10:53:20 -0700
-Message-Id: <1374774810-18459-7-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: Re: [PATCHv5 00/11] MSI support for Marvell EBU PCIe driver
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+On 07/15/2013 05:52 AM, Thomas Petazzoni wrote:
+> Hello,
+> 
+> This set of patches introduces Message Signaled Interrupt support in
+> the Marvell EBU PCIe driver. It has been successfully tested on the
+> Armada XP GP platform with an Intel e1000e PCIe network card that
+> supports MSI.
+> 
+> This patch set is intended for merging in 3.12, so the respective
+> maintainers of the different areas are invited to review/ack the
+> patches, see below for the details. This set of patches applies on top
+> of 3.11-rc1.
 
-With the device tree support in place, probe the PCIe controller from
-the device tree and remove the corresponding workaround in the board
-file.
+Thomas, who is going to merge this series?
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- arch/arm/boot/dts/tegra20-harmony.dts | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+I believe at least patches 1-8 (or perhaps just 1-5 plus 8; I /think/
+all the other patches are MVEBU-specific) are dependencies for the new
+Tegra PCIe driver which should be posted very soon for 3.12. As such,
+I'd like to see these dependencies merged into a standalone stable (100%
+non-rebasable) topic branch based on 3.11-rc1 so that the topic branch
+is available for merging into whichever tree takes the new Tegra PCIe
+driver (which I'm guessing will be the Tegra tree to reduce conflicts).
+So, whoever merges these patches is going to need to know to set up that
+topic branch.
 
-diff --git a/arch/arm/boot/dts/tegra20-harmony.dts b/arch/arm/boot/dts/tegra20-harmony.dts
-index d9f89cd..8724dc7 100644
---- a/arch/arm/boot/dts/tegra20-harmony.dts
-+++ b/arch/arm/boot/dts/tegra20-harmony.dts
-@@ -335,7 +335,7 @@
- 					regulator-always-on;
- 				};
- 
--				ldo0 {
-+				pci_clk_reg: ldo0 {
- 					regulator-name = "vdd_ldo0,vddio_pex_clk";
- 					regulator-min-microvolt = <3300000>;
- 					regulator-max-microvolt = <3300000>;
-@@ -425,6 +425,20 @@
- 		nvidia,sys-clock-req-active-high;
- 	};
- 
-+	pcie-controller {
-+		pex-clk-supply = <&pci_clk_reg>;
-+		vdd-supply = <&pci_vdd_reg>;
-+		status = "okay";
-+
-+		pci@1,0 {
-+			status = "okay";
-+		};
-+
-+		pci@2,0 {
-+			status = "okay";
-+		};
-+	};
-+
- 	usb@c5000000 {
- 		status = "okay";
- 	};
-@@ -643,7 +657,7 @@
- 			enable-active-high;
- 		};
- 
--		regulator@3 {
-+		pci_vdd_reg: regulator@3 {
- 			compatible = "regulator-fixed";
- 			reg = <3>;
- 			regulator-name = "vdd_1v05";
-@@ -651,8 +665,6 @@
- 			regulator-max-microvolt = <1050000>;
- 			gpio = <&pmic 2 GPIO_ACTIVE_HIGH>;
- 			enable-active-high;
--			/* Hack until board-harmony-pcie.c is removed */
--			status = "disabled";
- 		};
- 
- 		regulator@4 {
--- 
-1.8.1.5
-
+Thierry, please correct me if I'm wrong here.
