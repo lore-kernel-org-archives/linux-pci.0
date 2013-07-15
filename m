@@ -1,68 +1,141 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51F5B545.5050300@jp.fujitsu.com>
-Date: Mon, 29 Jul 2013 09:20:21 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
-MIME-Version: 1.0
-To: vgoyal@redhat.com
-CC: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	kexec@lists.infradead.org, ishii.hironobu@jp.fujitsu.com,
-	ddutile@redhat.com, bill.sumner@hp.com, alex.williamson@redhat.com,
-	hbabu@us.ibm.com
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com> <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com> <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com> <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com> <51B93221.2040505@jp.fujitsu.com> <CAErSpo5tVK-Z3aOdMTzab-S8o5zLVtDOFQ8-LSYpUgbrJSsxuw@mail.gmail.com> <51BA7BB6.1080104@jp.fujitsu.com> <51EF7466.20703@jp.fujitsu.com> <20130725142446.GK11993@redhat.com>
-In-Reply-To: <20130725142446.GK11993@redhat.com>
-Content-Type: text/plain; charset=ISO-2022-JP
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:56382 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755899Ab3GOLw4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 07:52:56 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: [PATCHv5 04/11] PCI: Introduce new MSI chip infrastructure
+Date: Mon, 15 Jul 2013 13:52:40 +0200
+Message-Id: <1373889167-27878-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2013/07/25 23:24), Vivek Goyal wrote:
-> On Wed, Jul 24, 2013 at 03:29:58PM +0900, Takao Indoh wrote:
->> Sorry for letting this discussion slide, I was busy on other works:-(
->> Anyway, the summary of previous discussion is:
->> - My patch adds new initcall(fs_initcall) to reset all PCIe endpoints on
->>    boot. This expects PCI enumeration is done before IOMMU
->>    initialization as follows.
->>      (1) PCI enumeration
->>      (2) fs_initcall ---> device reset
->>      (3) IOMMU initialization
->> - This works on x86, but does not work on other architecture because
->>    IOMMU is initialized before PCI enumeration on some architectures. So,
->>    device reset should be done where IOMMU is initialized instead of
->>    initcall.
->> - Or, as another idea, we can reset devices in first kernel(panic kernel)
->>
->> Resetting devices in panic kernel is against kdump policy and seems not to
->> be good idea. So I think adding reset code into iommu initialization is
->> better. I'll post patches for that.
-> 
-> I don't understand all the details but I agree that idea of trying to
-> reset IOMMU in crashed kernel might not fly.
-> 
->>
->> Another discussion point is how to handle buggy devices. Resetting buggy
->> devices makes system more unstable. One of ideas is using boot parameter
->> so that user can choose to reset devices or not.
-> 
-> So who would decide which device is buggy and don't reset it. Give
-> some details here.
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-I found the case that kdump does not work after resetting devices and
-it works when removing reset patch. The cause of problem is a bug of
-PCIe switch chip. If there is boot parameter not to reset devices,
-user can use it as workaround.
+The new struct msi_chip is used to associated an MSI controller with a
+PCI bus. It is automatically handed down from the root to its children
+during bus enumeration.
 
-I think in this case we should add PCI quirk to avoid this buggy
-hardware, but we need to wait errata from vendor and it basically takes
-long time.
+This patch provides default (weak) implementations for the architecture-
+specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
+and arch_msi_check_device()) which check if a PCI device's bus has an
+attached MSI chip and forward the call appropriately.
 
-> 
-> Can't we simply blacklist associated module, so that it never loads
-> and then it never tries to reset the devices?
-> 
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/msi.c   | 27 +++++++++++++++++++++++++--
+ drivers/pci/probe.c |  1 +
+ include/linux/msi.h | 11 +++++++++++
+ include/linux/pci.h |  1 +
+ 4 files changed, 38 insertions(+), 2 deletions(-)
 
-So you mean that device reset should be done on its driver loading?
-
-Thanks,
-Takao Indoh
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index aa2f697..d5b6378 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -32,16 +32,39 @@ static int pci_msi_enable = 1;
+ 
+ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+-	return -EINVAL;
++	struct msi_chip *chip = dev->bus->msi;
++	int err;
++
++	if (!chip || !chip->setup_irq)
++		return -EINVAL;
++
++	err = chip->setup_irq(chip, dev, desc);
++	if (err < 0)
++		return err;
++
++	irq_set_chip_data(desc->irq, chip);
++
++	return 0;
+ }
+ 
+ void __weak arch_teardown_msi_irq(unsigned int irq)
+ {
++	struct msi_chip *chip = irq_get_chip_data(irq);
++
++	if (!chip || !chip->teardown_irq)
++		return;
++
++	chip->teardown_irq(chip, irq);
+ }
+ 
+ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ {
+-	return 0;
++	struct msi_chip *chip = dev->bus->msi;
++
++	if (!chip || !chip->check_device)
++		return 0;
++
++	return chip->check_device(chip, dev, nvec, type);
+ }
+ 
+ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 46ada5c..b8eaa81 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -666,6 +666,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 
+ 	child->parent = parent;
+ 	child->ops = parent->ops;
++	child->msi = parent->msi;
+ 	child->sysdata = parent->sysdata;
+ 	child->bus_flags = parent->bus_flags;
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 18870b0..cbf5d05 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -64,4 +64,15 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
+ 
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+ 
++struct msi_chip {
++	struct module *owner;
++	struct device *dev;
++
++	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
++			 struct msi_desc *desc);
++	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
++	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
++			    int nvec, int type);
++};
++
+ #endif /* LINUX_MSI_H */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..4044e3c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -433,6 +433,7 @@ struct pci_bus {
+ 	struct resource busn_res;	/* bus numbers routed to this bus */
+ 
+ 	struct pci_ops	*ops;		/* configuration access functions */
++	struct msi_chip	*msi;		/* MSI controller */
+ 	void		*sysdata;	/* hook for sys-specific extension */
+ 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
+ 
+-- 
+1.8.1.2
 
