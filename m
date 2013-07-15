@@ -1,105 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:59687 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932834Ab3GLLsx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 12 Jul 2013 07:48:53 -0400
-Date: Fri, 12 Jul 2013 14:54:20 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: Re: [RFC][PATCH 11/30] ACPI / hotplug / PCI: Register all devices
- under the given bridge
-Message-ID: <20130712115420.GH4898@intel.com>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
- <3718119.FLASu5DBx8@vostro.rjw.lan>
- <1910839.UjS2m1ckUq@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1910839.UjS2m1ckUq@vostro.rjw.lan>
+Received: from mail.free-electrons.com ([94.23.35.102]:56320 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756053Ab3GOLwv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 07:52:51 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv5 01/11] irqdomain: add irq_alloc_mapping() function
+Date: Mon, 15 Jul 2013 13:52:37 +0200
+Message-Id: <1373889167-27878-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 12, 2013 at 01:50:29AM +0200, Rafael J. Wysocki wrote:
-> @@ -1210,6 +1125,35 @@ void acpiphp_enumerate_slots(struct pci_
->  	 */
->  	get_device(&bus->dev);
->  
-> +	if (!pci_is_root_bus(bridge->pci_bus)) {
-> +		struct acpiphp_context *context;
-> +
-> +		/*
-> +		 * This bridge should have been registered as a hotplug function
-> +		 * under its parent, so the context has to be there.  If not, we
-> +		 * are in deep goo.
-> +		 */
-> +		mutex_lock(&acpiphp_context_lock);
-> +		context = acpiphp_get_context(handle);
-> +		if (WARN_ON(!context || !context->func)) {
-> +			mutex_unlock(&acpiphp_context_lock);
-> +			put_device(&bus->dev);
-> +			kfree(bridge);
-> +			return;
-> +		}
-> +		bridge->context = context;
-> +		context->bridge = bridge;
-> +		/* Get a reference to the parent bridge. */
-> +		get_bridge(context->func->slot->bridge);
-> +		mutex_unlock(&acpiphp_context_lock);
-> +	}
-> +
-> +	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
-> +	if (ACPI_SUCCESS(status)) {
-> +		dbg("found ejectable p2p bridge\n");
-> +		bridge->flags |= BRIDGE_HAS_EJ0;
-> +	}
-> +
->  	/* must be added to the list prior to calling register_slot */
->  	mutex_lock(&bridge_mutex);
->  	list_add(&bridge->list, &bridge_list);
-> @@ -1220,34 +1164,9 @@ void acpiphp_enumerate_slots(struct pci_
->  				     register_slot, NULL, bridge, NULL);
->  	if (ACPI_FAILURE(status)) {
->  		acpi_handle_err(bridge->handle, "failed to register slots\n");
-> -		goto err;
-> -	}
-> -
-> -	if (pci_is_root_bus(bridge->pci_bus))
-> -		return;
-> -
-> -	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
-> -	if (ACPI_SUCCESS(status)) {
-> -		dbg("found ejectable p2p bridge\n");
-> -		bridge->flags |= BRIDGE_HAS_EJ0;
-> -	}
-> -	if (context->handler_for_func) {
-> -		/* Notify handler already installed. */
-> -		get_bridge(context->func->slot->bridge);
-> -		return;
-> +		cleanup_bridge(bridge);
-> +		put_bridge(bridge);
->  	}
-> -
-> -	/* install notify handler for P2P bridges */
-> -	status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
-> -					     handle_hotplug_event, NULL);
+This commit extends the irqdomain subsystem with an
+irq_alloc_mapping() function which allows to let the irqdomain code
+find an available hwirq number in the range [ 0 ; domain size ] for
+the given domain, and create a virq mapping for it.
 
-With this removed we now install notify handlers for the slot objects under
-this bridge but not for the bridge itself.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ include/linux/irqdomain.h |  2 ++
+ kernel/irq/irqdomain.c    | 32 ++++++++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
 
-In case of Thunderbolt the BIOS will send the event for the root port ACPI
-device \_SB_.PCI0.RP05 and with the above change we don't handle it
-anymore.
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index c983ed1..1ffa336 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -195,6 +195,8 @@ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
+ extern unsigned int irq_find_mapping(struct irq_domain *host,
+ 				     irq_hw_number_t hwirq);
+ extern unsigned int irq_create_direct_mapping(struct irq_domain *host);
++extern unsigned int irq_alloc_mapping(struct irq_domain *host,
++				      irq_hw_number_t *hwirq);
+ extern int irq_create_strict_mappings(struct irq_domain *domain,
+ 				      unsigned int irq_base,
+ 				      irq_hw_number_t hwirq_base, int count);
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 706724e..b9ddb94 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -375,6 +375,38 @@ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
+ EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
+ 
+ /**
++ * irq_alloc_mapping() - Allocate an irq for mapping
++ * @domain: domain to allocate the irq for or NULL for default domain
++ * @hwirq:  reference to the returned hwirq
++ *
++ * This routine are used for irq controllers which can choose the
++ * hardware interrupt number from a range [ 0 ; domain size ], such as
++ * is often the case with PCI MSI controllers. The function will
++ * returned the allocated hwirq number in the hwirq pointer, and the
++ * corresponding virq number as the return value.
++ */
++unsigned int irq_alloc_mapping(struct irq_domain *domain,
++			       irq_hw_number_t *out_hwirq)
++{
++	irq_hw_number_t hwirq;
++
++	pr_debug("irq_alloc_mapping(0x%p)\n", domain);
++
++	for (hwirq = 0; hwirq < domain->hwirq_max; hwirq++)
++		if (!irq_find_mapping(domain, hwirq))
++			break;
++
++	if (hwirq == domain->hwirq_max) {
++		pr_debug("-> no available hwirq found\n");
++		return 0;
++	}
++
++	*out_hwirq = hwirq;
++	return irq_create_mapping(domain, hwirq);
++}
++EXPORT_SYMBOL_GPL(irq_alloc_mapping);
++
++/**
+  * irq_create_mapping() - Map a hardware interrupt into linux irq space
+  * @domain: domain owning this hardware interrupt or NULL for default domain
+  * @hwirq: hardware irq number in that domain space
+-- 
+1.8.1.2
 
-> -	if (ACPI_SUCCESS(status))
-> -		return;
-> -
-> -	acpi_handle_err(bridge->handle, "failed to register notify handler\n");
-> -
-> - err:
-> -	cleanup_bridge(bridge);
-> -	put_bridge(bridge);
->  }
