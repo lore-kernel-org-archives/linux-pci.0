@@ -1,191 +1,204 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:37561 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142Ab3GYVW5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 17:22:57 -0400
-Received: by mail-oa0-f54.google.com with SMTP id o6so5715999oag.13
-        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 14:22:56 -0700 (PDT)
-Date: Thu, 25 Jul 2013 15:22:53 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
- pbus_size_io()
-Message-ID: <20130725212253.GA25183@google.com>
-References: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1372691432-6440-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5O6CdzSw3bQyuKXsP+H0deJtGL1kXU+ddf_reA+ECq6w@mail.gmail.com>
- <20130709032019.GC7094@weiyang.vnet.ibm.com>
- <CAErSpo76aKk_Nq=MuL6Rsf98+fTxXQe=bJ-wQOhosKSDoYC8Ew@mail.gmail.com>
- <20130710013442.GA6671@weiyang.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130710013442.GA6671@weiyang.vnet.ibm.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:56366 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756056Ab3GOLwz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 07:52:55 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
+Subject: [PATCHv5 03/11] PCI: remove ARCH_SUPPORTS_MSI kconfig option
+Date: Mon, 15 Jul 2013 13:52:39 +0200
+Message-Id: <1373889167-27878-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 10, 2013 at 09:34:42AM +0800, Wei Yang wrote:
-> On Tue, Jul 09, 2013 at 11:38:06AM -0600, Bjorn Helgaas wrote:
-> >On Mon, Jul 8, 2013 at 9:20 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> >> On Mon, Jul 08, 2013 at 03:15:13PM -0600, Bjorn Helgaas wrote:
-> >>>On Mon, Jul 1, 2013 at 9:10 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> >>>> In commit 462d9303 ("PCI: Align P2P windows using pcibios_window_alignment()"),
-> >>>> it introduce a new method to calculate the window alignment of P2P bridge.
-> >>>>
-> >>>> When the io_window_1k is set,  the calculation for the io resource alignment
-> >>>> is different from the original one. In the original logic before 462d9303,
-> >>>> the alignment is no bigger than 4K even the io_window_1k is set. The logic
-> >>>> introduced in 462d9303 will limit the alignment to 1k in this case.
-> >>>>
-> >>>> This patch fix this issue.
-> >>>>
-> >>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> >>>> Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> >>>> Reviewed-by: Ram Pai <linuxram@us.ibm.com>
-> >>>> ---
-> >>>>  drivers/pci/setup-bus.c |    4 ++++
-> >>>>  1 files changed, 4 insertions(+), 0 deletions(-)
-> >>>>
-> >>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> >>>> index bd0ce39d..5c60ca0 100644
-> >>>> --- a/drivers/pci/setup-bus.c
-> >>>> +++ b/drivers/pci/setup-bus.c
-> >>>> @@ -755,6 +755,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
-> >>>>                 return;
-> >>>>
-> >>>>         io_align = min_align = window_alignment(bus, IORESOURCE_IO);
-> >>>> +       /* Don't exceed 4KiB for windows requesting 1KiB alignment */
-> >>>> +       if (bus->self->io_window_1k && io_align == PCI_P2P_DEFAULT_IO_ALIGN_1K)
-> >>>> +               io_align = PCI_P2P_DEFAULT_IO_ALIGN;
-> >>>
-> >>>Please explain why we need this change, with some actual values that
-> >>>show the problem.  We need to know what the problem is, not merely
-> >>>that the code behaves differently than it did before 462d9303.
-> >>
-> >> Yep, sorry for not listing the exact problem value.
-> >>
-> >> Assume:
-> >>         1. pcibios_window_alignment() return 1.
-> >>         2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
-> >>         3. one of the child device has an IO resource with size of 2K.
-> >>
-> >> Result comparison:
-> >>
-> >>                     Before 462d9303             After 462d9303
-> >>     min_align       1k                          1k
-> >>                                         |
-> >>                              after loop |
-> >>                                         V
-> >>     min_align       2k                          2k
-> >>                                         |
-> >>                          check boundary |
-> >>                                         V
-> >>     min_align       2k                          1k
-> >>
-> >> In this case, with 462d9303 the min_align will be set back to 1k even one of
-> >> the child require 2k alignment.
-> >>
-> >>>
-> >>>It appears to me that this change will break the ability to use 1K
-> >>>windows.  For example, assume a bridge that supports 1K windows.
-> >>>Assume we're using the default pcibios_window_alignment().  Currently
-> >>>window_alignment() on the secondary bus returns
-> >>>PCI_P2P_DEFAULT_IO_ALIGN_1K (0x400, which is 1K), so io_align = 0x400.
-> >>>
-> >>>With your change, I think io_align will be bumped back up to 4K in
-> >>>this case, so we'll lose the ability to allocate a 1K window.
-> >>
-> >> After applying the change:
-> >>
-> >> Assume:
-> >>         1. pcibios_window_alignment() return 1.
-> >>         2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
-> >>         3. one of the child device has an IO resource with size of 2K.
-> >
-> >What happens if no child has an I/O resource larger than 1K?  Can we
-> >allocate a 1K window with 1K alignment in that case?
-> >
-> 
-> Yes, it could. The result comparison would look like this.
-> Since no child has an I/O resource larger than 1k, the min_align will remain
-> 1k after loop. And because io_align(4K) is larger than min_align(1k), the
-> final min_align would be 1k.
-> 
-> In this case, the code from commit 462d9303 and my patch both works.
-> 
->  Result comparison:
->                      with  462d9303             with this patch
->      min_align       1k                          1k
->      io_align        1k                          4k
->                                          |
->                               after loop |
->                                          V
->      min_align       1k                          1k
->      io_align        1k                          4k
->                                          |
->                           check boundary |
->                                          V
->      min_align       1k                          1k
->      io_align        1k                          4k
-> 
-> >> Result comparison:
-> >>
-> >>                     with  462d9303             with this patch
-> >>     min_align       1k                          1k
-> >>     io_align        1k                          4k
-> >>                                         |
-> >>                              after loop |
-> >>                                         V
-> >>     min_align       2k                          2k
-> >>     io_align        1k                          4k
-> >>                                         |
-> >>                          check boundary |
-> >>                                         V
-> >>     min_align       1k                          2k
-> >>     io_align        1k                          4k
-> >>
-> >> With this patch, in the same case as above, the min_align is 2k after
-> >> calculation.
-> >>
-> >> In my mind, the min_align is the lower bound, io_align is the upper bound. The
-> >> final result of min_align should be in this range.
-> >>
-> >> Is my understanding correct? or I missed something important?
+Now that we have weak versions for each of the PCI MSI architecture
+functions, we can actually build the MSI support for all platforms,
+regardless of whether they provide or not architecture-specific
+versions of those functions. For this reason, the ARCH_SUPPORTS_MSI
+hidden kconfig boolean becomes useless, and this patch gets rid of it.
 
-Since Gavin has reviewed this, I'm OK with it.  If you resend the series
-with the updated changelogs and so on, I'll apply it.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: linux390@de.ibm.com
+Cc: linux-s390@vger.kernel.org
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: x86@kernel.org
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-mips@linux-mips.org
+Cc: David S. Miller <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+Cc: Chris Metcalf <cmetcalf@tilera.com>
+---
+ arch/arm/Kconfig     | 1 -
+ arch/ia64/Kconfig    | 1 -
+ arch/mips/Kconfig    | 2 --
+ arch/powerpc/Kconfig | 1 -
+ arch/s390/Kconfig    | 1 -
+ arch/sparc/Kconfig   | 1 -
+ arch/tile/Kconfig    | 1 -
+ arch/x86/Kconfig     | 1 -
+ drivers/pci/Kconfig  | 4 ----
+ 9 files changed, 13 deletions(-)
 
-Bjorn
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index ba412e0..b173c1d 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -441,7 +441,6 @@ config ARCH_NETX
+ config ARCH_IOP13XX
+ 	bool "IOP13xx-based"
+ 	depends on MMU
+-	select ARCH_SUPPORTS_MSI
+ 	select CPU_XSC3
+ 	select NEED_MACH_MEMORY_H
+ 	select NEED_RET_TO_USER
+diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
+index 5a768ad..098602b 100644
+--- a/arch/ia64/Kconfig
++++ b/arch/ia64/Kconfig
+@@ -9,7 +9,6 @@ config IA64
+ 	select PCI if (!IA64_HP_SIM)
+ 	select ACPI if (!IA64_HP_SIM)
+ 	select PM if (!IA64_HP_SIM)
+-	select ARCH_SUPPORTS_MSI
+ 	select HAVE_UNSTABLE_SCHED_CLOCK
+ 	select HAVE_IDE
+ 	select HAVE_OPROFILE
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index 4758a8f..00b2698 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -726,7 +726,6 @@ config CAVIUM_OCTEON_SOC
+ 	select SYS_HAS_CPU_CAVIUM_OCTEON
+ 	select SWAP_IO_SPACE
+ 	select HW_HAS_PCI
+-	select ARCH_SUPPORTS_MSI
+ 	select ZONE_DMA32
+ 	select USB_ARCH_HAS_OHCI
+ 	select USB_ARCH_HAS_EHCI
+@@ -762,7 +761,6 @@ config NLM_XLR_BOARD
+ 	select CEVT_R4K
+ 	select CSRC_R4K
+ 	select IRQ_CPU
+-	select ARCH_SUPPORTS_MSI
+ 	select ZONE_DMA32 if 64BIT
+ 	select SYNC_R4K
+ 	select SYS_HAS_EARLY_PRINTK
+diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+index 3bf72cd..183a165 100644
+--- a/arch/powerpc/Kconfig
++++ b/arch/powerpc/Kconfig
+@@ -727,7 +727,6 @@ config PCI
+ 	default y if !40x && !CPM2 && !8xx && !PPC_83xx \
+ 		&& !PPC_85xx && !PPC_86xx && !GAMECUBE_COMMON
+ 	default PCI_QSPAN if !4xx && !CPM2 && 8xx
+-	select ARCH_SUPPORTS_MSI
+ 	select GENERIC_PCI_IOMAP
+ 	help
+ 	  Find out whether your system includes a PCI bus. PCI is the name of
+diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
+index 22f75b5..e9982a3 100644
+--- a/arch/s390/Kconfig
++++ b/arch/s390/Kconfig
+@@ -428,7 +428,6 @@ menuconfig PCI
+ 	bool "PCI support"
+ 	default n
+ 	depends on 64BIT
+-	select ARCH_SUPPORTS_MSI
+ 	select PCI_MSI
+ 	help
+ 	  Enable PCI support.
+diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
+index a00cbd3..1570ad2 100644
+--- a/arch/sparc/Kconfig
++++ b/arch/sparc/Kconfig
+@@ -52,7 +52,6 @@ config SPARC32
+ 
+ config SPARC64
+ 	def_bool 64BIT
+-	select ARCH_SUPPORTS_MSI
+ 	select HAVE_FUNCTION_TRACER
+ 	select HAVE_FUNCTION_GRAPH_TRACER
+ 	select HAVE_FUNCTION_GRAPH_FP_TEST
+diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
+index 24565a7..74dff90 100644
+--- a/arch/tile/Kconfig
++++ b/arch/tile/Kconfig
+@@ -380,7 +380,6 @@ config PCI
+ 	select PCI_DOMAINS
+ 	select GENERIC_PCI_IOMAP
+ 	select TILE_GXIO_TRIO if TILEGX
+-	select ARCH_SUPPORTS_MSI if TILEGX
+ 	select PCI_MSI if TILEGX
+ 	---help---
+ 	  Enable PCI root complex support, so PCIe endpoint devices can
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index b32ebf9..5db62ef 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2014,7 +2014,6 @@ menu "Bus options (PCI etc.)"
+ config PCI
+ 	bool "PCI support"
+ 	default y
+-	select ARCH_SUPPORTS_MSI if (X86_LOCAL_APIC && X86_IO_APIC)
+ 	---help---
+ 	  Find out whether you have a PCI motherboard. PCI is the name of a
+ 	  bus system, i.e. the way the CPU talks to the other stuff inside
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 81944fb..b6a99f7 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -1,13 +1,9 @@
+ #
+ # PCI configuration
+ #
+-config ARCH_SUPPORTS_MSI
+-	bool
+-
+ config PCI_MSI
+ 	bool "Message Signaled Interrupts (MSI and MSI-X)"
+ 	depends on PCI
+-	depends on ARCH_SUPPORTS_MSI
+ 	help
+ 	   This allows device drivers to enable MSI (Message Signaled
+ 	   Interrupts).  Message Signaled Interrupts enable a device to
+-- 
+1.8.1.2
 
-> >>
-> >>>
-> >>>>         list_for_each_entry(dev, &bus->devices, bus_list) {
-> >>>>                 int i;
-> >>>>
-> >>>> --
-> >>>> 1.7.5.4
-> >>>>
-> >>>> --
-> >>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >>>> the body of a message to majordomo@vger.kernel.org
-> >>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>--
-> >>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >>>the body of a message to majordomo@vger.kernel.org
-> >>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> >> --
-> >> Richard Yang
-> >> Help you, Help me
-> >>
-> >--
-> >To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >the body of a message to majordomo@vger.kernel.org
-> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -- 
-> Richard Yang
-> Help you, Help me
-> 
