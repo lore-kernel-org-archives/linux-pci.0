@@ -1,274 +1,318 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 5/30] ACPI / hotplug / PCI: Unified notify handler for hotplug events
-Date: Fri, 12 Jul 2013 01:40:57 +0200
-Message-ID: <5248420.dTt3AhzoPf@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:56333 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755899Ab3GOLwx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 07:52:53 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
+Subject: [PATCHv5 02/11] PCI: use weak functions for MSI arch-specific functions
+Date: Mon, 15 Jul 2013 13:52:38 +0200
+Message-Id: <1373889167-27878-3-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Until now, the MSI architecture-specific functions could be overloaded
+using a fairly complex set of #define and compile-time
+conditionals. In order to prepare for the introduction of the msi_chip
+infrastructure, it is desirable to switch all those functions to use
+the 'weak' mechanism. This commit converts all the architectures that
+were overidding those MSI functions to use the new strategy.
 
-Using the hotplug context objects introduced previously rework the
-ACPI-based PCI hotplug (ACPIPHP) core code so that all notifications
-for ACPI device objects corresponding to the hotplug PCI devices are
-handled by one function, handle_hotplug_event(), which recognizes
-whether it has to handle a bridge or a function.
+Note that we keep a separate, non-weak, function
+default_teardown_msi_irqs() for the default behavior of the
+arch_teardown_msi_irqs(), as the default behavior is needed by the Xen
+x86 PCI code.
 
-In addition to code size reduction it allows some ugly pieces of code
-where notify handlers have to be uninstalled and installed again to
-go away.  Moreover, it fixes a theoretically possible race between
-handle_hotplug_event() and free_bridge() tearing down data structures
-for the same handle.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: linux390@de.ibm.com
+Cc: linux-s390@vger.kernel.org
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: x86@kernel.org
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-mips@linux-mips.org
+Cc: David S. Miller <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+Cc: Chris Metcalf <cmetcalf@tilera.com>
 ---
- drivers/pci/hotplug/acpiphp.h      |    1 
- drivers/pci/hotplug/acpiphp_glue.c |  133 ++++++++++++++-----------------------
- 2 files changed, 54 insertions(+), 80 deletions(-)
+ arch/mips/include/asm/pci.h    |  5 -----
+ arch/powerpc/include/asm/pci.h |  5 -----
+ arch/s390/include/asm/pci.h    |  4 ----
+ arch/x86/include/asm/pci.h     | 28 --------------------------
+ arch/x86/kernel/x86_init.c     | 21 ++++++++++++++++++++
+ drivers/pci/msi.c              | 45 +++++++++++++++++++-----------------------
+ include/linux/msi.h            |  7 ++++++-
+ 7 files changed, 47 insertions(+), 68 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -59,11 +59,10 @@ static DEFINE_MUTEX(acpiphp_context_lock
- 
- #define MY_NAME "acpiphp_glue"
- 
--static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
-+static void handle_hotplug_event(acpi_handle handle, u32 type, void *data);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
- static void hotplug_event_func(acpi_handle handle, u32 type, void *context);
--static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
- static void free_bridge(struct kref *kref);
- 
- /* callback routine to check for the existence of a pci dock device */
-@@ -179,13 +178,13 @@ static void free_bridge(struct kref *kre
- 		kfree(slot);
- 	}
- 
-+	context = bridge->context;
- 	/* Release the reference acquired by acpiphp_enumerate_slots(). */
--	if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func)
-+	if (context->handler_for_func)
- 		put_bridge(bridge->func->slot->bridge);
- 
- 	put_device(&bridge->pci_bus->dev);
- 	pci_dev_put(bridge->pci_dev);
--	context = bridge->context;
- 	context->bridge = NULL;
- 	acpiphp_put_context(context);
- 	kfree(bridge);
-@@ -424,12 +423,12 @@ static acpi_status register_slot(acpi_ha
- 
- 	/* install notify handler */
- 	if (!(newfunc->flags & FUNC_HAS_DCK)) {
--		status = acpi_install_notify_handler(handle,
--					     ACPI_SYSTEM_NOTIFY,
--					     handle_hotplug_event_func,
--					     newfunc);
--
--		if (ACPI_FAILURE(status))
-+		status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+						     handle_hotplug_event,
-+						     context);
-+		if (ACPI_SUCCESS(status))
-+			context->handler_for_func = true;
-+		else
- 			err("failed to register interrupt notify handler\n");
- 	}
- 
-@@ -486,23 +485,13 @@ static void cleanup_bridge(struct acpiph
- 	acpi_status status;
- 	acpi_handle handle = bridge->handle;
- 
--	if (!pci_is_root_bus(bridge->pci_bus)) {
--		status = acpi_remove_notify_handler(handle,
--					    ACPI_SYSTEM_NOTIFY,
--					    handle_hotplug_event_bridge);
-+	if (!bridge->context->handler_for_func) {
-+		status = acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+						    handle_hotplug_event);
- 		if (ACPI_FAILURE(status))
- 			err("failed to remove notify handler\n");
- 	}
- 
--	if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
--		status = acpi_install_notify_handler(bridge->func->handle,
--						ACPI_SYSTEM_NOTIFY,
--						handle_hotplug_event_func,
--						bridge->func);
--		if (ACPI_FAILURE(status))
--			err("failed to install interrupt notify handler\n");
--	}
--
- 	list_for_each_entry(slot, &bridge->slots, node) {
- 		list_for_each_entry(func, &slot->funcs, sibling) {
- 			if (is_dock_device(func->handle)) {
-@@ -510,9 +499,10 @@ static void cleanup_bridge(struct acpiph
- 				unregister_dock_notifier(&func->nb);
- 			}
- 			if (!(func->flags & FUNC_HAS_DCK)) {
-+				func->context->handler_for_func = false;
- 				status = acpi_remove_notify_handler(func->handle,
--						ACPI_SYSTEM_NOTIFY,
--						handle_hotplug_event_func);
-+							ACPI_SYSTEM_NOTIFY,
-+							handle_hotplug_event);
- 				if (ACPI_FAILURE(status))
- 					err("failed to remove notify handler\n");
- 			}
-@@ -1093,31 +1083,6 @@ static void _handle_hotplug_event_bridge
- 	put_bridge(bridge);
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index fa8e0aa..f194c08 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -136,11 +136,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ 	return channel ? 15 : 14;
  }
  
--/**
-- * handle_hotplug_event_bridge - handle ACPI event on bridges
-- * @handle: Notify()'ed acpi_handle
-- * @type: Notify code
-- * @context: pointer to acpiphp_bridge structure
-- *
-- * Handles ACPI event notification on {host,p2p} bridges.
-- */
--static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
--					void *context)
--{
--	struct acpiphp_bridge *bridge = context;
+-#ifdef CONFIG_CPU_CAVIUM_OCTEON
+-/* MSI arch hook for OCTEON */
+-#define arch_setup_msi_irqs arch_setup_msi_irqs
+-#endif
 -
--	/*
--	 * Currently the code adds all hotplug events to the kacpid_wq
--	 * queue when it should add hotplug events to the kacpi_hotplug_wq.
--	 * The proper way to fix this is to reorganize the code so that
--	 * drivers (dock, etc.) do not call acpi_os_execute(), etc.
--	 * For now just re-add this work to the kacpi_hotplug_wq so we
--	 * don't deadlock on hotplug actions.
--	 */
--	get_bridge(bridge);
--	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
+ extern char * (*pcibios_plat_setup)(char *str);
+ 
+ #ifdef CONFIG_OF
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 6653f27..95145a1 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -113,11 +113,6 @@ extern int pci_domain_nr(struct pci_bus *bus);
+ /* Decide whether to display the domain number in /proc */
+ extern int pci_proc_domain(struct pci_bus *bus);
+ 
+-/* MSI arch hooks */
+-#define arch_setup_msi_irqs arch_setup_msi_irqs
+-#define arch_teardown_msi_irqs arch_teardown_msi_irqs
+-#define arch_msi_check_device arch_msi_check_device
+-
+ struct vm_area_struct;
+ /* Map a range of PCI memory or I/O space for a device into user space */
+ int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
+index 6e577ba..262b91b 100644
+--- a/arch/s390/include/asm/pci.h
++++ b/arch/s390/include/asm/pci.h
+@@ -21,10 +21,6 @@ void pci_iounmap(struct pci_dev *, void __iomem *);
+ int pci_domain_nr(struct pci_bus *);
+ int pci_proc_domain(struct pci_bus *);
+ 
+-/* MSI arch hooks */
+-#define arch_setup_msi_irqs	arch_setup_msi_irqs
+-#define arch_teardown_msi_irqs	arch_teardown_msi_irqs
+-
+ #define ZPCI_BUS_NR			0	/* default bus number */
+ #define ZPCI_DEVFN			0	/* default device number */
+ 
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index d9e9e6c..8c61de0 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -100,29 +100,6 @@ static inline void early_quirks(void) { }
+ extern void pci_iommu_alloc(void);
+ 
+ #ifdef CONFIG_PCI_MSI
+-/* MSI arch specific hooks */
+-static inline int x86_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+-{
+-	return x86_msi.setup_msi_irqs(dev, nvec, type);
 -}
 -
- static void hotplug_event_func(acpi_handle handle, u32 type, void *context)
- {
- 	struct acpiphp_func *func = context;
-@@ -1175,17 +1140,33 @@ static void _handle_hotplug_event_func(s
- }
+-static inline void x86_teardown_msi_irqs(struct pci_dev *dev)
+-{
+-	x86_msi.teardown_msi_irqs(dev);
+-}
+-
+-static inline void x86_teardown_msi_irq(unsigned int irq)
+-{
+-	x86_msi.teardown_msi_irq(irq);
+-}
+-static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
+-{
+-	x86_msi.restore_msi_irqs(dev, irq);
+-}
+-#define arch_setup_msi_irqs x86_setup_msi_irqs
+-#define arch_teardown_msi_irqs x86_teardown_msi_irqs
+-#define arch_teardown_msi_irq x86_teardown_msi_irq
+-#define arch_restore_msi_irqs x86_restore_msi_irqs
+ /* implemented in arch/x86/kernel/apic/io_apic. */
+ struct msi_desc;
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+@@ -130,11 +107,6 @@ void native_teardown_msi_irq(unsigned int irq);
+ void native_restore_msi_irqs(struct pci_dev *dev, int irq);
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 		  unsigned int irq_base, unsigned int irq_offset);
+-/* default to the implementation in drivers/lib/msi.c */
+-#define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
+-#define HAVE_DEFAULT_MSI_RESTORE_IRQS
+-void default_teardown_msi_irqs(struct pci_dev *dev);
+-void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+ #else
+ #define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 45a14db..a2b189c 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -116,6 +116,27 @@ struct x86_msi_ops x86_msi = {
+ 	.setup_hpet_msi		= default_setup_hpet_msi,
+ };
  
- /**
-- * handle_hotplug_event_func - handle ACPI event on functions (i.e. slots)
-+ * handle_hotplug_event - handle ACPI hotplug event
-  * @handle: Notify()'ed acpi_handle
-  * @type: Notify code
-- * @context: pointer to acpiphp_func structure
-+ * @data: pointer to acpiphp_context structure
-  *
-  * Handles ACPI event notification on slots.
-  */
--static void handle_hotplug_event_func(acpi_handle handle, u32 type,
--				      void *context)
-+static void handle_hotplug_event(acpi_handle handle, u32 type, void *data)
- {
--	struct acpiphp_func *func = context;
-+	struct acpiphp_context *context;
-+	void (*work_func)(struct work_struct *work) = NULL;
++/* MSI arch specific hooks */
++int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++{
++	return x86_msi.setup_msi_irqs(dev, nvec, type);
++}
 +
-+	mutex_lock(&acpiphp_context_lock);
-+	context = acpiphp_get_context(handle);
-+	if (context) {
-+		if (context->bridge) {
-+			get_bridge(context->bridge);
-+			data = context->bridge;
-+			work_func = _handle_hotplug_event_bridge;
-+		} else if (context->func) {
-+			get_bridge(context->func->slot->bridge);
-+			data = context->func;
-+			work_func = _handle_hotplug_event_func;
-+		}
-+		acpiphp_put_context(context);
-+	}
-+	mutex_unlock(&acpiphp_context_lock);
- 
- 	/*
- 	 * Currently the code adds all hotplug events to the kacpid_wq
-@@ -1195,8 +1176,8 @@ static void handle_hotplug_event_func(ac
- 	 * For now just re-add this work to the kacpi_hotplug_wq so we
- 	 * don't deadlock on hotplug actions.
- 	 */
--	get_bridge(func->slot->bridge);
--	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
-+	if (work_func)
-+		alloc_acpi_hp_work(handle, type, data, work_func);
- }
- 
- /*
-@@ -1267,33 +1248,25 @@ void acpiphp_enumerate_slots(struct pci_
- 	if (pci_is_root_bus(bridge->pci_bus))
- 		return;
- 
-+	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
-+	if (ACPI_SUCCESS(status)) {
-+		dbg("found ejectable p2p bridge\n");
-+		bridge->flags |= BRIDGE_HAS_EJ0;
-+	}
-+	if (context->handler_for_func) {
-+		/* Notify handler already installed. */
-+		bridge->func = context->func;
-+		get_bridge(context->func->slot->bridge);
-+		return;
-+	}
++void arch_teardown_msi_irqs(struct pci_dev *dev)
++{
++	x86_msi.teardown_msi_irqs(dev);
++}
 +
- 	/* install notify handler for P2P bridges */
- 	status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
--					     handle_hotplug_event_bridge,
--					     bridge);
--	if (ACPI_FAILURE(status)) {
--		acpi_handle_err(bridge->handle,
--				"failed to register notify handler\n");
--		goto err;
--	}
--	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
--	if (ACPI_FAILURE(status))
-+					     handle_hotplug_event, NULL);
-+	if (ACPI_SUCCESS(status))
- 		return;
++void arch_teardown_msi_irq(unsigned int irq)
++{
++	x86_msi.teardown_msi_irq(irq);
++}
++
++void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
++{
++	x86_msi.restore_msi_irqs(dev, irq);
++}
++
+ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.init			= native_io_apic_init_mappings,
+ 	.read			= native_io_apic_read,
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index aca7578..aa2f697 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -30,20 +30,21 @@ static int pci_msi_enable = 1;
  
--	dbg("found ejectable p2p bridge\n");
--	bridge->flags |= BRIDGE_HAS_EJ0;
--	if (context->func) {
--		get_bridge(context->func->slot->bridge);
--		bridge->func = context->func;
--		handle = context->handle;
--		WARN_ON(bridge->handle != handle);
--		status = acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--						    handle_hotplug_event_func);
--		if (ACPI_FAILURE(status))
--			acpi_handle_err(handle,
--					"failed to remove notify handler\n");
--	}
--	return;
-+	acpi_handle_err(bridge->handle, "failed to register notify handler\n");
+ /* Arch hooks */
  
-  err:
- 	cleanup_bridge(bridge);
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -137,6 +137,7 @@ struct acpiphp_context {
- 	struct acpiphp_func *func;
- 	struct acpiphp_bridge *bridge;
- 	unsigned int refcount;
-+	bool handler_for_func;
+-#ifndef arch_msi_check_device
+-int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+-	return 0;
++	return -EINVAL;
+ }
+-#endif
+ 
+-#ifndef arch_setup_msi_irqs
+-# define arch_setup_msi_irqs default_setup_msi_irqs
+-# define HAVE_DEFAULT_MSI_SETUP_IRQS
+-#endif
++void __weak arch_teardown_msi_irq(unsigned int irq)
++{
++}
+ 
+-#ifdef HAVE_DEFAULT_MSI_SETUP_IRQS
+-int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++{
++	return 0;
++}
++
++int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
+@@ -65,14 +66,11 @@ int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ 	return 0;
+ }
+-#endif
+ 
+-#ifndef arch_teardown_msi_irqs
+-# define arch_teardown_msi_irqs default_teardown_msi_irqs
+-# define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
+-#endif
+-
+-#ifdef HAVE_DEFAULT_MSI_TEARDOWN_IRQS
++/*
++ * We have a default implementation available as a separate non-weak
++ * function, as it is used by the Xen x86 PCI code
++ */
+ void default_teardown_msi_irqs(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
+@@ -89,15 +87,13 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
+ 			arch_teardown_msi_irq(entry->irq + i);
+ 	}
+ }
+-#endif
+ 
+-#ifndef arch_restore_msi_irqs
+-# define arch_restore_msi_irqs default_restore_msi_irqs
+-# define HAVE_DEFAULT_MSI_RESTORE_IRQS
+-#endif
++void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
++{
++	return default_teardown_msi_irqs(dev);
++}
+ 
+-#ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
+-void default_restore_msi_irqs(struct pci_dev *dev, int irq)
++void __weak arch_restore_msi_irqs(struct pci_dev *dev, int irq)
+ {
+ 	struct msi_desc *entry;
+ 
+@@ -114,7 +110,6 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+ 	if (entry)
+ 		write_msi_msg(irq, &entry->msg);
+ }
+-#endif
+ 
+ static void msi_set_enable(struct pci_dev *dev, int enable)
+ {
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index ee66f3a..18870b0 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -51,12 +51,17 @@ struct msi_desc {
  };
  
  /*
+- * The arch hook for setup up msi irqs
++ * The arch hooks to setup up msi irqs. Those functions are
++ * implemented as weak symbols so that they /can/ be overriden by
++ * architecture specific code if needed.
+  */
+ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
+ void arch_teardown_msi_irq(unsigned int irq);
+ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void arch_teardown_msi_irqs(struct pci_dev *dev);
+ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
++void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
++
++void default_teardown_msi_irqs(struct pci_dev *dev);
+ 
+ #endif /* LINUX_MSI_H */
+-- 
+1.8.1.2
 
