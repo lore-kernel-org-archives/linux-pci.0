@@ -1,75 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32272 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755358Ab3GYM23 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 08:28:29 -0400
-Date: Thu, 25 Jul 2013 08:28:14 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Cc: linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>, bhelgaas@google.com,
-	Feng Jin <joe.jin@oracle.com>,
-	"x86@kernel.org >> \"x86@kernel.org\"" <x86@kernel.org>
-Subject: Re: [PATCH 3/3] msix restore code optimization for dom0
-Message-ID: <20130725122813.GB23927@konrad-lan.dumpdata.com>
-References: <51EF453B.5070200@oracle.com>
- <20130724135555.GD2518@phenom.dumpdata.com>
- <51F0D109.4050002@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51F0D109.4050002@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:12505 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757764Ab3GOO5y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 15 Jul 2013 10:57:54 -0400
+From: Prarit Bhargava <prarit@redhat.com>
+To: linux-acpi@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>, Len Brown <lenb@kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"Myron Stowe" <mstowe@redhat.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] acpi, acpi_pci_irq_enable must return an error if ACPI cannot map an IRQ.
+Date: Mon, 15 Jul 2013 10:57:40 -0400
+Message-Id: <1373900260-1599-1-git-send-email-prarit@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 25, 2013 at 03:17:29PM +0800, Zhenzhong Duan wrote:
-> 
-> On 2013-07-24 21:55, Konrad Rzeszutek Wilk wrote:
-> >On Wed, Jul 24, 2013 at 11:08:43AM +0800, Zhenzhong Duan wrote:
-> >>PHYSDEVOP_restore_msi is used to restore all msix entrys in one hypercall
-> >>in dom0. But it is called multi times in current code.
-> >Couldn't the restore_msi_irqs instead check whether it has already
-> >made the hypercall (perhaps by seeing if the MSI-X's are enabled?)
-> >and if so don't do the hypercall?
-> I think it's better to remove the for loop for dom0, also hard to
-> know when to clear hypercall count.
-> >
-> >I think you are addressing the problem from a different viewpoint.
-> >
-> >The problem is not with the API (the x86_msi one). The problem
-> >is with the implementation (x86_msi.restore_msi_irq - specifically
-> >the Xen one) having an side effect.
-> We have x86_msi.restore_msi_irqs and no x86_msi.restore_msi_irq,if want to
-> add x86_msi.restore_msi_irq, same hypercall need to be added accordingly.
+Driver probe's currently do the following
 
-I think you need to repost this then without any mention to the
-implementation  and just point out that the reason for doing the cleanup
-from an API perspective.
+	pci_enable_device();
+	/* ... do some other init stuff, and eventually call ... */
+	request_irq();
 
-And also change the title. Thanks
+After pci_enable_device() is called it is assumed that the device's irq
+value (pci_dev->irq) has been appropriately set on success.  This value
+is passed into the request_irq() call.
+
+In the case that ACPI is used to determine the irq value, it is possible
+that the ACPI IRQ look up for a specific device fails and success is
+returned by pci_enable_device().
+
+The call sequence is:
+
+pci_enable_device();
+	-> pci_enable_device_flags();
+		->do_pci_enable_device();
+			-> pcibios_enable_device() which, if the device
+			   does not use MSI calls
+			   -> pcibios_enable_irq() which maps to
+			      acpi_pci_irq_enable()
+				-> acpi_pci_irq_lookup()
+
+If acpi_pci_irq_lookup() cannot map the device's IRQ value it returns NULL
+as an error.  The error is returned to acpi_pci_irq_enable(), but is not
+propagated further.  This can result in the driver returning success for
+pci_enable_device() and the driver probe attempting to call request_irq()
+with dev->irq = 0.
+
+This patch modifies acpi_pci_irq_enable() to return an error in the case
+that an entry is not found in the ACPI tables.
+
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+Cc: Len Brown <lenb@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: "Bjorn Helgaas" <bhelgaas@google.com>
+Cc: "Myron Stowe" <mstowe@redhat.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/acpi/pci_irq.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 41c5e1b..9681847 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -430,6 +430,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		} else {
+ 			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
+ 				 pin_name(pin));
++			return -ENOENT;
+ 		}
  
-> >
-> >>This patch split arch_restore_msi_irqs into two functions.
-> >>Use arch_restore_msi_irq deal with one entry and avoid call hypercall multi
-> >>times in __pci_restore_msix_state.
-> >But irregardless of how you address the problem, this in the MSI code
-> >is a bit odd:
-> >
-> >	list_for_each_entry(entry, &dev->msi_list, list) {
-> >		arch_restore_msi_irqs(dev, entry->irq);
-> >	}
-> >
-> >and if you collapse that and make the 'arch_restore_msi_irqs' be responsible
-> >for doing all the heavy lifting.. That does seem an improvement on the API
-> >and will make it inline with 'teardown_msi_irqs'.
-> >
-> >So from that view I think it would be nicer?
-> Yes, This patch just did that. There is
-> teardown_msi_irqs/teardown_msi_irq pair.
-> But in current code, arch_restore_msi_irqs is used for one msix
-> entry, this is not consistent with
-> its naming tradiition. So I changed default_restore_msi_irqs to deal
-> with all entrys and
-> default_restore_msi_irq to deal with one entry for baremetal. For
-> dom0, we have
-> PHYSDEVOP_restore_msi  to restore all msix entrys.
+ 		return 0;
+-- 
+1.7.9.3
+
