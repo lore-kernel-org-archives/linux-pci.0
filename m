@@ -1,113 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:39026 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756657Ab3GKX64 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Jul 2013 19:58:56 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 19/30] ACPI / hotplug / PCI: Rework namespace scanning and trimming routines
-Date: Fri, 12 Jul 2013 01:57:58 +0200
-Message-ID: <7159825.56C6kpKbiy@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:56382 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756082Ab3GOLw5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 07:52:57 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv5 06/11] irqchip: armada-370-xp: properly request resources
+Date: Mon, 15 Jul 2013 13:52:42 +0200
+Message-Id: <1373889167-27878-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Instead of using of_iomap(), we now use of_address_to_resource(),
+request_mem_region() and ioremap(). This allows the corresponding I/O
+regions to be properly requested and visible in /proc/iomem.
 
-The acpiphp_bus_trim() and acpiphp_bus_add() functions need not
-return error codes that are never checked, so redefine them and
-simplify them a bit.
+The main motivation for this change is that the introduction of the
+MSI support requires us to get the physical address of the main
+interrupt controller registers, so we will need the corresponding
+'struct resource' anyway.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+We also take this opportunity to change a panic() to BUG_ON(), in
+order to be consistent with the rest of the driver.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   52 +++++++++----------------------------
- 1 file changed, 13 insertions(+), 39 deletions(-)
+ drivers/irqchip/irq-armada-370-xp.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -552,53 +552,27 @@ static unsigned char acpiphp_max_busnr(s
- 	return max;
- }
- 
--
- /**
-- * acpiphp_bus_add - add a new bus to acpi subsystem
-- * @func: acpiphp_func of the bridge
-+ * acpiphp_bus_trim - Trim device objects in an ACPI namespace subtree.
-+ * @handle: ACPI device object handle to start from.
-  */
--static int acpiphp_bus_add(struct acpiphp_func *func)
-+static void acpiphp_bus_trim(acpi_handle handle)
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index bb328a3..26adc74 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -248,12 +248,25 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 					     struct device_node *parent)
  {
--	acpi_handle handle = func_to_handle(func);
--	struct acpi_device *device;
--	int ret_val;
--
--	if (!acpi_bus_get_device(handle, &device)) {
--		dbg("bus exists... trim\n");
--		/* this shouldn't be in here, so remove
--		 * the bus then re-add it...
--		 */
--		acpi_bus_trim(device);
--	}
--
--	ret_val = acpi_bus_scan(handle);
--	if (!ret_val)
--		ret_val = acpi_bus_get_device(handle, &device);
--
--	if (ret_val)
--		dbg("error adding bus, %x\n", -ret_val);
-+	struct acpi_device *adev = NULL;
++	struct resource main_int_res, per_cpu_int_res;
+ 	u32 control;
  
--	return ret_val;
-+	acpi_bus_get_device(handle, &adev);
-+	if (adev)
-+		acpi_bus_trim(adev);
- }
+-	main_int_base = of_iomap(node, 0);
+-	per_cpu_int_base = of_iomap(node, 1);
++	BUG_ON(of_address_to_resource(node, 0, &main_int_res));
++	BUG_ON(of_address_to_resource(node, 1, &per_cpu_int_res));
  
--
- /**
-- * acpiphp_bus_trim - trim a bus from acpi subsystem
-- * @handle: handle to acpi namespace
-+ * acpiphp_bus_add - Scan ACPI namespace subtree.
-+ * @handle: ACPI object handle to start the scan from.
-  */
--static int acpiphp_bus_trim(acpi_handle handle)
-+static void acpiphp_bus_add(acpi_handle handle)
- {
--	struct acpi_device *device;
--	int retval;
--
--	retval = acpi_bus_get_device(handle, &device);
--	if (retval) {
--		dbg("acpi_device not found\n");
--		return retval;
--	}
--
--	acpi_bus_trim(device);
--	return 0;
-+	acpiphp_bus_trim(handle);
-+	acpi_bus_scan(handle);
- }
++	BUG_ON(!request_mem_region(main_int_res.start,
++				   resource_size(&main_int_res),
++				   node->full_name));
++	BUG_ON(!request_mem_region(per_cpu_int_res.start,
++				   resource_size(&per_cpu_int_res),
++				   node->full_name));
++
++	main_int_base = ioremap(main_int_res.start,
++				resource_size(&main_int_res));
+ 	BUG_ON(!main_int_base);
++
++	per_cpu_int_base = ioremap(per_cpu_int_res.start,
++				   resource_size(&per_cpu_int_res));
+ 	BUG_ON(!per_cpu_int_base);
  
- static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
-@@ -661,7 +635,7 @@ static int __ref enable_device(struct ac
- 		goto err_exit;
+ 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
+@@ -262,8 +275,7 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 		irq_domain_add_linear(node, (control >> 2) & 0x3ff,
+ 				&armada_370_xp_mpic_irq_ops, NULL);
  
- 	list_for_each_entry(func, &slot->funcs, sibling)
--		acpiphp_bus_add(func);
-+		acpiphp_bus_add(func_to_handle(func));
+-	if (!armada_370_xp_mpic_domain)
+-		panic("Unable to add Armada_370_Xp MPIC irq domain (DT)\n");
++	BUG_ON(!armada_370_xp_mpic_domain);
  
- 	num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
- 	if (num == 0) {
+ 	irq_set_default_host(armada_370_xp_mpic_domain);
+ 
+-- 
+1.8.1.2
 
