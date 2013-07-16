@@ -1,79 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:34059 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753151Ab3GPIeT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2013 04:34:19 -0400
-Date: Tue, 16 Jul 2013 10:33:51 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+Received: from mail.mev.co.uk ([62.49.15.74]:56314 "EHLO mail.mev.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932391Ab3GPPZe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Jul 2013 11:25:34 -0400
+From: Ian Abbott <abbotti@mev.co.uk>
+To: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	driverdev-devel@linuxdriverproject.org,
+	linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv5 00/11] MSI support for Marvell EBU PCIe driver
-Message-ID: <20130716103351.15b0fb50@skate>
-In-Reply-To: <20130715162709.GA24625@dhcp-172-17-186-34.nvidia.com>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<51E4167B.4000208@wwwdotorg.org>
-	<20130715162709.GA24625@dhcp-172-17-186-34.nvidia.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	H Hartley Sweeten <hsweeten@visionengravers.com>,
+	Ian Abbott <abbotti@mev.co.uk>
+Subject: [PATCH 1/4] pci_ids.h: move PCI_VENDOR_ID_AMCC here
+Date: Tue, 16 Jul 2013 16:14:38 +0100
+Message-Id: <1373987681-18245-2-git-send-email-abbotti@mev.co.uk>
+In-Reply-To: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
+References: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
+PCI_VENDOR_ID_AMCC is defined locally in
+"drivers/staging/comedi/comedidev.h" for a few comedi hardware drivers,
+namely "adl_pci9118", "addi_apci_1500" and "addi_apci_3120" (also
+"addi_apci_1710" but that is not currently built and will probably be
+removed soon).  Move the define into "include/linux/pci_ids.h" as it is
+shared by several drivers (albeit all comedi drivers currently).
 
-On Mon, 15 Jul 2013 09:27:10 -0700, Thierry Reding wrote:
+PCI_VENDOR_ID_AMCC happens to have the same value (0x10e8) as
+PCI_VENDOR_ID_ADDIDATA_OLD.  The vendor ID is actually assigned to
+Applied Micro Circuits Corporation and Addi-Data were using device IDs
+assigned by AMCC on some of their earlier PCI boards. The
+PCI_VENDOR_ID_ADDIDATA_OLD define is still being used by the "8250_pci"
+PCI serial board driver.
 
-> We need at least patches 2, 4 and 8 for Tegra.
+Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
+---
+ drivers/staging/comedi/comedidev.h | 1 -
+ include/linux/pci_ids.h            | 4 +++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-Are you sure you don't want patch 1 ? It allows to replace the
-allocation of MSI interrupt numbers for the MSI driver by a generic
-facility based on irq domains.
-
-> There's still the option
-> of working around patch 8 by using the custom root bus scan function
-> that we have to use anyway, so I guess we could even trim the
-> requirement down to patches 2 and 4 if we really need.
-
-Bjorn said he didn't like having the msi chip assignment in the middle
-of the root bus scan function, because he was hoping someday to
-refactor this function. Quoting Bjorn:
-
-"""
-> +	bus->msi = pcie->msi;  
-
-Ideally, arches could use pci_scan_root_bus(), which does the
-pci_scan_child_bus() itself, so I never like to add arch-specific code
-between pci_create_root_bus() and pci_scan_child_bus().
-
-But you should be able to accomplish this by setting bus->msi in a
-pcibios_add_bus() hook.  There is a corresponding pcibios_remove_bus()
-hook that might be useful for deallocating the msi_chip.  I'm not too
-clear on how you manage the msi_chip lifetime -- I see the alloc in
-armada_370_xp_msi_init(), but I'm not sure whether you ever deallocate
-it or how you know when it would be safe to do so.
-"""
-
-This is from:
-
-Subject: Re: [PATCH v2 6/8] pci: mvebu: add support for MSI
-Date: Tue, 18 Jun 2013 16:57:11 -0600
-
-Best regards,
-
-Thomas
+diff --git a/drivers/staging/comedi/comedidev.h b/drivers/staging/comedi/comedidev.h
+index b75915f..9f4f73f 100644
+--- a/drivers/staging/comedi/comedidev.h
++++ b/drivers/staging/comedi/comedidev.h
+@@ -400,7 +400,6 @@ int comedi_driver_unregister(struct comedi_driver *);
+  */
+ #define PCI_VENDOR_ID_KOLTER		0x1001
+ #define PCI_VENDOR_ID_ICP		0x104c
+-#define PCI_VENDOR_ID_AMCC		0x10e8
+ #define PCI_VENDOR_ID_DT		0x1116
+ #define PCI_VENDOR_ID_IOTECH		0x1616
+ #define PCI_VENDOR_ID_CONTEC		0x1221
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 3bed2e8..9d99119 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1311,6 +1311,8 @@
+ #define PCI_DEVICE_ID_IMS_TT128		0x9128
+ #define PCI_DEVICE_ID_IMS_TT3D		0x9135
+ 
++#define PCI_VENDOR_ID_AMCC		0x10e8
++
+ #define PCI_VENDOR_ID_INTERG		0x10ea
+ #define PCI_DEVICE_ID_INTERG_1682	0x1682
+ #define PCI_DEVICE_ID_INTERG_2000	0x2000
+@@ -2256,7 +2258,7 @@
+ /*
+  * ADDI-DATA GmbH communication cards <info@addi-data.com>
+  */
+-#define PCI_VENDOR_ID_ADDIDATA_OLD             0x10E8
++#define PCI_VENDOR_ID_ADDIDATA_OLD             0x10E8	/* actually AMCC */
+ #define PCI_VENDOR_ID_ADDIDATA                 0x15B8
+ #define PCI_DEVICE_ID_ADDIDATA_APCI7500        0x7000
+ #define PCI_DEVICE_ID_ADDIDATA_APCI7420        0x7001
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.8.2.1
+
