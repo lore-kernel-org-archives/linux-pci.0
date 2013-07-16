@@ -1,83 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21982 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932138Ab3GWPrd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Jul 2013 11:47:33 -0400
-Message-ID: <1374594444.15429.34.camel@ul30vt.home>
-Subject: Re: [PATCH v2 0/3] pci: ACS fixes & quirks
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
-	andihartmann@01019freenet.de, linux-kernel@vger.kernel.org,
-	ddutile <ddutile@redhat.com>
-Date: Tue, 23 Jul 2013 09:47:24 -0600
-In-Reply-To: <1373300262.2602.22.camel@ul30vt.home>
-References: <20130627222159.16564.38166.stgit@bling.home>
-	 <1373300262.2602.22.camel@ul30vt.home>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:38108 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933284Ab3GPVnL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2013 17:43:11 -0400
+Date: Tue, 16 Jul 2013 23:43:07 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv5 00/11] MSI support for Marvell EBU PCIe driver
+Message-ID: <20130716234307.3d5ed229@skate>
+In-Reply-To: <20130716210509.GA29318@dhcp-172-17-186-34.nvidia.com>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<51E4167B.4000208@wwwdotorg.org>
+	<20130715162709.GA24625@dhcp-172-17-186-34.nvidia.com>
+	<20130716103351.15b0fb50@skate>
+	<20130716210509.GA29318@dhcp-172-17-186-34.nvidia.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Thierry,
 
-This series was ack'd by Don.  I haven't heard reports of any problems.
-What more needs to be done here?  Bjorn?  Thanks,
+On Tue, 16 Jul 2013 14:05:10 -0700, Thierry Reding wrote:
 
-Alex
-
-
-On Mon, 2013-07-08 at 10:17 -0600, Alex Williamson wrote:
-> Ping.  Comments?
+> > This is from:
+> > 
+> > Subject: Re: [PATCH v2 6/8] pci: mvebu: add support for MSI
+> > Date: Tue, 18 Jun 2013 16:57:11 -0600
 > 
-> On Thu, 2013-06-27 at 16:39 -0600, Alex Williamson wrote:
-> > v2:
-> > 
-> > Revised patch 1/ to match comments from Bjorn.  PCIe event collectors
-> > and PCIe-to-PCI bridges now indicate that they do not support ACS.
-> > I've reached out to try to get clarification on this, but I think it's
-> > reasonable to proceed with a conservative approach until then.  I also
-> > added PCI-to-PCIe bridges for the sake of being complete.  Also added
-> > more comments about the purpose and behavior of pci_acs_enabled().  If
-> > I've overlooked anything else that needs to be addressed, please let
-> > me know.
-> > 
-> > Patch 2/ had no comments, it's unchanged.
-> > 
-> > Patch 3/ is added.  This was sent as an RFC nearly a year ago and
-> > Joerg confirmed for us that these devices do not support p2p on AMD
-> > systems with AMD IOMMU.  We can't simply use iommu_present() to test
-> > for an IOMMU because it's setup just after we need this function.  
-> > Instead we test for the ACPI IVRS table that describes the IOMMU.  It
-> > would probably suffice to skip an actual AMD IOMMU check, but I don't
-> > want it to later come bite us if these ASICs get re-used, maybe with
-> > a different IOMMU, and don't make the same guarantees.
-> > 
-> > Joerg, I was also curious back when we investigated this patch if the
-> > same rules hold true for these other southbridge devices:
-> > 
-> > 1002:43a0 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
-> > 1002:43a1 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
-> > 1002:43a2 SB900 PCI to PCI bridge (PCIE port 2)
-> > 1002:43a3 SB900 PCI to PCI bridge (PCIE port 3)
-> > 
-> > If you remember or have contacts to poke, I'd be happy to follow-up
-> > with another patch to add them.  Thanks,
-> > 
-> > Alex
-> > 
-> > ---
-> > 
-> > Alex Williamson (3):
-> >       pci: Fix flaw in pci_acs_enabled()
-> >       pci: Differentiate ACS controllable from enabled
-> >       pci: ACS quirk for AMD southbridge
-> > 
-> > 
-> >  drivers/pci/pci.c    |   93 +++++++++++++++++++++++++++++++++++++++++---------
-> >  drivers/pci/quirks.c |   50 +++++++++++++++++++++++++++
-> >  2 files changed, 127 insertions(+), 16 deletions(-)
+> Yes, I'm aware of that discussion. However we currently need to have the
+> custom root bus scan implementation anyway because pci_scan_root_bus()
+> just doesn't work on ARM. So again, since we'll have to rework the
+> driver anyway in order to use pci_scan_root_bus() once the issues have
+> been resolved, it wouldn't hurt to postpone the transition to the new
+> ARM pcibios_add_bus() support until that point.
 > 
-> 
+> All I was trying to do was reduce the list of common dependencies in an
+> attempt to make merging it easier.
 
+Understood. Bjorn, since you are the one who originally requested
+the usage of pcibios_add_bus(), would you agree with the idea proposed
+by Thierry? It would remove one dependency for both the Marvell MSI
+support and Tegra PCIe support, which would help getting this code
+merged.
 
+As Thierry points out, this can easily be resolved at a later point,
+once the new hooks are merged in the ARM PCI core.
 
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
