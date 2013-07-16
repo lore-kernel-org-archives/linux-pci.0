@@ -1,32 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f43.google.com ([209.85.212.43]:54815 "EHLO
-	mail-vb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753746Ab3GTUy1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jul 2013 16:54:27 -0400
-Received: by mail-vb0-f43.google.com with SMTP id e12so3920399vbg.2
-        for <linux-pci@vger.kernel.org>; Sat, 20 Jul 2013 13:54:26 -0700 (PDT)
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:49311 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932356Ab3GPNQJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2013 09:16:09 -0400
+Date: Tue, 16 Jul 2013 09:15:47 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv5 00/11] MSI support for Marvell EBU PCIe driver
+Message-ID: <20130716131547.GC12062@titan.lakedaemon.net>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <51E4167B.4000208@wwwdotorg.org>
+ <20130716104347.045a612a@skate>
 MIME-Version: 1.0
-In-Reply-To: <1374353080-15837-1-git-send-email-teg@jklm.no>
-References: <1374353080-15837-1-git-send-email-teg@jklm.no>
-Date: Sat, 20 Jul 2013 22:54:26 +0200
-Message-ID: <CAGWsdOgb1J-fVzYsrasnDVALeECXgwF=bA1iiokqgoA+MMGT_A@mail.gmail.com>
-Subject: Re: [systemd-devel] [PATCH][pciutils] lspci: pci_id_lookup - add
- udev/hwdb support
-From: Michael Biebl <mbiebl@gmail.com>
-To: Tom Gundersen <teg@jklm.no>
-Cc: linux-pci@vger.kernel.org,
-	systemd Mailing List <systemd-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130716104347.045a612a@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/7/20 Tom Gundersen <teg@jklm.no>:
-> Ideally Linux distros using systemd would like to not ship pci.ids, but use hwdb as the only source
-> of this information, which this patch allows.
+On Tue, Jul 16, 2013 at 10:43:47AM +0200, Thomas Petazzoni wrote:
+> Dear Stephen Warren,
+> 
+> On Mon, 15 Jul 2013 09:34:19 -0600, Stephen Warren wrote:
+> 
+> > > This patch set is intended for merging in 3.12, so the respective
+> > > maintainers of the different areas are invited to review/ack the
+> > > patches, see below for the details. This set of patches applies on top
+> > > of 3.11-rc1.
+> > 
+> > Thomas, who is going to merge this series?
+> 
+> I don't know. There are quite a few build dependencies in there:
+> 
+>  * PATCH 7 build depends on PATCH 1 and PATCH 5, and obviously depends
+>    on PATCH 6.
+> 
+>  * PATCH 2 to 5 really are one thing, they depend on each other.
+> 
+>  * PATCH 10 build depends on PATCH 5 and PATCH 8.
+> 
+> A quick diagram of the dependencies, best viewed with a fixed-size font
+> mailer.
+> 
+> kernel/irq/irqdomain    drivers/pci        arch/arm/kernel
+>      patch 1           patch 2, 3, 4           patch 8
+>         ||                  ||                   ||
+>         ||                  \/                   \/
+>         ||               drivers/of   ==> drivers/pci/host
+>         ||                patch 5           patch 10
+>         ||                  ||
+>         \\__________________//
+>                   ||
+>                   \/
+>             drivers/irqchip
+>               patch 6, 7
 
-I don't think you strictly need to run systemd to make use of hwdb.
-You just need to run a recent enough version of udev [1].
+Well, that got more complicated.  :(  No cookie for you.
 
-Michael
+> Patches 9 and 11 are DT patches, so they are not mentioned in this
+> diagram.
+> 
+> Normally tegra would require 1, 2, 3, 4, 5 and 8, so ideally, with
+> the respective maintainers ACKs, Jason Cooper could take them in a
+> specific topic stable branch that would not be rebased, on top of which
+> both the Marvell work and Tegra work could be done.
 
-[1]  udev 196 or later
+After my recent discussions with tglx, here's my proposal:
+
+- rmk creates a dedicated topic branch with patch 8
+
+- Bjorn creates a dedicated topic branch based on rmk's with 2, 3, 4, 5,
+  and 10
+
+- tglx creates a dedicated topic branch based on Bjorn's with 1, 6, 7
+
+- I take 9 and 11.
+
+For Tegra, tglx can tag patch 1 for merging.  Tegra will 'adopt' patch
+10, but that shouldn't hurt anything.
+
+thx,
+
+Jason.
