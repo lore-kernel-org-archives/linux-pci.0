@@ -1,115 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:35090 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752833Ab3GHUqi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jul 2013 16:46:38 -0400
-Received: by mail-oa0-f41.google.com with SMTP id n10so6970920oag.0
-        for <linux-pci@vger.kernel.org>; Mon, 08 Jul 2013 13:46:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1372691432-6440-2-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com> <1372691432-6440-2-git-send-email-weiyang@linux.vnet.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 8 Jul 2013 14:46:17 -0600
-Message-ID: <CAErSpo4tejULHMTzSf31suh1jnU=9vx-u4PnV2EJfKBuWqeEkw@mail.gmail.com>
-Subject: Re: [PATCH 1/4] PCI: optimize pci_bus_get_depth() by enumerating on
- pci bus hierachy
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ian Abbott <abbotti@mev.co.uk>
+To: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	driverdev-devel@linuxdriverproject.org,
+	linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	H Hartley Sweeten <hsweeten@visionengravers.com>,
+	Ian Abbott <abbotti@mev.co.uk>
+Subject: [PATCH 3/4] serial: 8250_pci: use local device ID for ADDI-DATA APCI-7800
+Date: Tue, 16 Jul 2013 16:14:40 +0100
+Message-Id: <1373987681-18245-4-git-send-email-abbotti@mev.co.uk>
+In-Reply-To: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
+References: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 1, 2013 at 9:10 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> Normally, on one pci bus there would be more devices than pci buses. When
-> calculating the depth of pci bus, it would be more time efficient by
-> enumerating through the child buses instead of the child devices.
->
-> Also by doing so, the code seems more self explaining. Previously, it go
-> through the pci devices and check whether a bridge introduce a child bus or
-> not, which needs more background knowledge to understand it.
->
-> This patch caculating the depth by enumerating on pci bus hierachy in an
-> iterative way.
+The quirks and PCI ID table entries for the original ADDI-DATA APCI-7800
+(not the newer APCI-7800-3) use PCI_DEVICE_ID_ADDIDATA_APCI7800 from
+<linux/pci_ids.h> but the device ID was actually assigned to ADDI-DATA
+by Applied Micro Circuits Corporation (PCI_VENDOR_ID_AMCC).  Replace it
+locally with #define PCI_DEVICE_ID_AMCC_ADDIDATA_APCI7800.
 
-Your code does have the advantage of not being recursive, but the
-original code is significantly shorter and, in my opinion, much more
-readable.  This is not in a performance path, so I don't see any
-advantage in optimizing.
+Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
+---
+ drivers/tty/serial/8250/8250_pci.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> Reviewed-by: Ram Pai <linuxram@us.ibm.com>
-> Reviewed-by: Xiao Guangrong <xiaoguangrong@linux.vnet.ibm.com>
-> Reviewed-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-> ---
->  drivers/pci/setup-bus.c |   43 ++++++++++++++++++++++++++++++++-----------
->  1 files changed, 32 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 16abaaa..b333f73 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1299,22 +1299,43 @@ static void pci_bus_dump_resources(struct pci_bus *bus)
->
->  static int __init pci_bus_get_depth(struct pci_bus *bus)
->  {
-> -       int depth = 0;
-> -       struct pci_dev *dev;
-> +       int max_depth, depth;
-> +       struct pci_bus *parent, *curr;
-> +       struct list_head *node;
->
-> -       list_for_each_entry(dev, &bus->devices, bus_list) {
-> -               int ret;
-> -               struct pci_bus *b = dev->subordinate;
-> -               if (!b)
-> -                       continue;
-> +       /* no child? */
-> +       if (list_empty(&bus->children))
-> +               return 0;
->
-> -               ret = pci_bus_get_depth(b);
-> -               if (ret + 1 > depth)
-> -                       depth = ret + 1;
-> +       node = bus->children.next;
-> +       parent = bus;
-> +       max_depth = depth = 1;
-> +
-> +       while (parent) {
-> +               /* hit the head, go back to parent level */
-> +               if (node == &parent->children) {
-> +                       node = parent->node.next;
-> +                       parent = parent->parent;
-> +                       depth--;
-> +                       continue;
-> +               }
-> +               curr = list_entry(node, struct pci_bus, node);
-> +               /* depth first */
-> +               if (!list_empty(&curr->children)) {
-> +                       node = curr->children.next;
-> +                       parent = curr;
-> +                       depth++;
-> +                       if (max_depth < depth)
-> +                               max_depth = depth;
-> +               }
-> +               /* no child, go to the sibling */
-> +               else
-> +                       node = curr->node.next;
->         }
->
-> -       return depth;
-> +       return max_depth;
->  }
-> +
->  static int __init pci_get_max_depth(void)
->  {
->         int depth = 0;
-> --
-> 1.7.5.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/tty/serial/8250/8250_pci.c b/drivers/tty/serial/8250/8250_pci.c
+index 3e3d59b..e9b915c 100644
+--- a/drivers/tty/serial/8250/8250_pci.c
++++ b/drivers/tty/serial/8250/8250_pci.c
+@@ -1565,6 +1565,7 @@ pci_wch_ch353_setup(struct serial_private *priv,
+ #define PCI_DEVICE_ID_COMMTECH_4228PCIE	0x0021
+ #define PCI_DEVICE_ID_COMMTECH_4222PCIE	0x0022
+ #define PCI_DEVICE_ID_BROADCOM_TRUMANAGE 0x160a
++#define PCI_DEVICE_ID_AMCC_ADDIDATA_APCI7800 0x818e
+ 
+ #define PCI_VENDOR_ID_SUNIX		0x1fd4
+ #define PCI_DEVICE_ID_SUNIX_1999	0x1999
+@@ -1588,7 +1589,7 @@ static struct pci_serial_quirk pci_serial_quirks[] __refdata = {
+ 	*/
+ 	{
+ 		.vendor         = PCI_VENDOR_ID_AMCC,
+-		.device         = PCI_DEVICE_ID_ADDIDATA_APCI7800,
++		.device         = PCI_DEVICE_ID_AMCC_ADDIDATA_APCI7800,
+ 		.subvendor      = PCI_ANY_ID,
+ 		.subdevice      = PCI_ANY_ID,
+ 		.setup          = addidata_apci7800_setup,
+@@ -4698,7 +4699,7 @@ static struct pci_device_id serial_pci_tbl[] = {
+ 		pbn_b0_1_115200 },
+ 
+ 	{	PCI_VENDOR_ID_AMCC,
+-		PCI_DEVICE_ID_ADDIDATA_APCI7800,
++		PCI_DEVICE_ID_AMCC_ADDIDATA_APCI7800,
+ 		PCI_ANY_ID,
+ 		PCI_ANY_ID,
+ 		0,
+-- 
+1.8.2.1
+
