@@ -1,70 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:51852 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595Ab3GZG4P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 02:56:15 -0400
-From: Rui Wang <ruiv.wang@gmail.com>
-To: bhelgaas@google.com
-Cc: tony.luck@intel.com, chaohong.guo@intel.com,
-	gong.chen@linux.intel.com, rafael.j.wysocki@intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rui Wang <rui.y.wang@intel.com>
-Subject: [RFC 0/3] IO Hook: Method for emulating h/w events
-Date: Fri, 26 Jul 2013 14:51:12 +0800
-Message-Id: <1374821475-3196-1-git-send-email-rui.y.wang@intel.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:34123 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753351Ab3GPIoB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2013 04:44:01 -0400
+Date: Tue, 16 Jul 2013 10:43:47 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv5 00/11] MSI support for Marvell EBU PCIe driver
+Message-ID: <20130716104347.045a612a@skate>
+In-Reply-To: <51E4167B.4000208@wwwdotorg.org>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<51E4167B.4000208@wwwdotorg.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Dear Stephen Warren,
 
-This was originally the method I used to test hotplug on Intel SDV machines
-which are not capable of doing hotplug. I would like to present it here in
-case it interests the community, then it can be made available to a wider
-range of developers who are working on hotplug.
+On Mon, 15 Jul 2013 09:34:19 -0600, Stephen Warren wrote:
 
-I used it to generate desired ACPI events, PCI interrupts, and more. So
-things like CPU hotplug, IOH hotplug, memory hotplug, PCI native hotplug,
-PCI AER injection can be emulated and tested easily.
+> > This patch set is intended for merging in 3.12, so the respective
+> > maintainers of the different areas are invited to review/ack the
+> > patches, see below for the details. This set of patches applies on top
+> > of 3.11-rc1.
+> 
+> Thomas, who is going to merge this series?
 
-The best thing is that, it doesn't require any modification to those drivers
-involved. It works with whatever hardware events that the user can imagine.
-Further development in user-space using scripts may help simplify the usage
-model and add more software-defined logic on hardware.
+I don't know. There are quite a few build dependencies in there:
 
-Because it modifies the heart of all h/w access functions, I used Jump Label
-to reduce the performance penalty to effectively zero.
+ * PATCH 7 build depends on PATCH 1 and PATCH 5, and obviously depends
+   on PATCH 6.
 
-I tested the performance by repeatedly running lspci, which calls into the
-pci access functions. There's no added overhead observed.
+ * PATCH 2 to 5 really are one thing, they depend on each other.
 
-Regards,
-Rui Wang
-Intel Open Source Technology Center
+ * PATCH 10 build depends on PATCH 5 and PATCH 8.
 
-Rui Wang (3):
-  IO Hook: core functions and Register Override
-  IO Hook: kernel interface to manage the hook
-  IO Hook: sysfs interface to emulate h/w events
+A quick diagram of the dependencies, best viewed with a fixed-size font
+mailer.
 
- Documentation/PCI/iohook.txt      |  290 +++++++++++++++++
- arch/x86/Kconfig                  |    7 +
- arch/x86/boot/compressed/Makefile |    1 +
- arch/x86/include/asm/io.h         |   58 ++++-
- arch/x86/vdso/Makefile            |    2 +
- drivers/misc/Kconfig              |    1 +
- drivers/misc/Makefile             |    1 +
- drivers/misc/iohook/Kconfig       |    5 +
- drivers/misc/iohook/Makefile      |    1 +
- drivers/misc/iohook/iohook.c      |  503 +++++++++++++++++++++++++++++
- drivers/pci/access.c              |  630 +++++++++++++++++++++++++++++++++++++
- include/linux/reg_ovrd.h          |   55 ++++
- 12 files changed, 1552 insertions(+), 2 deletions(-)
- create mode 100644 Documentation/PCI/iohook.txt
- create mode 100644 drivers/misc/iohook/Kconfig
- create mode 100644 drivers/misc/iohook/Makefile
- create mode 100644 drivers/misc/iohook/iohook.c
- create mode 100644 include/linux/reg_ovrd.h
+kernel/irq/irqdomain    drivers/pci        arch/arm/kernel
+     patch 1           patch 2, 3, 4           patch 8
+        ||                  ||                   ||
+        ||                  \/                   \/
+        ||               drivers/of   ==> drivers/pci/host
+        ||                patch 5           patch 10
+        ||                  ||
+        \\__________________//
+                  ||
+                  \/
+            drivers/irqchip
+              patch 6, 7
 
+Patches 9 and 11 are DT patches, so they are not mentioned in this
+diagram.
+
+Normally tegra would require 1, 2, 3, 4, 5 and 8, so ideally, with
+the respective maintainers ACKs, Jason Cooper could take them in a
+specific topic stable branch that would not be rebased, on top of which
+both the Marvell work and Tegra work could be done.
+
+I really would like to see those patches very soon in linux-next, in
+order to get some build coverage, especially for the 2, 3 and 4 patches
+that touch a number of architectures.
+
+Thanks,
+
+Thomas
 -- 
-1.7.5.4
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
