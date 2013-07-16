@@ -1,40 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:41853 "EHLO gate.crashing.org"
+Received: from mail.mev.co.uk ([62.49.15.74]:56315 "EHLO mail.mev.co.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751670Ab3GEXFZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Jul 2013 19:05:25 -0400
-Message-ID: <1373065511.4446.11.camel@pasglop>
-Subject: Re: [PATCH 1/8] PCI: Add pcibios_stop_dev()
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Sat, 06 Jul 2013 09:05:11 +1000
-In-Reply-To: <CAErSpo52hic4nb-RtTT+e1nhXFeuWUJWajEzMy3j6wzWHVaG4A@mail.gmail.com>
-References: <1372993054-25730-1-git-send-email-shangw@linux.vnet.ibm.com>
-	 <1372993054-25730-2-git-send-email-shangw@linux.vnet.ibm.com>
-	 <CAErSpo7QGD99HM1fEcvGi-9h3HX6C8nu1mzJHnMMUKWTNO0vnw@mail.gmail.com>
-	 <1373063807.4446.10.camel@pasglop>
-	 <CAErSpo52hic4nb-RtTT+e1nhXFeuWUJWajEzMy3j6wzWHVaG4A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S932445Ab3GPPZe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Jul 2013 11:25:34 -0400
+From: Ian Abbott <abbotti@mev.co.uk>
+To: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	driverdev-devel@linuxdriverproject.org,
+	linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	H Hartley Sweeten <hsweeten@visionengravers.com>,
+	Ian Abbott <abbotti@mev.co.uk>
+Subject: [PATCH 4/4] pci_ids.h: remove PCI_VENDOR_ID_ADDIDATA_OLD and PCI_DEVICE_ID_ADDIDATA_APCI7800
+Date: Tue, 16 Jul 2013 16:14:41 +0100
+Message-Id: <1373987681-18245-5-git-send-email-abbotti@mev.co.uk>
+In-Reply-To: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
+References: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-07-05 at 16:49 -0600, Bjorn Helgaas wrote:
-> I know we have paths where we save config space, do a reset, and
-> restore config space.  I don't like those because some quirks aren't
-> applied and I don't believe restoring config space is sufficient to
-> make the device safe to use.  There could be internal state that we
-> aren't restoring.  It's also possible that a firmware update means the
-> device is different than it was before the reset, e.g., BARs could be
-> different types or sizes.
+These two defines are no longer used.  They were only used by the PCI
+serial driver "8250_pci" to support the original ADDI-DATA APCI-7800
+card.  In that driver, PCI_VENDOR_ID_ADDIDATA_OLD has been replaced with
+PCI_VENDOR_ID_AMCC which has the same value (0x10e8), and
+PCI_DEVICE_ID_ADDIDATA_APCI7800 has been replaced with a local #define
+PCI_DEVICE_ID_AMCC_ADDIDATA_APCI7800 with the same value (0x818e).
 
-True. Ok, I'll stick to the actual hotplug path then, you make
-good points.
+Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
+---
+ include/linux/pci_ids.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-Cheers,
-Ben.
-
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 9d99119..6dec3d6 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2258,12 +2258,10 @@
+ /*
+  * ADDI-DATA GmbH communication cards <info@addi-data.com>
+  */
+-#define PCI_VENDOR_ID_ADDIDATA_OLD             0x10E8	/* actually AMCC */
+ #define PCI_VENDOR_ID_ADDIDATA                 0x15B8
+ #define PCI_DEVICE_ID_ADDIDATA_APCI7500        0x7000
+ #define PCI_DEVICE_ID_ADDIDATA_APCI7420        0x7001
+ #define PCI_DEVICE_ID_ADDIDATA_APCI7300        0x7002
+-#define PCI_DEVICE_ID_ADDIDATA_APCI7800        0x818E
+ #define PCI_DEVICE_ID_ADDIDATA_APCI7500_2      0x7009
+ #define PCI_DEVICE_ID_ADDIDATA_APCI7420_2      0x700A
+ #define PCI_DEVICE_ID_ADDIDATA_APCI7300_2      0x700B
+-- 
+1.8.2.1
 
