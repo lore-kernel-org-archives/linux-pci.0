@@ -1,297 +1,213 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:37366 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747Ab3GWBOh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jul 2013 21:14:37 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Jingoo Han <jg1.han@samsung.com>
-References: <002801ce8376$a807dbf0$f81793d0$@samsung.com>
- <51ED49D6.9050209@ti.com>
-In-reply-to: <51ED49D6.9050209@ti.com>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys part
- and Exynos part
-Date: Tue, 23 Jul 2013 10:14:34 +0900
-Message-id: <000701ce8741$fe47deb0$fad79c10$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from youngberry.canonical.com ([91.189.89.112]:56590 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934466Ab3GQWzY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jul 2013 18:55:24 -0400
+From: Kamal Mostafa <kamal@canonical.com>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	kernel-team@lists.ubuntu.com
+Cc: Neil Horman <nhorman@tuxdriver.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	=?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>,
+	Luis Henriques <luis.henriques@canonical.com>
+Subject: [PATCH 089/145] iommu/vt-d: add quirk for broken interrupt remapping on 55XX chipsets
+Date: Wed, 17 Jul 2013 15:47:01 -0700
+Message-Id: <1374101277-7915-90-git-send-email-kamal@canonical.com>
+In-Reply-To: <1374101277-7915-1-git-send-email-kamal@canonical.com>
+References: <1374101277-7915-1-git-send-email-kamal@canonical.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 23, 2013 12:04 AM, Kishon Vijay Abraham I wrote:
-> On Thursday 18 July 2013 10:51 AM, Jingoo Han wrote:
-> > Exynos PCIe IP consists of Synopsys specific part and Exynos
-> > specific part. Only core block is a Synopsys designware part;
-> > other parts are Exynos specific.
-> > Also, the Synopsys designware part can be shared with other
-> > platforms; thus, it can be split two parts such as Synopsys
-> > designware part and Exynos specific part.
-> 
-> some more queries and comments..
+3.8.13.5 -stable review patch.  If anyone has any objections, please let me know.
 
-Hi Kishon,
-Thank you for your comments. :)
+------------------
 
-Hi Pratyush Anand,
-Please, answer one question mentioned below. :)
+From: Neil Horman <nhorman@tuxdriver.com>
 
-> >
-> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Pratyush Anand <pratyush.anand@st.com>
-> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> > ---
-> > Changes since v2:
-> .
-> .
-> <snip>
-> .
-> .
-> > +
-> > +static struct pcie_host_ops exynos_pcie_host_ops = {
-> > +	.readl_rc = exynos_pcie_readl_rc,
-> > +	.writel_rc = exynos_pcie_writel_rc,
-> > +	.rd_own_conf = exynos_pcie_rd_own_conf,
-> > +	.wr_own_conf = exynos_pcie_wr_own_conf,
-> > +	.link_up = exynos_pcie_link_up,
-> > +	.host_init = exynos_pcie_host_init,
-> > +};
-> > +
-> > +static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
-> > +{
-> > +	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
-> 
-> We can move the exynos_pcie specific initialization to probe and leave only
-> pcie_port initialization here.
+commit 03bbcb2e7e292838bb0244f5a7816d194c911d62 upstream.
 
-OK, I will move the exynos_pcie specific initialization to probe
-as you mentioned.
+A few years back intel published a spec update:
+http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
 
-> > +	struct resource *elbi_base;
-> > +	struct resource *phy_base;
-> > +	struct resource *block_base;
-> > +	int ret;
-> > +
-> > +	elbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> > +	if (!elbi_base) {
-> > +		dev_err(&pdev->dev, "couldn't get elbi base resource\n");
-> > +		return -EINVAL;
-> > +	}
-> > +	exynos_pcie->elbi_base = devm_ioremap_resource(&pdev->dev, elbi_base);
-> > +	if (IS_ERR(exynos_pcie->elbi_base))
-> > +		return PTR_ERR(exynos_pcie->elbi_base);
-> > +
-> > +	phy_base = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-> > +	if (!phy_base) {
-> > +		dev_err(&pdev->dev, "couldn't get phy base resource\n");
-> > +		return -EINVAL;
-> > +	}
-> > +	exynos_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy_base);
-> > +	if (IS_ERR(exynos_pcie->phy_base))
-> > +		return PTR_ERR(exynos_pcie->phy_base);
-> > +
-> > +	block_base = platform_get_resource(pdev, IORESOURCE_MEM, 2);
-> > +	if (!block_base) {
-> > +		dev_err(&pdev->dev, "couldn't get block base resource\n");
-> > +		return -EINVAL;
-> > +	}
-> > +	exynos_pcie->block_base = devm_ioremap_resource(&pdev->dev, block_base);
-> > +	if (IS_ERR(exynos_pcie->block_base))
-> > +		return PTR_ERR(exynos_pcie->block_base);
-> 
-> So all this till here can be moved to probe.
+For the 5520 and 5500 chipsets which contained an errata (specificially errata
+53), which noted that these chipsets can't properly do interrupt remapping, and
+as a result the recommend that interrupt remapping be disabled in bios.  While
+many vendors have a bios update to do exactly that, not all do, and of course
+not all users update their bios to a level that corrects the problem.  As a
+result, occasionally interrupts can arrive at a cpu even after affinity for that
+interrupt has be moved, leading to lost or spurrious interrupts (usually
+characterized by the message:
+kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
 
-As above mentioned, I will move it to probe.
+There have been several incidents recently of people seeing this error, and
+investigation has shown that they have system for which their BIOS level is such
+that this feature was not properly turned off.  As such, it would be good to
+give them a reminder that their systems are vulnurable to this problem.  For
+details of those that reported the problem, please see:
+https://bugzilla.redhat.com/show_bug.cgi?id=887006
 
-> > +
-> > +	pp->irq = platform_get_irq(pdev, 1);
-> > +	if (!pp->irq) {
-> > +		dev_err(&pdev->dev, "failed to get irq\n");
-> > +		return -ENODEV;
-> > +	}
-> > +	ret = devm_request_irq(&pdev->dev, pp->irq, exynos_pcie_irq_handler,
-> > +				IRQF_SHARED, "exynos-pcie", pp);
-> > +	if (ret) {
-> > +		dev_err(&pdev->dev, "failed to request irq\n");
-> > +		return ret;
-> > +	}
-> > +
-> > +	pp->root_bus_nr = -1;
-> > +	pp->ops = &exynos_pcie_host_ops;
-> > +
-> > +	spin_lock_init(&pp->conf_lock);
-> > +	ret = dw_pcie_host_init(pp);
-> > +	if (ret) {
-> > +		dev_err(&pdev->dev, "failed to initialize host\n");
-> > +		return ret;
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static int __init exynos_pcie_probe(struct platform_device *pdev)
-> > +{
-> > +	struct exynos_pcie *exynos_pcie;
-> > +	struct pcie_port *pp;
-> > +	struct device_node *np = pdev->dev.of_node;
-> > +	int ret;
-> > +
-> > +	exynos_pcie = devm_kzalloc(&pdev->dev, sizeof(*exynos_pcie),
-> > +				GFP_KERNEL);
-> > +	if (!exynos_pcie) {
-> > +		dev_err(&pdev->dev, "no memory for exynos pcie\n");
-> > +		return -ENOMEM;
-> > +	}
-> > +
-> > +	pp = &exynos_pcie->pp;
-> > +
-> > +	pp->dev = &pdev->dev;
-> > +
-> > +	exynos_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-> > +
-> > +	exynos_pcie->clk = devm_clk_get(&pdev->dev, "pcie");
-> > +	if (IS_ERR(exynos_pcie->clk)) {
-> > +		dev_err(&pdev->dev, "Failed to get pcie rc clock\n");
-> > +		return PTR_ERR(exynos_pcie->clk);
-> > +	}
-> > +	ret = clk_prepare_enable(exynos_pcie->clk);
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	exynos_pcie->bus_clk = devm_clk_get(&pdev->dev, "pcie_bus");
-> > +	if (IS_ERR(exynos_pcie->bus_clk)) {
-> > +		dev_err(&pdev->dev, "Failed to get pcie bus clock\n");
-> > +		ret = PTR_ERR(exynos_pcie->bus_clk);
-> > +		goto fail_clk;
-> > +	}
-> > +	ret = clk_prepare_enable(exynos_pcie->bus_clk);
-> > +	if (ret)
-> > +		goto fail_clk;
-> > +
-> > +	ret = add_pcie_port(pp, pdev);
-> > +	if (ret < 0)
-> > +		goto fail_bus_clk;
-> 
-> I think we should move all the below code to designware core file. IMO it
-> should be common everyone who use designware core.
+[ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
 
-OK, I will move the below code to dw_pcie_host_init() in pcie-designware.c
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+CC: Prarit Bhargava <prarit@redhat.com>
+CC: Don Zickus <dzickus@redhat.com>
+CC: Don Dutile <ddutile@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Asit Mallick <asit.k.mallick@intel.com>
+CC: David Woodhouse <dwmw2@infradead.org>
+CC: linux-pci@vger.kernel.org
+CC: Joerg Roedel <joro@8bytes.org>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+Signed-off-by: Joerg Roedel <joro@8bytes.org>
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+---
+ arch/x86/include/asm/irq_remapping.h |  2 ++
+ arch/x86/kernel/early-quirks.c       | 20 ++++++++++++++++++++
+ drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
+ drivers/iommu/irq_remapping.c        |  6 ++++++
+ drivers/iommu/irq_remapping.h        |  2 ++
+ 5 files changed, 40 insertions(+)
 
-
-> > +
-> > +	dw_pci.nr_controllers = 1;
-> > +	dw_pci.private_data = (void **)&pp;
-> > +
-> > +	pci_common_init(&dw_pci);
-> > +	pci_assign_unassigned_resources();
-> > +#ifdef CONFIG_PCI_DOMAINS
-> > +	dw_pci.domain++;
-> > +#endif
-> > +
-> > +	platform_set_drvdata(pdev, exynos_pcie);
-> > +	return 0;
-> > +
-> > +fail_bus_clk:
-> > +	clk_disable_unprepare(exynos_pcie->bus_clk);
-> > +fail_clk:
-> > +	clk_disable_unprepare(exynos_pcie->clk);
-> > +	return ret;
-> > +}
-> > +
-
-[.....]
-
-> > +int dw_pcie_host_init(struct pcie_port *pp)
-> > +{
-> > +	struct device_node *np = pp->dev->of_node;
-> > +	struct of_pci_range range;
-> > +	struct of_pci_range_parser parser;
-> > +	u32 val;
-> > +
-> > +	if (of_pci_range_parser_init(&parser, np)) {
-> > +		dev_err(pp->dev, "missing ranges property\n");
-> > +		return -EINVAL;
-> > +	}
-> 
-> I have some confusion here w.r.t address space :-s
-
-This scheme has been confirmed for last 6 months.
-Previous mail threads on Marvell PCIe, Tegra PCIe will be helpful
-to catch up this.
-
-> > +
-> > +	/* Get the I/O and memory ranges from DT */
-> > +	for_each_of_pci_range(&parser, &range) {
-> > +		unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
-> > +		if (restype == IORESOURCE_IO) {
-> > +			of_pci_range_to_resource(&range, np, &pp->io);
-> > +			pp->io.name = "I/O";
-> > +			pp->io.start = max_t(resource_size_t,
-> > +					     PCIBIOS_MIN_IO,
-> > +					     range.pci_addr + global_io_offset);
-> > +			pp->io.end = min_t(resource_size_t,
-> > +					   IO_SPACE_LIMIT,
-> > +					   range.pci_addr + range.size
-> > +					   + global_io_offset);
-> > +			pp->config.io_size = resource_size(&pp->io);
-> > +			pp->config.io_bus_addr = range.pci_addr;
-> > +		}
-> > +		if (restype == IORESOURCE_MEM) {
-> > +			of_pci_range_to_resource(&range, np, &pp->mem);
-> > +			pp->mem.name = "MEM";
-> > +			pp->config.mem_size = resource_size(&pp->mem);
-> > +			pp->config.mem_bus_addr = range.pci_addr;
-> > +		}
-> > +		if (restype == 0) {
-> > +			of_pci_range_to_resource(&range, np, &pp->cfg);
-> > +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
-> > +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
-> > +		}
-> > +	}
-> > +
-> > +	pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
-> > +				resource_size(&pp->cfg));
-> 
-> Why is configuraion space divided into two?
-
-Sorry, I don't know the exact reason. :(
-Pratyush Anand may know about this.
-Pratyush Anand, could you answer the question?
-
-Also, if you find some problems, please let me know.
-
-
-> Why should it be same as dbi_base?
-> AFAIK, jacinto6 has a dedicated configuration/io/memory space that is entirely
-> different from dbi_base.
-
-According to the Synopsys designware PCIe datasheet,
-in chapter 5.1.1 Register Space Layout,
-'Port Logic Registers' are placed between (config space 0x0 + 0x700)
-and (config space 0x0 + 0xFFF).
-'dbi_base' is used for reading/writing 'Port Logic Registers'.
-Exynos are using 'dbi_base' like this. Thus, the base addresses of
-both 'dbi_base' and configuration/io/memory space are same.
-
-Just now, I looked at Spear PCIe driver.
-However, in the case of Spear, the base address of configuration/io/memory
-space is defined as 0x80000000. The base address of 'Port Logic Registers'
-is defined as 0xb1000000.
-I think that the situation of 'jacinto6' is similar with Spear, right?
-
-Then, I will move pp->dbi_base mapping code from pcie-designware.c
-to pci-exynos.c.
-
-
-Best regards,
-Jingoo Han
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 5fb9bbb..38477e6 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -30,6 +30,7 @@ extern int irq_remapping_enabled;
+ 
+ extern void setup_irq_remapping_ops(void);
+ extern int irq_remapping_supported(void);
++extern void set_irq_remapping_broken(void);
+ extern int irq_remapping_prepare(void);
+ extern int irq_remapping_enable(void);
+ extern void irq_remapping_disable(void);
+@@ -58,6 +59,7 @@ extern int setup_hpet_msi_remapped(unsigned int irq, unsigned int id);
+ 
+ static inline void setup_irq_remapping_ops(void) { }
+ static inline int irq_remapping_supported(void) { return 0; }
++static inline void set_irq_remapping_broken(void) { }
+ static inline int irq_remapping_prepare(void) { return -ENODEV; }
+ static inline int irq_remapping_enable(void) { return -ENODEV; }
+ static inline void irq_remapping_disable(void) { }
+diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
+index 3755ef4..94ab6b9 100644
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -18,6 +18,7 @@
+ #include <asm/apic.h>
+ #include <asm/iommu.h>
+ #include <asm/gart.h>
++#include <asm/irq_remapping.h>
+ 
+ static void __init fix_hypertransport_config(int num, int slot, int func)
+ {
+@@ -192,6 +193,21 @@ static void __init ati_bugs_contd(int num, int slot, int func)
+ }
+ #endif
+ 
++static void __init intel_remapping_check(int num, int slot, int func)
++{
++	u8 revision;
++
++	revision = read_pci_config_byte(num, slot, func, PCI_REVISION_ID);
++
++	/*
++	 * Revision 0x13 of this chipset supports irq remapping
++	 * but has an erratum that breaks its behavior, flag it as such
++	 */
++	if (revision == 0x13)
++		set_irq_remapping_broken();
++
++}
++
+ #define QFLAG_APPLY_ONCE 	0x1
+ #define QFLAG_APPLIED		0x2
+ #define QFLAG_DONE		(QFLAG_APPLY_ONCE|QFLAG_APPLIED)
+@@ -221,6 +237,10 @@ static struct chipset early_qrk[] __initdata = {
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
+ 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
++	{ PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
++	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
++	{ PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
++	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
+ 	{}
+ };
+ 
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index af8904d..4c9379c 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -509,6 +509,16 @@ static int __init intel_irq_remapping_supported(void)
+ 
+ 	if (disable_irq_remap)
+ 		return 0;
++	if (irq_remap_broken) {
++		WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
++			   "This system BIOS has enabled interrupt remapping\n"
++			   "on a chipset that contains an erratum making that\n"
++			   "feature unstable.  To maintain system stability\n"
++			   "interrupt remapping is being disabled.  Please\n"
++			   "contact your BIOS vendor for an update\n");
++		disable_irq_remap = 1;
++		return 0;
++	}
+ 
+ 	if (!dmar_ir_support())
+ 		return 0;
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index faf85d6..018382c 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -12,6 +12,7 @@
+ int irq_remapping_enabled;
+ 
+ int disable_irq_remap;
++int irq_remap_broken;
+ int disable_sourceid_checking;
+ int no_x2apic_optout;
+ 
+@@ -58,6 +59,11 @@ void __init setup_irq_remapping_ops(void)
+ #endif
+ }
+ 
++void set_irq_remapping_broken(void)
++{
++	irq_remap_broken = 1;
++}
++
+ int irq_remapping_supported(void)
+ {
+ 	if (disable_irq_remap)
+diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+index 95363ac..23bdea1 100644
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -32,6 +32,7 @@ struct pci_dev;
+ struct msi_msg;
+ 
+ extern int disable_irq_remap;
++extern int irq_remap_broken;
+ extern int disable_sourceid_checking;
+ extern int no_x2apic_optout;
+ 
+@@ -88,6 +89,7 @@ extern struct irq_remap_ops amd_iommu_irq_ops;
+ 
+ #define irq_remapping_enabled 0
+ #define disable_irq_remap     1
++#define irq_remap_broken      0
+ 
+ #endif /* CONFIG_IRQ_REMAP */
+ 
+-- 
+1.8.1.2
 
