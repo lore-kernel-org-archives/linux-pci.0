@@ -1,63 +1,165 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
 	Mika Westerberg <mika.westerberg@linux.intel.com>,
 	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [PATCH 4/30] ACPI / hotplug / PCI: Hotplug context objects for bridges and functions
-Date: Thu, 18 Jul 2013 22:06:16 +0200
-Message-ID: <2397558.EsSCoq8A3j@vostro.rjw.lan>
-In-Reply-To: <3688658.K73mT4hj2a@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <CAE9FiQWjzZ6b1aGgL9OjNZF00hvwaEZJb7ABxjaVbS5FwNwpSQ@mail.gmail.com> <3688658.K73mT4hj2a@vostro.rjw.lan>
+Subject: [PATCH 20/30] ACPI / hotplug / PCI: Consolidate slot disabling and ejecting
+Date: Thu, 18 Jul 2013 01:28:30 +0200
+Message-ID: <2675342.96SJAC4hmM@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 18, 2013 09:04:11 PM Rafael J. Wysocki wrote:
-> On Wednesday, July 17, 2013 07:00:33 PM Yinghai Lu wrote:
-> > On Wed, Jul 17, 2013 at 4:17 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > >
-> > > When either a new hotplug bridge or a new hotplug function is added
-> > > by the ACPI-based PCI hotplug (ACPIPHP) code, attach a context object
-> > > to its ACPI handle to store hotplug-related information in it.  To
-> > > start with, put the handle's bridge and function pointers into that
-> > > object.  Count references to the context objects and drop them when
-> > > they are not needed any more.
-> > >
-> > > First of all, this makes it possible to find out if the given bridge
-> > > has been registered as a function already in a much more
-> > > straightforward way and acpiphp_bridge_handle_to_function() can be
-> > > dropped (Yay!).
-> > >
-> > > This also will allow some more simplifications to be made going
-> > > forward.
-> > >
-> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > ---
-> > >  drivers/pci/hotplug/acpiphp.h      |   10 ++
-> > >  drivers/pci/hotplug/acpiphp_glue.c |  179 ++++++++++++++++++++++++++++---------
-> > >  2 files changed, 146 insertions(+), 43 deletions(-)
-> > 
-> > no, more lines are added.
-> 
-> Well, that's what 'quilt refresh --diffstat' tells me, quite consistently.
-> 
-> Have you actually counted them?
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Now I have done that (using "grep '^+' | wc -l") and that indeed turns out ot
-the right number.
+Both acpiphp_disable_slot() and acpiphp_eject_slot() are always
+called together so instead of calling each separately we can
+consolidate them into one function acpiphp_disable_and_eject_slot()
+that does both (but it will return success on _EJ0 failures that
+were ignored in the majority of call sites anyway).
 
-What gives?
+[rjw: Rebased plus minor tweaks]
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    3 --
+ drivers/pci/hotplug/acpiphp_core.c |    6 ----
+ drivers/pci/hotplug/acpiphp_glue.c |   50 +++++++++++++------------------------
+ 3 files changed, 20 insertions(+), 39 deletions(-)
 
-Rafael
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -188,8 +188,7 @@ void acpiphp_unregister_hotplug_slot(str
+ typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
+ 
+ int acpiphp_enable_slot(struct acpiphp_slot *slot);
+-int acpiphp_disable_slot(struct acpiphp_slot *slot);
+-int acpiphp_eject_slot(struct acpiphp_slot *slot);
++int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot);
+ u8 acpiphp_get_power_status(struct acpiphp_slot *slot);
+ u8 acpiphp_get_attention_status(struct acpiphp_slot *slot);
+ u8 acpiphp_get_latch_status(struct acpiphp_slot *slot);
+Index: linux-pm/drivers/pci/hotplug/acpiphp_core.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_core.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_core.c
+@@ -155,15 +155,11 @@ static int enable_slot(struct hotplug_sl
+ static int disable_slot(struct hotplug_slot *hotplug_slot)
+ {
+ 	struct slot *slot = hotplug_slot->private;
+-	int retval;
+ 
+ 	dbg("%s - physical_slot = %s\n", __func__, slot_name(slot));
+ 
+ 	/* disable the specified slot */
+-	retval = acpiphp_disable_slot(slot->acpi_slot);
+-	if (!retval)
+-		retval = acpiphp_eject_slot(slot->acpi_slot);
+-	return retval;
++	return acpiphp_disable_and_eject_slot(slot->acpi_slot);
+ }
+ 
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -765,27 +765,6 @@ static unsigned int get_slot_status(stru
+ }
+ 
+ /**
+- * acpiphp_eject_slot - physically eject the slot
+- * @slot: ACPI PHP slot
+- */
+-int acpiphp_eject_slot(struct acpiphp_slot *slot)
+-{
+-	struct acpiphp_func *func;
+-
+-	list_for_each_entry(func, &slot->funcs, sibling) {
+-		/* We don't want to call _EJ0 on non-existing functions. */
+-		if (!(func->flags & FUNC_HAS_EJ0))
+-			continue;
+-
+-		if (ACPI_FAILURE(acpi_evaluate_ej0(func_to_handle(func))))
+-			return -1;
+-		else
+-			break;
+-	}
+-	return 0;
+-}
+-
+-/**
+  * acpiphp_check_bridge - re-enumerate devices
+  * @bridge: where to begin re-enumeration
+  *
+@@ -805,13 +784,11 @@ static int acpiphp_check_bridge(struct a
+ 		if (slot->flags & SLOT_ENABLED) {
+ 			if (status == ACPI_STA_ALL)
+ 				continue;
+-			retval = acpiphp_disable_slot(slot);
+-			if (retval) {
+-				err("Error occurred in disabling\n");
++
++			retval = acpiphp_disable_and_eject_slot(slot);
++			if (retval)
+ 				goto err_exit;
+-			} else {
+-				acpiphp_eject_slot(slot);
+-			}
++
+ 			disabled++;
+ 		} else {
+ 			if (status != ACPI_STA_ALL)
+@@ -951,9 +928,7 @@ static void hotplug_event(acpi_handle ha
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		/* request device eject */
+ 		dbg("%s: Device eject notify on %s\n", __func__, objname);
+-		if (!(acpiphp_disable_slot(func->slot)))
+-			acpiphp_eject_slot(func->slot);
+-
++		acpiphp_disable_and_eject_slot(func->slot);
+ 		break;
+ 
+ 	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
+@@ -1148,11 +1123,12 @@ int acpiphp_enable_slot(struct acpiphp_s
+ }
+ 
+ /**
+- * acpiphp_disable_slot - power off slot
++ * acpiphp_disable_and_eject_slot - power off and eject slot
+  * @slot: ACPI PHP slot
+  */
+-int acpiphp_disable_slot(struct acpiphp_slot *slot)
++int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot)
+ {
++	struct acpiphp_func *func;
+ 	int retval = 0;
+ 
+ 	mutex_lock(&slot->crit_sect);
+@@ -1167,6 +1143,16 @@ int acpiphp_disable_slot(struct acpiphp_
+ 	if (retval)
+ 		goto err_exit;
+ 
++	list_for_each_entry(func, &slot->funcs, sibling)
++		if (func->flags & FUNC_HAS_EJ0) {
++			acpi_handle handle = func_to_handle(func);
++
++			if (ACPI_FAILURE(acpi_evaluate_ej0(handle)))
++				acpi_handle_err(handle, "_EJ0 failed\n");
++
++			break;
++		}
++
+  err_exit:
+ 	mutex_unlock(&slot->crit_sect);
+ 	return retval;
 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
