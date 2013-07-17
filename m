@@ -1,144 +1,133 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH v2.1 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
-Date: Fri, 05 Jul 2013 01:48:01 +0200
-Message-ID: <2539126.i7GjLNiDjm@vostro.rjw.lan>
-In-Reply-To: <1372948192-17913-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1656567.0oqS7xVYJ8@vostro.rjw.lan> <1372948192-17913-1-git-send-email-mika.westerberg@linux.intel.com>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 21/30] ACPI / hotplug / PCI: Do not queue up event handling work items in vain
+Date: Thu, 18 Jul 2013 01:29:44 +0200
+Message-ID: <5427359.BFHA8nOGgM@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 04, 2013 05:29:51 PM Mika Westerberg wrote:
-> The acpiphp driver finds out whether the device is removable by checking
-> whether it has _RMV method directly behind it (and if it returns 1).
-> However, at least on Acer Aspire S5 with Thunderbolt host router has this
-> method placed behind a device called EPUP (endpoint upstream port?) and not
-> in the usual place expected by the acpiphp driver. The ASL code below shows
-> how this is done on that machine:
-> 
-> Device (RP05)
-> {
-> 	...
-> 	Device (HRUP)
-> 	{
-> 		Name (_ADR, Zero)
-> 		Name (_PRW, Package (0x02)
-> 		{
-> 			0x09,
-> 			0x04
-> 		})
-> 		Device (HRDN)
-> 		{
-> 			Name (_ADR, 0x00040000)
-> 			Name (_PRW, Package (0x02)
-> 			{
-> 				0x09,
-> 				0x04
-> 			})
-> 			Device (EPUP)
-> 			{
-> 				Name (_ADR, Zero)
-> 				Method (_RMV, 0, NotSerialized)
-> 				{
-> 					Return (One)
-> 				}
-> 			}
-> 		}
-> 	}
-> 	...
-> 
-> Fix this by adding a DMI quirk for the Acer Aspire S5 machine that gives an
-> alternative path to the _RMV method.
-> 
-> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This is fine by me and same for the other patches in the series.
+Modify handle_hotplug_event() to avoid queing up the execution of
+handle_hotplug_event_work_fn() as a work item on kacpi_hotplug_wq
+for non-hotplug events, such as ACPI_NOTIFY_DEVICE_WAKE.  Move
+the code printing diagnostic messages for those events into
+handle_hotplug_event().
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+In addition to that, remove the bogus comment about how the core
+should distinguish between hotplug and non-hotplug events and
+queue them up on different workqueues.  The core clearly cannot
+know in advance what events will be interesting to the given
+caller of acpi_install_notify_handler().
 
-> ---
->  drivers/pci/hotplug/acpi_pcihp.c | 34 ++++++++++++++++++++++++++++++++++
->  1 file changed, 34 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> index 2a47e82..eae1511 100644
-> --- a/drivers/pci/hotplug/acpi_pcihp.c
-> +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> @@ -33,6 +33,7 @@
->  #include <linux/acpi.h>
->  #include <linux/pci-acpi.h>
->  #include <linux/slab.h>
-> +#include <linux/dmi.h>
->  
->  #define MY_NAME	"acpi_pcihp"
->  
-> @@ -408,11 +409,31 @@ got_one:
->  }
->  EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
->  
-> +static const struct dmi_system_id pcihp_platform_quirks[] = {
-> +	{
-> +		/*
-> +		 * On Acer Aspire S5 the _RMV method for the
-> +		 * Thunderbolt host router upstream port is not
-> +		 * located directly under the device but it is
-> +		 * instead placed a bit deeper in the hierarchy.
-> +		 */
-> +		.ident = "Acer Aspire S5",
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "Aspire S5-391"),
-> +		},
-> +		.driver_data = "HRDN.EPUP._RMV",
-> +	},
-> +	{ }
-> +};
-> +
->  static int pcihp_is_ejectable(acpi_handle handle)
->  {
->  	acpi_status status;
->  	acpi_handle tmp;
->  	unsigned long long removable;
-> +	const struct dmi_system_id *id;
-> +
->  	status = acpi_get_handle(handle, "_ADR", &tmp);
->  	if (ACPI_FAILURE(status))
->  		return 0;
-> @@ -422,6 +443,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
->  	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
->  	if (ACPI_SUCCESS(status) && removable)
->  		return 1;
-> +
-> +	/*
-> +	 * Try to look if there is a platform specific method that we can
-> +	 * use to determine if the device is removable or not.
-> +	 */
-> +	id = dmi_first_match(pcihp_platform_quirks);
-> +	if (id && id->driver_data) {
-> +		status = acpi_evaluate_integer(handle, id->driver_data, NULL,
-> +					       &removable);
-> +		if (ACPI_SUCCESS(status) && removable)
-> +			return 1;
-> +	}
-> +
->  	return 0;
->  }
->  
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   64 ++++++++++++++++---------------------
+ 1 file changed, 29 insertions(+), 35 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -920,36 +920,11 @@ static void hotplug_event(acpi_handle ha
+ 
+ 		break;
+ 
+-	case ACPI_NOTIFY_DEVICE_WAKE:
+-		/* wake event */
+-		dbg("%s: Device wake notify on %s\n", __func__, objname);
+-		break;
+-
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		/* request device eject */
+ 		dbg("%s: Device eject notify on %s\n", __func__, objname);
+ 		acpiphp_disable_and_eject_slot(func->slot);
+ 		break;
+-
+-	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
+-		printk(KERN_ERR "Device %s cannot be configured due"
+-				" to a frequency mismatch\n", objname);
+-		break;
+-
+-	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
+-		printk(KERN_ERR "Device %s cannot be configured due"
+-				" to a bus mode mismatch\n", objname);
+-		break;
+-
+-	case ACPI_NOTIFY_POWER_FAULT:
+-		printk(KERN_ERR "Device %s has suffered a power fault\n",
+-				objname);
+-		break;
+-
+-	default:
+-		warn("notify_handler: unknown event type 0x%x for %s\n", type,
+-		     objname);
+-		break;
+ 	}
+ 
+ 	if (bridge)
+@@ -984,23 +959,42 @@ static void handle_hotplug_event(acpi_ha
+ {
+ 	struct acpiphp_context *context;
+ 
++	switch (type) {
++	case ACPI_NOTIFY_BUS_CHECK:
++	case ACPI_NOTIFY_DEVICE_CHECK:
++	case ACPI_NOTIFY_EJECT_REQUEST:
++		break;
++
++	case ACPI_NOTIFY_DEVICE_WAKE:
++		return;
++
++	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
++		acpi_handle_err(handle, "Device cannot be configured due "
++				"to a frequency mismatch\n");
++		return;
++
++	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
++		acpi_handle_err(handle, "Device cannot be configured due "
++				"to a bus mode mismatch\n");
++		return;
++
++	case ACPI_NOTIFY_POWER_FAULT:
++		acpi_handle_err(handle, "Device has suffered a power fault\n");
++		return;
++
++	default:
++		acpi_handle_warn(handle, "Unsupported event type 0x%x\n", type);
++		return;
++	}
++
+ 	mutex_lock(&acpiphp_context_lock);
+ 	context = acpiphp_get_context(handle);
+ 	if (context) {
+ 		get_bridge(context->func.parent);
+ 		acpiphp_put_context(context);
++		alloc_acpi_hp_work(handle, type, context, hotplug_event_work);
+ 	}
+ 	mutex_unlock(&acpiphp_context_lock);
+-	/*
+-	 * Currently the code adds all hotplug events to the kacpid_wq
+-	 * queue when it should add hotplug events to the kacpi_hotplug_wq.
+-	 * The proper way to fix this is to reorganize the code so that
+-	 * drivers (dock, etc.) do not call acpi_os_execute(), etc.
+-	 * For now just re-add this work to the kacpi_hotplug_wq so we
+-	 * don't deadlock on hotplug actions.
+-	 */
+-	if (context)
+-		alloc_acpi_hp_work(handle, type, context, hotplug_event_work);
+ }
+ 
+ /*
+
