@@ -1,58 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:34447 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751812Ab3GHNZL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Jul 2013 09:25:11 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 1/3] ACPI / hotplug / PCI: Always return success after adding a function
-Date: Mon, 08 Jul 2013 15:28:35 +0200
-Message-ID: <1502675.WMZKWG2iox@vostro.rjw.lan>
-In-Reply-To: <5361579.8un1t1TCfk@vostro.rjw.lan>
-References: <1468174.eo7i60DZFT@vostro.rjw.lan> <5361579.8un1t1TCfk@vostro.rjw.lan>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Date: Tue, 16 Jul 2013 20:21:26 -0600
+Message-ID: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
+Subject: Linux Plumbers ACPI/PM, PCI Microconference
+From: Myron Stowe <myron.stowe@gmail.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux-foundation.org,
+	virtualization@lists.linux-foundation.org, kvm@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Linux Plumbers has approved an ACPI/PM, PCI microconference. The
+overview page is here:
 
-When a new ACPIPHP function is added by register_slot() and the
-notify handler cannot be installed for it, register_slot() returns an
-error status without cleaning up, which causes the entire namespace
-walk in acpiphp_enumerate_slots() to be aborted, although it still
-may be possible to successfully install the function notify handler
-for other device objects under the given brigde.
+http://wiki.linuxplumbersconf.org/2013:pci_subsystem
 
-To address this issue make register_slot() return success after
-a new function has been added, even if the addition of the notify
-handler for it has failed.
+We would like to start receiving volunteers for presenting topics of
+interest.  There is a lot of activity in these subsystems so please
+respond by submitting presentation or discussion proposals that you
+would be willing to cover for consideration.  You should also feel
+free to submit ideas as proposals that others could cover.  The
+instructions for submitting ideas should be at:
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+http://www.linuxplumbersconf.org/2013/submitting-topic/
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -335,10 +335,9 @@ register_slot(acpi_handle handle, u32 lv
- 
- 		if (ACPI_FAILURE(status))
- 			err("failed to register interrupt notify handler\n");
--	} else
--		status = AE_OK;
-+	}
- 
--	return status;
-+	return AE_OK;
- 
-  err_exit:
- 	bridge->nr_slots--;
+This is the "Plumbers" conference so topics concerning userspace
+interaction with the kernel and not just topics concerning pure kernel
+subsystem internals would be greatly welcomed.  As a possible aid
+towards promoting topics for submissions we have listed a few
+candidates that seem to meet the criteria in the microconference
+proposals wiki located at
+http://wiki.linuxplumbersconf.org/2013:pci_subsystem
 
+Last year, we had a good discussion on general issues in PCI space -
+that also might be worth giving updates on.
+
+If you have topics that you would like to add, wait until the
+instructions get posted at the link above. If you are impatient, feel
+free to email me directly (but probably best to drop the broad mailing
+lists from the reply).
+
+Thanks!
+
+Len, Bjorn, Myron, Rafael
+
+
+
+Yinghai - An update on host bridge hot-add capabilities, what is in
+place and what still remains to be done, would seem like a good topic.
+
+Shuah - You brought up the idea about "Converting drivers from Legacy
+PM ops to dev_pm_ops"; would you like to present what you have
+done/encountered so far?
