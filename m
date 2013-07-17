@@ -1,101 +1,210 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:42216 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932805Ab3GLLwz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2013 07:52:55 -0400
-Date: Fri, 12 Jul 2013 13:52:53 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Wyborny, Carolyn" <carolyn.wyborny@intel.com>,
-	Greg KH <greg@kroah.com>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	Joe Lawrence <joe.lawrence@stratus.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	"Brandeburg, Jesse" <jesse.brandeburg@intel.com>,
-	"Allan, Bruce W" <bruce.w.allan@intel.com>,
-	"Skidmore, Donald C" <donald.c.skidmore@intel.com>,
-	"Rose, Gregory V" <gregory.v.rose@intel.com>,
-	"Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr@intel.com>,
-	"Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Dave, Tushar N" <tushar.n.dave@intel.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, mjg59@srcf.ucam.org
-Subject: Re: /sys/module/pcie_aspm/parameters/policy not writable?
-Message-ID: <20130712115253.GA4585@amd.pavel.ucw.cz>
-References: <20130709012611.GA22371@amd.pavel.ucw.cz>
- <20130709041321.GA30555@kroah.com>
- <20130709094906.GA3870@amd.pavel.ucw.cz>
- <20130709101039.GA4479@amd.pavel.ucw.cz>
- <CAErSpo57qjTkGbNK5qLzJcKuqBGK5=R=raEdyL6M1d5O=FkK_Q@mail.gmail.com>
- <20130710132950.GA3684@amd.pavel.ucw.cz>
- <CAErSpo5ig3bxZ3hBUUrzTdc=YqHy7cBGBxOLru4NYdyOOR+W5w@mail.gmail.com>
- <9BBC4E0CF881AA4299206E2E1412B6264F90E999@ORSMSX102.amr.corp.intel.com>
- <20130710225715.GA23171@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 14/30] ACPI / hotplug / PCI: Embed function struct into struct acpiphp_context
+Date: Thu, 18 Jul 2013 01:24:47 +0200
+Message-ID: <2262769.XioakSTT7I@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130710225715.GA23171@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> > > Pavel's ThinkPad X60 has two NICs: Intel 82573L and Intel PRO/Wireless
-> > > 3945ABG.  I'm pretty sure the problem he's reporting is with the 82573L.  Ping
-> > > times are bad (~100msec) when ASPM is enabled, as reported by lspci.
-> > > 
-> > > On Pavel's system, the FADT says we shouldn't enable OSPM control of ASPM
-> > > (ACPI_FADT_NO_ASPM is set), so we set "aspm_disabled = 1".  One effect is that
-> > > we don't blacklist the pre-1.1 82573L device, which I think results in it being left
-> > > with the BIOS configuration, which apparently has ASPM enabled.  (Pavel, could
-> > > you confirm the BIOS config, e.g., with "pci=earlydump"?)
-> > >
-> > > e1000e claims to disable ASPM, but because aspm_disabled is set, the driver's
-> > > call to pci_disable_link_state_locked() actually does nothing [1].
-> > 
-> > Yes, this is the problem we run into.  It would help if the call to pci_disable_link_state_locked() returned an error if ASPM is not disabled as requested so that drivers can then do the brute force disabling of it themselves.
-> 
-> I considered returning an error, but resisted because I think drivers
-> will just handle the error by doing the brute-force disable themselves,
-> and then we might as well drop the pci_disable_link_state() interface
-> completely.
+Since there has to be a struct acpiphp_func object for every struct
+acpiphp_context created by register_slot(), the struct acpiphp_func
+one can be embedded into the struct acpiphp_context one, which allows
+some code simplifications to be made.
 
-What is that? Yes, if function does not perform what it was asked to
-do, it should return an error. Anything else is antisocial.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    8 +++++-
+ drivers/pci/hotplug/acpiphp_glue.c |   44 +++++++++++++------------------------
+ 2 files changed, 22 insertions(+), 30 deletions(-)
 
-If drivers will attempt to do something _more_ antisocial (like doing
-PCI bit banging) we can surely catch it during review.
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -116,7 +116,6 @@ struct acpiphp_slot {
+  * typically 8 objects per slot (i.e. for each PCI function)
+  */
+ struct acpiphp_func {
+-	struct acpiphp_context *context;
+ 	struct acpiphp_slot *slot;	/* parent */
+ 
+ 	struct list_head sibling;
+@@ -128,11 +127,16 @@ struct acpiphp_func {
+ 
+ struct acpiphp_context {
+ 	acpi_handle handle;
+-	struct acpiphp_func *func;
++	struct acpiphp_func func;
+ 	struct acpiphp_bridge *bridge;
+ 	unsigned int refcount;
+ };
+ 
++static inline struct acpiphp_context *func_to_context(struct acpiphp_func *func)
++{
++	return container_of(func, struct acpiphp_context, func);
++}
++
+ /*
+  * struct acpiphp_attention_info - device specific attention registration
+  *
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -128,7 +128,7 @@ static void acpiphp_put_context(struct a
+ 	if (--context->refcount)
+ 		return;
+ 
+-	WARN_ON(context->func || context->bridge);
++	WARN_ON(context->bridge);
+ 	acpi_detach_data(context->handle, acpiphp_context_handler);
+ 	kfree(context);
+ }
+@@ -155,12 +155,9 @@ static void free_bridge(struct kref *kre
+ 	bridge = container_of(kref, struct acpiphp_bridge, ref);
+ 
+ 	list_for_each_entry_safe(slot, next, &bridge->slots, node) {
+-		list_for_each_entry_safe(func, tmp, &slot->funcs, sibling) {
+-			context = func->context;
+-			context->func = NULL;
+-			acpiphp_put_context(context);
+-			kfree(func);
+-		}
++		list_for_each_entry_safe(func, tmp, &slot->funcs, sibling)
++			acpiphp_put_context(func_to_context(func));
++
+ 		kfree(slot);
+ 	}
+ 
+@@ -168,7 +165,7 @@ static void free_bridge(struct kref *kre
+ 	/* Root bridges will not have hotplug context. */
+ 	if (context) {
+ 		/* Release the reference taken by acpiphp_enumerate_slots(). */
+-		put_bridge(context->func->slot->bridge);
++		put_bridge(context->func.slot->bridge);
+ 		context->bridge = NULL;
+ 		acpiphp_put_context(context);
+ 	}
+@@ -190,7 +187,7 @@ static void free_bridge(struct kref *kre
+ static void post_dock_fixups(acpi_handle not_used, u32 event, void *data)
+ {
+ 	struct acpiphp_context *context = data;
+-	struct pci_bus *bus = context->func->slot->bridge->pci_bus;
++	struct pci_bus *bus = context->func.slot->bridge->pci_bus;
+ 	u32 buses;
+ 
+ 	if (!bus->self)
+@@ -251,14 +248,14 @@ static void acpiphp_dock_init(void *data
+ {
+ 	struct acpiphp_context *context = data;
+ 
+-	get_bridge(context->func->slot->bridge);
++	get_bridge(context->func.slot->bridge);
+ }
+ 
+ static void acpiphp_dock_release(void *data)
+ {
+ 	struct acpiphp_context *context = data;
+ 
+-	put_bridge(context->func->slot->bridge);
++	put_bridge(context->func.slot->bridge);
+ }
+ 
+ /* callback routine to register each ACPI PCI slot object */
+@@ -288,23 +285,16 @@ static acpi_status register_slot(acpi_ha
+ 	device = (adr >> 16) & 0xffff;
+ 	function = adr & 0xffff;
+ 
+-	newfunc = kzalloc(sizeof(struct acpiphp_func), GFP_KERNEL);
+-	if (!newfunc)
+-		return AE_NO_MEMORY;
+-
+-	newfunc->handle = handle;
+-	newfunc->function = function;
+-
+ 	mutex_lock(&acpiphp_context_lock);
+ 	context = acpiphp_init_context(handle);
+ 	if (!context) {
+ 		mutex_unlock(&acpiphp_context_lock);
+ 		acpi_handle_err(handle, "No hotplug context\n");
+-		kfree(newfunc);
+ 		return AE_NOT_EXIST;
+ 	}
+-	newfunc->context = context;
+-	context->func = newfunc;
++	newfunc = &context->func;
++	newfunc->handle = handle;
++	newfunc->function = function;
+ 	mutex_unlock(&acpiphp_context_lock);
+ 
+ 	if (acpi_has_method(handle, "_EJ0"))
+@@ -404,10 +394,8 @@ static acpi_status register_slot(acpi_ha
+ 
+  err:
+ 	mutex_lock(&acpiphp_context_lock);
+-	context->func = NULL;
+ 	acpiphp_put_context(context);
+ 	mutex_unlock(&acpiphp_context_lock);
+-	kfree(newfunc);
+ 	return status;
+ }
+ 
+@@ -938,7 +926,7 @@ void acpiphp_check_host_bridge(acpi_hand
+ static void hotplug_event(acpi_handle handle, u32 type, void *data)
+ {
+ 	struct acpiphp_context *context = data;
+-	struct acpiphp_func *func = context->func;
++	struct acpiphp_func *func = &context->func;
+ 	struct acpiphp_bridge *bridge;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+@@ -1029,7 +1017,7 @@ static void hotplug_event_work(struct wo
+ 
+ 	acpi_scan_lock_release();
+ 	kfree(hp_work); /* allocated in handle_hotplug_event() */
+-	put_bridge(context->func->slot->bridge);
++	put_bridge(context->func.slot->bridge);
+ }
+ 
+ /**
+@@ -1047,7 +1035,7 @@ static void handle_hotplug_event(acpi_ha
+ 	mutex_lock(&acpiphp_context_lock);
+ 	context = acpiphp_get_context(handle);
+ 	if (context) {
+-		get_bridge(context->func->slot->bridge);
++		get_bridge(context->func.slot->bridge);
+ 		acpiphp_put_context(context);
+ 	}
+ 	mutex_unlock(&acpiphp_context_lock);
+@@ -1109,7 +1097,7 @@ void acpiphp_enumerate_slots(struct pci_
+ 		 */
+ 		mutex_lock(&acpiphp_context_lock);
+ 		context = acpiphp_get_context(handle);
+-		if (WARN_ON(!context || !context->func)) {
++		if (WARN_ON(!context)) {
+ 			mutex_unlock(&acpiphp_context_lock);
+ 			put_device(&bus->dev);
+ 			kfree(bridge);
+@@ -1118,7 +1106,7 @@ void acpiphp_enumerate_slots(struct pci_
+ 		bridge->context = context;
+ 		context->bridge = bridge;
+ 		/* Get a reference to the parent bridge. */
+-		get_bridge(context->func->slot->bridge);
++		get_bridge(context->func.slot->bridge);
+ 		mutex_unlock(&acpiphp_context_lock);
+ 	}
+ 
 
-[Actually, the functions seem to have "force" parameter. Should we
-just let e1000e/iwlwifi set the force? They _know_ hardware will not
-work properly with the ASPM.] 
-
-> I proposed a patch [3] a while ago that made pci_disable_link_state()
-> turn off ASPM unconditionally.  That would have the same effect as
-> returning failure and having drivers disable ASPM themselves.  But
-> Rafael and Matthew thought it was too risky [4] (and I think they're
-> probably right because it does not match the Windows behavior).
-
-Well, I believe "patch might be risky" is trumped by "this ethernet
-card is not usable". 
-
-> So by extension, I guess it would also be risky to return an error and
-> have the driver disable ASPM.
-
-It does not seem like clean conclusion to me.
-
-Doing force-disabling on selected hardware that needs it (x60+e1000e)
-is certainly less risky than changing behaviour for all the 1000
-notebooks out there.
-
-So yes, you should be returning error.
-
-At the very least, e1000e and iwlwifi could warn the user loudly and
-maybe even disable the interface.
-
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
