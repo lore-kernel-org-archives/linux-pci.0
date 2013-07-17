@@ -1,52 +1,87 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
-Subject: Re: [PATCH V2] x86/PCI: MMCONFIG: cleanup and add address warning to pci_mmconfig_insert
-From: Mark D Rustad <mrustad@gmail.com>
-In-Reply-To: <1374953558-4704-1-git-send-email-ethan.kernel@gmail.com>
-Date: Sat, 27 Jul 2013 20:09:41 -0700
-Cc: bhelgaas@google.com, yinghai@kernel.org, jbarnes@virtuousgeek.org,
-	linux-kernel@vger.kernel.org, jiang.liu@huawei.com,
-	linux-pci@vger.kernel.org, joe.jin@oracle.com,
-	"ethan.zhao" <ethan.zhao@oracle.com>
-Message-Id: <7F52345F-242F-4A9D-8CD2-5805936ABAEE@gmail.com>
-References: <1374953558-4704-1-git-send-email-ethan.kernel@gmail.com>
-To: ethan.kernel@gmail.com
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 30/30] ACPI / hotplug / PCI: Get rid of check_sub_bridges()
+Date: Thu, 18 Jul 2013 01:36:56 +0200
+Message-ID: <2212556.JheKCNdYg0@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Another nit below:
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-On Jul 27, 2013, at 12:32 PM, ethan.kernel@gmail.com wrote:
+Now that acpiphp_check_bridge() always enumerates devices behind the
+bridge, there is no need to do that for each sub-bridge anymore like
+it is done in the current ACPI-based PCI hotplug (ACPIPHP) code.
 
-> Cleanup the -EINVAL return value handling and add warning message for invalid
-> start,end,addr parameters.
-> 
-> V2: Corrected code style and tested for Linux v 3.11-rc2
-> 
-> Signed-off-by: ethan.zhao <ethan.zhao@oracle.com>
-> ---
-> arch/x86/pci/mmconfig-shared.c |   12 ++++++------
-> 1 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-> index 082e881..37f6c7f 100644
-> --- a/arch/x86/pci/mmconfig-shared.c
-> +++ b/arch/x86/pci/mmconfig-shared.c
-> @@ -700,8 +700,13 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
-> 	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
-> 		return -ENODEV;
-> 
-> -	if (start > end)
-> +	if (start > end || !addr) {
-> +		dev_warn(dev, FW_INFO
-> +			"Invalid address to add MMCONFIG"
-> +			"start %02x end %02x addr %pR\n",
+Given this we don't need check_sub_bridges() anymore, so drop that
+function completely.
 
-As it is here, there will be no space between MMCONFIG and the word start. Better still, put the entire string on one line to aid those searching for the message. There is a general exception to the 80-column rule for user-visible messages such as this.
+This also simplifies the ACPIPHP code a bit.
 
-<snip>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   25 -------------------------
+ 1 file changed, 25 deletions(-)
 
--- 
-Mark Rustad, MRustad@gmail.com
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -788,25 +788,6 @@ static void acpiphp_sanitize_bus(struct
+  * ACPI event handlers
+  */
+ 
+-static acpi_status
+-check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+-{
+-	struct acpiphp_bridge *bridge;
+-	char objname[64];
+-	struct acpi_buffer buffer = { .length = sizeof(objname),
+-				      .pointer = objname };
+-
+-	bridge = acpiphp_handle_to_bridge(handle);
+-	if (bridge) {
+-		acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+-		dbg("%s: re-enumerating slots under %s\n",
+-			__func__, objname);
+-		acpiphp_check_bridge(bridge);
+-		put_bridge(bridge);
+-	}
+-	return AE_OK ;
+-}
+-
+ void acpiphp_check_host_bridge(acpi_handle handle)
+ {
+ 	struct acpiphp_bridge *bridge;
+@@ -816,9 +797,6 @@ void acpiphp_check_host_bridge(acpi_hand
+ 		acpiphp_check_bridge(bridge);
+ 		put_bridge(bridge);
+ 	}
+-
+-	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
+-		ACPI_UINT32_MAX, check_sub_bridges, NULL, NULL, NULL);
+ }
+ 
+ static void hotplug_event(acpi_handle handle, u32 type, void *data)
+@@ -846,9 +824,6 @@ static void hotplug_event(acpi_handle ha
+ 		dbg("%s: re-enumerating slots under %s\n", __func__, objname);
+ 		if (bridge) {
+ 			acpiphp_check_bridge(bridge);
+-			acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
+-					    ACPI_UINT32_MAX, check_sub_bridges,
+-					    NULL, NULL, NULL);
+ 		} else {
+ 			struct acpiphp_slot *slot = func->slot;
+ 
 
