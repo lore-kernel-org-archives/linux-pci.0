@@ -1,169 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:33569 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757496Ab3GYR5X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:57:23 -0400
-Received: by mail-ob0-f171.google.com with SMTP id tb18so2189146obb.2
-        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 10:57:22 -0700 (PDT)
-Subject: [PATCH 1/2] PCI: hotplug: Convert to be builtin only, not modular
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>, Tony Luck <tony.luck@intel.com>,
-	linux-ia64@vger.kernel.org, linux-sh@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org
-Date: Thu, 25 Jul 2013 11:57:20 -0600
-Message-ID: <20130725175720.6006.96448.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
-References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 1/30] ACPI / PCI: Make bus registration and unregistration symmetric
+Date: Thu, 18 Jul 2013 01:15:58 +0200
+Message-ID: <1395739.1IFp3cq75N@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Convert CONFIG_HOTPLUG_PCI from tristate to bool.  This only affects
-the hotplug core; several of the hotplug drivers can still be modules.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Since acpi_pci_slot_enumerate() and acpiphp_enumerate_slots() can get
+the ACPI device handle they need from bus->bridge, it is not
+necessary to pass that handle to them as an argument.
+
+Drop the second argument of acpi_pci_slot_enumerate() and
+acpiphp_enumerate_slots(), rework them to obtain the ACPI handle
+from bus->bridge and make acpi_pci_add_bus() and
+acpi_pci_remove_bus() entirely symmetrical.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- arch/ia64/configs/generic_defconfig    |    2 +-
- arch/ia64/configs/gensparse_defconfig  |    2 +-
- arch/ia64/configs/tiger_defconfig      |    2 +-
- arch/ia64/configs/xen_domu_defconfig   |    2 +-
- arch/powerpc/configs/ppc64_defconfig   |    2 +-
- arch/powerpc/configs/ppc64e_defconfig  |    2 +-
- arch/powerpc/configs/pseries_defconfig |    2 +-
- arch/sh/configs/sh03_defconfig         |    2 +-
- drivers/pci/hotplug/Kconfig            |    5 +----
- 9 files changed, 9 insertions(+), 12 deletions(-)
+ drivers/acpi/pci_slot.c            |   14 +++++++++-----
+ drivers/pci/hotplug/acpiphp_glue.c |    6 ++++--
+ drivers/pci/pci-acpi.c             |   16 ++++------------
+ include/linux/pci-acpi.h           |   10 ++++------
+ 4 files changed, 21 insertions(+), 25 deletions(-)
 
-diff --git a/arch/ia64/configs/generic_defconfig b/arch/ia64/configs/generic_defconfig
-index 7913695..efbd292 100644
---- a/arch/ia64/configs/generic_defconfig
-+++ b/arch/ia64/configs/generic_defconfig
-@@ -31,7 +31,7 @@ CONFIG_ACPI_FAN=m
- CONFIG_ACPI_DOCK=y
- CONFIG_ACPI_PROCESSOR=m
- CONFIG_ACPI_CONTAINER=m
--CONFIG_HOTPLUG_PCI=m
-+CONFIG_HOTPLUG_PCI=y
- CONFIG_HOTPLUG_PCI_ACPI=m
- CONFIG_PACKET=y
- CONFIG_UNIX=y
-diff --git a/arch/ia64/configs/gensparse_defconfig b/arch/ia64/configs/gensparse_defconfig
-index f8e9133..f64980d 100644
---- a/arch/ia64/configs/gensparse_defconfig
-+++ b/arch/ia64/configs/gensparse_defconfig
-@@ -25,7 +25,7 @@ CONFIG_ACPI_BUTTON=m
- CONFIG_ACPI_FAN=m
- CONFIG_ACPI_PROCESSOR=m
- CONFIG_ACPI_CONTAINER=m
--CONFIG_HOTPLUG_PCI=m
-+CONFIG_HOTPLUG_PCI=y
- CONFIG_HOTPLUG_PCI_ACPI=m
- CONFIG_PACKET=y
- CONFIG_UNIX=y
-diff --git a/arch/ia64/configs/tiger_defconfig b/arch/ia64/configs/tiger_defconfig
-index a5a9e02..0f4e9e4 100644
---- a/arch/ia64/configs/tiger_defconfig
-+++ b/arch/ia64/configs/tiger_defconfig
-@@ -31,7 +31,7 @@ CONFIG_ACPI_BUTTON=m
- CONFIG_ACPI_FAN=m
- CONFIG_ACPI_PROCESSOR=m
- CONFIG_ACPI_CONTAINER=m
--CONFIG_HOTPLUG_PCI=m
-+CONFIG_HOTPLUG_PCI=y
- CONFIG_HOTPLUG_PCI_ACPI=m
- CONFIG_PACKET=y
- CONFIG_UNIX=y
-diff --git a/arch/ia64/configs/xen_domu_defconfig b/arch/ia64/configs/xen_domu_defconfig
-index 37b9b42..b025acf 100644
---- a/arch/ia64/configs/xen_domu_defconfig
-+++ b/arch/ia64/configs/xen_domu_defconfig
-@@ -32,7 +32,7 @@ CONFIG_ACPI_BUTTON=m
- CONFIG_ACPI_FAN=m
- CONFIG_ACPI_PROCESSOR=m
- CONFIG_ACPI_CONTAINER=m
--CONFIG_HOTPLUG_PCI=m
-+CONFIG_HOTPLUG_PCI=y
- CONFIG_HOTPLUG_PCI_ACPI=m
- CONFIG_PACKET=y
- CONFIG_UNIX=y
-diff --git a/arch/powerpc/configs/ppc64_defconfig b/arch/powerpc/configs/ppc64_defconfig
-index c86fcb9..0e8cfd0 100644
---- a/arch/powerpc/configs/ppc64_defconfig
-+++ b/arch/powerpc/configs/ppc64_defconfig
-@@ -58,7 +58,7 @@ CONFIG_SCHED_SMT=y
- CONFIG_PPC_DENORMALISATION=y
- CONFIG_PCCARD=y
- CONFIG_ELECTRA_CF=y
--CONFIG_HOTPLUG_PCI=m
-+CONFIG_HOTPLUG_PCI=y
- CONFIG_HOTPLUG_PCI_RPA=m
- CONFIG_HOTPLUG_PCI_RPA_DLPAR=m
- CONFIG_PACKET=y
-diff --git a/arch/powerpc/configs/ppc64e_defconfig b/arch/powerpc/configs/ppc64e_defconfig
-index 4b20f76..0085dc4 100644
---- a/arch/powerpc/configs/ppc64e_defconfig
-+++ b/arch/powerpc/configs/ppc64e_defconfig
-@@ -32,7 +32,7 @@ CONFIG_IRQ_ALL_CPUS=y
- CONFIG_SPARSEMEM_MANUAL=y
- CONFIG_PCI_MSI=y
- CONFIG_PCCARD=y
--CONFIG_HOTPLUG_PCI=m
-+CONFIG_HOTPLUG_PCI=y
- CONFIG_PACKET=y
- CONFIG_UNIX=y
- CONFIG_XFRM_USER=m
-diff --git a/arch/powerpc/configs/pseries_defconfig b/arch/powerpc/configs/pseries_defconfig
-index bea8587..1d4b976 100644
---- a/arch/powerpc/configs/pseries_defconfig
-+++ b/arch/powerpc/configs/pseries_defconfig
-@@ -53,7 +53,7 @@ CONFIG_PPC_64K_PAGES=y
- CONFIG_PPC_SUBPAGE_PROT=y
- CONFIG_SCHED_SMT=y
- CONFIG_PPC_DENORMALISATION=y
--CONFIG_HOTPLUG_PCI=m
-+CONFIG_HOTPLUG_PCI=y
- CONFIG_HOTPLUG_PCI_RPA=m
- CONFIG_HOTPLUG_PCI_RPA_DLPAR=m
- CONFIG_PACKET=y
-diff --git a/arch/sh/configs/sh03_defconfig b/arch/sh/configs/sh03_defconfig
-index 2051821..0cf4097 100644
---- a/arch/sh/configs/sh03_defconfig
-+++ b/arch/sh/configs/sh03_defconfig
-@@ -22,7 +22,7 @@ CONFIG_PREEMPT=y
- CONFIG_CMDLINE_OVERWRITE=y
- CONFIG_CMDLINE="console=ttySC1,115200 mem=64M root=/dev/nfs"
- CONFIG_PCI=y
--CONFIG_HOTPLUG_PCI=m
-+CONFIG_HOTPLUG_PCI=y
- CONFIG_BINFMT_MISC=y
- CONFIG_NET=y
- CONFIG_PACKET=y
-diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
-index bb7ebb2..d85009d 100644
---- a/drivers/pci/hotplug/Kconfig
-+++ b/drivers/pci/hotplug/Kconfig
-@@ -3,16 +3,13 @@
- #
+Index: linux-pm/drivers/acpi/pci_slot.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_slot.c
++++ linux-pm/drivers/acpi/pci_slot.c
+@@ -159,12 +159,16 @@ register_slot(acpi_handle handle, u32 lv
+ 	return AE_OK;
+ }
  
- menuconfig HOTPLUG_PCI
--	tristate "Support for PCI Hotplug"
-+	bool "Support for PCI Hotplug"
- 	depends on PCI && SYSFS
- 	---help---
- 	  Say Y here if you have a motherboard with a PCI Hotplug controller.
- 	  This allows you to add and remove PCI cards while the machine is
- 	  powered up and running.
+-void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle)
++void acpi_pci_slot_enumerate(struct pci_bus *bus)
+ {
+-	mutex_lock(&slot_list_lock);
+-	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
+-			    register_slot, NULL, bus, NULL);
+-	mutex_unlock(&slot_list_lock);
++	acpi_handle handle = ACPI_HANDLE(bus->bridge);
++
++	if (handle) {
++		mutex_lock(&slot_list_lock);
++		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
++				    register_slot, NULL, bus, NULL);
++		mutex_unlock(&slot_list_lock);
++	}
+ }
  
--	  To compile this driver as a module, choose M here: the
--	  module will be called pci_hotplug.
+ void acpi_pci_slot_remove(struct pci_bus *bus)
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1147,14 +1147,16 @@ static void handle_hotplug_event_func(ac
+  * Create hotplug slots for the PCI bus.
+  * It should always return 0 to avoid skipping following notifiers.
+  */
+-void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
++void acpiphp_enumerate_slots(struct pci_bus *bus)
+ {
++	acpi_handle handle;
+ 	struct acpiphp_bridge *bridge;
+ 
+ 	if (acpiphp_disabled)
+ 		return;
+ 
+-	if (detect_ejectable_slots(handle) <= 0)
++	handle = ACPI_HANDLE(bus->bridge);
++	if (!handle || detect_ejectable_slots(handle) <= 0)
+ 		return;
+ 
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -290,24 +290,16 @@ static struct pci_platform_pm_ops acpi_p
+ 
+ void acpi_pci_add_bus(struct pci_bus *bus)
+ {
+-	acpi_handle handle = NULL;
 -
- 	  When in doubt, say N.
+-	if (bus->bridge)
+-		handle = ACPI_HANDLE(bus->bridge);
+-	if (acpi_pci_disabled || handle == NULL)
++	if (acpi_pci_disabled || !bus->bridge)
+ 		return;
  
- if HOTPLUG_PCI
+-	acpi_pci_slot_enumerate(bus, handle);
+-	acpiphp_enumerate_slots(bus, handle);
++	acpi_pci_slot_enumerate(bus);
++	acpiphp_enumerate_slots(bus);
+ }
+ 
+ void acpi_pci_remove_bus(struct pci_bus *bus)
+ {
+-	/*
+-	 * bus->bridge->acpi_node.handle has already been reset to NULL
+-	 * when acpi_pci_remove_bus() is called, so don't check ACPI handle.
+-	 */
+-	if (acpi_pci_disabled)
++	if (acpi_pci_disabled || !bus->bridge)
+ 		return;
+ 
+ 	acpiphp_remove_slots(bus);
+Index: linux-pm/include/linux/pci-acpi.h
+===================================================================
+--- linux-pm.orig/include/linux/pci-acpi.h
++++ linux-pm/include/linux/pci-acpi.h
+@@ -47,24 +47,22 @@ void acpi_pci_remove_bus(struct pci_bus
+ 
+ #ifdef	CONFIG_ACPI_PCI_SLOT
+ void acpi_pci_slot_init(void);
+-void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle);
++void acpi_pci_slot_enumerate(struct pci_bus *bus);
+ void acpi_pci_slot_remove(struct pci_bus *bus);
+ #else
+ static inline void acpi_pci_slot_init(void) { }
+-static inline void acpi_pci_slot_enumerate(struct pci_bus *bus,
+-					   acpi_handle handle) { }
++static inline void acpi_pci_slot_enumerate(struct pci_bus *bus) { }
+ static inline void acpi_pci_slot_remove(struct pci_bus *bus) { }
+ #endif
+ 
+ #ifdef	CONFIG_HOTPLUG_PCI_ACPI
+ void acpiphp_init(void);
+-void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle);
++void acpiphp_enumerate_slots(struct pci_bus *bus);
+ void acpiphp_remove_slots(struct pci_bus *bus);
+ void acpiphp_check_host_bridge(acpi_handle handle);
+ #else
+ static inline void acpiphp_init(void) { }
+-static inline void acpiphp_enumerate_slots(struct pci_bus *bus,
+-					   acpi_handle handle) { }
++static inline void acpiphp_enumerate_slots(struct pci_bus *bus) { }
+ static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
+ static inline void acpiphp_check_host_bridge(acpi_handle handle) { }
+ #endif
 
