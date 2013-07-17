@@ -1,187 +1,109 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots
-Date: Thu, 18 Jul 2013 01:32:52 +0200
-Message-ID: <1818424.8fNkf5pBy3@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Kamal Mostafa <kamal@canonical.com>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	kernel-team@lists.ubuntu.com
+Cc: linux-pci@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Luis Henriques <luis.henriques@canonical.com>
+Subject: [PATCH 021/145] xen/pcifront: Deal with toolstack missing 'XenbusStateClosing' state.
+Date: Wed, 17 Jul 2013 15:45:53 -0700
+Message-Id: <1374101277-7915-22-git-send-email-kamal@canonical.com>
+In-Reply-To: <1374101277-7915-1-git-send-email-kamal@canonical.com>
+References: <1374101277-7915-1-git-send-email-kamal@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+3.8.13.5 -stable review patch.  If anyone has any objections, please let me know.
 
-The current implementation of acpiphp_check_bridge() is pretty dumb:
- - It enables a slot if it's not enabled and the slot status is
-   ACPI_STA_ALL.
- - It disables a slot if it's enabled and the slot status is not
-   ACPI_STA_ALL.
+------------------
 
-This behavior is not sufficient to handle the Thunderbolt daisy
-chaining case properly, however, because in that case the bus
-behind the already enabled slot needs to be rescanned for new
-devices.
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 
-For this reason, modify acpiphp_check_bridge() so that slots are
-disabled and stopped if they are not in the ACPI_STA_ALL state.
+commit 098b1aeaf4d6149953b8f1f8d55c21d85536fbff upstream.
 
-For slots in the ACPI_STA_ALL state, devices behind them that don't
-respond are trimmed using a new function, trim_stale_devices(),
-introduced specifically for this purpose.  That function walks
-the given bus and checks each device on it.  If the device doesn't
-respond, it is assumed to be gone and is removed.
+There are two tool-stack that can instruct the Xen PCI frontend
+and backend to change states: 'xm' (Python code with a daemon),
+and 'xl' (C library - does not keep state changes).
 
-Once all of the stale devices directy behind the slot have been
-removed, acpiphp_check_bridge() will start looking for new devices
-that might have appeared on the given bus.  It will do that even if
-the slot is already enabled (SLOT_ENABLED is set for it).
+With the 'xm', the path to disconnect a single PCI device (xm pci-detach
+<guest> <BDF>) is:
 
-In addition to that, make the bus check notification ignore
-SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
-so that devices behind the slot are re-enumerated in that case too.
+4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
 
-This change is based on earlier patches from Kirill A Shutemov
-and Mika Westerberg.
+The * is for states that the tool-stack sets. For 'xl', it is similar:
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
+
+Both of them also tear down the XenBus structure, so the backend
+state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
+
+When a PCI device is plugged back in (xm pci-attach <guest> <BDF>)
+both of them follow the same pattern:
+
+2(InitWait*), 3(Initialized*), 4(Connected*)->4(Connected).
+
+[xen-pcifront ignores the 2,3 state changes and only acts when
+4 (Connected) has been reached]
+
+Note that this is for a _single_ PCI device. If there were two
+PCI devices and only one was disconnected 'xm' would show the same
+state changes.
+
+The problem is that git commit 3d925320e9e2de162bd138bf97816bda8c3f71be
+("xen/pcifront: Use Xen-SWIOTLB when initting if required") introduced
+a mechanism to initialize the SWIOTLB when the Xen PCI front moves to
+Connected state. It also had some aggressive seatbelt code check that
+would warn the user if one tried to change to Connected state without
+hitting first the Closing state:
+
+ pcifront pci-0: PCI frontend already installed!
+
+However, that code can be relaxed and we can continue on working
+even if the frontend is instructed to be the 'Connected' state with
+no devices and then gets tickled to be in 'Connected' state again.
+
+In other words, this 4(Connected)->5(Closing)->4(Connected) state
+was expected, while 4(Connected)->.... anything but 5(Closing)->4(Connected)
+was not. This patch removes that aggressive check and allows
+Xen pcifront to work with the 'xl' toolstack (for one or more
+PCI devices) and with 'xm' toolstack (for more than two PCI
+devices).
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+[v2: Added in the description about two PCI devices]
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   87 +++++++++++++++++++++++++------------
- 1 file changed, 60 insertions(+), 27 deletions(-)
+ drivers/pci/xen-pcifront.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -46,6 +46,7 @@
- #include <linux/pci.h>
- #include <linux/pci_hotplug.h>
- #include <linux/pci-acpi.h>
-+#include <linux/pm_runtime.h>
- #include <linux/mutex.h>
- #include <linux/slab.h>
- #include <linux/acpi.h>
-@@ -687,47 +688,75 @@ static unsigned int get_slot_status(stru
- }
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 966abc6..f7197a7 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -678,10 +678,9 @@ static int pcifront_connect_and_init_dma(struct pcifront_device *pdev)
+ 	if (!pcifront_dev) {
+ 		dev_info(&pdev->xdev->dev, "Installing PCI frontend\n");
+ 		pcifront_dev = pdev;
+-	} else {
+-		dev_err(&pdev->xdev->dev, "PCI frontend already installed!\n");
++	} else
+ 		err = -EEXIST;
+-	}
++
+ 	spin_unlock(&pcifront_dev_lock);
  
- /**
-+ * trim_stale_devices - remove PCI devices that are not responding.
-+ * @dev: PCI device to start walking the hierarchy from.
-+ */
-+static void trim_stale_devices(struct pci_dev *dev)
-+{
-+	acpi_handle handle = ACPI_HANDLE(&dev->dev);
-+	struct pci_bus *bus = dev->subordinate;
-+	bool alive = false;
-+
-+	if (handle) {
-+		acpi_status status;
-+		unsigned long long sta;
-+
-+		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
-+		alive = ACPI_SUCCESS(status) && sta == ACPI_STA_ALL;
-+	}
-+	if (!alive) {
-+		u32 v;
-+
-+		/* Check if the device responds. */
-+		alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &v, 0);
-+	}
-+	if (!alive) {
-+		pci_stop_and_remove_bus_device(dev);
-+		if (handle)
-+			acpiphp_bus_trim(handle);
-+	} else if (bus) {
-+		struct pci_dev *child, *tmp;
-+
-+		/* The device is a bridge. so check the bus below it. */
-+		pm_runtime_get_sync(&dev->dev);
-+		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
-+			trim_stale_devices(child);
-+
-+		pm_runtime_put(&dev->dev);
-+	}
-+}
-+
-+/**
-  * acpiphp_check_bridge - re-enumerate devices
-  * @bridge: where to begin re-enumeration
-  *
-  * Iterate over all slots under this bridge and make sure that if a
-  * card is present they are enabled, and if not they are disabled.
-  */
--static int acpiphp_check_bridge(struct acpiphp_bridge *bridge)
-+static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
- {
- 	struct acpiphp_slot *slot;
--	int retval = 0;
--	int enabled, disabled;
--
--	enabled = disabled = 0;
+ 	if (!err && !swiotlb_nr_tbl()) {
+@@ -848,7 +847,7 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
+ 		goto out;
  
- 	list_for_each_entry(slot, &bridge->slots, node) {
--		unsigned int status = get_slot_status(slot);
--		if (slot->flags & SLOT_ENABLED) {
--			if (status == ACPI_STA_ALL)
--				continue;
-+		struct pci_bus *bus = slot->bus;
-+		struct pci_dev *dev, *tmp;
- 
--			retval = acpiphp_disable_and_eject_slot(slot);
--			if (retval)
--				goto err_exit;
-+		mutex_lock(&slot->crit_sect);
-+		/* wake up all functions */
-+		if (get_slot_status(slot) == ACPI_STA_ALL) {
-+			/* remove stale devices if any */
-+			list_for_each_entry_safe(dev, tmp, &bus->devices,
-+						 bus_list)
-+				if (PCI_SLOT(dev->devfn) == slot->device)
-+					trim_stale_devices(dev);
- 
--			disabled++;
-+			/* configure all functions */
-+			enable_device(slot);
- 		} else {
--			if (status != ACPI_STA_ALL)
--				continue;
--			retval = acpiphp_enable_slot(slot);
--			if (retval) {
--				err("Error occurred in enabling\n");
--				goto err_exit;
--			}
--			enabled++;
-+			disable_device(slot);
- 		}
-+		mutex_unlock(&slot->crit_sect);
- 	}
--
--	dbg("%s: %d enabled, %d disabled\n", __func__, enabled, disabled);
--
-- err_exit:
--	return retval;
- }
- 
- static void acpiphp_set_hpp_values(struct pci_bus *bus)
-@@ -828,7 +857,11 @@ static void hotplug_event(acpi_handle ha
- 					    ACPI_UINT32_MAX, check_sub_bridges,
- 					    NULL, NULL, NULL);
- 		} else {
--			acpiphp_enable_slot(func->slot);
-+			struct acpiphp_slot *slot = func->slot;
-+
-+			mutex_lock(&slot->crit_sect);
-+			enable_device(slot);
-+			mutex_unlock(&slot->crit_sect);
- 		}
- 		break;
- 
+ 	err = pcifront_connect_and_init_dma(pdev);
+-	if (err) {
++	if (err && err != -EEXIST) {
+ 		xenbus_dev_fatal(pdev->xdev, err,
+ 				 "Error setting up PCI Frontend");
+ 		goto out;
+-- 
+1.8.1.2
 
