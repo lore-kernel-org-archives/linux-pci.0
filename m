@@ -1,58 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:38844 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932477Ab3GZWqV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 18:46:21 -0400
-Date: Fri, 26 Jul 2013 23:46:07 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCHv5 08/11] ARM: pci: add ->add_bus() and ->remove_bus()
-	hooks to hw_pci
-Message-ID: <20130726224607.GZ24642@n2100.arm.linux.org.uk>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com> <1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com> <20130725165659.GB27802@dhcp-172-17-186-34.nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 12/30] ACPI / hotplug / PCI: Drop sun field from struct acpiphp_slot
+Date: Thu, 18 Jul 2013 01:23:38 +0200
+Message-ID: <5322920.vsY2PMx8WN@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130725165659.GB27802@dhcp-172-17-186-34.nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 25, 2013 at 09:57:00AM -0700, Thierry Reding wrote:
-> On Mon, Jul 15, 2013 at 01:52:44PM +0200, Thomas Petazzoni wrote:
-> > Some PCI drivers may need to adjust the pci_bus structure after it has
-> > been allocated by the Linux PCI core. The PCI core allows
-> > architectures to implement the pcibios_add_bus() and
-> > pcibios_remove_bus() for this purpose. This commit therefore extends
-> > the hw_pci and pci_sys_data structures of the ARM PCI core to allow
-> > PCI drivers to register ->add_bus() and ->remove_bus() in hw_pci,
-> > which will get called when a bus is added or removed from the system.
-> > 
-> > This will be used for example by the Marvell PCIe driver to connect a
-> > particular PCI bus with its corresponding MSI chip to handle Message
-> > Signaled Interrupts.
-> > 
-> > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
-> > ---
-> >  arch/arm/include/asm/mach/pci.h |  4 ++++
-> >  arch/arm/kernel/bios32.c        | 16 ++++++++++++++++
-> >  2 files changed, 20 insertions(+)
-> 
-> Hi Russell,
-> 
-> Can we have your Acked-by on this patch so that it can be moved to a
-> stable branch along with some of the other patches in this branch that
-> both Marvell and Tegra PCIe drivers need?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
+If the slot unique number is passed as an additional argument to
+acpiphp_register_hotplug_slot(), the 'sun' field in struct
+acpiphp_slot is only used by ibm_[s|g]et_attention_status(),
+but then it's more efficient to store it in struct slot.
+
+Thus move the 'sun' field from struct acpiphp_slot to struct slot
+changing its data type to unsigned int in the process, and redefine
+acpiphp_register_hotplug_slot() to take the slot number as separate
+argument.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    5 ++---
+ drivers/pci/hotplug/acpiphp_core.c |    6 ++++--
+ drivers/pci/hotplug/acpiphp_glue.c |    7 +++----
+ drivers/pci/hotplug/acpiphp_ibm.c  |    2 +-
+ 4 files changed, 10 insertions(+), 10 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -60,6 +60,7 @@ struct slot {
+ 	struct hotplug_slot	*hotplug_slot;
+ 	struct acpiphp_slot	*acpi_slot;
+ 	struct hotplug_slot_info info;
++	unsigned int sun;	/* ACPI _SUN (Slot User Number) value */
+ };
+ 
+ static inline const char *slot_name(struct slot *slot)
+@@ -106,8 +107,6 @@ struct acpiphp_slot {
+ 	struct mutex crit_sect;
+ 
+ 	u8		device;		/* pci device# */
+-
+-	unsigned long long sun;		/* ACPI _SUN (slot unique number) */
+ 	u32		flags;		/* see below */
+ };
+ 
+@@ -179,7 +178,7 @@ struct acpiphp_attention_info
+ /* acpiphp_core.c */
+ int acpiphp_register_attention(struct acpiphp_attention_info*info);
+ int acpiphp_unregister_attention(struct acpiphp_attention_info *info);
+-int acpiphp_register_hotplug_slot(struct acpiphp_slot *slot);
++int acpiphp_register_hotplug_slot(struct acpiphp_slot *slot, unsigned int sun);
+ void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
+ 
+ /* acpiphp_glue.c */
+Index: linux-pm/drivers/pci/hotplug/acpiphp_core.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_core.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_core.c
+@@ -290,7 +290,8 @@ static void release_slot(struct hotplug_
+ }
+ 
+ /* callback routine to initialize 'struct slot' for each slot */
+-int acpiphp_register_hotplug_slot(struct acpiphp_slot *acpiphp_slot)
++int acpiphp_register_hotplug_slot(struct acpiphp_slot *acpiphp_slot,
++				  unsigned int sun)
+ {
+ 	struct slot *slot;
+ 	int retval = -ENOMEM;
+@@ -317,7 +318,8 @@ int acpiphp_register_hotplug_slot(struct
+ 	slot->hotplug_slot->info->adapter_status = acpiphp_get_adapter_status(slot->acpi_slot);
+ 
+ 	acpiphp_slot->slot = slot;
+-	snprintf(name, SLOT_NAME_SIZE, "%llu", slot->acpi_slot->sun);
++	slot->sun = sun;
++	snprintf(name, SLOT_NAME_SIZE, "%u", sun);
+ 
+ 	retval = pci_hp_register(slot->hotplug_slot,
+ 					acpiphp_slot->bridge->pci_bus,
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -352,16 +352,15 @@ static acpi_status register_slot(acpi_ha
+ 		if (ACPI_FAILURE(status))
+ 			sun = bridge->nr_slots;
+ 
+-		slot->sun = sun;
+ 		dbg("found ACPI PCI Hotplug slot %llu at PCI %04x:%02x:%02x\n",
+-		    slot->sun, pci_domain_nr(pbus), pbus->number, device);
++		    sun, pci_domain_nr(pbus), pbus->number, device);
+ 
+-		retval = acpiphp_register_hotplug_slot(slot);
++		retval = acpiphp_register_hotplug_slot(slot, sun);
+ 		if (retval) {
+ 			bridge->nr_slots--;
+ 			if (retval == -EBUSY)
+ 				warn("Slot %llu already registered by another "
+-					"hotplug driver\n", slot->sun);
++					"hotplug driver\n", sun);
+ 			else
+ 				warn("acpiphp_register_hotplug_slot failed "
+ 					"(err code = 0x%x)\n", retval);
+Index: linux-pm/drivers/pci/hotplug/acpiphp_ibm.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_ibm.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_ibm.c
+@@ -66,7 +66,7 @@ do {							\
+ #define IBM_HARDWARE_ID1 "IBM37D0"
+ #define IBM_HARDWARE_ID2 "IBM37D4"
+ 
+-#define hpslot_to_sun(A) (((struct slot *)((A)->private))->acpi_slot->sun)
++#define hpslot_to_sun(A) (((struct slot *)((A)->private))->sun)
+ 
+ /* union apci_descriptor - allows access to the
+  * various device descriptors that are embedded in the
+
