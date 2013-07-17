@@ -1,67 +1,193 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:39070 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751589Ab3GWAar (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jul 2013 20:30:47 -0400
-Received: by mail-ie0-f181.google.com with SMTP id x12so16777230ief.40
-        for <linux-pci@vger.kernel.org>; Mon, 22 Jul 2013 17:30:47 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 17/30] ACPI / hotplug / PCI: Store parent in functions and bus in slots
+Date: Thu, 18 Jul 2013 01:26:44 +0200
+Message-ID: <2524990.k3VvUAygWI@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20130716234307.3d5ed229@skate>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <51E4167B.4000208@wwwdotorg.org> <20130715162709.GA24625@dhcp-172-17-186-34.nvidia.com>
- <20130716103351.15b0fb50@skate> <20130716210509.GA29318@dhcp-172-17-186-34.nvidia.com>
- <20130716234307.3d5ed229@skate>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 22 Jul 2013 18:30:26 -0600
-Message-ID: <CAErSpo5G=d=WsN0MnXrwYa4HgTVFre5QYj+hDeHGVXnz-Aeygg@mail.gmail.com>
-Subject: Re: [PATCHv5 00/11] MSI support for Marvell EBU PCIe driver
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 16, 2013 at 3:43 PM, Thomas Petazzoni
-<thomas.petazzoni@free-electrons.com> wrote:
-> Thierry,
->
-> On Tue, 16 Jul 2013 14:05:10 -0700, Thierry Reding wrote:
->
->> > This is from:
->> >
->> > Subject: Re: [PATCH v2 6/8] pci: mvebu: add support for MSI
->> > Date: Tue, 18 Jun 2013 16:57:11 -0600
->>
->> Yes, I'm aware of that discussion. However we currently need to have the
->> custom root bus scan implementation anyway because pci_scan_root_bus()
->> just doesn't work on ARM. So again, since we'll have to rework the
->> driver anyway in order to use pci_scan_root_bus() once the issues have
->> been resolved, it wouldn't hurt to postpone the transition to the new
->> ARM pcibios_add_bus() support until that point.
->>
->> All I was trying to do was reduce the list of common dependencies in an
->> attempt to make merging it easier.
->
-> Understood. Bjorn, since you are the one who originally requested
-> the usage of pcibios_add_bus(), would you agree with the idea proposed
-> by Thierry? It would remove one dependency for both the Marvell MSI
-> support and Tegra PCIe support, which would help getting this code
-> merged.
->
-> As Thierry points out, this can easily be resolved at a later point,
-> once the new hooks are merged in the ARM PCI core.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Yep, that's fine with me.
+To avoid chasing more pointers than necessary in some situations,
+move the bridge pointer from struct acpiphp_slot to struct
+acpiphp_func (and call it 'parent') and add a bus pointer to
+struct acpiphp_slot.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    5 +++--
+ drivers/pci/hotplug/acpiphp_core.c |    6 ++----
+ drivers/pci/hotplug/acpiphp_glue.c |   25 +++++++++++++------------
+ 3 files changed, 18 insertions(+), 18 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -97,7 +97,7 @@ struct acpiphp_bridge {
+  */
+ struct acpiphp_slot {
+ 	struct list_head node;
+-	struct acpiphp_bridge *bridge;	/* parent */
++	struct pci_bus *bus;
+ 	struct list_head funcs;		/* one slot may have different
+ 					   objects (i.e. for each function) */
+ 	struct slot *slot;
+@@ -115,7 +115,8 @@ struct acpiphp_slot {
+  * typically 8 objects per slot (i.e. for each PCI function)
+  */
+ struct acpiphp_func {
+-	struct acpiphp_slot *slot;	/* parent */
++	struct acpiphp_bridge *parent;
++	struct acpiphp_slot *slot;
+ 
+ 	struct list_head sibling;
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -165,7 +165,7 @@ static void free_bridge(struct kref *kre
+ 	/* Root bridges will not have hotplug context. */
+ 	if (context) {
+ 		/* Release the reference taken by acpiphp_enumerate_slots(). */
+-		put_bridge(context->func.slot->bridge);
++		put_bridge(context->func.parent);
+ 		context->bridge = NULL;
+ 		acpiphp_put_context(context);
+ 	}
+@@ -187,7 +187,7 @@ static void free_bridge(struct kref *kre
+ static void post_dock_fixups(acpi_handle not_used, u32 event, void *data)
+ {
+ 	struct acpiphp_context *context = data;
+-	struct pci_bus *bus = context->func.slot->bridge->pci_bus;
++	struct pci_bus *bus = context->func.slot->bus;
+ 	u32 buses;
+ 
+ 	if (!bus->self)
+@@ -248,14 +248,14 @@ static void acpiphp_dock_init(void *data
+ {
+ 	struct acpiphp_context *context = data;
+ 
+-	get_bridge(context->func.slot->bridge);
++	get_bridge(context->func.parent);
+ }
+ 
+ static void acpiphp_dock_release(void *data)
+ {
+ 	struct acpiphp_context *context = data;
+ 
+-	put_bridge(context->func.slot->bridge);
++	put_bridge(context->func.parent);
+ }
+ 
+ /* callback routine to register each ACPI PCI slot object */
+@@ -294,6 +294,7 @@ static acpi_status register_slot(acpi_ha
+ 	}
+ 	newfunc = &context->func;
+ 	newfunc->function = function;
++	newfunc->parent = bridge;
+ 	mutex_unlock(&acpiphp_context_lock);
+ 
+ 	if (acpi_has_method(handle, "_EJ0"))
+@@ -322,7 +323,7 @@ static acpi_status register_slot(acpi_ha
+ 		goto err;
+ 	}
+ 
+-	slot->bridge = bridge;
++	slot->bus = bridge->pci_bus;
+ 	slot->device = device;
+ 	INIT_LIST_HEAD(&slot->funcs);
+ 	mutex_init(&slot->crit_sect);
+@@ -639,7 +640,7 @@ static void check_hotplug_bridge(struct
+ static int __ref enable_device(struct acpiphp_slot *slot)
+ {
+ 	struct pci_dev *dev;
+-	struct pci_bus *bus = slot->bridge->pci_bus;
++	struct pci_bus *bus = slot->bus;
+ 	struct acpiphp_func *func;
+ 	int num, max, pass;
+ 	LIST_HEAD(add_list);
+@@ -709,7 +710,7 @@ static int __ref enable_device(struct ac
+ /* return first device in slot, acquiring a reference on it */
+ static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
+ {
+-	struct pci_bus *bus = slot->bridge->pci_bus;
++	struct pci_bus *bus = slot->bus;
+ 	struct pci_dev *dev;
+ 	struct pci_dev *ret = NULL;
+ 
+@@ -781,7 +782,7 @@ static unsigned int get_slot_status(stru
+ 		} else {
+ 			u32 dvid;
+ 
+-			pci_bus_read_config_dword(slot->bridge->pci_bus,
++			pci_bus_read_config_dword(slot->bus,
+ 						  PCI_DEVFN(slot->device,
+ 							    func->function),
+ 						  PCI_VENDOR_ID, &dvid);
+@@ -970,7 +971,7 @@ static void hotplug_event(acpi_handle ha
+ 		if (bridge)
+ 			acpiphp_check_bridge(bridge);
+ 		else
+-			acpiphp_check_bridge(func->slot->bridge);
++			acpiphp_check_bridge(func->parent);
+ 
+ 		break;
+ 
+@@ -1025,7 +1026,7 @@ static void hotplug_event_work(struct wo
+ 
+ 	acpi_scan_lock_release();
+ 	kfree(hp_work); /* allocated in handle_hotplug_event() */
+-	put_bridge(context->func.slot->bridge);
++	put_bridge(context->func.parent);
+ }
+ 
+ /**
+@@ -1043,7 +1044,7 @@ static void handle_hotplug_event(acpi_ha
+ 	mutex_lock(&acpiphp_context_lock);
+ 	context = acpiphp_get_context(handle);
+ 	if (context) {
+-		get_bridge(context->func.slot->bridge);
++		get_bridge(context->func.parent);
+ 		acpiphp_put_context(context);
+ 	}
+ 	mutex_unlock(&acpiphp_context_lock);
+@@ -1113,7 +1114,7 @@ void acpiphp_enumerate_slots(struct pci_
+ 		bridge->context = context;
+ 		context->bridge = bridge;
+ 		/* Get a reference to the parent bridge. */
+-		get_bridge(context->func.slot->bridge);
++		get_bridge(context->func.parent);
+ 		mutex_unlock(&acpiphp_context_lock);
+ 	}
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp_core.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_core.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_core.c
+@@ -321,10 +321,8 @@ int acpiphp_register_hotplug_slot(struct
+ 	slot->sun = sun;
+ 	snprintf(name, SLOT_NAME_SIZE, "%u", sun);
+ 
+-	retval = pci_hp_register(slot->hotplug_slot,
+-					acpiphp_slot->bridge->pci_bus,
+-					acpiphp_slot->device,
+-					name);
++	retval = pci_hp_register(slot->hotplug_slot, acpiphp_slot->bus,
++				 acpiphp_slot->device, name);
+ 	if (retval == -EBUSY)
+ 		goto error_hpslot;
+ 	if (retval) {
+
