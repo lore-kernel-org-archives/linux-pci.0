@@ -1,208 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:36360 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933369Ab3GSDLC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jul 2013 23:11:02 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 19 Jul 2013 13:00:42 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 09DE12CE804D
-	for <linux-pci@vger.kernel.org>; Fri, 19 Jul 2013 13:10:56 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r6J2tSOR55050332
-	for <linux-pci@vger.kernel.org>; Fri, 19 Jul 2013 12:55:29 +1000
-Received: from d23av01.au.ibm.com (loopback [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r6J3AsNV014679
-	for <linux-pci@vger.kernel.org>; Fri, 19 Jul 2013 13:10:54 +1000
-Date: Fri, 19 Jul 2013 11:10:52 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
- pbus_size_io()
-Message-ID: <20130719031052.GA30732@weiyang.vnet.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1372691432-6440-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5O6CdzSw3bQyuKXsP+H0deJtGL1kXU+ddf_reA+ECq6w@mail.gmail.com>
- <20130709032019.GC7094@weiyang.vnet.ibm.com>
- <CAErSpo76aKk_Nq=MuL6Rsf98+fTxXQe=bJ-wQOhosKSDoYC8Ew@mail.gmail.com>
- <20130710013442.GA6671@weiyang.vnet.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 24/30] ACPI / hotplug / PCI: Allow slots without new devices to be rescanned
+Date: Thu, 18 Jul 2013 01:31:52 +0200
+Message-ID: <1681066.kN23ZaLIQQ@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130710013442.GA6671@weiyang.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 10, 2013 at 09:34:42AM +0800, Wei Yang wrote:
->On Tue, Jul 09, 2013 at 11:38:06AM -0600, Bjorn Helgaas wrote:
->>On Mon, Jul 8, 2013 at 9:20 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->>> On Mon, Jul 08, 2013 at 03:15:13PM -0600, Bjorn Helgaas wrote:
->>>>On Mon, Jul 1, 2013 at 9:10 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->>>>> In commit 462d9303 ("PCI: Align P2P windows using pcibios_window_alignment()"),
->>>>> it introduce a new method to calculate the window alignment of P2P bridge.
->>>>>
->>>>> When the io_window_1k is set,  the calculation for the io resource alignment
->>>>> is different from the original one. In the original logic before 462d9303,
->>>>> the alignment is no bigger than 4K even the io_window_1k is set. The logic
->>>>> introduced in 462d9303 will limit the alignment to 1k in this case.
->>>>>
->>>>> This patch fix this issue.
->>>>>
->>>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>>> Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
->>>>> Reviewed-by: Ram Pai <linuxram@us.ibm.com>
->>>>> ---
->>>>>  drivers/pci/setup-bus.c |    4 ++++
->>>>>  1 files changed, 4 insertions(+), 0 deletions(-)
->>>>>
->>>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->>>>> index bd0ce39d..5c60ca0 100644
->>>>> --- a/drivers/pci/setup-bus.c
->>>>> +++ b/drivers/pci/setup-bus.c
->>>>> @@ -755,6 +755,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->>>>>                 return;
->>>>>
->>>>>         io_align = min_align = window_alignment(bus, IORESOURCE_IO);
->>>>> +       /* Don't exceed 4KiB for windows requesting 1KiB alignment */
->>>>> +       if (bus->self->io_window_1k && io_align == PCI_P2P_DEFAULT_IO_ALIGN_1K)
->>>>> +               io_align = PCI_P2P_DEFAULT_IO_ALIGN;
->>>>
->>>>Please explain why we need this change, with some actual values that
->>>>show the problem.  We need to know what the problem is, not merely
->>>>that the code behaves differently than it did before 462d9303.
->>>
->>> Yep, sorry for not listing the exact problem value.
->>>
->>> Assume:
->>>         1. pcibios_window_alignment() return 1.
->>>         2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
->>>         3. one of the child device has an IO resource with size of 2K.
->>>
->>> Result comparison:
->>>
->>>                     Before 462d9303             After 462d9303
->>>     min_align       1k                          1k
->>>                                         |
->>>                              after loop |
->>>                                         V
->>>     min_align       2k                          2k
->>>                                         |
->>>                          check boundary |
->>>                                         V
->>>     min_align       2k                          1k
->>>
->>> In this case, with 462d9303 the min_align will be set back to 1k even one of
->>> the child require 2k alignment.
->>>
->>>>
->>>>It appears to me that this change will break the ability to use 1K
->>>>windows.  For example, assume a bridge that supports 1K windows.
->>>>Assume we're using the default pcibios_window_alignment().  Currently
->>>>window_alignment() on the secondary bus returns
->>>>PCI_P2P_DEFAULT_IO_ALIGN_1K (0x400, which is 1K), so io_align = 0x400.
->>>>
->>>>With your change, I think io_align will be bumped back up to 4K in
->>>>this case, so we'll lose the ability to allocate a 1K window.
->>>
->>> After applying the change:
->>>
->>> Assume:
->>>         1. pcibios_window_alignment() return 1.
->>>         2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
->>>         3. one of the child device has an IO resource with size of 2K.
->>
->>What happens if no child has an I/O resource larger than 1K?  Can we
->>allocate a 1K window with 1K alignment in that case?
->>
->
->Yes, it could. The result comparison would look like this.
->Since no child has an I/O resource larger than 1k, the min_align will remain
->1k after loop. And because io_align(4K) is larger than min_align(1k), the
->final min_align would be 1k.
->
->In this case, the code from commit 462d9303 and my patch both works.
->
-> Result comparison:
->                     with  462d9303             with this patch
->     min_align       1k                          1k
->     io_align        1k                          4k
->                                         |
->                              after loop |
->                                         V
->     min_align       1k                          1k
->     io_align        1k                          4k
->                                         |
->                          check boundary |
->                                         V
->     min_align       1k                          1k
->     io_align        1k                          4k
->
+From: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
 
-Bjorn,
+Currently, enable_device() checks the return value of pci_scan_slot()
+and returns immediately if that's 0 (meaning that no new functions
+have been found in the slot).  However, if one of the functions in
+the slot is a bridge, some new devices may appear below it even if
+the bridge itself is present continuously, so it generally is
+necessary to do the rescan anyway just in case.  [In particular,
+that's necessary with the Thunderbolt daisy chaining in which case
+new devices may be connected to the existing ones down the chain.]
 
-Sorry for distubing you again.
+The correctness of this change relies on the ability of
+pcibios_resource_survey_bus() to detect if it has already been called
+for the given bus and to skip it if so.  Failure to do that will lead
+to resource allocation conflicts.
 
-Is my analysis correct or I still miss some point?
+[rjw: Changelog]
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+drivers/pci/hotplug/acpiphp_glue.c | 11 ++---------
+ drivers/pci/hotplug/acpiphp_glue.c |   11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
->>> Result comparison:
->>>
->>>                     with  462d9303             with this patch
->>>     min_align       1k                          1k
->>>     io_align        1k                          4k
->>>                                         |
->>>                              after loop |
->>>                                         V
->>>     min_align       2k                          2k
->>>     io_align        1k                          4k
->>>                                         |
->>>                          check boundary |
->>>                                         V
->>>     min_align       1k                          2k
->>>     io_align        1k                          4k
->>>
->>> With this patch, in the same case as above, the min_align is 2k after
->>> calculation.
->>>
->>> In my mind, the min_align is the lower bound, io_align is the upper bound. The
->>> final result of min_align should be in this range.
->>>
->>> Is my understanding correct? or I missed something important?
->>>
->>>>
->>>>>         list_for_each_entry(dev, &bus->devices, bus_list) {
->>>>>                 int i;
->>>>>
->>>>> --
->>>>> 1.7.5.4
->>>>>
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>--
->>>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>>the body of a message to majordomo@vger.kernel.org
->>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>> --
->>> Richard Yang
->>> Help you, Help me
->>>
->>--
->>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>the body of a message to majordomo@vger.kernel.org
->>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->-- 
->Richard Yang
->Help you, Help me
-
--- 
-Richard Yang
-Help you, Help me
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -542,18 +542,13 @@ static int __ref enable_device(struct ac
+ 	struct pci_dev *dev;
+ 	struct pci_bus *bus = slot->bus;
+ 	struct acpiphp_func *func;
+-	int num, max, pass;
++	int max, pass;
+ 	LIST_HEAD(add_list);
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling)
+ 		acpiphp_bus_add(func_to_handle(func));
+ 
+-	num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+-	if (num == 0) {
+-		/* Maybe only part of funcs are added. */
+-		dbg("No new device found\n");
+-		goto err_exit;
+-	}
++	pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+ 
+ 	max = acpiphp_max_busnr(bus);
+ 	for (pass = 0; pass < 2; pass++) {
+@@ -599,8 +594,6 @@ static int __ref enable_device(struct ac
+ 		}
+ 	}
+ 
+-
+- err_exit:
+ 	return 0;
+ }
+ 
 
