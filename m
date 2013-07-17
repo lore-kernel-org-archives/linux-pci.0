@@ -1,116 +1,158 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
 	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: [PATCH v2 5/8] PCI: acpiphp: kill SLOT_ENABLED in favor of always re-enumerating the devices
-Date: Wed,  3 Jul 2013 17:04:52 +0300
-Message-Id: <1372860295-8306-6-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 28/30] ACPI / hotplug / PCI: Redefine enable_device() and disable_device()
+Date: Thu, 18 Jul 2013 01:35:05 +0200
+Message-ID: <15117547.14X2XaKnYp@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The acpiphp driver checks SLOT_ENABLED flag only in aciphp_enable_slot() to
-prevent re-enumeration of the already enabled slot.  Because of that it is
-not possible to add new devices behind the slot later on (like it is the
-case with Thunderbolt devices).
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Now, there are two places where acpiphp_enable_slot() gets called:
- 1) On Bus Check event for a function (in case of a dock).
- 2) When userpace enables a slot by writing '1' to
-    /sys/bus/pci/slots/*/power.
+Notice that functions enable_device() and disable_device() cannot
+fail and their return values are ignored in the majority of places,
+so redefine them as void and use the opportunity to change their
+names to enable_slot() and disable_slot(), respectively, which much
+better reflects what they do.
 
-In the first case it doesn't make sense to do the check because we are
-ought to re-enumerate the bus anyway and see if there are any new devices
-added farther in the hierarchy, according the the ACPI specification.
-
-The second case where userspace explicitly enables the device also doesn't
-need this check as we already check if the slot is powered on or off in
-power_on_slot() and don't do it twice.
-
-So get rid of the SLOT_ENABLED flag and always re-enumerate devices behind
-a slot when acpiphp_enable_slot() is called. In addition doing this allows
-userspace to simulate Bus Check event by writing '1' to the 'power' file
-under the slot.
-
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/hotplug/acpiphp.h      |  1 -
- drivers/pci/hotplug/acpiphp_glue.c | 18 +-----------------
- 2 files changed, 1 insertion(+), 18 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |   33 ++++++++++++---------------------
+ 1 file changed, 12 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index 6fdd49c..ecc61b7 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -154,7 +154,6 @@ struct acpiphp_attention_info
- /* slot flags */
- 
- #define SLOT_POWEREDON		(0x00000001)
--#define SLOT_ENABLED		(0x00000002)
- #define SLOT_MULTIFUNCTION	(0x00000004)
- 
- /* function flags */
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index c9ec06e..506f38f 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -304,7 +304,7 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
- 
- 	if (pci_bus_read_dev_vendor_id(pbus, PCI_DEVFN(device, function),
- 				       &val, 60*1000))
--		slot->flags |= (SLOT_ENABLED | SLOT_POWEREDON);
-+		slot->flags |= SLOT_POWEREDON;
- 
- 	if (is_dock_device(handle)) {
- 		/* we don't want to call this device's _EJ0
-@@ -725,18 +725,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 
- 	pci_bus_add_devices(bus);
- 
--	slot->flags |= SLOT_ENABLED;
--	list_for_each_entry(func, &slot->funcs, sibling) {
--		dev = pci_get_slot(bus, PCI_DEVFN(slot->device,
--						  func->function));
--		if (!dev) {
--			/* Do not set SLOT_ENABLED flag if some funcs
--			   are not added. */
--			slot->flags &= (~SLOT_ENABLED);
--			continue;
--		}
--	}
--
- 	return 0;
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -532,13 +532,13 @@ static void check_hotplug_bridge(struct
  }
  
-@@ -782,8 +770,6 @@ static int disable_device(struct acpiphp_slot *slot)
- 		acpiphp_bus_trim(func->handle);
+ /**
+- * enable_device - enable, configure a slot
++ * enable_slot - enable, configure a slot
+  * @slot: slot to be enabled
+  *
+  * This function should be called per *physical slot*,
+  * not per each slot object in ACPI namespace.
+  */
+-static int __ref enable_device(struct acpiphp_slot *slot)
++static void __ref enable_slot(struct acpiphp_slot *slot)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *bus = slot->bus;
+@@ -556,6 +556,7 @@ static int __ref enable_device(struct ac
+ 		list_for_each_entry(dev, &bus->devices, bus_list) {
+ 			if (PCI_SLOT(dev->devfn) != slot->device)
+ 				continue;
++
+ 			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+ 			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+ 				max = pci_scan_bridge(bus, dev, max, pass);
+@@ -594,8 +595,6 @@ static int __ref enable_device(struct ac
+ 			continue;
+ 		}
  	}
- 
--	slot->flags &= (~SLOT_ENABLED);
 -
- 	return 0;
+-	return 0;
  }
  
-@@ -1229,8 +1215,6 @@ int acpiphp_enable_slot(struct acpiphp_slot *slot)
- 		goto err_exit;
+ /* return first device in slot, acquiring a reference on it */
+@@ -617,16 +616,16 @@ static struct pci_dev *dev_in_slot(struc
+ }
  
- 	if (get_slot_status(slot) == ACPI_STA_ALL) {
--		if (slot->flags & SLOT_ENABLED)
--			goto err_exit;
- 		/* configure all functions */
- 		retval = enable_device(slot);
- 		if (retval)
--- 
-1.8.3.2
+ /**
+- * disable_device - disable a slot
++ * disable_slot - disable a slot
+  * @slot: ACPI PHP slot
+  */
+-static int disable_device(struct acpiphp_slot *slot)
++static void disable_slot(struct acpiphp_slot *slot)
+ {
+ 	struct acpiphp_func *func;
+ 	struct pci_dev *pdev;
+ 
+ 	/*
+-	 * enable_device() enumerates all functions in this device via
++	 * enable_slot() enumerates all functions in this device via
+ 	 * pci_scan_slot(), whether they have associated ACPI hotplug
+ 	 * methods (_EJ0, etc.) or not.  Therefore, we remove all functions
+ 	 * here.
+@@ -640,8 +639,6 @@ static int disable_device(struct acpiphp
+ 		acpiphp_bus_trim(func_to_handle(func));
+ 
+ 	slot->flags &= (~SLOT_ENABLED);
+-
+-	return 0;
+ }
+ 
+ 
+@@ -751,9 +748,9 @@ static void acpiphp_check_bridge(struct
+ 					trim_stale_devices(dev);
+ 
+ 			/* configure all functions */
+-			enable_device(slot);
++			enable_slot(slot);
+ 		} else {
+-			disable_device(slot);
++			disable_slot(slot);
+ 		}
+ 		mutex_unlock(&slot->crit_sect);
+ 	}
+@@ -860,7 +857,7 @@ static void hotplug_event(acpi_handle ha
+ 			struct acpiphp_slot *slot = func->slot;
+ 
+ 			mutex_lock(&slot->crit_sect);
+-			enable_device(slot);
++			enable_slot(slot);
+ 			mutex_unlock(&slot->crit_sect);
+ 		}
+ 		break;
+@@ -1047,16 +1044,13 @@ void acpiphp_remove_slots(struct pci_bus
+  */
+ int acpiphp_enable_slot(struct acpiphp_slot *slot)
+ {
+-	int retval = 0;
+-
+ 	mutex_lock(&slot->crit_sect);
+-
+ 	/* configure all functions */
+ 	if (!(slot->flags & SLOT_ENABLED))
+-		retval = enable_device(slot);
++		enable_slot(slot);
+ 
+ 	mutex_unlock(&slot->crit_sect);
+-	return retval;
++	return 0;
+ }
+ 
+ /**
+@@ -1071,9 +1065,7 @@ int acpiphp_disable_and_eject_slot(struc
+ 	mutex_lock(&slot->crit_sect);
+ 
+ 	/* unconfigure all functions */
+-	retval = disable_device(slot);
+-	if (retval)
+-		goto err_exit;
++	disable_slot(slot);
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling)
+ 		if (func->flags & FUNC_HAS_EJ0) {
+@@ -1085,7 +1077,6 @@ int acpiphp_disable_and_eject_slot(struc
+ 			break;
+ 		}
+ 
+- err_exit:
+ 	mutex_unlock(&slot->crit_sect);
+ 	return retval;
+ }
 
