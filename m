@@ -1,228 +1,465 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:19969 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933661Ab3GDIxj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Jul 2013 04:53:39 -0400
-Date: Thu, 4 Jul 2013 11:58:44 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH v2 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer
- Aspire S5
-Message-ID: <20130704085844.GF4898@intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372860295-8306-7-git-send-email-mika.westerberg@linux.intel.com>
- <1444243.g9GbxN3NM0@vostro.rjw.lan>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 11/30] ACPI / hotplug / PCI: Register all devices under the given bridge
+Date: Thu, 18 Jul 2013 01:22:46 +0200
+Message-ID: <16183423.icbdPMHJVP@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444243.g9GbxN3NM0@vostro.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 03, 2013 at 11:40:42PM +0200, Rafael J. Wysocki wrote:
-> On Wednesday, July 03, 2013 05:04:53 PM Mika Westerberg wrote:
-> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> > 
-> > Correct ACPI PCI hotplug imeplementation should have _RMV method in a
-> > PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
-> > deeper in hierarchy:
-> > 
-> > Device (RP05)
-> > {
-> >    // ...
-> >    Device (HRUP)
-> >    {
-> >        // ...
-> >        Device (HRDN)
-> >        {
-> >            // ...
-> >            Device (EPUP)
-> >            {
-> >                // ...
-> >                Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
-> >                {
-> >                    Return (One)
-> >                }
-> >            }
-> >        }
-> >    }
-> > }
-> > 
-> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > ---
-> >  drivers/pci/hotplug/acpi_pcihp.c | 13 +++++++++++++
-> >  1 file changed, 13 insertions(+)
-> > 
-> > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> > index 2a47e82..d92ebfb 100644
-> > --- a/drivers/pci/hotplug/acpi_pcihp.c
-> > +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> > @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
-> >  	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-> >  	if (ACPI_SUCCESS(status) && removable)
-> >  		return 1;
-> > +
-> > +	/*
-> > +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
-> > +	 *
-> > +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
-> > +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
-> > +	 * deeper in hierarchy.
-> > +	 */
-> > +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
-> > +			&removable);
-> 
-> Well, calling stuff like this directly from a general function is kind of ugly.
-> 
-> Can we use something like a quirk instead?  A DMI check or something?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Sure we can. How about something like the patch below?
+Rework register_slot() to create a struct acpiphp_func object for
+every function it is called for and to create acpiphp slots for all
+of them.  Although acpiphp_register_hotplug_slot() is only called for
+the slots whose functions are identified as "ejectable", so that user
+space can manipulate them, the ACPIPHP notify handler,
+handle_hotplug_event(), is now installed for all of the registered
+functions (that aren't dock stations) and hotplug events may be
+handled for all of them.
 
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
+As a result, essentially, all PCI bridges represented by objects in
+the ACPI namespace are now going to be "hotplug" bridges and that may
+affect resources allocation in general, although it shouldn't lead to
+problems.
 
-The acpiphp driver finds out whether the device is removable by checking
-whether it has _RMV method directly behind it (and if it returns 1).
-However, at least on Acer Aspire S5 with Thunderbolt host router has this
-method placed behind a device called EPUP (endpoint upstream port?) and not
-in the usual place expected by the acpiphp driver. The ASL code below shows
-how this is done on that machine:
+This allows the code to be simplified substantially and addresses
+the problem where bus check or device check notifications for some
+PCI bridges or devices are not handled, because those devices are
+not recognized as "ejectable" or there appear to be no "ejectable"
+devices under those bridges.
 
-Device (RP05)
-{
-	...
-	Device (HRUP)
-	{
-		Name (_ADR, Zero)
-		Name (_PRW, Package (0x02)
-		{
-			0x09,
-			0x04
-		})
-		Device (HRDN)
-		{
-			Name (_ADR, 0x00040000)
-			Name (_PRW, Package (0x02)
-			{
-				0x09,
-				0x04
-			})
-			Device (EPUP)
-			{
-				Name (_ADR, Zero)
-				Method (_RMV, 0, NotSerialized)
-				{
-					Return (One)
-				}
-			}
-		}
-	}
-	...
-
-Fix this by adding a DMI quirk for the Acer Aspire S5 machine that gives an
-alternative path to the _RMV method.
-
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/hotplug/acpi_pcihp.c | 57 ++++++++++++++++++++++++++++++++++++----
- 1 file changed, 52 insertions(+), 5 deletions(-)
+ drivers/pci/hotplug/acpiphp.h      |    1 
+ drivers/pci/hotplug/acpiphp_glue.c |  230 ++++++++++++-------------------------
+ 2 files changed, 75 insertions(+), 156 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index 2a47e82..99fccf3 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -33,6 +33,7 @@
- #include <linux/acpi.h>
- #include <linux/pci-acpi.h>
- #include <linux/slab.h>
-+#include <linux/dmi.h>
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -65,20 +65,6 @@ static void acpiphp_set_hpp_values(struc
+ static void hotplug_event(acpi_handle handle, u32 type, void *data);
+ static void free_bridge(struct kref *kref);
  
- #define MY_NAME	"acpi_pcihp"
- 
-@@ -408,21 +409,67 @@ got_one:
- }
- EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
- 
-+/**
-+ * pcihp_is_removable - is the given ACPI device removable
-+ * @handle: ACPI handle of the device
-+ *
-+ * Try to find out whether the given ACPI device is removable by evaluating
-+ * its _RMV and returning the result. If we can't find the _RMV directly
-+ * under the device use system specific quirks to locate it.
-+ */
-+static bool pcihp_is_removable(acpi_handle handle)
-+{
-+	static const struct dmi_system_id rmv_paths[] = {
-+		{
-+			/*
-+			 * On Acer Aspire S5 the _RMV method for the
-+			 * Thunderbolt host router upstream port is not
-+			 * located directly under the device but it is
-+			 * instead placed a bit deeper in the hierarchy.
-+			 */
-+			.ident = "Acer Aspire S5",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "Aspire S5-391"),
-+			},
-+			.driver_data = "HRDN.EPUP._RMV",
-+		},
-+		{ }
-+	};
-+	const struct dmi_system_id *id;
-+	unsigned long long removable;
-+	acpi_status status;
-+
-+	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-+	if (ACPI_SUCCESS(status))
-+		return !!removable;
-+
-+	/* Try system specific quirks */
-+	id = dmi_first_match(rmv_paths);
-+	if (id && id->driver_data) {
-+		char path[64];
-+
-+		strlcpy(path, id->driver_data, sizeof(path));
-+		status = acpi_evaluate_integer(handle, path, NULL, &removable);
-+		if (ACPI_SUCCESS(status))
-+			return !!removable;
-+	}
-+
-+	return false;
-+}
-+
- static int pcihp_is_ejectable(acpi_handle handle)
+-/* callback routine to check for the existence of a pci dock device */
+-static acpi_status
+-is_pci_dock_device(acpi_handle handle, u32 lvl, void *context, void **rv)
+-{
+-	int *count = (int *)context;
+-
+-	if (is_dock_device(handle)) {
+-		(*count)++;
+-		return AE_CTRL_TERMINATE;
+-	} else {
+-		return AE_OK;
+-	}
+-}
+-
+ static void acpiphp_context_handler(acpi_handle handle, void *context)
  {
- 	acpi_status status;
- 	acpi_handle tmp;
--	unsigned long long removable;
+ 	/* Intentionally empty. */
+@@ -179,14 +165,16 @@ static void free_bridge(struct kref *kre
+ 	}
+ 
+ 	context = bridge->context;
+-	/* Release the reference acquired by acpiphp_enumerate_slots(). */
+-	if (context->handler_for_func)
++	/* Root bridges will not have hotplug context. */
++	if (context) {
++		/* Release the reference taken by acpiphp_enumerate_slots(). */
+ 		put_bridge(context->func->slot->bridge);
++		context->bridge = NULL;
++		acpiphp_put_context(context);
++	}
+ 
+ 	put_device(&bridge->pci_bus->dev);
+ 	pci_dev_put(bridge->pci_dev);
+-	context->bridge = NULL;
+-	acpiphp_put_context(context);
+ 	kfree(bridge);
+ 
+ 	mutex_unlock(&acpiphp_context_lock);
+@@ -282,28 +270,24 @@ static acpi_status register_slot(acpi_ha
+ 	struct acpiphp_slot *slot;
+ 	struct acpiphp_func *newfunc;
+ 	acpi_status status = AE_OK;
+-	unsigned long long adr, sun;
+-	int device, function, retval;
++	unsigned long long adr;
++	int device, function;
+ 	struct pci_bus *pbus = bridge->pci_bus;
+-	struct pci_dev *pdev;
++	struct pci_dev *pdev = bridge->pci_dev;
+ 	u32 val;
+ 
+-	if (!acpi_pci_check_ejectable(pbus, handle) && !is_dock_device(handle))
++	if (pdev && device_is_managed_by_native_pciehp(pdev))
+ 		return AE_OK;
+ 
+ 	status = acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
+ 	if (ACPI_FAILURE(status)) {
+-		warn("can't evaluate _ADR (%#x)\n", status);
++		acpi_handle_warn(handle, "can't evaluate _ADR (%#x)\n", status);
+ 		return AE_OK;
+ 	}
+ 
+ 	device = (adr >> 16) & 0xffff;
+ 	function = adr & 0xffff;
+ 
+-	pdev = bridge->pci_dev;
+-	if (pdev && device_is_managed_by_native_pciehp(pdev))
+-		return AE_OK;
+-
+ 	newfunc = kzalloc(sizeof(struct acpiphp_func), GFP_KERNEL);
+ 	if (!newfunc)
+ 		return AE_NO_MEMORY;
+@@ -338,23 +322,10 @@ static acpi_status register_slot(acpi_ha
+ 	if (acpi_has_method(handle, "_DCK"))
+ 		newfunc->flags |= FUNC_HAS_DCK;
+ 
+-	status = acpi_evaluate_integer(handle, "_SUN", NULL, &sun);
+-	if (ACPI_FAILURE(status)) {
+-		/*
+-		 * use the count of the number of slots we've found
+-		 * for the number of the slot
+-		 */
+-		sun = bridge->nr_slots+1;
+-	}
+-
+ 	/* search for objects that share the same slot */
+ 	list_for_each_entry(slot, &bridge->slots, node)
+-		if (slot->device == device) {
+-			if (slot->sun != sun)
+-				warn("sibling found, but _SUN doesn't match!\n");
+-
++		if (slot->device == device)
+ 			goto slot_found;
+-		}
+ 
+ 	slot = kzalloc(sizeof(struct acpiphp_slot), GFP_KERNEL);
+ 	if (!slot) {
+@@ -364,34 +335,38 @@ static acpi_status register_slot(acpi_ha
+ 
+ 	slot->bridge = bridge;
+ 	slot->device = device;
+-	slot->sun = sun;
+ 	INIT_LIST_HEAD(&slot->funcs);
+ 	mutex_init(&slot->crit_sect);
+ 
+ 	mutex_lock(&bridge_mutex);
+ 	list_add_tail(&slot->node, &bridge->slots);
+ 	mutex_unlock(&bridge_mutex);
+-	bridge->nr_slots++;
+ 
+-	dbg("found ACPI PCI Hotplug slot %llu at PCI %04x:%02x:%02x\n",
+-	    slot->sun, pci_domain_nr(pbus), pbus->number, device);
++	/* Register slots for ejectable funtions only. */
++	if (acpi_pci_check_ejectable(pbus, handle)  || is_dock_device(handle)) {
++		unsigned long long sun;
++		int retval;
+ 
+-	retval = acpiphp_register_hotplug_slot(slot);
+-	if (retval) {
+-		if (retval == -EBUSY)
+-			warn("Slot %llu already registered by another "
+-				"hotplug driver\n", slot->sun);
+-		else
+-			warn("acpiphp_register_hotplug_slot failed "
+-				"(err code = 0x%x)\n", retval);
++		bridge->nr_slots++;
++		status = acpi_evaluate_integer(handle, "_SUN", NULL, &sun);
++		if (ACPI_FAILURE(status))
++			sun = bridge->nr_slots;
+ 
+-		bridge->nr_slots--;
+-		mutex_lock(&bridge_mutex);
+-		list_del(&slot->node);
+-		mutex_unlock(&bridge_mutex);
+-		kfree(slot);
+-		status = AE_OK;
+-		goto err;
++		slot->sun = sun;
++		dbg("found ACPI PCI Hotplug slot %llu at PCI %04x:%02x:%02x\n",
++		    slot->sun, pci_domain_nr(pbus), pbus->number, device);
 +
- 	status = acpi_get_handle(handle, "_ADR", &tmp);
- 	if (ACPI_FAILURE(status))
- 		return 0;
- 	status = acpi_get_handle(handle, "_EJ0", &tmp);
- 	if (ACPI_SUCCESS(status))
- 		return 1;
--	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
--	if (ACPI_SUCCESS(status) && removable)
--		return 1;
--	return 0;
-+	return pcihp_is_removable(handle);
++		retval = acpiphp_register_hotplug_slot(slot);
++		if (retval) {
++			bridge->nr_slots--;
++			if (retval == -EBUSY)
++				warn("Slot %llu already registered by another "
++					"hotplug driver\n", slot->sun);
++			else
++				warn("acpiphp_register_hotplug_slot failed "
++					"(err code = 0x%x)\n", retval);
++		}
++		/* Even if the slot registration fails, we can still use it. */
+ 	}
+ 
+  slot_found:
+@@ -421,10 +396,9 @@ static acpi_status register_slot(acpi_ha
+ 		status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 						     handle_hotplug_event,
+ 						     context);
+-		if (ACPI_SUCCESS(status))
+-			context->handler_for_func = true;
+-		else
+-			err("failed to register interrupt notify handler\n");
++		if (ACPI_FAILURE(status))
++			acpi_handle_err(handle,
++					"failed to install notify handler\n");
+ 	}
+ 
+ 	return AE_OK;
+@@ -438,18 +412,6 @@ static acpi_status register_slot(acpi_ha
+ 	return status;
+ }
+ 
+-
+-/* see if it's worth looking at this bridge */
+-static int detect_ejectable_slots(acpi_handle handle)
+-{
+-	int found = acpi_pci_detect_ejectable(handle);
+-	if (!found) {
+-		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
+-				    is_pci_dock_device, NULL, (void *)&found, NULL);
+-	}
+-	return found;
+-}
+-
+ static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle)
+ {
+ 	struct acpiphp_context *context;
+@@ -473,14 +435,6 @@ static void cleanup_bridge(struct acpiph
+ 	struct acpiphp_slot *slot;
+ 	struct acpiphp_func *func;
+ 	acpi_status status;
+-	acpi_handle handle = bridge->handle;
+-
+-	if (!bridge->context->handler_for_func) {
+-		status = acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+-						    handle_hotplug_event);
+-		if (ACPI_FAILURE(status))
+-			err("failed to remove notify handler\n");
+-	}
+ 
+ 	list_for_each_entry(slot, &bridge->slots, node) {
+ 		list_for_each_entry(func, &slot->funcs, sibling) {
+@@ -488,7 +442,6 @@ static void cleanup_bridge(struct acpiph
+ 				unregister_hotplug_dock_device(func->handle);
+ 			}
+ 			if (!(func->flags & FUNC_HAS_DCK)) {
+-				func->context->handler_for_func = false;
+ 				status = acpi_remove_notify_handler(func->handle,
+ 							ACPI_SYSTEM_NOTIFY,
+ 							handle_hotplug_event);
+@@ -678,9 +631,7 @@ static void check_hotplug_bridge(struct
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling) {
+ 		if (PCI_FUNC(dev->devfn) == func->function) {
+-			/* check if this bridge has ejectable slots */
+-			if ((detect_ejectable_slots(func->handle) > 0))
+-				dev->is_hotplug_bridge = 1;
++			dev->is_hotplug_bridge = 1;
+ 			break;
+ 		}
+ 	}
+@@ -988,8 +939,8 @@ void acpiphp_check_host_bridge(acpi_hand
+ static void hotplug_event(acpi_handle handle, u32 type, void *data)
+ {
+ 	struct acpiphp_context *context = data;
++	struct acpiphp_func *func = context->func;
+ 	struct acpiphp_bridge *bridge;
+-	struct acpiphp_func *func;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+@@ -999,11 +950,6 @@ static void hotplug_event(acpi_handle ha
+ 	if (bridge)
+ 		get_bridge(bridge);
+ 
+-	/*
+-	 * If context->func is not NULL, we are holding a reference to its
+-	 * parent bridge, so it won't go away until we drop that reference.
+-	 */
+-	func = context->func;
+ 	mutex_unlock(&acpiphp_context_lock);
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+@@ -1041,9 +987,6 @@ static void hotplug_event(acpi_handle ha
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		/* request device eject */
+ 		dbg("%s: Device eject notify on %s\n", __func__, objname);
+-		if (!func)
+-			break;
+-
+ 		if (bridge && !(bridge->flags & BRIDGE_HAS_EJ0))
+ 			break;
+ 
+@@ -1090,14 +1033,7 @@ static void hotplug_event_work(struct wo
+ 
+ 	acpi_scan_lock_release();
+ 	kfree(hp_work); /* allocated in handle_hotplug_event() */
+-
+-	mutex_lock(&acpiphp_context_lock);
+-	if (context->func)
+-		put_bridge(context->func->slot->bridge);
+-	else
+-		acpiphp_put_context(context);
+-
+-	mutex_unlock(&acpiphp_context_lock);
++	put_bridge(context->func->slot->bridge);
  }
  
  /**
--- 
-1.8.3.2
+@@ -1115,13 +1051,8 @@ static void handle_hotplug_event(acpi_ha
+ 	mutex_lock(&acpiphp_context_lock);
+ 	context = acpiphp_get_context(handle);
+ 	if (context) {
+-		if (context->func) {
+-			get_bridge(context->func->slot->bridge);
+-			acpiphp_put_context(context);
+-		} else if (!context->bridge) {
+-			acpiphp_put_context(context);
+-			context = NULL;
+-		}
++		get_bridge(context->func->slot->bridge);
++		acpiphp_put_context(context);
+ 	}
+ 	mutex_unlock(&acpiphp_context_lock);
+ 	/*
+@@ -1142,7 +1073,6 @@ static void handle_hotplug_event(acpi_ha
+  */
+ void acpiphp_enumerate_slots(struct pci_bus *bus)
+ {
+-	struct acpiphp_context *context;
+ 	struct acpiphp_bridge *bridge;
+ 	acpi_handle handle;
+ 	acpi_status status;
+@@ -1151,7 +1081,7 @@ void acpiphp_enumerate_slots(struct pci_
+ 		return;
+ 
+ 	handle = ACPI_HANDLE(bus->bridge);
+-	if (!handle || detect_ejectable_slots(handle) <= 0)
++	if (!handle)
+ 		return;
+ 
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+@@ -1166,21 +1096,6 @@ void acpiphp_enumerate_slots(struct pci_
+ 	bridge->pci_dev = pci_dev_get(bus->self);
+ 	bridge->pci_bus = bus;
+ 
+-	mutex_lock(&acpiphp_context_lock);
+-	context = acpiphp_get_context(handle);
+-	if (!context) {
+-		context = acpiphp_init_context(handle);
+-		if (!context) {
+-			mutex_unlock(&acpiphp_context_lock);
+-			acpi_handle_err(handle, "No hotplug context\n");
+-			kfree(bridge);
+-			return;
+-		}
+-	}
+-	bridge->context = context;
+-	context->bridge = bridge;
+-	mutex_unlock(&acpiphp_context_lock);
+-
+ 	/*
+ 	 * Grab a ref to the subordinate PCI bus in case the bus is
+ 	 * removed via PCI core logical hotplug. The ref pins the bus
+@@ -1188,6 +1103,35 @@ void acpiphp_enumerate_slots(struct pci_
+ 	 */
+ 	get_device(&bus->dev);
+ 
++	if (!pci_is_root_bus(bridge->pci_bus)) {
++		struct acpiphp_context *context;
++
++		/*
++		 * This bridge should have been registered as a hotplug function
++		 * under its parent, so the context has to be there.  If not, we
++		 * are in deep goo.
++		 */
++		mutex_lock(&acpiphp_context_lock);
++		context = acpiphp_get_context(handle);
++		if (WARN_ON(!context || !context->func)) {
++			mutex_unlock(&acpiphp_context_lock);
++			put_device(&bus->dev);
++			kfree(bridge);
++			return;
++		}
++		bridge->context = context;
++		context->bridge = bridge;
++		/* Get a reference to the parent bridge. */
++		get_bridge(context->func->slot->bridge);
++		mutex_unlock(&acpiphp_context_lock);
++	}
++
++	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
++	if (ACPI_SUCCESS(status)) {
++		dbg("found ejectable p2p bridge\n");
++		bridge->flags |= BRIDGE_HAS_EJ0;
++	}
++
+ 	/* must be added to the list prior to calling register_slot */
+ 	mutex_lock(&bridge_mutex);
+ 	list_add(&bridge->list, &bridge_list);
+@@ -1198,33 +1142,9 @@ void acpiphp_enumerate_slots(struct pci_
+ 				     register_slot, NULL, bridge, NULL);
+ 	if (ACPI_FAILURE(status)) {
+ 		acpi_handle_err(bridge->handle, "failed to register slots\n");
+-		goto err;
+-	}
+-
+-	if (pci_is_root_bus(bridge->pci_bus))
+-		return;
+-
+-	if (acpi_has_method(bridge->handle, "_EJ0")) {
+-		dbg("found ejectable p2p bridge\n");
+-		bridge->flags |= BRIDGE_HAS_EJ0;
+-	}
+-	if (context->handler_for_func) {
+-		/* Notify handler already installed. */
+-		get_bridge(context->func->slot->bridge);
+-		return;
++		cleanup_bridge(bridge);
++		put_bridge(bridge);
+ 	}
+-
+-	/* install notify handler for P2P bridges */
+-	status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
+-					     handle_hotplug_event, NULL);
+-	if (ACPI_SUCCESS(status))
+-		return;
+-
+-	acpi_handle_err(bridge->handle, "failed to register notify handler\n");
+-
+- err:
+-	cleanup_bridge(bridge);
+-	put_bridge(bridge);
+ }
+ 
+ /* Destroy hotplug slots associated with the PCI bus */
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -134,7 +134,6 @@ struct acpiphp_context {
+ 	struct acpiphp_func *func;
+ 	struct acpiphp_bridge *bridge;
+ 	unsigned int refcount;
+-	bool handler_for_func;
+ };
+ 
+ /*
 
