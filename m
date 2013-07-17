@@ -1,54 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:51013 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761Ab3GIQbF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 12:31:05 -0400
-Received: by mail-ob0-f177.google.com with SMTP id ta17so7156016obb.36
-        for <linux-pci@vger.kernel.org>; Tue, 09 Jul 2013 09:31:04 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 9/30] ACPI / hotplug / PCI: Drop func field from struct acpiphp_bridge
+Date: Thu, 18 Jul 2013 01:21:29 +0200
+Message-ID: <14183515.KN6khfkHh2@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20130709160132.7f5e7a8e@skate>
-References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1372686136-1370-6-git-send-email-thomas.petazzoni@free-electrons.com>
- <CAL_Jsq+h=y5SNo4qO5-5u_w8rW++9MKDZK8rASNjhtVcjh-iyQ@mail.gmail.com> <20130709160132.7f5e7a8e@skate>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 9 Jul 2013 10:30:42 -0600
-Message-ID: <CAErSpo6cnHbE3RSu8HFn09SY66tOZZG95JEvKFmzHieXYV0NYg@mail.gmail.com>
-Subject: Re: [PATCHv4 05/11] of: pci: add registry of MSI chips
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Rob Herring <robherring2@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 9, 2013 at 8:01 AM, Thomas Petazzoni
-<thomas.petazzoni@free-electrons.com> wrote:
-> On Tue, 9 Jul 2013 08:43:36 -0500, Rob Herring wrote:
->> > +{
->> > +       struct msi_chip *c;
->> > +       list_for_each_entry(c, &msi_chip_list, list) {
->>
->> Need the safe variant here?
->
-> As suggested by Bjorn, I've changed this function to grab the
-> msi_chip_mutex while traversing the list.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-The "safe" list functions don't do any mutual exclusion.  The only
-safety they provide is that we won't go in the weeds if the body of
-the loop deletes the current list entry.  This loop doesn't delete
-entries, so we don't need the safe variant.
+Since the func pointer in struct acpiphp_context can always be used
+instead of the func pointer in struct acpiphp_bridge, drop the
+latter.
 
-Bjorn
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    2 --
+ drivers/pci/hotplug/acpiphp_glue.c |    3 +--
+ 2 files changed, 1 insertion(+), 4 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -79,8 +79,6 @@ struct acpiphp_bridge {
+ 	acpi_handle handle;
+ 
+ 	struct acpiphp_context *context;
+-	/* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
+-	struct acpiphp_func *func;
+ 
+ 	int nr_slots;
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -181,7 +181,7 @@ static void free_bridge(struct kref *kre
+ 	context = bridge->context;
+ 	/* Release the reference acquired by acpiphp_enumerate_slots(). */
+ 	if (context->handler_for_func)
+-		put_bridge(bridge->func->slot->bridge);
++		put_bridge(context->func->slot->bridge);
+ 
+ 	put_device(&bridge->pci_bus->dev);
+ 	pci_dev_put(bridge->pci_dev);
+@@ -1212,7 +1212,6 @@ void acpiphp_enumerate_slots(struct pci_
+ 	}
+ 	if (context->handler_for_func) {
+ 		/* Notify handler already installed. */
+-		bridge->func = context->func;
+ 		get_bridge(context->func->slot->bridge);
+ 		return;
+ 	}
+
