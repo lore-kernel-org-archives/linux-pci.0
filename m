@@ -1,108 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: "linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Andi Kleen" <andi@firstfloor.org>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] pci: Avoid unnecessary calls to work_on_cpu
-In-Reply-To: <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
-References: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com> <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
-Date: Mon, 08 Jul 2013 11:14:51 +0930
-Message-ID: <87wqp1esff.fsf@rustcorp.com.au>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 23/30] ACPI / hotplug / PCI: Do not check SLOT_ENABLED in enable_device()
+Date: Thu, 18 Jul 2013 01:31:09 +0200
+Message-ID: <4522760.ZMSetGZzqP@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
-> [+cc Rusty]
->
-> On Mon, Jun 24, 2013 at 2:05 PM, Alexander Duyck
-> <alexander.h.duyck@intel.com> wrote:
->> This patch is meant to address the fact that we are making unnecessary calls
->> to work_on_cpu.  To resolve this I have added a check to see if the current
->> node is the correct node for the device before we decide to assign the probe
->> task to another CPU.
->>
->> The advantages to this approach is that we can avoid reentrant calls to
->> work_on_cpu.  In addition we should not make any calls to setup the work
->> remotely in the case of a single node system that has NUMA enabled.
->
-> The description above makes it sound like this is just a minor
-> performance enhancement, but I think the real reason you want this is
-> to resolve the lockdep warning mentioned at [1].  That thread is long
-> and confusing, so I'd like to see a bugzilla that distills out the
-> useful details, and a synopsis in this changelog.
->
-> [1] https://lkml.kernel.org/r/1368498506-25857-7-git-send-email-yinghai@kernel.org
->
->> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
->> ---
->>
->> This patch is based off of work I submitted in an earlier patch that I never
->> heard back on.  The change was originally submitted in:
->>   pci: Avoid reentrant calls to work_on_cpu
->>
->> I'm not sure what ever happened with that patch, however after reviewing it
->> some myself I decided I could do without the change to the comments since they
->> were unneeded.  As such I am resubmitting this as a much simpler patch that
->> only adds the line of code needed to avoid calling work_on_cpu for every call
->> to probe on an NUMA node specific device.
->>
->>  drivers/pci/pci-driver.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> index 79277fb..7d81713 100644
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -282,7 +282,7 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
->>            its local memory on the right node without any need to
->>            change it. */
->>         node = dev_to_node(&dev->dev);
->> -       if (node >= 0) {
->> +       if ((node >= 0) && (node != numa_node_id())) {
->>                 int cpu;
->>
->>                 get_online_cpus();
->
-> I think it's theoretically unsafe to use numa_node_id() while
-> preemption is enabled.
->
-> It seems a little strange to me that this "run the driver probe method
-> on the correct node" code is in PCI.  I would think this behavior
-> would be desirable for *all* bus types, not just PCI, so maybe it
-> would make sense to do this up in device_attach() or somewhere
-> similar.
->
-> But Rusty added this (in 873392ca51), and he knows way more about this
-> stuff than I do.
+From: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
 
-Actually, I just stopped the code from playing cpumask games, which is
-what it used to do.
+With Thunderbolt you can daisy chain devices: connect new devices to
+an already plugged one.  In that case the "hotplug slot" is already
+enabled, but we still want to look for new PCI devices behind it.
 
-You want Andi and/or Greg KH:
+Reuse enable_device() to scan for new PCI devices on enabled slots
+and push the SLOT_ENABLED check up into acpiphp_enable_slot().
 
-commit d42c69972b853fd33a26c8c7405624be41a22136
-Author: Andi Kleen <ak@suse.de>
-Date:   Wed Jul 6 19:56:03 2005 +0200
+[rjw: Rebased, modified the changelog]
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+drivers/pci/hotplug/acpiphp_glue.c | 5 ++---
+ drivers/pci/hotplug/acpiphp_glue.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-    [PATCH] PCI: Run PCI driver initialization on local node
-    
-    Run PCI driver initialization on local node
-    
-    Instead of adding messy kmalloc_node()s everywhere run the
-    PCI driver probe on the node local to the device.
-    
-    This would not have helped for IDE, but should for
-    other more clean drivers that do more initialization in probe().
-    It won't help for drivers that do most of the work
-    on first open (like many network drivers)
-    
-    Signed-off-by: Andi Kleen <ak@suse.de>
-    Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -545,9 +545,6 @@ static int __ref enable_device(struct ac
+ 	int num, max, pass;
+ 	LIST_HEAD(add_list);
+ 
+-	if (slot->flags & SLOT_ENABLED)
+-		goto err_exit;
+-
+ 	list_for_each_entry(func, &slot->funcs, sibling)
+ 		acpiphp_bus_add(func_to_handle(func));
+ 
+@@ -1024,11 +1021,14 @@ void acpiphp_remove_slots(struct pci_bus
+  */
+ int acpiphp_enable_slot(struct acpiphp_slot *slot)
+ {
+-	int retval;
++	int retval = 0;
+ 
+ 	mutex_lock(&slot->crit_sect);
++
+ 	/* configure all functions */
+-	retval = enable_device(slot);
++	if (!(slot->flags & SLOT_ENABLED))
++		retval = enable_device(slot);
++
+ 	mutex_unlock(&slot->crit_sect);
+ 	return retval;
+ }
 
-Cheers,
-Rusty.
