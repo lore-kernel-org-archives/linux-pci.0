@@ -1,60 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:47861 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934243Ab3GQX1X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Jul 2013 19:27:23 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 16/30] ACPI / hotplug / PCI: Drop handle field from struct acpiphp_bridge
+Date: Thu, 18 Jul 2013 01:26:03 +0200
+Message-ID: <1728714.uO2ItaqRg9@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <51F8D5C9.4020309@huawei.com>
-References: <1360036520-31032-1-git-send-email-wangyijing@huawei.com>
- <51A42137.9090908@huawei.com> <CAErSpo7iyiq6H-BsPNO0Nyc1SF+JteOzBqNQ+d_D=RYE_pdTEA@mail.gmail.com>
- <51F73108.4070905@huawei.com> <CAErSpo4mHTwqrW-yq_1BkjD0GyFtVYZRm9+eGfASJ_aJCOagjg@mail.gmail.com>
- <CAErSpo4xJk7bHQihtdN1UP+6Y17TOrBFhEsO_Zwyvz8iQMEXsw@mail.gmail.com> <51F8D5C9.4020309@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 31 Jul 2013 11:53:30 -0600
-Message-ID: <CAErSpo5GUTXyo4GeCGvh_GauKUA4decbDWUnD47qKPr6E65g9w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>, Joe Jin <joe.jin@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 31, 2013 at 3:15 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Hi Bjorn,
->    I didn't observe a performance difference between MPS=128 and MPS=512. I use ping $dest_ip -s 65500(large size packet)
-> to test the different situations.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Interesting.  "ping" is probably not a good way to see performance
-differences, but hopefully you could see a difference in *some*
-scenario.  Otherwise, there's not much point in increasing MPS :)
+The handle field in struct acpiphp_bridge is only used by
+acpiphp_enumerate_slots(), but in that function the local handle
+variable can be used instead, so make that happen and drop handle
+from struct acpiphp_bridge.
 
->> I assume there are no AER or other errors logged by the root port?
-> Yes, AER is not support in local machine.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    1 -
+ drivers/pci/hotplug/acpiphp_glue.c |    5 ++---
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-Per the 5520/5500 spec, it does support AER (sec 19.11.5).  Maybe
-there's some platform support required in addition.  You might still
-be able to see some info just with "lspci -vv"
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -77,7 +77,6 @@ struct acpiphp_bridge {
+ 	struct list_head list;
+ 	struct list_head slots;
+ 	struct kref ref;
+-	acpi_handle handle;
+ 
+ 	struct acpiphp_context *context;
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1084,7 +1084,6 @@ void acpiphp_enumerate_slots(struct pci_
+ 
+ 	INIT_LIST_HEAD(&bridge->slots);
+ 	kref_init(&bridge->ref);
+-	bridge->handle = handle;
+ 	bridge->pci_dev = pci_dev_get(bus->self);
+ 	bridge->pci_bus = bus;
+ 
+@@ -1124,10 +1123,10 @@ void acpiphp_enumerate_slots(struct pci_
+ 	mutex_unlock(&bridge_mutex);
+ 
+ 	/* register all slot objects under this bridge */
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
+ 				     register_slot, NULL, bridge, NULL);
+ 	if (ACPI_FAILURE(status)) {
+-		acpi_handle_err(bridge->handle, "failed to register slots\n");
++		acpi_handle_err(handle, "failed to register slots\n");
+ 		cleanup_bridge(bridge);
+ 		put_bridge(bridge);
+ 	}
 
-> Hmmm, PCIe Spec does not involve too much about MPS setting. So maybe different platform
-> has different strategy.
-
-I think there's enough in the spec to tell us what we need to do (this
-is sec 2.2.2):
-
-  - A Transmitter must not send a TLP larger than its Max_Payload_Size
-  - A Receiver must treat TLPs larger than its Max_Payload_Size as malformed
-
-The only way I can see to guarantee that is to set the MPS on both
-ends of the link the same.
-
-> Conservatively, as a improvement for mps setting after hotplug. I think update mps setting equal to its parent
-> make sense. This is no harm to other devices, we only modify the hotplug device itself mps register.
->
-> So if you agree, I will update my patch ,only try to modify hotplug device mps, make them equal to its parent.
-
-Yes, I think that would be safe.  If the switch is set to a larger MPS
-than the hot-added device supports, I don't think we can safely use
-the device.
-
-Bjorn
