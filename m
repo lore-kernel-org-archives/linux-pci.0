@@ -1,87 +1,97 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 14/30] ACPI / hotplug / PCI: Drop flags field from struct acpiphp_bridge
-Date: Fri, 12 Jul 2013 01:54:01 +0200
-Message-ID: <1762230.UBuO8qyPbi@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+Date: Wed, 17 Jul 2013 06:56:08 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Peter De Schrijver <pdeschrijver@nvidia.com>
+Cc: Jay Agarwal <jagarwal@nvidia.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"swarren@wwwdotorg.org" <swarren@wwwdotorg.org>,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
+	Prashant Gaikwad <pgaikwad@nvidia.com>,
+	"mturquette@linaro.org" <mturquette@linaro.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Subject: Re: [PATCH V3 3/4] ARM: dts: tegra: Correct PCIe entry
+Message-ID: <20130717045607.GC11359@mithrandir>
+References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
+ <1370372252-4332-3-git-send-email-jagarwal@nvidia.com>
+ <20130610195511.GC25859@mithrandir>
+ <20130611073048.GR3847@tbergstrom-lnx.Nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="MnLPg7ZWsaic7Fhd"
+In-Reply-To: <20130611073048.GR3847@tbergstrom-lnx.Nvidia.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-The only bridge flag used by the ACPI-based PCI hotplug (ACPIPHP)
-code is BRIDGE_HAS_EJ0, but it is only used by the event handling
-function hotplug_event() and if that flag is set, the corresponding
-function flag FUNC_HAS_EJ0 is set as well, so that bridge flag is
-redundant.
+--MnLPg7ZWsaic7Fhd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-For this reason, drop BRIDGE_HAS_EJ0 and all code referring to it
-and since it is the only bridge flag defined, drop the flags field
-from struct acpiphp_bridge entirely.
+On Tue, Jun 11, 2013 at 10:30:48AM +0300, Peter De Schrijver wrote:
+> On Mon, Jun 10, 2013 at 09:55:12PM +0200, Thierry Reding wrote:
+> > * PGP Signed by an unknown key
+> >=20
+> > On Wed, Jun 05, 2013 at 12:27:31AM +0530, Jay Agarwal wrote:
+> > [...]
+> > > @@ -29,7 +29,7 @@
+> > >  		ranges =3D <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* p=
+ort 0 configuration space */
+> > >  			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 con=
+figuration space */
+> > >  			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 con=
+figuration space */
+> > > -			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream=
+ I/O */
+> > > +			  0x81000000 0 0          0x02000000 0 0x00100000   /* downstream=
+ I/O */
+> > >  			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefet=
+chable memory */
+> > >  			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchab=
+le memory */
+> >=20
+> > That increases the I/O region size from 64 KiB to 1 MiB. Why is that
+> > necessary? I/O operations can only address 64 KiB, so I don't think
+> > adding more makes any sense.
+>=20
+> At least PCI allows 32bit I/O addresses. No idea if anyone uses them thou=
+gh.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |    5 -----
- drivers/pci/hotplug/acpiphp_glue.c |    9 ---------
- 2 files changed, 14 deletions(-)
+I just realized that we are constrained to 64 KiB by the implementation
+of pci_ioremap_io(), which assumes each mapping is 64 KiB. Not that it
+couldn't be changed, but unless there actually is a use-case where more
+than 64 KiB are required I don't think we should worry about it.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -80,8 +80,6 @@ struct acpiphp_bridge {
- 
- 	struct acpiphp_context *context;
- 
--	u32 flags;
--
- 	/* This bus (host bridge) or Secondary bus (PCI-to-PCI bridge) */
- 	struct pci_bus *pci_bus;
- 
-@@ -152,9 +150,6 @@ struct acpiphp_attention_info
- /* ACPI _STA method value (ignore bit 4; battery present) */
- #define ACPI_STA_ALL			(0x0000000f)
- 
--/* bridge flags */
--#define BRIDGE_HAS_EJ0		(0x00000001)
--
- /* slot flags */
- 
- #define SLOT_POWEREDON		(0x00000001)
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1009,9 +1009,6 @@ static void hotplug_event(acpi_handle ha
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
- 		dbg("%s: Device eject notify on %s\n", __func__, objname);
--		if (bridge && !(bridge->flags & BRIDGE_HAS_EJ0))
--			break;
--
- 		if (!(acpiphp_disable_slot(func->slot)))
- 			acpiphp_eject_slot(func->slot);
- 
-@@ -1148,12 +1145,6 @@ void acpiphp_enumerate_slots(struct pci_
- 		mutex_unlock(&acpiphp_context_lock);
- 	}
- 
--	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
--	if (ACPI_SUCCESS(status)) {
--		dbg("found ejectable p2p bridge\n");
--		bridge->flags |= BRIDGE_HAS_EJ0;
--	}
--
- 	/* must be added to the list prior to calling register_slot */
- 	mutex_lock(&bridge_mutex);
- 	list_add(&bridge->list, &bridge_list);
+Thierry
 
+--MnLPg7ZWsaic7Fhd
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJR5iPmAAoJEN0jrNd/PrOhrBMP/0vz8TPy4041QDMywygKLoBd
+wqq4TzpO3Tq3y8m8zk8anVQ9CtSdXiJVzbvum9IehAeWUUYoPVK2ENcaC6Atkzi2
+pWDfSICda40hZyEukwUXh0ncOLwM5+sK5Shz0hCk2lOr2HTk34LgGr0I0Nb9eSM+
+KkCFSqLPaH2QZuGxvTPgMKP2EcrGdcMYVDB7pZ1ENu8WKwHJmDZLRz6QisXqYIVF
+osKhmUIuVpuP7RafvjU0wOHghx2yZD9FZG5x1guiAiWox78MvrYwJNULzRlq1IPA
+nxvnasLM3ZOUk7YQYJkD6WE184MJYYXmGUNwymyfdWFNe17xEGy0j2y4fOxkb87a
+TUytPwi5RuidPu/FNlCcb0sCxdbbjuwxzBUDvR/zQ6i5YUPPvVXwADCOV/i6WoPI
+FIY3JhiqKkapo5YSWOrlskImpQZPGfLOJXTH2TiGAHc6oBF18OjielG+xUAPbX1A
+GcOSg5leYEHjIihC/BEvXYun2vBa4yca6F0mcOiTIjFHAbB7s8OYQFGSX84htwmT
+bgw+2869EtP5LJUnTMONM/FZv487/UWICqLNXEmlNHFrmwuxOzyfQk6WxHtiYiVS
+eY4SjpJ/HfDS5VClFESozo0SkzG2nG5ogQvsUnrEjtkPnIINnK2qXOSU6Cks9Q+G
+BLC2lvtmjh1SNFBYMzso
+=Rjk/
+-----END PGP SIGNATURE-----
+
+--MnLPg7ZWsaic7Fhd--
