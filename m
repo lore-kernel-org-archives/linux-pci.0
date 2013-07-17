@@ -1,49 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17972 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754462Ab3GAScO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Jul 2013 14:32:14 -0400
-Date: Mon, 1 Jul 2013 21:36:13 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in
- enable_device()
-Message-ID: <20130701183612.GJ9294@intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <4600759.u0rXpSLd62@vostro.rjw.lan>
- <20130701093217.GG9294@intel.com>
- <1530651.ees8hXMYoR@vostro.rjw.lan>
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 7/30] ACPI / hotplug / PCI: Pass hotplug context objects to event handlers
+Date: Thu, 18 Jul 2013 01:19:59 +0200
+Message-ID: <12177707.iMaENA9NZf@vostro.rjw.lan>
+In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1530651.ees8hXMYoR@vostro.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 01, 2013 at 04:01:37PM +0200, Rafael J. Wysocki wrote:
-> > Given the fact that SLOT_ENABLED is only checked in acpiphp_enable_slot()
-> > (after this patch) and that /sys/bus/pci/slots/*/power uses SLOT_POWEREDON
-> > anyway, should we remove the whole flag?
-> 
-> Sure, if it is not necessary any more, we should remove it.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Well, there is one thing that changes due that. Once the flag is gone
-userspace can do 'echo 1 > /sys/bus/pci/slots/*/power' several times and
-the slot is always re-enumerated.
+Modify handle_hotplug_event() to pass the entire context object
+(instead of its fields individually) to work functions started by it.
 
-If that is not acceptable we should probably move the SLOT_ENABLED check
-closer to acpiphp_core:enable_device() and drop it from here, so that we
-always re-enumerate on Bus Check event but userspace can only do enable
-once (we still re-enumerate on Bus Check).
+This change makes the subsequent consolidation of the event handling
+work functions a bit more straightforward.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -989,6 +989,7 @@ void acpiphp_check_host_bridge(acpi_hand
+ 
+ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ {
++	struct acpiphp_context *context;
+ 	struct acpiphp_bridge *bridge;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+@@ -1000,7 +1001,8 @@ static void _handle_hotplug_event_bridge
+ 	hp_work = container_of(work, struct acpi_hp_work, work);
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+-	bridge = (struct acpiphp_bridge *)hp_work->context;
++	context = hp_work->context;
++	bridge = context->bridge;
+ 
+ 	acpi_scan_lock_acquire();
+ 
+@@ -1105,18 +1107,18 @@ static void hotplug_event_func(acpi_hand
+ 
+ static void _handle_hotplug_event_func(struct work_struct *work)
+ {
++	struct acpiphp_context *context;
+ 	struct acpi_hp_work *hp_work;
+-	struct acpiphp_func *func;
+ 
+ 	hp_work = container_of(work, struct acpi_hp_work, work);
+-	func = hp_work->context;
++	context = hp_work->context;
+ 	acpi_scan_lock_acquire();
+ 
+-	hotplug_event_func(hp_work->handle, hp_work->type, func);
++	hotplug_event_func(hp_work->handle, hp_work->type, context->func);
+ 
+ 	acpi_scan_lock_release();
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
+-	put_bridge(func->slot->bridge);
++	put_bridge(context->func->slot->bridge);
+ }
+ 
+ /**
+@@ -1137,11 +1139,9 @@ static void handle_hotplug_event(acpi_ha
+ 	if (context) {
+ 		if (context->bridge) {
+ 			get_bridge(context->bridge);
+-			data = context->bridge;
+ 			work_func = _handle_hotplug_event_bridge;
+ 		} else if (context->func) {
+ 			get_bridge(context->func->slot->bridge);
+-			data = context->func;
+ 			work_func = _handle_hotplug_event_func;
+ 		}
+ 		acpiphp_put_context(context);
+@@ -1157,7 +1157,7 @@ static void handle_hotplug_event(acpi_ha
+ 	 * don't deadlock on hotplug actions.
+ 	 */
+ 	if (work_func)
+-		alloc_acpi_hp_work(handle, type, data, work_func);
++		alloc_acpi_hp_work(handle, type, context, work_func);
+ }
+ 
+ /*
+
