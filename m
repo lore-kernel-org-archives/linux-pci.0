@@ -1,66 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5GUTXyo4GeCGvh_GauKUA4decbDWUnD47qKPr6E65g9w@mail.gmail.com>
-References: <1360036520-31032-1-git-send-email-wangyijing@huawei.com>
- <51A42137.9090908@huawei.com> <CAErSpo7iyiq6H-BsPNO0Nyc1SF+JteOzBqNQ+d_D=RYE_pdTEA@mail.gmail.com>
- <51F73108.4070905@huawei.com> <CAErSpo4mHTwqrW-yq_1BkjD0GyFtVYZRm9+eGfASJ_aJCOagjg@mail.gmail.com>
- <CAErSpo4xJk7bHQihtdN1UP+6Y17TOrBFhEsO_Zwyvz8iQMEXsw@mail.gmail.com>
- <51F8D5C9.4020309@huawei.com> <CAErSpo5GUTXyo4GeCGvh_GauKUA4decbDWUnD47qKPr6E65g9w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 31 Jul 2013 14:42:36 -0600
-Message-ID: <CAErSpo6yuxdngHepJ96w72SOSapud2URwc2GHPT_-CZh0e1CSA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>, Joe Jin <joe.jin@oracle.com>
+In-Reply-To: <1551099.EAQDd0lEcY@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+	<3718119.FLASu5DBx8@vostro.rjw.lan>
+	<2366394.4EoP1MXmG2@vostro.rjw.lan>
+	<1551099.EAQDd0lEcY@vostro.rjw.lan>
+Date: Wed, 17 Jul 2013 19:07:02 -0700
+Message-ID: <CAE9FiQU99a=BeHCrt0FWSeNs8NORg85C4uwQyY7Ky+-nqaSfxg@mail.gmail.com>
+Subject: Re: [PATCH 5/30] ACPI / hotplug / PCI: Unified notify handler for
+ hotplug events
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 31, 2013 at 11:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Jul 31, 2013 at 3:15 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Hi Bjorn,
->>    I didn't observe a performance difference between MPS=128 and MPS=512. I use ping $dest_ip -s 65500(large size packet)
->> to test the different situations.
+On Wed, Jul 17, 2013 at 4:18 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 >
-> Interesting.  "ping" is probably not a good way to see performance
-> differences, but hopefully you could see a difference in *some*
-> scenario.  Otherwise, there's not much point in increasing MPS :)
+> Using the hotplug context objects introduced previously rework the
+> ACPI-based PCI hotplug (ACPIPHP) core code so that all notifications
+> for ACPI device objects corresponding to the hotplug PCI devices are
+> handled by one function, handle_hotplug_event(), which recognizes
+> whether it has to handle a bridge or a function.
 >
->>> I assume there are no AER or other errors logged by the root port?
->> Yes, AER is not support in local machine.
+> In addition to code size reduction it allows some ugly pieces of code
+> where notify handlers have to be uninstalled and installed again to
+> go away.  Moreover, it fixes a theoretically possible race between
+> handle_hotplug_event() and free_bridge() tearing down data structures
+> for the same handle.
 >
-> Per the 5520/5500 spec, it does support AER (sec 19.11.5).  Maybe
-> there's some platform support required in addition.  You might still
-> be able to see some info just with "lspci -vv"
->
->> Hmmm, PCIe Spec does not involve too much about MPS setting. So maybe different platform
->> has different strategy.
->
-> I think there's enough in the spec to tell us what we need to do (this
-> is sec 2.2.2):
->
->   - A Transmitter must not send a TLP larger than its Max_Payload_Size
->   - A Receiver must treat TLPs larger than its Max_Payload_Size as malformed
->
-> The only way I can see to guarantee that is to set the MPS on both
-> ends of the link the same.
->
->> Conservatively, as a improvement for mps setting after hotplug. I think update mps setting equal to its parent
->> make sense. This is no harm to other devices, we only modify the hotplug device itself mps register.
->>
->> So if you agree, I will update my patch ,only try to modify hotplug device mps, make them equal to its parent.
->
-> Yes, I think that would be safe.  If the switch is set to a larger MPS
-> than the hot-added device supports, I don't think we can safely use
-> the device.
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/pci/hotplug/acpiphp.h      |    1
+>  drivers/pci/hotplug/acpiphp_glue.c |  132 ++++++++++++++-----------------------
+>  2 files changed, 53 insertions(+), 80 deletions(-)
 
-I opened a bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=60671
-for this problem.  Please correct any mistakes in my summary and
-reference it in your changelog.
+Can you put this patches in one temp branch ?
 
-Bjorn
+Like to check final bits.
+
+Thanks
+
+Yinghai
