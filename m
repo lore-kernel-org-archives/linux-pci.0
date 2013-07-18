@@ -1,81 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:60485 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759947Ab3GZWFw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 18:05:52 -0400
-Received: by mail-ob0-f179.google.com with SMTP id xk17so5259247obc.24
-        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 15:05:52 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <51EF516F.6010102@huawei.com>
-References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
- <1374261258-23036-2-git-send-email-yinghai@kernel.org> <CAErSpo78DU3bPwkVOt=1XD08y9iD38+wUOp2+GVxO7P68TOOjg@mail.gmail.com>
- <CAE9FiQUyVUssJx8eZK9kabS99CD6ry-UnJ9q1-q+f53Fx+tjng@mail.gmail.com>
- <20130723155645.GA18422@google.com> <CAE9FiQUQirapRONeb1ndOoKsiYviyXJVx3wZTcgzJj7bHX-1xQ@mail.gmail.com>
- <51EF516F.6010102@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 26 Jul 2013 16:05:31 -0600
-Message-ID: <CAErSpo7C2jG+MwLd-1JhrGbn0WJWpMKrAvG22mK0-M4k5QH94w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Separate stop and remove devices in pciehp
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>
+In-Reply-To: <1395739.1IFp3cq75N@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+	<3718119.FLASu5DBx8@vostro.rjw.lan>
+	<2366394.4EoP1MXmG2@vostro.rjw.lan>
+	<1395739.1IFp3cq75N@vostro.rjw.lan>
+Date: Wed, 17 Jul 2013 18:00:23 -0700
+Message-ID: <CAE9FiQW-Hvi-_OrTZDXPvGajY9nDybwRbXRkiy1kp1YEeiDqKQ@mail.gmail.com>
+Subject: Re: [PATCH 1/30] ACPI / PCI: Make bus registration and unregistration symmetric
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 23, 2013 at 10:00 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Hi Yinghai,
->    The third patch make pci_stop_dev call pci_disable_sriov(dev).
-> It looks asymmetrical, because pci_enable_sriov(dev, NR_VIRTFN) always
-> be called by device driver. Why not work around this in device driver like ixgbe?
-> I'm not familiar with SRIOV, so I'm just a bit puzzled.
+On Wed, Jul 17, 2013 at 4:15 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 >
-> Thanks!
-> Yijing.
+> Since acpi_pci_slot_enumerate() and acpiphp_enumerate_slots() can get
+> the ACPI device handle they need from bus->bridge, it is not
+> necessary to pass that handle to them as an argument.
 >
-> ------------------------------------------------------------
-> Some driver (like ixgbe) does not call pci_disable_sriov() if
-> sriov is enabled via /sys/.../sriov_numvfs setting.
-> ixgbe does allow driver for PF get detached, but still have VFs
-> around.
+> Drop the second argument of acpi_pci_slot_enumerate() and
+> acpiphp_enumerate_slots(), rework them to obtain the ACPI handle
+> from bus->bridge and make acpi_pci_add_bus() and
+> acpi_pci_remove_bus() entirely symmetrical.
 >
-> But how about PF get removed via /sys or pciehp finally?
->
-> During hot-remove, VF will still hold one ref to PF and it
-> prevent PF to be removed.
-> That make the next hot-add fails, as old PF dev struct is still around.
->
-> We need to add pci_disable_sriov() calling during stop PF .
->
-> Need this one for v3.11
->
-> -v2: Accoring to Bjorn, move that calling to pci_stop_dev.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Jiang Liu <liuj97@gmail.com>
-> Cc: Alexander Duyck <alexander.h.duyck@intel.com>
-> Cc: Donald Dutile <ddutile@redhat.com>
-> Cc: Greg Rose <gregory.v.rose@intel.com>
->
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > ---
->  drivers/pci/remove.c |    2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/acpi/pci_slot.c            |   14 +++++++++-----
+>  drivers/pci/hotplug/acpiphp_glue.c |    6 ++++--
+>  drivers/pci/pci-acpi.c             |   16 ++++------------
+>  include/linux/pci-acpi.h           |   10 ++++------
+>  4 files changed, 21 insertions(+), 25 deletions(-)
 >
-> Index: linux-2.6/drivers/pci/remove.c
+> Index: linux-pm/drivers/acpi/pci_slot.c
 > ===================================================================
-> --- linux-2.6.orig/drivers/pci/remove.c
-> +++ linux-2.6/drivers/pci/remove.c
-> @@ -25,6 +25,8 @@ static void pci_stop_dev(struct pci_dev
->                 pci_proc_detach_device(dev);
->                 pci_remove_sysfs_dev_files(dev);
->                 device_del(&dev->dev);
-> +               /* remove VF, if PF driver skip that */
-> +               pci_disable_sriov(dev);
->                 dev->is_added = 0;
->         }
+> --- linux-pm.orig/drivers/acpi/pci_slot.c
+> +++ linux-pm/drivers/acpi/pci_slot.c
+> @@ -159,12 +159,16 @@ register_slot(acpi_handle handle, u32 lv
+>         return AE_OK;
+>  }
+>
+> -void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle)
+> +void acpi_pci_slot_enumerate(struct pci_bus *bus)
+>  {
+> -       mutex_lock(&slot_list_lock);
+> -       acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
+> -                           register_slot, NULL, bus, NULL);
+> -       mutex_unlock(&slot_list_lock);
+> +       acpi_handle handle = ACPI_HANDLE(bus->bridge);
+> +
+> +       if (handle) {
+> +               mutex_lock(&slot_list_lock);
+> +               acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
+> +                                   register_slot, NULL, bus, NULL);
+> +               mutex_unlock(&slot_list_lock);
+> +       }
+>  }
+>
+>  void acpi_pci_slot_remove(struct pci_bus *bus)
+> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
+> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -1147,14 +1147,16 @@ static void handle_hotplug_event_func(ac
+>   * Create hotplug slots for the PCI bus.
+>   * It should always return 0 to avoid skipping following notifiers.
+>   */
+> -void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
+> +void acpiphp_enumerate_slots(struct pci_bus *bus)
+>  {
+> +       acpi_handle handle;
+>         struct acpiphp_bridge *bridge;
+>
+>         if (acpiphp_disabled)
+>                 return;
+>
+> -       if (detect_ejectable_slots(handle) <= 0)
+> +       handle = ACPI_HANDLE(bus->bridge);
+> +       if (!handle || detect_ejectable_slots(handle) <= 0)
+>                 return;
+>
+>         bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+> Index: linux-pm/drivers/pci/pci-acpi.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-acpi.c
+> +++ linux-pm/drivers/pci/pci-acpi.c
+> @@ -290,24 +290,16 @@ static struct pci_platform_pm_ops acpi_p
+>
+>  void acpi_pci_add_bus(struct pci_bus *bus)
+>  {
+> -       acpi_handle handle = NULL;
+> -
+> -       if (bus->bridge)
+> -               handle = ACPI_HANDLE(bus->bridge);
+> -       if (acpi_pci_disabled || handle == NULL)
+> +       if (acpi_pci_disabled || !bus->bridge)
+>                 return;
+>
+> -       acpi_pci_slot_enumerate(bus, handle);
+> -       acpiphp_enumerate_slots(bus, handle);
+> +       acpi_pci_slot_enumerate(bus);
+> +       acpiphp_enumerate_slots(bus);
+>  }
+>
+>  void acpi_pci_remove_bus(struct pci_bus *bus)
+>  {
+> -       /*
+> -        * bus->bridge->acpi_node.handle has already been reset to NULL
+> -        * when acpi_pci_remove_bus() is called, so don't check ACPI handle.
+> -        */
+> -       if (acpi_pci_disabled)
+> +       if (acpi_pci_disabled || !bus->bridge)
+>                 return;
 
-Can you post these as a new thread with -v2 patches?
+Acked-by: Yinghai Lu <yinghai@kernel.org>
 
-Why did you put pci_disable_sriov() inside the "if (dev->is_added)"
-block?  Is it related to is_added?
+>
+>         acpiphp_remove_slots(bus);
+> Index: linux-pm/include/linux/pci-acpi.h
+> ===================================================================
+> --- linux-pm.orig/include/linux/pci-acpi.h
+> +++ linux-pm/include/linux/pci-acpi.h
+> @@ -47,24 +47,22 @@ void acpi_pci_remove_bus(struct pci_bus
+>
+>  #ifdef CONFIG_ACPI_PCI_SLOT
+>  void acpi_pci_slot_init(void);
+> -void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle);
+> +void acpi_pci_slot_enumerate(struct pci_bus *bus);
+>  void acpi_pci_slot_remove(struct pci_bus *bus);
+>  #else
+>  static inline void acpi_pci_slot_init(void) { }
+> -static inline void acpi_pci_slot_enumerate(struct pci_bus *bus,
+> -                                          acpi_handle handle) { }
+> +static inline void acpi_pci_slot_enumerate(struct pci_bus *bus) { }
+>  static inline void acpi_pci_slot_remove(struct pci_bus *bus) { }
+>  #endif
+>
+>  #ifdef CONFIG_HOTPLUG_PCI_ACPI
+>  void acpiphp_init(void);
+> -void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle);
+> +void acpiphp_enumerate_slots(struct pci_bus *bus);
+>  void acpiphp_remove_slots(struct pci_bus *bus);
+>  void acpiphp_check_host_bridge(acpi_handle handle);
+>  #else
+>  static inline void acpiphp_init(void) { }
+> -static inline void acpiphp_enumerate_slots(struct pci_bus *bus,
+> -                                          acpi_handle handle) { }
+> +static inline void acpiphp_enumerate_slots(struct pci_bus *bus) { }
+>  static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
+>  static inline void acpiphp_check_host_bridge(acpi_handle handle) { }
+>  #endif
+>
