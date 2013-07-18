@@ -1,88 +1,115 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 13/30] ACPI / hotplug / PCI: Drop flags field from struct acpiphp_bridge
-Date: Thu, 18 Jul 2013 01:24:12 +0200
-Message-ID: <1619021.iXxrTV6Dob@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
+Date: Thu, 18 Jul 2013 06:37:39 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Thomas Backlund <tmb@mageia.org>
+Cc: Kamal Mostafa <kamal@canonical.com>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, kernel-team@lists.ubuntu.com,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>,
+	Luis Henriques <luis.henriques@canonical.com>
+Subject: Re: [PATCH 089/145] iommu/vt-d: add quirk for broken interrupt
+ remapping on 55XX chipsets
+Message-ID: <20130718103739.GA3626@hmsreliant.think-freely.org>
+References: <1374101277-7915-1-git-send-email-kamal@canonical.com>
+ <1374101277-7915-90-git-send-email-kamal@canonical.com>
+ <51E7A0F8.9000308@mageia.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <51E7A0F8.9000308@mageia.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Jul 18, 2013 at 11:02:00AM +0300, Thomas Backlund wrote:
+> 18.07.2013 01:47, Kamal Mostafa skrev:
+> >3.8.13.5 -stable review patch.  If anyone has any objections, please let me know.
+> >
+> >------------------
+> >
+> >From: Neil Horman <nhorman@tuxdriver.com>
+> >
+> >commit 03bbcb2e7e292838bb0244f5a7816d194c911d62 upstream.
+> >
+> >A few years back intel published a spec update:
+> >http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+> >
+> >For the 5520 and 5500 chipsets which contained an errata (specificially errata
+> >53), which noted that these chipsets can't properly do interrupt remapping, and
+> >as a result the recommend that interrupt remapping be disabled in bios.  While
+> >many vendors have a bios update to do exactly that, not all do, and of course
+> >not all users update their bios to a level that corrects the problem.  As a
+> >result, occasionally interrupts can arrive at a cpu even after affinity for that
+> >interrupt has be moved, leading to lost or spurrious interrupts (usually
+> >characterized by the message:
+> >kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+> >
+> >There have been several incidents recently of people seeing this error, and
+> >investigation has shown that they have system for which their BIOS level is such
+> >that this feature was not properly turned off.  As such, it would be good to
+> >give them a reminder that their systems are vulnurable to this problem.  For
+> >details of those that reported the problem, please see:
+> >https://bugzilla.redhat.com/show_bug.cgi?id=887006
+> >
+> >[ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+> >
+> >Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> >CC: Prarit Bhargava <prarit@redhat.com>
+> >CC: Don Zickus <dzickus@redhat.com>
+> >CC: Don Dutile <ddutile@redhat.com>
+> >CC: Bjorn Helgaas <bhelgaas@google.com>
+> >CC: Asit Mallick <asit.k.mallick@intel.com>
+> >CC: David Woodhouse <dwmw2@infradead.org>
+> >CC: linux-pci@vger.kernel.org
+> >CC: Joerg Roedel <joro@8bytes.org>
+> >CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> >CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+> >Signed-off-by: Joerg Roedel <joro@8bytes.org>
+> >Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+> >---
+> >  arch/x86/include/asm/irq_remapping.h |  2 ++
+> >  arch/x86/kernel/early-quirks.c       | 20 ++++++++++++++++++++
+> >  drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
+> >  drivers/iommu/irq_remapping.c        |  6 ++++++
+> >  drivers/iommu/irq_remapping.h        |  2 ++
+> >  5 files changed, 40 insertions(+)
+> >
+> 
+> This patch introduces this warning on 3.8 series kernels:
+> 
+> In file included from arch/x86/kernel/early-quirks.c:21:0:
+> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:46:10:
+> varning: ”struct irq_data” deklarerad inuti parameterlista
+> [aktiverat som standard]
+> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:46:10:
+> varning: dess scope-område är endast denna definition eller
+> deklaration, vilket troligen inte är vad du vill. [aktiverat som
+> standard]
+> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:50:17:
+> varning: ”struct msi_msg” deklarerad inuti parameterlista [aktiverat
+> som standard]
+> 
+> 
+> You need to add this upstream fix too:
+> 
+> commit 35d3d814cbd46a85bed97cd74ba97fbbb51e0ccd
+> Author: Joerg Roedel <joro@8bytes.org>
+> Date:   Fri Apr 19 20:34:55 2013 +0200
+> 
+>     iommu: Fix compile warnings with forward declarations
+> 
+I submited a 3.9 backport that included that fix to -stable over a week ago, you
+should just be able to use that if you want.
+Neil
 
-The only bridge flag used by the ACPI-based PCI hotplug (ACPIPHP)
-code is BRIDGE_HAS_EJ0, but it is only used by the event handling
-function hotplug_event() and if that flag is set, the corresponding
-function flag FUNC_HAS_EJ0 is set as well, so that bridge flag is
-redundant.
-
-For this reason, drop BRIDGE_HAS_EJ0 and all code referring to it
-and since it is the only bridge flag defined, drop the flags field
-from struct acpiphp_bridge entirely.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |    5 -----
- drivers/pci/hotplug/acpiphp_glue.c |    9 ---------
- 2 files changed, 14 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -83,8 +83,6 @@ struct acpiphp_bridge {
- 
- 	int nr_slots;
- 
--	u32 flags;
--
- 	/* This bus (host bridge) or Secondary bus (PCI-to-PCI bridge) */
- 	struct pci_bus *pci_bus;
- 
-@@ -154,9 +152,6 @@ struct acpiphp_attention_info
- /* ACPI _STA method value (ignore bit 4; battery present) */
- #define ACPI_STA_ALL			(0x0000000f)
- 
--/* bridge flags */
--#define BRIDGE_HAS_EJ0		(0x00000001)
--
- /* slot flags */
- 
- #define SLOT_POWEREDON		(0x00000001)
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -986,9 +986,6 @@ static void hotplug_event(acpi_handle ha
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
- 		dbg("%s: Device eject notify on %s\n", __func__, objname);
--		if (bridge && !(bridge->flags & BRIDGE_HAS_EJ0))
--			break;
--
- 		if (!(acpiphp_disable_slot(func->slot)))
- 			acpiphp_eject_slot(func->slot);
- 
-@@ -1125,12 +1122,6 @@ void acpiphp_enumerate_slots(struct pci_
- 		mutex_unlock(&acpiphp_context_lock);
- 	}
- 
--	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
--	if (ACPI_SUCCESS(status)) {
--		dbg("found ejectable p2p bridge\n");
--		bridge->flags |= BRIDGE_HAS_EJ0;
--	}
--
- 	/* must be added to the list prior to calling register_slot */
- 	mutex_lock(&bridge_mutex);
- 	list_add(&bridge->list, &bridge_list);
-
+> 
+> --
+> 
+> Thomas
+> 
+> 
