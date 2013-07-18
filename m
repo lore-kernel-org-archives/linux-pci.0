@@ -1,81 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:40606 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758258Ab3GZNIL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 09:08:11 -0400
-Received: by mail-oa0-f43.google.com with SMTP id i10so2220490oag.16
-        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 06:08:11 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [PATCH 4/30] ACPI / hotplug / PCI: Hotplug context objects for bridges and functions
+Date: Thu, 18 Jul 2013 22:06:16 +0200
+Message-ID: <2397558.EsSCoq8A3j@vostro.rjw.lan>
+In-Reply-To: <3688658.K73mT4hj2a@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <CAE9FiQWjzZ6b1aGgL9OjNZF00hvwaEZJb7ABxjaVbS5FwNwpSQ@mail.gmail.com> <3688658.K73mT4hj2a@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <1374823418-1550-1-git-send-email-Chunhe.Lan@freescale.com>
-References: <1374823418-1550-1-git-send-email-Chunhe.Lan@freescale.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 26 Jul 2013 07:07:49 -0600
-Message-ID: <CAErSpo4xftQjwKHsenuKuEvT10iOa+DuiYfSyJYLhp=ObcDZsQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Add quirk for setting valid class for FSL PCI host bridge
-To: Chunhe Lan <Chunhe.Lan@freescale.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Anton Vorontsov <avorontsov@ru.mvista.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Ben, Paul, Minghuan, Kumar, Anton, linuxppc-dev
+On Thursday, July 18, 2013 09:04:11 PM Rafael J. Wysocki wrote:
+> On Wednesday, July 17, 2013 07:00:33 PM Yinghai Lu wrote:
+> > On Wed, Jul 17, 2013 at 4:17 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > >
+> > > When either a new hotplug bridge or a new hotplug function is added
+> > > by the ACPI-based PCI hotplug (ACPIPHP) code, attach a context object
+> > > to its ACPI handle to store hotplug-related information in it.  To
+> > > start with, put the handle's bridge and function pointers into that
+> > > object.  Count references to the context objects and drop them when
+> > > they are not needed any more.
+> > >
+> > > First of all, this makes it possible to find out if the given bridge
+> > > has been registered as a function already in a much more
+> > > straightforward way and acpiphp_bridge_handle_to_function() can be
+> > > dropped (Yay!).
+> > >
+> > > This also will allow some more simplifications to be made going
+> > > forward.
+> > >
+> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > ---
+> > >  drivers/pci/hotplug/acpiphp.h      |   10 ++
+> > >  drivers/pci/hotplug/acpiphp_glue.c |  179 ++++++++++++++++++++++++++++---------
+> > >  2 files changed, 146 insertions(+), 43 deletions(-)
+> > 
+> > no, more lines are added.
+> 
+> Well, that's what 'quilt refresh --diffstat' tells me, quite consistently.
+> 
+> Have you actually counted them?
 
-On Fri, Jul 26, 2013 at 1:23 AM, Chunhe Lan <Chunhe.Lan@freescale.com> wrote:
-> Freescale platform has class code = 0x0b2000, when it boots. This makes
-> kernel PCI bus code to setup these devices resulting into the following
-> notice information when trying to enable them:
->
-> pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
->
-> This patch adds a ID specific(PCI_VENDOR_ID_FREESCALE & PCI_ANY_ID based)
-> 'early' fixup quirk to replace class code with PCI_CLASS_BRIDGE_PCI as
-> class. Then the above information disappears.
->
-> Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/quirks.c |   10 ++++++++++
->  1 files changed, 10 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index e85d230..906a04a3 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2772,6 +2772,16 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x342e, vtd_mask_spec_errors);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3c28, vtd_mask_spec_errors);
->  #endif
->
-> +#ifdef CONFIG_FSL_PCI
-> +static void quirk_freescale_class(struct pci_dev *dev)
-> +{
-> +       dev_info(&dev->dev, "Setting PCI class for FSL PCI host bridge\n");
-> +       dev->class = (PCI_CLASS_BRIDGE_PCI << 8) | (dev->class & 0xff);
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID,
-> +                       quirk_freescale_class);
+Now I have done that (using "grep '^+' | wc -l") and that indeed turns out ot
+the right number.
 
-1.  This looks an awful lot like quirk_fsl_pcie_head().
-quirk_fsl_pcie_head() is currently a HEADER quirk, but that runs
-*after* pci_setup_device(), where dev->class is used.  I suspect this
-should be an EARLY quirk instead.  But this quirk has a long history
-as a HEADER quirk, and I'm sure many people have tested it, so I don't
-know what's going on.
+What gives?
 
-2.  I assume the Freescale vendor ID might be used for devices other
-than bridges, so I doubt it would be correct to overwrite the class
-for *every* Freescale device as you're doing here.
+Rafael
 
-> +#endif
-> +
->  static void fixup_ti816x_class(struct pci_dev *dev)
->  {
->         /* TI 816x devices do not have class code set when in PCIe boot mode */
-> --
-> 1.7.6.5
->
->
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
