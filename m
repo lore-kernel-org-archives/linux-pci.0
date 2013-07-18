@@ -1,158 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:35147 "EHLO hydra.sisk.pl"
+Received: from smtp.multi.fi ([85.134.37.151]:41243 "EHLO smtp.multi.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753522Ab3GIANY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Jul 2013 20:13:24 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 1/8] ACPI / PCI: Make bus registration and unregistration symmetric
-Date: Tue, 09 Jul 2013 02:14:38 +0200
-Message-ID: <29876102.Oh151SK5OE@vostro.rjw.lan>
-In-Reply-To: <26431283.HJCKsss0rt@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+	id S1758247Ab3GRNqy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Jul 2013 09:46:54 -0400
+Message-ID: <51E7F192.4000004@mageia.org>
+Date: Thu, 18 Jul 2013 16:45:54 +0300
+From: Thomas Backlund <tmb@mageia.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Neil Horman <nhorman@tuxdriver.com>
+CC: Kamal Mostafa <kamal@canonical.com>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, kernel-team@lists.ubuntu.com,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	=?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>,
+	Luis Henriques <luis.henriques@canonical.com>
+Subject: Re: [PATCH 089/145] iommu/vt-d: add quirk for broken interrupt remapping
+ on 55XX chipsets
+References: <1374101277-7915-1-git-send-email-kamal@canonical.com> <1374101277-7915-90-git-send-email-kamal@canonical.com> <51E7A0F8.9000308@mageia.org> <20130718103739.GA3626@hmsreliant.think-freely.org>
+In-Reply-To: <20130718103739.GA3626@hmsreliant.think-freely.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+18.07.2013 13:37, Neil Horman skrev:
+> On Thu, Jul 18, 2013 at 11:02:00AM +0300, Thomas Backlund wrote:
+>> 18.07.2013 01:47, Kamal Mostafa skrev:
+>>> 3.8.13.5 -stable review patch.  If anyone has any objections, please let me know.
+>>>
+>>> ------------------
+>>>
+>>> From: Neil Horman <nhorman@tuxdriver.com>
+>>>
+>>> commit 03bbcb2e7e292838bb0244f5a7816d194c911d62 upstream.
+>>>
+>>> A few years back intel published a spec update:
+>>> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+>>>
+>>> For the 5520 and 5500 chipsets which contained an errata (specificially errata
+>>> 53), which noted that these chipsets can't properly do interrupt remapping, and
+>>> as a result the recommend that interrupt remapping be disabled in bios.  While
+>>> many vendors have a bios update to do exactly that, not all do, and of course
+>>> not all users update their bios to a level that corrects the problem.  As a
+>>> result, occasionally interrupts can arrive at a cpu even after affinity for that
+>>> interrupt has be moved, leading to lost or spurrious interrupts (usually
+>>> characterized by the message:
+>>> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+>>>
+>>> There have been several incidents recently of people seeing this error, and
+>>> investigation has shown that they have system for which their BIOS level is such
+>>> that this feature was not properly turned off.  As such, it would be good to
+>>> give them a reminder that their systems are vulnurable to this problem.  For
+>>> details of those that reported the problem, please see:
+>>> https://bugzilla.redhat.com/show_bug.cgi?id=887006
+>>>
+>>> [ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+>>>
+>>> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+>>> CC: Prarit Bhargava <prarit@redhat.com>
+>>> CC: Don Zickus <dzickus@redhat.com>
+>>> CC: Don Dutile <ddutile@redhat.com>
+>>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>>> CC: Asit Mallick <asit.k.mallick@intel.com>
+>>> CC: David Woodhouse <dwmw2@infradead.org>
+>>> CC: linux-pci@vger.kernel.org
+>>> CC: Joerg Roedel <joro@8bytes.org>
+>>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>>> CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+>>> Signed-off-by: Joerg Roedel <joro@8bytes.org>
+>>> Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+>>> ---
+>>>   arch/x86/include/asm/irq_remapping.h |  2 ++
+>>>   arch/x86/kernel/early-quirks.c       | 20 ++++++++++++++++++++
+>>>   drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
+>>>   drivers/iommu/irq_remapping.c        |  6 ++++++
+>>>   drivers/iommu/irq_remapping.h        |  2 ++
+>>>   5 files changed, 40 insertions(+)
+>>>
+>>
+>> This patch introduces this warning on 3.8 series kernels:
+>>
+>> In file included from arch/x86/kernel/early-quirks.c:21:0:
+>> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:46:10:
+>> varning: ”struct irq_data” deklarerad inuti parameterlista
+>> [aktiverat som standard]
+>> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:46:10:
+>> varning: dess scope-område är endast denna definition eller
+>> deklaration, vilket troligen inte är vad du vill. [aktiverat som
+>> standard]
+>> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:50:17:
+>> varning: ”struct msi_msg” deklarerad inuti parameterlista [aktiverat
+>> som standard]
+>>
+>>
+>> You need to add this upstream fix too:
+>>
+>> commit 35d3d814cbd46a85bed97cd74ba97fbbb51e0ccd
+>> Author: Joerg Roedel <joro@8bytes.org>
+>> Date:   Fri Apr 19 20:34:55 2013 +0200
+>>
+>>      iommu: Fix compile warnings with forward declarations
+>>
+> I submited a 3.9 backport that included that fix to -stable over a week ago, you
+> should just be able to use that if you want.
+> Neil
 
-Since acpi_pci_slot_enumerate() and acpiphp_enumerate_slots() can get
-the ACPI device handle they need from bus->bridge, it is not
-necessary to pass that handle to them as an argument.
+Almost, but not enough...
 
-Drop the second argument of acpi_pci_slot_enumerate() and
-acpiphp_enumerate_slots(), rework them to obtain the ACPI handle
-from bus->bridge and make acpi_pci_add_bus() and
-acpi_pci_remove_bus() entirely symmetrical.
+The patch you refer to was:
+[3.9 stable PATCH] iommu/vt-d: add quirk for broken interrupt remapping 
+on 55XX chipsets
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/pci_slot.c            |   14 +++++++++-----
- drivers/pci/hotplug/acpiphp_glue.c |    7 ++++---
- drivers/pci/pci-acpi.c             |   16 ++++------------
- include/linux/pci-acpi.h           |   10 ++++------
- 4 files changed, 21 insertions(+), 26 deletions(-)
+and got merged in 3.9.9.
 
-Index: linux-pm/drivers/acpi/pci_slot.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_slot.c
-+++ linux-pm/drivers/acpi/pci_slot.c
-@@ -159,12 +159,16 @@ register_slot(acpi_handle handle, u32 lv
- 	return AE_OK;
- }
- 
--void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle)
-+void acpi_pci_slot_enumerate(struct pci_bus *bus)
- {
--	mutex_lock(&slot_list_lock);
--	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
--			    register_slot, NULL, bus, NULL);
--	mutex_unlock(&slot_list_lock);
-+	acpi_handle handle = ACPI_HANDLE(bus->bridge);
-+
-+	if (handle) {
-+		mutex_lock(&slot_list_lock);
-+		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
-+				    register_slot, NULL, bus, NULL);
-+		mutex_unlock(&slot_list_lock);
-+	}
- }
- 
- void acpi_pci_slot_remove(struct pci_bus *bus)
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1169,15 +1169,16 @@ static void handle_hotplug_event_func(ac
-  * Create hotplug slots for the PCI bus.
-  * It should always return 0 to avoid skipping following notifiers.
-  */
--void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
-+void acpiphp_enumerate_slots(struct pci_bus *bus)
- {
--	acpi_handle dummy_handle;
-+	acpi_handle handle, dummy_handle;
- 	struct acpiphp_bridge *bridge;
- 
- 	if (acpiphp_disabled)
- 		return;
- 
--	if (detect_ejectable_slots(handle) <= 0)
-+	handle = ACPI_HANDLE(bus->bridge);
-+	if (!handle || detect_ejectable_slots(handle) <= 0)
- 		return;
- 
- 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -290,24 +290,16 @@ static struct pci_platform_pm_ops acpi_p
- 
- void acpi_pci_add_bus(struct pci_bus *bus)
- {
--	acpi_handle handle = NULL;
--
--	if (bus->bridge)
--		handle = ACPI_HANDLE(bus->bridge);
--	if (acpi_pci_disabled || handle == NULL)
-+	if (acpi_pci_disabled || !bus->bridge)
- 		return;
- 
--	acpi_pci_slot_enumerate(bus, handle);
--	acpiphp_enumerate_slots(bus, handle);
-+	acpi_pci_slot_enumerate(bus);
-+	acpiphp_enumerate_slots(bus);
- }
- 
- void acpi_pci_remove_bus(struct pci_bus *bus)
- {
--	/*
--	 * bus->bridge->acpi_node.handle has already been reset to NULL
--	 * when acpi_pci_remove_bus() is called, so don't check ACPI handle.
--	 */
--	if (acpi_pci_disabled)
-+	if (acpi_pci_disabled || !bus->bridge)
- 		return;
- 
- 	acpiphp_remove_slots(bus);
-Index: linux-pm/include/linux/pci-acpi.h
-===================================================================
---- linux-pm.orig/include/linux/pci-acpi.h
-+++ linux-pm/include/linux/pci-acpi.h
-@@ -47,24 +47,22 @@ void acpi_pci_remove_bus(struct pci_bus
- 
- #ifdef	CONFIG_ACPI_PCI_SLOT
- void acpi_pci_slot_init(void);
--void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle);
-+void acpi_pci_slot_enumerate(struct pci_bus *bus);
- void acpi_pci_slot_remove(struct pci_bus *bus);
- #else
- static inline void acpi_pci_slot_init(void) { }
--static inline void acpi_pci_slot_enumerate(struct pci_bus *bus,
--					   acpi_handle handle) { }
-+static inline void acpi_pci_slot_enumerate(struct pci_bus *bus) { }
- static inline void acpi_pci_slot_remove(struct pci_bus *bus) { }
- #endif
- 
- #ifdef	CONFIG_HOTPLUG_PCI_ACPI
- void acpiphp_init(void);
--void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle);
-+void acpiphp_enumerate_slots(struct pci_bus *bus);
- void acpiphp_remove_slots(struct pci_bus *bus);
- void acpiphp_check_host_bridge(acpi_handle handle);
- #else
- static inline void acpiphp_init(void) { }
--static inline void acpiphp_enumerate_slots(struct pci_bus *bus,
--					   acpi_handle handle) { }
-+static inline void acpiphp_enumerate_slots(struct pci_bus *bus) { }
- static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
- static inline void acpiphp_check_host_bridge(acpi_handle handle) { }
- #endif
+And that added a missing: "#include <linux/irq.h>" in
+arch/x86/include/asm/irq_remapping.h
+
+But using that patch it still spits out:
+
+kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:50:17:
+ >> varning: ”struct msi_msg” deklarerad inuti parameterlista [aktiverat
+ >> som standard]
+
+
+which is why the additional patch is still needed...
+
+--
+
+Thomas
+
 
