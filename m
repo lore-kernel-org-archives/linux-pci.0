@@ -1,67 +1,172 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51307 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753785Ab3GaDbe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Jul 2013 23:31:34 -0400
-Subject: [RFC PATCH 0/7] pci: bus and slot reset interfaces
-To: linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: bhelgaas@google.com, indou.takao@jp.fujitsu.com
-Date: Tue, 30 Jul 2013 21:31:29 -0600
-Message-ID: <20130731031316.31931.56751.stgit@bling.home>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [PATCH 2/30] ACPI / hotplug / PCI: Consolidate acpiphp_enumerate_slots()
+Date: Thu, 18 Jul 2013 21:09:39 +0200
+Message-ID: <2875178.oTVLArQBaT@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQXcLeNxjmh-6+jtpOmgC-NB3=Pwh1vZnb+DNLnoKzZQaQ@mail.gmail.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <10121200.vQGTlJqFtd@vostro.rjw.lan> <CAE9FiQXcLeNxjmh-6+jtpOmgC-NB3=Pwh1vZnb+DNLnoKzZQaQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series adds PCI bus and slot reset interfaces to the already
-existing function reset interface.  I need this for two reasons, the
-first is that not all devices support function level reset.  Even
-some of those that we detect as supporting a PM reset on D3hot->D0
-transition actually don't do any reset.  Others have no reset
-capability at all.  We currently implement a secondary bus reset
-escalation from the function reset path, but only when there is a
-single devfn on the bus.  Drivers like vfio can have ownership of
-all of the devices on a bus and should therefore have a path to
-initiate a secondary bus reset with multiple devices.  This is
-particularly required for use of GPUs by userspace, where none of
-the predominant GPUs implement a useful function level reset.
+On Wednesday, July 17, 2013 06:40:10 PM Yinghai Lu wrote:
+> On Wed, Jul 17, 2013 at 4:16 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > The acpiphp_enumerate_slots() function is now split into two parts,
+> > acpiphp_enumerate_slots() proper and init_bridge_misc() which is
+> > only called by the former.  If these functions are combined,
+> > it is possible to make the code easier to follow and to clean up
+> > the error handling (to prevent memory leaks on error from
+> > happening in particular), so do that.
+> >
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/pci/hotplug/acpiphp_glue.c |   92 ++++++++++++++++++-------------------
+> >  1 file changed, 45 insertions(+), 47 deletions(-)
+> >
+> > Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
+> > +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> > @@ -353,46 +353,6 @@ static int detect_ejectable_slots(acpi_h
+> >         return found;
+> >  }
+> >
+> > -/* initialize miscellaneous stuff for both root and PCI-to-PCI bridge */
+> > -static void init_bridge_misc(struct acpiphp_bridge *bridge)
+> > -{
+> > -       acpi_status status;
+> > -
+> > -       /* must be added to the list prior to calling register_slot */
+> > -       mutex_lock(&bridge_mutex);
+> > -       list_add(&bridge->list, &bridge_list);
+> > -       mutex_unlock(&bridge_mutex);
+> > -
+> > -       /* register all slot objects under this bridge */
+> > -       status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, (u32)1,
+> > -                                    register_slot, NULL, bridge, NULL);
+> > -       if (ACPI_FAILURE(status)) {
+> > -               mutex_lock(&bridge_mutex);
+> > -               list_del(&bridge->list);
+> > -               mutex_unlock(&bridge_mutex);
+> > -               return;
+> > -       }
+> > -
+> > -       /* install notify handler for P2P bridges */
+> > -       if (!pci_is_root_bus(bridge->pci_bus)) {
+> > -               if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
+> > -                       status = acpi_remove_notify_handler(bridge->func->handle,
+> > -                                               ACPI_SYSTEM_NOTIFY,
+> > -                                               handle_hotplug_event_func);
+> > -                       if (ACPI_FAILURE(status))
+> > -                               err("failed to remove notify handler\n");
+> > -               }
+> > -               status = acpi_install_notify_handler(bridge->handle,
+> > -                                            ACPI_SYSTEM_NOTIFY,
+> > -                                            handle_hotplug_event_bridge,
+> > -                                            bridge);
+> > -
+> > -               if (ACPI_FAILURE(status)) {
+> > -                       err("failed to register interrupt notify handler\n");
+> > -               }
+> > -       }
+> > -}
+> > -
+> >
+> >  /* find acpiphp_func from acpiphp_bridge */
+> >  static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
+> > @@ -1149,8 +1109,9 @@ static void handle_hotplug_event_func(ac
+> >   */
+> >  void acpiphp_enumerate_slots(struct pci_bus *bus)
+> >  {
+> > -       acpi_handle handle;
+> >         struct acpiphp_bridge *bridge;
+> > +       acpi_handle handle;
+> > +       acpi_status status;
+> >
+> >         if (acpiphp_disabled)
+> >                 return;
+> > @@ -1178,14 +1139,51 @@ void acpiphp_enumerate_slots(struct pci_
+> >          */
+> >         get_device(&bus->dev);
+> >
+> > -       if (!pci_is_root_bus(bridge->pci_bus) &&
+> > -           acpi_has_method(bridge->handle, "_EJ0")) {
+> > -               dbg("found ejectable p2p bridge\n");
+> > -               bridge->flags |= BRIDGE_HAS_EJ0;
+> > -               bridge->func = acpiphp_bridge_handle_to_function(handle);
+> > +       /* must be added to the list prior to calling register_slot */
+> > +       mutex_lock(&bridge_mutex);
+> > +       list_add(&bridge->list, &bridge_list);
+> > +       mutex_unlock(&bridge_mutex);
+> > +
+> > +       /* register all slot objects under this bridge */
+> > +       status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
+> > +                                    register_slot, NULL, bridge, NULL);
+> > +       if (ACPI_FAILURE(status)) {
+> > +               acpi_handle_err(bridge->handle, "failed to register slots\n");
+> > +               goto err;
+> > +       }
+> > +
+> > +       if (pci_is_root_bus(bridge->pci_bus))
+> > +               return;
+> > +
+> > +       /* install notify handler for P2P bridges */
+> > +       status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
+> > +                                            handle_hotplug_event_bridge,
+> > +                                            bridge);
+> > +       if (ACPI_FAILURE(status)) {
+> > +               acpi_handle_err(bridge->handle,
+> > +                               "failed to register notify handler\n");
+> > +               goto err;
+> >         }
+> >
+> > -       init_bridge_misc(bridge);
+> > +       if (!acpi_has_method(bridge->handle, "_EJ0"))
+> > +               return;
+> > +
+> > +       dbg("found ejectable p2p bridge\n");
+> > +       bridge->flags |= BRIDGE_HAS_EJ0;
+> > +       bridge->func = acpiphp_bridge_handle_to_function(bridge->handle);
+> > +       if (bridge->func) {
+> > +               status = acpi_remove_notify_handler(bridge->func->handle,
+> > +                                                   ACPI_SYSTEM_NOTIFY,
+> > +                                                   handle_hotplug_event_func);
+> > +               if (ACPI_FAILURE(status))
+> > +                       acpi_handle_err(bridge->func->handle,
+> > +                                       "failed to remove notify handler\n");
+> > +       }
+> 
+> looks little weird that you change to install bridge notifier handler and remove
+> bridge func notifier handler.
+> actually these two handles is the same one.
+> 
+> I would prefer to keeping the old sequence.
 
-The second reason is that even the current function reset escalating
-to a secondary bus reset can cause problems with hotplug controllers.
-If a root port supports PCIe HP with suprise removal, a bus reset
-can trigger a presence detection change, which results in an attempt
-to remove the struct device.  By having a slot reset interface, we
-can involve the hotplug controllers to allow for a controlled bus
-reset and avoid this spurious removal attempt.
+First, it doesn't matter because one of the notifiers goes away in the
+subsequent patches and it would complicate those patches without any real
+reason if I did that.
 
-Takao-san also needs a PCI bus reset interface to quiesce devices
-during kexec.  I believe this interface also provides that.
+Second, it doesn't matter because there can be multiple notify handlers for the
+same handle and if one of the above two triggers, the second one won't really
+do anything.
 
-Why is this an RFC?  I posted this a while back and self-nacked it
-because there were issues when hotplug was built as a module.  Now
-that we're removing module support for PCI hotplug and pciehp in
-particular, I think that problem is resolved, but it needs further
-testing.  Coments welcome.  Thanks,
+So no, I'm not going to do that, sorry.
 
-Alex
-
----
-
-Alex Williamson (7):
-      pci: Create pci_reset_bridge_secondary_bus()
-      pci: Add hotplug_slot_ops.reset_slot()
-      pci: Implement reset_slot for pciehp
-      pci: Add slot reset option to pci_dev_reset
-      pci: Split out pci_dev lock/unlock and save/restore
-      pci: Add slot and bus reset interfaces
-      pci: Wake-up devices before save for reset
+Thanks,
+Rafael
 
 
- drivers/pci/hotplug/pciehp.h      |    1 
- drivers/pci/hotplug/pciehp_core.c |   12 +
- drivers/pci/hotplug/pciehp_hpc.c  |   31 ++++
- drivers/pci/pci.c                 |  320 ++++++++++++++++++++++++++++++++++---
- include/linux/pci.h               |    3 
- include/linux/pci_hotplug.h       |    4 
- 6 files changed, 345 insertions(+), 26 deletions(-)
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
