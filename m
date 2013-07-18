@@ -1,245 +1,162 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 4 Jul 2013 15:53:38 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH v2 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer
- Aspire S5
-Message-ID: <20130704125337.GN4898@intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
- <1444243.g9GbxN3NM0@vostro.rjw.lan>
- <20130704085844.GF4898@intel.com>
- <6828518.UobQ5xLxzT@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:45097 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757632Ab3GRBkL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jul 2013 21:40:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6828518.UobQ5xLxzT@vostro.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <10121200.vQGTlJqFtd@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+	<3718119.FLASu5DBx8@vostro.rjw.lan>
+	<2366394.4EoP1MXmG2@vostro.rjw.lan>
+	<10121200.vQGTlJqFtd@vostro.rjw.lan>
+Date: Wed, 17 Jul 2013 18:40:10 -0700
+Message-ID: <CAE9FiQXcLeNxjmh-6+jtpOmgC-NB3=Pwh1vZnb+DNLnoKzZQaQ@mail.gmail.com>
+Subject: Re: [PATCH 2/30] ACPI / hotplug / PCI: Consolidate acpiphp_enumerate_slots()
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 04, 2013 at 02:36:00PM +0200, Rafael J. Wysocki wrote:
-> On Thursday, July 04, 2013 11:58:44 AM Mika Westerberg wrote:
-> > On Wed, Jul 03, 2013 at 11:40:42PM +0200, Rafael J. Wysocki wrote:
-> > > On Wednesday, July 03, 2013 05:04:53 PM Mika Westerberg wrote:
-> > > > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> > > > 
-> > > > Correct ACPI PCI hotplug imeplementation should have _RMV method in a
-> > > > PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
-> > > > deeper in hierarchy:
-> > > > 
-> > > > Device (RP05)
-> > > > {
-> > > >    // ...
-> > > >    Device (HRUP)
-> > > >    {
-> > > >        // ...
-> > > >        Device (HRDN)
-> > > >        {
-> > > >            // ...
-> > > >            Device (EPUP)
-> > > >            {
-> > > >                // ...
-> > > >                Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
-> > > >                {
-> > > >                    Return (One)
-> > > >                }
-> > > >            }
-> > > >        }
-> > > >    }
-> > > > }
-> > > > 
-> > > > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > > ---
-> > > >  drivers/pci/hotplug/acpi_pcihp.c | 13 +++++++++++++
-> > > >  1 file changed, 13 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> > > > index 2a47e82..d92ebfb 100644
-> > > > --- a/drivers/pci/hotplug/acpi_pcihp.c
-> > > > +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> > > > @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
-> > > >  	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-> > > >  	if (ACPI_SUCCESS(status) && removable)
-> > > >  		return 1;
-> > > > +
-> > > > +	/*
-> > > > +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
-> > > > +	 *
-> > > > +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
-> > > > +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
-> > > > +	 * deeper in hierarchy.
-> > > > +	 */
-> > > > +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
-> > > > +			&removable);
-> > > 
-> > > Well, calling stuff like this directly from a general function is kind of ugly.
-> > > 
-> > > Can we use something like a quirk instead?  A DMI check or something?
-> > 
-> > Sure we can. How about something like the patch below?
-> 
-> Well, it goes into the right (to me) direction. :-)
-> 
-> Some comments below.
-> 
-> > From: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > Subject: [PATCH] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
-> > 
-> > The acpiphp driver finds out whether the device is removable by checking
-> > whether it has _RMV method directly behind it (and if it returns 1).
-> > However, at least on Acer Aspire S5 with Thunderbolt host router has this
-> > method placed behind a device called EPUP (endpoint upstream port?) and not
-> > in the usual place expected by the acpiphp driver. The ASL code below shows
-> > how this is done on that machine:
-> > 
-> > Device (RP05)
-> > {
-> > 	...
-> > 	Device (HRUP)
-> > 	{
-> > 		Name (_ADR, Zero)
-> > 		Name (_PRW, Package (0x02)
-> > 		{
-> > 			0x09,
-> > 			0x04
-> > 		})
-> > 		Device (HRDN)
-> > 		{
-> > 			Name (_ADR, 0x00040000)
-> > 			Name (_PRW, Package (0x02)
-> > 			{
-> > 				0x09,
-> > 				0x04
-> > 			})
-> > 			Device (EPUP)
-> > 			{
-> > 				Name (_ADR, Zero)
-> > 				Method (_RMV, 0, NotSerialized)
-> > 				{
-> > 					Return (One)
-> > 				}
-> > 			}
-> > 		}
-> > 	}
-> > 	...
-> > 
-> > Fix this by adding a DMI quirk for the Acer Aspire S5 machine that gives an
-> > alternative path to the _RMV method.
-> > 
-> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > ---
-> >  drivers/pci/hotplug/acpi_pcihp.c | 57 ++++++++++++++++++++++++++++++++++++----
-> >  1 file changed, 52 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> > index 2a47e82..99fccf3 100644
-> > --- a/drivers/pci/hotplug/acpi_pcihp.c
-> > +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> > @@ -33,6 +33,7 @@
-> >  #include <linux/acpi.h>
-> >  #include <linux/pci-acpi.h>
-> >  #include <linux/slab.h>
-> > +#include <linux/dmi.h>
-> >  
-> >  #define MY_NAME	"acpi_pcihp"
-> >  
-> > @@ -408,21 +409,67 @@ got_one:
-> >  }
-> >  EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
-> >  
-> > +/**
-> > + * pcihp_is_removable - is the given ACPI device removable
-> > + * @handle: ACPI handle of the device
-> > + *
-> > + * Try to find out whether the given ACPI device is removable by evaluating
-> > + * its _RMV and returning the result. If we can't find the _RMV directly
-> > + * under the device use system specific quirks to locate it.
-> > + */
-> > +static bool pcihp_is_removable(acpi_handle handle)
-> > +{
-> 
-> People are generally used to seeing DMI lists outside of functions.
+On Wed, Jul 17, 2013 at 4:16 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> The acpiphp_enumerate_slots() function is now split into two parts,
+> acpiphp_enumerate_slots() proper and init_bridge_misc() which is
+> only called by the former.  If these functions are combined,
+> it is possible to make the code easier to follow and to clean up
+> the error handling (to prevent memory leaks on error from
+> happening in particular), so do that.
+>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |   92 ++++++++++++++++++-------------------
+>  1 file changed, 45 insertions(+), 47 deletions(-)
+>
+> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
+> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -353,46 +353,6 @@ static int detect_ejectable_slots(acpi_h
+>         return found;
+>  }
+>
+> -/* initialize miscellaneous stuff for both root and PCI-to-PCI bridge */
+> -static void init_bridge_misc(struct acpiphp_bridge *bridge)
+> -{
+> -       acpi_status status;
+> -
+> -       /* must be added to the list prior to calling register_slot */
+> -       mutex_lock(&bridge_mutex);
+> -       list_add(&bridge->list, &bridge_list);
+> -       mutex_unlock(&bridge_mutex);
+> -
+> -       /* register all slot objects under this bridge */
+> -       status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, (u32)1,
+> -                                    register_slot, NULL, bridge, NULL);
+> -       if (ACPI_FAILURE(status)) {
+> -               mutex_lock(&bridge_mutex);
+> -               list_del(&bridge->list);
+> -               mutex_unlock(&bridge_mutex);
+> -               return;
+> -       }
+> -
+> -       /* install notify handler for P2P bridges */
+> -       if (!pci_is_root_bus(bridge->pci_bus)) {
+> -               if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
+> -                       status = acpi_remove_notify_handler(bridge->func->handle,
+> -                                               ACPI_SYSTEM_NOTIFY,
+> -                                               handle_hotplug_event_func);
+> -                       if (ACPI_FAILURE(status))
+> -                               err("failed to remove notify handler\n");
+> -               }
+> -               status = acpi_install_notify_handler(bridge->handle,
+> -                                            ACPI_SYSTEM_NOTIFY,
+> -                                            handle_hotplug_event_bridge,
+> -                                            bridge);
+> -
+> -               if (ACPI_FAILURE(status)) {
+> -                       err("failed to register interrupt notify handler\n");
+> -               }
+> -       }
+> -}
+> -
+>
+>  /* find acpiphp_func from acpiphp_bridge */
+>  static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
+> @@ -1149,8 +1109,9 @@ static void handle_hotplug_event_func(ac
+>   */
+>  void acpiphp_enumerate_slots(struct pci_bus *bus)
+>  {
+> -       acpi_handle handle;
+>         struct acpiphp_bridge *bridge;
+> +       acpi_handle handle;
+> +       acpi_status status;
+>
+>         if (acpiphp_disabled)
+>                 return;
+> @@ -1178,14 +1139,51 @@ void acpiphp_enumerate_slots(struct pci_
+>          */
+>         get_device(&bus->dev);
+>
+> -       if (!pci_is_root_bus(bridge->pci_bus) &&
+> -           acpi_has_method(bridge->handle, "_EJ0")) {
+> -               dbg("found ejectable p2p bridge\n");
+> -               bridge->flags |= BRIDGE_HAS_EJ0;
+> -               bridge->func = acpiphp_bridge_handle_to_function(handle);
+> +       /* must be added to the list prior to calling register_slot */
+> +       mutex_lock(&bridge_mutex);
+> +       list_add(&bridge->list, &bridge_list);
+> +       mutex_unlock(&bridge_mutex);
+> +
+> +       /* register all slot objects under this bridge */
+> +       status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
+> +                                    register_slot, NULL, bridge, NULL);
+> +       if (ACPI_FAILURE(status)) {
+> +               acpi_handle_err(bridge->handle, "failed to register slots\n");
+> +               goto err;
+> +       }
+> +
+> +       if (pci_is_root_bus(bridge->pci_bus))
+> +               return;
+> +
+> +       /* install notify handler for P2P bridges */
+> +       status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
+> +                                            handle_hotplug_event_bridge,
+> +                                            bridge);
+> +       if (ACPI_FAILURE(status)) {
+> +               acpi_handle_err(bridge->handle,
+> +                               "failed to register notify handler\n");
+> +               goto err;
+>         }
+>
+> -       init_bridge_misc(bridge);
+> +       if (!acpi_has_method(bridge->handle, "_EJ0"))
+> +               return;
+> +
+> +       dbg("found ejectable p2p bridge\n");
+> +       bridge->flags |= BRIDGE_HAS_EJ0;
+> +       bridge->func = acpiphp_bridge_handle_to_function(bridge->handle);
+> +       if (bridge->func) {
+> +               status = acpi_remove_notify_handler(bridge->func->handle,
+> +                                                   ACPI_SYSTEM_NOTIFY,
+> +                                                   handle_hotplug_event_func);
+> +               if (ACPI_FAILURE(status))
+> +                       acpi_handle_err(bridge->func->handle,
+> +                                       "failed to remove notify handler\n");
+> +       }
 
-OK.
+looks little weird that you change to install bridge notifier handler and remove
+bridge func notifier handler.
+actually these two handles is the same one.
 
-> > +	static const struct dmi_system_id rmv_paths[] = {
-> > +		{
-> > +			/*
-> > +			 * On Acer Aspire S5 the _RMV method for the
-> > +			 * Thunderbolt host router upstream port is not
-> > +			 * located directly under the device but it is
-> > +			 * instead placed a bit deeper in the hierarchy.
-> > +			 */
-> > +			.ident = "Acer Aspire S5",
-> > +			.matches = {
-> > +				DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-> > +				DMI_MATCH(DMI_PRODUCT_NAME, "Aspire S5-391"),
-> > +			},
-> > +			.driver_data = "HRDN.EPUP._RMV",
-> 
-> Use .callback instead? ->
-> 
-> > +		},
-> > +		{ }
-> > +	};
-> > +	const struct dmi_system_id *id;
-> > +	unsigned long long removable;
-> > +	acpi_status status;
-> > +
-> > +	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-> > +	if (ACPI_SUCCESS(status))
-> > +		return !!removable;
-> > +
-> > +	/* Try system specific quirks */
-> > +	id = dmi_first_match(rmv_paths);
-> > +	if (id && id->driver_data) {
-> 
-> -> And here do
-> 
-> 	if (id && id->callback)
-> 		return id->callback(id);
+I would prefer to keeping the old sequence.
 
-There is a problem with the above that we can't pass an ACPI handle to the
-callback function.
-
-> 
-> > +		char path[64];
-> > +
-> > +		strlcpy(path, id->driver_data, sizeof(path));
-> > +		status = acpi_evaluate_integer(handle, path, NULL, &removable);
-> > +		if (ACPI_SUCCESS(status))
-> > +			return !!removable;
-> > +	}
-> > +
-> > +	return false;
-> > +}
-> > +
-> >  static int pcihp_is_ejectable(acpi_handle handle)
-> >  {
-> >  	acpi_status status;
-> >  	acpi_handle tmp;
-> > -	unsigned long long removable;
-> > +
-> >  	status = acpi_get_handle(handle, "_ADR", &tmp);
-> >  	if (ACPI_FAILURE(status))
-> >  		return 0;
-> >  	status = acpi_get_handle(handle, "_EJ0", &tmp);
-> >  	if (ACPI_SUCCESS(status))
-> >  		return 1;
-> > -	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-> > -	if (ACPI_SUCCESS(status) && removable)
-> > -		return 1;
-> 
-> I'd keep the above unchanged and simply add a "platform check" function.
-
-OK, thanks.
+Yinghai
