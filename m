@@ -1,111 +1,208 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:14644 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753937Ab3GWHAd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 03:00:33 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kishon Vijay Abraham I' <kishon@ti.com>
-Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>
-References: <002801ce8376$a807dbf0$f81793d0$@samsung.com>
- <51ED49D6.9050209@ti.com> <000701ce8741$fe47deb0$fad79c10$@samsung.com>
- <51EE22DF.6090902@ti.com>
-In-reply-to: <51EE22DF.6090902@ti.com>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys part
- and Exynos part
-Date: Tue, 23 Jul 2013 16:00:31 +0900
-Message-id: <001301ce8772$522dfc50$f689f4f0$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:36360 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933369Ab3GSDLC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jul 2013 23:11:02 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 19 Jul 2013 13:00:42 +1000
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 09DE12CE804D
+	for <linux-pci@vger.kernel.org>; Fri, 19 Jul 2013 13:10:56 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r6J2tSOR55050332
+	for <linux-pci@vger.kernel.org>; Fri, 19 Jul 2013 12:55:29 +1000
+Received: from d23av01.au.ibm.com (loopback [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r6J3AsNV014679
+	for <linux-pci@vger.kernel.org>; Fri, 19 Jul 2013 13:10:54 +1000
+Date: Fri, 19 Jul 2013 11:10:52 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
+ pbus_size_io()
+Message-ID: <20130719031052.GA30732@weiyang.vnet.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1372691432-6440-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CAErSpo5O6CdzSw3bQyuKXsP+H0deJtGL1kXU+ddf_reA+ECq6w@mail.gmail.com>
+ <20130709032019.GC7094@weiyang.vnet.ibm.com>
+ <CAErSpo76aKk_Nq=MuL6Rsf98+fTxXQe=bJ-wQOhosKSDoYC8Ew@mail.gmail.com>
+ <20130710013442.GA6671@weiyang.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130710013442.GA6671@weiyang.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 23, 2013 3:30 PM, Kishon Vijay Abraham I wrote:
-> On Tuesday 23 July 2013 06:44 AM, Jingoo Han wrote:
-> > On Tuesday, July 23, 2013 12:04 AM, Kishon Vijay Abraham I wrote:
-> >> On Thursday 18 July 2013 10:51 AM, Jingoo Han wrote:
-> >>> Exynos PCIe IP consists of Synopsys specific part and Exynos
-> >>> specific part. Only core block is a Synopsys designware part;
-> >>> other parts are Exynos specific.
-> >>> Also, the Synopsys designware part can be shared with other
-> >>> platforms; thus, it can be split two parts such as Synopsys
-> >>> designware part and Exynos specific part.
-> >>
-> >> some more queries and comments..
-> >
-> .
-> .
-> <snip>
-> .
-> .
-> >>> +			of_pci_range_to_resource(&range, np, &pp->cfg);
-> >>> +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
-> >>> +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
-> >>> +		}
-> >>> +	}
-> >>> +
-> >>> +	pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
-> >>> +				resource_size(&pp->cfg));
-> >>
-> >> Why is configuraion space divided into two?
-> >
-> > Sorry, I don't know the exact reason. :(
-> > Pratyush Anand may know about this.
-> > Pratyush Anand, could you answer the question?
-> >
-> > Also, if you find some problems, please let me know.
-> >
-> >
-> >> Why should it be same as dbi_base?
-> >> AFAIK, jacinto6 has a dedicated configuration/io/memory space that is entirely
-> >> different from dbi_base.
-> >
-> > According to the Synopsys designware PCIe datasheet,
-> > in chapter 5.1.1 Register Space Layout,
-> > 'Port Logic Registers' are placed between (config space 0x0 + 0x700)
-> > and (config space 0x0 + 0xFFF).
-> > 'dbi_base' is used for reading/writing 'Port Logic Registers'.
-> > Exynos are using 'dbi_base' like this. Thus, the base addresses of
-> > both 'dbi_base' and configuration/io/memory space are same.
-> >
-> > Just now, I looked at Spear PCIe driver.
-> > However, in the case of Spear, the base address of configuration/io/memory
-> > space is defined as 0x80000000. The base address of 'Port Logic Registers'
-> > is defined as 0xb1000000.
-> > I think that the situation of 'jacinto6' is similar with Spear, right?
-> >
-> > Then, I will move pp->dbi_base mapping code from pcie-designware.c
-> > to pci-exynos.c.
-> 
-> I think you need not move this to exynos (since registers in dbi_base is common
-> for all platforms) but modify the pcie-designware.c to use different address
-> space for dbi_base. In your case, you'll duplicate the address space for
-> dbi_base and configuration space.
+On Wed, Jul 10, 2013 at 09:34:42AM +0800, Wei Yang wrote:
+>On Tue, Jul 09, 2013 at 11:38:06AM -0600, Bjorn Helgaas wrote:
+>>On Mon, Jul 8, 2013 at 9:20 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>>> On Mon, Jul 08, 2013 at 03:15:13PM -0600, Bjorn Helgaas wrote:
+>>>>On Mon, Jul 1, 2013 at 9:10 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>>>>> In commit 462d9303 ("PCI: Align P2P windows using pcibios_window_alignment()"),
+>>>>> it introduce a new method to calculate the window alignment of P2P bridge.
+>>>>>
+>>>>> When the io_window_1k is set,  the calculation for the io resource alignment
+>>>>> is different from the original one. In the original logic before 462d9303,
+>>>>> the alignment is no bigger than 4K even the io_window_1k is set. The logic
+>>>>> introduced in 462d9303 will limit the alignment to 1k in this case.
+>>>>>
+>>>>> This patch fix this issue.
+>>>>>
+>>>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>>>> Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+>>>>> Reviewed-by: Ram Pai <linuxram@us.ibm.com>
+>>>>> ---
+>>>>>  drivers/pci/setup-bus.c |    4 ++++
+>>>>>  1 files changed, 4 insertions(+), 0 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>>>>> index bd0ce39d..5c60ca0 100644
+>>>>> --- a/drivers/pci/setup-bus.c
+>>>>> +++ b/drivers/pci/setup-bus.c
+>>>>> @@ -755,6 +755,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+>>>>>                 return;
+>>>>>
+>>>>>         io_align = min_align = window_alignment(bus, IORESOURCE_IO);
+>>>>> +       /* Don't exceed 4KiB for windows requesting 1KiB alignment */
+>>>>> +       if (bus->self->io_window_1k && io_align == PCI_P2P_DEFAULT_IO_ALIGN_1K)
+>>>>> +               io_align = PCI_P2P_DEFAULT_IO_ALIGN;
+>>>>
+>>>>Please explain why we need this change, with some actual values that
+>>>>show the problem.  We need to know what the problem is, not merely
+>>>>that the code behaves differently than it did before 462d9303.
+>>>
+>>> Yep, sorry for not listing the exact problem value.
+>>>
+>>> Assume:
+>>>         1. pcibios_window_alignment() return 1.
+>>>         2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
+>>>         3. one of the child device has an IO resource with size of 2K.
+>>>
+>>> Result comparison:
+>>>
+>>>                     Before 462d9303             After 462d9303
+>>>     min_align       1k                          1k
+>>>                                         |
+>>>                              after loop |
+>>>                                         V
+>>>     min_align       2k                          2k
+>>>                                         |
+>>>                          check boundary |
+>>>                                         V
+>>>     min_align       2k                          1k
+>>>
+>>> In this case, with 462d9303 the min_align will be set back to 1k even one of
+>>> the child require 2k alignment.
+>>>
+>>>>
+>>>>It appears to me that this change will break the ability to use 1K
+>>>>windows.  For example, assume a bridge that supports 1K windows.
+>>>>Assume we're using the default pcibios_window_alignment().  Currently
+>>>>window_alignment() on the secondary bus returns
+>>>>PCI_P2P_DEFAULT_IO_ALIGN_1K (0x400, which is 1K), so io_align = 0x400.
+>>>>
+>>>>With your change, I think io_align will be bumped back up to 4K in
+>>>>this case, so we'll lose the ability to allocate a 1K window.
+>>>
+>>> After applying the change:
+>>>
+>>> Assume:
+>>>         1. pcibios_window_alignment() return 1.
+>>>         2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
+>>>         3. one of the child device has an IO resource with size of 2K.
+>>
+>>What happens if no child has an I/O resource larger than 1K?  Can we
+>>allocate a 1K window with 1K alignment in that case?
+>>
+>
+>Yes, it could. The result comparison would look like this.
+>Since no child has an I/O resource larger than 1k, the min_align will remain
+>1k after loop. And because io_align(4K) is larger than min_align(1k), the
+>final min_align would be 1k.
+>
+>In this case, the code from commit 462d9303 and my patch both works.
+>
+> Result comparison:
+>                     with  462d9303             with this patch
+>     min_align       1k                          1k
+>     io_align        1k                          4k
+>                                         |
+>                              after loop |
+>                                         V
+>     min_align       1k                          1k
+>     io_align        1k                          4k
+>                                         |
+>                          check boundary |
+>                                         V
+>     min_align       1k                          1k
+>     io_align        1k                          4k
+>
 
-I cannot understand fully what you said.
-Please, give a pseudo code.
+Bjorn,
 
-> 
-> Also I have one more query.
-> In your dt binding, your pci address and cpu address is the same. But the pci
-> address should start at 0x00000000 and end at 0xffffffff (for 32bit). Shouldn't
-> the cpu address map to something within this range of pci address?
-> 
+Sorry for distubing you again.
 
-Sorry, I cannot answer it exactly.
-DT binding was confirmed by Arnd Bergmann.
-He will answer it exactly.
+Is my analysis correct or I still miss some point?
 
-Best regards,
-Jingoo Han
+>>> Result comparison:
+>>>
+>>>                     with  462d9303             with this patch
+>>>     min_align       1k                          1k
+>>>     io_align        1k                          4k
+>>>                                         |
+>>>                              after loop |
+>>>                                         V
+>>>     min_align       2k                          2k
+>>>     io_align        1k                          4k
+>>>                                         |
+>>>                          check boundary |
+>>>                                         V
+>>>     min_align       1k                          2k
+>>>     io_align        1k                          4k
+>>>
+>>> With this patch, in the same case as above, the min_align is 2k after
+>>> calculation.
+>>>
+>>> In my mind, the min_align is the lower bound, io_align is the upper bound. The
+>>> final result of min_align should be in this range.
+>>>
+>>> Is my understanding correct? or I missed something important?
+>>>
+>>>>
+>>>>>         list_for_each_entry(dev, &bus->devices, bus_list) {
+>>>>>                 int i;
+>>>>>
+>>>>> --
+>>>>> 1.7.5.4
+>>>>>
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>--
+>>>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>>the body of a message to majordomo@vger.kernel.org
+>>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>> --
+>>> Richard Yang
+>>> Help you, Help me
+>>>
+>>--
+>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>-- 
+>Richard Yang
+>Help you, Help me
 
+-- 
+Richard Yang
+Help you, Help me
 
