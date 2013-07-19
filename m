@@ -1,123 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7329 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758449Ab3GaDbv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Jul 2013 23:31:51 -0400
-Subject: [RFC PATCH 3/7] pci: Implement reset_slot for pciehp
-To: linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: bhelgaas@google.com, indou.takao@jp.fujitsu.com
-Date: Tue, 30 Jul 2013 21:31:48 -0600
-Message-ID: <20130731033147.31931.3426.stgit@bling.home>
-In-Reply-To: <20130731031316.31931.56751.stgit@bling.home>
-References: <20130731031316.31931.56751.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from userp1040.oracle.com ([156.151.31.81]:26775 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751926Ab3GSTOd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jul 2013 15:14:33 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH] PCI: Separate stop and remove devices in pciehp
+Date: Fri, 19 Jul 2013 12:14:17 -0700
+Message-Id: <1374261258-23036-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
+References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe hotplug has a bus per slot, so we can just use a normal
-secondary bus reset.  However, if a slot support surprise removal
-then a bus reset can be seen as a presence detection change triggering
-a hot-remove followed by a hot-add.  Disable presence detection from
-triggering an interrupt or being polled around the bus reset.
+After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
+(PCI: Simplify IOV implementation and fix reference count races)
+VF need to be removed via virtfn_remove to make sure ref to PF
+is put back.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+So we can not call stop_and_remove for VF before PF, that will
+make VF get removed directly before PF's driver try to use
+virtfn_remove to do it.
+
+Solution is separating stop and remove in two iterations.
+
+In first iteration, we stop VF driver at first with iterating devices
+reversely, and later during stop PF driver, disable_sriov will use
+virtfn_remove to remove VFs.
+
+Also some driver (like mlx4_core) need VF's driver get stopped before PF.
+
+To make it simple, separate VGA checking out and do that at first,
+if there is VGA in the chain, do even try to stop or remove any device
+under that bus.
+
+Need this one for v3.11.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <liuj97@gmail.com>
+
 ---
- drivers/pci/hotplug/pciehp.h      |    1 +
- drivers/pci/hotplug/pciehp_core.c |   12 ++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  |   31 +++++++++++++++++++++++++++++++
- 3 files changed, 44 insertions(+)
+ drivers/pci/hotplug/pciehp_pci.c |   46 ++++++++++++++++++++++++++-------------
+ drivers/pci/remove.c             |    6 +++--
+ include/linux/pci.h              |    2 +
+ 3 files changed, 37 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 7fb3269..541bbe6 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -155,6 +155,7 @@ void pciehp_green_led_off(struct slot *slot);
- void pciehp_green_led_blink(struct slot *slot);
- int pciehp_check_link_status(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
-+int pciehp_reset_slot(struct slot *slot, int probe);
+Index: linux-2.6/drivers/pci/hotplug/pciehp_pci.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/hotplug/pciehp_pci.c
++++ linux-2.6/drivers/pci/hotplug/pciehp_pci.c
+@@ -92,26 +92,37 @@ int pciehp_unconfigure_device(struct slo
+ 	if (ret)
+ 		presence = 0;
  
- static inline const char *slot_name(struct slot *slot)
++	/* check if VGA is around */
++	if (presence) {
++		list_for_each_entry(dev, &parent->devices, bus_list) {
++			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++				pci_read_config_byte(dev, PCI_BRIDGE_CONTROL,
++							&bctl);
++				if (bctl & PCI_BRIDGE_CTL_VGA) {
++					ctrl_err(ctrl,
++						 "Cannot remove display device %s\n",
++						 pci_name(dev));
++					return -EINVAL;
++				}
++			}
++		}
++	}
++
+ 	/*
+-	 * Need to iterate device reversely, as during
++	 * Now VF need to be removed via virtfn_remove to make
++	 * sure ref to PF is put back. Some driver (mlx4_core) need
++	 * VF's driver get stopped before PF.
++	 * So we need to stop VF driver at first, that means
++	 * loop reversely, and later during stop PF driver,
++	 * disable_sriov will use virtfn_remove to remove VFs.
++	 * Also we can not loop without reverse, as during
+ 	 * stop PF driver, VF will be removed, the list_for_each
+ 	 * could point to removed VF with temp.
+ 	 */
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+-					 bus_list) {
+-		pci_dev_get(dev);
+-		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
+-			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+-			if (bctl & PCI_BRIDGE_CTL_VGA) {
+-				ctrl_err(ctrl,
+-					 "Cannot remove display device %s\n",
+-					 pci_name(dev));
+-				pci_dev_put(dev);
+-				rc = -EINVAL;
+-				break;
+-			}
+-		}
+-		pci_stop_and_remove_bus_device(dev);
++						 bus_list) {
++		pci_stop_bus_device(dev);
++
+ 		/*
+ 		 * Ensure that no new Requests will be generated from
+ 		 * the device.
+@@ -122,6 +133,11 @@ int pciehp_unconfigure_device(struct slo
+ 			command |= PCI_COMMAND_INTX_DISABLE;
+ 			pci_write_config_word(dev, PCI_COMMAND, command);
+ 		}
++	}
++
++	list_for_each_entry_safe(dev, temp, &parent->devices, bus_list) {
++		pci_dev_get(dev);
++		pci_remove_bus_device(dev);
+ 		pci_dev_put(dev);
+ 	}
+ 
+Index: linux-2.6/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/remove.c
++++ linux-2.6/drivers/pci/remove.c
+@@ -56,7 +56,7 @@ void pci_remove_bus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
+-static void pci_stop_bus_device(struct pci_dev *dev)
++void pci_stop_bus_device(struct pci_dev *dev)
  {
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 7d72c5e..f4a18f5 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -69,6 +69,7 @@ static int get_power_status	(struct hotplug_slot *slot, u8 *value);
- static int get_attention_status	(struct hotplug_slot *slot, u8 *value);
- static int get_latch_status	(struct hotplug_slot *slot, u8 *value);
- static int get_adapter_status	(struct hotplug_slot *slot, u8 *value);
-+static int reset_slot		(struct hotplug_slot *slot, int probe);
+ 	struct pci_bus *bus = dev->subordinate;
+ 	struct pci_dev *child, *tmp;
+@@ -75,8 +75,9 @@ static void pci_stop_bus_device(struct p
+ 
+ 	pci_stop_dev(dev);
+ }
++EXPORT_SYMBOL(pci_stop_bus_device);
+ 
+-static void pci_remove_bus_device(struct pci_dev *dev)
++void pci_remove_bus_device(struct pci_dev *dev)
+ {
+ 	struct pci_bus *bus = dev->subordinate;
+ 	struct pci_dev *child, *tmp;
+@@ -92,6 +93,7 @@ static void pci_remove_bus_device(struct
+ 
+ 	pci_destroy_dev(dev);
+ }
++EXPORT_SYMBOL(pci_remove_bus_device);
  
  /**
-  * release_slot - free up the memory used by a slot
-@@ -111,6 +112,7 @@ static int init_slot(struct controller *ctrl)
- 	ops->disable_slot = disable_slot;
- 	ops->get_power_status = get_power_status;
- 	ops->get_adapter_status = get_adapter_status;
-+	ops->reset_slot = reset_slot;
- 	if (MRL_SENS(ctrl))
- 		ops->get_latch_status = get_latch_status;
- 	if (ATTN_LED(ctrl)) {
-@@ -223,6 +225,16 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- 	return pciehp_get_adapter_status(slot, value);
- }
- 
-+static int reset_slot(struct hotplug_slot *hotplug_slot, int probe)
-+{
-+	struct slot *slot = hotplug_slot->private;
-+
-+	ctrl_dbg(slot->ctrl, "%s: physical_slot = %s\n",
-+		 __func__, slot_name(slot));
-+
-+	return pciehp_reset_slot(slot, probe);
-+}
-+
- static int pciehp_probe(struct pcie_device *dev)
- {
- 	int rc;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index b225573..51f56ef 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -749,6 +749,37 @@ static void pcie_disable_notification(struct controller *ctrl)
- 		ctrl_warn(ctrl, "Cannot disable software notification\n");
- }
- 
-+/*
-+ * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
-+ * bus reset of the bridge, but if the slot supports surprise removal we need
-+ * to disable presence detection around the bus reset and clear any spurious
-+ * events after.
-+ */
-+int pciehp_reset_slot(struct slot *slot, int probe)
-+{
-+	struct controller *ctrl = slot->ctrl;
-+
-+	if (probe)
-+		return 0;
-+
-+	if (HP_SUPR_RM(ctrl)) {
-+		pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_PDCE);
-+		if (pciehp_poll_mode)
-+			del_timer_sync(&ctrl->poll_timer);
-+	}
-+
-+	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
-+
-+	if (HP_SUPR_RM(ctrl)) {
-+		pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_PDC);
-+		pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PDCE, PCI_EXP_SLTCTL_PDCE);
-+		if (pciehp_poll_mode)
-+			int_poll_timeout(ctrl->poll_timer.data);
-+	}
-+
-+	return 0;
-+}
-+
- int pcie_init_notification(struct controller *ctrl)
- {
- 	if (pciehp_request_irq(ctrl))
-
+  * pci_stop_and_remove_bus_device - remove a PCI device and any children
+Index: linux-2.6/include/linux/pci.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci.h
++++ linux-2.6/include/linux/pci.h
+@@ -754,6 +754,8 @@ u8 pci_common_swizzle(struct pci_dev *de
+ struct pci_dev *pci_dev_get(struct pci_dev *dev);
+ void pci_dev_put(struct pci_dev *dev);
+ void pci_remove_bus(struct pci_bus *b);
++void pci_stop_bus_device(struct pci_dev *dev);
++void pci_remove_bus_device(struct pci_dev *dev);
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev);
+ void pci_stop_root_bus(struct pci_bus *bus);
+ void pci_remove_root_bus(struct pci_bus *bus);
