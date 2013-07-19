@@ -1,126 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26715 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756086Ab3GKNvz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Jul 2013 09:51:55 -0400
-Message-ID: <51DE8032.4040808@redhat.com>
-Date: Thu, 11 Jul 2013 05:51:46 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Rafael <rjw@sisk.pl>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
-Subject: Re: [PATCH -v2 1/3] PCI: introduce PCIe Device Serial Number Capability
- support
-References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com> <1373535825-49972-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1373535825-49972-2-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	linux-pci@vger.kernel.org
+Subject: [ 16/38] xen/pcifront: Deal with toolstack missing XenbusStateClosing state.
+Date: Thu, 18 Jul 2013 22:21:32 -0700
+Message-Id: <20130719052048.995477903@linuxfoundation.org>
+In-Reply-To: <20130719052047.858393825@linuxfoundation.org>
+References: <20130719052047.858393825@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/11/2013 05:43 AM, Yijing Wang wrote:
-> Introduce PCIe Ext Capability Device Serial Number support,
-> so we can use the unique device serial number to identify
-> the physical device. During system suspend, if the PCIe
-> device was removed and inserted a new same device, after
-> system resume there is no good way to identify it, maybe
-> Device Serial Number is a good choice if device support.
->
-> Signed-off-by: Yijing Wang<wangyijing@huawei.com>
-> ---
->   drivers/pci/pci.c   |   27 +++++++++++++++++++++++++++
->   drivers/pci/probe.c |    2 ++
->   include/linux/pci.h |    3 +++
->   3 files changed, 32 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e37fea6..2e855b5 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2048,6 +2048,33 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
->   }
->
->   /**
-> + * pci_device_serial_number - get device serial number
-> + * @dev: the PCI device
-> + *
-> + * return the device serial number if device support,
-> + * otherwise return 0.
-> + */
-> +u64 pci_device_serial_number(struct pci_dev *dev)
-See comment below:
-void  pci_device_serial_number(struct pci_dev *dev)
+3.9-stable review patch.  If anyone has any objections, please let me know.
 
-> +{
-> +	int pos;
-> +	u64 sn;
-> +	u32 lo, hi;
-> +
-> +	if (!pci_is_pcie(dev))
-> +		return 0;
-> +
-See comment below:
-if (!pci_is_pcie(dev)) {
-	dev->sn = 0;
-	return;
-}
-> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
-> +	if (!pos)
-> +		return 0;
-> +
-> +	pci_read_config_dword(dev, pos + 4,&lo);
-> +	pci_read_config_dword(dev, pos + 8,&hi);
-> +	sn = ((u64)hi<<  32) | lo;
-See comment below:
-	dev->sn = ((u64)hi<<  32) | lo;
-	return;
-> +	return sn;
-> +}
-> +EXPORT_SYMBOL(pci_device_serial_number);
-> +
-> +/**
->    * pci_configure_ari - enable or disable ARI forwarding
->    * @dev: the PCI device
->    *
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 46ada5c..c4c1a2b 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1322,6 +1322,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
->   	/* Power Management */
->   	pci_pm_init(dev);
->
-> +	dev->sn = pci_device_serial_number(dev);
-> +
-Finally, 'the comment below':
-I know you were following Bjorn's suggestion, which I thought
-was an improvement, but why not do above assignment in pci_device_serial_number() ?
-See above....
-- Don
+------------------
 
->   	/* Vital Product Data */
->   	pci_vpd_pci22_init(dev);
->
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 0fd1f15..10d190b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -342,6 +342,7 @@ struct pci_dev {
->   	struct list_head msi_list;
->   	struct kset *msi_kset;
->   #endif
-> +	u64 sn;		/* device serieal number, 0 if not support */
->   	struct pci_vpd *vpd;
->   #ifdef CONFIG_PCI_ATS
->   	union {
-> @@ -995,6 +996,8 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
->   ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
->   int pci_vpd_truncate(struct pci_dev *dev, size_t size);
->
-> +u64 pci_device_serial_number(struct pci_dev *dev);
-> +
->   /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
->   resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
->   void pci_bus_assign_resources(const struct pci_bus *bus);
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+
+commit 098b1aeaf4d6149953b8f1f8d55c21d85536fbff upstream.
+
+There are two tool-stack that can instruct the Xen PCI frontend
+and backend to change states: 'xm' (Python code with a daemon),
+and 'xl' (C library - does not keep state changes).
+
+With the 'xm', the path to disconnect a single PCI device (xm pci-detach
+<guest> <BDF>) is:
+
+4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
+
+The * is for states that the tool-stack sets. For 'xl', it is similar:
+
+4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
+
+Both of them also tear down the XenBus structure, so the backend
+state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
+
+When a PCI device is plugged back in (xm pci-attach <guest> <BDF>)
+both of them follow the same pattern:
+
+2(InitWait*), 3(Initialized*), 4(Connected*)->4(Connected).
+
+[xen-pcifront ignores the 2,3 state changes and only acts when
+4 (Connected) has been reached]
+
+Note that this is for a _single_ PCI device. If there were two
+PCI devices and only one was disconnected 'xm' would show the same
+state changes.
+
+The problem is that git commit 3d925320e9e2de162bd138bf97816bda8c3f71be
+("xen/pcifront: Use Xen-SWIOTLB when initting if required") introduced
+a mechanism to initialize the SWIOTLB when the Xen PCI front moves to
+Connected state. It also had some aggressive seatbelt code check that
+would warn the user if one tried to change to Connected state without
+hitting first the Closing state:
+
+ pcifront pci-0: PCI frontend already installed!
+
+However, that code can be relaxed and we can continue on working
+even if the frontend is instructed to be the 'Connected' state with
+no devices and then gets tickled to be in 'Connected' state again.
+
+In other words, this 4(Connected)->5(Closing)->4(Connected) state
+was expected, while 4(Connected)->.... anything but 5(Closing)->4(Connected)
+was not. This patch removes that aggressive check and allows
+Xen pcifront to work with the 'xl' toolstack (for one or more
+PCI devices) and with 'xm' toolstack (for more than two PCI
+devices).
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+[v2: Added in the description about two PCI devices]
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ drivers/pci/xen-pcifront.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -678,10 +678,9 @@ static int pcifront_connect_and_init_dma
+ 	if (!pcifront_dev) {
+ 		dev_info(&pdev->xdev->dev, "Installing PCI frontend\n");
+ 		pcifront_dev = pdev;
+-	} else {
+-		dev_err(&pdev->xdev->dev, "PCI frontend already installed!\n");
++	} else
+ 		err = -EEXIST;
+-	}
++
+ 	spin_unlock(&pcifront_dev_lock);
+ 
+ 	if (!err && !swiotlb_nr_tbl()) {
+@@ -848,7 +847,7 @@ static int pcifront_try_connect(struct p
+ 		goto out;
+ 
+ 	err = pcifront_connect_and_init_dma(pdev);
+-	if (err) {
++	if (err && err != -EEXIST) {
+ 		xenbus_dev_fatal(pdev->xdev, err,
+ 				 "Error setting up PCI Frontend");
+ 		goto out;
+
 
