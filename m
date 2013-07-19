@@ -1,107 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:35770 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756382Ab3GYQxL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 12:53:11 -0400
-Received: by mail-bk0-f50.google.com with SMTP id ik5so772444bkc.23
-        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 09:53:09 -0700 (PDT)
-Date: Thu, 25 Jul 2013 09:53:03 -0700
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: [PATCHv5 08/11] ARM: pci: add ->add_bus() and ->remove_bus()
- hooks to hw_pci
-Message-ID: <20130725165302.GA27802@dhcp-172-17-186-34.nvidia.com>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <51E8B923.5090201@gmail.com>
+Date: Thu, 18 Jul 2013 21:57:23 -0600
+From: Robert Hancock <hancockrwd@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="1yeeQ81UyVL57Vl7"
-In-Reply-To: <1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
+	miles.j.penner@intel.com, bruce.w.allan@intel.com,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org
+Subject: Re: [PATCH v2 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer
+ Aspire S5
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com> <1372860295-8306-7-git-send-email-mika.westerberg@linux.intel.com> <1444243.g9GbxN3NM0@vostro.rjw.lan>
+In-Reply-To: <1444243.g9GbxN3NM0@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 07/03/2013 03:40 PM, Rafael J. Wysocki wrote:
+> On Wednesday, July 03, 2013 05:04:53 PM Mika Westerberg wrote:
+>> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+>>
+>> Correct ACPI PCI hotplug imeplementation should have _RMV method in a
+>> PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
+>> deeper in hierarchy:
+>>
+>> Device (RP05)
+>> {
+>>     // ...
+>>     Device (HRUP)
+>>     {
+>>         // ...
+>>         Device (HRDN)
+>>         {
+>>             // ...
+>>             Device (EPUP)
+>>             {
+>>                 // ...
+>>                 Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
+>>                 {
+>>                     Return (One)
+>>                 }
+>>             }
+>>         }
+>>     }
+>> }
+>>
+>> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+>> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+>> ---
+>>   drivers/pci/hotplug/acpi_pcihp.c | 13 +++++++++++++
+>>   1 file changed, 13 insertions(+)
+>>
+>> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+>> index 2a47e82..d92ebfb 100644
+>> --- a/drivers/pci/hotplug/acpi_pcihp.c
+>> +++ b/drivers/pci/hotplug/acpi_pcihp.c
+>> @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
+>>   	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+>>   	if (ACPI_SUCCESS(status) && removable)
+>>   		return 1;
+>> +
+>> +	/*
+>> +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
+>> +	 *
+>> +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
+>> +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
+>> +	 * deeper in hierarchy.
+>> +	 */
+>> +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
+>> +			&removable);
+>
+> Well, calling stuff like this directly from a general function is kind of ugly.
+>
+> Can we use something like a quirk instead?  A DMI check or something?
 
---1yeeQ81UyVL57Vl7
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Presumably this device functions under Windows so clearly Windows is 
+capable of dealing with this case, so we should too.
 
-On Mon, Jul 15, 2013 at 01:52:44PM +0200, Thomas Petazzoni wrote:
-[...]
+There are way too many of these silly DMI checks in the kernel - we 
+should be way more hesitant to add more of them. They're almost 
+guaranteed to be incomplete. I would say they should be avoided whenever 
+possible unless there's some reason why a general workaround can't be used.
 
-Hi Thomas,
+>
+>> +	if (ACPI_SUCCESS(status) && removable)
+>> +		return 1;
+>> +
+>>   	return 0;
+>>   }
+>
+> Rafael
+>
+>
 
-I just noticed two minor issues, see below.
-
-> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-[...]
-> @@ -36,6 +36,8 @@ struct hw_pci {
->  					  resource_size_t start,
->  					  resource_size_t size,
->  					  resource_size_t align);
-> +	void            (*add_bus)(struct pci_bus *bus);
-> +	void            (*remove_bus)(struct pci_bus *bus);
-
-This hunk...
-
-> @@ -63,6 +65,8 @@ struct pci_sys_data {
->  					  resource_size_t start,
->  					  resource_size_t size,
->  					  resource_size_t align);
-> +	void            (*add_bus)(struct pci_bus *bus);
-> +	void            (*remove_bus)(struct pci_bus *bus);
->  	void		*private_data;	/* platform controller private data	*/
->  };
-
-and this one use inconsistent indentation (spaces instead of tabs).
-
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-[...]
-> @@ -464,6 +478,8 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  		sys->swizzle = hw->swizzle;
->  		sys->map_irq = hw->map_irq;
->  		sys->align_resource = hw->align_resource;
-> +		sys->add_bus        = hw->add_bus;
-> +		sys->remove_bus     = hw->remove_bus;
-
-And this one aligns the '=' sign, whereas none of the other assignments
-do.
-
-Might be nice to fix those up before sending them to Russell's patch
-tracker.
-
-Thierry
-
---1yeeQ81UyVL57Vl7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJR8VftAAoJEN0jrNd/PrOhqhcP/1E9ONIuqiClTNYr7VD0VmNr
-TzM94l3pYe2EsAKXKCaDPpVJwbf+xj01Y1TVik3WawxJY7tiaF09g2XapDDnzuGq
-7UkgSf/+CCY5m6AZlErdq+uzCjGFwFRw9nBGif27ZMmTAIBvZHTA7JQrEcw6oXnA
-tUOBNXbKPGJ+g6N98wEaropcE+dvYotpKXs164dlolPoZ0M5WX01085NUIPpHMhb
-pN5zYjtH44vMeVF5bvxzbEEZAWTYT2gLEyYP1pfyU7JFjKRKPPdMNOfM+9zuhLiJ
-L75ryP0K9KFmE1oHOz+AUHzeBgD9HDUEPj3WmS6coNgB3EfZSEz+632ZR3i/37Wb
-l6Se4cgKReXq1rO73ri4WaraYdmtG4hlI+4VvgEyVloKfaTzwXqlepA1cRSAD7AT
-JC5e+fCH5me4lwFDczllYivaM3cRowFkWRPGiQHso7XPKMH/rZPWoW0RWEKCOHVq
-SpW0KxyitKAL8o4fkkkI7+czOUMbSRYQTq8V0WHRdfK3SYvoKC6jXapeHciDuzTU
-1SAgLL5ILxvsJvgTIfAaTOdTtav6ldSZa+YTnhVXnFKGd1luOrFIw32sCOZ5CC47
-yeg3jJk4EwObXp6e+ZxLnn1+BOGJvoSAhJDdqAe1Dieay73baD1eQ2SNZP16zrPC
-wKdtG+ps3EDDxeNVAela
-=RiO5
------END PGP SIGNATURE-----
-
---1yeeQ81UyVL57Vl7--
