@@ -1,107 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52784 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752734Ab3GIVSS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 17:18:18 -0400
-Message-ID: <1373404695.18560.17.camel@dabdike>
-Subject: Re: [PATCH 0/3] [SCSI] megaraid: Remove local (struct pci_dev)
- pdev's
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Myron Stowe <myron.stowe@redhat.com>,
-	adam radford <aradford@gmail.com>
-Cc: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 09 Jul 2013 22:18:15 +0100
-In-Reply-To: <20130709203927.31676.35169.stgit@amt.stowe>
-References: <20130709203927.31676.35169.stgit@amt.stowe>
-Content-Type: text/plain; charset="ISO-8859-15"
-Mime-Version: 1.0
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:40741 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752488Ab3GSVhq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jul 2013 17:37:46 -0400
+Received: by mail-ie0-f178.google.com with SMTP id u16so10805880iet.9
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jul 2013 14:37:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
+References: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 19 Jul 2013 15:37:26 -0600
+Message-ID: <CAErSpo4daNsF0BTJhqdZ0hrBpS+EQ3Z1_-C_LN=ec9fLafNkog@mail.gmail.com>
+Subject: Re: [PATCH 0/4] pci_ids, 8250_pci: remove PCI_VENDOR_ID_ADDIDATA_OLD
+To: Ian Abbott <abbotti@mev.co.uk>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-serial@vger.kernel.org,
+	driverdev-devel@linuxdriverproject.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	H Hartley Sweeten <hsweeten@visionengravers.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-07-09 at 14:39 -0600, Myron Stowe wrote:
-> Is the "megaraid" driver still actively used and maintained?  I originally
-> posted this series on 06.07.2013 and after receiving no comments, pinged
-> the list again on 06.17.2013 and still received no comments/feedback.
-> 
-> Trying again as I believe there is a real issue here, which I'd like
-> confirmation on, and we really should remove the local copy/usage of
-> 'struct pci_dev' that this driver currently maintains.
-> 
-> 
-> While the megaraid device itself may be 64-bit DMA capable, 32-bit address
-> restricted DMA buffers are apparently required for "internal commands" as
-> is denoted by a couple of comments - "For all internal commands, the
-> buffer must be allocated in <4GB address range" - within the driver.
-> 
-> If the device is 64-bit DMA capable then, once it is setup, any subsequent
-> DMA allocations for "internal commands" would not be properly restricted
-> due to megaraid_probe_one() having called pci_set_dma_mask() on pdev with
-> DMA_BIT_MASK(64).  The driver attempts to solve this by using
-> make_local_pdev() to dynamically create local pci_dev structures which are
-> then set and used for allocating 32-bit address space restricted DMA
-> buffers[1] but I don't believe that the implementation works as intended.
-> 
-> 
-> Assume that the megaraid device is 64-bit DMA capable.  While probing the
-> device and attaching the megaraid driver, pci_set_dma_mask() is called
-> with the "originating pdev" and a DMA_BIT_MASK of 64.  As a result, any
-> subsequent dynamic DMA related allocations associated with the
-> "originating pdev" will acquire 64-bit based buffers, which do not meet
-> the addressing restrictions for internal commands.
-> 
->   megaraid_probe_one(struct pci_dev *pdev, ...)
->       ...
->       pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
-> 
-> As mentioned, the driver attempts to solve this by using make_local_pdev()
-> to dynamically create local pci_dev structures - "local pdev's" - which
-> are set with a DMA_BIT_MASK of 32.
-> 
->   make_local_pdev
->       alloc_pci_dev
->       memcpy
->       pci_set_dma_mask
->           dma_set_mask
->               *dev->dma_mask = mask;
-> 
-> The "local pdev" is then used in allocating a DMA buffer in an attempt to
-> meet the < 4 GB restriction.
-> 
-> For a 64-bit DMA capable device, the "originating pdev" will have its
-> 'dma_mask' set to 0xffffffffffffffff after the driver attaches.
-> Subsequently, when an internal command is initiated, make_local_pdev() is
-> called.  make_local_pdev() uses the PCI's core to allocate a "local pdev"
-> and then copies the "originating pdev" content into the newly allocated
-> "local pdev".  As a result of copying the "originating pdev" content into
-> the "local pdev", pdev->dev.dma_mask will be pointing back to the
-> "originating pdev's" 'dma_mask' member, not the "local pdev's" as
-> intended.  Thus, when make_local_pdev() calls pci_set_dma_mask() in an
-> attempt to set the "local pdev's" DMA mask to 32 it will instead overwrite
-> the "originating pdev's" DMA mask.  Thus, after any user initiated
-> commands are issued, all subsequent DMA allocations will be 32-bit
-> restricted from that point onward regardless of whether they are internal
-> commands or otherwise.
-> 
-> 
-> This patch fixes the issue by removing the setup of DMA_BIT_MASK to 64 in
-> megaraid_probe_one(), leaving the driver with default 32-bit DMA
-> capabilities, as it currently ends up in such a state anyway after any
-> internal commands are initiated.
-> 
-> 
-> [1] It seems strange that both mega_buffer/buf_dma_handle and
->     make_local_pdev() both exist for internal commands but this has been
->     the case for a long time - at least since 2.6.12-rc2.  Perhaps there
->     is some coalescing that could be done.
-> ---
-> Myron Stowe (3):
->       [SCSI] megaraid: Remove 64-bit DMA related dead code
->       [SCSI] megaraid: Remove local pdev's
->       [SCSI] megaraid: Remove 64-bit DMA_BIT_MASK capability
+On Tue, Jul 16, 2013 at 9:14 AM, Ian Abbott <abbotti@mev.co.uk> wrote:
+> The 8250_pci driver uses PCI_VENDOR_ID_ADDIDATA_OLD (0x10e8),
+> PCI_DEVICE_ID_ADDIDATA_APCI7800 (0x818e) to recognize the original
+> ADDI-DATA APCI-7800 PCI serial card.  However vendor ID 0x10e8 was
+> assigned by PCI-SIG to Applied Micro Circuits Corporation (AMCC) and the
+> associated device ID 0x818e was assigned by AMCC to ADDI-DATA.
+>
+> Comedi already defines PCI_VENDOR_ID_AMCC as 0x10e8 in one of its header
+> files, so that definition can be moved into pci_ids.h and the 8250_pci
+> driver changed to use it.  The PCI_DEVICE_ID_ADDIDATA_APCI7800 define
+> seems out of place in pci_ids.h since it isn't associated with
+> ADDI-DATA's vendor ID but with AMCC's vendor ID.  It's only used in
+> 8250_pci.c so it can be moved there and renamed to something more
+> sensible.
+>
+> 1) pci_ids.h: move PCI_VENDOR_ID_AMCC here
+> 2) serial: 8250_pci: replace PCI_VENDOR_ID_ADDIDATA_OLD
+> 3) serial: 8250_pci: use local device ID for ADDI-DATA APCI-7800
+> 4) pci_ids.h: remove PCI_VENDOR_ID_ADDIDATA_OLD and
+>    PCI_DEVICE_ID_ADDIDATA_APCI7800
+>
+>  drivers/staging/comedi/comedidev.h | 1 -
+>  drivers/tty/serial/8250/8250_pci.c | 9 +++++----
+>  include/linux/pci_ids.h            | 4 ++--
+>  3 files changed, 7 insertions(+), 7 deletions(-)
 
-Adam, you do drive by coding on this for LSI ... ack or reject, please.
+For patches 1 & 4 (the ones that touch pci_ids.h):
 
-James
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-
+Please merge them along with the 8250 changes.
