@@ -1,53 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.mev.co.uk ([62.49.15.74]:56315 "EHLO mail.mev.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932445Ab3GPPZe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 16 Jul 2013 11:25:34 -0400
-From: Ian Abbott <abbotti@mev.co.uk>
-To: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
-	driverdev-devel@linuxdriverproject.org,
-	linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	H Hartley Sweeten <hsweeten@visionengravers.com>,
-	Ian Abbott <abbotti@mev.co.uk>
-Subject: [PATCH 4/4] pci_ids.h: remove PCI_VENDOR_ID_ADDIDATA_OLD and PCI_DEVICE_ID_ADDIDATA_APCI7800
-Date: Tue, 16 Jul 2013 16:14:41 +0100
-Message-Id: <1373987681-18245-5-git-send-email-abbotti@mev.co.uk>
-In-Reply-To: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
-References: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:52545 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754946Ab3GTUoy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jul 2013 16:44:54 -0400
+Received: by mail-wg0-f43.google.com with SMTP id z11so4724749wgg.34
+        for <linux-pci@vger.kernel.org>; Sat, 20 Jul 2013 13:44:53 -0700 (PDT)
+From: Tom Gundersen <teg@jklm.no>
+To: linux-pci@vger.kernel.org
+Cc: Tom Gundersen <teg@jklm.no>, systemd-devel@lists.freedesktop.org
+Subject: [PATCH][pciutils] lspci: pci_id_lookup - add udev/hwdb support
+Date: Sat, 20 Jul 2013 22:44:40 +0200
+Message-Id: <1374353080-15837-1-git-send-email-teg@jklm.no>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These two defines are no longer used.  They were only used by the PCI
-serial driver "8250_pci" to support the original ADDI-DATA APCI-7800
-card.  In that driver, PCI_VENDOR_ID_ADDIDATA_OLD has been replaced with
-PCI_VENDOR_ID_AMCC which has the same value (0x10e8), and
-PCI_DEVICE_ID_ADDIDATA_APCI7800 has been replaced with a local #define
-PCI_DEVICE_ID_AMCC_ADDIDATA_APCI7800 with the same value (0x818e).
+This lets you select hwdb support at compile time.
 
-Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
+hwdb is an efficient hardware database shipped with recent versions of systemd/udev. It contains
+among other sources pci.ids so querying hwdb rather than reading pci.ids directly should give
+the same result.
+
+Ideally Linux distros using systemd would like to not ship pci.ids, but use hwdb as the only source
+of this information, which this patch allows.
+
+Cc: systemd-devel@lists.freedesktop.org
+
 ---
- include/linux/pci_ids.h | 2 --
- 1 file changed, 2 deletions(-)
+ lib/configure    | 17 ++++++++++++++++
+ lib/names-hash.c | 59 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 74 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 9d99119..6dec3d6 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2258,12 +2258,10 @@
- /*
-  * ADDI-DATA GmbH communication cards <info@addi-data.com>
-  */
--#define PCI_VENDOR_ID_ADDIDATA_OLD             0x10E8	/* actually AMCC */
- #define PCI_VENDOR_ID_ADDIDATA                 0x15B8
- #define PCI_DEVICE_ID_ADDIDATA_APCI7500        0x7000
- #define PCI_DEVICE_ID_ADDIDATA_APCI7420        0x7001
- #define PCI_DEVICE_ID_ADDIDATA_APCI7300        0x7002
--#define PCI_DEVICE_ID_ADDIDATA_APCI7800        0x818E
- #define PCI_DEVICE_ID_ADDIDATA_APCI7500_2      0x7009
- #define PCI_DEVICE_ID_ADDIDATA_APCI7420_2      0x700A
- #define PCI_DEVICE_ID_ADDIDATA_APCI7300_2      0x700B
+diff --git a/lib/configure b/lib/configure
+index 4ae20d4..674d3ea 100755
+--- a/lib/configure
++++ b/lib/configure
+@@ -141,6 +141,23 @@ esac
+ echo >>$c '#define PCI_HAVE_PM_DUMP'
+ echo " dump"
+ 
++echo_n "Checking for udev hwdb support... "
++if [ "$HWDB" = yes -o "$HWDB" = no ] ; then
++	echo "$HWDB (set manually)"
++else
++	if [ -f /usr/include/libudev.h -o -f /usr/local/include/libudev.h ] ; then
++		HWDB=yes
++	else
++		HWDB=no
++	fi
++	echo "$HWDB (auto-detected)"
++fi
++if [ "$HWDB" = yes ] ; then
++	echo >>$c '#define PCI_HAVE_HWDB'
++	echo >>$m 'LIBUDEV=-ludev'
++	echo >>$m 'WITH_LIBS+=$(LIBUDEV)'
++fi
++
+ echo_n "Checking for zlib support... "
+ if [ "$ZLIB" = yes -o "$ZLIB" = no ] ; then
+ 	echo "$ZLIB (set manually)"
+diff --git a/lib/names-hash.c b/lib/names-hash.c
+index 33f3c11..9661d03 100644
+--- a/lib/names-hash.c
++++ b/lib/names-hash.c
+@@ -11,6 +11,11 @@
+ #include "internal.h"
+ #include "names.h"
+ 
++#ifdef PCI_HAVE_HWDB
++#include <libudev.h>
++#include <stdio.h>
++#endif
++
+ struct id_bucket {
+   struct id_bucket *next;
+   unsigned int full;
+@@ -86,8 +91,58 @@ char
+ *pci_id_lookup(struct pci_access *a, int flags, int cat, int id1, int id2, int id3, int id4)
+ {
+   struct id_entry *n, *best;
+-  u32 id12 = id_pair(id1, id2);
+-  u32 id34 = id_pair(id3, id4);
++  u32 id12, id34;
++
++#ifdef PCI_HAVE_HWDB
++  if (!(flags & PCI_LOOKUP_SKIP_LOCAL))
++    {
++      char modalias[64];
++      const char *key = NULL;
++      struct udev *udev = udev_new();
++      struct udev_hwdb *hwdb = udev_hwdb_new(udev);
++      struct udev_list_entry *entry;
++
++      switch(cat)
++        {
++        case ID_VENDOR:
++          sprintf(modalias, "pci:v%08X*", id1);
++          key = "ID_VENDOR_FROM_DATABASE";
++          break;
++        case ID_DEVICE:
++          sprintf(modalias, "pci:v%08Xd%08X*", id1, id2);
++          key = "ID_MODEL_FROM_DATABASE";
++          break;
++        case ID_SUBSYSTEM:
++          sprintf(modalias, "pci:v%08Xd%08Xsv%08Xsd%08X*", id1, id2, id3, id4);
++          key = "ID_MODEL_FROM_DATABASE";
++          break;
++        case ID_GEN_SUBSYSTEM:
++          sprintf(modalias, "pci:v*d*sv%08Xsd%08X*", id1, id2);
++          key = "ID_MODEL_FROM_DATABASE";
++          break;
++        case ID_CLASS:
++          sprintf(modalias, "pci:v*d*sv*sd*bc%02X*", id1);
++          key = "ID_PCI_CLASS_FROM_DATABASE";
++          break;
++        case ID_SUBCLASS:
++          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02X*", id1, id2);
++          key = "ID_PCI_SUBCLASS_FROM_DATABASE";
++          break;
++        case ID_PROGIF:
++          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02Xi%02X*", id1, id2, id3);
++          key = "ID_PCI_INTERFACE_FROM_DATABASE";
++          break;
++        }
++
++      if (key)
++          udev_list_entry_foreach(entry, udev_hwdb_get_properties_list_entry(hwdb, modalias, 0))
++              if (strcmp(udev_list_entry_get_name(entry), key) == 0)
++                return udev_list_entry_get_value(entry);
++    }
++#endif
++
++  id12 = id_pair(id1, id2);
++  id34 = id_pair(id3, id4);
+ 
+   if (a->id_hash)
+     {
 -- 
-1.8.2.1
+1.8.3.3
 
