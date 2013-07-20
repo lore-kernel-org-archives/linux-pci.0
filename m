@@ -1,56 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:56547 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755648Ab3GBBUN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Jul 2013 21:20:13 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
-Date: Tue, 02 Jul 2013 03:29:49 +0200
-Message-ID: <3216917.m2IEX2IHod@vostro.rjw.lan>
-In-Reply-To: <20130701183612.GJ9294@intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <1530651.ees8hXMYoR@vostro.rjw.lan> <20130701183612.GJ9294@intel.com>
+Received: from mail-vb0-f43.google.com ([209.85.212.43]:54815 "EHLO
+	mail-vb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753746Ab3GTUy1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jul 2013 16:54:27 -0400
+Received: by mail-vb0-f43.google.com with SMTP id e12so3920399vbg.2
+        for <linux-pci@vger.kernel.org>; Sat, 20 Jul 2013 13:54:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1374353080-15837-1-git-send-email-teg@jklm.no>
+References: <1374353080-15837-1-git-send-email-teg@jklm.no>
+Date: Sat, 20 Jul 2013 22:54:26 +0200
+Message-ID: <CAGWsdOgb1J-fVzYsrasnDVALeECXgwF=bA1iiokqgoA+MMGT_A@mail.gmail.com>
+Subject: Re: [systemd-devel] [PATCH][pciutils] lspci: pci_id_lookup - add
+ udev/hwdb support
+From: Michael Biebl <mbiebl@gmail.com>
+To: Tom Gundersen <teg@jklm.no>
+Cc: linux-pci@vger.kernel.org,
+	systemd Mailing List <systemd-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, July 01, 2013 09:36:13 PM Mika Westerberg wrote:
-> On Mon, Jul 01, 2013 at 04:01:37PM +0200, Rafael J. Wysocki wrote:
-> > > Given the fact that SLOT_ENABLED is only checked in acpiphp_enable_slot()
-> > > (after this patch) and that /sys/bus/pci/slots/*/power uses SLOT_POWEREDON
-> > > anyway, should we remove the whole flag?
-> > 
-> > Sure, if it is not necessary any more, we should remove it.
-> 
-> Well, there is one thing that changes due that. Once the flag is gone
-> userspace can do 'echo 1 > /sys/bus/pci/slots/*/power' several times and
-> the slot is always re-enumerated.
-> 
-> If that is not acceptable we should probably move the SLOT_ENABLED check
-> closer to acpiphp_core:enable_device() and drop it from here, so that we
-> always re-enumerate on Bus Check event but userspace can only do enable
-> once (we still re-enumerate on Bus Check).
+2013/7/20 Tom Gundersen <teg@jklm.no>:
+> Ideally Linux distros using systemd would like to not ship pci.ids, but use hwdb as the only source
+> of this information, which this patch allows.
 
-Yes, that sounds like the right thing to do.
+I don't think you strictly need to run systemd to make use of hwdb.
+You just need to run a recent enough version of udev [1].
 
-Thanks,
-Rafael
+Michael
 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+[1]  udev 196 or later
