@@ -1,132 +1,147 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 22/30] ACPI / hotplug / PCI: Do not queue up event handling work items in vain
-Date: Fri, 12 Jul 2013 02:00:46 +0200
-Message-ID: <3148946.a6Eeh6IYXM@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:61995 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755133Ab3GTVlB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jul 2013 17:41:01 -0400
+Received: by mail-bk0-f44.google.com with SMTP id 6so2048978bkj.17
+        for <linux-pci@vger.kernel.org>; Sat, 20 Jul 2013 14:40:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+From: Tom Gundersen <teg@jklm.no>
+Date: Sat, 20 Jul 2013 23:40:38 +0200
+Message-ID: <CAG-2HqUUznNH3oM=qCnuQ6d6oGeuHeEiP_0+6FD96d8SewKoug@mail.gmail.com>
+Subject: [PATCH][pciutils] libpci: pci_id_lookup - add udev/hwdb support
+To: linux-pci@vger.kernel.org
+Cc: Tom Gundersen <teg@jklm.no>, systemd-devel@lists.freedesktop.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Small correction to the subject, it should have said:
 
-Modify handle_hotplug_event() to avoid queing up the execution of
-handle_hotplug_event_work_fn() as a work item on kacpi_hotplug_wq
-for non-hotplug events, such as ACPI_NOTIFY_DEVICE_WAKE.  Move
-the code printing diagnostic messages for those events into
-handle_hotplug_event().
+[PATCH][pciutils] libpci: pci_id_lookup - add udev/hwdb support
 
-In addition to that, remove the bogus comment about how the core
-should distinguish between hotplug and non-hotplug events and
-queue them up on different workqueues.  The core clearly cannot
-know in advance what events will be interesting to the given
-caller of acpi_install_notify_handler().
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   64 ++++++++++++++++---------------------
- 1 file changed, 29 insertions(+), 35 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -932,36 +932,11 @@ static void hotplug_event(acpi_handle ha
- 
- 		break;
- 
--	case ACPI_NOTIFY_DEVICE_WAKE:
--		/* wake event */
--		dbg("%s: Device wake notify on %s\n", __func__, objname);
--		break;
--
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
- 		dbg("%s: Device eject notify on %s\n", __func__, objname);
- 		acpiphp_disable_and_eject_slot(func->slot);
- 		break;
--
--	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
--		printk(KERN_ERR "Device %s cannot be configured due"
--				" to a frequency mismatch\n", objname);
--		break;
--
--	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
--		printk(KERN_ERR "Device %s cannot be configured due"
--				" to a bus mode mismatch\n", objname);
--		break;
--
--	case ACPI_NOTIFY_POWER_FAULT:
--		printk(KERN_ERR "Device %s has suffered a power fault\n",
--				objname);
--		break;
--
--	default:
--		warn("notify_handler: unknown event type 0x%x for %s\n", type,
--		     objname);
--		break;
- 	}
- 
- 	if (bridge)
-@@ -996,23 +971,42 @@ static void handle_hotplug_event(acpi_ha
- {
- 	struct acpiphp_context *context;
- 
-+	switch (type) {
-+	case ACPI_NOTIFY_BUS_CHECK:
-+	case ACPI_NOTIFY_DEVICE_CHECK:
-+	case ACPI_NOTIFY_EJECT_REQUEST:
-+		break;
-+
-+	case ACPI_NOTIFY_DEVICE_WAKE:
-+		return;
-+
-+	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
-+		acpi_handle_err(handle, "Device cannot be configured due "
-+				"to a frequency mismatch\n");
-+		return;
-+
-+	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
-+		acpi_handle_err(handle, "Device cannot be configured due "
-+				"to a bus mode mismatch\n");
-+		return;
-+
-+	case ACPI_NOTIFY_POWER_FAULT:
-+		acpi_handle_err(handle, "Device has suffered a power fault\n");
-+		return;
-+
-+	default:
-+		acpi_handle_warn(handle, "Unsupported event type 0x%x\n", type);
-+		return;
-+	}
-+
- 	mutex_lock(&acpiphp_context_lock);
- 	context = acpiphp_get_context(handle);
- 	if (context) {
- 		get_bridge(context->func.parent);
- 		acpiphp_put_context(context);
-+		alloc_acpi_hp_work(handle, type, context, hotplug_event_work);
- 	}
- 	mutex_unlock(&acpiphp_context_lock);
--	/*
--	 * Currently the code adds all hotplug events to the kacpid_wq
--	 * queue when it should add hotplug events to the kacpi_hotplug_wq.
--	 * The proper way to fix this is to reorganize the code so that
--	 * drivers (dock, etc.) do not call acpi_os_execute(), etc.
--	 * For now just re-add this work to the kacpi_hotplug_wq so we
--	 * don't deadlock on hotplug actions.
--	 */
--	if (context)
--		alloc_acpi_hp_work(handle, type, context, hotplug_event_work);
- }
- 
- /*
-
+On Sat, Jul 20, 2013 at 10:44 PM, Tom Gundersen <teg@jklm.no> wrote:
+> This lets you select hwdb support at compile time.
+>
+> hwdb is an efficient hardware database shipped with recent versions of systemd/udev. It contains
+> among other sources pci.ids so querying hwdb rather than reading pci.ids directly should give
+> the same result.
+>
+> Ideally Linux distros using systemd would like to not ship pci.ids, but use hwdb as the only source
+> of this information, which this patch allows.
+>
+> Cc: systemd-devel@lists.freedesktop.org
+>
+> ---
+>  lib/configure    | 17 ++++++++++++++++
+>  lib/names-hash.c | 59 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+>  2 files changed, 74 insertions(+), 2 deletions(-)
+>
+> diff --git a/lib/configure b/lib/configure
+> index 4ae20d4..674d3ea 100755
+> --- a/lib/configure
+> +++ b/lib/configure
+> @@ -141,6 +141,23 @@ esac
+>  echo >>$c '#define PCI_HAVE_PM_DUMP'
+>  echo " dump"
+>
+> +echo_n "Checking for udev hwdb support... "
+> +if [ "$HWDB" = yes -o "$HWDB" = no ] ; then
+> +       echo "$HWDB (set manually)"
+> +else
+> +       if [ -f /usr/include/libudev.h -o -f /usr/local/include/libudev.h ] ; then
+> +               HWDB=yes
+> +       else
+> +               HWDB=no
+> +       fi
+> +       echo "$HWDB (auto-detected)"
+> +fi
+> +if [ "$HWDB" = yes ] ; then
+> +       echo >>$c '#define PCI_HAVE_HWDB'
+> +       echo >>$m 'LIBUDEV=-ludev'
+> +       echo >>$m 'WITH_LIBS+=$(LIBUDEV)'
+> +fi
+> +
+>  echo_n "Checking for zlib support... "
+>  if [ "$ZLIB" = yes -o "$ZLIB" = no ] ; then
+>         echo "$ZLIB (set manually)"
+> diff --git a/lib/names-hash.c b/lib/names-hash.c
+> index 33f3c11..9661d03 100644
+> --- a/lib/names-hash.c
+> +++ b/lib/names-hash.c
+> @@ -11,6 +11,11 @@
+>  #include "internal.h"
+>  #include "names.h"
+>
+> +#ifdef PCI_HAVE_HWDB
+> +#include <libudev.h>
+> +#include <stdio.h>
+> +#endif
+> +
+>  struct id_bucket {
+>    struct id_bucket *next;
+>    unsigned int full;
+> @@ -86,8 +91,58 @@ char
+>  *pci_id_lookup(struct pci_access *a, int flags, int cat, int id1, int id2, int id3, int id4)
+>  {
+>    struct id_entry *n, *best;
+> -  u32 id12 = id_pair(id1, id2);
+> -  u32 id34 = id_pair(id3, id4);
+> +  u32 id12, id34;
+> +
+> +#ifdef PCI_HAVE_HWDB
+> +  if (!(flags & PCI_LOOKUP_SKIP_LOCAL))
+> +    {
+> +      char modalias[64];
+> +      const char *key = NULL;
+> +      struct udev *udev = udev_new();
+> +      struct udev_hwdb *hwdb = udev_hwdb_new(udev);
+> +      struct udev_list_entry *entry;
+> +
+> +      switch(cat)
+> +        {
+> +        case ID_VENDOR:
+> +          sprintf(modalias, "pci:v%08X*", id1);
+> +          key = "ID_VENDOR_FROM_DATABASE";
+> +          break;
+> +        case ID_DEVICE:
+> +          sprintf(modalias, "pci:v%08Xd%08X*", id1, id2);
+> +          key = "ID_MODEL_FROM_DATABASE";
+> +          break;
+> +        case ID_SUBSYSTEM:
+> +          sprintf(modalias, "pci:v%08Xd%08Xsv%08Xsd%08X*", id1, id2, id3, id4);
+> +          key = "ID_MODEL_FROM_DATABASE";
+> +          break;
+> +        case ID_GEN_SUBSYSTEM:
+> +          sprintf(modalias, "pci:v*d*sv%08Xsd%08X*", id1, id2);
+> +          key = "ID_MODEL_FROM_DATABASE";
+> +          break;
+> +        case ID_CLASS:
+> +          sprintf(modalias, "pci:v*d*sv*sd*bc%02X*", id1);
+> +          key = "ID_PCI_CLASS_FROM_DATABASE";
+> +          break;
+> +        case ID_SUBCLASS:
+> +          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02X*", id1, id2);
+> +          key = "ID_PCI_SUBCLASS_FROM_DATABASE";
+> +          break;
+> +        case ID_PROGIF:
+> +          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02Xi%02X*", id1, id2, id3);
+> +          key = "ID_PCI_INTERFACE_FROM_DATABASE";
+> +          break;
+> +        }
+> +
+> +      if (key)
+> +          udev_list_entry_foreach(entry, udev_hwdb_get_properties_list_entry(hwdb, modalias, 0))
+> +              if (strcmp(udev_list_entry_get_name(entry), key) == 0)
+> +                return udev_list_entry_get_value(entry);
+> +    }
+> +#endif
+> +
+> +  id12 = id_pair(id1, id2);
+> +  id34 = id_pair(id3, id4);
+>
+>    if (a->id_hash)
+>      {
+> --
+> 1.8.3.3
+>
