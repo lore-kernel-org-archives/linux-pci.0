@@ -1,140 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:4065 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462Ab3GAL2z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 07:28:55 -0400
-From: Vipul Pandya <vipul@chelsio.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, leedom@chelsio.com, tomreu@chelsio.com,
-	vipul@chelsio.com, divy@chelsio.com, dm@chelsio.com,
-	nirranjan@chelsio.com
-Subject: [PATCH] pci: Enable bus master till the FLR completes
-Date: Mon,  1 Jul 2013 16:52:17 +0530
-Message-Id: <1372677737-15485-1-git-send-email-vipul@chelsio.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20695 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932388Ab3GVVhe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jul 2013 17:37:34 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 0/7]  PCI: Change assign unassigned resources per root bus bassis
+Date: Mon, 22 Jul 2013 14:37:11 -0700
+Message-Id: <1374529038-14311-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+BenH reported that there is some assign unassigned resource problem
+in powerpc.
 
-T4 can wedge if there are DMAs in flight within the chip and Bus master has
-been disabled.  We need to have it on till the Function Level Reset completes.
-T4 can also suffer a Head Of Line blocking problem if MSI-X interrupts are
-disabled before the FLR has completed.
+It turns out after
+| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
+| Date:   Thu Feb 23 19:23:29 2012 -0800
+|
+|    PCI: Retry on IORESOURCE_IO type allocations
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
----
- drivers/pci/quirks.c | 91 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 91 insertions(+)
+even the root bus does not have io port range, it will keep retrying
+to realloc with mmio.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e85d230..6357ba1 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3208,6 +3208,95 @@ reset_complete:
- 	return 0;
- }
- 
-+/*
-+ * Device-specific reset method for Chelsio T4-based adapters.
-+ */
-+static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
-+{
-+	u16 old_command;
-+	u16 status, msix_flags;
-+	int i, rc, msix_pos;
-+
-+	/*
-+	 * If this isn't a Chelsio T4-based device, return -ENOTTY indicating
-+	 * that we have no device-specific reset method.
-+	 */
-+	if ((dev->device & 0xf000) != 0x4000)
-+		return -ENOTTY;
-+
-+	/*
-+	 * If this is the "probe" phase, return 0 indicating that we can
-+	 * reset this device.
-+	 */
-+	if (probe)
-+		return 0;
-+
-+	/*
-+	 * T4 can wedge if their are DMAs in flight within the chip and Bus
-+	 * master has been disabled.  We need to have it on till the Function
-+	 * Level Reset completes.
-+	 */
-+	pci_read_config_word(dev, PCI_COMMAND, &old_command);
-+	pci_write_config_word(dev, PCI_COMMAND,
-+			      old_command | PCI_COMMAND_MASTER);
-+
-+	/*
-+	 * Perform the actual device function reset, saving and restoring
-+	 * configuration information around the reset.
-+	 */
-+	pci_save_state(dev);
-+
-+	/*
-+	 * T4 also suffers a Head-Of-Line blocking problem if MSI-X interrupts
-+	 * are disabled when an MSI-X interrupt message needs to be delivered.
-+	 * So we briefly re-enable MSI-X interrupts for the duration of the
-+	 * FLR.  The pci_restore_state() below will restore the original
-+	 * MSI-X state.
-+	 */
-+	msix_pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-+	pci_read_config_word(dev, msix_pos+PCI_MSIX_FLAGS, &msix_flags);
-+	if ((msix_flags & PCI_MSIX_FLAGS_ENABLE) == 0)
-+		pci_write_config_word(dev, msix_pos+PCI_MSIX_FLAGS,
-+				      msix_flags |
-+				      PCI_MSIX_FLAGS_ENABLE |
-+				      PCI_MSIX_FLAGS_MASKALL);
-+
-+	/*
-+	 * This reset code is a copy of the guts of pcie_flr() because that's
-+	 * not an exported function.
-+	 */
-+
-+	/* Wait for Transaction Pending bit clean */
-+	for (i = 0; i < 4; i++) {
-+		if (i)
-+			msleep((1 << (i - 1)) * 100);
-+
-+		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
-+		if (!(status & PCI_EXP_DEVSTA_TRPND))
-+			goto clear;
-+	}
-+
-+	dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
-+
-+clear:
-+	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
-+	msleep(100);
-+
-+	/*
-+	 * End of pcie_flr() code sequence.
-+	 */
-+
-+	rc = 0;
-+	pci_restore_state(dev);
-+
-+	/*
-+	 * Restore the original PCI Configuration Space Command word (which
-+	 * probably had Bus Master disabled).
-+	 */
-+	pci_write_config_word(dev, PCI_COMMAND, old_command);
-+	return rc;
-+}
-+
- #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
- #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
- #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
-@@ -3221,6 +3310,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 		reset_ivb_igd },
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
- 		reset_intel_generic_dev },
-+	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
-+		reset_chelsio_generic_dev },
- 	{ 0 }
- };
- 
+After checking the code, found that we bound io port and mmio fail
+path together.
+First patch fix the problem, that will not make mmio fall back to must-only
+when only have io port fail with must+optional.
+
+That is first patch.
+
+During we found the fix for that problem, found that we can separate assign
+unassigned resources to per root bus.
+that will make the code simple, also could reuse it for hotadd path.
+
+Besides that, "PCI: Enable pci bridge when it is needed" will delay pci
+bridge enabling, that will kill another difference between booting path
+and hotadd path.
+
+-v4: split first patch into 4 patches per Bjorn.
+-v5: drop two patches that will pass root bus resource mask after we found
+     simple and less intrusive way to fix the problem.
+-v6: refreshed on top of v3.11-rc2
+
+could get from
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-assign-unassigned
+
+Thanks
+
+Yinghai
+
+Yinghai Lu (7):
+  PCI: Don't use temp bus for pci_bus_release_bridge_resources
+  PCI: Use pci_walk_bus to detect unassigned resources
+  PCI: Check pci bus address for unassigned res
+  PCI: Introduce enable_local to prepare per root bus handling
+  PCI: Split pci_assign_unassigned_resources to per root bus
+  PCI: Enable pci bridge when it is needed
+  PCI: Retry assign unassigned resources for hotadd root bus
+
+ arch/arm/kernel/bios32.c           |   5 --
+ arch/m68k/platform/coldfire/pci.c  |   1 -
+ arch/mips/pci/pci.c                |   1 -
+ arch/sh/drivers/pci/pci.c          |   1 -
+ drivers/acpi/pci_root.c            |   5 +-
+ drivers/parisc/lba_pci.c           |   1 -
+ drivers/pci/bus.c                  |  19 -----
+ drivers/pci/hotplug/acpiphp_glue.c |   1 -
+ drivers/pci/pci.c                  |  20 ++++++
+ drivers/pci/probe.c                |   1 -
+ drivers/pci/setup-bus.c            | 141 +++++++++++++++++++------------------
+ drivers/pcmcia/cardbus.c           |   1 -
+ include/linux/pci.h                |   2 +-
+ 13 files changed, 95 insertions(+), 104 deletions(-)
+
 -- 
-1.8.0
+1.8.1.4
 
