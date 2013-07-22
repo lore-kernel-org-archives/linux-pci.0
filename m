@@ -1,254 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:59913 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757207Ab3GEKqE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jul 2013 06:46:04 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH] pci: exynos: split into two parts such as Synopsys part and Exynos part
-Date: Fri, 5 Jul 2013 12:45:51 +0200
-Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org
-References: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
-In-Reply-To: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:56487 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932316Ab3GVVXu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jul 2013 17:23:50 -0400
+Received: by mail-ie0-f181.google.com with SMTP id x12so16704450ief.12
+        for <linux-pci@vger.kernel.org>; Mon, 22 Jul 2013 14:23:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201307051245.52149.arnd@arndb.de>
+In-Reply-To: <1374261258-23036-2-git-send-email-yinghai@kernel.org>
+References: <1374261258-23036-1-git-send-email-yinghai@kernel.org> <1374261258-23036-2-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 22 Jul 2013 15:23:30 -0600
+Message-ID: <CAErSpo78DU3bPwkVOt=1XD08y9iD38+wUOp2+GVxO7P68TOOjg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Separate stop and remove devices in pciehp
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 05 July 2013, Jingoo Han wrote:
+Evidently this is really part of a series, but you didn't label it
+that way.  It looks like this applies on top of your "PCI: Fix hotplug
+remove with sriov again" patch?
 
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-exynos.c
+On Fri, Jul 19, 2013 at 1:14 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
+> (PCI: Simplify IOV implementation and fix reference count races)
+> VF need to be removed via virtfn_remove to make sure ref to PF
+> is put back.
 
-> +
-> +/* PCIe ELBI registers */
-> +#define PCIE_IRQ_PULSE			0x000
-> +#define IRQ_INTA_ASSERT			(0x1 << 0)
-> +#define IRQ_INTB_ASSERT			(0x1 << 2)
-> +#define IRQ_INTC_ASSERT			(0x1 << 4)
-> +#define IRQ_INTD_ASSERT			(0x1 << 6)
-> +#define PCIE_IRQ_LEVEL			0x004
-> +#define PCIE_IRQ_SPECIAL		0x008
-> +#define PCIE_IRQ_EN_PULSE		0x00c
-> +#define PCIE_IRQ_EN_LEVEL		0x010
-> +#define PCIE_IRQ_EN_SPECIAL		0x014
-> +#define PCIE_PWR_RESET			0x018
-> +#define PCIE_CORE_RESET			0x01c
-> +#define PCIE_CORE_RESET_ENABLE		(0x1 << 0)
-> +#define PCIE_STICKY_RESET		0x020
-> +#define PCIE_NONSTICKY_RESET		0x024
-> +#define PCIE_APP_INIT_RESET		0x028
-> +#define PCIE_APP_LTSSM_ENABLE		0x02c
-> +#define PCIE_ELBI_RDLH_LINKUP		0x064
-> +#define PCIE_ELBI_LTSSM_ENABLE		0x1
-> +#define PCIE_ELBI_SLV_AWMISC		0x11c
-> +#define PCIE_ELBI_SLV_ARMISC		0x120
-> +#define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
-> +
-> +/* PCIe Purple registers */
-> +#define PCIE_PHY_GLOBAL_RESET		0x000
-> +#define PCIE_PHY_COMMON_RESET		0x004
-> +#define PCIE_PHY_CMN_REG		0x008
-> +#define PCIE_PHY_MAC_RESET		0x00c
-> +#define PCIE_PHY_PLL_LOCKED		0x010
-> +#define PCIE_PHY_TRSVREG_RESET		0x020
-> +#define PCIE_PHY_TRSV_RESET		0x024
-> +
-> +/* PCIe PHY registers */
-> +#define PCIE_PHY_IMPEDANCE		0x004
-> +#define PCIE_PHY_PLL_DIV_0		0x008
-> +#define PCIE_PHY_PLL_BIAS		0x00c
-> +#define PCIE_PHY_DCC_FEEDBACK		0x014
-> +#define PCIE_PHY_PLL_DIV_1		0x05c
-> +#define PCIE_PHY_TRSV0_EMP_LVL		0x084
-> +#define PCIE_PHY_TRSV0_DRV_LVL		0x088
-> +#define PCIE_PHY_TRSV0_RXCDR		0x0ac
-> +#define PCIE_PHY_TRSV0_LVCC		0x0dc
-> +#define PCIE_PHY_TRSV1_EMP_LVL		0x144
-> +#define PCIE_PHY_TRSV1_RXCDR		0x16c
-> +#define PCIE_PHY_TRSV1_LVCC		0x19c
-> +#define PCIE_PHY_TRSV2_EMP_LVL		0x204
-> +#define PCIE_PHY_TRSV2_RXCDR		0x22c
-> +#define PCIE_PHY_TRSV2_LVCC		0x25c
-> +#define PCIE_PHY_TRSV3_EMP_LVL		0x2c4
-> +#define PCIE_PHY_TRSV3_RXCDR		0x2ec
-> +#define PCIE_PHY_TRSV3_LVCC		0x31c
+I'm sure this makes sense, but it needs background.  I haven't figured
+out exactly what the problem is.  You're describing the lowest-level
+details, but not the overall picture that would make it understandable
+to the rest of us.
 
-Are you sure these are all exynos specific? Maybe they are licensed
-from someone else?
+> So we can not call stop_and_remove for VF before PF, that will
+> make VF get removed directly before PF's driver try to use
+> virtfn_remove to do it.
+>
+> Solution is separating stop and remove in two iterations.
+>
+> In first iteration, we stop VF driver at first with iterating devices
+> reversely, and later during stop PF driver, disable_sriov will use
+> virtfn_remove to remove VFs.
+>
+> Also some driver (like mlx4_core) need VF's driver get stopped before PF.
 
-> +
-> +	pp->dbi_base = devm_ioremap(&pdev->dev, pp->cfg.start,
-> +				resource_size(&pp->cfg));
-> +	if (!pp->dbi_base) {
-> +		dev_err(&pdev->dev, "error with ioremap\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	pp->root_bus_nr = -1;
-> +	pp->ops = &exynos_pcie_host_ops;
-> +
-> +	spin_lock_init(&pp->conf_lock);
-> +	dw_pcie_host_init(pp);
-> +	pp->va_cfg0_base = devm_ioremap(&pdev->dev, pp->cfg0_base,
-> +					pp->config.cfg0_size);
-> +	if (!pp->va_cfg0_base) {
-> +		dev_err(pp->dev, "error with ioremap in function\n");
-> +		return -ENOMEM;
-> +	}
-> +	pp->va_cfg1_base = devm_ioremap(&pdev->dev, pp->cfg1_base,
-> +					pp->config.cfg1_size);
-> +	if (!pp->va_cfg1_base) {
-> +		dev_err(pp->dev, "error with ioremap\n");
-> +		return -ENOMEM;
-> +	}
+If this is relevant, please give a pointer to the mlx4_core code that
+requires VFs to be stopped before the PF.
 
-I think the configuration space handling should go into the
-dw_pcie_host_init function, as that part would be needed by all drivers.
+> To make it simple, separate VGA checking out and do that at first,
+> if there is VGA in the chain, do even try to stop or remove any device
+> under that bus.
 
-> +static int __init exynos_pcie_probe(struct platform_device *pdev)
-> +{
-> +	struct pcie_port *pp;
-> +	struct device_node *np = pdev->dev.of_node;
-> +	struct of_pci_range range;
-> +	struct of_pci_range_parser parser;
-> +	int ret;
-> +
-> +	pp = devm_kzalloc(&pdev->dev, sizeof(*pp), GFP_KERNEL);
-> +	if (!pp) {
-> +		dev_err(&pdev->dev, "no memory for pcie port\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	pp->dev = &pdev->dev;
-> +
-> +	if (of_pci_range_parser_init(&parser, np)) {
-> +		dev_err(&pdev->dev, "missing ranges property\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	/* Get the I/O and memory ranges from DT */
-> +	for_each_of_pci_range(&parser, &range) {
-> +		unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
-> +		if (restype == IORESOURCE_IO) {
-> +			of_pci_range_to_resource(&range, np, &pp->io);
-> +			pp->io.name = "I/O";
-> +			pp->io.start = max_t(resource_size_t,
-> +					     PCIBIOS_MIN_IO,
-> +					     range.pci_addr + global_io_offset);
-> +			pp->io.end = min_t(resource_size_t,
-> +					   IO_SPACE_LIMIT,
-> +					   range.pci_addr + range.size
-> +					   + global_io_offset);
-> +			pp->config.io_size = resource_size(&pp->io);
-> +			pp->config.io_bus_addr = range.pci_addr;
-> +		}
-> +		if (restype == IORESOURCE_MEM) {
-> +			of_pci_range_to_resource(&range, np, &pp->mem);
-> +			pp->mem.name = "MEM";
-> +			pp->config.mem_size = resource_size(&pp->mem);
-> +			pp->config.mem_bus_addr = range.pci_addr;
-> +		}
-> +		if (restype == 0) {
-> +			of_pci_range_to_resource(&range, np, &pp->cfg);
-> +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
-> +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
-> +		}
-> +	}
+This part seems like it could be a separate patch.
 
-Same for these: it would be better to split up the probe function here
-and move all of the above into the common code.
+> Need this one for v3.11.
 
-> +	pp->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+OK, but why?  We need a better explanation of what problem this fixes.
+ It sounds like it fixes a reference counting problem in v3.11-rc1,
+but I don't know what the effect of that problem is.  Maybe it means a
+device isn't freed when it should be?  Maybe it means we can't add a
+new device after hot-removing an SR-IOV device?
 
-I assume the reset logic would need to remain exynos specific
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Yijing Wang <wangyijing@huawei.com>
+> Cc: Jiang Liu <liuj97@gmail.com>
+>
+> ---
+>  drivers/pci/hotplug/pciehp_pci.c |   46 ++++++++++++++++++++++++++-------------
+>  drivers/pci/remove.c             |    6 +++--
+>  include/linux/pci.h              |    2 +
+>  3 files changed, 37 insertions(+), 17 deletions(-)
+>
+> Index: linux-2.6/drivers/pci/hotplug/pciehp_pci.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_pci.c
+> +++ linux-2.6/drivers/pci/hotplug/pciehp_pci.c
+> @@ -92,26 +92,37 @@ int pciehp_unconfigure_device(struct slo
+>         if (ret)
+>                 presence = 0;
+>
+> +       /* check if VGA is around */
+> +       if (presence) {
+> +               list_for_each_entry(dev, &parent->devices, bus_list) {
+> +                       if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +                               pci_read_config_byte(dev, PCI_BRIDGE_CONTROL,
+> +                                                       &bctl);
+> +                               if (bctl & PCI_BRIDGE_CTL_VGA) {
+> +                                       ctrl_err(ctrl,
+> +                                                "Cannot remove display device %s\n",
+> +                                                pci_name(dev));
+> +                                       return -EINVAL;
+> +                               }
+> +                       }
+> +               }
+> +       }
+> +
+>         /*
+> -        * Need to iterate device reversely, as during
+> +        * Now VF need to be removed via virtfn_remove to make
+> +        * sure ref to PF is put back. Some driver (mlx4_core) need
+> +        * VF's driver get stopped before PF.
+> +        * So we need to stop VF driver at first, that means
+> +        * loop reversely, and later during stop PF driver,
+> +        * disable_sriov will use virtfn_remove to remove VFs.
+> +        * Also we can not loop without reverse, as during
+>          * stop PF driver, VF will be removed, the list_for_each
+>          * could point to removed VF with temp.
+>          */
+>         list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+> -                                        bus_list) {
+> -               pci_dev_get(dev);
+> -               if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
+> -                       pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+> -                       if (bctl & PCI_BRIDGE_CTL_VGA) {
+> -                               ctrl_err(ctrl,
+> -                                        "Cannot remove display device %s\n",
+> -                                        pci_name(dev));
+> -                               pci_dev_put(dev);
+> -                               rc = -EINVAL;
+> -                               break;
+> -                       }
+> -               }
+> -               pci_stop_and_remove_bus_device(dev);
+> +                                                bus_list) {
+> +               pci_stop_bus_device(dev);
+> +
+>                 /*
+>                  * Ensure that no new Requests will be generated from
+>                  * the device.
+> @@ -122,6 +133,11 @@ int pciehp_unconfigure_device(struct slo
+>                         command |= PCI_COMMAND_INTX_DISABLE;
+>                         pci_write_config_word(dev, PCI_COMMAND, command);
+>                 }
+> +       }
+> +
+> +       list_for_each_entry_safe(dev, temp, &parent->devices, bus_list) {
+> +               pci_dev_get(dev);
+> +               pci_remove_bus_device(dev);
+>                 pci_dev_put(dev);
+>         }
+>
+> Index: linux-2.6/drivers/pci/remove.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/remove.c
+> +++ linux-2.6/drivers/pci/remove.c
+> @@ -56,7 +56,7 @@ void pci_remove_bus(struct pci_bus *bus)
+>  }
+>  EXPORT_SYMBOL(pci_remove_bus);
+>
+> -static void pci_stop_bus_device(struct pci_dev *dev)
+> +void pci_stop_bus_device(struct pci_dev *dev)
+>  {
+>         struct pci_bus *bus = dev->subordinate;
+>         struct pci_dev *child, *tmp;
+> @@ -75,8 +75,9 @@ static void pci_stop_bus_device(struct p
+>
+>         pci_stop_dev(dev);
+>  }
+> +EXPORT_SYMBOL(pci_stop_bus_device);
+>
+> -static void pci_remove_bus_device(struct pci_dev *dev)
+> +void pci_remove_bus_device(struct pci_dev *dev)
+>  {
+>         struct pci_bus *bus = dev->subordinate;
+>         struct pci_dev *child, *tmp;
+> @@ -92,6 +93,7 @@ static void pci_remove_bus_device(struct
+>
+>         pci_destroy_dev(dev);
+>  }
+> +EXPORT_SYMBOL(pci_remove_bus_device);
 
-> +	pp->clk = devm_clk_get(&pdev->dev, "pcie");
-> +	if (IS_ERR(pp->clk)) {
-> +		dev_err(&pdev->dev, "Failed to get pcie rc clock\n");
-> +		return PTR_ERR(pp->clk);
-> +	}
-> +	ret = clk_prepare_enable(pp->clk);
-> +	if (ret)
-> +		return ret;
-> +
-> +	pp->bus_clk = devm_clk_get(&pdev->dev, "pcie_bus");
-> +	if (IS_ERR(pp->bus_clk)) {
-> +		dev_err(&pdev->dev, "Failed to get pcie bus clock\n");
-> +		ret = PTR_ERR(pp->bus_clk);
-> +		goto fail_clk;
-> +	}
-> +	ret = clk_prepare_enable(pp->bus_clk);
-> +	if (ret)
-> +		goto fail_clk;
+I really don't want to export these two symbols unless we have to.
+Obviously this is the heart of your patch, so we probably *will* have
+to.
 
-For the clocks, I think we can keep them in the common code, but
-make them optional, i.e. do not fail the probe function if the clocks
-don't exist, i.e. you get -ENOENT from devm_clk_get. We should however
-still fail here if devm_clk_get returns a different error.
+But maybe they can at least be confined to drivers/pci code, and not
+exported to modules?  I don't think there's any reason pciehp needs to
+be a module.  I was planning to merge a patch restricting it to be
+built-in this cycle anyway.
 
-I also noticed an existing bug in your code here: if the clock controller
-is not yet initialized, devm_clk_get() will return -EPROBE_DEFER,
-which is broken in combination with platform_driver_probe. In order
-to fix that, just change the code to use platform_driver_register
-so it has the option to retry the probe after the clock controller
-is initialized.
-That should be a separate patch.
-
-> +static int exynos_pcie_abort(unsigned long addr, unsigned int fsr,
-> +			struct pt_regs *regs)
-> +{
-> +	unsigned long pc = instruction_pointer(regs);
-> +	unsigned long instr = *(unsigned long *)pc;
-> +
-> +	WARN_ONCE(1, "pcie abort\n");
-> +
-> +	/*
-> +	 * If the instruction being executed was a read,
-> +	 * make it look like it read all-ones.
-> +	 */
-> +	if ((instr & 0x0c100000) == 0x04100000) {
-> +		int reg = (instr >> 12) & 15;
-> +		unsigned long val;
-> +
-> +		if (instr & 0x00400000)
-> +			val = 255;
-> +		else
-> +			val = -1;
-> +
-> +		regs->uregs[reg] = val;
-> +		regs->ARM_pc += 4;
-> +		return 0;
-> +	}
-> +
-> +	if ((instr & 0x0e100090) == 0x00100090) {
-> +		int reg = (instr >> 12) & 15;
-> +
-> +		regs->uregs[reg] = -1;
-> +		regs->ARM_pc += 4;
-> +		return 0;
-> +	}
-> +
-> +	return 1;
-> +}
-
-Another observation that is only partially related: the abort handler logic
-is not specific to either exynos nor synopsys. However it is specific
-to ARM and should not be part of a driver that is potentially architecture
-independent. I would recommend moving this to a separate file
-"arm-pci-abort.c" or something like that. I notice that a lot of the other
-ARM PCI implementations have the exact same code but also need to reset
-the abort in the bridge. Can you confirm that a) you don't need to tell
-the root port about the abort and b) the abort handler is actually required
-for exynos? How often do you run into this?
-
-	Arnd
+>  /**
+>   * pci_stop_and_remove_bus_device - remove a PCI device and any children
+> Index: linux-2.6/include/linux/pci.h
+> ===================================================================
+> --- linux-2.6.orig/include/linux/pci.h
+> +++ linux-2.6/include/linux/pci.h
+> @@ -754,6 +754,8 @@ u8 pci_common_swizzle(struct pci_dev *de
+>  struct pci_dev *pci_dev_get(struct pci_dev *dev);
+>  void pci_dev_put(struct pci_dev *dev);
+>  void pci_remove_bus(struct pci_bus *b);
+> +void pci_stop_bus_device(struct pci_dev *dev);
+> +void pci_remove_bus_device(struct pci_dev *dev);
+>  void pci_stop_and_remove_bus_device(struct pci_dev *dev);
+>  void pci_stop_root_bus(struct pci_bus *bus);
+>  void pci_remove_root_bus(struct pci_bus *bus);
