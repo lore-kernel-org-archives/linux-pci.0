@@ -1,291 +1,576 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:50477 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756027Ab3GVRsl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jul 2013 13:48:41 -0400
 MIME-Version: 1.0
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
-	<3718119.FLASu5DBx8@vostro.rjw.lan>
-	<2366394.4EoP1MXmG2@vostro.rjw.lan>
-Date: Mon, 22 Jul 2013 23:49:45 -0700
-Message-ID: <CAE9FiQVq3O45SOr9h6c5dBiAZs2Ry6z6L_irW8AE-fZ_1NmMXQ@mail.gmail.com>
-Subject: Re: [PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
+In-Reply-To: <CAErSpo405XN5f4tKp=kJhuqimoYV5+KhdZG=rJ31tkHdOEhx7A@mail.gmail.com>
+References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo405XN5f4tKp=kJhuqimoYV5+KhdZG=rJ31tkHdOEhx7A@mail.gmail.com>
+Date: Mon, 22 Jul 2013 10:48:41 -0700
+Message-ID: <CAE9FiQUPNinBo77UnsuY7w_oWjqAwy9seKVVBBP844EA_BPkng@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Fix hotplug remove with sriov again
 From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 17, 2013 at 4:05 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> Hi All,
->
-> Now the series has been rebased on top of current linux-pm.git/linux-next
-> and tested on two systems with Thunderbolt.  Some changes have been made too. ->
->
-> On Friday, July 12, 2013 01:34:20 AM Rafael J. Wysocki wrote:
->> Hi,
+On Mon, Jul 22, 2013 at 10:39 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Jul 19, 2013 at 1:14 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> Found hot-remove pcie card with sriov enabled cause crash in v3.10.
 >>
->> I've made some progress with my ACPIPHP rework since I posted the series last
->> time and here goes an update.
->>
->> First off, the previous series was somewhat racy, which should be fixed now.
->> Apart from this there's quite some new material on top of the patches I posted
->> last time (or rather on top of their new versions) and I integrated the
->> Thunderbolt series from Mika with that.  As a result,
->>
->> https://patchwork.kernel.org/patch/2817341/
->>
->> is required to be applied.
->>
->> Still untested, still based on 3.10 with ACPI+PM 3.11 material merged on top,
->> but this time I don't have any plans to add more patches to the series for the
->> time being.  Also 3.11-rc1 should be out in a couple of days, so I'll be able
->> to integrate this work with the previous cleanups series from Gerry and myself
->> on top of it.
->>
->> I did my best not to change too much at a time and some steps add stuff that
->> is removed by the subsequent ones, so hopefully it is bisectable.
->>
->> If anyone finds something questionable or outright bogus in these patches,
->> please let me know before it's too late. ;-)
->>
->> [ 1/30] Make bus registration and unregistration symmetric.  [Resend]
->> [ 2/30] Consolidate acpiphp_enumerate_slots().  [Resend]
->> [ 3/30] Fix error code path in register_slot().  [Resend]
->> [ 4/30] Introduce hotplug context objects for ACPI device objects corresponding
->>         to PCI hotplug devices.  [Update]
->> [ 5/30] Unified notify handler for hotplug events.  [Update]
->> [ 6/30] Drop acpiphp_handle_to_bridge() and use context objects instead of it.  [Update]
->> [ 7/30] Pass entire hotplug context objects (instead of their fields
->>         individually) to event handling work functions.  [Update]
->> [ 8/30] Merge hotplug event handling functions.  [Update]
->> [ 9/30] Drop func field from struct acpiphp_bridge.
->> [10/30] Refactor slot allocation code in register_slot().
->> [11/30] Make acpiphp_enumerate_slots() to register all devices on the given bus
->>         and install the notification handler for all of them.
->> [12/30] Drop sun field from struct acpiphp_slot.
->> [13/30] Use common slot count variable in register_slot().
+>> It is regression caused by commit ba518e3c177547dfebf7fa7252cea0c850e7ce25
+>> (PCI: pciehp: Iterate over all devices in slot, not functions 0-7)
 >
-> -> The one above has been dropped, because it might cause regressions to appear
-> on some systems, but that's not a big deal.
->
-> The numbering of the patches below has changed as a result, so the next one is
-> [13/30] now and so on.
->
->> [14/30] Drop flags field from struct acpiphp_bridge.
->> [15/30] Embed function structure into struct acpiphp_context.
->> [16/30] Drop handle field from struct acpiphp_func.
->> [17/30] Drop handle field from struct acpiphp_bridge.
->> [18/30] Store parent bridge pointer in function objects and bus pointer in slot
->>         objects.
->> [19/30] Rework ACPI namespace scanning and trimming routines.
->> [20/30] Drop redundant checks from check_hotplug_bridge().
->> [21/30] Consolidate slot disabling and ejecting
->> [22/30] Do not queue up event handling work items for non-hotplug events.
->> [23/30] Do not execute _PS0 and _PS3 directly.
->
-> This one was fixed after Mika had reported a problem with it.
->
->> [24/30] Do not check SLOT_ENABLED in enable_device().  [Thunderbolt series]
->> [25/30] Allow slots without new devices to be rescanned.  [Thunderbolt series]
->> [26/30] Check for new devices on enabled slots.  [Thunderbolt series, TBD]
->
-> This one was reworked to use acpi_bus_trim() on ACPI device objects
-> corresponding to PCI devices being removed (it also uses _STA to check the
-> status of those devices if available).
->
->> [27/30] Get rid of unused constands in acpiphp.h.  [Thunderbolt series]
->> [28/30] Sanitize acpiphp_get_(latch)|(adapter)_status().  [Thunderbolt series]
->> [29/30] Redefine enable_device() and disable_device() (rename and change to void).
->> [30/30] Clean up the usage of bridge_mutex.
->
-> The one above is [29/30] now and we have added one more patch:
->
-> [30/30] Drop check_sub_bridges() which isn't necessary any more.
->
-> The updated patches follow.
->
-> If you don't hate this stuff, I'll put it into linux-next over the weekend for
-> further testing.
+> Can you post the dmesg or console log showing the crash?  If somebody
+> else sees this crash, having the log in the mailing list archive will
+> help them figure out that this is the fix they need.
 
-pm/linux-next with those patches breaks acpi root bus hotplug.
-it is kvm guest:
-
-10:~ # echo "PCI0 3" > /sys/kernel/debug/acpi/sci_notify
-[   92.549508] ACPI: ACPI device name is <PCI0>, event code is <3>
-[   92.552433] ACPI: Notify event is queued
-10:~ # [   92.554279] ACPI: \_SB_.PCI0: Device eject notify on
-_handle_hotplug_event_root
-[   92.677696] ACPI: Device 0000:00:03.0 -x-> \_SB_.PCI0.S03_
-[   92.679229] ACPI: Device 0000:00:02.0 -x-> \_SB_.PCI0.VGA_
-[   92.680684] ACPI: Device 0000:00:01.3 -x-> \_SB_.PCI0.PX13
-[   92.682235] ata1.00: disabled
-[   92.689000] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-[   92.690399] sd 0:0:0:0: [sda]
-[   92.691133] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-[   92.693151] sd 0:0:0:0: [sda] Stopping disk
-[   92.694682] sd 0:0:0:0: [sda] START_STOP FAILED
-[   92.696749] sd 0:0:0:0: [sda]
-[   92.698157] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-[   92.702852] ata2.00: disabled
-[   92.711550] ACPI: Device 0000:00:01.0 -x-> \_SB_.PCI0.ISA_
-[   92.713208] ACPI: Device pci0000:00 -x-> \_SB_.PCI0
-[   92.713226]   acpi_pci_iommu_remove is called for \_SB_.PCI0 ffff88007ab3f1e0
-[   92.713274]   acpi_pci_ioapic_remove is called for \_SB_.PCI0
-ffff88007ab3f1e0
-[   92.713345] pci 0000:00:00.0: freeing pci_dev info
-[   92.713363] pci 0000:00:01.0: freeing pci_dev info
-[   92.713366] pci 0000:00:01.1: freeing pci_dev info
-[   92.713376] pci 0000:00:01.3: freeing pci_dev info
-[   92.713380] pci 0000:00:02.0: freeing pci_dev info
-[   92.713384] pci 0000:00:03.0: freeing pci_dev info
-[   92.713396] pci_bus 0000:00: busn_res: [bus 00-ff] is released
-[   92.713441] BUG: unable to handle kernel NULL pointer dereference
+Rescue:~ # echo -n 0 > /sys/bus/pci/slots/2/power
+[ 5445.937864] pci_hotplug: power_write_file: power = 0
+[ 5445.938153] pciehp 0000:00:03.0:pcie04: disable_slot: physical_slot = 2
+[ 5445.949164] pciehp 0000:00:03.0:pcie04: pciehp_get_power_status:
+SLOTCTRL a8 value read 1f9
+[ 5445.949672] pciehp 0000:00:03.0:pcie04: pciehp_unconfigure_device:
+domain:bus:dev = 0000:02:00
+[ 5445.969878] mlx4_core 0000:02:00.0: Disabling SR-IOV
+[ 5446.215792] mlx4_core 0000:02:00.0: Received reset from slave:1
+[ 5446.217265]   free irq_desc for 1174
+[ 5446.217567]   free irq_desc for 1175
+[ 5446.229637]   free irq_desc for 1176
+[ 5446.229691]   free irq_desc for 1177
+[ 5446.230758] pci 0000:02:00.1: freeing pci_dev info
+[ 5446.463034] mlx4_core 0000:02:00.0: Received reset from slave:2
+[ 5446.463984]   free irq_desc for 1178
+[ 5446.464274]   free irq_desc for 1179
+[ 5446.479397]   free irq_desc for 1180
+[ 5446.479804]   free irq_desc for 1181
+[ 5446.480364] pci 0000:02:00.2: freeing pci_dev info
+[ 5446.718817] mlx4_core 0000:02:00.0: Received reset from slave:3
+[ 5446.719737]   free irq_desc for 1182
+[ 5446.720123]   free irq_desc for 1183
+[ 5446.729482]   free irq_desc for 1184
+[ 5446.729533]   free irq_desc for 1185
+[ 5446.730128] pci 0000:02:00.3: freeing pci_dev info
+[ 5446.967233] mlx4_core 0000:02:00.0: Received reset from slave:4
+[ 5446.968242]   free irq_desc for 1186
+[ 5446.968508]   free irq_desc for 1187
+[ 5446.979492]   free irq_desc for 1188
+[ 5446.979905]   free irq_desc for 1189
+[ 5446.981335] pci 0000:02:00.4: freeing pci_dev info
+[ 5447.215089] mlx4_core 0000:02:00.0: Received reset from slave:5
+[ 5447.216123]   free irq_desc for 1190
+[ 5447.216460]   free irq_desc for 1191
+[ 5447.229640]   free irq_desc for 1192
+[ 5447.229692]   free irq_desc for 1193
+[ 5447.230212] pci 0000:02:00.5: freeing pci_dev info
+[ 5447.463557] mlx4_core 0000:02:00.0: Received reset from slave:6
+[ 5447.464562]   free irq_desc for 1194
+[ 5447.464867]   free irq_desc for 1195
+[ 5447.479527]   free irq_desc for 1196
+[ 5447.479579]   free irq_desc for 1197
+[ 5447.480518] pci 0000:02:00.6: freeing pci_dev info
+[ 5447.731734] mlx4_core 0000:02:00.0: Received reset from slave:7
+[ 5447.732717]   free irq_desc for 1198
+[ 5447.733032]   free irq_desc for 1199
+[ 5447.749623]   free irq_desc for 1200
+[ 5447.749675]   free irq_desc for 1201
+[ 5447.750238] pci 0000:02:00.7: freeing pci_dev info
+[ 5447.966630] mlx4_core 0000:02:00.0: Received reset from slave:8
+[ 5447.967646]   free irq_desc for 1202
+[ 5447.967947]   free irq_desc for 1203
+[ 5447.979694]   free irq_desc for 1204
+[ 5447.979746]   free irq_desc for 1205
+[ 5447.980168] pci 0000:02:01.0: freeing pci_dev info
+[ 5448.222466] mlx4_core 0000:02:00.0: Received reset from slave:9
+[ 5448.223455]   free irq_desc for 1206
+[ 5448.223830]   free irq_desc for 1207
+[ 5448.239969]   free irq_desc for 1208
+[ 5448.240022]   free irq_desc for 1209
+[ 5448.240782] pci 0000:02:01.1: freeing pci_dev info
+[ 5448.478746] mlx4_core 0000:02:00.0: Received reset from slave:10
+[ 5448.479740]   free irq_desc for 1210
+[ 5448.480071]   free irq_desc for 1211
+[ 5448.489773]   free irq_desc for 1212
+[ 5448.490298]   free irq_desc for 1213
+[ 5448.491051] pci 0000:02:01.2: freeing pci_dev info
+[ 5448.720910] mlx4_core 0000:02:00.0: Received reset from slave:11
+[ 5448.721946]   free irq_desc for 1214
+[ 5448.722198]   free irq_desc for 1215
+[ 5448.739749]   free irq_desc for 1216
+[ 5448.739800]   free irq_desc for 1217
+[ 5448.740644] pci 0000:02:01.3: freeing pci_dev info
+[ 5448.970280] mlx4_core 0000:02:00.0: Received reset from slave:12
+[ 5448.971247]   free irq_desc for 1218
+[ 5448.971515]   free irq_desc for 1219
+[ 5448.989981]   free irq_desc for 1220
+[ 5448.990405]   free irq_desc for 1221
+[ 5448.991519] pci 0000:02:01.4: freeing pci_dev info
+[ 5449.223394] mlx4_core 0000:02:00.0: Received reset from slave:13
+[ 5449.224348]   free irq_desc for 1222
+[ 5449.224651]   free irq_desc for 1223
+[ 5449.239806]   free irq_desc for 1224
+[ 5449.239872]   free irq_desc for 1225
+[ 5449.240365] pci 0000:02:01.5: freeing pci_dev info
+[ 5449.483929] mlx4_core 0000:02:00.0: Received reset from slave:14
+[ 5449.484909]   free irq_desc for 1226
+[ 5449.485193]   free irq_desc for 1227
+[ 5449.499872]   free irq_desc for 1228
+[ 5449.499939]   free irq_desc for 1229
+[ 5449.500420] pci 0000:02:01.6: freeing pci_dev info
+[ 5449.736091] mlx4_core 0000:02:00.0: Received reset from slave:15
+[ 5449.737126]   free irq_desc for 1230
+[ 5449.737430]   free irq_desc for 1231
+[ 5449.749963]   free irq_desc for 1232
+[ 5449.750016]   free irq_desc for 1233
+[ 5449.750655] pci 0000:02:01.7: freeing pci_dev info
+[ 5449.976423] mlx4_core 0000:02:00.0: Received reset from slave:16
+[ 5449.977463]   free irq_desc for 1234
+[ 5449.977704]   free irq_desc for 1235
+[ 5449.989977]   free irq_desc for 1236
+[ 5449.990027]   free irq_desc for 1237
+[ 5449.990567] pci 0000:02:02.0: freeing pci_dev info
+[ 5450.203801] mlx4_core 0000:02:00.0: Received reset from slave:17
+[ 5450.204757]   free irq_desc for 1238
+[ 5450.205063]   free irq_desc for 1239
+[ 5450.220138]   free irq_desc for 1240
+[ 5450.220526]   free irq_desc for 1241
+[ 5450.221462] pci 0000:02:02.1: freeing pci_dev info
+[ 5450.459183] mlx4_core 0000:02:00.0: Received reset from slave:18
+[ 5450.460094]   free irq_desc for 1242
+[ 5450.460433]   free irq_desc for 1243
+[ 5450.473318]   free irq_desc for 1244
+[ 5450.473657]   free irq_desc for 1245
+[ 5450.474055] pci 0000:02:02.2: freeing pci_dev info
+[ 5450.716685] mlx4_core 0000:02:00.0: Received reset from slave:19
+[ 5450.717715]   free irq_desc for 1246
+[ 5450.717954]   free irq_desc for 1247
+[ 5450.730326]   free irq_desc for 1248
+[ 5450.730376]   free irq_desc for 1249
+[ 5450.731344] pci 0000:02:02.3: freeing pci_dev info
+[ 5450.963028] mlx4_core 0000:02:00.0: Received reset from slave:20
+[ 5450.963980]   free irq_desc for 1250
+[ 5450.964309]   free irq_desc for 1251
+[ 5450.980321]   free irq_desc for 1252
+[ 5450.980407]   free irq_desc for 1253
+[ 5450.981486] pci 0000:02:02.4: freeing pci_dev info
+[ 5451.216104] mlx4_core 0000:02:00.0: Received reset from slave:21
+[ 5451.217006]   free irq_desc for 1254
+[ 5451.217402]   free irq_desc for 1255
+[ 5451.230218]   free irq_desc for 1256
+[ 5451.230580]   free irq_desc for 1257
+[ 5451.231433] pci 0000:02:02.5: freeing pci_dev info
+[ 5451.468278] mlx4_core 0000:02:00.0: Received reset from slave:22
+[ 5451.469250]   free irq_desc for 1258
+[ 5451.469527]   free irq_desc for 1259
+[ 5451.480235]   free irq_desc for 1260
+[ 5451.480286]   free irq_desc for 1261
+[ 5451.480821] pci 0000:02:02.6: freeing pci_dev info
+[ 5451.708808] mlx4_core 0000:02:00.0: Received reset from slave:23
+[ 5451.709831]   free irq_desc for 1262
+[ 5451.710109]   free irq_desc for 1263
+[ 5451.720320]   free irq_desc for 1264
+[ 5451.720774]   free irq_desc for 1265
+[ 5451.721286] pci 0000:02:02.7: freeing pci_dev info
+[ 5451.967833] mlx4_core 0000:02:00.0: Received reset from slave:24
+[ 5451.968861]   free irq_desc for 1266
+[ 5451.969165]   free irq_desc for 1267
+[ 5451.980340]   free irq_desc for 1268
+[ 5451.980725]   free irq_desc for 1269
+[ 5451.981814] pci 0000:02:03.0: freeing pci_dev info
+[ 5452.215387] mlx4_core 0000:02:00.0: Received reset from slave:25
+[ 5452.216410]   free irq_desc for 1270
+[ 5452.216711]   free irq_desc for 1271
+[ 5452.230791]   free irq_desc for 1272
+[ 5452.230841]   free irq_desc for 1273
+[ 5452.231804] pci 0000:02:03.1: freeing pci_dev info
+[ 5452.479753] mlx4_core 0000:02:00.0: Received reset from slave:26
+[ 5452.480677]   free irq_desc for 1274
+[ 5452.481045]   free irq_desc for 1275
+[ 5452.490411]   free irq_desc for 1276
+[ 5452.490460]   free irq_desc for 1277
+[ 5452.491277] pci 0000:02:03.2: freeing pci_dev info
+[ 5452.728961] mlx4_core 0000:02:00.0: Received reset from slave:27
+[ 5452.729876]   free irq_desc for 1278
+[ 5452.730469]   free irq_desc for 1279
+[ 5452.730525]   free irq_desc for 1280
+[ 5452.730575]   free irq_desc for 1281
+[ 5452.731132] pci 0000:02:03.3: freeing pci_dev info
+[ 5452.968678] mlx4_core 0000:02:00.0: Received reset from slave:28
+[ 5452.969655]   free irq_desc for 1282
+[ 5452.969939]   free irq_desc for 1283
+[ 5452.980494]   free irq_desc for 1284
+[ 5452.980558]   free irq_desc for 1285
+[ 5452.981101] pci 0000:02:03.4: freeing pci_dev info
+[ 5453.223899] mlx4_core 0000:02:00.0: Received reset from slave:29
+[ 5453.224896]   free irq_desc for 1286
+[ 5453.225157]   free irq_desc for 1287
+[ 5453.240827]   free irq_desc for 1288
+[ 5453.240877]   free irq_desc for 1289
+[ 5453.241357] pci 0000:02:03.5: freeing pci_dev info
+[ 5453.480534] mlx4_core 0000:02:00.0: Received reset from slave:30
+[ 5453.481469]   free irq_desc for 1290
+[ 5453.481754]   free irq_desc for 1291
+[ 5453.500604]   free irq_desc for 1292
+[ 5453.501013]   free irq_desc for 1293
+[ 5453.501753] pci 0000:02:03.6: freeing pci_dev info
+[ 5453.753006] mlx4_core 0000:02:00.0: Received reset from slave:31
+[ 5453.754081]   free irq_desc for 1294
+[ 5453.754395]   free irq_desc for 1295
+[ 5453.770626]   free irq_desc for 1296
+[ 5453.770689]   free irq_desc for 1297
+[ 5453.771160] pci 0000:02:03.7: freeing pci_dev info
+[ 5453.996813] mlx4_core 0000:02:00.0: Received reset from slave:32
+[ 5453.997762]   free irq_desc for 1298
+[ 5453.998103]   free irq_desc for 1299
+[ 5454.010692]   free irq_desc for 1300
+[ 5454.010742]   free irq_desc for 1301
+[ 5454.011668] pci 0000:02:04.0: freeing pci_dev info
+[ 5454.248027] mlx4_core 0000:02:00.0: Received reset from slave:33
+[ 5454.248994]   free irq_desc for 1302
+[ 5454.249287]   free irq_desc for 1303
+[ 5454.260953]   free irq_desc for 1304
+[ 5454.261279]   free irq_desc for 1305
+[ 5454.261696] pci 0000:02:04.1: freeing pci_dev info
+[ 5454.497131] mlx4_core 0000:02:00.0: Received reset from slave:34
+[ 5454.498033]   free irq_desc for 1306
+[ 5454.498368]   free irq_desc for 1307
+[ 5454.510715]   free irq_desc for 1308
+[ 5454.511040]   free irq_desc for 1309
+[ 5454.511637] pci 0000:02:04.2: freeing pci_dev info
+[ 5454.756143] mlx4_core 0000:02:00.0: Received reset from slave:35
+[ 5454.757169]   free irq_desc for 1310
+[ 5454.757450]   free irq_desc for 1311
+[ 5454.770945]   free irq_desc for 1312
+[ 5454.770995]   free irq_desc for 1313
+[ 5454.771448] pci 0000:02:04.3: freeing pci_dev info
+[ 5455.025076] mlx4_core 0000:02:00.0: Received reset from slave:36
+[ 5455.026029]   free irq_desc for 1314
+[ 5455.026291]   free irq_desc for 1315
+[ 5455.040816]   free irq_desc for 1316
+[ 5455.040865]   free irq_desc for 1317
+[ 5455.041315] pci 0000:02:04.4: freeing pci_dev info
+[ 5455.271839] mlx4_core 0000:02:00.0: Received reset from slave:37
+[ 5455.272777]   free irq_desc for 1318
+[ 5455.273083]   free irq_desc for 1319
+[ 5455.290978]   free irq_desc for 1320
+[ 5455.291240]   free irq_desc for 1321
+[ 5455.291721] pci 0000:02:04.5: freeing pci_dev info
+[ 5455.515457] mlx4_core 0000:02:00.0: Received reset from slave:38
+[ 5455.516424]   free irq_desc for 1322
+[ 5455.516538]   free irq_desc for 1323
+[ 5455.516587]   free irq_desc for 1324
+[ 5455.516635]   free irq_desc for 1325
+[ 5455.517140] pci 0000:02:04.6: freeing pci_dev info
+[ 5455.757061] mlx4_core 0000:02:00.0: Received reset from slave:39
+[ 5455.757998]   free irq_desc for 1326
+[ 5455.758287]   free irq_desc for 1327
+[ 5455.770962]   free irq_desc for 1328
+[ 5455.771028]   free irq_desc for 1329
+[ 5455.771488] pci 0000:02:04.7: freeing pci_dev info
+[ 5456.005454] mlx4_core 0000:02:00.0: Received reset from slave:40
+[ 5456.006393]   free irq_desc for 1330
+[ 5456.006644]   free irq_desc for 1331
+[ 5456.020994]   free irq_desc for 1332
+[ 5456.021057]   free irq_desc for 1333
+[ 5456.021527] pci 0000:02:05.0: freeing pci_dev info
+[ 5456.249555] mlx4_core 0000:02:00.0: Received reset from slave:41
+[ 5456.250495]   free irq_desc for 1334
+[ 5456.250798]   free irq_desc for 1335
+[ 5456.261188]   free irq_desc for 1336
+[ 5456.261251]   free irq_desc for 1337
+[ 5456.262184] pci 0000:02:05.1: freeing pci_dev info
+[ 5456.496812] mlx4_core 0000:02:00.0: Received reset from slave:42
+[ 5456.497782]   free irq_desc for 1338
+[ 5456.498102]   free irq_desc for 1339
+[ 5456.511340]   free irq_desc for 1340
+[ 5456.511403]   free irq_desc for 1341
+[ 5456.511908] pci 0000:02:05.2: freeing pci_dev info
+[ 5456.752499] mlx4_core 0000:02:00.0: Received reset from slave:43
+[ 5456.753720]   free irq_desc for 1342
+[ 5456.753972]   free irq_desc for 1343
+[ 5456.771268]   free irq_desc for 1344
+[ 5456.771329]   free irq_desc for 1345
+[ 5456.771727] pci 0000:02:05.3: freeing pci_dev info
+[ 5457.007932] mlx4_core 0000:02:00.0: Received reset from slave:44
+[ 5457.008893]   free irq_desc for 1346
+[ 5457.009117]   free irq_desc for 1347
+[ 5457.021232]   free irq_desc for 1348
+[ 5457.021472]   free irq_desc for 1349
+[ 5457.022457] pci 0000:02:05.4: freeing pci_dev info
+[ 5457.261323] mlx4_core 0000:02:00.0: Received reset from slave:45
+[ 5457.262191]   free irq_desc for 1350
+[ 5457.262480]   free irq_desc for 1351
+[ 5457.281299]   free irq_desc for 1352
+[ 5457.281346]   free irq_desc for 1353
+[ 5457.281710] pci 0000:02:05.5: freeing pci_dev info
+[ 5457.513048] mlx4_core 0000:02:00.0: Received reset from slave:46
+[ 5457.513944]   free irq_desc for 1354
+[ 5457.514207]   free irq_desc for 1355
+[ 5457.531258]   free irq_desc for 1356
+[ 5457.531306]   free irq_desc for 1357
+[ 5457.531670] pci 0000:02:05.6: freeing pci_dev info
+[ 5457.760620] mlx4_core 0000:02:00.0: Received reset from slave:47
+[ 5457.761494]   free irq_desc for 1358
+[ 5457.761794]   free irq_desc for 1359
+[ 5457.771264]   free irq_desc for 1360
+[ 5457.771312]   free irq_desc for 1361
+[ 5457.771773] pci 0000:02:05.7: freeing pci_dev info
+[ 5458.008640] mlx4_core 0000:02:00.0: Received reset from slave:48
+[ 5458.009717]   free irq_desc for 1362
+[ 5458.009947]   free irq_desc for 1363
+[ 5458.021417]   free irq_desc for 1364
+[ 5458.021795]   free irq_desc for 1365
+[ 5458.022351] pci 0000:02:06.0: freeing pci_dev info
+[ 5458.252793] mlx4_core 0000:02:00.0: Received reset from slave:49
+[ 5458.253677]   free irq_desc for 1366
+[ 5458.253972]   free irq_desc for 1367
+[ 5458.271677]   free irq_desc for 1368
+[ 5458.271724]   free irq_desc for 1369
+[ 5458.272084] pci 0000:02:06.1: freeing pci_dev info
+[ 5458.489329] mlx4_core 0000:02:00.0: Received reset from slave:50
+[ 5458.490216]   free irq_desc for 1370
+[ 5458.490505]   free irq_desc for 1371
+[ 5458.501513]   free irq_desc for 1372
+[ 5458.501776]   free irq_desc for 1373
+[ 5458.502129] pci 0000:02:06.2: freeing pci_dev info
+[ 5458.731210] mlx4_core 0000:02:00.0: Received reset from slave:51
+[ 5458.732090]   free irq_desc for 1374
+[ 5458.732437]   free irq_desc for 1375
+[ 5458.751457]   free irq_desc for 1376
+[ 5458.751503]   free irq_desc for 1377
+[ 5458.751859] pci 0000:02:06.3: freeing pci_dev info
+[ 5458.973317] mlx4_core 0000:02:00.0: Received reset from slave:52
+[ 5458.974191]   free irq_desc for 1378
+[ 5458.974489]   free irq_desc for 1379
+[ 5458.991634]   free irq_desc for 1380
+[ 5458.991894]   free irq_desc for 1381
+[ 5458.992269] pci 0000:02:06.4: freeing pci_dev info
+[ 5459.228617] mlx4_core 0000:02:00.0: Received reset from slave:53
+[ 5459.229475]   free irq_desc for 1382
+[ 5459.229736]   free irq_desc for 1383
+[ 5459.241833]   free irq_desc for 1384
+[ 5459.242083]   free irq_desc for 1385
+[ 5459.242445] pci 0000:02:06.5: freeing pci_dev info
+[ 5459.457288] mlx4_core 0000:02:00.0: Received reset from slave:54
+[ 5459.458150]   free irq_desc for 1386
+[ 5459.458462]   free irq_desc for 1387
+[ 5459.471683]   free irq_desc for 1388
+[ 5459.471927]   free irq_desc for 1389
+[ 5459.472283] pci 0000:02:06.6: freeing pci_dev info
+[ 5459.713679] mlx4_core 0000:02:00.0: Received reset from slave:55
+[ 5459.714556]   free irq_desc for 1390
+[ 5459.714867]   free irq_desc for 1391
+[ 5459.731666]   free irq_desc for 1392
+[ 5459.731711]   free irq_desc for 1393
+[ 5459.732073] pci 0000:02:06.7: freeing pci_dev info
+[ 5459.957250] mlx4_core 0000:02:00.0: Received reset from slave:56
+[ 5459.958154]   free irq_desc for 1394
+[ 5459.958417]   free irq_desc for 1395
+[ 5459.971922]   free irq_desc for 1396
+[ 5459.971968]   free irq_desc for 1397
+[ 5459.972321] pci 0000:02:07.0: freeing pci_dev info
+[ 5460.191680] mlx4_core 0000:02:00.0: Received reset from slave:57
+[ 5460.192550]   free irq_desc for 1398
+[ 5460.192787]   free irq_desc for 1399
+[ 5460.211683]   free irq_desc for 1400
+[ 5460.211729]   free irq_desc for 1401
+[ 5460.212086] pci 0000:02:07.1: freeing pci_dev info
+[ 5460.433863] mlx4_core 0000:02:00.0: Received reset from slave:58
+[ 5460.434719]   free irq_desc for 1402
+[ 5460.435006]   free irq_desc for 1403
+[ 5460.451914]   free irq_desc for 1404
+[ 5460.451959]   free irq_desc for 1405
+[ 5460.452316] pci 0000:02:07.2: freeing pci_dev info
+[ 5460.673364] mlx4_core 0000:02:00.0: Received reset from slave:59
+[ 5460.674225]   free irq_desc for 1406
+[ 5460.674555]   free irq_desc for 1407
+[ 5460.692072]   free irq_desc for 1408
+[ 5460.692338]   free irq_desc for 1409
+[ 5460.692695] pci 0000:02:07.3: freeing pci_dev info
+[ 5460.922618] mlx4_core 0000:02:00.0: Received reset from slave:60
+[ 5460.923478]   free irq_desc for 1410
+[ 5460.923741]   free irq_desc for 1411
+[ 5460.941851]   free irq_desc for 1412
+[ 5460.941897]   free irq_desc for 1413
+[ 5460.942254] pci 0000:02:07.4: freeing pci_dev info
+[ 5461.161658] mlx4_core 0000:02:00.0: Received reset from slave:61
+[ 5461.162534]   free irq_desc for 1414
+[ 5461.162851]   free irq_desc for 1415
+[ 5461.182001]   free irq_desc for 1416
+[ 5461.182251]   free irq_desc for 1417
+[ 5461.182608] pci 0000:02:07.5: freeing pci_dev info
+[ 5461.412367] mlx4_core 0000:02:00.0: Received reset from slave:62
+[ 5461.413303]   free irq_desc for 1418
+[ 5461.413350]   free irq_desc for 1419
+[ 5461.413394]   free irq_desc for 1420
+[ 5461.413441]   free irq_desc for 1421
+[ 5461.413991] pci 0000:02:07.6: freeing pci_dev info
+[ 5461.664620] mlx4_core 0000:02:00.0: Received reset from slave:63
+[ 5461.665489]   free irq_desc for 1422
+[ 5461.665732]   free irq_desc for 1423
+[ 5461.682056]   free irq_desc for 1424
+[ 5461.682104]   free irq_desc for 1425
+[ 5461.682465] pci 0000:02:07.7: freeing pci_dev info
+[ 5463.037163] mlx4_core 0000:02:00.0: command 0x14 failed: fw status = 0x9
+[ 5463.037635] mlx4_core 0000:02:00.0: vhcr command:0x14 slave:0
+failed with error:0, status -9
+[ 5463.052599] mlx4_core 0000:02:00.0: HW2SW_EQ failed (-5)
+[ 5463.052605] remove_mtt_ok-761: state RES_MTT_ALLOCATED, ref_count 1
+[ 5463.052607] mlx4_core 0000:02:00.0: vhcr command:0xf01 slave:0
+failed with error:0, status -16
+[ 5463.052611] mlx4_core 0000:02:00.0: Failed to free mtt range at:512 order:9
+[ 5463.054664] mlx4_core 0000:02:00.0: command 0x14 failed: fw status = 0x9
+[ 5463.054669] mlx4_core 0000:02:00.0: vhcr command:0x14 slave:0
+failed with error:0, status -9
+[ 5463.054673] mlx4_core 0000:02:00.0: HW2SW_EQ failed (-5)
+[ 5463.054678] remove_mtt_ok-761: state RES_MTT_ALLOCATED, ref_count 1
+[ 5463.054681] mlx4_core 0000:02:00.0: vhcr command:0xf01 slave:0
+failed with error:0, status -16
+[ 5463.054684] mlx4_core 0000:02:00.0: Failed to free mtt range at:1024 order:9
+[ 5463.056586] mlx4_core 0000:02:00.0: command 0x14 failed: fw status = 0x9
+[ 5463.056591] mlx4_core 0000:02:00.0: vhcr command:0x14 slave:0
+failed with error:0, status -9
+[ 5463.056595] mlx4_core 0000:02:00.0: HW2SW_EQ failed (-5)
+[ 5463.056599] remove_mtt_ok-761: state RES_MTT_ALLOCATED, ref_count 1
+[ 5463.056602] mlx4_core 0000:02:00.0: vhcr command:0xf01 slave:0
+failed with error:0, status -16
+[ 5463.056605] mlx4_core 0000:02:00.0: Failed to free mtt range at:1536 order:9
+[ 5463.058522] mlx4_core 0000:02:00.0: command 0x14 failed: fw status = 0x9
+[ 5463.058527] mlx4_core 0000:02:00.0: vhcr command:0x14 slave:0
+failed with error:0, status -9
+[ 5463.058531] mlx4_core 0000:02:00.0: HW2SW_EQ failed (-5)
+[ 5463.058534] remove_mtt_ok-761: state RES_MTT_ALLOCATED, ref_count 1
+[ 5463.058537] mlx4_core 0000:02:00.0: vhcr command:0xf01 slave:0
+failed with error:0, status -16
+[ 5463.058540] mlx4_core 0000:02:00.0: Failed to free mtt range at:32 order:2
+[ 5463.072428]   free irq_desc for 1170
+[ 5463.072475]   free irq_desc for 1171
+[ 5463.072520]   free irq_desc for 1172
+[ 5463.072565]   free irq_desc for 1173
+[ 5464.075050] pci 0000:02:00.0: freeing pci_dev info
+[ 5464.075364] ------------[ cut here ]------------
+[ 5464.075602] WARNING: CPU: 20 PID: 25098 at include/linux/kref.h:47
+kobject_get+0x40/0x60()
+[ 5464.092574] Modules linked in:
+[ 5464.092748] CPU: 20 PID: 25098 Comm: bash Not tainted
+3.10.0-yh-04644-g692d9ae-dirty #1787
+[ 5464.112615] Hardware name: Oracle Corporation  unknown       /
+, BIOS 11016600    05/17/2011
+[ 5464.112620]  0000000000000009 ffff885011f51cd8 ffffffff820b9680
+0000000000004880
+[ 5464.112623]  0000000000000000 ffff885011f51d18 ffffffff81096957
+ffffffff82b28f20
+[ 5464.112627]  ffff8880263dd000 0000000000000000 ffff883027056828
+ffff882025616200
+[ 5464.112629] Call Trace:
+[ 5464.112640]  [<ffffffff820b9680>] dump_stack+0x46/0x58
+[ 5464.112649]  [<ffffffff81096957>] warn_slowpath_common+0x87/0xb0
+[ 5464.112654]  [<ffffffff8109699a>] warn_slowpath_null+0x1a/0x20
+[ 5464.112657]  [<ffffffff81504aa0>] kobject_get+0x40/0x60
+[ 5464.112664]  [<ffffffff81760db7>] get_device+0x17/0x30
+[ 5464.112671]  [<ffffffff815387a2>] pci_dev_get+0x22/0x30
+[ 5464.112677]  [<ffffffff8154e758>] pciehp_unconfigure_device+0xa8/0x190
+[ 5464.112681]  [<ffffffff8154e150>] pciehp_disable_slot+0x160/0x200
+[ 5464.112683]  [<ffffffff8154e494>] pciehp_sysfs_disable_slot+0x64/0x130
+[ 5464.112686]  [<ffffffff8154d03a>] disable_slot+0x5a/0x70
+[ 5464.112695]  [<ffffffff8154997f>] power_write_file+0xaf/0x130
+[ 5464.112699]  [<ffffffff8153f471>] pci_slot_attr_store+0x21/0x30
+[ 5464.112708]  [<ffffffff8124272b>] sysfs_write_file+0x10b/0x160
+[ 5464.112718]  [<ffffffff811d1b1b>] vfs_write+0xeb/0x1d0
+[ 5464.112721]  [<ffffffff811d1fb5>] SyS_write+0x55/0xb0
+[ 5464.112728]  [<ffffffff820d609a>] tracesys+0xd4/0xd9
+[ 5464.112730] ---[ end trace a3110aa40b91f7fc ]---
+[ 5464.112744] pci : freeing pci_dev info
+[ 5464.112745] ------------[ cut here ]------------
+[ 5464.112753] WARNING: CPU: 20 PID: 25098 at lib/list_debug.c:56
+__list_del_entry+0x63/0xe0()
+[ 5464.112755] list_del corruption, ffff8880263dd000->prev is
+LIST_POISON2 (dead000000200200)
+[ 5464.112756] Modules linked in:
+[ 5464.112759] CPU: 20 PID: 25098 Comm: bash Tainted: G        W
+3.10.0-yh-04644-g692d9ae-dirty #1787
+[ 5464.112760] Hardware name: Oracle Corporation  unknown       /
+, BIOS 11016600    05/17/2011
+[ 5464.112764]  0000000000000009 ffff885011f51bc8 ffffffff820b9680
+0000000000000d70
+[ 5464.112768]  ffff885011f51c18 ffff885011f51c08 ffffffff81096957
+ffff885011f51c58
+[ 5464.112771]  ffff8880263dd000 ffff8880263dd000 ffff8880263dd098
+ffff8880263dd0a8
+[ 5464.112772] Call Trace:
+[ 5464.112776]  [<ffffffff820b9680>] dump_stack+0x46/0x58
+[ 5464.112779]  [<ffffffff81096957>] warn_slowpath_common+0x87/0xb0
+[ 5464.112782]  [<ffffffff81096a36>] warn_slowpath_fmt+0x46/0x50
+[ 5464.112786]  [<ffffffff81518273>] __list_del_entry+0x63/0xe0
+[ 5464.112790]  [<ffffffff81518301>] list_del+0x11/0x40
+[ 5464.112797]  [<ffffffff8153064c>] pci_release_dev+0x4c/0x150
+[ 5464.112801]  [<ffffffff817610f5>] device_release+0xa5/0x110
+[ 5464.112804]  [<ffffffff81504c4f>] kobject_release+0x6f/0x90
+[ 5464.112807]  [<ffffffff81504b0c>] kobject_put+0x4c/0x60
+[ 5464.112810]  [<ffffffff81760e07>] put_device+0x17/0x20
+[ 5464.112812]  [<ffffffff815386aa>] pci_dev_put+0x1a/0x20
+[ 5464.112815]  [<ffffffff8154e812>] pciehp_unconfigure_device+0x162/0x190
+[ 5464.112818]  [<ffffffff8154e150>] pciehp_disable_slot+0x160/0x200
+[ 5464.112821]  [<ffffffff8154e494>] pciehp_sysfs_disable_slot+0x64/0x130
+[ 5464.112823]  [<ffffffff8154d03a>] disable_slot+0x5a/0x70
+[ 5464.112826]  [<ffffffff8154997f>] power_write_file+0xaf/0x130
+[ 5464.112830]  [<ffffffff8153f471>] pci_slot_attr_store+0x21/0x30
+[ 5464.112833]  [<ffffffff8124272b>] sysfs_write_file+0x10b/0x160
+[ 5464.112836]  [<ffffffff811d1b1b>] vfs_write+0xeb/0x1d0
+[ 5464.112839]  [<ffffffff811d1fb5>] SyS_write+0x55/0xb0
+[ 5464.112842]  [<ffffffff820d609a>] tracesys+0xd4/0xd9
+[ 5464.112844] ---[ end trace a3110aa40b91f7fd ]---
+[ 5464.112859] BUG: unable to handle kernel NULL pointer dereference
 at           (null)
-[   92.713446] IP: [<ffffffff81557910>]
-acpiphp_unregister_hotplug_slot+0x20/0x60
-[   92.713448] PGD 0
-[   92.713449] Oops: 0000 [#1] SMP
-[   92.713451] Modules linked in:
-[   92.713453] CPU: 0 PID: 1042 Comm: kworker/0:1 Not tainted
-3.11.0-rc2-yh-00277-gaaf9c19-dirty #1818
-[   92.713454] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-[   92.713458] Workqueue: kacpi_hotplug acpi_os_execute_deferred
-[   92.713459] task: ffff88007a0ecb40 ti: ffff88007a72a000 task.ti:
-ffff88007a72a000
-[   92.713461] RIP: 0010:[<ffffffff81557910>]  [<ffffffff81557910>]
-acpiphp_unregister_hotplug_slot+0x20/0x60
-[   92.713462] RSP: 0018:ffff88007a72bb28  EFLAGS: 00010296
-[   92.713463] RAX: ffff88007a774e18 RBX: 0000000000000000 RCX: 0000000000000004
-[   92.713463] RDX: ffffffff822ab080 RSI: ffffffff8284eaef RDI: ffffffff8284eb13
-[   92.713464] RBP: ffff88007a72bb38 R08: 0000000000000000 R09: 0000000000000000
-[   92.713465] R10: 0000000000000000 R11: 0000000000000001 R12: ffff88007a774e18
-[   92.713465] R13: ffff88007a774e00 R14: ffff88007a148f70 R15: ffff88007a774e08
-[   92.713466] FS:  0000000000000000(0000) GS:ffff88007b800000(0000)
+[ 5464.112863] IP: [<ffffffff8154e815>] pciehp_unconfigure_device+0x165/0x190
+[ 5464.112866] PGD 0
+[ 5464.112868] Oops: 0000 [#1] SMP
+[ 5464.112871] Modules linked in:
+[ 5464.112873] CPU: 20 PID: 25098 Comm: bash Tainted: G        W
+3.10.0-yh-04644-g692d9ae-dirty #1787
+[ 5464.112874] Hardware name: Oracle Corporation  unknown       /
+, BIOS 11016600    05/17/2011
+[ 5464.112875] task: ffff8850278acb40 ti: ffff885011f50000 task.ti:
+ffff885011f50000
+[ 5464.112878] RIP: 0010:[<ffffffff8154e815>]  [<ffffffff8154e815>]
+pciehp_unconfigure_device+0x165/0x190
+[ 5464.112879] RSP: 0018:ffff885011f51d88  EFLAGS: 00010296
+[ 5464.112881] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000181000094
+[ 5464.112882] RDX: 0000000181000095 RSI: 0000000000000001 RDI: ffff88103d807d00
+[ 5464.112883] RBP: ffff885011f51db8 R08: 0000000000000007 R09: ffff88303e7d70c0
+[ 5464.112884] R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000000
+[ 5464.112886] R13: ffff883027056828 R14: ffff882025616200 R15: ffff886025383ea0
+[ 5464.112888] FS:  00007f6ef7efa700(0000) GS:ffff88303e600000(0000)
 knlGS:0000000000000000
-[   92.713467] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[   92.713470] CR2: 0000000000000000 CR3: 00000000794fc000 CR4: 00000000000006f0
-[   92.713474] Stack:
-[   92.713476]  ffff88007a148f70 ffff88007ab43cd0 ffff88007a72bb88
-ffffffff81557ae0
-[   92.713478]  ffff88007a72bb78 ffff88007a148f60 ffffffff8153574e
-ffff88007a148f60
-[   92.713479]  ffff88007a07d000 ffff88007a07d028 ffff88007a07d800
-ffff88007a325298
-[   92.713480] Call Trace:
-[   92.713482]  [<ffffffff81557ae0>] cleanup_bridge+0x80/0xf0
-[   92.713485]  [<ffffffff8153574e>] ? pci_remove_bus+0x3e/0x60
-[   92.713487]  [<ffffffff81558b1d>] acpiphp_remove_slots+0x5d/0xa0
-[   92.713489]  [<ffffffff8155d48a>] acpi_pci_remove_bus+0x2a/0x40
-[   92.713493]  [<ffffffff81f7bf9e>] pcibios_remove_bus+0xe/0x10
-[   92.713494]  [<ffffffff81535756>] pci_remove_bus+0x46/0x60
-[   92.713496]  [<ffffffff81535900>] pci_remove_root_bus+0x50/0xa0
-[   92.713499]  [<ffffffff81595596>] acpi_pci_root_remove+0x52/0x5f
-[   92.713501]  [<ffffffff81590a0f>] acpi_bus_device_detach+0x3d/0x5e
-[   92.713503]  [<ffffffff81590a72>] acpi_bus_trim+0x42/0x7a
-[   92.713505]  [<ffffffff8159104e>] acpi_scan_hot_remove+0x194/0x23b
-[   92.713507]  [<ffffffff815911f4>] acpi_bus_hot_remove_device+0x2f/0x66
-[   92.713509]  [<ffffffff8158b60b>] acpi_os_execute_deferred+0x25/0x32
-[   92.713513]  [<ffffffff810b7ffb>] process_one_work+0x28b/0x490
-[   92.713515]  [<ffffffff810b7f72>] ? process_one_work+0x202/0x490
-[   92.713517]  [<ffffffff810b94ce>] worker_thread+0x21e/0x370
-[   92.713521]  [<ffffffff810fdafd>] ? trace_hardirqs_on+0xd/0x10
-[   92.713523]  [<ffffffff810b92b0>] ? manage_workers.isra.18+0x330/0x330
-[   92.713526]  [<ffffffff810c0aa8>] kthread+0xe8/0xf0
-[   92.713528]  [<ffffffff810c09c0>] ? __init_kthread_worker+0x70/0x70
-[   92.713531]  [<ffffffff820d991c>] ret_from_fork+0x7c/0xb0
-[   92.713533]  [<ffffffff810c09c0>] ? __init_kthread_worker+0x70/0x70
-[   92.713549] Code: 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00
-55 48 c7 c6 ef ea 84 82 48 89 e5 53 48 83 ec 08 48 8b 5f 28 48 c7 c7
-13 eb 84 82 <48> 8b 03 48 8b 40 30 48 8b 50 28 31 c0 e8 f7 dd b5 00 48
-8b 3b
-[   92.713551] RIP  [<ffffffff81557910>]
-acpiphp_unregister_hotplug_slot+0x20/0x60
-[   92.713552]  RSP <ffff88007a72bb28>
-[   92.713552] CR2: 0000000000000000
-[   92.713554] ---[ end trace 9e3bba504fb5e5d4 ]---
-[   92.713589] BUG: unable to handle kernel paging request at ffffffffffffff98
-[   92.713591] IP: [<ffffffff810c0e30>] kthread_data+0x10/0x20
-[   92.713593] PGD 2a15067 PUD 2a17067 PMD 0
-[   92.713594] Oops: 0000 [#2] SMP
-[   92.713595] Modules linked in:
-[   92.713596] CPU: 0 PID: 1042 Comm: kworker/0:1 Tainted: G      D
-  3.11.0-rc2-yh-00277-gaaf9c19-dirty #1818
-[   92.713597] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-[   92.713604] task: ffff88007a0ecb40 ti: ffff88007a72a000 task.ti:
-ffff88007a72a000
-[   92.713606] RIP: 0010:[<ffffffff810c0e30>]  [<ffffffff810c0e30>]
-kthread_data+0x10/0x20
-[   92.713607] RSP: 0018:ffff88007a72b648  EFLAGS: 00010092
-[   92.713607] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000008
-[   92.713608] RDX: 0000000000000006 RSI: 0000000000000000 RDI: ffff88007a0ecb40
-[   92.713608] RBP: ffff88007a72b648 R08: ffff88007a0ecbb0 R09: 0000000000000000
-[   92.713609] R10: 0000000000000000 R11: 000000159620c258 R12: ffff88007b9d3e80
-[   92.713610] R13: 0000000000000000 R14: 0000000000000001 R15: ffff88007a0ecb40
-[   92.713611] FS:  0000000000000000(0000) GS:ffff88007b800000(0000)
-knlGS:0000000000000000
-[   92.713612] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[   92.713615] CR2: 0000000000000028 CR3: 00000000794fc000 CR4: 00000000000006f0
-[   92.713618] Stack:
-[   92.713620]  ffff88007a72b668 ffffffff810b9a15 ffff88007a72b668
-ffff88007a0ed168
-[   92.713621]  ffff88007a72b788 ffffffff820ce2f4 ffff88007a72b6c8
-ffff88007a72bfd8
-[   92.713623]  ffff88007a72bfd8 0000000000004000 ffff88007a0ecb40
-ffff88007a0ecb40
-[   92.713623] Call Trace:
-[   92.713625]  [<ffffffff810b9a15>] wq_worker_sleeping+0x15/0xa0
-[   92.713627]  [<ffffffff820ce2f4>] __schedule+0x154/0xa60
-[   92.713629]  [<ffffffff810fdafd>] ? trace_hardirqs_on+0xd/0x10
-[   92.713632]  [<ffffffff814e540a>] ? put_io_context+0x9a/0xb0
-[   92.713633]  [<ffffffff814e547b>] ? put_io_context_active+0x5b/0xd0
-[   92.713635]  [<ffffffff820cecfd>] schedule+0x5d/0x60
-[   92.713638]  [<ffffffff8109def5>] do_exit+0x935/0x990
-[   92.713640]  [<ffffffff820d20e8>] oops_end+0xc8/0xe0
-[   92.713643]  [<ffffffff820b4fbc>] no_context+0x261/0x28c
-[   92.713645]  [<ffffffff820b51ac>] __bad_area_nosemaphore+0x1c5/0x1e4
-[   92.713646]  [<ffffffff820b51de>] bad_area_nosemaphore+0x13/0x15
-[   92.713649]  [<ffffffff820d505e>] __do_page_fault+0x4be/0x550
-[   92.713651]  [<ffffffff810d41e5>] ? sched_clock_local+0x25/0xa0
-[   92.713653]  [<ffffffff810f9fc8>] ? trace_hardirqs_off_caller+0x28/0x160
-[   92.713655]  [<ffffffff810fd876>] ? mark_held_locks+0x136/0x150
-[   92.713657]  [<ffffffff810c673b>] ? up+0x4b/0x60
-[   92.713659]  [<ffffffff820d5127>] do_page_fault+0x37/0x60
-[   92.713660]  [<ffffffff820d128c>] ? restore_args+0x30/0x30
-[   92.713662]  [<ffffffff820d1462>] page_fault+0x22/0x30
-[   92.713664]  [<ffffffff81557910>] ? acpiphp_unregister_hotplug_slot+0x20/0x60
-[   92.713667]  [<ffffffff81557ae0>] cleanup_bridge+0x80/0xf0
-[   92.713669]  [<ffffffff8153574e>] ? pci_remove_bus+0x3e/0x60
-[   92.713671]  [<ffffffff81558b1d>] acpiphp_remove_slots+0x5d/0xa0
-[   92.713673]  [<ffffffff8155d48a>] acpi_pci_remove_bus+0x2a/0x40
-[   92.713676]  [<ffffffff81f7bf9e>] pcibios_remove_bus+0xe/0x10
-[   92.713678]  [<ffffffff81535756>] pci_remove_bus+0x46/0x60
-[   92.713681]  [<ffffffff81535900>] pci_remove_root_bus+0x50/0xa0
-[   92.713683]  [<ffffffff81595596>] acpi_pci_root_remove+0x52/0x5f
-[   92.713685]  [<ffffffff81590a0f>] acpi_bus_device_detach+0x3d/0x5e
-[   92.713687]  [<ffffffff81590a72>] acpi_bus_trim+0x42/0x7a
-[   92.713690]  [<ffffffff8159104e>] acpi_scan_hot_remove+0x194/0x23b
-[   92.713692]  [<ffffffff815911f4>] acpi_bus_hot_remove_device+0x2f/0x66
-[   92.713695]  [<ffffffff8158b60b>] acpi_os_execute_deferred+0x25/0x32
-[   92.713697]  [<ffffffff810b7ffb>] process_one_work+0x28b/0x490
-[   92.713699]  [<ffffffff810b7f72>] ? process_one_work+0x202/0x490
-[   92.713701]  [<ffffffff810b94ce>] worker_thread+0x21e/0x370
-[   92.713704]  [<ffffffff810fdafd>] ? trace_hardirqs_on+0xd/0x10
-[   92.713706]  [<ffffffff810b92b0>] ? manage_workers.isra.18+0x330/0x330
-[   92.713708]  [<ffffffff810c0aa8>] kthread+0xe8/0xf0
-[   92.713710]  [<ffffffff810c09c0>] ? __init_kthread_worker+0x70/0x70
-[   92.713712]  [<ffffffff820d991c>] ret_from_fork+0x7c/0xb0
-[   92.713713]  [<ffffffff810c09c0>] ? __init_kthread_worker+0x70/0x70
-[   92.713728] Code: 00 48 89 e5 5d 48 8b 40 88 48 c1 e8 02 83 e0 01
-c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 8b 87 70 05 00 00
-55 48 89 e5 <48> 8b 40 98 5d c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44
-00 00
-[   92.713730] RIP  [<ffffffff810c0e30>] kthread_data+0x10/0x20
-[   92.713730]  RSP <ffff88007a72b648>
-[   92.713731] CR2: ffffffffffffff98
-[   92.713732] ---[ end trace 9e3bba504fb5e5d5 ]---
-[   92.713732] Fixing recursive fault but reboot is needed!
+[ 5464.112889] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[ 5464.112891] CR2: 0000000000000000 CR3: 0000003010ce7000 CR4: 00000000000007e0
+[ 5464.112892] Stack:
+[ 5464.112895]  ffff885011f51da8 fefb010000000002 ffff882025616000
+ffff882025616200
+[ 5464.112898]  ffff882025616200 ffffffff822a36a0 ffff885011f51df8
+ffffffff8154e150
+[ 5464.112900]  0000000000000001 01ff882025616000 ffff882025616000
+ffff8820256160f8
+[ 5464.112900] Call Trace:
+[ 5464.112903]  [<ffffffff8154e150>] pciehp_disable_slot+0x160/0x200
+[ 5464.112905]  [<ffffffff8154e494>] pciehp_sysfs_disable_slot+0x64/0x130
+[ 5464.112908]  [<ffffffff8154d03a>] disable_slot+0x5a/0x70
+[ 5464.112910]  [<ffffffff8154997f>] power_write_file+0xaf/0x130
+[ 5464.112913]  [<ffffffff8153f471>] pci_slot_attr_store+0x21/0x30
+[ 5464.112916]  [<ffffffff8124272b>] sysfs_write_file+0x10b/0x160
+[ 5464.112919]  [<ffffffff811d1b1b>] vfs_write+0xeb/0x1d0
+[ 5464.112921]  [<ffffffff811d1fb5>] SyS_write+0x55/0xb0
+[ 5464.112923]  [<ffffffff820d609a>] tracesys+0xd4/0xd9
+[ 5464.112947] Code: ba 04 00 00 00 48 8b 7b 10 66 81 e1 fb fe 80 cd
+04 66 89 4d de 0f b7 c9 e8 39 fd fd ff 48 89 df 4c 89 e3 e8 7e 9e fe
+ff 4c 89 e0 <4d> 8b 24 24 4c 39 e8 0f 85 2e ff ff ff e9 21 ff ff ff 66
+0f 1f
+[ 5464.112949] RIP  [<ffffffff8154e815>] pciehp_unconfigure_device+0x165/0x190
+[ 5464.112950]  RSP <ffff885011f51d88>
+[ 5464.112951] CR2: 0000000000000000
+[ 5464.113457] ---[ end trace a3110aa40b91f7fe ]---
