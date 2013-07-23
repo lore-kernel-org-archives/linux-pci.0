@@ -1,162 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:45097 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757632Ab3GRBkL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jul 2013 21:40:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <10121200.vQGTlJqFtd@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
-	<3718119.FLASu5DBx8@vostro.rjw.lan>
-	<2366394.4EoP1MXmG2@vostro.rjw.lan>
-	<10121200.vQGTlJqFtd@vostro.rjw.lan>
-Date: Wed, 17 Jul 2013 18:40:10 -0700
-Message-ID: <CAE9FiQXcLeNxjmh-6+jtpOmgC-NB3=Pwh1vZnb+DNLnoKzZQaQ@mail.gmail.com>
-Subject: Re: [PATCH 2/30] ACPI / hotplug / PCI: Consolidate acpiphp_enumerate_slots()
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:36788 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933220Ab3GWRGD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 13:06:03 -0400
+Date: Tue, 23 Jul 2013 10:06:02 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: stable@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>,
+	Jean Delvare <jdelvare@suse.de>
+Subject: Re: [stable PATCH] iommu/vt-d: add quirk for broken interrupt
+ remapping on 55XX chipsets
+Message-ID: <20130723170602.GA15090@kroah.com>
+References: <20130708154111.GA27952@kroah.com>
+ <1373303174-21977-1-git-send-email-nhorman@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1373303174-21977-1-git-send-email-nhorman@tuxdriver.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 17, 2013 at 4:16 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> The acpiphp_enumerate_slots() function is now split into two parts,
-> acpiphp_enumerate_slots() proper and init_bridge_misc() which is
-> only called by the former.  If these functions are combined,
-> it is possible to make the code easier to follow and to clean up
-> the error handling (to prevent memory leaks on error from
-> happening in particular), so do that.
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c |   92 ++++++++++++++++++-------------------
->  1 file changed, 45 insertions(+), 47 deletions(-)
->
-> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -353,46 +353,6 @@ static int detect_ejectable_slots(acpi_h
->         return found;
->  }
->
-> -/* initialize miscellaneous stuff for both root and PCI-to-PCI bridge */
-> -static void init_bridge_misc(struct acpiphp_bridge *bridge)
-> -{
-> -       acpi_status status;
-> -
-> -       /* must be added to the list prior to calling register_slot */
-> -       mutex_lock(&bridge_mutex);
-> -       list_add(&bridge->list, &bridge_list);
-> -       mutex_unlock(&bridge_mutex);
-> -
-> -       /* register all slot objects under this bridge */
-> -       status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, (u32)1,
-> -                                    register_slot, NULL, bridge, NULL);
-> -       if (ACPI_FAILURE(status)) {
-> -               mutex_lock(&bridge_mutex);
-> -               list_del(&bridge->list);
-> -               mutex_unlock(&bridge_mutex);
-> -               return;
-> -       }
-> -
-> -       /* install notify handler for P2P bridges */
-> -       if (!pci_is_root_bus(bridge->pci_bus)) {
-> -               if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
-> -                       status = acpi_remove_notify_handler(bridge->func->handle,
-> -                                               ACPI_SYSTEM_NOTIFY,
-> -                                               handle_hotplug_event_func);
-> -                       if (ACPI_FAILURE(status))
-> -                               err("failed to remove notify handler\n");
-> -               }
-> -               status = acpi_install_notify_handler(bridge->handle,
-> -                                            ACPI_SYSTEM_NOTIFY,
-> -                                            handle_hotplug_event_bridge,
-> -                                            bridge);
-> -
-> -               if (ACPI_FAILURE(status)) {
-> -                       err("failed to register interrupt notify handler\n");
-> -               }
-> -       }
-> -}
-> -
->
->  /* find acpiphp_func from acpiphp_bridge */
->  static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
-> @@ -1149,8 +1109,9 @@ static void handle_hotplug_event_func(ac
->   */
->  void acpiphp_enumerate_slots(struct pci_bus *bus)
->  {
-> -       acpi_handle handle;
->         struct acpiphp_bridge *bridge;
-> +       acpi_handle handle;
-> +       acpi_status status;
->
->         if (acpiphp_disabled)
->                 return;
-> @@ -1178,14 +1139,51 @@ void acpiphp_enumerate_slots(struct pci_
->          */
->         get_device(&bus->dev);
->
-> -       if (!pci_is_root_bus(bridge->pci_bus) &&
-> -           acpi_has_method(bridge->handle, "_EJ0")) {
-> -               dbg("found ejectable p2p bridge\n");
-> -               bridge->flags |= BRIDGE_HAS_EJ0;
-> -               bridge->func = acpiphp_bridge_handle_to_function(handle);
-> +       /* must be added to the list prior to calling register_slot */
-> +       mutex_lock(&bridge_mutex);
-> +       list_add(&bridge->list, &bridge_list);
-> +       mutex_unlock(&bridge_mutex);
-> +
-> +       /* register all slot objects under this bridge */
-> +       status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
-> +                                    register_slot, NULL, bridge, NULL);
-> +       if (ACPI_FAILURE(status)) {
-> +               acpi_handle_err(bridge->handle, "failed to register slots\n");
-> +               goto err;
-> +       }
-> +
-> +       if (pci_is_root_bus(bridge->pci_bus))
-> +               return;
-> +
-> +       /* install notify handler for P2P bridges */
-> +       status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
-> +                                            handle_hotplug_event_bridge,
-> +                                            bridge);
-> +       if (ACPI_FAILURE(status)) {
-> +               acpi_handle_err(bridge->handle,
-> +                               "failed to register notify handler\n");
-> +               goto err;
->         }
->
-> -       init_bridge_misc(bridge);
-> +       if (!acpi_has_method(bridge->handle, "_EJ0"))
-> +               return;
-> +
-> +       dbg("found ejectable p2p bridge\n");
-> +       bridge->flags |= BRIDGE_HAS_EJ0;
-> +       bridge->func = acpiphp_bridge_handle_to_function(bridge->handle);
-> +       if (bridge->func) {
-> +               status = acpi_remove_notify_handler(bridge->func->handle,
-> +                                                   ACPI_SYSTEM_NOTIFY,
-> +                                                   handle_hotplug_event_func);
-> +               if (ACPI_FAILURE(status))
-> +                       acpi_handle_err(bridge->func->handle,
-> +                                       "failed to remove notify handler\n");
-> +       }
+On Mon, Jul 08, 2013 at 01:06:14PM -0400, Neil Horman wrote:
+> A few years back intel published a spec update:
+> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+> 
+> For the 5520 and 5500 chipsets which contained an errata (specificially errata
+> 53), which noted that these chipsets can't properly do interrupt remapping, and
+> as a result the recommend that interrupt remapping be disabled in bios.  While
+> many vendors have a bios update to do exactly that, not all do, and of course
+> not all users update their bios to a level that corrects the problem.  As a
+> result, occasionally interrupts can arrive at a cpu even after affinity for that
+> interrupt has be moved, leading to lost or spurrious interrupts (usually
+> characterized by the message:
+> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+> 
+> There have been several incidents recently of people seeing this error, and
+> investigation has shown that they have system for which their BIOS level is such
+> that this feature was not properly turned off.  As such, it would be good to
+> give them a reminder that their systems are vulnurable to this problem.  For
+> details of those that reported the problem, please see:
+> https://bugzilla.redhat.com/show_bug.cgi?id=887006
+> 
+> [ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+> 
+> Notes: Modified early-quirks.c to include linux/irq.h, to fix warnings.  This
+> isn't needed in the upstream tree
+> 
+> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> CC: Prarit Bhargava <prarit@redhat.com>
+> CC: Don Zickus <dzickus@redhat.com>
+> CC: Don Dutile <ddutile@redhat.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Asit Mallick <asit.k.mallick@intel.com>
+> CC: David Woodhouse <dwmw2@infradead.org>
+> CC: linux-pci@vger.kernel.org
+> CC: Joerg Roedel <joro@8bytes.org>
+> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+> CC: Jean Delvare <jdelvare@suse.de>
+> CC: Greg KH <gregkh@linuxfoundation.org>
+> Signed-off-by: Joerg Roedel <joro@8bytes.org>
+> (cherry picked from commit 03bbcb2e7e292838bb0244f5a7816d194c911d62)
 
-looks little weird that you change to install bridge notifier handler and remove
-bridge func notifier handler.
-actually these two handles is the same one.
+As 3.9-stable is now dead, this one missed that window, sorry about
+that.
 
-I would prefer to keeping the old sequence.
-
-Yinghai
+greg k-h
