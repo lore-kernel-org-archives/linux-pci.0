@@ -1,57 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Cc: Myron Stowe <myron.stowe@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org,
-	virtualization@lists.linux-foundation.org, kvm@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [Announcement] Linux Plumbers ACPI/PM, PCI Microconference
-Date: Wed, 31 Jul 2013 13:40:14 +0200
-Message-ID: <1755363.sGc8nLIQOW@vostro.rjw.lan>
-In-Reply-To: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
-References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:61062 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933409Ab3GWQKh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 12:10:37 -0400
+Received: by mail-ob0-f171.google.com with SMTP id dn14so10682018obc.30
+        for <linux-pci@vger.kernel.org>; Tue, 23 Jul 2013 09:10:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <51EEA26E.50700@redhat.com>
+References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
+	<1374261258-23036-3-git-send-email-yinghai@kernel.org>
+	<51E9B3C7.1010409@intel.com>
+	<CAE9FiQXUgSVO8h=+JTY-giQ_jz9DryOXDsFJJeMT-y1J9Sv+fA@mail.gmail.com>
+	<51E9CA2F.5050307@intel.com>
+	<51EEA26E.50700@redhat.com>
+Date: Tue, 23 Jul 2013 09:10:37 -0700
+Message-ID: <CAE9FiQUfNWS-wgSbxH1qLnFKQMT0YdkzXt1ivCbrtscWaFvzwQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Stop sriov before remove PF
+From: Yinghai Lu <yinghai@kernel.org>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Alexander Duyck <alexander.h.duyck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Greg Rose <gregory.v.rose@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+On Tue, Jul 23, 2013 at 8:34 AM, Don Dutile <ddutile@redhat.com> wrote:
+>>
+>> I suspect that is much easier said than done.  We probably need somebody
+>> familiar with the KVM side of things to address the feasibility of
+>> something like that.  I believe it was Greg and Don that worked on the
+>> original patches that made it so that we could leave the VFs in place on
+>> driver removal.  They would likely have a better answer as to why it is
+>> preferable to leave the VFs in place than panic a non-compliant guest.
+>
+>
+> The virtual effect of leaving the VFs in place was the equivalent of
+> unplugging
+> the cable from the VF device in the guest. When the PF driver was reloaded,
+> it
+> caused the virtual effect of the network cable being reconnected.  Before
+> that
+> patch set (in ixgbe & igb), a PF driver unload in the host would result in
+> the VF
+> assigned to KVM a guest caused a *host crash*.
+> So, start up a KVM (linux) guest, hot-remove the PF with a VF
+> assigned to a guest, and with these patches applied, ensure the host doesn't
+> crash.
+> if it does crash, that's a regression that can't be tolerated, and this
+> patch (set)
+> will need further work.
 
-The original announcement didn't go to linux-pm, so again:
+at beginning, we have pcie native hotlpug working even with sriov enabled.
 
-On Tuesday, July 16, 2013 08:21:26 PM Myron Stowe wrote:
-> Linux Plumbers has approved an ACPI/PM, PCI microconference. The
-> overview page is here:
-> 
-> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
-> 
-> We would like to start receiving volunteers for presenting topics of
-> interest.  There is a lot of activity in these subsystems so please
-> respond by submitting presentation or discussion proposals that you
-> would be willing to cover for consideration.  You should also feel
-> free to submit ideas as proposals that others could cover.  The
-> instructions for submitting ideas should be at:
-> 
-> http://www.linuxplumbersconf.org/2013/submitting-topic/
+later patchset (in ixgbe & igb) will not call disable_sriov, that cause
 
-If anyone who's going to attend the Linux Plumbers Conf this year is interested
-in any particular topic for discussion during the ACPI/PM+PCI uconf, please
-submit a formal topic proposal at:
+hotplug does not work anymore, so that is first regression at all.
 
-http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/proposals/new
+Anyway, guest host crash is not regression when PF get removed, that
+is old behavior when guest/sriov pci passthrough support is added.
 
-If you submit a topic, that doesn't mean you'll be expected to present anything
-(if accepted).  In fact, we are mostly interested in discussion topics and we'd
-like to know what is important to people.
+So need to pci_stub to notify guest to do hotremove, when PF's driver
+get detached?
 
-That said if you have a (short) presentation to make, please submit it too.
+Thanks
 
-We'll appreciate all submissions very much.
-
-Thanks,
-Rafael
-
+Yinghai
