@@ -1,36 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54525 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751130Ab3GEFmO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Jul 2013 01:42:14 -0400
-Date: Fri, 5 Jul 2013 08:47:38 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH v2.1 6/8] PCI: acpiphp: workaround for Thunderbolt on
- Acer Aspire S5
-Message-ID: <20130705054738.GQ4898@intel.com>
-References: <1656567.0oqS7xVYJ8@vostro.rjw.lan>
- <1372948192-17913-1-git-send-email-mika.westerberg@linux.intel.com>
- <2539126.i7GjLNiDjm@vostro.rjw.lan>
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:33875 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933386Ab3GWXKb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 19:10:31 -0400
+Received: by mail-oa0-f50.google.com with SMTP id k7so12907123oag.9
+        for <linux-pci@vger.kernel.org>; Tue, 23 Jul 2013 16:10:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2539126.i7GjLNiDjm@vostro.rjw.lan>
+In-Reply-To: <20130723180821.19616.52936.stgit@bhelgaas-glaptop>
+References: <20130723180001.19616.72450.stgit@bhelgaas-glaptop>
+	<20130723180821.19616.52936.stgit@bhelgaas-glaptop>
+Date: Tue, 23 Jul 2013 16:10:30 -0700
+Message-ID: <CAE9FiQU5-rjWir=NvwEs0vEMmSL9qps6NAa2QFO7yNrLzrx26A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Convert pciehp to be builtin only, not modular
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 05, 2013 at 01:48:01AM +0200, Rafael J. Wysocki wrote:
-> This is fine by me and same for the other patches in the series.
-> 
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Jul 23, 2013 at 11:08 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Convert pciehp to be builtin only, with no module option.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pcie/Kconfig |    5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+>
+> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+> index 569f82f..3b94cfc 100644
+> --- a/drivers/pci/pcie/Kconfig
+> +++ b/drivers/pci/pcie/Kconfig
+> @@ -14,15 +14,12 @@ config PCIEPORTBUS
+>  # Include service Kconfig here
+>  #
+>  config HOTPLUG_PCI_PCIE
+> -       tristate "PCI Express Hotplug driver"
+> +       bool "PCI Express Hotplug driver"
+>         depends on HOTPLUG_PCI && PCIEPORTBUS
 
-Thanks!
+HOTPLUG_PCI is still tristate,
+
+ menuconfig HOTPLUG_PCI
+        tristate "Support for PCI Hotplug"
+
+
+Can you make HOTPLUG_PCI to be built-in ?
+
+or to be more aggressive, just kill HOTPLUG_PCI as with HOTPLUG.
+
+Thanks
+
+Yinghai
+
+>         help
+>           Say Y here if you have a motherboard that supports PCI Express Native
+>           Hotplug
+>
+> -         To compile this driver as a module, choose M here: the
+> -         module will be called pciehp.
+> -
+>           When in doubt, say N.
+>
+>  source "drivers/pci/pcie/aer/Kconfig"
+>
