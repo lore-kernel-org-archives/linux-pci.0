@@ -1,100 +1,297 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:52872 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757781Ab3GaWlw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jul 2013 18:41:52 -0400
-Received: by mail-oa0-f46.google.com with SMTP id l10so2799500oag.19
-        for <linux-pci@vger.kernel.org>; Wed, 31 Jul 2013 15:41:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51EF451A.8050003@oracle.com>
-References: <51EF451A.8050003@oracle.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 31 Jul 2013 16:41:32 -0600
-Message-ID: <CAErSpo5phkLpdR35eaMnYthVXiAAAr-JLD44QkntOZi2-NppOg@mail.gmail.com>
-Subject: Re: [PATCH 2/3] Refactor msi/msix restore code Part2
-To: zhenzhong.duan@oracle.com
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Feng Jin <joe.jin@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout1.samsung.com ([203.254.224.24]:37366 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747Ab3GWBOh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jul 2013 21:14:37 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Jingoo Han <jg1.han@samsung.com>
+References: <002801ce8376$a807dbf0$f81793d0$@samsung.com>
+ <51ED49D6.9050209@ti.com>
+In-reply-to: <51ED49D6.9050209@ti.com>
+Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys part
+ and Exynos part
+Date: Tue, 23 Jul 2013 10:14:34 +0900
+Message-id: <000701ce8741$fe47deb0$fad79c10$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 23, 2013 at 9:08 PM, Zhenzhong Duan
-<zhenzhong.duan@oracle.com> wrote:
-> xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
-> in dom0. It's better to do the same for default_restore_msi_irqs in baremetal.
->
-> Move restore of mask in default_restore_msi_irqs, this could avoid mask
-> restored twice in dom0, once in hypercall, the other in kernel.
->
-> Without that, qlcnic driver calling pci_reset_function will lost interrupt
-> in dom0.
->
-> Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-> ---
->  drivers/pci/msi.c |   17 ++++++++++++++---
->  1 files changed, 14 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 87223ae..922fb49 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
->  #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
->  void default_restore_msi_irqs(struct pci_dev *dev, int irq)
->  {
-> +       int pos;
-> +       u16 control;
->         struct msi_desc *entry;
->
->         entry = NULL;
-> @@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
->                 entry = irq_get_msi_desc(irq);
->         }
->
-> -       if (entry)
-> +       if (entry) {
->                 write_msi_msg(irq, &entry->msg);
-> +               if (dev->msix_enabled) {
-> +                       msix_mask_irq(entry, entry->masked);
-> +                       readl(entry->mask_base);
-> +               } else {
-> +                       pos = entry->msi_attrib.pos;
-> +                       pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
-> +                                            &control);
-> +                       msi_mask_irq(entry, msi_capable_mask(control),
-> +                                    entry->masked);
-> +               }
-> +       }
->  }
->  #endif
->
-> @@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
->         arch_restore_msi_irqs(dev, dev->irq);
->
->         pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-> -       msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
->         control &= ~PCI_MSI_FLAGS_QSIZE;
->         control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
->         pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-> @@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
->
->         list_for_each_entry(entry, &dev->msi_list, list) {
->                 arch_restore_msi_irqs(dev, entry->irq);
-> -               msix_mask_irq(entry, entry->masked);
->         }
->
->         control &= ~PCI_MSIX_FLAGS_MASKALL;
+On Tuesday, July 23, 2013 12:04 AM, Kishon Vijay Abraham I wrote:
+> On Thursday 18 July 2013 10:51 AM, Jingoo Han wrote:
+> > Exynos PCIe IP consists of Synopsys specific part and Exynos
+> > specific part. Only core block is a Synopsys designware part;
+> > other parts are Exynos specific.
+> > Also, the Synopsys designware part can be shared with other
+> > platforms; thus, it can be split two parts such as Synopsys
+> > designware part and Exynos specific part.
+> 
+> some more queries and comments..
 
-Konrad, are you OK with this patch now?
+Hi Kishon,
+Thank you for your comments. :)
 
-If so, can you (Zhenzhong) update the changelog with some of the info
-from the conversation with Konrad?  It seems like a few more details
-are needed to make it clear why we need this change.
+Hi Pratyush Anand,
+Please, answer one question mentioned below. :)
 
-Bjorn
+> >
+> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> > Cc: Pratyush Anand <pratyush.anand@st.com>
+> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> > ---
+> > Changes since v2:
+> .
+> .
+> <snip>
+> .
+> .
+> > +
+> > +static struct pcie_host_ops exynos_pcie_host_ops = {
+> > +	.readl_rc = exynos_pcie_readl_rc,
+> > +	.writel_rc = exynos_pcie_writel_rc,
+> > +	.rd_own_conf = exynos_pcie_rd_own_conf,
+> > +	.wr_own_conf = exynos_pcie_wr_own_conf,
+> > +	.link_up = exynos_pcie_link_up,
+> > +	.host_init = exynos_pcie_host_init,
+> > +};
+> > +
+> > +static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+> > +{
+> > +	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+> 
+> We can move the exynos_pcie specific initialization to probe and leave only
+> pcie_port initialization here.
+
+OK, I will move the exynos_pcie specific initialization to probe
+as you mentioned.
+
+> > +	struct resource *elbi_base;
+> > +	struct resource *phy_base;
+> > +	struct resource *block_base;
+> > +	int ret;
+> > +
+> > +	elbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> > +	if (!elbi_base) {
+> > +		dev_err(&pdev->dev, "couldn't get elbi base resource\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	exynos_pcie->elbi_base = devm_ioremap_resource(&pdev->dev, elbi_base);
+> > +	if (IS_ERR(exynos_pcie->elbi_base))
+> > +		return PTR_ERR(exynos_pcie->elbi_base);
+> > +
+> > +	phy_base = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+> > +	if (!phy_base) {
+> > +		dev_err(&pdev->dev, "couldn't get phy base resource\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	exynos_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy_base);
+> > +	if (IS_ERR(exynos_pcie->phy_base))
+> > +		return PTR_ERR(exynos_pcie->phy_base);
+> > +
+> > +	block_base = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+> > +	if (!block_base) {
+> > +		dev_err(&pdev->dev, "couldn't get block base resource\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	exynos_pcie->block_base = devm_ioremap_resource(&pdev->dev, block_base);
+> > +	if (IS_ERR(exynos_pcie->block_base))
+> > +		return PTR_ERR(exynos_pcie->block_base);
+> 
+> So all this till here can be moved to probe.
+
+As above mentioned, I will move it to probe.
+
+> > +
+> > +	pp->irq = platform_get_irq(pdev, 1);
+> > +	if (!pp->irq) {
+> > +		dev_err(&pdev->dev, "failed to get irq\n");
+> > +		return -ENODEV;
+> > +	}
+> > +	ret = devm_request_irq(&pdev->dev, pp->irq, exynos_pcie_irq_handler,
+> > +				IRQF_SHARED, "exynos-pcie", pp);
+> > +	if (ret) {
+> > +		dev_err(&pdev->dev, "failed to request irq\n");
+> > +		return ret;
+> > +	}
+> > +
+> > +	pp->root_bus_nr = -1;
+> > +	pp->ops = &exynos_pcie_host_ops;
+> > +
+> > +	spin_lock_init(&pp->conf_lock);
+> > +	ret = dw_pcie_host_init(pp);
+> > +	if (ret) {
+> > +		dev_err(&pdev->dev, "failed to initialize host\n");
+> > +		return ret;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static int __init exynos_pcie_probe(struct platform_device *pdev)
+> > +{
+> > +	struct exynos_pcie *exynos_pcie;
+> > +	struct pcie_port *pp;
+> > +	struct device_node *np = pdev->dev.of_node;
+> > +	int ret;
+> > +
+> > +	exynos_pcie = devm_kzalloc(&pdev->dev, sizeof(*exynos_pcie),
+> > +				GFP_KERNEL);
+> > +	if (!exynos_pcie) {
+> > +		dev_err(&pdev->dev, "no memory for exynos pcie\n");
+> > +		return -ENOMEM;
+> > +	}
+> > +
+> > +	pp = &exynos_pcie->pp;
+> > +
+> > +	pp->dev = &pdev->dev;
+> > +
+> > +	exynos_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> > +
+> > +	exynos_pcie->clk = devm_clk_get(&pdev->dev, "pcie");
+> > +	if (IS_ERR(exynos_pcie->clk)) {
+> > +		dev_err(&pdev->dev, "Failed to get pcie rc clock\n");
+> > +		return PTR_ERR(exynos_pcie->clk);
+> > +	}
+> > +	ret = clk_prepare_enable(exynos_pcie->clk);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	exynos_pcie->bus_clk = devm_clk_get(&pdev->dev, "pcie_bus");
+> > +	if (IS_ERR(exynos_pcie->bus_clk)) {
+> > +		dev_err(&pdev->dev, "Failed to get pcie bus clock\n");
+> > +		ret = PTR_ERR(exynos_pcie->bus_clk);
+> > +		goto fail_clk;
+> > +	}
+> > +	ret = clk_prepare_enable(exynos_pcie->bus_clk);
+> > +	if (ret)
+> > +		goto fail_clk;
+> > +
+> > +	ret = add_pcie_port(pp, pdev);
+> > +	if (ret < 0)
+> > +		goto fail_bus_clk;
+> 
+> I think we should move all the below code to designware core file. IMO it
+> should be common everyone who use designware core.
+
+OK, I will move the below code to dw_pcie_host_init() in pcie-designware.c
+
+
+> > +
+> > +	dw_pci.nr_controllers = 1;
+> > +	dw_pci.private_data = (void **)&pp;
+> > +
+> > +	pci_common_init(&dw_pci);
+> > +	pci_assign_unassigned_resources();
+> > +#ifdef CONFIG_PCI_DOMAINS
+> > +	dw_pci.domain++;
+> > +#endif
+> > +
+> > +	platform_set_drvdata(pdev, exynos_pcie);
+> > +	return 0;
+> > +
+> > +fail_bus_clk:
+> > +	clk_disable_unprepare(exynos_pcie->bus_clk);
+> > +fail_clk:
+> > +	clk_disable_unprepare(exynos_pcie->clk);
+> > +	return ret;
+> > +}
+> > +
+
+[.....]
+
+> > +int dw_pcie_host_init(struct pcie_port *pp)
+> > +{
+> > +	struct device_node *np = pp->dev->of_node;
+> > +	struct of_pci_range range;
+> > +	struct of_pci_range_parser parser;
+> > +	u32 val;
+> > +
+> > +	if (of_pci_range_parser_init(&parser, np)) {
+> > +		dev_err(pp->dev, "missing ranges property\n");
+> > +		return -EINVAL;
+> > +	}
+> 
+> I have some confusion here w.r.t address space :-s
+
+This scheme has been confirmed for last 6 months.
+Previous mail threads on Marvell PCIe, Tegra PCIe will be helpful
+to catch up this.
+
+> > +
+> > +	/* Get the I/O and memory ranges from DT */
+> > +	for_each_of_pci_range(&parser, &range) {
+> > +		unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
+> > +		if (restype == IORESOURCE_IO) {
+> > +			of_pci_range_to_resource(&range, np, &pp->io);
+> > +			pp->io.name = "I/O";
+> > +			pp->io.start = max_t(resource_size_t,
+> > +					     PCIBIOS_MIN_IO,
+> > +					     range.pci_addr + global_io_offset);
+> > +			pp->io.end = min_t(resource_size_t,
+> > +					   IO_SPACE_LIMIT,
+> > +					   range.pci_addr + range.size
+> > +					   + global_io_offset);
+> > +			pp->config.io_size = resource_size(&pp->io);
+> > +			pp->config.io_bus_addr = range.pci_addr;
+> > +		}
+> > +		if (restype == IORESOURCE_MEM) {
+> > +			of_pci_range_to_resource(&range, np, &pp->mem);
+> > +			pp->mem.name = "MEM";
+> > +			pp->config.mem_size = resource_size(&pp->mem);
+> > +			pp->config.mem_bus_addr = range.pci_addr;
+> > +		}
+> > +		if (restype == 0) {
+> > +			of_pci_range_to_resource(&range, np, &pp->cfg);
+> > +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
+> > +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
+> > +		}
+> > +	}
+> > +
+> > +	pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
+> > +				resource_size(&pp->cfg));
+> 
+> Why is configuraion space divided into two?
+
+Sorry, I don't know the exact reason. :(
+Pratyush Anand may know about this.
+Pratyush Anand, could you answer the question?
+
+Also, if you find some problems, please let me know.
+
+
+> Why should it be same as dbi_base?
+> AFAIK, jacinto6 has a dedicated configuration/io/memory space that is entirely
+> different from dbi_base.
+
+According to the Synopsys designware PCIe datasheet,
+in chapter 5.1.1 Register Space Layout,
+'Port Logic Registers' are placed between (config space 0x0 + 0x700)
+and (config space 0x0 + 0xFFF).
+'dbi_base' is used for reading/writing 'Port Logic Registers'.
+Exynos are using 'dbi_base' like this. Thus, the base addresses of
+both 'dbi_base' and configuration/io/memory space are same.
+
+Just now, I looked at Spear PCIe driver.
+However, in the case of Spear, the base address of configuration/io/memory
+space is defined as 0x80000000. The base address of 'Port Logic Registers'
+is defined as 0xb1000000.
+I think that the situation of 'jacinto6' is similar with Spear, right?
+
+Then, I will move pp->dbi_base mapping code from pcie-designware.c
+to pci-exynos.c.
+
+
+Best regards,
+Jingoo Han
+
