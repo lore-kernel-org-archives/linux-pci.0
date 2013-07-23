@@ -1,71 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:46641 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751619Ab3GXVsJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Jul 2013 17:48:09 -0400
-Message-ID: <1374702465.6142.3.camel@pasglop>
-Subject: Re: [PATCH 04/11] PCI/hotplug: Needn't remove EEH cache again
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1372860295-8306-2-git-send-email-mika.westerberg@linux.intel.com>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com> <1372860295-8306-2-git-send-email-mika.westerberg@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 22 Jul 2013 18:08:28 -0600
+Message-ID: <CAErSpo7=ed3=P7ab9zYB23qnwe8Z-ghRfCEurskpcNW5m86j8g@mail.gmail.com>
+Subject: Re: [PATCH v2 1/8] x86/PCI: prevent re-allocation of already existing
+ bridge and ROM resources
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Date: Thu, 25 Jul 2013 07:47:45 +1000
-In-Reply-To: <CAErSpo7rXF9vf=BMT1LoLeHPRiyJxT2XWbroRjdt+DH8+4QOnA@mail.gmail.com>
-References: <1374632701-20972-1-git-send-email-shangw@linux.vnet.ibm.com>
-	 <1374632701-20972-5-git-send-email-shangw@linux.vnet.ibm.com>
-	 <CAErSpo7rXF9vf=BMT1LoLeHPRiyJxT2XWbroRjdt+DH8+4QOnA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	"x86@kernel.org" <x86@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-07-24 at 12:02 -0600, Bjorn Helgaas wrote:
-> [+cc linux-pci]
-> 
-> On Tue, Jul 23, 2013 at 8:24 PM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
-> > Since pcibios_release_device() called by pci_stop_and_remove_bus_device()
-> > has removed the EEH cache, we needn't do that again.
-> >
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> 
-> I'll be happy to merge this if you want, or since you have my Ack
-> already, you can merge it with the rest of the series.  I didn't get
-> the rest of the series, so I don't know if it depends on this.
-> 
-> Just let me know what you want me to do.
+On Wed, Jul 3, 2013 at 8:04 AM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> In hotplug case (especially with Thunderbolt enabled systems) we might need
+> to call pcibios_resource_survey_bus() several times for a bus. The function
+> ends up calling pci_claim_resource() for each bridge resource that then
+> fails claiming that the resource exists already (which it does). Once this
+> happens the resource is invalidated thus preventing devices behind the
+> bridge to allocate their resources.
+>
+> To fix this we do what has been done in pcibios_allocate_dev_resources()
+> and check 'parent' of the given resource. If it is non-NULL it means that
+> the resource has been allocated already and we can skip it. We do the same
+> for ROM resources as well.
+>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Already merged :-)
+This looks reasonable to me.
 
-Thanks !
+However, the use of "r->parent" to determine whether the resource is
+already allocated is nothing specific to x86.  So I think we might be
+missing an opportunity to make this more consistent across
+architectures.  I looked at other callers of pci_claim_resource() for
+bridge and ROM resources, and it looks like we might be able to make
+similar changes in:
 
-Cheers,
-Ben.
+  frv pcibios_allocate_bus_resources()
+  ia64 pcibios_fixup_resources() (via pcibios_fixup_bridge_resources())
+  mn10300 pcibios_allocate_bus_resources()
+  mn10300 pcibios_assign_resources() (ROM)
+  mn10300 pcibios_fixup_device_resources()
+  parisc lba_fixup_bus()
 
-> > ---
-> >  drivers/pci/hotplug/rpadlpar_core.c |    1 -
-> >  1 files changed, 0 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-> > index b29e20b..bb7af78 100644
-> > --- a/drivers/pci/hotplug/rpadlpar_core.c
-> > +++ b/drivers/pci/hotplug/rpadlpar_core.c
-> > @@ -388,7 +388,6 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
-> >         /* Remove the EADS bridge device itself */
-> >         BUG_ON(!bus->self);
-> >         pr_debug("PCI: Now removing bridge device %s\n", pci_name(bus->self));
-> > -       eeh_remove_bus_device(bus->self, true);
-> >         pci_stop_and_remove_bus_device(bus->self);
-> >
-> >         return 0;
-> > --
-> > 1.7.5.4
-> >
+I really hate the idea of fixing something for x86 but not for other
+arches, so maybe somebody could take a deeper look at this and see if
+it would make sense to change the other arches, too.
+
+Bjorn
+
+> ---
+>  arch/x86/pci/i386.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+> index 94919e3..db6b1ab 100644
+> --- a/arch/x86/pci/i386.c
+> +++ b/arch/x86/pci/i386.c
+> @@ -210,6 +210,8 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+>                 r = &dev->resource[idx];
+>                 if (!r->flags)
+>                         continue;
+> +               if (r->parent)  /* Already allocated */
+> +                       continue;
+>                 if (!r->start || pci_claim_resource(dev, idx) < 0) {
+>                         /*
+>                          * Something is wrong with the region.
+> @@ -318,6 +320,8 @@ static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
+>         r = &dev->resource[PCI_ROM_RESOURCE];
+>         if (!r->flags || !r->start)
+>                 return;
+> +       if (r->parent) /* Already allocated */
+> +               return;
+>
+>         if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
+>                 r->end -= r->start;
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+> 1.8.3.2
+>
