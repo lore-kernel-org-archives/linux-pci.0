@@ -1,124 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35093 "EHLO mx1.redhat.com"
+Received: from hydra.sisk.pl ([212.160.235.94]:33891 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756126Ab3GKOEc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Jul 2013 10:04:32 -0400
-Message-ID: <51DE8319.60301@redhat.com>
-Date: Thu, 11 Jul 2013 06:04:09 -0400
-From: Don Dutile <ddutile@redhat.com>
+	id S1753536Ab3GWBke (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Jul 2013 21:40:34 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"Penner, Miles J" <miles.j.penner@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH v2 1/8] x86/PCI: prevent re-allocation of already existing bridge and ROM resources
+Date: Tue, 23 Jul 2013 03:50:36 +0200
+Message-ID: <2765266.7xyo4HkKBQ@vostro.rjw.lan>
+In-Reply-To: <CAErSpo5=-32QSZ_RtLgU_67gMF6RVcnTAG6oKJ_Uz7uf4pXRkA@mail.gmail.com>
+References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com> <CAErSpo7=ed3=P7ab9zYB23qnwe8Z-ghRfCEurskpcNW5m86j8g@mail.gmail.com> <CAErSpo5=-32QSZ_RtLgU_67gMF6RVcnTAG6oKJ_Uz7uf4pXRkA@mail.gmail.com>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Rafael <rjw@sisk.pl>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH -v2 3/3] PCI,pciehp: use PCIe DSN to identify device change
- during suspend
-References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com> <1373535825-49972-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1373535825-49972-4-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry, did a 'reply' instead of 'reply all' on first reply to this patch...
-excuse any repeat...
-- Don
+On Monday, July 22, 2013 07:18:38 PM Bjorn Helgaas wrote:
+> On Mon, Jul 22, 2013 at 6:08 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Wed, Jul 3, 2013 at 8:04 AM, Mika Westerberg
+> > <mika.westerberg@linux.intel.com> wrote:
+> >> In hotplug case (especially with Thunderbolt enabled systems) we might need
+> >> to call pcibios_resource_survey_bus() several times for a bus. The function
+> >> ends up calling pci_claim_resource() for each bridge resource that then
+> >> fails claiming that the resource exists already (which it does). Once this
+> >> happens the resource is invalidated thus preventing devices behind the
+> >> bridge to allocate their resources.
+> >>
+> >> To fix this we do what has been done in pcibios_allocate_dev_resources()
+> >> and check 'parent' of the given resource. If it is non-NULL it means that
+> >> the resource has been allocated already and we can skip it. We do the same
+> >> for ROM resources as well.
+> >>
+> >> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> >
+> > This looks reasonable to me.
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-On 07/11/2013 05:43 AM, Yijing Wang wrote:
-> If device was removed from slot and reinsert a new device during
-> suspend, pciehp can not identify the physical device change now.
-> So the old driver .resume() method will be called for the new device,
-> this is bad. If device support device serial number capability,
-> we can identify this by DSN. So the reasonable way is first remove
-> the old device, then enable the new device.
->
-> Signed-off-by: Yijing Wang<wangyijing@huawei.com>
-> Cc: Paul Bolle<pebolle@tiscali.nl>
-> Cc: "Rafael J. Wysocki"<rjw@sisk.pl>
-> Cc: Oliver Neukum<oneukum@suse.de>
-> Cc: Gu Zheng<guz.fnst@cn.fujitsu.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->   drivers/pci/hotplug/pciehp_core.c |   45 +++++++++++++++++++++++++++++++++++++
->   1 files changed, 45 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 1542735..f2eb214 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -296,11 +296,38 @@ static int pciehp_suspend (struct pcie_device *dev)
->   	return 0;
->   }
->
-> +/*
-> + * check the func 0 device serial number is changed,
-> + * if device does not support device serial number,
-> + * return false.
-> + */
-> +static bool device_serial_number_changed(struct pci_bus *pbus)
-> +{
-> +	u64 old_dsn, new_dsn;
-> +	struct pci_dev *pdev;
-> +
-> +	pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
-> +	if (!pdev)
-> +		return false;
-> +
-> +	old_dsn = pdev->sn;
-> +
-> +	/* get func 0 device serial number */
-> +	new_dsn = pci_device_serial_number(pdev);
-Due to previous recommended change to 1/3 patch, above would be:
-     pci_device_serial_number(pdev);
+Thanks a lot!
 
-> +	pci_dev_put(pdev);
-> +
-> +	if (old_dsn != new_dsn)
-> +		return true;
-> +
-and above would be:
-     new_dsn = pdev->dsn;
-     pci_dev_put(pdev);
-     if(pdev->dsn != old_dsn)
-         return true;
-
-> +	return false;
-> +}
-> +
->   static int pciehp_resume (struct pcie_device *dev)
->   {
->   	struct controller *ctrl;
->   	struct slot *slot;
->   	struct pci_bus *pbus = dev->port->subordinate;
-> +	int retval = 0;
->   	u8 status;
->
->   	ctrl = get_service_data(dev);
-> @@ -315,6 +342,24 @@ static int pciehp_resume (struct pcie_device *dev)
->   	if (status) {
->   		if (list_empty(&pbus->devices))
->   			pciehp_enable_slot(slot);
-> +
-> +		if (device_serial_number_changed(pbus)) {
-> +			/*
-> +			 * first power off slot, avoid the old driver
-> +			 * .remove() method touch the new hardware
-> +			 */
-> +			if (POWER_CTRL(ctrl)) {
-> +				retval = pciehp_power_off_slot(slot);
-> +				if (retval) {
-> +					ctrl_err(ctrl,
-> +						"Issue of Slot Disable command failed\n");
-> +					return 0;
-> +				}
-> +				msleep(1000);
-> +				pciehp_unconfigure_device(slot);
-> +				pciehp_enable_slot(slot);
-> +			}
-> +		}
->   	} else if (!list_empty(&pbus->devices))
->   		pciehp_disable_slot(slot);
->   	
-
+> > However, the use of "r->parent" to determine whether the resource is
+> > already allocated is nothing specific to x86.  So I think we might be
+> > missing an opportunity to make this more consistent across
+> > architectures.  I looked at other callers of pci_claim_resource() for
+> > bridge and ROM resources, and it looks like we might be able to make
+> > similar changes in:
+> >
+> >   frv pcibios_allocate_bus_resources()
+> >   ia64 pcibios_fixup_resources() (via pcibios_fixup_bridge_resources())
+> >   mn10300 pcibios_allocate_bus_resources()
+> >   mn10300 pcibios_assign_resources() (ROM)
+> >   mn10300 pcibios_fixup_device_resources()
+> >   parisc lba_fixup_bus()
+> >
+> > I really hate the idea of fixing something for x86 but not for other
+> > arches, so maybe somebody could take a deeper look at this and see if
+> > it would make sense to change the other arches, too.
+> >
+> > Bjorn
+> >
+> >> ---
+> >>  arch/x86/pci/i386.c | 4 ++++
+> >>  1 file changed, 4 insertions(+)
+> >>
+> >> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+> >> index 94919e3..db6b1ab 100644
+> >> --- a/arch/x86/pci/i386.c
+> >> +++ b/arch/x86/pci/i386.c
+> >> @@ -210,6 +210,8 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+> >>                 r = &dev->resource[idx];
+> >>                 if (!r->flags)
+> >>                         continue;
+> >> +               if (r->parent)  /* Already allocated */
+> >> +                       continue;
+> >>                 if (!r->start || pci_claim_resource(dev, idx) < 0) {
+> >>                         /*
+> >>                          * Something is wrong with the region.
+> >> @@ -318,6 +320,8 @@ static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
+> >>         r = &dev->resource[PCI_ROM_RESOURCE];
+> >>         if (!r->flags || !r->start)
+> >>                 return;
+> >> +       if (r->parent) /* Already allocated */
+> >> +               return;
+> >>
+> >>         if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
+> >>                 r->end -= r->start;
+> >> --
+> >> 1.8.3.2
+> >>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
