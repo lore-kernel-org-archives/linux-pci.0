@@ -1,122 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:44662 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753699Ab3G1O1W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 28 Jul 2013 10:27:22 -0400
-Date: Sun, 28 Jul 2013 16:27:11 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Grant Likely <grant.likely@secretlab.ca>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCHv5 05/11] of: pci: add registry of MSI chips
-Message-ID: <20130728162711.32a9a21e@skate>
-In-Reply-To: <20130728043310.6CF1D3E08FE@localhost>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1373889167-27878-6-git-send-email-thomas.petazzoni@free-electrons.com>
-	<51E41F7A.4010502@gmail.com>
-	<20130728043310.6CF1D3E08FE@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx1.redhat.com ([209.132.183.28]:65449 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757798Ab3GWPeR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Jul 2013 11:34:17 -0400
+Message-ID: <51EEA26E.50700@redhat.com>
+Date: Tue, 23 Jul 2013 11:34:06 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Greg Rose <gregory.v.rose@intel.com>
+Subject: Re: [PATCH] PCI: Stop sriov before remove PF
+References: <1374261258-23036-1-git-send-email-yinghai@kernel.org> <1374261258-23036-3-git-send-email-yinghai@kernel.org> <51E9B3C7.1010409@intel.com> <CAE9FiQXUgSVO8h=+JTY-giQ_jz9DryOXDsFJJeMT-y1J9Sv+fA@mail.gmail.com> <51E9CA2F.5050307@intel.com>
+In-Reply-To: <51E9CA2F.5050307@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Grant Likely,
+On 07/19/2013 07:22 PM, Alexander Duyck wrote:
+> On 07/19/2013 03:44 PM, Yinghai Lu wrote:
+>> On Fri, Jul 19, 2013 at 2:46 PM, Alexander Duyck
+>> <alexander.h.duyck@intel.com>  wrote:
+>>> On 07/19/2013 12:14 PM, Yinghai Lu wrote:
+>>>> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
+>>>> (PCI: Simplify IOV implementation and fix reference count races)
+>>>> VF need to be removed via virtfn_remove to make sure ref to PF
+>>>> is put back.
+>>>>
+>>>> Some driver (like ixgbe) does not call pci_disable_sriov() if
+>>>> sriov is enabled via /sys/.../sriov_numvfs setting.
+>>>> ixgbe does allow driver for PF get detached, but still have VFs
+>>>> around.
+>>>>
+>>>> But how about PF get removed via /sys or pciehp?
+>>>>
+>>>> During hot-remove, VF will still hold one ref to PF and it
+>>>> prevent PF to be removed.
+>>>> That make the next hot-add fails, as old PF dev struct is still around.
+>>>>
+>>>> We need to add pci_disable_sriov() calling during pci dev removing.
+>>>>
+>>>> Need this one for v3.11
+>>>>
+>>>> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
+>>>> Cc: Jiang Liu<liuj97@gmail.com>
+>>>> Cc: Alexander Duyck<alexander.h.duyck@intel.com>
+>>>> Cc: Donald Dutile<ddutile@redhat.com>
+>>>> Cc: Greg Rose<gregory.v.rose@intel.com>
+>>>>
+>>>> ---
+>>>>   drivers/pci/remove.c |    3 +++
+>>>>   1 file changed, 3 insertions(+)
+>>>>
+>>>> Index: linux-2.6/drivers/pci/remove.c
+>>>> ===================================================================
+>>>> --- linux-2.6.orig/drivers/pci/remove.c
+>>>> +++ linux-2.6/drivers/pci/remove.c
+>>>> @@ -34,6 +34,9 @@ static void pci_stop_dev(struct pci_dev
+>>>>
+>>>>   static void pci_destroy_dev(struct pci_dev *dev)
+>>>>   {
+>>>> +     /* remove VF, if PF driver skip that */
+>>>> +     pci_disable_sriov(dev);
+>>>> +
+>>>>        down_write(&pci_bus_sem);
+>>>>        list_del(&dev->bus_list);
+>>>>        up_write(&pci_bus_sem);
+>>>>
+>>> How are you able to hot-remove the PF if the VFs are still holding
+>>> references to it?
+>> usually pci_stop_and_remove_bus_device always successfully, and
+>> power get turned off for that card.
+>
+> I'm not an expert in this area, but that doesn't seem right.  How is it
+> you can remove a device if there are still outstanding references to
+> it?  Is this one of those cases where we have to succeed because the
+> system is removing the device and there is nothing we can do to stop it?
+>
+>>> The issue I see with this patch is that if the PF has any VFs direct
+>>> assigned, hot plug removing the PF will cause the guests containing
+>>> those VFs to panic.
+>> Then you should make guest support hotplug or suprise removal.
+>>
+>> If the guest does panic because it does support hotplug, that is right behavior.
+>>
+>> Just like in bare metal machine, if it does not support hotplug, and user would
+>> know what is going to happen if he remove one pcie card.
+>>
+>> Thanks
+>>
+>> Yinghai
+>
+> I suspect that is much easier said than done.  We probably need somebody
+> familiar with the KVM side of things to address the feasibility of
+> something like that.  I believe it was Greg and Don that worked on the
+> original patches that made it so that we could leave the VFs in place on
+> driver removal.  They would likely have a better answer as to why it is
+> preferable to leave the VFs in place than panic a non-compliant guest.
 
-Thanks for your feedback! Some comments below.
+The virtual effect of leaving the VFs in place was the equivalent of unplugging
+the cable from the VF device in the guest. When the PF driver was reloaded, it
+caused the virtual effect of the network cable being reconnected.  Before that
+patch set (in ixgbe & igb), a PF driver unload in the host would result in the VF
+assigned to KVM a guest caused a *host crash*.
+So, start up a KVM (linux) guest, hot-remove the PF with a VF
+assigned to a guest, and with these patches applied, ensure the host doesn't crash.
+if it does crash, that's a regression that can't be tolerated, and this patch (set)
+will need further work.
+- Don
 
-On Sat, 27 Jul 2013 22:33:10 -0600, Grant Likely wrote:
+>
+> Thanks,
+>
+> Alex
 
-> > > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > 
-> > Acked-by: Rob Herring <rob.herring@calxeda.com>
-> 
-> Actually, I'm going to disagree on this one and say NAK. I don't think
-> it is a good idea to create a completely separate registry of msi_chips
-> for binding to dt nodes. I think it would be better to include the
-> msi_chip pointer directly into the irq_domain which has to be there
-> anyway. It then becomes another feature for irq controllers if it can
-> support doing MSI.
-
-The problem that this patch tries to solve is how can the PCIe driver
-work get a pointer to the msi_chip structure from the DT device node
-pointed to by the 'msi-parent' property. I.e, we have:
-
-	interrupt-parent = <&mpic>;
-
-	mpic {
-		reg = <...>;
-		compatible = "...";
-		interrupt-controller;
-		msi-controller;
-	};
-
-	pcie-controller {
-		msi-parent = <&mpic>;
-	};
-
-The 'mpic' driver registers two irq_domains, one for the "normal"
-interrupts, and one for the MSI interrupts. Both irq_domain cannot be
-associated to the same &mpic node, or the irq_domain lookup for
-interrupt-parent and msi-parent is going to be confused.
-
-In the very first version of this patch set, I was using two separate
-DT device nodes to avoid this problem:
-
-	interrupt-parent = <&mpic>;
-
-	interrupt-controller {
-		reg = <...>;
-		compatible = "...";
-
-		mpic {
-			interrupt-controller;
-		};
-
-		msi {
-			msi-controller;
-		};
-	};
-
-	pcie-controller {
-		msi-parent = <&msi>;
-	};
-
-This way, each of the two irq_domain was associated to a distinct DT
-device node, and everything was working fine. But during the review, I
-was pointed by Arnd that it wasn't the proper way of describing the
-interrupt controller, and that there should be only one DT device node
-having both the interrupt-controller and msi-controller roles.
-
-So what is your suggestion to allow the PCIe controller to retrieve the
-correct irq_domain if we have only one DT node for the IRQ controller
-that registers two irq_domains ?
-
-See:
-
-   [RFCv1 00/11] MSI support for Marvell EBU PCIe driver
-   https://lists.ozlabs.org/pipermail/devicetree-discuss/2013-March/030578.html
-
-and particularly:
-
-   [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to interrupt
-   controller driver
-   https://lists.ozlabs.org/pipermail/devicetree-discuss/2013-March/030584.html
-
-Thanks,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
