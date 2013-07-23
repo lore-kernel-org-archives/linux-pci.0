@@ -1,135 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, x86@kernel.org
-Subject: [PATCH v2.1 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer Aspire S5
-Date: Thu,  4 Jul 2013 17:29:51 +0300
-Message-Id: <1372948192-17913-1-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1656567.0oqS7xVYJ8@vostro.rjw.lan>
-References: <1656567.0oqS7xVYJ8@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:21982 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932138Ab3GWPrd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Jul 2013 11:47:33 -0400
+Message-ID: <1374594444.15429.34.camel@ul30vt.home>
+Subject: Re: [PATCH v2 0/3] pci: ACS fixes & quirks
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
+	andihartmann@01019freenet.de, linux-kernel@vger.kernel.org,
+	ddutile <ddutile@redhat.com>
+Date: Tue, 23 Jul 2013 09:47:24 -0600
+In-Reply-To: <1373300262.2602.22.camel@ul30vt.home>
+References: <20130627222159.16564.38166.stgit@bling.home>
+	 <1373300262.2602.22.camel@ul30vt.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The acpiphp driver finds out whether the device is removable by checking
-whether it has _RMV method directly behind it (and if it returns 1).
-However, at least on Acer Aspire S5 with Thunderbolt host router has this
-method placed behind a device called EPUP (endpoint upstream port?) and not
-in the usual place expected by the acpiphp driver. The ASL code below shows
-how this is done on that machine:
 
-Device (RP05)
-{
-	...
-	Device (HRUP)
-	{
-		Name (_ADR, Zero)
-		Name (_PRW, Package (0x02)
-		{
-			0x09,
-			0x04
-		})
-		Device (HRDN)
-		{
-			Name (_ADR, 0x00040000)
-			Name (_PRW, Package (0x02)
-			{
-				0x09,
-				0x04
-			})
-			Device (EPUP)
-			{
-				Name (_ADR, Zero)
-				Method (_RMV, 0, NotSerialized)
-				{
-					Return (One)
-				}
-			}
-		}
-	}
-	...
+This series was ack'd by Don.  I haven't heard reports of any problems.
+What more needs to be done here?  Bjorn?  Thanks,
 
-Fix this by adding a DMI quirk for the Acer Aspire S5 machine that gives an
-alternative path to the _RMV method.
+Alex
 
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpi_pcihp.c | 34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index 2a47e82..eae1511 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -33,6 +33,7 @@
- #include <linux/acpi.h>
- #include <linux/pci-acpi.h>
- #include <linux/slab.h>
-+#include <linux/dmi.h>
- 
- #define MY_NAME	"acpi_pcihp"
- 
-@@ -408,11 +409,31 @@ got_one:
- }
- EXPORT_SYMBOL(acpi_get_hp_hw_control_from_firmware);
- 
-+static const struct dmi_system_id pcihp_platform_quirks[] = {
-+	{
-+		/*
-+		 * On Acer Aspire S5 the _RMV method for the
-+		 * Thunderbolt host router upstream port is not
-+		 * located directly under the device but it is
-+		 * instead placed a bit deeper in the hierarchy.
-+		 */
-+		.ident = "Acer Aspire S5",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "Aspire S5-391"),
-+		},
-+		.driver_data = "HRDN.EPUP._RMV",
-+	},
-+	{ }
-+};
-+
- static int pcihp_is_ejectable(acpi_handle handle)
- {
- 	acpi_status status;
- 	acpi_handle tmp;
- 	unsigned long long removable;
-+	const struct dmi_system_id *id;
-+
- 	status = acpi_get_handle(handle, "_ADR", &tmp);
- 	if (ACPI_FAILURE(status))
- 		return 0;
-@@ -422,6 +443,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
- 	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
- 	if (ACPI_SUCCESS(status) && removable)
- 		return 1;
-+
-+	/*
-+	 * Try to look if there is a platform specific method that we can
-+	 * use to determine if the device is removable or not.
-+	 */
-+	id = dmi_first_match(pcihp_platform_quirks);
-+	if (id && id->driver_data) {
-+		status = acpi_evaluate_integer(handle, id->driver_data, NULL,
-+					       &removable);
-+		if (ACPI_SUCCESS(status) && removable)
-+			return 1;
-+	}
-+
- 	return 0;
- }
- 
--- 
-1.8.3.2
+On Mon, 2013-07-08 at 10:17 -0600, Alex Williamson wrote:
+> Ping.  Comments?
+> 
+> On Thu, 2013-06-27 at 16:39 -0600, Alex Williamson wrote:
+> > v2:
+> > 
+> > Revised patch 1/ to match comments from Bjorn.  PCIe event collectors
+> > and PCIe-to-PCI bridges now indicate that they do not support ACS.
+> > I've reached out to try to get clarification on this, but I think it's
+> > reasonable to proceed with a conservative approach until then.  I also
+> > added PCI-to-PCIe bridges for the sake of being complete.  Also added
+> > more comments about the purpose and behavior of pci_acs_enabled().  If
+> > I've overlooked anything else that needs to be addressed, please let
+> > me know.
+> > 
+> > Patch 2/ had no comments, it's unchanged.
+> > 
+> > Patch 3/ is added.  This was sent as an RFC nearly a year ago and
+> > Joerg confirmed for us that these devices do not support p2p on AMD
+> > systems with AMD IOMMU.  We can't simply use iommu_present() to test
+> > for an IOMMU because it's setup just after we need this function.  
+> > Instead we test for the ACPI IVRS table that describes the IOMMU.  It
+> > would probably suffice to skip an actual AMD IOMMU check, but I don't
+> > want it to later come bite us if these ASICs get re-used, maybe with
+> > a different IOMMU, and don't make the same guarantees.
+> > 
+> > Joerg, I was also curious back when we investigated this patch if the
+> > same rules hold true for these other southbridge devices:
+> > 
+> > 1002:43a0 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
+> > 1002:43a1 SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
+> > 1002:43a2 SB900 PCI to PCI bridge (PCIE port 2)
+> > 1002:43a3 SB900 PCI to PCI bridge (PCIE port 3)
+> > 
+> > If you remember or have contacts to poke, I'd be happy to follow-up
+> > with another patch to add them.  Thanks,
+> > 
+> > Alex
+> > 
+> > ---
+> > 
+> > Alex Williamson (3):
+> >       pci: Fix flaw in pci_acs_enabled()
+> >       pci: Differentiate ACS controllable from enabled
+> >       pci: ACS quirk for AMD southbridge
+> > 
+> > 
+> >  drivers/pci/pci.c    |   93 +++++++++++++++++++++++++++++++++++++++++---------
+> >  drivers/pci/quirks.c |   50 +++++++++++++++++++++++++++
+> >  2 files changed, 127 insertions(+), 16 deletions(-)
+> 
+> 
+
+
 
