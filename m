@@ -1,54 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:45660 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753447Ab3GHFNV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jul 2013 01:13:21 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>
-References: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
- <51D6A370.7060604@st.com> <002801ce7b98$e1520f60$a3f62e20$@samsung.com>
-In-reply-to: <002801ce7b98$e1520f60$a3f62e20$@samsung.com>
-Subject: Re: [PATCH] pci: exynos: split into two parts such as Synopsys part
- and Exynos part
-Date: Mon, 08 Jul 2013 14:13:12 +0900
-Message-id: <002901ce7b99$d7e42930$87ac7b90$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:45885 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933104Ab3GWQGr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 12:06:47 -0400
+Received: by mail-oa0-f53.google.com with SMTP id k14so11551083oag.40
+        for <linux-pci@vger.kernel.org>; Tue, 23 Jul 2013 09:06:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
+References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 23 Jul 2013 10:06:26 -0600
+Message-ID: <CAErSpo7TexM5-7Z=8H+B5=49-GzoKd_prn=LbMFZWV9rpdn__A@mail.gmail.com>
+Subject: Re: Linux Plumbers ACPI/PM, PCI Microconference
+To: Myron Stowe <myron.stowe@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	virtualization@lists.linux-foundation.org,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, July 08, 2013 2:06 PM, Jingoo Han wrote:
-> On Friday, July 05, 2013 7:44 PM, Pratyush Anand wrote:
-> > On 7/5/2013 1:59 PM, Jingoo Han wrote:
-> > > Exynos PCIe IP consists of Synopsys specific part and Exynos
-> > > specific part. Only core block is a Synopsys designware part;
-> > > other parts are Exynos specific.
-> > > Also, the Synopsys designware part can be shared with other
-> > > platforms; thus, it can be split two parts such as Synopsys
-> > > designware part and Exynos specific part.
-> > >
-> >
-> > A quick and nice job :)
-> > Just few minor comments.
-> 
-> Thank you.
-> Without your comment, it could be done. :)
+On Tue, Jul 16, 2013 at 8:21 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
+> Linux Plumbers has approved an ACPI/PM, PCI microconference. The
+> overview page is here:
+>
+> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
+>
+> We would like to start receiving volunteers for presenting topics of
+> interest.  There is a lot of activity in these subsystems so please
+> respond by submitting presentation or discussion proposals that you
+> would be willing to cover for consideration.  You should also feel
+> free to submit ideas as proposals that others could cover.
 
-Oops, it is a typo.
-Without your comment, it could 'NOT' be done. :)
+Somebody else privately suggested these ARM/PCI topics:
 
-Thank you for your comment.
-It is very helpful.
+> -> how it's been cleaned up to be more common across arm-32 machines
+> -> dependencies on dtb
+> -> future use/dependency(s) on ACPI
+> -> hotplug support issues (if any; acpi (host-bridge) vs <whatever ARM uses> ?)
 
-Best regards,
-Jingoo Han
+and I'm interested in those as well.  There seems to be a lot of
+activity in that area.  In addition, I'm interested in ARM IOMMU
+support.  I see drivers/iommu/arm-smmu.c, but it's brand-new and I
+haven't looked at it at all.
 
-
+Bjorn
