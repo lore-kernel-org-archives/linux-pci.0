@@ -1,85 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:38774 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757164Ab3GEStZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jul 2013 14:49:25 -0400
-Received: by mail-ob0-f175.google.com with SMTP id xn12so3182578obc.20
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jul 2013 11:49:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1372993054-25730-2-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1372993054-25730-1-git-send-email-shangw@linux.vnet.ibm.com> <1372993054-25730-2-git-send-email-shangw@linux.vnet.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 5 Jul 2013 12:49:05 -0600
-Message-ID: <CAErSpo7QGD99HM1fEcvGi-9h3HX6C8nu1mzJHnMMUKWTNO0vnw@mail.gmail.com>
-Subject: Re: [PATCH 1/8] PCI: Add pcibios_stop_dev()
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kishon Vijay Abraham I' <kishon@ti.com>
+Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>
+References: <002801ce8376$a807dbf0$f81793d0$@samsung.com>
+ <51ED49D6.9050209@ti.com> <000701ce8741$fe47deb0$fad79c10$@samsung.com>
+ <51EE22DF.6090902@ti.com>
+In-reply-to: <51EE22DF.6090902@ti.com>
+Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys part
+ and Exynos part
+Date: Tue, 23 Jul 2013 17:42:23 +0900
+Message-id: <001401ce8780$8d8461f0$a88d25d0$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 4, 2013 at 8:57 PM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
-> When stopping and removing one specific PCI device, the platform
-> might need take some actions. One example is that EEH already had
-> eeh cache and eeh device attached to the PCI device, and we need
-> release eeh cache and device during the time. The patch introduces
-> hook pcibios_stop_dev() for the purpose.
->
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> ---
->  drivers/pci/probe.c  |    4 ++++
->  drivers/pci/remove.c |    2 ++
->  include/linux/pci.h  |    1 +
->  3 files changed, 7 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 70f10fa..7167dc4 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1669,6 +1669,10 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
->  {
->  }
->
-> +void __weak pcibios_stop_dev(struct pci_dev *dev)
-> +{
-> +}
-> +
->  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->                 struct pci_ops *ops, void *sysdata, struct list_head *resources)
->  {
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 8fc54b7..e329efc 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -21,6 +21,8 @@ static void pci_stop_dev(struct pci_dev *dev)
->  {
->         pci_pme_active(dev, false);
->
-> +       pcibios_stop_dev(dev);
+On Tuesday, July 23, 2013 3:30 PM, Kishon Vijay Abraham I wrote:
+> On Tuesday 23 July 2013 06:44 AM, Jingoo Han wrote:
+> > On Tuesday, July 23, 2013 12:04 AM, Kishon Vijay Abraham I wrote:
+> >> On Thursday 18 July 2013 10:51 AM, Jingoo Han wrote:
+> >>> Exynos PCIe IP consists of Synopsys specific part and Exynos
+> >>> specific part. Only core block is a Synopsys designware part;
+> >>> other parts are Exynos specific.
+> >>> Also, the Synopsys designware part can be shared with other
+> >>> platforms; thus, it can be split two parts such as Synopsys
+> >>> designware part and Exynos specific part.
+> >>
+> >> some more queries and comments..
+> >
+> .
+> .
+> <snip>
+> .
+> .
+> >>> +			of_pci_range_to_resource(&range, np, &pp->cfg);
+> >>> +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
+> >>> +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
+> >>> +		}
+> >>> +	}
+> >>> +
+> >>> +	pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
+> >>> +				resource_size(&pp->cfg));
 
-We already have pcibios_release_device() (just merged for v3.11).
-Would that work for you?  I haven't seen your whole series, so I can't
-tell whether you need something different.
+[.....]
 
->         if (dev->is_added) {
->                 pci_proc_detach_device(dev);
->                 pci_remove_sysfs_dev_files(dev);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 3a24e4f..40df783 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -696,6 +696,7 @@ int no_pci_devices(void);
->  void pcibios_resource_survey_bus(struct pci_bus *bus);
->  void pcibios_add_bus(struct pci_bus *bus);
->  void pcibios_remove_bus(struct pci_bus *bus);
-> +void pcibios_stop_dev(struct pci_dev *dev);
->  void pcibios_fixup_bus(struct pci_bus *);
->  int __must_check pcibios_enable_device(struct pci_dev *, int mask);
->  /* Architecture specific versions may override this (weak) */
-> --
-> 1.7.5.4
->
+> >
+> >> Why should it be same as dbi_base?
+> >> AFAIK, jacinto6 has a dedicated configuration/io/memory space that is entirely
+> >> different from dbi_base.
+> >
+> > According to the Synopsys designware PCIe datasheet,
+> > in chapter 5.1.1 Register Space Layout,
+> > 'Port Logic Registers' are placed between (config space 0x0 + 0x700)
+> > and (config space 0x0 + 0xFFF).
+> > 'dbi_base' is used for reading/writing 'Port Logic Registers'.
+> > Exynos are using 'dbi_base' like this. Thus, the base addresses of
+> > both 'dbi_base' and configuration/io/memory space are same.
+> >
+> > Just now, I looked at Spear PCIe driver.
+> > However, in the case of Spear, the base address of configuration/io/memory
+> > space is defined as 0x80000000. The base address of 'Port Logic Registers'
+> > is defined as 0xb1000000.
+> > I think that the situation of 'jacinto6' is similar with Spear, right?
+> >
+> > Then, I will move pp->dbi_base mapping code from pcie-designware.c
+> > to pci-exynos.c.
+> 
+> I think you need not move this to exynos (since registers in dbi_base is common
+> for all platforms) but modify the pcie-designware.c to use different address
+> space for dbi_base. In your case, you'll duplicate the address space for
+> dbi_base and configuration space.
+> 
+
+I will map 'pp->dbi_base' as below:
+Also, I referenced SPEAr PCIe patches made by Pratyush Anand.
+(http://permalink.gmane.org/gmane.linux.kernel.pci/18400)
+(http://permalink.gmane.org/gmane.linux.kernel.pci/18403)
+
+
+1. The different addresses between dbi_base and configuration space
+    : SPEAr PCIe, OMAP PCIe
+      'pp->dbi_base' value is come from DT binding, then, 'pp->dbi_base' will
+       be mapped in spear_pcie_probe() in pci-spear.c
+
+(arch/arm/boot/dts/spear13xx.dtsi)
+		pcie0@b1000000 {
+			reg = <0xb1000000 0x2000      <-- dbi register
+				 0xb1002000 0x7fdfff   <-- elbi register
+
+(drivers/pci/host/pci-spear.c)
+static int __init spear_pcie_probe(struct platform_device *pdev)
+{
+	struct resource *dbi_base;
+	struct resource *elbi_base;
+
+	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
+
+	elbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+	spear_pcie->elbi_base = devm_ioremap_resource(&pdev->dev, elbi_base);
+
+
+
+2. The same addresses between dbi_base and configuration space
+    : Exynos PCIe
+      'pp->dbi_base' will be mapped in dw_pcie_host_init() of pcie-designware.c.
+
+(drivers/pci/host/pcie-exynos.c)
+static int __init exynos_pcie_probe(struct platform_device *pdev)
+{
+	struct resource *elbi_base;
+
+	elbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	exynos_pcie->elbi_base = devm_ioremap_resource(&pdev->dev, elbi_base);
+
+(drivers/pci/host/pcie-designware.c)
+int dw_pcie_host_init(struct pcie_port *pp)
+{
+	if (!pp->dbi_base) {
+		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
+						resource_size(&pp->cfg));
+		if (!pp->dbi_base) {
+			dev_err(pp->dev, "error with ioremap\n");
+			return -ENOMEM;
+		}
+	}
+
+
+Best regards,
+Jingoo Han
+
+
