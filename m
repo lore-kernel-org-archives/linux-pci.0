@@ -1,87 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 29/30] ACPI / hotplug / PCI: Clean up bridge_mutex usage
-Date: Thu, 18 Jul 2013 01:35:45 +0200
-Message-ID: <1699392.oW1xlocqas@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40226 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754991Ab3GWUDW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 16:03:22 -0400
+Date: Tue, 23 Jul 2013 16:03:06 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: stable@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>,
+	Jean Delvare <jdelvare@suse.de>
+Subject: Re: [stable PATCH] iommu/vt-d: add quirk for broken interrupt
+ remapping on 55XX chipsets
+Message-ID: <20130723200306.GD6759@hmsreliant.think-freely.org>
+References: <20130708154111.GA27952@kroah.com>
+ <1373303174-21977-1-git-send-email-nhorman@tuxdriver.com>
+ <20130723170602.GA15090@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130723170602.GA15090@kroah.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Jul 23, 2013 at 10:06:02AM -0700, Greg KH wrote:
+> On Mon, Jul 08, 2013 at 01:06:14PM -0400, Neil Horman wrote:
+> > A few years back intel published a spec update:
+> > http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+> > 
+> > For the 5520 and 5500 chipsets which contained an errata (specificially errata
+> > 53), which noted that these chipsets can't properly do interrupt remapping, and
+> > as a result the recommend that interrupt remapping be disabled in bios.  While
+> > many vendors have a bios update to do exactly that, not all do, and of course
+> > not all users update their bios to a level that corrects the problem.  As a
+> > result, occasionally interrupts can arrive at a cpu even after affinity for that
+> > interrupt has be moved, leading to lost or spurrious interrupts (usually
+> > characterized by the message:
+> > kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+> > 
+> > There have been several incidents recently of people seeing this error, and
+> > investigation has shown that they have system for which their BIOS level is such
+> > that this feature was not properly turned off.  As such, it would be good to
+> > give them a reminder that their systems are vulnurable to this problem.  For
+> > details of those that reported the problem, please see:
+> > https://bugzilla.redhat.com/show_bug.cgi?id=887006
+> > 
+> > [ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+> > 
+> > Notes: Modified early-quirks.c to include linux/irq.h, to fix warnings.  This
+> > isn't needed in the upstream tree
+> > 
+> > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> > CC: Prarit Bhargava <prarit@redhat.com>
+> > CC: Don Zickus <dzickus@redhat.com>
+> > CC: Don Dutile <ddutile@redhat.com>
+> > CC: Bjorn Helgaas <bhelgaas@google.com>
+> > CC: Asit Mallick <asit.k.mallick@intel.com>
+> > CC: David Woodhouse <dwmw2@infradead.org>
+> > CC: linux-pci@vger.kernel.org
+> > CC: Joerg Roedel <joro@8bytes.org>
+> > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+> > CC: Jean Delvare <jdelvare@suse.de>
+> > CC: Greg KH <gregkh@linuxfoundation.org>
+> > Signed-off-by: Joerg Roedel <joro@8bytes.org>
+> > (cherry picked from commit 03bbcb2e7e292838bb0244f5a7816d194c911d62)
+> 
+> As 3.9-stable is now dead, this one missed that window, sorry about
+> that.
+> 
+Thanks for the heads up, we tried our best :).
+Neil
 
-Do not acquire bridge_mutex around the addition of a slot to its
-bridge's list of slots and arount the addition of a function to
-its slot's list of functions, because that doesn't help anything
-right now (those lists are walked without any locking anyway).
-
-However, acquire bridge_mutex around the list walk in
-acpiphp_remove_slots() and use list_for_each_entry() there,
-because we terminate the walk as soon as we find the first matching
-entry.  This prevents that list walk from colliding with bridge
-addition and removal.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -323,9 +323,7 @@ static acpi_status register_slot(acpi_ha
- 	INIT_LIST_HEAD(&slot->funcs);
- 	mutex_init(&slot->crit_sect);
- 
--	mutex_lock(&bridge_mutex);
- 	list_add_tail(&slot->node, &bridge->slots);
--	mutex_unlock(&bridge_mutex);
- 
- 	/* Register slots for ejectable funtions only. */
- 	if (acpi_pci_check_ejectable(pbus, handle)  || is_dock_device(handle)) {
-@@ -355,9 +353,7 @@ static acpi_status register_slot(acpi_ha
- 
-  slot_found:
- 	newfunc->slot = slot;
--	mutex_lock(&bridge_mutex);
- 	list_add_tail(&newfunc->sibling, &slot->funcs);
--	mutex_unlock(&bridge_mutex);
- 
- 	if (pci_bus_read_dev_vendor_id(pbus, PCI_DEVFN(device, function),
- 				       &val, 60*1000))
-@@ -1025,17 +1021,21 @@ void acpiphp_enumerate_slots(struct pci_
- /* Destroy hotplug slots associated with the PCI bus */
- void acpiphp_remove_slots(struct pci_bus *bus)
- {
--	struct acpiphp_bridge *bridge, *tmp;
-+	struct acpiphp_bridge *bridge;
- 
- 	if (acpiphp_disabled)
- 		return;
- 
--	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
-+	mutex_lock(&bridge_mutex);
-+	list_for_each_entry(bridge, &bridge_list, list)
- 		if (bridge->pci_bus == bus) {
-+			mutex_unlock(&bridge_mutex);
- 			cleanup_bridge(bridge);
- 			put_bridge(bridge);
--			break;
-+			return;
- 		}
-+
-+	mutex_unlock(&bridge_mutex);
- }
- 
- /**
-
+> greg k-h
+> 
