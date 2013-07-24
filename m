@@ -1,97 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 17 Jul 2013 06:56:08 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Peter De Schrijver <pdeschrijver@nvidia.com>
-Cc: Jay Agarwal <jagarwal@nvidia.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"swarren@wwwdotorg.org" <swarren@wwwdotorg.org>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
-	Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Subject: Re: [PATCH V3 3/4] ARM: dts: tegra: Correct PCIe entry
-Message-ID: <20130717045607.GC11359@mithrandir>
-References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
- <1370372252-4332-3-git-send-email-jagarwal@nvidia.com>
- <20130610195511.GC25859@mithrandir>
- <20130611073048.GR3847@tbergstrom-lnx.Nvidia.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:24545 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101Ab3GXDH6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 23:07:58 -0400
+Message-ID: <51EF44FA.4020903@oracle.com>
+Date: Wed, 24 Jul 2013 11:07:38 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="MnLPg7ZWsaic7Fhd"
-In-Reply-To: <20130611073048.GR3847@tbergstrom-lnx.Nvidia.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>
+CC: bhelgaas@google.com,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Subject: [PATCH 1/3] Refactor msi/msix restore code Part1
+Content-Type: text/plain; charset=GB2312
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Move default_restore_msi_irqs down to reference some static function
+msi_mask_irq and msix_mask_irq.
 
---MnLPg7ZWsaic7Fhd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+---
+ drivers/pci/msi.c |   40 ++++++++++++++++++++--------------------
+ 1 files changed, 20 insertions(+), 20 deletions(-)
 
-On Tue, Jun 11, 2013 at 10:30:48AM +0300, Peter De Schrijver wrote:
-> On Mon, Jun 10, 2013 at 09:55:12PM +0200, Thierry Reding wrote:
-> > * PGP Signed by an unknown key
-> >=20
-> > On Wed, Jun 05, 2013 at 12:27:31AM +0530, Jay Agarwal wrote:
-> > [...]
-> > > @@ -29,7 +29,7 @@
-> > >  		ranges =3D <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* p=
-ort 0 configuration space */
-> > >  			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 con=
-figuration space */
-> > >  			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 con=
-figuration space */
-> > > -			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream=
- I/O */
-> > > +			  0x81000000 0 0          0x02000000 0 0x00100000   /* downstream=
- I/O */
-> > >  			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefet=
-chable memory */
-> > >  			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchab=
-le memory */
-> >=20
-> > That increases the I/O region size from 64 KiB to 1 MiB. Why is that
-> > necessary? I/O operations can only address 64 KiB, so I don't think
-> > adding more makes any sense.
->=20
-> At least PCI allows 32bit I/O addresses. No idea if anyone uses them thou=
-gh.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index aca7578..87223ae 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -96,26 +96,6 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
+ # define HAVE_DEFAULT_MSI_RESTORE_IRQS
+ #endif
+ 
+-#ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
+-void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+-{
+-	struct msi_desc *entry;
+-
+-	entry = NULL;
+-	if (dev->msix_enabled) {
+-		list_for_each_entry(entry, &dev->msi_list, list) {
+-			if (irq == entry->irq)
+-				break;
+-		}
+-	} else if (dev->msi_enabled)  {
+-		entry = irq_get_msi_desc(irq);
+-	}
+-
+-	if (entry)
+-		write_msi_msg(irq, &entry->msg);
+-}
+-#endif
+-
+ static void msi_set_enable(struct pci_dev *dev, int enable)
+ {
+ 	u16 control;
+@@ -233,6 +213,26 @@ void unmask_msi_irq(struct irq_data *data)
+ 
+ #endif /* CONFIG_GENERIC_HARDIRQS */
+ 
++#ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
++void default_restore_msi_irqs(struct pci_dev *dev, int irq)
++{
++	struct msi_desc *entry;
++
++	entry = NULL;
++	if (dev->msix_enabled) {
++		list_for_each_entry(entry, &dev->msi_list, list) {
++			if (irq == entry->irq)
++				break;
++		}
++	} else if (dev->msi_enabled)  {
++		entry = irq_get_msi_desc(irq);
++	}
++
++	if (entry)
++		write_msi_msg(irq, &entry->msg);
++}
++#endif
++
+ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	BUG_ON(entry->dev->current_state != PCI_D0);
+-- 
+1.7.3
 
-I just realized that we are constrained to 64 KiB by the implementation
-of pci_ioremap_io(), which assumes each mapping is 64 KiB. Not that it
-couldn't be changed, but unless there actually is a use-case where more
-than 64 KiB are required I don't think we should worry about it.
-
-Thierry
-
---MnLPg7ZWsaic7Fhd
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBAgAGBQJR5iPmAAoJEN0jrNd/PrOhrBMP/0vz8TPy4041QDMywygKLoBd
-wqq4TzpO3Tq3y8m8zk8anVQ9CtSdXiJVzbvum9IehAeWUUYoPVK2ENcaC6Atkzi2
-pWDfSICda40hZyEukwUXh0ncOLwM5+sK5Shz0hCk2lOr2HTk34LgGr0I0Nb9eSM+
-KkCFSqLPaH2QZuGxvTPgMKP2EcrGdcMYVDB7pZ1ENu8WKwHJmDZLRz6QisXqYIVF
-osKhmUIuVpuP7RafvjU0wOHghx2yZD9FZG5x1guiAiWox78MvrYwJNULzRlq1IPA
-nxvnasLM3ZOUk7YQYJkD6WE184MJYYXmGUNwymyfdWFNe17xEGy0j2y4fOxkb87a
-TUytPwi5RuidPu/FNlCcb0sCxdbbjuwxzBUDvR/zQ6i5YUPPvVXwADCOV/i6WoPI
-FIY3JhiqKkapo5YSWOrlskImpQZPGfLOJXTH2TiGAHc6oBF18OjielG+xUAPbX1A
-GcOSg5leYEHjIihC/BEvXYun2vBa4yca6F0mcOiTIjFHAbB7s8OYQFGSX84htwmT
-bgw+2869EtP5LJUnTMONM/FZv487/UWICqLNXEmlNHFrmwuxOzyfQk6WxHtiYiVS
-eY4SjpJ/HfDS5VClFESozo0SkzG2nG5ogQvsUnrEjtkPnIINnK2qXOSU6Cks9Q+G
-BLC2lvtmjh1SNFBYMzso
-=Rjk/
------END PGP SIGNATURE-----
-
---MnLPg7ZWsaic7Fhd--
