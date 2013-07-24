@@ -1,134 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31166 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755781Ab3GYM0L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 08:26:11 -0400
-Date: Thu, 25 Jul 2013 08:25:53 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Cc: linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>, bhelgaas@google.com,
-	Feng Jin <joe.jin@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Subject: Re: [PATCH 2/3] Refactor msi/msix restore code Part2
-Message-ID: <20130725122552.GA23927@konrad-lan.dumpdata.com>
-References: <51EF451A.8050003@oracle.com>
- <20130724134622.GC2518@phenom.dumpdata.com>
- <51F0CB10.1070500@oracle.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:38662 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752871Ab3GXXY4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Jul 2013 19:24:56 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] acpi, acpi_pci_irq_enable must return an error if ACPI cannot map an IRQ.
+Date: Thu, 25 Jul 2013 01:35 +0200
+Message-ID: <4699269.a9aFxdNOHD@vostro.rjw.lan>
+In-Reply-To: <1373900260-1599-1-git-send-email-prarit@redhat.com>
+References: <1373900260-1599-1-git-send-email-prarit@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51F0CB10.1070500@oracle.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 25, 2013 at 02:52:00PM +0800, Zhenzhong Duan wrote:
+On Monday, July 15, 2013 10:57:40 AM Prarit Bhargava wrote:
+> Driver probe's currently do the following
 > 
-> On 2013-07-24 21:46, Konrad Rzeszutek Wilk wrote:
-> >On Wed, Jul 24, 2013 at 11:08:10AM +0800, Zhenzhong Duan wrote:
-> >>xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
-> >>in dom0. It's better to do the same for default_restore_msi_irqs in baremetal.
-> >>
-> >>Move restore of mask in default_restore_msi_irqs, this could avoid mask
-> >>restored twice in dom0, once in hypercall, the other in kernel.
-> >Why not remove the hypercall then?
-> If removed, msi entry couldn't be restored, such as
-> pci_reset_function who will reset pci registers.
-
-I did not read your email first time correctly. You are saying
-that we restore it twice in the host kernel (aka dom0), once in the
-hypervisor (b/c the guest tries to do MSI-X write and it ends up in
-the hypervisor), and then we also do it in the guest kernel?
-
-That is a lot of duplicate calls.
-> >Or alter the function to detect
-> >whether the restore of the mask has occurred?
-> Then we need to add the check for dom0 only.
-
-I am not sure I completly follow this. Is the reason for the lost of
-interrupt b/c one of those four MSI-X writes ends up masking and the
-subsequent writes end up with invalid data?
-
-> >
-> >>Without that, qlcnic driver calling pci_reset_function will lost interrupt
-> >>in dom0.
-
-But if you pass said PCI device to a guest there is no need for the
-interrupts to go to the host (dom0). They should go to the hypervisor
-which will deliever them to the guest.
-
-Is that what you meant by 'in dom0' ?
-
-
-> >>
-> >>Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-> >>Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-> >>---
-> >>  drivers/pci/msi.c |   17 ++++++++++++++---
-> >>  1 files changed, 14 insertions(+), 3 deletions(-)
-> >>
-> >>diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> >>index 87223ae..922fb49 100644
-> >>--- a/drivers/pci/msi.c
-> >>+++ b/drivers/pci/msi.c
-> >>@@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
-> >>  #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
-> >>  void default_restore_msi_irqs(struct pci_dev *dev, int irq)
-> >>  {
-> >>+	int pos;
-> >>+	u16 control;
-> >>  	struct msi_desc *entry;
-> >>  	entry = NULL;
-> >>@@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
-> >>  		entry = irq_get_msi_desc(irq);
-> >>  	}
-> >>-	if (entry)
-> >>+	if (entry) {
-> >>  		write_msi_msg(irq, &entry->msg);
-> >>+		if (dev->msix_enabled) {
-> >>+			msix_mask_irq(entry, entry->masked);
-> >>+			readl(entry->mask_base);
-> >>+		} else {
-> >>+			pos = entry->msi_attrib.pos;
-> >>+			pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
-> >>+					     &control);
-> >>+			msi_mask_irq(entry, msi_capable_mask(control),
-> >>+				     entry->masked);
-> >>+		}
-> >>+	}
-> >>  }
-> >>  #endif
-> >>@@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
-> >>  	arch_restore_msi_irqs(dev, dev->irq);
-> >>  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-> >>-	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
-> >Before this patch we had:
-> >
-> >	write_msi_msg(..)
-> >	pci_read_config_work(PCI_MSI_FLAGS, &control)
-> >	pci_write_config_dword(~msi_capable_mask(control) | entry->masked)
-> >	control &= ~_PCI_MSI_FLAGS_QSIZE;
-> >	control |= ...
-> >	pci_write_config_dword(PCI_MSI_FLAGS, control)
-> >
-> >while with this you have now:
-> >
-> >	write_msi_msg(..)
-> >	pci_read_config_work(PCI_MSI_FLAGS, &_control)
-> >	pci_write_config_dword(~msi_capable_mask(_control) | entry->masked)
-> >--> 	pci_read_config_work(PCI_MSI_FLAGS, &control)
-> >	control &= ~_PCI_MSI_FLAGS_QSIZE;
-> >	control |= ...
-> >	pci_write_config_dword(PCI_MSI_FLAGS, control)
-> >
-> >see the problem? The 'control' value in __pci_restore_msi_state reads the
-> >value _after_ it has been masked (which is now done in default_restore_msi_irqs).
-> >
-> >Wouldn't that cause problems?
-> >
-> pci_write_config_dword(~msi_capable_mask(_control) | entry->masked) restore per vector
-> msi mask bits based on the support of PCI_MSI_FLAGS_MASKBIT. This is different from the
-> global mask bit in PCI_MSI_FLAGS.
-
-So I think you are saying that it won't cause problems? 
+> 	pci_enable_device();
+> 	/* ... do some other init stuff, and eventually call ... */
+> 	request_irq();
 > 
+> After pci_enable_device() is called it is assumed that the device's irq
+> value (pci_dev->irq) has been appropriately set on success.  This value
+> is passed into the request_irq() call.
+> 
+> In the case that ACPI is used to determine the irq value, it is possible
+> that the ACPI IRQ look up for a specific device fails and success is
+> returned by pci_enable_device().
+> 
+> The call sequence is:
+> 
+> pci_enable_device();
+> 	-> pci_enable_device_flags();
+> 		->do_pci_enable_device();
+> 			-> pcibios_enable_device() which, if the device
+> 			   does not use MSI calls
+> 			   -> pcibios_enable_irq() which maps to
+> 			      acpi_pci_irq_enable()
+> 				-> acpi_pci_irq_lookup()
+> 
+> If acpi_pci_irq_lookup() cannot map the device's IRQ value it returns NULL
+> as an error.  The error is returned to acpi_pci_irq_enable(), but is not
+> propagated further.  This can result in the driver returning success for
+> pci_enable_device() and the driver probe attempting to call request_irq()
+> with dev->irq = 0.
+> 
+> This patch modifies acpi_pci_irq_enable() to return an error in the case
+> that an entry is not found in the ACPI tables.
+
+Is there any known system on which this leads to observable misbehavior?
+
+If so, what's that system?
+
+Rafael
+
+
+> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: "Bjorn Helgaas" <bhelgaas@google.com>
+> Cc: "Myron Stowe" <mstowe@redhat.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/acpi/pci_irq.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+> index 41c5e1b..9681847 100644
+> --- a/drivers/acpi/pci_irq.c
+> +++ b/drivers/acpi/pci_irq.c
+> @@ -430,6 +430,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>  		} else {
+>  			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
+>  				 pin_name(pin));
+> +			return -ENOENT;
+>  		}
+>  
+>  		return 0;
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
