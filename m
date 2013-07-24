@@ -1,366 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:35132 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753485Ab3GIANU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Jul 2013 20:13:20 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 4/8] ACPI / hotplug / PCI: Hotplug context objects for bridges and functions
-Date: Tue, 09 Jul 2013 02:18:12 +0200
-Message-ID: <1541978.EJm27nSHDT@vostro.rjw.lan>
-In-Reply-To: <26431283.HJCKsss0rt@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH v6 0/7] PCI: Change assign unassigned resources per root bus bassis
+Date: Thu, 25 Jul 2013 01:12:49 +0200
+Message-ID: <1511167.6cyW9CZQyO@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6aXm8_GCSHJcceaimODxpkX4syh4Gd15N-THZ97SGF4A@mail.gmail.com>
+References: <1374529038-14311-1-git-send-email-yinghai@kernel.org> <CAErSpo6aXm8_GCSHJcceaimODxpkX4syh4Gd15N-THZ97SGF4A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wednesday, July 24, 2013 04:03:48 PM Bjorn Helgaas wrote:
+> [+cc Rafael, linux-acpi]
+> 
+> On Mon, Jul 22, 2013 at 3:37 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > BenH reported that there is some assign unassigned resource problem
+> > in powerpc.
+> >
+> > It turns out after
+> > | commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
+> > | Date:   Thu Feb 23 19:23:29 2012 -0800
+> > |
+> > |    PCI: Retry on IORESOURCE_IO type allocations
+> >
+> > even the root bus does not have io port range, it will keep retrying
+> > to realloc with mmio.
+> >
+> > After checking the code, found that we bound io port and mmio fail
+> > path together.
+> > First patch fix the problem, that will not make mmio fall back to must-only
+> > when only have io port fail with must+optional.
+> 
+> Can you point out again which patch actually fixes Ben's problem?  I
+> don't see it mentioned in the changelogs, and I'd like to mention it
+> there.
+> 
+> I applied these to my pci/yinghai-assign-unassigned-v6 branch for
+> v3.12.  I expect to update these (at least the changelog), so this
+> branch will be rebased before being merged to -next.
+> 
+> Rafael, there are a couple changes to drivers/acpi/pci_root.c and
+> drivers/pci/hotplug/acpiphp_glue.c here, and I want to make sure
+> you're OK with them before going farther.
+> 
+> Here's the branch:
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/yinghai-assign-unassigned-v6
 
-When either a new hotplug brigde or a new hotplug function is added
-by the ACPI-based PCI hotplug (acpiphp) code, attach a context object
-to its ACPI handle to store hotplug-related information in it.  To
-start with, put the handle's bridge and function pointers into that
-object.  Count references to the context objects and drop them when
-they are not needed any more.
+I'm generally OK with them, as long as doing pci_bus_add_devices(bus) without
+pci_enable_bridges() for that bus before is going to work.
 
-First of all, this makes it possible to find out if the given bridge
-has been registered as a function already in a much more
-straightforward way and acpiphp_bridge_handle_to_function() can be
-dropped (Yay!).
+Thanks,
+Rafael
 
-This also will allow some more simplifications to be made going
-forward.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |   10 ++
- drivers/pci/hotplug/acpiphp_glue.c |  154 ++++++++++++++++++++++++++-----------
- 2 files changed, 121 insertions(+), 43 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -49,6 +49,7 @@
- #define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME , ## arg)
- #define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME , ## arg)
- 
-+struct acpiphp_context;
- struct acpiphp_bridge;
- struct acpiphp_slot;
- 
-@@ -77,6 +78,7 @@ struct acpiphp_bridge {
- 	struct kref ref;
- 	acpi_handle handle;
- 
-+	struct acpiphp_context *context;
- 	/* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
- 	struct acpiphp_func *func;
- 
-@@ -119,6 +121,7 @@ struct acpiphp_slot {
-  * typically 8 objects per slot (i.e. for each PCI function)
-  */
- struct acpiphp_func {
-+	struct acpiphp_context *context;
- 	struct acpiphp_slot *slot;	/* parent */
- 
- 	struct list_head sibling;
-@@ -129,6 +132,13 @@ struct acpiphp_func {
- 	u32		flags;		/* see below */
- };
- 
-+struct acpiphp_context {
-+	struct kref kref;
-+	acpi_handle handle;
-+	struct acpiphp_func *func;
-+	struct acpiphp_bridge *bridge;
-+};
-+
- /*
-  * struct acpiphp_attention_info - device specific attention registration
-  *
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -79,6 +79,61 @@ is_pci_dock_device(acpi_handle handle, u
- 	}
- }
- 
-+static void acpiphp_context_handler(acpi_handle handle, void *context)
-+{
-+	/* Intentionally empty. */
-+}
-+
-+static struct acpiphp_context *acpiphp_init_context(acpi_handle handle)
-+{
-+	struct acpiphp_context *context;
-+	acpi_status status;
-+
-+	context = kzalloc(sizeof(*context), GFP_KERNEL);
-+	if (!context)
-+		return NULL;
-+
-+	context->handle = handle;
-+	kref_init(&context->kref);
-+	status = acpi_attach_data(handle, acpiphp_context_handler, context);
-+	if (ACPI_FAILURE(status)) {
-+		kfree(context);
-+		return NULL;
-+	}
-+	return context;
-+}
-+
-+static struct acpiphp_context *acpiphp_get_context(acpi_handle handle)
-+{
-+	struct acpiphp_context *context = NULL;
-+	acpi_status status;
-+	void *data;
-+
-+	status = acpi_get_data(handle, acpiphp_context_handler, &data);
-+	if (ACPI_SUCCESS(status)) {
-+		context = data;
-+		kref_get(&context->kref);
-+	} else if (status == AE_NOT_FOUND) {
-+		context = acpiphp_init_context(handle);
-+	}
-+	return context;
-+}
-+
-+static void acpiphp_release_context(struct kref *kref)
-+{
-+	struct acpiphp_context *context;
-+
-+	context = container_of(kref, struct acpiphp_context, kref);
-+	WARN_ON(context->func || context->bridge);
-+	acpi_detach_data(context->handle, acpiphp_context_handler);
-+	kfree(context);
-+}
-+
-+static void acpiphp_put_context(struct acpiphp_context *context)
-+{
-+	kref_put(&context->kref, acpiphp_release_context);
-+}
-+
- static inline void get_bridge(struct acpiphp_bridge *bridge)
- {
- 	kref_get(&bridge->ref);
-@@ -91,6 +146,7 @@ static inline void put_bridge(struct acp
- 
- static void free_bridge(struct kref *kref)
- {
-+	struct acpiphp_context *context;
- 	struct acpiphp_bridge *bridge;
- 	struct acpiphp_slot *slot, *next;
- 	struct acpiphp_func *func, *tmp;
-@@ -99,17 +155,24 @@ static void free_bridge(struct kref *kre
- 
- 	list_for_each_entry_safe(slot, next, &bridge->slots, node) {
- 		list_for_each_entry_safe(func, tmp, &slot->funcs, sibling) {
-+			context = func->context;
-+			context->func = NULL;
- 			kfree(func);
-+			acpiphp_put_context(context);
- 		}
- 		kfree(slot);
- 	}
- 
--	/* Release reference acquired by acpiphp_bridge_handle_to_function() */
-+	/* Release reference acquired by acpiphp_enumerate_slots(). */
- 	if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func)
- 		put_bridge(bridge->func->slot->bridge);
-+
- 	put_device(&bridge->pci_bus->dev);
- 	pci_dev_put(bridge->pci_dev);
-+	context = bridge->context;
-+	context->bridge = NULL;
- 	kfree(bridge);
-+	acpiphp_put_context(context);
- }
- 
- /*
-@@ -195,10 +258,11 @@ static void acpiphp_dock_release(void *d
- }
- 
- /* callback routine to register each ACPI PCI slot object */
--static acpi_status
--register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
-+static acpi_status register_slot(acpi_handle handle, u32 lvl, void *data,
-+				 void **rv)
- {
--	struct acpiphp_bridge *bridge = (struct acpiphp_bridge *)context;
-+	struct acpiphp_bridge *bridge = (struct acpiphp_bridge *)data;
-+	struct acpiphp_context *context;
- 	struct acpiphp_slot *slot;
- 	struct acpiphp_func *newfunc;
- 	acpi_handle tmp;
-@@ -229,8 +293,20 @@ register_slot(acpi_handle handle, u32 lv
- 	if (!newfunc)
- 		return AE_NO_MEMORY;
- 
-+	context = acpiphp_get_context(handle);
-+	if (!context) {
-+		context = acpiphp_init_context(handle);
-+		if (!context) {
-+			acpi_handle_err(handle, "No hotplug context\n");
-+			kfree(newfunc);
-+			return AE_NOT_EXIST;
-+		}
-+	}
-+
- 	newfunc->handle = handle;
- 	newfunc->function = function;
-+	newfunc->context = context;
-+	context->func = newfunc;
- 
- 	if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &tmp)))
- 		newfunc->flags = FUNC_HAS_EJ0;
-@@ -268,8 +344,8 @@ register_slot(acpi_handle handle, u32 lv
- 	if (!found) {
- 		slot = kzalloc(sizeof(struct acpiphp_slot), GFP_KERNEL);
- 		if (!slot) {
--			kfree(newfunc);
--			return AE_NO_MEMORY;
-+			status = AE_NO_MEMORY;
-+			goto err_out;
- 		}
- 
- 		slot->bridge = bridge;
-@@ -293,7 +369,9 @@ register_slot(acpi_handle handle, u32 lv
- 			else
- 				warn("acpiphp_register_hotplug_slot failed "
- 					"(err code = 0x%x)\n", retval);
--			goto err_exit;
-+
-+			status = AE_OK;
-+			goto err;
- 		}
- 	}
- 
-@@ -339,15 +417,17 @@ register_slot(acpi_handle handle, u32 lv
- 
- 	return AE_OK;
- 
-- err_exit:
-+ err:
- 	bridge->nr_slots--;
- 	mutex_lock(&bridge_mutex);
- 	list_del(&slot->node);
- 	mutex_unlock(&bridge_mutex);
- 	kfree(slot);
-+ err_out:
-+	context->func = NULL;
- 	kfree(newfunc);
--
--	return AE_OK;
-+	acpiphp_put_context(context);
-+	return status;
- }
- 
- 
-@@ -362,32 +442,6 @@ static int detect_ejectable_slots(acpi_h
- 	return found;
- }
- 
--
--/* find acpiphp_func from acpiphp_bridge */
--static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
--{
--	struct acpiphp_bridge *bridge;
--	struct acpiphp_slot *slot;
--	struct acpiphp_func *func = NULL;
--
--	mutex_lock(&bridge_mutex);
--	list_for_each_entry(bridge, &bridge_list, list) {
--		list_for_each_entry(slot, &bridge->slots, node) {
--			list_for_each_entry(func, &slot->funcs, sibling) {
--				if (func->handle == handle) {
--					get_bridge(func->slot->bridge);
--					mutex_unlock(&bridge_mutex);
--					return func;
--				}
--			}
--		}
--	}
--	mutex_unlock(&bridge_mutex);
--
--	return NULL;
--}
--
--
- static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle)
- {
- 	struct acpiphp_bridge *bridge;
-@@ -1130,6 +1184,7 @@ static void handle_hotplug_event_func(ac
-  */
- void acpiphp_enumerate_slots(struct pci_bus *bus)
- {
-+	struct acpiphp_context *context;
- 	struct acpiphp_bridge *bridge;
- 	acpi_handle handle;
- 	acpi_status status;
-@@ -1141,9 +1196,19 @@ void acpiphp_enumerate_slots(struct pci_
- 	if (!handle || detect_ejectable_slots(handle) <= 0)
- 		return;
- 
-+	context = acpiphp_get_context(handle);
-+	if (!context) {
-+		context = acpiphp_init_context(handle);
-+		if (!context) {
-+			acpi_handle_err(handle, "No hotplug context\n");
-+			return;
-+		}
-+	}
-+
- 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
- 	if (bridge == NULL) {
--		err("out of memory\n");
-+		acpi_handle_err(handle, "No memory for bridge object\n");
-+		acpiphp_put_context(context);
- 		return;
- 	}
- 
-@@ -1152,6 +1217,8 @@ void acpiphp_enumerate_slots(struct pci_
- 	bridge->handle = handle;
- 	bridge->pci_dev = pci_dev_get(bus->self);
- 	bridge->pci_bus = bus;
-+	bridge->context = context;
-+	context->bridge = bridge;
- 
- 	/*
- 	 * Grab a ref to the subordinate PCI bus in case the bus is
-@@ -1185,20 +1252,21 @@ void acpiphp_enumerate_slots(struct pci_
- 				"failed to register notify handler\n");
- 		goto err;
- 	}
--
- 	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
- 	if (ACPI_FAILURE(status))
- 		return;
- 
- 	dbg("found ejectable p2p bridge\n");
- 	bridge->flags |= BRIDGE_HAS_EJ0;
--	bridge->func = acpiphp_bridge_handle_to_function(bridge->handle);
--	if (bridge->func) {
--		status = acpi_remove_notify_handler(bridge->func->handle,
--						    ACPI_SYSTEM_NOTIFY,
-+	if (context->func) {
-+		get_bridge(context->func->slot->bridge);
-+		bridge->func = context->func;
-+		handle = context->handle;
-+		WARN_ON(bridge->handle != handle);
-+		status = acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 						    handle_hotplug_event_func);
- 		if (ACPI_FAILURE(status))
--			acpi_handle_err(bridge->func->handle,
-+			acpi_handle_err(handle,
- 					"failed to remove notify handler\n");
- 	}
- 	return;
-
+> > That is first patch.
+> >
+> > During we found the fix for that problem, found that we can separate assign
+> > unassigned resources to per root bus.
+> > that will make the code simple, also could reuse it for hotadd path.
+> >
+> > Besides that, "PCI: Enable pci bridge when it is needed" will delay pci
+> > bridge enabling, that will kill another difference between booting path
+> > and hotadd path.
+> >
+> > -v4: split first patch into 4 patches per Bjorn.
+> > -v5: drop two patches that will pass root bus resource mask after we found
+> >      simple and less intrusive way to fix the problem.
+> > -v6: refreshed on top of v3.11-rc2
+> >
+> > could get from
+> >         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-assign-unassigned
+> >
+> > Thanks
+> >
+> > Yinghai
+> >
+> > Yinghai Lu (7):
+> >   PCI: Don't use temp bus for pci_bus_release_bridge_resources
+> >   PCI: Use pci_walk_bus to detect unassigned resources
+> >   PCI: Check pci bus address for unassigned res
+> >   PCI: Introduce enable_local to prepare per root bus handling
+> >   PCI: Split pci_assign_unassigned_resources to per root bus
+> >   PCI: Enable pci bridge when it is needed
+> >   PCI: Retry assign unassigned resources for hotadd root bus
+> >
+> >  arch/arm/kernel/bios32.c           |   5 --
+> >  arch/m68k/platform/coldfire/pci.c  |   1 -
+> >  arch/mips/pci/pci.c                |   1 -
+> >  arch/sh/drivers/pci/pci.c          |   1 -
+> >  drivers/acpi/pci_root.c            |   5 +-
+> >  drivers/parisc/lba_pci.c           |   1 -
+> >  drivers/pci/bus.c                  |  19 -----
+> >  drivers/pci/hotplug/acpiphp_glue.c |   1 -
+> >  drivers/pci/pci.c                  |  20 ++++++
+> >  drivers/pci/probe.c                |   1 -
+> >  drivers/pci/setup-bus.c            | 141 +++++++++++++++++++------------------
+> >  drivers/pcmcia/cardbus.c           |   1 -
+> >  include/linux/pci.h                |   2 +-
+> >  13 files changed, 95 insertions(+), 104 deletions(-)
+> >
+> > --
+> > 1.8.1.4
+> >
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
