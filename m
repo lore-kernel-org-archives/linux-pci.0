@@ -1,73 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:1947 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755988Ab3GKJpn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 05:45:43 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH -v2 2/3] PCI,pciehp: avoid add a device already exist before suspend during resume
-Date: Thu, 11 Jul 2013 17:43:44 +0800
-Message-ID: <1373535825-49972-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
-References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:37707 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750902Ab3GXMsf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Jul 2013 08:48:35 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
+Date: Wed, 24 Jul 2013 14:58:38 +0200
+Message-ID: <6958813.eThhpoh5QO@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQURY5WFFJekPHV_s0HPi8uhKzSDOLSXHAkyLPf1=i8oAw@mail.gmail.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3215120.cRBBS5jciE@vostro.rjw.lan> <CAE9FiQURY5WFFJekPHV_s0HPi8uhKzSDOLSXHAkyLPf1=i8oAw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pciehp_resume() try to hot add device if the slot adapter
-status return true. But if there are already some devices exist,
-namely list_empty(bus->devices) return false. We should not add the device
-again, because the device add action will fail. Also print some uncomfortable
-messages like this:
-	pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
-	pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
+On Tuesday, July 23, 2013 07:20:53 PM Yinghai Lu wrote:
+> On Tue, Jul 23, 2013 at 2:39 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
+[...]
+
+> [  102.631369] pci_host_bridge pci0000:00: freeing pci_host_bridge info
+
+By the way this looks fishy:
+
+> [  102.633091] ACPI: Device does not support D3cold
+> [  102.633915] ACPI: Device does not support D3cold
+> [  102.635221] ACPI: Device does not support D3cold
+> [  102.636103] ACPI: Device does not support D3cold
+> [  102.636902] ACPI: Device does not support D3cold
+> [  102.637685] ACPI: Device does not support D3cold
+> [  102.638467] ACPI: Device does not support D3cold
+> [  102.639631] ACPI: Device does not support D3cold
+> [  102.640472] ACPI: Device does not support D3cold
+> [  102.641310] ACPI: Device does not support D3cold
+> [  102.642105] ACPI: Device does not support D3cold
+> [  102.642928] ACPI: Device does not support D3cold
+> [  102.643725] ACPI: Device does not support D3cold
+> [  102.644544] ACPI: Device does not support D3cold
+> [  102.645344] ACPI: Device does not support D3cold
+> [  102.646126] ACPI: Device does not support D3cold
+> [  102.646902] ACPI: Device does not support D3cold
+> [  102.647677] ACPI: Device does not support D3cold
+> [  102.648485] ACPI: Device does not support D3cold
+> [  102.649269] ACPI: Device does not support D3cold
+> [  102.650065] ACPI: Device does not support D3cold
+> [  102.650822] ACPI: Device does not support D3cold
+> [  102.652483] ACPI: Device does not support D3cold
+> [  102.654157] ACPI: Device does not support D3cold
+> [  102.655803] ACPI: Device does not support D3cold
+> [  102.657419] ACPI: Device does not support D3cold
+> [  102.658528] ACPI: Device does not support D3cold
+> [  102.659255] ACPI: Device does not support D3cold
+> [  102.659973] ACPI: Device does not support D3cold
+> [  102.661807] ACPI: Device does not support D3cold
+> [  102.661925] ACPI: Device does not support D3cold
+> [  102.662047] ACPI: Device does not support D3cold
+> [  102.662148] ACPI: Device does not support D3cold
+> [  102.662258] ACPI: Device does not support D3cold
+> [  102.662374] ACPI: Device does not support D3cold
+> [  102.662486] ACPI: Device does not support D3cold
+> [  102.662597] ACPI: Device does not support D3cold
+> [  102.662711] ACPI: Device does not support D3cold
+> [  102.662814] ACPI: Device does not support D3cold
+> [  102.662918] ACPI: Device does not support D3cold
+> [  102.663019] ACPI: Device does not support D3cold
+
+Can you please check if it goes away with the patch below applied?
+
+> [  102.663039] ACPI: \_SB_.PCI0: No _EJ0 support for device
+
+
 ---
- drivers/pci/hotplug/pciehp_core.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/acpi/device_pm.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 7d72c5e..1542735 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -300,6 +300,7 @@ static int pciehp_resume (struct pcie_device *dev)
- {
- 	struct controller *ctrl;
- 	struct slot *slot;
-+	struct pci_bus *pbus = dev->port->subordinate;
- 	u8 status;
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -159,7 +159,8 @@ int acpi_device_set_power(struct acpi_de
+ 	int result = 0;
+ 	bool cut_power = false;
  
- 	ctrl = get_service_data(dev);
-@@ -311,10 +312,12 @@ static int pciehp_resume (struct pcie_device *dev)
+-	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
++	if (!device || !device->flags.power_manageable
++	    || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+ 		return -EINVAL;
  
- 	/* Check if slot is occupied */
- 	pciehp_get_adapter_status(slot, &status);
--	if (status)
--		pciehp_enable_slot(slot);
--	else
-+	if (status) {
-+		if (list_empty(&pbus->devices))
-+			pciehp_enable_slot(slot);
-+	} else if (!list_empty(&pbus->devices))
- 		pciehp_disable_slot(slot);
-+
- 	return 0;
- }
- #endif /* PM */
--- 
-1.7.1
-
+ 	/* Make sure this is a valid target state */
 
