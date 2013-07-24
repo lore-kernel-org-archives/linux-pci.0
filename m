@@ -1,210 +1,453 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:40439 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932512Ab3GLC1A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 22:27:00 -0400
-Message-ID: <51DF6912.5040305@hp.com>
-Date: Fri, 12 Jul 2013 10:25:22 +0800
-From: ZhenHua <zhen-hual@hp.com>
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:56254 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814Ab3GXPDj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jul 2013 11:03:39 -0400
+Received: by mail-lb0-f170.google.com with SMTP id u10so586957lbi.15
+        for <linux-pci@vger.kernel.org>; Wed, 24 Jul 2013 08:03:38 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/1] ia64/pci: set mmio decoding on for some host bridge
-References: <1373348531-31893-1-git-send-email-zhen-hual@hp.com> <CAErSpo6pCrzCOuthrgD_+oRyw7ZhqztVSi=ti336s2h5xeH_uA@mail.gmail.com> <51DCFDC7.3060406@hp.com> <CAErSpo6LkwK5h7+1VDRKG81FdK2uoPSukSASfTEAngfNhNV8VA@mail.gmail.com>
-In-Reply-To: <CAErSpo6LkwK5h7+1VDRKG81FdK2uoPSukSASfTEAngfNhNV8VA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1374621703.15429.98.camel@ul30vt.home>
+References: <20130711204439.1701.90503.stgit@bling.home>
+	<20130711210326.1701.56478.stgit@bling.home>
+	<20130723223533.GB19765@google.com>
+	<1374621703.15429.98.camel@ul30vt.home>
+Date: Wed, 24 Jul 2013 23:03:37 +0800
+Message-ID: <CAJtEV7b3JR9J7UN_gzL6deD1JDBTfhQjGQzd_TRMLcWX2aoUfg@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
+From: Andrew Cooks <acooks@gmail.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Don Dutile <ddutile@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-     Thanks for your suggestions. I will try to find more information.
-
-ZhenHua
-On 07/11/2013 12:12 AM, Bjorn Helgaas wrote:
-> On Wed, Jul 10, 2013 at 12:23 AM, ZhenHua <zhen-hual@hp.com> wrote:
->> Hi Bjorn,
->> On the system that this bug happens,  an MCA event is generated while kernel
->> crashed:
->>      Transaction Address: memory write to address 0x00000ae041428 (LMMIO -
->> SBL Blade 1 SFW DDR Memory)
+On Wed, Jul 24, 2013 at 7:21 AM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Tue, 2013-07-23 at 16:35 -0600, Bjorn Helgaas wrote:
+>> On Thu, Jul 11, 2013 at 03:03:27PM -0600, Alex Williamson wrote:
+>> > This provides interfaces for drivers to discover the visible PCIe
+>> > requester ID for a device, for things like IOMMU setup, and iterate
 >>
->> I guess the there is some module trying to visit the address 0x00000ae041428
->> right after this line is run:
->>       pci_write_config_word(dev, PCI_COMMAND,
->>                          orig_cmd & ~(PCI_COMMAND_MEMORY | PCI_COMMAND_IO));
-> Well, you need to figure out what is accessing 0x00000ae041428 and
-> why.  Presumably that address belongs to some device below the 40:01.0
-> root port, and knowing which device that is would be a good clue, but
-> you didn't include that in your lspci.
+>> IDs (plural)
 >
-> I'm trying to give you hints about how *you* can figure out what's
-> going on here.  Obviously I don't have the system and I'm not
-> proposing a change, so that's about all I can do.
+> How does a device can't have multiple requester IDs?  Reading below, I'm
+> not sure we're on the same page for the purpose of this patch.
 >
->> The output of lspci -vvv is followed.
->> 40:01.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root
->> Port 1 (rev 22) (prog-if 00 [Normal decode])
->>          Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+
->> Stepping- SERR+ FastB2B- DisINTx+
->>          Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>          Latency: 0, Cache Line Size: 64 bytes
->>          Bus: primary=40, secondary=41, subordinate=41, sec-latency=0
->>          I/O behind bridge: 0000f000-00000fff
->>          Memory behind bridge: ae000000-af8fffff
->>          Prefetchable memory behind bridge: fffffffffff00000-00000000000fffff
->>          Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
->> <TAbort- <MAbort- <SERR- <PERR-
->>          BridgeCtl: Parity+ SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
->>                  PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->>          Capabilities: [40] Subsystem: Intel Corporation 5520/5500/X58 I/O
->> Hub PCI Express Root Port 1
->>          Capabilities: [60] Message Signalled Interrupts: Mask+ 64bit-
->> Count=1/2 Enable+
->>                  Address: fee00000  Data: 4046
->>                  Masking: 00000002  Pending: 00000000
->>          Capabilities: [90] Express (v2) Root Port (Slot-), MSI 00
->>                  DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s
->> <64ns, L1 <1us
->>                          ExtTag+ RBE+ FLReset-
->>                  DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+
->> Unsupported+
->>                          RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
->>                          MaxPayload 128 bytes, MaxReadReq 128 bytes
->>                  DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr-
->> TransPend-
->>                  LnkCap: Port #0, Speed 5GT/s, Width x2, ASPM L0s L1, Latency
->> L0 <512ns, L1 <64us
->>                          ClockPM- Suprise+ LLActRep+ BwNot+
->>                  LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain-
->> CommClk-
->>                          ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->>                  LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+
->> DLActive+ BWMgmt- ABWMgmt-
->>                  RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna+
->> CRSVisible-
->>                  RootCap: CRSVisible-
->>                  RootSta: PME ReqID 0000, PMEStatus- PMEPending-
->>                  DevCap2: Completion Timeout: Range BCD, TimeoutDis+ ARIFwd+
->>                  DevCtl2: Completion Timeout: 260ms to 900ms, TimeoutDis-
->> ARIFwd-
->>                  LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance-
->> SpeedDis-, Selectable De-emphasis: -3.5dB
->>                           Transmit Margin: Normal Operating Range,
->> EnterModifiedCompliance- ComplianceSOS-
->>                           Compliance De-emphasis: -6dB
->>                  LnkSta2: Current De-emphasis Level: -3.5dB
->>          Capabilities: [e0] Power Management version 3
->>                  Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
->> PME(D0+,D1-,D2-,D3hot+,D3cold+)
->>                  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->>          Capabilities: [100] Advanced Error Reporting
->>                  UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
->> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>                  UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
->> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>                  UESvrt: DLP+ SDES+ TLP+ FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
->> RxOF+ MalfTLP+ ECRC- UnsupReq+ ACSViol-
->>                  CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
->> NonFatalErr-
->>                  CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
->> NonFatalErr+
->>                  AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap-
->> ChkEn-
->>          Capabilities: [150] Access Control Services
->>                  ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+
->> UpstreamFwd+ EgressCtrl- DirectTrans-
->>                  ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir-
->> UpstreamFwd- EgressCtrl- DirectTrans-
->>          Capabilities: [160] Vendor Specific Information <?>
->>          Kernel driver in use: pcieport
->>          Kernel modules: shpchp
+>> > over the device chain from requestee to requester, including DMA
+>> > quirks at each step.
 >>
+>> "requestee" doesn't make sense to me.  The "-ee" suffix added to a verb
+>> normally makes a noun that refers to the object of the action.  So
+>> "requestee" sounds like it means something like "target" or "responder,"
+>> but that's not what you mean here.
+>
+> Hmm, ok.  I figured a request-er makes a request on behalf of a
+> request-ee.  Suggestions?
+>
+>> > Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+>> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>> > ---
+>> >  drivers/pci/search.c |  198 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>> >  include/linux/pci.h  |    7 ++
+>> >  2 files changed, 205 insertions(+)
+>> >
+>> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+>> > index d0627fa..4759c02 100644
+>> > --- a/drivers/pci/search.c
+>> > +++ b/drivers/pci/search.c
+>> > @@ -18,6 +18,204 @@ DECLARE_RWSEM(pci_bus_sem);
+>> >  EXPORT_SYMBOL_GPL(pci_bus_sem);
+>> >
+>> >  /*
+>> > + * pci_has_pcie_requester_id - Does @dev have a PCIe requester ID
+>> > + * @dev: device to test
+>> > + */
+>> > +static bool pci_has_pcie_requester_id(struct pci_dev *dev)
+>> > +{
+>> > +   /*
+>> > +    * XXX There's no indicator of the bus type, conventional PCI vs
+>> > +    * PCI-X vs PCI-e, but we assume that a caller looking for a PCIe
+>> > +    * requester ID is a native PCIe based system (such as VT-d or
+>> > +    * AMD-Vi).  It's common that PCIe root complex devices do not
+>> > +    * include a PCIe capability, but we can assume they are PCIe
+>> > +    * devices based on their topology.
+>> > +    */
+>> > +   if (pci_is_pcie(dev) || pci_is_root_bus(dev->bus))
+>> > +           return true;
+>> > +
+>> > +   /*
+>> > +    * PCI-X devices have a requester ID, but the bridge may still take
+>> > +    * ownership of transactions and create a requester ID.  We therefore
+>> > +    * assume that the PCI-X requester ID is not the same one used on PCIe.
+>> > +    */
+>> > +
+>> > +#ifdef CONFIG_PCI_QUIRKS
+>> > +   /*
+>> > +    * Quirk for PCIe-to-PCI bridges which do not expose a PCIe capability.
+>> > +    * If the device is a bridge, look to the next device upstream of it.
+>> > +    * If that device is PCIe and not a PCIe-to-PCI bridge, then by
+>> > +    * deduction, the device must be PCIe and therefore has a requester ID.
+>> > +    */
+>> > +   if (dev->subordinate) {
+>> > +           struct pci_dev *parent = dev->bus->self;
+>> > +
+>> > +           if (pci_is_pcie(parent) &&
+>> > +               pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
+>> > +                   return true;
+>> > +   }
+>> > +#endif
+>> > +
+>> > +   return false;
+>> > +}
+>> > +
+>> > +/*
+>> > + * pci_has_visible_pcie_requester_id - Can @bridge see @dev's requester ID?
+>> > + * @dev: requester device
+>> > + * @bridge: upstream bridge (or NULL for root bus)
+>> > + */
+>> > +static bool pci_has_visible_pcie_requester_id(struct pci_dev *dev,
+>> > +                                         struct pci_dev *bridge)
+>> > +{
+>> > +   /*
+>> > +    * The entire path must be tested, if any step does not have a
+>> > +    * requester ID, the chain is broken.  This allows us to support
+>> > +    * topologies with PCIe requester ID gaps, ex: PCIe-PCI-PCIe
+>> > +    */
+>> > +   while (dev != bridge) {
+>> > +           if (!pci_has_pcie_requester_id(dev))
+>> > +                   return false;
+>> > +
+>> > +           if (pci_is_root_bus(dev->bus))
+>> > +                   return !bridge; /* false if we don't hit @bridge */
+>> > +
+>> > +           dev = dev->bus->self;
+>> > +   }
+>> > +
+>> > +   return true;
+>> > +}
+>> > +
+>> > +/*
+>> > + * Legacy PCI bridges within a root complex (ex. Intel 82801) report
+>> > + * a different requester ID than a standard PCIe-to-PCI bridge.  Instead
+>> > + * of using (subordinate << 8 | 0) the use (bus << 8 | devfn), like a
 >>
+>> s/the/they/
 >>
->> On 07/10/2013 12:49 AM, Bjorn Helgaas wrote:
+>> Did you learn about this empirically?  Intel spec?  I wonder if there's
+>> some way to derive this from the PCIe specs.
+>
+> It's in the current intel-iommu logic, pretty much anywhere it uses
+> pci_find_upstream_pcie_bridge() it follows that up with a pci_is_pcie()
+> check.  If it's PCIe, it uses a traditional PCIe-to-PCI bridge ID.  If
+> it's a legacy PCI bridge it uses the bridge ID itself.
+>
+> static int
+> domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
+>                         int translation)
+> {
+> ...
+>         /* dependent device mapping */
+>         tmp = pci_find_upstream_pcie_bridge(pdev);
+>         if (!tmp)
+>                 return 0;
+> ...
+>         if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
+>                 return domain_context_mapping_one(domain,
+>                                         pci_domain_nr(tmp->subordinate),
+>                                         tmp->subordinate->number, 0,
+>                                         translation);
+>         else /* this is a legacy PCI bridge */
+>                 return domain_context_mapping_one(domain,
+>                                                   pci_domain_nr(tmp->bus),
+>                                                   tmp->bus->number,
+>                                                   tmp->devfn,
+>                                                   translation);
+>
+> The 82801 reference is from looking at when this would actually happen
+> on one of my own systems.
+>
+>
+>> > + * standard PCIe endpoint.  This function detects them.
+>> > + *
+>> > + * XXX Is this Intel vendor ID specific?
+>> > + */
+>> > +static bool pci_bridge_uses_endpoint_requester(struct pci_dev *bridge)
+>> > +{
+>> > +   if (!pci_is_pcie(bridge) && pci_is_root_bus(bridge->bus))
+>> > +           return true;
+>> > +
+>> > +   return false;
+>> > +}
+>> > +
+>> > +#define PCI_REQUESTER_ID(dev)      (((dev)->bus->number << 8) | (dev)->devfn)
+>> > +#define PCI_BRIDGE_REQUESTER_ID(dev)       ((dev)->subordinate->number << 8)
+>> > +
+>> > +/*
+>> > + * pci_get_visible_pcie_requester - Get requester and requester ID for
+>> > + *                                  @requestee below @bridge
+>> > + * @requestee: requester device
+>> > + * @bridge: upstream bridge (or NULL for root bus)
+>> > + * @requester_id: location to store requester ID or NULL
+>> > + */
+>> > +struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
+>> > +                                          struct pci_dev *bridge,
+>> > +                                          u16 *requester_id)
 >>
->> On Mon, Jul 8, 2013 at 11:42 PM, Li, Zhen-Hua <zhen-hual@hp.com> wrote:
+>> I'm not sure it makes sense to return a struct pci_dev here because
+>> there's no requirement that a requester ID correspond to an actual
+>> pci_dev.
+>
+> That's why this function is named get_.._requester instead of requester
+> ID.  I believe there still has to be a struct pci_dev that does the
+> request, but the requester ID for that device may not actually match.
+> So I return both.  In a PCIe-to-PCI bridge case, the pci_dev is the
+> bridge, but the requester ID is either the bridge bus|devfn or
+> subordinate|0 depending on the topology.  If we want to support "ghost
+> functions", we can return the real pci_dev and a ghost requester ID.
+>
+> I think if we used just a requester ID, it ends up being extremely
+> difficult to pass that into anything else since we then have to search
+> again for where that requester ID is rooted.
+>
+>> > +{
+>> > +   struct pci_dev *requester = requestee;
+>> > +
+>> > +   while (requester != bridge) {
+>> > +           requester = pci_get_dma_source(requester);
+>> > +           pci_dev_put(requester); /* XXX skip ref cnt */
+>> > +
+>> > +           if (pci_has_visible_pcie_requester_id(requester, bridge))
 >>
->> On some IA64 platforms with intel PCI bridge, for example, HP BL890c i2
->> with  Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port,
->> when kernel tries to disable the mmio decoding on the PCI bridge devices,
->> kernel may crash.
+>> If we acquire the "requester" pointer via a ref-counting interface,
+>> it's illegal to use the pointer after dropping the reference, isn't it?
+>> Maybe that's what you mean by the "XXX" comment.
+>
+>
+> Yes, I was just following your RFC lead and didn't want to deal with
+> reference counting until this approach had enough traction.
+>
+>
+>> > +                   break;
+>> > +
+>> > +           if (pci_is_root_bus(requester->bus))
+>> > +                   return NULL; /* @bridge not parent to @requestee */
+>> > +
+>> > +           requester = requester->bus->self;
+>> > +   }
+>> > +
+>> > +   if (requester_id) {
+>> > +           if (requester->bus != requestee->bus &&
+>> > +               !pci_bridge_uses_endpoint_requester(requester))
+>> > +                   *requester_id = PCI_BRIDGE_REQUESTER_ID(requester);
+>> > +           else
+>> > +                   *requester_id = PCI_REQUESTER_ID(requester);
+>> > +   }
+>> > +
+>> > +   return requester;
+>> > +}
+>> > +
+>> > +static int pci_do_requester_callback(struct pci_dev **dev,
+>> > +                                int (*fn)(struct pci_dev *,
+>> > +                                          u16 id, void *),
+>> > +                                void *data)
+>> > +{
+>> > +   struct pci_dev *dma_dev;
+>> > +   int ret;
+>> > +
+>> > +   ret = fn(*dev, PCI_REQUESTER_ID(*dev), data);
+>> > +   if (ret)
+>> > +           return ret;
+>> > +
+>> > +   dma_dev = pci_get_dma_source(*dev);
+>> > +   pci_dev_put(dma_dev); /* XXX skip ref cnt */
+>> > +   if (dma_dev == *dev)
 >>
->> And in the comment of function quirk_mmio_always_on, it also says:
->> "But doing so (disable the mmio decoding) may cause problems on host bridge
->>   and perhaps other key system devices"
+>> Same ref count question as above.
 >>
->> So, for this PCI bridge,  dev->mmio_always_on bit should be set to 1.
+>> > +           return 0;
+>> > +
+>> > +   ret = fn(dma_dev, PCI_REQUESTER_ID(dma_dev), data);
+>> > +   if (ret)
+>> > +           return ret;
+>> > +
+>> > +   *dev = dma_dev;
+>> > +   return 0;
+>> > +}
+>> > +
+>> > +/*
+>> > + * pcie_for_each_requester - Call callback @fn on each devices and DMA source
+>> > + *                           from @requestee to the PCIe requester ID visible
+>> > + *                           to @bridge.
 >>
->> To avoid affecting the use of quirk_mmio_always_on, a new function is
->> created.
+>> Transactions from a device may appear with one of several requester IDs,
+>> but there's not necessarily an actual pci_dev for each ID, so I think the
+>> caller reads better if it's "...for_each_requester_id()"
+>
+> Wouldn't you expect to pass a requester ID into a function with that
+> name?  I'm pretty sure I had it named that at one point but thought the
+> parameters made more sense this way.  I'll see if I can think of a
+> better name.
+>
+>> The "Call X on each devices and DMA source from Y to the requester ID"
+>> part doesn't quite make a sentence.
+>
+>
+> Ok
+>
+>> > + * @requestee: Starting device
+>> > + * @bridge: upstream bridge (or NULL for root bus)
 >>
->> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
->> ---
->>   drivers/pci/quirks.c    |   17 +++++++++++++++++
->>   include/linux/pci_ids.h |    1 +
->>   2 files changed, 18 insertions(+)
+>> You should say something about the significance of @bridge.  I think the
+>> point is to call @fn for every possible requester ID @bridge could see for
+>> transactions from @requestee.  This is a way to learn the requester IDs an
+>> IOMMU at @bridge needs to be prepared for.
+>
+> I can add something.  @bridge is supposed to be for bridge-based IOMMUs.
+> Essentially it's just a stopping point.  There might be PCI topology
+> upstream of @bridge, but if you only want the requester ID seen by the
+> bridge, you don't care.
+>
+>> > + * @fn: callback function
+>> > + * @data: data to pass to callback
+>> > + */
+>> > +int pcie_for_each_requester(struct pci_dev *requestee, struct pci_dev *bridge,
+>> > +                       int (*fn)(struct pci_dev *, u16 id, void *),
+>> > +                       void *data)
+>> > +{
+>> > +   struct pci_dev *requester;
+>> > +   struct pci_dev *dev = requestee;
+>> > +   int ret = 0;
+>> > +
+>> > +   requester = pci_get_visible_pcie_requester(requestee, bridge, NULL);
+>> > +   if (!requester)
+>> > +           return -EINVAL;
+>> > +
+>> > +   do {
+>> > +           ret = pci_do_requester_callback(&dev, fn, data);
+>> > +           if (ret)
+>> > +                   return ret;
+>> > +
+>> > +           if (dev == requester)
+>> > +                   return 0;
+>> > +
+>> > +           /*
+>> > +            * We always consider root bus devices to have a visible
+>> > +            * requester ID, therefore this should never be true.
+>> > +            */
+>> > +           BUG_ON(pci_is_root_bus(dev->bus));
 >>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index e85d230..665af3e 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -44,6 +44,23 @@ static void quirk_mmio_always_on(struct pci_dev *dev)
->>   DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
->>                                  PCI_CLASS_BRIDGE_HOST, 8,
->> quirk_mmio_always_on);
+>> What are we going to do if somebody hits this BUG_ON()?  If it's impossible
+>> to hit, we should just remove it.  If it's possible to hit it in some weird
+>> topology you didn't consider, we should see IOMMU faults for any requester
+>> ID we neglected to map, and that fault would be a better debugging hint
+>> than a BUG_ON() here.
+>
+> It's mostly for readability.  I've learned that we never what to look at
+> dev->bus->self without first testing pci_is_root_bus(dev->bus), so if I
+> was reading this code I'd stumble when I got here and spend too long
+> looking around for the assumption that makes it not needed.  I suppose I
+> could just make it a comment, but I thought why not make it official w/
+> a BUG.
+>
+>> > +
+>> > +           dev = dev->bus->self;
+>> > +
+>> > +   } while (dev != requester);
+>> > +
+>> > +   /*
+>> > +    * If we've made it here, @requester is a bridge upstream from
+>> > +    * @requestee.
+>> > +    */
+>> > +   if (pci_bridge_uses_endpoint_requester(requester))
+>> > +           return pci_do_requester_callback(&requester, fn, data);
+>> > +
+>> > +   return fn(requester, PCI_BRIDGE_REQUESTER_ID(requester), data);
+>> > +}
+>> > +
+>> > +/*
+>> >   * find the upstream PCIe-to-PCI bridge of a PCI device
+>> >   * if the device is PCIE, return NULL
+>> >   * if the device isn't connected to a PCIe bridge (that is its parent is a
+>> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> > index 3a24e4f..94e81d1 100644
+>> > --- a/include/linux/pci.h
+>> > +++ b/include/linux/pci.h
+>> > @@ -1873,6 +1873,13 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+>> >  }
+>> >  #endif
+>> >
+>> > +struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
+>> > +                                          struct pci_dev *bridge,
+>> > +                                          u16 *requester_id);
 >>
->> +#ifdef CONFIG_IA64
->> +/*
->> + * On some IA64 platforms, for some intel PCI bridge devices, for example,
->> + * the Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port,
->> + * disable the mmio decoding on this device may cause system crash.
->> + * So dev->mmio_always_on bit should be set to 1.
->> + */
->> +static void quirk_mmio_on_intel_pcibridge(struct pci_dev *dev)
->> +{
->> +       dev->mmio_always_on = 1;
->> +}
->> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL,
->> +                       PCI_DEVICE_ID_INTEL_5520_5550_X58,
->> +                       PCI_CLASS_BRIDGE_PCI,
->> +                       8, quirk_mmio_on_intel_pcibridge);
->> +#endif
->> +
->>   /* The Mellanox Tavor device gives false positive parity errors
->>    * Mark this device with a broken_parity_status, to allow
->>    * PCI scanning code to "skip" this now blacklisted device.
->> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->> index 3bed2e8..d8c60b7 100644
->> --- a/include/linux/pci_ids.h
->> +++ b/include/linux/pci_ids.h
->> @@ -2742,6 +2742,7 @@
->>   #define PCI_DEVICE_ID_INTEL_LYNNFIELD_MC_CH2_RANK_REV2  0x2db2
->>   #define PCI_DEVICE_ID_INTEL_LYNNFIELD_MC_CH2_TC_REV2    0x2db3
->>   #define PCI_DEVICE_ID_INTEL_82855PM_HB 0x3340
->> +#define PCI_DEVICE_ID_INTEL_5520_5550_X58       0x3408
->>   #define PCI_DEVICE_ID_INTEL_IOAT_TBG4  0x3429
->>   #define PCI_DEVICE_ID_INTEL_IOAT_TBG5  0x342a
->>   #define PCI_DEVICE_ID_INTEL_IOAT_TBG6  0x342b
->> --
->> 1.7.10.4
->>
->> You need to figure out what the problem is, not just avoid it.  It's
->> very unlikely that the problem is something unique to ia64.  In fact,
->> I think it's very doubtful that the problem is even something unique
->> to the 5520 root ports.  My guess is there's something special about
->> the system you're testing.
->>
->> Evidently you have traffic going to a device behind the root port at
->> the same time as we're trying to read the root port's BARs.  Linux
->> should not generate traffic like that while we're enumerating the root
->> port.  Does the problem happen on a root port with an iLO behind it?
->> Can you collect "lspci -vvv" output and identify the root port where
->> the problem occurs?
->>
->> Bjorn
->>
->>
+>> The structure of this interface implies that there is only one visible
+>> requester ID, but the whole point of this patch is that a transaction from
+>> @requestee may appear with one of several requester IDs.  So which one will
+>> this return?
+>
+> I thought the point of this patch was to have an integrated interface
+> for finding the requester ID and doing something across all devices with
+> that requester ID and thereby remove pci_find_upstream_pcie_bridge(),
+> provide a way to quirk broken PCIe-to-PCI bridge and quirk dma_ops for
+> devices that use the wrong requester ID.  In what case does a device
+> appear to have multiple requester IDs?  We have cases where devices use
+> the wrong requester ID, but AFAIK they only use a single wrong requester
+> ID.  Thanks,
+>
 
+The cases I've found where multiple requester IDs were used are all related
+to Marvell Sata controllers.
+
+Here's a table of affected devices with links to the
+bug reports. In each case both functions 0 and 1 are used.
+
+static const struct pci_dev_dma_multi_source_map {
+       u16 vendor;
+       u16 device;
+} pci_dev_dma_multi_source_map[] = {
+        /* Reported by Patrick Bregman
+         * https://bugzilla.redhat.com/show_bug.cgi?id=863653 */
+       { PCI_VENDOR_ID_MARVELL_EXT, 0x9120},
+
+       /* Reported by  Paweł Żak, Korneliusz Jarzębski, Daniel Mayer
+        * https://bugzilla.kernel.org/show_bug.cgi?id=42679 and by
+        * Justin Piszcz  https://lkml.org/lkml/2012/11/24/94 */
+       { PCI_VENDOR_ID_MARVELL_EXT, 0x9123},
+
+       /* Reported by Robert Cicconetti
+        * https://bugzilla.kernel.org/show_bug.cgi?id=42679 and by
+        * Fernando https://bugzilla.redhat.com/show_bug.cgi?id=757166 */
+       { PCI_VENDOR_ID_MARVELL_EXT, 0x9128},
+
+       /* Reported by Stijn Tintel
+        * https://bugzilla.kernel.org/show_bug.cgi?id=42679 */
+       { PCI_VENDOR_ID_MARVELL_EXT, 0x9130},
+
+       /* Reported by Gaudenz Steinlin
+        * https://lkml.org/lkml/2013/3/5/288 */
+       { PCI_VENDOR_ID_MARVELL_EXT, 0x9143},
+
+       /* Reported by Andrew Cooks
+        * https://bugzilla.kernel.org/show_bug.cgi?id=42679 */
+       { PCI_VENDOR_ID_MARVELL_EXT, 0x9172}
+};
+
+
+> Alex
+>
+>> > +int pcie_for_each_requester(struct pci_dev *requestee, struct pci_dev *bridge,
+>> > +                       int (*fn)(struct pci_dev *, u16 id, void *),
+>> > +                       void *data);
+>> > +
+>> >  /**
+>> >   * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+>> >   * @pdev: the PCI device
+>> >
+>
+>
+>
