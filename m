@@ -1,107 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:24665 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101Ab3GXDI0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 23:08:26 -0400
+Message-ID: <51EF451A.8050003@oracle.com>
+Date: Wed, 24 Jul 2013 11:08:10 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
+MIME-Version: 1.0
+To: linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>
+CC: bhelgaas@google.com,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	linux-pci@vger.kernel.org
-Subject: [ 29/72] xen/pcifront: Deal with toolstack missing XenbusStateClosing state.
-Date: Thu, 18 Jul 2013 22:25:46 -0700
-Message-Id: <20130719052601.856152676@linuxfoundation.org>
-In-Reply-To: <20130719052559.852627424@linuxfoundation.org>
-References: <20130719052559.852627424@linuxfoundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Subject: [PATCH 2/3] Refactor msi/msix restore code Part2
+Content-Type: text/plain; charset=GB2312
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-3.10-stable review patch.  If anyone has any objections, please let me know.
+xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
+in dom0. It's better to do the same for default_restore_msi_irqs in baremetal.
 
-------------------
+Move restore of mask in default_restore_msi_irqs, this could avoid mask
+restored twice in dom0, once in hypercall, the other in kernel.
 
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Without that, qlcnic driver calling pci_reset_function will lost interrupt
+in dom0.
 
-commit 098b1aeaf4d6149953b8f1f8d55c21d85536fbff upstream.
-
-There are two tool-stack that can instruct the Xen PCI frontend
-and backend to change states: 'xm' (Python code with a daemon),
-and 'xl' (C library - does not keep state changes).
-
-With the 'xm', the path to disconnect a single PCI device (xm pci-detach
-<guest> <BDF>) is:
-
-4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
-
-The * is for states that the tool-stack sets. For 'xl', it is similar:
-
-4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
-
-Both of them also tear down the XenBus structure, so the backend
-state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
-
-When a PCI device is plugged back in (xm pci-attach <guest> <BDF>)
-both of them follow the same pattern:
-
-2(InitWait*), 3(Initialized*), 4(Connected*)->4(Connected).
-
-[xen-pcifront ignores the 2,3 state changes and only acts when
-4 (Connected) has been reached]
-
-Note that this is for a _single_ PCI device. If there were two
-PCI devices and only one was disconnected 'xm' would show the same
-state changes.
-
-The problem is that git commit 3d925320e9e2de162bd138bf97816bda8c3f71be
-("xen/pcifront: Use Xen-SWIOTLB when initting if required") introduced
-a mechanism to initialize the SWIOTLB when the Xen PCI front moves to
-Connected state. It also had some aggressive seatbelt code check that
-would warn the user if one tried to change to Connected state without
-hitting first the Closing state:
-
- pcifront pci-0: PCI frontend already installed!
-
-However, that code can be relaxed and we can continue on working
-even if the frontend is instructed to be the 'Connected' state with
-no devices and then gets tickled to be in 'Connected' state again.
-
-In other words, this 4(Connected)->5(Closing)->4(Connected) state
-was expected, while 4(Connected)->.... anything but 5(Closing)->4(Connected)
-was not. This patch removes that aggressive check and allows
-Xen pcifront to work with the 'xl' toolstack (for one or more
-PCI devices) and with 'xm' toolstack (for more than two PCI
-devices).
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-[v2: Added in the description about two PCI devices]
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
+Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
 ---
- drivers/pci/xen-pcifront.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/pci/msi.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
 
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -678,10 +678,9 @@ static int pcifront_connect_and_init_dma
- 	if (!pcifront_dev) {
- 		dev_info(&pdev->xdev->dev, "Installing PCI frontend\n");
- 		pcifront_dev = pdev;
--	} else {
--		dev_err(&pdev->xdev->dev, "PCI frontend already installed!\n");
-+	} else
- 		err = -EEXIST;
--	}
-+
- 	spin_unlock(&pcifront_dev_lock);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 87223ae..922fb49 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
+ #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
+ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+ {
++	int pos;
++	u16 control;
+ 	struct msi_desc *entry;
  
- 	if (!err && !swiotlb_nr_tbl()) {
-@@ -848,7 +847,7 @@ static int pcifront_try_connect(struct p
- 		goto out;
+ 	entry = NULL;
+@@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+ 		entry = irq_get_msi_desc(irq);
+ 	}
  
- 	err = pcifront_connect_and_init_dma(pdev);
--	if (err) {
-+	if (err && err != -EEXIST) {
- 		xenbus_dev_fatal(pdev->xdev, err,
- 				 "Error setting up PCI Frontend");
- 		goto out;
-
+-	if (entry)
++	if (entry) {
+ 		write_msi_msg(irq, &entry->msg);
++		if (dev->msix_enabled) {
++			msix_mask_irq(entry, entry->masked);
++			readl(entry->mask_base);
++		} else {
++			pos = entry->msi_attrib.pos;
++			pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
++					     &control);
++			msi_mask_irq(entry, msi_capable_mask(control),
++				     entry->masked);
++		}
++	}
+ }
+ #endif
+ 
+@@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+ 	arch_restore_msi_irqs(dev, dev->irq);
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+-	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
+ 	control &= ~PCI_MSI_FLAGS_QSIZE;
+ 	control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
+ 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+@@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+ 		arch_restore_msi_irqs(dev, entry->irq);
+-		msix_mask_irq(entry, entry->masked);
+ 	}
+ 
+ 	control &= ~PCI_MSIX_FLAGS_MASKALL;
+-- 
+1.7.3
 
