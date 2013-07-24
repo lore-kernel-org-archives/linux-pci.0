@@ -1,56 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38986 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755864Ab3GKVDu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Jul 2013 17:03:50 -0400
-Subject: [RFC PATCH v2 0/2] pci/iommu: PCIe requester ID interface
-To: bhelgaas@google.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
-	iommu@lists.linux-foundation.org, acooks@gmail.com,
-	ddutile@redhat.com, dwmw2@infradead.org
-Date: Thu, 11 Jul 2013 15:03:18 -0600
-Message-ID: <20130711204439.1701.90503.stgit@bling.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7TexM5-7Z=8H+B5=49-GzoKd_prn=LbMFZWV9rpdn__A@mail.gmail.com>
+References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
+	<CAErSpo7TexM5-7Z=8H+B5=49-GzoKd_prn=LbMFZWV9rpdn__A@mail.gmail.com>
+Date: Wed, 24 Jul 2013 10:30:33 -0600
+Message-ID: <CAKocOOOW6+eqb6GTsWLgonQQ7uy5R10t6L_T3jaTN9qSbetVeQ@mail.gmail.com>
+Subject: Re: Linux Plumbers ACPI/PM, PCI Microconference
+From: Shuah Khan <shuahkhan@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Myron Stowe <myron.stowe@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	virtualization@lists.linux-foundation.org,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v2: second pass at refining the interface.  Rolled pci_requester_id
-into pci_get_visible_pcie_requester.  Fixed some bus walk issues.
+On Tue, Jul 23, 2013 at 10:06 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Jul 16, 2013 at 8:21 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
+>> Linux Plumbers has approved an ACPI/PM, PCI microconference. The
+>> overview page is here:
+>>
+>> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
+>>
+>> We would like to start receiving volunteers for presenting topics of
+>> interest.  There is a lot of activity in these subsystems so please
+>> respond by submitting presentation or discussion proposals that you
+>> would be willing to cover for consideration.  You should also feel
+>> free to submit ideas as proposals that others could cover.
+>
+> Somebody else privately suggested these ARM/PCI topics:
+>
+>> -> how it's been cleaned up to be more common across arm-32 machines
+>> -> dependencies on dtb
+>> -> future use/dependency(s) on ACPI
+>> -> hotplug support issues (if any; acpi (host-bridge) vs <whatever ARM uses> ?)
+>
+> and I'm interested in those as well.  There seems to be a lot of
+> activity in that area.  In addition, I'm interested in ARM IOMMU
+> support.  I see drivers/iommu/arm-smmu.c, but it's brand-new and I
+> haven't looked at it at all.
+>
 
-Another obscure issue that I forgot to mention that this should fix
-is gaps in requester IDs.  If you had:
+I second this topic. I am interested in ARM/iommu space also.
 
- ---pcie--->[pcie2pci]---pci--->[pci2pcie]---pcie--->[endpoint]
-
-I think the current code would try to use the endpoint requester id and
-fail.  This code will use the pcie2pci->secondary as the requester id.
-This may not even be that obscure of a bug if a PCIe ASIC is soldered
-to a pci2pcie bridge to make a compatible conventional PCI card.
-
-The diffstat for pci improves a bit when we remove:
-pci_find_upstream_pci_bridge:
-
- drivers/iommu/intel-iommu.c         |  164 ++++++++++-----------------
- drivers/iommu/intel_irq_remapping.c |    2 
- drivers/pci/search.c                |  215 +++++++++++++++++++++++++++++++-----
- include/linux/pci.h                 |   16 +-
- 4 files changed, 260 insertions(+), 137 deletions(-)
-
-Comments?  Thanks,
-
-Alex
-
----
-
-Alex Williamson (2):
-      pci: Create PCIe requester ID interface
-      iommu/intel: Make use of PCIe requester ID interface
-
-
- drivers/iommu/intel-iommu.c         |  164 +++++++++++------------------
- drivers/iommu/intel_irq_remapping.c |    2 
- drivers/pci/search.c                |  198 +++++++++++++++++++++++++++++++++++
- include/linux/pci.h                 |    7 +
- 4 files changed, 270 insertions(+), 101 deletions(-)
+thanks,
+-- Shuah
