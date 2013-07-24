@@ -1,118 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f50.google.com ([209.85.128.50]:37102 "EHLO
-	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237Ab3GIWMo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 18:12:44 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
+Date: Wed, 24 Jul 2013 22:02:35 +0200
+Message-ID: <1393554.usuhpOuYgm@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6z9CqCyLFbXpuJMtHHjLRNbo=gx87W_0_7TCHbvwrCRw@mail.gmail.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <6958813.eThhpoh5QO@vostro.rjw.lan> <CAErSpo6z9CqCyLFbXpuJMtHHjLRNbo=gx87W_0_7TCHbvwrCRw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1373404695.18560.17.camel@dabdike>
-References: <20130709203927.31676.35169.stgit@amt.stowe>
-	<1373404695.18560.17.camel@dabdike>
-Date: Tue, 9 Jul 2013 15:12:43 -0700
-Message-ID: <CAHtARFHbEz8UQUjh5cPSFYDxqW93EmFz7aiQ=91hfkDj0fCWdQ@mail.gmail.com>
-Subject: Re: [PATCH 0/3] [SCSI] megaraid: Remove local (struct pci_dev) pdev's
-From: adam radford <aradford@gmail.com>
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>,
-	Neela Syam Kolli <megaraidlinux@lsi.com>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 9, 2013 at 2:18 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Tue, 2013-07-09 at 14:39 -0600, Myron Stowe wrote:
->> Is the "megaraid" driver still actively used and maintained?  I originally
->> posted this series on 06.07.2013 and after receiving no comments, pinged
->> the list again on 06.17.2013 and still received no comments/feedback.
->>
->> Trying again as I believe there is a real issue here, which I'd like
->> confirmation on, and we really should remove the local copy/usage of
->> 'struct pci_dev' that this driver currently maintains.
->>
->>
->> While the megaraid device itself may be 64-bit DMA capable, 32-bit address
->> restricted DMA buffers are apparently required for "internal commands" as
->> is denoted by a couple of comments - "For all internal commands, the
->> buffer must be allocated in <4GB address range" - within the driver.
->>
->> If the device is 64-bit DMA capable then, once it is setup, any subsequent
->> DMA allocations for "internal commands" would not be properly restricted
->> due to megaraid_probe_one() having called pci_set_dma_mask() on pdev with
->> DMA_BIT_MASK(64).  The driver attempts to solve this by using
->> make_local_pdev() to dynamically create local pci_dev structures which are
->> then set and used for allocating 32-bit address space restricted DMA
->> buffers[1] but I don't believe that the implementation works as intended.
->>
->>
->> Assume that the megaraid device is 64-bit DMA capable.  While probing the
->> device and attaching the megaraid driver, pci_set_dma_mask() is called
->> with the "originating pdev" and a DMA_BIT_MASK of 64.  As a result, any
->> subsequent dynamic DMA related allocations associated with the
->> "originating pdev" will acquire 64-bit based buffers, which do not meet
->> the addressing restrictions for internal commands.
->>
->>   megaraid_probe_one(struct pci_dev *pdev, ...)
->>       ...
->>       pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
->>
->> As mentioned, the driver attempts to solve this by using make_local_pdev()
->> to dynamically create local pci_dev structures - "local pdev's" - which
->> are set with a DMA_BIT_MASK of 32.
->>
->>   make_local_pdev
->>       alloc_pci_dev
->>       memcpy
->>       pci_set_dma_mask
->>           dma_set_mask
->>               *dev->dma_mask = mask;
->>
->> The "local pdev" is then used in allocating a DMA buffer in an attempt to
->> meet the < 4 GB restriction.
->>
->> For a 64-bit DMA capable device, the "originating pdev" will have its
->> 'dma_mask' set to 0xffffffffffffffff after the driver attaches.
->> Subsequently, when an internal command is initiated, make_local_pdev() is
->> called.  make_local_pdev() uses the PCI's core to allocate a "local pdev"
->> and then copies the "originating pdev" content into the newly allocated
->> "local pdev".  As a result of copying the "originating pdev" content into
->> the "local pdev", pdev->dev.dma_mask will be pointing back to the
->> "originating pdev's" 'dma_mask' member, not the "local pdev's" as
->> intended.  Thus, when make_local_pdev() calls pci_set_dma_mask() in an
->> attempt to set the "local pdev's" DMA mask to 32 it will instead overwrite
->> the "originating pdev's" DMA mask.  Thus, after any user initiated
->> commands are issued, all subsequent DMA allocations will be 32-bit
->> restricted from that point onward regardless of whether they are internal
->> commands or otherwise.
->>
->>
->> This patch fixes the issue by removing the setup of DMA_BIT_MASK to 64 in
->> megaraid_probe_one(), leaving the driver with default 32-bit DMA
->> capabilities, as it currently ends up in such a state anyway after any
->> internal commands are initiated.
->>
->>
->> [1] It seems strange that both mega_buffer/buf_dma_handle and
->>     make_local_pdev() both exist for internal commands but this has been
->>     the case for a long time - at least since 2.6.12-rc2.  Perhaps there
->>     is some coalescing that could be done.
->> ---
->> Myron Stowe (3):
->>       [SCSI] megaraid: Remove 64-bit DMA related dead code
->>       [SCSI] megaraid: Remove local pdev's
->>       [SCSI] megaraid: Remove 64-bit DMA_BIT_MASK capability
->
-> Adam, you do drive by coding on this for LSI ... ack or reject, please.
->
-> James
->
->
+On Wednesday, July 24, 2013 10:06:01 AM Bjorn Helgaas wrote:
+> On Wed, Jul 24, 2013 at 6:58 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Tuesday, July 23, 2013 07:20:53 PM Yinghai Lu wrote:
+> >> On Tue, Jul 23, 2013 at 2:39 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >
+> > [...]
+> >
+> >> [  102.631369] pci_host_bridge pci0000:00: freeing pci_host_bridge info
+> >
+> > By the way this looks fishy:
+> >
+> >> [  102.633091] ACPI: Device does not support D3cold
+> 
+> This and other printks in that function don't give any clue what
+> device is involved, even though we have an acpi_device pointer.  It'd
+> be nice to fix that, too.
 
-James,
+As it turns out, I have that patch ready as well.  Appended for completeness.
 
-I have just now located my box of MegaRAID Parallel SCSI controllers.
-I will review and test the patch series from Myron and respond by next Monday.
+Thanks,
+Rafael
 
--Adam
+
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI / PM: Make messages in acpi_device_set_power() print device name
+
+Modify acpi_device_set_power() so that diagnostic messages printed by
+it to the kernel log always contain the name of the device to make it
+possible to identify the device if need be.  Also replace
+printk(KERN_WARNING ) with dev_warn() everywhere in that function.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/device_pm.c |   22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
+
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -166,20 +166,20 @@ int acpi_device_set_power(struct acpi_de
+ 	/* Make sure this is a valid target state */
+ 
+ 	if (state == device->power.state) {
+-		ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Device is already at %s\n",
++		ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Device [%s] already in %s\n",
++				  device->pnp.bus_id,
+ 				  acpi_power_state_string(state)));
+ 		return 0;
+ 	}
+ 
+ 	if (!device->power.states[state].flags.valid) {
+-		printk(KERN_WARNING PREFIX "Device does not support %s\n",
+-		       acpi_power_state_string(state));
++		dev_warn(&device->dev, "Power state %s not supported\n",
++			 acpi_power_state_string(state));
+ 		return -ENODEV;
+ 	}
+ 	if (device->parent && (state < device->parent->power.state)) {
+-		printk(KERN_WARNING PREFIX
+-			      "Cannot set device to a higher-powered"
+-			      " state than parent\n");
++		dev_warn(&device->dev, "Cannot transition to a higher-powered "
++			 "state than parent\n");
+ 		return -ENODEV;
+ 	}
+ 
+@@ -192,8 +192,8 @@ int acpi_device_set_power(struct acpi_de
+ 
+ 	if (state < device->power.state && state != ACPI_STATE_D0
+ 	    && device->power.state >= ACPI_STATE_D3_HOT) {
+-		printk(KERN_WARNING PREFIX
+-			"Cannot transition to non-D0 state from D3\n");
++		dev_warn(&device->dev,
++			 "Cannot transition to non-D0 state from D3\n");
+ 		return -ENODEV;
+ 	}
+ 
+@@ -220,10 +220,8 @@ int acpi_device_set_power(struct acpi_de
+ 
+  end:
+ 	if (result) {
+-		printk(KERN_WARNING PREFIX
+-			      "Device [%s] failed to transition to %s\n",
+-			      device->pnp.bus_id,
+-			      acpi_power_state_string(state));
++		dev_warn(&device->dev, "Failed to change power state to %s\n",
++			 acpi_power_state_string(state));
+ 	} else {
+ 		device->power.state = state;
+ 		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+
