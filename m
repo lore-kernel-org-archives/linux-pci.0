@@ -1,83 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 09/16] PCI: tegra: set up PADS_REFCLK_CFG1
-Date: Thu, 25 Jul 2013 10:53:23 -0700
-Message-Id: <1374774810-18459-10-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:5430 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747Ab3GXCBo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 22:01:44 -0400
+Message-ID: <51EF3570.7030608@huawei.com>
+Date: Wed, 24 Jul 2013 10:01:20 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<stable@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Fix hotplug remove with sriov again
+References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Warren <swarren@nvidia.com>
+Hi Yinghai,
+   It seems to have the the same problem in acpiphp,
 
-The registers PADS_REFCLK_CFG are an array of 16-bit data, one entry per
-PCIe root port. For Tegra30, we therefore need to write a 3rd entry in
-this array. Doing so mays the mini-PCIe slot on Beaver operate correctly.
+diable_device(..):
 
-While we're at it, add some #defines to partially document the fields
-within these 16-bit values.
+	while ((pdev = dev_in_slot(slot))) {
+		pci_stop_and_remove_bus_device(pdev);
+		pci_dev_put(pdev);
+	}
 
-Signed-off-by: Stephen Warren <swarren@nvidia.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 29 ++++++++++++++++++++++++-----
- 1 file changed, 24 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 5347d7d..0c84c67 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -196,6 +196,25 @@
- #define PADS_REFCLK_CFG0			0x000000C8
- #define PADS_REFCLK_CFG1			0x000000CC
- 
-+/*
-+ * Fields in PADS_REFCLK_CFG*. Those registers form an array of 16-bit
-+ * entries, one entry per PCIe port. These field definitions and desired
-+ * values aren't in the TRM, but do come from NVIDIA.
-+ */
-+#define PADS_REFCLK_CFG_TERM_SHIFT		2  /* 6:2 */
-+#define PADS_REFCLK_CFG_E_TERM_SHIFT		7
-+#define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
-+#define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
-+
-+/* Default value provided by HW engineering is 0xfa5c */
-+#define PADS_REFCLK_CFG_VALUE \
-+	( \
-+		(0x17 << PADS_REFCLK_CFG_TERM_SHIFT)   | \
-+		(0    << PADS_REFCLK_CFG_E_TERM_SHIFT) | \
-+		(0xa  << PADS_REFCLK_CFG_PREDI_SHIFT)  | \
-+		(0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
-+	)
-+
- struct tegra_msi {
- 	struct msi_chip chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-@@ -809,11 +828,11 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 	value |= PADS_PLL_CTL_RST_B4SM;
- 	pads_writel(pcie, value, soc->pads_pll_ctl);
- 
--	/*
--	 * Hack, set the clock voltage to the DEFAULT provided by hw folks.
--	 * This doesn't exist in the documentation.
--	 */
--	pads_writel(pcie, 0xfa5cfa5c, PADS_REFCLK_CFG0);
-+	/* Configure the reference clock driver */
-+	value = PADS_REFCLK_CFG_VALUE | (PADS_REFCLK_CFG_VALUE << 16);
-+	pads_writel(pcie, value, PADS_REFCLK_CFG0);
-+	if (soc->num_ports > 2)
-+		pads_writel(pcie, PADS_REFCLK_CFG_VALUE, PADS_REFCLK_CFG1);
- 
- 	/* wait for the PLL to lock */
- 	timeout = 300;
+static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
+{
+	struct pci_bus *bus = slot->bridge->pci_bus;
+	struct pci_dev *dev;
+	struct pci_dev *ret = NULL;
+
+	down_read(&pci_bus_sem);
+	list_for_each_entry(dev, &bus->devices, bus_list)
+		if (PCI_SLOT(dev->devfn) == slot->device) {
+			ret = pci_dev_get(dev);
+			break;
+		}
+	up_read(&pci_bus_sem);
+
+
+Thanks!
+Yijing.
+
+On 2013/7/20 3:14, Yinghai Lu wrote:
+> Found hot-remove pcie card with sriov enabled cause crash in v3.10.
+> 
+> It is regression caused by commit ba518e3c177547dfebf7fa7252cea0c850e7ce25
+> (PCI: pciehp: Iterate over all devices in slot, not functions 0-7)
+> 
+> That commit change to use bus->devices to iterate devices under
+> bus to run pci_stop_and_remove_bus_device().
+> Actually it duplicates the problem with those bus->devices iteratation
+> that we try to fix in commit ac205b7bb72fa4227d2e79979bbe2b4687cdf44d
+> (PCI: make sriov work with hotplug remove)
+> 
+> Change to iterate reversely as we did last time.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Yijing Wang <wangyijing@huawei.com>
+> Cc: <stable@vger.kernel.org> v3.9+
+> 
+> ---
+>  drivers/pci/hotplug/pciehp_pci.c |    8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> Index: linux-2.6/drivers/pci/hotplug/pciehp_pci.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_pci.c
+> +++ linux-2.6/drivers/pci/hotplug/pciehp_pci.c
+> @@ -92,7 +92,13 @@ int pciehp_unconfigure_device(struct slo
+>  	if (ret)
+>  		presence = 0;
+>  
+> -	list_for_each_entry_safe(dev, temp, &parent->devices, bus_list) {
+> +	/*
+> +	 * Need to iterate device reversely, as during
+> +	 * stop PF driver, VF will be removed, the list_for_each
+> +	 * could point to removed VF with temp.
+> +	 */
+> +	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+> +					 bus_list) {
+>  		pci_dev_get(dev);
+>  		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
+>  			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+> 
+> 
+
+
 -- 
-1.8.1.5
+Thanks!
+Yijing
 
