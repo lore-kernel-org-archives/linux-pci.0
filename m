@@ -1,137 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:6586 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752701Ab3GIH4L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 03:56:11 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Oliver Neukum <oneukum@suse.de>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH 1/2] PCI: introduce PCIe Device Serial NUmber Capability support
-Date: Tue, 9 Jul 2013 15:55:45 +0800
-Message-ID: <1373356545-45944-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:45279 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750780Ab3GXCPt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 22:15:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAE9FiQUX7Dx5Z8zgx94bQ5vWTRsExarzG6WB_iuGj1jWkurc4w@mail.gmail.com>
+References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
+	<51EF3570.7030608@huawei.com>
+	<CAE9FiQUX7Dx5Z8zgx94bQ5vWTRsExarzG6WB_iuGj1jWkurc4w@mail.gmail.com>
+Date: Tue, 23 Jul 2013 19:15:48 -0700
+Message-ID: <CAE9FiQVBfx_nyyna-9Xn+769fqqmMMMiNUwcacf4dA1iaZj6jw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Fix hotplug remove with sriov again
+From: Yinghai Lu <yinghai@kernel.org>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=90e6ba6e901cf2439a04e2387c2b
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce PCIe Ext Capability Device Serial Number support,
-so we can use the unique device serial number to identify
-the physical device. During system suspend, if the PCIe
-device was removed and inserted a new same device, after
-system resume there is no good way to identify it, maybe
-Device Serial Number is a good choice if device support.
+--90e6ba6e901cf2439a04e2387c2b
+Content-Type: text/plain; charset=ISO-8859-1
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/pci.c   |   33 +++++++++++++++++++++++++++++++++
- drivers/pci/pci.h   |    1 +
- drivers/pci/probe.c |    3 +++
- include/linux/pci.h |    4 ++++
- 4 files changed, 41 insertions(+), 0 deletions(-)
+On Tue, Jul 23, 2013 at 7:04 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Jul 23, 2013 at 7:01 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Hi Yinghai,
+>>    It seems to have the the same problem in acpiphp,
+>>
+>> diable_device(..):
+>>
+>>         while ((pdev = dev_in_slot(slot))) {
+>>                 pci_stop_and_remove_bus_device(pdev);
+>>                 pci_dev_put(pdev);
+>>         }
+>>
+>>
+>> static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
+>> {
+>>         struct pci_bus *bus = slot->bridge->pci_bus;
+>>         struct pci_dev *dev;
+>>         struct pci_dev *ret = NULL;
+>>
+>>         down_read(&pci_bus_sem);
+>>         list_for_each_entry(dev, &bus->devices, bus_list)
+>>                 if (PCI_SLOT(dev->devfn) == slot->device) {
+>>                         ret = pci_dev_get(dev);
+>>                         break;
+>>                 }
+>>         up_read(&pci_bus_sem);
+>>
+>
+> acpiphp is ok.
+>
+> dev_in_slot will restart from bus->devices again every time.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e37fea6..d08df2b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2048,6 +2048,39 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
- }
- 
- /**
-+ * pci_get_dsn - get device serial number
-+ * @dev: the PCI device
-+ * @sn: saved device serial number
-+ */
-+void pci_get_dsn(struct pci_dev *dev, u64 *sn)
-+{
-+	int pos;
-+	u32 lo, hi;
-+
-+	if (!pci_is_pcie(dev))
-+		goto out;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
-+	if (!pos)
-+		goto out;
-+
-+	pci_read_config_dword(dev, pos + 4, &lo);
-+	pci_read_config_dword(dev, pos + 8, &hi);
-+	*sn = ((u64)hi << 32) | lo;
-+	return;
-+
-+out:
-+	*sn = 0;
-+	return;
-+}
-+EXPORT_SYMBOL(pci_get_dsn);
-+
-+void pci_dsn_init(struct pci_dev *dev)
-+{
-+	return pci_get_dsn(dev, &dev->sn);
-+}
-+
-+/**
-  * pci_configure_ari - enable or disable ARI forwarding
-  * @dev: the PCI device
-  *
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 68678ed..f626006 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -202,6 +202,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		    struct resource *res, unsigned int reg);
- int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
- void pci_configure_ari(struct pci_dev *dev);
-+void pci_dsn_init(struct pci_dev *dev);
- 
- /**
-  * pci_ari_enabled - query ARI forwarding status
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 46ada5c..d4c6e7e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1322,6 +1322,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Power Management */
- 	pci_pm_init(dev);
- 
-+	/* Device Serial Number */
-+	pci_dsn_init(dev);
-+
- 	/* Vital Product Data */
- 	pci_vpd_pci22_init(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..59cd205 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -342,6 +342,7 @@ struct pci_dev {
- 	struct list_head msi_list;
- 	struct kset *msi_kset;
- #endif
-+	u64 sn;		/* device serieal number, 0 if not support */
- 	struct pci_vpd *vpd;
- #ifdef CONFIG_PCI_ATS
- 	union {
-@@ -995,6 +996,9 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
- int pci_vpd_truncate(struct pci_dev *dev, size_t size);
- 
-+/* Device Serial Number */
-+void pci_get_dsn(struct pci_dev *dev, u64 *sn);
-+
- /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
- resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
- void pci_bus_assign_resources(const struct pci_bus *bus);
--- 
-1.7.1
+Actually I had another version to fix the problem, but I did not even
+try to compile
+and to test it after i figured out that mlx4_core like to VF get stopped before
+PF's driver.
 
+Thanks
 
+Yinghai
+
+--90e6ba6e901cf2439a04e2387c2b
+Content-Type: application/octet-stream; name="fix_cx3_hotplug_1x.patch"
+Content-Disposition: attachment; filename="fix_cx3_hotplug_1x.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hjhweggi0
+
+LS0tCiBkcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9wY2kuYyB8ICAgMjEgKysrKysrKysrKysr
+KysrKysrLS0tCiAxIGZpbGUgY2hhbmdlZCwgMTggaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMo
+LSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfcGNpLmMKPT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfcGNp
+LmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9wY2kuYwpAQCAtNzYs
+MTIgKzc2LDI4IEBAIGludCBwY2llaHBfY29uZmlndXJlX2RldmljZShzdHJ1Y3Qgc2xvdAogCXJl
+dHVybiAwOwogfQogCisvKiByZXR1cm4gb25lIGRldmljZSBvbiBidXMsIGFjcXVpcmluZyBhIHJl
+ZmVyZW5jZSBvbiBpdCAqLworc3RhdGljIHN0cnVjdCBwY2lfZGV2ICpvbmVfZGV2X29uX2J1cyhz
+dHJ1Y3QgcGNpX2J1cyAqYnVzKQoreworCXN0cnVjdCBwY2lfZGV2ICpkZXY7CisJc3RydWN0IHBj
+aV9kZXYgKnJldCA9IE5VTEw7CisKKwlkb3duX3JlYWQoJnBjaV9idXNfc2VtKTsKKwlsaXN0X2Zv
+cl9lYWNoX2VudHJ5KGRldiwgJmJ1cy0+ZGV2aWNlcywgYnVzX2xpc3QpIHsKKwkJcmV0ID0gcGNp
+X2Rldl9nZXQoZGV2KTsKKwkJYnJlYWs7CisJfQorCXVwX3JlYWQoJnBjaV9idXNfc2VtKTsKKwor
+CXJldHVybiByZXQ7Cit9CisKIGludCBwY2llaHBfdW5jb25maWd1cmVfZGV2aWNlKHN0cnVjdCBz
+bG90ICpwX3Nsb3QpCiB7CiAJaW50IHJldCwgcmMgPSAwOwogCXU4IGJjdGwgPSAwOwogCXU4IHBy
+ZXNlbmNlID0gMDsKLQlzdHJ1Y3QgcGNpX2RldiAqZGV2LCAqdGVtcDsKKwlzdHJ1Y3QgcGNpX2Rl
+diAqZGV2OwogCXN0cnVjdCBwY2lfYnVzICpwYXJlbnQgPSBwX3Nsb3QtPmN0cmwtPnBjaWUtPnBv
+cnQtPnN1Ym9yZGluYXRlOwogCXUxNiBjb21tYW5kOwogCXN0cnVjdCBjb250cm9sbGVyICpjdHJs
+ID0gcF9zbG90LT5jdHJsOwpAQCAtOTIsOCArMTA4LDcgQEAgaW50IHBjaWVocF91bmNvbmZpZ3Vy
+ZV9kZXZpY2Uoc3RydWN0IHNsbwogCWlmIChyZXQpCiAJCXByZXNlbmNlID0gMDsKIAotCWxpc3Rf
+Zm9yX2VhY2hfZW50cnlfc2FmZShkZXYsIHRlbXAsICZwYXJlbnQtPmRldmljZXMsIGJ1c19saXN0
+KSB7Ci0JCXBjaV9kZXZfZ2V0KGRldik7CisJd2hpbGUgKGRldiA9IG9uZV9kZXZfb25fYnVzKHBh
+cmVudCkpIHsKIAkJaWYgKGRldi0+aGRyX3R5cGUgPT0gUENJX0hFQURFUl9UWVBFX0JSSURHRSAm
+JiBwcmVzZW5jZSkgewogCQkJcGNpX3JlYWRfY29uZmlnX2J5dGUoZGV2LCBQQ0lfQlJJREdFX0NP
+TlRST0wsICZiY3RsKTsKIAkJCWlmIChiY3RsICYgUENJX0JSSURHRV9DVExfVkdBKSB7Cg==
+--90e6ba6e901cf2439a04e2387c2b--
