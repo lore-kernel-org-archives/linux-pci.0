@@ -1,102 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <51E8B923.5090201@gmail.com>
-Date: Thu, 18 Jul 2013 21:57:23 -0600
-From: Robert Hancock <hancockrwd@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:23944 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1749667Ab3GXEBJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jul 2013 00:01:09 -0400
+Message-ID: <51EF516F.6010102@huawei.com>
+Date: Wed, 24 Jul 2013 12:00:47 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH v2 6/8] PCI: acpiphp: workaround for Thunderbolt on Acer
- Aspire S5
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com> <1372860295-8306-7-git-send-email-mika.westerberg@linux.intel.com> <1444243.g9GbxN3NM0@vostro.rjw.lan>
-In-Reply-To: <1444243.g9GbxN3NM0@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH] PCI: Separate stop and remove devices in pciehp
+References: <1374261258-23036-1-git-send-email-yinghai@kernel.org> <1374261258-23036-2-git-send-email-yinghai@kernel.org> <CAErSpo78DU3bPwkVOt=1XD08y9iD38+wUOp2+GVxO7P68TOOjg@mail.gmail.com> <CAE9FiQUyVUssJx8eZK9kabS99CD6ry-UnJ9q1-q+f53Fx+tjng@mail.gmail.com> <20130723155645.GA18422@google.com> <CAE9FiQUQirapRONeb1ndOoKsiYviyXJVx3wZTcgzJj7bHX-1xQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQUQirapRONeb1ndOoKsiYviyXJVx3wZTcgzJj7bHX-1xQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/03/2013 03:40 PM, Rafael J. Wysocki wrote:
-> On Wednesday, July 03, 2013 05:04:53 PM Mika Westerberg wrote:
->> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
->>
->> Correct ACPI PCI hotplug imeplementation should have _RMV method in a
->> PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
->> deeper in hierarchy:
->>
->> Device (RP05)
->> {
->>     // ...
->>     Device (HRUP)
->>     {
->>         // ...
->>         Device (HRDN)
->>         {
->>             // ...
->>             Device (EPUP)
->>             {
->>                 // ...
->>                 Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
->>                 {
->>                     Return (One)
->>                 }
->>             }
->>         }
->>     }
->> }
->>
->> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
->> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
->> ---
->>   drivers/pci/hotplug/acpi_pcihp.c | 13 +++++++++++++
->>   1 file changed, 13 insertions(+)
->>
->> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
->> index 2a47e82..d92ebfb 100644
->> --- a/drivers/pci/hotplug/acpi_pcihp.c
->> +++ b/drivers/pci/hotplug/acpi_pcihp.c
->> @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
->>   	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
->>   	if (ACPI_SUCCESS(status) && removable)
->>   		return 1;
->> +
->> +	/*
->> +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
->> +	 *
->> +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
->> +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
->> +	 * deeper in hierarchy.
->> +	 */
->> +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
->> +			&removable);
->
-> Well, calling stuff like this directly from a general function is kind of ugly.
->
-> Can we use something like a quirk instead?  A DMI check or something?
+Hi Yinghai,
+   The third patch make pci_stop_dev call pci_disable_sriov(dev).
+It looks asymmetrical, because pci_enable_sriov(dev, NR_VIRTFN) always
+be called by device driver. Why not work around this in device driver like ixgbe?
+I'm not familiar with SRIOV, so I'm just a bit puzzled.
 
-Presumably this device functions under Windows so clearly Windows is 
-capable of dealing with this case, so we should too.
+Thanks!
+Yijing.
 
-There are way too many of these silly DMI checks in the kernel - we 
-should be way more hesitant to add more of them. They're almost 
-guaranteed to be incomplete. I would say they should be avoided whenever 
-possible unless there's some reason why a general workaround can't be used.
+------------------------------------------------------------
+Some driver (like ixgbe) does not call pci_disable_sriov() if
+sriov is enabled via /sys/.../sriov_numvfs setting.
+ixgbe does allow driver for PF get detached, but still have VFs
+around.
 
->
->> +	if (ACPI_SUCCESS(status) && removable)
->> +		return 1;
->> +
->>   	return 0;
->>   }
->
-> Rafael
->
->
+But how about PF get removed via /sys or pciehp finally?
+
+During hot-remove, VF will still hold one ref to PF and it
+prevent PF to be removed.
+That make the next hot-add fails, as old PF dev struct is still around.
+
+We need to add pci_disable_sriov() calling during stop PF .
+
+Need this one for v3.11
+
+-v2: Accoring to Bjorn, move that calling to pci_stop_dev.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <liuj97@gmail.com>
+Cc: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: Donald Dutile <ddutile@redhat.com>
+Cc: Greg Rose <gregory.v.rose@intel.com>
+
+---
+ drivers/pci/remove.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: linux-2.6/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/remove.c
++++ linux-2.6/drivers/pci/remove.c
+@@ -25,6 +25,8 @@ static void pci_stop_dev(struct pci_dev
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
+ 		device_del(&dev->dev);
++		/* remove VF, if PF driver skip that */
++		pci_disable_sriov(dev);
+ 		dev->is_added = 0;
+ 	}
 
