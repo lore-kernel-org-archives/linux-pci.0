@@ -1,154 +1,93 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 1/30] ACPI / PCI: Make bus registration and unregistration symmetric
-Date: Thu, 18 Jul 2013 01:15:58 +0200
-Message-ID: <1395739.1IFp3cq75N@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1374774810-18459-10-git-send-email-thierry.reding@gmail.com>
+References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com> <1374774810-18459-10-git-send-email-thierry.reding@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Jul 2013 12:01:05 -0600
+Message-ID: <CAErSpo5v0ajACxAZnUQtL5LbY=JW1Xdw+cRf=wtqvJuQDxfAow@mail.gmail.com>
+Subject: Re: [PATCH v5 09/16] PCI: tegra: set up PADS_REFCLK_CFG1
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jay Agarwal <jagarwal@nvidia.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	devicetree@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Jul 25, 2013 at 11:53 AM, Thierry Reding
+<thierry.reding@gmail.com> wrote:
+> From: Stephen Warren <swarren@nvidia.com>
+>
+> The registers PADS_REFCLK_CFG are an array of 16-bit data, one entry per
+> PCIe root port. For Tegra30, we therefore need to write a 3rd entry in
+> this array. Doing so mays the mini-PCIe slot on Beaver operate correctly.
+>
+> While we're at it, add some #defines to partially document the fields
+> within these 16-bit values.
+>
+> Signed-off-by: Stephen Warren <swarren@nvidia.com>
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-Since acpi_pci_slot_enumerate() and acpiphp_enumerate_slots() can get
-the ACPI device handle they need from bus->bridge, it is not
-necessary to pass that handle to them as an argument.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Drop the second argument of acpi_pci_slot_enumerate() and
-acpiphp_enumerate_slots(), rework them to obtain the ACPI handle
-from bus->bridge and make acpi_pci_add_bus() and
-acpi_pci_remove_bus() entirely symmetrical.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/pci_slot.c            |   14 +++++++++-----
- drivers/pci/hotplug/acpiphp_glue.c |    6 ++++--
- drivers/pci/pci-acpi.c             |   16 ++++------------
- include/linux/pci-acpi.h           |   10 ++++------
- 4 files changed, 21 insertions(+), 25 deletions(-)
-
-Index: linux-pm/drivers/acpi/pci_slot.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_slot.c
-+++ linux-pm/drivers/acpi/pci_slot.c
-@@ -159,12 +159,16 @@ register_slot(acpi_handle handle, u32 lv
- 	return AE_OK;
- }
- 
--void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle)
-+void acpi_pci_slot_enumerate(struct pci_bus *bus)
- {
--	mutex_lock(&slot_list_lock);
--	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
--			    register_slot, NULL, bus, NULL);
--	mutex_unlock(&slot_list_lock);
-+	acpi_handle handle = ACPI_HANDLE(bus->bridge);
-+
-+	if (handle) {
-+		mutex_lock(&slot_list_lock);
-+		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
-+				    register_slot, NULL, bus, NULL);
-+		mutex_unlock(&slot_list_lock);
-+	}
- }
- 
- void acpi_pci_slot_remove(struct pci_bus *bus)
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1147,14 +1147,16 @@ static void handle_hotplug_event_func(ac
-  * Create hotplug slots for the PCI bus.
-  * It should always return 0 to avoid skipping following notifiers.
-  */
--void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
-+void acpiphp_enumerate_slots(struct pci_bus *bus)
- {
-+	acpi_handle handle;
- 	struct acpiphp_bridge *bridge;
- 
- 	if (acpiphp_disabled)
- 		return;
- 
--	if (detect_ejectable_slots(handle) <= 0)
-+	handle = ACPI_HANDLE(bus->bridge);
-+	if (!handle || detect_ejectable_slots(handle) <= 0)
- 		return;
- 
- 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -290,24 +290,16 @@ static struct pci_platform_pm_ops acpi_p
- 
- void acpi_pci_add_bus(struct pci_bus *bus)
- {
--	acpi_handle handle = NULL;
--
--	if (bus->bridge)
--		handle = ACPI_HANDLE(bus->bridge);
--	if (acpi_pci_disabled || handle == NULL)
-+	if (acpi_pci_disabled || !bus->bridge)
- 		return;
- 
--	acpi_pci_slot_enumerate(bus, handle);
--	acpiphp_enumerate_slots(bus, handle);
-+	acpi_pci_slot_enumerate(bus);
-+	acpiphp_enumerate_slots(bus);
- }
- 
- void acpi_pci_remove_bus(struct pci_bus *bus)
- {
--	/*
--	 * bus->bridge->acpi_node.handle has already been reset to NULL
--	 * when acpi_pci_remove_bus() is called, so don't check ACPI handle.
--	 */
--	if (acpi_pci_disabled)
-+	if (acpi_pci_disabled || !bus->bridge)
- 		return;
- 
- 	acpiphp_remove_slots(bus);
-Index: linux-pm/include/linux/pci-acpi.h
-===================================================================
---- linux-pm.orig/include/linux/pci-acpi.h
-+++ linux-pm/include/linux/pci-acpi.h
-@@ -47,24 +47,22 @@ void acpi_pci_remove_bus(struct pci_bus
- 
- #ifdef	CONFIG_ACPI_PCI_SLOT
- void acpi_pci_slot_init(void);
--void acpi_pci_slot_enumerate(struct pci_bus *bus, acpi_handle handle);
-+void acpi_pci_slot_enumerate(struct pci_bus *bus);
- void acpi_pci_slot_remove(struct pci_bus *bus);
- #else
- static inline void acpi_pci_slot_init(void) { }
--static inline void acpi_pci_slot_enumerate(struct pci_bus *bus,
--					   acpi_handle handle) { }
-+static inline void acpi_pci_slot_enumerate(struct pci_bus *bus) { }
- static inline void acpi_pci_slot_remove(struct pci_bus *bus) { }
- #endif
- 
- #ifdef	CONFIG_HOTPLUG_PCI_ACPI
- void acpiphp_init(void);
--void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle);
-+void acpiphp_enumerate_slots(struct pci_bus *bus);
- void acpiphp_remove_slots(struct pci_bus *bus);
- void acpiphp_check_host_bridge(acpi_handle handle);
- #else
- static inline void acpiphp_init(void) { }
--static inline void acpiphp_enumerate_slots(struct pci_bus *bus,
--					   acpi_handle handle) { }
-+static inline void acpiphp_enumerate_slots(struct pci_bus *bus) { }
- static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
- static inline void acpiphp_check_host_bridge(acpi_handle handle) { }
- #endif
-
+> ---
+>  drivers/pci/host/pci-tegra.c | 29 ++++++++++++++++++++++++-----
+>  1 file changed, 24 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 5347d7d..0c84c67 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -196,6 +196,25 @@
+>  #define PADS_REFCLK_CFG0                       0x000000C8
+>  #define PADS_REFCLK_CFG1                       0x000000CC
+>
+> +/*
+> + * Fields in PADS_REFCLK_CFG*. Those registers form an array of 16-bit
+> + * entries, one entry per PCIe port. These field definitions and desired
+> + * values aren't in the TRM, but do come from NVIDIA.
+> + */
+> +#define PADS_REFCLK_CFG_TERM_SHIFT             2  /* 6:2 */
+> +#define PADS_REFCLK_CFG_E_TERM_SHIFT           7
+> +#define PADS_REFCLK_CFG_PREDI_SHIFT            8  /* 11:8 */
+> +#define PADS_REFCLK_CFG_DRVI_SHIFT             12 /* 15:12 */
+> +
+> +/* Default value provided by HW engineering is 0xfa5c */
+> +#define PADS_REFCLK_CFG_VALUE \
+> +       ( \
+> +               (0x17 << PADS_REFCLK_CFG_TERM_SHIFT)   | \
+> +               (0    << PADS_REFCLK_CFG_E_TERM_SHIFT) | \
+> +               (0xa  << PADS_REFCLK_CFG_PREDI_SHIFT)  | \
+> +               (0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
+> +       )
+> +
+>  struct tegra_msi {
+>         struct msi_chip chip;
+>         DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+> @@ -809,11 +828,11 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+>         value |= PADS_PLL_CTL_RST_B4SM;
+>         pads_writel(pcie, value, soc->pads_pll_ctl);
+>
+> -       /*
+> -        * Hack, set the clock voltage to the DEFAULT provided by hw folks.
+> -        * This doesn't exist in the documentation.
+> -        */
+> -       pads_writel(pcie, 0xfa5cfa5c, PADS_REFCLK_CFG0);
+> +       /* Configure the reference clock driver */
+> +       value = PADS_REFCLK_CFG_VALUE | (PADS_REFCLK_CFG_VALUE << 16);
+> +       pads_writel(pcie, value, PADS_REFCLK_CFG0);
+> +       if (soc->num_ports > 2)
+> +               pads_writel(pcie, PADS_REFCLK_CFG_VALUE, PADS_REFCLK_CFG1);
+>
+>         /* wait for the PLL to lock */
+>         timeout = 300;
+> --
+> 1.8.1.5
+>
