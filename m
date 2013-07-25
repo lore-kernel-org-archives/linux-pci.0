@@ -1,39 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:39375 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586Ab3G0OZU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Jul 2013 10:25:20 -0400
-Received: by mail-oa0-f51.google.com with SMTP id i4so9967175oah.10
-        for <linux-pci@vger.kernel.org>; Sat, 27 Jul 2013 07:25:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5KZkxJ+rwkmEUKEPRuj1nZ=7xv8Y9m0T6yp9Jo=FXPbw@mail.gmail.com>
-References: <1374759098-6746-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo79rJZuEkJB+W0XGq-sKUDwTgrG5SVzJbFBqobLY2+nGQ@mail.gmail.com>
-	<CAE9FiQUmetaXJ-=d3HV-AiaeEEh_ehdbT5E=Mrm7d7Z7y78Tng@mail.gmail.com>
-	<CAErSpo5KZkxJ+rwkmEUKEPRuj1nZ=7xv8Y9m0T6yp9Jo=FXPbw@mail.gmail.com>
-Date: Sat, 27 Jul 2013 07:25:19 -0700
-Message-ID: <CAE9FiQVzLm1=3YbD76FvzoVbg6-n3bNrHnmEqz1SerODNbVRDg@mail.gmail.com>
-Subject: Re: [PATCH v6] PCI: Don't let mmio fallback to must-only, if ioport
- fails with must+optional
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 02/16] ARM: tegra: Move pmc.h to include/linux/tegra-pmc.h
+Date: Thu, 25 Jul 2013 10:53:16 -0700
+Message-Id: <1374774810-18459-3-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 10:08 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Jul 26, 2013 at 6:57 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
->> BenH at last only hope it could backport to v3.10 for the distribution.
->
-> OK, I applied this to for-linus and marked it for stable.  Please take
-> a look and see if it makes sense, especially the changelog:
->
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=aa914f5
+In preparation for moving the PCIe driver into the drivers/pci/host
+directory, this header, which contains prototypes that are required by
+the PCIe driver, needs to be moved to a globally visible location.
 
-yes, thanks for that.
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+Changes in v2:
+- keep tegra_pmc_init() prototype in arch/arm/mach-tegra/pmc.h
+- move pmc.h to includex/linux/tegra-pmc.h
 
-Yinghai
+Changes in v3:
+- update subject to match new location
+
+ arch/arm/mach-tegra/pmc.h |  1 -
+ include/linux/tegra-pmc.h | 23 +++++++++++++++++++++++
+ 2 files changed, 23 insertions(+), 1 deletion(-)
+ create mode 100644 include/linux/tegra-pmc.h
+
+diff --git a/arch/arm/mach-tegra/pmc.h b/arch/arm/mach-tegra/pmc.h
+index cdb08a1..e1c2df2 100644
+--- a/arch/arm/mach-tegra/pmc.h
++++ b/arch/arm/mach-tegra/pmc.h
+@@ -37,6 +37,5 @@ int tegra_pmc_cpu_power_on(int cpuid);
+ int tegra_pmc_cpu_remove_clamping(int cpuid);
+ 
+ void tegra_pmc_init(void);
+-void tegra_pmc_pcie_xclk_clamp(bool clamp);
+ 
+ #endif
+diff --git a/include/linux/tegra-pmc.h b/include/linux/tegra-pmc.h
+new file mode 100644
+index 0000000..b6296bf
+--- /dev/null
++++ b/include/linux/tegra-pmc.h
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (C) 2012 NVIDIA CORPORATION. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ *
++ */
++
++#ifndef __LINUX_TEGRA_PMC_H
++#define __LINUX_TEGRA_PMC_H
++
++void tegra_pmc_pcie_xclk_clamp(bool clamp);
++
++#endif
+-- 
+1.8.1.5
+
