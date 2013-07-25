@@ -1,112 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:50292 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755882Ab3GKJoh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 05:44:37 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH -v2 3/3] PCI,pciehp: use PCIe DSN to identify device change during suspend
-Date: Thu, 11 Jul 2013 17:43:45 +0800
-Message-ID: <1373535825-49972-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
-References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 09/16] PCI: tegra: set up PADS_REFCLK_CFG1
+Date: Thu, 25 Jul 2013 10:53:23 -0700
+Message-Id: <1374774810-18459-10-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If device was removed from slot and reinsert a new device during
-suspend, pciehp can not identify the physical device change now.
-So the old driver .resume() method will be called for the new device,
-this is bad. If device support device serial number capability,
-we can identify this by DSN. So the reasonable way is first remove
-the old device, then enable the new device.
+From: Stephen Warren <swarren@nvidia.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
+The registers PADS_REFCLK_CFG are an array of 16-bit data, one entry per
+PCIe root port. For Tegra30, we therefore need to write a 3rd entry in
+this array. Doing so mays the mini-PCIe slot on Beaver operate correctly.
+
+While we're at it, add some #defines to partially document the fields
+within these 16-bit values.
+
+Signed-off-by: Stephen Warren <swarren@nvidia.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/pci/hotplug/pciehp_core.c |   45 +++++++++++++++++++++++++++++++++++++
- 1 files changed, 45 insertions(+), 0 deletions(-)
+ drivers/pci/host/pci-tegra.c | 29 ++++++++++++++++++++++++-----
+ 1 file changed, 24 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 1542735..f2eb214 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -296,11 +296,38 @@ static int pciehp_suspend (struct pcie_device *dev)
- 	return 0;
- }
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 5347d7d..0c84c67 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -196,6 +196,25 @@
+ #define PADS_REFCLK_CFG0			0x000000C8
+ #define PADS_REFCLK_CFG1			0x000000CC
  
 +/*
-+ * check the func 0 device serial number is changed,
-+ * if device does not support device serial number,
-+ * return false.
++ * Fields in PADS_REFCLK_CFG*. Those registers form an array of 16-bit
++ * entries, one entry per PCIe port. These field definitions and desired
++ * values aren't in the TRM, but do come from NVIDIA.
 + */
-+static bool device_serial_number_changed(struct pci_bus *pbus)
-+{
-+	u64 old_dsn, new_dsn;
-+	struct pci_dev *pdev;
++#define PADS_REFCLK_CFG_TERM_SHIFT		2  /* 6:2 */
++#define PADS_REFCLK_CFG_E_TERM_SHIFT		7
++#define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
++#define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
 +
-+	pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
-+	if (!pdev)
-+		return false;
++/* Default value provided by HW engineering is 0xfa5c */
++#define PADS_REFCLK_CFG_VALUE \
++	( \
++		(0x17 << PADS_REFCLK_CFG_TERM_SHIFT)   | \
++		(0    << PADS_REFCLK_CFG_E_TERM_SHIFT) | \
++		(0xa  << PADS_REFCLK_CFG_PREDI_SHIFT)  | \
++		(0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
++	)
 +
-+	old_dsn = pdev->sn;
-+
-+	/* get func 0 device serial number */
-+	new_dsn = pci_device_serial_number(pdev);
-+	pci_dev_put(pdev);
-+
-+	if (old_dsn != new_dsn)
-+		return true;
-+
-+	return false;
-+}
-+
- static int pciehp_resume (struct pcie_device *dev)
- {
- 	struct controller *ctrl;
- 	struct slot *slot;
- 	struct pci_bus *pbus = dev->port->subordinate;
-+	int retval = 0;
- 	u8 status;
+ struct tegra_msi {
+ 	struct msi_chip chip;
+ 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+@@ -809,11 +828,11 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 	value |= PADS_PLL_CTL_RST_B4SM;
+ 	pads_writel(pcie, value, soc->pads_pll_ctl);
  
- 	ctrl = get_service_data(dev);
-@@ -315,6 +342,24 @@ static int pciehp_resume (struct pcie_device *dev)
- 	if (status) {
- 		if (list_empty(&pbus->devices))
- 			pciehp_enable_slot(slot);
-+
-+		if (device_serial_number_changed(pbus)) {
-+			/*
-+			 * first power off slot, avoid the old driver
-+			 * .remove() method touch the new hardware
-+			 */
-+			if (POWER_CTRL(ctrl)) {
-+				retval = pciehp_power_off_slot(slot);
-+				if (retval) {
-+					ctrl_err(ctrl,
-+						"Issue of Slot Disable command failed\n");
-+					return 0;
-+				}
-+				msleep(1000);
-+				pciehp_unconfigure_device(slot);
-+				pciehp_enable_slot(slot);
-+			}
-+		}
- 	} else if (!list_empty(&pbus->devices))
- 		pciehp_disable_slot(slot);
- 	
+-	/*
+-	 * Hack, set the clock voltage to the DEFAULT provided by hw folks.
+-	 * This doesn't exist in the documentation.
+-	 */
+-	pads_writel(pcie, 0xfa5cfa5c, PADS_REFCLK_CFG0);
++	/* Configure the reference clock driver */
++	value = PADS_REFCLK_CFG_VALUE | (PADS_REFCLK_CFG_VALUE << 16);
++	pads_writel(pcie, value, PADS_REFCLK_CFG0);
++	if (soc->num_ports > 2)
++		pads_writel(pcie, PADS_REFCLK_CFG_VALUE, PADS_REFCLK_CFG1);
+ 
+ 	/* wait for the PLL to lock */
+ 	timeout = 300;
 -- 
-1.7.1
-
+1.8.1.5
 
