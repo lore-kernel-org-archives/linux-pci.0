@@ -1,195 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:35729 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752372Ab3GJBeu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2013 21:34:50 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 10 Jul 2013 06:58:21 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 64A46E0055
-	for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 07:04:31 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r6A1Yeb55177500
-	for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 07:04:40 +0530
-Received: from d28av02.in.ibm.com (loopback [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r6A1Yhs2016472
-	for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 11:34:44 +1000
-Date: Wed, 10 Jul 2013 09:34:42 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
- pbus_size_io()
-Message-ID: <20130710013442.GA6671@weiyang.vnet.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1372691432-6440-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1372691432-6440-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5O6CdzSw3bQyuKXsP+H0deJtGL1kXU+ddf_reA+ECq6w@mail.gmail.com>
- <20130709032019.GC7094@weiyang.vnet.ibm.com>
- <CAErSpo76aKk_Nq=MuL6Rsf98+fTxXQe=bJ-wQOhosKSDoYC8Ew@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31859 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751572Ab3GYGwP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 02:52:15 -0400
+Message-ID: <51F0CB10.1070500@oracle.com>
+Date: Thu, 25 Jul 2013 14:52:00 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo76aKk_Nq=MuL6Rsf98+fTxXQe=bJ-wQOhosKSDoYC8Ew@mail.gmail.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>, bhelgaas@google.com,
+	Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Subject: Re: [PATCH 2/3] Refactor msi/msix restore code Part2
+References: <51EF451A.8050003@oracle.com> <20130724134622.GC2518@phenom.dumpdata.com>
+In-Reply-To: <20130724134622.GC2518@phenom.dumpdata.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 09, 2013 at 11:38:06AM -0600, Bjorn Helgaas wrote:
->On Mon, Jul 8, 2013 at 9:20 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Mon, Jul 08, 2013 at 03:15:13PM -0600, Bjorn Helgaas wrote:
->>>On Mon, Jul 1, 2013 at 9:10 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->>>> In commit 462d9303 ("PCI: Align P2P windows using pcibios_window_alignment()"),
->>>> it introduce a new method to calculate the window alignment of P2P bridge.
->>>>
->>>> When the io_window_1k is set,  the calculation for the io resource alignment
->>>> is different from the original one. In the original logic before 462d9303,
->>>> the alignment is no bigger than 4K even the io_window_1k is set. The logic
->>>> introduced in 462d9303 will limit the alignment to 1k in this case.
->>>>
->>>> This patch fix this issue.
->>>>
->>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>> Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
->>>> Reviewed-by: Ram Pai <linuxram@us.ibm.com>
->>>> ---
->>>>  drivers/pci/setup-bus.c |    4 ++++
->>>>  1 files changed, 4 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->>>> index bd0ce39d..5c60ca0 100644
->>>> --- a/drivers/pci/setup-bus.c
->>>> +++ b/drivers/pci/setup-bus.c
->>>> @@ -755,6 +755,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->>>>                 return;
->>>>
->>>>         io_align = min_align = window_alignment(bus, IORESOURCE_IO);
->>>> +       /* Don't exceed 4KiB for windows requesting 1KiB alignment */
->>>> +       if (bus->self->io_window_1k && io_align == PCI_P2P_DEFAULT_IO_ALIGN_1K)
->>>> +               io_align = PCI_P2P_DEFAULT_IO_ALIGN;
->>>
->>>Please explain why we need this change, with some actual values that
->>>show the problem.  We need to know what the problem is, not merely
->>>that the code behaves differently than it did before 462d9303.
+
+On 2013-07-24 21:46, Konrad Rzeszutek Wilk wrote:
+> On Wed, Jul 24, 2013 at 11:08:10AM +0800, Zhenzhong Duan wrote:
+>> xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
+>> in dom0. It's better to do the same for default_restore_msi_irqs in baremetal.
 >>
->> Yep, sorry for not listing the exact problem value.
->>
->> Assume:
->>         1. pcibios_window_alignment() return 1.
->>         2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
->>         3. one of the child device has an IO resource with size of 2K.
->>
->> Result comparison:
->>
->>                     Before 462d9303             After 462d9303
->>     min_align       1k                          1k
->>                                         |
->>                              after loop |
->>                                         V
->>     min_align       2k                          2k
->>                                         |
->>                          check boundary |
->>                                         V
->>     min_align       2k                          1k
->>
->> In this case, with 462d9303 the min_align will be set back to 1k even one of
->> the child require 2k alignment.
->>
->>>
->>>It appears to me that this change will break the ability to use 1K
->>>windows.  For example, assume a bridge that supports 1K windows.
->>>Assume we're using the default pcibios_window_alignment().  Currently
->>>window_alignment() on the secondary bus returns
->>>PCI_P2P_DEFAULT_IO_ALIGN_1K (0x400, which is 1K), so io_align = 0x400.
->>>
->>>With your change, I think io_align will be bumped back up to 4K in
->>>this case, so we'll lose the ability to allocate a 1K window.
->>
->> After applying the change:
->>
->> Assume:
->>         1. pcibios_window_alignment() return 1.
->>         2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
->>         3. one of the child device has an IO resource with size of 2K.
+>> Move restore of mask in default_restore_msi_irqs, this could avoid mask
+>> restored twice in dom0, once in hypercall, the other in kernel.
+> Why not remove the hypercall then?
+If removed, msi entry couldn't be restored, such as pci_reset_function 
+who will reset pci registers.
+> Or alter the function to detect
+> whether the restore of the mask has occurred?
+Then we need to add the check for dom0 only.
 >
->What happens if no child has an I/O resource larger than 1K?  Can we
->allocate a 1K window with 1K alignment in that case?
+>> Without that, qlcnic driver calling pci_reset_function will lost interrupt
+>> in dom0.
+>>
+>> Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+>> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+>> ---
+>>   drivers/pci/msi.c |   17 ++++++++++++++---
+>>   1 files changed, 14 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index 87223ae..922fb49 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
+>>   #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
+>>   void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+>>   {
+>> +	int pos;
+>> +	u16 control;
+>>   	struct msi_desc *entry;
+>>   
+>>   	entry = NULL;
+>> @@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+>>   		entry = irq_get_msi_desc(irq);
+>>   	}
+>>   
+>> -	if (entry)
+>> +	if (entry) {
+>>   		write_msi_msg(irq, &entry->msg);
+>> +		if (dev->msix_enabled) {
+>> +			msix_mask_irq(entry, entry->masked);
+>> +			readl(entry->mask_base);
+>> +		} else {
+>> +			pos = entry->msi_attrib.pos;
+>> +			pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
+>> +					     &control);
+>> +			msi_mask_irq(entry, msi_capable_mask(control),
+>> +				     entry->masked);
+>> +		}
+>> +	}
+>>   }
+>>   #endif
+>>   
+>> @@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+>>   	arch_restore_msi_irqs(dev, dev->irq);
+>>   
+>>   	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+>> -	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
+> Before this patch we had:
 >
-
-Yes, it could. The result comparison would look like this.
-Since no child has an I/O resource larger than 1k, the min_align will remain
-1k after loop. And because io_align(4K) is larger than min_align(1k), the
-final min_align would be 1k.
-
-In this case, the code from commit 462d9303 and my patch both works.
-
- Result comparison:
-                     with  462d9303             with this patch
-     min_align       1k                          1k
-     io_align        1k                          4k
-                                         |
-                              after loop |
-                                         V
-     min_align       1k                          1k
-     io_align        1k                          4k
-                                         |
-                          check boundary |
-                                         V
-     min_align       1k                          1k
-     io_align        1k                          4k
-
->> Result comparison:
->>
->>                     with  462d9303             with this patch
->>     min_align       1k                          1k
->>     io_align        1k                          4k
->>                                         |
->>                              after loop |
->>                                         V
->>     min_align       2k                          2k
->>     io_align        1k                          4k
->>                                         |
->>                          check boundary |
->>                                         V
->>     min_align       1k                          2k
->>     io_align        1k                          4k
->>
->> With this patch, in the same case as above, the min_align is 2k after
->> calculation.
->>
->> In my mind, the min_align is the lower bound, io_align is the upper bound. The
->> final result of min_align should be in this range.
->>
->> Is my understanding correct? or I missed something important?
->>
->>>
->>>>         list_for_each_entry(dev, &bus->devices, bus_list) {
->>>>                 int i;
->>>>
->>>> --
->>>> 1.7.5.4
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>--
->>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>the body of a message to majordomo@vger.kernel.org
->>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> --
->> Richard Yang
->> Help you, Help me
->>
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Richard Yang
-Help you, Help me
+> 	write_msi_msg(..)
+> 	pci_read_config_work(PCI_MSI_FLAGS, &control)
+> 	pci_write_config_dword(~msi_capable_mask(control) | entry->masked)
+> 	control &= ~_PCI_MSI_FLAGS_QSIZE;
+> 	control |= ...
+> 	pci_write_config_dword(PCI_MSI_FLAGS, control)
+>
+> while with this you have now:
+>
+> 	write_msi_msg(..)
+> 	pci_read_config_work(PCI_MSI_FLAGS, &_control)
+> 	pci_write_config_dword(~msi_capable_mask(_control) | entry->masked)
+> --> 	pci_read_config_work(PCI_MSI_FLAGS, &control)
+> 	control &= ~_PCI_MSI_FLAGS_QSIZE;
+> 	control |= ...
+> 	pci_write_config_dword(PCI_MSI_FLAGS, control)
+>
+> see the problem? The 'control' value in __pci_restore_msi_state reads the
+> value _after_ it has been masked (which is now done in default_restore_msi_irqs).
+>
+> Wouldn't that cause problems?
+>
+pci_write_config_dword(~msi_capable_mask(_control) | entry->masked) restore per vector
+msi mask bits based on the support of PCI_MSI_FLAGS_MASKBIT. This is different from the
+global mask bit in PCI_MSI_FLAGS.
 
