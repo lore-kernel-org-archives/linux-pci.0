@@ -1,133 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 21/30] ACPI / hotplug / PCI: Do not queue up event handling work items in vain
-Date: Thu, 18 Jul 2013 01:29:44 +0200
-Message-ID: <5427359.BFHA8nOGgM@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:37890 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757317Ab3GYRyL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:54:11 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 05/16] ARM: tegra: tec: Add PCIe support
+Date: Thu, 25 Jul 2013 10:53:19 -0700
+Message-Id: <1374774810-18459-6-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-Modify handle_hotplug_event() to avoid queing up the execution of
-handle_hotplug_event_work_fn() as a work item on kacpi_hotplug_wq
-for non-hotplug events, such as ACPI_NOTIFY_DEVICE_WAKE.  Move
-the code printing diagnostic messages for those events into
-handle_hotplug_event().
+Enable the first PCIe root port which is connected to an FPGA on the
+Tamonten Evaluation Carrier and add device nodes for each of the PCI
+endpoints available in the standard configuration.
 
-In addition to that, remove the bogus comment about how the core
-should distinguish between hotplug and non-hotplug events and
-queue them up on different workqueues.  The core clearly cannot
-know in advance what events will be interesting to the given
-caller of acpi_install_notify_handler().
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   64 ++++++++++++++++---------------------
- 1 file changed, 29 insertions(+), 35 deletions(-)
+Changes in v2:
+- remove duplicate nodes and properties defined in tegra20-tamonten.dtsi
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -920,36 +920,11 @@ static void hotplug_event(acpi_handle ha
+Changes in v3:
+- remove PCIe endpoint device tree nodes, all devices can be discovered
+  via standard PCI enumeration
+
+ arch/arm/boot/dts/tegra20-tec.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/tegra20-tec.dts b/arch/arm/boot/dts/tegra20-tec.dts
+index c572c43..3ada3cb 100644
+--- a/arch/arm/boot/dts/tegra20-tec.dts
++++ b/arch/arm/boot/dts/tegra20-tec.dts
+@@ -32,6 +32,14 @@
+ 		};
+ 	};
  
- 		break;
- 
--	case ACPI_NOTIFY_DEVICE_WAKE:
--		/* wake event */
--		dbg("%s: Device wake notify on %s\n", __func__, objname);
--		break;
--
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
- 		dbg("%s: Device eject notify on %s\n", __func__, objname);
- 		acpiphp_disable_and_eject_slot(func->slot);
- 		break;
--
--	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
--		printk(KERN_ERR "Device %s cannot be configured due"
--				" to a frequency mismatch\n", objname);
--		break;
--
--	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
--		printk(KERN_ERR "Device %s cannot be configured due"
--				" to a bus mode mismatch\n", objname);
--		break;
--
--	case ACPI_NOTIFY_POWER_FAULT:
--		printk(KERN_ERR "Device %s has suffered a power fault\n",
--				objname);
--		break;
--
--	default:
--		warn("notify_handler: unknown event type 0x%x for %s\n", type,
--		     objname);
--		break;
- 	}
- 
- 	if (bridge)
-@@ -984,23 +959,42 @@ static void handle_hotplug_event(acpi_ha
- {
- 	struct acpiphp_context *context;
- 
-+	switch (type) {
-+	case ACPI_NOTIFY_BUS_CHECK:
-+	case ACPI_NOTIFY_DEVICE_CHECK:
-+	case ACPI_NOTIFY_EJECT_REQUEST:
-+		break;
++	pcie-controller {
++		status = "okay";
 +
-+	case ACPI_NOTIFY_DEVICE_WAKE:
-+		return;
++		pci@1,0 {
++			status = "okay";
++		};
++	};
 +
-+	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
-+		acpi_handle_err(handle, "Device cannot be configured due "
-+				"to a frequency mismatch\n");
-+		return;
-+
-+	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
-+		acpi_handle_err(handle, "Device cannot be configured due "
-+				"to a bus mode mismatch\n");
-+		return;
-+
-+	case ACPI_NOTIFY_POWER_FAULT:
-+		acpi_handle_err(handle, "Device has suffered a power fault\n");
-+		return;
-+
-+	default:
-+		acpi_handle_warn(handle, "Unsupported event type 0x%x\n", type);
-+		return;
-+	}
-+
- 	mutex_lock(&acpiphp_context_lock);
- 	context = acpiphp_get_context(handle);
- 	if (context) {
- 		get_bridge(context->func.parent);
- 		acpiphp_put_context(context);
-+		alloc_acpi_hp_work(handle, type, context, hotplug_event_work);
- 	}
- 	mutex_unlock(&acpiphp_context_lock);
--	/*
--	 * Currently the code adds all hotplug events to the kacpid_wq
--	 * queue when it should add hotplug events to the kacpi_hotplug_wq.
--	 * The proper way to fix this is to reorganize the code so that
--	 * drivers (dock, etc.) do not call acpi_os_execute(), etc.
--	 * For now just re-add this work to the kacpi_hotplug_wq so we
--	 * don't deadlock on hotplug actions.
--	 */
--	if (context)
--		alloc_acpi_hp_work(handle, type, context, hotplug_event_work);
- }
- 
- /*
+ 	sound {
+ 		compatible = "ad,tegra-audio-wm8903-tec",
+ 			     "nvidia,tegra-audio-wm8903";
+-- 
+1.8.1.5
 
