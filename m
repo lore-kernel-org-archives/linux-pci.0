@@ -1,61 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:63942 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757321Ab3GZMni (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 08:43:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130725175727.6006.98109.stgit@bhelgaas-glaptop>
-References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
-	<20130725175727.6006.98109.stgit@bhelgaas-glaptop>
-Date: Fri, 26 Jul 2013 05:43:36 -0700
-Message-ID: <CAE9FiQU9k6m-5bM5ZfFUZxW3H7_v4aOtaK66pa7iV0Zb-J86jw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: pciehp: Convert pciehp to be builtin only, not modular
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	linux-sh@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 01/16] ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
+Date: Thu, 25 Jul 2013 10:53:15 -0700
+Message-Id: <1374774810-18459-2-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 25, 2013 at 10:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Convert pciehp to be builtin only, with no module option.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/pcie/Kconfig |    5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-> index 569f82f..3b94cfc 100644
-> --- a/drivers/pci/pcie/Kconfig
-> +++ b/drivers/pci/pcie/Kconfig
-> @@ -14,15 +14,12 @@ config PCIEPORTBUS
->  # Include service Kconfig here
->  #
->  config HOTPLUG_PCI_PCIE
-> -       tristate "PCI Express Hotplug driver"
-> +       bool "PCI Express Hotplug driver"
->         depends on HOTPLUG_PCI && PCIEPORTBUS
->         help
->           Say Y here if you have a motherboard that supports PCI Express Native
->           Hotplug
->
-> -         To compile this driver as a module, choose M here: the
-> -         module will be called pciehp.
-> -
->           When in doubt, say N.
->
->  source "drivers/pci/pcie/aer/Kconfig"
->
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-Acked-by: Yinghai Lu <yinghai@kernel.org>
+The PMC code already accesses to PMC registers so it makes sense to
+move this function there as well. While at it, rename the function to
+tegra_pmc_pcie_xclk_clamp() for consistency.
+
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Acked-by: Stephen Warren <swarren@wwwdotorg.org>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ arch/arm/mach-tegra/pcie.c | 30 ++++--------------------------
+ arch/arm/mach-tegra/pmc.c  | 16 ++++++++++++++++
+ arch/arm/mach-tegra/pmc.h  |  1 +
+ 3 files changed, 21 insertions(+), 26 deletions(-)
+
+diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
+index 46144a1..6c1989b 100644
+--- a/arch/arm/mach-tegra/pcie.c
++++ b/arch/arm/mach-tegra/pcie.c
+@@ -41,6 +41,7 @@
+ 
+ #include "board.h"
+ #include "iomap.h"
++#include "pmc.h"
+ 
+ /* Hack - need to parse this from DT */
+ #define INT_PCIE_INTR 130
+@@ -147,17 +148,6 @@
+ #define  PADS_PLL_CTL_TXCLKREF_DIV10		(0 << 20)
+ #define  PADS_PLL_CTL_TXCLKREF_DIV5		(1 << 20)
+ 
+-/* PMC access is required for PCIE xclk (un)clamping */
+-#define PMC_SCRATCH42		0x144
+-#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
+-
+-static void __iomem *reg_pmc_base = IO_ADDRESS(TEGRA_PMC_BASE);
+-
+-#define pmc_writel(value, reg) \
+-	__raw_writel(value, reg_pmc_base + (reg))
+-#define pmc_readl(reg) \
+-	__raw_readl(reg_pmc_base + (reg))
+-
+ /*
+  * Tegra2 defines 1GB in the AXI address map for PCIe.
+  *
+@@ -639,18 +629,6 @@ static int tegra_pcie_enable_controller(void)
+ 	return 0;
+ }
+ 
+-static void tegra_pcie_xclk_clamp(bool clamp)
+-{
+-	u32 reg;
+-
+-	reg = pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
+-
+-	if (clamp)
+-		reg |= PMC_SCRATCH42_PCX_CLAMP;
+-
+-	pmc_writel(reg, PMC_SCRATCH42);
+-}
+-
+ static void tegra_pcie_power_off(void)
+ {
+ 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
+@@ -658,7 +636,7 @@ static void tegra_pcie_power_off(void)
+ 	tegra_periph_reset_assert(tegra_pcie.pex_clk);
+ 
+ 	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+-	tegra_pcie_xclk_clamp(true);
++	tegra_pmc_pcie_xclk_clamp(true);
+ }
+ 
+ static int tegra_pcie_power_regate(void)
+@@ -667,7 +645,7 @@ static int tegra_pcie_power_regate(void)
+ 
+ 	tegra_pcie_power_off();
+ 
+-	tegra_pcie_xclk_clamp(true);
++	tegra_pmc_pcie_xclk_clamp(true);
+ 
+ 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
+ 	tegra_periph_reset_assert(tegra_pcie.afi_clk);
+@@ -681,7 +659,7 @@ static int tegra_pcie_power_regate(void)
+ 
+ 	tegra_periph_reset_deassert(tegra_pcie.afi_clk);
+ 
+-	tegra_pcie_xclk_clamp(false);
++	tegra_pmc_pcie_xclk_clamp(false);
+ 
+ 	clk_prepare_enable(tegra_pcie.afi_clk);
+ 	clk_prepare_enable(tegra_pcie.pex_clk);
+diff --git a/arch/arm/mach-tegra/pmc.c b/arch/arm/mach-tegra/pmc.c
+index 8345fcd..db72297 100644
+--- a/arch/arm/mach-tegra/pmc.c
++++ b/arch/arm/mach-tegra/pmc.c
+@@ -75,6 +75,10 @@ struct pmc_pm_data {
+ };
+ static struct pmc_pm_data pmc_pm_data;
+ 
++/* PMC access is required for PCIE xclk (un)clamping */
++#define PMC_SCRATCH42		0x144
++#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
++
+ static inline u32 tegra_pmc_readl(u32 reg)
+ {
+ 	return readl(tegra_pmc_base + reg);
+@@ -342,3 +346,15 @@ void __init tegra_pmc_init(void)
+ 		val &= ~PMC_CTRL_INTR_LOW;
+ 	tegra_pmc_writel(val, PMC_CTRL);
+ }
++
++void tegra_pmc_pcie_xclk_clamp(bool clamp)
++{
++	u32 reg;
++
++	reg = tegra_pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
++
++	if (clamp)
++		reg |= PMC_SCRATCH42_PCX_CLAMP;
++
++	tegra_pmc_writel(reg, PMC_SCRATCH42);
++}
+diff --git a/arch/arm/mach-tegra/pmc.h b/arch/arm/mach-tegra/pmc.h
+index e1c2df2..cdb08a1 100644
+--- a/arch/arm/mach-tegra/pmc.h
++++ b/arch/arm/mach-tegra/pmc.h
+@@ -37,5 +37,6 @@ int tegra_pmc_cpu_power_on(int cpuid);
+ int tegra_pmc_cpu_remove_clamping(int cpuid);
+ 
+ void tegra_pmc_init(void);
++void tegra_pmc_pcie_xclk_clamp(bool clamp);
+ 
+ #endif
+-- 
+1.8.1.5
+
