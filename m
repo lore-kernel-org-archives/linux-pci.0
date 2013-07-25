@@ -1,98 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [207.46.163.26] ([207.46.163.26]:50428 "EHLO
-	co9outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751120Ab3GBEyi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2013 00:54:38 -0400
-From: Zhu Richard-R65037 <r65037@freescale.com>
-To: Sean Cross <xobs@kosagi.com>,
-	Pratyush Anand <pratyush.anand@st.com>
-CC: "devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>, Mohit KUMAR <Mohit.KUMAR@st.com>
-Subject: RE: [PATCH 3/4] PCI: Add driver for i.MX6 PCI Express
-Date: Tue, 2 Jul 2013 04:53:22 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D30C672@039-SN2MPN1-013.039d.mgd.msft.net>
-References: <1372662947-27160-1-git-send-email-xobs@kosagi.com>
- <1372662947-27160-4-git-send-email-xobs@kosagi.com>
- <51D15513.7020101@st.com> <2E3BDF14016345FA887E3BACAE05DADA@kosagi.com>
-In-Reply-To: <2E3BDF14016345FA887E3BACAE05DADA@kosagi.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <6958813.eThhpoh5QO@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+	<3215120.cRBBS5jciE@vostro.rjw.lan>
+	<CAE9FiQURY5WFFJekPHV_s0HPi8uhKzSDOLSXHAkyLPf1=i8oAw@mail.gmail.com>
+	<6958813.eThhpoh5QO@vostro.rjw.lan>
+Date: Thu, 25 Jul 2013 06:25:06 -0700
+Message-ID: <CAE9FiQVOKv-EBPFoVUi5HBPmDDrjmc9nuww68Tm865fkCJeWkA@mail.gmail.com>
+Subject: Re: [PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQ3Jvc3M6DQpGaXJzdCBvZiBhbGwsIFRoYW5rcyBmb3IgeW91ciBlZmZvcnRzIHRvIHN1bW1p
-dCB0aGUgaW14IHBjaWUgc3VwcG9ydCBwYXRjaGVzLg0KSSBsb29rZWQgdGhyb3VnaCB5b3VyIHBh
-dGNoLXNldCwgYW5kIGhhdmUgc29tZSBjb25jZXJuczoNCiogUENJZSBkcml2ZXIgdXNlZCBpbiB0
-aGUgRlNMIGxpbnV4LTIuNi4zNSBCU1AsIGlzIG5vdCBnb29kIGVub3VnaCwNCkJhc2VkIG9uIHRo
-ZSBsYXRlc3QgRlNMIEJTUC4NCiogVGhlIFBDSWUgc3dpdGNoL01TSSBmZWF0dXJlcyBoYWQgYmVl
-biBzdXBwb3J0ZWQuDQoqIEluIG9yZGVyIHRvIHN1cHBvcnQgdGhlIDhNQiBtZW1vcnkgc3BhY2Ug
-c2l6ZSwgdGhlIG1lbSBsYXlvdXQgaGFkIGJlZW4gdXBkYXRlZCBhcyBsaXN0ZWQgYmVsb3csDQog
-b3RoZXJ3aXNlLCB0aGUgbWVtb3J5IHNwYWNlIHNpemUgcmVxdWlyZWQgYnkgUENJZSBFUCBkZXZp
-Y2Ugd291bGRuJ3QgbGFyZ2VyIHRoYW4gNE1CLg0KICAgICAgICAvKg0KICAgICAgICAgKiBpLk1Y
-NiBkZWZpbmVzIDE2TUIgaW4gdGhlIEFYSSBhZGRyZXNzIG1hcCBmb3IgUENJZS4NCiAgICAgICAg
-ICoNCiAgICAgICAgICogVGhhdCBhZGRyZXNzIHNwYWNlIGV4Y2VwdGVkIHRoZSBwY2llIHJlZ2lz
-dGVycyBpcw0KICAgICAgICAgKiBzcGxpdCBhbmQgZGVmaW5lZCBpbnRvIGRpZmZlcmVudCByZWdp
-b25zIGJ5IGlBVFUsDQogICAgICAgICAqIHdpdGggc2l6ZXMgYW5kIG9mZnNldHMgYXMgZm9sbG93
-czoNCiAgICAgICAgICoNCiAgICAgICAgICogUkM6DQogICAgICAgICAqIDB4MDEwMF8wMDAwIC0t
-LSAweDAxREZfRkZGRiAxNE1CIElPUkVTT1VSQ0VfTUVNDQogICAgICAgICAqIDB4MDFFMF8wMDAw
-IC0tLSAweDAxRUZfRkZGRiAxTUIgSU9SRVNPVVJDRV9JTw0KICAgICAgICAgKiAweDAxRjBfMDAw
-MCAtLS0gMHgwMUZGX0ZGRkYgMU1CIENmZyArIE1TSSArIFJlZ2lzdGVycw0KICAgICAgICAgKg0K
-ICAgICAgICAgKiBFUCAoZGVmYXVsdCB2YWx1ZSk6DQogICAgICAgICAqIDB4MDEwMF8wMDAwIC0t
-LSAweDAxRkZfQzAwMCAxNk1CIC0gMTZLQiBJT1JFU09VUkNFX01FTQ0KICAgICAgICAgKi8NCg0K
-KiBCVFcsIHRoZSBQQ0llIEVQIG1vZGUgaGFkIGJlZW4gdmVyaWZpZWQgdG9vLg0KDQpCZXN0IFJl
-Z2FyZHMNClJpY2hhcmQgWmh1DQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206
-IGxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktb3duZXJA
-dmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgU2VhbiBDcm9zcw0KU2VudDogVHVlc2RheSwg
-SnVseSAwMiwgMjAxMyAxMTo0NiBBTQ0KVG86IFByYXR5dXNoIEFuYW5kDQpDYzogZGV2aWNldHJl
-ZS1kaXNjdXNzQGxpc3RzLm96bGFicy5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxp
-bnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgQXJuZCBCZXJnbWFubjsgTW9oaXQg
-S1VNQVINClN1YmplY3Q6IFJlOiBbUEFUQ0ggMy80XSBQQ0k6IEFkZCBkcml2ZXIgZm9yIGkuTVg2
-IFBDSSBFeHByZXNzDQoNCk9uIE1vbmRheSwgSnVseSAxLCAyMDEzIGF0IDY6MDggUE0sIFByYXR5
-dXNoIEFuYW5kIHdyb3RlOg0KPiBPbiA3LzEvMjAxMyAxMjo0NSBQTSwgU2VhbiBDcm9zcyB3cm90
-ZToNCj4gPiBUaGlzIGFkZHMgYSBQQ0kgRXhwcmVzcyBwb3J0IGRyaXZlciBmb3IgdGhlIG9uLWNo
-aXAgUENJIEV4cHJlc3MgcG9ydCANCj4gPiBwcmVzZW50IG9uIHRoZSBpLk1YNiBTb0MuIEl0IGlz
-IGJhc2VkIG9uIHRoZSBQQ0kgRXhwcmVzcyBkcml2ZXIgDQo+ID4gYXZhaWxhYmxlIGluIHRoZSBG
-cmVlc2NhbGUgQlNQLg0KPiA+IA0KPiA+IFNpZ25lZC1vZmYtYnk6IFNlYW4gQ3Jvc3MgPHhvYnNA
-a29zYWdpLmNvbSAobWFpbHRvOnhvYnNAa29zYWdpLmNvbSk+DQo+ID4gLS0tDQo+IA0KPiANCj4g
-DQo+IC4uLg0KPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcGNpZS9wY2llLWlteC5j
-IA0KPiA+IGIvZHJpdmVycy9wY2kvcGNpZS9wY2llLWlteC5jIG5ldyBmaWxlIG1vZGUgMTAwNjQ0
-IGluZGV4IA0KPiA+IDAwMDAwMDAuLjY2NDY3OWUNCj4gPiAtLS0gL2Rldi9udWxsDQo+ID4gKysr
-IGIvZHJpdmVycy9wY2kvcGNpZS9wY2llLWlteC5jDQo+IA0KPiANCj4gDQo+IFNob3VsZCBnbyB0
-byBkcml2ZXJzL3BjaS9ob3N0Lw0KSSdsbCBwdWxsIGZyb20gYXJtLXNvYyByYXRoZXIgdGhhbiBm
-cm9tIExpbnVzJyB0cmVlIGFuZCBwbGFjZSB0aGUgZHJpdmVyIHRoZXJlIGluc3RlYWQuDQogDQo+
-ID4gQEAgLTAsMCArMSwxMDQ5IEBADQo+ID4gKy8qDQo+ID4gKyAqIGRyaXZlcnMvcGNpL3BjaWUv
-cGNpZS1pbXguYw0KPiA+ICsgKg0KPiANCj4gDQo+IA0KPiAuLi4NCj4gDQo+IA0KPiA+ICsjZGVm
-aW5lIEFUVV9SX0Jhc2VBZGRyZXNzIDB4OTAwDQo+ID4gKyNkZWZpbmUgUENJRV9QTF9pQVRVVlIg
-KEFUVV9SX0Jhc2VBZGRyZXNzICsgMHgwKSAjZGVmaW5lIA0KPiA+ICtQQ0lFX1BMX2lBVFVSQzEg
-KEFUVV9SX0Jhc2VBZGRyZXNzICsgMHg0KSAjZGVmaW5lIFBDSUVfUExfaUFUVVJDMiANCj4gPiAr
-KEFUVV9SX0Jhc2VBZGRyZXNzICsgMHg4KSAjZGVmaW5lIFBDSUVfUExfaUFUVVJMQkEgDQo+ID4g
-KyhBVFVfUl9CYXNlQWRkcmVzcyArIDB4QykgI2RlZmluZSBQQ0lFX1BMX2lBVFVSVUJBIA0KPiA+
-ICsoQVRVX1JfQmFzZUFkZHJlc3MgKyAweDEwKSAjZGVmaW5lIFBDSUVfUExfaUFUVVJMQSANCj4g
-PiArKEFUVV9SX0Jhc2VBZGRyZXNzICsgMHgxNCkgI2RlZmluZSBQQ0lFX1BMX2lBVFVSTFRBIA0K
-PiA+ICsoQVRVX1JfQmFzZUFkZHJlc3MgKyAweDE4KSAjZGVmaW5lIFBDSUVfUExfaUFUVVJVVEEg
-DQo+ID4gKyhBVFVfUl9CYXNlQWRkcmVzcyArIDB4MUMpDQo+IA0KPiANCj4gDQo+IEkgbWF5IGJl
-IHdyb25nLCBidXQgZnJvbSB0aGVzZSBvZmZzZXQgaXQgc2VlbXMgdG8gbWUgdGhhdCBpdCBpcyBT
-TlBTIA0KPiBjb250cm9sbGVyLiBJZiB5ZXMsIHRoZW4gcGxlYXNlIGdvIHRocm91Z2ggY29tbWVu
-dHMgb2YgIltQQVRDSCBWMS0xMCANCj4gMC80XSBQQ0llIHN1cHBvcnQgZm9yIFNhbXN1bmcgRXh5
-bm9zNTQ0MCBTb0MiDQoNCkV4eW5vczU0NDAgYXBwZWFycyB0byB1c2UgdGhlIHNhbWUgcG9ydCBs
-b2dpYyBjb250cm9sbGVyLiAgSG93ZXZlciwgdGhlIFBIWXMgYXJlIGRpZmZlcmVudC4gIEknbSBu
-b3QgZXhhY3RseSBjZXJ0YWluIHdoaWNoIGNvbW1lbnRzIHlvdSB3YW50IG1lIHRvIG5vdGljZSBp
-biB0aGF0IHNlcmllcyBvZiBwYXRjaHNldHMsIGJ1dCBJIHNlZSByZWZlcmVuY2VzIHRvIHNwbGl0
-dGluZyBFeHlub3Mtc3BlY2lmaWMgY29kZSBpbnRvIGl0cyBvd24gcHJvamVjdC4gIEJhc2VkIG9u
-IHRoYXQsIGl0IHNlZW1zIGxpa2UgdGhlIGJlc3QgYXBwcm9hY2ggd291bGQgYmUgdG86DQoNCiAg
-ICAxKSBNb3ZlIEV4eW5vcyBjb2RlIGludG8gaXRzIG93biBmaWxlLCBzYXksIHBjaWUtZXh5bm9z
-LmMuICBUaGlzIHdvdWxkIGxlYXZlIG9ubHkgU3lub3BzeXMtc3BlY2lmaWMgQVRDIGNvZGUgaW4g
-cGNpZS1kZXNpZ253YXJlLmMNCiAgICAyKSBSZW5hbWUgZ2VuZXJpYyBleHlub3MgZnVuY3Rpb25z
-IHRvIHJlZmxlY3QgdGhlIGZhY3QgdGhhdCB0aGV5J3JlIGRlc2lnbndhcmUtZ2VuZXJpYyBmdW5j
-dGlvbnMuDQogICAgMykgSGF2ZSBwY2llLWlteC5jIHJlZmVyZW5jZSB0aGlzIGdlbmVyaWMgZGVz
-aWdud2FyZSBBVEMgY29kZS4NCg0KSSdsbCByZXdvcmsgdGhlIHBhdGNoIGFuZCByZS1zdWJtaXQg
-aXQgZm9sbG93aW5nIHRoZXNlIHRocmVlIGNoYW5nZXMuDQoNCg0KLS0NClNlYW4gQ3Jvc3MNCg0K
-LS0NClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNj
-cmliZSBsaW51eC1wY2kiIGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdl
-ci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5v
-cmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQo=
+On Wed, Jul 24, 2013 at 5:58 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Tuesday, July 23, 2013 07:20:53 PM Yinghai Lu wrote:
+>> On Tue, Jul 23, 2013 at 2:39 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>
+> [...]
+>
+>> [  102.631369] pci_host_bridge pci0000:00: freeing pci_host_bridge info
+>
+> By the way this looks fishy:
+>
+>> [  102.633091] ACPI: Device does not support D3cold
+>> [  102.633915] ACPI: Device does not support D3cold
+>> [  102.635221] ACPI: Device does not support D3cold
+>> [  102.636103] ACPI: Device does not support D3cold
+>> [  102.636902] ACPI: Device does not support D3cold
+>> [  102.637685] ACPI: Device does not support D3cold
+>> [  102.638467] ACPI: Device does not support D3cold
+>> [  102.639631] ACPI: Device does not support D3cold
+>> [  102.640472] ACPI: Device does not support D3cold
+>> [  102.641310] ACPI: Device does not support D3cold
+>> [  102.642105] ACPI: Device does not support D3cold
+>> [  102.642928] ACPI: Device does not support D3cold
+>> [  102.643725] ACPI: Device does not support D3cold
+>> [  102.644544] ACPI: Device does not support D3cold
+>> [  102.645344] ACPI: Device does not support D3cold
+>> [  102.646126] ACPI: Device does not support D3cold
+>> [  102.646902] ACPI: Device does not support D3cold
+>> [  102.647677] ACPI: Device does not support D3cold
+>> [  102.648485] ACPI: Device does not support D3cold
+>> [  102.649269] ACPI: Device does not support D3cold
+>> [  102.650065] ACPI: Device does not support D3cold
+>> [  102.650822] ACPI: Device does not support D3cold
+>> [  102.652483] ACPI: Device does not support D3cold
+>> [  102.654157] ACPI: Device does not support D3cold
+>> [  102.655803] ACPI: Device does not support D3cold
+>> [  102.657419] ACPI: Device does not support D3cold
+>> [  102.658528] ACPI: Device does not support D3cold
+>> [  102.659255] ACPI: Device does not support D3cold
+>> [  102.659973] ACPI: Device does not support D3cold
+>> [  102.661807] ACPI: Device does not support D3cold
+>> [  102.661925] ACPI: Device does not support D3cold
+>> [  102.662047] ACPI: Device does not support D3cold
+>> [  102.662148] ACPI: Device does not support D3cold
+>> [  102.662258] ACPI: Device does not support D3cold
+>> [  102.662374] ACPI: Device does not support D3cold
+>> [  102.662486] ACPI: Device does not support D3cold
+>> [  102.662597] ACPI: Device does not support D3cold
+>> [  102.662711] ACPI: Device does not support D3cold
+>> [  102.662814] ACPI: Device does not support D3cold
+>> [  102.662918] ACPI: Device does not support D3cold
+>> [  102.663019] ACPI: Device does not support D3cold
+>
+> Can you please check if it goes away with the patch below applied?
+>
+>> [  102.663039] ACPI: \_SB_.PCI0: No _EJ0 support for device
+>
+>
+> ---
+>  drivers/acpi/device_pm.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> Index: linux-pm/drivers/acpi/device_pm.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/device_pm.c
+> +++ linux-pm/drivers/acpi/device_pm.c
+> @@ -159,7 +159,8 @@ int acpi_device_set_power(struct acpi_de
+>         int result = 0;
+>         bool cut_power = false;
+>
+> -       if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+> +       if (!device || !device->flags.power_manageable
+> +           || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+>                 return -EINVAL;
+>
+>         /* Make sure this is a valid target state */
+>
 
+yes, with this change, those print out are gone.
+
+Thanks
+
+Yinghai
