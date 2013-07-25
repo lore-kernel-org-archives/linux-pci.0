@@ -1,153 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:58631 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213Ab3GHLXt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jul 2013 07:23:49 -0400
-Date: Mon, 8 Jul 2013 13:23:35 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:35770 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756382Ab3GYQxL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 12:53:11 -0400
+Received: by mail-bk0-f50.google.com with SMTP id ik5so772444bkc.23
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 09:53:09 -0700 (PDT)
+Date: Thu, 25 Jul 2013 09:53:03 -0700
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Andrew Lunn <andrew@lunn.ch>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
 	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCHv4 05/11] of: pci: add registry of MSI chips
-Message-ID: <20130708132335.37ff4ad4@skate>
-In-Reply-To: <1372686136-1370-6-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1372686136-1370-6-git-send-email-thomas.petazzoni@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: [PATCHv5 08/11] ARM: pci: add ->add_bus() and ->remove_bus()
+ hooks to hw_pci
+Message-ID: <20130725165302.GA27802@dhcp-172-17-186-34.nvidia.com>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="1yeeQ81UyVL57Vl7"
+In-Reply-To: <1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Grant, Rob,
 
-Would it be possible to get your feeling about the below patch? Are you
-ok with the idea of this msi_chip registry, based on device_node
-pointer? This is the last piece of this patch set that needs an
-approval in terms of general approach.
+--1yeeQ81UyVL57Vl7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-I am at Linaro Connect this week, so if you want to discuss this live,
-do not hesitate to ping me.
+On Mon, Jul 15, 2013 at 01:52:44PM +0200, Thomas Petazzoni wrote:
+[...]
 
-Thanks a lot,
+Hi Thomas,
 
-Thomas
+I just noticed two minor issues, see below.
 
-On Mon,  1 Jul 2013 15:42:10 +0200, Thomas Petazzoni wrote:
-> This commit adds a very basic registry of msi_chip structures, so that
-> an IRQ controller driver can register an msi_chip, and a PCIe host
-> controller can find it, based on a 'struct device_node'.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/of/of_pci.c    | 40 ++++++++++++++++++++++++++++++++++++++++
->  include/linux/msi.h    |  2 ++
->  include/linux/of_pci.h | 12 ++++++++++++
->  3 files changed, 54 insertions(+)
-> 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 42c687a..f516632 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -89,3 +89,43 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
->  	return 0;
->  }
->  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-> +
-> +#ifdef CONFIG_PCI_MSI
-> +
-> +static LIST_HEAD(msi_chip_list);
-> +static DEFINE_MUTEX(msi_chip_mutex);
-> +
-> +int of_msi_chip_add(struct msi_chip *chip)
-> +{
-> +	if (! of_property_read_bool(chip->of_node, "msi-controller"))
-> +		return -EINVAL;
-> +
-> +	mutex_lock(&msi_chip_mutex);
-> +	list_add(&chip->list, &msi_chip_list);
-> +	mutex_unlock(&msi_chip_mutex);
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(of_msi_chip_add);
-> +
-> +void of_msi_chip_remove(struct msi_chip *chip)
-> +{
-> +	mutex_lock(&msi_chip_mutex);
-> +	list_del(&chip->list);
-> +	mutex_unlock(&msi_chip_mutex);
-> +}
-> +EXPORT_SYMBOL_GPL(of_msi_chip_remove);
-> +
-> +struct msi_chip *of_find_msi_chip_by_node(struct device_node *of_node)
-> +{
-> +	struct msi_chip *c;
-> +	list_for_each_entry(c, &msi_chip_list, list) {
-> +		if (c->of_node == of_node)
-> +			return c;
-> +	}
-> +
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(of_find_msi_chip_by_node);
-> +
-> +#endif /* CONFIG_PCI_MSI */
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 5b357d92..9e1a44b 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -66,6 +66,8 @@ void default_teardown_msi_irqs(struct pci_dev *dev);
->  struct msi_chip {
->  	struct module *owner;
->  	struct device *dev;
-> +	struct device_node *of_node;
-> +	struct list_head list;
->  
->  	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
->  			 struct msi_desc *desc);
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index 7a04826..99e4361 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -2,6 +2,7 @@
->  #define __OF_PCI_H
->  
->  #include <linux/pci.h>
-> +#include <linux/msi.h>
->  
->  struct pci_dev;
->  struct of_irq;
-> @@ -13,4 +14,15 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
->  int of_pci_get_devfn(struct device_node *np);
->  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
->  
-> +#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
-> +int of_msi_chip_add(struct msi_chip *chip);
-> +void of_msi_chip_remove(struct msi_chip *chip);
-> +struct msi_chip *of_find_msi_chip_by_node(struct device_node *of_node);
-> +#else
-> +static inline int of_msi_chip_add(struct msi_chip *chip) { return -EINVAL; }
-> +static inline void of_msi_chip_remove(struct msi_chip *chip) { }
-> +static inline struct msi_chip *
-> +of_find_msi_chip_by_node(struct device_node *of_node) { return NULL };
-> +#endif
-> +
->  #endif
+> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+[...]
+> @@ -36,6 +36,8 @@ struct hw_pci {
+>  					  resource_size_t start,
+>  					  resource_size_t size,
+>  					  resource_size_t align);
+> +	void            (*add_bus)(struct pci_bus *bus);
+> +	void            (*remove_bus)(struct pci_bus *bus);
 
+This hunk...
 
+> @@ -63,6 +65,8 @@ struct pci_sys_data {
+>  					  resource_size_t start,
+>  					  resource_size_t size,
+>  					  resource_size_t align);
+> +	void            (*add_bus)(struct pci_bus *bus);
+> +	void            (*remove_bus)(struct pci_bus *bus);
+>  	void		*private_data;	/* platform controller private data	*/
+>  };
 
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+and this one use inconsistent indentation (spaces instead of tabs).
+
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+[...]
+> @@ -464,6 +478,8 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  		sys->swizzle = hw->swizzle;
+>  		sys->map_irq = hw->map_irq;
+>  		sys->align_resource = hw->align_resource;
+> +		sys->add_bus        = hw->add_bus;
+> +		sys->remove_bus     = hw->remove_bus;
+
+And this one aligns the '=' sign, whereas none of the other assignments
+do.
+
+Might be nice to fix those up before sending them to Russell's patch
+tracker.
+
+Thierry
+
+--1yeeQ81UyVL57Vl7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJR8VftAAoJEN0jrNd/PrOhqhcP/1E9ONIuqiClTNYr7VD0VmNr
+TzM94l3pYe2EsAKXKCaDPpVJwbf+xj01Y1TVik3WawxJY7tiaF09g2XapDDnzuGq
+7UkgSf/+CCY5m6AZlErdq+uzCjGFwFRw9nBGif27ZMmTAIBvZHTA7JQrEcw6oXnA
+tUOBNXbKPGJ+g6N98wEaropcE+dvYotpKXs164dlolPoZ0M5WX01085NUIPpHMhb
+pN5zYjtH44vMeVF5bvxzbEEZAWTYT2gLEyYP1pfyU7JFjKRKPPdMNOfM+9zuhLiJ
+L75ryP0K9KFmE1oHOz+AUHzeBgD9HDUEPj3WmS6coNgB3EfZSEz+632ZR3i/37Wb
+l6Se4cgKReXq1rO73ri4WaraYdmtG4hlI+4VvgEyVloKfaTzwXqlepA1cRSAD7AT
+JC5e+fCH5me4lwFDczllYivaM3cRowFkWRPGiQHso7XPKMH/rZPWoW0RWEKCOHVq
+SpW0KxyitKAL8o4fkkkI7+czOUMbSRYQTq8V0WHRdfK3SYvoKC6jXapeHciDuzTU
+1SAgLL5ILxvsJvgTIfAaTOdTtav6ldSZa+YTnhVXnFKGd1luOrFIw32sCOZ5CC47
+yeg3jJk4EwObXp6e+ZxLnn1+BOGJvoSAhJDdqAe1Dieay73baD1eQ2SNZP16zrPC
+wKdtG+ps3EDDxeNVAela
+=RiO5
+-----END PGP SIGNATURE-----
+
+--1yeeQ81UyVL57Vl7--
