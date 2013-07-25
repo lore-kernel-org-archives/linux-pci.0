@@ -1,70 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:61062 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933409Ab3GWQKh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 12:10:37 -0400
-Received: by mail-ob0-f171.google.com with SMTP id dn14so10682018obc.30
-        for <linux-pci@vger.kernel.org>; Tue, 23 Jul 2013 09:10:37 -0700 (PDT)
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:51452 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756517Ab3GYQsS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 12:48:18 -0400
+Received: by mail-ob0-f172.google.com with SMTP id f8so2079950obp.3
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 09:48:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <51EEA26E.50700@redhat.com>
-References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
-	<1374261258-23036-3-git-send-email-yinghai@kernel.org>
-	<51E9B3C7.1010409@intel.com>
-	<CAE9FiQXUgSVO8h=+JTY-giQ_jz9DryOXDsFJJeMT-y1J9Sv+fA@mail.gmail.com>
-	<51E9CA2F.5050307@intel.com>
-	<51EEA26E.50700@redhat.com>
-Date: Tue, 23 Jul 2013 09:10:37 -0700
-Message-ID: <CAE9FiQUfNWS-wgSbxH1qLnFKQMT0YdkzXt1ivCbrtscWaFvzwQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Stop sriov before remove PF
-From: Yinghai Lu <yinghai@kernel.org>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Alexander Duyck <alexander.h.duyck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Greg Rose <gregory.v.rose@intel.com>
+In-Reply-To: <CAE9FiQVXY4-J6u5HTLA3q5VY+D74W91hzpnLZTYBMgb1Jad7oA@mail.gmail.com>
+References: <20130723180001.19616.72450.stgit@bhelgaas-glaptop>
+ <20130723180821.19616.52936.stgit@bhelgaas-glaptop> <CAE9FiQU5-rjWir=NvwEs0vEMmSL9qps6NAa2QFO7yNrLzrx26A@mail.gmail.com>
+ <CAErSpo4J+69VeSiLceeV8U322ZgtWw099wRBUyjzF_eSE7+8Hg@mail.gmail.com> <CAE9FiQVXY4-J6u5HTLA3q5VY+D74W91hzpnLZTYBMgb1Jad7oA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Jul 2013 10:47:57 -0600
+Message-ID: <CAErSpo67PyXCnU=7hv6kbq17nXqX8oryyy-azRJs=QV=5195kQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Convert pciehp to be builtin only, not modular
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 23, 2013 at 8:34 AM, Don Dutile <ddutile@redhat.com> wrote:
+On Thu, Jul 25, 2013 at 7:14 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Jul 24, 2013 at 10:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Tue, Jul 23, 2013 at 5:10 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On Tue, Jul 23, 2013 at 11:08 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>> Convert pciehp to be builtin only, with no module option.
+>>>>
+>>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>> ---
+>>>>  drivers/pci/pcie/Kconfig |    5 +----
+>>>>  1 file changed, 1 insertion(+), 4 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+>>>> index 569f82f..3b94cfc 100644
+>>>> --- a/drivers/pci/pcie/Kconfig
+>>>> +++ b/drivers/pci/pcie/Kconfig
+>>>> @@ -14,15 +14,12 @@ config PCIEPORTBUS
+>>>>  # Include service Kconfig here
+>>>>  #
+>>>>  config HOTPLUG_PCI_PCIE
+>>>> -       tristate "PCI Express Hotplug driver"
+>>>> +       bool "PCI Express Hotplug driver"
+>>>>         depends on HOTPLUG_PCI && PCIEPORTBUS
+>>>
+>>> HOTPLUG_PCI is still tristate,
+>>>
+>>>  menuconfig HOTPLUG_PCI
+>>>         tristate "Support for PCI Hotplug"
+>>>
+>>>
+>>> Can you make HOTPLUG_PCI to be built-in ?
 >>
->> I suspect that is much easier said than done.  We probably need somebody
->> familiar with the KVM side of things to address the feasibility of
->> something like that.  I believe it was Greg and Don that worked on the
->> original patches that made it so that we could leave the VFs in place on
->> driver removal.  They would likely have a better answer as to why it is
->> preferable to leave the VFs in place than panic a non-compliant guest.
+>> Is that necessary for this CONFIG_HOTPLUG_PCI_PCIE change?  The config
+>> tools are smart enough to only offer CONFIG_HOTPLUG_PCI_PCIE as an
+>> option when CONFIG_HOTPLUG_PCI=y, so I'm not sure it's actually a
+>> problem yet.
 >
+> a little weird.
+> before this change normally
+> CONFIG_HOTPLUG_PCI=m, and CONFIG_HOTPLUG_PCI_PCIE=m.
 >
-> The virtual effect of leaving the VFs in place was the equivalent of
-> unplugging
-> the cable from the VF device in the guest. When the PF driver was reloaded,
-> it
-> caused the virtual effect of the network cable being reconnected.  Before
-> that
-> patch set (in ixgbe & igb), a PF driver unload in the host would result in
-> the VF
-> assigned to KVM a guest caused a *host crash*.
-> So, start up a KVM (linux) guest, hot-remove the PF with a VF
-> assigned to a guest, and with these patches applied, ensure the host doesn't
-> crash.
-> if it does crash, that's a regression that can't be tolerated, and this
-> patch (set)
-> will need further work.
+> now if user may select
+> CONFIG_HOTPLUG_PCI=m, and CONFIG_HOTPLUG_PCI_PCIE=y
+> never test that if it is really work.
 
-at beginning, we have pcie native hotlpug working even with sriov enabled.
+Ooh, you're right!  I tried CONFIG_HOTPLUG_PCI=m and
+CONFIG_HOTPLUG_PCI_PCIE=y, and config *allows* that and builds a
+working kernel (though pciehp doesn't actually work), even though I
+don't think menuconfig will actually generate that combination.  I'll
+convert CONFIG_HOTPLUG_PCI to a bool as well.
 
-later patchset (in ixgbe & igb) will not call disable_sriov, that cause
-
-hotplug does not work anymore, so that is first regression at all.
-
-Anyway, guest host crash is not regression when PF get removed, that
-is old behavior when guest/sriov pci passthrough support is added.
-
-So need to pci_stub to notify guest to do hotremove, when PF's driver
-get detached?
-
-Thanks
-
-Yinghai
+Bjorn
