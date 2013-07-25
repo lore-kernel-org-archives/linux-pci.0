@@ -1,260 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17547 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755864Ab3GKVDz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Jul 2013 17:03:55 -0400
-Subject: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
-To: bhelgaas@google.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
-	iommu@lists.linux-foundation.org, acooks@gmail.com,
-	ddutile@redhat.com, dwmw2@infradead.org
-Date: Thu, 11 Jul 2013 15:03:27 -0600
-Message-ID: <20130711210326.1701.56478.stgit@bling.home>
-In-Reply-To: <20130711204439.1701.90503.stgit@bling.home>
-References: <20130711204439.1701.90503.stgit@bling.home>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:62810 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751504Ab3GYU0n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 16:26:43 -0400
+Received: by mail-ob0-f173.google.com with SMTP id er7so2537959obc.4
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 13:26:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1373889167-27878-5-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1373889167-27878-5-git-send-email-thomas.petazzoni@free-electrons.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Jul 2013 14:26:22 -0600
+Message-ID: <CAErSpo45xs-A8wCwVGtdn0NEUq1-j96=+h2jdKB8xdRoe0YAvg@mail.gmail.com>
+Subject: Re: [PATCHv5 04/11] PCI: Introduce new MSI chip infrastructure
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This provides interfaces for drivers to discover the visible PCIe
-requester ID for a device, for things like IOMMU setup, and iterate
-over the device chain from requestee to requester, including DMA
-quirks at each step.
+On Mon, Jul 15, 2013 at 5:52 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> From: Thierry Reding <thierry.reding@avionic-design.de>
+>
+> The new struct msi_chip is used to associated an MSI controller with a
+> PCI bus. It is automatically handed down from the root to its children
+> during bus enumeration.
+>
+> This patch provides default (weak) implementations for the architecture-
+> specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
+> and arch_msi_check_device()) which check if a PCI device's bus has an
+> attached MSI chip and forward the call appropriately.
+>
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/search.c |  198 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    7 ++
- 2 files changed, 205 insertions(+)
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index d0627fa..4759c02 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -18,6 +18,204 @@ DECLARE_RWSEM(pci_bus_sem);
- EXPORT_SYMBOL_GPL(pci_bus_sem);
- 
- /*
-+ * pci_has_pcie_requester_id - Does @dev have a PCIe requester ID
-+ * @dev: device to test
-+ */
-+static bool pci_has_pcie_requester_id(struct pci_dev *dev)
-+{
-+	/*
-+	 * XXX There's no indicator of the bus type, conventional PCI vs
-+	 * PCI-X vs PCI-e, but we assume that a caller looking for a PCIe
-+	 * requester ID is a native PCIe based system (such as VT-d or
-+	 * AMD-Vi).  It's common that PCIe root complex devices do not
-+	 * include a PCIe capability, but we can assume they are PCIe
-+	 * devices based on their topology.
-+	 */
-+	if (pci_is_pcie(dev) || pci_is_root_bus(dev->bus))
-+		return true;
-+
-+	/*
-+	 * PCI-X devices have a requester ID, but the bridge may still take
-+	 * ownership of transactions and create a requester ID.  We therefore
-+	 * assume that the PCI-X requester ID is not the same one used on PCIe.
-+	 */
-+
-+#ifdef CONFIG_PCI_QUIRKS
-+	/*
-+	 * Quirk for PCIe-to-PCI bridges which do not expose a PCIe capability.
-+	 * If the device is a bridge, look to the next device upstream of it.
-+	 * If that device is PCIe and not a PCIe-to-PCI bridge, then by
-+	 * deduction, the device must be PCIe and therefore has a requester ID.
-+	 */
-+	if (dev->subordinate) {
-+		struct pci_dev *parent = dev->bus->self;
-+
-+		if (pci_is_pcie(parent) &&
-+		    pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
-+			return true;
-+	}
-+#endif
-+
-+	return false;
-+}
-+
-+/*
-+ * pci_has_visible_pcie_requester_id - Can @bridge see @dev's requester ID?
-+ * @dev: requester device
-+ * @bridge: upstream bridge (or NULL for root bus)
-+ */
-+static bool pci_has_visible_pcie_requester_id(struct pci_dev *dev,
-+					      struct pci_dev *bridge)
-+{
-+	/*
-+	 * The entire path must be tested, if any step does not have a
-+	 * requester ID, the chain is broken.  This allows us to support
-+	 * topologies with PCIe requester ID gaps, ex: PCIe-PCI-PCIe
-+	 */
-+	while (dev != bridge) {
-+		if (!pci_has_pcie_requester_id(dev))
-+			return false;
-+
-+		if (pci_is_root_bus(dev->bus))
-+			return !bridge; /* false if we don't hit @bridge */
-+
-+		dev = dev->bus->self;
-+	}
-+
-+	return true;
-+}
-+
-+/*
-+ * Legacy PCI bridges within a root complex (ex. Intel 82801) report
-+ * a different requester ID than a standard PCIe-to-PCI bridge.  Instead
-+ * of using (subordinate << 8 | 0) the use (bus << 8 | devfn), like a
-+ * standard PCIe endpoint.  This function detects them.
-+ *
-+ * XXX Is this Intel vendor ID specific?
-+ */
-+static bool pci_bridge_uses_endpoint_requester(struct pci_dev *bridge)
-+{
-+	if (!pci_is_pcie(bridge) && pci_is_root_bus(bridge->bus))
-+		return true;
-+
-+	return false;
-+}
-+
-+#define PCI_REQUESTER_ID(dev)	(((dev)->bus->number << 8) | (dev)->devfn)
-+#define PCI_BRIDGE_REQUESTER_ID(dev)	((dev)->subordinate->number << 8)
-+
-+/*
-+ * pci_get_visible_pcie_requester - Get requester and requester ID for
-+ *                                  @requestee below @bridge
-+ * @requestee: requester device
-+ * @bridge: upstream bridge (or NULL for root bus)
-+ * @requester_id: location to store requester ID or NULL
-+ */
-+struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
-+					       struct pci_dev *bridge,
-+					       u16 *requester_id)
-+{
-+	struct pci_dev *requester = requestee;
-+
-+	while (requester != bridge) {
-+		requester = pci_get_dma_source(requester);
-+		pci_dev_put(requester); /* XXX skip ref cnt */
-+
-+		if (pci_has_visible_pcie_requester_id(requester, bridge))
-+			break;
-+
-+		if (pci_is_root_bus(requester->bus))
-+			return NULL; /* @bridge not parent to @requestee */
-+
-+		requester = requester->bus->self;
-+	}
-+
-+	if (requester_id) {
-+		if (requester->bus != requestee->bus &&
-+		    !pci_bridge_uses_endpoint_requester(requester))
-+			*requester_id = PCI_BRIDGE_REQUESTER_ID(requester);
-+		else
-+			*requester_id = PCI_REQUESTER_ID(requester);
-+	}
-+
-+	return requester;
-+}
-+
-+static int pci_do_requester_callback(struct pci_dev **dev,
-+				     int (*fn)(struct pci_dev *,
-+					       u16 id, void *),
-+				     void *data)
-+{
-+	struct pci_dev *dma_dev;
-+	int ret;
-+
-+	ret = fn(*dev, PCI_REQUESTER_ID(*dev), data);
-+	if (ret)
-+		return ret;
-+
-+	dma_dev = pci_get_dma_source(*dev);
-+	pci_dev_put(dma_dev); /* XXX skip ref cnt */
-+	if (dma_dev == *dev)
-+		return 0;
-+
-+	ret = fn(dma_dev, PCI_REQUESTER_ID(dma_dev), data);
-+	if (ret)
-+		return ret;
-+
-+	*dev = dma_dev;
-+	return 0;
-+}
-+
-+/*
-+ * pcie_for_each_requester - Call callback @fn on each devices and DMA source
-+ *                           from @requestee to the PCIe requester ID visible
-+ *                           to @bridge.
-+ * @requestee: Starting device
-+ * @bridge: upstream bridge (or NULL for root bus)
-+ * @fn: callback function
-+ * @data: data to pass to callback
-+ */
-+int pcie_for_each_requester(struct pci_dev *requestee, struct pci_dev *bridge,
-+			    int (*fn)(struct pci_dev *, u16 id, void *),
-+			    void *data)
-+{
-+	struct pci_dev *requester;
-+	struct pci_dev *dev = requestee;
-+	int ret = 0;
-+
-+	requester = pci_get_visible_pcie_requester(requestee, bridge, NULL);
-+	if (!requester)
-+		return -EINVAL;
-+
-+	do {
-+		ret = pci_do_requester_callback(&dev, fn, data);
-+		if (ret)
-+			return ret;
-+
-+		if (dev == requester)
-+			return 0;
-+
-+		/*
-+		 * We always consider root bus devices to have a visible
-+		 * requester ID, therefore this should never be true.
-+		 */
-+		BUG_ON(pci_is_root_bus(dev->bus));
-+
-+		dev = dev->bus->self;
-+
-+	} while (dev != requester);
-+
-+	/*
-+	 * If we've made it here, @requester is a bridge upstream from
-+	 * @requestee.
-+	 */
-+	if (pci_bridge_uses_endpoint_requester(requester))
-+		return pci_do_requester_callback(&requester, fn, data);
-+
-+	return fn(requester, PCI_BRIDGE_REQUESTER_ID(requester), data);
-+}
-+
-+/*
-  * find the upstream PCIe-to-PCI bridge of a PCI device
-  * if the device is PCIE, return NULL
-  * if the device isn't connected to a PCIe bridge (that is its parent is a
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3a24e4f..94e81d1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1873,6 +1873,13 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
- }
- #endif
- 
-+struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
-+					       struct pci_dev *bridge,
-+					       u16 *requester_id);
-+int pcie_for_each_requester(struct pci_dev *requestee, struct pci_dev *bridge,
-+			    int (*fn)(struct pci_dev *, u16 id, void *),
-+			    void *data);
-+
- /**
-  * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
-  * @pdev: the PCI device
-
+> ---
+>  drivers/pci/msi.c   | 27 +++++++++++++++++++++++++--
+>  drivers/pci/probe.c |  1 +
+>  include/linux/msi.h | 11 +++++++++++
+>  include/linux/pci.h |  1 +
+>  4 files changed, 38 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index aa2f697..d5b6378 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -32,16 +32,39 @@ static int pci_msi_enable = 1;
+>
+>  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+>  {
+> -       return -EINVAL;
+> +       struct msi_chip *chip = dev->bus->msi;
+> +       int err;
+> +
+> +       if (!chip || !chip->setup_irq)
+> +               return -EINVAL;
+> +
+> +       err = chip->setup_irq(chip, dev, desc);
+> +       if (err < 0)
+> +               return err;
+> +
+> +       irq_set_chip_data(desc->irq, chip);
+> +
+> +       return 0;
+>  }
+>
+>  void __weak arch_teardown_msi_irq(unsigned int irq)
+>  {
+> +       struct msi_chip *chip = irq_get_chip_data(irq);
+> +
+> +       if (!chip || !chip->teardown_irq)
+> +               return;
+> +
+> +       chip->teardown_irq(chip, irq);
+>  }
+>
+>  int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>  {
+> -       return 0;
+> +       struct msi_chip *chip = dev->bus->msi;
+> +
+> +       if (!chip || !chip->check_device)
+> +               return 0;
+> +
+> +       return chip->check_device(chip, dev, nvec, type);
+>  }
+>
+>  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 46ada5c..b8eaa81 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -666,6 +666,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>
+>         child->parent = parent;
+>         child->ops = parent->ops;
+> +       child->msi = parent->msi;
+>         child->sysdata = parent->sysdata;
+>         child->bus_flags = parent->bus_flags;
+>
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index 18870b0..cbf5d05 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -64,4 +64,15 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
+>
+>  void default_teardown_msi_irqs(struct pci_dev *dev);
+>
+> +struct msi_chip {
+> +       struct module *owner;
+> +       struct device *dev;
+> +
+> +       int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+> +                        struct msi_desc *desc);
+> +       void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+> +       int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
+> +                           int nvec, int type);
+> +};
+> +
+>  #endif /* LINUX_MSI_H */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 0fd1f15..4044e3c 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -433,6 +433,7 @@ struct pci_bus {
+>         struct resource busn_res;       /* bus numbers routed to this bus */
+>
+>         struct pci_ops  *ops;           /* configuration access functions */
+> +       struct msi_chip *msi;           /* MSI controller */
+>         void            *sysdata;       /* hook for sys-specific extension */
+>         struct proc_dir_entry *procdir; /* directory entry in /proc/bus/pci */
+>
+> --
+> 1.8.1.2
+>
