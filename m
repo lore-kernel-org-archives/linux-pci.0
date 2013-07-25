@@ -1,158 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:47898 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757789Ab3GQX1f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Jul 2013 19:27:35 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 2/30] ACPI / hotplug / PCI: Consolidate acpiphp_enumerate_slots()
-Date: Thu, 18 Jul 2013 01:16:36 +0200
-Message-ID: <10121200.vQGTlJqFtd@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:33947 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757011Ab3GYRyt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:54:49 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 11/16] ARM: tegra: Enable PCIe controller on Cardhu
+Date: Thu, 25 Jul 2013 10:53:25 -0700
+Message-Id: <1374774810-18459-12-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+From: Jay Agarwal <jagarwal@nvidia.com>
 
-The acpiphp_enumerate_slots() function is now split into two parts,
-acpiphp_enumerate_slots() proper and init_bridge_misc() which is
-only called by the former.  If these functions are combined,
-it is possible to make the code easier to follow and to clean up
-the error handling (to prevent memory leaks on error from
-happening in particular), so do that.
+Root port 2 is routed to the bottom connector on Cardhu and is used by
+the development dock to provide gigabit ethernet and USB functionality.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   92 ++++++++++++++++++-------------------
- 1 file changed, 45 insertions(+), 47 deletions(-)
+ arch/arm/boot/dts/tegra30-cardhu.dtsi | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -353,46 +353,6 @@ static int detect_ejectable_slots(acpi_h
- 	return found;
- }
+diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+index c011b67..ee8fff8 100644
+--- a/arch/arm/boot/dts/tegra30-cardhu.dtsi
++++ b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+@@ -31,6 +31,26 @@
+ 		reg = <0x80000000 0x40000000>;
+ 	};
  
--/* initialize miscellaneous stuff for both root and PCI-to-PCI bridge */
--static void init_bridge_misc(struct acpiphp_bridge *bridge)
--{
--	acpi_status status;
--
--	/* must be added to the list prior to calling register_slot */
--	mutex_lock(&bridge_mutex);
--	list_add(&bridge->list, &bridge_list);
--	mutex_unlock(&bridge_mutex);
--
--	/* register all slot objects under this bridge */
--	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, (u32)1,
--				     register_slot, NULL, bridge, NULL);
--	if (ACPI_FAILURE(status)) {
--		mutex_lock(&bridge_mutex);
--		list_del(&bridge->list);
--		mutex_unlock(&bridge_mutex);
--		return;
--	}
--
--	/* install notify handler for P2P bridges */
--	if (!pci_is_root_bus(bridge->pci_bus)) {
--		if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
--			status = acpi_remove_notify_handler(bridge->func->handle,
--						ACPI_SYSTEM_NOTIFY,
--						handle_hotplug_event_func);
--			if (ACPI_FAILURE(status))
--				err("failed to remove notify handler\n");
--		}
--		status = acpi_install_notify_handler(bridge->handle,
--					     ACPI_SYSTEM_NOTIFY,
--					     handle_hotplug_event_bridge,
--					     bridge);
--
--		if (ACPI_FAILURE(status)) {
--			err("failed to register interrupt notify handler\n");
--		}
--	}
--}
--
- 
- /* find acpiphp_func from acpiphp_bridge */
- static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
-@@ -1149,8 +1109,9 @@ static void handle_hotplug_event_func(ac
-  */
- void acpiphp_enumerate_slots(struct pci_bus *bus)
- {
--	acpi_handle handle;
- 	struct acpiphp_bridge *bridge;
-+	acpi_handle handle;
-+	acpi_status status;
- 
- 	if (acpiphp_disabled)
- 		return;
-@@ -1178,14 +1139,51 @@ void acpiphp_enumerate_slots(struct pci_
- 	 */
- 	get_device(&bus->dev);
- 
--	if (!pci_is_root_bus(bridge->pci_bus) &&
--	    acpi_has_method(bridge->handle, "_EJ0")) {
--		dbg("found ejectable p2p bridge\n");
--		bridge->flags |= BRIDGE_HAS_EJ0;
--		bridge->func = acpiphp_bridge_handle_to_function(handle);
-+	/* must be added to the list prior to calling register_slot */
-+	mutex_lock(&bridge_mutex);
-+	list_add(&bridge->list, &bridge_list);
-+	mutex_unlock(&bridge_mutex);
++	pcie-controller {
++		status = "okay";
++		pex-clk-supply = <&pex_hvdd_3v3_reg>;
++		vdd-supply = <&ldo1_reg>;
++		avdd-supply = <&ldo2_reg>;
 +
-+	/* register all slot objects under this bridge */
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
-+				     register_slot, NULL, bridge, NULL);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_handle_err(bridge->handle, "failed to register slots\n");
-+		goto err;
-+	}
++		pci@1,0 {
++			nvidia,num-lanes = <4>;
++		};
 +
-+	if (pci_is_root_bus(bridge->pci_bus))
-+		return;
++		pci@2,0 {
++			nvidia,num-lanes = <1>;
++		};
 +
-+	/* install notify handler for P2P bridges */
-+	status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
-+					     handle_hotplug_event_bridge,
-+					     bridge);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_handle_err(bridge->handle,
-+				"failed to register notify handler\n");
-+		goto err;
- 	}
- 
--	init_bridge_misc(bridge);
-+	if (!acpi_has_method(bridge->handle, "_EJ0"))
-+		return;
++		pci@3,0 {
++			status = "okay";
++			nvidia,num-lanes = <1>;
++		};
++	};
 +
-+	dbg("found ejectable p2p bridge\n");
-+	bridge->flags |= BRIDGE_HAS_EJ0;
-+	bridge->func = acpiphp_bridge_handle_to_function(bridge->handle);
-+	if (bridge->func) {
-+		status = acpi_remove_notify_handler(bridge->func->handle,
-+						    ACPI_SYSTEM_NOTIFY,
-+						    handle_hotplug_event_func);
-+		if (ACPI_FAILURE(status))
-+			acpi_handle_err(bridge->func->handle,
-+					"failed to remove notify handler\n");
-+	}
-+	return;
-+
-+ err:
-+	cleanup_bridge(bridge);
-+	put_bridge(bridge);
- }
- 
- /* Destroy hotplug slots associated with the PCI bus */
+ 	pinmux {
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&state_default>;
+-- 
+1.8.1.5
 
