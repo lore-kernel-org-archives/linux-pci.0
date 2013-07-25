@@ -1,217 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57595 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751488Ab3GHRGr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jul 2013 13:06:47 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: stable@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	=?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>,
-	Jean Delvare <jdelvare@suse.de>,
-	Greg KH <gregkh@linuxfoundation.org>
-Subject: [stable PATCH] iommu/vt-d: add quirk for broken interrupt remapping on 55XX chipsets
-Date: Mon,  8 Jul 2013 13:06:14 -0400
-Message-Id: <1373303174-21977-1-git-send-email-nhorman@tuxdriver.com>
-In-Reply-To: <20130708154111.GA27952@kroah.com>
-References: <20130708154111.GA27952@kroah.com>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:46444 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756696Ab3GYRUD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:20:03 -0400
+Received: by mail-ob0-f180.google.com with SMTP id eh20so2075887obb.39
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 10:20:01 -0700 (PDT)
+Date: Thu, 25 Jul 2013 11:19:58 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, joro@8bytes.org,
+	iommu@lists.linux-foundation.org, acooks@gmail.com,
+	dwmw2@infradead.org
+Subject: Re: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
+Message-ID: <20130725171958.GB9272@google.com>
+References: <20130711204439.1701.90503.stgit@bling.home>
+ <20130711210326.1701.56478.stgit@bling.home>
+ <20130723223533.GB19765@google.com>
+ <51F03C1B.2070002@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51F03C1B.2070002@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A few years back intel published a spec update:
-http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+On Wed, Jul 24, 2013 at 04:42:03PM -0400, Don Dutile wrote:
+> On 07/23/2013 06:35 PM, Bjorn Helgaas wrote:
+> >On Thu, Jul 11, 2013 at 03:03:27PM -0600, Alex Williamson wrote:
+> >>This provides interfaces for drivers to discover the visible PCIe
+> >>requester ID for a device, for things like IOMMU setup, and iterate
+> >
+> >IDs (plural)
+> >
+> a single device does not have multiple requester id's;
+> can have multiple tag-id's (that are ignored in this situation, but
+> can be used by switches for ordering purposes), but there's only 1/fcn
+> (except for those quirker pdevs!).
 
-For the 5520 and 5500 chipsets which contained an errata (specificially errata
-53), which noted that these chipsets can't properly do interrupt remapping, and
-as a result the recommend that interrupt remapping be disabled in bios.  While
-many vendors have a bios update to do exactly that, not all do, and of course
-not all users update their bios to a level that corrects the problem.  As a
-result, occasionally interrupts can arrive at a cpu even after affinity for that
-interrupt has be moved, leading to lost or spurrious interrupts (usually
-characterized by the message:
-kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+Generally a device does not have multiple requester IDs, but the
+IOMMU may see one of several requester IDs for DMAs from a given
+device because bridges may take ownership of those transactions (sec
+3.6.1.1 of the VT-d spec).
 
-There have been several incidents recently of people seeing this error, and
-investigation has shown that they have system for which their BIOS level is such
-that this feature was not properly turned off.  As such, it would be good to
-give them a reminder that their systems are vulnurable to this problem.  For
-details of those that reported the problem, please see:
-https://bugzilla.redhat.com/show_bug.cgi?id=887006
+Just to be clear, I envision this whole interface as being
+specifically for use by IOMMU drivers, so I'm only trying to provide
+what's necessary to build IOMMU mappings.
 
-[ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+> >>+ * pci_get_visible_pcie_requester - Get requester and requester ID for
+> >>+ *                                  @requestee below @bridge
+> >>+ * @requestee: requester device
+> >>+ * @bridge: upstream bridge (or NULL for root bus)
+> >>+ * @requester_id: location to store requester ID or NULL
+> >>+ */
+> >>+struct pci_dev *pci_get_visible_pcie_requester(struct pci_dev *requestee,
+> >>+					       struct pci_dev *bridge,
+> >>+					       u16 *requester_id)
+> >
+> >I'm not sure it makes sense to return a struct pci_dev here because
+> >there's no requirement that a requester ID correspond to an actual
+> >pci_dev.
+> >
+> well, I would expect the only callers would be for subsys (iommu's)
+> searching to find requester-id for a pdev, b/c if a pdev doesn't exist,
+> then the device (and requester-id) doesn't exist... :-/
 
-Notes: Modified early-quirks.c to include linux/irq.h, to fix warnings.  This
-isn't needed in the upstream tree
+> >>+ * pcie_for_each_requester - Call callback @fn on each devices and DMA source
+> >>+ *                           from @requestee to the PCIe requester ID visible
+> >>+ *                           to @bridge.
+> >
+> >Transactions from a device may appear with one of several requester IDs,
+> >but there's not necessarily an actual pci_dev for each ID, so I think the
+> ditto above; have to have a pdev for each id....
 
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-CC: Prarit Bhargava <prarit@redhat.com>
-CC: Don Zickus <dzickus@redhat.com>
-CC: Don Dutile <ddutile@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Asit Mallick <asit.k.mallick@intel.com>
-CC: David Woodhouse <dwmw2@infradead.org>
-CC: linux-pci@vger.kernel.org
-CC: Joerg Roedel <joro@8bytes.org>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
-CC: Jean Delvare <jdelvare@suse.de>
-CC: Greg KH <gregkh@linuxfoundation.org>
-Signed-off-by: Joerg Roedel <joro@8bytes.org>
-(cherry picked from commit 03bbcb2e7e292838bb0244f5a7816d194c911d62)
----
- arch/x86/include/asm/irq_remapping.h |  2 ++
- arch/x86/kernel/early-quirks.c       | 21 +++++++++++++++++++++
- drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
- drivers/iommu/irq_remapping.c        |  6 ++++++
- drivers/iommu/irq_remapping.h        |  2 ++
- 5 files changed, 41 insertions(+)
+This *might* be true, but I don't think we should rely on it.  For
+example:
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 95fd352..aca6aa2 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -28,6 +28,7 @@
- 
- extern void setup_irq_remapping_ops(void);
- extern int irq_remapping_supported(void);
-+extern void set_irq_remapping_broken(void);
- extern int irq_remapping_prepare(void);
- extern int irq_remapping_enable(void);
- extern void irq_remapping_disable(void);
-@@ -54,6 +55,7 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip);
- 
- static inline void setup_irq_remapping_ops(void) { }
- static inline int irq_remapping_supported(void) { return 0; }
-+static inline void set_irq_remapping_broken(void) { }
- static inline int irq_remapping_prepare(void) { return -ENODEV; }
- static inline int irq_remapping_enable(void) { return -ENODEV; }
- static inline void irq_remapping_disable(void) { }
-diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-index 3755ef4..28bd4a1 100644
---- a/arch/x86/kernel/early-quirks.c
-+++ b/arch/x86/kernel/early-quirks.c
-@@ -12,12 +12,14 @@
- #include <linux/pci.h>
- #include <linux/acpi.h>
- #include <linux/pci_ids.h>
-+#include <linux/irq.h>
- #include <asm/pci-direct.h>
- #include <asm/dma.h>
- #include <asm/io_apic.h>
- #include <asm/apic.h>
- #include <asm/iommu.h>
- #include <asm/gart.h>
-+#include <asm/irq_remapping.h>
- 
- static void __init fix_hypertransport_config(int num, int slot, int func)
- {
-@@ -192,6 +194,21 @@ static void __init ati_bugs_contd(int num, int slot, int func)
- }
- #endif
- 
-+static void __init intel_remapping_check(int num, int slot, int func)
-+{
-+	u8 revision;
-+
-+	revision = read_pci_config_byte(num, slot, func, PCI_REVISION_ID);
-+
-+	/*
-+	 * Revision 0x13 of this chipset supports irq remapping
-+	 * but has an erratum that breaks its behavior, flag it as such
-+	 */
-+	if (revision == 0x13)
-+		set_irq_remapping_broken();
-+
-+}
-+
- #define QFLAG_APPLY_ONCE 	0x1
- #define QFLAG_APPLIED		0x2
- #define QFLAG_DONE		(QFLAG_APPLY_ONCE|QFLAG_APPLIED)
-@@ -221,6 +238,10 @@ static struct chipset early_qrk[] __initdata = {
- 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
- 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
- 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
-+	{ PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
-+	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
-+	{ PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
-+	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
- 	{}
- };
- 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index f3b8f23..5b19b2d 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -524,6 +524,16 @@ static int __init intel_irq_remapping_supported(void)
- 
- 	if (disable_irq_remap)
- 		return 0;
-+	if (irq_remap_broken) {
-+		WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
-+			   "This system BIOS has enabled interrupt remapping\n"
-+			   "on a chipset that contains an erratum making that\n"
-+			   "feature unstable.  To maintain system stability\n"
-+			   "interrupt remapping is being disabled.  Please\n"
-+			   "contact your BIOS vendor for an update\n");
-+		disable_irq_remap = 1;
-+		return 0;
-+	}
- 
- 	if (!dmar_ir_support())
- 		return 0;
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 7c11ff3..dcfea4e 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -18,6 +18,7 @@
- int irq_remapping_enabled;
- 
- int disable_irq_remap;
-+int irq_remap_broken;
- int disable_sourceid_checking;
- int no_x2apic_optout;
- 
-@@ -210,6 +211,11 @@ void __init setup_irq_remapping_ops(void)
- #endif
- }
- 
-+void set_irq_remapping_broken(void)
-+{
-+	irq_remap_broken = 1;
-+}
-+
- int irq_remapping_supported(void)
- {
- 	if (disable_irq_remap)
-diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-index ecb6376..90c4dae 100644
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -32,6 +32,7 @@ struct pci_dev;
- struct msi_msg;
- 
- extern int disable_irq_remap;
-+extern int irq_remap_broken;
- extern int disable_sourceid_checking;
- extern int no_x2apic_optout;
- extern int irq_remapping_enabled;
-@@ -89,6 +90,7 @@ extern struct irq_remap_ops amd_iommu_irq_ops;
- 
- #define irq_remapping_enabled 0
- #define disable_irq_remap     1
-+#define irq_remap_broken      0
- 
- #endif /* CONFIG_IRQ_REMAP */
- 
--- 
-1.8.1.4
+  00:1c.0 PCIe to PCI bridge to [bus 01]
+  01:01.0 PCI endpoint
 
+The bridge will take ownership of DMA transactions from the 01:01.0
+endpoint.  An IOMMU on bus 00 will see a bridge-assigned requester
+ID of 01:00.0 (subordinate bus number, devfn zero), but there is no
+01:00.0 device.
+
+Maybe the rules of conventional PCI require a device zero (I don't
+remember), but even if they do, it's ugly to rely on that here
+because I don't think device 01:00.0 is relevant to mappings for
+device 01:01.0.
+
+Obviously we also have to be aware that 01:00.0 and 01:01.0 can't be
+isolated from each other, but I think that issue is separate from
+the question of what requester IDs have to be mapped to make 01:01.0
+work.
+
+Bjorn
