@@ -1,90 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:41218 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754104Ab3GANnJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 09:43:09 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:35662 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756456Ab3GYRzH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:55:07 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Cc: Russell King <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv4 11/11] arm: mvebu: link PCIe controllers to the MSI controller
-Date: Mon,  1 Jul 2013 15:42:16 +0200
-Message-Id: <1372686136-1370-12-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 14/16] ARM: tegra: Update default configuration (PCIe)
+Date: Thu, 25 Jul 2013 10:53:28 -0700
+Message-Id: <1374774810-18459-15-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adjusts the Armada 370 and Armada XP PCIe controllers
-Device Tree informations to reference their MSI controller. In the
-case of this platform, the MSI controller is implemented by the MPIC.
+From: Thierry Reding <treding@nvidia.com>
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Enable PCI and MSI support as well as the new Tegra PCIe controller
+driver.
+
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- arch/arm/boot/dts/armada-370.dtsi        | 1 +
- arch/arm/boot/dts/armada-xp-mv78230.dtsi | 1 +
- arch/arm/boot/dts/armada-xp-mv78260.dtsi | 1 +
- arch/arm/boot/dts/armada-xp-mv78460.dtsi | 1 +
- 4 files changed, 4 insertions(+)
+Changes in v5:
+- enable PCI Express support (CONFIG_PCIEPORTBUS)
 
-diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
-index fa3dfc6..a60018d 100644
---- a/arch/arm/boot/dts/armada-370.dtsi
-+++ b/arch/arm/boot/dts/armada-370.dtsi
-@@ -178,6 +178,7 @@
- 				#address-cells = <3>;
- 				#size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
-diff --git a/arch/arm/boot/dts/armada-xp-mv78230.dtsi b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-index f8eaa38..4a9a305 100644
---- a/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-@@ -91,6 +91,7 @@
- #address-cells = <3>;
- #size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
-diff --git a/arch/arm/boot/dts/armada-xp-mv78260.dtsi b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-index f4029f0..bc63783 100644
---- a/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-@@ -111,6 +111,7 @@
- 				#address-cells = <3>;
- 				#size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
-diff --git a/arch/arm/boot/dts/armada-xp-mv78460.dtsi b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-index c7b1f4d..77db2bc 100644
---- a/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-@@ -127,6 +127,7 @@
- 				#address-cells = <3>;
- 				#size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
+ arch/arm/configs/tegra_defconfig | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/configs/tegra_defconfig b/arch/arm/configs/tegra_defconfig
+index 36ad70c..1586dda 100644
+--- a/arch/arm/configs/tegra_defconfig
++++ b/arch/arm/configs/tegra_defconfig
+@@ -27,8 +27,11 @@ CONFIG_ARCH_TEGRA=y
+ CONFIG_ARCH_TEGRA_2x_SOC=y
+ CONFIG_ARCH_TEGRA_3x_SOC=y
+ CONFIG_ARCH_TEGRA_114_SOC=y
+-CONFIG_TEGRA_PCI=y
+ CONFIG_TEGRA_EMC_SCALING_ENABLE=y
++CONFIG_PCI=y
++CONFIG_PCI_MSI=y
++CONFIG_PCI_TEGRA=y
++CONFIG_PCIEPORTBUS=y
+ CONFIG_SMP=y
+ CONFIG_PREEMPT=y
+ CONFIG_AEABI=y
 -- 
-1.8.1.2
+1.8.1.5
 
