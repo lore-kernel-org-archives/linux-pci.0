@@ -1,187 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:48131 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757618Ab3GYSky (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 14:40:54 -0400
-Received: by mail-bk0-f46.google.com with SMTP id na10so820459bkb.19
-        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 11:40:52 -0700 (PDT)
-Date: Thu, 25 Jul 2013 11:40:44 -0700
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCHv5 04/11] PCI: Introduce new MSI chip infrastructure
-Message-ID: <20130725184043.GB18584@dhcp-172-17-186-34.nvidia.com>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1373889167-27878-5-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:40210 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756177Ab3GYTrn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Jul 2013 15:47:43 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
+Date: Thu, 25 Jul 2013 21:57:47 +0200
+Message-ID: <1658856.3PiOm7PIQU@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQVOKv-EBPFoVUi5HBPmDDrjmc9nuww68Tm865fkCJeWkA@mail.gmail.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <6958813.eThhpoh5QO@vostro.rjw.lan> <CAE9FiQVOKv-EBPFoVUi5HBPmDDrjmc9nuww68Tm865fkCJeWkA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="KFztAG8eRSV9hGtP"
-In-Reply-To: <1373889167-27878-5-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thursday, July 25, 2013 06:25:06 AM Yinghai Lu wrote:
+> On Wed, Jul 24, 2013 at 5:58 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Tuesday, July 23, 2013 07:20:53 PM Yinghai Lu wrote:
+> >> On Tue, Jul 23, 2013 at 2:39 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >
+> > [...]
+> >
+> >> [  102.631369] pci_host_bridge pci0000:00: freeing pci_host_bridge info
+> >
+> > By the way this looks fishy:
+> >
+> >> [  102.633091] ACPI: Device does not support D3cold
+> >> [  102.633915] ACPI: Device does not support D3cold
+> >> [  102.635221] ACPI: Device does not support D3cold
+> >> [  102.636103] ACPI: Device does not support D3cold
+> >> [  102.636902] ACPI: Device does not support D3cold
+> >> [  102.637685] ACPI: Device does not support D3cold
+> >> [  102.638467] ACPI: Device does not support D3cold
+> >> [  102.639631] ACPI: Device does not support D3cold
+> >> [  102.640472] ACPI: Device does not support D3cold
+> >> [  102.641310] ACPI: Device does not support D3cold
+> >> [  102.642105] ACPI: Device does not support D3cold
+> >> [  102.642928] ACPI: Device does not support D3cold
+> >> [  102.643725] ACPI: Device does not support D3cold
+> >> [  102.644544] ACPI: Device does not support D3cold
+> >> [  102.645344] ACPI: Device does not support D3cold
+> >> [  102.646126] ACPI: Device does not support D3cold
+> >> [  102.646902] ACPI: Device does not support D3cold
+> >> [  102.647677] ACPI: Device does not support D3cold
+> >> [  102.648485] ACPI: Device does not support D3cold
+> >> [  102.649269] ACPI: Device does not support D3cold
+> >> [  102.650065] ACPI: Device does not support D3cold
+> >> [  102.650822] ACPI: Device does not support D3cold
+> >> [  102.652483] ACPI: Device does not support D3cold
+> >> [  102.654157] ACPI: Device does not support D3cold
+> >> [  102.655803] ACPI: Device does not support D3cold
+> >> [  102.657419] ACPI: Device does not support D3cold
+> >> [  102.658528] ACPI: Device does not support D3cold
+> >> [  102.659255] ACPI: Device does not support D3cold
+> >> [  102.659973] ACPI: Device does not support D3cold
+> >> [  102.661807] ACPI: Device does not support D3cold
+> >> [  102.661925] ACPI: Device does not support D3cold
+> >> [  102.662047] ACPI: Device does not support D3cold
+> >> [  102.662148] ACPI: Device does not support D3cold
+> >> [  102.662258] ACPI: Device does not support D3cold
+> >> [  102.662374] ACPI: Device does not support D3cold
+> >> [  102.662486] ACPI: Device does not support D3cold
+> >> [  102.662597] ACPI: Device does not support D3cold
+> >> [  102.662711] ACPI: Device does not support D3cold
+> >> [  102.662814] ACPI: Device does not support D3cold
+> >> [  102.662918] ACPI: Device does not support D3cold
+> >> [  102.663019] ACPI: Device does not support D3cold
+> >
+> > Can you please check if it goes away with the patch below applied?
+> >
+> >> [  102.663039] ACPI: \_SB_.PCI0: No _EJ0 support for device
+> >
+> >
+> > ---
+> >  drivers/acpi/device_pm.c |    3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> > Index: linux-pm/drivers/acpi/device_pm.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/acpi/device_pm.c
+> > +++ linux-pm/drivers/acpi/device_pm.c
+> > @@ -159,7 +159,8 @@ int acpi_device_set_power(struct acpi_de
+> >         int result = 0;
+> >         bool cut_power = false;
+> >
+> > -       if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+> > +       if (!device || !device->flags.power_manageable
+> > +           || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+> >                 return -EINVAL;
+> >
+> >         /* Make sure this is a valid target state */
+> >
+> 
+> yes, with this change, those print out are gone.
 
---KFztAG8eRSV9hGtP
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Cool, thanks!
 
-On Mon, Jul 15, 2013 at 01:52:40PM +0200, Thomas Petazzoni wrote:
-> From: Thierry Reding <thierry.reding@avionic-design.de>
->=20
-> The new struct msi_chip is used to associated an MSI controller with a
-> PCI bus. It is automatically handed down from the root to its children
-> during bus enumeration.
->=20
-> This patch provides default (weak) implementations for the architecture-
-> specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
-> and arch_msi_check_device()) which check if a PCI device's bus has an
-> attached MSI chip and forward the call appropriately.
->=20
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/pci/msi.c   | 27 +++++++++++++++++++++++++--
->  drivers/pci/probe.c |  1 +
->  include/linux/msi.h | 11 +++++++++++
->  include/linux/pci.h |  1 +
->  4 files changed, 38 insertions(+), 2 deletions(-)
+Rafael
 
-Bjorn,
-
-We'll need this as part of a stable branch as well, so any chance you
-could ack it?
-
-Thierry
-
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index aa2f697..d5b6378 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -32,16 +32,39 @@ static int pci_msi_enable =3D 1;
-> =20
->  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
->  {
-> -	return -EINVAL;
-> +	struct msi_chip *chip =3D dev->bus->msi;
-> +	int err;
-> +
-> +	if (!chip || !chip->setup_irq)
-> +		return -EINVAL;
-> +
-> +	err =3D chip->setup_irq(chip, dev, desc);
-> +	if (err < 0)
-> +		return err;
-> +
-> +	irq_set_chip_data(desc->irq, chip);
-> +
-> +	return 0;
->  }
-> =20
->  void __weak arch_teardown_msi_irq(unsigned int irq)
->  {
-> +	struct msi_chip *chip =3D irq_get_chip_data(irq);
-> +
-> +	if (!chip || !chip->teardown_irq)
-> +		return;
-> +
-> +	chip->teardown_irq(chip, irq);
->  }
-> =20
->  int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
->  {
-> -	return 0;
-> +	struct msi_chip *chip =3D dev->bus->msi;
-> +
-> +	if (!chip || !chip->check_device)
-> +		return 0;
-> +
-> +	return chip->check_device(chip, dev, nvec, type);
->  }
-> =20
->  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 46ada5c..b8eaa81 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -666,6 +666,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci=
-_bus *parent,
-> =20
->  	child->parent =3D parent;
->  	child->ops =3D parent->ops;
-> +	child->msi =3D parent->msi;
->  	child->sysdata =3D parent->sysdata;
->  	child->bus_flags =3D parent->bus_flags;
-> =20
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 18870b0..cbf5d05 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -64,4 +64,15 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int ir=
-q);
-> =20
->  void default_teardown_msi_irqs(struct pci_dev *dev);
-> =20
-> +struct msi_chip {
-> +	struct module *owner;
-> +	struct device *dev;
-> +
-> +	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
-> +			 struct msi_desc *desc);
-> +	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-> +	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-> +			    int nvec, int type);
-> +};
-> +
->  #endif /* LINUX_MSI_H */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 0fd1f15..4044e3c 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -433,6 +433,7 @@ struct pci_bus {
->  	struct resource busn_res;	/* bus numbers routed to this bus */
-> =20
->  	struct pci_ops	*ops;		/* configuration access functions */
-> +	struct msi_chip	*msi;		/* MSI controller */
->  	void		*sysdata;	/* hook for sys-specific extension */
->  	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
-> =20
-> --=20
-> 1.8.1.2
->=20
-
---KFztAG8eRSV9hGtP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJR8XErAAoJEN0jrNd/PrOhok8P+wY2pEESu8yrAZzQpnnvtejE
-quuCDHoqaO3ObGDtw0ZyMyiSNDLZCzOumjvJQzFj+z9QwxaX1zALg3VCAXbO3Rqd
-2aDvB8jAkKF4XZeSWL6yYJwdsOzvU26HKjMgTzAWMEsgqAWpGxQ0WH9h5NdWWDoB
-1jfnPn0/iQ7IMes2GjrqV61lsU/1x5u+z9JupY71GTjxyibNhz9OfS3PmUKaWEdt
-HCbuP20zrT2O1XIRxkkHNP1ioJk5alBczO2+fgrksNBA6F94A6G5NVPsYK/669Jn
-3bVaNrZfsRFsIjuJ68jqcgYMtyjR6IavDcxSWnXDb2OuwTAUs88EO7EvjdZdgDOF
-RgIOVjFvUg6hbB9ArMcJUocdzy6IEF3EPAR7tat2PDVgsEOzeP1t+1Ci2oE0XhX1
-KEs18wwInJUYzN3aqgicI25tJc7xLVaoIEnLc8hW4TRcwYeWOg8KYqFhZGZL16Tt
-kAmCvNqhVw6OiCP72wq7NLfn1xYB+MEWYW9SDNWiDoCK66c70v9wMJjCegXpurk/
-l/yIQxyTNstn3bDaIt3QvjDmqLAAIGGKXYDqHm0VF9rshKfCyqNeacBIVpbmbgks
-FX86O06eWD6wxm6R7348CpWTeAtJrLfwUcdq7qvQHVyP0aYQYWqvJuUTw7PyY0SM
-a3S/eK1j3cIiD2uSK6bS
-=eVL4
------END PGP SIGNATURE-----
-
---KFztAG8eRSV9hGtP--
