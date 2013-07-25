@@ -1,75 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:51930 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757527Ab3GLJhT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2013 05:37:19 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, Don Dutile <ddutile@redhat.com>,
-	Paul Bolle <pebolle@tiscali.nl>, <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH -v3 2/3] PCI,pciehp: avoid add a device already exist before suspend during resume
-Date: Fri, 12 Jul 2013 17:32:22 +0800
-Message-ID: <1373621543-54836-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1373621543-54836-1-git-send-email-wangyijing@huawei.com>
-References: <1373621543-54836-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:61300 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755552Ab3GYNOK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 09:14:10 -0400
+Received: by mail-ob0-f169.google.com with SMTP id up14so1465629obb.0
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 06:14:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAErSpo4J+69VeSiLceeV8U322ZgtWw099wRBUyjzF_eSE7+8Hg@mail.gmail.com>
+References: <20130723180001.19616.72450.stgit@bhelgaas-glaptop>
+	<20130723180821.19616.52936.stgit@bhelgaas-glaptop>
+	<CAE9FiQU5-rjWir=NvwEs0vEMmSL9qps6NAa2QFO7yNrLzrx26A@mail.gmail.com>
+	<CAErSpo4J+69VeSiLceeV8U322ZgtWw099wRBUyjzF_eSE7+8Hg@mail.gmail.com>
+Date: Thu, 25 Jul 2013 06:14:09 -0700
+Message-ID: <CAE9FiQVXY4-J6u5HTLA3q5VY+D74W91hzpnLZTYBMgb1Jad7oA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Convert pciehp to be builtin only, not modular
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pciehp_resume() try to hot add device if the slot adapter
-status return true. But if there are already some devices exist,
-namely list_empty(bus->devices) return false. We should not add the device
-again, because the device add action will fail. Also print some uncomfortable
-messages like this:
-	pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
-	pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
+On Wed, Jul 24, 2013 at 10:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Jul 23, 2013 at 5:10 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Tue, Jul 23, 2013 at 11:08 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> Convert pciehp to be builtin only, with no module option.
+>>>
+>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>> ---
+>>>  drivers/pci/pcie/Kconfig |    5 +----
+>>>  1 file changed, 1 insertion(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+>>> index 569f82f..3b94cfc 100644
+>>> --- a/drivers/pci/pcie/Kconfig
+>>> +++ b/drivers/pci/pcie/Kconfig
+>>> @@ -14,15 +14,12 @@ config PCIEPORTBUS
+>>>  # Include service Kconfig here
+>>>  #
+>>>  config HOTPLUG_PCI_PCIE
+>>> -       tristate "PCI Express Hotplug driver"
+>>> +       bool "PCI Express Hotplug driver"
+>>>         depends on HOTPLUG_PCI && PCIEPORTBUS
+>>
+>> HOTPLUG_PCI is still tristate,
+>>
+>>  menuconfig HOTPLUG_PCI
+>>         tristate "Support for PCI Hotplug"
+>>
+>>
+>> Can you make HOTPLUG_PCI to be built-in ?
+>
+> Is that necessary for this CONFIG_HOTPLUG_PCI_PCIE change?  The config
+> tools are smart enough to only offer CONFIG_HOTPLUG_PCI_PCIE as an
+> option when CONFIG_HOTPLUG_PCI=y, so I'm not sure it's actually a
+> problem yet.
 
-Tested-by: Paul Bolle <pebolle@tiscali.nl>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/hotplug/pciehp_core.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+a little weird.
+before this change normally
+CONFIG_HOTPLUG_PCI=m, and CONFIG_HOTPLUG_PCI_PCIE=m.
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 7d72c5e..7fe9dbd 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -300,6 +300,7 @@ static int pciehp_resume (struct pcie_device *dev)
- {
- 	struct controller *ctrl;
- 	struct slot *slot;
-+	struct pci_bus *pbus = dev->port->subordinate;
- 	u8 status;
- 
- 	ctrl = get_service_data(dev);
-@@ -311,10 +312,13 @@ static int pciehp_resume (struct pcie_device *dev)
- 
- 	/* Check if slot is occupied */
- 	pciehp_get_adapter_status(slot, &status);
--	if (status)
--		pciehp_enable_slot(slot);
--	else
-+	if (status) {
-+		if (list_empty(&pbus->devices))
-+			pciehp_enable_slot(slot);
-+	} else if (!list_empty(&pbus->devices)) {
- 		pciehp_disable_slot(slot);
-+	}
-+
- 	return 0;
- }
- #endif /* PM */
--- 
-1.7.1
+now if user may select
+CONFIG_HOTPLUG_PCI=m, and CONFIG_HOTPLUG_PCI_PCIE=y
+never test that if it is really work.
 
+>
+>> or to be more aggressive, just kill HOTPLUG_PCI as with HOTPLUG.
+>
+> Getting rid of CONFIG_HOTPLUG let us get rid of all the __devinit*
+> markings, which helps avoid a whole class of bugs.  That doesn't apply
+> to CONFIG_HOTPLUG_PCI, of course.
+>
+> But if somebody wants to do the work and see if it's useful to remove
+> CONFIG_HOTPLUG_PCI, I'm certainly willing to consider it.  I'm sure
+> most general-purpose distros will set CONFIG_HOTPLUG_PCI=y and
+> CONFIG_HOTPLUG_PCI_PCIE=y, but I wouldn't be surprised if embedded
+> folks still leave them both disabled.
 
+ok, let's leave HOTPLUG_PCI alone.
+
+Yinghai
