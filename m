@@ -1,101 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:56764 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898Ab3G3P7g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jul 2013 11:59:36 -0400
-Received: by mail-ob0-f180.google.com with SMTP id up14so4334643obb.39
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jul 2013 08:59:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51F758B6.9090204@jp.fujitsu.com>
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
- <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com>
- <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com>
- <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com>
- <51B93221.2040505@jp.fujitsu.com> <CAErSpo5tVK-Z3aOdMTzab-S8o5zLVtDOFQ8-LSYpUgbrJSsxuw@mail.gmail.com>
- <51BA7BB6.1080104@jp.fujitsu.com> <51EF7466.20703@jp.fujitsu.com>
- <CAErSpo5B7NzVfxwW3bQnfK+iK+DrRsWQd2Cm14z5PWNnRHWL5w@mail.gmail.com>
- <51F5B966.9080405@jp.fujitsu.com> <CAErSpo4JtG5qVJb-nCywe3vkft=-cDeRDKn_V92RCZ-sGXpwbg@mail.gmail.com>
- <51F758B6.9090204@jp.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 30 Jul 2013 09:59:16 -0600
-Message-ID: <CAErSpo7TNhQO0dx_xZvF=dU2fSWTFf8x=xUJcEsbadJkv8ktuQ@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-Cc: Vivek Goyal <vgoyal@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	"Sumner, William" <bill.sumner@hp.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	Haren Myneni <hbabu@us.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 15/16] ARM: dts: tegra: Increase prefetchable PCI memory space
+Date: Thu, 25 Jul 2013 10:53:29 -0700
+Message-Id: <1374774810-18459-16-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 30, 2013 at 12:09 AM, Takao Indoh
-<indou.takao@jp.fujitsu.com> wrote:
-> (2013/07/29 23:17), Bjorn Helgaas wrote:
->> On Sun, Jul 28, 2013 at 6:37 PM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
->>> (2013/07/26 2:00), Bjorn Helgaas wrote:
+From: Jay Agarwal <jagarwal@nvidia.com>
 
->>>> My point about IOMMU and PCI initialization order doesn't go away just
->>>> because it doesn't fit "kdump policy."  Having system initialization
->>>> occur in a logical order is far more important than making kdump work.
->>>
->>> My next plan is as follows. I think this is matched to logical order
->>> on boot.
->>>
->>> drivers/pci/pci.c
->>> - Add function to reset bus, for example, pci_reset_bus(struct pci_bus *bus)
->>>
->>> drivers/iommu/intel-iommu.c
->>> - On initialization, if IOMMU is already enabled, call this bus reset
->>>    function before disabling and re-enabling IOMMU.
->>
->> I raised this issue because of arches like sparc that enumerate the
->> IOMMU before the PCI devices that use it.  In that situation, I think
->> you're proposing this:
->>
->>    panic kernel
->>      enable IOMMU
->>      panic
->>    kdump kernel
->>      initialize IOMMU (already enabled)
->>        pci_reset_bus
->>        disable IOMMU
->>        enable IOMMU
->>      enumerate PCI devices
->>
->> But the problem is that when you call pci_reset_bus(), you haven't
->> enumerated the PCI devices, so you don't know what to reset.
->
-> Right, so my idea is adding reset code into "intel-iommu.c". intel-iommu
-> initialization is based on the assumption that enumeration of PCI devices
-> is already done. We can find target device from IOMMU page table instead
-> of scanning all devices in pci tree.
->
-> Therefore, this idea is only for intel-iommu. Other architectures need
-> to implement their own reset code.
+Instead of evenly splitting the 512 MiB area between prefetchable and
+non-prefetchable memory spaces, increase the prefetchable memory space
+to 384 MiB while at the same time decreasing the non-prefetchable memory
+space to 128 MiB. This is a more useful default as most PCIe devices
+require more prefetchable than non-prefetchable memory.
 
-That's my point.  I'm opposed to adding code to PCI when it only
-benefits x86 and we know other arches will need a fundamentally
-different design.  I would rather have a design that can work for all
-arches.
+Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+Tested-by: Stephen Warren <swarren@nvidia.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ arch/arm/boot/dts/tegra20.dtsi | 4 ++--
+ arch/arm/boot/dts/tegra30.dtsi | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-If your implementation is totally implemented under arch/x86 (or in
-intel-iommu.c, I guess), I can't object as much.  However, I think
-that eventually even x86 should enumerate the IOMMUs via ACPI before
-we enumerate PCI devices.
+diff --git a/arch/arm/boot/dts/tegra20.dtsi b/arch/arm/boot/dts/tegra20.dtsi
+index ecd016a..3add9ac2 100644
+--- a/arch/arm/boot/dts/tegra20.dtsi
++++ b/arch/arm/boot/dts/tegra20.dtsi
+@@ -473,8 +473,8 @@
+ 		ranges = <0x82000000 0 0x80000000 0x80000000 0 0x00001000   /* port 0 registers */
+ 			  0x82000000 0 0x80001000 0x80001000 0 0x00001000   /* port 1 registers */
+ 			  0x81000000 0 0          0x82000000 0 0x00010000   /* downstream I/O */
+-			  0x82000000 0 0xa0000000 0xa0000000 0 0x10000000   /* non-prefetchable memory */
+-			  0xc2000000 0 0xb0000000 0xb0000000 0 0x10000000>; /* prefetchable memory */
++			  0x82000000 0 0xa0000000 0xa0000000 0 0x08000000   /* non-prefetchable memory */
++			  0xc2000000 0 0xa8000000 0xa8000000 0 0x18000000>; /* prefetchable memory */
+ 
+ 		clocks = <&tegra_car TEGRA20_CLK_PEX>,
+ 			 <&tegra_car TEGRA20_CLK_AFI>,
+diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
+index c8facca..d81c52e 100644
+--- a/arch/arm/boot/dts/tegra30.dtsi
++++ b/arch/arm/boot/dts/tegra30.dtsi
+@@ -35,8 +35,8 @@
+ 			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
+ 			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
+ 			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
+-			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
+-			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
++			  0x82000000 0 0x20000000 0x20000000 0 0x08000000   /* non-prefetchable memory */
++			  0xc2000000 0 0x28000000 0x28000000 0 0x18000000>; /* prefetchable memory */
+ 
+ 		clocks = <&tegra_car TEGRA30_CLK_PCIE>,
+ 			 <&tegra_car TEGRA30_CLK_AFI>,
+-- 
+1.8.1.5
 
-It's pretty clear that's how BIOS designers expect the OS to work.
-For example, sec 8.7.3 of the Intel Virtualization Technology for
-Directed I/O spec, rev 1.3, shows the expectation that remapping
-hardware (IOMMU) is initialized before discovering the I/O hierarchy
-below a hot-added host bridge.  Obviously you're not talking about a
-hot-add scenario, but I think the same sequence should apply at
-boot-time as well.
-
-Bjorn
