@@ -1,40 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([193.170.194.197]:51348 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793Ab3GHEhG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jul 2013 00:37:06 -0400
-Date: Mon, 8 Jul 2013 06:37:03 +0200
-From: Andi Kleen <andi@firstfloor.org>
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Andi Kleen <andi@firstfloor.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] pci: Avoid unnecessary calls to work_on_cpu
-Message-ID: <20130708043703.GT6123@two.firstfloor.org>
-References: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com>
- <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
- <87wqp1esff.fsf@rustcorp.com.au>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:37334 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757566Ab3GYR5Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:57:16 -0400
+Received: by mail-ob0-f174.google.com with SMTP id wd20so2196897obb.19
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 10:57:15 -0700 (PDT)
+Subject: [PATCH 0/2] PCI: Convert hotplug core and pciehp to be builtin only
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>, Tony Luck <tony.luck@intel.com>,
+	linux-ia64@vger.kernel.org, linux-sh@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org
+Date: Thu, 25 Jul 2013 11:57:12 -0600
+Message-ID: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87wqp1esff.fsf@rustcorp.com.au>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > But Rusty added this (in 873392ca51), and he knows way more about this
-> > stuff than I do.
-> 
-> Actually, I just stopped the code from playing cpumask games, which is
-> what it used to do.
+Yinghai is working on a regression fix ("PCI: Separate stop and remove
+devices in pciehp") that needs to go into v3.11, and his fix will be
+simpler if we remove the module option for pciehp in v3.11.  That will mean
+he won't have to export pci_stop_bus_device() and pci_remove_bus_device()
+for use by modules.
 
-You're right the numa_node_id() check ptimization is not 100% safe on preempt 
-kernels and should be probably removed. Also I agree it would probably
-make sense to move it up to the generic device layer (although I'm not
-sure that other bus types really care that much about NUMA locality)
+So these two patches convert CONFIG_HOTPLUG_PCI and CONFIG_HOTPLUG_PCI_PCIE
+to be bool (not tristate) and update defconfig files that had
+CONFIG_HOTPLUG_PCI=m.
 
-None of it seems to be a fatal problem though, so it boils down to
-"if someone cares enough to write a patch"
+The motivation was for CONFIG_HOTPLUG_PCI_PCIE, but I also converted
+CONFIG_HOTPLUG_PCI to bool because the CONFIG_HOTPLUG_PCI=m and
+CONFIG_HOTPLUG_PCI_PCIE=y combination was accepted by Kconfig and builds a
+kernel, but pciehp doesn't actually work in that case (pointed out by
+Yinghai, thanks!)
 
--Andi
+These are intended for v3.11.
+
+---
+
+Bjorn Helgaas (2):
+      PCI: hotplug: Convert to be builtin only, not modular
+      PCI: pciehp: Convert pciehp to be builtin only, not modular
+
+
+ arch/ia64/configs/generic_defconfig    |    2 +-
+ arch/ia64/configs/gensparse_defconfig  |    2 +-
+ arch/ia64/configs/tiger_defconfig      |    2 +-
+ arch/ia64/configs/xen_domu_defconfig   |    2 +-
+ arch/powerpc/configs/ppc64_defconfig   |    2 +-
+ arch/powerpc/configs/ppc64e_defconfig  |    2 +-
+ arch/powerpc/configs/pseries_defconfig |    2 +-
+ arch/sh/configs/sh03_defconfig         |    2 +-
+ drivers/pci/hotplug/Kconfig            |    5 +----
+ drivers/pci/pcie/Kconfig               |    5 +----
+ 10 files changed, 10 insertions(+), 16 deletions(-)
