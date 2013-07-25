@@ -1,98 +1,169 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7=ed3=P7ab9zYB23qnwe8Z-ghRfCEurskpcNW5m86j8g@mail.gmail.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372860295-8306-2-git-send-email-mika.westerberg@linux.intel.com> <CAErSpo7=ed3=P7ab9zYB23qnwe8Z-ghRfCEurskpcNW5m86j8g@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:33569 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757496Ab3GYR5X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:57:23 -0400
+Received: by mail-ob0-f171.google.com with SMTP id tb18so2189146obb.2
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 10:57:22 -0700 (PDT)
+Subject: [PATCH 1/2] PCI: hotplug: Convert to be builtin only, not modular
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 22 Jul 2013 19:18:38 -0600
-Message-ID: <CAErSpo5=-32QSZ_RtLgU_67gMF6RVcnTAG6oKJ_Uz7uf4pXRkA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/8] x86/PCI: prevent re-allocation of already existing
- bridge and ROM resources
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Cc: Fenghua Yu <fenghua.yu@intel.com>, Tony Luck <tony.luck@intel.com>,
+	linux-ia64@vger.kernel.org, linux-sh@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org
+Date: Thu, 25 Jul 2013 11:57:20 -0600
+Message-ID: <20130725175720.6006.96448.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
+References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 22, 2013 at 6:08 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Jul 3, 2013 at 8:04 AM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
->> In hotplug case (especially with Thunderbolt enabled systems) we might need
->> to call pcibios_resource_survey_bus() several times for a bus. The function
->> ends up calling pci_claim_resource() for each bridge resource that then
->> fails claiming that the resource exists already (which it does). Once this
->> happens the resource is invalidated thus preventing devices behind the
->> bridge to allocate their resources.
->>
->> To fix this we do what has been done in pcibios_allocate_dev_resources()
->> and check 'parent' of the given resource. If it is non-NULL it means that
->> the resource has been allocated already and we can skip it. We do the same
->> for ROM resources as well.
->>
->> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
->
-> This looks reasonable to me.
+Convert CONFIG_HOTPLUG_PCI from tristate to bool.  This only affects
+the hotplug core; several of the hotplug drivers can still be modules.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/ia64/configs/generic_defconfig    |    2 +-
+ arch/ia64/configs/gensparse_defconfig  |    2 +-
+ arch/ia64/configs/tiger_defconfig      |    2 +-
+ arch/ia64/configs/xen_domu_defconfig   |    2 +-
+ arch/powerpc/configs/ppc64_defconfig   |    2 +-
+ arch/powerpc/configs/ppc64e_defconfig  |    2 +-
+ arch/powerpc/configs/pseries_defconfig |    2 +-
+ arch/sh/configs/sh03_defconfig         |    2 +-
+ drivers/pci/hotplug/Kconfig            |    5 +----
+ 9 files changed, 9 insertions(+), 12 deletions(-)
 
-> However, the use of "r->parent" to determine whether the resource is
-> already allocated is nothing specific to x86.  So I think we might be
-> missing an opportunity to make this more consistent across
-> architectures.  I looked at other callers of pci_claim_resource() for
-> bridge and ROM resources, and it looks like we might be able to make
-> similar changes in:
->
->   frv pcibios_allocate_bus_resources()
->   ia64 pcibios_fixup_resources() (via pcibios_fixup_bridge_resources())
->   mn10300 pcibios_allocate_bus_resources()
->   mn10300 pcibios_assign_resources() (ROM)
->   mn10300 pcibios_fixup_device_resources()
->   parisc lba_fixup_bus()
->
-> I really hate the idea of fixing something for x86 but not for other
-> arches, so maybe somebody could take a deeper look at this and see if
-> it would make sense to change the other arches, too.
->
-> Bjorn
->
->> ---
->>  arch/x86/pci/i386.c | 4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
->> index 94919e3..db6b1ab 100644
->> --- a/arch/x86/pci/i386.c
->> +++ b/arch/x86/pci/i386.c
->> @@ -210,6 +210,8 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
->>                 r = &dev->resource[idx];
->>                 if (!r->flags)
->>                         continue;
->> +               if (r->parent)  /* Already allocated */
->> +                       continue;
->>                 if (!r->start || pci_claim_resource(dev, idx) < 0) {
->>                         /*
->>                          * Something is wrong with the region.
->> @@ -318,6 +320,8 @@ static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
->>         r = &dev->resource[PCI_ROM_RESOURCE];
->>         if (!r->flags || !r->start)
->>                 return;
->> +       if (r->parent) /* Already allocated */
->> +               return;
->>
->>         if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
->>                 r->end -= r->start;
->> --
->> 1.8.3.2
->>
+diff --git a/arch/ia64/configs/generic_defconfig b/arch/ia64/configs/generic_defconfig
+index 7913695..efbd292 100644
+--- a/arch/ia64/configs/generic_defconfig
++++ b/arch/ia64/configs/generic_defconfig
+@@ -31,7 +31,7 @@ CONFIG_ACPI_FAN=m
+ CONFIG_ACPI_DOCK=y
+ CONFIG_ACPI_PROCESSOR=m
+ CONFIG_ACPI_CONTAINER=m
+-CONFIG_HOTPLUG_PCI=m
++CONFIG_HOTPLUG_PCI=y
+ CONFIG_HOTPLUG_PCI_ACPI=m
+ CONFIG_PACKET=y
+ CONFIG_UNIX=y
+diff --git a/arch/ia64/configs/gensparse_defconfig b/arch/ia64/configs/gensparse_defconfig
+index f8e9133..f64980d 100644
+--- a/arch/ia64/configs/gensparse_defconfig
++++ b/arch/ia64/configs/gensparse_defconfig
+@@ -25,7 +25,7 @@ CONFIG_ACPI_BUTTON=m
+ CONFIG_ACPI_FAN=m
+ CONFIG_ACPI_PROCESSOR=m
+ CONFIG_ACPI_CONTAINER=m
+-CONFIG_HOTPLUG_PCI=m
++CONFIG_HOTPLUG_PCI=y
+ CONFIG_HOTPLUG_PCI_ACPI=m
+ CONFIG_PACKET=y
+ CONFIG_UNIX=y
+diff --git a/arch/ia64/configs/tiger_defconfig b/arch/ia64/configs/tiger_defconfig
+index a5a9e02..0f4e9e4 100644
+--- a/arch/ia64/configs/tiger_defconfig
++++ b/arch/ia64/configs/tiger_defconfig
+@@ -31,7 +31,7 @@ CONFIG_ACPI_BUTTON=m
+ CONFIG_ACPI_FAN=m
+ CONFIG_ACPI_PROCESSOR=m
+ CONFIG_ACPI_CONTAINER=m
+-CONFIG_HOTPLUG_PCI=m
++CONFIG_HOTPLUG_PCI=y
+ CONFIG_HOTPLUG_PCI_ACPI=m
+ CONFIG_PACKET=y
+ CONFIG_UNIX=y
+diff --git a/arch/ia64/configs/xen_domu_defconfig b/arch/ia64/configs/xen_domu_defconfig
+index 37b9b42..b025acf 100644
+--- a/arch/ia64/configs/xen_domu_defconfig
++++ b/arch/ia64/configs/xen_domu_defconfig
+@@ -32,7 +32,7 @@ CONFIG_ACPI_BUTTON=m
+ CONFIG_ACPI_FAN=m
+ CONFIG_ACPI_PROCESSOR=m
+ CONFIG_ACPI_CONTAINER=m
+-CONFIG_HOTPLUG_PCI=m
++CONFIG_HOTPLUG_PCI=y
+ CONFIG_HOTPLUG_PCI_ACPI=m
+ CONFIG_PACKET=y
+ CONFIG_UNIX=y
+diff --git a/arch/powerpc/configs/ppc64_defconfig b/arch/powerpc/configs/ppc64_defconfig
+index c86fcb9..0e8cfd0 100644
+--- a/arch/powerpc/configs/ppc64_defconfig
++++ b/arch/powerpc/configs/ppc64_defconfig
+@@ -58,7 +58,7 @@ CONFIG_SCHED_SMT=y
+ CONFIG_PPC_DENORMALISATION=y
+ CONFIG_PCCARD=y
+ CONFIG_ELECTRA_CF=y
+-CONFIG_HOTPLUG_PCI=m
++CONFIG_HOTPLUG_PCI=y
+ CONFIG_HOTPLUG_PCI_RPA=m
+ CONFIG_HOTPLUG_PCI_RPA_DLPAR=m
+ CONFIG_PACKET=y
+diff --git a/arch/powerpc/configs/ppc64e_defconfig b/arch/powerpc/configs/ppc64e_defconfig
+index 4b20f76..0085dc4 100644
+--- a/arch/powerpc/configs/ppc64e_defconfig
++++ b/arch/powerpc/configs/ppc64e_defconfig
+@@ -32,7 +32,7 @@ CONFIG_IRQ_ALL_CPUS=y
+ CONFIG_SPARSEMEM_MANUAL=y
+ CONFIG_PCI_MSI=y
+ CONFIG_PCCARD=y
+-CONFIG_HOTPLUG_PCI=m
++CONFIG_HOTPLUG_PCI=y
+ CONFIG_PACKET=y
+ CONFIG_UNIX=y
+ CONFIG_XFRM_USER=m
+diff --git a/arch/powerpc/configs/pseries_defconfig b/arch/powerpc/configs/pseries_defconfig
+index bea8587..1d4b976 100644
+--- a/arch/powerpc/configs/pseries_defconfig
++++ b/arch/powerpc/configs/pseries_defconfig
+@@ -53,7 +53,7 @@ CONFIG_PPC_64K_PAGES=y
+ CONFIG_PPC_SUBPAGE_PROT=y
+ CONFIG_SCHED_SMT=y
+ CONFIG_PPC_DENORMALISATION=y
+-CONFIG_HOTPLUG_PCI=m
++CONFIG_HOTPLUG_PCI=y
+ CONFIG_HOTPLUG_PCI_RPA=m
+ CONFIG_HOTPLUG_PCI_RPA_DLPAR=m
+ CONFIG_PACKET=y
+diff --git a/arch/sh/configs/sh03_defconfig b/arch/sh/configs/sh03_defconfig
+index 2051821..0cf4097 100644
+--- a/arch/sh/configs/sh03_defconfig
++++ b/arch/sh/configs/sh03_defconfig
+@@ -22,7 +22,7 @@ CONFIG_PREEMPT=y
+ CONFIG_CMDLINE_OVERWRITE=y
+ CONFIG_CMDLINE="console=ttySC1,115200 mem=64M root=/dev/nfs"
+ CONFIG_PCI=y
+-CONFIG_HOTPLUG_PCI=m
++CONFIG_HOTPLUG_PCI=y
+ CONFIG_BINFMT_MISC=y
+ CONFIG_NET=y
+ CONFIG_PACKET=y
+diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
+index bb7ebb2..d85009d 100644
+--- a/drivers/pci/hotplug/Kconfig
++++ b/drivers/pci/hotplug/Kconfig
+@@ -3,16 +3,13 @@
+ #
+ 
+ menuconfig HOTPLUG_PCI
+-	tristate "Support for PCI Hotplug"
++	bool "Support for PCI Hotplug"
+ 	depends on PCI && SYSFS
+ 	---help---
+ 	  Say Y here if you have a motherboard with a PCI Hotplug controller.
+ 	  This allows you to add and remove PCI cards while the machine is
+ 	  powered up and running.
+ 
+-	  To compile this driver as a module, choose M here: the
+-	  module will be called pci_hotplug.
+-
+ 	  When in doubt, say N.
+ 
+ if HOTPLUG_PCI
+
