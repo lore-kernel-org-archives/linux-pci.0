@@ -1,56 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:36013 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932244Ab3GOPeX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2013 11:34:23 -0400
-Message-ID: <51E4167B.4000208@wwwdotorg.org>
-Date: Mon, 15 Jul 2013 09:34:19 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCHv5 00/11] MSI support for Marvell EBU PCIe driver
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from aserp1040.oracle.com ([141.146.126.69]:30000 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755491Ab3GYNb4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 09:31:56 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6] PCI: Don't let mmio fallback to must-only, if ioport fails with must+optional
+Date: Thu, 25 Jul 2013 06:31:38 -0700
+Message-Id: <1374759098-6746-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/15/2013 05:52 AM, Thomas Petazzoni wrote:
-> Hello,
-> 
-> This set of patches introduces Message Signaled Interrupt support in
-> the Marvell EBU PCIe driver. It has been successfully tested on the
-> Armada XP GP platform with an Intel e1000e PCIe network card that
-> supports MSI.
-> 
-> This patch set is intended for merging in 3.12, so the respective
-> maintainers of the different areas are invited to review/ack the
-> patches, see below for the details. This set of patches applies on top
-> of 3.11-rc1.
+BenH reported that there are assign unassigned resource problems
+in powerpc.
 
-Thomas, who is going to merge this series?
+It turns out after
+| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
+| Date:   Thu Feb 23 19:23:29 2012 -0800
+|
+|    PCI: Retry on IORESOURCE_IO type allocations
 
-I believe at least patches 1-8 (or perhaps just 1-5 plus 8; I /think/
-all the other patches are MVEBU-specific) are dependencies for the new
-Tegra PCIe driver which should be posted very soon for 3.12. As such,
-I'd like to see these dependencies merged into a standalone stable (100%
-non-rebasable) topic branch based on 3.11-rc1 so that the topic branch
-is available for merging into whichever tree takes the new Tegra PCIe
-driver (which I'm guessing will be the Tegra tree to reduce conflicts).
-So, whoever merges these patches is going to need to know to set up that
-topic branch.
+even for root bus that does not have io port range, it will keep retrying
+to realloc with mmio after mmio allocation work in first try already.
 
-Thierry, please correct me if I'm wrong here.
+Current retry logic is : try with must+optional at first, and if
+it fails with any ioport or mmio, it will try must then try to extend
+must with optional. The reassign will put extended mmio or pref mmio
+in the middle of parent resource range.
+That will prevent other sibling resources from getting must-have resources
+or get extended properly.
+
+We can check fail type to see if can we need fall back to must-have
+for it only, that will keep others type to keep resource to have
+must+optional allocations.
+
+Separate three resource type checking if we need to release
+assigned resource after requested + add_size try.
+1. if there is io port assign fail, will release assigned io port.
+2. if there is pref mmio assign fail, release assigned pref mmio.
+   if assigned pref mmio's parent is non-pref mmio and there
+   is non-pref mmio assign fail, will release that assigned pref mmio.
+3. if there is non-pref mmio assign fail or pref mmio assigned fail,
+   will release assigned non-pref mmio.
+
+This will be become more often when we have x86 8 sockets or 32 sockets
+system, and those systems will have one root bus per socket.
+They will have some root buses that do not have ioport range or 32bit mmio.
+
+-v2: need to remove assigned entries from optional list too.
+-v3: not just checking ioport related, requested by Bjorn.
+
+Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Tested-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/setup-bus.c |   70 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 69 insertions(+), 1 deletion(-)
+
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -300,6 +300,48 @@ static void assign_requested_resources_s
+ 	}
+ }
+ 
++static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
++{
++	struct pci_dev_resource *fail_res;
++	unsigned long mask = 0;
++
++	/* check failed type */
++	list_for_each_entry(fail_res, fail_head, list)
++		mask |= fail_res->flags;
++
++	/*
++	 * one pref failed resource will set IORESOURCE_MEM,
++	 * as we can allocate pref in non-pref range.
++	 * Will release all asssigned non-pref sibling resources
++	 * according to that bit.
++	 */
++	return mask & (IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH);
++}
++
++static bool pci_need_to_release(unsigned long mask, struct resource *res)
++{
++	if (res->flags & IORESOURCE_IO)
++		return !!(mask & IORESOURCE_IO);
++
++	/* check pref at first */
++	if (res->flags & IORESOURCE_PREFETCH) {
++		if (mask & IORESOURCE_PREFETCH)
++			return true;
++		/* count pref if its parent is non-pref */
++		else if ((mask & IORESOURCE_MEM) &&
++			 !(res->parent->flags & IORESOURCE_PREFETCH))
++			return true;
++		else
++			return false;
++	}
++
++	if (res->flags & IORESOURCE_MEM)
++		return !!(mask & IORESOURCE_MEM);
++
++	/* should not get here */
++	return false;
++}
++
+ static void __assign_resources_sorted(struct list_head *head,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *fail_head)
+@@ -312,11 +354,24 @@ static void __assign_resources_sorted(st
+ 	 *  if could do that, could get out early.
+ 	 *  if could not do that, we still try to assign requested at first,
+ 	 *    then try to reassign add_size for some resources.
++	 *
++	 * Separate three resource type checking if we need to release
++	 *  assigned resource after requested + add_size try.
++	 *	1. if there is io port assign fail, will release assigned
++	 *	   io port.
++	 *	2. if there is pref mmio assign fail, release assigned
++	 *	   pref mmio.
++	 *	   if assigned pref mmio's parent is non-pref mmio and there
++	 *	   is non-pref mmio assign fail, will release that assigned
++	 *	   pref mmio.
++	 *	3. if there is non-pref mmio assign fail or pref mmio
++	 *	   assigned fail, will release assigned non-pref mmio.
+ 	 */
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res;
++	struct pci_dev_resource *dev_res, *tmp_res;
++	unsigned long fail_type;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -348,6 +403,19 @@ static void __assign_resources_sorted(st
+ 		return;
+ 	}
+ 
++	/* check failed type */
++	fail_type = pci_fail_res_type_mask(&local_fail_head);
++	/* remove not need to be released assigned res from head list etc */
++	list_for_each_entry_safe(dev_res, tmp_res, head, list)
++		if (dev_res->res->parent &&
++		    !pci_need_to_release(fail_type, dev_res->res)) {
++			/* remove it from realloc_head list */
++			remove_from_list(realloc_head, dev_res->res);
++			remove_from_list(&save_head, dev_res->res);
++			list_del(&dev_res->list);
++			kfree(dev_res);
++		}
++
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+ 	list_for_each_entry(dev_res, head, list)
