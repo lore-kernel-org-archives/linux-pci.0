@@ -1,177 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:16372 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932661Ab3GCOCd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Jul 2013 10:02:33 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: [PATCH v2 4/8] PCI: acpiphp: check for new devices on enabled host
-Date: Wed,  3 Jul 2013 17:04:51 +0300
-Message-Id: <1372860295-8306-5-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] acpi, acpi_pci_irq_enable must return an error if ACPI cannot map an IRQ.
+Date: Thu, 25 Jul 2013 14:10:44 +0200
+Message-ID: <1552127.Zb4xNexoAU@vostro.rjw.lan>
+In-Reply-To: <51F0F67F.8070200@redhat.com>
+References: <1373900260-1599-1-git-send-email-prarit@redhat.com> <51F06AE4.9010606@redhat.com> <51F0F67F.8070200@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+On Thursday, July 25, 2013 05:57:19 AM Prarit Bhargava wrote:
+> 
+> On 07/24/2013 08:01 PM, Prarit Bhargava wrote:
+> > 
+> > 
+> > On 07/24/2013 07:35 PM, Rafael J. Wysocki wrote:
+> >> On Monday, July 15, 2013 10:57:40 AM Prarit Bhargava wrote:
+> >>> Driver probe's currently do the following
+> >>>
+> >>> 	pci_enable_device();
+> >>> 	/* ... do some other init stuff, and eventually call ... */
+> >>> 	request_irq();
+> >>>
+> >>> After pci_enable_device() is called it is assumed that the device's irq
+> >>> value (pci_dev->irq) has been appropriately set on success.  This value
+> >>> is passed into the request_irq() call.
+> >>>
+> >>> In the case that ACPI is used to determine the irq value, it is possible
+> >>> that the ACPI IRQ look up for a specific device fails and success is
+> >>> returned by pci_enable_device().
+> >>>
+> >>> The call sequence is:
+> >>>
+> >>> pci_enable_device();
+> >>> 	-> pci_enable_device_flags();
+> >>> 		->do_pci_enable_device();
+> >>> 			-> pcibios_enable_device() which, if the device
+> >>> 			   does not use MSI calls
+> >>> 			   -> pcibios_enable_irq() which maps to
+> >>> 			      acpi_pci_irq_enable()
+> >>> 				-> acpi_pci_irq_lookup()
+> >>>
+> >>> If acpi_pci_irq_lookup() cannot map the device's IRQ value it returns NULL
+> >>> as an error.  The error is returned to acpi_pci_irq_enable(), but is not
+> >>> propagated further.  This can result in the driver returning success for
+> >>> pci_enable_device() and the driver probe attempting to call request_irq()
+> >>> with dev->irq = 0.
+> >>>
+> >>> This patch modifies acpi_pci_irq_enable() to return an error in the case
+> >>> that an entry is not found in the ACPI tables.
+> >>
+> >> Is there any known system on which this leads to observable misbehavior?
+> >>
+> >> If so, what's that system?
+> >>
+> > 
+> > Dell PowerEdge 840.  The end result is an genirq warning about the irq flags of
+> > irq 0:
+> > 
+> > [   14.126845] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT B
+> > [   14.133473] i801_smbus 0000:00:1f.3: PCI INT B: no GSI
+> > [   14.795122] genirq: Flags mismatch irq 0. 00000080 (i801_smbus) vs. 00015a20
+> > (timer)
+> > [   14.796037] CPU: 0 PID: 427 Comm: systemd-udevd Tainted: G        W
+> > --------------   3.10.0-0.rc4.60.el7.x86_64.debug #1
+> > [   14.796037] Hardware name: Dell Computer Corporation PowerEdge 840/0RH822,
+> > BIOS A05 10/04/2007
+> > [   14.796037]  ffff880075643b80 ffff88007a743aa8 ffffffff816b8bbd ffff88007a743af8
+> > [   14.796037]  ffffffff8111ed8d ffffffff811bf5d1 0000000000000296 ffff880075b93800
+> > [   14.796037]  ffffffffa03d2240 0000000000000080 0000000000000000 ffff88007ad7e000
+> > [   14.796037] Call Trace:
+> > [   14.796037]  [<ffffffff816b8bbd>] dump_stack+0x19/0x1b
+> > [   14.796037]  [<ffffffff8111ed8d>] __setup_irq+0x51d/0x550
+> > [   14.796037]  [<ffffffff811bf5d1>] ? kmem_cache_alloc_trace+0x111/0x340
+> > [   14.796037]  [<ffffffffa03d2240>] ? i801_check_pre.isra.6+0xe0/0xe0 [i2c_i801]
+> > [   14.796037]  [<ffffffff8111ef1c>] request_threaded_irq+0xcc/0x170
+> > [   14.796037]  [<ffffffffa03d388d>] i801_probe+0x34d/0x52c [i2c_i801]
+> > [   14.796037]  [<ffffffff810ddecd>] ? trace_hardirqs_on+0xd/0x10
+> > [   14.796037]  [<ffffffff813876be>] local_pci_probe+0x3e/0x70
+> > [   14.796037]  [<ffffffff813889a1>] pci_device_probe+0x111/0x120
+> > [   14.796037]  [<ffffffff8144ff77>] driver_probe_device+0x87/0x390
+> > [   14.796037]  [<ffffffff81450353>] __driver_attach+0x93/0xa0
+> > [   14.796037]  [<ffffffff814502c0>] ? __device_attach+0x40/0x40
+> > [   14.796037]  [<ffffffff8144de93>] bus_for_each_dev+0x63/0xa0
+> > [   14.796037]  [<ffffffff8144f9ae>] driver_attach+0x1e/0x20
+> > [   14.796037]  [<ffffffff8144f540>] bus_add_driver+0x1f0/0x2a0
+> > [   14.796037]  [<ffffffffa03d8000>] ? 0xffffffffa03d7fff
+> > [   14.796037]  [<ffffffff814509d1>] driver_register+0x71/0x150
+> > [   14.796037]  [<ffffffffa03d8000>] ? 0xffffffffa03d7fff
+> > [   14.796037]  [<ffffffff81387540>] __pci_register_driver+0x60/0x70
+> > [   14.796037]  [<ffffffffa03d80af>] i2c_i801_init+0xaf/0x1000 [i2c_i801]
+> > [   14.796037]  [<ffffffffa03d8000>] ? 0xffffffffa03d7fff
+> > [   14.796037]  [<ffffffff810020e2>] do_one_initcall+0xe2/0x1a0
+> > [   14.796037]  [<ffffffff810ee09f>] load_module+0xf4f/0x14d0
+> > [   14.796037]  [<ffffffff81375d20>] ? ddebug_proc_write+0xf0/0xf0
+> > [   14.796037]  [<ffffffff8136088d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
+> > [   14.796037]  [<ffffffff810ee6e1>] SyS_init_module+0xc1/0x110
+> > [   14.796037]  [<ffffffff816ca299>] system_call_fastpath+0x16/0x1b
+> > 
+> 
+> Rafael,
+> 
+> One other thing -- the core issue here is that the BIOS is broken and does not
+> supply an ACPI entry for the IRQ.  I think the kernel should do a better job of
+> reacting to that instead of just continuing down a broken path.
+> 
+> In either case, the end result is the same -- the i801 driver does not load, but
+> with my patch the warning is not displayed, which IMO is the correct way to fail.
 
-Current acpiphp_check_bridge() implementation is pretty dumb:
- - it enables the slot if it's not enabled and the slot status is
-   ACPI_STA_ALL;
- - it disables the slot if it's enabled and slot is not in ACPI_STA_ALL
-   state.
+I agree.  I wanted to know how serious the problem was so as to determine the
+urgency of the fix.
 
-This behavior is not enough to handle Thunderbolt chaining case
-properly. We need to actually rescan for new devices even if a device
-has already in the slot.
+Thanks,
+Rafael
 
-The new implementation disables and stops the slot if it's not in
-ACPI_STA_ALL state.
 
-For ACPI_STA_ALL state we first trim devices which don't respond. In order
-to support that we introduce a new function pci_trim_stale_devices() that
-goes through the child devices of a given bus, check if the device is gone
-and in that case stop and remove the device.
-
-Once we have trimmed the bus we start looking for any new devices that
-might have appeared on the bus. We do that even if the slot is already
-enabled (SLOT_ENABLED).
-
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c | 55 ++++++++++++++++++--------------------
- drivers/pci/remove.c               | 20 ++++++++++++++
- include/linux/pci.h                |  1 +
- 3 files changed, 47 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 0f4da3b..c9ec06e 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -865,43 +865,40 @@ int acpiphp_eject_slot(struct acpiphp_slot *slot)
-  * Iterate over all slots under this bridge and make sure that if a
-  * card is present they are enabled, and if not they are disabled.
-  */
--static int acpiphp_check_bridge(struct acpiphp_bridge *bridge)
-+static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
- {
- 	struct acpiphp_slot *slot;
--	int retval = 0;
--	int enabled, disabled;
--
--	enabled = disabled = 0;
- 
- 	list_for_each_entry(slot, &bridge->slots, node) {
--		unsigned int status = get_slot_status(slot);
--		if (slot->flags & SLOT_ENABLED) {
--			if (status == ACPI_STA_ALL)
--				continue;
--			retval = acpiphp_disable_slot(slot);
--			if (retval) {
--				err("Error occurred in disabling\n");
--				goto err_exit;
--			} else {
--				acpiphp_eject_slot(slot);
-+		struct pci_bus *bus = slot->bridge->pci_bus;
-+		struct pci_dev *dev, *tmp;
-+		int retval;
-+
-+		mutex_lock(&slot->crit_sect);
-+		/* wake up all functions */
-+		retval = power_on_slot(slot);
-+		if (retval)
-+			goto unlock;
-+
-+		if (get_slot_status(slot) == ACPI_STA_ALL) {
-+			/* remove stale devices if any */
-+			list_for_each_entry_safe(dev, tmp, &bus->devices,
-+						 bus_list) {
-+				if (PCI_SLOT(dev->devfn) == slot->device)
-+					pci_trim_stale_devices(dev);
- 			}
--			disabled++;
-+
-+			/* configure all functions */
-+			retval = enable_device(slot);
-+			if (retval)
-+				power_off_slot(slot);
- 		} else {
--			if (status != ACPI_STA_ALL)
--				continue;
--			retval = acpiphp_enable_slot(slot);
--			if (retval) {
--				err("Error occurred in enabling\n");
--				goto err_exit;
--			}
--			enabled++;
-+			disable_device(slot);
-+			power_off_slot(slot);
- 		}
-+unlock:
-+		mutex_unlock(&slot->crit_sect);
- 	}
--
--	dbg("%s: %d enabled, %d disabled\n", __func__, enabled, disabled);
--
-- err_exit:
--	return retval;
- }
- 
- static void acpiphp_set_hpp_values(struct pci_bus *bus)
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8fc54b7..77b7a64 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -112,6 +112,26 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
- 
-+/**
-+ * pci_trim_stale_devices - remove stale device or any stale child
-+ */
-+void pci_trim_stale_devices(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->subordinate;
-+	struct pci_dev *child, *tmp;
-+	bool alive;
-+	u32 l;
-+
-+	/* check if the device responds */
-+	alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l, 0);
-+	if (!alive)
-+		pci_stop_and_remove_bus_device(dev);
-+
-+	if (alive && bus)
-+		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
-+			pci_trim_stale_devices(child);
-+}
-+
- void pci_stop_root_bus(struct pci_bus *bus)
- {
- 	struct pci_dev *child, *tmp;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3a24e4f..8f6e7a0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -754,6 +754,7 @@ struct pci_dev *pci_dev_get(struct pci_dev *dev);
- void pci_dev_put(struct pci_dev *dev);
- void pci_remove_bus(struct pci_bus *b);
- void pci_stop_and_remove_bus_device(struct pci_dev *dev);
-+void pci_trim_stale_devices(struct pci_dev *dev);
- void pci_stop_root_bus(struct pci_bus *bus);
- void pci_remove_root_bus(struct pci_bus *bus);
- void pci_setup_cardbus(struct pci_bus *bus);
 -- 
-1.8.3.2
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
