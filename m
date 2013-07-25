@@ -1,83 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:43776 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755342Ab3GKIff (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Jul 2013 04:35:35 -0400
-Message-ID: <51DE6E46.3030204@ti.com>
-Date: Thu, 11 Jul 2013 14:05:18 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:32272 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755358Ab3GYM23 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 08:28:29 -0400
+Date: Thu, 25 Jul 2013 08:28:14 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Cc: linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>, bhelgaas@google.com,
+	Feng Jin <joe.jin@oracle.com>,
+	"x86@kernel.org >> \"x86@kernel.org\"" <x86@kernel.org>
+Subject: Re: [PATCH 3/3] msix restore code optimization for dom0
+Message-ID: <20130725122813.GB23927@konrad-lan.dumpdata.com>
+References: <51EF453B.5070200@oracle.com>
+ <20130724135555.GD2518@phenom.dumpdata.com>
+ <51F0D109.4050002@oracle.com>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	<linux-kernel@vger.kernel.org>,
-	Seungwon Jeon <tgih.jun@samsung.com>,
-	"'Yulgon Kim'" <yulgon.kim@samsung.com>
-Subject: Re: [PATCH V2] pci: exynos: split into two parts such as Synopsys
- part and Exynos part
-References: <001201ce7dfa$716b3370$54419a50$@samsung.com> <51DE5359.90905@ti.com> <000001ce7e05$13ab4210$3b01c630$@samsung.com>
-In-Reply-To: <000001ce7e05$13ab4210$3b01c630$@samsung.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51F0D109.4050002@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thu, Jul 25, 2013 at 03:17:29PM +0800, Zhenzhong Duan wrote:
+> 
+> On 2013-07-24 21:55, Konrad Rzeszutek Wilk wrote:
+> >On Wed, Jul 24, 2013 at 11:08:43AM +0800, Zhenzhong Duan wrote:
+> >>PHYSDEVOP_restore_msi is used to restore all msix entrys in one hypercall
+> >>in dom0. But it is called multi times in current code.
+> >Couldn't the restore_msi_irqs instead check whether it has already
+> >made the hypercall (perhaps by seeing if the MSI-X's are enabled?)
+> >and if so don't do the hypercall?
+> I think it's better to remove the for loop for dom0, also hard to
+> know when to clear hypercall count.
+> >
+> >I think you are addressing the problem from a different viewpoint.
+> >
+> >The problem is not with the API (the x86_msi one). The problem
+> >is with the implementation (x86_msi.restore_msi_irq - specifically
+> >the Xen one) having an side effect.
+> We have x86_msi.restore_msi_irqs and no x86_msi.restore_msi_irq,if want to
+> add x86_msi.restore_msi_irq, same hypercall need to be added accordingly.
 
-On Thursday 11 July 2013 12:35 PM, Jingoo Han wrote:
-> On Thursday, July 11, 2013 3:40 PM, Kishon Vijay Abraham I wrote:
->> On Thursday 11 July 2013 11:19 AM, Jingoo Han wrote:
->>>
->>>  drivers/pci/host/Makefile          |    1 +
->>>  drivers/pci/host/pcie-designware.c |  963 +++++++++---------------------------
->>>  drivers/pci/host/pcie-designware.h |   71 +++
->>>  drivers/pci/host/pcie-exynos.c     |  523 ++++++++++++++++++++
->>>  4 files changed, 822 insertions(+), 736 deletions(-)
->>>  create mode 100644 drivers/pci/host/pcie-designware.h
->>>  create mode 100644 drivers/pci/host/pcie-exynos.c
->>>
->>> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
->>> index 086d850..7e59864 100644
->>> --- a/drivers/pci/host/Makefile
->>> +++ b/drivers/pci/host/Makefile
->>> @@ -1,2 +1,3 @@
->>>  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
->>>  obj-$(CONFIG_PCIE_DW) += pcie-designware.o
->>> +obj-$(CONFIG_PCI_EXYNOS) += pcie-exynos.o
->>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> [...]
->>
->> How about making this a separate driver in itself that does all the
->> configurations for designware core? By this I mean we can have a separate dt
->> node (child node of soc specific wrapper), that will have all the configuration
->> space/IO space and memory space. pci_common_init/dw_pcie_host_init should be
->> done in this driver.
->> We just need to think about a way of passing the ops (since that looks like
->> very much needed because of the sideband bits you have to enable before
->> reading/writing).
->>
-> 
-> CC'ed Seungwon Jeon(DW-MMC Maintainer), Yulgon Kim (DW-USB Developer)
-> 
-> 
-> Um, maybe you mean dwc3 usb driver (./drivers/usb/dwc3/)'?
-> 
-> But, I referenced dw mmc driver (./drivers/mmc/host/dw_mmc*.c).
-> 
-> Now, Exynos PCIe driver, Spear PCIe driver[1], and i.MX PCIe driver[2]
-> are submitted to PCIe mailing-list, these are using designware PCIe core.
-> 
-> There are many differences between Exynos PCIe and Spear PCIe.
-> Also, for Exynos PCIe, platform specific part will be changed more.
-> 
-> Thus, the dw mmc driver model looked more suitable.
+I think you need to repost this then without any mention to the
+implementation  and just point out that the reason for doing the cleanup
+from an API perspective.
 
-Alright. I'll go ahead with a similar implementation then.
-
-Thanks
-Kishon
+And also change the title. Thanks
+ 
+> >
+> >>This patch split arch_restore_msi_irqs into two functions.
+> >>Use arch_restore_msi_irq deal with one entry and avoid call hypercall multi
+> >>times in __pci_restore_msix_state.
+> >But irregardless of how you address the problem, this in the MSI code
+> >is a bit odd:
+> >
+> >	list_for_each_entry(entry, &dev->msi_list, list) {
+> >		arch_restore_msi_irqs(dev, entry->irq);
+> >	}
+> >
+> >and if you collapse that and make the 'arch_restore_msi_irqs' be responsible
+> >for doing all the heavy lifting.. That does seem an improvement on the API
+> >and will make it inline with 'teardown_msi_irqs'.
+> >
+> >So from that view I think it would be nicer?
+> Yes, This patch just did that. There is
+> teardown_msi_irqs/teardown_msi_irq pair.
+> But in current code, arch_restore_msi_irqs is used for one msix
+> entry, this is not consistent with
+> its naming tradiition. So I changed default_restore_msi_irqs to deal
+> with all entrys and
+> default_restore_msi_irq to deal with one entry for baremetal. For
+> dom0, we have
+> PHYSDEVOP_restore_msi  to restore all msix entrys.
