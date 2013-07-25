@@ -1,137 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:49365 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851Ab3GBIIY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2013 04:08:24 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Pratyush Anand <pratyush.anand@st.com>
-Cc: Sean Cross <xobs@kosagi.com>, Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 3/4] PCI: Add driver for i.MX6 PCI Express
-Date: Tue, 02 Jul 2013 10:09:37 +0200
-Message-ID: <2810182.Mjp7jITIaf@wuerfel>
-In-Reply-To: <51D25A13.9060006@st.com>
-References: <1372662947-27160-1-git-send-email-xobs@kosagi.com> <2E3BDF14016345FA887E3BACAE05DADA@kosagi.com> <51D25A13.9060006@st.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 00/16] Rewrite Tegra PCIe driver
+Date: Thu, 25 Jul 2013 10:53:14 -0700
+Message-Id: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 02 July 2013 10:11:55 Pratyush Anand wrote:
-> On 7/2/2013 9:16 AM, Sean Cross wrote:
-> >> >I may be wrong, but from these offset it seems to me that it is SNPS
-> >> >controller. If yes, then please go through comments of
-> >> >"[PATCH V1-10 0/4] PCIe support for Samsung Exynos5440 SoC"
-> > Exynos5440 appears to use the same port logic controller.  However, the PHYs are different.  I'm not exactly certain which comments you want me to notice in that series of patchsets, but I see references to splitting Exynos-specific code into its own project.  Based on that, it seems like the best approach would be to:
-> >
-> >      1) Move Exynos code into its own file, say, pcie-exynos.c.  This would leave only Synopsys-specific ATC code in pcie-designware.c
-> >      2) Rename generic exynos functions to reflect the fact that they're designware-generic functions.
+From: Thierry Reding <treding@nvidia.com>
 
-Ouch, I missed the fact that Jingoo Han had only renamed the file, but not
-also all the function identifiers. This change needs to be done anyway.
+This patch series contains an almost complete rewrite of the Tegra PCIe
+driver. The code is moved to the drivers/pci/host directory and turned
+into a proper platform driver, adding MSI and DT support while at it.
 
-> >      3) Have pcie-imx.c reference this generic designware ATC code.
-> >
-> > I'll rework the patch and re-submit it following these three changes.
->
-> Correct, Exactly these steps has to be done. But, Mohit might be doing 
-> similar work, so it would be better to get consensus on what has to be done.
+Patches 1 and 2 move some of the Tegra specific code around to allow it
+to be used from outside the arch/arm/mach-tegra directory.
 
-If the platform specific parts are small enough, you can actually just leave
-everything in one file, and use the of_device_id data field to point
-to a structure describing the differences, e.g. using function pointers.
- 
-> IMO, there should be three categories of functions. May be arnd can 
-> comment if we can do even something better.
+Patch 3 moves the Tegra PCIe controller driver to the drivers/pci/host
+directory and turns it into a proper platform driver while adding MSI
+(based on patches from NVIDIA) and DT support.
 
-As a general comment in case you are wondering: In a situation like this,
-the common code should always be structured as a "library" of functions
-and the hardware specific drivers become the actual driver that register
-to a particular device 'compatible' string in DT.
+Patches 4 to 7 add Tegra20 board support for PCIe via DT.
 
-> Group I: Initially, These functions should remain in pcie-designware.c 
-> (offcourse by changing exynos tag to dw). Latter on, we can see if some 
-> of them can even be moved to common pci layer.
-> 
-> sys_to_pcie
-> cfg_read
-> cfg_write
-> dw_pcie_prog_viewport_cfg0
-> dw_pcie_prog_viewport_cfg1
-> dw_pcie_prog_viewport_mem_outbound
-> dw_pcie_prog_viewport_io_outbound
-> dw_pcie_rd_other_conf
-> dw_pcie_wr_other_conf
-> dw_pcie_setup
-> dw_pcie_valid_config
-> dw_pcie_rd_conf
-> dw_pcie_wd_conf
-> dw_pcie_scan_bus
-> dw_pcie_map_irq
-> dw_pcie_setup_rc
-> add_pcie_port (after a bit of generalization)
-> dw_pcie_probe
-> dw_pcie_remove
+Patch 8 adds Tegra30 PCIe support to the driver, which is fixed up by
+patch 9. These haven't been squashed to keep the history since most of
+this work has been done over several months.
 
-The probe and remove functions might need be split up into a generic
-part that gets called by the hardware specific part.
+Patch 10 adds DT support for Tegra30 and patches 11 to 13 enable PCIe
+support on Tegra30-based Cardhu and Beaver boards.
 
-> Group II: These functions should still remain as dummy in 
-> pcie-designware.c , and should be classified as __week. So, each 
-> implementer of designware controller say Exynos/SPEAr/imx will have to 
-> define their own function to super-seed default dummy definitions.
-> 
-> dw_readl_rc
-> dw_writel_rc
-> dw_pcie_rd_own_conf
-> dw_pcie_wr_own_conf
-> dw_pcie_link_up
-> dw_pcie_host_init (will contain all platform specific and phy 
-> initialization)
+Patch 14 enables PCI in the Tegra default configuration. Patch 15
+increases the prefetchable memory size to accomodate more use-cases and
+patch 16 finally adds me as the maintainer of the Tegra PCIe driver in
+the MAINTAINERS file.
 
-I don't like __weak functions really, and they don't work well with loadable
-modules the way I suggested above. Instead, you probably need a structure
-with function pointers that gets initialized by platform specific
-driver.
+Note that this patch series depends on patches posted by Thomas
+Petazzoni for Marvell PCIe support. They can be found here:
 
-	struct dw_pcie_host_ops {
-		void (*readl_rc)(struct pcie_port *pp, void *dbi_base, u32 *val);
-		...
-	};
+  - [PATCHv5 02/11] PCI: use weak functions for MSI arch-specific functions
+    http://www.spinics.net/lists/linux-pci/msg23802.html
 
-static inline void dw_pcie_readl_rc(struct pcie_port *pp, void *dbi_base, u32 *val);
-{
-	if (pp->ops->readl_rc)
-		pp->ops->readl_rc(pp, dbi_base, val);
-	else
-		*val = readl(dbi_base);
-}
+  - [PATCHv5 04/11] PCI: Introduce new MSI chip infrastructure
+    http://www.spinics.net/lists/linux-pci/msg23797.html
 
-dw_pcie_host_init would become the probe function that calls the generic
-dw_pcie_probe.
+  - [PATCHv5 08/11] ARM: pci: add ->add_bus() and ->remove_bus() hooks to hw_pci
+    http://www.spinics.net/lists/linux-pci/msg23801.html
 
-> Group III: Functions specific to Exynos, which should move to pcie-exynos.c
-> 
-> exynos_pcie_sideband_dbi_w_mode
-> exynos_pcie_sideband_dbi_r_mode
-> exynos_pcie_assert_core_reset
-> exynos_pcie_deassert_core_reset
-> exynos_pcie_assert_phy_reset
-> exynos_pcie_deassert_phy_reset
-> exynos_pcie_init_phy
-> exynos_pcie_assert_reset
-> exynos_pcie_establish_link
-> 
-> 
-> @Mohit, See if you have BW then please take it further.
-> 
-> arnd, are exynos patches applied to any branch of arm-soc git tree?
+So it would be great if we could set up a stable branch that contains
+those three, which could then be pulled into the Marvell and Tegra
+branches.
 
-Yes, they are currently in the next/soc branch.
+For this series, patches 3, 8 and 9 will require Bjorn's Acked-by so
+that Stephen can take them through the Tegra tree, which I think both of
+them already agreed on to being the best solution.
 
-	Arnd
+Thierry
+
+Jay Agarwal (3):
+  PCI: tegra: Add Tegra 30 PCIe support
+  ARM: tegra: Enable PCIe controller on Cardhu
+  ARM: dts: tegra: Increase prefetchable PCI memory space
+
+Stephen Warren (2):
+  PCI: tegra: set up PADS_REFCLK_CFG1
+  ARM: tegra: Fix Beaver's PCIe lane configuration
+
+Thierry Reding (11):
+  ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
+  ARM: tegra: Move pmc.h to include/linux/tegra-pmc.h
+  PCI: tegra: Move PCIe driver to drivers/pci/host
+  ARM: tegra: tamonten: Add PCIe support
+  ARM: tegra: tec: Add PCIe support
+  ARM: tegra: harmony: Initialize PCIe from DT
+  ARM: tegra: trimslice: Initialize PCIe from DT
+  ARM: tegra: Add Tegra30 PCIe support
+  ARM: tegra: Enable PCIe controller on Beaver
+  ARM: tegra: Update default configuration (PCIe)
+  MAINTAINERS: Add myself as Tegra PCIe maintainer
+
+ .../bindings/pci/nvidia,tegra20-pcie.txt           |  163 ++
+ MAINTAINERS                                        |    7 +
+ arch/arm/boot/dts/tegra20-harmony.dts              |   20 +-
+ arch/arm/boot/dts/tegra20-tamonten.dtsi            |   17 +-
+ arch/arm/boot/dts/tegra20-tec.dts                  |    8 +
+ arch/arm/boot/dts/tegra20-trimslice.dts            |   28 +
+ arch/arm/boot/dts/tegra20.dtsi                     |   55 +
+ arch/arm/boot/dts/tegra30-beaver.dts               |   21 +
+ arch/arm/boot/dts/tegra30-cardhu.dtsi              |   20 +
+ arch/arm/boot/dts/tegra30.dtsi                     |   70 +
+ arch/arm/configs/tegra_defconfig                   |    5 +-
+ arch/arm/mach-tegra/Kconfig                        |    7 +-
+ arch/arm/mach-tegra/Makefile                       |    3 -
+ arch/arm/mach-tegra/board-harmony-pcie.c           |   89 -
+ arch/arm/mach-tegra/board.h                        |    8 -
+ arch/arm/mach-tegra/iomap.h                        |    3 -
+ arch/arm/mach-tegra/pcie.c                         |  886 ----------
+ arch/arm/mach-tegra/pmc.c                          |   16 +
+ arch/arm/mach-tegra/tegra.c                        |   24 -
+ drivers/pci/host/Kconfig                           |    4 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pci-tegra.c                       | 1702 ++++++++++++++++++++
+ include/linux/tegra-pmc.h                          |   23 +
+ 23 files changed, 2156 insertions(+), 1024 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+ delete mode 100644 arch/arm/mach-tegra/board-harmony-pcie.c
+ delete mode 100644 arch/arm/mach-tegra/pcie.c
+ create mode 100644 drivers/pci/host/pci-tegra.c
+ create mode 100644 include/linux/tegra-pmc.h
+
+-- 
+1.8.1.5
+
