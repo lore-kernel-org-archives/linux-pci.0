@@ -1,57 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:8252 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755083Ab3GKCgw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jul 2013 22:36:52 -0400
-Message-ID: <51DE1A35.2030108@huawei.com>
-Date: Thu, 11 Jul 2013 10:36:37 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
+Received: from hydra.sisk.pl ([212.160.235.94]:40150 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756940Ab3GYTYW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Jul 2013 15:24:22 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Oliver Neukum <oneukum@suse.de>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH 1/2] PCI: introduce PCIe Device Serial NUmber Capability
- support
-References: <1373356545-45944-1-git-send-email-wangyijing@huawei.com> <CAErSpo6L8W40JBjNfE+bf_HWaW5be0VLdK+YyN3+J+05--ukyA@mail.gmail.com>
-In-Reply-To: <CAErSpo6L8W40JBjNfE+bf_HWaW5be0VLdK+YyN3+J+05--ukyA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Cc: linux-pci@vger.kernel.org, Fenghua Yu <fenghua.yu@intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	linux-sh@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 1/2] PCI: hotplug: Convert to be builtin only, not modular
+Date: Thu, 25 Jul 2013 21:34:26 +0200
+Message-ID: <1790250.TtZ9d6PaXM@vostro.rjw.lan>
+In-Reply-To: <20130725175720.6006.96448.stgit@bhelgaas-glaptop>
+References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop> <20130725175720.6006.96448.stgit@bhelgaas-glaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> + */
->> +void pci_get_dsn(struct pci_dev *dev, u64 *sn)
+On Thursday, July 25, 2013 11:57:20 AM Bjorn Helgaas wrote:
+> Convert CONFIG_HOTPLUG_PCI from tristate to bool.  This only affects
+> the hotplug core; several of the hotplug drivers can still be modules.
 > 
-> How about:
-> 
->     u64 pci_device_serial_number(struct pci_dev *dev)
-> 
-> "get" suggests reference counting, which isn't happening here.  And
-> why pass a pointer to a return value when we can just as easily return
-> it directly?
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Yes, u64 pci_device_serial_number(struct pci_dev *dev) is better, thanks!
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+> ---
+>  arch/ia64/configs/generic_defconfig    |    2 +-
+>  arch/ia64/configs/gensparse_defconfig  |    2 +-
+>  arch/ia64/configs/tiger_defconfig      |    2 +-
+>  arch/ia64/configs/xen_domu_defconfig   |    2 +-
+>  arch/powerpc/configs/ppc64_defconfig   |    2 +-
+>  arch/powerpc/configs/ppc64e_defconfig  |    2 +-
+>  arch/powerpc/configs/pseries_defconfig |    2 +-
+>  arch/sh/configs/sh03_defconfig         |    2 +-
+>  drivers/pci/hotplug/Kconfig            |    5 +----
+>  9 files changed, 9 insertions(+), 12 deletions(-)
 > 
-id pci_init_capabilities(struct pci_dev *dev)
->>         /* Power Management */
->>         pci_pm_init(dev);
->>
->> +       /* Device Serial Number */
->> +       pci_dsn_init(dev);
+> diff --git a/arch/ia64/configs/generic_defconfig b/arch/ia64/configs/generic_defconfig
+> index 7913695..efbd292 100644
+> --- a/arch/ia64/configs/generic_defconfig
+> +++ b/arch/ia64/configs/generic_defconfig
+> @@ -31,7 +31,7 @@ CONFIG_ACPI_FAN=m
+>  CONFIG_ACPI_DOCK=y
+>  CONFIG_ACPI_PROCESSOR=m
+>  CONFIG_ACPI_CONTAINER=m
+> -CONFIG_HOTPLUG_PCI=m
+> +CONFIG_HOTPLUG_PCI=y
+>  CONFIG_HOTPLUG_PCI_ACPI=m
+>  CONFIG_PACKET=y
+>  CONFIG_UNIX=y
+> diff --git a/arch/ia64/configs/gensparse_defconfig b/arch/ia64/configs/gensparse_defconfig
+> index f8e9133..f64980d 100644
+> --- a/arch/ia64/configs/gensparse_defconfig
+> +++ b/arch/ia64/configs/gensparse_defconfig
+> @@ -25,7 +25,7 @@ CONFIG_ACPI_BUTTON=m
+>  CONFIG_ACPI_FAN=m
+>  CONFIG_ACPI_PROCESSOR=m
+>  CONFIG_ACPI_CONTAINER=m
+> -CONFIG_HOTPLUG_PCI=m
+> +CONFIG_HOTPLUG_PCI=y
+>  CONFIG_HOTPLUG_PCI_ACPI=m
+>  CONFIG_PACKET=y
+>  CONFIG_UNIX=y
+> diff --git a/arch/ia64/configs/tiger_defconfig b/arch/ia64/configs/tiger_defconfig
+> index a5a9e02..0f4e9e4 100644
+> --- a/arch/ia64/configs/tiger_defconfig
+> +++ b/arch/ia64/configs/tiger_defconfig
+> @@ -31,7 +31,7 @@ CONFIG_ACPI_BUTTON=m
+>  CONFIG_ACPI_FAN=m
+>  CONFIG_ACPI_PROCESSOR=m
+>  CONFIG_ACPI_CONTAINER=m
+> -CONFIG_HOTPLUG_PCI=m
+> +CONFIG_HOTPLUG_PCI=y
+>  CONFIG_HOTPLUG_PCI_ACPI=m
+>  CONFIG_PACKET=y
+>  CONFIG_UNIX=y
+> diff --git a/arch/ia64/configs/xen_domu_defconfig b/arch/ia64/configs/xen_domu_defconfig
+> index 37b9b42..b025acf 100644
+> --- a/arch/ia64/configs/xen_domu_defconfig
+> +++ b/arch/ia64/configs/xen_domu_defconfig
+> @@ -32,7 +32,7 @@ CONFIG_ACPI_BUTTON=m
+>  CONFIG_ACPI_FAN=m
+>  CONFIG_ACPI_PROCESSOR=m
+>  CONFIG_ACPI_CONTAINER=m
+> -CONFIG_HOTPLUG_PCI=m
+> +CONFIG_HOTPLUG_PCI=y
+>  CONFIG_HOTPLUG_PCI_ACPI=m
+>  CONFIG_PACKET=y
+>  CONFIG_UNIX=y
+> diff --git a/arch/powerpc/configs/ppc64_defconfig b/arch/powerpc/configs/ppc64_defconfig
+> index c86fcb9..0e8cfd0 100644
+> --- a/arch/powerpc/configs/ppc64_defconfig
+> +++ b/arch/powerpc/configs/ppc64_defconfig
+> @@ -58,7 +58,7 @@ CONFIG_SCHED_SMT=y
+>  CONFIG_PPC_DENORMALISATION=y
+>  CONFIG_PCCARD=y
+>  CONFIG_ELECTRA_CF=y
+> -CONFIG_HOTPLUG_PCI=m
+> +CONFIG_HOTPLUG_PCI=y
+>  CONFIG_HOTPLUG_PCI_RPA=m
+>  CONFIG_HOTPLUG_PCI_RPA_DLPAR=m
+>  CONFIG_PACKET=y
+> diff --git a/arch/powerpc/configs/ppc64e_defconfig b/arch/powerpc/configs/ppc64e_defconfig
+> index 4b20f76..0085dc4 100644
+> --- a/arch/powerpc/configs/ppc64e_defconfig
+> +++ b/arch/powerpc/configs/ppc64e_defconfig
+> @@ -32,7 +32,7 @@ CONFIG_IRQ_ALL_CPUS=y
+>  CONFIG_SPARSEMEM_MANUAL=y
+>  CONFIG_PCI_MSI=y
+>  CONFIG_PCCARD=y
+> -CONFIG_HOTPLUG_PCI=m
+> +CONFIG_HOTPLUG_PCI=y
+>  CONFIG_PACKET=y
+>  CONFIG_UNIX=y
+>  CONFIG_XFRM_USER=m
+> diff --git a/arch/powerpc/configs/pseries_defconfig b/arch/powerpc/configs/pseries_defconfig
+> index bea8587..1d4b976 100644
+> --- a/arch/powerpc/configs/pseries_defconfig
+> +++ b/arch/powerpc/configs/pseries_defconfig
+> @@ -53,7 +53,7 @@ CONFIG_PPC_64K_PAGES=y
+>  CONFIG_PPC_SUBPAGE_PROT=y
+>  CONFIG_SCHED_SMT=y
+>  CONFIG_PPC_DENORMALISATION=y
+> -CONFIG_HOTPLUG_PCI=m
+> +CONFIG_HOTPLUG_PCI=y
+>  CONFIG_HOTPLUG_PCI_RPA=m
+>  CONFIG_HOTPLUG_PCI_RPA_DLPAR=m
+>  CONFIG_PACKET=y
+> diff --git a/arch/sh/configs/sh03_defconfig b/arch/sh/configs/sh03_defconfig
+> index 2051821..0cf4097 100644
+> --- a/arch/sh/configs/sh03_defconfig
+> +++ b/arch/sh/configs/sh03_defconfig
+> @@ -22,7 +22,7 @@ CONFIG_PREEMPT=y
+>  CONFIG_CMDLINE_OVERWRITE=y
+>  CONFIG_CMDLINE="console=ttySC1,115200 mem=64M root=/dev/nfs"
+>  CONFIG_PCI=y
+> -CONFIG_HOTPLUG_PCI=m
+> +CONFIG_HOTPLUG_PCI=y
+>  CONFIG_BINFMT_MISC=y
+>  CONFIG_NET=y
+>  CONFIG_PACKET=y
+> diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
+> index bb7ebb2..d85009d 100644
+> --- a/drivers/pci/hotplug/Kconfig
+> +++ b/drivers/pci/hotplug/Kconfig
+> @@ -3,16 +3,13 @@
+>  #
+>  
+>  menuconfig HOTPLUG_PCI
+> -	tristate "Support for PCI Hotplug"
+> +	bool "Support for PCI Hotplug"
+>  	depends on PCI && SYSFS
+>  	---help---
+>  	  Say Y here if you have a motherboard with a PCI Hotplug controller.
+>  	  This allows you to add and remove PCI cards while the machine is
+>  	  powered up and running.
+>  
+> -	  To compile this driver as a module, choose M here: the
+> -	  module will be called pci_hotplug.
+> -
+>  	  When in doubt, say N.
+>  
+>  if HOTPLUG_PCI
 > 
->     dev->sn = pci_serial_number(dev);
-> 
-> Obvious, no comment or wrapper function needed.
-
-OK, will remove the unnecessary comment.
-
-> 
->> +
->>         /* Vital Product Data */
->>         pci_vpd_pci22_init(dev);
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
