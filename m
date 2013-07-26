@@ -1,52 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:50787 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757321Ab3GZNJw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 09:09:52 -0400
+Received: by mail-oa0-f43.google.com with SMTP id i10so2191168oag.2
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 06:09:52 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7TexM5-7Z=8H+B5=49-GzoKd_prn=LbMFZWV9rpdn__A@mail.gmail.com>
-References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
-	<CAErSpo7TexM5-7Z=8H+B5=49-GzoKd_prn=LbMFZWV9rpdn__A@mail.gmail.com>
-Date: Wed, 24 Jul 2013 10:30:33 -0600
-Message-ID: <CAKocOOOW6+eqb6GTsWLgonQQ7uy5R10t6L_T3jaTN9qSbetVeQ@mail.gmail.com>
-Subject: Re: Linux Plumbers ACPI/PM, PCI Microconference
-From: Shuah Khan <shuahkhan@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Myron Stowe <myron.stowe@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	virtualization@lists.linux-foundation.org,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <CAErSpo4xftQjwKHsenuKuEvT10iOa+DuiYfSyJYLhp=ObcDZsQ@mail.gmail.com>
+References: <1374823418-1550-1-git-send-email-Chunhe.Lan@freescale.com> <CAErSpo4xftQjwKHsenuKuEvT10iOa+DuiYfSyJYLhp=ObcDZsQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 26 Jul 2013 07:09:31 -0600
+Message-ID: <CAErSpo5AqqFy5uM+bQNiGnqKyRMwCwHOzta6NV4ZnBi2vJxD8A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Add quirk for setting valid class for FSL PCI host bridge
+To: Chunhe Lan <Chunhe.Lan@freescale.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 23, 2013 at 10:06 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Jul 16, 2013 at 8:21 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
->> Linux Plumbers has approved an ACPI/PM, PCI microconference. The
->> overview page is here:
->>
->> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
->>
->> We would like to start receiving volunteers for presenting topics of
->> interest.  There is a lot of activity in these subsystems so please
->> respond by submitting presentation or discussion proposals that you
->> would be willing to cover for consideration.  You should also feel
->> free to submit ideas as proposals that others could cover.
->
-> Somebody else privately suggested these ARM/PCI topics:
->
->> -> how it's been cleaned up to be more common across arm-32 machines
->> -> dependencies on dtb
->> -> future use/dependency(s) on ACPI
->> -> hotplug support issues (if any; acpi (host-bridge) vs <whatever ARM uses> ?)
->
-> and I'm interested in those as well.  There seems to be a lot of
-> activity in that area.  In addition, I'm interested in ARM IOMMU
-> support.  I see drivers/iommu/arm-smmu.c, but it's brand-new and I
-> haven't looked at it at all.
->
+[-cc Anton (bounced)]
 
-I second this topic. I am interested in ARM/iommu space also.
-
-thanks,
--- Shuah
+On Fri, Jul 26, 2013 at 7:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Ben, Paul, Minghuan, Kumar, Anton, linuxppc-dev
+>
+> On Fri, Jul 26, 2013 at 1:23 AM, Chunhe Lan <Chunhe.Lan@freescale.com> wrote:
+>> Freescale platform has class code = 0x0b2000, when it boots. This makes
+>> kernel PCI bus code to setup these devices resulting into the following
+>> notice information when trying to enable them:
+>>
+>> pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
+>>
+>> This patch adds a ID specific(PCI_VENDOR_ID_FREESCALE & PCI_ANY_ID based)
+>> 'early' fixup quirk to replace class code with PCI_CLASS_BRIDGE_PCI as
+>> class. Then the above information disappears.
+>>
+>> Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  drivers/pci/quirks.c |   10 ++++++++++
+>>  1 files changed, 10 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index e85d230..906a04a3 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -2772,6 +2772,16 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x342e, vtd_mask_spec_errors);
+>>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3c28, vtd_mask_spec_errors);
+>>  #endif
+>>
+>> +#ifdef CONFIG_FSL_PCI
+>> +static void quirk_freescale_class(struct pci_dev *dev)
+>> +{
+>> +       dev_info(&dev->dev, "Setting PCI class for FSL PCI host bridge\n");
+>> +       dev->class = (PCI_CLASS_BRIDGE_PCI << 8) | (dev->class & 0xff);
+>> +}
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID,
+>> +                       quirk_freescale_class);
+>
+> 1.  This looks an awful lot like quirk_fsl_pcie_head().
+> quirk_fsl_pcie_head() is currently a HEADER quirk, but that runs
+> *after* pci_setup_device(), where dev->class is used.  I suspect this
+> should be an EARLY quirk instead.  But this quirk has a long history
+> as a HEADER quirk, and I'm sure many people have tested it, so I don't
+> know what's going on.
+>
+> 2.  I assume the Freescale vendor ID might be used for devices other
+> than bridges, so I doubt it would be correct to overwrite the class
+> for *every* Freescale device as you're doing here.
+>
+>> +#endif
+>> +
+>>  static void fixup_ti816x_class(struct pci_dev *dev)
+>>  {
+>>         /* TI 816x devices do not have class code set when in PCIe boot mode */
+>> --
+>> 1.7.6.5
+>>
+>>
