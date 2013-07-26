@@ -1,124 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 6/8] ACPI / hotplug / PCI: Drop acpiphp_handle_to_bridge()
-Date: Tue, 09 Jul 2013 02:20:31 +0200
-Message-ID: <3804403.VVlzfJfUyu@vostro.rjw.lan>
-In-Reply-To: <26431283.HJCKsss0rt@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:46623 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757321Ab3GZMmM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 08:42:12 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20130725175720.6006.96448.stgit@bhelgaas-glaptop>
+References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
+	<20130725175720.6006.96448.stgit@bhelgaas-glaptop>
+Date: Fri, 26 Jul 2013 05:42:11 -0700
+Message-ID: <CAE9FiQVNYB7z7e1s=1PGsgQe_kexy+7V10WAxkReA-kiQ=10yg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: hotplug: Convert to be builtin only, not modular
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	linux-sh@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Jul 25, 2013 at 10:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Convert CONFIG_HOTPLUG_PCI from tristate to bool.  This only affects
+> the hotplug core; several of the hotplug drivers can still be modules.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  arch/ia64/configs/generic_defconfig    |    2 +-
+>  arch/ia64/configs/gensparse_defconfig  |    2 +-
+>  arch/ia64/configs/tiger_defconfig      |    2 +-
+>  arch/ia64/configs/xen_domu_defconfig   |    2 +-
+>  arch/powerpc/configs/ppc64_defconfig   |    2 +-
+>  arch/powerpc/configs/ppc64e_defconfig  |    2 +-
+>  arch/powerpc/configs/pseries_defconfig |    2 +-
+>  arch/sh/configs/sh03_defconfig         |    2 +-
+>  drivers/pci/hotplug/Kconfig            |    5 +----
+>  9 files changed, 9 insertions(+), 12 deletions(-)
 
-Using the hotplug context objects introduced previously rework the
-ACPI-based PCI hotplug (acpiphp) core code to get to acpiphp_bridge
-objects associated with hotplug bridges from those context objects
-rather than from the global list of hotplug bridges.
-
-After that the acpiphp_handle_to_bridge() is not necessary any more,
-so drop it.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   54 +++++++++++++++++--------------------
- 1 file changed, 25 insertions(+), 29 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -441,22 +441,6 @@ static int detect_ejectable_slots(acpi_h
- 	return found;
- }
- 
--static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle)
--{
--	struct acpiphp_bridge *bridge;
--
--	mutex_lock(&bridge_mutex);
--	list_for_each_entry(bridge, &bridge_list, list)
--		if (bridge->handle == handle) {
--			get_bridge(bridge);
--			mutex_unlock(&bridge_mutex);
--			return bridge;
--		}
--	mutex_unlock(&bridge_mutex);
--
--	return NULL;
--}
--
- static void cleanup_bridge(struct acpiphp_bridge *bridge)
- {
- 	struct acpiphp_slot *slot;
-@@ -953,37 +937,49 @@ static void acpiphp_sanitize_bus(struct
-  * ACPI event handlers
-  */
- 
--static acpi_status
--check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
-+static acpi_status check_sub_bridges(acpi_handle handle, u32 lvl, void *data,
-+				     void **rv)
- {
--	struct acpiphp_bridge *bridge;
--	char objname[64];
--	struct acpi_buffer buffer = { .length = sizeof(objname),
--				      .pointer = objname };
-+	struct acpiphp_context *context = acpiphp_get_context(handle);
-+
-+	if (!context)
-+		return AE_OK;
- 
--	bridge = acpiphp_handle_to_bridge(handle);
--	if (bridge) {
-+	if (context->bridge) {
-+		struct acpiphp_bridge *bridge = context->bridge;
-+		char objname[64];
-+		struct acpi_buffer buffer = { .length = sizeof(objname),
-+					      .pointer = objname };
-+
-+		get_bridge(bridge);
- 		acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
--		dbg("%s: re-enumerating slots under %s\n",
--			__func__, objname);
-+		dbg("%s: re-enumerating slots under %s\n", __func__, objname);
- 		acpiphp_check_bridge(bridge);
- 		put_bridge(bridge);
- 	}
-+	acpiphp_put_context(context);
- 	return AE_OK ;
- }
- 
- void acpiphp_check_host_bridge(acpi_handle handle)
- {
--	struct acpiphp_bridge *bridge;
-+	struct acpiphp_context *context = acpiphp_get_context(handle);
- 
--	bridge = acpiphp_handle_to_bridge(handle);
--	if (bridge) {
-+	if (!context)
-+		return;
-+
-+	if (context->bridge) {
-+		struct acpiphp_bridge *bridge = context->bridge;
-+
-+		get_bridge(bridge);
- 		acpiphp_check_bridge(bridge);
- 		put_bridge(bridge);
- 	}
- 
- 	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
- 		ACPI_UINT32_MAX, check_sub_bridges, NULL, NULL, NULL);
-+
-+	acpiphp_put_context(context);
- }
- 
- static void _handle_hotplug_event_bridge(struct work_struct *work)
-
+Acked-by: Yinghai Lu <yinghai@kernel.org>
