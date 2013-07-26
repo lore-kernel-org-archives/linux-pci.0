@@ -1,96 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:29759 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751030Ab3G2Mw1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Jul 2013 08:52:27 -0400
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: davem@davemloft.net, bhelgaas@google.com
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>, netdev@vger.kernel.org,
-	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org
-Subject: [net-next 00/15][pull request] Intel Wired LAN Driver Updates
-Date: Mon, 29 Jul 2013 05:51:56 -0700
-Message-Id: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Received: from am1ehsobe003.messaging.microsoft.com ([213.199.154.206]:29097
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757461Ab3GZHdZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 03:33:25 -0400
+From: Chunhe Lan <Chunhe.Lan@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <bhelgaas@google.com>, Chunhe Lan <Chunhe.Lan@freescale.com>
+Subject: [PATCH] PCI: Add quirk for setting valid class for FSL PCI host bridge
+Date: Fri, 26 Jul 2013 15:23:38 +0800
+Message-ID: <1374823418-1550-1-git-send-email-Chunhe.Lan@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series contains updates to ixgbe and pci.
+Freescale platform has class code = 0x0b2000, when it boots. This makes
+kernel PCI bus code to setup these devices resulting into the following
+notice information when trying to enable them:
 
-The first patch for ixgbe from Greg Rose is the second submission.  The
-first submission of "ixgbe: Retain VLAN filtering in promiscuous + VT
-mode" had a typo, which Joe Perches pointed out and is fixed in this
-submission.
+pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
 
-Alex updates the ixgbe driver to use the generic helper pci_vfs_assigned
-instead of the driver specific function ixgbe_vfs_are_assigned.
+This patch adds a ID specific(PCI_VENDOR_ID_FREESCALE & PCI_ANY_ID based)
+'early' fixup quirk to replace class code with PCI_CLASS_BRIDGE_PCI as
+class. Then the above information disappears.
 
-Don Skidmore provides 4 patches for ixgbe, the first being a fix for
-flow control ethtool reporting.  Originally ixgbe_device_supports_autoneg_fc()
-was expected to be called by only copper devices, which lead to false
-information being displayed via ethtool.  Two other patches add support
-for fixed fiber for SFP+ devices and the addition of a quad-port x520
-adapter.  The last patch simply bumps the driver version.
+Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/quirks.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-Emil Tantilov provides 3 fixes for ixgbe, two of which resolve
-semaphore lock issues.  The third fix resolves several issues in the
-previous implementation of the SFF data dumps of SFP+ modules.
-
-The remaining ixgbe and pci patches are from Jacob Keller.  The pci
-patches exposes bus speed, link speed and bus width so that drivers
-can take advantage of this information.  In addition, adds a pci function
-which obtains minimum link width and speed.  Jacob also provides the
-ixgbe patch to incorporate the pci function. He provides a patch that
-fixes a lockdep issue created due to ixgbe_ptp_stop always running
-cancel_work_sync even if the work item had not been created properly with
-INIT_WORK. This issue was found and reported by Stephen Hemminger.
-
-The following are changes since commit fe6f700d6cbb7e8a61711e325f53d9c9e0a42a4c:
-  net/mlx4_core: Respond to operation request by firmware
-and are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/jkirsher/net-next master
-
-Alexander Duyck (1):
-  ixgbe: Use pci_vfs_assigned instead of ixgbe_vfs_are_assigned
-
-Don Skidmore (4):
-  ixgbe: fix fc autoneg ethtool reporting.
-  ixgbe: add new media type
-  ixgbe: bump version number
-  ixgbe: add support for quad-port x520 adapter
-
-Emil Tantilov (3):
-  ixgbe: fix semaphore lock for I2C read/writes on 82598
-  ixgbe: fix SFF data dumps of SFP+ modules
-  ixgbe: clear semaphore bits on timeouts
-
-Greg Rose (1):
-  ixgbe: Retain VLAN filtering in promiscuous + VT mode
-
-Jacob Keller (6):
-  pci: expose pcie_link_speed and pcix_bus_speed arrays
-  pci: move enum pcie_link_width into pci.h
-  pci: Add function to obtain minimum link width and speed
-  ixgbe: call pcie_get_mimimum_link to check if device has enough
-    bandwidth
-  ixgbe: fix lockdep annotation issue for ptp's work item
-  ixgbe: rename LL_EXTENDED_STATS to use queue instead of q
-
- drivers/net/ethernet/intel/ixgbe/ixgbe.h         |   7 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_82598.c   |  34 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_82599.c   | 231 ++++++++++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_common.c  |  88 +++--
- drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c |  94 ++---
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c    | 158 +++++++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_phy.c     | 470 ++++++++++++++++-------
- drivers/net/ethernet/intel/ixgbe/ixgbe_phy.h     |  41 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c     |  12 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c   | 101 +++--
- drivers/net/ethernet/intel/ixgbe/ixgbe_type.h    |  12 +
- drivers/pci/pci.c                                |  43 +++
- drivers/pci/probe.c                              |   4 +-
- include/linux/pci.h                              |  18 +
- include/linux/pci_hotplug.h                      |  13 -
- 15 files changed, 983 insertions(+), 343 deletions(-)
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e85d230..906a04a3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2772,6 +2772,16 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x342e, vtd_mask_spec_errors);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3c28, vtd_mask_spec_errors);
+ #endif
+ 
++#ifdef CONFIG_FSL_PCI
++static void quirk_freescale_class(struct pci_dev *dev)
++{
++	dev_info(&dev->dev, "Setting PCI class for FSL PCI host bridge\n");
++	dev->class = (PCI_CLASS_BRIDGE_PCI << 8) | (dev->class & 0xff);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID,
++			quirk_freescale_class);
++#endif
++
+ static void fixup_ti816x_class(struct pci_dev *dev)
+ {
+ 	/* TI 816x devices do not have class code set when in PCIe boot mode */
 -- 
-1.7.11.7
+1.7.6.5
+
 
