@@ -1,92 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7410 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753785Ab3GaDbk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Jul 2013 23:31:40 -0400
-Subject: [RFC PATCH 1/7] pci: Create pci_reset_bridge_secondary_bus()
-To: linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: bhelgaas@google.com, indou.takao@jp.fujitsu.com
-Date: Tue, 30 Jul 2013 21:31:36 -0600
-Message-ID: <20130731033135.31931.10896.stgit@bling.home>
-In-Reply-To: <20130731031316.31931.56751.stgit@bling.home>
-References: <20130731031316.31931.56751.stgit@bling.home>
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:38889 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757524Ab3GZM5S (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 08:57:18 -0400
+Received: by mail-oa0-f50.google.com with SMTP id k7so7344765oag.37
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 05:57:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo79rJZuEkJB+W0XGq-sKUDwTgrG5SVzJbFBqobLY2+nGQ@mail.gmail.com>
+References: <1374759098-6746-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo79rJZuEkJB+W0XGq-sKUDwTgrG5SVzJbFBqobLY2+nGQ@mail.gmail.com>
+Date: Fri, 26 Jul 2013 05:57:17 -0700
+Message-ID: <CAE9FiQUmetaXJ-=d3HV-AiaeEEh_ehdbT5E=Mrm7d7Z7y78Tng@mail.gmail.com>
+Subject: Re: [PATCH v6] PCI: Don't let mmio fallback to must-only, if ioport
+ fails with must+optional
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move the secondary bus reset code from pci_parent_bus_reset() into its own
-function.  Export it as we'll later be calling it from hotplug controllers.
+On Thu, Jul 25, 2013 at 1:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Jul 25, 2013 at 7:31 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> BenH reported that there are assign unassigned resource problems
+>> in powerpc.
+>>
+>> It turns out after
+>> | commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
+>> | Date:   Thu Feb 23 19:23:29 2012 -0800
+>> |
+>> |    PCI: Retry on IORESOURCE_IO type allocations
+>>
+>> even for root bus that does not have io port range, it will keep retrying
+>> to realloc with mmio after mmio allocation work in first try already.
+>>
+>> Current retry logic is : try with must+optional at first, and if
+>> it fails with any ioport or mmio, it will try must then try to extend
+>> must with optional. The reassign will put extended mmio or pref mmio
+>> in the middle of parent resource range.
+>> That will prevent other sibling resources from getting must-have resources
+>> or get extended properly.
+>>
+>> We can check fail type to see if can we need fall back to must-have
+>> for it only, that will keep others type to keep resource to have
+>> must+optional allocations.
+>>
+>> Separate three resource type checking if we need to release
+>> assigned resource after requested + add_size try.
+>> 1. if there is io port assign fail, will release assigned io port.
+>> 2. if there is pref mmio assign fail, release assigned pref mmio.
+>>    if assigned pref mmio's parent is non-pref mmio and there
+>>    is non-pref mmio assign fail, will release that assigned pref mmio.
+>> 3. if there is non-pref mmio assign fail or pref mmio assigned fail,
+>>    will release assigned non-pref mmio.
+>>
+>> This will be become more often when we have x86 8 sockets or 32 sockets
+>> system, and those systems will have one root bus per socket.
+>> They will have some root buses that do not have ioport range or 32bit mmio.
+>>
+>> -v2: need to remove assigned entries from optional list too.
+>> -v3: not just checking ioport related, requested by Bjorn.
+>>
+>> Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>
+> I forgot; is there a mailing list archive URL for this report?
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c   |   32 +++++++++++++++++++++++---------
- include/linux/pci.h |    1 +
- 2 files changed, 24 insertions(+), 9 deletions(-)
+yes, should be
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a599a6b..bfd629c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3276,9 +3276,30 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
--static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
-+/**
-+ * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
-+ * @dev: Bridge device
-+ *
-+ * Use the bridge control register to assert reset on the secondary bus.
-+ * Devices on the secondary bus are left in power-on state.
-+ */
-+void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
- {
- 	u16 ctrl;
-+
-+	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
-+	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
-+	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-+	msleep(100);
-+
-+	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-+	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-+	msleep(100);
-+}
-+EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
-+
-+static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
-+{
- 	struct pci_dev *pdev;
- 
- 	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
-@@ -3291,14 +3312,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- 	if (probe)
- 		return 0;
- 
--	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
--	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
--	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
--	msleep(100);
--
--	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
--	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
--	msleep(100);
-+	pci_reset_bridge_secondary_bus(dev->bus->self);
- 
- 	return 0;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..35c1bc4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -924,6 +924,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
- int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
-+void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+http://marc.info/?l=linux-pci&m=136941328913610&w=1
 
+title is: Resource assignment oddities
+
+
+>
+> And did you say this should go to stable for v3.10+?  If that's the
+> case, this should probably go in my for-linus branch for v3.11 instead
+> of waiting for v3.12, right?
+
+Yes. You are right.
+
+BenH at last only hope it could backport to v3.10 for the distribution.
+
+Thanks
+
+Yinghai
