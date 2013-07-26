@@ -1,42 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:45905 "EHLO mail1.g1.pair.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752776Ab3GAHkC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Jul 2013 03:40:02 -0400
-From: Sean Cross <xobs@kosagi.com>
-To: devicetree-discuss@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Sean Cross <xobs@kosagi.com>
-Subject: [PATCH 2/4] ARM: Enable PCI Express on ARM
-Date: Mon,  1 Jul 2013 07:15:45 +0000
-Message-Id: <1372662947-27160-3-git-send-email-xobs@kosagi.com>
-In-Reply-To: <1372662947-27160-1-git-send-email-xobs@kosagi.com>
-References: <1372662947-27160-1-git-send-email-xobs@kosagi.com>
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:52885 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756993Ab3GZVyj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 17:54:39 -0400
+Received: by mail-oa0-f44.google.com with SMTP id l20so5149765oag.31
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 14:54:39 -0700 (PDT)
+Date: Fri, 26 Jul 2013 15:54:35 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Andrew Cooks <acooks@gmail.com>,
+	Don Dutile <ddutile@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
+Message-ID: <20130726215435.GB20021@google.com>
+References: <20130711204439.1701.90503.stgit@bling.home>
+ <20130711210326.1701.56478.stgit@bling.home>
+ <20130723223533.GB19765@google.com>
+ <1374621703.15429.98.camel@ul30vt.home>
+ <CAErSpo6bcGCjqdxn-bz_vjo+HsAiOxDu=--mD7veEZ9f7k+gyA@mail.gmail.com>
+ <1374689548.5208.62.camel@ul30vt.home>
+ <20130724232427.GA9272@google.com>
+ <1374775016.2642.116.camel@ul30vt.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1374775016.2642.116.camel@ul30vt.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some ARM devices have PCI Express hardware, and should be able to take
-advantage of PCI Express code present in the common driver files.  Enable
-PCI Express on ARM, when PCI is available.
+On Thu, Jul 25, 2013 at 11:56:56AM -0600, Alex Williamson wrote:
+> On Wed, 2013-07-24 at 17:24 -0600, Bjorn Helgaas wrote:
+> > On Wed, Jul 24, 2013 at 12:12:28PM -0600, Alex Williamson wrote:
+> > > On Wed, 2013-07-24 at 10:47 -0600, Bjorn Helgaas wrote:
+> > > > On Tue, Jul 23, 2013 at 5:21 PM, Alex Williamson
+> > > > <alex.williamson@redhat.com> wrote:
+> > > > > On Tue, 2013-07-23 at 16:35 -0600, Bjorn Helgaas wrote:
+> > > > >> On Thu, Jul 11, 2013 at 03:03:27PM -0600, Alex Williamson wrote:
+> > > >   As the DMA
+> > > > transaction propagates through the fabric, it may be tagged by bridges
+> > > > with different requester IDs.
+> > > > 
+> > > > The requester IDs are needed outside PCI (by IOMMU drivers), but I'm
+> > > > not sure the intermediate pci_devs are.
+> > > 
+> > > A u16 requester ID doesn't mean much on it's own though, it's not
+> > > necessarily even unique.  A requester ID associated with the context of
+> > > a pci_dev is unique and gives us a reference point if we need to perform
+> > > another operation on that requester ID.
+> > 
+> > A u16 requester ID better mean something to an IOMMU -- it's all the
+> > IOMMU can use to look up the correct mapping.  That's why we have to
+> > give the iterator something to define the scope to iterate over.  The
+> > same requester ID could mean something totally unrelated in a
+> > different scope, e.g., below a different IOMMU.
+> 
+> The point I'm trying to make is that a requester ID depends on it's
+> context (minimally, the PCI segment).  The caller can assume the context
+> based on the calling parameters or we can provide context in the form of
+> an associated pci_dev.  I chose the latter path because I prefer
+> explicit interfaces and it has some usefulness in the intel-iommu
+> implementation.
+> 
+> For instance, get_domain_for_dev() first looks to see if a pci_dev
+> already has a domain.  If it doesn't, we want to look to see if there's
+> an upstream device that would use the same requester ID that already has
+> a domain.  If our get-requester-ID-for-device function returns only the
+> requester ID, we don't know if that requester ID is the device we're
+> searching from or some upstream device.  Therefore we potentially do an
+> unnecessary search for the domain.
+> 
+> The other user is intel_iommu_add_device() where we're trying to build
+> IOMMU groups.  Visibility is the first requirement of an IOMMU group.
+> If the IOMMU cannot distinguish between devices, they must be part of
+> the same IOMMU group.  Here we want to find the pci_dev that hosts the
+> requester ID.  I don't even know how we'd implement this with a function
+> that only returned the requester ID.  Perhaps we'd have to walk upstream
+> from the device calling the get-requester-ID-for-device function at each
+> step and noticing when it changed.  That moves significant logic back
+> into the caller code.
+> ...
 
-Signed-off-by: Sean Cross <xobs@kosagi.com>
----
- arch/arm/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
+> > I don't see the point of passing a "device closest to the requester
+> > ID."  What would the IOMMU do with that?  As far as the IOMMU is
+> > concerned, the requester ID could be an arbitrary number completely
+> > unrelated to a pci_dev.
+> 
+> Do you have an example of a case where a requester ID doesn't have some
+> association to a pci_dev?
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 136f263..2f51f13 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1418,6 +1418,8 @@ config PCI_HOST_ITE8152
- 
- source "drivers/pci/Kconfig"
- 
-+source "drivers/pci/pcie/Kconfig"
-+
- source "drivers/pcmcia/Kconfig"
- 
- endmenu
--- 
-1.7.9.5
+I think our confusion here is the same as what Don & I have been
+hashing out -- I'm saying a requester ID fabricated by a bridge
+need not correspond to a specific pci_dev, and you probably mean
+that every requester ID is by definition the result of *some* PCI
+device making a DMA request.
 
+> ...
+> Furthermore, if we have:
+> 
+>      -- A
+>     /
+> X--Y
+>     \
+>      -- B
+> ... 
+
+> Let me go back to the X-Y-A|B example above to see if I can explain why
+> pcie_for_each_requester_id() doesn't make sense to me.  Generally a
+> for_each_foo function should iterate across all things with the same
+> foo.  So a for_each_requester_id should iterate across all things with
+> the same requester ID.  
+
+Hm, that's not the way I think of for_each_FOO() interfaces.  I
+think of it as "execute the body (or callback) for every possible
+FOO", where FOO is different each time.  for_each_pci_dev(),
+pci_bus_for_each_resource(), for_each_zone(), for_each_cpu(), etc.,
+work like that.
+
+But the more important question is what arguments we give to the
+callback.  My proposal was to map
+
+  {pci_dev -> {requester-ID-A, requester-ID-B, ...}}
+
+Yours is to map
+
+  {pci_dev -> {{pci_dev-A, requester-ID-A}, {pci_dev-B, requester-ID-B}, ...}}
+
+i.e., your callback gets both a pci_dev and a requester-ID.  I'm
+trying to figure out how you handle cases where requester-id-A
+doesn't have a corresponding pci_dev-A.  I guess you pass the device
+most closely associated with requester-id-A
+
+The "most closely associated device" idea seems confusing to
+describe and think about.  I think you want to use it as part of
+grouping devices into domains.  But I think we should attack that
+problem separately.  For grouping or isolation questions, we have
+to pay attention to things like ACS, which are not relevant for
+mapping.
+
+> If we look at an endpoint device like A, only A
+> has A's requester ID.  Therefore, why would for_each_requester_id(A)
+> traverse up to Y?
+
+Even if A is a PCIe device, we have to traverse upwards to find any
+bridges that might drop A's requester ID or take ownership, e.g., if
+we have this:
+
+  00:1c.0 PCIe-to-PCI bridge to [bus 01-02]
+  01:00.0 PCI-to-PCIe bridge to [bus 02]
+  02:00.0 PCIe endpoint A
+
+the IOMMU has to look for requester-ID 0100.
+
+> Y can take ownership and become the requester for A,
+> but if we were to call for_each_requester_id(Y), wouldn't you expect the
+> callback to happen on {Y, A, B} since all of those can use that
+> requester ID?
+
+No.  If I call for_each_requester_id(Y), I'm expecting the callback
+to happen for each requester ID that could be used for transactions
+originated by *Y*.  I'm trying to make an IOMMU mapping for use by
+Y, so any devices downstream of Y, e.g., A and B, are irrelevant.
+
+I think a lot of the confusion here is because we're trying to solve
+both two questions at once: (1) what requester-IDs need to be mapped
+to handle DMA from a device, and (2) what devices can't be isolated
+from each other and must be in the same domain.  I think things will
+be simpler if we can deal with those separately.  Even if it ends up
+being more code, at least each piece will be easier to understand by
+itself.
+
+Bjorn
