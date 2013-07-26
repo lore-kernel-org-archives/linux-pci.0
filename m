@@ -1,210 +1,173 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51D8D5D7.3010701@gmail.com>
-Date: Sun, 07 Jul 2013 10:43:35 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:48008 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755891Ab3GZW2N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 18:28:13 -0400
+Received: by mail-oa0-f41.google.com with SMTP id n10so8830844oag.14
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 15:28:12 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Haicheng Li <haicheng.li@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Haicheng Li <haicheng.lee@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/3] PCI: Add hide_device support to pci subsystem.
-References: <1372864578-6925-1-git-send-email-haicheng.li@linux.intel.com> <CAErSpo5dR_2tUDFoFO49N3Ut569+6Cfosx8Q=91U_w-8mvFVkg@mail.gmail.com>
-In-Reply-To: <CAErSpo5dR_2tUDFoFO49N3Ut569+6Cfosx8Q=91U_w-8mvFVkg@mail.gmail.com>
+In-Reply-To: <1372677737-15485-1-git-send-email-vipul@chelsio.com>
+References: <1372677737-15485-1-git-send-email-vipul@chelsio.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 26 Jul 2013 16:27:51 -0600
+Message-ID: <CAErSpo7bxZKWqdR2MCOvz4=n_pO=u59KSsHZzJMBoN8qQ+E+Dw@mail.gmail.com>
+Subject: Re: [PATCH] pci: Enable bus master till the FLR completes
+To: Vipul Pandya <vipul@chelsio.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	leedom@chelsio.com, tomreu@chelsio.com, divy@chelsio.com,
+	dm@chelsio.com, nirranjan@chelsio.com
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/04/2013 12:09 AM, Bjorn Helgaas wrote:
-> On Wed, Jul 3, 2013 at 9:16 AM, Haicheng Li <haicheng.li@linux.intel.com> wrote:
->> With more and more SOCs having pci device integrated into chip (e.g. Intel
->> Atom series), it's useful to add an interface to cleanly hide pci devices from
->> pci device scanning, which is because:
->>
->> 1. phone or tablet OEMs may choose disabling some pci device in the SOC,
->>    such as camera ISP in Intel Atom Z2580 chip, and etc.
->> 2. if such disabled devices are not cleanly removed from pci device tree,
->>    then pci-core will still try to operate on the relative device control
->>    registers while S3 suspend and resume.
->> 3. so hiding such devices from early begining will not only reduce the kernel
->>    boot time, but also optimize the latency of system suspend and resume.
-> 
-> Normally the chip provides a way to disable devices by writing a
-> configuration register.  Then the device doesn't respond when Linux
-> enumerates devices, so nothing special is required in the kernel.
-> What's different about the Z2580?  I'd be surprised if Intel forgot to
-> include such a register.  Maybe the firmware just isn't smart enough
-> to disable the device?  If so, it would be better to fix the firmware
-> than to add kludges in the kernel.
-Agree, it would be great if chipset and firmware could cooperate to
-handle this issue. Otherwise the interface may be abused and causes
-trouble to PCI hotplug operations because the notation seg:bus:dev.func
-isn't reliable. The PCI bus number may reassigned by OS.
+On Mon, Jul 1, 2013 at 5:22 AM, Vipul Pandya <vipul@chelsio.com> wrote:
+> From: Casey Leedom <leedom@chelsio.com>
+>
+> T4 can wedge if there are DMAs in flight within the chip and Bus master has
+> been disabled.  We need to have it on till the Function Level Reset completes.
+> T4 can also suffer a Head Of Line blocking problem if MSI-X interrupts are
+> disabled before the FLR has completed.
+>
+> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+> ---
+>  drivers/pci/quirks.c | 91 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 91 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index e85d230..6357ba1 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3208,6 +3208,95 @@ reset_complete:
+>         return 0;
+>  }
+>
+> +/*
+> + * Device-specific reset method for Chelsio T4-based adapters.
+> + */
+> +static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+> +{
+> +       u16 old_command;
+> +       u16 status, msix_flags;
+> +       int i, rc, msix_pos;
+> +
+> +       /*
+> +        * If this isn't a Chelsio T4-based device, return -ENOTTY indicating
+> +        * that we have no device-specific reset method.
+> +        */
+> +       if ((dev->device & 0xf000) != 0x4000)
+> +               return -ENOTTY;
+> +
+> +       /*
+> +        * If this is the "probe" phase, return 0 indicating that we can
+> +        * reset this device.
+> +        */
+> +       if (probe)
+> +               return 0;
+> +
+> +       /*
+> +        * T4 can wedge if their are DMAs in flight within the chip and Bus
+> +        * master has been disabled.  We need to have it on till the Function
+> +        * Level Reset completes.
+> +        */
+> +       pci_read_config_word(dev, PCI_COMMAND, &old_command);
+> +       pci_write_config_word(dev, PCI_COMMAND,
+> +                             old_command | PCI_COMMAND_MASTER);
+> +
+> +       /*
+> +        * Perform the actual device function reset, saving and restoring
+> +        * configuration information around the reset.
+> +        */
+> +       pci_save_state(dev);
+> +
+> +       /*
+> +        * T4 also suffers a Head-Of-Line blocking problem if MSI-X interrupts
+> +        * are disabled when an MSI-X interrupt message needs to be delivered.
+> +        * So we briefly re-enable MSI-X interrupts for the duration of the
+> +        * FLR.  The pci_restore_state() below will restore the original
+> +        * MSI-X state.
+> +        */
+> +       msix_pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
 
-> 
->> To hide pci devices, just pass such parameters to kernel at boot stage:
->>         pci=hide=[<domain>:]<bus>:<slot>.<func>[; ...]
->>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: linux-pci@vger.kernel.org
->> Signed-off-by: Haicheng Li <haicheng.li@linux.intel.com>
->> ---
->>  drivers/pci/pci.c   |    2 ++
->>  drivers/pci/pci.h   |    2 ++
->>  drivers/pci/probe.c |   94 +++++++++++++++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 98 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index a899d8b..e228d00 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -3915,6 +3915,8 @@ static int __init pci_setup(char *str)
->>                                 pcie_bus_config = PCIE_BUS_PEER2PEER;
->>                         } else if (!strncmp(str, "pcie_scan_all", 13)) {
->>                                 pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
->> +                       } else if (!strncmp(str, "hide=", 5)) {
->> +                               pci_hide_devices(str + 5, strlen(str + 5));
->>                         } else {
->>                                 printk(KERN_ERR "PCI: Unknown option `%s'\n",
->>                                                 str);
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index d1182c4..783703a 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -317,4 +317,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->>  }
->>  #endif
->>
->> +void pci_hide_devices(const char *, size_t);
->> +
->>  #endif /* DRIVERS_PCI_H */
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 70f10fa..4223ef3 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -11,6 +11,7 @@
->>  #include <linux/cpumask.h>
->>  #include <linux/pci-aspm.h>
->>  #include <asm-generic/pci-bridge.h>
->> +#include <asm/setup.h>
->>  #include "pci.h"
->>
->>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
->> @@ -1352,10 +1353,103 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->>         pci_proc_attach_device(dev);
->>  }
->>
->> +static LIST_HEAD(pci_hidden_dev_list);
->> +struct pci_hidden_dev {
->> +       struct list_head list;
->> +       int domain_nr;
->> +       int devfn;
->> +       unsigned char bus_nr;
->> +};
->> +
->> +static void do_pci_hide_device(int domain_nr, unsigned char bus_nr, int devfn)
->> +{
->> +       struct pci_hidden_dev *d;
->> +
->> +       list_for_each_entry(d, &pci_hidden_dev_list, list)
->> +               if (devfn == d->devfn && bus_nr == d->bus_nr &&
->> +                               domain_nr == d->domain_nr)
->> +                       return;
->> +
->> +       d = kzalloc(sizeof(*d), GFP_KERNEL);
->> +       if (!d)
->> +               return;
->> +
->> +       d->domain_nr = domain_nr;
->> +       d->bus_nr = bus_nr;
->> +       d->devfn = devfn;
->> +
->> +       list_add_tail(&d->list, &pci_hidden_dev_list);
->> +}
->> +
->> +static bool init_hidden = true;
->> +
->> +#define PCI_HIDE_PARAM_SIZE COMMAND_LINE_SIZE
->> +static char pci_hide_param[PCI_HIDE_PARAM_SIZE] = {'\0'};
->> +
->> +static void parse_hidden_devices(void)
->> +{
->> +       char *p = pci_hide_param;
->> +       int seg, bus, slot, func, devfn, count;
->> +
->> +       /* parse pci.hide= command-line */
->> +       while (*p != '\0') {
->> +               count = 0;
->> +               if (sscanf(p, "%x:%x:%x.%x%n",
->> +                       &seg, &bus, &slot, &func, &count) != 4) {
->> +                       seg = 0;
->> +                       if (sscanf(p, "%x:%x.%x%n",
->> +                                       &bus, &slot, &func, &count) != 3) {
->> +                               /* Invalid format */
->> +                               printk(KERN_ERR "PCI: Can't parse "
->> +                                               "hide parameter: %s\n", p);
->> +                               break;
->> +                       }
->> +               }
->> +               p += count;
->> +               devfn = (slot << 3) | func;
->> +
->> +               do_pci_hide_device(seg, bus, devfn);
->> +               if (*p != ';') {
->> +                       /* End of param or invalid format */
->> +                       break;
->> +               }
->> +               p++;
->> +       }
->> +       init_hidden = false;
->> +}
->> +
->> +static bool is_device_hidden(struct pci_bus *bus, int devfn)
->> +{
->> +       struct pci_hidden_dev *d;
->> +
->> +       if (unlikely(init_hidden))
->> +               parse_hidden_devices();
->> +
->> +       list_for_each_entry(d, &pci_hidden_dev_list, list)
->> +               if (d->devfn == devfn && d->bus_nr == bus->number &&
->> +                               d->domain_nr == pci_domain_nr(bus))
->> +                       return true;
->> +
->> +       return false;
->> +}
->> +
->> +void pci_hide_devices(const char *str, size_t count)
->> +{
->> +       if (!str)
->> +               return;
->> +       if (count > PCI_HIDE_PARAM_SIZE - 1)
->> +               count = PCI_HIDE_PARAM_SIZE - 1;
->> +       strncpy(pci_hide_param, str, count);
->> +       pci_hide_param[count] = '\0';
->> +}
->> +
->>  struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
->>  {
->>         struct pci_dev *dev;
->>
->> +       if (unlikely(is_device_hidden(bus, devfn)))
->> +               return NULL;
->> +
->>         dev = pci_get_slot(bus, devfn);
->>         if (dev) {
->>                 pci_dev_put(dev);
->> --
->> 1.7.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+dev->msix_cap contains the capability offset already.
+
+> +       pci_read_config_word(dev, msix_pos+PCI_MSIX_FLAGS, &msix_flags);
+> +       if ((msix_flags & PCI_MSIX_FLAGS_ENABLE) == 0)
+> +               pci_write_config_word(dev, msix_pos+PCI_MSIX_FLAGS,
+> +                                     msix_flags |
+> +                                     PCI_MSIX_FLAGS_ENABLE |
+> +                                     PCI_MSIX_FLAGS_MASKALL);
+> +
+> +       /*
+> +        * This reset code is a copy of the guts of pcie_flr() because that's
+> +        * not an exported function.
+> +        */
+> +
+> +       /* Wait for Transaction Pending bit clean */
+> +       for (i = 0; i < 4; i++) {
+> +               if (i)
+> +                       msleep((1 << (i - 1)) * 100);
+> +
+> +               pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
+> +               if (!(status & PCI_EXP_DEVSTA_TRPND))
+> +                       goto clear;
+> +       }
+
+This is at least the fifth copy of this loop:
+
+  pcie_flr()
+  pci_af_flr()
+  bnx2x_do_flr()
+  reset_intel_82599_sfp_virtfn()
+
+Can we factor this out and just implement it once?  Maybe even make it
+smart enough to look at the PCIe DEVSTA if it exists, and fall back to
+using PCI_AF_STATUS register if *it* exists?
+
+> +
+> +       dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+> +
+> +clear:
+> +       pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+> +       msleep(100);
+> +
+> +       /*
+> +        * End of pcie_flr() code sequence.
+> +        */
+> +
+> +       rc = 0;
+> +       pci_restore_state(dev);
+> +
+> +       /*
+> +        * Restore the original PCI Configuration Space Command word (which
+> +        * probably had Bus Master disabled).
+
+Why was Bus Master probably originally disabled?  I don't see anything
+in the pci_reset_function() path that would have disabled it before
+getting to this function.
+
+But I don't think you need the comment anyway.  "Probably had Bus
+Master disabled" isn't anything one can rely on.
+
+> +        */
+> +       pci_write_config_word(dev, PCI_COMMAND, old_command);
+> +       return rc;
+
+"rc" appears useless.
+
+> +}
+> +
+>  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+>  #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+>  #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+> @@ -3221,6 +3310,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>                 reset_ivb_igd },
+>         { PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+>                 reset_intel_generic_dev },
+> +       { PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+> +               reset_chelsio_generic_dev },
+>         { 0 }
+>  };
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-
+> 1.8.0
+>
