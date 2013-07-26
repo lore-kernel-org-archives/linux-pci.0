@@ -1,61 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1375230992.31262.87.camel@ul30vt.home>
-Subject: Re: Linux Plumbers ACPI/PM, PCI Microconference
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Shuah Khan <shuah.kh@samsung.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Shuah Khan <shuahkhan@gmail.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"virtualization@lists.linux-foundation.org"
-	<virtualization@lists.linux-foundation.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Tue, 30 Jul 2013 18:36:32 -0600
-In-Reply-To: <B8EFE96D1287C24090BAD9D858E15E6174F0B5@sisaex01sj>
-References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
-	 <CAKocOOOgEb5h1dZWP_2UqBKhSK9U-kxKUbvTdzHfds=RiDzNJg@mail.gmail.com>
-	 <1476124.sWE2ygoo2D@vostro.rjw.lan>
-	 <B8EFE96D1287C24090BAD9D858E15E6174F0B5@sisaex01sj>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:52557 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757607Ab3GZXL0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 19:11:26 -0400
+Date: Fri, 26 Jul 2013 16:11:24 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ian Abbott <abbotti@mev.co.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-serial@vger.kernel.org,
+	driverdev-devel@linuxdriverproject.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	H Hartley Sweeten <hsweeten@visionengravers.com>
+Subject: Re: [PATCH 0/4] pci_ids, 8250_pci: remove PCI_VENDOR_ID_ADDIDATA_OLD
+Message-ID: <20130726231124.GA10464@kroah.com>
+References: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
+ <CAErSpo4daNsF0BTJhqdZ0hrBpS+EQ3Z1_-C_LN=ec9fLafNkog@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4daNsF0BTJhqdZ0hrBpS+EQ3Z1_-C_LN=ec9fLafNkog@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-07-31 at 00:02 +0000, Shuah Khan wrote:
-> On 07/30/2013 05:38 PM, Rafael J. Wysocki wrote:
-> > On Wednesday, July 17, 2013 08:31:55 AM Shuah Khan wrote:
-> >> Myron,
-> >>
-> >> On Tue, Jul 16, 2013 at 8:21 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
-> >>
-> >>>
-> >>> Shuah - You brought up the idea about "Converting drivers from Legacy
-> >>> PM ops to dev_pm_ops"; would you like to present what you have
-> >>> done/encountered so far?
-> >>>
-> >>
-> >> Awesome. Yes, I would like to present what I have done so far and I do
-> >> have a couple of things that could benefit from a face to face
-> >> discussion which would help me make progress on the rest of the work
-> >> that needs to get done.
+On Fri, Jul 19, 2013 at 03:37:26PM -0600, Bjorn Helgaas wrote:
+> On Tue, Jul 16, 2013 at 9:14 AM, Ian Abbott <abbotti@mev.co.uk> wrote:
+> > The 8250_pci driver uses PCI_VENDOR_ID_ADDIDATA_OLD (0x10e8),
+> > PCI_DEVICE_ID_ADDIDATA_APCI7800 (0x818e) to recognize the original
+> > ADDI-DATA APCI-7800 PCI serial card.  However vendor ID 0x10e8 was
+> > assigned by PCI-SIG to Applied Micro Circuits Corporation (AMCC) and the
+> > associated device ID 0x818e was assigned by AMCC to ADDI-DATA.
 > >
-> > Care to sumbit a formal proposal through the LPC web page?
+> > Comedi already defines PCI_VENDOR_ID_AMCC as 0x10e8 in one of its header
+> > files, so that definition can be moved into pci_ids.h and the 8250_pci
+> > driver changed to use it.  The PCI_DEVICE_ID_ADDIDATA_APCI7800 define
+> > seems out of place in pci_ids.h since it isn't associated with
+> > ADDI-DATA's vendor ID but with AMCC's vendor ID.  It's only used in
+> > 8250_pci.c so it can be moved there and renamed to something more
+> > sensible.
 > >
-> > Rafael
+> > 1) pci_ids.h: move PCI_VENDOR_ID_AMCC here
+> > 2) serial: 8250_pci: replace PCI_VENDOR_ID_ADDIDATA_OLD
+> > 3) serial: 8250_pci: use local device ID for ADDI-DATA APCI-7800
+> > 4) pci_ids.h: remove PCI_VENDOR_ID_ADDIDATA_OLD and
+> >    PCI_DEVICE_ID_ADDIDATA_APCI7800
 > >
-> >
+> >  drivers/staging/comedi/comedidev.h | 1 -
+> >  drivers/tty/serial/8250/8250_pci.c | 9 +++++----
+> >  include/linux/pci_ids.h            | 4 ++--
+> >  3 files changed, 7 insertions(+), 7 deletions(-)
 > 
-> Rafael,
+> For patches 1 & 4 (the ones that touch pci_ids.h):
 > 
-> I did submit a formal talk proposal to LinuxCon/LPC and it was rejected. 
-> Submission is closed now as far as I know.
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Please merge them along with the 8250 changes.
 
-Microconference topics should be submitted here:
+Thanks, will do.
 
-http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/proposals/new
-
+greg k-h
