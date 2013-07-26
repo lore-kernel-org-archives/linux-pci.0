@@ -1,83 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26678 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750772Ab3GBKlO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jul 2013 06:41:14 -0400
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	x86@kernel.org
-In-Reply-To: <1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com>
-Subject: RE: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the
- hierarhcy
-Message-Id: <20130702104406.4473EE0090@blue.fi.intel.com>
-Date: Tue,  2 Jul 2013 13:44:06 +0300 (EEST)
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:56720 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758935Ab3GZRkA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 13:40:00 -0400
+Received: by mail-ob0-f177.google.com with SMTP id ta17so4810199obb.22
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 10:40:00 -0700 (PDT)
+Date: Fri, 26 Jul 2013 11:39:56 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: ethan zhao <ethan.zhao@oracle.com>
+Cc: jbarnes@virtuousgeek.org, yinghai@kernel.org,
+	linux-kernel@vger.kernel.org, ethan.kernel@gmail.com,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: MMCONFIG: cleanup and add address warning to
+ pci_mmconfig_insert
+Message-ID: <20130726173956.GA14078@google.com>
+References: <51F23D0F.7090909@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <51F23D0F.7090909@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mika Westerberg wrote:
-> The acpiphp driver finds out whether the device is hotpluggable by checking
-> whether it has _RMV method behind it (and if it returns 1). However, at
-> least Acer Aspire S5 with Thunderbolt host router has this method placed
-> behind device called EPUP (endpoint upstream port?) and not directly behind
-> the root port as can be seen from the ASL code below:
+[+cc Jiang, linux-pci, -cc bjorn.helgaas@hp.com (dead address)]
+
+On Fri, Jul 26, 2013 at 05:10:39PM +0800, ethan zhao wrote:
+> Cleanup the -EINVAL return value handling and add warning message
+> for invalid
+> start,end,addr parameters.
 > 
-> Device (RP05)
-> {
-> 	...
-> 	Device (HRUP)
-> 	{
-> 		Name (_ADR, Zero)
-> 		Name (_PRW, Package (0x02)
-> 		{
-> 			0x09,
-> 			0x04
-> 		})
-> 		Device (HRDN)
-> 		{
-> 			Name (_ADR, 0x00040000)
-> 			Name (_PRW, Package (0x02)
-> 			{
-> 				0x09,
-> 				0x04
-> 			})
-> 			Device (EPUP)
-> 			{
-> 				Name (_ADR, Zero)
-> 				Method (_RMV, 0, NotSerialized)
-> 				{
-> 					Return (One)
-> 				}
-> 			}
-> 		}
-> 	}
+> Signed-off-by: ethan.zhao <ethan.zhao@oracle.com>
+
+This patch was corrupted, so I couldn't apply it directly.  See
+Documentation/SubmittingPatches, sections 5-7.
+
+> ---
+>  arch/x86/pci/mmconfig-shared.c |   12 ++++++------
+>  1 files changed, 6 insertions(+), 6 deletions(-)
 > 
-> If we want to support such machines we must look for the _RMV method a bit
-> deeper in the hierarchy. Fix this by changing pcihp_is_ejectable() to check
-> few more devices down from the root port.
+> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+> index 082e881..37f6c7f 100644
+> --- a/arch/x86/pci/mmconfig-shared.c
+> +++ b/arch/x86/pci/mmconfig-shared.c
+> @@ -700,8 +700,13 @@ int pci_mmconfig_insert(struct device *dev, u16
+> seg, u8 start, u8 end,
+>      if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
+>          return -ENODEV;
+> 
+> -    if (start > end)
+> +    if (start > end || !addr) {
+> +        dev_warn(dev, FW_WARN
+> +                                 "Invalid address to add MMCONFIG"
+> +                                 "start %02x end %02x addr %pR\n",
+> +                                  start, end, addr);
+>          return -EINVAL;
+> +    }
 
-We found that this approach is broken. We've got false positive: host
-bridge itself was detected as hotplugable slot %) I think it's not
-acceptable.
+I like the "!addr" cleanup.
 
-Mika has tried few more approaches, but we haven't found anything better
-then hardcoded path like in original workaround patch[1]. It's not generic
-at all, but safe from false positives.
+Did you actually see this problem on a machine?
 
-Any thoughts?
+I expect this would be a BIOS bug, and one that should be found
+early in development, long before a machine is released.
+Therefore, I doubt that it's worth adding another printk for it.
+If an end-user sees this problem, I think we'll already get a
+generic message from check_segment().
 
-[1] http://article.gmane.org/gmane.linux.kernel.pci/19102
+I propose the patch below; what do you think?
 
--- 
- Kirill A. Shutemov
+> 
+>      mutex_lock(&pci_mmcfg_lock);
+>      cfg = pci_mmconfig_lookup(seg, start);
+> @@ -716,11 +721,6 @@ int pci_mmconfig_insert(struct device *dev, u16
+> seg, u8 start, u8 end,
+>          return -EEXIST;
+>      }
+> 
+> -    if (!addr) {
+> -        mutex_unlock(&pci_mmcfg_lock);
+> -        return -EINVAL;
+> -    }
+> -
+>      rc = -EBUSY;
+>      cfg = pci_mmconfig_alloc(seg, start, end, addr);
+>      if (cfg == NULL) {
+
+
+
+Author: ethan.zhao <ethan.zhao@oracle.com>
+Date:   Fri Jul 26 11:21:24 2013 -0600
+
+    x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero
+    
+    We can check for addr being zero earlier and thus avoid the mutex_unlock()
+    cleanup path.
+    
+    [bhelgaas: changelog, drop printk]
+    Signed-off-by: ethan.zhao <ethan.zhao@oracle.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Yinghai Lu <yinghai@kerne.org>
+
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 082e881..5596c7b 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -700,7 +700,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
+ 		return -ENODEV;
+ 
+-	if (start > end)
++	if (start > end || !addr)
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&pci_mmcfg_lock);
+@@ -716,11 +716,6 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 		return -EEXIST;
+ 	}
+ 
+-	if (!addr) {
+-		mutex_unlock(&pci_mmcfg_lock);
+-		return -EINVAL;
+-	}
+-
+ 	rc = -EBUSY;
+ 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
+ 	if (cfg == NULL) {
