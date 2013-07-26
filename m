@@ -1,72 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:24510 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756827Ab3GLAAa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 20:00:30 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kishon Vijay Abraham I' <kishon@ti.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>
-References: <001201ce7dfa$716b3370$54419a50$@samsung.com>
- <51DE72CC.9050001@ti.com>
-In-reply-to: <51DE72CC.9050001@ti.com>
-Subject: Re: [PATCH V2] pci: exynos: split into two parts such as Synopsys part
- and Exynos part
-Date: Fri, 12 Jul 2013 09:00:28 +0900
-Message-id: <001301ce7e92$d19a04e0$74ce0ea0$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:60485 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759947Ab3GZWFw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 18:05:52 -0400
+Received: by mail-ob0-f179.google.com with SMTP id xk17so5259247obc.24
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 15:05:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <51EF516F.6010102@huawei.com>
+References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
+ <1374261258-23036-2-git-send-email-yinghai@kernel.org> <CAErSpo78DU3bPwkVOt=1XD08y9iD38+wUOp2+GVxO7P68TOOjg@mail.gmail.com>
+ <CAE9FiQUyVUssJx8eZK9kabS99CD6ry-UnJ9q1-q+f53Fx+tjng@mail.gmail.com>
+ <20130723155645.GA18422@google.com> <CAE9FiQUQirapRONeb1ndOoKsiYviyXJVx3wZTcgzJj7bHX-1xQ@mail.gmail.com>
+ <51EF516F.6010102@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 26 Jul 2013 16:05:31 -0600
+Message-ID: <CAErSpo7C2jG+MwLd-1JhrGbn0WJWpMKrAvG22mK0-M4k5QH94w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Separate stop and remove devices in pciehp
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 11, 2013 5:55 PM, Kishon Vijay Abraham I wrote:
-> On Thursday 11 July 2013 11:19 AM, Jingoo Han wrote:
-> > Exynos PCIe IP consists of Synopsys specific part and Exynos
-> > specific part. Only core block is a Synopsys designware part;
-> > other parts are Exynos specific.
-> > Also, the Synopsys designware part can be shared with other
-> > platforms; thus, it can be split two parts such as Synopsys
-> > designware part and Exynos specific part.
-> >
-> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Pratyush Anand <pratyush.anand@st.com>
-> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> > ---
-> .
-> .
-> <snip>
-> .
-> .
-> > +
-> > +/* Exynos PCIe driver does not allow module unload */
-> 
-> Just curious, why is this restriction?
+On Tue, Jul 23, 2013 at 10:00 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Hi Yinghai,
+>    The third patch make pci_stop_dev call pci_disable_sriov(dev).
+> It looks asymmetrical, because pci_enable_sriov(dev, NR_VIRTFN) always
+> be called by device driver. Why not work around this in device driver like ixgbe?
+> I'm not familiar with SRIOV, so I'm just a bit puzzled.
+>
+> Thanks!
+> Yijing.
+>
+> ------------------------------------------------------------
+> Some driver (like ixgbe) does not call pci_disable_sriov() if
+> sriov is enabled via /sys/.../sriov_numvfs setting.
+> ixgbe does allow driver for PF get detached, but still have VFs
+> around.
+>
+> But how about PF get removed via /sys or pciehp finally?
+>
+> During hot-remove, VF will still hold one ref to PF and it
+> prevent PF to be removed.
+> That make the next hot-add fails, as old PF dev struct is still around.
+>
+> We need to add pci_disable_sriov() calling during stop PF .
+>
+> Need this one for v3.11
+>
+> -v2: Accoring to Bjorn, move that calling to pci_stop_dev.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Jiang Liu <liuj97@gmail.com>
+> Cc: Alexander Duyck <alexander.h.duyck@intel.com>
+> Cc: Donald Dutile <ddutile@redhat.com>
+> Cc: Greg Rose <gregory.v.rose@intel.com>
+>
+> ---
+>  drivers/pci/remove.c |    2 ++
+>  1 file changed, 2 insertions(+)
+>
+> Index: linux-2.6/drivers/pci/remove.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/remove.c
+> +++ linux-2.6/drivers/pci/remove.c
+> @@ -25,6 +25,8 @@ static void pci_stop_dev(struct pci_dev
+>                 pci_proc_detach_device(dev);
+>                 pci_remove_sysfs_dev_files(dev);
+>                 device_del(&dev->dev);
+> +               /* remove VF, if PF driver skip that */
+> +               pci_disable_sriov(dev);
+>                 dev->is_added = 0;
+>         }
 
-CC'ed Thierry Reding,
+Can you post these as a new thread with -v2 patches?
 
-Hi Kishon,
-
-That's a good question.
-
-Now, we don't have the solution to "be able to load and unload
-the PCI host driver in a loop definitely without crashing or exposing
-any races  or leaks", as Arnd Bergmann said.
-Please refer to the following thread in mailing-list.
-(http://archive.arm.linux.org.uk/lurker/message/20130614.123849.4ff363c5.pl.html)
-
-Thus, Exynos PCIe did not support unloading module.
-(http://archive.arm.linux.org.uk/lurker/message/20130614.125338.7d2bbf62.pl.html)
-
-Best regards,
-Jingoo Han
-
-
+Why did you put pci_disable_sriov() inside the "if (dev->is_added)"
+block?  Is it related to is_added?
