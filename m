@@ -1,142 +1,214 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59468 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754572Ab3GKWSU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Jul 2013 18:18:20 -0400
-Message-ID: <51DEF6DD.1070406@redhat.com>
-Date: Thu, 11 Jul 2013 14:18:05 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH -v2 1/3] PCI: introduce PCIe Device Serial Number Capability
- support
-References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com> <1373535825-49972-2-git-send-email-wangyijing@huawei.com> <51DE8032.4040808@redhat.com> <CAErSpo50ni41TiscZDVpg8wMFK2wgWmS1sySfNTs8X9JA7Mmkw@mail.gmail.com>
-In-Reply-To: <CAErSpo50ni41TiscZDVpg8wMFK2wgWmS1sySfNTs8X9JA7Mmkw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Rui Wang <ruiv.wang@gmail.com>
+To: bhelgaas@google.com
+Cc: tony.luck@intel.com, chaohong.guo@intel.com,
+	gong.chen@linux.intel.com, rafael.j.wysocki@intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Rui Wang <rui.y.wang@intel.com>
+Subject: [RFC 2/3] IO Hook: kernel interface to manage the hook
+Date: Fri, 26 Jul 2013 14:51:14 +0800
+Message-Id: <1374821475-3196-3-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1374821475-3196-1-git-send-email-rui.y.wang@intel.com>
+References: <1374821475-3196-1-git-send-email-rui.y.wang@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/11/2013 04:09 PM, Bjorn Helgaas wrote:
-> On Thu, Jul 11, 2013 at 3:51 AM, Don Dutile<ddutile@redhat.com>  wrote:
->> On 07/11/2013 05:43 AM, Yijing Wang wrote:
->>>
->>> Introduce PCIe Ext Capability Device Serial Number support,
->>> so we can use the unique device serial number to identify
->>> the physical device. During system suspend, if the PCIe
->>> device was removed and inserted a new same device, after
->>> system resume there is no good way to identify it, maybe
->>> Device Serial Number is a good choice if device support.
->>>
->>> Signed-off-by: Yijing Wang<wangyijing@huawei.com>
->>> ---
->>>    drivers/pci/pci.c   |   27 +++++++++++++++++++++++++++
->>>    drivers/pci/probe.c |    2 ++
->>>    include/linux/pci.h |    3 +++
->>>    3 files changed, 32 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index e37fea6..2e855b5 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -2048,6 +2048,33 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
->>>    }
->>>
->>>    /**
->>> + * pci_device_serial_number - get device serial number
->>> + * @dev: the PCI device
->>> + *
->>> + * return the device serial number if device support,
->>> + * otherwise return 0.
->>> + */
->>> +u64 pci_device_serial_number(struct pci_dev *dev)
->>
->> See comment below:
->> void  pci_device_serial_number(struct pci_dev *dev)
->>
->>
->>> +{
->>> +       int pos;
->>> +       u64 sn;
->>> +       u32 lo, hi;
->>> +
->>> +       if (!pci_is_pcie(dev))
->>> +               return 0;
->>> +
->>
->> See comment below:
->> if (!pci_is_pcie(dev)) {
->>          dev->sn = 0;
->>          return;
->>
->> }
->>>
->>> +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
->>> +       if (!pos)
->>> +               return 0;
->>> +
->>> +       pci_read_config_dword(dev, pos + 4,&lo);
->>> +       pci_read_config_dword(dev, pos + 8,&hi);
->>> +       sn = ((u64)hi<<   32) | lo;
->>
->> See comment below:
->>          dev->sn = ((u64)hi<<   32) | lo;
->>          return;
->>
->>> +       return sn;
->>> +}
->>> +EXPORT_SYMBOL(pci_device_serial_number);
->>> +
->>> +/**
->>>     * pci_configure_ari - enable or disable ARI forwarding
->>>     * @dev: the PCI device
->>>     *
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> index 46ada5c..c4c1a2b 100644
->>> --- a/drivers/pci/probe.c
->>> +++ b/drivers/pci/probe.c
->>> @@ -1322,6 +1322,8 @@ static void pci_init_capabilities(struct pci_dev
->>> *dev)
->>>          /* Power Management */
->>>          pci_pm_init(dev);
->>>
->>> +       dev->sn = pci_device_serial_number(dev);
->>> +
->>
->> Finally, 'the comment below':
->> I know you were following Bjorn's suggestion, which I thought
->> was an improvement, but why not do above assignment in
->> pci_device_serial_number() ?
->> See above....
->
-> pci_device_serial_number() would then have the side-effect of saving
-> the result somewhere, and callers would have to know where to look.
-Ah, like so many other features of a PCI device?  -- what are all those
-flags/status bits in pdev for ??? ;-)
+The following kernel functions are exported:
+	hook_add_ovrd
+	hook_query_ovrd
+	hook_cleanup_ovrd
+	hook_start_ovrd
+	hook_stop_ovrd
+	hook_get_status
+Kernel modules can use them to add/delete/query Register Overrides, and
+to start/stop the hook engine.
 
-> Personally, I think it's simpler to return the serial number directly
-> and avoid the side-effect, but maybe this is just bike-shedding.
->
-What struck me about rtning a value is in pci_init_capabilities(),
-it was the only function with a rtn value that had to be put into a pci_dev 
-struct element,
-while all the others stored their related capabilities in the pdev, or other struct
-related to it.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/pci/access.c     |  150 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/reg_ovrd.h |    9 +++
+ 2 files changed, 159 insertions(+), 0 deletions(-)
 
-So, maybe there should be a "pci_device_serial_number_init()" function
-which does the storage in the pdev struct, and another (wrapper,
-dare I shoot myself, inline)  that is "pci_device_serial_number()" that returns
-the value of the pdev's sn element, if another module or other core component
-want to get it. .... and do that in a future patch... :-/
-
-> As long as we are bike-shedding, I'd just drop "sn" and do:
->
->      return ((u64)hi<<  32) | lo;
->
-> And of course, you need spaces before "&hi" and "&lo" in the
-> pci_read_config_dword() calls.
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index fe7b282..81428655 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -27,6 +27,156 @@ LIST_HEAD(ovrd_pci_conf_reg_map);
+ struct static_key ovrdhw_enabled = STATIC_KEY_INIT_FALSE;
+ EXPORT_SYMBOL(ovrdhw_enabled);
+ 
++int	g_ovrd_on;
++/* query a Register Override given spaceid and index */
++struct reg_ovrd *hook_query_ovrd(int spaceid, int idx)
++{
++	struct list_head *reg_ovrd;
++	struct reg_ovrd *ovrdreg, *regentry;
++	unsigned long lock_flags = 0;
++	int n = 0;
++
++	if (spaceid == OVRD_SPACE_MEM)
++		reg_ovrd = &ovrd_mem_reg_map;
++	else if (spaceid == OVRD_SPACE_IO)
++		reg_ovrd = &ovrd_io_reg_map;
++	else
++		reg_ovrd = &ovrd_pci_conf_reg_map;
++
++	regentry = NULL;
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	list_for_each_entry(ovrdreg, reg_ovrd, node) {
++		if (n++ >= idx) {
++			regentry = ovrdreg;
++			break;
++		}
++	}
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++	pr_info("hook_query_ovrd() returns %p, idx=%d\n",
++		regentry, idx);
++	return regentry;
++
++}
++EXPORT_SYMBOL(hook_query_ovrd);
++
++/* delete all Register Overrides from one space (IO/mem/pciconf) */
++void hook_cleanup_ovrd(int spaceid)
++{
++	struct list_head *tmp, *next, *ovrd_list;
++
++	if (spaceid == OVRD_SPACE_MEM)
++		ovrd_list = &ovrd_mem_reg_map;
++	else if (spaceid == OVRD_SPACE_IO)
++		ovrd_list = &ovrd_io_reg_map;
++	else
++		ovrd_list = &ovrd_pci_conf_reg_map;
++
++	list_for_each_safe(tmp, next, ovrd_list) {
++		struct reg_ovrd *ovrdreg =
++		    list_entry(tmp, struct reg_ovrd, node);
++		list_del(tmp);
++		kfree(ovrdreg);
++	}
++}
++EXPORT_SYMBOL(hook_cleanup_ovrd);
++
++/* for pci config space, address is encoded per PCI_ENCODE_ADDR() */
++void hook_add_ovrd(int spaceid, u64 address, u64 value, u64 mask,
++		u32 length, u8 attrib)
++{
++	struct list_head *reg_ovrd;
++	struct reg_ovrd *ovrdreg;
++	unsigned long lock_flags = 0;
++
++	if (spaceid == OVRD_SPACE_MEM)
++		reg_ovrd = &ovrd_mem_reg_map;
++	else if (spaceid == OVRD_SPACE_IO)
++		reg_ovrd = &ovrd_io_reg_map;
++	else
++		reg_ovrd = &ovrd_pci_conf_reg_map;
++
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	list_for_each_entry(ovrdreg, reg_ovrd, node) {
++		if (ovrdreg->address == address &&
++			ovrdreg->attrib == attrib &&
++			ovrdreg->length == length) {
++			/* if already added the address, just change the bits */
++			ovrdreg->bit_mask |= mask;
++			ovrdreg->val |= value;
++			pr_info("hook_add_ovrd(): 0x%llx already added, changed to 0x%llx, mask:0x%llx, attrib:0x%x\n",
++				address, ovrdreg->val, ovrdreg->bit_mask,
++				attrib);
++			goto out;
++		} else if (address >= ovrdreg->address &&
++			address < ovrdreg->address + ovrdreg->length) {
++			pr_info("hook_add_ovrd(): conflicting reg at 0x%llx, length:%llx, mask:0x%llx, attrib:0x%x\n",
++				address, ovrdreg->val, ovrdreg->bit_mask,
++				attrib);
++			goto out;
++		}
++	}
++
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++	ovrdreg = kmalloc(sizeof(struct reg_ovrd), GFP_ATOMIC);
++	if (!ovrdreg) {
++		pr_info("failed to alloc Reg Override!\n");
++		return;
++	}
++
++	ovrdreg->address = address;
++	ovrdreg->val = value;
++	ovrdreg->length = length;
++	ovrdreg->bit_mask = mask;
++	ovrdreg->attrib = attrib;
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	list_add_tail(&ovrdreg->node, reg_ovrd);
++out:
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++}
++EXPORT_SYMBOL(hook_add_ovrd);
++
++/* to start the hook */
++void hook_start_ovrd(void)
++{
++	unsigned long lock_flags = 0;
++
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	if (g_ovrd_on)
++		goto done;
++
++	static_key_slow_inc(&ovrdhw_enabled);
++	g_ovrd_on = 1;
++done:
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++}
++EXPORT_SYMBOL(hook_start_ovrd);
++
++/* to stop the hook */
++void hook_stop_ovrd(void)
++{
++	unsigned long lock_flags = 0;
++
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	if (!g_ovrd_on)
++		goto done;
++	g_ovrd_on = 0;
++	static_key_slow_dec(&ovrdhw_enabled);
++done:
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++}
++EXPORT_SYMBOL(hook_stop_ovrd);
++
++int hook_get_status()
++{
++	return g_ovrd_on;
++}
++EXPORT_SYMBOL(hook_get_status);
++
+ /* len should only be 1, 2, 4, 8 */
+ static int mem_read(u64 address, int len, void *data)
+ {
+diff --git a/include/linux/reg_ovrd.h b/include/linux/reg_ovrd.h
+index 5f851fe..7a81b58 100644
+--- a/include/linux/reg_ovrd.h
++++ b/include/linux/reg_ovrd.h
+@@ -42,5 +42,14 @@ struct reg_ovrd {
+ #define PCI_DECODE_BUSN(x)	((u8)(((x) >> 20) & 0xff))
+ #define PCI_DECODE_DOMAIN(x)	((u32)((x) >> 32))
+ 
++#ifdef CONFIG_IO_HOOK
++void hook_add_ovrd(int spaceid, u64 address, u64 value, u64 mask,
++		u32 length, u8 attrib);
++struct reg_ovrd *hook_query_ovrd(int spaceid, int idx);
++void hook_cleanup_ovrd(int spaceid);
++void hook_start_ovrd(void);
++void hook_stop_ovrd(void);
++int hook_get_status(void);
++#endif /* CONFIG_IO_HOOK */
+ 
+ #endif			/* __REG_OVRD_H__ */
+-- 
+1.7.5.4
 
