@@ -1,96 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:64580 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751848Ab3G0Oa6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Jul 2013 10:30:58 -0400
-Received: by mail-ob0-f176.google.com with SMTP id v19so6481879obq.35
-        for <linux-pci@vger.kernel.org>; Sat, 27 Jul 2013 07:30:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7C2jG+MwLd-1JhrGbn0WJWpMKrAvG22mK0-M4k5QH94w@mail.gmail.com>
-References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
-	<1374261258-23036-2-git-send-email-yinghai@kernel.org>
-	<CAErSpo78DU3bPwkVOt=1XD08y9iD38+wUOp2+GVxO7P68TOOjg@mail.gmail.com>
-	<CAE9FiQUyVUssJx8eZK9kabS99CD6ry-UnJ9q1-q+f53Fx+tjng@mail.gmail.com>
-	<20130723155645.GA18422@google.com>
-	<CAE9FiQUQirapRONeb1ndOoKsiYviyXJVx3wZTcgzJj7bHX-1xQ@mail.gmail.com>
-	<51EF516F.6010102@huawei.com>
-	<CAErSpo7C2jG+MwLd-1JhrGbn0WJWpMKrAvG22mK0-M4k5QH94w@mail.gmail.com>
-Date: Sat, 27 Jul 2013 07:30:57 -0700
-Message-ID: <CAE9FiQVNxtUUjAPmjR-6ycA5zevXaPT2=Ok6z1Jb5Gqsynf0hQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Separate stop and remove devices in pciehp
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:51852 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752595Ab3GZG4P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 02:56:15 -0400
+From: Rui Wang <ruiv.wang@gmail.com>
+To: bhelgaas@google.com
+Cc: tony.luck@intel.com, chaohong.guo@intel.com,
+	gong.chen@linux.intel.com, rafael.j.wysocki@intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Rui Wang <rui.y.wang@intel.com>
+Subject: [RFC 0/3] IO Hook: Method for emulating h/w events
+Date: Fri, 26 Jul 2013 14:51:12 +0800
+Message-Id: <1374821475-3196-1-git-send-email-rui.y.wang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 3:05 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Jul 23, 2013 at 10:00 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Hi Yinghai,
->>    The third patch make pci_stop_dev call pci_disable_sriov(dev).
->> It looks asymmetrical, because pci_enable_sriov(dev, NR_VIRTFN) always
->> be called by device driver. Why not work around this in device driver like ixgbe?
->> I'm not familiar with SRIOV, so I'm just a bit puzzled.
->>
->> Thanks!
->> Yijing.
->>
->> ------------------------------------------------------------
->> Some driver (like ixgbe) does not call pci_disable_sriov() if
->> sriov is enabled via /sys/.../sriov_numvfs setting.
->> ixgbe does allow driver for PF get detached, but still have VFs
->> around.
->>
->> But how about PF get removed via /sys or pciehp finally?
->>
->> During hot-remove, VF will still hold one ref to PF and it
->> prevent PF to be removed.
->> That make the next hot-add fails, as old PF dev struct is still around.
->>
->> We need to add pci_disable_sriov() calling during stop PF .
->>
->> Need this one for v3.11
->>
->> -v2: Accoring to Bjorn, move that calling to pci_stop_dev.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Jiang Liu <liuj97@gmail.com>
->> Cc: Alexander Duyck <alexander.h.duyck@intel.com>
->> Cc: Donald Dutile <ddutile@redhat.com>
->> Cc: Greg Rose <gregory.v.rose@intel.com>
->>
->> ---
->>  drivers/pci/remove.c |    2 ++
->>  1 file changed, 2 insertions(+)
->>
->> Index: linux-2.6/drivers/pci/remove.c
->> ===================================================================
->> --- linux-2.6.orig/drivers/pci/remove.c
->> +++ linux-2.6/drivers/pci/remove.c
->> @@ -25,6 +25,8 @@ static void pci_stop_dev(struct pci_dev
->>                 pci_proc_detach_device(dev);
->>                 pci_remove_sysfs_dev_files(dev);
->>                 device_del(&dev->dev);
->> +               /* remove VF, if PF driver skip that */
->> +               pci_disable_sriov(dev);
->>                 dev->is_added = 0;
->>         }
->
-> Can you post these as a new thread with -v2 patches?
+Hi Bjorn,
 
-ok, will repost them on top of pci/for-linus
+This was originally the method I used to test hotplug on Intel SDV machines
+which are not capable of doing hotplug. I would like to present it here in
+case it interests the community, then it can be made available to a wider
+range of developers who are working on hotplug.
 
->
-> Why did you put pci_disable_sriov() inside the "if (dev->is_added)"
-> block?  Is it related to is_added?
+I used it to generate desired ACPI events, PCI interrupts, and more. So
+things like CPU hotplug, IOH hotplug, memory hotplug, PCI native hotplug,
+PCI AER injection can be emulated and tested easily.
 
-yes, only have pci_enable_sriov when is_added is true.
-driver is detached when device_del() is called, and at that time
-pci_disable_sriov should be just called.
+The best thing is that, it doesn't require any modification to those drivers
+involved. It works with whatever hardware events that the user can imagine.
+Further development in user-space using scripts may help simplify the usage
+model and add more software-defined logic on hardware.
 
-Thanks
+Because it modifies the heart of all h/w access functions, I used Jump Label
+to reduce the performance penalty to effectively zero.
 
-Yinghai
+I tested the performance by repeatedly running lspci, which calls into the
+pci access functions. There's no added overhead observed.
+
+Regards,
+Rui Wang
+Intel Open Source Technology Center
+
+Rui Wang (3):
+  IO Hook: core functions and Register Override
+  IO Hook: kernel interface to manage the hook
+  IO Hook: sysfs interface to emulate h/w events
+
+ Documentation/PCI/iohook.txt      |  290 +++++++++++++++++
+ arch/x86/Kconfig                  |    7 +
+ arch/x86/boot/compressed/Makefile |    1 +
+ arch/x86/include/asm/io.h         |   58 ++++-
+ arch/x86/vdso/Makefile            |    2 +
+ drivers/misc/Kconfig              |    1 +
+ drivers/misc/Makefile             |    1 +
+ drivers/misc/iohook/Kconfig       |    5 +
+ drivers/misc/iohook/Makefile      |    1 +
+ drivers/misc/iohook/iohook.c      |  503 +++++++++++++++++++++++++++++
+ drivers/pci/access.c              |  630 +++++++++++++++++++++++++++++++++++++
+ include/linux/reg_ovrd.h          |   55 ++++
+ 12 files changed, 1552 insertions(+), 2 deletions(-)
+ create mode 100644 Documentation/PCI/iohook.txt
+ create mode 100644 drivers/misc/iohook/Kconfig
+ create mode 100644 drivers/misc/iohook/Makefile
+ create mode 100644 drivers/misc/iohook/iohook.c
+ create mode 100644 include/linux/reg_ovrd.h
+
+-- 
+1.7.5.4
+
