@@ -1,154 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 01/16] ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
-Date: Thu, 25 Jul 2013 10:53:15 -0700
-Message-Id: <1374774810-18459-2-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:55435 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753006Ab3GZI02 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 04:26:28 -0400
+Message-ID: <51F2328F.4050500@huawei.com>
+Date: Fri, 26 Jul 2013 16:25:51 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH -v3 3/3] PCI,pciehp: use PCIe DSN to identify device change
+ during suspend
+References: <1373621543-54836-1-git-send-email-wangyijing@huawei.com> <1373621543-54836-4-git-send-email-wangyijing@huawei.com> <CAErSpo4XhONYq3CZnPKgdMD4V5o8fgFc=NGVUGgFz0y5zM3GyA@mail.gmail.com>
+In-Reply-To: <CAErSpo4XhONYq3CZnPKgdMD4V5o8fgFc=NGVUGgFz0y5zM3GyA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+Hi Bjorn,
+   Thanks for your review and comments!
 
-The PMC code already accesses to PMC registers so it makes sense to
-move this function there as well. While at it, rename the function to
-tegra_pmc_pcie_xclk_clamp() for consistency.
+> 
+> I'm not sure this is implemented at the correct place.  The idea of
+> using the serial number to detect card swaps is not really specific to
+> pciehp.  I know the Device Serial Number capability is defined in the
+> PCIe spec, but it doesn't *require* any PCIe functionality, and
+> there's no reason a similar capability couldn't be defined for
+> conventional PCI.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Acked-by: Stephen Warren <swarren@wwwdotorg.org>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- arch/arm/mach-tegra/pcie.c | 30 ++++--------------------------
- arch/arm/mach-tegra/pmc.c  | 16 ++++++++++++++++
- arch/arm/mach-tegra/pmc.h  |  1 +
- 3 files changed, 21 insertions(+), 26 deletions(-)
+Yes, maybe implement this interface in PCI core is better.
 
-diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
-index 46144a1..6c1989b 100644
---- a/arch/arm/mach-tegra/pcie.c
-+++ b/arch/arm/mach-tegra/pcie.c
-@@ -41,6 +41,7 @@
- 
- #include "board.h"
- #include "iomap.h"
-+#include "pmc.h"
- 
- /* Hack - need to parse this from DT */
- #define INT_PCIE_INTR 130
-@@ -147,17 +148,6 @@
- #define  PADS_PLL_CTL_TXCLKREF_DIV10		(0 << 20)
- #define  PADS_PLL_CTL_TXCLKREF_DIV5		(1 << 20)
- 
--/* PMC access is required for PCIE xclk (un)clamping */
--#define PMC_SCRATCH42		0x144
--#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
--
--static void __iomem *reg_pmc_base = IO_ADDRESS(TEGRA_PMC_BASE);
--
--#define pmc_writel(value, reg) \
--	__raw_writel(value, reg_pmc_base + (reg))
--#define pmc_readl(reg) \
--	__raw_readl(reg_pmc_base + (reg))
--
- /*
-  * Tegra2 defines 1GB in the AXI address map for PCIe.
-  *
-@@ -639,18 +629,6 @@ static int tegra_pcie_enable_controller(void)
- 	return 0;
- }
- 
--static void tegra_pcie_xclk_clamp(bool clamp)
--{
--	u32 reg;
--
--	reg = pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
--
--	if (clamp)
--		reg |= PMC_SCRATCH42_PCX_CLAMP;
--
--	pmc_writel(reg, PMC_SCRATCH42);
--}
--
- static void tegra_pcie_power_off(void)
- {
- 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
-@@ -658,7 +636,7 @@ static void tegra_pcie_power_off(void)
- 	tegra_periph_reset_assert(tegra_pcie.pex_clk);
- 
- 	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
--	tegra_pcie_xclk_clamp(true);
-+	tegra_pmc_pcie_xclk_clamp(true);
- }
- 
- static int tegra_pcie_power_regate(void)
-@@ -667,7 +645,7 @@ static int tegra_pcie_power_regate(void)
- 
- 	tegra_pcie_power_off();
- 
--	tegra_pcie_xclk_clamp(true);
-+	tegra_pmc_pcie_xclk_clamp(true);
- 
- 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
- 	tegra_periph_reset_assert(tegra_pcie.afi_clk);
-@@ -681,7 +659,7 @@ static int tegra_pcie_power_regate(void)
- 
- 	tegra_periph_reset_deassert(tegra_pcie.afi_clk);
- 
--	tegra_pcie_xclk_clamp(false);
-+	tegra_pmc_pcie_xclk_clamp(false);
- 
- 	clk_prepare_enable(tegra_pcie.afi_clk);
- 	clk_prepare_enable(tegra_pcie.pex_clk);
-diff --git a/arch/arm/mach-tegra/pmc.c b/arch/arm/mach-tegra/pmc.c
-index 8345fcd..db72297 100644
---- a/arch/arm/mach-tegra/pmc.c
-+++ b/arch/arm/mach-tegra/pmc.c
-@@ -75,6 +75,10 @@ struct pmc_pm_data {
- };
- static struct pmc_pm_data pmc_pm_data;
- 
-+/* PMC access is required for PCIE xclk (un)clamping */
-+#define PMC_SCRATCH42		0x144
-+#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
-+
- static inline u32 tegra_pmc_readl(u32 reg)
- {
- 	return readl(tegra_pmc_base + reg);
-@@ -342,3 +346,15 @@ void __init tegra_pmc_init(void)
- 		val &= ~PMC_CTRL_INTR_LOW;
- 	tegra_pmc_writel(val, PMC_CTRL);
- }
-+
-+void tegra_pmc_pcie_xclk_clamp(bool clamp)
-+{
-+	u32 reg;
-+
-+	reg = tegra_pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
-+
-+	if (clamp)
-+		reg |= PMC_SCRATCH42_PCX_CLAMP;
-+
-+	tegra_pmc_writel(reg, PMC_SCRATCH42);
-+}
-diff --git a/arch/arm/mach-tegra/pmc.h b/arch/arm/mach-tegra/pmc.h
-index e1c2df2..cdb08a1 100644
---- a/arch/arm/mach-tegra/pmc.h
-+++ b/arch/arm/mach-tegra/pmc.h
-@@ -37,5 +37,6 @@ int tegra_pmc_cpu_power_on(int cpuid);
- int tegra_pmc_cpu_remove_clamping(int cpuid);
- 
- void tegra_pmc_init(void);
-+void tegra_pmc_pcie_xclk_clamp(bool clamp);
- 
- #endif
+> 
+> I don't know much about it, but conventional PCI *does* in fact
+> support the VPD capability, which can contain a serial number.  I
+> wonder if we should enhance pci_device_serial_number() to look for a
+> VPD serial number if there's no PCIe DSN.  Then we would want this
+> check for card swap in a more generic place, e.g., somewhere in
+> pci_scan_slot(), so all forms of hotplug would benefit from it.
+
+This is a good idea, I will try to enhance pci_device_serial_number to
+support legacy PCI device VPD capability. Then I will try to move this to
+a more generic place.
+
+> 
+> Also, I think it's possible to use acpiphp for ExpressCard slots, and
+> this patch doesn't help acpiphp detect card swaps.  I don't see any
+> mention of suspend/resume in acpiphp, so I don't know if it does
+> anything at all to detect card changes while suspended.  Maybe Rafael
+> can shed some light?
+
+Acpiphp driver is not attached to a specific pci/pcie device, so i think
+there is no point to call driver->suspend/resume interface.
+Add cc Rafael J. Wysocki.
+
+> 
+> I put the first two patches on a pci/yijing-dsn-v3 branch while we
+> work out the details of this one.
+
+Thanks!
+
+> 
+> Bjorn
+> 
+>>         } else if (!list_empty(&pbus->devices)) {
+>>                 pciehp_disable_slot(slot);
+>>         }
+>> --
+>> 1.7.1
+>>
+>>
+> 
+> .
+> 
+
+
 -- 
-1.8.1.5
+Thanks!
+Yijing
 
