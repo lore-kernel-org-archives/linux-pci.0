@@ -1,125 +1,102 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] acpi, acpi_pci_irq_enable must return an error if ACPI cannot map an IRQ.
-Date: Thu, 25 Jul 2013 14:10:44 +0200
-Message-ID: <1552127.Zb4xNexoAU@vostro.rjw.lan>
-In-Reply-To: <51F0F67F.8070200@redhat.com>
-References: <1373900260-1599-1-git-send-email-prarit@redhat.com> <51F06AE4.9010606@redhat.com> <51F0F67F.8070200@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:59701 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704Ab3GZTjO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 15:39:14 -0400
+Received: by mail-oa0-f51.google.com with SMTP id i4so8526725oah.10
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 12:39:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1374821475-3196-1-git-send-email-rui.y.wang@intel.com>
+References: <1374821475-3196-1-git-send-email-rui.y.wang@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 26 Jul 2013 13:38:53 -0600
+Message-ID: <CAErSpo653opkF_ROupSOYoP21LGwm023430Pyj_thbFeDXRq9w@mail.gmail.com>
+Subject: Re: [RFC 0/3] IO Hook: Method for emulating h/w events
+To: Rui Wang <ruiv.wang@gmail.com>
+Cc: Tony Luck <tony.luck@intel.com>, chaohong.guo@intel.com,
+	Chen Gong <gong.chen@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rui Wang <rui.y.wang@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 25, 2013 05:57:19 AM Prarit Bhargava wrote:
-> 
-> On 07/24/2013 08:01 PM, Prarit Bhargava wrote:
-> > 
-> > 
-> > On 07/24/2013 07:35 PM, Rafael J. Wysocki wrote:
-> >> On Monday, July 15, 2013 10:57:40 AM Prarit Bhargava wrote:
-> >>> Driver probe's currently do the following
-> >>>
-> >>> 	pci_enable_device();
-> >>> 	/* ... do some other init stuff, and eventually call ... */
-> >>> 	request_irq();
-> >>>
-> >>> After pci_enable_device() is called it is assumed that the device's irq
-> >>> value (pci_dev->irq) has been appropriately set on success.  This value
-> >>> is passed into the request_irq() call.
-> >>>
-> >>> In the case that ACPI is used to determine the irq value, it is possible
-> >>> that the ACPI IRQ look up for a specific device fails and success is
-> >>> returned by pci_enable_device().
-> >>>
-> >>> The call sequence is:
-> >>>
-> >>> pci_enable_device();
-> >>> 	-> pci_enable_device_flags();
-> >>> 		->do_pci_enable_device();
-> >>> 			-> pcibios_enable_device() which, if the device
-> >>> 			   does not use MSI calls
-> >>> 			   -> pcibios_enable_irq() which maps to
-> >>> 			      acpi_pci_irq_enable()
-> >>> 				-> acpi_pci_irq_lookup()
-> >>>
-> >>> If acpi_pci_irq_lookup() cannot map the device's IRQ value it returns NULL
-> >>> as an error.  The error is returned to acpi_pci_irq_enable(), but is not
-> >>> propagated further.  This can result in the driver returning success for
-> >>> pci_enable_device() and the driver probe attempting to call request_irq()
-> >>> with dev->irq = 0.
-> >>>
-> >>> This patch modifies acpi_pci_irq_enable() to return an error in the case
-> >>> that an entry is not found in the ACPI tables.
-> >>
-> >> Is there any known system on which this leads to observable misbehavior?
-> >>
-> >> If so, what's that system?
-> >>
-> > 
-> > Dell PowerEdge 840.  The end result is an genirq warning about the irq flags of
-> > irq 0:
-> > 
-> > [   14.126845] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT B
-> > [   14.133473] i801_smbus 0000:00:1f.3: PCI INT B: no GSI
-> > [   14.795122] genirq: Flags mismatch irq 0. 00000080 (i801_smbus) vs. 00015a20
-> > (timer)
-> > [   14.796037] CPU: 0 PID: 427 Comm: systemd-udevd Tainted: G        W
-> > --------------   3.10.0-0.rc4.60.el7.x86_64.debug #1
-> > [   14.796037] Hardware name: Dell Computer Corporation PowerEdge 840/0RH822,
-> > BIOS A05 10/04/2007
-> > [   14.796037]  ffff880075643b80 ffff88007a743aa8 ffffffff816b8bbd ffff88007a743af8
-> > [   14.796037]  ffffffff8111ed8d ffffffff811bf5d1 0000000000000296 ffff880075b93800
-> > [   14.796037]  ffffffffa03d2240 0000000000000080 0000000000000000 ffff88007ad7e000
-> > [   14.796037] Call Trace:
-> > [   14.796037]  [<ffffffff816b8bbd>] dump_stack+0x19/0x1b
-> > [   14.796037]  [<ffffffff8111ed8d>] __setup_irq+0x51d/0x550
-> > [   14.796037]  [<ffffffff811bf5d1>] ? kmem_cache_alloc_trace+0x111/0x340
-> > [   14.796037]  [<ffffffffa03d2240>] ? i801_check_pre.isra.6+0xe0/0xe0 [i2c_i801]
-> > [   14.796037]  [<ffffffff8111ef1c>] request_threaded_irq+0xcc/0x170
-> > [   14.796037]  [<ffffffffa03d388d>] i801_probe+0x34d/0x52c [i2c_i801]
-> > [   14.796037]  [<ffffffff810ddecd>] ? trace_hardirqs_on+0xd/0x10
-> > [   14.796037]  [<ffffffff813876be>] local_pci_probe+0x3e/0x70
-> > [   14.796037]  [<ffffffff813889a1>] pci_device_probe+0x111/0x120
-> > [   14.796037]  [<ffffffff8144ff77>] driver_probe_device+0x87/0x390
-> > [   14.796037]  [<ffffffff81450353>] __driver_attach+0x93/0xa0
-> > [   14.796037]  [<ffffffff814502c0>] ? __device_attach+0x40/0x40
-> > [   14.796037]  [<ffffffff8144de93>] bus_for_each_dev+0x63/0xa0
-> > [   14.796037]  [<ffffffff8144f9ae>] driver_attach+0x1e/0x20
-> > [   14.796037]  [<ffffffff8144f540>] bus_add_driver+0x1f0/0x2a0
-> > [   14.796037]  [<ffffffffa03d8000>] ? 0xffffffffa03d7fff
-> > [   14.796037]  [<ffffffff814509d1>] driver_register+0x71/0x150
-> > [   14.796037]  [<ffffffffa03d8000>] ? 0xffffffffa03d7fff
-> > [   14.796037]  [<ffffffff81387540>] __pci_register_driver+0x60/0x70
-> > [   14.796037]  [<ffffffffa03d80af>] i2c_i801_init+0xaf/0x1000 [i2c_i801]
-> > [   14.796037]  [<ffffffffa03d8000>] ? 0xffffffffa03d7fff
-> > [   14.796037]  [<ffffffff810020e2>] do_one_initcall+0xe2/0x1a0
-> > [   14.796037]  [<ffffffff810ee09f>] load_module+0xf4f/0x14d0
-> > [   14.796037]  [<ffffffff81375d20>] ? ddebug_proc_write+0xf0/0xf0
-> > [   14.796037]  [<ffffffff8136088d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
-> > [   14.796037]  [<ffffffff810ee6e1>] SyS_init_module+0xc1/0x110
-> > [   14.796037]  [<ffffffff816ca299>] system_call_fastpath+0x16/0x1b
-> > 
-> 
-> Rafael,
-> 
-> One other thing -- the core issue here is that the BIOS is broken and does not
-> supply an ACPI entry for the IRQ.  I think the kernel should do a better job of
-> reacting to that instead of just continuing down a broken path.
-> 
-> In either case, the end result is the same -- the i801 driver does not load, but
-> with my patch the warning is not displayed, which IMO is the correct way to fail.
+[+cc linux-acpi]
 
-I agree.  I wanted to know how serious the problem was so as to determine the
-urgency of the fix.
+On Fri, Jul 26, 2013 at 12:51 AM, Rui Wang <ruiv.wang@gmail.com> wrote:
+> Hi Bjorn,
+>
+> This was originally the method I used to test hotplug on Intel SDV machines
+> which are not capable of doing hotplug. I would like to present it here in
+> case it interests the community, then it can be made available to a wider
+> range of developers who are working on hotplug.
+>
+> I used it to generate desired ACPI events, PCI interrupts, and more. So
+> things like CPU hotplug, IOH hotplug, memory hotplug, PCI native hotplug,
+> PCI AER injection can be emulated and tested easily.
+>
+> The best thing is that, it doesn't require any modification to those drivers
+> involved. It works with whatever hardware events that the user can imagine.
+> Further development in user-space using scripts may help simplify the usage
+> model and add more software-defined logic on hardware.
+>
+> Because it modifies the heart of all h/w access functions, I used Jump Label
+> to reduce the performance penalty to effectively zero.
 
-Thanks,
-Rafael
+This is a cool idea.
 
+I don't know if you want to merge this upstream, or if it's just a "I
+found this useful; here it is in case it's useful to you" sort of
+thing.  So the comments below are only relevant if you want to try to
+merge it upstream.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+I wouldn't really want all the gunk in drivers/pci/access.c.  Most of
+it isn't related to PCI, and some of it is even x86-specific.  It'd be
+nicer if you could factor it out so just the generic PCI-related
+things go in drivers/pci.
+
+It appears to be implemented only for x86.  The MMIO & I/O port parts
+are x86-specific, but the PCI config stuff should work on any arch.
+
+I don't know whether it's worth supporting as a module.  It seems like
+a development aid where building in statically would probably be fine.
+ If it didn't have to work as a module, you wouldn't have to export
+any symbols.
+
+> I tested the performance by repeatedly running lspci, which calls into the
+> pci access functions. There's no added overhead observed.
+>
+> Regards,
+> Rui Wang
+> Intel Open Source Technology Center
+>
+> Rui Wang (3):
+>   IO Hook: core functions and Register Override
+>   IO Hook: kernel interface to manage the hook
+>   IO Hook: sysfs interface to emulate h/w events
+>
+>  Documentation/PCI/iohook.txt      |  290 +++++++++++++++++
+>  arch/x86/Kconfig                  |    7 +
+>  arch/x86/boot/compressed/Makefile |    1 +
+>  arch/x86/include/asm/io.h         |   58 ++++-
+>  arch/x86/vdso/Makefile            |    2 +
+>  drivers/misc/Kconfig              |    1 +
+>  drivers/misc/Makefile             |    1 +
+>  drivers/misc/iohook/Kconfig       |    5 +
+>  drivers/misc/iohook/Makefile      |    1 +
+>  drivers/misc/iohook/iohook.c      |  503 +++++++++++++++++++++++++++++
+>  drivers/pci/access.c              |  630 +++++++++++++++++++++++++++++++++++++
+>  include/linux/reg_ovrd.h          |   55 ++++
+>  12 files changed, 1552 insertions(+), 2 deletions(-)
+>  create mode 100644 Documentation/PCI/iohook.txt
+>  create mode 100644 drivers/misc/iohook/Kconfig
+>  create mode 100644 drivers/misc/iohook/Makefile
+>  create mode 100644 drivers/misc/iohook/iohook.c
+>  create mode 100644 include/linux/reg_ovrd.h
+>
+> --
+> 1.7.5.4
+>
