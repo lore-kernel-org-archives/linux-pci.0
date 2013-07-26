@@ -1,115 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:25958 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753484Ab3GHGza (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jul 2013 02:55:30 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>
-References: <000201ce7959$bf0fb150$3d2f13f0$@samsung.com>
- <51D6A370.7060604@st.com>
-In-reply-to: <51D6A370.7060604@st.com>
-Subject: Re: [PATCH] pci: exynos: split into two parts such as Synopsys part
- and Exynos part
-Date: Mon, 08 Jul 2013 15:55:23 +0900
-Message-id: <002d01ce7ba8$1e532250$5af966f0$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:40099 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704Ab3GZTsS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 15:48:18 -0400
+Received: by mail-ob0-f170.google.com with SMTP id vb8so217032obc.29
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 12:48:17 -0700 (PDT)
+Date: Fri, 26 Jul 2013 13:48:13 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, joro@8bytes.org,
+	iommu@lists.linux-foundation.org, acooks@gmail.com,
+	dwmw2@infradead.org
+Subject: Re: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
+Message-ID: <20130726194813.GA20021@google.com>
+References: <20130711204439.1701.90503.stgit@bling.home>
+ <20130711210326.1701.56478.stgit@bling.home>
+ <20130723223533.GB19765@google.com>
+ <51F03C1B.2070002@redhat.com>
+ <20130725171958.GB9272@google.com>
+ <51F16D80.5040208@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51F16D80.5040208@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, July 05, 2013 7:44 PM, Pratyush Anand wrote:
-> On 7/5/2013 1:59 PM, Jingoo Han wrote:
-> > Exynos PCIe IP consists of Synopsys specific part and Exynos
-> > specific part. Only core block is a Synopsys designware part;
-> > other parts are Exynos specific.
-> > Also, the Synopsys designware part can be shared with other
-> > platforms; thus, it can be split two parts such as Synopsys
-> > designware part and Exynos specific part.
+On Thu, Jul 25, 2013 at 02:25:04PM -0400, Don Dutile wrote:
+> On 07/25/2013 01:19 PM, Bjorn Helgaas wrote:
+> >On Wed, Jul 24, 2013 at 04:42:03PM -0400, Don Dutile wrote:
+> >>On 07/23/2013 06:35 PM, Bjorn Helgaas wrote:
+> >>>On Thu, Jul 11, 2013 at 03:03:27PM -0600, Alex Williamson wrote:
+> >>>>+ * pcie_for_each_requester - Call callback @fn on each devices and DMA source
+> >>>>+ *                           from @requestee to the PCIe requester ID visible
+> >>>>+ *                           to @bridge.
+> >>>
+> >>>Transactions from a device may appear with one of several requester IDs,
+> >>>but there's not necessarily an actual pci_dev for each ID, so I think the
+> >>ditto above; have to have a pdev for each id....
 > >
-> 
-> A quick and nice job :)
-> Just few minor comments.
-> 
-> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Pratyush Anand <pratyush.anand@st.com>
-> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> > ---
-> >   drivers/pci/host/Makefile          |    1 +
-> >   drivers/pci/host/pcie-designware.c |  907 +++++++-----------------------------
-> >   drivers/pci/host/pcie-designware.h |   72 +++
-> >   drivers/pci/host/pcie-exynos.c     |  619 ++++++++++++++++++++++++
-> >   4 files changed, 862 insertions(+), 737 deletions(-)
-> >   create mode 100644 drivers/pci/host/pcie-designware.h
-> >   create mode 100644 drivers/pci/host/pcie-exynos.c
+> >This *might* be true, but I don't think we should rely on it.  For
+> >example:
 > >
-
-[...]
-
-> > -static inline void readl_rc(struct pcie_port *pp, void *dbi_base, u32 *val)
-> > +static inline void dw_pcie_readl_rc(struct pcie_port *pp, void *dbi_base,
-> > +                               u32 *val)
-> 
-> dbi_base is part of pp. So why to pass 3 args?
-
-Sorry, this variable does not mean dbi_base;
-it means 'dbi_base + offset'.
-
-dw_pcie_{readl/writel}_rc() are called as below:
-
-  dw_pcie_readl_rc(pp, dbi_base + PCIE_PORT_LINK_CONTROL, &val);
-  dw_pcie_writel_rc(pp, val, dbi_base + PCIE_PORT_LINK_CONTROL);
-
-Thus, 'dbi_base' can be replaced with 'dbi_addr'.
-
-
-Best regards,
-Jingoo Han
-
-
-> 
-> >   {
-> > -       exynos_pcie_sideband_dbi_r_mode(pp, true);
-> > -       *val = readl(dbi_base);
-> > -       exynos_pcie_sideband_dbi_r_mode(pp, false);
-> > -       return;
-> > +       if (pp->ops->readl_rc)
-> > +               pp->ops->readl_rc(pp, dbi_base, val);
-> 
-> ditto
-> 
-> > +       else
-> > +               *val = readl(dbi_base);
-> >   }
+> >   00:1c.0 PCIe to PCI bridge to [bus 01]
+> >   01:01.0 PCI endpoint
 > >
-> > -static inline void writel_rc(struct pcie_port *pp, u32 val, void *dbi_base)
-> > +static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val,
-> > +                               void *dbi_base)
-> 
-> ditto
-> 
-> >   {
-> > -       exynos_pcie_sideband_dbi_w_mode(pp, true);
-> > -       writel(val, dbi_base);
-> > -       exynos_pcie_sideband_dbi_w_mode(pp, false);
-> > -       return;
-> > +       if (pp->ops->writel_rc)
-> > +               pp->ops->writel_rc(pp, val, dbi_base);
-> 
-> ditto
-> 
-> > +       else
-> > +               writel(val, dbi_base);
-> >   }
-> 
-> 
-> Regards
-> Pratyush
+> >The bridge will take ownership of DMA transactions from the 01:01.0
+> >endpoint.  An IOMMU on bus 00 will see a bridge-assigned requester
+> >ID of 01:00.0 (subordinate bus number, devfn zero), but there is no
+> >01:00.0 device.
+> >
+> Clarification:
+> I meant that each requester-id must have at least 1 PCI device associated
+> with it.
 
+I don't think that's true, as in the example above.  Requester ID
+0x0100 has no pci_dev associated with it.  What am I missing?
+
+Maybe you mean that requester ID 0x0100 is associated with pci_dev
+01:01.0 in the sense that DMAs from 01:01.0 appear with that ID?
+That's true, but I can't think of a reason why we would start with
+ID 0x0100 and try to look up 01:01.0 from it.  And of course, if you
+*did* try to look up the device, there could be several of them.
+
+Bjorn
