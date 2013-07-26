@@ -1,176 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14158 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752830Ab3G2Vw4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Jul 2013 17:52:56 -0400
-Message-ID: <1375134764.2104.1.camel@jtkirshe-mobl>
-Subject: Re: [PATCH v2 3/3] PCI: Stop sriov after stop PF if PF's driver
- skip that
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Reply-To: jeffrey.t.kirsher@intel.com
-To: Don Dutile <ddutile@redhat.com>
-Cc: Alexander Duyck <alexander.h.duyck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:54608 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757119Ab3GZARk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 20:17:40 -0400
+Received: by mail-oa0-f50.google.com with SMTP id k7so5934956oag.23
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 17:17:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1373621543-54836-4-git-send-email-wangyijing@huawei.com>
+References: <1373621543-54836-1-git-send-email-wangyijing@huawei.com> <1373621543-54836-4-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Jul 2013 18:17:19 -0600
+Message-ID: <CAErSpo4XhONYq3CZnPKgdMD4V5o8fgFc=NGVUGgFz0y5zM3GyA@mail.gmail.com>
+Subject: Re: [PATCH -v3 3/3] PCI,pciehp: use PCIe DSN to identify device
+ change during suspend
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Greg Rose <gregory.v.rose@intel.com>
-Date: Mon, 29 Jul 2013 14:52:44 -0700
-In-Reply-To: <51F6DF35.40909@redhat.com>
-References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
-	 <1374937868-24437-2-git-send-email-yinghai@kernel.org>
-	 <CAErSpo7xk-NGp+4ZFo-jnVnQSEomY=7=CXDSbZPzrhdjZ4zVSA@mail.gmail.com>
-	 <51F6D161.1040106@redhat.com> <51F6D9A2.8020403@intel.com>
-	 <51F6DF35.40909@redhat.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-jaZkccha/MyR74flpKLM"
-Mime-Version: 1.0
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Jul 12, 2013 at 3:32 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> If device was removed from slot and reinsert a new device during
+> suspend, pciehp can not identify the physical device change now.
+> So the old driver .resume() method will be called for the new device,
+> this is bad. If device support device serial number capability,
+> we can identify this by DSN. So the reasonable way is first remove
+> the old device, then enable the new device.
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Paul Bolle <pebolle@tiscali.nl>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: Oliver Neukum <oneukum@suse.de>
+> Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/pci/hotplug/pciehp_core.c |   45 +++++++++++++++++++++++++++++++++++++
+>  1 files changed, 45 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 7fe9dbd..bc47f8e 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -296,11 +296,38 @@ static int pciehp_suspend (struct pcie_device *dev)
+>         return 0;
+>  }
+>
+> +/*
+> + * check the func 0 device serial number is changed,
+> + * if device does not support device serial number,
+> + * return false.
+> + */
+> +static bool device_serial_number_changed(struct pci_bus *pbus)
+> +{
+> +       u64 old_dsn, new_dsn;
+> +       struct pci_dev *pdev;
+> +
+> +       pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
+> +       if (!pdev)
+> +               return false;
+> +
+> +       old_dsn = pdev->sn;
+> +
+> +       /* get func 0 device serial number */
+> +       new_dsn = pci_device_serial_number(pdev);
+> +       pci_dev_put(pdev);
+> +
+> +       if (old_dsn != new_dsn)
+> +               return true;
+> +
+> +       return false;
+> +}
+> +
+>  static int pciehp_resume (struct pcie_device *dev)
+>  {
+>         struct controller *ctrl;
+>         struct slot *slot;
+>         struct pci_bus *pbus = dev->port->subordinate;
+> +       int retval = 0;
+>         u8 status;
+>
+>         ctrl = get_service_data(dev);
+> @@ -315,6 +342,24 @@ static int pciehp_resume (struct pcie_device *dev)
+>         if (status) {
+>                 if (list_empty(&pbus->devices))
+>                         pciehp_enable_slot(slot);
+> +
+> +               if (device_serial_number_changed(pbus)) {
+> +                       /*
+> +                        * first power off slot, avoid the old driver
+> +                        * .remove() method touch the new hardware
+> +                        */
+> +                       if (POWER_CTRL(ctrl)) {
+> +                               retval = pciehp_power_off_slot(slot);
+> +                               if (retval) {
+> +                                       ctrl_err(ctrl,
+> +                                               "Issue of Slot Disable command failed\n");
+> +                                       return 0;
+> +                               }
+> +                               msleep(1000);
+> +                               pciehp_unconfigure_device(slot);
+> +                               pciehp_enable_slot(slot);
+> +                       }
+> +               }
 
---=-jaZkccha/MyR74flpKLM
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I'm not sure this is implemented at the correct place.  The idea of
+using the serial number to detect card swaps is not really specific to
+pciehp.  I know the Device Serial Number capability is defined in the
+PCIe spec, but it doesn't *require* any PCIe functionality, and
+there's no reason a similar capability couldn't be defined for
+conventional PCI.
 
-On Mon, 2013-07-29 at 17:31 -0400, Don Dutile wrote:
-> On 07/29/2013 05:07 PM, Alexander Duyck wrote:
-> > On 07/29/2013 01:32 PM, Don Dutile wrote:
-> >> On 07/29/2013 03:58 PM, Bjorn Helgaas wrote:
-> >>> On Sat, Jul 27, 2013 at 9:11 AM, Yinghai Lu<yinghai@kernel.org>   wro=
-te:
-> >>>> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
-> >>>> (PCI: Simplify IOV implementation and fix reference count races)
-> >>>> VF need to be removed via virtfn_remove to make sure ref to PF
-> >>>> is put back.
-> >>>>
-> >>>> Some driver (like ixgbe) does not call pci_disable_sriov() if
-> >>>> sriov is enabled via /sys/.../sriov_numvfs setting.
-> >>>> ixgbe does allow driver for PF get detached, but still have VFs
-> >>>> around.
-> >>>
-> >>> Is this something ixgbe should be doing differently?
-> >>>
-> >>> I'm not 100% sold on the idea of the VFs staying active after the
-> >>> driver releases the PF.  It seems asymmetric because I think the
-> >>> driver has to claim the PF to *enable* the VFs, but we don't disable
-> >>> them when releasing the PF.
-> >>>
-> >>> What's the use case for detaching the PF driver while the VFs are
-> >>> active?
-> >>>
-> >> VF's assigned to (KVM) guest (via device-assignment).
-> >> Virtually, it's as if the enet cable is unplugged to the VF in the
-> >> guest --
-> >> the device is still there (the PF wasn't unplugged, just the driver
-> >> de-configured).
-> >>
-> >> Pre-sysfs-based configuration, the std way to configure the VFs into
-> >> a system was to unload the PF driver, and reload it with a vf-enabling
-> >> parameter
-> >> (like max_vfs=3D<n>  in the case of ixgbe, igb).
-> >> Now, if someone unloaded the PF driver in the host, the unplanned remo=
-val
-> >> of the PF enabled the VF to crash the host (maybe AlexD can provide th=
-e
-> >> details how that occurred).
-> >> So, the solution was to 'pause' the VF operation and let packets drop
-> >> in the guest, and re-enable the VF operation if the PF driver was
-> >> re-configured.
-> >>
-> >> So, as I stated in previous postings, this patch is acceptable if
-> >> it doesn't cause a guest crash when a VF is assigned to a KVM guest.
-> >> If you tested this case, then please state as such in the posting.
-> >> If not, then can AlexD test this case ?
-> >>
-> >> - Don
-> >
-> > I actually haven't done much with direct assignment to guests.  I
-> > believe it was Greg who did that work to fix this issue.
-> >
-> > I'm adding Jeff Kirsher to the CC.  Perhaps he can pull this patch into
-> > a copy of the net tree and submit it to our validation team for testing
-> > to see if they end up being able to reproduce the kernel panic issue
-> > that was originally addressed by allowing the VFs to be persistent.
-> >
-> I'd appreciate hearing Jeff's test results....
+I don't know much about it, but conventional PCI *does* in fact
+support the VPD capability, which can contain a serial number.  I
+wonder if we should enhance pci_device_serial_number() to look for a
+VPD serial number if there's no PCIe DSN.  Then we would want this
+check for card swap in a more generic place, e.g., somewhere in
+pci_scan_slot(), so all forms of hotplug would benefit from it.
 
-Can I apply this patch as a standalone? or will I need the entire 3
-patch series?
+Also, I think it's possible to use acpiphp for ExpressCard slots, and
+this patch doesn't help acpiphp detect card swaps.  I don't see any
+mention of suspend/resume in acpiphp, so I don't know if it does
+anything at all to detect card changes while suspended.  Maybe Rafael
+can shed some light?
 
->=20
-> > Thanks,
-> >
-> > Alex
-> >
-> >>>> But how about PF get removed via /sys or pciehp finally?
-> >>>>
-> >>>> During hot-remove, VF will still hold one ref to PF and it
-> >>>> prevent PF to be removed.
-> >>>> That make the next hot-add fails, as old PF dev struct is still arou=
-nd.
-> >>>>
-> >>>> We need to add pci_disable_sriov() calling during stop PF .
-> >>>>
-> >>>> Need this one for v3.11
-> >>>
-> >>> Don had a concern that there might be a regression here ... I'm a bit
-> >>> confused on the details, but you guys need to come to agreement that
-> >>> this doesn't make things worse.
-> >>>
-> >>>> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
-> >>>> Cc: Jiang Liu<liuj97@gmail.com>
-> >>>> Cc: Alexander Duyck<alexander.h.duyck@intel.com>
-> >>>> Cc: Donald Dutile<ddutile@redhat.com>
-> >>>> Cc: Greg Rose<gregory.v.rose@intel.com>
-> >>>>
-> >>>> ---
-> >>>>    drivers/pci/remove.c |    2 ++
-> >>>>    1 file changed, 2 insertions(+)
-> >>>>
-> >>>> Index: linux-2.6/drivers/pci/remove.c
-> >>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> >>>> --- linux-2.6.orig/drivers/pci/remove.c
-> >>>> +++ linux-2.6/drivers/pci/remove.c
-> >>>> @@ -25,6 +25,8 @@ static void pci_stop_dev(struct pci_dev
-> >>>>                   pci_proc_detach_device(dev);
-> >>>>                   pci_remove_sysfs_dev_files(dev);
-> >>>>                   device_del(&dev->dev);
-> >>>> +               /* remove VF, if PF driver skip that */
-> >>>> +               pci_disable_sriov(dev);
-> >>>>                   dev->is_added =3D 0;
-> >>>>           }
-> >>>>
-> >>
-> >
->=20
+I put the first two patches on a pci/yijing-dsn-v3 branch while we
+work out the details of this one.
 
+Bjorn
 
-
---=-jaZkccha/MyR74flpKLM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iQIcBAABCgAGBQJR9uQsAAoJEOVv75VaS+3ODXkP/1+HNhkFWujijUVsXeWktLPy
-Z4j60goC71z8SbAV9QTMr0naPtnda2mGvJVIHUaetLX2b28S7mrou8+lTYeNpheh
-AP2eAw5jNakEC4Km7HONluh2cZEry32j/FA+o+FhuhadS/4M/5f5Heubaf+3I9/8
-QSFgrGBIYG78/3b8DlBGxe0tOOMA57Sr4c8bvh2O6ZtAlqSO/4/z+vngBAwdk9Wx
-RjAYUQmnNnNbk04B9Su/MlrGxhKDeMPFKKC9Zgn9yP71nhlEaZyYU1PIcSFwzW87
-8vyllDav50b0VfUrNmR0XFqAylWona4IngdX5n4jdNfLNnEvESoQuIbWJdiwAs6s
-AW1UK82Smrurd7pFsWhR6kfjpqz77uAOhTojsXYJIehPLTY1dP80ZyaHeGb79Xej
-5R0m0rlz1s+0NQ3sGTWaqaysS5nCVLZ/fuDpLFkZhAoxG+7VmBshmhKUkp1/oiRH
-e4nbjKPyz28eePVm0VVhMkMT4V4SNO8RFmqNb+NQ6qH33lNRqnHMLBtMgozW4Lhe
-rk/rgPm/G75Ou39/K55s92+TEIuc4QXuGTVPQbLP4+C55NUlQRz9mQz3iB4aUEfC
-fchruV9fhZpMMvOYdDjfIRiuofc9FCXy9tITGBmdBjm8zFFE0NG4x+XHLIZt1VQT
-k3DbVEECzUwaB2CLZSWs
-=DLv6
------END PGP SIGNATURE-----
-
---=-jaZkccha/MyR74flpKLM--
-
+>         } else if (!list_empty(&pbus->devices)) {
+>                 pciehp_disable_slot(slot);
+>         }
+> --
+> 1.7.1
+>
+>
