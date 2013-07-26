@@ -1,204 +1,209 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:41124 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753975Ab3GANmt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2013 09:42:49 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
-Subject: [PATCHv4 03/11] pci: remove ARCH_SUPPORTS_MSI kconfig option
-Date: Mon,  1 Jul 2013 15:42:08 +0200
-Message-Id: <1372686136-1370-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1372686136-1370-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:32915 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758091Ab3GZXIf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 19:08:35 -0400
+Received: by mail-oa0-f50.google.com with SMTP id k7so8802389oag.37
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 16:08:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <51F2FDF4.6060706@chelsio.com>
+References: <1372677737-15485-1-git-send-email-vipul@chelsio.com>
+ <CAErSpo7bxZKWqdR2MCOvz4=n_pO=u59KSsHZzJMBoN8qQ+E+Dw@mail.gmail.com> <51F2FDF4.6060706@chelsio.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 26 Jul 2013 17:08:14 -0600
+Message-ID: <CAErSpo6PyEtYL=zqWNE=pFox-ZhTkSwGQTf_wCMFc=bAMD27-w@mail.gmail.com>
+Subject: Re: [PATCH] pci: Enable bus master till the FLR completes
+To: Casey Leedom <leedom@chelsio.com>
+Cc: Vipul Pandya <vipul@chelsio.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	tomreu@chelsio.com, divy@chelsio.com, dm@chelsio.com,
+	nirranjan@chelsio.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we have weak versions for each of the PCI MSI architecture
-functions, we can actually build the MSI support for all platforms,
-regardless of whether they provide or not architecture-specific
-versions of those functions. For this reason, the ARCH_SUPPORTS_MSI
-hidden kconfig boolean becomes useless, and this patch gets rid of it.
+On Fri, Jul 26, 2013 at 4:53 PM, Casey Leedom <leedom@chelsio.com> wrote:
+> Thanks for the review comments. I'll work with Vipul to get these properly
+> incorporated. Answers to your comments are inline below:
+>
+>
+>
+> On 07/26/13 15:27, Bjorn Helgaas wrote:
+>>
+>> On Mon, Jul 1, 2013 at 5:22 AM, Vipul Pandya <vipul@chelsio.com> wrote:
+>>>
+>>> From: Casey Leedom <leedom@chelsio.com>
+>>>
+>>> T4 can wedge if there are DMAs in flight within the chip and Bus master
+>>> has
+>>> been disabled.  We need to have it on till the Function Level Reset
+>>> completes.
+>>> T4 can also suffer a Head Of Line blocking problem if MSI-X interrupts
+>>> are
+>>> disabled before the FLR has completed.
+>>>
+>>> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+>>> ---
+>>>   drivers/pci/quirks.c | 91
+>>> ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>>   1 file changed, 91 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>> index e85d230..6357ba1 100644
+>>> --- a/drivers/pci/quirks.c
+>>> +++ b/drivers/pci/quirks.c
+>>> @@ -3208,6 +3208,95 @@ reset_complete:
+>>>          return 0;
+>>>   }
+>>>
+>>> +/*
+>>> + * Device-specific reset method for Chelsio T4-based adapters.
+>>> + */
+>>> +static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+>>> +{
+>>> +       u16 old_command;
+>>> +       u16 status, msix_flags;
+>>> +       int i, rc, msix_pos;
+>>> +
+>>> +       /*
+>>> +        * If this isn't a Chelsio T4-based device, return -ENOTTY
+>>> indicating
+>>> +        * that we have no device-specific reset method.
+>>> +        */
+>>> +       if ((dev->device & 0xf000) != 0x4000)
+>>> +               return -ENOTTY;
+>>> +
+>>> +       /*
+>>> +        * If this is the "probe" phase, return 0 indicating that we can
+>>> +        * reset this device.
+>>> +        */
+>>> +       if (probe)
+>>> +               return 0;
+>>> +
+>>> +       /*
+>>> +        * T4 can wedge if their are DMAs in flight within the chip and
+>>> Bus
+>>> +        * master has been disabled.  We need to have it on till the
+>>> Function
+>>> +        * Level Reset completes.
+>>> +        */
+>>> +       pci_read_config_word(dev, PCI_COMMAND, &old_command);
+>>> +       pci_write_config_word(dev, PCI_COMMAND,
+>>> +                             old_command | PCI_COMMAND_MASTER);
+>>> +
+>>> +       /*
+>>> +        * Perform the actual device function reset, saving and restoring
+>>> +        * configuration information around the reset.
+>>> +        */
+>>> +       pci_save_state(dev);
+>>> +
+>>> +       /*
+>>> +        * T4 also suffers a Head-Of-Line blocking problem if MSI-X
+>>> interrupts
+>>> +        * are disabled when an MSI-X interrupt message needs to be
+>>> delivered.
+>>> +        * So we briefly re-enable MSI-X interrupts for the duration of
+>>> the
+>>> +        * FLR.  The pci_restore_state() below will restore the original
+>>> +        * MSI-X state.
+>>> +        */
+>>> +       msix_pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+>>
+>> dev->msix_cap contains the capability offset already.
+>
+>
+> Thanks. I didn't know about that.
+>
+>
+>>> +       pci_read_config_word(dev, msix_pos+PCI_MSIX_FLAGS, &msix_flags);
+>>> +       if ((msix_flags & PCI_MSIX_FLAGS_ENABLE) == 0)
+>>> +               pci_write_config_word(dev, msix_pos+PCI_MSIX_FLAGS,
+>>> +                                     msix_flags |
+>>> +                                     PCI_MSIX_FLAGS_ENABLE |
+>>> +                                     PCI_MSIX_FLAGS_MASKALL);
+>>> +
+>>> +       /*
+>>> +        * This reset code is a copy of the guts of pcie_flr() because
+>>> that's
+>>> +        * not an exported function.
+>>> +        */
+>>> +
+>>> +       /* Wait for Transaction Pending bit clean */
+>>> +       for (i = 0; i < 4; i++) {
+>>> +               if (i)
+>>> +                       msleep((1 << (i - 1)) * 100);
+>>> +
+>>> +               pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
+>>> +               if (!(status & PCI_EXP_DEVSTA_TRPND))
+>>> +                       goto clear;
+>>> +       }
+>>
+>> This is at least the fifth copy of this loop:
+>>
+>>    pcie_flr()
+>>    pci_af_flr()
+>>    bnx2x_do_flr()
+>>    reset_intel_82599_sfp_virtfn()
+>>
+>> Can we factor this out and just implement it once?  Maybe even make it
+>> smart enough to look at the PCIe DEVSTA if it exists, and fall back to
+>> using PCI_AF_STATUS register if *it* exists?
+>
+>
+> Should such a task be taken up in the patch we're trying to submit or should
+> it be a follow on patch? I had thought that, in general, patches were
+> supposed to essentially do "one thing." Thanks for your insight on this.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: linux390@de.ibm.com
-Cc: linux-s390@vger.kernel.org
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-mips@linux-mips.org
-Cc: David S. Miller <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
-Cc: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/arm/Kconfig     | 1 -
- arch/ia64/Kconfig    | 1 -
- arch/mips/Kconfig    | 2 --
- arch/powerpc/Kconfig | 1 -
- arch/s390/Kconfig    | 1 -
- arch/sparc/Kconfig   | 1 -
- arch/tile/Kconfig    | 1 -
- arch/x86/Kconfig     | 1 -
- drivers/pci/Kconfig  | 4 ----
- 9 files changed, 13 deletions(-)
+You're right.  The *ideal* thing would be a series like this:
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 8ab5962..3413679 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -435,7 +435,6 @@ config ARCH_NETX
- config ARCH_IOP13XX
- 	bool "IOP13xx-based"
- 	depends on MMU
--	select ARCH_SUPPORTS_MSI
- 	select CPU_XSC3
- 	select NEED_MACH_MEMORY_H
- 	select NEED_RET_TO_USER
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index 1a2b774..943d425 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -9,7 +9,6 @@ config IA64
- 	select PCI if (!IA64_HP_SIM)
- 	select ACPI if (!IA64_HP_SIM)
- 	select PM if (!IA64_HP_SIM)
--	select ARCH_SUPPORTS_MSI
- 	select HAVE_UNSTABLE_SCHED_CLOCK
- 	select HAVE_IDE
- 	select HAVE_OPROFILE
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index 7a58ab9..96c1225 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -763,7 +763,6 @@ config CAVIUM_OCTEON_REFERENCE_BOARD
- 	select SYS_HAS_CPU_CAVIUM_OCTEON
- 	select SWAP_IO_SPACE
- 	select HW_HAS_PCI
--	select ARCH_SUPPORTS_MSI
- 	select ZONE_DMA32
- 	select USB_ARCH_HAS_OHCI
- 	select USB_ARCH_HAS_EHCI
-@@ -799,7 +798,6 @@ config NLM_XLR_BOARD
- 	select CEVT_R4K
- 	select CSRC_R4K
- 	select IRQ_CPU
--	select ARCH_SUPPORTS_MSI
- 	select ZONE_DMA32 if 64BIT
- 	select SYNC_R4K
- 	select SYS_HAS_EARLY_PRINTK
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index c33e3ad..f9d9d8e 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -734,7 +734,6 @@ config PCI
- 	default y if !40x && !CPM2 && !8xx && !PPC_83xx \
- 		&& !PPC_85xx && !PPC_86xx && !GAMECUBE_COMMON
- 	default PCI_QSPAN if !4xx && !CPM2 && 8xx
--	select ARCH_SUPPORTS_MSI
- 	select GENERIC_PCI_IOMAP
- 	help
- 	  Find out whether your system includes a PCI bus. PCI is the name of
-diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-index da183c5..9a6225b 100644
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -429,7 +429,6 @@ menuconfig PCI
- 	bool "PCI support"
- 	default n
- 	depends on 64BIT
--	select ARCH_SUPPORTS_MSI
- 	select PCI_MSI
- 	help
- 	  Enable PCI support.
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index 9ac9f16..822e1a1 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -52,7 +52,6 @@ config SPARC32
- 
- config SPARC64
- 	def_bool 64BIT
--	select ARCH_SUPPORTS_MSI
- 	select HAVE_FUNCTION_TRACER
- 	select HAVE_FUNCTION_GRAPH_TRACER
- 	select HAVE_FUNCTION_GRAPH_FP_TEST
-diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
-index 3aa3766..d2d519c 100644
---- a/arch/tile/Kconfig
-+++ b/arch/tile/Kconfig
-@@ -379,7 +379,6 @@ config PCI
- 	select PCI_DOMAINS
- 	select GENERIC_PCI_IOMAP
- 	select TILE_GXIO_TRIO if TILEGX
--	select ARCH_SUPPORTS_MSI if TILEGX
- 	select PCI_MSI if TILEGX
- 	---help---
- 	  Enable PCI root complex support, so PCIe endpoint devices can
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 685692c..4229ce0 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -1999,7 +1999,6 @@ menu "Bus options (PCI etc.)"
- config PCI
- 	bool "PCI support"
- 	default y
--	select ARCH_SUPPORTS_MSI if (X86_LOCAL_APIC && X86_IO_APIC)
- 	---help---
- 	  Find out whether you have a PCI motherboard. PCI is the name of a
- 	  bus system, i.e. the way the CPU talks to the other stuff inside
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index ac45398..3d4c061 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -1,13 +1,9 @@
- #
- # PCI configuration
- #
--config ARCH_SUPPORTS_MSI
--	bool
--
- config PCI_MSI
- 	bool "Message Signaled Interrupts (MSI and MSI-X)"
- 	depends on PCI
--	depends on ARCH_SUPPORTS_MSI
- 	help
- 	   This allows device drivers to enable MSI (Message Signaled
- 	   Interrupts).  Message Signaled Interrupts enable a device to
--- 
-1.8.1.2
+  1 add pci_wait_for_pending_transactions() and use it in drivers/pci
+  2 convert bnx2x to use it
+  3 chelsio patch (this one) using it
 
+But I wouldn't hold your feet to the fire about the bnx2x one because
+that's outside of your control.  It's just good citizenship if you can
+propose the patch.
+
+>>> +
+>>> +       dev_err(&dev->dev, "transaction is not cleared; proceeding with
+>>> reset anyway\n");
+>>> +
+>>> +clear:
+>>> +       pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+>>> PCI_EXP_DEVCTL_BCR_FLR);
+>>> +       msleep(100);
+>>> +
+>>> +       /*
+>>> +        * End of pcie_flr() code sequence.
+>>> +        */
+>>> +
+>>> +       rc = 0;
+>>> +       pci_restore_state(dev);
+>>> +
+>>> +       /*
+>>> +        * Restore the original PCI Configuration Space Command word
+>>> (which
+>>> +        * probably had Bus Master disabled).
+>>
+>> Why was Bus Master probably originally disabled?  I don't see anything
+>> in the pci_reset_function() path that would have disabled it before
+>> getting to this function.
+>>
+>> But I don't think you need the comment anyway.  "Probably had Bus
+>> Master disabled" isn't anything one can rely on.
+>
+>
+> Sorry, I probably should have included our example. In this case it's coming
+> from KVM's kvm_free_assigned_device() routine which calls
+> pci_reset_function() where we do:
+>
+> /*
+> * both INTx and MSI are disabled after the Interrupt Disable bit
+> * is set and the Bus Master bit is cleared.
+> */
+> pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
+
+Wow, I must be blind to have missed that :)  Personally I would just
+drop the whole comment and not worry about it.
+
+Bjorn
