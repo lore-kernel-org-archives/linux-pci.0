@@ -1,305 +1,139 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 2/3] [SCSI] megaraid: Remove local pdev's
-To: megaraidlinux@lsi.com, JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Tue, 09 Jul 2013 14:39:39 -0600
-Message-ID: <20130709203939.31676.34588.stgit@amt.stowe>
-In-Reply-To: <20130709203927.31676.35169.stgit@amt.stowe>
-References: <20130709203927.31676.35169.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ve0-f170.google.com ([209.85.128.170]:62640 "EHLO
+	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752611Ab3G0Xrw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Jul 2013 19:47:52 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130726173956.GA14078@google.com>
+References: <51F23D0F.7090909@oracle.com>
+	<20130726173956.GA14078@google.com>
+Date: Sun, 28 Jul 2013 07:47:50 +0800
+Message-ID: <CABawtvOBpqjupVYzc3TS2BGwARmutKi-phcdKHd5bBbiPr2Ceg@mail.gmail.com>
+Subject: Re: [PATCH] x86/PCI: MMCONFIG: cleanup and add address warning to pci_mmconfig_insert
+From: Ethan Zhao <ethan.kernel@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ethan zhao <ethan.zhao@oracle.com>, jbarnes@virtuousgeek.org,
+	yinghai@kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With the driver now setup for default 32-bit DMA capabilities, remove the
-broken make_local_pdev() implementation and usages.
+On Sat, Jul 27, 2013 at 1:39 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Jiang, linux-pci, -cc bjorn.helgaas@hp.com (dead address)]
+>
+> On Fri, Jul 26, 2013 at 05:10:39PM +0800, ethan zhao wrote:
+>> Cleanup the -EINVAL return value handling and add warning message
+>> for invalid
+>> start,end,addr parameters.
+>>
+>> Signed-off-by: ethan.zhao <ethan.zhao@oracle.com>
+>
+> This patch was corrupted, so I couldn't apply it directly.  See
+> Documentation/SubmittingPatches, sections 5-7.
+>
+>> ---
+>>  arch/x86/pci/mmconfig-shared.c |   12 ++++++------
+>>  1 files changed, 6 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+>> index 082e881..37f6c7f 100644
+>> --- a/arch/x86/pci/mmconfig-shared.c
+>> +++ b/arch/x86/pci/mmconfig-shared.c
+>> @@ -700,8 +700,13 @@ int pci_mmconfig_insert(struct device *dev, u16
+>> seg, u8 start, u8 end,
+>>      if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
+>>          return -ENODEV;
+>>
+>> -    if (start > end)
+>> +    if (start > end || !addr) {
+>> +        dev_warn(dev, FW_WARN
+>> +                                 "Invalid address to add MMCONFIG"
+>> +                                 "start %02x end %02x addr %pR\n",
+>> +                                  start, end, addr);
+>>          return -EINVAL;
+>> +    }
+>
+> I like the "!addr" cleanup.
+>
+> Did you actually see this problem on a machine?
+>
+> I expect this would be a BIOS bug, and one that should be found
+> early in development, long before a machine is released.
+> Therefore, I doubt that it's worth adding another printk for it.
+> If an end-user sees this problem, I think we'll already get a
+> generic message from check_segment().
+>
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
+Yes, Maybe I met a BIOS bug, but the mmconfig just yelled a failed message like
+this, no other information
 
- drivers/scsi/megaraid.c |   98 ++++++++---------------------------------------
- 1 files changed, 16 insertions(+), 82 deletions(-)
+"fail to add MMCONFIG information, xx--xx can't access extended PCI
+configuration space under this bridge"
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 32cca61..316924c 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -2023,29 +2023,6 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
- 	return FALSE;
- }
- 
--static inline int
--make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
--{
--	*pdev = alloc_pci_dev();
--
--	if( *pdev == NULL ) return -1;
--
--	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
--
--	if( pci_set_dma_mask(*pdev, DMA_BIT_MASK(32)) != 0 ) {
--		kfree(*pdev);
--		return -1;
--	}
--
--	return 0;
--}
--
--static inline void
--free_local_pdev(struct pci_dev *pdev)
--{
--	kfree(pdev);
--}
--
- /**
-  * mega_allocate_inquiry()
-  * @dma_handle - handle returned for dma address
-@@ -2209,13 +2186,10 @@ proc_show_rebuild_rate(struct seq_file *m, void *v)
- 	adapter_t	*adapter = m->private;
- 	dma_addr_t	dma_handle;
- 	caddr_t		inquiry;
--	struct pci_dev	*pdev;
--
--	if( make_local_pdev(adapter, &pdev) != 0 )
--		return 0;
-+	struct pci_dev	*pdev = adapter->dev;
- 
- 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
--		goto free_pdev;
-+		return 0;
- 
- 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
- 		seq_puts(m, "Adapter inquiry failed.\n");
-@@ -2233,8 +2207,6 @@ proc_show_rebuild_rate(struct seq_file *m, void *v)
- 
- free_inquiry:
- 	mega_free_inquiry(inquiry, dma_handle, pdev);
--free_pdev:
--	free_local_pdev(pdev);
- 	return 0;
- }
- 
-@@ -2252,14 +2224,11 @@ proc_show_battery(struct seq_file *m, void *v)
- 	adapter_t	*adapter = m->private;
- 	dma_addr_t	dma_handle;
- 	caddr_t		inquiry;
--	struct pci_dev	*pdev;
-+	struct pci_dev	*pdev = adapter->dev;
- 	u8	battery_status;
- 
--	if( make_local_pdev(adapter, &pdev) != 0 )
--		return 0;
--
- 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
--		goto free_pdev;
-+		return 0;
- 
- 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
- 		seq_printf(m, "Adapter inquiry failed.\n");
-@@ -2308,8 +2277,6 @@ proc_show_battery(struct seq_file *m, void *v)
- 
- free_inquiry:
- 	mega_free_inquiry(inquiry, dma_handle, pdev);
--free_pdev:
--	free_local_pdev(pdev);
- 	return 0;
- }
- 
-@@ -2357,18 +2324,15 @@ proc_show_pdrv(struct seq_file *m, adapter_t *adapter, int channel)
- 	char		*scsi_inq;
- 	dma_addr_t	scsi_inq_dma_handle;
- 	caddr_t		inquiry;
--	struct pci_dev	*pdev;
-+	struct pci_dev	*pdev = adapter->dev;
- 	u8	*pdrv_state;
- 	u8	state;
- 	int	tgt;
- 	int	max_channels;
- 	int	i;
- 
--	if( make_local_pdev(adapter, &pdev) != 0 )
--		return 0;
--
- 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
--		goto free_pdev;
-+		return 0;
- 
- 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
- 		seq_puts(m, "Adapter inquiry failed.\n");
-@@ -2453,8 +2417,6 @@ free_pci:
- 	pci_free_consistent(pdev, 256, scsi_inq, scsi_inq_dma_handle);
- free_inquiry:
- 	mega_free_inquiry(inquiry, dma_handle, pdev);
--free_pdev:
--	free_local_pdev(pdev);
- 	return 0;
- }
- 
-@@ -2533,17 +2495,14 @@ proc_show_rdrv(struct seq_file *m, adapter_t *adapter, int start, int end )
- 	char		*disk_array;
- 	dma_addr_t	disk_array_dma_handle;
- 	caddr_t		inquiry;
--	struct pci_dev	*pdev;
-+	struct pci_dev	*pdev = adapter->dev;
- 	u8	*rdrv_state;
- 	int	num_ldrv;
- 	u32	array_sz;
- 	int	i;
- 
--	if( make_local_pdev(adapter, &pdev) != 0 )
--		return 0;
--
- 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
--		goto free_pdev;
-+		return 0;
- 
- 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
- 		seq_puts(m, "Adapter inquiry failed.\n");
-@@ -2694,8 +2653,6 @@ free_pci:
- 			disk_array_dma_handle);
- free_inquiry:
- 	mega_free_inquiry(inquiry, dma_handle, pdev);
--free_pdev:
--	free_local_pdev(pdev);
- 	return 0;
- }
- 
-@@ -3164,6 +3121,7 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- 			return (-ENODEV);
- 
- 		adapter = hba_soft_state[adapno];
-+		pdev = adapter->dev;
- 
- 		/*
- 		 * Deletion of logical drive is a special case. The adapter
-@@ -3208,12 +3166,10 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- 
- 		/*
- 		 * For all internal commands, the buffer must be allocated in
--		 * <4GB address range
-+		 * <4GB address range.
-+		 *
-+		 * Is it a passthru command or a DCMD
- 		 */
--		if( make_local_pdev(adapter, &pdev) != 0 )
--			return -EIO;
--
--		/* Is it a passthru command or a DCMD */
- 		if( uioc.uioc_rmbox[0] == MEGA_MBOXCMD_PASSTHRU ) {
- 			/* Passthru commands */
- 
-@@ -3221,10 +3177,8 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- 					sizeof(mega_passthru),
- 					&pthru_dma_hndl);
- 
--			if( pthru == NULL ) {
--				free_local_pdev(pdev);
-+			if( pthru == NULL )
- 				return (-ENOMEM);
--			}
- 
- 			/*
- 			 * The user passthru structure
-@@ -3241,8 +3195,6 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- 						sizeof(mega_passthru), pthru,
- 						pthru_dma_hndl);
- 
--				free_local_pdev(pdev);
--
- 				return (-EFAULT);
- 			}
- 
-@@ -3260,8 +3212,6 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- 							pthru,
- 							pthru_dma_hndl);
- 
--					free_local_pdev(pdev);
--
- 					return (-ENOMEM);
- 				}
- 
-@@ -3331,8 +3281,6 @@ freemem_and_return:
- 			pci_free_consistent(pdev, sizeof(mega_passthru),
- 					pthru, pthru_dma_hndl);
- 
--			free_local_pdev(pdev);
--
- 			return rval;
- 		}
- 		else {
-@@ -3345,10 +3293,8 @@ freemem_and_return:
- 				data = pci_alloc_consistent(pdev,
- 						uioc.xferlen, &data_dma_hndl);
- 
--				if( data == NULL ) {
--					free_local_pdev(pdev);
-+				if( data == NULL )
- 					return (-ENOMEM);
--				}
- 
- 				uxferaddr = MBOX(uioc)->xferaddr;
- 			}
-@@ -3367,8 +3313,6 @@ freemem_and_return:
- 							uioc.xferlen,
- 							data, data_dma_hndl);
- 
--					free_local_pdev(pdev);
--
- 					return (-EFAULT);
- 				}
- 			}
-@@ -3391,8 +3335,6 @@ freemem_and_return:
- 							data_dma_hndl);
- 				}
- 
--				free_local_pdev(pdev);
--
- 				return rval;
- 			}
- 
-@@ -3413,8 +3355,6 @@ freemem_and_return:
- 						data_dma_hndl);
- 			}
- 
--			free_local_pdev(pdev);
--
- 			return rval;
- 		}
- 
-@@ -4068,22 +4008,18 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, u8 tgt,
- 	dma_addr_t	pthru_dma_handle;
- 	megacmd_t	mc;
- 	int		rval;
--	struct pci_dev	*pdev;
-+	struct pci_dev	*pdev = adapter->dev;
- 
- 
- 	/*
- 	 * For all internal commands, the buffer must be allocated in <4GB
- 	 * address range
- 	 */
--	if( make_local_pdev(adapter, &pdev) != 0 ) return -1;
--
- 	pthru = pci_alloc_consistent(pdev, sizeof(mega_passthru),
- 			&pthru_dma_handle);
- 
--	if( pthru == NULL ) {
--		free_local_pdev(pdev);
-+	if( pthru == NULL )
- 		return -1;
--	}
- 
- 	pthru->timeout = 2;
- 	pthru->ars = 1;
-@@ -4117,8 +4053,6 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, u8 tgt,
- 	pci_free_consistent(pdev, sizeof(mega_passthru), pthru,
- 			pthru_dma_handle);
- 
--	free_local_pdev(pdev);
--
- 	return rval;
- }
- #endif
+While I look into the code, found there are detail messages for other
+return values in pci_mmconfig_insert(),
+But no for -EINVAL, that is not fair and force me to add more code to
+debug  the cause.
 
+
+> I propose the patch below; what do you think?
+>
+>>
+>>      mutex_lock(&pci_mmcfg_lock);
+>>      cfg = pci_mmconfig_lookup(seg, start);
+>> @@ -716,11 +721,6 @@ int pci_mmconfig_insert(struct device *dev, u16
+>> seg, u8 start, u8 end,
+>>          return -EEXIST;
+>>      }
+>>
+>> -    if (!addr) {
+>> -        mutex_unlock(&pci_mmcfg_lock);
+>> -        return -EINVAL;
+>> -    }
+>> -
+>>      rc = -EBUSY;
+>>      cfg = pci_mmconfig_alloc(seg, start, end, addr);
+>>      if (cfg == NULL) {
+>
+>
+>
+> Author: ethan.zhao <ethan.zhao@oracle.com>
+> Date:   Fri Jul 26 11:21:24 2013 -0600
+>
+>     x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero
+>
+>     We can check for addr being zero earlier and thus avoid the mutex_unlock()
+>     cleanup path.
+>
+>     [bhelgaas: changelog, drop printk]
+>     Signed-off-by: ethan.zhao <ethan.zhao@oracle.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Acked-by: Yinghai Lu <yinghai@kerne.org>
+>
+> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+> index 082e881..5596c7b 100644
+> --- a/arch/x86/pci/mmconfig-shared.c
+> +++ b/arch/x86/pci/mmconfig-shared.c
+> @@ -700,7 +700,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+>         if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
+>                 return -ENODEV;
+>
+> -       if (start > end)
+> +       if (start > end || !addr)
+>                 return -EINVAL;
+>
+>         mutex_lock(&pci_mmcfg_lock);
+> @@ -716,11 +716,6 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+>                 return -EEXIST;
+>         }
+>
+> -       if (!addr) {
+> -               mutex_unlock(&pci_mmcfg_lock);
+> -               return -EINVAL;
+> -       }
+> -
+>         rc = -EBUSY;
+>         cfg = pci_mmconfig_alloc(seg, start, end, addr);
+>         if (cfg == NULL) {
