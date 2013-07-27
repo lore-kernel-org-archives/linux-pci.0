@@ -1,91 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:57692 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779Ab3G2Soc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2013 14:44:32 -0400
-Received: by mail-ob0-f172.google.com with SMTP id uz6so6499100obc.31
-        for <linux-pci@vger.kernel.org>; Mon, 29 Jul 2013 11:44:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375102331-23905-9-git-send-email-jeffrey.t.kirsher@intel.com>
-References: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com> <1375102331-23905-9-git-send-email-jeffrey.t.kirsher@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 29 Jul 2013 12:44:11 -0600
-Message-ID: <CAErSpo5sVTveY54iodDuqLXqsUTqUXTfDLh14k3=okneHB+ikg@mail.gmail.com>
-Subject: Re: [net-next 08/15] pci: expose pcie_link_speed and pcix_bus_speed arrays
-To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: David Miller <davem@davemloft.net>,
-	Jacob Keller <jacob.e.keller@intel.com>,
-	netdev <netdev@vger.kernel.org>, gospo@redhat.com,
-	sassmann@redhat.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from userp1040.oracle.com ([156.151.31.81]:24666 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752049Ab3G0PLd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Jul 2013 11:11:33 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Donald Dutile <ddutile@redhat.com>,
+	Greg Rose <gregory.v.rose@intel.com>
+Subject: [PATCH v2 3/3] PCI: Stop sriov after stop PF if PF's driver skip that
+Date: Sat, 27 Jul 2013 08:11:07 -0700
+Message-Id: <1374937868-24437-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
+References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 29, 2013 at 6:52 AM, Jeff Kirsher
-<jeffrey.t.kirsher@intel.com> wrote:
-> From: Jacob Keller <jacob.e.keller@intel.com>
->
-> pcie_link_speed and pcix_bus_speed are arrays used by probe.c to correctly
-> convert lnksta register values into the pci_bus_speed enum. These static arrays
-> are useful outside probe for this purpose. This patch makes these defines into
-> const arrays and exposes them with an extern header in linux/include/pci.h
->
-> Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
-> Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
-> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-> ---
->  drivers/pci/probe.c | 4 ++--
->  include/linux/pci.h | 3 +++
->  2 files changed, 5 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 46ada5c..496c5b0 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -513,7 +513,7 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
->         return bridge;
->  }
->
-> -static unsigned char pcix_bus_speed[] = {
-> +const unsigned char pcix_bus_speed[] = {
->         PCI_SPEED_UNKNOWN,              /* 0 */
->         PCI_SPEED_66MHz_PCIX,           /* 1 */
->         PCI_SPEED_100MHz_PCIX,          /* 2 */
-> @@ -532,7 +532,7 @@ static unsigned char pcix_bus_speed[] = {
->         PCI_SPEED_133MHz_PCIX_533       /* F */
->  };
->
-> -static unsigned char pcie_link_speed[] = {
-> +const unsigned char pcie_link_speed[] = {
->         PCI_SPEED_UNKNOWN,              /* 0 */
->         PCIE_SPEED_2_5GT,               /* 1 */
->         PCIE_SPEED_5_0GT,               /* 2 */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 0fd1f15..95ff993 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -120,6 +120,9 @@ typedef int __bitwise pci_power_t;
->  /* Remember to update this when the list above changes! */
->  extern const char *pci_power_names[];
->
-> +extern const unsigned char pcix_bus_speed[];
-> +extern const unsigned char pcie_link_speed[];
+After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
+(PCI: Simplify IOV implementation and fix reference count races)
+VF need to be removed via virtfn_remove to make sure ref to PF
+is put back.
 
-As far as I can tell, you didn't actually add anything that uses
-pcix_bus_speed[].
+Some driver (like ixgbe) does not call pci_disable_sriov() if
+sriov is enabled via /sys/.../sriov_numvfs setting.
+ixgbe does allow driver for PF get detached, but still have VFs
+around.
 
-You added a pcie_link_speed[] use only in drivers/pci/pci.c; maybe
-this extern declaration could go in drivers/pci/pci.h to limit its
-visibility?
+But how about PF get removed via /sys or pciehp finally?
 
-If you update this patch, note that we conventionally capitalize "PCI:
-Expose ..." in the changelog summary, e.g., "git log --oneline
-drivers/pci".
+During hot-remove, VF will still hold one ref to PF and it
+prevent PF to be removed.
+That make the next hot-add fails, as old PF dev struct is still around.
 
->  static inline const char *pci_power_name(pci_power_t state)
->  {
->         return pci_power_names[1 + (int) state];
-> --
-> 1.7.11.7
->
+We need to add pci_disable_sriov() calling during stop PF .
+
+Need this one for v3.11
+
+-v2: Accoring to Bjorn, move that calling to pci_stop_dev.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <liuj97@gmail.com>
+Cc: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: Donald Dutile <ddutile@redhat.com>
+Cc: Greg Rose <gregory.v.rose@intel.com>
+
+---
+ drivers/pci/remove.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: linux-2.6/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/remove.c
++++ linux-2.6/drivers/pci/remove.c
+@@ -25,6 +25,8 @@ static void pci_stop_dev(struct pci_dev
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
+ 		device_del(&dev->dev);
++		/* remove VF, if PF driver skip that */
++		pci_disable_sriov(dev);
+ 		dev->is_added = 0;
+ 	}
+ 
