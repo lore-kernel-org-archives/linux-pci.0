@@ -1,56 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:40741 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488Ab3GSVhq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jul 2013 17:37:46 -0400
-Received: by mail-ie0-f178.google.com with SMTP id u16so10805880iet.9
-        for <linux-pci@vger.kernel.org>; Fri, 19 Jul 2013 14:37:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
-References: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 19 Jul 2013 15:37:26 -0600
-Message-ID: <CAErSpo4daNsF0BTJhqdZ0hrBpS+EQ3Z1_-C_LN=ec9fLafNkog@mail.gmail.com>
-Subject: Re: [PATCH 0/4] pci_ids, 8250_pci: remove PCI_VENDOR_ID_ADDIDATA_OLD
-To: Ian Abbott <abbotti@mev.co.uk>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-serial@vger.kernel.org,
-	driverdev-devel@linuxdriverproject.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	H Hartley Sweeten <hsweeten@visionengravers.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: ethan.kernel@gmail.com
+To: bhelgaas@google.com, yinghai@kernel.org, jbarnes@virtuousgeek.org
+Cc: linux-kernel@vger.kernel.org, jiang.liu@huawei.com,
+	linux-pci@vger.kernel.org, joe.jin@oracle.com,
+	"ethan.zhao" <ethan.zhao@oracle.com>
+Subject: [PATCH V2] x86/PCI: MMCONFIG: cleanup and add address warning to pci_mmconfig_insert
+Date: Sat, 27 Jul 2013 15:32:38 -0400
+Message-Id: <1374953558-4704-1-git-send-email-ethan.kernel@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 16, 2013 at 9:14 AM, Ian Abbott <abbotti@mev.co.uk> wrote:
-> The 8250_pci driver uses PCI_VENDOR_ID_ADDIDATA_OLD (0x10e8),
-> PCI_DEVICE_ID_ADDIDATA_APCI7800 (0x818e) to recognize the original
-> ADDI-DATA APCI-7800 PCI serial card.  However vendor ID 0x10e8 was
-> assigned by PCI-SIG to Applied Micro Circuits Corporation (AMCC) and the
-> associated device ID 0x818e was assigned by AMCC to ADDI-DATA.
->
-> Comedi already defines PCI_VENDOR_ID_AMCC as 0x10e8 in one of its header
-> files, so that definition can be moved into pci_ids.h and the 8250_pci
-> driver changed to use it.  The PCI_DEVICE_ID_ADDIDATA_APCI7800 define
-> seems out of place in pci_ids.h since it isn't associated with
-> ADDI-DATA's vendor ID but with AMCC's vendor ID.  It's only used in
-> 8250_pci.c so it can be moved there and renamed to something more
-> sensible.
->
-> 1) pci_ids.h: move PCI_VENDOR_ID_AMCC here
-> 2) serial: 8250_pci: replace PCI_VENDOR_ID_ADDIDATA_OLD
-> 3) serial: 8250_pci: use local device ID for ADDI-DATA APCI-7800
-> 4) pci_ids.h: remove PCI_VENDOR_ID_ADDIDATA_OLD and
->    PCI_DEVICE_ID_ADDIDATA_APCI7800
->
->  drivers/staging/comedi/comedidev.h | 1 -
->  drivers/tty/serial/8250/8250_pci.c | 9 +++++----
->  include/linux/pci_ids.h            | 4 ++--
->  3 files changed, 7 insertions(+), 7 deletions(-)
+Cleanup the -EINVAL return value handling and add warning message for invalid
+start,end,addr parameters.
 
-For patches 1 & 4 (the ones that touch pci_ids.h):
+V2: Corrected code style and tested for Linux v 3.11-rc2
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: ethan.zhao <ethan.zhao@oracle.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-Please merge them along with the 8250 changes.
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 082e881..37f6c7f 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -700,8 +700,13 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
+ 		return -ENODEV;
+ 
+-	if (start > end)
++	if (start > end || !addr) {
++		dev_warn(dev, FW_INFO
++			"Invalid address to add MMCONFIG"
++			"start %02x end %02x addr %pR\n",
++			start, end, addr);
+ 		return -EINVAL;
++	}
+ 
+ 	mutex_lock(&pci_mmcfg_lock);
+ 	cfg = pci_mmconfig_lookup(seg, start);
+@@ -716,11 +721,6 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 		return -EEXIST;
+ 	}
+ 
+-	if (!addr) {
+-		mutex_unlock(&pci_mmcfg_lock);
+-		return -EINVAL;
+-	}
+-
+ 	rc = -EBUSY;
+ 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
+ 	if (cfg == NULL) {
+-- 
+1.7.1
