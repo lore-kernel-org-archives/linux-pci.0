@@ -1,93 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1374774810-18459-10-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com> <1374774810-18459-10-git-send-email-thierry.reding@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 25 Jul 2013 12:01:05 -0600
-Message-ID: <CAErSpo5v0ajACxAZnUQtL5LbY=JW1Xdw+cRf=wtqvJuQDxfAow@mail.gmail.com>
-Subject: Re: [PATCH v5 09/16] PCI: tegra: set up PADS_REFCLK_CFG1
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:44662 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753699Ab3G1O1W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 28 Jul 2013 10:27:22 -0400
+Date: Sun, 28 Jul 2013 16:27:11 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Grant Likely <grant.likely@secretlab.ca>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Russell King <linux@arm.linux.org.uk>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	devicetree@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: Re: [PATCHv5 05/11] of: pci: add registry of MSI chips
+Message-ID: <20130728162711.32a9a21e@skate>
+In-Reply-To: <20130728043310.6CF1D3E08FE@localhost>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1373889167-27878-6-git-send-email-thomas.petazzoni@free-electrons.com>
+	<51E41F7A.4010502@gmail.com>
+	<20130728043310.6CF1D3E08FE@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 25, 2013 at 11:53 AM, Thierry Reding
-<thierry.reding@gmail.com> wrote:
-> From: Stephen Warren <swarren@nvidia.com>
->
-> The registers PADS_REFCLK_CFG are an array of 16-bit data, one entry per
-> PCIe root port. For Tegra30, we therefore need to write a 3rd entry in
-> this array. Doing so mays the mini-PCIe slot on Beaver operate correctly.
->
-> While we're at it, add some #defines to partially document the fields
-> within these 16-bit values.
->
-> Signed-off-by: Stephen Warren <swarren@nvidia.com>
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
+Dear Grant Likely,
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Thanks for your feedback! Some comments below.
 
-> ---
->  drivers/pci/host/pci-tegra.c | 29 ++++++++++++++++++++++++-----
->  1 file changed, 24 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 5347d7d..0c84c67 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -196,6 +196,25 @@
->  #define PADS_REFCLK_CFG0                       0x000000C8
->  #define PADS_REFCLK_CFG1                       0x000000CC
->
-> +/*
-> + * Fields in PADS_REFCLK_CFG*. Those registers form an array of 16-bit
-> + * entries, one entry per PCIe port. These field definitions and desired
-> + * values aren't in the TRM, but do come from NVIDIA.
-> + */
-> +#define PADS_REFCLK_CFG_TERM_SHIFT             2  /* 6:2 */
-> +#define PADS_REFCLK_CFG_E_TERM_SHIFT           7
-> +#define PADS_REFCLK_CFG_PREDI_SHIFT            8  /* 11:8 */
-> +#define PADS_REFCLK_CFG_DRVI_SHIFT             12 /* 15:12 */
-> +
-> +/* Default value provided by HW engineering is 0xfa5c */
-> +#define PADS_REFCLK_CFG_VALUE \
-> +       ( \
-> +               (0x17 << PADS_REFCLK_CFG_TERM_SHIFT)   | \
-> +               (0    << PADS_REFCLK_CFG_E_TERM_SHIFT) | \
-> +               (0xa  << PADS_REFCLK_CFG_PREDI_SHIFT)  | \
-> +               (0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
-> +       )
-> +
->  struct tegra_msi {
->         struct msi_chip chip;
->         DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-> @@ -809,11 +828,11 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->         value |= PADS_PLL_CTL_RST_B4SM;
->         pads_writel(pcie, value, soc->pads_pll_ctl);
->
-> -       /*
-> -        * Hack, set the clock voltage to the DEFAULT provided by hw folks.
-> -        * This doesn't exist in the documentation.
-> -        */
-> -       pads_writel(pcie, 0xfa5cfa5c, PADS_REFCLK_CFG0);
-> +       /* Configure the reference clock driver */
-> +       value = PADS_REFCLK_CFG_VALUE | (PADS_REFCLK_CFG_VALUE << 16);
-> +       pads_writel(pcie, value, PADS_REFCLK_CFG0);
-> +       if (soc->num_ports > 2)
-> +               pads_writel(pcie, PADS_REFCLK_CFG_VALUE, PADS_REFCLK_CFG1);
->
->         /* wait for the PLL to lock */
->         timeout = 300;
-> --
-> 1.8.1.5
->
+On Sat, 27 Jul 2013 22:33:10 -0600, Grant Likely wrote:
+
+> > > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > 
+> > Acked-by: Rob Herring <rob.herring@calxeda.com>
+> 
+> Actually, I'm going to disagree on this one and say NAK. I don't think
+> it is a good idea to create a completely separate registry of msi_chips
+> for binding to dt nodes. I think it would be better to include the
+> msi_chip pointer directly into the irq_domain which has to be there
+> anyway. It then becomes another feature for irq controllers if it can
+> support doing MSI.
+
+The problem that this patch tries to solve is how can the PCIe driver
+work get a pointer to the msi_chip structure from the DT device node
+pointed to by the 'msi-parent' property. I.e, we have:
+
+	interrupt-parent = <&mpic>;
+
+	mpic {
+		reg = <...>;
+		compatible = "...";
+		interrupt-controller;
+		msi-controller;
+	};
+
+	pcie-controller {
+		msi-parent = <&mpic>;
+	};
+
+The 'mpic' driver registers two irq_domains, one for the "normal"
+interrupts, and one for the MSI interrupts. Both irq_domain cannot be
+associated to the same &mpic node, or the irq_domain lookup for
+interrupt-parent and msi-parent is going to be confused.
+
+In the very first version of this patch set, I was using two separate
+DT device nodes to avoid this problem:
+
+	interrupt-parent = <&mpic>;
+
+	interrupt-controller {
+		reg = <...>;
+		compatible = "...";
+
+		mpic {
+			interrupt-controller;
+		};
+
+		msi {
+			msi-controller;
+		};
+	};
+
+	pcie-controller {
+		msi-parent = <&msi>;
+	};
+
+This way, each of the two irq_domain was associated to a distinct DT
+device node, and everything was working fine. But during the review, I
+was pointed by Arnd that it wasn't the proper way of describing the
+interrupt controller, and that there should be only one DT device node
+having both the interrupt-controller and msi-controller roles.
+
+So what is your suggestion to allow the PCIe controller to retrieve the
+correct irq_domain if we have only one DT node for the IRQ controller
+that registers two irq_domains ?
+
+See:
+
+   [RFCv1 00/11] MSI support for Marvell EBU PCIe driver
+   https://lists.ozlabs.org/pipermail/devicetree-discuss/2013-March/030578.html
+
+and particularly:
+
+   [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to interrupt
+   controller driver
+   https://lists.ozlabs.org/pipermail/devicetree-discuss/2013-March/030584.html
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
