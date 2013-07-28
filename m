@@ -1,58 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:35137 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753505Ab3GIANW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Jul 2013 20:13:22 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 3/8] ACPI / hotplug / PCI: Always return success after adding a function
-Date: Tue, 09 Jul 2013 02:17:34 +0200
-Message-ID: <3387129.165JytWxXq@vostro.rjw.lan>
-In-Reply-To: <26431283.HJCKsss0rt@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:64406 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710Ab3G1EdN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 28 Jul 2013 00:33:13 -0400
+Received: by mail-pb0-f43.google.com with SMTP id md12so3440858pbc.16
+        for <linux-pci@vger.kernel.org>; Sat, 27 Jul 2013 21:33:13 -0700 (PDT)
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCHv5 05/11] of: pci: add registry of MSI chips
+To: Rob Herring <robherring2@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+In-Reply-To: <51E41F7A.4010502@gmail.com>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com> <1373889167-27878-6-git-send-email-thomas.petazzoni@free-electrons.com> <51E41F7A.4010502@gmail.com>
+Date: Sat, 27 Jul 2013 22:33:10 -0600
+Message-Id: <20130728043310.6CF1D3E08FE@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, 15 Jul 2013 11:12:42 -0500, Rob Herring <robherring2@gmail.com> wrote:
+> On 07/15/2013 06:52 AM, Thomas Petazzoni wrote:
+> > This commit adds a very basic registry of msi_chip structures, so that
+> > an IRQ controller driver can register an msi_chip, and a PCIe host
+> > controller can find it, based on a 'struct device_node'.
+> > 
+> > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> 
+> Acked-by: Rob Herring <rob.herring@calxeda.com>
 
-When a new ACPIPHP function is added by register_slot() and the
-notify handler cannot be installed for it, register_slot() returns an
-error status without cleaning up, which causes the entire namespace
-walk in acpiphp_enumerate_slots() to be aborted, although it still
-may be possible to successfully install the function notify handler
-for other device objects under the given brigde.
+Actually, I'm going to disagree on this one and say NAK. I don't think
+it is a good idea to create a completely separate registry of msi_chips
+for binding to dt nodes. I think it would be better to include the
+msi_chip pointer directly into the irq_domain which has to be there
+anyway. It then becomes another feature for irq controllers if it can
+support doing MSI.
 
-To address this issue make register_slot() return success after
-a new function has been added, even if the addition of the notify
-handler for it has failed.
+In fact, I would even go so far as to say it would make sense for the
+msi_chip functionality to be rolled directly into the irq_domain without
+a separate structure; but I'm not nacking on that point.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+g.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -335,10 +335,9 @@ register_slot(acpi_handle handle, u32 lv
- 
- 		if (ACPI_FAILURE(status))
- 			err("failed to register interrupt notify handler\n");
--	} else
--		status = AE_OK;
-+	}
- 
--	return status;
-+	return AE_OK;
- 
-  err_exit:
- 	bridge->nr_slots--;
+> 
+> 
+> > ---
+> >  drivers/of/of_pci.c    | 45 +++++++++++++++++++++++++++++++++++++++++++++
+> >  include/linux/msi.h    |  2 ++
+> >  include/linux/of_pci.h | 12 ++++++++++++
+> >  3 files changed, 59 insertions(+)
+> > 
+> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> > index 42c687a..e5ca008 100644
+> > --- a/drivers/of/of_pci.c
+> > +++ b/drivers/of/of_pci.c
+> > @@ -89,3 +89,48 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+> >  	return 0;
+> >  }
+> >  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+> > +
+> > +#ifdef CONFIG_PCI_MSI
+> > +
+> > +static LIST_HEAD(of_pci_msi_chip_list);
+> > +static DEFINE_MUTEX(of_pci_msi_chip_mutex);
+> > +
+> > +int of_pci_msi_chip_add(struct msi_chip *chip)
+> > +{
+> > +	if (!of_property_read_bool(chip->of_node, "msi-controller"))
+> > +		return -EINVAL;
+> > +
+> > +	mutex_lock(&of_pci_msi_chip_mutex);
+> > +	list_add(&chip->list, &of_pci_msi_chip_list);
+> > +	mutex_unlock(&of_pci_msi_chip_mutex);
+> > +
+> > +	return 0;
+> > +}
+> > +EXPORT_SYMBOL_GPL(of_pci_msi_chip_add);
+> > +
+> > +void of_pci_msi_chip_remove(struct msi_chip *chip)
+> > +{
+> > +	mutex_lock(&of_pci_msi_chip_mutex);
+> > +	list_del(&chip->list);
+> > +	mutex_unlock(&of_pci_msi_chip_mutex);
+> > +}
+> > +EXPORT_SYMBOL_GPL(of_pci_msi_chip_remove);
+> > +
+> > +struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node)
+> > +{
+> > +	struct msi_chip *c;
+> > +
+> > +	mutex_lock(&of_pci_msi_chip_mutex);
+> > +	list_for_each_entry(c, &of_pci_msi_chip_list, list) {
+> > +		if (c->of_node == of_node) {
+> > +			mutex_unlock(&of_pci_msi_chip_mutex);
+> > +			return c;
+> > +		}
+> > +	}
+> > +	mutex_unlock(&of_pci_msi_chip_mutex);
+> > +
+> > +	return NULL;
+> > +}
+> > +EXPORT_SYMBOL_GPL(of_pci_find_msi_chip_by_node);
+> > +
+> > +#endif /* CONFIG_PCI_MSI */
+> > diff --git a/include/linux/msi.h b/include/linux/msi.h
+> > index cbf5d05..80900e0 100644
+> > --- a/include/linux/msi.h
+> > +++ b/include/linux/msi.h
+> > @@ -67,6 +67,8 @@ void default_teardown_msi_irqs(struct pci_dev *dev);
+> >  struct msi_chip {
+> >  	struct module *owner;
+> >  	struct device *dev;
+> > +	struct device_node *of_node;
+> > +	struct list_head list;
+> >  
+> >  	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+> >  			 struct msi_desc *desc);
+> > diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> > index 7a04826..29631eb 100644
+> > --- a/include/linux/of_pci.h
+> > +++ b/include/linux/of_pci.h
+> > @@ -2,6 +2,7 @@
+> >  #define __OF_PCI_H
+> >  
+> >  #include <linux/pci.h>
+> > +#include <linux/msi.h>
+> >  
+> >  struct pci_dev;
+> >  struct of_irq;
+> > @@ -13,4 +14,15 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+> >  int of_pci_get_devfn(struct device_node *np);
+> >  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+> >  
+> > +#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+> > +int of_pci_msi_chip_add(struct msi_chip *chip);
+> > +void of_pci_msi_chip_remove(struct msi_chip *chip);
+> > +struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node);
+> > +#else
+> > +static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; }
+> > +static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
+> > +static inline struct msi_chip *
+> > +of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL };
+> > +#endif
+> > +
+> >  #endif
+> > 
+> 
 
