@@ -1,54 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:36367 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757721Ab3GWVQA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Jul 2013 17:16:00 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PCI: pciehp: Convert pciehp to be builtin only, not modular
-Date: Tue, 23 Jul 2013 23:26:03 +0200
-Message-ID: <1858488.HKVVs8OCFA@vostro.rjw.lan>
-In-Reply-To: <20130723180821.19616.52936.stgit@bhelgaas-glaptop>
-References: <20130723180001.19616.72450.stgit@bhelgaas-glaptop> <20130723180821.19616.52936.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+Subject: Re: [PATCH V2] x86/PCI: MMCONFIG: cleanup and add address warning to pci_mmconfig_insert
+From: Mark D Rustad <mrustad@gmail.com>
+In-Reply-To: <1374953558-4704-1-git-send-email-ethan.kernel@gmail.com>
+Date: Sat, 27 Jul 2013 20:09:41 -0700
+Cc: bhelgaas@google.com, yinghai@kernel.org, jbarnes@virtuousgeek.org,
+	linux-kernel@vger.kernel.org, jiang.liu@huawei.com,
+	linux-pci@vger.kernel.org, joe.jin@oracle.com,
+	"ethan.zhao" <ethan.zhao@oracle.com>
+Message-Id: <7F52345F-242F-4A9D-8CD2-5805936ABAEE@gmail.com>
+References: <1374953558-4704-1-git-send-email-ethan.kernel@gmail.com>
+To: ethan.kernel@gmail.com
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 23, 2013 12:08:21 PM Bjorn Helgaas wrote:
-> Convert pciehp to be builtin only, with no module option.
+Another nit below:
+
+On Jul 27, 2013, at 12:32 PM, ethan.kernel@gmail.com wrote:
+
+> Cleanup the -EINVAL return value handling and add warning message for invalid
+> start,end,addr parameters.
 > 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
+> V2: Corrected code style and tested for Linux v 3.11-rc2
+> 
+> Signed-off-by: ethan.zhao <ethan.zhao@oracle.com>
 > ---
->  drivers/pci/pcie/Kconfig |    5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
+> arch/x86/pci/mmconfig-shared.c |   12 ++++++------
+> 1 files changed, 6 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-> index 569f82f..3b94cfc 100644
-> --- a/drivers/pci/pcie/Kconfig
-> +++ b/drivers/pci/pcie/Kconfig
-> @@ -14,15 +14,12 @@ config PCIEPORTBUS
->  # Include service Kconfig here
->  #
->  config HOTPLUG_PCI_PCIE
-> -	tristate "PCI Express Hotplug driver"
-> +	bool "PCI Express Hotplug driver"
->  	depends on HOTPLUG_PCI && PCIEPORTBUS
->  	help
->  	  Say Y here if you have a motherboard that supports PCI Express Native
->  	  Hotplug
->  
-> -	  To compile this driver as a module, choose M here: the
-> -	  module will be called pciehp.
-> -
->  	  When in doubt, say N.
->  
->  source "drivers/pci/pcie/aer/Kconfig"
+> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+> index 082e881..37f6c7f 100644
+> --- a/arch/x86/pci/mmconfig-shared.c
+> +++ b/arch/x86/pci/mmconfig-shared.c
+> @@ -700,8 +700,13 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+> 	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
+> 		return -ENODEV;
 > 
+> -	if (start > end)
+> +	if (start > end || !addr) {
+> +		dev_warn(dev, FW_INFO
+> +			"Invalid address to add MMCONFIG"
+> +			"start %02x end %02x addr %pR\n",
+
+As it is here, there will be no space between MMCONFIG and the word start. Better still, put the entire string on one line to aid those searching for the message. There is a general exception to the 80-column rule for user-visible messages such as this.
+
+<snip>
+
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Mark Rustad, MRustad@gmail.com
+
