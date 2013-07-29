@@ -1,98 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 7/30] ACPI / hotplug / PCI: Pass hotplug context objects to event handlers
-Date: Fri, 12 Jul 2013 01:45:41 +0200
-Message-ID: <1557800.QvsP0qdoD8@vostro.rjw.lan>
-In-Reply-To: <3718119.FLASu5DBx8@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:29759 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751030Ab3G2Mw1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Jul 2013 08:52:27 -0400
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: davem@davemloft.net, bhelgaas@google.com
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>, netdev@vger.kernel.org,
+	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org
+Subject: [net-next 00/15][pull request] Intel Wired LAN Driver Updates
+Date: Mon, 29 Jul 2013 05:51:56 -0700
+Message-Id: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This series contains updates to ixgbe and pci.
 
-Modify handle_hotplug_event() to pass the entire context object
-(instead of its fields individually) to work functions started by it.
+The first patch for ixgbe from Greg Rose is the second submission.  The
+first submission of "ixgbe: Retain VLAN filtering in promiscuous + VT
+mode" had a typo, which Joe Perches pointed out and is fixed in this
+submission.
 
-This change makes the subsequent consolidation of the event handling
-work functions a bit more straightforward.
+Alex updates the ixgbe driver to use the generic helper pci_vfs_assigned
+instead of the driver specific function ixgbe_vfs_are_assigned.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Don Skidmore provides 4 patches for ixgbe, the first being a fix for
+flow control ethtool reporting.  Originally ixgbe_device_supports_autoneg_fc()
+was expected to be called by only copper devices, which lead to false
+information being displayed via ethtool.  Two other patches add support
+for fixed fiber for SFP+ devices and the addition of a quad-port x520
+adapter.  The last patch simply bumps the driver version.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1011,6 +1011,7 @@ void acpiphp_check_host_bridge(acpi_hand
- 
- static void _handle_hotplug_event_bridge(struct work_struct *work)
- {
-+	struct acpiphp_context *context;
- 	struct acpiphp_bridge *bridge;
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
-@@ -1022,7 +1023,8 @@ static void _handle_hotplug_event_bridge
- 	hp_work = container_of(work, struct acpi_hp_work, work);
- 	handle = hp_work->handle;
- 	type = hp_work->type;
--	bridge = (struct acpiphp_bridge *)hp_work->context;
-+	context = hp_work->context;
-+	bridge = context->bridge;
- 
- 	acpi_scan_lock_acquire();
- 
-@@ -1127,18 +1129,18 @@ static void hotplug_event_func(acpi_hand
- 
- static void _handle_hotplug_event_func(struct work_struct *work)
- {
-+	struct acpiphp_context *context;
- 	struct acpi_hp_work *hp_work;
--	struct acpiphp_func *func;
- 
- 	hp_work = container_of(work, struct acpi_hp_work, work);
--	func = hp_work->context;
-+	context = hp_work->context;
- 	acpi_scan_lock_acquire();
- 
--	hotplug_event_func(hp_work->handle, hp_work->type, func);
-+	hotplug_event_func(hp_work->handle, hp_work->type, context->func);
- 
- 	acpi_scan_lock_release();
- 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
--	put_bridge(func->slot->bridge);
-+	put_bridge(context->func->slot->bridge);
- }
- 
- /**
-@@ -1159,11 +1161,9 @@ static void handle_hotplug_event(acpi_ha
- 	if (context) {
- 		if (context->bridge) {
- 			get_bridge(context->bridge);
--			data = context->bridge;
- 			work_func = _handle_hotplug_event_bridge;
- 		} else if (context->func) {
- 			get_bridge(context->func->slot->bridge);
--			data = context->func;
- 			work_func = _handle_hotplug_event_func;
- 		}
- 		acpiphp_put_context(context);
-@@ -1179,7 +1179,7 @@ static void handle_hotplug_event(acpi_ha
- 	 * don't deadlock on hotplug actions.
- 	 */
- 	if (work_func)
--		alloc_acpi_hp_work(handle, type, data, work_func);
-+		alloc_acpi_hp_work(handle, type, context, work_func);
- }
- 
- /*
+Emil Tantilov provides 3 fixes for ixgbe, two of which resolve
+semaphore lock issues.  The third fix resolves several issues in the
+previous implementation of the SFF data dumps of SFP+ modules.
+
+The remaining ixgbe and pci patches are from Jacob Keller.  The pci
+patches exposes bus speed, link speed and bus width so that drivers
+can take advantage of this information.  In addition, adds a pci function
+which obtains minimum link width and speed.  Jacob also provides the
+ixgbe patch to incorporate the pci function. He provides a patch that
+fixes a lockdep issue created due to ixgbe_ptp_stop always running
+cancel_work_sync even if the work item had not been created properly with
+INIT_WORK. This issue was found and reported by Stephen Hemminger.
+
+The following are changes since commit fe6f700d6cbb7e8a61711e325f53d9c9e0a42a4c:
+  net/mlx4_core: Respond to operation request by firmware
+and are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/jkirsher/net-next master
+
+Alexander Duyck (1):
+  ixgbe: Use pci_vfs_assigned instead of ixgbe_vfs_are_assigned
+
+Don Skidmore (4):
+  ixgbe: fix fc autoneg ethtool reporting.
+  ixgbe: add new media type
+  ixgbe: bump version number
+  ixgbe: add support for quad-port x520 adapter
+
+Emil Tantilov (3):
+  ixgbe: fix semaphore lock for I2C read/writes on 82598
+  ixgbe: fix SFF data dumps of SFP+ modules
+  ixgbe: clear semaphore bits on timeouts
+
+Greg Rose (1):
+  ixgbe: Retain VLAN filtering in promiscuous + VT mode
+
+Jacob Keller (6):
+  pci: expose pcie_link_speed and pcix_bus_speed arrays
+  pci: move enum pcie_link_width into pci.h
+  pci: Add function to obtain minimum link width and speed
+  ixgbe: call pcie_get_mimimum_link to check if device has enough
+    bandwidth
+  ixgbe: fix lockdep annotation issue for ptp's work item
+  ixgbe: rename LL_EXTENDED_STATS to use queue instead of q
+
+ drivers/net/ethernet/intel/ixgbe/ixgbe.h         |   7 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_82598.c   |  34 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_82599.c   | 231 ++++++++++-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_common.c  |  88 +++--
+ drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c |  94 ++---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c    | 158 +++++++-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_phy.c     | 470 ++++++++++++++++-------
+ drivers/net/ethernet/intel/ixgbe/ixgbe_phy.h     |  41 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c     |  12 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c   | 101 +++--
+ drivers/net/ethernet/intel/ixgbe/ixgbe_type.h    |  12 +
+ drivers/pci/pci.c                                |  43 +++
+ drivers/pci/probe.c                              |   4 +-
+ include/linux/pci.h                              |  18 +
+ include/linux/pci_hotplug.h                      |  13 -
+ 15 files changed, 983 insertions(+), 343 deletions(-)
+
+-- 
+1.7.11.7
 
