@@ -1,73 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:58541 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019Ab3GEWt5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jul 2013 18:49:57 -0400
-Received: by mail-oa0-f44.google.com with SMTP id l10so3963898oag.17
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jul 2013 15:49:57 -0700 (PDT)
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:49547 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753638Ab3G2ORy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2013 10:17:54 -0400
+Received: by mail-oa0-f47.google.com with SMTP id m6so6212093oag.20
+        for <linux-pci@vger.kernel.org>; Mon, 29 Jul 2013 07:17:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1373063807.4446.10.camel@pasglop>
-References: <1372993054-25730-1-git-send-email-shangw@linux.vnet.ibm.com>
- <1372993054-25730-2-git-send-email-shangw@linux.vnet.ibm.com>
- <CAErSpo7QGD99HM1fEcvGi-9h3HX6C8nu1mzJHnMMUKWTNO0vnw@mail.gmail.com> <1373063807.4446.10.camel@pasglop>
+In-Reply-To: <51F5B966.9080405@jp.fujitsu.com>
+References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
+ <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com>
+ <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com>
+ <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com>
+ <51B93221.2040505@jp.fujitsu.com> <CAErSpo5tVK-Z3aOdMTzab-S8o5zLVtDOFQ8-LSYpUgbrJSsxuw@mail.gmail.com>
+ <51BA7BB6.1080104@jp.fujitsu.com> <51EF7466.20703@jp.fujitsu.com>
+ <CAErSpo5B7NzVfxwW3bQnfK+iK+DrRsWQd2Cm14z5PWNnRHWL5w@mail.gmail.com> <51F5B966.9080405@jp.fujitsu.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 5 Jul 2013 16:49:37 -0600
-Message-ID: <CAErSpo52hic4nb-RtTT+e1nhXFeuWUJWajEzMy3j6wzWHVaG4A@mail.gmail.com>
-Subject: Re: [PATCH 1/8] PCI: Add pcibios_stop_dev()
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Mon, 29 Jul 2013 08:17:33 -0600
+Message-ID: <CAErSpo4JtG5qVJb-nCywe3vkft=-cDeRDKn_V92RCZ-sGXpwbg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	"Sumner, William" <bill.sumner@hp.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	Vivek Goyal <vgoyal@redhat.com>,
+	Haren Myneni <hbabu@us.ibm.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 5, 2013 at 4:36 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Fri, 2013-07-05 at 12:49 -0600, Bjorn Helgaas wrote:
->> We already have pcibios_release_device() (just merged for v3.11).
->> Would that work for you?  I haven't seen your whole series, so I can't
->> tell whether you need something different.
+On Sun, Jul 28, 2013 at 6:37 PM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
+> (2013/07/26 2:00), Bjorn Helgaas wrote:
+>> On Wed, Jul 24, 2013 at 12:29 AM, Takao Indoh
+>> <indou.takao@jp.fujitsu.com> wrote:
+>>> Sorry for letting this discussion slide, I was busy on other works:-(
+>>> Anyway, the summary of previous discussion is:
+>>> - My patch adds new initcall(fs_initcall) to reset all PCIe endpoints on
+>>>    boot. This expects PCI enumeration is done before IOMMU
+>>>    initialization as follows.
+>>>      (1) PCI enumeration
+>>>      (2) fs_initcall ---> device reset
+>>>      (3) IOMMU initialization
+>>> - This works on x86, but does not work on other architecture because
+>>>    IOMMU is initialized before PCI enumeration on some architectures. So,
+>>>    device reset should be done where IOMMU is initialized instead of
+>>>    initcall.
+>>> - Or, as another idea, we can reset devices in first kernel(panic kernel)
+>>>
+>>> Resetting devices in panic kernel is against kdump policy and seems not to
+>>> be good idea. So I think adding reset code into iommu initialization is
+>>> better. I'll post patches for that.
+>>
+>> Of course nobody *wants* to do anything in the panic kernel.  But
+>> simply saying "it's against kdump policy and seems not to be a good
+>> idea" is not a technical argument.  There are things that are
+>> impractical to do in the kdump kernel, so they have to be done in the
+>> panic kernel even though we know the kernel is unreliable and the
+>> attempt may fail.
 >
-> Maybe... Gavin's original hook applies when the device is removed
-> from the tree, your new hook when the refcount expires and the
-> structure is about to be freed...
+> Accessing kernel data in panic kernel causes panic again, so
+> - Don't touch kernel data in panic situation
+> - Jump to kdump kernel as quickly as possible, and do things in safe
+>   kernel
+> These are basic "kdump policy". Of course if there are any works which
+> we cannot do in kdump kernel and can do only in panic kernel, for
+> example saving registers or stopping cpus, we should do them in panic
+> kernel.
+>
+> Resetting devices in panic kernel is worth considering if we can safely
+> find pci_dev and reset it, but I have no idea how to do that because
+> for example struct pci_dev may be borken.
 
-Yep, pcibios_release_device() is definitely at a different point.  I
-just want to avoid exposing too many points in the device lifetime to
-the arch, because it makes it so much harder to refactor things.
+Nobody can guarantee that the panic kernel can do *anything* safely
+because any arbitrary kernel data or text may be corrupted.  But if
+you consider any specific data structure, e.g., CPU or PCI device
+lists, it's not very likely that it will be corrupted.
 
-> I *suspect* that's fine but I'll need to have a closer look (or wait
-> for Gavin to be back from vacation :-)
+>> My point about IOMMU and PCI initialization order doesn't go away just
+>> because it doesn't fit "kdump policy."  Having system initialization
+>> occur in a logical order is far more important than making kdump work.
 >
-> BTW. One thing we do in EEH is that if we get an error and the driver
-> for the device doesn't implement recovery, we simulate a hotplug.
+> My next plan is as follows. I think this is matched to logical order
+> on boot.
 >
-> IE. We unplug the device (currently removing it), reset it (or the
-> bus it's on, whatever applies, which lifts the fence established by
-> the EEH hardware), and re-plug it.
+> drivers/pci/pci.c
+> - Add function to reset bus, for example, pci_reset_bus(struct pci_bus *bus)
 >
-> The current method really removes the device from the PCI subsystem,
-> and "plugs" it back. IE. We rescan the slot, and might even end up
-> re-assigning resources, which I'm not too fan about. It's also unclear
-> what quirks gets called in that re-plug case, etc...
->
-> I'm wondering whether it might be better to keep the pci_dev around,
-> just mark it blocked for user access, unbind the driver, reset, restore
-> the BARs to their original values, unblock and re-bind.
+> drivers/iommu/intel-iommu.c
+> - On initialization, if IOMMU is already enabled, call this bus reset
+>   function before disabling and re-enabling IOMMU.
 
-Personally, I like the full hotplug approach, even though it will
-probably reassign resources, because it uses the standard paths that
-should be better-tested, and it's clear what should happen.
-Reassigning resources should be OK because we already have to do that
-for the non-error handling hot-add case.
+I raised this issue because of arches like sparc that enumerate the
+IOMMU before the PCI devices that use it.  In that situation, I think
+you're proposing this:
 
-I know we have paths where we save config space, do a reset, and
-restore config space.  I don't like those because some quirks aren't
-applied and I don't believe restoring config space is sufficient to
-make the device safe to use.  There could be internal state that we
-aren't restoring.  It's also possible that a firmware update means the
-device is different than it was before the reset, e.g., BARs could be
-different types or sizes.
+  panic kernel
+    enable IOMMU
+    panic
+  kdump kernel
+    initialize IOMMU (already enabled)
+      pci_reset_bus
+      disable IOMMU
+      enable IOMMU
+    enumerate PCI devices
+
+But the problem is that when you call pci_reset_bus(), you haven't
+enumerated the PCI devices, so you don't know what to reset.
 
 Bjorn
