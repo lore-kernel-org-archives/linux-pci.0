@@ -1,78 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:36347 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933155Ab3GWSNE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jul 2013 14:13:04 -0400
-Received: by mail-oa0-f50.google.com with SMTP id k7so11940132oag.23
-        for <linux-pci@vger.kernel.org>; Tue, 23 Jul 2013 11:13:03 -0700 (PDT)
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:47737 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753311Ab3G2OcK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2013 10:32:10 -0400
+Received: by mail-ob0-f169.google.com with SMTP id wc20so3185001obb.0
+        for <linux-pci@vger.kernel.org>; Mon, 29 Jul 2013 07:32:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1374602524-3398-14-git-send-email-wsa@the-dreams.de>
-References: <1374602524-3398-1-git-send-email-wsa@the-dreams.de> <1374602524-3398-14-git-send-email-wsa@the-dreams.de>
+In-Reply-To: <1374657972-2456-1-git-send-email-wangyijing@huawei.com>
+References: <1374657972-2456-1-git-send-email-wangyijing@huawei.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 23 Jul 2013 12:12:42 -0600
-Message-ID: <CAErSpo4jazaN8YahJGs+KD1-j6o8QHe2LmiQwBY9+UweBVkHxQ@mail.gmail.com>
-Subject: Re: [PATCH 13/27] drivers/pci/host: don't check resource with devm_ioremap_resource
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>
+Date: Mon, 29 Jul 2013 08:31:49 -0600
+Message-ID: <CAErSpo4jww8mX61-tw8aTXtv5TR2fCg_+6pfwPKHdwB=iL=mBA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: update NumVFs register properly during
+ enable/disable sriov
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Don Dutile <ddutile@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jingoo]
+[+cc Don]
 
-On Tue, Jul 23, 2013 at 12:01 PM, Wolfram Sang <wsa@the-dreams.de> wrote:
-> devm_ioremap_resource does sanity checks on the given resource. No need to
-> duplicate this in the driver.
+On Wed, Jul 24, 2013 at 3:26 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Currently, we only update NumVFs register during sriov_enable().
+> This register should also be updated properly during sriov_disable.
+> Otherwise, we will get the stale "Number of VFs" info from lspci.
+
+Has this always been broken, or was it broken by a recent change?
+
+Can you post a transcript demonstrating what's going wrong?  Doesn't
+have to be in the changelog unless it's short, but just something to
+help reproduce the problem.
+
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/iov.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
 >
-> Signed-off-by: Wolfram Sang <wsa@the-dreams.de>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Jingoo, I can apply this, or if you have other pcie-designware.c
-updates this cycle, you can fold it into those.  Just let me know what
-you'd prefer.
-
-Bjorn
-
-
->  drivers/pci/host/pcie-designware.c |   12 ------------
->  1 file changed, 12 deletions(-)
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index de8ffac..6e4844b 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -286,7 +286,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>             (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
+>                 return -EINVAL;
 >
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 26bdbda..f0ba6ef 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -817,28 +817,16 @@ static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
->         int ret;
+> -       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
+>         pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
+>         pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
+>         if (!offset || (nr_virtfn > 1 && !stride))
+> @@ -334,6 +333,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>                         return rc;
+>         }
 >
->         elbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> -       if (!elbi_base) {
-> -               dev_err(&pdev->dev, "couldn't get elbi base resource\n");
-> -               return -EINVAL;
-> -       }
->         pp->elbi_base = devm_ioremap_resource(&pdev->dev, elbi_base);
->         if (IS_ERR(pp->elbi_base))
->                 return PTR_ERR(pp->elbi_base);
+> +       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
+>         iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+>         pci_cfg_access_lock(dev);
+>         pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+> @@ -368,6 +368,7 @@ failed:
+>         iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>         pci_cfg_access_lock(dev);
+>         pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+> +       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
+>         ssleep(1);
+>         pci_cfg_access_unlock(dev);
 >
->         phy_base = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-> -       if (!phy_base) {
-> -               dev_err(&pdev->dev, "couldn't get phy base resource\n");
-> -               return -EINVAL;
-> -       }
->         pp->phy_base = devm_ioremap_resource(&pdev->dev, phy_base);
->         if (IS_ERR(pp->phy_base))
->                 return PTR_ERR(pp->phy_base);
+> @@ -401,6 +402,7 @@ static void sriov_disable(struct pci_dev *dev)
+>                 sysfs_remove_link(&dev->dev.kobj, "dep_link");
 >
->         purple_base = platform_get_resource(pdev, IORESOURCE_MEM, 2);
-> -       if (!purple_base) {
-> -               dev_err(&pdev->dev, "couldn't get purple base resource\n");
-> -               return -EINVAL;
-> -       }
->         pp->purple_base = devm_ioremap_resource(&pdev->dev, purple_base);
->         if (IS_ERR(pp->purple_base))
->                 return PTR_ERR(pp->purple_base);
+>         iov->num_VFs = 0;
+> +       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
+>  }
+>
+>  static int sriov_init(struct pci_dev *dev, int pos)
 > --
-> 1.7.10.4
+> 1.7.1
 >
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
