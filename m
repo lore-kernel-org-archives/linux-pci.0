@@ -1,39 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:38581 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751091Ab3GFA3n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Jul 2013 20:29:43 -0400
-Message-ID: <1373070567.4446.14.camel@pasglop>
-Subject: Re: [PATCH] pci: Avoid unnecessary calls to work_on_cpu
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.h.duyck@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Date: Sat, 06 Jul 2013 10:29:27 +1000
-In-Reply-To: <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
-References: <20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com>
-	 <CAErSpo70VKFxJqyZJKSp=CZ2x131Kz_+0vah3juTEuEx5RLX8A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51F5B545.5050300@jp.fujitsu.com>
+Date: Mon, 29 Jul 2013 09:20:21 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
+MIME-Version: 1.0
+To: vgoyal@redhat.com
+CC: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	kexec@lists.infradead.org, ishii.hironobu@jp.fujitsu.com,
+	ddutile@redhat.com, bill.sumner@hp.com, alex.williamson@redhat.com,
+	hbabu@us.ibm.com
+Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
+References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com> <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com> <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com> <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com> <51B93221.2040505@jp.fujitsu.com> <CAErSpo5tVK-Z3aOdMTzab-S8o5zLVtDOFQ8-LSYpUgbrJSsxuw@mail.gmail.com> <51BA7BB6.1080104@jp.fujitsu.com> <51EF7466.20703@jp.fujitsu.com> <20130725142446.GK11993@redhat.com>
+In-Reply-To: <20130725142446.GK11993@redhat.com>
+Content-Type: text/plain; charset=ISO-2022-JP
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-07-05 at 17:36 -0600, Bjorn Helgaas wrote:
-> It seems a little strange to me that this "run the driver probe method
-> on the correct node" code is in PCI.  I would think this behavior
-> would be desirable for *all* bus types, not just PCI, so maybe it
-> would make sense to do this up in device_attach() or somewhere
-> similar.
+(2013/07/25 23:24), Vivek Goyal wrote:
+> On Wed, Jul 24, 2013 at 03:29:58PM +0900, Takao Indoh wrote:
+>> Sorry for letting this discussion slide, I was busy on other works:-(
+>> Anyway, the summary of previous discussion is:
+>> - My patch adds new initcall(fs_initcall) to reset all PCIe endpoints on
+>>    boot. This expects PCI enumeration is done before IOMMU
+>>    initialization as follows.
+>>      (1) PCI enumeration
+>>      (2) fs_initcall ---> device reset
+>>      (3) IOMMU initialization
+>> - This works on x86, but does not work on other architecture because
+>>    IOMMU is initialized before PCI enumeration on some architectures. So,
+>>    device reset should be done where IOMMU is initialized instead of
+>>    initcall.
+>> - Or, as another idea, we can reset devices in first kernel(panic kernel)
+>>
+>> Resetting devices in panic kernel is against kdump policy and seems not to
+>> be good idea. So I think adding reset code into iommu initialization is
+>> better. I'll post patches for that.
 > 
-> But Rusty added this (in 873392ca51), and he knows way more about this
-> stuff than I do.
+> I don't understand all the details but I agree that idea of trying to
+> reset IOMMU in crashed kernel might not fly.
+> 
+>>
+>> Another discussion point is how to handle buggy devices. Resetting buggy
+>> devices makes system more unstable. One of ideas is using boot parameter
+>> so that user can choose to reset devices or not.
+> 
+> So who would decide which device is buggy and don't reset it. Give
+> some details here.
 
-I tend to agree... I can see this being useful on some of our non-PCI
-devices on power as well in fact.
+I found the case that kdump does not work after resetting devices and
+it works when removing reset patch. The cause of problem is a bug of
+PCIe switch chip. If there is boot parameter not to reset devices,
+user can use it as workaround.
 
-Cheers,
-Ben.
+I think in this case we should add PCI quirk to avoid this buggy
+hardware, but we need to wait errata from vendor and it basically takes
+long time.
 
+> 
+> Can't we simply blacklist associated module, so that it never loads
+> and then it never tries to reset the devices?
+> 
+
+So you mean that device reset should be done on its driver loading?
+
+Thanks,
+Takao Indoh
 
