@@ -1,105 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <6958813.eThhpoh5QO@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
-	<3215120.cRBBS5jciE@vostro.rjw.lan>
-	<CAE9FiQURY5WFFJekPHV_s0HPi8uhKzSDOLSXHAkyLPf1=i8oAw@mail.gmail.com>
-	<6958813.eThhpoh5QO@vostro.rjw.lan>
-Date: Thu, 25 Jul 2013 06:25:06 -0700
-Message-ID: <CAE9FiQVOKv-EBPFoVUi5HBPmDDrjmc9nuww68Tm865fkCJeWkA@mail.gmail.com>
-Subject: Re: [PATCH 0/30] ACPI / hotplug / PCI: Major rework + Thunderbolt workarounds
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:22772 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753783Ab3G2Mwb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Jul 2013 08:52:31 -0400
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: davem@davemloft.net, bhelgaas@google.com
+Cc: Jacob Keller <jacob.e.keller@intel.com>, netdev@vger.kernel.org,
+	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Subject: [net-next 09/15] pci: move enum pcie_link_width into pci.h
+Date: Mon, 29 Jul 2013 05:52:05 -0700
+Message-Id: <1375102331-23905-10-git-send-email-jeffrey.t.kirsher@intel.com>
+In-Reply-To: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
+References: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 24, 2013 at 5:58 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Tuesday, July 23, 2013 07:20:53 PM Yinghai Lu wrote:
->> On Tue, Jul 23, 2013 at 2:39 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->
-> [...]
->
->> [  102.631369] pci_host_bridge pci0000:00: freeing pci_host_bridge info
->
-> By the way this looks fishy:
->
->> [  102.633091] ACPI: Device does not support D3cold
->> [  102.633915] ACPI: Device does not support D3cold
->> [  102.635221] ACPI: Device does not support D3cold
->> [  102.636103] ACPI: Device does not support D3cold
->> [  102.636902] ACPI: Device does not support D3cold
->> [  102.637685] ACPI: Device does not support D3cold
->> [  102.638467] ACPI: Device does not support D3cold
->> [  102.639631] ACPI: Device does not support D3cold
->> [  102.640472] ACPI: Device does not support D3cold
->> [  102.641310] ACPI: Device does not support D3cold
->> [  102.642105] ACPI: Device does not support D3cold
->> [  102.642928] ACPI: Device does not support D3cold
->> [  102.643725] ACPI: Device does not support D3cold
->> [  102.644544] ACPI: Device does not support D3cold
->> [  102.645344] ACPI: Device does not support D3cold
->> [  102.646126] ACPI: Device does not support D3cold
->> [  102.646902] ACPI: Device does not support D3cold
->> [  102.647677] ACPI: Device does not support D3cold
->> [  102.648485] ACPI: Device does not support D3cold
->> [  102.649269] ACPI: Device does not support D3cold
->> [  102.650065] ACPI: Device does not support D3cold
->> [  102.650822] ACPI: Device does not support D3cold
->> [  102.652483] ACPI: Device does not support D3cold
->> [  102.654157] ACPI: Device does not support D3cold
->> [  102.655803] ACPI: Device does not support D3cold
->> [  102.657419] ACPI: Device does not support D3cold
->> [  102.658528] ACPI: Device does not support D3cold
->> [  102.659255] ACPI: Device does not support D3cold
->> [  102.659973] ACPI: Device does not support D3cold
->> [  102.661807] ACPI: Device does not support D3cold
->> [  102.661925] ACPI: Device does not support D3cold
->> [  102.662047] ACPI: Device does not support D3cold
->> [  102.662148] ACPI: Device does not support D3cold
->> [  102.662258] ACPI: Device does not support D3cold
->> [  102.662374] ACPI: Device does not support D3cold
->> [  102.662486] ACPI: Device does not support D3cold
->> [  102.662597] ACPI: Device does not support D3cold
->> [  102.662711] ACPI: Device does not support D3cold
->> [  102.662814] ACPI: Device does not support D3cold
->> [  102.662918] ACPI: Device does not support D3cold
->> [  102.663019] ACPI: Device does not support D3cold
->
-> Can you please check if it goes away with the patch below applied?
->
->> [  102.663039] ACPI: \_SB_.PCI0: No _EJ0 support for device
->
->
-> ---
->  drivers/acpi/device_pm.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> Index: linux-pm/drivers/acpi/device_pm.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/device_pm.c
-> +++ linux-pm/drivers/acpi/device_pm.c
-> @@ -159,7 +159,8 @@ int acpi_device_set_power(struct acpi_de
->         int result = 0;
->         bool cut_power = false;
->
-> -       if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
-> +       if (!device || !device->flags.power_manageable
-> +           || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
->                 return -EINVAL;
->
->         /* Make sure this is a valid target state */
->
+From: Jacob Keller <jacob.e.keller@intel.com>
 
-yes, with this change, those print out are gone.
+pcie_link_width is the enum used to define the link width values for a pcie
+device. This enum should not be contained solely in pci_hotplug.h, and this
+patch moves it next to pci_bus_speed in pci.h
 
-Thanks
+Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
+Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
+Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+---
+ include/linux/pci.h         | 13 +++++++++++++
+ include/linux/pci_hotplug.h | 13 -------------
+ 2 files changed, 13 insertions(+), 13 deletions(-)
 
-Yinghai
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 95ff993..fc2d1fb 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -186,6 +186,19 @@ enum pci_bus_flags {
+ 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
+ };
+ 
++/* These values come from the PCI Express Spec */
++enum pcie_link_width {
++	PCIE_LNK_WIDTH_RESRV	= 0x00,
++	PCIE_LNK_X1		= 0x01,
++	PCIE_LNK_X2		= 0x02,
++	PCIE_LNK_X4		= 0x04,
++	PCIE_LNK_X8		= 0x08,
++	PCIE_LNK_X12		= 0x0C,
++	PCIE_LNK_X16		= 0x10,
++	PCIE_LNK_X32		= 0x20,
++	PCIE_LNK_WIDTH_UNKNOWN  = 0xFF,
++};
++
+ /* Based on the PCI Hotplug Spec, but some values are made up by us */
+ enum pci_bus_speed {
+ 	PCI_SPEED_33MHz			= 0x00,
+diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+index 8db71dc..64e61e0 100644
+--- a/include/linux/pci_hotplug.h
++++ b/include/linux/pci_hotplug.h
+@@ -28,19 +28,6 @@
+ #ifndef _PCI_HOTPLUG_H
+ #define _PCI_HOTPLUG_H
+ 
+-/* These values come from the PCI Express Spec */
+-enum pcie_link_width {
+-	PCIE_LNK_WIDTH_RESRV	= 0x00,
+-	PCIE_LNK_X1		= 0x01,
+-	PCIE_LNK_X2		= 0x02,
+-	PCIE_LNK_X4		= 0x04,
+-	PCIE_LNK_X8		= 0x08,
+-	PCIE_LNK_X12		= 0x0C,
+-	PCIE_LNK_X16		= 0x10,
+-	PCIE_LNK_X32		= 0x20,
+-	PCIE_LNK_WIDTH_UNKNOWN  = 0xFF,
+-};
+-
+ /**
+  * struct hotplug_slot_ops -the callbacks that the hotplug pci core can use
+  * @owner: The module owner of this structure
+-- 
+1.7.11.7
+
