@@ -1,56 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:35662 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756456Ab3GYRzH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:55:07 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 14/16] ARM: tegra: Update default configuration (PCIe)
-Date: Thu, 25 Jul 2013 10:53:28 -0700
-Message-Id: <1374774810-18459-15-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:37099 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485Ab3G2Aie (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 28 Jul 2013 20:38:34 -0400
+Message-ID: <51F5B966.9080405@jp.fujitsu.com>
+Date: Mon, 29 Jul 2013 09:37:58 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
+MIME-Version: 1.0
+To: bhelgaas@google.com
+CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	ishii.hironobu@jp.fujitsu.com, ddutile@redhat.com,
+	bill.sumner@hp.com, alex.williamson@redhat.com, vgoyal@redhat.com,
+	hbabu@us.ibm.com
+Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
+References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com> <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com> <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com> <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com> <51B93221.2040505@jp.fujitsu.com> <CAErSpo5tVK-Z3aOdMTzab-S8o5zLVtDOFQ8-LSYpUgbrJSsxuw@mail.gmail.com> <51BA7BB6.1080104@jp.fujitsu.com> <51EF7466.20703@jp.fujitsu.com> <CAErSpo5B7NzVfxwW3bQnfK+iK+DrRsWQd2Cm14z5PWNnRHWL5w@mail.gmail.com>
+In-Reply-To: <CAErSpo5B7NzVfxwW3bQnfK+iK+DrRsWQd2Cm14z5PWNnRHWL5w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+(2013/07/26 2:00), Bjorn Helgaas wrote:
+> On Wed, Jul 24, 2013 at 12:29 AM, Takao Indoh
+> <indou.takao@jp.fujitsu.com> wrote:
+>> Sorry for letting this discussion slide, I was busy on other works:-(
+>> Anyway, the summary of previous discussion is:
+>> - My patch adds new initcall(fs_initcall) to reset all PCIe endpoints on
+>>    boot. This expects PCI enumeration is done before IOMMU
+>>    initialization as follows.
+>>      (1) PCI enumeration
+>>      (2) fs_initcall ---> device reset
+>>      (3) IOMMU initialization
+>> - This works on x86, but does not work on other architecture because
+>>    IOMMU is initialized before PCI enumeration on some architectures. So,
+>>    device reset should be done where IOMMU is initialized instead of
+>>    initcall.
+>> - Or, as another idea, we can reset devices in first kernel(panic kernel)
+>>
+>> Resetting devices in panic kernel is against kdump policy and seems not to
+>> be good idea. So I think adding reset code into iommu initialization is
+>> better. I'll post patches for that.
+> 
+> Of course nobody *wants* to do anything in the panic kernel.  But
+> simply saying "it's against kdump policy and seems not to be a good
+> idea" is not a technical argument.  There are things that are
+> impractical to do in the kdump kernel, so they have to be done in the
+> panic kernel even though we know the kernel is unreliable and the
+> attempt may fail.
 
-Enable PCI and MSI support as well as the new Tegra PCIe controller
-driver.
+Accessing kernel data in panic kernel causes panic again, so
+- Don't touch kernel data in panic situation
+- Jump to kdump kernel as quickly as possible, and do things in safe
+  kernel
+These are basic "kdump policy". Of course if there are any works which
+we cannot do in kdump kernel and can do only in panic kernel, for
+example saving registers or stopping cpus, we should do them in panic
+kernel.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v5:
-- enable PCI Express support (CONFIG_PCIEPORTBUS)
+Resetting devices in panic kernel is worth considering if we can safely
+find pci_dev and reset it, but I have no idea how to do that because
+for example struct pci_dev may be borken.
 
- arch/arm/configs/tegra_defconfig | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> My point about IOMMU and PCI initialization order doesn't go away just
+> because it doesn't fit "kdump policy."  Having system initialization
+> occur in a logical order is far more important than making kdump work.
 
-diff --git a/arch/arm/configs/tegra_defconfig b/arch/arm/configs/tegra_defconfig
-index 36ad70c..1586dda 100644
---- a/arch/arm/configs/tegra_defconfig
-+++ b/arch/arm/configs/tegra_defconfig
-@@ -27,8 +27,11 @@ CONFIG_ARCH_TEGRA=y
- CONFIG_ARCH_TEGRA_2x_SOC=y
- CONFIG_ARCH_TEGRA_3x_SOC=y
- CONFIG_ARCH_TEGRA_114_SOC=y
--CONFIG_TEGRA_PCI=y
- CONFIG_TEGRA_EMC_SCALING_ENABLE=y
-+CONFIG_PCI=y
-+CONFIG_PCI_MSI=y
-+CONFIG_PCI_TEGRA=y
-+CONFIG_PCIEPORTBUS=y
- CONFIG_SMP=y
- CONFIG_PREEMPT=y
- CONFIG_AEABI=y
--- 
-1.8.1.5
+My next plan is as follows. I think this is matched to logical order
+on boot.
+
+drivers/pci/pci.c
+- Add function to reset bus, for example, pci_reset_bus(struct pci_bus *bus)
+
+drivers/iommu/intel-iommu.c
+- On initialization, if IOMMU is already enabled, call this bus reset
+  function before disabling and re-enabling IOMMU.
+
+Thanks,
+Takao Indoh
 
