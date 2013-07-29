@@ -1,54 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: [PATCH v2 7/8] PCI: acpiphp: get rid of unused constants in acpiphp.h
-Date: Wed,  3 Jul 2013 17:04:54 +0300
-Message-Id: <1372860295-8306-8-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:40247 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752827Ab3G2VD4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Jul 2013 17:03:56 -0400
+From: "Keller, Jacob E" <jacob.e.keller@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	David Miller <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	"gospo@redhat.com" <gospo@redhat.com>,
+	"sassmann@redhat.com" <sassmann@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [net-next 08/15] pci: expose pcie_link_speed and pcix_bus_speed
+ arrays
+Date: Mon, 29 Jul 2013 21:03:53 +0000
+Message-ID: <1375131833.5297.14.camel@jekeller-desk1.amr.corp.intel.com>
+References: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
+	 <1375102331-23905-9-git-send-email-jeffrey.t.kirsher@intel.com>
+	 <CAErSpo5sVTveY54iodDuqLXqsUTqUXTfDLh14k3=okneHB+ikg@mail.gmail.com>
+In-Reply-To: <CAErSpo5sVTveY54iodDuqLXqsUTqUXTfDLh14k3=okneHB+ikg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These are not used anywhere so kill them.
-
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp.h | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index ecc61b7..5fc9977 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -142,9 +142,6 @@ struct acpiphp_attention_info
- 	struct module *owner;
- };
- 
--/* PCI bus bridge HID */
--#define ACPI_PCI_HOST_HID		"PNP0A03"
--
- /* ACPI _STA method value (ignore bit 4; battery present) */
- #define ACPI_STA_ALL			(0x0000000f)
- 
-@@ -154,7 +151,6 @@ struct acpiphp_attention_info
- /* slot flags */
- 
- #define SLOT_POWEREDON		(0x00000001)
--#define SLOT_MULTIFUNCTION	(0x00000004)
- 
- /* function flags */
- 
--- 
-1.8.3.2
-
+T24gTW9uLCAyMDEzLTA3LTI5IGF0IDEyOjQ0IC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
+PiBPbiBNb24sIEp1bCAyOSwgMjAxMyBhdCA2OjUyIEFNLCBKZWZmIEtpcnNoZXINCj4gPGplZmZy
+ZXkudC5raXJzaGVyQGludGVsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogSmFjb2IgS2VsbGVyIDxq
+YWNvYi5lLmtlbGxlckBpbnRlbC5jb20+DQo+ID4NCj4gPiBwY2llX2xpbmtfc3BlZWQgYW5kIHBj
+aXhfYnVzX3NwZWVkIGFyZSBhcnJheXMgdXNlZCBieSBwcm9iZS5jIHRvIGNvcnJlY3RseQ0KPiA+
+IGNvbnZlcnQgbG5rc3RhIHJlZ2lzdGVyIHZhbHVlcyBpbnRvIHRoZSBwY2lfYnVzX3NwZWVkIGVu
+dW0uIFRoZXNlIHN0YXRpYyBhcnJheXMNCj4gPiBhcmUgdXNlZnVsIG91dHNpZGUgcHJvYmUgZm9y
+IHRoaXMgcHVycG9zZS4gVGhpcyBwYXRjaCBtYWtlcyB0aGVzZSBkZWZpbmVzIGludG8NCj4gPiBj
+b25zdCBhcnJheXMgYW5kIGV4cG9zZXMgdGhlbSB3aXRoIGFuIGV4dGVybiBoZWFkZXIgaW4gbGlu
+dXgvaW5jbHVkZS9wY2kuaA0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogSmFjb2IgS2VsbGVyIDxq
+YWNvYi5lLmtlbGxlckBpbnRlbC5jb20+DQo+ID4gVGVzdGVkLWJ5OiBQaGlsIFNjaG1pdHQgPHBo
+aWxsaXAuai5zY2htaXR0QGludGVsLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBKZWZmIEtpcnNo
+ZXIgPGplZmZyZXkudC5raXJzaGVyQGludGVsLmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9w
+Y2kvcHJvYmUuYyB8IDQgKystLQ0KPiA+ICBpbmNsdWRlL2xpbnV4L3BjaS5oIHwgMyArKysNCj4g
+PiAgMiBmaWxlcyBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQo+ID4N
+Cj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcHJvYmUuYyBiL2RyaXZlcnMvcGNpL3Byb2Jl
+LmMNCj4gPiBpbmRleCA0NmFkYTVjLi40OTZjNWIwIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMv
+cGNpL3Byb2JlLmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9wcm9iZS5jDQo+ID4gQEAgLTUxMyw3
+ICs1MTMsNyBAQCBzdGF0aWMgc3RydWN0IHBjaV9ob3N0X2JyaWRnZSAqcGNpX2FsbG9jX2hvc3Rf
+YnJpZGdlKHN0cnVjdCBwY2lfYnVzICpiKQ0KPiA+ICAgICAgICAgcmV0dXJuIGJyaWRnZTsNCj4g
+PiAgfQ0KPiA+DQo+ID4gLXN0YXRpYyB1bnNpZ25lZCBjaGFyIHBjaXhfYnVzX3NwZWVkW10gPSB7
+DQo+ID4gK2NvbnN0IHVuc2lnbmVkIGNoYXIgcGNpeF9idXNfc3BlZWRbXSA9IHsNCj4gPiAgICAg
+ICAgIFBDSV9TUEVFRF9VTktOT1dOLCAgICAgICAgICAgICAgLyogMCAqLw0KPiA+ICAgICAgICAg
+UENJX1NQRUVEXzY2TUh6X1BDSVgsICAgICAgICAgICAvKiAxICovDQo+ID4gICAgICAgICBQQ0lf
+U1BFRURfMTAwTUh6X1BDSVgsICAgICAgICAgIC8qIDIgKi8NCj4gPiBAQCAtNTMyLDcgKzUzMiw3
+IEBAIHN0YXRpYyB1bnNpZ25lZCBjaGFyIHBjaXhfYnVzX3NwZWVkW10gPSB7DQo+ID4gICAgICAg
+ICBQQ0lfU1BFRURfMTMzTUh6X1BDSVhfNTMzICAgICAgIC8qIEYgKi8NCj4gPiAgfTsNCj4gPg0K
+PiA+IC1zdGF0aWMgdW5zaWduZWQgY2hhciBwY2llX2xpbmtfc3BlZWRbXSA9IHsNCj4gPiArY29u
+c3QgdW5zaWduZWQgY2hhciBwY2llX2xpbmtfc3BlZWRbXSA9IHsNCj4gPiAgICAgICAgIFBDSV9T
+UEVFRF9VTktOT1dOLCAgICAgICAgICAgICAgLyogMCAqLw0KPiA+ICAgICAgICAgUENJRV9TUEVF
+RF8yXzVHVCwgICAgICAgICAgICAgICAvKiAxICovDQo+ID4gICAgICAgICBQQ0lFX1NQRUVEXzVf
+MEdULCAgICAgICAgICAgICAgIC8qIDIgKi8NCj4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51
+eC9wY2kuaCBiL2luY2x1ZGUvbGludXgvcGNpLmgNCj4gPiBpbmRleCAwZmQxZjE1Li45NWZmOTkz
+IDEwMDY0NA0KPiA+IC0tLSBhL2luY2x1ZGUvbGludXgvcGNpLmgNCj4gPiArKysgYi9pbmNsdWRl
+L2xpbnV4L3BjaS5oDQo+ID4gQEAgLTEyMCw2ICsxMjAsOSBAQCB0eXBlZGVmIGludCBfX2JpdHdp
+c2UgcGNpX3Bvd2VyX3Q7DQo+ID4gIC8qIFJlbWVtYmVyIHRvIHVwZGF0ZSB0aGlzIHdoZW4gdGhl
+IGxpc3QgYWJvdmUgY2hhbmdlcyEgKi8NCj4gPiAgZXh0ZXJuIGNvbnN0IGNoYXIgKnBjaV9wb3dl
+cl9uYW1lc1tdOw0KPiA+DQo+ID4gK2V4dGVybiBjb25zdCB1bnNpZ25lZCBjaGFyIHBjaXhfYnVz
+X3NwZWVkW107DQo+ID4gK2V4dGVybiBjb25zdCB1bnNpZ25lZCBjaGFyIHBjaWVfbGlua19zcGVl
+ZFtdOw0KPiANCj4gQXMgZmFyIGFzIEkgY2FuIHRlbGwsIHlvdSBkaWRuJ3QgYWN0dWFsbHkgYWRk
+IGFueXRoaW5nIHRoYXQgdXNlcw0KPiBwY2l4X2J1c19zcGVlZFtdLg0KPiANCg0KSSBtb3N0bHkg
+YWRkZWQgdGhpcyBmb3IgY29uc2lzdGVuY3kuLi4NCg0KPiBZb3UgYWRkZWQgYSBwY2llX2xpbmtf
+c3BlZWRbXSB1c2Ugb25seSBpbiBkcml2ZXJzL3BjaS9wY2kuYzsgbWF5YmUNCj4gdGhpcyBleHRl
+cm4gZGVjbGFyYXRpb24gY291bGQgZ28gaW4gZHJpdmVycy9wY2kvcGNpLmggdG8gbGltaXQgaXRz
+DQo+IHZpc2liaWxpdHk/DQoNClByZXR0eSBzdXJlIEkgdXNlIHRoZSBwY2llX2xpbmtfc3BlZWQg
+aW4gdGhlIGl4Z2JlIGRyaXZlciBieSBpbmNsdWRpbmcNCnRoZSBsaW51eC9wY2kuaCBoZWFkZXIu
+Li4gIENoZWNrIHBhdGNoIDExLzE1IG9mIHRoaXMgc2VyaWVzIHdoZXJlIEkNCmFjdHVhbGx5IHVz
+ZSB0aGUgdmFsdWVzLCBzbyBpdCB3b3VsZCBuZWVkIHRvIGJlIGluIHRoZSBsaW51eC9wY2kuaA0K
+aGVhZGVyLg0KDQo+IA0KPiBJZiB5b3UgdXBkYXRlIHRoaXMgcGF0Y2gsIG5vdGUgdGhhdCB3ZSBj
+b252ZW50aW9uYWxseSBjYXBpdGFsaXplICJQQ0k6DQo+IEV4cG9zZSAuLi4iIGluIHRoZSBjaGFu
+Z2Vsb2cgc3VtbWFyeSwgZS5nLiwgImdpdCBsb2cgLS1vbmVsaW5lDQo+IGRyaXZlcnMvcGNpIi4N
+Cg0KT2guIGdvb2QgdG8ga25vdywgSSB3aWxsIGtlZXAgdGhhdCBpbiBtaW5kIGZvciBmdXR1cmUu
+DQo+IA0KPiA+ICBzdGF0aWMgaW5saW5lIGNvbnN0IGNoYXIgKnBjaV9wb3dlcl9uYW1lKHBjaV9w
+b3dlcl90IHN0YXRlKQ0KPiA+ICB7DQo+ID4gICAgICAgICByZXR1cm4gcGNpX3Bvd2VyX25hbWVz
+WzEgKyAoaW50KSBzdGF0ZV07DQo+ID4gLS0NCj4gPiAxLjcuMTEuNw0KPiA+DQoNClRoYW5rcywN
+Ckpha2UNCg==
