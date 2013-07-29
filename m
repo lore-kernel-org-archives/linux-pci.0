@@ -1,90 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:59155 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759034Ab3GZRIn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 13:08:43 -0400
-Received: by mail-ob0-f175.google.com with SMTP id xn12so4702096obc.6
-        for <linux-pci@vger.kernel.org>; Fri, 26 Jul 2013 10:08:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUmetaXJ-=d3HV-AiaeEEh_ehdbT5E=Mrm7d7Z7y78Tng@mail.gmail.com>
-References: <1374759098-6746-1-git-send-email-yinghai@kernel.org>
- <CAErSpo79rJZuEkJB+W0XGq-sKUDwTgrG5SVzJbFBqobLY2+nGQ@mail.gmail.com> <CAE9FiQUmetaXJ-=d3HV-AiaeEEh_ehdbT5E=Mrm7d7Z7y78Tng@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 26 Jul 2013 11:08:22 -0600
-Message-ID: <CAErSpo5KZkxJ+rwkmEUKEPRuj1nZ=7xv8Y9m0T6yp9Jo=FXPbw@mail.gmail.com>
-Subject: Re: [PATCH v6] PCI: Don't let mmio fallback to must-only, if ioport
- fails with must+optional
+Received: from mga03.intel.com ([143.182.124.21]:42772 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751288Ab3G2XXl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Jul 2013 19:23:41 -0400
+Message-ID: <1375140189.2104.25.camel@jtkirshe-mobl>
+Subject: Re: [PATCH v2 3/3] PCI: Stop sriov after stop PF if PF's driver
+ skip that
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Reply-To: jeffrey.t.kirsher@intel.com
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Don Dutile <ddutile@redhat.com>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Greg Rose <gregory.v.rose@intel.com>
+Date: Mon, 29 Jul 2013 16:23:09 -0700
+In-Reply-To: <CAE9FiQWsaMuAPrx62rTGBokyV-O49NuX0tsaVzqKUcxuoEoPvA@mail.gmail.com>
+References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
+	 <1374937868-24437-2-git-send-email-yinghai@kernel.org>
+	 <CAErSpo7xk-NGp+4ZFo-jnVnQSEomY=7=CXDSbZPzrhdjZ4zVSA@mail.gmail.com>
+	 <51F6D161.1040106@redhat.com> <51F6D9A2.8020403@intel.com>
+	 <51F6DF35.40909@redhat.com> <1375134764.2104.1.camel@jtkirshe-mobl>
+	 <CAE9FiQWsaMuAPrx62rTGBokyV-O49NuX0tsaVzqKUcxuoEoPvA@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-vytGsNxsLAdYtEganTnB"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 6:57 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Jul 25, 2013 at 1:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Thu, Jul 25, 2013 at 7:31 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> BenH reported that there are assign unassigned resource problems
->>> in powerpc.
->>>
->>> It turns out after
->>> | commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
->>> | Date:   Thu Feb 23 19:23:29 2012 -0800
->>> |
->>> |    PCI: Retry on IORESOURCE_IO type allocations
->>>
->>> even for root bus that does not have io port range, it will keep retrying
->>> to realloc with mmio after mmio allocation work in first try already.
->>>
->>> Current retry logic is : try with must+optional at first, and if
->>> it fails with any ioport or mmio, it will try must then try to extend
->>> must with optional. The reassign will put extended mmio or pref mmio
->>> in the middle of parent resource range.
->>> That will prevent other sibling resources from getting must-have resources
->>> or get extended properly.
->>>
->>> We can check fail type to see if can we need fall back to must-have
->>> for it only, that will keep others type to keep resource to have
->>> must+optional allocations.
->>>
->>> Separate three resource type checking if we need to release
->>> assigned resource after requested + add_size try.
->>> 1. if there is io port assign fail, will release assigned io port.
->>> 2. if there is pref mmio assign fail, release assigned pref mmio.
->>>    if assigned pref mmio's parent is non-pref mmio and there
->>>    is non-pref mmio assign fail, will release that assigned pref mmio.
->>> 3. if there is non-pref mmio assign fail or pref mmio assigned fail,
->>>    will release assigned non-pref mmio.
->>>
->>> This will be become more often when we have x86 8 sockets or 32 sockets
->>> system, and those systems will have one root bus per socket.
->>> They will have some root buses that do not have ioport range or 32bit mmio.
->>>
->>> -v2: need to remove assigned entries from optional list too.
->>> -v3: not just checking ioport related, requested by Bjorn.
->>>
->>> Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->>
->> I forgot; is there a mailing list archive URL for this report?
->
-> yes, should be
->
-> http://marc.info/?l=linux-pci&m=136941328913610&w=1
->
-> title is: Resource assignment oddities
->
->
->>
->> And did you say this should go to stable for v3.10+?  If that's the
->> case, this should probably go in my for-linus branch for v3.11 instead
->> of waiting for v3.12, right?
->
-> Yes. You are right.
->
-> BenH at last only hope it could backport to v3.10 for the distribution.
 
-OK, I applied this to for-linus and marked it for stable.  Please take
-a look and see if it makes sense, especially the changelog:
+--=-vytGsNxsLAdYtEganTnB
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=aa914f5
+On Mon, 2013-07-29 at 16:14 -0700, Yinghai Lu wrote:
+> On Mon, Jul 29, 2013 at 2:52 PM, Jeff Kirsher
+> <jeffrey.t.kirsher@intel.com> wrote:
+> > Can I apply this patch as a standalone? or will I need the entire 3
+> > patch series?
+>=20
+> would be better if you can test those three on top of pci/for-linus branc=
+h.
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=3Dfor-=
+linus
+
+I will have to do that, because I was only able to get patch 3 of the
+series to apply to David Miller's net tree.
+
+--=-vytGsNxsLAdYtEganTnB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iQIcBAABCgAGBQJR9vldAAoJEOVv75VaS+3OUoIQAIDJ82CtzfhPEb6cw0by7Ohp
+IV/6aYFc1KUABXDh+lFOxfwkFWGRGd9DAH0YOHti0svAl1n9C8mvlK7THxliMpM3
+EhsfA045Ac56zF6GWv8YNNrmFH4luuMMbdvD1Zzr6p5rKE2GIIe0srUQdrhbs49V
+WSfeNTMFIsVOATH9sy+cp0QbyRmGVI1QR/a9/Y7L+f59CmQTBo3n+Bbbifcn8Zce
+NZDyfL+kCdk5QuLy4PXcUHMOP2232loJJtLM9ij+6WaZewtwrlyEEo1rh0oSLwPm
+vNjkTPLLBxmaCF1JTIO+bwl7w9LqsjZEvpt5Qmb4Vrhk/QIfgQt5S5rNT5D11UzY
+76b9R8hxmnvfiqfMYevwjkKLvDSYfXysrfC0Rl6LddGXKv8fgt/DoeeB/QCba6ZU
+nTF4aG40WcVcyi0gL3q+dQo04Tt838rIA/VUVTeQANzKsutDHGGdBI4NdUCjLy6D
+yYtsFjmYKSO2Lt3Mpb060DHr/ZjJAg60RSJ9Sc9Zx5yOH04TBTciRFE4KuGFtBRP
+k/T/3qr0jK0+HRNUXJGPcizrgn6BpGckj/+0idaEUZ2IqipXt8pTBuFePssfO7Yg
+zj9Lc/tP8bmxsNt8XBDh5ATVbSahqY43/TYDt1pFYxbl2Hdfepeyezz6yrwAvalo
+NlzabosSZkTlFgRh4e6u
+=4bWp
+-----END PGP SIGNATURE-----
+
+--=-vytGsNxsLAdYtEganTnB--
+
