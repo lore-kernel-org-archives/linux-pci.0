@@ -1,39 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ian Abbott <abbotti@mev.co.uk>
-To: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
-	driverdev-devel@linuxdriverproject.org,
-	linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	H Hartley Sweeten <hsweeten@visionengravers.com>,
-	Ian Abbott <abbotti@mev.co.uk>
-Subject: [PATCH 0/4] pci_ids, 8250_pci: remove PCI_VENDOR_ID_ADDIDATA_OLD
-Date: Tue, 16 Jul 2013 16:14:37 +0100
-Message-Id: <1373987681-18245-1-git-send-email-abbotti@mev.co.uk>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:38183 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753692Ab3G2Mwc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Jul 2013 08:52:32 -0400
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: davem@davemloft.net, bhelgaas@google.com
+Cc: Jacob Keller <jacob.e.keller@intel.com>, netdev@vger.kernel.org,
+	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Subject: [net-next 10/15] pci: Add function to obtain minimum link width and speed
+Date: Mon, 29 Jul 2013 05:52:06 -0700
+Message-Id: <1375102331-23905-11-git-send-email-jeffrey.t.kirsher@intel.com>
+In-Reply-To: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
+References: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The 8250_pci driver uses PCI_VENDOR_ID_ADDIDATA_OLD (0x10e8),
-PCI_DEVICE_ID_ADDIDATA_APCI7800 (0x818e) to recognize the original
-ADDI-DATA APCI-7800 PCI serial card.  However vendor ID 0x10e8 was
-assigned by PCI-SIG to Applied Micro Circuits Corporation (AMCC) and the
-associated device ID 0x818e was assigned by AMCC to ADDI-DATA.
+From: Jacob Keller <jacob.e.keller@intel.com>
 
-Comedi already defines PCI_VENDOR_ID_AMCC as 0x10e8 in one of its header
-files, so that definition can be moved into pci_ids.h and the 8250_pci
-driver changed to use it.  The PCI_DEVICE_ID_ADDIDATA_APCI7800 define
-seems out of place in pci_ids.h since it isn't associated with
-ADDI-DATA's vendor ID but with AMCC's vendor ID.  It's only used in
-8250_pci.c so it can be moved there and renamed to something more
-sensible.
+A PCI Express device can potentially report a link width and speed which it will
+not properly fulfill due to being plugged into a slower link higher in the
+chain. This function walks up the PCI bus chain and calculates the minimum link
+width and speed of this entire chain. This can be useful to enable a device to
+determine if it has enough bandwidth for optimum functionality.
 
-1) pci_ids.h: move PCI_VENDOR_ID_AMCC here
-2) serial: 8250_pci: replace PCI_VENDOR_ID_ADDIDATA_OLD
-3) serial: 8250_pci: use local device ID for ADDI-DATA APCI-7800
-4) pci_ids.h: remove PCI_VENDOR_ID_ADDIDATA_OLD and
-   PCI_DEVICE_ID_ADDIDATA_APCI7800
+Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
+Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
+Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+---
+ drivers/pci/pci.c   | 43 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  2 ++
+ 2 files changed, 45 insertions(+)
 
- drivers/staging/comedi/comedidev.h | 1 -
- drivers/tty/serial/8250/8250_pci.c | 9 +++++----
- include/linux/pci_ids.h            | 4 ++--
- 3 files changed, 7 insertions(+), 7 deletions(-)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e37fea6..c71e78c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3579,6 +3579,49 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+ }
+ 
+ /**
++ * pcie_get_minimum_link - determine minimum link settings of a PCI device
++ * @dev: PCI device to query
++ * @speed: storage for minimum speed
++ * @width: storage for minimum width
++ *
++ * This function will walk up the PCI device chain and determine the minimum
++ * link width and speed of the device.
++ */
++int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
++			  enum pcie_link_width *width)
++{
++	int ret;
++
++	*speed = PCI_SPEED_UNKNOWN;
++	*width = PCIE_LNK_WIDTH_UNKNOWN;
++
++	while (dev) {
++		u16 lnksta;
++		enum pci_bus_speed next_speed;
++		enum pcie_link_width next_width;
++
++		ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
++		if (ret)
++			return ret;
++
++		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
++		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
++			PCI_EXP_LNKSTA_NLW_SHIFT;
++
++		if (next_speed < *speed)
++			*speed = next_speed;
++
++		if (next_width < *width)
++			*width = next_width;
++
++		dev = dev->bus->self;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL(pcie_get_minimum_link);
++
++/**
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fc2d1fb..38994de 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -937,6 +937,8 @@ int pcie_get_readrq(struct pci_dev *dev);
+ int pcie_set_readrq(struct pci_dev *dev, int rq);
+ int pcie_get_mps(struct pci_dev *dev);
+ int pcie_set_mps(struct pci_dev *dev, int mps);
++int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
++			  enum pcie_link_width *width);
+ int __pci_reset_function(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.7.11.7
+
