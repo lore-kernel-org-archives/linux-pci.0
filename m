@@ -1,141 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:7973 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757350Ab3GLJkD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2013 05:40:03 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, Don Dutile <ddutile@redhat.com>,
-	Paul Bolle <pebolle@tiscali.nl>, <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH -v3 1/3] PCI: introduce PCIe Device Serial Number Capability support
-Date: Fri, 12 Jul 2013 17:32:21 +0800
-Message-ID: <1373621543-54836-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1373621543-54836-1-git-send-email-wangyijing@huawei.com>
-References: <1373621543-54836-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:42067 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751777Ab3G2MbH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2013 08:31:07 -0400
+Received: by mail-bk0-f42.google.com with SMTP id jk14so356501bkc.29
+        for <linux-pci@vger.kernel.org>; Mon, 29 Jul 2013 05:31:05 -0700 (PDT)
+Date: Mon, 29 Jul 2013 14:31:03 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCHv5 08/11] ARM: pci: add ->add_bus() and ->remove_bus()
+ hooks to hw_pci
+Message-ID: <20130729123102.GG23152@manwe>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130725165659.GB27802@dhcp-172-17-186-34.nvidia.com>
+ <20130726224607.GZ24642@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="2NLGdgz3UMHa/lqP"
+In-Reply-To: <20130726224607.GZ24642@n2100.arm.linux.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce PCIe Ext Capability Device Serial Number support,
-so we can use the unique device serial number to identify
-the physical device. During system suspend, if the PCIe
-device was removed and reinserted a new same device, during
-system resume there is no good way to identify it, maybe
-Device Serial Number is a good choice if device support.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/pci.c   |   30 ++++++++++++++++++++++++++++++
- drivers/pci/pci.h   |    1 +
- drivers/pci/probe.c |    2 ++
- include/linux/pci.h |    3 +++
- 4 files changed, 36 insertions(+), 0 deletions(-)
+--2NLGdgz3UMHa/lqP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e37fea6..156e251 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1985,6 +1985,11 @@ void pci_pm_init(struct pci_dev *dev)
- 	}
- }
- 
-+void pci_dsn_init(struct pci_dev *dev)
-+{
-+	dev->sn = pci_device_serial_number(dev);
-+}
-+
- static void pci_add_saved_cap(struct pci_dev *pci_dev,
- 	struct pci_cap_saved_state *new_cap)
- {
-@@ -2048,6 +2053,31 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
- }
- 
- /**
-+ * pci_device_serial_number - get device serial number
-+ * @dev: the PCI device
-+ *
-+ * return the device serial number if device support,
-+ * otherwise return 0.
-+ */
-+u64 pci_device_serial_number(struct pci_dev *dev)
-+{
-+	int pos;
-+	u32 lo, hi;
-+
-+	if (!pci_is_pcie(dev))
-+		return 0;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
-+	if (!pos)
-+		return 0;
-+
-+	pci_read_config_dword(dev, pos + 4, &lo);
-+	pci_read_config_dword(dev, pos + 8, &hi);
-+	return ((u64)hi << 32) | lo;
-+}
-+EXPORT_SYMBOL(pci_device_serial_number);
-+
-+/**
-  * pci_configure_ari - enable or disable ARI forwarding
-  * @dev: the PCI device
-  *
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 68678ed..f626006 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -202,6 +202,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		    struct resource *res, unsigned int reg);
- int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
- void pci_configure_ari(struct pci_dev *dev);
-+void pci_dsn_init(struct pci_dev *dev);
- 
- /**
-  * pci_ari_enabled - query ARI forwarding status
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 46ada5c..b37534f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1322,6 +1322,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Power Management */
- 	pci_pm_init(dev);
- 
-+	pci_dsn_init(dev);
-+
- 	/* Vital Product Data */
- 	pci_vpd_pci22_init(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..f2c6ed9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -342,6 +342,7 @@ struct pci_dev {
- 	struct list_head msi_list;
- 	struct kset *msi_kset;
- #endif
-+	u64 sn;		/* device serial number, 0 if not support */
- 	struct pci_vpd *vpd;
- #ifdef CONFIG_PCI_ATS
- 	union {
-@@ -995,6 +996,8 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
- int pci_vpd_truncate(struct pci_dev *dev, size_t size);
- 
-+u64 pci_device_serial_number(struct pci_dev *dev);
-+
- /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
- resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
- void pci_bus_assign_resources(const struct pci_bus *bus);
--- 
-1.7.1
+On Fri, Jul 26, 2013 at 11:46:07PM +0100, Russell King - ARM Linux wrote:
+> On Thu, Jul 25, 2013 at 09:57:00AM -0700, Thierry Reding wrote:
+> > On Mon, Jul 15, 2013 at 01:52:44PM +0200, Thomas Petazzoni wrote:
+> > > Some PCI drivers may need to adjust the pci_bus structure after it has
+> > > been allocated by the Linux PCI core. The PCI core allows
+> > > architectures to implement the pcibios_add_bus() and
+> > > pcibios_remove_bus() for this purpose. This commit therefore extends
+> > > the hw_pci and pci_sys_data structures of the ARM PCI core to allow
+> > > PCI drivers to register ->add_bus() and ->remove_bus() in hw_pci,
+> > > which will get called when a bus is added or removed from the system.
+> > >=20
+> > > This will be used for example by the Marvell PCIe driver to connect a
+> > > particular PCI bus with its corresponding MSI chip to handle Message
+> > > Signaled Interrupts.
+> > >=20
+> > > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > > Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
+> > > ---
+> > >  arch/arm/include/asm/mach/pci.h |  4 ++++
+> > >  arch/arm/kernel/bios32.c        | 16 ++++++++++++++++
+> > >  2 files changed, 20 insertions(+)
+> >=20
+> > Hi Russell,
+> >=20
+> > Can we have your Acked-by on this patch so that it can be moved to a
+> > stable branch along with some of the other patches in this branch that
+> > both Marvell and Tegra PCIe drivers need?
+>=20
+> Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
+Thanks, Russell.
 
+Thierry
+
+--2NLGdgz3UMHa/lqP
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJR9mCGAAoJEN0jrNd/PrOh/JwP/i1AyNoN+XWQ8C+p0i5UvV+g
+YhK+LE0K0fxfPDF+e1P+jaIcsrR+eXppOjtfG/b4vk8wT5hNxVbtR8qCj0ropRSI
+JVns7ufWwgiVd6MhunpxhuCCQzp7MPZ88dKjqtqC0vc3mgOxj52h+s5Vw0xMhRka
+CZQiYKQF1ddXhti2WoOrAe3K5OzSAg0zTsu0dQNnRu4zxo613WLY928mv7kqIlwr
+MitrpX0uCIM+SAaBU7E5VaYUSPSE2FLrahYFKfVQE/yxKLSb+VcZTgVdk/df/K2l
+qdB+bydcuI/+/tysS2ykMG8p5bgB3VW508Pvbjohz/sBJjMlF7FjzrdHiX6MKGuo
+YZdXx6dGVbSYIAOFaB0GStRJ/wNLe/5pD6K4M4etFc+iuzHl7Fkini8yexmZZwU1
+xqI6spoLOnAh3w6VmRTD5wNBXYoB9E5ZNXDBSsFzOVcJ42bmJIDQsAzgACknmA6V
+zXGxH872fO8AlPhorXynEtXWpyOr6gHXL2Mq6cXcKlkE4V50ldBz3t4Z8fY2r9H0
+Z+NO06M0oBUEmfcDub4asl1kEBem45hMYu7meQ+iEEJ7SOtRUY85odnQTAvGcd8/
+jYBe0wnzq91brTsawnzGnIhL2tBfZHW8meERFOu1bVYYTxQryEX0YZdnNMrdqdnG
+HArj++Za0toWtxZylAUa
+=SjFn
+-----END PGP SIGNATURE-----
+
+--2NLGdgz3UMHa/lqP--
