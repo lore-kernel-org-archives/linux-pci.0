@@ -1,83 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:51448 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754419Ab3GJUu4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jul 2013 16:50:56 -0400
-Received: by mail-oa0-f51.google.com with SMTP id i4so10108300oah.24
-        for <linux-pci@vger.kernel.org>; Wed, 10 Jul 2013 13:50:56 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:39137 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848Ab3G3EMt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jul 2013 00:12:49 -0400
+Message-ID: <51F73BB8.6090908@huawei.com>
+Date: Tue, 30 Jul 2013 12:06:16 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1373477126220-681610.post@n7.nabble.com>
-References: <494703114.34959.1360492995961.JavaMail.mail@webmail19>
- <CA+55aFyscOeZUPaYj_-QYgjADPD59+=c5aMvtpPEnd1tmpUGiA@mail.gmail.com> <1373477126220-681610.post@n7.nabble.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 10 Jul 2013 14:50:35 -0600
-Message-ID: <CAErSpo5YK=JKqjJZyd=QgOqqmCwFD5X-2CqvTn2N50_Bc6hBrw@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-To: hyphop <email2tema@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Artem S. Tashkinov" <t.artem@lycos.com>,
-	Phillip Susi <psusi@ubuntu.com>,
-	Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
-	Robert Hancock <hancockrwd@gmail.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, hendrik.haddorp@gmx.net
-Content-Type: text/plain; charset=ISO-8859-1
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: Re: [PATCH -v3 3/3] PCI,pciehp: use PCIe DSN to identify device change
+ during suspend
+References: <1373621543-54836-1-git-send-email-wangyijing@huawei.com> <1373621543-54836-4-git-send-email-wangyijing@huawei.com> <CAErSpo4XhONYq3CZnPKgdMD4V5o8fgFc=NGVUGgFz0y5zM3GyA@mail.gmail.com> <51F73730.9070402@huawei.com> <CAErSpo6Zw3Q=bzw6tAR70TCcXs1+UB9BNW3y7w8qNusT2c79tg@mail.gmail.com>
+In-Reply-To: <CAErSpo6Zw3Q=bzw6tAR70TCcXs1+UB9BNW3y7w8qNusT2c79tg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc previous cc list from lkml]
+>>
+>> Hi Bjorn,
+>>    I'm reworking this patch, but found some strange info about vpd serial number.
+>> I have two x86 machines, they almost have the same hardware topology. But by lspci,
+>> I found two different Broadcom BCM5709 NIC in different machine have the same vpd serial
+>> number. If this is normal, vpd serial number seems to be useless for identify device change.
+> 
+> I wouldn't say it's completely useless.  If the VPD serial number
+> changes, we can be pretty confident that the card has changed.  It's
+> just that if the VPD serial number is unchanged, we might incorrectly
+> assume it's the same device.
+> 
+> But we currently *always* assume it's the same device, since we don't
+> look at serial numbers at all.  If we can detect some changes, that
+> should be an improvement over what we have today even though it's not
+> perfect.
 
-On Wed, Jul 10, 2013 at 11:25 AM, hyphop <email2tema@gmail.com> wrote:
-> hello
-> i have same problem. low write speed after system sleep
->
-> kernel 3.9.9
->
-> i can see it HDD SATA & USB disks to
->
-> i try to make another test
->
-> before sleep i make  file /tmp/test ( /tmp mounted as tmpfs size=8G, i have
-> 16G memory in my system )
->
-> dd if=/dev/zero bs=1M count=1000 of=/tmp/test
->  ~ 3,2 GB/s
-> cryptsetup luksFormat /tmp/test
-> cryptsetup luksOpen /tmp/test test
->
-> dd if=/dev/zero bs=1M count=1000 of=/dev/mapper/test
->  ~ 465 GB/s good speed
->
-> after sleep
->
-> dd if=/dev/zero bs=1M count=1000 of=/dev/mapper/test
->  ~ 5MB/s ooops (((( very slow
->
-> but if write directly in /tmp i can see
->
-> dd if=/dev/zero bs=1M count=1000 of=/tmp/test2
->  ~ 3,2 GB/s
->
-> I can see this is not hardware problem (NOT SATA OR USB) i think is kernel
-> BUG, i i dont have this problem on previous kernel 3.4
+Hmmm, Yes, different VPD serial number must comes from different device.
+Although the same serial number maybe not the same device.
 
-Thanks for this report.  Artem collected some of his info here:
-https://bugzilla.kernel.org/show_bug.cgi?id=53551 .  Hendrik Haddorp
-also reported seeing this issue there.
+I will send out the new version patchset soon.
 
-Artem reported that Windows complains "The system firmware has changed
-the processor's memory type range registers (MTRRs) across a sleep
-state transition (S4). This can result in reduced resume performance."
- If you have Windows on your system, does it complain the same way?
+Thanks!
+Yijing.
 
-Can you collect and attach complete dmesg and "lspci -vvv" logs, from
-both working and broken kernels, to the bugzilla?  Collect lspci logs
-both before and after the sleep; I think Artem saw some differences
-between those, and I'm not sure we completely ruled those out.
+> 
+>> The first machine:
+>> linux:/home/yijing # lspci -vvv -s 0000:01:00.0
+>> 01:00.0 Ethernet controller: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet (rev 20)
+>>         Subsystem: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet
+>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>         Latency: 0, Cache Line Size: 256 bytes
+>>         Interrupt: pin A routed to IRQ 28
+>>         Region 0: Memory at c0000000 (64-bit, non-prefetchable) [size=32M]
+>>         Capabilities: [48] Power Management version 3
+>>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+>>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
+>>         Capabilities: [50] Vital Product Data
+>>                 Product Name: Broadcom NetXtreme II Ethernet Controller
+>>                 Read-only fields:
+>>                         [PN] Part number: BCM95706A0
+>>                         [EC] Engineering changes: 220197-2
+>>                         [SN] Serial number: 0123456789
+>>                         [MN] Manufacture ID: 31 34 65 34
+>>                         [RV] Reserved: checksum good, 31 byte(s) reserved
+>>                 End
+>>         Capabilities: [58] MSI: Enable- Count=1/16 Maskable- 64bit+
+>>                 Address: 0000000000000000  Data: 0000
+>>         ..............[snip]...................
+>>
+>> The second machine:
+>> linux-suse-vmdq:~/pciutils-3.2.0 # ./lspci -vvv -s 01:00.0
+>> 01:00.0 Ethernet controller: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet (rev 20)
+>>         Subsystem: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet
+>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>         Latency: 0, Cache Line Size: 256 bytes
+>>         Interrupt: pin A routed to IRQ 28
+>>         Region 0: Memory at f6000000 (64-bit, non-prefetchable) [size=32M]
+>>         Capabilities: [48] Power Management version 3
+>>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+>>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
+>>         Capabilities: [50] Vital Product Data
+>>                 Product Name: Broadcom NetXtreme II Ethernet Controller
+>>                 Read-only fields:
+>>                         [PN] Part number: BCM95706A0
+>>                         [EC] Engineering changes: 220197-2
+>>                         [SN] Serial number: 0123456789
+>>                         [MN] Manufacture ID: 31 34 65 34
+>>                         [RV] Reserved: checksum good, 31 byte(s) reserved
+>>                 End
+>>         .......[snip]........
+>>
+>>
+>>>
+>>> Also, I think it's possible to use acpiphp for ExpressCard slots, and
+>>> this patch doesn't help acpiphp detect card swaps.  I don't see any
+>>> mention of suspend/resume in acpiphp, so I don't know if it does
+>>> anything at all to detect card changes while suspended.  Maybe Rafael
+>>> can shed some light?
+>>>
+>>> I put the first two patches on a pci/yijing-dsn-v3 branch while we
+>>> work out the details of this one.
+>>>
+>>> Bjorn
+>>>
+>>>>         } else if (!list_empty(&pbus->devices)) {
+>>>>                 pciehp_disable_slot(slot);
+>>>>         }
+>>>> --
+>>>> 1.7.1
+>>>>
+>>>>
+>>>
+>>> .
+>>>
+>>
+>>
+>> --
+>> Thanks!
+>> Yijing
+>>
+> 
+> .
+> 
 
-If anybody can reproduce this reliably enough to bisect it, that would
-be a huge help.
 
-Bjorn
+-- 
+Thanks!
+Yijing
+
