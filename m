@@ -1,83 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jay Agarwal <jagarwal@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 07/16] ARM: tegra: trimslice: Initialize PCIe from DT
-Date: Thu, 25 Jul 2013 10:53:21 -0700
-Message-Id: <1374774810-18459-8-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-References: <1374774810-18459-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "lan,Tianyu" <tianyu.lan@intel.com>, Len Brown <lenb@kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] PCI/ACPI: Change dev_info() to dev_dbg() in the acpi_pci_set_power_state()
+Date: Wed, 31 Jul 2013 01:31:33 +0200
+Message-ID: <3509301.e8ST4r5R4A@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7XGa+t0g3Zp+4tXwS8JdAa5UonN7rt6dSZpEmDZuXP7w@mail.gmail.com>
+References: <1375151550-28632-1-git-send-email-tianyu.lan@intel.com> <8048720.q4LxpIqNkE@vostro.rjw.lan> <CAErSpo7XGa+t0g3Zp+4tXwS8JdAa5UonN7rt6dSZpEmDZuXP7w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+On Tuesday, July 30, 2013 09:40:18 AM Bjorn Helgaas wrote:
+> On Tue, Jul 30, 2013 at 7:59 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Tuesday, July 30, 2013 10:32:30 AM tianyu.lan@intel.com wrote:
+> >> From: Lan Tianyu <tianyu.lan@intel.com>
+> >>
+> >> acpi_pci_set_power_state() produces log of device power state changing.
+> >> Now the log is produced by dev_info(). This seems make no sense when user
+> >> doesn't open debug option. So change it to dev_dbg() and prevent kernel
+> >> log from being.
+> >>
+> >> Reference: https://bugzilla.kernel.org/show_bug.cgi?id=60636
+> >> Suggested-by: Alan Stern <stern@rowland.harvard.edu>
+> >> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+> >
+> > Bjorn, what do you think about this?
+> 
+> It's fine with me.  For information that I want in the dmesg log all
+> the time, with no special action from the user, I personally avoid
+> dev_dbg() because I can never figure out whether it's enabled or not.
+> But I don't use the information from this printk, so it's completely
+> up to you.  Just let me know what you want.  If you have other pending
+> changes to this file, you can take it, or I can put it in my tree.
 
-With the device tree support in place, probe the PCIe controller from
-the device tree and remove the corresponding workaround in the board
-file.
+Yes, I have one change to this file in my queue for 3.12, so I can take this
+patch.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v2:
-- add missing dummy regulator nodes by Stephen Warren
-- rename port 0 DT node and disable unused port 1
+Thanks,
+Rafael
 
- arch/arm/boot/dts/tegra20-trimslice.dts | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
 
-diff --git a/arch/arm/boot/dts/tegra20-trimslice.dts b/arch/arm/boot/dts/tegra20-trimslice.dts
-index ed4b901..9f1b237 100644
---- a/arch/arm/boot/dts/tegra20-trimslice.dts
-+++ b/arch/arm/boot/dts/tegra20-trimslice.dts
-@@ -310,6 +310,16 @@
- 		nvidia,sys-clock-req-active-high;
- 	};
- 
-+	pcie-controller {
-+		status = "okay";
-+		pex-clk-supply = <&pci_clk_reg>;
-+		vdd-supply = <&pci_vdd_reg>;
-+
-+		pci@1,0 {
-+			status = "okay";
-+		};
-+	};
-+
- 	usb@c5000000 {
- 		status = "okay";
- 		nvidia,vbus-gpio = <&gpio TEGRA_GPIO(V, 2) GPIO_ACTIVE_HIGH>;
-@@ -413,6 +423,24 @@
- 			enable-active-high;
- 			gpio = <&gpio 170 0>; /* PV2 */
- 		};
-+
-+		pci_clk_reg: regulator@3 {
-+			compatible = "regulator-fixed";
-+			reg = <3>;
-+			regulator-name = "pci_clk";
-+			regulator-min-microvolt = <3300000>;
-+			regulator-max-microvolt = <3300000>;
-+			regulator-always-on;
-+		};
-+
-+		pci_vdd_reg: regulator@4 {
-+			compatible = "regulator-fixed";
-+			reg = <4>;
-+			regulator-name = "pci_vdd";
-+			regulator-min-microvolt = <1050000>;
-+			regulator-max-microvolt = <1050000>;
-+			regulator-always-on;
-+		};
- 	};
- 
- 	sound {
+> >> ---
+> >>  drivers/pci/pci-acpi.c | 2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> >> index c78cc43..fb3522957 100644
+> >> --- a/drivers/pci/pci-acpi.c
+> >> +++ b/drivers/pci/pci-acpi.c
+> >> @@ -210,7 +210,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >>       }
+> >>
+> >>       if (!error)
+> >> -             dev_info(&dev->dev, "power state changed by ACPI to %s\n",
+> >> +             dev_dbg(&dev->dev, "power state changed by ACPI to %s\n",
+> >>                        acpi_power_state_string(state_conv[state]));
+> >>
+> >>       return error;
+> >>
+> > --
+> > I speak only for myself.
+> > Rafael J. Wysocki, Intel Open Source Technology Center.
 -- 
-1.8.1.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
