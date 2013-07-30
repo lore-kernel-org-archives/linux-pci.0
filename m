@@ -1,67 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:56714 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757916Ab3GZMgY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jul 2013 08:36:24 -0400
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:60431 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756584Ab3G3Pkj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jul 2013 11:40:39 -0400
+Received: by mail-oa0-f54.google.com with SMTP id o6so440416oag.13
+        for <linux-pci@vger.kernel.org>; Tue, 30 Jul 2013 08:40:39 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <51F23D0F.7090909@oracle.com>
-References: <51F23D0F.7090909@oracle.com>
-Date: Fri, 26 Jul 2013 05:36:23 -0700
-Message-ID: <CAE9FiQVvOe9pOmLLKRUWzSmHLWvv6S32LUYARCG3MoLMJpATXQ@mail.gmail.com>
-Subject: Re: [PATCH] x86/PCI: MMCONFIG: cleanup and add address warning to pci_mmconfig_insert
-From: Yinghai Lu <yinghai@kernel.org>
-To: ethan zhao <ethan.zhao@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ethan.kernel@gmail.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <8048720.q4LxpIqNkE@vostro.rjw.lan>
+References: <1375151550-28632-1-git-send-email-tianyu.lan@intel.com> <8048720.q4LxpIqNkE@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 30 Jul 2013 09:40:18 -0600
+Message-ID: <CAErSpo7XGa+t0g3Zp+4tXwS8JdAa5UonN7rt6dSZpEmDZuXP7w@mail.gmail.com>
+Subject: Re: [PATCH] PCI/ACPI: Change dev_info() to dev_dbg() in the acpi_pci_set_power_state()
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: "lan,Tianyu" <tianyu.lan@intel.com>, Len Brown <lenb@kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 2:10 AM, ethan zhao <ethan.zhao@oracle.com> wrote:
-> Cleanup the -EINVAL return value handling and add warning message for
-> invalid
-> start,end,addr parameters.
+On Tue, Jul 30, 2013 at 7:59 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Tuesday, July 30, 2013 10:32:30 AM tianyu.lan@intel.com wrote:
+>> From: Lan Tianyu <tianyu.lan@intel.com>
+>>
+>> acpi_pci_set_power_state() produces log of device power state changing.
+>> Now the log is produced by dev_info(). This seems make no sense when user
+>> doesn't open debug option. So change it to dev_dbg() and prevent kernel
+>> log from being.
+>>
+>> Reference: https://bugzilla.kernel.org/show_bug.cgi?id=60636
+>> Suggested-by: Alan Stern <stern@rowland.harvard.edu>
+>> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
 >
-> Signed-off-by: ethan.zhao <ethan.zhao@oracle.com>
-> ---
->  arch/x86/pci/mmconfig-shared.c |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
->
-> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-> index 082e881..37f6c7f 100644
-> --- a/arch/x86/pci/mmconfig-shared.c
-> +++ b/arch/x86/pci/mmconfig-shared.c
-> @@ -700,8 +700,13 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8
-> start, u8 end,
->      if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
->          return -ENODEV;
->
-> -    if (start > end)
-> +    if (start > end || !addr) {
-> +        dev_warn(dev, FW_WARN
-> +                                 "Invalid address to add MMCONFIG"
-> +                                 "start %02x end %02x addr %pR\n",
-> +                                  start, end, addr);
->          return -EINVAL;
-> +    }
->
->      mutex_lock(&pci_mmcfg_lock);
->      cfg = pci_mmconfig_lookup(seg, start);
-> @@ -716,11 +721,6 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8
-> start, u8 end,
->          return -EEXIST;
->      }
->
-> -    if (!addr) {
-> -        mutex_unlock(&pci_mmcfg_lock);
-> -        return -EINVAL;
-> -    }
-> -
->      rc = -EBUSY;
->      cfg = pci_mmconfig_alloc(seg, start, end, addr);
->      if (cfg == NULL) {
+> Bjorn, what do you think about this?
 
+It's fine with me.  For information that I want in the dmesg log all
+the time, with no special action from the user, I personally avoid
+dev_dbg() because I can never figure out whether it's enabled or not.
+But I don't use the information from this printk, so it's completely
+up to you.  Just let me know what you want.  If you have other pending
+changes to this file, you can take it, or I can put it in my tree.
 
-Acked-by: Yinghai Lu <yinghai@kerne.org>
+Bjorn
+
+>> ---
+>>  drivers/pci/pci-acpi.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+>> index c78cc43..fb3522957 100644
+>> --- a/drivers/pci/pci-acpi.c
+>> +++ b/drivers/pci/pci-acpi.c
+>> @@ -210,7 +210,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>>       }
+>>
+>>       if (!error)
+>> -             dev_info(&dev->dev, "power state changed by ACPI to %s\n",
+>> +             dev_dbg(&dev->dev, "power state changed by ACPI to %s\n",
+>>                        acpi_power_state_string(state_conv[state]));
+>>
+>>       return error;
+>>
+> --
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
