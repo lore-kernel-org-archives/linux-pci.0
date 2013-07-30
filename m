@@ -1,81 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:60013 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631Ab3G3Qgp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jul 2013 12:36:45 -0400
-Received: by mail-oa0-f50.google.com with SMTP id i4so3878481oah.37
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jul 2013 09:36:44 -0700 (PDT)
+Received: from hydra.sisk.pl ([212.160.235.94]:47452 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755594Ab3G3NtN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Jul 2013 09:49:13 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: tianyu.lan@intel.com, bhelgaas@google.com
+Cc: lenb@kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, stern@rowland.harvard.edu
+Subject: Re: [PATCH] PCI/ACPI: Change dev_info() to dev_dbg() in the acpi_pci_set_power_state()
+Date: Tue, 30 Jul 2013 15:59:22 +0200
+Message-ID: <8048720.q4LxpIqNkE@vostro.rjw.lan>
+In-Reply-To: <1375151550-28632-1-git-send-email-tianyu.lan@intel.com>
+References: <1375151550-28632-1-git-send-email-tianyu.lan@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1374657972-2456-1-git-send-email-wangyijing@huawei.com>
-References: <1374657972-2456-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 30 Jul 2013 10:36:24 -0600
-Message-ID: <CAErSpo79sEzYXg9yy6bJjpEs2rmhYa+rgh50K76m1RPvn6mJHw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: update NumVFs register properly during
- enable/disable sriov
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 24, 2013 at 3:26 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Currently, we only update NumVFs register during sriov_enable().
-> This register should also be updated properly during sriov_disable.
-> Otherwise, we will get the stale "Number of VFs" info from lspci.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+On Tuesday, July 30, 2013 10:32:30 AM tianyu.lan@intel.com wrote:
+> From: Lan Tianyu <tianyu.lan@intel.com>
+> 
+> acpi_pci_set_power_state() produces log of device power state changing.
+> Now the log is produced by dev_info(). This seems make no sense when user
+> doesn't open debug option. So change it to dev_dbg() and prevent kernel
+> log from being.
+> 
+> Reference: https://bugzilla.kernel.org/show_bug.cgi?id=60636
+> Suggested-by: Alan Stern <stern@rowland.harvard.edu>
+> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
 
-Applied to pci/misc, thanks!
+Bjorn, what do you think about this?
+
+Rafael
+
 
 > ---
->  drivers/pci/iov.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index de8ffac..6e4844b 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -286,7 +286,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->             (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
->                 return -EINVAL;
->
-> -       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
->         pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
->         pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
->         if (!offset || (nr_virtfn > 1 && !stride))
-> @@ -334,6 +333,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->                         return rc;
->         }
->
-> +       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
->         iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
->         pci_cfg_access_lock(dev);
->         pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> @@ -368,6 +368,7 @@ failed:
->         iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->         pci_cfg_access_lock(dev);
->         pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> +       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
->         ssleep(1);
->         pci_cfg_access_unlock(dev);
->
-> @@ -401,6 +402,7 @@ static void sriov_disable(struct pci_dev *dev)
->                 sysfs_remove_link(&dev->dev.kobj, "dep_link");
->
->         iov->num_VFs = 0;
-> +       pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
->  }
->
->  static int sriov_init(struct pci_dev *dev, int pos)
-> --
-> 1.7.1
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  drivers/pci/pci-acpi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index c78cc43..fb3522957 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -210,7 +210,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  	}
+>  
+>  	if (!error)
+> -		dev_info(&dev->dev, "power state changed by ACPI to %s\n",
+> +		dev_dbg(&dev->dev, "power state changed by ACPI to %s\n",
+>  			 acpi_power_state_string(state_conv[state]));
+>  
+>  	return error;
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
