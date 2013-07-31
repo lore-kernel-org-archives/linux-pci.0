@@ -1,72 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1408 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754754Ab3G2Use (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Jul 2013 16:48:34 -0400
-Message-ID: <51F6D519.3010506@redhat.com>
-Date: Mon, 29 Jul 2013 16:48:25 -0400
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Takao Indoh <indou.takao@jp.fujitsu.com>,
+	Vivek Goyal <vgoyal@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	"Sumner, William" <bill.sumner@hp.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	Haren Myneni <hbabu@us.ibm.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
+Date: Wed, 31 Jul 2013 23:23:28 +0200
+Message-ID: <1699397.FXoFYIGzbk@vostro.rjw.lan>
+In-Reply-To: <CAErSpo4yJ2yqCWv7GT7jWSVd_8SktU=xJXT78m8Vxp_wLA4Fow@mail.gmail.com>
+References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com> <51F85BCC.2070103@jp.fujitsu.com> <CAErSpo4yJ2yqCWv7GT7jWSVd_8SktU=xJXT78m8Vxp_wLA4Fow@mail.gmail.com>
 MIME-Version: 1.0
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-CC: Stefan Assmann <sassmann@kpanic.de>, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, yu.zhao@intel.com
-Subject: Re: return value for "if (!dev->is_physfn)"
-References: <51F24788.6010505@kpanic.de> <51F2A735.2010405@intel.com>
-In-Reply-To: <51F2A735.2010405@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/26/2013 12:43 PM, Alexander Duyck wrote:
-> On 07/26/2013 02:55 AM, Stefan Assmann wrote:
->> Looking at drivers/pci/iov.c I see at least 3 different return values
->> for if (!dev->is_physfn).
->>
->> sriov_enable() and pci_enable_sriov()
->> [...]
->> 	if (!dev->is_physfn)
->> 		return -ENODEV;
->> pci_num_vf() and pci_vfs_assigned()
->> [...]
->> 	if (!dev->is_physfn)
->> 		return 0;
->> pci_sriov_set_totalvfs() and pci_sriov_get_totalvfs()
->> [...]
->> 	if (!dev->is_physfn)
->> 		return -EINVAL;
->>
->> I'd like to make this consistently return one of the above. Question is,
->> which one should it be? I'd lean towards -ENODEV, other opinions?
->>
->>    Stefan
->
-> It all depends on how the results are meant to be interpreted.
->
-> In the case of pci_num_vf and pci_vfs_assigned the return of 0 is
-> preferred since there are no VFs if the device is not a physical
-> function.  I really think pci_sriov_get_totalvfs should probably just
-> return 0 as well since it is simply supposed to return the total number
-> of VFs supported on the device and 0 would be valid in this case.  Also
-> that way the behavior is consistent if CONFIG_PCI_IOV is enabled or
-> disabled in the kernel.
->
-+1. returning enosys hangs the caller (echo/cat of sysfs) IIRC.
+On Wednesday, July 31, 2013 03:08:03 PM Bjorn Helgaas wrote:
+> [+cc Rafael, linux-acpi]
+> 
+> On Tue, Jul 30, 2013 at 6:35 PM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
+> 
+> > On x86, currently IOMMU initialization run *after* PCI enumeration, but
+> > what you are talking about is that it should be changed so that x86
+> > IOMMU initialization is done *before* PCI enumeration like sparc, right?
+> 
+> Yes.  I don't know whether or when that initialization order will ever
+> be changed, but I do think we should avoid building more
+> infrastructure that depends on the current order.
+> 
+> Changing the order is a pretty big deal because it's a lot more than
+> just the IOMMU.  Basically I think we should be enumerating ACPI
+> devices, including the IOMMU, before PCI devices, but there's a lot of
+> legacy involved in that area.  Added Rafael in case he has any
+> thoughts.
 
-> As for the rest my preference is ENOSYS rather than EINVAL or ENODEV.
-> The issue is that the SR-IOV functionality is not implemented for the
-> device or in the OS when we return the error so it would make sense to
-> return that as an error code in these cases.
->
-> Thanks,
->
-> Alex
->
-+1
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Well, actually, I'm not really familiar with IOMMUs, sorry.
+
+I do think that initializing IOMMU before PCI enumeration would be better,
+however.  At least if the ordering should be the same on all architectures,
+which I suppose is the case, that's the one I'd choose.
+
+Thanks,
+Rafael
 
