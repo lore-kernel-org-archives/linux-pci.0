@@ -1,154 +1,60 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH 2/8] ACPI / hotplug / PCI: Consolidate acpiphp_enumerate_slots()
-Date: Tue, 09 Jul 2013 02:16:21 +0200
-Message-ID: <2968184.45Unk7vAg9@vostro.rjw.lan>
-In-Reply-To: <26431283.HJCKsss0rt@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <51F8D5C9.4020309@huawei.com>
+References: <1360036520-31032-1-git-send-email-wangyijing@huawei.com>
+ <51A42137.9090908@huawei.com> <CAErSpo7iyiq6H-BsPNO0Nyc1SF+JteOzBqNQ+d_D=RYE_pdTEA@mail.gmail.com>
+ <51F73108.4070905@huawei.com> <CAErSpo4mHTwqrW-yq_1BkjD0GyFtVYZRm9+eGfASJ_aJCOagjg@mail.gmail.com>
+ <CAErSpo4xJk7bHQihtdN1UP+6Y17TOrBFhEsO_Zwyvz8iQMEXsw@mail.gmail.com> <51F8D5C9.4020309@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 31 Jul 2013 11:53:30 -0600
+Message-ID: <CAErSpo5GUTXyo4GeCGvh_GauKUA4decbDWUnD47qKPr6E65g9w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>, Joe Jin <joe.jin@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Jul 31, 2013 at 3:15 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Hi Bjorn,
+>    I didn't observe a performance difference between MPS=128 and MPS=512. I use ping $dest_ip -s 65500(large size packet)
+> to test the different situations.
 
-The acpiphp_enumerate_slots() function is now split into two parts,
-acpiphp_enumerate_slots() proper and init_bridge_misc() which is
-only called by the former.  If these functions are combined,
-it is possible to make the code easier to follow and to clean up
-the error handling (to prevent memory leaks on error from
-happening in particular), so do that.
+Interesting.  "ping" is probably not a good way to see performance
+differences, but hopefully you could see a difference in *some*
+scenario.  Otherwise, there's not much point in increasing MPS :)
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   94 ++++++++++++++++++-------------------
- 1 file changed, 46 insertions(+), 48 deletions(-)
+>> I assume there are no AER or other errors logged by the root port?
+> Yes, AER is not support in local machine.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -363,46 +363,6 @@ static int detect_ejectable_slots(acpi_h
- 	return found;
- }
- 
--/* initialize miscellaneous stuff for both root and PCI-to-PCI bridge */
--static void init_bridge_misc(struct acpiphp_bridge *bridge)
--{
--	acpi_status status;
--
--	/* must be added to the list prior to calling register_slot */
--	mutex_lock(&bridge_mutex);
--	list_add(&bridge->list, &bridge_list);
--	mutex_unlock(&bridge_mutex);
--
--	/* register all slot objects under this bridge */
--	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, (u32)1,
--				     register_slot, NULL, bridge, NULL);
--	if (ACPI_FAILURE(status)) {
--		mutex_lock(&bridge_mutex);
--		list_del(&bridge->list);
--		mutex_unlock(&bridge_mutex);
--		return;
--	}
--
--	/* install notify handler for P2P bridges */
--	if (!pci_is_root_bus(bridge->pci_bus)) {
--		if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
--			status = acpi_remove_notify_handler(bridge->func->handle,
--						ACPI_SYSTEM_NOTIFY,
--						handle_hotplug_event_func);
--			if (ACPI_FAILURE(status))
--				err("failed to remove notify handler\n");
--		}
--		status = acpi_install_notify_handler(bridge->handle,
--					     ACPI_SYSTEM_NOTIFY,
--					     handle_hotplug_event_bridge,
--					     bridge);
--
--		if (ACPI_FAILURE(status)) {
--			err("failed to register interrupt notify handler\n");
--		}
--	}
--}
--
- 
- /* find acpiphp_func from acpiphp_bridge */
- static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
-@@ -1171,8 +1131,9 @@ static void handle_hotplug_event_func(ac
-  */
- void acpiphp_enumerate_slots(struct pci_bus *bus)
- {
--	acpi_handle handle, dummy_handle;
- 	struct acpiphp_bridge *bridge;
-+	acpi_handle handle;
-+	acpi_status status;
- 
- 	if (acpiphp_disabled)
- 		return;
-@@ -1200,15 +1161,52 @@ void acpiphp_enumerate_slots(struct pci_
- 	 */
- 	get_device(&bus->dev);
- 
--	if (!pci_is_root_bus(bridge->pci_bus) &&
--	    ACPI_SUCCESS(acpi_get_handle(bridge->handle,
--					"_EJ0", &dummy_handle))) {
--		dbg("found ejectable p2p bridge\n");
--		bridge->flags |= BRIDGE_HAS_EJ0;
--		bridge->func = acpiphp_bridge_handle_to_function(handle);
-+	/* must be added to the list prior to calling register_slot */
-+	mutex_lock(&bridge_mutex);
-+	list_add(&bridge->list, &bridge_list);
-+	mutex_unlock(&bridge_mutex);
-+
-+	/* register all slot objects under this bridge */
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, 1,
-+				     register_slot, NULL, bridge, NULL);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_handle_err(bridge->handle, "failed to register slots\n");
-+		goto err;
- 	}
- 
--	init_bridge_misc(bridge);
-+	if (pci_is_root_bus(bridge->pci_bus))
-+		return;
-+
-+	/* install notify handler for P2P bridges */
-+	status = acpi_install_notify_handler(bridge->handle, ACPI_SYSTEM_NOTIFY,
-+					     handle_hotplug_event_bridge,
-+					     bridge);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_handle_err(bridge->handle,
-+				"failed to register notify handler\n");
-+		goto err;
-+	}
-+
-+	status = acpi_get_handle(bridge->handle, "_EJ0", &handle);
-+	if (ACPI_FAILURE(status))
-+		return;
-+
-+	dbg("found ejectable p2p bridge\n");
-+	bridge->flags |= BRIDGE_HAS_EJ0;
-+	bridge->func = acpiphp_bridge_handle_to_function(bridge->handle);
-+	if (bridge->func) {
-+		status = acpi_remove_notify_handler(bridge->func->handle,
-+						    ACPI_SYSTEM_NOTIFY,
-+						    handle_hotplug_event_func);
-+		if (ACPI_FAILURE(status))
-+			acpi_handle_err(bridge->func->handle,
-+					"failed to remove notify handler\n");
-+	}
-+	return;
-+
-+ err:
-+	cleanup_bridge(bridge);
-+	put_bridge(bridge);
- }
- 
- /* Destroy hotplug slots associated with the PCI bus */
+Per the 5520/5500 spec, it does support AER (sec 19.11.5).  Maybe
+there's some platform support required in addition.  You might still
+be able to see some info just with "lspci -vv"
+
+> Hmmm, PCIe Spec does not involve too much about MPS setting. So maybe different platform
+> has different strategy.
+
+I think there's enough in the spec to tell us what we need to do (this
+is sec 2.2.2):
+
+  - A Transmitter must not send a TLP larger than its Max_Payload_Size
+  - A Receiver must treat TLPs larger than its Max_Payload_Size as malformed
+
+The only way I can see to guarantee that is to set the MPS on both
+ends of the link the same.
+
+> Conservatively, as a improvement for mps setting after hotplug. I think update mps setting equal to its parent
+> make sense. This is no harm to other devices, we only modify the hotplug device itself mps register.
+>
+> So if you agree, I will update my patch ,only try to modify hotplug device mps, make them equal to its parent.
+
+Yes, I think that would be safe.  If the switch is set to a larger MPS
+than the hot-added device supports, I don't think we can safely use
+the device.
+
+Bjorn
