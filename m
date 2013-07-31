@@ -1,126 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24665 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab3G0PLc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Jul 2013 11:11:32 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 2/3] PCI: Separate stop and remove devices in pciehp
-Date: Sat, 27 Jul 2013 08:11:06 -0700
-Message-Id: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:7410 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753785Ab3GaDbk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Jul 2013 23:31:40 -0400
+Subject: [RFC PATCH 1/7] pci: Create pci_reset_bridge_secondary_bus()
+To: linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: bhelgaas@google.com, indou.takao@jp.fujitsu.com
+Date: Tue, 30 Jul 2013 21:31:36 -0600
+Message-ID: <20130731033135.31931.10896.stgit@bling.home>
+In-Reply-To: <20130731031316.31931.56751.stgit@bling.home>
+References: <20130731031316.31931.56751.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
-(PCI: Simplify IOV implementation and fix reference count races)
-broke the pcie native hotplug with SRIOV enabled: PF is not freed
-during hot-remove, and later hot-add do not work as old pci_dev
-is still around, and can not create new pci_dev.
+Move the secondary bus reset code from pci_parent_bus_reset() into its own
+function.  Export it as we'll later be calling it from hotplug controllers.
 
-That commit need VFs to be removed via pci_disable_sriov/virtfn_remove
-to make sure ref to PF is put back.
-
-So we can not call stop_and_remove for VF before PF, that will
-make VF get removed directly before PF's driver try to use
-pci_disable_sriov/virtfn_remove to do it.
-
-Solution is separating stop and remove in two iterations.
-
-In first iteration, we stop VF driver at first with iterating devices
-reversely, and later during stop PF driver, disable_sriov will use
-virtfn_remove to remove VFs.
-
-Also some driver (like mlx4_core) need VF's driver get stopped before PF's.
-
-Need this one for v3.11.
-
--v2: separate VGA checking to another patch according to Bjorn.
-     and after patches that make pciehp to be built-in
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <liuj97@gmail.com>
-
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/hotplug/pciehp_pci.c |   15 +++++++++++++--
- drivers/pci/pci.h                |    3 +++
- drivers/pci/remove.c             |    4 ++--
- 3 files changed, 18 insertions(+), 4 deletions(-)
+ drivers/pci/pci.c   |   32 +++++++++++++++++++++++---------
+ include/linux/pci.h |    1 +
+ 2 files changed, 24 insertions(+), 9 deletions(-)
 
-Index: linux-2.6/drivers/pci/hotplug/pciehp_pci.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_pci.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_pci.c
-@@ -109,6 +109,13 @@ int pciehp_unconfigure_device(struct slo
- 	}
- 
- 	/*
-+	 * Now VF need to be removed via virtfn_remove to make
-+	 * sure ref to PF is put back. Some driver (mlx4_core) need
-+	 * VF's driver get stopped before PF.
-+	 * So we need to stop VF driver at first, that means
-+	 * loop reversely, and later during stop PF driver,
-+	 * disable_sriov will use virtfn_remove to remove VFs.
-+	 *
- 	 * Stopping an SR-IOV PF device removes all the associated VFs,
- 	 * which will update the bus->devices list and confuse the
- 	 * iterator.  Therefore, iterate in reverse so we remove the VFs
-@@ -116,8 +123,7 @@ int pciehp_unconfigure_device(struct slo
- 	 */
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
- 					 bus_list) {
--		pci_dev_get(dev);
--		pci_stop_and_remove_bus_device(dev);
-+		pci_stop_bus_device(dev);
- 		/*
- 		 * Ensure that no new Requests will be generated from
- 		 * the device.
-@@ -128,6 +134,11 @@ int pciehp_unconfigure_device(struct slo
- 			command |= PCI_COMMAND_INTX_DISABLE;
- 			pci_write_config_word(dev, PCI_COMMAND, command);
- 		}
-+	}
-+
-+	list_for_each_entry_safe(dev, temp, &parent->devices, bus_list) {
-+		pci_dev_get(dev);
-+		pci_remove_bus_device(dev);
- 		pci_dev_put(dev);
- 	}
- 
-Index: linux-2.6/drivers/pci/remove.c
-===================================================================
---- linux-2.6.orig/drivers/pci/remove.c
-+++ linux-2.6/drivers/pci/remove.c
-@@ -56,7 +56,7 @@ void pci_remove_bus(struct pci_bus *bus)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a599a6b..bfd629c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3276,9 +3276,30 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
  }
- EXPORT_SYMBOL(pci_remove_bus);
  
--static void pci_stop_bus_device(struct pci_dev *dev)
-+void pci_stop_bus_device(struct pci_dev *dev)
+-static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
++/**
++ * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
++ * @dev: Bridge device
++ *
++ * Use the bridge control register to assert reset on the secondary bus.
++ * Devices on the secondary bus are left in power-on state.
++ */
++void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
  {
- 	struct pci_bus *bus = dev->subordinate;
- 	struct pci_dev *child, *tmp;
-@@ -76,7 +76,7 @@ static void pci_stop_bus_device(struct p
- 	pci_stop_dev(dev);
- }
- 
--static void pci_remove_bus_device(struct pci_dev *dev)
-+void pci_remove_bus_device(struct pci_dev *dev)
- {
- 	struct pci_bus *bus = dev->subordinate;
- 	struct pci_dev *child, *tmp;
-Index: linux-2.6/drivers/pci/pci.h
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.h
-+++ linux-2.6/drivers/pci/pci.h
-@@ -317,4 +317,7 @@ static inline int pci_dev_specific_reset
- }
- #endif
- 
-+void pci_stop_bus_device(struct pci_dev *dev);
-+void pci_remove_bus_device(struct pci_dev *dev);
+ 	u16 ctrl;
 +
- #endif /* DRIVERS_PCI_H */
++	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
++	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++	msleep(100);
++
++	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++	msleep(100);
++}
++EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
++
++static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
++{
+ 	struct pci_dev *pdev;
+ 
+ 	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
+@@ -3291,14 +3312,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 	if (probe)
+ 		return 0;
+ 
+-	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
+-	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
+-	msleep(100);
+-
+-	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
+-	msleep(100);
++	pci_reset_bridge_secondary_bus(dev->bus->self);
+ 
+ 	return 0;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..35c1bc4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -924,6 +924,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int __pci_reset_function(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
++void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+
