@@ -1,64 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22784 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926Ab3GSTOb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jul 2013 15:14:31 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Donald Dutile <ddutile@redhat.com>,
-	Greg Rose <gregory.v.rose@intel.com>
-Subject: [PATCH] PCI: Stop sriov before remove PF
-Date: Fri, 19 Jul 2013 12:14:18 -0700
-Message-Id: <1374261258-23036-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
-References: <1374261258-23036-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:1155 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758476Ab3GaDb7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Jul 2013 23:31:59 -0400
+Subject: [RFC PATCH 4/7] pci: Add slot reset option to pci_dev_reset
+To: linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: bhelgaas@google.com, indou.takao@jp.fujitsu.com
+Date: Tue, 30 Jul 2013 21:31:54 -0600
+Message-ID: <20130731033154.31931.36203.stgit@bling.home>
+In-Reply-To: <20130731031316.31931.56751.stgit@bling.home>
+References: <20130731031316.31931.56751.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
-(PCI: Simplify IOV implementation and fix reference count races)
-VF need to be removed via virtfn_remove to make sure ref to PF
-is put back.
+If the hotplug controller provides a way to reset a slot, use that
+before a direct parent bus reset.  Like the bus reset option, this is
+only available when a single pci_dev occupies the slot.
 
-Some driver (like ixgbe) does not call pci_disable_sriov() if
-sriov is enabled via /sys/.../sriov_numvfs setting.
-ixgbe does allow driver for PF get detached, but still have VFs
-around.
-
-But how about PF get removed via /sys or pciehp?
-
-During hot-remove, VF will still hold one ref to PF and it
-prevent PF to be removed.
-That make the next hot-add fails, as old PF dev struct is still around.
-
-We need to add pci_disable_sriov() calling during pci dev removing.
-
-Need this one for v3.11
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <liuj97@gmail.com>
-Cc: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: Donald Dutile <ddutile@redhat.com>
-Cc: Greg Rose <gregory.v.rose@intel.com>
-
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/remove.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/pci.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-Index: linux-2.6/drivers/pci/remove.c
-===================================================================
---- linux-2.6.orig/drivers/pci/remove.c
-+++ linux-2.6/drivers/pci/remove.c
-@@ -34,6 +34,9 @@ static void pci_stop_dev(struct pci_dev
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index bfd629c..db90692 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -22,6 +22,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
++#include <linux/pci_hotplug.h>
+ #include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include "pci.h"
+@@ -3317,6 +3318,35 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
  
- static void pci_destroy_dev(struct pci_dev *dev)
- {
-+	/* remove VF, if PF driver skip that */
-+	pci_disable_sriov(dev);
++static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
++{
++	int rc = -ENOTTY;
 +
- 	down_write(&pci_bus_sem);
- 	list_del(&dev->bus_list);
- 	up_write(&pci_bus_sem);
++	if (!hotplug || !try_module_get(hotplug->ops->owner))
++		return rc;
++
++	if (hotplug->ops->reset_slot)
++		rc = hotplug->ops->reset_slot(hotplug, probe);
++
++	module_put(hotplug->ops->owner);
++
++	return rc;
++}
++
++static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
++{
++	struct pci_dev *pdev;
++
++	if (dev->subordinate || !dev->slot)
++		return -ENOTTY;
++
++	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
++		if (pdev != dev && pdev->slot == dev->slot)
++			return -ENOTTY;
++
++	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
++}
++
+ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+ {
+ 	int rc;
+@@ -3339,6 +3369,10 @@ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+ 	if (rc != -ENOTTY)
+ 		goto done;
+ 
++	rc = pci_dev_reset_slot_function(dev, probe);
++	if (rc != -ENOTTY)
++		goto done;
++
+ 	rc = pci_parent_bus_reset(dev, probe);
+ done:
+ 	return rc;
+
