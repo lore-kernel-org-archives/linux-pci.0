@@ -1,98 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41609 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759802Ab3GaNmK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 31 Jul 2013 09:42:10 -0400
-From: Stefan Assmann <sassmann@kpanic.de>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alexander.h.duyck@intel.com,
-	ddutile@redhat.com
-Subject: [PATCH] pci: adjust return values for error cases of IOV functions
-Date: Wed, 31 Jul 2013 15:41:28 +0200
-Message-Id: <1375278088-31260-1-git-send-email-sassmann@kpanic.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5GUTXyo4GeCGvh_GauKUA4decbDWUnD47qKPr6E65g9w@mail.gmail.com>
+References: <1360036520-31032-1-git-send-email-wangyijing@huawei.com>
+ <51A42137.9090908@huawei.com> <CAErSpo7iyiq6H-BsPNO0Nyc1SF+JteOzBqNQ+d_D=RYE_pdTEA@mail.gmail.com>
+ <51F73108.4070905@huawei.com> <CAErSpo4mHTwqrW-yq_1BkjD0GyFtVYZRm9+eGfASJ_aJCOagjg@mail.gmail.com>
+ <CAErSpo4xJk7bHQihtdN1UP+6Y17TOrBFhEsO_Zwyvz8iQMEXsw@mail.gmail.com>
+ <51F8D5C9.4020309@huawei.com> <CAErSpo5GUTXyo4GeCGvh_GauKUA4decbDWUnD47qKPr6E65g9w@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 31 Jul 2013 14:42:36 -0600
+Message-ID: <CAErSpo6yuxdngHepJ96w72SOSapud2URwc2GHPT_-CZh0e1CSA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>, Joe Jin <joe.jin@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changing the return value to -ENOSYS if a device is not physical PCI function.
-Also have pci_sriov_get_totalvfs() return 0 in the error cae to make the
-behaviour consistent whether CONFIG_PCI_IOV is enabled or not.
-Some comment fixes.
+On Wed, Jul 31, 2013 at 11:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jul 31, 2013 at 3:15 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Hi Bjorn,
+>>    I didn't observe a performance difference between MPS=128 and MPS=512. I use ping $dest_ip -s 65500(large size packet)
+>> to test the different situations.
+>
+> Interesting.  "ping" is probably not a good way to see performance
+> differences, but hopefully you could see a difference in *some*
+> scenario.  Otherwise, there's not much point in increasing MPS :)
+>
+>>> I assume there are no AER or other errors logged by the root port?
+>> Yes, AER is not support in local machine.
+>
+> Per the 5520/5500 spec, it does support AER (sec 19.11.5).  Maybe
+> there's some platform support required in addition.  You might still
+> be able to see some info just with "lspci -vv"
+>
+>> Hmmm, PCIe Spec does not involve too much about MPS setting. So maybe different platform
+>> has different strategy.
+>
+> I think there's enough in the spec to tell us what we need to do (this
+> is sec 2.2.2):
+>
+>   - A Transmitter must not send a TLP larger than its Max_Payload_Size
+>   - A Receiver must treat TLPs larger than its Max_Payload_Size as malformed
+>
+> The only way I can see to guarantee that is to set the MPS on both
+> ends of the link the same.
+>
+>> Conservatively, as a improvement for mps setting after hotplug. I think update mps setting equal to its parent
+>> make sense. This is no harm to other devices, we only modify the hotplug device itself mps register.
+>>
+>> So if you agree, I will update my patch ,only try to modify hotplug device mps, make them equal to its parent.
+>
+> Yes, I think that would be safe.  If the switch is set to a larger MPS
+> than the hot-added device supports, I don't think we can safely use
+> the device.
 
-Signed-off-by: Stefan Assmann <sassmann@kpanic.de>
----
- drivers/pci/iov.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+I opened a bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+for this problem.  Please correct any mistakes in my summary and
+reference it in your changelog.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index de8ffac..1fc9942 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -324,7 +324,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 
- 		if (!pdev->is_physfn) {
- 			pci_dev_put(pdev);
--			return -ENODEV;
-+			return -ENOSYS;
- 		}
- 
- 		rc = sysfs_create_link(&dev->dev.kobj,
-@@ -662,7 +662,7 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- 	might_sleep();
- 
- 	if (!dev->is_physfn)
--		return -ENODEV;
-+		return -ENOSYS;
- 
- 	return sriov_enable(dev, nr_virtfn);
- }
-@@ -722,7 +722,7 @@ EXPORT_SYMBOL_GPL(pci_num_vf);
-  * @dev: the PCI device
-  *
-  * Returns number of VFs belonging to this device that are assigned to a guest.
-- * If device is not a physical function returns -ENODEV.
-+ * If device is not a physical function returns 0.
-  */
- int pci_vfs_assigned(struct pci_dev *dev)
- {
-@@ -767,12 +767,15 @@ EXPORT_SYMBOL_GPL(pci_vfs_assigned);
-  * device's mutex held.
-  *
-  * Returns 0 if PF is an SRIOV-capable device and
-- * value of numvfs valid. If not a PF with VFS, return -EINVAL;
-+ * value of numvfs valid. If not a PF return -ENOSYS;
-+ * if numvfs is invalid return -EINVAL;
-  * if VFs already enabled, return -EBUSY.
-  */
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- {
--	if (!dev->is_physfn || (numvfs > dev->sriov->total_VFs))
-+	if (!dev->is_physfn)
-+		return -ENOSYS;
-+	if (numvfs > dev->sriov->total_VFs)
- 		return -EINVAL;
- 
- 	/* Shouldn't change if VFs already enabled */
-@@ -786,17 +789,17 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- EXPORT_SYMBOL_GPL(pci_sriov_set_totalvfs);
- 
- /**
-- * pci_sriov_get_totalvfs -- get total VFs supported on this devic3
-+ * pci_sriov_get_totalvfs -- get total VFs supported on this device
-  * @dev: the PCI PF device
-  *
-  * For a PCIe device with SRIOV support, return the PCIe
-  * SRIOV capability value of TotalVFs or the value of driver_max_VFs
-- * if the driver reduced it.  Otherwise, -EINVAL.
-+ * if the driver reduced it.  Otherwise 0.
-  */
- int pci_sriov_get_totalvfs(struct pci_dev *dev)
- {
- 	if (!dev->is_physfn)
--		return -EINVAL;
-+		return 0;
- 
- 	if (dev->sriov->driver_max_VFs)
- 		return dev->sriov->driver_max_VFs;
--- 
-1.8.3.1
-
+Bjorn
