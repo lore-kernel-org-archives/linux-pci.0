@@ -1,137 +1,342 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.multi.fi ([85.134.37.151]:41243 "EHLO smtp.multi.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758247Ab3GRNqy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Jul 2013 09:46:54 -0400
-Message-ID: <51E7F192.4000004@mageia.org>
-Date: Thu, 18 Jul 2013 16:45:54 +0300
-From: Thomas Backlund <tmb@mageia.org>
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:52962 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750875Ab3GaXJO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jul 2013 19:09:14 -0400
+Received: by mail-oa0-f47.google.com with SMTP id g12so2341394oah.20
+        for <linux-pci@vger.kernel.org>; Wed, 31 Jul 2013 16:09:13 -0700 (PDT)
 MIME-Version: 1.0
-To: Neil Horman <nhorman@tuxdriver.com>
-CC: Kamal Mostafa <kamal@canonical.com>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, kernel-team@lists.ubuntu.com,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	=?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>,
-	Luis Henriques <luis.henriques@canonical.com>
-Subject: Re: [PATCH 089/145] iommu/vt-d: add quirk for broken interrupt remapping
- on 55XX chipsets
-References: <1374101277-7915-1-git-send-email-kamal@canonical.com> <1374101277-7915-90-git-send-email-kamal@canonical.com> <51E7A0F8.9000308@mageia.org> <20130718103739.GA3626@hmsreliant.think-freely.org>
-In-Reply-To: <20130718103739.GA3626@hmsreliant.think-freely.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAErSpo5B1eDxwZ+Uu=M5tWaunYEZj_en81RdXj1rdpanYqMcxw@mail.gmail.com>
+References: <51122D9A.6040002@cn.fujitsu.com> <518B7D65.9090408@cn.fujitsu.com>
+ <CAErSpo5B1eDxwZ+Uu=M5tWaunYEZj_en81RdXj1rdpanYqMcxw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 31 Jul 2013 17:08:52 -0600
+Message-ID: <CAErSpo4egT9kru-Vr69PGorKS9t-3+ybv9fYLavNn3A=Z8BnPQ@mail.gmail.com>
+Subject: Re: pci-sysfs: queue sysfs rescan routine into workqueue to avoid
+ potential deadlock situation
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-18.07.2013 13:37, Neil Horman skrev:
-> On Thu, Jul 18, 2013 at 11:02:00AM +0300, Thomas Backlund wrote:
->> 18.07.2013 01:47, Kamal Mostafa skrev:
->>> 3.8.13.5 -stable review patch.  If anyone has any objections, please let me know.
+On Thu, May 9, 2013 at 10:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, May 9, 2013 at 3:41 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+>> Hi Bjorn,
+>>         Very sorry to disturb you. This patch was sent a long time ago, but we have not get
+>> any feedback until now.
+>> It is used to fix a potential deadlock situation when doing pci-hotplug via pci-sysfs.
+>> In the first version we sent:
+>> https://patchwork.kernel.org/patch/1912351/
+>> replaced mutex_lock with mutex_trylock to avoid potential deadlock situation, but you suggested
+>> that using a workqueue to queue these routines seems a good way to avoid the deadlock situation,
+>> and this patch was followed your suggestion, can your split a while to review it? Or is there any
+>> better way to fix this issue? Any comments is welcome! :)
+>
+> No problem, thanks for reminding me about this.  I hadn't actually
+> forgotten about this patch, but it does seem like it's tangled up with
+> the whole pci_bus and pci_dev reference counting situation, so I was
+> hoping that if we could figure out a clean resolution to that, it
+> would make it more obvious what to do here.
+
+Gu, can you open a bugzilla for this (or include a URL here if a
+bugzilla already exists)?  Please include a recipe showing how to
+reproduce the problem and attach a transcript, e.g., a complete dmesg
+from which the portion below was extracted.  Thanks!
+
+Bjorn
+
+>> On 02/06/2013 06:16 PM, Gu Zheng wrote:
+>>
+>>> There is a potential deadlock situation when we manipulate the pci-sysfs user
+>>> interfaces from different bus hierarchy simultaneously, described as following:
 >>>
->>> ------------------
+>>> path1: sysfs remove device:             | path2: sysfs rescan device:
+>>> sysfs_schedule_callback_work()          | sysfs_write_file()
+>>>   remove_callback()                     |   flush_write_buffer()
+>>> *1* mutex_lock(&pci_remove_rescan_mutex)|*2*  sysfs_get_active(attr_sd)
+>>>       ...                               |     dev_attr_store()
+>>>         device_remove_file()            |       dev_rescan_store()
+>>>           ...                           |*4*
+>>> mutex_lock(&pci_remove_rescan_mutex)
+>>> *3*       sysfs_deactivate(sd)          |     ...
+>>>             wait_for_completion()       |*5*  sysfs_put_active(attr_sd)
+>>> *6* mutex_unlock(&pci_remove_rescan_mutex)
 >>>
->>> From: Neil Horman <nhorman@tuxdriver.com>
+>>> If path1 first holds the pci_remove_rescan_mutex at *1*, then another path
+>>> called path2 actived and runs to *2* before path1 runs to *3*, we now runs
+>>> to a deadlock situation:
+>>> Path1 holds the mutex waiting path2 to decrease sysfs_dirent's s_active
+>>> counter at *5*, but path2 is blocked at *4* when trying to get the
+>>> pci_remove_rescan_mutex. The mutex won't be put by path1 until it reach
+>>> *6*, but it's now blocked at *3*.
 >>>
->>> commit 03bbcb2e7e292838bb0244f5a7816d194c911d62 upstream.
+>>> Under the suggestion of Bjorn, and base on Yinghai Lu's patch:
+>>> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=277df390baeab7ba6aa136356b677a096c890c0c
 >>>
->>> A few years back intel published a spec update:
->>> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+>>> The circumvent approach is queuing the sysfs rescan routine into workqueue just
+>>> like removal to avoid manipulating(remove/scan) the pci-tree at the same time.
 >>>
->>> For the 5520 and 5500 chipsets which contained an errata (specificially errata
->>> 53), which noted that these chipsets can't properly do interrupt remapping, and
->>> as a result the recommend that interrupt remapping be disabled in bios.  While
->>> many vendors have a bios update to do exactly that, not all do, and of course
->>> not all users update their bios to a level that corrects the problem.  As a
->>> result, occasionally interrupts can arrive at a cpu even after affinity for that
->>> interrupt has be moved, leading to lost or spurrious interrupts (usually
->>> characterized by the message:
->>> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
 >>>
->>> There have been several incidents recently of people seeing this error, and
->>> investigation has shown that they have system for which their BIOS level is such
->>> that this feature was not properly turned off.  As such, it would be good to
->>> give them a reminder that their systems are vulnurable to this problem.  For
->>> details of those that reported the problem, please see:
->>> https://bugzilla.redhat.com/show_bug.cgi?id=887006
+>>> *dmesg ifno*:
+>>> (snip)
+>>> 1000e 0000:1c:00.0: eth9: Intel(R) PRO/1000 Network Connection
+>>> sd 13:2:0:0: [sdb] Attached SCSI disk
+>>> e1000e 0000:1c:00.0: eth9: MAC: 0, PHY: 4, PBA No: D50228-005
+>>> e1000e 0000:1c:00.1: Disabling ASPM  L1
+>>> e1000e 0000:1c:00.1: Interrupt Throttling Rate (ints/sec) set to dynamic
+>>> conservative mode
+>>> e1000e 0000:1c:00.1: irq 143 for MSI/MSI-X
+>>> e1000e 0000:1c:00.1: eth10: (PCI Express:2.5GT/s:Width x4) 00:15:17:cd:96:bf
+>>> e1000e 0000:1c:00.1: eth10: Intel(R) PRO/1000 Network Connection
+>>> e1000e 0000:1c:00.1: eth10: MAC: 0, PHY: 4, PBA No: D50228-005
+>>> INFO: task bash:62982 blocked for more than 120 seconds.
+>>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>>> bash            D 0000000000000000     0 62982  62978 0x00000080
+>>>  ffff88038b277db8 0000000000000082 ffff88038b277fd8 0000000000013940
+>>>  ffff88038b276010 0000000000013940 0000000000013940 0000000000013940
+>>>  ffff88038b277fd8 0000000000013940 ffff880377449e30 ffff8806e822c670
+>>> Call Trace:
+>>>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>>>  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
+>>>  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
+>>>  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
+>>>  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
+>>>  [<ffffffff81341800>] dev_attr_store+0x20/0x30
+>>>  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
+>>>  [<ffffffff81173d08>] vfs_write+0xc8/0x190
+>>>  [<ffffffff81173ed1>] sys_write+0x51/0x90
+>>>  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
+>>> INFO: task bash:64141 blocked for more than 120 seconds.
+>>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>>> bash            D ffffffff81610460     0 64141  64136 0x00000080
+>>>  ffff8803540e9db8 0000000000000086 ffff8803540e9fd8 0000000000013940
+>>>  ffff8803540e8010 0000000000013940 0000000000013940 0000000000013940
+>>>  ffff8803540e9fd8 0000000000013940 ffff8807db338a10 ffff8806f09abc60
+>>> Call Trace:
+>>>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>>>  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
+>>>  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
+>>>  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
+>>>  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
+>>>  [<ffffffff81341800>] dev_attr_store+0x20/0x30
+>>>  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
+>>>  [<ffffffff81173d08>] vfs_write+0xc8/0x190
+>>>  [<ffffffff81173ed1>] sys_write+0x51/0x90
+>>>  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
+>>> INFO: task kworker/u:3:64451 blocked for more than 120 seconds.
+>>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>>> kworker/u:3     D ffffffff81610460     0 64451      2 0x00000080
+>>>  ffff8807d51b7a30 0000000000000046 ffff8807d51b7fd8 0000000000013940
+>>>  ffff8807d51b6010 0000000000013940 0000000000013940 0000000000013940
+>>>  ffff8807d51b7fd8 0000000000013940 ffff8807db339420 ffff88037744b250
+>>> Call Trace:
+>>>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>>>  [<ffffffff81519ded>] schedule_timeout+0x19d/0x220
+>>>  [<ffffffff81165f92>] ? __slab_free+0x1f2/0x2f0
+>>>  [<ffffffff8151b8fe>] wait_for_common+0x11e/0x190
+>>>  [<ffffffff8108a6e0>] ? try_to_wake_up+0x2c0/0x2c0
+>>>  [<ffffffff8151ba4d>] wait_for_completion+0x1d/0x20
+>>>  [<ffffffff811e53e8>] sysfs_addrm_finish+0xb8/0xd0
+>>>  [<ffffffff811e4320>] ? sysfs_schedule_callback+0x1e0/0x1e0
+>>>  [<ffffffff811e33f0>] sysfs_hash_and_remove+0x60/0xb0
+>>>  [<ffffffff811e43c9>] sysfs_remove_file+0x39/0x50
+>>>  [<ffffffff81342cb7>] device_remove_file+0x17/0x20
+>>>  [<ffffffff8134505c>] bus_remove_device+0xdc/0x180
+>>>  [<ffffffff81342eb0>] device_del+0x120/0x1d0
+>>>  [<ffffffff81342f82>] device_unregister+0x22/0x60
+>>>  [<ffffffff8127ade4>] pci_stop_bus_device+0x94/0xa0
+>>>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>>>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>>>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>>>  [<ffffffff8127af66>] pci_stop_and_remove_bus_device+0x16/0x30
+>>>  [<ffffffff81282359>] remove_callback+0x29/0x40
+>>>  [<ffffffff811e4344>] sysfs_schedule_callback_work+0x24/0x70
+>>>  [<ffffffff81070009>] process_one_work+0x179/0x4b0
+>>>  [<ffffffff8107210e>] worker_thread+0x12e/0x330
+>>>  [<ffffffff81071fe0>] ? manage_workers+0x110/0x110
+>>>  [<ffffffff8107705e>] kthread+0x9e/0xb0
+>>>  [<ffffffff81525bc4>] kernel_thread_helper+0x4/0x10
+>>>  [<ffffffff81076fc0>] ? kthread_freezable_should_stop+0x70/0x70
+>>>  [<ffffffff81525bc0>] ? gs_change+0x13/0x13
 >>>
->>> [ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
 >>>
->>> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
->>> CC: Prarit Bhargava <prarit@redhat.com>
->>> CC: Don Zickus <dzickus@redhat.com>
->>> CC: Don Dutile <ddutile@redhat.com>
->>> CC: Bjorn Helgaas <bhelgaas@google.com>
->>> CC: Asit Mallick <asit.k.mallick@intel.com>
->>> CC: David Woodhouse <dwmw2@infradead.org>
->>> CC: linux-pci@vger.kernel.org
->>> CC: Joerg Roedel <joro@8bytes.org>
->>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->>> CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
->>> Signed-off-by: Joerg Roedel <joro@8bytes.org>
->>> Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>>> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
 >>> ---
->>>   arch/x86/include/asm/irq_remapping.h |  2 ++
->>>   arch/x86/kernel/early-quirks.c       | 20 ++++++++++++++++++++
->>>   drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
->>>   drivers/iommu/irq_remapping.c        |  6 ++++++
->>>   drivers/iommu/irq_remapping.h        |  2 ++
->>>   5 files changed, 40 insertions(+)
+>>>  drivers/pci/pci-sysfs.c |   92 +++++++++++++++++++++++++++++++++--------------
+>>>  1 files changed, 65 insertions(+), 27 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>>> index 9c6e9bb..e66b498 100644
+>>> --- a/drivers/pci/pci-sysfs.c
+>>> +++ b/drivers/pci/pci-sysfs.c
+>>> @@ -285,21 +285,34 @@ msi_bus_store(struct device *dev, struct device_attribute
+>>> *attr,
+>>>  }
+>>>
+>>>  static DEFINE_MUTEX(pci_remove_rescan_mutex);
+>>> +
+>>> +static void bus_rescan_callback(struct device *dev)
+>>> +{
+>>> +     struct pci_bus *b = NULL;
+>>> +
+>>> +     mutex_lock(&pci_remove_rescan_mutex);
+>>> +     while ((b = pci_find_next_bus(b)) != NULL)
+>>> +             pci_rescan_bus(b);
+>>> +     mutex_unlock(&pci_remove_rescan_mutex);
+>>> +}
+>>> +
+>>>  static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+>>>                               size_t count)
+>>>  {
+>>> +     int err;
+>>>       unsigned long val;
+>>> -     struct pci_bus *b = NULL;
+>>> +     struct device *dev = bus->dev_root;
+>>>
+>>>       if (strict_strtoul(buf, 0, &val) < 0)
+>>>               return -EINVAL;
+>>>
+>>> -     if (val) {
+>>> -             mutex_lock(&pci_remove_rescan_mutex);
+>>> -             while ((b = pci_find_next_bus(b)) != NULL)
+>>> -                     pci_rescan_bus(b);
+>>> -             mutex_unlock(&pci_remove_rescan_mutex);
+>>> -     }
+>>> +     if (!val)
+>>> +             return count;
+>>> +
+>>> +     err = device_schedule_callback(dev, bus_rescan_callback);
+>>> +     if (err)
+>>> +             return err;
+>>> +
+>>>       return count;
+>>>  }
+>>>
+>>> @@ -308,21 +321,32 @@ struct bus_attribute pci_bus_attrs[] = {
+>>>       __ATTR_NULL
+>>>  };
+>>>
+>>> +static void dev_rescan_callback(struct device *dev)
+>>> +{
+>>> +     struct pci_dev *pdev = to_pci_dev(dev);
+>>> +
+>>> +     if (pdev->is_added) {
+>>> +             mutex_lock(&pci_remove_rescan_mutex);
+>>> +             pci_rescan_bus(pdev->bus);
+>>> +             mutex_unlock(&pci_remove_rescan_mutex);
+>>> +     }
+>>> +}
+>>> +
+>>>  static ssize_t
+>>>  dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>>>                const char *buf, size_t count)
+>>>  {
+>>> +     int err;
+>>>       unsigned long val;
+>>> -     struct pci_dev *pdev = to_pci_dev(dev);
+>>>
+>>>       if (strict_strtoul(buf, 0, &val) < 0)
+>>>               return -EINVAL;
+>>>
+>>> -     if (val) {
+>>> -             mutex_lock(&pci_remove_rescan_mutex);
+>>> -             pci_rescan_bus(pdev->bus);
+>>> -             mutex_unlock(&pci_remove_rescan_mutex);
+>>> -     }
+>>> +     if (!val)
+>>> +             return count;
+>>> +     err = device_schedule_callback(dev, dev_rescan_callback);
+>>> +     if (err)
+>>> +             return err;
+>>>       return count;
+>>>  }
+>>>
+>>> @@ -339,7 +363,7 @@ static ssize_t
+>>>  remove_store(struct device *dev, struct device_attribute *dummy,
+>>>            const char *buf, size_t count)
+>>>  {
+>>> -     int ret = 0;
+>>> +     int err;
+>>>       unsigned long val;
+>>>
+>>>       if (strict_strtoul(buf, 0, &val) < 0)
+>>> @@ -348,31 +372,45 @@ remove_store(struct device *dev, struct device_attribute
+>>> *dummy,
+>>>       /* An attribute cannot be unregistered by one of its own methods,
+>>>        * so we have to use this roundabout approach.
+>>>        */
+>>> -     if (val)
+>>> -             ret = device_schedule_callback(dev, remove_callback);
+>>> -     if (ret)
+>>> -             count = ret;
+>>> +     if (!val)
+>>> +             return count;
+>>> +
+>>> +     err = device_schedule_callback(dev, remove_callback);
+>>> +     if (err)
+>>> +             return err;
+>>> +
+>>>       return count;
+>>>  }
+>>>
+>>> +static void dev_bus_rescan_callback(struct device *dev)
+>>> +{
+>>> +     struct pci_bus *bus = to_pci_bus(dev);
+>>> +
+>>> +     mutex_lock(&pci_remove_rescan_mutex);
+>>> +     if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+>>> +             pci_rescan_bus_bridge_resize(bus->self);
+>>> +     else
+>>> +             pci_rescan_bus(bus);
+>>> +     mutex_unlock(&pci_remove_rescan_mutex);
+>>> +}
+>>> +
+>>>  static ssize_t
+>>>  dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+>>>                const char *buf, size_t count)
+>>>  {
+>>> +     int err;
+>>>       unsigned long val;
+>>> -     struct pci_bus *bus = to_pci_bus(dev);
+>>>
+>>>       if (strict_strtoul(buf, 0, &val) < 0)
+>>>               return -EINVAL;
+>>>
+>>> -     if (val) {
+>>> -             mutex_lock(&pci_remove_rescan_mutex);
+>>> -             if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+>>> -                     pci_rescan_bus_bridge_resize(bus->self);
+>>> -             else
+>>> -                     pci_rescan_bus(bus);
+>>> -             mutex_unlock(&pci_remove_rescan_mutex);
+>>> -     }
+>>> +     if (!val)
+>>> +             return count;
+>>> +
+>>> +     err = device_schedule_callback(dev, dev_bus_rescan_callback);
+>>> +     if (err)
+>>> +             return err;
+>>> +
+>>>       return count;
+>>>  }
+>>>
+>>> -- 1.7.7
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>>
 >>
->> This patch introduces this warning on 3.8 series kernels:
 >>
->> In file included from arch/x86/kernel/early-quirks.c:21:0:
->> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:46:10:
->> varning: ”struct irq_data” deklarerad inuti parameterlista
->> [aktiverat som standard]
->> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:46:10:
->> varning: dess scope-område är endast denna definition eller
->> deklaration, vilket troligen inte är vad du vill. [aktiverat som
->> standard]
->> /kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:50:17:
->> varning: ”struct msi_msg” deklarerad inuti parameterlista [aktiverat
->> som standard]
->>
->>
->> You need to add this upstream fix too:
->>
->> commit 35d3d814cbd46a85bed97cd74ba97fbbb51e0ccd
->> Author: Joerg Roedel <joro@8bytes.org>
->> Date:   Fri Apr 19 20:34:55 2013 +0200
->>
->>      iommu: Fix compile warnings with forward declarations
->>
-> I submited a 3.9 backport that included that fix to -stable over a week ago, you
-> should just be able to use that if you want.
-> Neil
-
-Almost, but not enough...
-
-The patch you refer to was:
-[3.9 stable PATCH] iommu/vt-d: add quirk for broken interrupt remapping 
-on 55XX chipsets
-
-and got merged in 3.9.9.
-
-And that added a missing: "#include <linux/irq.h>" in
-arch/x86/include/asm/irq_remapping.h
-
-But using that patch it still spits out:
-
-kernel/linux-3.8.13.5/arch/x86/include/asm/irq_remapping.h:50:17:
- >> varning: ”struct msi_msg” deklarerad inuti parameterlista [aktiverat
- >> som standard]
-
-
-which is why the additional patch is still needed...
-
---
-
-Thomas
-
-
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
