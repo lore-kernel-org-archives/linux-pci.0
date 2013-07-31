@@ -1,86 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:16645 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755629Ab3GKHFw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 03:05:52 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kishon Vijay Abraham I' <kishon@ti.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org, Seungwon Jeon <tgih.jun@samsung.com>,
-	'Yulgon Kim' <yulgon.kim@samsung.com>,
-	Jingoo Han <jg1.han@samsung.com>
-References: <001201ce7dfa$716b3370$54419a50$@samsung.com>
- <51DE5359.90905@ti.com>
-In-reply-to: <51DE5359.90905@ti.com>
-Subject: Re: [PATCH V2] pci: exynos: split into two parts such as Synopsys part
- and Exynos part
-Date: Thu, 11 Jul 2013 16:05:50 +0900
-Message-id: <000001ce7e05$13ab4210$3b01c630$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <51F85BCC.2070103@jp.fujitsu.com>
+References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
+ <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com>
+ <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com>
+ <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com>
+ <51B93221.2040505@jp.fujitsu.com> <CAErSpo5tVK-Z3aOdMTzab-S8o5zLVtDOFQ8-LSYpUgbrJSsxuw@mail.gmail.com>
+ <51BA7BB6.1080104@jp.fujitsu.com> <51EF7466.20703@jp.fujitsu.com>
+ <CAErSpo5B7NzVfxwW3bQnfK+iK+DrRsWQd2Cm14z5PWNnRHWL5w@mail.gmail.com>
+ <51F5B966.9080405@jp.fujitsu.com> <CAErSpo4JtG5qVJb-nCywe3vkft=-cDeRDKn_V92RCZ-sGXpwbg@mail.gmail.com>
+ <51F758B6.9090204@jp.fujitsu.com> <CAErSpo7TNhQO0dx_xZvF=dU2fSWTFf8x=xUJcEsbadJkv8ktuQ@mail.gmail.com>
+ <51F85BCC.2070103@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 31 Jul 2013 15:08:03 -0600
+Message-ID: <CAErSpo4yJ2yqCWv7GT7jWSVd_8SktU=xJXT78m8Vxp_wLA4Fow@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: Vivek Goyal <vgoyal@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	"Sumner, William" <bill.sumner@hp.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	Haren Myneni <hbabu@us.ibm.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 11, 2013 3:40 PM, Kishon Vijay Abraham I wrote:
-> On Thursday 11 July 2013 11:19 AM, Jingoo Han wrote:
-> >
-> >  drivers/pci/host/Makefile          |    1 +
-> >  drivers/pci/host/pcie-designware.c |  963 +++++++++---------------------------
-> >  drivers/pci/host/pcie-designware.h |   71 +++
-> >  drivers/pci/host/pcie-exynos.c     |  523 ++++++++++++++++++++
-> >  4 files changed, 822 insertions(+), 736 deletions(-)
-> >  create mode 100644 drivers/pci/host/pcie-designware.h
-> >  create mode 100644 drivers/pci/host/pcie-exynos.c
-> >
-> > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> > index 086d850..7e59864 100644
-> > --- a/drivers/pci/host/Makefile
-> > +++ b/drivers/pci/host/Makefile
-> > @@ -1,2 +1,3 @@
-> >  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
-> >  obj-$(CONFIG_PCIE_DW) += pcie-designware.o
-> > +obj-$(CONFIG_PCI_EXYNOS) += pcie-exynos.o
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-[...]
-> 
-> How about making this a separate driver in itself that does all the
-> configurations for designware core? By this I mean we can have a separate dt
-> node (child node of soc specific wrapper), that will have all the configuration
-> space/IO space and memory space. pci_common_init/dw_pcie_host_init should be
-> done in this driver.
-> We just need to think about a way of passing the ops (since that looks like
-> very much needed because of the sideband bits you have to enable before
-> reading/writing).
-> 
+[+cc Rafael, linux-acpi]
 
-CC'ed Seungwon Jeon(DW-MMC Maintainer), Yulgon Kim (DW-USB Developer)
+On Tue, Jul 30, 2013 at 6:35 PM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
 
+> On x86, currently IOMMU initialization run *after* PCI enumeration, but
+> what you are talking about is that it should be changed so that x86
+> IOMMU initialization is done *before* PCI enumeration like sparc, right?
 
-Um, maybe you mean dwc3 usb driver (./drivers/usb/dwc3/)'?
+Yes.  I don't know whether or when that initialization order will ever
+be changed, but I do think we should avoid building more
+infrastructure that depends on the current order.
 
-But, I referenced dw mmc driver (./drivers/mmc/host/dw_mmc*.c).
+Changing the order is a pretty big deal because it's a lot more than
+just the IOMMU.  Basically I think we should be enumerating ACPI
+devices, including the IOMMU, before PCI devices, but there's a lot of
+legacy involved in that area.  Added Rafael in case he has any
+thoughts.
 
-Now, Exynos PCIe driver, Spear PCIe driver[1], and i.MX PCIe driver[2]
-are submitted to PCIe mailing-list, these are using designware PCIe core.
-
-There are many differences between Exynos PCIe and Spear PCIe.
-Also, for Exynos PCIe, platform specific part will be changed more.
-
-Thus, the dw mmc driver model looked more suitable.
-
-
-[1] http://permalink.gmane.org/gmane.linux.kernel.pci/18400
-[2] http://www.spinics.net/lists/linux-pci/msg23489.html
-
-
-Best regards,
-Jingoo Han
-
-
+> Hmm, ok, I think I need to post attached patch to iommu list and
+> discuss it including current order of x86 IOMMU initialization.
