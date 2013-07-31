@@ -1,112 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:51667 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757416Ab3GLJgu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2013 05:36:50 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, Don Dutile <ddutile@redhat.com>,
-	Paul Bolle <pebolle@tiscali.nl>, <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH -v3 3/3] PCI,pciehp: use PCIe DSN to identify device change during suspend
-Date: Fri, 12 Jul 2013 17:32:23 +0800
-Message-ID: <1373621543-54836-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1373621543-54836-1-git-send-email-wangyijing@huawei.com>
-References: <1373621543-54836-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([143.182.124.37]:59620 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752396Ab3GaJ7l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 31 Jul 2013 05:59:41 -0400
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: davem@davemloft.net, bhelgaas@google.com
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>, netdev@vger.kernel.org,
+	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org
+Subject: [net-next v2 00/15][pull request] Intel Wired LAN Driver Updates
+Date: Wed, 31 Jul 2013 02:59:22 -0700
+Message-Id: <1375264777-13595-1-git-send-email-jeffrey.t.kirsher@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If device was removed from slot and reinsert a new device during
-suspend, pciehp can not identify the physical device change now.
-So the old driver .resume() method will be called for the new device,
-this is bad. If device support device serial number capability,
-we can identify this by DSN. So the reasonable way is first remove
-the old device, then enable the new device.
+This series contains updates to ixgbe and pci.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/hotplug/pciehp_core.c |   45 +++++++++++++++++++++++++++++++++++++
- 1 files changed, 45 insertions(+), 0 deletions(-)
+The first patch for ixgbe from Greg Rose is the second submission.  The
+first submission of "ixgbe: Retain VLAN filtering in promiscuous + VT
+mode" had a typo, which Joe Perches pointed out and is fixed in this
+submission.
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 7fe9dbd..bc47f8e 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -296,11 +296,38 @@ static int pciehp_suspend (struct pcie_device *dev)
- 	return 0;
- }
- 
-+/*
-+ * check the func 0 device serial number is changed,
-+ * if device does not support device serial number,
-+ * return false.
-+ */
-+static bool device_serial_number_changed(struct pci_bus *pbus)
-+{
-+	u64 old_dsn, new_dsn;
-+	struct pci_dev *pdev;
-+
-+	pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
-+	if (!pdev)
-+		return false;
-+
-+	old_dsn = pdev->sn;
-+
-+	/* get func 0 device serial number */
-+	new_dsn = pci_device_serial_number(pdev);
-+	pci_dev_put(pdev);
-+
-+	if (old_dsn != new_dsn)
-+		return true;
-+
-+	return false;
-+}
-+
- static int pciehp_resume (struct pcie_device *dev)
- {
- 	struct controller *ctrl;
- 	struct slot *slot;
- 	struct pci_bus *pbus = dev->port->subordinate;
-+	int retval = 0;
- 	u8 status;
- 
- 	ctrl = get_service_data(dev);
-@@ -315,6 +342,24 @@ static int pciehp_resume (struct pcie_device *dev)
- 	if (status) {
- 		if (list_empty(&pbus->devices))
- 			pciehp_enable_slot(slot);
-+
-+		if (device_serial_number_changed(pbus)) {
-+			/*
-+			 * first power off slot, avoid the old driver
-+			 * .remove() method touch the new hardware
-+			 */
-+			if (POWER_CTRL(ctrl)) {
-+				retval = pciehp_power_off_slot(slot);
-+				if (retval) {
-+					ctrl_err(ctrl,
-+						"Issue of Slot Disable command failed\n");
-+					return 0;
-+				}
-+				msleep(1000);
-+				pciehp_unconfigure_device(slot);
-+				pciehp_enable_slot(slot);
-+			}
-+		}
- 	} else if (!list_empty(&pbus->devices)) {
- 		pciehp_disable_slot(slot);
- 	}
+Alex updates the ixgbe driver to use the generic helper pci_vfs_assigned
+instead of the driver specific function ixgbe_vfs_are_assigned.
+
+Don Skidmore provides 4 patches for ixgbe, the first being a fix for
+flow control ethtool reporting.  Originally ixgbe_device_supports_autoneg_fc()
+was expected to be called by only copper devices, which lead to false
+information being displayed via ethtool.  Two other patches add support
+for fixed fiber for SFP+ devices and the addition of a quad-port x520
+adapter.  The last patch simply bumps the driver version.
+
+Emil Tantilov provides 3 fixes for ixgbe, two of which resolve
+semaphore lock issues.  The third fix resolves several issues in the
+previous implementation of the SFF data dumps of SFP+ modules.
+
+The remaining ixgbe and pci patches are from Jacob Keller.  The pci
+patches exposes bus speed, link speed and bus width so that drivers
+can take advantage of this information.  In addition, adds a pci function
+which obtains minimum link width and speed.  Jacob also provides the
+ixgbe patch to incorporate the pci function. He provides a patch that
+fixes a lockdep issue created due to ixgbe_ptp_stop always running
+cancel_work_sync even if the work item had not been created properly with
+INIT_WORK. This issue was found and reported by Stephen Hemminger.
+
+-v2-
+* fix patch 3 to be a bool function based on David Miller's feedback
+* fix patch 4 debug message based on David Miller's feedback
+* fix patch 8 moved the extern declarations to pci.h based on Bjorn
+  Helgaas's feedback
+* fix patch 11 update the error message to include encoding loss based
+* fix patch 8/9/10 title based on Bjorn's feedback
+
+The following are changes since commit 60ff779c4abba37a31bd8624ef45026f7fb1b70c:
+  9p: client: remove unused code and any reference to "cancelled" function
+and are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/jkirsher/net-next master
+
+Alexander Duyck (1):
+  ixgbe: Use pci_vfs_assigned instead of ixgbe_vfs_are_assigned
+
+Don Skidmore (4):
+  ixgbe: fix fc autoneg ethtool reporting.
+  ixgbe: add new media type.
+  ixgbe: bump version number
+  ixgbe: add support for quad-port x520 adapter
+
+Emil Tantilov (3):
+  ixgbe: fix semaphore lock for I2C read/writes on 82598
+  ixgbe: fix SFF data dumps of SFP+ modules
+  ixgbe: clear semaphore bits on timeouts
+
+Greg Rose (1):
+  ixgbe: Retain VLAN filtering in promiscuous + VT mode
+
+Jacob Keller (6):
+  PCI: expose pcie_link_speed and pcix_bus_speed arrays
+  PCI: move enum pcie_link_width into pci.h
+  PCI: Add function to obtain minimum link width and speed
+  ixgbe: call pcie_get_mimimum_link to check if device has enough
+    bandwidth
+  ixgbe: fix lockdep annotation issue for ptp's work item
+  ixgbe: rename LL_EXTENDED_STATS to use queue instead of q
+
+ drivers/net/ethernet/intel/ixgbe/ixgbe.h         |   7 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_82598.c   |  34 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_82599.c   | 240 +++++++++++-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_common.c  |  90 +++--
+ drivers/net/ethernet/intel/ixgbe/ixgbe_common.h  |   2 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c |  94 ++---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c    | 167 +++++++-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_phy.c     | 470 ++++++++++++++++-------
+ drivers/net/ethernet/intel/ixgbe/ixgbe_phy.h     |  41 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c     |  12 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c   | 101 +++--
+ drivers/net/ethernet/intel/ixgbe/ixgbe_type.h    |  12 +
+ drivers/pci/pci.c                                |  43 +++
+ drivers/pci/pci.h                                |   3 +
+ drivers/pci/probe.c                              |   4 +-
+ include/linux/pci.h                              |  15 +
+ include/linux/pci_hotplug.h                      |  13 -
+ 17 files changed, 1001 insertions(+), 347 deletions(-)
+
 -- 
-1.7.1
-
+1.7.11.7
 
