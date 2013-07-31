@@ -1,104 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:38183 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40339 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753692Ab3G2Mwc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Jul 2013 08:52:32 -0400
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: davem@davemloft.net, bhelgaas@google.com
-Cc: Jacob Keller <jacob.e.keller@intel.com>, netdev@vger.kernel.org,
-	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: [net-next 10/15] pci: Add function to obtain minimum link width and speed
-Date: Mon, 29 Jul 2013 05:52:06 -0700
-Message-Id: <1375102331-23905-11-git-send-email-jeffrey.t.kirsher@intel.com>
-In-Reply-To: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
-References: <1375102331-23905-1-git-send-email-jeffrey.t.kirsher@intel.com>
+	id S1758498Ab3GaDcD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Jul 2013 23:32:03 -0400
+Subject: [RFC PATCH 5/7] pci: Split out pci_dev lock/unlock and save/restore
+To: linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: bhelgaas@google.com, indou.takao@jp.fujitsu.com
+Date: Tue, 30 Jul 2013 21:32:00 -0600
+Message-ID: <20130731033200.31931.99870.stgit@bling.home>
+In-Reply-To: <20130731031316.31931.56751.stgit@bling.home>
+References: <20130731031316.31931.56751.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jacob Keller <jacob.e.keller@intel.com>
+Only cosmetic changes to existing paths.
 
-A PCI Express device can potentially report a link width and speed which it will
-not properly fulfill due to being plugged into a slower link higher in the
-chain. This function walks up the PCI bus chain and calculates the minimum link
-width and speed of this entire chain. This can be useful to enable a device to
-determine if it has enough bandwidth for optimum functionality.
-
-Signed-off-by: Jacob Keller <jacob.e.keller@intel.com>
-Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/pci.c   | 43 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |  2 ++
- 2 files changed, 45 insertions(+)
+ drivers/pci/pci.c |   52 +++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 35 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e37fea6..c71e78c 100644
+index db90692..f6c757a 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -3579,6 +3579,49 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+@@ -3378,22 +3378,46 @@ done:
+ 	return rc;
  }
  
- /**
-+ * pcie_get_minimum_link - determine minimum link settings of a PCI device
-+ * @dev: PCI device to query
-+ * @speed: storage for minimum speed
-+ * @width: storage for minimum width
-+ *
-+ * This function will walk up the PCI device chain and determine the minimum
-+ * link width and speed of the device.
-+ */
-+int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-+			  enum pcie_link_width *width)
++static void pci_dev_lock(struct pci_dev *dev)
 +{
-+	int ret;
-+
-+	*speed = PCI_SPEED_UNKNOWN;
-+	*width = PCIE_LNK_WIDTH_UNKNOWN;
-+
-+	while (dev) {
-+		u16 lnksta;
-+		enum pci_bus_speed next_speed;
-+		enum pcie_link_width next_width;
-+
-+		ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-+		if (ret)
-+			return ret;
-+
-+		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
-+		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
-+			PCI_EXP_LNKSTA_NLW_SHIFT;
-+
-+		if (next_speed < *speed)
-+			*speed = next_speed;
-+
-+		if (next_width < *width)
-+			*width = next_width;
-+
-+		dev = dev->bus->self;
-+	}
-+
-+	return 0;
++	pci_cfg_access_lock(dev);
++	/* block PM suspend, driver probe, etc. */
++	device_lock(&dev->dev);
 +}
-+EXPORT_SYMBOL(pcie_get_minimum_link);
 +
-+/**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-  * @flags: resource type mask to be selected
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index fc2d1fb..38994de 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -937,6 +937,8 @@ int pcie_get_readrq(struct pci_dev *dev);
- int pcie_set_readrq(struct pci_dev *dev, int rq);
- int pcie_get_mps(struct pci_dev *dev);
- int pcie_set_mps(struct pci_dev *dev, int mps);
-+int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-+			  enum pcie_link_width *width);
- int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
--- 
-1.7.11.7
++static void pci_dev_unlock(struct pci_dev *dev)
++{
++	device_unlock(&dev->dev);
++	pci_cfg_access_unlock(dev);
++}
++
++static void pci_dev_save_and_disable(struct pci_dev *dev)
++{
++	pci_save_state(dev);
++	/*
++	 * both INTx and MSI are disabled after the Interrupt Disable bit
++	 * is set and the Bus Master bit is cleared.
++	 */
++	pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
++}
++
++static void pci_dev_restore(struct pci_dev *dev)
++{
++	pci_restore_state(dev);
++}
++
+ static int pci_dev_reset(struct pci_dev *dev, int probe)
+ {
+ 	int rc;
+ 
+-	if (!probe) {
+-		pci_cfg_access_lock(dev);
+-		/* block PM suspend, driver probe, etc. */
+-		device_lock(&dev->dev);
+-	}
++	if (!probe)
++		pci_dev_lock(dev);
+ 
+ 	rc = __pci_dev_reset(dev, probe);
+ 
+-	if (!probe) {
+-		device_unlock(&dev->dev);
+-		pci_cfg_access_unlock(dev);
+-	}
++	if (!probe)
++		pci_dev_unlock(dev);
++
+ 	return rc;
+ }
+ /**
+@@ -3484,17 +3508,11 @@ int pci_reset_function(struct pci_dev *dev)
+ 	if (rc)
+ 		return rc;
+ 
+-	pci_save_state(dev);
+-
+-	/*
+-	 * both INTx and MSI are disabled after the Interrupt Disable bit
+-	 * is set and the Bus Master bit is cleared.
+-	 */
+-	pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
++	pci_dev_save_and_disable(dev);
+ 
+ 	rc = pci_dev_reset(dev, 0);
+ 
+-	pci_restore_state(dev);
++	pci_dev_restore(dev);
+ 
+ 	return rc;
+ }
 
