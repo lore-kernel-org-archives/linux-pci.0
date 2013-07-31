@@ -1,236 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH 22/30] ACPI / hotplug / PCI: Do not exectute _PS0 and _PS3 directly
-Date: Thu, 18 Jul 2013 01:30:31 +0200
-Message-ID: <2147895.18KNAqILnt@vostro.rjw.lan>
-In-Reply-To: <2366394.4EoP1MXmG2@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:52872 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757781Ab3GaWlw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jul 2013 18:41:52 -0400
+Received: by mail-oa0-f46.google.com with SMTP id l10so2799500oag.19
+        for <linux-pci@vger.kernel.org>; Wed, 31 Jul 2013 15:41:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <51EF451A.8050003@oracle.com>
+References: <51EF451A.8050003@oracle.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 31 Jul 2013 16:41:32 -0600
+Message-ID: <CAErSpo5phkLpdR35eaMnYthVXiAAAr-JLD44QkntOZi2-NppOg@mail.gmail.com>
+Subject: Re: [PATCH 2/3] Refactor msi/msix restore code Part2
+To: zhenzhong.duan@oracle.com
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Jul 23, 2013 at 9:08 PM, Zhenzhong Duan
+<zhenzhong.duan@oracle.com> wrote:
+> xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
+> in dom0. It's better to do the same for default_restore_msi_irqs in baremetal.
+>
+> Move restore of mask in default_restore_msi_irqs, this could avoid mask
+> restored twice in dom0, once in hypercall, the other in kernel.
+>
+> Without that, qlcnic driver calling pci_reset_function will lost interrupt
+> in dom0.
+>
+> Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+> ---
+>  drivers/pci/msi.c |   17 ++++++++++++++---
+>  1 files changed, 14 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 87223ae..922fb49 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
+>  #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
+>  void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+>  {
+> +       int pos;
+> +       u16 control;
+>         struct msi_desc *entry;
+>
+>         entry = NULL;
+> @@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+>                 entry = irq_get_msi_desc(irq);
+>         }
+>
+> -       if (entry)
+> +       if (entry) {
+>                 write_msi_msg(irq, &entry->msg);
+> +               if (dev->msix_enabled) {
+> +                       msix_mask_irq(entry, entry->masked);
+> +                       readl(entry->mask_base);
+> +               } else {
+> +                       pos = entry->msi_attrib.pos;
+> +                       pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
+> +                                            &control);
+> +                       msi_mask_irq(entry, msi_capable_mask(control),
+> +                                    entry->masked);
+> +               }
+> +       }
+>  }
+>  #endif
+>
+> @@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+>         arch_restore_msi_irqs(dev, dev->irq);
+>
+>         pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+> -       msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
+>         control &= ~PCI_MSI_FLAGS_QSIZE;
+>         control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
+>         pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+> @@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+>
+>         list_for_each_entry(entry, &dev->msi_list, list) {
+>                 arch_restore_msi_irqs(dev, entry->irq);
+> -               msix_mask_irq(entry, entry->masked);
+>         }
+>
+>         control &= ~PCI_MSIX_FLAGS_MASKALL;
 
-The ACPI-based PCI hotplug (acpiphp) core code need not and really
-should not execute _PS0 and _PS3 directly for devices it handles.
+Konrad, are you OK with this patch now?
 
-First of all, it is not necessary to put devices into D3 after
-acpi_bus_trim() has walked through them, because
-acpi_device_unregister() invoked by it puts each device into D3cold
-before returning.  Thus after disable_device() the slot should be
-powered down already.
+If so, can you (Zhenzhong) update the changelog with some of the info
+from the conversation with Konrad?  It seems like a few more details
+are needed to make it clear why we need this change.
 
-Second, calling _PS0 directly on ACPI device objects may not be
-appropriate, because it may require power resources to be set up in
-a specific way in advance and that must be taken care of by the ACPI
-core.  Thus modify acpiphp_bus_add() to power up the device using
-the appropriate interface after it has run acpi_bus_scan() on its
-handle.
-
-After that, the functions executing _PS0 and _PS3, power_on_slot()
-and power_off_slot(), are not necessary any more, so drop them
-and update the code calling them accordingly.  Also drop the
-function flags related to device power states, since they aren't
-useful any more too.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |    7 --
- drivers/pci/hotplug/acpiphp_glue.c |  106 +++----------------------------------
- 2 files changed, 10 insertions(+), 103 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -303,12 +303,6 @@ static acpi_status register_slot(acpi_ha
- 	if (acpi_has_method(handle, "_STA"))
- 		newfunc->flags |= FUNC_HAS_STA;
- 
--	if (acpi_has_method(handle, "_PS0"))
--		newfunc->flags |= FUNC_HAS_PS0;
--
--	if (acpi_has_method(handle, "_PS3"))
--		newfunc->flags |= FUNC_HAS_PS3;
--
- 	if (acpi_has_method(handle, "_DCK"))
- 		newfunc->flags |= FUNC_HAS_DCK;
- 
-@@ -366,7 +360,7 @@ static acpi_status register_slot(acpi_ha
- 
- 	if (pci_bus_read_dev_vendor_id(pbus, PCI_DEVFN(device, function),
- 				       &val, 60*1000))
--		slot->flags |= (SLOT_ENABLED | SLOT_POWEREDON);
-+		slot->flags |= SLOT_ENABLED;
- 
- 	if (is_dock_device(handle)) {
- 		/* we don't want to call this device's _EJ0
-@@ -446,73 +440,6 @@ static void cleanup_bridge(struct acpiph
- 	mutex_unlock(&bridge_mutex);
- }
- 
--static int power_on_slot(struct acpiphp_slot *slot)
--{
--	acpi_status status;
--	struct acpiphp_func *func;
--	int retval = 0;
--
--	/* if already enabled, just skip */
--	if (slot->flags & SLOT_POWEREDON)
--		goto err_exit;
--
--	list_for_each_entry(func, &slot->funcs, sibling) {
--		if (func->flags & FUNC_HAS_PS0) {
--			dbg("%s: executing _PS0\n", __func__);
--			status = acpi_evaluate_object(func_to_handle(func),
--						      "_PS0", NULL, NULL);
--			if (ACPI_FAILURE(status)) {
--				warn("%s: _PS0 failed\n", __func__);
--				retval = -1;
--				goto err_exit;
--			} else
--				break;
--		}
--	}
--
--	/* TBD: evaluate _STA to check if the slot is enabled */
--
--	slot->flags |= SLOT_POWEREDON;
--
-- err_exit:
--	return retval;
--}
--
--
--static int power_off_slot(struct acpiphp_slot *slot)
--{
--	acpi_status status;
--	struct acpiphp_func *func;
--
--	int retval = 0;
--
--	/* if already disabled, just skip */
--	if ((slot->flags & SLOT_POWEREDON) == 0)
--		goto err_exit;
--
--	list_for_each_entry(func, &slot->funcs, sibling) {
--		if (func->flags & FUNC_HAS_PS3) {
--			status = acpi_evaluate_object(func_to_handle(func),
--						      "_PS3", NULL, NULL);
--			if (ACPI_FAILURE(status)) {
--				warn("%s: _PS3 failed\n", __func__);
--				retval = -1;
--				goto err_exit;
--			} else
--				break;
--		}
--	}
--
--	/* TBD: evaluate _STA to check if the slot is disabled */
--
--	slot->flags &= (~SLOT_POWEREDON);
--
-- err_exit:
--	return retval;
--}
--
--
--
- /**
-  * acpiphp_max_busnr - return the highest reserved bus number under the given bus.
-  * @bus: bus to start search with
-@@ -559,8 +486,13 @@ static void acpiphp_bus_trim(acpi_handle
-  */
- static void acpiphp_bus_add(acpi_handle handle)
- {
-+	struct acpi_device *adev = NULL;
-+
- 	acpiphp_bus_trim(handle);
- 	acpi_bus_scan(handle);
-+	acpi_bus_get_device(handle, &adev);
-+	if (adev)
-+		acpi_device_set_power(adev, ACPI_STATE_D0);
- }
- 
- static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
-@@ -1095,23 +1027,8 @@ int acpiphp_enable_slot(struct acpiphp_s
- 	int retval;
- 
- 	mutex_lock(&slot->crit_sect);
--
--	/* wake up all functions */
--	retval = power_on_slot(slot);
--	if (retval)
--		goto err_exit;
--
--	if (get_slot_status(slot) == ACPI_STA_ALL) {
--		/* configure all functions */
--		retval = enable_device(slot);
--		if (retval)
--			power_off_slot(slot);
--	} else {
--		dbg("%s: Slot status is not ACPI_STA_ALL\n", __func__);
--		power_off_slot(slot);
--	}
--
-- err_exit:
-+	/* configure all functions */
-+	retval = enable_device(slot);
- 	mutex_unlock(&slot->crit_sect);
- 	return retval;
- }
-@@ -1132,11 +1049,6 @@ int acpiphp_disable_and_eject_slot(struc
- 	if (retval)
- 		goto err_exit;
- 
--	/* power off all functions */
--	retval = power_off_slot(slot);
--	if (retval)
--		goto err_exit;
--
- 	list_for_each_entry(func, &slot->funcs, sibling)
- 		if (func->flags & FUNC_HAS_EJ0) {
- 			acpi_handle handle = func_to_handle(func);
-@@ -1159,7 +1071,7 @@ int acpiphp_disable_and_eject_slot(struc
-  */
- u8 acpiphp_get_power_status(struct acpiphp_slot *slot)
- {
--	return (slot->flags & SLOT_POWEREDON);
-+	return (slot->flags & SLOT_ENABLED);
- }
- 
- 
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -162,7 +162,6 @@ struct acpiphp_attention_info
- 
- /* slot flags */
- 
--#define SLOT_POWEREDON		(0x00000001)
- #define SLOT_ENABLED		(0x00000002)
- #define SLOT_MULTIFUNCTION	(0x00000004)
- 
-@@ -170,11 +169,7 @@ struct acpiphp_attention_info
- 
- #define FUNC_HAS_STA		(0x00000001)
- #define FUNC_HAS_EJ0		(0x00000002)
--#define FUNC_HAS_PS0		(0x00000010)
--#define FUNC_HAS_PS1		(0x00000020)
--#define FUNC_HAS_PS2		(0x00000040)
--#define FUNC_HAS_PS3		(0x00000080)
--#define FUNC_HAS_DCK            (0x00000100)
-+#define FUNC_HAS_DCK            (0x00000004)
- 
- /* function prototypes */
- 
-
+Bjorn
