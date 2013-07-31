@@ -1,112 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:33891 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753536Ab3GWBke (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Jul 2013 21:40:34 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH v2 1/8] x86/PCI: prevent re-allocation of already existing bridge and ROM resources
-Date: Tue, 23 Jul 2013 03:50:36 +0200
-Message-ID: <2765266.7xyo4HkKBQ@vostro.rjw.lan>
-In-Reply-To: <CAErSpo5=-32QSZ_RtLgU_67gMF6RVcnTAG6oKJ_Uz7uf4pXRkA@mail.gmail.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com> <CAErSpo7=ed3=P7ab9zYB23qnwe8Z-ghRfCEurskpcNW5m86j8g@mail.gmail.com> <CAErSpo5=-32QSZ_RtLgU_67gMF6RVcnTAG6oKJ_Uz7uf4pXRkA@mail.gmail.com>
+To: Shuah Khan <shuahkhan@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux-foundation.org,
+	virtualization@lists.linux-foundation.org, kvm@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, shuah.kh@samsung.com
+Subject: Re: [Announcement] Linux Plumbers ACPI/PM, PCI Microconference
+Date: Wed, 31 Jul 2013 23:17:36 +0200
+Message-ID: <7183196.Ov6Qetq3lO@vostro.rjw.lan>
+In-Reply-To: <CAKocOOPOqqS80D23z6xTVSNYYYWZ7ACg9MtSMz_hTqVA3Duo0w@mail.gmail.com>
+References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com> <1755363.sGc8nLIQOW@vostro.rjw.lan> <CAKocOOPOqqS80D23z6xTVSNYYYWZ7ACg9MtSMz_hTqVA3Duo0w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, July 22, 2013 07:18:38 PM Bjorn Helgaas wrote:
-> On Mon, Jul 22, 2013 at 6:08 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Wed, Jul 3, 2013 at 8:04 AM, Mika Westerberg
-> > <mika.westerberg@linux.intel.com> wrote:
-> >> In hotplug case (especially with Thunderbolt enabled systems) we might need
-> >> to call pcibios_resource_survey_bus() several times for a bus. The function
-> >> ends up calling pci_claim_resource() for each bridge resource that then
-> >> fails claiming that the resource exists already (which it does). Once this
-> >> happens the resource is invalidated thus preventing devices behind the
-> >> bridge to allocate their resources.
-> >>
-> >> To fix this we do what has been done in pcibios_allocate_dev_resources()
-> >> and check 'parent' of the given resource. If it is non-NULL it means that
-> >> the resource has been allocated already and we can skip it. We do the same
-> >> for ROM resources as well.
-> >>
-> >> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+On Wednesday, July 31, 2013 10:35:05 AM Shuah Khan wrote:
+> On Wed, Jul 31, 2013 at 5:40 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > Hi All,
 > >
-> > This looks reasonable to me.
+> > The original announcement didn't go to linux-pm, so again:
+> >
+> > On Tuesday, July 16, 2013 08:21:26 PM Myron Stowe wrote:
+> >> Linux Plumbers has approved an ACPI/PM, PCI microconference. The
+> >> overview page is here:
+> >>
+> >> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
+> >>
+> >> We would like to start receiving volunteers for presenting topics of
+> >> interest.  There is a lot of activity in these subsystems so please
+> >> respond by submitting presentation or discussion proposals that you
+> >> would be willing to cover for consideration.  You should also feel
+> >> free to submit ideas as proposals that others could cover.  The
+> >> instructions for submitting ideas should be at:
+> >>
+> >> http://www.linuxplumbersconf.org/2013/submitting-topic/
+> >
+> > If anyone who's going to attend the Linux Plumbers Conf this year is interested
+> > in any particular topic for discussion during the ACPI/PM+PCI uconf, please
+> > submit a formal topic proposal at:
+> >
+> > http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/proposals/new
+> >
+> > If you submit a topic, that doesn't mean you'll be expected to present anything
+> > (if accepted).  In fact, we are mostly interested in discussion topics and we'd
+> > like to know what is important to people.
+> >
+> > That said if you have a (short) presentation to make, please submit it too.
+> >
+> > We'll appreciate all submissions very much.
+> >
 > 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> What I have mind is a discussion topic for the Mini-conference, which
+> in-line with what you are asking for.
+> I will add it to the web.
 
-Thanks a lot!
+Thank you!
 
-> > However, the use of "r->parent" to determine whether the resource is
-> > already allocated is nothing specific to x86.  So I think we might be
-> > missing an opportunity to make this more consistent across
-> > architectures.  I looked at other callers of pci_claim_resource() for
-> > bridge and ROM resources, and it looks like we might be able to make
-> > similar changes in:
-> >
-> >   frv pcibios_allocate_bus_resources()
-> >   ia64 pcibios_fixup_resources() (via pcibios_fixup_bridge_resources())
-> >   mn10300 pcibios_allocate_bus_resources()
-> >   mn10300 pcibios_assign_resources() (ROM)
-> >   mn10300 pcibios_fixup_device_resources()
-> >   parisc lba_fixup_bus()
-> >
-> > I really hate the idea of fixing something for x86 but not for other
-> > arches, so maybe somebody could take a deeper look at this and see if
-> > it would make sense to change the other arches, too.
-> >
-> > Bjorn
-> >
-> >> ---
-> >>  arch/x86/pci/i386.c | 4 ++++
-> >>  1 file changed, 4 insertions(+)
-> >>
-> >> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-> >> index 94919e3..db6b1ab 100644
-> >> --- a/arch/x86/pci/i386.c
-> >> +++ b/arch/x86/pci/i386.c
-> >> @@ -210,6 +210,8 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
-> >>                 r = &dev->resource[idx];
-> >>                 if (!r->flags)
-> >>                         continue;
-> >> +               if (r->parent)  /* Already allocated */
-> >> +                       continue;
-> >>                 if (!r->start || pci_claim_resource(dev, idx) < 0) {
-> >>                         /*
-> >>                          * Something is wrong with the region.
-> >> @@ -318,6 +320,8 @@ static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
-> >>         r = &dev->resource[PCI_ROM_RESOURCE];
-> >>         if (!r->flags || !r->start)
-> >>                 return;
-> >> +       if (r->parent) /* Already allocated */
-> >> +               return;
-> >>
-> >>         if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
-> >>                 r->end -= r->start;
-> >> --
-> >> 1.8.3.2
-> >>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
