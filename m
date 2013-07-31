@@ -1,106 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:59620 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752396Ab3GaJ7l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 31 Jul 2013 05:59:41 -0400
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: davem@davemloft.net, bhelgaas@google.com
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>, netdev@vger.kernel.org,
-	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org
-Subject: [net-next v2 00/15][pull request] Intel Wired LAN Driver Updates
-Date: Wed, 31 Jul 2013 02:59:22 -0700
-Message-Id: <1375264777-13595-1-git-send-email-jeffrey.t.kirsher@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1375230992.31262.87.camel@ul30vt.home>
+Subject: Re: Linux Plumbers ACPI/PM, PCI Microconference
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Shuah Khan <shuah.kh@samsung.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Shuah Khan <shuahkhan@gmail.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"virtualization@lists.linux-foundation.org"
+	<virtualization@lists.linux-foundation.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Tue, 30 Jul 2013 18:36:32 -0600
+In-Reply-To: <B8EFE96D1287C24090BAD9D858E15E6174F0B5@sisaex01sj>
+References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
+	 <CAKocOOOgEb5h1dZWP_2UqBKhSK9U-kxKUbvTdzHfds=RiDzNJg@mail.gmail.com>
+	 <1476124.sWE2ygoo2D@vostro.rjw.lan>
+	 <B8EFE96D1287C24090BAD9D858E15E6174F0B5@sisaex01sj>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series contains updates to ixgbe and pci.
+On Wed, 2013-07-31 at 00:02 +0000, Shuah Khan wrote:
+> On 07/30/2013 05:38 PM, Rafael J. Wysocki wrote:
+> > On Wednesday, July 17, 2013 08:31:55 AM Shuah Khan wrote:
+> >> Myron,
+> >>
+> >> On Tue, Jul 16, 2013 at 8:21 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
+> >>
+> >>>
+> >>> Shuah - You brought up the idea about "Converting drivers from Legacy
+> >>> PM ops to dev_pm_ops"; would you like to present what you have
+> >>> done/encountered so far?
+> >>>
+> >>
+> >> Awesome. Yes, I would like to present what I have done so far and I do
+> >> have a couple of things that could benefit from a face to face
+> >> discussion which would help me make progress on the rest of the work
+> >> that needs to get done.
+> >
+> > Care to sumbit a formal proposal through the LPC web page?
+> >
+> > Rafael
+> >
+> >
+> 
+> Rafael,
+> 
+> I did submit a formal talk proposal to LinuxCon/LPC and it was rejected. 
+> Submission is closed now as far as I know.
 
-The first patch for ixgbe from Greg Rose is the second submission.  The
-first submission of "ixgbe: Retain VLAN filtering in promiscuous + VT
-mode" had a typo, which Joe Perches pointed out and is fixed in this
-submission.
+Microconference topics should be submitted here:
 
-Alex updates the ixgbe driver to use the generic helper pci_vfs_assigned
-instead of the driver specific function ixgbe_vfs_are_assigned.
-
-Don Skidmore provides 4 patches for ixgbe, the first being a fix for
-flow control ethtool reporting.  Originally ixgbe_device_supports_autoneg_fc()
-was expected to be called by only copper devices, which lead to false
-information being displayed via ethtool.  Two other patches add support
-for fixed fiber for SFP+ devices and the addition of a quad-port x520
-adapter.  The last patch simply bumps the driver version.
-
-Emil Tantilov provides 3 fixes for ixgbe, two of which resolve
-semaphore lock issues.  The third fix resolves several issues in the
-previous implementation of the SFF data dumps of SFP+ modules.
-
-The remaining ixgbe and pci patches are from Jacob Keller.  The pci
-patches exposes bus speed, link speed and bus width so that drivers
-can take advantage of this information.  In addition, adds a pci function
-which obtains minimum link width and speed.  Jacob also provides the
-ixgbe patch to incorporate the pci function. He provides a patch that
-fixes a lockdep issue created due to ixgbe_ptp_stop always running
-cancel_work_sync even if the work item had not been created properly with
-INIT_WORK. This issue was found and reported by Stephen Hemminger.
-
--v2-
-* fix patch 3 to be a bool function based on David Miller's feedback
-* fix patch 4 debug message based on David Miller's feedback
-* fix patch 8 moved the extern declarations to pci.h based on Bjorn
-  Helgaas's feedback
-* fix patch 11 update the error message to include encoding loss based
-* fix patch 8/9/10 title based on Bjorn's feedback
-
-The following are changes since commit 60ff779c4abba37a31bd8624ef45026f7fb1b70c:
-  9p: client: remove unused code and any reference to "cancelled" function
-and are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/jkirsher/net-next master
-
-Alexander Duyck (1):
-  ixgbe: Use pci_vfs_assigned instead of ixgbe_vfs_are_assigned
-
-Don Skidmore (4):
-  ixgbe: fix fc autoneg ethtool reporting.
-  ixgbe: add new media type.
-  ixgbe: bump version number
-  ixgbe: add support for quad-port x520 adapter
-
-Emil Tantilov (3):
-  ixgbe: fix semaphore lock for I2C read/writes on 82598
-  ixgbe: fix SFF data dumps of SFP+ modules
-  ixgbe: clear semaphore bits on timeouts
-
-Greg Rose (1):
-  ixgbe: Retain VLAN filtering in promiscuous + VT mode
-
-Jacob Keller (6):
-  PCI: expose pcie_link_speed and pcix_bus_speed arrays
-  PCI: move enum pcie_link_width into pci.h
-  PCI: Add function to obtain minimum link width and speed
-  ixgbe: call pcie_get_mimimum_link to check if device has enough
-    bandwidth
-  ixgbe: fix lockdep annotation issue for ptp's work item
-  ixgbe: rename LL_EXTENDED_STATS to use queue instead of q
-
- drivers/net/ethernet/intel/ixgbe/ixgbe.h         |   7 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_82598.c   |  34 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_82599.c   | 240 +++++++++++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_common.c  |  90 +++--
- drivers/net/ethernet/intel/ixgbe/ixgbe_common.h  |   2 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c |  94 ++---
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c    | 167 +++++++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_phy.c     | 470 ++++++++++++++++-------
- drivers/net/ethernet/intel/ixgbe/ixgbe_phy.h     |  41 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c     |  12 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c   | 101 +++--
- drivers/net/ethernet/intel/ixgbe/ixgbe_type.h    |  12 +
- drivers/pci/pci.c                                |  43 +++
- drivers/pci/pci.h                                |   3 +
- drivers/pci/probe.c                              |   4 +-
- include/linux/pci.h                              |  15 +
- include/linux/pci_hotplug.h                      |  13 -
- 17 files changed, 1001 insertions(+), 347 deletions(-)
-
--- 
-1.7.11.7
+http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/proposals/new
 
