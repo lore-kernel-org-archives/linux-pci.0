@@ -1,63 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: [PATCH v2 1/8] x86/PCI: prevent re-allocation of already existing bridge and ROM resources
-Date: Wed,  3 Jul 2013 17:04:48 +0300
-Message-Id: <1372860295-8306-2-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372860295-8306-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51307 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753785Ab3GaDbe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Jul 2013 23:31:34 -0400
+Subject: [RFC PATCH 0/7] pci: bus and slot reset interfaces
+To: linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: bhelgaas@google.com, indou.takao@jp.fujitsu.com
+Date: Tue, 30 Jul 2013 21:31:29 -0600
+Message-ID: <20130731031316.31931.56751.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In hotplug case (especially with Thunderbolt enabled systems) we might need
-to call pcibios_resource_survey_bus() several times for a bus. The function
-ends up calling pci_claim_resource() for each bridge resource that then
-fails claiming that the resource exists already (which it does). Once this
-happens the resource is invalidated thus preventing devices behind the
-bridge to allocate their resources.
+This series adds PCI bus and slot reset interfaces to the already
+existing function reset interface.  I need this for two reasons, the
+first is that not all devices support function level reset.  Even
+some of those that we detect as supporting a PM reset on D3hot->D0
+transition actually don't do any reset.  Others have no reset
+capability at all.  We currently implement a secondary bus reset
+escalation from the function reset path, but only when there is a
+single devfn on the bus.  Drivers like vfio can have ownership of
+all of the devices on a bus and should therefore have a path to
+initiate a secondary bus reset with multiple devices.  This is
+particularly required for use of GPUs by userspace, where none of
+the predominant GPUs implement a useful function level reset.
 
-To fix this we do what has been done in pcibios_allocate_dev_resources()
-and check 'parent' of the given resource. If it is non-NULL it means that
-the resource has been allocated already and we can skip it. We do the same
-for ROM resources as well.
+The second reason is that even the current function reset escalating
+to a secondary bus reset can cause problems with hotplug controllers.
+If a root port supports PCIe HP with suprise removal, a bus reset
+can trigger a presence detection change, which results in an attempt
+to remove the struct device.  By having a slot reset interface, we
+can involve the hotplug controllers to allow for a controlled bus
+reset and avoid this spurious removal attempt.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Takao-san also needs a PCI bus reset interface to quiesce devices
+during kexec.  I believe this interface also provides that.
+
+Why is this an RFC?  I posted this a while back and self-nacked it
+because there were issues when hotplug was built as a module.  Now
+that we're removing module support for PCI hotplug and pciehp in
+particular, I think that problem is resolved, but it needs further
+testing.  Coments welcome.  Thanks,
+
+Alex
+
 ---
- arch/x86/pci/i386.c | 4 ++++
- 1 file changed, 4 insertions(+)
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 94919e3..db6b1ab 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -210,6 +210,8 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 		r = &dev->resource[idx];
- 		if (!r->flags)
- 			continue;
-+		if (r->parent)	/* Already allocated */
-+			continue;
- 		if (!r->start || pci_claim_resource(dev, idx) < 0) {
- 			/*
- 			 * Something is wrong with the region.
-@@ -318,6 +320,8 @@ static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
- 	r = &dev->resource[PCI_ROM_RESOURCE];
- 	if (!r->flags || !r->start)
- 		return;
-+	if (r->parent) /* Already allocated */
-+		return;
- 
- 	if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
- 		r->end -= r->start;
--- 
-1.8.3.2
+Alex Williamson (7):
+      pci: Create pci_reset_bridge_secondary_bus()
+      pci: Add hotplug_slot_ops.reset_slot()
+      pci: Implement reset_slot for pciehp
+      pci: Add slot reset option to pci_dev_reset
+      pci: Split out pci_dev lock/unlock and save/restore
+      pci: Add slot and bus reset interfaces
+      pci: Wake-up devices before save for reset
 
+
+ drivers/pci/hotplug/pciehp.h      |    1 
+ drivers/pci/hotplug/pciehp_core.c |   12 +
+ drivers/pci/hotplug/pciehp_hpc.c  |   31 ++++
+ drivers/pci/pci.c                 |  320 ++++++++++++++++++++++++++++++++++---
+ include/linux/pci.h               |    3 
+ include/linux/pci_hotplug.h       |    4 
+ 6 files changed, 345 insertions(+), 26 deletions(-)
