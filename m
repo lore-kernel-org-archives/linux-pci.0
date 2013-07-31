@@ -1,81 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:37099 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485Ab3G2Aie (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 28 Jul 2013 20:38:34 -0400
-Message-ID: <51F5B966.9080405@jp.fujitsu.com>
-Date: Mon, 29 Jul 2013 09:37:58 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46599 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759920Ab3GaNgm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jul 2013 09:36:42 -0400
+Date: Wed, 31 Jul 2013 09:36:22 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Cc: linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>, bhelgaas@google.com,
+	Feng Jin <joe.jin@oracle.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [PATCH 3/3 v2] Update x86_msi.restore_msi_irqs API param
+Message-ID: <20130731133622.GA22594@phenom.dumpdata.com>
+References: <51F7208D.60604@oracle.com>
 MIME-Version: 1.0
-To: bhelgaas@google.com
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	ishii.hironobu@jp.fujitsu.com, ddutile@redhat.com,
-	bill.sumner@hp.com, alex.williamson@redhat.com, vgoyal@redhat.com,
-	hbabu@us.ibm.com
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com> <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com> <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com> <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com> <51B93221.2040505@jp.fujitsu.com> <CAErSpo5tVK-Z3aOdMTzab-S8o5zLVtDOFQ8-LSYpUgbrJSsxuw@mail.gmail.com> <51BA7BB6.1080104@jp.fujitsu.com> <51EF7466.20703@jp.fujitsu.com> <CAErSpo5B7NzVfxwW3bQnfK+iK+DrRsWQd2Cm14z5PWNnRHWL5w@mail.gmail.com>
-In-Reply-To: <CAErSpo5B7NzVfxwW3bQnfK+iK+DrRsWQd2Cm14z5PWNnRHWL5w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51F7208D.60604@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2013/07/26 2:00), Bjorn Helgaas wrote:
-> On Wed, Jul 24, 2013 at 12:29 AM, Takao Indoh
-> <indou.takao@jp.fujitsu.com> wrote:
->> Sorry for letting this discussion slide, I was busy on other works:-(
->> Anyway, the summary of previous discussion is:
->> - My patch adds new initcall(fs_initcall) to reset all PCIe endpoints on
->>    boot. This expects PCI enumeration is done before IOMMU
->>    initialization as follows.
->>      (1) PCI enumeration
->>      (2) fs_initcall ---> device reset
->>      (3) IOMMU initialization
->> - This works on x86, but does not work on other architecture because
->>    IOMMU is initialized before PCI enumeration on some architectures. So,
->>    device reset should be done where IOMMU is initialized instead of
->>    initcall.
->> - Or, as another idea, we can reset devices in first kernel(panic kernel)
->>
->> Resetting devices in panic kernel is against kdump policy and seems not to
->> be good idea. So I think adding reset code into iommu initialization is
->> better. I'll post patches for that.
+On Tue, Jul 30, 2013 at 10:10:21AM +0800, Zhenzhong Duan wrote:
+> Change x86_msi.restore_msi_irqs(struct pci_dev *dev, int irq) to
+> x86_msi.restore_msi_irqs(struct pci_dev *dev)
 > 
-> Of course nobody *wants* to do anything in the panic kernel.  But
-> simply saying "it's against kdump policy and seems not to be a good
-> idea" is not a technical argument.  There are things that are
-> impractical to do in the kdump kernel, so they have to be done in the
-> panic kernel even though we know the kernel is unreliable and the
-> attempt may fail.
+> >From its naming, restore_msi_irqs is used to restore multiple msix irqs,
+> param 'int irq' is unneeded. This could make code looks consistent in vm
+> and bare metal.
 
-Accessing kernel data in panic kernel causes panic again, so
-- Don't touch kernel data in panic situation
-- Jump to kdump kernel as quickly as possible, and do things in safe
-  kernel
-These are basic "kdump policy". Of course if there are any works which
-we cannot do in kdump kernel and can do only in panic kernel, for
-example saving registers or stopping cpus, we should do them in panic
-kernel.
-
-Resetting devices in panic kernel is worth considering if we can safely
-find pci_dev and reset it, but I have no idea how to do that because
-for example struct pci_dev may be borken.
-
+Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 > 
-> My point about IOMMU and PCI initialization order doesn't go away just
-> because it doesn't fit "kdump policy."  Having system initialization
-> occur in a logical order is far more important than making kdump work.
+> Dom0 msix restore code could be optimized a bit with this change.
 
-My next plan is as follows. I think this is matched to logical order
-on boot.
+This part of the comment I don't think is needed.
 
-drivers/pci/pci.c
-- Add function to reset bus, for example, pci_reset_bus(struct pci_bus *bus)
-
-drivers/iommu/intel-iommu.c
-- On initialization, if IOMMU is already enabled, call this bus reset
-  function before disabling and re-enabling IOMMU.
-
-Thanks,
-Takao Indoh
-
+Thanks!
+> 
+> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+> ---
+>  arch/x86/include/asm/pci.h      |    8 ++++----
+>  arch/x86/include/asm/x86_init.h |    2 +-
+>  arch/x86/pci/xen.c              |    2 +-
+>  drivers/pci/msi.c               |   17 ++++++++++++-----
+>  4 files changed, 18 insertions(+), 11 deletions(-)
+> 
+> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+> index d9e9e6c..40cbea4 100644
+> --- a/arch/x86/include/asm/pci.h
+> +++ b/arch/x86/include/asm/pci.h
+> @@ -115,9 +115,9 @@ static inline void x86_teardown_msi_irq(unsigned int irq)
+>  {
+>  	x86_msi.teardown_msi_irq(irq);
+>  }
+> -static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
+> +static inline void x86_restore_msi_irqs(struct pci_dev *dev)
+>  {
+> -	x86_msi.restore_msi_irqs(dev, irq);
+> +	x86_msi.restore_msi_irqs(dev);
+>  }
+>  #define arch_setup_msi_irqs x86_setup_msi_irqs
+>  #define arch_teardown_msi_irqs x86_teardown_msi_irqs
+> @@ -127,14 +127,14 @@ static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
+>  struct msi_desc;
+>  int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+>  void native_teardown_msi_irq(unsigned int irq);
+> -void native_restore_msi_irqs(struct pci_dev *dev, int irq);
+> +void native_restore_msi_irqs(struct pci_dev *dev);
+>  int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+>  		  unsigned int irq_base, unsigned int irq_offset);
+>  /* default to the implementation in drivers/lib/msi.c */
+>  #define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
+>  #define HAVE_DEFAULT_MSI_RESTORE_IRQS
+>  void default_teardown_msi_irqs(struct pci_dev *dev);
+> -void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+> +void default_restore_msi_irqs(struct pci_dev *dev);
+>  #else
+>  #define native_setup_msi_irqs		NULL
+>  #define native_teardown_msi_irq		NULL
+> diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+> index 828a156..f58a9c7 100644
+> --- a/arch/x86/include/asm/x86_init.h
+> +++ b/arch/x86/include/asm/x86_init.h
+> @@ -180,7 +180,7 @@ struct x86_msi_ops {
+>  			       u8 hpet_id);
+>  	void (*teardown_msi_irq)(unsigned int irq);
+>  	void (*teardown_msi_irqs)(struct pci_dev *dev);
+> -	void (*restore_msi_irqs)(struct pci_dev *dev, int irq);
+> +	void (*restore_msi_irqs)(struct pci_dev *dev);
+>  	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
+>  };
+>  
+> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+> index 48e8461..cdd869f 100644
+> --- a/arch/x86/pci/xen.c
+> +++ b/arch/x86/pci/xen.c
+> @@ -337,7 +337,7 @@ out:
+>  	return ret;
+>  }
+>  
+> -static void xen_initdom_restore_msi_irqs(struct pci_dev *dev, int irq)
+> +static void xen_initdom_restore_msi_irqs(struct pci_dev *dev)
+>  {
+>  	int ret = 0;
+>  
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 922fb49..d4ccfeb 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -214,7 +214,7 @@ void unmask_msi_irq(struct irq_data *data)
+>  #endif /* CONFIG_GENERIC_HARDIRQS */
+>  
+>  #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
+> -void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+> +static void default_restore_msi_irq(struct pci_dev *dev, int irq)
+>  {
+>  	int pos;
+>  	u16 control;
+> @@ -244,6 +244,15 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+>  		}
+>  	}
+>  }
+> +
+> +void default_restore_msi_irqs(struct pci_dev *dev)
+> +{
+> +	struct msi_desc *entry;
+> +
+> +	list_for_each_entry(entry, &dev->msi_list, list) {
+> +		default_restore_msi_irq(dev, entry->irq);
+> +	}
+> +}
+>  #endif
+>  
+>  void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+> @@ -416,7 +425,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+>  
+>  	pci_intx_for_msi(dev, 0);
+>  	msi_set_enable(dev, 0);
+> -	arch_restore_msi_irqs(dev, dev->irq);
+> +	arch_restore_msi_irqs(dev);
+>  
+>  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+>  	control &= ~PCI_MSI_FLAGS_QSIZE;
+> @@ -440,9 +449,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+>  	control |= PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL;
+>  	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, control);
+>  
+> -	list_for_each_entry(entry, &dev->msi_list, list) {
+> -		arch_restore_msi_irqs(dev, entry->irq);
+> -	}
+> +	arch_restore_msi_irqs(dev);
+>  
+>  	control &= ~PCI_MSIX_FLAGS_MASKALL;
+>  	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, control);
+> -- 
+> 1.7.3
+> 
