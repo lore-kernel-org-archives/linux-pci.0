@@ -1,107 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	linux-pci@vger.kernel.org
-Subject: [ 16/38] xen/pcifront: Deal with toolstack missing XenbusStateClosing state.
-Date: Thu, 18 Jul 2013 22:21:32 -0700
-Message-Id: <20130719052048.995477903@linuxfoundation.org>
-In-Reply-To: <20130719052047.858393825@linuxfoundation.org>
-References: <20130719052047.858393825@linuxfoundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41609 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759802Ab3GaNmK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 31 Jul 2013 09:42:10 -0400
+From: Stefan Assmann <sassmann@kpanic.de>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, alexander.h.duyck@intel.com,
+	ddutile@redhat.com
+Subject: [PATCH] pci: adjust return values for error cases of IOV functions
+Date: Wed, 31 Jul 2013 15:41:28 +0200
+Message-Id: <1375278088-31260-1-git-send-email-sassmann@kpanic.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-3.9-stable review patch.  If anyone has any objections, please let me know.
+Changing the return value to -ENOSYS if a device is not physical PCI function.
+Also have pci_sriov_get_totalvfs() return 0 in the error cae to make the
+behaviour consistent whether CONFIG_PCI_IOV is enabled or not.
+Some comment fixes.
 
-------------------
-
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-
-commit 098b1aeaf4d6149953b8f1f8d55c21d85536fbff upstream.
-
-There are two tool-stack that can instruct the Xen PCI frontend
-and backend to change states: 'xm' (Python code with a daemon),
-and 'xl' (C library - does not keep state changes).
-
-With the 'xm', the path to disconnect a single PCI device (xm pci-detach
-<guest> <BDF>) is:
-
-4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
-
-The * is for states that the tool-stack sets. For 'xl', it is similar:
-
-4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
-
-Both of them also tear down the XenBus structure, so the backend
-state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
-
-When a PCI device is plugged back in (xm pci-attach <guest> <BDF>)
-both of them follow the same pattern:
-
-2(InitWait*), 3(Initialized*), 4(Connected*)->4(Connected).
-
-[xen-pcifront ignores the 2,3 state changes and only acts when
-4 (Connected) has been reached]
-
-Note that this is for a _single_ PCI device. If there were two
-PCI devices and only one was disconnected 'xm' would show the same
-state changes.
-
-The problem is that git commit 3d925320e9e2de162bd138bf97816bda8c3f71be
-("xen/pcifront: Use Xen-SWIOTLB when initting if required") introduced
-a mechanism to initialize the SWIOTLB when the Xen PCI front moves to
-Connected state. It also had some aggressive seatbelt code check that
-would warn the user if one tried to change to Connected state without
-hitting first the Closing state:
-
- pcifront pci-0: PCI frontend already installed!
-
-However, that code can be relaxed and we can continue on working
-even if the frontend is instructed to be the 'Connected' state with
-no devices and then gets tickled to be in 'Connected' state again.
-
-In other words, this 4(Connected)->5(Closing)->4(Connected) state
-was expected, while 4(Connected)->.... anything but 5(Closing)->4(Connected)
-was not. This patch removes that aggressive check and allows
-Xen pcifront to work with the 'xl' toolstack (for one or more
-PCI devices) and with 'xm' toolstack (for more than two PCI
-devices).
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-[v2: Added in the description about two PCI devices]
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
+Signed-off-by: Stefan Assmann <sassmann@kpanic.de>
 ---
- drivers/pci/xen-pcifront.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/pci/iov.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -678,10 +678,9 @@ static int pcifront_connect_and_init_dma
- 	if (!pcifront_dev) {
- 		dev_info(&pdev->xdev->dev, "Installing PCI frontend\n");
- 		pcifront_dev = pdev;
--	} else {
--		dev_err(&pdev->xdev->dev, "PCI frontend already installed!\n");
-+	} else
- 		err = -EEXIST;
--	}
-+
- 	spin_unlock(&pcifront_dev_lock);
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index de8ffac..1fc9942 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -324,7 +324,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
  
- 	if (!err && !swiotlb_nr_tbl()) {
-@@ -848,7 +847,7 @@ static int pcifront_try_connect(struct p
- 		goto out;
+ 		if (!pdev->is_physfn) {
+ 			pci_dev_put(pdev);
+-			return -ENODEV;
++			return -ENOSYS;
+ 		}
  
- 	err = pcifront_connect_and_init_dma(pdev);
--	if (err) {
-+	if (err && err != -EEXIST) {
- 		xenbus_dev_fatal(pdev->xdev, err,
- 				 "Error setting up PCI Frontend");
- 		goto out;
-
+ 		rc = sysfs_create_link(&dev->dev.kobj,
+@@ -662,7 +662,7 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ 	might_sleep();
+ 
+ 	if (!dev->is_physfn)
+-		return -ENODEV;
++		return -ENOSYS;
+ 
+ 	return sriov_enable(dev, nr_virtfn);
+ }
+@@ -722,7 +722,7 @@ EXPORT_SYMBOL_GPL(pci_num_vf);
+  * @dev: the PCI device
+  *
+  * Returns number of VFs belonging to this device that are assigned to a guest.
+- * If device is not a physical function returns -ENODEV.
++ * If device is not a physical function returns 0.
+  */
+ int pci_vfs_assigned(struct pci_dev *dev)
+ {
+@@ -767,12 +767,15 @@ EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+  * device's mutex held.
+  *
+  * Returns 0 if PF is an SRIOV-capable device and
+- * value of numvfs valid. If not a PF with VFS, return -EINVAL;
++ * value of numvfs valid. If not a PF return -ENOSYS;
++ * if numvfs is invalid return -EINVAL;
+  * if VFs already enabled, return -EBUSY.
+  */
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ {
+-	if (!dev->is_physfn || (numvfs > dev->sriov->total_VFs))
++	if (!dev->is_physfn)
++		return -ENOSYS;
++	if (numvfs > dev->sriov->total_VFs)
+ 		return -EINVAL;
+ 
+ 	/* Shouldn't change if VFs already enabled */
+@@ -786,17 +789,17 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ EXPORT_SYMBOL_GPL(pci_sriov_set_totalvfs);
+ 
+ /**
+- * pci_sriov_get_totalvfs -- get total VFs supported on this devic3
++ * pci_sriov_get_totalvfs -- get total VFs supported on this device
+  * @dev: the PCI PF device
+  *
+  * For a PCIe device with SRIOV support, return the PCIe
+  * SRIOV capability value of TotalVFs or the value of driver_max_VFs
+- * if the driver reduced it.  Otherwise, -EINVAL.
++ * if the driver reduced it.  Otherwise 0.
+  */
+ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ {
+ 	if (!dev->is_physfn)
+-		return -EINVAL;
++		return 0;
+ 
+ 	if (dev->sriov->driver_max_VFs)
+ 		return dev->sriov->driver_max_VFs;
+-- 
+1.8.3.1
 
