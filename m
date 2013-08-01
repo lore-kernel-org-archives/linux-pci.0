@@ -1,37 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Luck, Tony" <tony.luck@intel.com>
-To: Borislav Petkov <bp@alien8.de>,
-	"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
-CC: Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Date: Tue, 13 Aug 2013 18:05:02 +0000
-Message-ID: <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
- <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com>
- <20130812125343.GE18018@pd.tnic> <520A16BD.30201@linux.vnet.ibm.com>
- <20130813124258.GC4077@pd.tnic> <520A6D98.9060204@linux.vnet.ibm.com>
- <20130813175809.GE4077@pd.tnic>
-In-Reply-To: <20130813175809.GE4077@pd.tnic>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:33829 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752245Ab3HAUQy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 16:16:54 -0400
+Received: by mail-oa0-f51.google.com with SMTP id h1so2337634oag.24
+        for <linux-pci@vger.kernel.org>; Thu, 01 Aug 2013 13:16:53 -0700 (PDT)
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <51F6D161.1040106@redhat.com>
+References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
+ <1374937868-24437-2-git-send-email-yinghai@kernel.org> <CAErSpo7xk-NGp+4ZFo-jnVnQSEomY=7=CXDSbZPzrhdjZ4zVSA@mail.gmail.com>
+ <51F6D161.1040106@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 1 Aug 2013 14:16:33 -0600
+Message-ID: <CAErSpo5d2+mCkwED-RYV4=3LCvpj7HNxT_6yHxqNA-kcHSHF2g@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] PCI: Stop sriov after stop PF if PF's driver skip that
+To: Don Dutile <ddutile@redhat.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBXaHkgd291bGQgeW91IG5lZWQgZG1lc2cgaWYgeW91IGdldCB5b3VyIGh3IGVycm9ycyBvdmVy
-IHRoZSB0cmFjZXBvaW50Pw0KDQpSZWR1bmRhbmN5IGlzIGEgZ29vZCB0aGluZyB3aGVuIHRhbGtp
-bmcgYWJvdXQgbWlzc2lvbiBjcml0aWNhbCBzeXN0ZW1zLiAgZG1lc2cNCm1heSBiZSBmZWVkaW5n
-IHRvIGEgc2VyaWFsIGNvbnNvbGUgdG8gYmUgbG9nZ2VkIGFuZCBhbmFseXNlZCBvbiBhbm90aGVy
-IHN5c3RlbS4NCg0KVGhlIHRyYWNlcG9pbnQgZGF0YSBnb2VzIHRvIGEgcHJvY2VzcyBvbiB0aGUg
-c3lzdGVtIGV4cGVyaWVuY2luZyB0aGUgZXJyb3JzLiBJZiB0aGUNCmVycm9ycyBhcmUgc2VyaW91
-cyAob3IgYSBwcmVjdXJzb3IgdG8gc29tZXRoaW5nIHNlcmlvdXMpIHRoYXQgcHJvY2VzcyBtYXkg
-bmV2ZXIgZ2V0DQp0aGUgY2hhbmNlIHRvIHNhdmUgdGhlIGxvZy4NCg0KLVRvbnkNCg==
+On Mon, Jul 29, 2013 at 2:32 PM, Don Dutile <ddutile@redhat.com> wrote:
+> On 07/29/2013 03:58 PM, Bjorn Helgaas wrote:
+>>
+>> On Sat, Jul 27, 2013 at 9:11 AM, Yinghai Lu<yinghai@kernel.org>  wrote:
+>>>
+>>> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
+>>> (PCI: Simplify IOV implementation and fix reference count races)
+>>> VF need to be removed via virtfn_remove to make sure ref to PF
+>>> is put back.
+
+OK, I'm lost here.  I think this is the scenario where Yinghai saw a
+regression (please correct me if not):
+
+  00:03.0 Root port to [bus 02]
+  02:00.0 SR-IOV NIC (PF in slot 2)
+  02:00.1 VF (for example)
+
+  # echo -n 0 > /sys/bus/pci/slots/2/power
+  02:00.0 PF is powered off
+  02:00.0 PF pci_dev is released, but VF 02:00.1 pci_dev still exists
+and holds a reference to the PF pci_dev, so the 02:00.0 pci_dev is not
+actually deallocated
+
+  # echo -n 1 > /sys/bus/pci/slots/2/power
+  pciehp 0000:00:03.0:pcie04: Device 0000:02:00.0 already exists at
+0000:02:00, cannot hot-add
+
+Prior to dc087f2f6 ("Simplify IOV implementation and fix reference
+count races"), this scenario (powering the slot off then back on)
+apparently worked, and hot-adding 02:00.0 worked fine.
+
+But what about the VF pci_devs?  Prior to dc087f2f6, I assume they
+still existed even after we removed power from the PF.  But obviously
+the hardware VFs are disabled when we power the slot back up.  It
+doesn't make sense to me to have pci_devs for these VFs that are no
+longer enabled, so maybe I'm missing something here.
+
+>>> Some driver (like ixgbe) does not call pci_disable_sriov() if
+>>> sriov is enabled via /sys/.../sriov_numvfs setting.
+>>> ixgbe does allow driver for PF get detached, but still have VFs
+>>> around.
+>>
+>> Is this something ixgbe should be doing differently?
+>>
+>> I'm not 100% sold on the idea of the VFs staying active after the
+>> driver releases the PF.  It seems asymmetric because I think the
+>> driver has to claim the PF to *enable* the VFs, but we don't disable
+>> them when releasing the PF.
+>>
+>> What's the use case for detaching the PF driver while the VFs are active?
+>>
+> VF's assigned to (KVM) guest (via device-assignment).
+> Virtually, it's as if the enet cable is unplugged to the VF in the guest --
+> the device is still there (the PF wasn't unplugged, just the driver
+> de-configured).
+
+OK, but why is it necessary to detach and reattach the PF driver at
+all?  Are you trying to update the PF driver or something?  Change the
+number of VFs?
+
+> Pre-sysfs-based configuration, the std way to configure the VFs into
+> a system was to unload the PF driver, and reload it with a vf-enabling
+> parameter
+> (like max_vfs=<n> in the case of ixgbe, igb).
+
+Yes.  But I assume the first time the PF was loaded, there were no VFs
+enabled.  So disabling VFs at unload wouldn't cause any problem there.
+ Then you reload the driver with "max_vfs=<n>".  The driver enables
+VFs.  Is there any reason to unload the PF driver again?
+
+> Now, if someone unloaded the PF driver in the host, the unplanned removal
+> of the PF enabled the VF to crash the host (maybe AlexD can provide the
+> details how that occurred).
+> So, the solution was to 'pause' the VF operation and let packets drop
+> in the guest, and re-enable the VF operation if the PF driver was
+> re-configured.
+
+I don't get this.  Why should we tolerate "unplanned removal of the
+PF"?  If you yank the card, I would *expect* anything using it to
+crash.
+
+Bjorn
