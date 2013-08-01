@@ -1,37 +1,80 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <808c6bb1ffd0ebde59d3902adb4757ff04b2b599.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 12:37:24 -0400
-Subject: [PATCH 10/20] tile PCI DMA: handle a NULL dev argument properly
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Shuah Khan <shuah.kh@samsung.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Shuah Khan <shuahkhan@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"virtualization@lists.linux-foundation.org"
+	<virtualization@lists.linux-foundation.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shuah Khan <shuah.kh@samsung.com>
+Subject: Re: [Announcement] Linux Plumbers ACPI/PM, PCI Microconference
+Date: Thu, 01 Aug 2013 19:45:35 +0000
+Message-id: <B8EFE96D1287C24090BAD9D858E15E617505EB@sisaex01sj>
+References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
+ <1755363.sGc8nLIQOW@vostro.rjw.lan>
+ <CAKocOOPOqqS80D23z6xTVSNYYYWZ7ACg9MtSMz_hTqVA3Duo0w@mail.gmail.com>
+ <7183196.Ov6Qetq3lO@vostro.rjw.lan>
+Content-type: text/plain; charset=us-ascii
+MIME-version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/tile/kernel/pci-dma.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+On 07/31/2013 03:07 PM, Rafael J. Wysocki wrote:
+> On Wednesday, July 31, 2013 10:35:05 AM Shuah Khan wrote:
+>> On Wed, Jul 31, 2013 at 5:40 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>> Hi All,
+>>>
+>>> The original announcement didn't go to linux-pm, so again:
+>>>
+>>> On Tuesday, July 16, 2013 08:21:26 PM Myron Stowe wrote:
+>>>> Linux Plumbers has approved an ACPI/PM, PCI microconference. The
+>>>> overview page is here:
+>>>>
+>>>> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
+>>>>
+>>>> We would like to start receiving volunteers for presenting topics of
+>>>> interest.  There is a lot of activity in these subsystems so please
+>>>> respond by submitting presentation or discussion proposals that you
+>>>> would be willing to cover for consideration.  You should also feel
+>>>> free to submit ideas as proposals that others could cover.  The
+>>>> instructions for submitting ideas should be at:
+>>>>
+>>>> http://www.linuxplumbersconf.org/2013/submitting-topic/
+>>>
+>>> If anyone who's going to attend the Linux Plumbers Conf this year is interested
+>>> in any particular topic for discussion during the ACPI/PM+PCI uconf, please
+>>> submit a formal topic proposal at:
+>>>
+>>> http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/proposals/new
+>>>
+>>> If you submit a topic, that doesn't mean you'll be expected to present anything
+>>> (if accepted).  In fact, we are mostly interested in discussion topics and we'd
+>>> like to know what is important to people.
+>>>
+>>> That said if you have a (short) presentation to make, please submit it too.
+>>>
+>>> We'll appreciate all submissions very much.
+>>>
+>>
+>> What I have mind is a discussion topic for the Mini-conference, which
+>> in-line with what you are asking for.
+>> I will add it to the web.
+>
+> Thank you!
 
-diff --git a/arch/tile/kernel/pci-dma.c b/arch/tile/kernel/pci-dma.c
-index 7e98371..d16cfc1 100644
---- a/arch/tile/kernel/pci-dma.c
-+++ b/arch/tile/kernel/pci-dma.c
-@@ -36,8 +36,9 @@ static void *tile_dma_alloc_coherent(struct device *dev, size_t size,
- 				     dma_addr_t *dma_handle, gfp_t gfp,
- 				     struct dma_attrs *attrs)
- {
--	u64 dma_mask = dev->coherent_dma_mask ?: DMA_BIT_MASK(32);
--	int node = dev_to_node(dev);
-+	u64 dma_mask = (dev && dev->coherent_dma_mask) ?
-+		dev->coherent_dma_mask : DMA_BIT_MASK(32);
-+	int node = dev ? dev_to_node(dev) : 0;
- 	int order = get_order(size);
- 	struct page *pg;
- 	dma_addr_t addr;
--- 
-1.8.3.1
+Rafael,
 
+Done. I submitted a topic for discussion.
+
+-- Shuah
+
+Shuah Khan, Linux Kernel Developer - Open Source Group Samsung Research 
+America (Silicon Valley) shuah.kh@samsung.com | (970) 672-0658
