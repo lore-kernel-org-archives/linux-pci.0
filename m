@@ -1,132 +1,286 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:44358 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759547Ab3HNJDR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 05:03:17 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	<stable@vger.kernel.org.#.3.4+>
-Subject: [PATCH v4 1/2] PCI: fix the only slot identification in pcie_find_smpss()
-Date: Wed, 14 Aug 2013 17:01:51 +0800
-Message-ID: <1376470912-40264-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1376470912-40264-1-git-send-email-wangyijing@huawei.com>
-References: <1376470912-40264-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:61650 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751957Ab3HAVXD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Aug 2013 17:23:03 -0400
+Message-ID: <51FAD1B3.5050503@redhat.com>
+Date: Thu, 01 Aug 2013 17:22:59 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 6/9] pci: Add slot and bus reset interfaces
+References: <20130801164652.16145.79918.stgit@bling.home> <20130801165545.16145.74383.stgit@bling.home>
+In-Reply-To: <20130801165545.16145.74383.stgit@bling.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We use list_is_singular() to identify the slot whether is
-only slot directly connected to the root port in
-pcie_find_smpss(). It's not correct, if we have only slot
-connected to root port, and this slot has two function devices.
-list_is_singular() return false. This patch introduces
-pci_only_one_slot() to fix this issue. In addition, we should
-pass subordinate bus devices list to list_is_singular(), not
-its parent bus devices list.
+On 08/01/2013 12:55 PM, Alex Williamson wrote:
+> Sometimes pci_reset_function is not sufficient.  We have cases where
+> devices do not support any kind of reset, but there might be multiple
+> functions on the bus preventing pci_reset_function from doing a
+> secondary bus reset.  We also have cases where a device will advertise
+> that it supports a PM reset, but really does nothing on D3hot->D0
+> (graphics cards are notorious for this).  These devices often also
+> have more than one function, so even blacklisting PM reset for them
+> wouldn't allow a secondary bus reset through pci_reset_function.
+>
+> If a driver supports multiple devices it should have the ability to
+> induce a bus reset when it needs to.  This patch provides that ability
+> through pci_reset_slot and pci_reset_bus.  It's the caller's
+> responsibility when using these interfaces to understand that all of
+> the devices in or below the slot (or on or below the bus) will be
+> reset and therefore should be under control of the caller.  PCI state
+> of all the affected devices is saved and restored around these resets,
+> but internal state of all of the affected devices is reset (which
+> should be the intention).
+>
+> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
+> ---
+>   drivers/pci/pci.c   |  195 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>   include/linux/pci.h |    2 +
+>   2 files changed, 197 insertions(+)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f6c757a..91f7bc4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3518,6 +3518,201 @@ int pci_reset_function(struct pci_dev *dev)
+>   }
+>   EXPORT_SYMBOL_GPL(pci_reset_function);
+>
+> +static void pci_bus_lock(struct pci_bus *bus)
+> +{
+> +	struct pci_dev *dev;
+> +
+> +	list_for_each_entry(dev,&bus->devices, bus_list) {
+> +		pci_dev_lock(dev);
+> +		if (dev->subordinate)
+> +			pci_bus_lock(dev->subordinate);
+> +	}
+> +}
+> +
+> +static void pci_bus_unlock(struct pci_bus *bus)
+> +{
+> +	struct pci_dev *dev;
+> +
+> +	list_for_each_entry(dev,&bus->devices, bus_list) {
+> +		pci_dev_unlock(dev);
+> +		if (dev->subordinate)
+> +			pci_bus_unlock(dev->subordinate);
+> +	}
+> +}
+So, I'm wondering if the above locks from top of PCI tree down,
+should the unlock work from bottom back to the top ?
+i.e.,
+	list_for_each_entry(dev,&bus->devices, bus_list) {
+		if (dev->subordinate)
+			pci_bus_unlock(dev->subordinate);
+		pci_dev_unlock(dev);
+	}
 
--+-[0000:40]-+-00.0-[0000:41]--
-    ......................
- |           +-07.0-[0000:46]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
+> +static void pci_slot_lock(struct pci_slot *slot)
+> +{
+> +	struct pci_dev *dev;
+> +
+> +	list_for_each_entry(dev,&slot->bus->devices, bus_list) {
+> +		if (!dev->slot || dev->slot != slot)
+> +			continue;
+> +		pci_dev_lock(dev);
+> +		if (dev->subordinate)
+> +			pci_bus_lock(dev->subordinate);
+> +	}
+> +}
+> +
+> +static void pci_slot_unlock(struct pci_slot *slot)
+> +{
+> +	struct pci_dev *dev;
+> +
+> +	list_for_each_entry(dev,&slot->bus->devices, bus_list) {
+> +		if (!dev->slot || dev->slot != slot)
+> +			continue;
+> +		pci_dev_unlock(dev);
+> +		if (dev->subordinate)
+> +			pci_bus_unlock(dev->subordinate);
+> +	}
+> +}
+ditto.
 
-MPS configure after boot up, with boot command "pci=pcie_bus_safe"
+> +
+> +static void pci_bus_save_and_disable(struct pci_bus *bus)
+> +{
+> +	struct pci_dev *dev;
+> +
+> +	list_for_each_entry(dev,&bus->devices, bus_list) {
+> +		pci_dev_save_and_disable(dev);
+> +		if (dev->subordinate)
+> +			pci_bus_save_and_disable(dev->subordinate);
+> +	}
+> +}
+> +
+> +static void pci_bus_restore(struct pci_bus *bus)
+> +{
+> +	struct pci_dev *dev;
+> +
+> +	list_for_each_entry(dev,&bus->devices, bus_list) {
+> +		pci_dev_restore(dev);
+> +		if (dev->subordinate)
+> +			pci_bus_restore(dev->subordinate);
+> +	}
+> +}
+but not in reverse here, b/c need top-most device restored
+to get to next level in PCI tree (since could be a PPB that needs
+restoring to get to next level bus/device(s)).
 
-linux-ha2:~ # lspci -vvv -s 40:07.0
-40:07.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 7 (rev 22) (prog-if 00 [Normal decode])
-	...............
-	Capabilities: [90] Express (v2) Root Port (Slot+), MSI 00
-		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-			ExtTag+ RBE+ FLReset-
-		DevCtl:	Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-			MaxPayload 256 bytes, MaxReadReq 128 bytes
+> +
+> +static void pci_slot_save_and_disable(struct pci_slot *slot)
+> +{
+> +	struct pci_dev *dev;
+> +
+> +	list_for_each_entry(dev,&slot->bus->devices, bus_list) {
+> +		if (!dev->slot || dev->slot != slot)
+> +			continue;
+> +		pci_dev_save_and_disable(dev);
+> +		if (dev->subordinate)
+> +			pci_bus_save_and_disable(dev->subordinate);
+> +	}
+> +}
+> +
+> +static void pci_slot_restore(struct pci_slot *slot)
+> +{
+> +	struct pci_dev *dev;
+> +
+> +	list_for_each_entry(dev,&slot->bus->devices, bus_list) {
+> +		if (!dev->slot || dev->slot != slot)
+> +			continue;
+> +		pci_dev_restore(dev);
+> +		if (dev->subordinate)
+> +			pci_bus_restore(dev->subordinate);
+> +	}
+> +}
+ditto.
 
-linux-ha2:~ # lspci -vvv -s 46:00.0
-46:00.0 Ethernet controller: Intel Corporation 82576 Gigabit Network Connection (rev 01)
-	...............
-	Capabilities: [a0] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 512 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-		DevCtl:	Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-			MaxPayload 256 bytes, MaxReadReq 512 bytes
-
-linux-ha2:/sys/bus/pci/slots/7 # echo 0 > power     ------>power off slot
-linux-ha2:/sys/bus/pci/slots/7 # echo 1 > power     ------>power on slot
-linux-ha2:/sys/bus/pci/slots/7 # dmesg
-................
-pcieport 0000:40:07.0: PCI-E Max Payload Size set to  128/ 256 (was  256), Max Read Rq  128
-pci 0000:46:00.0: PCI-E Max Payload Size set to  128/ 512 (was  128), Max Read Rq  512
-pci 0000:46:00.1: PCI-E Max Payload Size set to  128/ 512 (was  128), Max Read Rq  512
-pcieport 0000:40:07.0: PCI-E Max Payload Size set to  128/ 256 (was  128), Max Read Rq  128
-pci 0000:46:00.0: PCI-E Max Payload Size set to  128/ 512 (was  128), Max Read Rq  512
-pci 0000:46:00.1: PCI-E Max Payload Size set to  128/ 512 (was  128), Max Read Rq  512
-.....
-
-Because 46:00.0 and 46:00.1 function devices are directly connected to root port 40:07.0.
-After slot hot plug, root port mps is 256, slot fun devices(46:00.0/1) mps is 128.
-We should both change root port and slot mps to 256, but now kernel change mps to 128.
-
-
-After applied this patch, dmesg after hot plug:
-..............
-pcieport 0000:40:07.0: PCI-E Max Payload Size set to  256/ 256 (was  256), Max Read Rq  128
-pci 0000:46:00.0: PCI-E Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512
-pci 0000:46:00.1: PCI-E Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512
-pcieport 0000:40:07.0: PCI-E Max Payload Size set to  256/ 256 (was  256), Max Read Rq  128
-pci 0000:46:00.0: PCI-E Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512
-pci 0000:46:00.1: PCI-E Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Cc: stable@vger.kernel.org # 3.4+
----
- drivers/pci/probe.c |   20 +++++++++++++++++++-
- 1 files changed, 19 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cf57fe7..0699ec0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1484,6 +1484,24 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
- 	return nr;
- }
- 
-+static bool pci_only_one_slot(struct pci_bus *pbus)
-+{
-+	u8 device;
-+	struct pci_dev *pdev;
-+
-+	if (!pbus || list_empty(&pbus->devices))
-+		return false;
-+
-+	pdev = list_entry(pbus->devices.next,
-+			struct pci_dev, bus_list);
-+	device = PCI_SLOT(pdev->devfn);
-+	list_for_each_entry(pdev, &pbus->devices, bus_list)
-+		if (PCI_SLOT(pdev->devfn) != device)
-+			return false;
-+
-+	return true;
-+}
-+
- static int pcie_find_smpss(struct pci_dev *dev, void *data)
- {
- 	u8 *smpss = data;
-@@ -1506,7 +1524,7 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
- 	 * common case), then this is not an issue and MPS discovery
- 	 * will occur as normal.
- 	 */
--	if (dev->is_hotplug_bridge && (!list_is_singular(&dev->bus->devices) ||
-+	if (dev->is_hotplug_bridge && (!pci_only_one_slot(dev->subordinate) ||
- 	     (dev->bus->self &&
- 	      pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)))
- 		*smpss = 0;
--- 
-1.7.1
-
+> +
+> +static int pci_slot_reset(struct pci_slot *slot, int probe)
+> +{
+> +	int rc;
+> +
+> +	if (!slot)
+> +		return -ENOTTY;
+> +
+> +	if (!probe)
+> +		pci_slot_lock(slot);
+> +
+> +	might_sleep();
+> +
+> +	rc = pci_reset_hotplug_slot(slot->hotplug, probe);
+> +
+> +	if (!probe)
+> +		pci_slot_unlock(slot);
+> +
+> +	return rc;
+> +}
+> +
+> +/**
+> + * pci_reset_slot - reset a PCI slot
+> + * @slot: PCI slot to reset
+> + *
+> + * A PCI bus may host multiple slots, each slot may support a reset mechanism
+> + * independent of other slots.  For instance, some slots may support slot power
+> + * control.  In the case of a 1:1 bus to slot architecture, this function may
+> + * wrap the bus reset to avoid spurious slot related events such as hotplug.
+> + * Generally a slot reset should be attempted before a bus reset.  All of the
+> + * function of the slot and any subordinate buses behind the slot are reset
+> + * through this function.  PCI config space of all devices in the slot and
+> + * behind the slot is saved before and restored after reset.
+> + *
+> + * Return 0 on success, non-zero on error.
+> + */
+> +int pci_reset_slot(struct pci_slot *slot)
+> +{
+> +	int rc;
+> +
+> +	rc = pci_slot_reset(slot, 1);
+> +	if (rc)
+> +		return rc;
+> +
+> +	pci_slot_save_and_disable(slot);
+> +
+> +	rc = pci_slot_reset(slot, 0);
+> +
+> +	pci_slot_restore(slot);
+> +
+> +	return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_reset_slot);
+> +
+> +static int pci_bus_reset(struct pci_bus *bus, int probe)
+> +{
+> +	if (!bus->self)
+> +		return -ENOTTY;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	pci_bus_lock(bus);
+> +
+> +	might_sleep();
+> +
+> +	pci_reset_bridge_secondary_bus(bus->self);
+> +
+> +	pci_bus_unlock(bus);
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * pci_reset_bus - reset a PCI bus
+> + * @bus: top level PCI bus to reset
+> + *
+> + * Do a bus reset on the given bus and any subordinate buses, saving
+> + * and restoring state of all devices.
+> + *
+> + * Return 0 on success, non-zero on error.
+> + */
+> +int pci_reset_bus(struct pci_bus *bus)
+> +{
+> +	int rc;
+> +
+> +	rc = pci_bus_reset(bus, 1);
+> +	if (rc)
+> +		return rc;
+> +
+> +	pci_bus_save_and_disable(bus);
+> +
+> +	rc = pci_bus_reset(bus, 0);
+> +
+> +	pci_bus_restore(bus);
+> +
+> +	return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_reset_bus);
+> +
+>   /**
+>    * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
+>    * @dev: PCI device to query
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 35c1bc4..1a8fd34 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -924,6 +924,8 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+>   int __pci_reset_function(struct pci_dev *dev);
+>   int __pci_reset_function_locked(struct pci_dev *dev);
+>   int pci_reset_function(struct pci_dev *dev);
+> +int pci_reset_slot(struct pci_slot *slot);
+> +int pci_reset_bus(struct pci_bus *bus);
+>   void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+>   void pci_update_resource(struct pci_dev *dev, int resno);
+>   int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
