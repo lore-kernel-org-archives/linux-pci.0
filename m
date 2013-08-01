@@ -1,45 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <e616aa52bf39517b14dd2000d65ace7a0ac54d97.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 02/20] tile PCI RC: tilepro conflict with PCI and RAM addresses
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:18419 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756977Ab3HAQzU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Aug 2013 12:55:20 -0400
+Subject: [PATCH v3 1/9] pci: Create pci_reset_bridge_secondary_bus()
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 Aug 2013 10:55:15 -0600
+Message-ID: <20130801165514.16145.62825.stgit@bling.home>
+In-Reply-To: <20130801164652.16145.79918.stgit@bling.home>
+References: <20130801164652.16145.79918.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix a bug in the tilepro PCI resource allocation code that could make
-the bootmem allocator unhappy if 4GB is installed on mshim 0.
+Move the secondary bus reset code from pci_parent_bus_reset() into its own
+function.  Export it as we'll later be calling it from hotplug controllers
+and elsewhere.
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- arch/tile/kernel/setup.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/pci/pci.c   |   32 +++++++++++++++++++++++---------
+ include/linux/pci.h |    1 +
+ 2 files changed, 24 insertions(+), 9 deletions(-)
 
-diff --git a/arch/tile/kernel/setup.c b/arch/tile/kernel/setup.c
-index 68b5426..676e155 100644
---- a/arch/tile/kernel/setup.c
-+++ b/arch/tile/kernel/setup.c
-@@ -614,11 +614,12 @@ static void __init setup_bootmem_allocator_node(int i)
- 	/*
- 	 * Throw away any memory aliased by the PCI region.
- 	 */
--	if (pci_reserve_start_pfn < end && pci_reserve_end_pfn > start)
--		reserve_bootmem(PFN_PHYS(pci_reserve_start_pfn),
--				PFN_PHYS(pci_reserve_end_pfn -
--					 pci_reserve_start_pfn),
-+	if (pci_reserve_start_pfn < end && pci_reserve_end_pfn > start) {
-+		start = max(pci_reserve_start_pfn, start);
-+		end = min(pci_reserve_end_pfn, end);
-+		reserve_bootmem(PFN_PHYS(start), PFN_PHYS(end - start),
- 				BOOTMEM_EXCLUSIVE);
-+	}
- #endif
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a599a6b..bfd629c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3276,9 +3276,30 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
  }
  
--- 
-1.8.3.1
+-static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
++/**
++ * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
++ * @dev: Bridge device
++ *
++ * Use the bridge control register to assert reset on the secondary bus.
++ * Devices on the secondary bus are left in power-on state.
++ */
++void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
+ {
+ 	u16 ctrl;
++
++	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
++	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++	msleep(100);
++
++	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++	msleep(100);
++}
++EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
++
++static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
++{
+ 	struct pci_dev *pdev;
+ 
+ 	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
+@@ -3291,14 +3312,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 	if (probe)
+ 		return 0;
+ 
+-	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
+-	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
+-	msleep(100);
+-
+-	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
+-	msleep(100);
++	pci_reset_bridge_secondary_bus(dev->bus->self);
+ 
+ 	return 0;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..35c1bc4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -924,6 +924,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int __pci_reset_function(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
++void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
 
