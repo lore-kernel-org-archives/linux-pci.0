@@ -1,151 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59444 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751978Ab3HZPgs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Aug 2013 11:36:48 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: linux-kernel@vger.kernel.org
-Cc: root <root@dhcp47-16.lab.bos.redhat.com>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Len Brown <lenb@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2] ACPI: Fix osc flag setup ordering to allow pcie hotplug use when available
-Date: Mon, 26 Aug 2013 11:36:21 -0400
-Message-Id: <1377531381-14695-1-git-send-email-nhorman@tuxdriver.com>
-In-Reply-To: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com>
-References: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38664 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751957Ab3HAVEp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Aug 2013 17:04:45 -0400
+Message-ID: <1375391081.31262.236.camel@ul30vt.home>
+Subject: Re: [PATCH v3 5/9] pci: Split out pci_dev lock/unlock and
+ save/restore
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 Aug 2013 15:04:41 -0600
+In-Reply-To: <51FACC22.10500@redhat.com>
+References: <20130801164652.16145.79918.stgit@bling.home>
+	 <20130801165539.16145.79655.stgit@bling.home> <51FACC22.10500@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: root <root@dhcp47-16.lab.bos.redhat.com>
+On Thu, 2013-08-01 at 16:59 -0400, Don Dutile wrote:
+> On 08/01/2013 12:55 PM, Alex Williamson wrote:
+> > Only cosmetic changes to existing paths.
+> >
+> > Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
+> > ---
+> >   drivers/pci/pci.c |   52 +++++++++++++++++++++++++++++++++++-----------------
+> >   1 file changed, 35 insertions(+), 17 deletions(-)
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index db90692..f6c757a 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -3378,22 +3378,46 @@ done:
+> >   	return rc;
+> >   }
+> >
+> > +static void pci_dev_lock(struct pci_dev *dev)
+> > +{
+> > +	pci_cfg_access_lock(dev);
+> > +	/* block PM suspend, driver probe, etc. */
+> > +	device_lock(&dev->dev);
+> > +}
+> > +
+> > +static void pci_dev_unlock(struct pci_dev *dev)
+> > +{
+> > +	device_unlock(&dev->dev);
+> > +	pci_cfg_access_unlock(dev);
+> > +}
+> > +
+> > +static void pci_dev_save_and_disable(struct pci_dev *dev)
+> > +{
+> > +	pci_save_state(dev);
+> > +	/*
+> > +	 * both INTx and MSI are disabled after the Interrupt Disable bit
+> > +	 * is set and the Bus Master bit is cleared.
+> > +	 */
+> > +	pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
+> > +}
+> although the above is just a shuffling of the previous code,
+> does the comment need to point out that BARs are disabled by this write as well ?
 
-Somewhere between 3.9 and 3.10 it seems the order in which pcie and acpi probed
-slots for hotplug capabilites got reversed.  While this isn't a big deal, it did
-uncover a bug in the ACPI bus setup path.  Specifically, acpi_pci_root_add calls
-pci_acpi_scan_root before setting the osc flags for the device handle.
-pci_acpi_scan_root, among other things uses device_is_managed_by_native_pciehp()
-to determine if a given slot has pcie hotplug capabilties, whcih checks the
-devices OSC_PCI_EXPRESS_NATIVE_HP_CONTROL flag.  Since that flag is not set
-until after pci_acpi_scan_root_completes, the acpi code never sees that pcie
-slots are hotplug capable and configures them all to use acpi instead.
+I could certainly add such a comment.  That's also why I added the
+_and_disable to this function name instead of just pci_dev_save().
+Thanks,
 
-Fix is pretty simple, just defer the scan until after the osc flags have been
-set on the device.  Tested by myself and it seems to work well.
+Alex
 
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-CC: Len Brown <lenb@kernel.org>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-acpi@vger.kernel.org
-CC: linux-pci@vger.kernel.org
+> > +
+> > +static void pci_dev_restore(struct pci_dev *dev)
+> > +{
+> > +	pci_restore_state(dev);
+> > +}
+> > +
+> >   static int pci_dev_reset(struct pci_dev *dev, int probe)
+> >   {
+> >   	int rc;
+> >
+> > -	if (!probe) {
+> > -		pci_cfg_access_lock(dev);
+> > -		/* block PM suspend, driver probe, etc. */
+> > -		device_lock(&dev->dev);
+> > -	}
+> > +	if (!probe)
+> > +		pci_dev_lock(dev);
+> >
+> >   	rc = __pci_dev_reset(dev, probe);
+> >
+> > -	if (!probe) {
+> > -		device_unlock(&dev->dev);
+> > -		pci_cfg_access_unlock(dev);
+> > -	}
+> > +	if (!probe)
+> > +		pci_dev_unlock(dev);
+> > +
+> >   	return rc;
+> >   }
+> >   /**
+> > @@ -3484,17 +3508,11 @@ int pci_reset_function(struct pci_dev *dev)
+> >   	if (rc)
+> >   		return rc;
+> >
+> > -	pci_save_state(dev);
+> > -
+> > -	/*
+> > -	 * both INTx and MSI are disabled after the Interrupt Disable bit
+> > -	 * is set and the Bus Master bit is cleared.
+> > -	 */
+> > -	pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
+> > +	pci_dev_save_and_disable(dev);
+> >
+> >   	rc = pci_dev_reset(dev, 0);
+> >
+> > -	pci_restore_state(dev);
+> > +	pci_dev_restore(dev);
+> >
+> >   	return rc;
+> >   }
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
----
-Change notes:
-v2) eferred the disabling of aspm until after the acpi scan of the pci bus is
-complete.  This was done to allow proper handling of pcie 1.1 devices, as per:
 
-commit b8178f130e25c1bdac1c33e0996f1ff6e20ec08e
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Apr 1 15:47:39 2013 -0600
-
-    Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
-
-As discussed previously in the thread the disable logic for aspm needs to be
-untangled and refactored, which is not something I'm sufficently versed in teh
-hotplug code to do right now, but this fixes the problem above, and prevents the
-problem that necessitated the revert without adding any visible complexity to
-the user, so I think its ok.
----
- drivers/acpi/pci_root.c | 54 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 32 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 5917839..1e80a90 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -378,6 +378,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	struct acpi_pci_root *root;
- 	u32 flags, base_flags;
- 	acpi_handle handle = device->handle;
-+	bool no_aspm = false;
- 
- 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
- 	if (!root)
-@@ -437,27 +438,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
- 	acpi_pci_osc_support(root, flags);
- 
--	/*
--	 * TBD: Need PCI interface for enumeration/configuration of roots.
--	 */
--
--	/*
--	 * Scan the Root Bridge
--	 * --------------------
--	 * Must do this prior to any attempt to bind the root device, as the
--	 * PCI namespace does not get created until this call is made (and
--	 * thus the root bridge's pci_dev does not exist).
--	 */
--	root->bus = pci_acpi_scan_root(root);
--	if (!root->bus) {
--		dev_err(&device->dev,
--			"Bus %04x:%02x not present in PCI namespace\n",
--			root->segment, (unsigned int)root->secondary.start);
--		result = -ENODEV;
--		goto end;
--	}
--
--	/* Indicate support for various _OSC capabilities. */
- 	if (pci_ext_cfg_avail())
- 		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
- 	if (pcie_aspm_support_enabled()) {
-@@ -512,7 +492,14 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 				acpi_format_exception(status), flags);
- 			dev_info(&device->dev,
- 				 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
--			pcie_no_aspm();
-+			/*
-+			 * We want to disable aspm here, but aspm_disabled
-+			 * needs to remain in its state from boot so that we
-+			 * properly handle pcie 1.1 devices.  So we set this
-+			 * flag here, to defer the action until after the acpi
-+			 * root scan
-+			 */
-+			no_aspm = true;
- 		}
- 	} else {
- 		dev_info(&device->dev,
-@@ -520,6 +507,29 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 			 "(_OSC support mask: 0x%02x)\n", flags);
- 	}
- 
-+	/*
-+	 * TBD: Need PCI interface for enumeration/configuration of roots.
-+	 */
-+
-+	/*
-+	 * Scan the Root Bridge
-+	 * --------------------
-+	 * Must do this prior to any attempt to bind the root device, as the
-+	 * PCI namespace does not get created until this call is made (and
-+	 * thus the root bridge's pci_dev does not exist).
-+	 */
-+	root->bus = pci_acpi_scan_root(root);
-+	if (!root->bus) {
-+		dev_err(&device->dev,
-+			"Bus %04x:%02x not present in PCI namespace\n",
-+			root->segment, (unsigned int)root->secondary.start);
-+		result = -ENODEV;
-+		goto end;
-+	}
-+
-+	if (no_aspm)
-+		pcie_no_aspm();
-+
- 	pci_acpi_add_bus_pm_notifier(device, root->bus);
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(root->bus->bridge, true);
--- 
-1.8.1.4
 
