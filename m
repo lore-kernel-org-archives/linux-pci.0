@@ -1,73 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:22514 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755995Ab3HLQWa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 12:22:30 -0400
-Date: Mon, 12 Aug 2013 12:22:27 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6 00/14] Rewrite Tegra PCIe driver
-Message-ID: <20130812162227.GA14590@titan.lakedaemon.net>
-References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
- <20130809150831.GF25111@titan.lakedaemon.net>
- <20130812161612.GA8282@ulmo>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:57227 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753278Ab3HAQuq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 12:50:46 -0400
+Received: by mail-ob0-f178.google.com with SMTP id ef5so4268003obb.23
+        for <linux-pci@vger.kernel.org>; Thu, 01 Aug 2013 09:50:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130812161612.GA8282@ulmo>
+In-Reply-To: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 1 Aug 2013 10:50:25 -0600
+Message-ID: <CAErSpo67t2D=bLMq3fxU6Hj9FX+MBAbaLNbF42-uufWug-x8Tg@mail.gmail.com>
+Subject: Re: [PATCHv6 00/13] MSI support for Marvell EBU PCIe driver
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 12, 2013 at 06:16:13PM +0200, Thierry Reding wrote:
-> On Fri, Aug 09, 2013 at 11:08:31AM -0400, Jason Cooper wrote:
-> > On Fri, Aug 09, 2013 at 04:49:18PM +0200, Thierry Reding wrote:
-> > > Hi Stephen,
-> > > 
-> > > This is the latest version of the Tegra PCIe driver patch series. I've
-> > > dropped the PCI xclk clamping code as discussed and successfully tested
-> > > on Beaver. The patches that touch the PCI subsystem have Bjorn's
-> > > Acked-by and I've tested this on top of next-20130809, which has Jason's
-> > > common branch. Once he's comfortable with making the branch stable you
-> > > should be able to merge that branch and apply these patches on top.
-> > 
-> > Just an FYI, I'm mostly happy with what we have now, except that I'd
-> > like to confirm that the build failure Randy discovered isn't caused by
-> > us:
-> > 
-> > Randy wrote some time later:
-> > > On 08/08/13 00:08, Stephen Rothwell wrote:
-> > > > Hi all,
-> > > >
-> > > > Changes since 20130807:
-> > > >
-> > > 
-> > > on i386 and x86_64:
-> > > when CONFIG_PCI_MSI is not enabled:
-> > > 
-> > > There are many of these errors:
-> > > include/linux/msi.h:65:6: error: expected identifier or '(' before 'void'
-> > > include/linux/msi.h:65:6: error: expected ')' before numeric constant
-> > > 
-> > > because arch/x86/include/asm/pci.h defines:
-> > > #define default_teardown_msi_irqs NULL
-> > 
-> > I'm having a helluva time reproducing it :(
-> > 
-> > The next run of linux-next isn't until Sunday evening (AUS Monday
-> > morning), so we have some time to figure it out.
-> > 
-> > Also, I've renamed the branch mvebu/msi_pci to more accurately describe
-> > the changes it contains.
-> 
-> Has there been any progress on this? If not I'll take a look at it
-> tomorrow.
+On Thu, Aug 1, 2013 at 7:25 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> Hello,
+>
+> This set of patches introduces Message Signaled Interrupt support in
+> the Marvell EBU PCIe driver. It has been successfully tested on the
+> Armada XP GP platform with an Intel e1000e PCIe network card that
+> supports MSI.
+>
+> This patch set is intended for merging in 3.12, so the respective
+> maintainers of the different areas are invited to review/ack the
+> patches, see below for the details. Note that several of those patches
+> are also needed for the Tegra PCIe driver.
+>
+> There are still missing ACKs from Grant Likely (5, 6, 7), Thomas
+> Gleixner (8, 9) and Bjorn Helgaas (2, 12).
 
-Yes, Thomas fixed it by properly implementing weak across the archs.  I
-got wrapped around the axle yesterday, so I'm working on it today.
-Should have a stable branch for you in an hour or so.
+I just acked 2, and my ack is already on 12.  Let me know if you need
+anything else from me.
 
-thx,
-
-Jason.
+Bjorn
