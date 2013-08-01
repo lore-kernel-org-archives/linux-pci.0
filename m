@@ -1,94 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:5007 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751891Ab3HTCzU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 22:55:20 -0400
-Message-ID: <5212DA84.6070409@huawei.com>
-Date: Tue, 20 Aug 2013 10:55:00 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:10379 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756814Ab3HAQzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Aug 2013 12:55:55 -0400
+Subject: [PATCH v3 7/9] pci: Wake-up devices before save for reset
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 Aug 2013 10:55:51 -0600
+Message-ID: <20130801165551.16145.34134.stgit@bling.home>
+In-Reply-To: <20130801164652.16145.79918.stgit@bling.home>
+References: <20130801164652.16145.79918.stgit@bling.home>
 MIME-Version: 1.0
-To: Jon Mason <jdmason@kudzu.us>, Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH v5 1/2] PCI: fix the only slot identification in pcie_find_smpss()
-References: <1376533135-36708-1-git-send-email-wangyijing@huawei.com> <1376533135-36708-2-git-send-email-wangyijing@huawei.com> <20130816221716.GA25780@google.com> <521187A5.6030002@huawei.com> <CAPoiz9zpovgcnx=DG-g4v7VpA17H5P2EYv1spm7TGLOwO6zYCQ@mail.gmail.com> <CAErSpo7kxfJDrm1QwNrGd4onfKBzUW+jVV-8p14i1yJqkMFobg@mail.gmail.com> <CAErSpo7tf+9NUGT2U5WBcQUtZb9=ZT_4wAjxzhiiWh9n_KEbAA@mail.gmail.com> <CAPoiz9wMo+sr1EWp+fPdwKTBoJpQGjZg-dASRMHAtvPBE+G4Eg@mail.gmail.com>
-In-Reply-To: <CAPoiz9wMo+sr1EWp+fPdwKTBoJpQGjZg-dASRMHAtvPBE+G4Eg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> Actually, I don't think it matters whether the slot is currently
->> occupied or not.  If the bridge supports hot-plug, we have to handle
->> the current device (if any) as well as any other device that might be
->> added after removing the current device.
-> 
-> Yes, this is true.  So, we want to see if there is the ability to:
-> 1. have a device hotplugged
-> and
-> 2a. there are other devices under the same root port
-> or
-> 2b. there are multiple hotplug slots under the same root port
-> 
-> The patch covers part 2b (unless I missunderstand and it only covers
-> the devices present and not the slots available), but we need part 2a
-> to be covered.  I believe your suggested code above covers 2a.  Am I
-> off my rocker?
+Devices come out of reset in D0.  Restoring a device to a different
+post-reset state takes more smarts than our simple config space
+restore, which can leave devices in an inconsistent state.  For
+example, if a device is reset in D3, but the restore doesn't
+successfully return the device to D3, then the actual state of the
+device and dev->current_state are contradictory.  Put everything
+in D0 going into the reset, then we don't need to do anything
+special on the way out.
 
-I'm a little confused, let us list the possible pcie topo here:
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-1.
-root port -------------->[slot]-(function device a)
-			       -(function device b)
-
-Here there is only one slot directly connected to root port,
-this slot is inserted a physical device which contain function device a and b.
-After we insert physical device into this slot, hotplug driver will call
-pci_configure_slot()---->pcie_bus_configure_settings() to set device mps.
-
-As Jon's original patch, in this case we should update root port and slot device
-mps to the minmum mpss of root port and slot device. But in pcie_find_smpss()
-list_is_singular() is used to check whether there are other devices on the fabric.
-list_is_singular() in this case return false. because more than one devices found in devices list.
-But we expect the result is true.
-
-And Bjorn think root port always connected to only one hot-plug slot, so use list_is_singular() or pci_only_one_slot()
-to check other devices on the fabric make no sense. I agree with him if there is no broken hardware platform that
-a root port connected to more than one slot.
-
-2.		(is_hotplug_bridge)
-root port --------------->Port A--------->[slot]
-		bus a	 |
-			 |Port or devices ?
-
-If Jon's original patch is correct, I guess the topo is like above.
-In this case, Port A is hotplug bridge and connected directly to root port.
-So if there is no other port or devices in bus a, we can configure mps to the minmum
-mpss of root port and Port A and slot device.
-
-But does this topo exist? root port has only one link, the pcie link is point to point.
-
-3.                                                (hotplug bridge)
-root port ---------------Up steam port----------->Downsteam port A -------->[slot]
-						 |
-						 |Downsteam port B -------->[slot]  ?
-
-This topo is common, but DP A is not directly connected to root port, so the original patch
-can not cover this case. If DP B is not exist. there is only one Downstream port A, like:
-
-                                                (hotplug bridge)
-root port ---------------Up steam port----------->Downsteam port A -------->[slot]
-
-In this case, we can also configure mps after a pcie card inserted into slot, because
-although the system is running, because root port UP port DP port A and slot are not running.
-But this case is rare.
-
-So, Jon, does your original patch want to cover the case 1 or case 2 ?
-For case 1, we can remove the list_is_singular() check.
-For case 2, do you have some example hardware platform ?
-Or there are other pcie topos not exist here?
-
-Thanks!
-Yijing.
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 91f7bc4..3e71887 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3393,6 +3393,13 @@ static void pci_dev_unlock(struct pci_dev *dev)
+ 
+ static void pci_dev_save_and_disable(struct pci_dev *dev)
+ {
++	/*
++	 * Wake-up device prior to save.  PM registers default to D0 after
++	 * reset and a simple register restore doesn't reliably return
++	 * to a non-D0 state anyway.
++	 */
++	pci_set_power_state(dev, PCI_D0);
++
+ 	pci_save_state(dev);
+ 	/*
+ 	 * both INTx and MSI are disabled after the Interrupt Disable bit
 
