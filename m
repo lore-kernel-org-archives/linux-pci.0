@@ -1,75 +1,219 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CANVTcTZT-0bg=GBdo06=1--NgyMEM6-pFX8DjMxh=7JYtaTLpw@mail.gmail.com>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-	<1376189294-32022-27-git-send-email-yinghai@kernel.org>
-	<CANVTcTYhdiptB_sOUyveBfieg0VkTGdor16kCHKkJDemHzcWXw@mail.gmail.com>
-	<CAE9FiQVSRMdinMKQdJUB_q8pAK-ei-Q-if+8K5yyz=HRTHbCTA@mail.gmail.com>
-	<CANVTcTZT-0bg=GBdo06=1--NgyMEM6-pFX8DjMxh=7JYtaTLpw@mail.gmail.com>
-Date: Mon, 26 Aug 2013 23:53:36 -0700
-Message-ID: <CAE9FiQVM+q=PjZ+Q_wR2-BGrbs+gBcGyKFhOqGZdZWyxjMjB0g@mail.gmail.com>
-Subject: Re: [PATCH v4 26/28] PCI, x86, ACPI: Link acpi ioapic register to ioapic
-From: Yinghai Lu <yinghai@kernel.org>
-To: rui wang <ruiv.wang@gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:40575 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752407Ab3HAKgx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 06:36:53 -0400
+From: Rui Wang <ruiv.wang@gmail.com>
+To: bhelgaas@google.com
+Cc: tony.luck@intel.com, chaohong.guo@intel.com,
+	gong.chen@linux.intel.com, rafael.j.wysocki@intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Rui Wang <rui.y.wang@intel.com>
+Subject: [RFC v2 2/3] I/O Hook: kernel interface to manage the hook
+Date: Thu,  1 Aug 2013 18:31:32 +0800
+Message-Id: <1375353093-3206-3-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1375353093-3206-1-git-send-email-rui.y.wang@intel.com>
+References: <1375353093-3206-1-git-send-email-rui.y.wang@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 26, 2013 at 11:44 PM, rui wang <ruiv.wang@gmail.com> wrote:
-> On 8/27/13, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, Aug 23, 2013 at 5:51 PM, rui wang <ruiv.wang@gmail.com> wrote:
->>> On 8/11/13, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> During ioapic hotplug, acpi_register_ioapic will be called.
->>>> Now for x86, that function is blank.
->>>> Fill that will update __mp_register_ioapic to use those ioapic.
->>>>
->>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>>> ---
->>>>  arch/x86/kernel/acpi/boot.c | 10 ++++++----
->>>>  1 file changed, 6 insertions(+), 4 deletions(-)
->>>>
->>>> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
->>>> index 5be15d1..4a5336d 100644
->>>> --- a/arch/x86/kernel/acpi/boot.c
->>>> +++ b/arch/x86/kernel/acpi/boot.c
->>>> @@ -707,16 +707,18 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
->>>>
->>>>  int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32
->>>> gsi_base)
->>>>  {
->>>> -     /* TBD */
->>>> -     return -EINVAL;
->>>> +     unsigned long long id = 0;
->>>> +
->>>> +     acpi_evaluate_integer(handle, "_UID", NULL, &id);
->>>
->>> We cannot assume that "_UID" is an integer. "_UID" can be either an
->>> integer or a string. Need to consider the case when it is a string.
->>
->> Yes.
->>
->> But do you have test case for ioapic that _UID is not integer?
->>
->
-> Yes I have an IOAPIC with an _UID of:
->
->         Name (_UID, "IOAPIC01")  // _UID: Unique ID
->
-> It's a bit challenge how you'll conjure unique identifiers from both
-> integers and strings. If you have a new patch I can help try it out.
+Add the following kernel functions used to add/delete/query Register
+Overrides, and to start/stop the I/O Hook:
+	hook_add_ovrd
+	hook_query_ovrd
+	hook_cleanup_ovrd
+	hook_start_ovrd
+	hook_stop_ovrd
+	hook_get_status
 
-Then do you have _MAT with that ioapic device or else?
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/misc/iohook/iohook.c |  151 ++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 151 insertions(+), 0 deletions(-)
 
-need to find the _MAT entry with GSM matching to find out ioapic id.
+diff --git a/drivers/misc/iohook/iohook.c b/drivers/misc/iohook/iohook.c
+index e410ece..be671d7 100644
+--- a/drivers/misc/iohook/iohook.c
++++ b/drivers/misc/iohook/iohook.c
+@@ -6,6 +6,7 @@
+ #include "iohook.h"
+ 
+ static DEFINE_RAW_SPINLOCK(io_hook_lock);
++static DEFINE_RAW_SPINLOCK(engine_lock);
+ 
+ LIST_HEAD(ovrd_io_reg_map);
+ LIST_HEAD(ovrd_mem_reg_map);
+@@ -14,6 +15,150 @@ LIST_HEAD(ovrd_pci_conf_reg_map);
+ struct static_key ovrdhw_enabled = STATIC_KEY_INIT_FALSE;
+ EXPORT_SYMBOL(ovrdhw_enabled);
+ 
++int	g_ovrd_on;
++/* query a Register Override given spaceid and index */
++struct reg_ovrd *hook_query_ovrd(int spaceid, int idx)
++{
++	struct list_head *reg_ovrd;
++	struct reg_ovrd *ovrdreg, *regentry;
++	unsigned long lock_flags = 0;
++	int n = 0;
++
++	if (spaceid == OVRD_SPACE_MEM)
++		reg_ovrd = &ovrd_mem_reg_map;
++	else if (spaceid == OVRD_SPACE_IO)
++		reg_ovrd = &ovrd_io_reg_map;
++	else
++		reg_ovrd = &ovrd_pci_conf_reg_map;
++
++	regentry = NULL;
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	list_for_each_entry(ovrdreg, reg_ovrd, node) {
++		if (n++ >= idx) {
++			regentry = ovrdreg;
++			break;
++		}
++	}
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++	pr_info("hook_query_ovrd() returns %p, idx=%d\n",
++		regentry, idx);
++	return regentry;
++
++}
++
++/* delete all Register Overrides from one space (IO/mem/pciconf) */
++void hook_cleanup_ovrd(int spaceid)
++{
++	struct list_head *tmp, *next, *ovrd_list;
++
++	if (spaceid == OVRD_SPACE_MEM)
++		ovrd_list = &ovrd_mem_reg_map;
++	else if (spaceid == OVRD_SPACE_IO)
++		ovrd_list = &ovrd_io_reg_map;
++	else
++		ovrd_list = &ovrd_pci_conf_reg_map;
++
++	list_for_each_safe(tmp, next, ovrd_list) {
++		struct reg_ovrd *ovrdreg =
++		    list_entry(tmp, struct reg_ovrd, node);
++		list_del(tmp);
++		kfree(ovrdreg);
++	}
++}
++
++/* for pci config space, address is encoded per PCI_ENCODE_ADDR() */
++void hook_add_ovrd(int spaceid, u64 address, u64 value, u64 mask,
++		u32 length, u8 attrib)
++{
++	struct list_head *reg_ovrd;
++	struct reg_ovrd *ovrdreg;
++	unsigned long lock_flags = 0;
++
++	if (spaceid == OVRD_SPACE_MEM)
++		reg_ovrd = &ovrd_mem_reg_map;
++	else if (spaceid == OVRD_SPACE_IO)
++		reg_ovrd = &ovrd_io_reg_map;
++	else
++		reg_ovrd = &ovrd_pci_conf_reg_map;
++
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	list_for_each_entry(ovrdreg, reg_ovrd, node) {
++		if (ovrdreg->address == address &&
++			ovrdreg->attrib == attrib &&
++			ovrdreg->length == length) {
++			/* if already added the address, just change the bits */
++			ovrdreg->bit_mask |= mask;
++			ovrdreg->val |= value;
++			pr_info("hook_add_ovrd(): 0x%llx already added, changed to 0x%llx, mask:0x%llx, attrib:0x%x\n",
++				address, ovrdreg->val, ovrdreg->bit_mask,
++				attrib);
++			goto out;
++		} else if (address >= ovrdreg->address &&
++			address < ovrdreg->address + ovrdreg->length) {
++			pr_info("hook_add_ovrd(): conflicting reg at 0x%llx, length:%llx, mask:0x%llx, attrib:0x%x\n",
++				address, ovrdreg->val, ovrdreg->bit_mask,
++				attrib);
++			goto out;
++		}
++	}
++
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++	ovrdreg = kmalloc(sizeof(struct reg_ovrd), GFP_ATOMIC);
++	if (!ovrdreg) {
++		pr_info("failed to alloc Reg Override!\n");
++		return;
++	}
++
++	ovrdreg->address = address;
++	ovrdreg->val = value;
++	ovrdreg->length = length;
++	ovrdreg->bit_mask = mask;
++	ovrdreg->attrib = attrib;
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	list_add_tail(&ovrdreg->node, reg_ovrd);
++out:
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++}
++
++/* to start the hook */
++void hook_start_ovrd(void)
++{
++	unsigned long lock_flags = 0;
++
++	raw_spin_lock_irqsave(&engine_lock, lock_flags);
++	if (g_ovrd_on)
++		goto done;
++
++	static_key_slow_inc(&ovrdhw_enabled);
++	g_ovrd_on = 1;
++done:
++	raw_spin_unlock_irqrestore(&engine_lock, lock_flags);
++
++}
++
++/* to stop the hook */
++void hook_stop_ovrd(void)
++{
++	unsigned long lock_flags = 0;
++
++	raw_spin_lock_irqsave(&engine_lock, lock_flags);
++	if (!g_ovrd_on)
++		goto done;
++	g_ovrd_on = 0;
++	static_key_slow_dec(&ovrdhw_enabled);
++done:
++	raw_spin_unlock_irqrestore(&engine_lock, lock_flags);
++
++}
++
++int hook_get_status(void)
++{
++	return g_ovrd_on;
++}
++
+ /* len should only be 1, 2, 4, 8 */
+ static int mem_read(u64 address, int len, void *data)
+ {
+@@ -165,6 +310,9 @@ int read_ovrd_common(int spaceid, u64 address, int len, void *value, void *bus)
+ 
+ 	ret = -EINVAL;
+ 
++	if (!g_ovrd_on)
++		return ret;
++
+ 	if (spaceid == OVRD_SPACE_MEM) {
+ 		/* in the case of memory, 'address' is virtual */
+ 		vaddr = address;
+@@ -295,6 +443,9 @@ int write_ovrd_common(int spaceid, u64 address, int len, void *data, void *bus)
+ 
+ 	ret = -EINVAL;
+ 
++	if (!g_ovrd_on)
++		return ret;
++
+ 	if (spaceid == OVRD_SPACE_MEM) {
+ 		ovrd_list = &ovrd_mem_reg_map;
+ 	} else if (spaceid == OVRD_SPACE_IO) {
+-- 
+1.7.5.4
 
-
-Thanks
-
-Yinghai
