@@ -1,137 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:46439 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1031006Ab3HIU1f (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 16:27:35 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv9 04/10] of: pci: add registry of MSI chips
-Date: Fri,  9 Aug 2013 22:27:09 +0200
-Message-Id: <1376080035-29344-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Rui Wang <ruiv.wang@gmail.com>
+To: bhelgaas@google.com
+Cc: tony.luck@intel.com, chaohong.guo@intel.com,
+	gong.chen@linux.intel.com, rafael.j.wysocki@intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Rui Wang <rui.y.wang@intel.com>
+Subject: [RFC v2 0/3] I/O Hook: Method for emulating h/w events
+Date: Thu,  1 Aug 2013 18:31:30 +0800
+Message-Id: <1375353093-3206-1-git-send-email-rui.y.wang@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds a very basic registry of msi_chip structures, so that
-an IRQ controller driver can register an msi_chip, and a PCIe host
-controller can find it, based on a 'struct device_node'.
+Hi Bjorn,
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Acked-by: Rob Herring <rob.herring@calxeda.com>
----
- drivers/of/of_pci.c    | 45 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/msi.h    |  2 ++
- include/linux/of_pci.h | 12 ++++++++++++
- 3 files changed, 59 insertions(+)
+In this v2, I made the following changes according to your suggestion:
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 42c687a..e5ca008 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -89,3 +89,48 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-+
-+#ifdef CONFIG_PCI_MSI
-+
-+static LIST_HEAD(of_pci_msi_chip_list);
-+static DEFINE_MUTEX(of_pci_msi_chip_mutex);
-+
-+int of_pci_msi_chip_add(struct msi_chip *chip)
-+{
-+	if (!of_property_read_bool(chip->of_node, "msi-controller"))
-+		return -EINVAL;
-+
-+	mutex_lock(&of_pci_msi_chip_mutex);
-+	list_add(&chip->list, &of_pci_msi_chip_list);
-+	mutex_unlock(&of_pci_msi_chip_mutex);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_msi_chip_add);
-+
-+void of_pci_msi_chip_remove(struct msi_chip *chip)
-+{
-+	mutex_lock(&of_pci_msi_chip_mutex);
-+	list_del(&chip->list);
-+	mutex_unlock(&of_pci_msi_chip_mutex);
-+}
-+EXPORT_SYMBOL_GPL(of_pci_msi_chip_remove);
-+
-+struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node)
-+{
-+	struct msi_chip *c;
-+
-+	mutex_lock(&of_pci_msi_chip_mutex);
-+	list_for_each_entry(c, &of_pci_msi_chip_list, list) {
-+		if (c->of_node == of_node) {
-+			mutex_unlock(&of_pci_msi_chip_mutex);
-+			return c;
-+		}
-+	}
-+	mutex_unlock(&of_pci_msi_chip_mutex);
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_find_msi_chip_by_node);
-+
-+#endif /* CONFIG_PCI_MSI */
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 090ddad..b17ead8 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -68,6 +68,8 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
- struct msi_chip {
- 	struct module *owner;
- 	struct device *dev;
-+	struct device_node *of_node;
-+	struct list_head list;
- 
- 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
- 			 struct msi_desc *desc);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 7a04826..fd9c408 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -2,6 +2,7 @@
- #define __OF_PCI_H
- 
- #include <linux/pci.h>
-+#include <linux/msi.h>
- 
- struct pci_dev;
- struct of_irq;
-@@ -13,4 +14,15 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- int of_pci_get_devfn(struct device_node *np);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- 
-+#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
-+int of_pci_msi_chip_add(struct msi_chip *chip);
-+void of_pci_msi_chip_remove(struct msi_chip *chip);
-+struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node);
-+#else
-+static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; }
-+static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
-+static inline struct msi_chip *
-+of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL; }
-+#endif
-+
- #endif
+	1) The iohook driver is now built-in so we have alot fewer exported
+	   symbols. But we still need to export two functions because the
+	   loadable modules need to call into the I/O Hook.
+	2) Non-PCI part moved from drivers/pci into drivers/misc/iohook
+	3) It's now platform neutral. The PCI part should now work on all
+	   platforms. The memory mapped I/O part can be easily extened later
+	   to non-x86 platforms by modifying their part under arch/
+
+I tested this new version on Westmere-EX. It worked as expected.
+
+Regards,
+Rui Wang
+Intel Open Source Technology Center
+
+Rui Wang (3):
+  I/O Hook: core functions and Register Override
+  I/O Hook: kernel interface to manage the hook
+  I/O Hook: sysfs interface to emulate h/w events
+
+ Documentation/PCI/iohook.txt      |  282 ++++++++++
+ arch/Kconfig                      |   10 +
+ arch/x86/boot/compressed/Makefile |    1 +
+ arch/x86/include/asm/io.h         |   57 ++-
+ arch/x86/vdso/Makefile            |    2 +
+ drivers/misc/Makefile             |    1 +
+ drivers/misc/iohook/Makefile      |    1 +
+ drivers/misc/iohook/iohook.c      | 1025 +++++++++++++++++++++++++++++++++++++
+ drivers/misc/iohook/iohook.h      |    6 +
+ drivers/pci/access.c              |   66 +++
+ include/linux/reg_ovrd.h          |   51 ++
+ 11 files changed, 1500 insertions(+), 2 deletions(-)
+ create mode 100644 Documentation/PCI/iohook.txt
+ create mode 100644 drivers/misc/iohook/Makefile
+ create mode 100644 drivers/misc/iohook/iohook.c
+ create mode 100644 drivers/misc/iohook/iohook.h
+ create mode 100644 include/linux/reg_ovrd.h
+
 -- 
-1.8.1.2
+1.7.5.4
 
