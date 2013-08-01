@@ -1,54 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f51.google.com ([209.85.212.51]:64012 "EHLO
-	mail-vb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508Ab3HBU22 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 16:28:28 -0400
+Received: from szxga02-in.huawei.com ([119.145.14.65]:35951 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753532Ab3HANHF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:07:05 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH -v4 1/6] PCI,pciehp: avoid add a device already exist before suspend during resume
+Date: Thu, 1 Aug 2013 21:06:24 +0800
+Message-ID: <1375362389-26096-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
+References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20130802181740.GA27100@google.com>
-References: <20130802181740.GA27100@google.com>
-Date: Fri, 2 Aug 2013 13:28:25 -0700
-Message-ID: <CA+55aFzSG8ny=79_MFik5xP99c7eb-LMKh0JzTKpbiEB8Wt=5Q@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI updates for v3.11
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Michal Marek <mmarek@suse.cz>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 2, 2013 at 11:17 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> Yinghai is still working on another SR-IOV-related fix or two, which
-> will be simpler if pciehp is non-modular, so I included the Kconfig
-> changes now to get them in earlier.
+Currently, pciehp_resume() try to hot add device if the slot adapter
+status return true. But if there are already some devices exist,
+namely list_empty(bus->devices) return false. We should not add the device
+again, because the device add action will fail. Also print some uncomfortable
+messages like this:
+	pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
+	pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
 
-Hmm. Doing a trivial "make allmoconfig" for testing, I get
+Tested-by: Paul Bolle <pebolle@tiscali.nl>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/hotplug/pciehp_core.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-  include/config/auto.conf:3014:warning: symbol value 'm' invalid for
-HOTPLUG_PCI_PCIE
-  include/config/auto.conf:4711:warning: symbol value 'm' invalid for
-HOTPLUG_PCI
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 7d72c5e..7fe9dbd 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -300,6 +300,7 @@ static int pciehp_resume (struct pcie_device *dev)
+ {
+ 	struct controller *ctrl;
+ 	struct slot *slot;
++	struct pci_bus *pbus = dev->port->subordinate;
+ 	u8 status;
+ 
+ 	ctrl = get_service_data(dev);
+@@ -311,10 +312,13 @@ static int pciehp_resume (struct pcie_device *dev)
+ 
+ 	/* Check if slot is occupied */
+ 	pciehp_get_adapter_status(slot, &status);
+-	if (status)
+-		pciehp_enable_slot(slot);
+-	else
++	if (status) {
++		if (list_empty(&pbus->devices))
++			pciehp_enable_slot(slot);
++	} else if (!list_empty(&pbus->devices)) {
+ 		pciehp_disable_slot(slot);
++	}
++
+ 	return 0;
+ }
+ #endif /* PM */
+-- 
+1.7.1
 
-but that may be a build system issue with stale data from the
-*previous* "make allmodconfig". Regardless, that makes me worried.
 
-Adding Michal Marek to the discussion. I'm currently doing a new "make
-allmodconfig" after having done a "git clean -dqfx" to see if the
-error remains. If it does, I will unpull. If it is gone, I'm going to
-assume the Kconfig changes are ok, but that our build system is
-missing some dependency.
-
-Michal? I haven't pushed things out yet (and that allmodconfig build
-from scratch will take 20 min or so), but you can recreate my tree by
-pulling that pci thing locally from:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-tags/pci-v3.11-fixes-1
-
-Ho humm..
-
-                     Linus
