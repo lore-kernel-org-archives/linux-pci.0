@@ -1,413 +1,839 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:47704 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925Ab3HFGc5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 02:32:57 -0400
-Received: by mail-wi0-f174.google.com with SMTP id j17so2276998wiw.13
-        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 23:32:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5ZZgdpkK+QdQUEnNCEXcG_T+QBWTVoQnMTghxkX7n2HA@mail.gmail.com>
-References: <CAPWoNkJ3NKM-_g93LdRpjvdNFtLt-Pjpg4d4oEKC9CvkpzZ-Wg@mail.gmail.com>
- <CAPWoNkLQUbFG2vZ7wqoqqVNj4uxKz3Fa_vsSH=1_TDD=XC1f2A@mail.gmail.com> <CAErSpo5ZZgdpkK+QdQUEnNCEXcG_T+QBWTVoQnMTghxkX7n2HA@mail.gmail.com>
-From: Leon Ravich <lravich@gmail.com>
-Date: Tue, 6 Aug 2013 09:32:35 +0300
-Message-ID: <CAPWoNkJtnE3ASH0AdgfAD-3soa13DyH-zZAyzWMg9K2=nCX87Q@mail.gmail.com>
-Subject: Re: PCIE device errors after linux kernel upgrade
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Rui Wang <ruiv.wang@gmail.com>
+To: bhelgaas@google.com
+Cc: tony.luck@intel.com, chaohong.guo@intel.com,
+	gong.chen@linux.intel.com, rafael.j.wysocki@intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Rui Wang <rui.y.wang@intel.com>
+Subject: [RFC v2 3/3] I/O Hook: sysfs interface to emulate h/w events
+Date: Thu,  1 Aug 2013 18:31:33 +0800
+Message-Id: <1375353093-3206-4-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1375353093-3206-1-git-send-email-rui.y.wang@intel.com>
+References: <1375353093-3206-1-git-send-email-rui.y.wang@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks Bjorn.
+Add sysfs interface used to emulate h/w events. Here's how it works:
 
-1) If I understand it right this patch only removes the "pci
-0000:00:00.0: ignoring class 0x0b2000 (doesn't
-match header type 01)" message , don't  care about it , had it before .
+The sysfs interface can be used to add/delete Register Overrides with user-
+defined values. The user can also specify which IRQ to be triggered via
+Inter-Processor Interrupt (IPI) while the h/w registers are being overridden.
+When the irq handler is triggered by the IPI it looks for the registers
+specific to some h/w events. As long as the Register Overrides are setup
+correctly, the irq  handler  will believe that the h/w is in a state
+corresponding to a predefined interrupt, thus process the event.
 
-2) regarding the comparing of printouts:
+This can be typically used to generate ACPI events, PCI interrupts, PCIe
+AER injection etc., and can thus be used to help test RAS features like
+the hotplug of CPU/MEM/IOH on machines that are not capable of generating
+the events.
 
-kernel 3.8.13:
+See Documentation/PCI/iohook.txt for usage details.
 
-[   37.908846] pci_bus 0000:00: scanning bus
-[   37.912870] pci 0000:00:00.0: [1957:0070] type 01 class 0x0b2000
-[   37.918881] pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't
-match header type 01)
-[   37.926640] pci 0000:00:00.0: calling fixup_hide_host_resource_fsl+0x0/0x5c
-[   37.933596] pci 0000:00:00.0: calling pcibios_fixup_resources+0x0/0xf0
-[   37.940132] pci 0000:00:00.0: calling quirk_fsl_pcie_header+0x0/0x78
-[   37.946505] pci 0000:00:00.0: supports D1 D2
-[   37.950779] pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-[   37.957397] pci 0000:00:00.0: PME# disabled
-[   37.961580] PCIE error(s) detected
-[   37.964971] PCIE ERR_DR register: 0x00020000
-[   37.969229] PCIE ERR_CAP_STAT register: 0x00000041
-[   37.974008] PCIE ERR_CAP_R0 register: 0x00000800
-[   37.978614] PCIE ERR_CAP_R1 register: 0x00000000
-[   37.983218] PCIE ERR_CAP_R2 register: 0x00000000
-[   37.987823] PCIE ERR_CAP_R3 register: 0x00000000
-[   37.992448] PCIE error(s) detected
-[   37.995841] PCIE ERR_DR register: 0x00020000
-[   38.000098] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.004877] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.009482] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.014087] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.018692] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.023312] PCIE error(s) detected
-[   38.026704] PCIE ERR_DR register: 0x00020000
-[   38.030961] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.035740] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.040345] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.044950] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.049554] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.054180] PCIE error(s) detected
-[   38.057573] PCIE ERR_DR register: 0x00020000
-[   38.061831] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.066609] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.071214] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.075819] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.080424] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.085046] PCIE error(s) detected
-[   38.088438] PCIE ERR_DR register: 0x00020000
-[   38.092696] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.097474] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.102079] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.106684] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.111289] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.115909] PCIE error(s) detected
-[   38.119301] PCIE ERR_DR register: 0x00020000
-[   38.123559] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.128337] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.132942] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.137547] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.142152] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.146773] PCIE error(s) detected
-[   38.150164] PCIE ERR_DR register: 0x00020000
-[   38.154423] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.159201] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.163806] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.168410] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.173015] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.177635] PCIE error(s) detected
-[   38.181028] PCIE ERR_DR register: 0x00020000
-[   38.185286] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.190066] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.194670] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.199275] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.203880] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.208504] PCIE error(s) detected
-[   38.211897] PCIE ERR_DR register: 0x00020000
-[   38.216156] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.220935] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.225540] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.230144] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.234749] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.239395] PCIE error(s) detected
-[   38.242788] PCIE ERR_DR register: 0x00020000
-[   38.247046] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.251825] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.256430] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.261034] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.265639] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.270268] PCIE error(s) detected
-[   38.273660] PCIE ERR_DR register: 0x00020000
-[   38.277918] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.282697] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.287302] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.291906] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.296511] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.301134] PCIE error(s) detected
-[   38.304526] PCIE ERR_DR register: 0x00020000
-[   38.308784] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.313563] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.318168] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.322772] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.327377] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.331999] PCIE error(s) detected
-[   38.335390] PCIE ERR_DR register: 0x00020000
-[   38.339648] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.344427] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.349031] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.353636] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.358241] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.362862] PCIE error(s) detected
-[   38.366255] PCIE ERR_DR register: 0x00020000
-[   38.370512] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.375291] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.379896] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.384501] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.389106] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.393728] PCIE error(s) detected
-[   38.397121] PCIE ERR_DR register: 0x00020000
-[   38.401379] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.406158] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.410763] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.415367] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.419972] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.424613] PCIE error(s) detected
-[   38.428007] PCIE ERR_DR register: 0x00020000
-[   38.432264] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.437043] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.441648] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.446253] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.450857] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.455483] PCIE error(s) detected
-[   38.458875] PCIE ERR_DR register: 0x00020000
-[   38.463133] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.467911] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.472516] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.477121] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.481726] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.486351] PCIE error(s) detected
-[   38.489743] PCIE ERR_DR register: 0x00020000
-[   38.494001] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.498780] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.503385] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.507989] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.512594] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.517212] PCIE error(s) detected
-[   38.520603] PCIE ERR_DR register: 0x00020000
-[   38.524860] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.529639] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.534244] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.538849] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.543453] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.548069] PCIE error(s) detected
-[   38.551461] PCIE ERR_DR register: 0x00020000
-[   38.555719] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.560497] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.565102] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.569707] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.574312] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.578928] PCIE error(s) detected
-[   38.582318] PCIE ERR_DR register: 0x00020000
-[   38.586576] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.591354] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.595959] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.600564] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.605169] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.609784] PCIE error(s) detected
-[   38.613175] PCIE ERR_DR register: 0x00020000
-[   38.617433] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.622211] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.626816] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.631421] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.636026] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.640658] PCIE error(s) detected
-[   38.644050] PCIE ERR_DR register: 0x00020000
-[   38.648309] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.653088] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.657692] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.662297] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.666902] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.671522] PCIE error(s) detected
-[   38.674914] PCIE ERR_DR register: 0x00020000
-[   38.679172] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.683951] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.688556] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.693161] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.697766] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.702386] PCIE error(s) detected
-[   38.705777] PCIE ERR_DR register: 0x00020000
-[   38.710034] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.714813] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.719418] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.724023] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.728628] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.733244] PCIE error(s) detected
-[   38.736636] PCIE ERR_DR register: 0x00020000
-[   38.740895] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.745673] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.750278] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.754883] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.759488] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.764103] PCIE error(s) detected
-[   38.767494] PCIE ERR_DR register: 0x00020000
-[   38.771752] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.776530] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.781135] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.785740] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.790344] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.794984] PCIE error(s) detected
-[   38.798377] PCIE ERR_DR register: 0x00020000
-[   38.802635] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.807414] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.812019] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.816624] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.821229] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.825848] PCIE error(s) detected
-[   38.829239] PCIE ERR_DR register: 0x00020000
-[   38.833496] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.838275] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.842880] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.847485] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.852090] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.856712] PCIE error(s) detected
-[   38.860103] PCIE ERR_DR register: 0x00020000
-[   38.864361] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.869139] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.873744] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.878349] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.882954] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.887574] PCIE error(s) detected
-[   38.890966] PCIE ERR_DR register: 0x00020000
-[   38.895223] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.900002] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.904607] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.909212] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.913817] PCIE ERR_CAP_R3 register: 0x00000000
-[   38.918446] pci 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 0
-[   38.925142] pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
-[   38.931873] pci_bus 0000:01: busn_res: can not insert [bus 01-ff]
-under [bus 00-01] (conflicts with (null) [bus 00-01])
-[   38.942654] pci_bus 0000:01: scanning bus
-[   38.946687] pci 0000:01:00.0: [1234:0002] type 00 class 0xff0000
-[   38.952697] pci 0000:01:00.0: reg 10: [mem 0x00000000-0x000fffff]
-[   38.958801] pci 0000:01:00.0: reg 14: [mem 0x00000000-0x0007ffff]
-[   38.964891] pci 0000:01:00.0: reg 18: [mem 0x00000000-0x0007ffff]
-[   38.971017] pci 0000:01:00.0: calling pcibios_fixup_resources+0x0/0xf0
-[   38.977605] pci_bus 0000:01: fixups for bus
-[   38.981782] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
-[   38.987012] pci 0000:00:00.0:   bridge window [io  0x0000-0x0fff]
-[   38.993098] pci 0000:00:00.0:   bridge window [mem 0xc0000000-0xdfffffff]
-[   38.999970] pci_bus 0000:01: bus scan returning with max=01
-[   39.005537] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-[   39.012158] pci_bus 0000:00: bus scan returning with max=01
-[   39.017749] pci 0000:00:00.0: BAR 8: assigned [mem 0xc0000000-0xdfffffff]
-[   39.024530] pci 0000:00:00.0: BAR 7: can't assign io (size 0x10000)
-[   39.030801] pci 0000:01:00.0: BAR 0: assigned [mem 0xc0000000-0xc00fffff]
-[   39.037596] pci 0000:01:00.0: BAR 0: set to [mem
-0xc0000000-0xc00fffff] (PCI address [0xc0000000-0xc00fffff])
-[   39.047511] pci 0000:01:00.0: BAR 1: assigned [mem 0xc0100000-0xc017ffff]
-[   39.054293] pci 0000:01:00.0: BAR 1: set to [mem
-0xc0100000-0xc017ffff] (PCI address [0xc0100000-0xc017ffff])
-[   39.064204] pci 0000:01:00.0: BAR 2: assigned [mem 0xc0180000-0xc01fffff]
-[   39.070997] pci 0000:01:00.0: BAR 2: set to [mem
-0xc0180000-0xc01fffff] (PCI address [0xc0180000-0xc01fffff])
-[   39.080910] pci 0000:00:00.0: PCI bridge to [bus 01]
-[   39.085866] pci 0000:00:00.0:   bridge window [mem 0xc0000000-0xdfffffff]
-[   39.092662] pci 0000:00:00.0: enabling bus mastering
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ Documentation/PCI/iohook.txt |  282 ++++++++++++++++++++++++
+ drivers/misc/iohook/iohook.c |  490 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 772 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/PCI/iohook.txt
 
-
-
-
-kernel 2.6.32
-
-[   49.665070] PCI: Scanning bus 0000:00
-[   49.668744] pci 0000:00:00.0: found [1957:0070] class 000b20 header type 01
-[   49.675708] pci 0000:00:00.0: ignoring class b20 (doesn't match
-header type 01)
-[   49.683028] pci 0000:00:00.0: calling fixup_hide_host_resource_fsl+0x0/0x5c
-[   49.689991] pci 0000:00:00.0: calling pcibios_fixup_resources+0x0/0xd0
-[   49.696525] pci 0000:00:00.0: calling quirk_fsl_pcie_header+0x0/0x64
-[   49.702885] pci 0000:00:00.0: calling quirk_resource_alignment+0x0/0x1d4
-[   49.709583] pci 0000:00:00.0: supports D1 D2
-[   49.713851] pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-[   49.720457] pci 0000:00:00.0: PME# disabled
-[   49.724657] pci 0000:00:00.0: scanning behind bridge, config 010100, pass 0
-[   49.731611] pci 0000:00:00.0: scanning behind bridge, config 000000, pass 1
-[   49.738576] PCI: Scanning bus 0000:01
-[   49.742256] pci 0000:01:00.0: found [1234:0002] class 00ff00 header type 00
-[   49.749224] pci 0000:01:00.0: reg 10 32bit mmio: [0x000000-0x0fffff]
-[   49.755584] pci 0000:01:00.0: reg 14 32bit mmio: [0x000000-0x07ffff]
-[   49.761932] pci 0000:01:00.0: reg 18 32bit mmio: [0x000000-0x07ffff]
-[   49.768302] pci 0000:01:00.0: calling pcibios_fixup_resources+0x0/0xd0
-[   49.774830] pci 0000:01:00.0: calling quirk_resource_alignment+0x0/0x1d4
-[   49.781566] PCI: Fixups for bus 0000:01
-[   49.785402] pci 0000:00:00.0: bridge io port: [0x00-0xfff]
-[   49.790879] pci 0000:00:00.0: bridge 32bit mmio: [0xc0000000-0xdfffffff]
-[   49.797627] PCI: Bus scan for 0000:01 returning with max=01
-[   49.803200] PCI: Bus scan for 0000:00 returning with max=01
-[   49.808777] pci 0000:01:00.0: BAR 0: got res
-[0xc0000000-0xc00fffff] bus [0xc0000000-0xc00fffff] flags 0x20020200
-[   49.819041] pci 0000:01:00.0: BAR 0: moved to bus
-[0xc0000000-0xc00fffff] flags 0x20200
-[   49.827043] pci 0000:01:00.0: BAR 1: got res
-[0xc0100000-0xc017ffff] bus [0xc0100000-0xc017ffff] flags 0x20020200
-[   49.837303] pci 0000:01:00.0: BAR 1: moved to bus
-[0xc0100000-0xc017ffff] flags 0x20200
-[   49.845306] pci 0000:01:00.0: BAR 2: got res
-[0xc0180000-0xc01fffff] bus [0xc0180000-0xc01fffff] flags 0x20020200
-[   49.855566] pci 0000:01:00.0: BAR 2: moved to bus
-[0xc0180000-0xc01fffff] flags 0x20200
-[   49.863568] pci 0000:00:00.0: PCI bridge, secondary bus 0000:01
-[   49.869477] pci 0000:00:00.0:   IO window: disabled
-[   49.874352] pci 0000:00:00.0:   MEM window: 0xc0000000-0xc01fffff
-[   49.880436] pci 0000:00:00.0:   PREFETCH window: disabled
-
-
-
-On 5 August 2013 18:38, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc linuxppc-dev]
->
-> On Mon, Aug 5, 2013 at 5:17 AM, Leon Ravich <lravich@gmail.com> wrote:
->> Hi all ,
->> I am trying to upgrade ours embedded device (freescale powerPC P2020 cpu)
->> linux kernel  , till now we used 2.6.32 I am trying to upgrade to 3.8.13 .
->> I took the source from freescale git:
->> git://git.freescale.com/ppc/sdk/linux.git
->>
->> on our embedded device we have an FPGA connected through PCIE .
->>
->> on each boot we loading the rbf design to the FPGA and the rescan pci bus to let
->> kernel detect it .
->>
->> during the rescan I getting error messages:
->>  genirq: Setting trigger mode 0 for irq 27 failed
->> (mpc8xxx_irq_set_type+0x0/0xec)
->> [   22.060898] genirq: Setting trigger mode 0 for irq 28 failed
->> (mpc8xxx_irq_set_type+0x0/0xec)
->> [   22.069461] genirq: Setting trigger mode 0 for irq 31 failed
->> (mpc8xxx_irq_set_type+0x0/0xec)
->> [   22.078010] genirq: Setting trigger mode 0 for irq 32 failed
->> (mpc8xxx_irq_set_type+0x0/0xec)
->> [   22.086576] genirq: Setting trigger mode 0 for irq 33 failed
->> (mpc8xxx_irq_set_type+0x0/0xec)
->> [   22.095143] genirq: Setting trigger mode 0 for irq 37 failed
->> (mpc8xxx_irq_set_type+0x0/0xec)
->> [   22.103715] genirq: Setting trigger mode 0 for irq 38 failed
->> (mpc8xxx_irq_set_type+0x0/0xec)
->> [   22.112282] genirq: Setting trigger mode 0 for irq 39 failed
->> (mpc8xxx_irq_set_type+0x0/0xec)
->
-> Hmm, I don't know much about IRQ issues.
->
->> [   37.945785] pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't
->> match header type 01)
->
-> There's a recent patch related to this:
-> http://lkml.kernel.org/r/1374823418-1550-1-git-send-email-Chunhe.Lan@freescale.com
->
->> [   37.953640] PCIE error(s) detected
->> [   37.953858] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
->> [   37.953988] pci 0000:00:00.0: BAR 8: assigned [mem 0xc0000000-0xdfffffff]
->> [   37.953994] pci 0000:00:00.0: BAR 7: can't assign io (size 0x10000)
->> [   37.954000] pci 0000:01:00.0: BAR 0: assigned [mem 0xc0000000-0xc00fffff]
->> [   37.954013] pci 0000:01:00.0: BAR 1: assigned [mem 0xc0100000-0xc017ffff]
->> [   37.954025] pci 0000:01:00.0: BAR 2: assigned [mem 0xc0180000-0xc01fffff]
->> [   37.954036] pci 0000:00:00.0: PCI bridge to [bus 01]
->> [   37.954041] pci 0000:00:00.0:   bridge window [mem 0xc0000000-0xdfffffff]
->> [   38.007354] PCIE ERR_DR register: 0x80020000
->> [   38.011613] PCIE ERR_CAP_STAT register: 0x00000041
->> [   38.016392] PCIE ERR_CAP_R0 register: 0x00000800
->> [   38.020997] PCIE ERR_CAP_R1 register: 0x00000000
->> [   38.025602] PCIE ERR_CAP_R2 register: 0x00000000
->> [   38.030207] PCIE ERR_CAP_R3 register: 0x00000000
->>
->>
->> and after a few minutes I linux reboot it self,
->>
->>
->> where can I start debugging it??
->
-> I'd start by applying the header quirk patch above, then comparing the
-> complete console log (boot with "ignore_loglevel") from 2.6.32 and
-> 3.8.13.
->
-> Bjorn
-
-
-
+diff --git a/Documentation/PCI/iohook.txt b/Documentation/PCI/iohook.txt
+new file mode 100644
+index 0000000..07777d2
+--- /dev/null
++++ b/Documentation/PCI/iohook.txt
+@@ -0,0 +1,282 @@
++Emulating h/w events via iohook
++=================================
++
++1. Introduction
++2. How to use it
++3. Use cases
++
++1. Introduction
++---------------------
++I/O Hook is  a  mechanism to intercept  i/o register access  functions in the
++kernel. By overriding h/w register bits with user-defined bits in RAM called
++Register Override, it is possible to emulate h/w states without modifying
++the driver specific to that hardware.
++
++iohook is a driver that exports sysfs interface used to talk to the I/O Hook
++in the kernel in order to emulate h/w events. Here's how it works:
++
++The sysfs interface can be used to add/delete Register Overrides with user-
++defined values. The user can also specify which IRQ  to  be  triggered  via
++Inter-Processor Interrupt (IPI)  while  the  h/w registers are being over-
++ridden. When  the irq  handler  is  triggered  by  the IPI it looks for the
++registers specific to some h/w events. As long as the Register Overrides are
++setup correctly, the irq  handler  will believe that the h/w is in a state
++corresponding to a predefined interrupt, thus process the event.
++
++A Register Override can be defined in whatever bit-width, identified by its
++address, bitmask, initial value and attributes like read-only, read-write,
++write-clear, etc., similar to how a hardware register behaves when accessed.
++
++A Register Override may not use every bit in a byte. Its bitmask identifies
++which bits are used (overridden). The unused bits are accessed on the h/w
++and combined with the overridden bits to form the final result. The reason
++to support this combination is that many h/w events are controlled by only
++a few bits. For example the ACPI GPEx_STS and GPEx_EN are encoded such that
++each bit represents a different General Purpose Event. The user is supposed
++to fully understand the side-effect, if any, of reading adjacent bits when
++he or she adds a Register Override not in the entirety of a byte, a word, a
++dword, or a qword.
++
++iohook can be typically used to generate ACPI events, PCI interrupts, PCIe
++AER injection etc., and can thus be used to help test RAS features like
++the hotplug of CPU/MEM/IOH on machines that are not capable of generating
++these events.
++
++2. How to use it
++-------------------
++
++2.1 Kernel compilation and sysfs interface
++
++First compile the kernel with CONFIG_IO_HOOK. After the new kernel is loaded
++a directory subtree is created under /sys/kernel/debug/iohook
++
++bash# cd /sys/kernel/debug/iohook
++bash# ls
++io  irq  mem  pciconf  trigger
++
++Each file is used to manage a type of resource.
++'io' is used to add/show Register Overrides in IO port space.
++'mem' is used to add/show Register Overrides in memory space.
++'pciconf' is used to add/show Register Overrides in pci config space.
++'irq' is used to set the desired IRQ to be triggered via IPI.
++'trigger' is used to turn on/off the I/O Hook.
++
++2.2 Add Register Overrides
++
++A Register Override can be specified on the command line with the following
++syntax (all numbers are in hex without space between each element)
++
++for a Register Override in IO port or memory space, it's specified as:
++
++	address-length[value/mask]attribute
++
++for a Register Override in PCI config space, it's specified as:
++
++	domain|bus:dev.func+offset-length[value/mask]attribute
++
++where
++	address - the 64bit address of the h/w register to be overridden
++
++	length - the number of bytes affected. Affected here means that
++		 at least one bit in that byte is overridden. For 'length'
++		 less than 8, the overridden bits are determined by the
++		 corresponding bits set in 'mask'. Other bits are unaffected
++		 and accessed on the h/w. For 'length' >= 8 then 'mask' is
++		 ignored and the entire range of bytes are overridden to be
++		 a single value specified by the first byte of 'value'. This
++		 can be used, for example, to set the entire PCI Config
++		 space of a device to 0xff.
++
++	value -  the user-defined value to replace the content of the
++		 corresponding h/w register. for 'length' < 8, only the bits
++		 masked by 'mask' are used.
++
++	mask -   is the bit-mask specifying the bits to be overridden when
++		 'length' < 8.
++
++	attribute - used to specify the attribute of the overridden bits.
++		 It can be ro, rw, wc, rc to mean read-only, read-write,
++		 write-clear, and read-clear respectively.
++
++	domain - pci domain number
++	bus    - pci bus number
++	dev    - pci device number
++	func   - pci function number
++	offset - used to specify the offset of the affected bytes in the
++		 PCI config space.
++
++Multiple registers can be specified on one line with each separated by at
++least one space.  For example, to override two registers in IO space at port
++0x420 and port 0x428, with the former in write-clear mode and the latter in
++read-only mode:
++
++bash# cd /sys/kernel/debug/iohook
++bash# echo "420-1[04/04]wc 428-1[04/04]ro" > io
++The syntax is "address-length[value/mask]attribute".
++Since only one bit is overridden (mask is 0x04), the affected byte is 1.
++So 'length' is 1.
++
++As another example, to add two Register Overrides in the PCI config space of
++device 00:05.0 at offsets 0x130 and 0x134 respectively:
++
++bash# echo "0000|00:05.0+130-1[01/01]wc 0000|00:05.0+134-2[0500/ffff]ro">pciconf
++The syntax is "domain|bus:dev.func+offset-length[value/mask]attribute"
++The first register overrides only bit0 and the second register overrides the
++first 2 bytes (mask == 0xffff), with an initial value of 0x0500.
++
++Register Overrides are disabled when added. They can be enabled by using the
++'trigger' file. See below.
++
++2.3 Add IRQ and enable the Register Overrides
++
++To specify an IRQ to be triggered via IPI, just echo the IRQ number in decimal
++to the 'irq' file. For example:
++
++bash# cd /sys/kernel/debug/iohook
++bash# echo 9 > irq
++This specifies that IRQ9 be triggered after the Register Overrides are enabled.
++
++To enable the Register Overrides in the kernel:
++
++bash# echo 1 > trigger
++
++This immediately enables all the Register Overrides and if an IRQ number was
++specified, generate the IPI.
++
++To disable the Register Overrides in the kernel:
++
++bash echo 0 > trigger
++This immediately disables all Register Overrides. The kernel starts to see
++real h/w registers again. This does not delete the Register Overrides. They
++can be re-enabled again by echo 1 > trigger.
++
++3. Use cases
++-----------------
++
++3.1 Generate ACPI Events
++
++A typical use case is to generate ACPI events. Suppose we want to test IOH
++hotplug on a machine whose BIOS doesn't support it. We can override its DSDT
++and add a GPE to notify the OS the hot-add/removal of the IOH device. We can
++then use iohook to trigger the imaginary GPE and the OS will have to process
++the hotplug event. (For detailed instructions on how to override DSDT see
++Documentation/acpi/initrd_table_override.txt.) The following is an example:
++
++We first extract the DSDT
++bash # cat /sys/firmware/acpi/tables/DSDT > DSDT
++bash # iasl -d DSDT
++Now we have disassembled the DSDT into DSDT.dsl. We vi DSDT.dsl and notice
++that there's a IOH device named \_SB.IOH1. Since GPEs are named _Lxx with xx
++being the GPE numbers, we notice that there's no _L02 in DSDT.dsl, so we can
++use this spare GPE to notify the OS the hotplug of \_SB.IOH1. We add a new
++method in DSDT.dsl:
++
++    Method (_L02, 0, NotSerialized) // _Lxx: Level-Triggered GPE
++    {
++	Notify (\_SB.IOH1, 0x0)     // 0x0: hot-add event
++    }
++
++ACPI uses a single interrupt (SCI) to dispatch all GPEs. The SCI IRQ number
++can be found from:
++
++bash # grep acpi /proc/interrupts | awk '{ print $1; }'
++9:
++
++which means SCI is IRQ9. What we need to do is to generate IRQ9 via IPI and
++let the SCI interrupt handler call _L02. Each _Lxx has a status bit in
++GPEx_STS to reflect if it is asserted and a controlling bit in GPEx_EN to
++reflect if it is enabled. The SCI interrupt handler reads GPEx_STS and
++GPEx_EN to decide whether to call a _Lxx. a _Lxx is called if it is both
++enabled and asserted. We can use Register Overrides to override the bits
++controlling _L02 in GPEx_STS and GPEx_EN so that the SCI handler will believe
++that _L02 is asserted and enabled, and will call the ACPI method that we
++added.
++
++_L02's controlling bits are in GPE0_STS and GPE0_EN, whose addresses can be
++found from FACP as follows.
++
++bash # cat /sys/firmware/acpi/tables/FACP > FACP
++bash # iasl -d FACP
++[root@TXT acpi]# grep GPE FACP.dsl
++[050h 080  4]           GPE0 Block Address : 00000420
++[054h 084  4]           GPE1 Block Address : 00000000
++[05Ch 092  1]            GPE0 Block Length : 10
++
++So according to FACP, GPE0 block is at port 0x420; GPE0 block length is 0x10.
++GPE0_STS/GPE0_EN each occupies half the block length, with GPE0_STS at 0x420
++and GPE0_EN at 0x428. _L02 is controlled by bit2 of each of them. We need to
++override bit2 of both IO port 0x420 and IO port 0x428.
++
++Before adding the Register Override we need to replace the DSDT provided by
++BIOS with our modified DSDT.dsl, by following initrd_table_override.txt.
++Once the new DSDT is injected into initrd we reboot the system and add the
++Register Override as follows.
++
++bash # cd /sys/kernel/debug/iohook/
++bash # echo "420-1[4/4]wc 428-1[4/4]ro" > io
++bash # echo 9 > irq
++bash # echo 1 > trigger
++
++The last command immediately triggers the _L02 method that we provided and
++Linux sees a hot-add ACPI event for the IOH device.
++
++
++3.2 Generate PCIe Native Hotplug
++
++The pciehp driver allocates an irq to handle each native PCIe hotplug slot.
++The driver prints the status of each hotplug slot when debugging is enabled
++so we can see which irq it's using.
++
++bash # modprobe pciehp pciehp_debug=1
++
++dmesg shows:
++
++pciehp 0000:00:1c.0:pcie04: Hotplug Controller:
++pciehp 0000:00:1c.0:pcie04:   Seg/Bus/Dev/Func/IRQ : 0000:00:1c.0 IRQ 70
++
++So we pick this hotplug slot at 00:1c.0 which uses IRQ70. Its PCIe Slot
++Status Register is at offset 0x5a of its pci config space. We can easily
++inject a Hot-Add (Presence Detect) event into the system by adding a
++Register Override to override the register at offset 0x5a in the PCI config
++space of 00:1c.0
++
++bash # cd /sys/kernel/debug/iohook/
++bash # echo "00|00:1c.0+5a-1[48/ff]wc" > pciconf
++bash # echo 70 > irq
++bash # echo 1 > trigger
++
++dmesg shows:
++
++pciehp 0000:00:1c.0:pcie04: Card present on Slot(1)
++pciehp 0000:00:1c.0:pcie04: Device 0000:0f:00.0 already exists at 0000:0f:00,
++cannot hot-add
++pciehp 0000:00:1c.0:pcie04: Cannot add device at 0000:0f:00
++
++We can then inject an Attention Button Pressed event:
++
++bash # echo "00|00:1c.0+5a-1[41/ff]wc" > pciconf
++bash # echo 70 > irq
++bash # echo 1 > trigger
++
++dmesg shows:
++
++pciehp 0000:00:1c.0:pcie04: Button pressed on Slot(1)
++pciehp 0000:00:1c.0:pcie04: PCI slot #1 - powering off due to button press
++
++3.3 PCIe AER error injection
++
++The aerdrv driver allocates a few irqs to handle AER. Each of them handles a
++PCIe root port device. In an example aerdrv uses irq66 to handle AER on root
++port 00:05.0. As seen in lspci, the AER capability is at offset 0x100 of its
++pci config space. So the Root Error Status Register is at offset 0x130, and
++the Error Source Identification Register is at offset 0x134. We can inject a
++Correctable Error with a source id to identify its child at 05:00.0.
++
++bash # cd /sys/kernel/debug/iohook/
++bash # echo "00|00:05.0+130-1[01/01]wc 00|00:05.0+134-2[0500/ffff]ro" > pciconf
++bash # echo 66 > irq
++bash # echo 1 > trigger
++
++dmesg shows:
++pcieport 0000:00:05.0: AER: Corrected error received: id=0500
++
+diff --git a/drivers/misc/iohook/iohook.c b/drivers/misc/iohook/iohook.c
+index be671d7..15ae94a 100644
+--- a/drivers/misc/iohook/iohook.c
++++ b/drivers/misc/iohook/iohook.c
+@@ -1,10 +1,34 @@
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/kernel.h>
++#include <linux/uaccess.h>
++#include <linux/debugfs.h>
++#include <linux/cpu.h>
++#include <linux/interrupt.h>
++#include <linux/kernel_stat.h>
++#include <linux/of.h>
++#include <linux/seq_file.h>
++#include <linux/smp.h>
++#include <linux/ftrace.h>
++#include <linux/delay.h>
++#include <linux/export.h>
++#include <linux/slab.h>
++
++#include <asm/apic.h>
++#include <asm/io_apic.h>
++#include <asm/irq.h>
++#include <asm/idle.h>
++#include <asm/mce.h>
++#include <asm/hw_irq.h>
+ #include <linux/reg_ovrd.h>
+ #include <linux/pci.h>
+ #include "iohook.h"
+ 
++MODULE_LICENSE("GPL");
++
++static struct dentry *hook_irq_dentry;
++static struct dentry *hook_reg_dentry;
++
+ static DEFINE_RAW_SPINLOCK(io_hook_lock);
+ static DEFINE_RAW_SPINLOCK(engine_lock);
+ 
+@@ -533,3 +557,469 @@ int write_ovrd_common(int spaceid, u64 address, int len, void *data, void *bus)
+ 	return ret;
+ }
+ EXPORT_SYMBOL(write_ovrd_common);
++
++static void trigger_irq_by_ipi(unsigned long irqnum)
++{
++	struct irq_desc *desc;
++	struct irq_data *data;
++	struct irq_chip *chip;
++
++	desc = irq_to_desc(irqnum);
++	data = irq_desc_get_irq_data(desc);
++	chip = irq_data_get_irq_chip(data);
++
++	raw_spin_lock(&desc->lock);
++
++	if (chip->irq_retrigger)
++		chip->irq_retrigger(data);
++	else
++		pr_err("platform doesn't support irq_retrigger?\n");
++
++	raw_spin_unlock(&desc->lock);
++
++}
++
++/* currently there can be one hook_ irq */
++int	g_irq_num;
++
++ssize_t hook_trigger_read(struct file *file, char __user *ubuf, size_t cnt,
++		loff_t *ppos)
++{
++	char buf[64];		/* big enough to hold a number */
++	int r;
++
++	r = sprintf(buf, "%u\n", hook_get_status() ? 1 : 0);
++	return simple_read_from_buffer(ubuf, cnt, ppos, buf, r);
++
++}
++
++static ssize_t hook_trigger_write(struct file *file,
++	const char __user *user_buf, size_t count, loff_t *ppos)
++{
++	char *trigger = NULL;
++	unsigned long on, ret = -EINVAL;
++
++	trigger = kmalloc(count+1, GFP_ATOMIC);
++	if (!trigger) {
++		pr_err("hook_trigger: Memory allocation failed\n");
++		return count;
++	}
++	trigger[count] = '\0';
++	if (copy_from_user(trigger, user_buf, count))
++		goto end;
++	ret = kstrtoul(trigger, 10, &on);
++	if (ret)
++		goto end;
++
++	if (on == 1) {
++		hook_start_ovrd();
++		if (g_irq_num)
++			trigger_irq_by_ipi(g_irq_num);
++	} else if (on == 0) {
++		hook_stop_ovrd();
++	}
++end:
++	kfree(trigger);
++	return count;
++}
++
++ssize_t hook_irq_read(struct file *file, char __user *ubuf, size_t cnt,
++		loff_t *ppos)
++{
++	char buf[64];		/* big enough to hold a number */
++	int r;
++
++	r = sprintf(buf, "%u\n", g_irq_num);
++	return simple_read_from_buffer(ubuf, cnt, ppos, buf, r);
++}
++
++static ssize_t hook_irq_write(struct file *file, const char __user *user_buf,
++			size_t count, loff_t *ppos)
++{
++	char *irq = NULL;
++	unsigned long irqnum, ret;
++
++	irq = kmalloc(count+1, GFP_ATOMIC);
++	if (!irq) {
++		pr_err("hook_irq_write: Memory allocation failed\n");
++		return count;
++	}
++	irq[count] = '\0';
++	if (copy_from_user(irq, user_buf, count))
++		goto end;
++	ret = kstrtoul(irq, 10, &irqnum);
++	if (ret) {
++		pr_err("bogus irq number? %s\n", irq);
++		goto end;
++	}
++	if (irqnum > NR_IRQS) {
++		pr_err("irq num too big: %lu\n", irqnum);
++		goto end;
++	}
++
++	g_irq_num = irqnum;
++end:
++	kfree(irq);
++	return count;
++}
++
++struct hook_iter {
++	int spaceid; /* io/mem/pciconf */
++};
++
++static void
++hook_seq_stop(struct seq_file *s, void *it)
++{
++}
++
++static void *
++hook_seq_next(struct seq_file *s, void *it, loff_t *offset)
++{
++	struct hook_iter *iter = s->private;
++	int idx;
++	struct reg_ovrd *regmap;
++
++	idx = *offset;
++	regmap = hook_query_ovrd(iter->spaceid, idx);
++	if (regmap)
++		(*offset)++;
++
++	return regmap;
++}
++
++static void *
++hook_seq_start(struct seq_file *s, loff_t *offset)
++{
++	return hook_seq_next(s, NULL, offset);
++}
++
++char *hook_attrib(int attrib)
++{
++	switch (attrib) {
++	case OVRD_RO:
++		return "ro";
++	case OVRD_RW:
++		return "rw";
++	case OVRD_WC:
++		return "wc";
++	case OVRD_RC:
++		return "rc";
++	}
++
++	return "(null)";
++
++}
++
++static int
++hook_seq_show(struct seq_file *s, void *it)
++{
++	struct hook_iter *iter = s->private;
++	struct reg_ovrd *regmap;
++
++	regmap = (struct reg_ovrd *)it;
++	switch (iter->spaceid) {
++	case OVRD_SPACE_IO:
++	case OVRD_SPACE_MEM:
++		seq_printf(s,
++		"addr: 0x%llx lenght: 0x%x value: 0x%llx mask: 0x%llx attrib: %s\n",
++			regmap->address, regmap->length, regmap->val,
++			regmap->bit_mask, hook_attrib(regmap->attrib));
++		break;
++	case OVRD_SPACE_PCICONF:
++		seq_printf(s,
++			"pciconf: 0x%04x|%02x:%02x.%02x offset: 0x%x lenght: 0x%x value: 0x%llx mask: 0x%llx attrib: %s\n",
++			PCI_DECODE_DOMAIN(regmap->address),
++			PCI_DECODE_BUSN(regmap->address),
++			PCI_SLOT(PCI_DECODE_DEVFN(regmap->address)),
++			PCI_FUNC(PCI_DECODE_DEVFN(regmap->address)),
++			PCI_DECODE_POS(regmap->address), regmap->length,
++			regmap->val,
++			regmap->bit_mask, hook_attrib(regmap->attrib));
++		break;
++	default:
++		seq_puts(s, "error: unknown spaceid\n");
++		break;
++	}
++	return 0;
++}
++
++static const struct seq_operations hook_seq_ops = {
++	.start = hook_seq_start,
++	.stop  = hook_seq_stop,
++	.next  = hook_seq_next,
++	.show  = hook_seq_show,
++};
++
++static int
++hook_io_open(struct inode *inode, struct file *file)
++{
++	struct hook_iter *iter;
++
++	iter = __seq_open_private(file, &hook_seq_ops,
++				sizeof(struct hook_iter));
++	if (iter)
++		iter->spaceid = OVRD_SPACE_IO;
++
++	return iter ? 0 : -ENOMEM;
++}
++
++static int
++hook_mem_open(struct inode *inode, struct file *file)
++{
++	struct hook_iter *iter;
++
++	iter = __seq_open_private(file, &hook_seq_ops,
++				sizeof(struct hook_iter));
++	if (iter)
++		iter->spaceid = OVRD_SPACE_MEM;
++
++	return iter ? 0 : -ENOMEM;
++}
++
++static int
++hook_pciconf_open(struct inode *inode, struct file *file)
++{
++	struct hook_iter *iter;
++
++	iter = __seq_open_private(file, &hook_seq_ops,
++				sizeof(struct hook_iter));
++	if (iter)
++		iter->spaceid = OVRD_SPACE_PCICONF;
++
++	return iter ? 0 : -ENOMEM;
++}
++
++/*
++ * IO & MEM entries are formatted as follows (all values are in hex):
++ *
++ * address-length[value/mask]attrib
++ *
++ * For example: 420-1[20/20]rw
++ * It means io port 0x420, 1 byte, value 0x20, mask 0x20, read/write
++ * PCI config entries are formatted as (all values are in hex):
++ *
++ * domain|bus:dev.func+offset-length[value/mask]attrib
++ *
++ * For example: 0000|00:1e.0+10-4[fe930000/ffffffff]rw
++ * It means pci domain 0, bus 0, dev 1e, func 0, offset 10, 4 bytes
++ * with a overridden value of 0xfe930000, mask 0xffffffff, read/write
++ */
++static int
++hook_parse_entry(char *entry, int spaceid)
++{
++	char *field;
++	u64 address, length, value, mask;
++	unsigned long domain, bus, dev, func;
++	int attrib, ret;
++	u16 cval;
++
++	if (spaceid != OVRD_SPACE_PCICONF)
++		goto mem_io;
++
++	field = strsep(&entry, "|");
++	ret = kstrtoul(field, 16, &domain);
++	if (ret || !entry)
++		return -1;
++
++	field = strsep(&entry, ":");
++	ret = kstrtoul(field, 16, &bus);
++	if (ret || !entry)
++		return -1;
++
++	field = strsep(&entry, ".");
++	ret = kstrtoul(field, 16, &dev);
++	if (ret || !entry)
++		return -1;
++
++	field = strsep(&entry, "+");
++	ret = kstrtoul(field, 16, &func);
++	if (ret || !entry)
++		return -1;
++
++mem_io:
++	field = strsep(&entry, "-");
++	ret = kstrtoull(field, 16, &address);
++	if (ret || !entry)
++		return -1;
++
++	pr_info("parse_hook_entry() address=0x%llx\n", address);
++
++	field = strsep(&entry, "[");
++	ret = kstrtoull(field, 16, &length);
++	if (ret || !entry)
++		return -1;
++
++	pr_info("parse_hook_entry() length=0x%llx\n", length);
++
++	field = strsep(&entry, "/");
++	ret = kstrtoull(field, 16, &value);
++	if (ret || !entry)
++		return -1;
++	pr_info("parse_hook_entry() value=0x%llx\n", value);
++
++	field = strsep(&entry, "]");
++	ret = kstrtoull(field, 16, &mask);
++	if (ret || !entry)
++		return -1;
++	pr_info("parse_hook_entry() mask=0x%llx\n", mask);
++
++	cval = (*(u16 *)entry);
++	pr_info("parse_hook_entry() attrib:%s, cval=0x%x\n",
++		entry, cval);
++	if (cval == *(u16 *)"ro")
++		attrib = OVRD_RO;
++	else if (cval == *(u16 *)"rw")
++		attrib = OVRD_RW;
++	else if (cval == *(u16 *)"rc")
++		attrib = OVRD_RC;
++	else if (cval == *(u16 *)"wc")
++		attrib = OVRD_WC;
++	else
++		return -1;
++
++	if (spaceid == OVRD_SPACE_PCICONF) {
++		address = PCI_ENCODE_ADDR(domain, bus, PCI_DEVFN(dev, func),
++			address);
++	}
++
++	hook_add_ovrd(spaceid, address, value, mask, length, attrib);
++
++	return 0;
++}
++
++static ssize_t
++hook_write(struct file *file, const char __user *user_buf,
++		 size_t user_len, loff_t *offset, int spaceid)
++{
++	char *buf, *pstr, *entry;
++	ssize_t rc;
++
++	if (*offset)
++		return -EINVAL;
++
++	buf = vzalloc(user_len + 1);
++	if (buf == NULL)
++		return -ENOMEM;
++
++	if (strncpy_from_user(buf, user_buf, user_len) < 0) {
++		rc = -EFAULT;
++		goto out_free;
++	}
++
++	/* first delete all overridden registers */
++	hook_cleanup_ovrd(spaceid);
++
++	buf[user_len] = '\0';
++	pstr = buf;
++	while (pstr && *pstr) {
++		pstr = skip_spaces(pstr);
++		entry = strsep(&pstr, " \t\x0D\x0A");
++		pr_info("hook_write input: %s\n", entry);
++		if (hook_parse_entry(entry, spaceid)) {
++			rc = -EINVAL;
++			goto out_free;
++		}
++	}
++
++	rc = user_len;
++
++out_free:
++	vfree(buf);
++	return rc;
++}
++
++static ssize_t
++hook_io_write(struct file *file, const char __user *user_buf,
++		 size_t user_len, loff_t *offset)
++{
++
++	return hook_write(file, user_buf, user_len, offset, OVRD_SPACE_IO);
++}
++
++static ssize_t
++hook_mem_write(struct file *file, const char __user *user_buf,
++		 size_t user_len, loff_t *offset)
++{
++
++	return hook_write(file, user_buf, user_len, offset, OVRD_SPACE_MEM);
++}
++
++static ssize_t
++hook_pciconf_write(struct file *file, const char __user *user_buf,
++		 size_t user_len, loff_t *offset)
++{
++
++	return hook_write(file, user_buf, user_len, offset, OVRD_SPACE_PCICONF);
++}
++
++static const struct file_operations hook_io_fops = {
++	.open = hook_io_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = seq_release_private,
++	.write = hook_io_write,
++};
++
++static const struct file_operations hook_mem_fops = {
++	.open = hook_mem_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = seq_release_private,
++	.write = hook_mem_write,
++};
++
++static const struct file_operations hook_pciconf_fops = {
++	.open = hook_pciconf_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = seq_release_private,
++	.write = hook_pciconf_write,
++};
++
++static const struct file_operations hook_irq_fops = {
++	.read = hook_irq_read,
++	.write = hook_irq_write,
++};
++
++static const struct file_operations hook_trigger_fops = {
++	.read = hook_trigger_read,
++	.write = hook_trigger_write,
++};
++
++static int __init iohook_init(void)
++{
++	struct dentry *root;
++
++	root = debugfs_create_dir("iohook", NULL);
++	if (root == NULL)
++		return -ENODEV;
++
++	hook_irq_dentry = debugfs_create_file("irq", S_IWUSR,
++				root, NULL, &hook_irq_fops);
++	if (hook_irq_dentry == NULL)
++		return -ENODEV;
++
++	hook_reg_dentry = debugfs_create_file("io", S_IWUSR,
++				root, NULL, &hook_io_fops);
++	if (hook_reg_dentry == NULL)
++		return -ENODEV;
++
++	hook_reg_dentry = debugfs_create_file("mem", S_IWUSR,
++				root, NULL, &hook_mem_fops);
++	if (hook_reg_dentry == NULL)
++		return -ENODEV;
++
++	hook_reg_dentry = debugfs_create_file("pciconf", S_IWUSR,
++				root, NULL, &hook_pciconf_fops);
++	if (hook_reg_dentry == NULL)
++		return -ENODEV;
++
++	hook_reg_dentry = debugfs_create_file("trigger", S_IWUSR,
++				root, NULL, &hook_trigger_fops);
++	if (hook_reg_dentry == NULL)
++		return -ENODEV;
++
++	return 0;
++}
++
++device_initcall(iohook_init);
 -- 
-Leonid Ravich
+1.7.5.4
+
