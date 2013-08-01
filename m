@@ -1,199 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:58601 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688Ab3HANHI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:07:08 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH -v4 3/6] PCI: Introduce Vital Product Data Serial Number capability support
-Date: Thu, 1 Aug 2013 21:06:26 +0800
-Message-ID: <1375362389-26096-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
-References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v3 4/9] pci: Add slot reset option to pci_dev_reset
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 Aug 2013 10:55:33 -0600
+Message-ID: <20130801165533.16145.14078.stgit@bling.home>
+In-Reply-To: <20130801164652.16145.79918.stgit@bling.home>
+References: <20130801164652.16145.79918.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Vital Product Data Serial Number is another capability to support
-device serial number, some devices may implement this cap. So we
-introduce VPD SN support here to enhance the device change
-identification.
+If the hotplug controller provides a way to reset a slot, use that
+before a direct parent bus reset.  Like the bus reset option, this is
+only available when a single pci_dev occupies the slot.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/access.c |    4 ++-
- drivers/pci/pci.h    |    4 +++
- drivers/pci/vpd.c    |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    1 +
- 4 files changed, 78 insertions(+), 1 deletions(-)
+ drivers/pci/pci.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 1cc2366..0069981 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -194,7 +194,6 @@ PCI_USER_WRITE_CONFIG(dword, u32)
- 
- /* VPD access through PCI 2.2+ VPD capability */
- 
--#define PCI_VPD_PCI22_SIZE (PCI_VPD_ADDR_MASK + 1)
- 
- struct pci_vpd_pci22 {
- 	struct pci_vpd base;
-@@ -350,6 +349,7 @@ out:
- 
- static void pci_vpd_pci22_release(struct pci_dev *dev)
- {
-+	kfree(dev->vpd->sn);
- 	kfree(container_of(dev->vpd, struct pci_vpd_pci22, base));
- }
- 
-@@ -377,6 +377,8 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	vpd->cap = cap;
- 	vpd->busy = false;
- 	dev->vpd = &vpd->base;
-+
-+	pci_vpd_serial_number_init(dev, dev->vpd);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index bfd629c..db90692 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -22,6 +22,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
++#include <linux/pci_hotplug.h>
+ #include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include "pci.h"
+@@ -3317,6 +3318,35 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
  	return 0;
  }
  
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 5f398a5..aed8751 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -83,6 +83,8 @@ static inline bool pci_is_bridge(struct pci_dev *pci_dev)
- 	return !!(pci_dev->subordinate);
- }
- 
-+#define PCI_VPD_PCI22_SIZE (PCI_VPD_ADDR_MASK + 1)
-+
- struct pci_vpd_ops {
- 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
-@@ -91,6 +93,7 @@ struct pci_vpd_ops {
- 
- struct pci_vpd {
- 	unsigned int len;
-+	char *sn; /* serial number */
- 	const struct pci_vpd_ops *ops;
- 	struct bin_attribute *attr; /* descriptor for sysfs VPD entry */
- };
-@@ -208,6 +211,7 @@ void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
- 				      struct list_head *realloc_head,
- 				      struct list_head *fail_head);
- void pci_dsn_init(struct pci_dev *dev);
-+struct pci_vpd *pci_vpd_serial_number_init(struct pci_dev *dev, struct pci_vpd *vpd);
- /**
-  * pci_ari_enabled - query ARI forwarding status
-  * @bus: the PCI bus
-diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 39b7907..e5a4853 100644
---- a/drivers/pci/vpd.c
-+++ b/drivers/pci/vpd.c
-@@ -7,6 +7,7 @@
- 
- #include <linux/pci.h>
- #include <linux/export.h>
-+#include "pci.h"
- 
- int pci_vpd_find_tag(const u8 *buf, unsigned int off, unsigned int len, u8 rdt)
- {
-@@ -60,3 +61,71 @@ int pci_vpd_find_info_keyword(const u8 *buf, unsigned int off,
- 	return -ENOENT;
- }
- EXPORT_SYMBOL_GPL(pci_vpd_find_info_keyword);
-+
-+/**
-+ * pci_vpd_serial_number_init - initialize the device VPD SN
-+ * @dev: the PCI device
-+ * @vpd: the VPD used to initialize SN
-+ *
-+ * Initialize the device VPD Serial Number, if vpd passed as NULL,
-+ * allocate a new VPD and initialize its SN.
-+ */
-+struct pci_vpd *pci_vpd_serial_number_init(struct pci_dev *dev,
-+				struct pci_vpd *vpd)
++static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
 +{
-+	char *buf = NULL;
-+	struct pci_vpd *old = dev->vpd;
-+	struct pci_vpd *new = NULL;
-+	int cnt, i, end, j, len;
++	int rc = -ENOTTY;
 +
-+	/* To detect whether the device is changed, we should
-+	 * allocate a new VPD to initialize serial number,
-+	 * because if the device has been changed, the cap
-+	 * info is stale.
-+	 */
-+	if (!vpd) {
-+		dev->vpd = NULL;
-+		pci_vpd_pci22_init(dev);
-+		if (!dev->vpd)
-+			goto fail;
-+	}
++	if (!hotplug || !try_module_get(hotplug->ops->owner))
++		return rc;
 +
-+	new = dev->vpd;
-+	buf = kzalloc(PCI_VPD_PCI22_SIZE, GFP_KERNEL);
-+	if (!buf)
-+		goto fail;
++	if (hotplug->ops->reset_slot)
++		rc = hotplug->ops->reset_slot(hotplug, probe);
 +
-+	cnt = pci_read_vpd(dev, 0, PCI_VPD_PCI22_SIZE, buf);
-+	if (cnt < 0)
-+		goto fail;
++	module_put(hotplug->ops->owner);
 +
-+	i = pci_vpd_find_tag(buf, 0, PCI_VPD_PCI22_SIZE,
-+			PCI_VPD_LRDT_RO_DATA);
-+	if (i < 0)
-+		goto fail;
-+
-+	end = i + PCI_VPD_LRDT_TAG_SIZE + pci_vpd_lrdt_size(&buf[i]);
-+	i += PCI_VPD_LRDT_TAG_SIZE;
-+
-+	j = pci_vpd_find_info_keyword(buf, i, end,
-+			PCI_VPD_RO_KEYWORD_SN);
-+	if (j < 0)
-+		goto fail;
-+
-+	len = pci_vpd_info_field_size(&buf[j]);
-+	new->sn = kzalloc(len + 1, GFP_KERNEL);
-+	if (!new->sn)
-+		goto fail;
-+
-+	j += PCI_VPD_INFO_FLD_HDR_SIZE;
-+	memcpy(new->sn, &buf[j], len);
-+	kfree(buf);
-+	dev->vpd = old;
-+	return new;
-+fail:
-+	kfree(buf);
-+	if (new != old)
-+		pci_vpd_release(dev);
-+	dev->vpd = old;
-+	return NULL;
++	return rc;
 +}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4354eaf..5c38b55 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1781,6 +1781,7 @@ bool pci_acs_path_enabled(struct pci_dev *start,
++
++static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
++{
++	struct pci_dev *pdev;
++
++	if (dev->subordinate || !dev->slot)
++		return -ENOTTY;
++
++	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
++		if (pdev != dev && pdev->slot == dev->slot)
++			return -ENOTTY;
++
++	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
++}
++
+ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+ {
+ 	int rc;
+@@ -3339,6 +3369,10 @@ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+ 	if (rc != -ENOTTY)
+ 		goto done;
  
- #define PCI_VPD_RO_KEYWORD_PARTNO	"PN"
- #define PCI_VPD_RO_KEYWORD_MFR_ID	"MN"
-+#define PCI_VPD_RO_KEYWORD_SN		"SN"
- #define PCI_VPD_RO_KEYWORD_VENDOR0	"V0"
- #define PCI_VPD_RO_KEYWORD_CHKSUM	"RV"
- 
--- 
-1.7.1
-
++	rc = pci_dev_reset_slot_function(dev, probe);
++	if (rc != -ENOTTY)
++		goto done;
++
+ 	rc = pci_parent_bus_reset(dev, probe);
+ done:
+ 	return rc;
 
