@@ -1,67 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:4251
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751385Ab3HTA2D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 20:28:03 -0400
-From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-To: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<dougthompson@xmission.com>, <bp@alien8.de>, <bhelgaas@google.com>,
-	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
-	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Subject: [PATCH 1/1] AMD64_EDAC: Fix incorrect wrap arounds due to left shift beyond 32 bits.
-Date: Mon, 19 Aug 2013 19:27:52 -0500
-Message-ID: <1376958472-2150-2-git-send-email-Aravind.Gopalakrishnan@amd.com>
-In-Reply-To: <1376958472-2150-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
-References: <1376958472-2150-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from up.free-electrons.com ([94.23.35.102]:53480 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750886Ab3HANZZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:25:25 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv6 04/13] irqdomain: add irq_alloc_mapping() function
+Date: Thu,  1 Aug 2013 15:25:07 +0200
+Message-Id: <1375363516-2620-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Link to the bug report:
-http://marc.info/?l=linux-edac&m=137692201732220&w=2
+This commit extends the irqdomain subsystem with an
+irq_alloc_mapping() function which allows to let the irqdomain code
+find an available hwirq number in the range [ 0 ; domain size ] for
+the given domain, and create a virq mapping for it.
 
-dct_base and dct_limit obtain 32 bit register values when they read their
-respective pci config space registers. A left shift beyond 32 bits will
-cause them to wrap around. Similar case for chan_addr as can be seen from
-the bug report. In the patch, we rectify this by casting chan_addr to u64
-and by comparing dct_base and dct_limit against (sys_addr >> 27)
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Acked-by: Grant Likely <grant.likely@linaro.org>
+---
+ include/linux/irqdomain.h |  2 ++
+ kernel/irq/irqdomain.c    | 36 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-Tested on F15h, M30h with ECC turned on and works fine.
-
-Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-
-diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
-index b86228c..eb4793e 100644
---- a/drivers/edac/amd64_edac.c
-+++ b/drivers/edac/amd64_edac.c
-@@ -1558,11 +1558,12 @@ static int f15_m30h_match_to_this_node(struct amd64_pvt *pvt, unsigned range,
- 	}
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index c983ed1..1ffa336 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -195,6 +195,8 @@ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
+ extern unsigned int irq_find_mapping(struct irq_domain *host,
+ 				     irq_hw_number_t hwirq);
+ extern unsigned int irq_create_direct_mapping(struct irq_domain *host);
++extern unsigned int irq_alloc_mapping(struct irq_domain *host,
++				      irq_hw_number_t *hwirq);
+ extern int irq_create_strict_mappings(struct irq_domain *domain,
+ 				      unsigned int irq_base,
+ 				      irq_hw_number_t hwirq_base, int count);
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 706724e..034bbac 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -375,6 +375,42 @@ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
+ EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
  
- 	/* Verify sys_addr is within DCT Range. */
--	dct_base = (dct_sel_baseaddr(pvt) << 27);
--	dct_limit = (((dct_cont_limit_reg >> 11) & 0x1FFF) << 27) | 0x7FFFFFF;
-+	dct_base = dct_sel_baseaddr(pvt);
-+	dct_limit = (dct_cont_limit_reg >> 11) & 0x1FFF;
- 
- 	if (!(dct_cont_base_reg & BIT(0)) &&
--	    !(dct_base <= sys_addr && dct_limit >= sys_addr))
-+	    !(dct_base <= (sys_addr >> 27) &&
-+	      dct_limit >= (sys_addr >> 27)))
- 		return -EINVAL;
- 
- 	/* Verify number of dct's that participate in channel interleaving. */
-@@ -1614,7 +1615,7 @@ static int f15_m30h_match_to_this_node(struct amd64_pvt *pvt, unsigned range,
- 		amd64_read_pci_cfg(pvt->F1,
- 				   DRAM_CONT_HIGH_OFF + (int) channel * 4,
- 				   &tmp);
--		chan_addr +=  ((tmp >> 11) & 0xfff) << 27;
-+		chan_addr +=  (u64) ((tmp >> 11) & 0xfff) << 27;
- 	}
- 
- 	f15h_select_dct(pvt, channel);
+ /**
++ * irq_alloc_mapping() - Allocate an irq for mapping
++ * @domain: domain to allocate the irq for or NULL for default domain
++ * @hwirq:  reference to the returned hwirq
++ *
++ * This routine are used for irq controllers which can choose the
++ * hardware interrupt number from a range [ 0 ; domain size ], such as
++ * is often the case with PCI MSI controllers. The function will
++ * returned the allocated hwirq number in the hwirq pointer, and the
++ * corresponding virq number as the return value.
++ */
++unsigned int irq_alloc_mapping(struct irq_domain *domain,
++			       irq_hw_number_t *out_hwirq)
++{
++	irq_hw_number_t hwirq;
++	int rc;
++
++	pr_debug("irq_alloc_mapping(0x%p)\n", domain);
++
++	for (hwirq = 0; hwirq < domain->revmap_size; hwirq++)
++		if (domain->linear_revmap[hwirq] == 0)
++			break;
++
++	if (hwirq == domain->hwirq_max) {
++		pr_debug("-> no available hwirq found\n");
++		return 0;
++	}
++
++	rc = irq_create_mapping(domain, hwirq);
++	if (rc)
++		*out_hwirq = hwirq;
++
++	return rc;
++}
++EXPORT_SYMBOL_GPL(irq_alloc_mapping);
++
++/**
+  * irq_create_mapping() - Map a hardware interrupt into linux irq space
+  * @domain: domain owning this hardware interrupt or NULL for default domain
+  * @hwirq: hardware irq number in that domain space
 -- 
-1.7.10.4
-
+1.8.1.2
 
