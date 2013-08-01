@@ -1,48 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:43904 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753754Ab3HIKhK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 06:37:10 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Lior Amsalem <alior@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] PCI: mvebu: make Marvell PCIe driver depend on OF
-Date: Fri,  9 Aug 2013 12:35:50 +0200
-Message-Id: <1376044550-30572-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:57231 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755708Ab3HARFK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 13:05:10 -0400
+Received: by mail-ob0-f173.google.com with SMTP id ta17so4361537obb.18
+        for <linux-pci@vger.kernel.org>; Thu, 01 Aug 2013 10:05:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1375362327-25404-1-git-send-email-wangyijing@huawei.com>
+References: <1375362327-25404-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 1 Aug 2013 11:04:49 -0600
+Message-ID: <CAErSpo5Z-UQrXu_M1aMK5w++7P6EW-WDCG0qMPbvh9g8bLeT0w@mail.gmail.com>
+Subject: Re: [PATCH] PCI/trivial: Fix comment typo for pci_add_cap_save_buffer()
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Marvell PCIe host controller driver is heavily tied to Device Tree
-APIs, and can only be used on platforms where the Device Tree is
-used. Therefore, it should "depends on OF" to avoid build failures on
-!OF configurations.
+On Thu, Aug 1, 2013 at 7:05 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Fix trivial comment typo for pci_add_cap_save_buffer().
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-Reported-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
-Bjorn, you can take this one through your tree. Either for 3.11 or
-3.12, at your preference.
----
- drivers/pci/host/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+Applied to pci/misc for v3.12, thanks!
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 1184ff6..e5ba4eb 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -4,6 +4,7 @@ menu "PCI host controller drivers"
- config PCI_MVEBU
- 	bool "Marvell EBU PCIe controller"
- 	depends on ARCH_MVEBU || ARCH_KIRKWOOD
-+	depends on OF
- 
- config PCIE_DW
- 	bool
--- 
-1.8.1.2
-
+> ---
+>  drivers/pci/pci.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index a599a6b..a8d5fd0 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1992,7 +1992,7 @@ static void pci_add_saved_cap(struct pci_dev *pci_dev,
+>  }
+>
+>  /**
+> - * pci_add_save_buffer - allocate buffer for saving given capability registers
+> + * pci_add_cap_save_buffer - allocate buffer for saving given capability registers
+>   * @dev: the PCI device
+>   * @cap: the capability to allocate the buffer for
+>   * @size: requested size of the buffer
+> --
+> 1.7.1
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
