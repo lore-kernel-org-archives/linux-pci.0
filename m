@@ -1,70 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34657 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965961Ab3HHUJX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Aug 2013 16:09:23 -0400
-Subject: [PATCH v5 0/9] pci: bus and slot reset interfaces
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
-	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Thu, 08 Aug 2013 14:09:18 -0600
-Message-ID: <20130808200444.2932.17381.stgit@bling.home>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:35955 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754957Ab3HANHJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:07:09 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH -v4 6/6] PCI,pciehp: identify device change during suspend
+Date: Thu, 1 Aug 2013 21:06:29 +0800
+Message-ID: <1375362389-26096-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
+References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v5: Increase length of time we assert reset in the final common
-    secondary bus reset function to 2ms and document that this is
-    to ensure that reset on the bus is seen for at least a full
-    1ms (per converstation with Alex Duyck)
+If device was removed from slot and reinsert a new device during
+suspend, pciehp can not identify the physical device change now.
+So the old driver .resume() method will be called for the new device,
+this is bad. If device support device serial number capability,
+we can identify this by DSN. So the reasonable way is first remove
+the old device, then enable the new device.
 
-Thanks,
-Alex
-
-This series adds PCI bus and slot reset interfaces to the already
-existing function reset interface.  I need this for two reasons, the
-first is that not all devices support function level reset.  Even
-some of those that we detect as supporting a PM reset on D3hot->D0
-transition actually don't do any reset.  Others have no reset
-capability at all.  We currently implement a secondary bus reset
-escalation from the function reset path, but only when there is a
-single devfn on the bus.  Drivers like vfio can have ownership of
-all of the devices on a bus and should therefore have a path to
-initiate a secondary bus reset with multiple devices.  This is
-particularly required for use of GPUs by userspace, where none of
-the predominant GPUs implement a useful function level reset.
-
-The second reason is that even the current function reset escalating
-to a secondary bus reset can cause problems with hotplug controllers.
-If a root port supports PCIe HP with suprise removal, a bus reset
-can trigger a presence detection change, which results in an attempt
-to remove the struct device.  By having a slot reset interface, we
-can involve the hotplug controllers to allow for a controlled bus
-reset and avoid this spurious removal attempt.
-
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
 ---
+ drivers/pci/hotplug/pciehp_core.c |   34 +++++++++++++++++++++++++++++++---
+ 1 files changed, 31 insertions(+), 3 deletions(-)
 
-Alex Williamson (9):
-      pci: Create pci_reset_bridge_secondary_bus()
-      pci: Add hotplug_slot_ops.reset_slot()
-      pci: Implement reset_slot for pciehp
-      pci: Add slot reset option to pci_dev_reset
-      pci: Split out pci_dev lock/unlock and save/restore
-      pci: Add slot and bus reset interfaces
-      pci: Wake-up devices before save for reset
-      pci: Tune secondary bus reset timing
-      pci: Remove aer_do_secondary_bus_reset()
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 7fe9dbd..db5f597 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -301,6 +301,8 @@ static int pciehp_resume (struct pcie_device *dev)
+ 	struct controller *ctrl;
+ 	struct slot *slot;
+ 	struct pci_bus *pbus = dev->port->subordinate;
++	struct pci_dev *pdev;
++	int ret = 0;
+ 	u8 status;
+ 
+ 	ctrl = get_service_data(dev);
+@@ -315,10 +317,36 @@ static int pciehp_resume (struct pcie_device *dev)
+ 	if (status) {
+ 		if (list_empty(&pbus->devices))
+ 			pciehp_enable_slot(slot);
+-	} else if (!list_empty(&pbus->devices)) {
+-		pciehp_disable_slot(slot);
++
++		pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
++		if (!pdev)
++			return 0;
++		ret = pci_serial_number_changed(pdev);
++		pci_dev_put(pdev);
++		if (ret) {
++			/*
++			 * first power off slot, avoid the old driver
++			 * .remove() method touch the new hardware
++			 */
++			if (POWER_CTRL(ctrl)) {
++				ret = pciehp_power_off_slot(slot);
++				if (ret) {
++					ctrl_err(ctrl,
++						"Issue of Slot Disable command failed\n");
++					return 0;
++				}
++				msleep(1000);
++				pciehp_unconfigure_device(slot);
++				/* call child devices driver->suspend() for symmetry */
++				list_for_each_entry(pdev, &pbus->devices, bus_list)
++					if (pdev->driver)
++						pdev->driver->driver.pm->suspend(&pdev->dev);
++				pciehp_enable_slot(slot);
++			}
++		} else if (!list_empty(&pbus->devices)) {
++			pciehp_disable_slot(slot);
++		}
+ 	}
+-	
+ 	return 0;
+ }
+ #endif /* PM */
+-- 
+1.7.1
 
 
- drivers/pci/hotplug/pciehp.h       |    1 
- drivers/pci/hotplug/pciehp_core.c  |   12 +
- drivers/pci/hotplug/pciehp_hpc.c   |   31 +++
- drivers/pci/pci.c                  |  349 +++++++++++++++++++++++++++++++++---
- drivers/pci/pcie/aer/aerdrv.c      |    2 
- drivers/pci/pcie/aer/aerdrv.h      |    1 
- drivers/pci/pcie/aer/aerdrv_core.c |   35 ----
- include/linux/pci.h                |    3 
- include/linux/pci_hotplug.h        |    4 
- 9 files changed, 376 insertions(+), 62 deletions(-)
