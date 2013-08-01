@@ -1,85 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49536 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756833Ab3HGC4g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Aug 2013 22:56:36 -0400
-Message-ID: <1375844191.3509.15.camel@ul30vt.home>
-Subject: Re: [PATCH v4 8/9] pci: Tune secondary bus reset timing
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v3 9/9] pci: Remove aer_do_secondary_bus_reset()
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
 From: Alex Williamson <alex.williamson@redhat.com>
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, ddutile@redhat.com,
-	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Tue, 06 Aug 2013 20:56:31 -0600
-In-Reply-To: <52018664.1080103@intel.com>
-References: <20130805193200.9260.38729.stgit@bling.home>
-	 <20130805193753.9260.35206.stgit@bling.home> <52018664.1080103@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Cc: indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 Aug 2013 10:56:04 -0600
+Message-ID: <20130801165603.16145.48836.stgit@bling.home>
+In-Reply-To: <20130801164652.16145.79918.stgit@bling.home>
+References: <20130801164652.16145.79918.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-08-06 at 16:27 -0700, Alexander Duyck wrote:
-> On 08/05/2013 12:37 PM, Alex Williamson wrote:
-> > The PCI spec indicates that with stable power, reset needs to be
-> > asserted for a minimum of 1ms (Trst).  Seems like we should be able
-> > to assume power is stable for a runtime secondary bus reset.  The
-> > current code has always used 100ms with no explanation where that
-> > came from.  The aer_do_secondary_bus_reset() function uses 2ms, but
-> > that seems to be a misinterpretation of the PCIe spec, where hot
-> > reset is implemented by TS1 ordered sets containing the hot reset
-> > command.  After a 2ms delay the state machine enters the detect state,
-> > but to generate a link down, only two consecutive TS1 hot reset
-> > ordered sets are requred.  1ms should be plenty for that.
-> 
-> The reason for doing a 2ms sleep is because the are supposed to be
-> sending the Hot Reset TS1 Ordered-Sets continuously for 2ms per all of
-> the documents I have read.
+One PCI bus reset function to rule them all.
 
-Could you point to one of those references?  In the PCIe v3 spec I'm
-seeing things like 4.2.6.11 Hot Reset:
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pcie/aer/aerdrv.c      |    2 +-
+ drivers/pci/pcie/aer/aerdrv.h      |    1 -
+ drivers/pci/pcie/aer/aerdrv_core.c |   35 +----------------------------------
+ 3 files changed, 2 insertions(+), 36 deletions(-)
 
-      * If two consecutive TS1 Ordered Sets are received on any Lane
-        with the Hot Reset bit asserted and configured Link and Lane
-        numbers, then:
-              * LinkUp = 0b (False)
-              * If no higher Layer is directing the Physical Layer to
-                remain in Hot Reset, the next state is Detect
-              * Otherwise, all Lanes in the configured Link continue to
-                transmit TS1 Ordered Sets with the Hot Reset bit
-                asserted and the configured Link and Lane numbers.
-      * Otherwise, after a 2 ms timeout next state is Detect.
-
-The next section has something similar for propagation of hot resets.
-
-Nowhere there does it say TS1 Ordered Sets need to be sent continuously
-for 2ms.  A hot reset is initiated only by two consecutive TS1 Ordered
-Sets with the Hot Reset bit asserted.  The 2ms timeout seems to be the
-delay before the link moves to the Detect state after we stop asserting
-hot reset.  1ms seems like more than enough time for two TS1 Ordered
-Sets to propagate down a multi-level hierarchy at 2.5GT/s. 
-
-> The 1ms number you quote is the minimum time
-> for a conventional PCI bus.  I'm not completely sure of that applies as
-> well to PCIe, nor does it represent the maximum recommended value.
-
-Correct, 1ms comes from conventional PCI.  PCIe is designed to be
-software compatible with conventional PCI so it makes sense that PCIe
-would do something within the timing boundaries of conventional PCI.  I
-didn't see any reference to a maximum recommended value for this
-parameter.
-
-> If we stop early we risk not resetting the full device tree on the
-> secondary bus which is the bug I was resolving by adding the 2ms delay. 
-> Previously we saw that some devices were only getting their PCIe link
-> retrained without performing a hot reset when the bit was not held for
-> long enough.  I would prefer to keep this at 2 ms in order to account
-> for the fact that PCIe has to go though link recovery states before it
-> can perform the hot reset.
-
-I'm not going to sweat over 1ms or 2ms but I do want to be able to
-document why we're setting it to one or the other.  If it's warm
-fuzzies, so be it, but I'd prefer if we could find actual spec or
-hardware examples to back it up.  Thanks,
-
-Alex
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 76ef634..0bf82a2 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -352,7 +352,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+ 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
+ 
+-	aer_do_secondary_bus_reset(dev);
++	pci_reset_bridge_secondary_bus(dev);
+ 	dev_printk(KERN_DEBUG, &dev->dev, "Root Port link has been reset\n");
+ 
+ 	/* Clear Root Error Status */
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+index 90ea3e8..84420b7 100644
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ b/drivers/pci/pcie/aer/aerdrv.h
+@@ -106,7 +106,6 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
+ }
+ 
+ extern struct bus_type pcie_port_bus_type;
+-void aer_do_secondary_bus_reset(struct pci_dev *dev);
+ int aer_init(struct pcie_device *dev);
+ void aer_isr(struct work_struct *work);
+ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 8b68ae5..85ca36f 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -367,39 +367,6 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ }
+ 
+ /**
+- * aer_do_secondary_bus_reset - perform secondary bus reset
+- * @dev: pointer to bridge's pci_dev data structure
+- *
+- * Invoked when performing link reset at Root Port or Downstream Port.
+- */
+-void aer_do_secondary_bus_reset(struct pci_dev *dev)
+-{
+-	u16 p2p_ctrl;
+-
+-	/* Assert Secondary Bus Reset */
+-	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &p2p_ctrl);
+-	p2p_ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
+-
+-	/*
+-	 * we should send hot reset message for 2ms to allow it time to
+-	 * propagate to all downstream ports
+-	 */
+-	msleep(2);
+-
+-	/* De-assert Secondary Bus Reset */
+-	p2p_ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
+-
+-	/*
+-	 * System software must wait for at least 100ms from the end
+-	 * of a reset of one or more device before it is permitted
+-	 * to issue Configuration Requests to those devices.
+-	 */
+-	msleep(200);
+-}
+-
+-/**
+  * default_reset_link - default reset function
+  * @dev: pointer to pci_dev data structure
+  *
+@@ -408,7 +375,7 @@ void aer_do_secondary_bus_reset(struct pci_dev *dev)
+  */
+ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ {
+-	aer_do_secondary_bus_reset(dev);
++	pci_reset_bridge_secondary_bus(dev);
+ 	dev_printk(KERN_DEBUG, &dev->dev, "downstream link has been reset\n");
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
 
