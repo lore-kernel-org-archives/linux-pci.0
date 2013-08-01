@@ -1,721 +1,256 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51FC361B.2010209@amd.com>
-Date: Fri, 2 Aug 2013 17:43:39 -0500
-From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
-MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<dougthompson@xmission.com>, <bhelgaas@google.com>,
-	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
-	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/1] EDAC, AMD64_EDAC: Add ECC decoding support for newer
- F15h models.
-References: <1375457592-2194-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <1375457592-2194-2-git-send-email-Aravind.Gopalakrishnan@amd.com> <20130802162525.GA15392@pd.tnic> <51FBE613.7080204@amd.com>
-In-Reply-To: <51FBE613.7080204@amd.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from up.free-electrons.com ([94.23.35.102]:53533 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751551Ab3HANZc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:25:32 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv6 09/13] irqchip: armada-370-xp: implement MSI support
+Date: Thu,  1 Aug 2013 15:25:12 +0200
+Message-Id: <1375363516-2620-10-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/2/2013 12:02 PM, Aravind Gopalakrishnan wrote:
-> On 8/2/2013 11:25 AM, Borislav Petkov wrote:
->> On Fri, Aug 02, 2013 at 10:33:12AM -0500, Aravind Gopalakrishnan wrote:
->>> Adding support for handling ECC error decoding for new F15 models.
->>> On newer models, support has been included for upto 4 DCT's,
->>> however, only DCT0 and DCT3 are currently configured. (Refer BKDG 
->>> Section 2.10)
->>> There is also a new "Routing DRAM Requests" algorithm for this model.
->>>
->>> Tested on Fam15h M30h with ECC turned on using mce_amd_inj facility and
->>> verified to be functionally correct.
->> This patch is huge and before we do any serious reviewing, it needs
->> splitting.
->>
->> So I'm gonna go over it and give you only rough points what needs
->> changing.
->>
->>> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
->>>
->>> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
->>> index 3048ded..3ee7a4d 100644
->>> --- a/arch/x86/kernel/amd_nb.c
->>> +++ b/arch/x86/kernel/amd_nb.c
->>> @@ -20,6 +20,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
->>>       { PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC) },
->>>       { PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
->>>       { PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
->>> +    { PCI_DEVICE(PCI_VENDOR_ID_AMD, 
->>> PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
->>>       { PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
->>>       {}
->>>   };
->>> @@ -27,6 +28,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
->>>     static const struct pci_device_id amd_nb_link_ids[] = {
->>>       { PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
->>> +    { PCI_DEVICE(PCI_VENDOR_ID_AMD, 
->>> PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
->>>       { PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
->>>       {}
->>>   };
->>> @@ -81,13 +83,21 @@ int amd_cache_northbridges(void)
->>>               next_northbridge(misc, amd_nb_misc_ids);
->>>           node_to_amd_nb(i)->link = link =
->>>               next_northbridge(link, amd_nb_link_ids);
->>> -        }
->>> +    }
->>>   +    /* GART present only on Fam15h upto model 0fh */
->>>       if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
->>> -        boot_cpu_data.x86 == 0x15)
->>> +        (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model < 0x10))
->>>           amd_northbridges.flags |= AMD_NB_GART;
->>>         /*
->>> +     * Check CPUID Fn8000_0006_EDX: L3 Cache Identifiers.
->>> +     * If == 0, then no need to proceed as there is no L3.
->>> +     */
->>> +    if (cpuid_edx(0x80000006) == 0)
->>> +        return 0;
->> Is this for real? Model 0x30 can have no L3 cache?!
-> AFAIK, Yes. But I'll double check this..
->
-Checked again, and - there is no L3 cache.
->>> +
->>> +    /*
->>>        * Some CPU families support L3 Cache Index Disable. There are 
->>> some
->>>        * limitations because of E382 and E388 on family 0x10.
->>>        */
->> Whatever it is, the amd_nb.c stuff needs to be a separate patch.
->>
->>> diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
->>> index 8b6a034..365beda 100644
->>> --- a/drivers/edac/amd64_edac.c
->>> +++ b/drivers/edac/amd64_edac.c
->>> @@ -123,7 +123,11 @@ static void f15h_select_dct(struct amd64_pvt 
->>> *pvt, u8 dct)
->>>       u32 reg = 0;
->>>         amd64_read_pci_cfg(pvt->F1, DCT_CFG_SEL, &reg);
->>> -    reg &= 0xfffffffe;
->>> +    /*
->>> +     * If Fam15h M30h, mask out last two bits for programming dct.
->>> +     * Else, only mask out the last bit.
->>> +     */
->>> +    reg &= is_f15h_m30h ? 0xfffffffc : 0xfffffff8;
->>>       reg |= dct;
->>>       amd64_write_pci_cfg(pvt->F1, DCT_CFG_SEL, reg);
->>>   }
->>> @@ -133,8 +137,12 @@ static int f15_read_dct_pci_cfg(struct 
->>> amd64_pvt *pvt, int addr, u32 *val,
->>>   {
->>>       u8 dct  = 0;
->>>   +    /*
->>> +     * For F15 M30h, the second dct is DCT 3.
->>> +     * Refer BKDG Section 2.10
->>> +     */
->>>       if (addr >= 0x140 && addr <= 0x1a0) {
->>> -        dct   = 1;
->>> +        dct = is_f15h_m30h ? 3 : 1;
->>>           addr -= 0x100;
->>>       }
->>>   @@ -205,8 +213,9 @@ static int amd64_set_scrub_rate(struct 
->>> mem_ctl_info *mci, u32 bw)
->>>       if (boot_cpu_data.x86 == 0xf)
->>>           min_scrubrate = 0x0;
->>>   -    /* F15h Erratum #505 */
->>> -    if (boot_cpu_data.x86 == 0x15)
->>> +    /* F15h Models 0x00 - 0x0f Erratum #505 */
->>> +    if (boot_cpu_data.x86 == 0x15 &&
->>> +        boot_cpu_data.x86_model != 0x30)
->>>           f15h_select_dct(pvt, 0);
->>>         return __amd64_set_scrub_rate(pvt->F3, bw, min_scrubrate);
->>> @@ -218,8 +227,9 @@ static int amd64_get_scrub_rate(struct 
->>> mem_ctl_info *mci)
->>>       u32 scrubval = 0;
->>>       int i, retval = -EINVAL;
->>>   -    /* F15h Erratum #505 */
->>> -    if (boot_cpu_data.x86 == 0x15)
->>> +    /* F15h Models 0x00 - 0x0f Erratum #505 */
->>> +    if (boot_cpu_data.x86 == 0x15 &&
->>> +        boot_cpu_data.x86_model != 0x30)
->>>           f15h_select_dct(pvt, 0);
->>>         amd64_read_pci_cfg(pvt->F3, SCRCTRL, &scrubval);
->>> @@ -343,10 +353,10 @@ static void get_cs_base_and_mask(struct 
->>> amd64_pvt *pvt, int csrow, u8 dct,
->>>           addr_shift    = 4;
->>>         /*
->>> -    * F16h needs two addr_shift values: 8 for high and 6 for low
->>> -    * (cf. F16h BKDG).
->>> +    * F16h and F15h(model 30h) needs two addr_shift values:
->>> +    * 8 for high and 6 for low (cf. F16h BKDG).
->>>       */
->>> -    } else if (boot_cpu_data.x86 == 0x16) {
->>> +    } else if (boot_cpu_data.x86 == 0x16 || is_f15h_m30h) {
->>>           csbase          = pvt->csels[dct].csbases[csrow];
->>>           csmask          = pvt->csels[dct].csmasks[csrow >> 1];
->>>   @@ -743,6 +753,9 @@ static void prep_chip_selects(struct amd64_pvt 
->>> *pvt)
->>>       if (boot_cpu_data.x86 == 0xf && pvt->ext_model < K8_REV_F) {
->>>           pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 8;
->>>           pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 8;
->>> +    } else if (is_f15h_m30h) {
->>> +        pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 4;
->>> +        pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 2;
->>>       } else {
->>>           pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 8;
->>>           pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 4;
->>> @@ -850,9 +863,9 @@ static u64 get_error_address(struct mce *m)
->>>       addr = m->addr & GENMASK(start_bit, end_bit);
->>>         /*
->>> -     * Erratum 637 workaround
->>> +     * Erratum 637 workaround for F15h Models 0x00 - 0x0f
->>>        */
->>> -    if (c->x86 == 0x15) {
->>> +    if (c->x86 == 0x15 && boot_cpu_data.x86_model != 0x30) {
->> Huh,
->>
->>     c->x86_model is there too, you know.
->
-> Oops.. I'll fix this.
->
->>>           struct amd64_pvt *pvt;
->>>           u64 cc6_base, tmp_addr;
->>>           u32 tmp;
->>> @@ -942,7 +955,15 @@ static void read_dram_base_limit_regs(struct 
->>> amd64_pvt *pvt, unsigned range)
->>>           return;
->>>         misc = nb->misc;
->>> -    f1 = pci_get_related_function(misc->vendor, 
->>> PCI_DEVICE_ID_AMD_15H_NB_F1, misc);
->>> +
->>> +    if (c->x86_model == 0x30)
->>> +        f1 = pci_get_related_function(misc->vendor,
->>> +                    PCI_DEVICE_ID_AMD_15H_M30H_NB_F1,
->>> +                    misc);
->> Indentation.
->>
->>> +    else
->>> +        f1 = pci_get_related_function(misc->vendor,
->>> +                      PCI_DEVICE_ID_AMD_15H_NB_F1,
->>> +                      misc);
->> Simpler:
->>
->>     pci_func = (pvt->x86_model == 0x30 ? 
->> PCI_DEVICE_ID_AMD_15H_M30H_NB_F1
->>                        : PCI_DEVICE_ID_AMD_15H_NB_F1);
->>
->>     f1 = pci_get_related_function(misc->vendor, pci_func, misc);
->
-> Yes, I'll fix this.
->
->>>       if (WARN_ON(!f1))
->>>           return;
->>>   @@ -1173,7 +1194,8 @@ static int f15_dbam_to_chip_select(struct 
->>> amd64_pvt *pvt, u8 dct,
->>>   }
->>>     /*
->>> - * F16h has only limited cs_modes
->>> + * F16h has only limited cs_modes.
->>> + * F15 M30h follows the same pattern.
->>>    */
->>>   static int f16_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
->>>                   unsigned cs_mode)
->>> @@ -1218,6 +1240,65 @@ static void read_dram_ctl_register(struct 
->>> amd64_pvt *pvt)
->>>   }
->>>     /*
->>> + * Determine channel (DCT) based on the interleaving mode:
->>> + * F15h M30h BKDG, 2.10.12 Memory Interleaving Modes.
->>> + */
->>> +static u8 f15_m30h_determine_channel(struct amd64_pvt *pvt, u64 
->>> sys_addr,
->>> +                u8 intlv_en, int num_dcts_intlv, u32 dct_sel)
->>> +{
->>> +    u8 channel = 0;
->>> +    u8 select;
->>> +    u8 intlv_addr = dct_sel_interleave_addr(pvt);
->>> +
->>> +    if (!(intlv_en))
->>> +        return (u8)(dct_sel);
->>> +    /*
->>> +    * If num_dcts_intlv == 2, them consider addr bit 8 or addr bit 9
->>> +    * depending on intlv_addr, then return either channel = 0/1/2/3.
->>> +    * If num_dcts_intlv == 4, consider either bits[8:9] or bits[9:10]
->>> +    * depending on intlv_addr, then return the value obtained.
->>> +    */
->>> +
->>> +    if (num_dcts_intlv == 2) {
->>> +        if (intlv_addr == 0x4)
->>> +            select = (sys_addr >> 8) & BIT(0);
->>> +        else if (intlv_addr == 0x5)
->>> +            select = (sys_addr >> 9) & BIT(0);
->>> +        else
->>> +            return -EINVAL;
->>> +
->>> +        /* Upper DCT selected */
->>> +        if (select > 0) {
->>> +            if (intlv_en & 0x8)
->>> +                channel =  0x3;
->>> +            else if (intlv_en & 0x4)
->>> +                channel =  0x2;
->>> +            else
->>> +                channel =  0x1;
->> Can intlv_en be a three-bit field with only one bit set? If so, we have
->> these functions like fls() for example which should give you what you
->> want. IOW:
->>
->>         if (select)
->>             channel = fls(intlv_en);
->>
->>> +        } else {
->>> +            /* Lower DCT selected */
->>> +            if (intlv_en & BIT(0))
->>> +                channel = 0;
->>> +            else if (intlv_en & 0x2)
->>> +                channel = 0x1;
->>> +            else
->>> +                channel = 0x2;
->> I'm sure you can come up with a similar thing here :)
->
-> Okay, thanks for the pointer!
->
+This commit introduces the support for the MSI interrupts in the
+armada-370-xp interrupt controller driver. It registers an MSI chip to
+the MSI chip registry, which will be used by the Marvell PCIe host
+controller driver.
 
-Actually, here, since DCT's 1 and 2 are in isolation, channel value is 
-*always*
-either 0 or 3. So this just reduces to -
-channel = select ? 0x3 : 0;
+The MSI interrupts use the 16 high doorbells, and are therefore
+notified using IRQ1 of the main interrupt controller.
 
->>> +        }
->>> +    } else if (num_dcts_intlv == 4) {
->>> +        if (intlv_addr == 0x4)
->>> +            select =  (sys_addr >> 8) & 0x3;
->>> +        else if (intlv_addr == 0x5)
->>> +            select = (sys_addr >> 9) & 0x3;
->>> +        else
->>> +            return -EINVAL;
->> You know that this function cannot return an error, right? Look at
->> f1x_lookup_addr_in_dct() for example.
->>
->> I can see that you handle this but is there any possibility not to be
->> able to determine the channel?
->
-> Some bits are reserved.. Hence the safety of returning error value..
-> (In case hardware programs the bits wrongly)
->
->>> +
->>> +        channel = select;
->>> +    }
->>> +
->>> +    return channel;
->>> +}
->>> +
->>> +/*
->>>    * Determine channel (DCT) based on the interleaving mode: F10h 
->>> BKDG, 2.8.9 Memory
->>>    * Interleaving Modes.
->>>    */
->>> @@ -1366,6 +1447,10 @@ static int f1x_lookup_addr_in_dct(u64 
->>> in_addr, u8 nid, u8 dct)
->>>                (in_addr & cs_mask), (cs_base & cs_mask));
->>>             if ((in_addr & cs_mask) == (cs_base & cs_mask)) {
->>> +            if (is_f15h_m30h) {
->>> +                cs_found =  csrow;
->>> +                break;
->>> +            }
->>>               cs_found = f10_process_possible_spare(pvt, dct, csrow);
->>>                 edac_dbg(1, " MATCH csrow=%d\n", cs_found);
->>> @@ -1492,20 +1577,147 @@ static int f1x_match_to_this_node(struct 
->>> amd64_pvt *pvt, unsigned range,
->>>       return cs_found;
->>>   }
->>>   -static int f1x_translate_sysaddr_to_cs(struct amd64_pvt *pvt, u64 
->>> sys_addr,
->>> -                       int *chan_sel)
->>> +/*
->>> + * Routing DRAM Requests algorithm is different for F15h M30h.
->>> + * It is cleaner to use a brand new function rather than
->>> + * adding quirks in the more generic 'f1x_match_to_this_node'.
->>> + * Refer "2.10.5 DRAM Routing Requests" in BKDG for info.
->>> + */
->>> +static int f15_m30h_match_to_this_node(struct amd64_pvt *pvt, 
->>> unsigned range,
->>> +                  u64 sys_addr, int *chan_sel)
->>> +{
->>> +    int cs_found = -EINVAL;
->>> +    int num_dcts_intlv = 0;
->>> +    u8 leg_mmio_hole;
->>> +    u64 chan_addr, chan_offset, high_addr_offset;
->>> +    u64 dct_base, dct_limit;
->>> +    u8 channel, alias_channel;
->>> +
->>> +    /*
->>> +     * Read DRAM Control registers specific to F15 M30h.
->>> +     */
->>> +    u64 dhar_offset        = f10_dhar_offset(pvt);
->>> +    u8 dct_offset_en    = f15_m30h_dct_offset_en(pvt);
->>> +    u8 dct_sel        = f15_m30h_dct_sel(pvt);
->>> +    u8 intlv_addr        = dct_sel_interleave_addr(pvt);
->>> +    u8 node_id        = dram_dst_node(pvt, range);
->>> +    u8 intlv_en        = dram_intlv_en(pvt, range);
->>> +
->>> +    edac_dbg(1, "(range %d) SystemAddr= 0x%llx Limit=0x%llx\n",
->>> +         range, sys_addr, get_dram_limit(pvt, range));
->>> +
->>> +    if (!(get_dram_base(pvt, range)  <= sys_addr) &&
->>> +        !(get_dram_limit(pvt, range) >= sys_addr))
->>> +        return -EINVAL;
->>> +
->>> +    if (dhar_valid(pvt) &&
->>> +        dhar_base(pvt) <= sys_addr &&
->>> +        sys_addr < BIT_64(32)) {
->>> +        amd64_warn("Huh? Address is in the MMIO hole: 0x%016llx\n",
->>> +                sys_addr);
->>> +        return -EINVAL;
->>> +    }
->>> +
->>> +    /* Verify sys_addr is within DCT Range. */
->>> +    dct_base = (dct_sel_baseaddr(pvt) << 27);
->>> +    dct_limit = (f15_m30h_dct_limit_addr(pvt) << 27) | 0x7FFFFFF;
->>> +    if (!(f15_m30h_dct_addr_val(pvt)) &&
->>> +            !(dct_base <= sys_addr && dct_limit >= sys_addr)) {
->>> +        return -EINVAL;
->>> +    }
->>> +
->>> +    /* Verify number of dct's that participate in channel 
->>> interleaving. */
->>> +    num_dcts_intlv = (int) hweight8(intlv_en);
->>> +
->>> +    if (!(num_dcts_intlv % 2 == 0) || (num_dcts_intlv > 4))
->>> +        return -EINVAL;
->>> +
->>> +    channel = f15_m30h_determine_channel(pvt, sys_addr,
->>> +                         intlv_en,
->>> +                         num_dcts_intlv,
->>> +                         dct_sel);
->>> +
->>> +    /* Verify if we stay within the MAX number of channels allowed */
->>> +    if (channel > 4 || channel < 0)
->>> +        return -EINVAL;
->>> +
->>> +    leg_mmio_hole = f15_m30h_leg_mmio_en(pvt);
->>> +
->>> +    /* Get normalized DCT addr */
->>> +    if (leg_mmio_hole && (sys_addr >= BIT_64(32)))
->>> +        chan_offset = dhar_offset;
->>> +    else
->>> +        chan_offset = dct_base;
->>> +
->>> +    chan_addr = sys_addr - chan_offset;
->>> +
->>> +    /* remove channel interleave */
->>> +    if (num_dcts_intlv == 2) {
->>> +        if (intlv_addr == 0x4)
->>> +            chan_addr = ((chan_addr >> 9) << 8) |
->>> +                        (chan_addr & 0xff);
->>> +        else if (intlv_addr == 0x5)
->>> +            chan_addr = ((chan_addr >> 10) << 9) |
->>> +                        (chan_addr & 0x1ff);
->>> +        else
->>> +            return -EINVAL;
->>> +
->>> +    } else if (num_dcts_intlv == 4) {
->>> +        if (intlv_addr == 0x4)
->>> +            chan_addr = ((chan_addr >> 10) << 8) |
->>> +                            (chan_addr & 0xff);
->>> +        else if (intlv_addr == 0x5)
->>> +            chan_addr = ((chan_addr >> 11) << 9) |
->>> +                            (chan_addr & 0x1ff);
->>> +        else
->>> +            return -EINVAL;
->>> +    }
->>> +
->>> +    if (dct_offset_en) {
->>> +        high_addr_offset = f15_m30h_dct_high_offset(pvt, channel);
->>> +        chan_addr += high_addr_offset;
->>> +    }
->>> +
->>> +    /* Set DCTCFGSEL = ChannelSelect */
->>> +    f15h_select_dct(pvt, channel);
->>> +
->>> +    edac_dbg(1, "   Normalized DCT addr: 0x%llx\n", chan_addr);
->>> +    /* Find the Chip select.. */
->>> +    /*
->>> +     * NOTE: if channel = 3, then alias it to 1.
->>> +     * This is because, in F15 M30h, there is support for
->>> +     * 4 DCT's, but only 2 are currently included in the architecture.
->>> +     * They are DCT0 and DCT3. But we have read all registers of DCT3
->>> +     * into pvt->csels[1]. So we need to use '1' here to get correct
->>> +     * info. Refer F15 M30h BKDG Section 2.10 and 2.10.3 for 
->>> clarifications
->>> +     */
->>> +
->>> +    alias_channel =  (channel == 3) ? 1 : channel;
->>> +
->>> +    cs_found = f1x_lookup_addr_in_dct(chan_addr, node_id, 
->>> alias_channel);
->>> +
->>> +    if (cs_found >= 0)
->>> +        *chan_sel = alias_channel;
->>> +
->>> +    return cs_found;
->>> +}
->>> +
->>> +static int
->>> +f1x_translate_sysaddr_to_cs(struct amd64_pvt *pvt,
->>> +                u64 sys_addr,
->>> +                int *chan_sel)
->>>   {
->>>       int cs_found = -EINVAL;
->>>       unsigned range;
->>>         for (range = 0; range < DRAM_RANGES; range++) {
->>> -
->>>           if (!dram_rw(pvt, range))
->>>               continue;
->>> -
->>> -        if ((get_dram_base(pvt, range)  <= sys_addr) &&
->>> -            (get_dram_limit(pvt, range) >= sys_addr)) {
->>> -
->>> +        if (is_f15h_m30h)
->>> +            cs_found = f15_m30h_match_to_this_node(pvt, range,
->>> +                              sys_addr, chan_sel);
->>> +        else if ((get_dram_base(pvt, range)  <= sys_addr) &&
->>> +             (get_dram_limit(pvt, range) >= sys_addr)) {
->>>               cs_found = f1x_match_to_this_node(pvt, range,
->>>                                 sys_addr, chan_sel);
->>>               if (cs_found >= 0)
->>> @@ -1624,6 +1836,17 @@ static struct amd64_family_type 
->>> amd64_family_types[] = {
->>>               .read_dct_pci_cfg    = f15_read_dct_pci_cfg,
->>>           }
->>>       },
->>> +    [F15_M30H_CPUS] = {
->>> +        .ctl_name = "F15h_M30h",
->>> +        .f1_id = PCI_DEVICE_ID_AMD_15H_M30H_NB_F1,
->>> +        .f3_id = PCI_DEVICE_ID_AMD_15H_M30H_NB_F3,
->>> +        .ops = {
->>> +            .early_channel_count    = f1x_early_channel_count,
->>> +            .map_sysaddr_to_csrow    = f1x_map_sysaddr_to_csrow,
->>> +            .dbam_to_cs        = f16_dbam_to_chip_select,
->>> +            .read_dct_pci_cfg    = f15_read_dct_pci_cfg,
->>> +        }
->>> +    },
->>>       [F16_CPUS] = {
->>>           .ctl_name = "F16h",
->>>           .f1_id = PCI_DEVICE_ID_AMD_16H_NB_F1,
->>> @@ -2402,6 +2625,12 @@ static struct amd64_family_type 
->>> *amd64_per_family_init(struct amd64_pvt *pvt)
->>>           break;
->>>         case 0x15:
->>> +        if (boot_cpu_data.x86_model == 0x30) {
->>> +            fam_type    = &amd64_family_types[F15_M30H_CPUS];
->>> +            pvt->ops    = &amd64_family_types[F15_M30H_CPUS].ops;
->>> +            break;
->>> +        }
->>> +
->>>           fam_type        = &amd64_family_types[F15_CPUS];
->>>           pvt->ops        = &amd64_family_types[F15_CPUS].ops;
->>>           break;
->>> @@ -2638,6 +2867,14 @@ static 
->>> DEFINE_PCI_DEVICE_TABLE(amd64_pci_table) = {
->>>       },
->>>       {
->>>           .vendor        = PCI_VENDOR_ID_AMD,
->>> +        .device        = PCI_DEVICE_ID_AMD_15H_M30H_NB_F2,
->>> +        .subvendor    = PCI_ANY_ID,
->>> +        .subdevice    = PCI_ANY_ID,
->>> +        .class        = 0,
->>> +        .class_mask    = 0,
->>> +    },
->>> +    {
->>> +        .vendor        = PCI_VENDOR_ID_AMD,
->>>           .device        = PCI_DEVICE_ID_AMD_16H_NB_F2,
->>>           .subvendor    = PCI_ANY_ID,
->>>           .subdevice    = PCI_ANY_ID,
->>> diff --git a/drivers/edac/amd64_edac.h b/drivers/edac/amd64_edac.h
->>> index 2c6f113..8ef5ad3 100644
->>> --- a/drivers/edac/amd64_edac.h
->>> +++ b/drivers/edac/amd64_edac.h
->>> @@ -170,6 +170,8 @@
->>>   /*
->>>    * PCI-defined configuration space registers
->>>    */
->>> +#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F1 0x141b
->>> +#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F2 0x141c
->>>   #define PCI_DEVICE_ID_AMD_15H_NB_F1    0x1601
->>>   #define PCI_DEVICE_ID_AMD_15H_NB_F2    0x1602
->>>   #define PCI_DEVICE_ID_AMD_16H_NB_F1    0x1531
->>> @@ -181,13 +183,24 @@
->>>   #define DRAM_BASE_LO            0x40
->>>   #define DRAM_LIMIT_LO            0x44
->>>   -#define dram_intlv_en(pvt, i) ((u8)((pvt->ranges[i].base.lo >> 8) 
->>> & 0x7))
->>> +/*
->>> + * F15 M30h DRAM Controller Base/Limit
->>> + * D18F1x2[1C:00]
->>> + */
->>> +#define DRAM_CONT_BASE            0x200
->>> +#define DRAM_CONT_LIMIT            0x204
->>> +
->>> +/*
->>> + * F15 M30h DRAM Controller High Addre Offset
->>> + * D18F1x2[4C:40]
->>> + */
->>> +#define DRAM_CONT_HIGH_OFF      0x240
->>> +
->>>   #define dram_rw(pvt, i) ((u8)(pvt->ranges[i].base.lo & 0x3))
->>>   #define dram_intlv_sel(pvt, i) ((u8)((pvt->ranges[i].lim.lo >> 8) 
->>> & 0x7))
->>>   #define dram_dst_node(pvt, i) ((u8)(pvt->ranges[i].lim.lo & 0x7))
->>>     #define DHAR                0xf0
->>> -#define dhar_valid(pvt)            ((pvt)->dhar & BIT(0))
->>>   #define dhar_mem_hoist_valid(pvt)    ((pvt)->dhar & BIT(1))
->>>   #define dhar_base(pvt)            ((pvt)->dhar & 0xff000000)
->>>   #define k8_dhar_offset(pvt)        (((pvt)->dhar & 0x0000ff00) << 16)
->>> @@ -234,8 +247,6 @@
->>>   #define DDR3_MODE            BIT(8)
->>>     #define DCT_SEL_LO            0x110
->>> -#define dct_sel_baseaddr(pvt)        ((pvt)->dct_sel_lo & 0xFFFFF800)
->>> -#define dct_sel_interleave_addr(pvt) (((pvt)->dct_sel_lo >> 6) & 0x3)
->>>   #define dct_high_range_enabled(pvt)    ((pvt)->dct_sel_lo & BIT(0))
->>>   #define dct_interleave_enabled(pvt)    ((pvt)->dct_sel_lo & BIT(2))
->>>   @@ -293,10 +304,14 @@
->>>   /* MSRs */
->>>   #define MSR_MCGCTL_NBE            BIT(4)
->>>   +/* Helper Macro for F15h M30h */
->>> +#define is_f15h_m30h            ((boot_cpu_data.x86 == 0x15) && \
->>> +                      (boot_cpu_data.x86_model == 0x30))
->> This is ugly.
->>
->> Since most functions have struct amd64_pvt as an argument, you could put
->> the family in there in a nice format, which is easy to check. Off the
->> top of my head, you can copy c->x86 and c->x86_model u8s and that should
->> work.
->
-> Okay, Will fix this..
->
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ .../devicetree/bindings/arm/armada-370-xp-mpic.txt |   3 +
+ drivers/irqchip/irq-armada-370-xp.c                | 133 ++++++++++++++++++++-
+ 2 files changed, 135 insertions(+), 1 deletion(-)
 
-I have added family and model as part of amd64_pvt structure as you 
-suggested.
-However, I have retained the macro (renamed it to F15H_M30H_CPU) as it 
-helps to
-save an extra line while writing conditions. Do let me know if this is 
-acceptable...
-
-Sending it out as V2..
->>>   enum amd_families {
->>>       K8_CPUS = 0,
->>>       F10_CPUS,
->>>       F15_CPUS,
->>> +    F15_M30H_CPUS,
->>>       F16_CPUS,
->>>       NUM_FAMILIES,
->>>   };
->>> @@ -414,6 +429,14 @@ static inline u16 extract_syndrome(u64 status)
->>>       return ((status >> 47) & 0xff) | ((status >> 16) & 0xff00);
->>>   }
->>>   +static inline u8 dct_sel_interleave_addr(struct amd64_pvt *pvt)
->>> +{
->>> +    if (is_f15h_m30h)
->>> +        return (((pvt->dct_sel_hi >> 9) & 0x1) << 2) |
->>> +            ((pvt->dct_sel_lo >> 6) & 0x3);
->>> +
->>> +    return    ((pvt)->dct_sel_lo >> 6) & 0x3;
->>> +}
->>>   /*
->>>    * per-node ECC settings descriptor
->>>    */
->>> @@ -504,3 +527,80 @@ static inline void enable_caches(void *dummy)
->>>   {
->>>       write_cr0(read_cr0() & ~X86_CR0_CD);
->>>   }
->>> +
->>> +/*
->>> + * Introduce helper functions for F15 M30h
->>> + */
->>> +static inline u8 f15_m30h_dct_offset_en(struct amd64_pvt *pvt)
->>> +{
->>> +    u32 tmp;
->>> +    amd64_read_pci_cfg(pvt->F1, DRAM_CONT_BASE, &tmp);
->>> +    return (u8) ((tmp >> 3) & BIT(0));
->>> +}
->>> +
->>> +static inline u8 f15_m30h_dct_sel(struct amd64_pvt *pvt)
->>> +{
->>> +    u32 tmp;
->>> +    amd64_read_pci_cfg(pvt->F1, DRAM_CONT_BASE, &tmp);
->>> +    return (u8) ((tmp >> 4) & 0x7);
->>> +}
->>> +
->>> +static inline u32 f15_m30h_dct_limit_addr(struct amd64_pvt *pvt)
->>> +{
->>> +    u32 tmp;
->>> +    amd64_read_pci_cfg(pvt->F1, DRAM_CONT_LIMIT, &tmp);
->>> +    return (tmp >> 11) & 0x1FFF;
->>> +}
->>> +
->>> +static inline u8 f15_m30h_leg_mmio_en(struct amd64_pvt *pvt)
->>> +{
->>> +    u32 tmp;
->>> +    amd64_read_pci_cfg(pvt->F1, DRAM_CONT_BASE, &tmp);
->>> +    return (u8) ((tmp >> 1) & BIT(0));
->>> +}
->>> +
->>> +static inline u64 f15_m30h_dct_high_offset(struct amd64_pvt *pvt, 
->>> u8 channel)
->>> +{
->>> +    u32 tmp;
->>> +    amd64_read_pci_cfg(pvt->F1,
->>> +            DRAM_CONT_HIGH_OFF + (int) channel * 4,
->>> +            &tmp);
->>> +    return ((tmp >> 11) & 0xfff) << 27;
->>> +}
->>> +
->>> +static inline int f15_m30h_dct_addr_val(struct amd64_pvt *pvt)
->>> +{
->>> +    u32 tmp;
->>> +    amd64_read_pci_cfg(pvt->F1, DRAM_CONT_BASE, &tmp);
->>> +    return tmp & BIT(0);
->>> +}
->>> +
->>> +static inline u8 dram_intlv_en(struct amd64_pvt *pvt, unsigned int i)
->>> +{
->>> +    u32 tmp;
->>> +    if (is_f15h_m30h) {
->>> +        amd64_read_pci_cfg(pvt->F1, DRAM_CONT_LIMIT, &tmp);
->>> +        return (u8) tmp & 0xF;
->>> +    }
->>> +    return (u8) (pvt->ranges[i].base.lo >> 8) & 0x7;
->>> +}
->>> +
->>> +static inline u8 dhar_valid(struct amd64_pvt *pvt)
->>> +{
->>> +    u32 tmp;
->>> +    if (is_f15h_m30h) {
->>> +        amd64_read_pci_cfg(pvt->F1, DRAM_CONT_BASE, &tmp);
->>> +        return (tmp >> 1) & BIT(0);
->>> +    }
->>> +    return (pvt)->dhar & BIT(0);
->>> +}
->>> +
->>> +static inline u32 dct_sel_baseaddr(struct amd64_pvt *pvt)
->>> +{
->>> +    u32 tmp;
->>> +    if (is_f15h_m30h) {
->>> +        amd64_read_pci_cfg(pvt->F1, DRAM_CONT_BASE, &tmp);
->>> +        return (tmp >> 11) & 0x1FFF;
->>> +    }
->>> +    return (pvt)->dct_sel_lo & 0xFFFFF800;
->>> +}
->> Now this looks like unneeded. Some of those functions are called only
->> once so why do you even have those functions?
->
-> Hmm.. You are right.. I will remove these too..
->
->> Whatever it is, the amd64_edac.[ch] stuff needs to be a separate patch.
->>
->> So please split this thing into smaller pieces first.
->>
->> Thanks.
->
-> Thanks! I will split it up and make the necessary changes as you 
-> suggested and send it out as V2.
->
-
+diff --git a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+index 61df564..d74091a 100644
+--- a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
++++ b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+@@ -4,6 +4,8 @@ Marvell Armada 370 and Armada XP Interrupt Controller
+ Required properties:
+ - compatible: Should be "marvell,mpic"
+ - interrupt-controller: Identifies the node as an interrupt controller.
++- msi-controller: Identifies the node as an PCI Message Signaled
++  Interrupt controller.
+ - #interrupt-cells: The number of cells to define the interrupts. Should be 1.
+   The cell is the IRQ number
+ 
+@@ -24,6 +26,7 @@ Example:
+               #address-cells = <1>;
+               #size-cells = <1>;
+               interrupt-controller;
++              msi-controller;
+               reg = <0xd0020a00 0x1d0>,
+                     <0xd0021070 0x58>;
+         };
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index 26adc74..7627ded 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -21,7 +21,10 @@
+ #include <linux/io.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
++#include <linux/of_pci.h>
+ #include <linux/irqdomain.h>
++#include <linux/slab.h>
++#include <linux/msi.h>
+ #include <asm/mach/arch.h>
+ #include <asm/exception.h>
+ #include <asm/smp_plat.h>
+@@ -51,12 +54,20 @@
+ #define IPI_DOORBELL_START                      (0)
+ #define IPI_DOORBELL_END                        (8)
+ #define IPI_DOORBELL_MASK                       0xFF
++#define PCI_MSI_DOORBELL_START                  (16)
++#define PCI_MSI_DOORBELL_NR                     (16)
++#define PCI_MSI_DOORBELL_END                    (32)
++#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
+ 
+ static DEFINE_RAW_SPINLOCK(irq_controller_lock);
+ 
+ static void __iomem *per_cpu_int_base;
+ static void __iomem *main_int_base;
+ static struct irq_domain *armada_370_xp_mpic_domain;
++#ifdef CONFIG_PCI_MSI
++static struct irq_domain *armada_370_xp_msi_domain;
++static phys_addr_t msi_doorbell_addr;
++#endif
+ 
+ /*
+  * In SMP mode:
+@@ -87,6 +98,94 @@ static void armada_370_xp_irq_unmask(struct irq_data *d)
+ 				ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
+ }
+ 
++#ifdef CONFIG_PCI_MSI
++
++static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
++				       struct pci_dev *pdev,
++				       struct msi_desc *desc)
++{
++	struct msi_msg msg;
++	irq_hw_number_t hwirq;
++	int virq;
++
++	virq = irq_alloc_mapping(armada_370_xp_msi_domain, &hwirq);
++	if (!virq)
++		return -EINVAL;
++
++	irq_set_msi_desc(virq, desc);
++
++	msg.address_lo = msi_doorbell_addr;
++	msg.address_hi = 0;
++	msg.data = 0xf00 | (hwirq + 16);
++
++	write_msi_msg(virq, &msg);
++	return 0;
++}
++
++static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
++					   unsigned int irq)
++{
++	irq_dispose_mapping(irq);
++}
++
++static struct irq_chip armada_370_xp_msi_irq_chip = {
++	.name = "armada_370_xp_msi_irq",
++	.irq_enable = unmask_msi_irq,
++	.irq_disable = mask_msi_irq,
++	.irq_mask = mask_msi_irq,
++	.irq_unmask = unmask_msi_irq,
++};
++
++static int armada_370_xp_msi_map(struct irq_domain *domain, unsigned int virq,
++				 irq_hw_number_t hw)
++{
++	irq_set_chip_and_handler(virq, &armada_370_xp_msi_irq_chip,
++				 handle_simple_irq);
++	set_irq_flags(virq, IRQF_VALID);
++
++	return 0;
++}
++
++static const struct irq_domain_ops armada_370_xp_msi_irq_ops = {
++	.map = armada_370_xp_msi_map,
++};
++
++static int armada_370_xp_msi_init(struct device_node *node)
++{
++	struct msi_chip *msi_chip;
++	u32 reg;
++
++	msi_chip = kzalloc(sizeof(*msi_chip), GFP_KERNEL);
++	if (!msi_chip)
++		return -ENOMEM;
++
++	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
++	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
++
++	armada_370_xp_msi_domain =
++		irq_domain_add_msi(node, PCI_MSI_DOORBELL_NR,
++				   &armada_370_xp_msi_irq_ops,
++				   msi_chip, NULL);
++	if (!armada_370_xp_msi_domain) {
++		kfree(msi_chip);
++		return -ENOMEM;
++	}
++
++	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
++		| PCI_MSI_DOORBELL_MASK;
++
++	writel(reg, per_cpu_int_base +
++	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
++
++	/* Unmask IPI interrupt */
++	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
++
++	return 0;
++}
++#else
++static inline int armada_370_xp_msi_init(struct device_node *node) { return 0; }
++#endif
++
+ #ifdef CONFIG_SMP
+ static int armada_xp_set_affinity(struct irq_data *d,
+ 				  const struct cpumask *mask_val, bool force)
+@@ -214,12 +313,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ 		if (irqnr > 1022)
+ 			break;
+ 
+-		if (irqnr > 0) {
++		if (irqnr > 1) {
+ 			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
+ 					irqnr);
+ 			handle_IRQ(irqnr, regs);
+ 			continue;
+ 		}
++
++#ifdef CONFIG_PCI_MSI
++		/* MSI handling */
++		if (irqnr == 1) {
++			u32 msimask, msinr;
++
++			msimask = readl_relaxed(per_cpu_int_base +
++						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
++				& PCI_MSI_DOORBELL_MASK;
++
++			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
++			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
++
++			for (msinr = PCI_MSI_DOORBELL_START;
++			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
++				int irq;
++
++				if (!(msimask & BIT(msinr)))
++					continue;
++
++				irq = irq_find_mapping(armada_370_xp_msi_domain,
++						       msinr - 16);
++				handle_IRQ(irq, regs);
++			}
++		}
++#endif
++
+ #ifdef CONFIG_SMP
+ 		/* IPI Handling */
+ 		if (irqnr == 0) {
+@@ -269,6 +395,9 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 				   resource_size(&per_cpu_int_res));
+ 	BUG_ON(!per_cpu_int_base);
+ 
++	msi_doorbell_addr = main_int_res.start +
++		ARMADA_370_XP_SW_TRIG_INT_OFFS;
++
+ 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
+ 
+ 	armada_370_xp_mpic_domain =
+@@ -292,6 +421,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 
+ #endif
+ 
++	armada_370_xp_msi_init(node);
++
+ 	set_handle_irq(armada_370_xp_handle_irq);
+ 
+ 	return 0;
+-- 
+1.8.1.2
 
