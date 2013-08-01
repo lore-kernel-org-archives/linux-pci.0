@@ -1,55 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:4098 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751420Ab3HSMIP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 08:08:15 -0400
-Date: Mon, 19 Aug 2013 14:07:54 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Thierry Reding <thierry.reding@gmail.com>
-cc: kernel-janitors@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
- devm_ioremap_resource
-In-Reply-To: <20130819120249.GA5740@ulmo>
-Message-ID: <alpine.DEB.2.02.1308191405450.2313@hadrien>
-References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr> <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr> <20130819120249.GA5740@ulmo>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from up.free-electrons.com ([94.23.35.102]:55296 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751428Ab3HAR7A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 13:59:00 -0400
+Date: Thu, 1 Aug 2013 19:58:56 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: Re: [PATCHv6 00/13] MSI support for Marvell EBU PCIe driver
+Message-ID: <20130801195856.00f78934@skate>
+In-Reply-To: <CAErSpo67t2D=bLMq3fxU6Hj9FX+MBAbaLNbF42-uufWug-x8Tg@mail.gmail.com>
+References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<CAErSpo67t2D=bLMq3fxU6Hj9FX+MBAbaLNbF42-uufWug-x8Tg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Dear Bjorn Helgaas,
 
-
-On Mon, 19 Aug 2013, Thierry Reding wrote:
-
-> On Mon, Aug 19, 2013 at 01:20:35PM +0200, Julia Lawall wrote:
-> > From: Julia Lawall <Julia.Lawall@lip6.fr>
+On Thu, 1 Aug 2013 10:50:25 -0600, Bjorn Helgaas wrote:
+> On Thu, Aug 1, 2013 at 7:25 AM, Thomas Petazzoni
+> <thomas.petazzoni@free-electrons.com> wrote:
+> > Hello,
 > >
-> > Use devm_ioremap_resource instead of devm_request_and_ioremap.
+> > This set of patches introduces Message Signaled Interrupt support in
+> > the Marvell EBU PCIe driver. It has been successfully tested on the
+> > Armada XP GP platform with an Intel e1000e PCIe network card that
+> > supports MSI.
 > >
-> > This was done using the semantic patch
-> > scripts/coccinelle/api/devm_ioremap_resource.cocci
+> > This patch set is intended for merging in 3.12, so the respective
+> > maintainers of the different areas are invited to review/ack the
+> > patches, see below for the details. Note that several of those patches
+> > are also needed for the Tegra PCIe driver.
 > >
-> > Error-handling code was manually removed from the associated calls to
-> > platform_get_resource.
-> >
-> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> >
-> > ---
-> > The first block of modified code is followed by a call to
-> > devm_request_mem_region for pcie->cs with no associated ioremap.  Should
-> > ioremap be used in this case as well?
->
-> No. The pcie->cs resource is 256 MiB so it's challenging to map it at
-> once. Furthermore it requires a non-linear mapping so we do it on
-> demand.
+> > There are still missing ACKs from Grant Likely (5, 6, 7), Thomas
+> > Gleixner (8, 9) and Bjorn Helgaas (2, 12).
+> 
+> I just acked 2, and my ack is already on 12.  Let me know if you need
+> anything else from me.
 
-OK, thanks for the explanation.  Is the comment, though, a little
-misleading, since the mapping is not done here?
+That's good, thanks a lot!
 
-/* request and remap configuration space */
-
-julia
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
