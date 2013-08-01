@@ -1,62 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:59035 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754377Ab3HLRwH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 13:52:07 -0400
-Message-ID: <520920C1.5040904@wwwdotorg.org>
-Date: Mon, 12 Aug 2013 11:52:01 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Jason Cooper <jason@lakedaemon.net>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+Received: from up.free-electrons.com ([94.23.35.102]:53495 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751551Ab3HANZ1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:25:27 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Russell King <linux@arm.linux.org.uk>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
 	Rob Herring <rob.herring@calxeda.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv9 00/10] MSI support for Marvell EBU PCIe driver
-References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130812163723.GK25111@titan.lakedaemon.net> <520916E0.5030404@wwwdotorg.org> <20130812174439.GO25111@titan.lakedaemon.net>
-In-Reply-To: <20130812174439.GO25111@titan.lakedaemon.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv6 06/13] irqdomain: add support to associate an irq_domain with a msi_chip
+Date: Thu,  1 Aug 2013 15:25:09 +0200
+Message-Id: <1375363516-2620-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/12/2013 11:44 AM, Jason Cooper wrote:
-> On Mon, Aug 12, 2013 at 11:09:52AM -0600, Stephen Warren wrote:
->> On 08/12/2013 10:37 AM, Jason Cooper wrote:
->>> Thomas,
->>>
->>> Whole series applied as follows:
->>>
->>> +---+ mvebu/msi_pci (1-4,7)
->>>     |
->>>     +---+---+ mvebu/msi_irq (5,6)
->>>             |
->>>             +---+---+ mvebu/msi_mvebu (8-10)
->>>
->>> mvebu/msi_pci built successfully with Randy's config for x86_64.
->>>
->>> Thierry, I've tagged mvebu/msi_pci.  Unless it all falls apart in -next,
->>> those commit-id's won't change from what will be in arm-soc.
->>
->> So, the branch still isn't stable, hence I shouldn't use it as a
->> baseline to apply Thierry's PCIe patches?
-> 
-> It's as stable as I can make it.  I've tested it for all known build
-> regressions (discovered in -next), and I see no reason to change it.
-> Anything needing fixed after today, I'll append the fix to it's HEAD if
-> appropriate.
+Message Signaled Interrupts are a PCI-specific mechanism that allows
+PCI devices to notify interrupts to the CPU using in-band
+messages. The PCI subsystem represents an MSI-capable interrupt
+controller as an msi_chip structure, and this patch improves the
+irqdomain subsystem with a new pointer associating an irq_domain with
+the corresponding msi_chip.
 
-OK, if you will only append fixes rather than rebase the branch, then
-it's fine; what you said above implied that the commit IDs still might
-change.
+The irq_domain structure gains a pointer to a msi_chip structure, and
+a new helper function irq_domain_add_msi() is added to help in
+allocating, initializing and registering an irq_domain for a MSI-type
+interrupt controller.
 
-So, I'll try pulling this in with Thierry's patches today.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ include/linux/irqdomain.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-Thanks.
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 7113941..b0504ff 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -38,6 +38,7 @@
+ struct device_node;
+ struct irq_domain;
+ struct of_device_id;
++struct msi_chip;
+ 
+ /* Number of irqs reserved for a legacy isa controller */
+ #define NUM_ISA_INTERRUPTS	16
+@@ -101,6 +102,7 @@ struct irq_domain {
+ 	/* Optional data */
+ 	struct device_node *of_node;
+ 	struct irq_domain_chip_generic *gc;
++	struct msi_chip *msi_chip;
+ 
+ 	/* reverse map data. The linear map gets appended to the irq_domain */
+ 	irq_hw_number_t hwirq_max;
+@@ -177,6 +179,22 @@ static inline struct irq_domain *irq_domain_add_tree(struct device_node *of_node
+ 		__irq_domain_register(d);
+ 	return d;
+ }
++static inline struct irq_domain *irq_domain_add_msi(struct device_node *of_node,
++						    unsigned int size,
++						    const struct irq_domain_ops *ops,
++						    struct msi_chip *msi_chip,
++						    void *host_data)
++{
++	struct irq_domain *d;
++	d = __irq_domain_alloc(of_node, size, size, 0, ops, host_data);
++	if (d) {
++		d->msi_chip = msi_chip;
++		__irq_domain_register(d);
++	}
++
++	return d;
++}
++
+ 
+ extern void irq_domain_remove(struct irq_domain *host);
+ 
+-- 
+1.8.1.2
+
