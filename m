@@ -1,185 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19034 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148Ab3H2NcH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 09:32:07 -0400
-In-Reply-To: <521EB76B.8090903@oracle.com>
-References: <521EB76B.8090903@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:1941 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756427Ab3HAQzb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Aug 2013 12:55:31 -0400
+Subject: [PATCH v3 3/9] pci: Implement reset_slot for pciehp
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 Aug 2013 10:55:27 -0600
+Message-ID: <20130801165527.16145.8953.stgit@bling.home>
+In-Reply-To: <20130801164652.16145.79918.stgit@bling.home>
+References: <20130801164652.16145.79918.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: [PATCH 2/3 v3] Refactor MSI restore call-chain to drop unnecessary argument
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Date: Thu, 29 Aug 2013 09:31:55 -0400
-To: zhenzhong.duan@oracle.com,
-	Zhenzhong Duan <zhenzhong.duan@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Feng Jin <joe.jin@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Message-ID: <e316cb7e-6f73-4aff-8533-c73539f4ae91@email.android.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Zhenzhong Duan <zhenzhong.duan@oracle.com> wrote:
->Driver init call graph under baremetal:
->driver_init->
->    msix_capability_init->
->        msix_program_entries->
->            msix_mask_irq->
->                entry->masked = 1
->    request_irq->
->        __setup_irq->
->            irq_startup->
->                unmask_msi_irq->
->                    msix_mask_irq->
->                        entry->masked = 0
->
->So entry->masked is always updated with newest value and its value
->could be used
->to restore to mask register in device.
->
->But in initial domain (aka priviliged guest), it's different.
->Driver init call graph under initial domain:
->driver_init->
->    msix_capability_init->
->        msix_program_entries->
->            msix_mask_irq->
->                entry->masked = 1
->    request_irq->
->        __setup_irq->
->            irq_startup->
->                __startup_pirq->
->                    EVTCHNOP_bind_pirq hypercall    (trap into Xen)
->[Xen:]
->pirq_guest_bind->
->    startup_msi_irq->
->        unmask_msi_irq->
->            msi_set_mask_bit->
->                entry->msi_attrib.masked = 0
->
->So entry->msi_attrib.masked in xen side always has newest value.
->entry->masked
->in initial domain is untouched and is 1 after msix_capability_init.
->
->Based on above, it's Xen's duty to restore entry->msi_attrib.masked to
->device,
->but with current code, entry->masked is used and MSI-x interrupt is
->masked.
->
->Before patch, restore call graph under initial domain:
->pci_reset_function->
->    pci_restore_state->
->        __pci_restore_msix_state->
->            arch_restore_msi_irqs->
->                xen_initdom_restore_msi_irqs->
->                   PHYSDEVOP_restore_msi hypercall (first mask restore)
->          msix_mask_irq(entry, entry->masked)     (second mask restore)
->
->So msix_mask_irq call in initial domain call graph needs to be removed.
->
->Based on this we can move the restore of the mask in
->default_restore_msi_irqs
->which would avoid restoring the invalid mask under Xen. Furthermore
->this
->simplifies the API by making everything related to restoring an MSI be
->in the
->platform specific APIs instead of just parts of it.
->
->After patch, restore call graph under initial domain:
->pci_reset_function->
->    pci_restore_state->
->        __pci_restore_msix_state->
->            arch_restore_msi_irqs->
->                xen_initdom_restore_msi_irqs->
->                   PHYSDEVOP_restore_msi hypercall (first mask restore)
->
->Logic for baremetal is not changed.
->Before patch, restore call graph under baremetal:
->pci_reset_function->
->    pci_restore_state->
->        __pci_restore_msix_state->
->            arch_restore_msi_irqs->
->                default_restore_msi_irqs->
->           msix_mask_irq(entry, entry->masked)     (first mask restore)
->
->After patch, restore call graph under baremetal:
->pci_reset_function->
->    pci_restore_state->
->        __pci_restore_msix_state->
->            arch_restore_msi_irqs->
->                default_restore_msi_irqs->
->               msix_mask_irq(entry, entry->masked) (first mask restore)
->
->The process for MSI code is similiar.
->
->-v3: Update patch description per Konrad suggestion, thanks.
->
->Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
->Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+PCIe hotplug has a bus per slot, so we can just use a normal
+secondary bus reset.  However, if a slot supports surprise removal
+then a bus reset can be seen as a presence detection change triggering
+a hot-remove followed by a hot-add.  Disable presence detection from
+triggering an interrupt or being polled around the bus reset.
 
-Bjorn, 
-If this is not too late to add to your queue please add it with my Acked-By. 
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/hotplug/pciehp.h      |    1 +
+ drivers/pci/hotplug/pciehp_core.c |   12 ++++++++++++
+ drivers/pci/hotplug/pciehp_hpc.c  |   31 +++++++++++++++++++++++++++++++
+ 3 files changed, 44 insertions(+)
 
-Thanks. 
-
->---
-> drivers/pci/msi.c |   17 ++++++++++++++---
-> 1 files changed, 14 insertions(+), 3 deletions(-)
->
->diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->index 87223ae..922fb49 100644
->--- a/drivers/pci/msi.c
->+++ b/drivers/pci/msi.c
->@@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
-> #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
-> void default_restore_msi_irqs(struct pci_dev *dev, int irq)
-> {
->+	int pos;
->+	u16 control;
-> 	struct msi_desc *entry;
-> 
-> 	entry = NULL;
->@@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev,
->int irq)
-> 		entry = irq_get_msi_desc(irq);
-> 	}
-> 
->-	if (entry)
->+	if (entry) {
-> 		write_msi_msg(irq, &entry->msg);
->+		if (dev->msix_enabled) {
->+			msix_mask_irq(entry, entry->masked);
->+			readl(entry->mask_base);
->+		} else {
->+			pos = entry->msi_attrib.pos;
->+			pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
->+					     &control);
->+			msi_mask_irq(entry, msi_capable_mask(control),
->+				     entry->masked);
->+		}
->+	}
-> }
-> #endif
-> 
->@@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev
->*dev)
-> 	arch_restore_msi_irqs(dev, dev->irq);
-> 
-> 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
->-	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
-> 	control &= ~PCI_MSI_FLAGS_QSIZE;
-> 	control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
-> 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
->@@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev
->*dev)
-> 
-> 	list_for_each_entry(entry, &dev->msi_list, list) {
-> 		arch_restore_msi_irqs(dev, entry->irq);
->-		msix_mask_irq(entry, entry->masked);
-> 	}
-> 
-> 	control &= ~PCI_MSIX_FLAGS_MASKALL;
-
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 7fb3269..541bbe6 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -155,6 +155,7 @@ void pciehp_green_led_off(struct slot *slot);
+ void pciehp_green_led_blink(struct slot *slot);
+ int pciehp_check_link_status(struct controller *ctrl);
+ void pciehp_release_ctrl(struct controller *ctrl);
++int pciehp_reset_slot(struct slot *slot, int probe);
+ 
+ static inline const char *slot_name(struct slot *slot)
+ {
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 7d72c5e..f4a18f5 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -69,6 +69,7 @@ static int get_power_status	(struct hotplug_slot *slot, u8 *value);
+ static int get_attention_status	(struct hotplug_slot *slot, u8 *value);
+ static int get_latch_status	(struct hotplug_slot *slot, u8 *value);
+ static int get_adapter_status	(struct hotplug_slot *slot, u8 *value);
++static int reset_slot		(struct hotplug_slot *slot, int probe);
+ 
+ /**
+  * release_slot - free up the memory used by a slot
+@@ -111,6 +112,7 @@ static int init_slot(struct controller *ctrl)
+ 	ops->disable_slot = disable_slot;
+ 	ops->get_power_status = get_power_status;
+ 	ops->get_adapter_status = get_adapter_status;
++	ops->reset_slot = reset_slot;
+ 	if (MRL_SENS(ctrl))
+ 		ops->get_latch_status = get_latch_status;
+ 	if (ATTN_LED(ctrl)) {
+@@ -223,6 +225,16 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ 	return pciehp_get_adapter_status(slot, value);
+ }
+ 
++static int reset_slot(struct hotplug_slot *hotplug_slot, int probe)
++{
++	struct slot *slot = hotplug_slot->private;
++
++	ctrl_dbg(slot->ctrl, "%s: physical_slot = %s\n",
++		 __func__, slot_name(slot));
++
++	return pciehp_reset_slot(slot, probe);
++}
++
+ static int pciehp_probe(struct pcie_device *dev)
+ {
+ 	int rc;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index b225573..51f56ef 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -749,6 +749,37 @@ static void pcie_disable_notification(struct controller *ctrl)
+ 		ctrl_warn(ctrl, "Cannot disable software notification\n");
+ }
+ 
++/*
++ * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
++ * bus reset of the bridge, but if the slot supports surprise removal we need
++ * to disable presence detection around the bus reset and clear any spurious
++ * events after.
++ */
++int pciehp_reset_slot(struct slot *slot, int probe)
++{
++	struct controller *ctrl = slot->ctrl;
++
++	if (probe)
++		return 0;
++
++	if (HP_SUPR_RM(ctrl)) {
++		pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_PDCE);
++		if (pciehp_poll_mode)
++			del_timer_sync(&ctrl->poll_timer);
++	}
++
++	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
++
++	if (HP_SUPR_RM(ctrl)) {
++		pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_PDC);
++		pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PDCE, PCI_EXP_SLTCTL_PDCE);
++		if (pciehp_poll_mode)
++			int_poll_timeout(ctrl->poll_timer.data);
++	}
++
++	return 0;
++}
++
+ int pcie_init_notification(struct controller *ctrl)
+ {
+ 	if (pciehp_request_irq(ctrl))
 
