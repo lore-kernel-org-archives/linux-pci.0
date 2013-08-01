@@ -1,44 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:14296
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756961Ab3HGDfV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Aug 2013 23:35:21 -0400
-From: Zang Roy-R61911 <r61911@freescale.com>
-To: Leon Ravich <lravich@gmail.com>,
-	Johannes Thumshirn <johannes.thumshirn@men.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: RE: PCIE device errors after linux kernel upgrade
-Date: Wed, 7 Aug 2013 03:35:17 +0000
-Message-ID: <3E027F8168735B46AC006B1D0C7BB0020B2A60F6@039-SN2MPN1-013.039d.mgd.msft.net>
-References: <CAPWoNkJ3NKM-_g93LdRpjvdNFtLt-Pjpg4d4oEKC9CvkpzZ-Wg@mail.gmail.com>
- <CAPWoNkLQUbFG2vZ7wqoqqVNj4uxKz3Fa_vsSH=1_TDD=XC1f2A@mail.gmail.com>
- <CAErSpo5ZZgdpkK+QdQUEnNCEXcG_T+QBWTVoQnMTghxkX7n2HA@mail.gmail.com>
- <20130806070703.GA20622@jtlinux>
- <CAPWoNkKo6Cfg0Hr2QYBXVnUrC-UQwES65UUHfSvR3nBvZrfFoA@mail.gmail.com>
-In-Reply-To: <CAPWoNkKo6Cfg0Hr2QYBXVnUrC-UQwES65UUHfSvR3nBvZrfFoA@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from szxga02-in.huawei.com ([119.145.14.65]:35956 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755028Ab3HANHJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:07:09 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH -v4 5/6] PCI: add inspection of device change in pci_scan_single_device
+Date: Thu, 1 Aug 2013 21:06:28 +0800
+Message-ID: <1375362389-26096-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
+References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add inspection of device change in pci_scan_single_device.
+If device change found, print warning. Because the new device
+bind the old device driver, so for safety, we do not remove this
+device.
 
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/probe.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> -----Original Message-----
-> From: Linuxppc-dev [mailto:linuxppc-dev-bounces+tie-
-> fei.zang=freescale.com@lists.ozlabs.org] On Behalf Of Leon Ravich
-> Sent: Tuesday, August 06, 2013 3:26 PM
-> To: Johannes Thumshirn
-> Cc: Bjorn Helgaas; linux-pci@vger.kernel.org; linuxppc-dev
-> Subject: Re: PCIE device errors after linux kernel upgrade
-> 
-> Hi Johannes
-> no panic just reboot.
-> it is not the first read, it takes few minutes of work with pcie to
-> reboot.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index edb138c..3ac65aa 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1389,6 +1389,8 @@ struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
+ 
+ 	dev = pci_get_slot(bus, devfn);
+ 	if (dev) {
++		if (pci_serial_number_changed(dev))
++			dev_warn(&dev->dev, "device serial number changed!");
+ 		pci_dev_put(dev);
+ 		return dev;
+ 	}
+-- 
+1.7.1
 
-You may need to check the error code in EDAC driver as Johannes suggested.
-Roy
 
