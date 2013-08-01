@@ -1,73 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:33857 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756967Ab3HMOBn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 10:01:43 -0400
-Date: Tue, 13 Aug 2013 10:01:30 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 0/5] ARM: dove: DT PCIe support
-Message-ID: <20130813140130.GA25111@titan.lakedaemon.net>
-References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:20030 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750875Ab3HANMK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:12:10 -0400
+Message-ID: <51FA5EA0.6030805@huawei.com>
+Date: Thu, 1 Aug 2013 21:12:00 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: Re: [PATCH -v4 6/6] PCI,pciehp: identify device change during suspend
+References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com> <1375362389-26096-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1375362389-26096-7-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+Hi Bjorn,
+   I still leave this code in pciehp modeule, because I do not find
+a better place to move. Only in pciehp module, we can know the device whether support
+hotplug, if we can not power off device, although we find the device change, but we
+can not remove the device for safety. What do you think?
 
-On Tue, Aug 13, 2013 at 02:25:19PM +0200, Sebastian Hesselbarth wrote:
-> This patch set adds support for the PCIe controllers found on Marvell
-> Dove SoCs. It depends on mvebu-pci patches sent by Thomas Petazzoni.
+Thanks!
+Yijing.
 
-Well, when it rains, it pours.  If this series looks good to you, I'll
-go ahead and add it on top of Thomas' patches.
-
-> The ARM Dove related patches have already been taken by Jason Cooper
-> and have been removed from v2 of this patch set. Changelog is added
-> to the individual patch emails.
+On 2013/8/1 21:06, Yijing Wang wrote:
+> If device was removed from slot and reinsert a new device during
+> suspend, pciehp can not identify the physical device change now.
+> So the old driver .resume() method will be called for the new device,
+> this is bad. If device support device serial number capability,
+> we can identify this by DSN. So the reasonable way is first remove
+> the old device, then enable the new device.
 > 
-> Patches 1 and 2 fix some minor issues with pci-mvebu by moving
-> clk_prepare_enable before accessing any controller registers and
-> counting sucessfully registered ports only.
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Paul Bolle <pebolle@tiscali.nl>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: Oliver Neukum <oneukum@suse.de>
+> Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/pci/hotplug/pciehp_core.c |   34 +++++++++++++++++++++++++++++++---
+>  1 files changed, 31 insertions(+), 3 deletions(-)
 > 
-> Patch 3 converts pci-mvebu from subsys_initcall registration to
-> normal platform driver registration to allow it to fail with
-> EPROBE_DEFER later.
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 7fe9dbd..db5f597 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -301,6 +301,8 @@ static int pciehp_resume (struct pcie_device *dev)
+>  	struct controller *ctrl;
+>  	struct slot *slot;
+>  	struct pci_bus *pbus = dev->port->subordinate;
+> +	struct pci_dev *pdev;
+> +	int ret = 0;
+>  	u8 status;
+>  
+>  	ctrl = get_service_data(dev);
+> @@ -315,10 +317,36 @@ static int pciehp_resume (struct pcie_device *dev)
+>  	if (status) {
+>  		if (list_empty(&pbus->devices))
+>  			pciehp_enable_slot(slot);
+> -	} else if (!list_empty(&pbus->devices)) {
+> -		pciehp_disable_slot(slot);
+> +
+> +		pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
+> +		if (!pdev)
+> +			return 0;
+> +		ret = pci_serial_number_changed(pdev);
+> +		pci_dev_put(pdev);
+> +		if (ret) {
+> +			/*
+> +			 * first power off slot, avoid the old driver
+> +			 * .remove() method touch the new hardware
+> +			 */
+> +			if (POWER_CTRL(ctrl)) {
+> +				ret = pciehp_power_off_slot(slot);
+> +				if (ret) {
+> +					ctrl_err(ctrl,
+> +						"Issue of Slot Disable command failed\n");
+> +					return 0;
+> +				}
+> +				msleep(1000);
+> +				pciehp_unconfigure_device(slot);
+> +				/* call child devices driver->suspend() for symmetry */
+> +				list_for_each_entry(pdev, &pbus->devices, bus_list)
+> +					if (pdev->driver)
+> +						pdev->driver->driver.pm->suspend(&pdev->dev);
+> +				pciehp_enable_slot(slot);
+> +			}
+> +		} else if (!list_empty(&pbus->devices)) {
+> +			pciehp_disable_slot(slot);
+> +		}
+>  	}
+> -	
+>  	return 0;
+>  }
+>  #endif /* PM */
 > 
-> Patch 4 adds DT parsing for reset (PERST#) GPIO pins and delay to
-> wait for PCIe devices after reset de-assertion.
-> 
-> Patch 5 finally adds a compatible to pci-mvebu for Dove SoCs.
-> 
-> [Patch 6-9 have already been taken by Jason Cooper]
 
-These were the dts files.
 
-> Sebastian Hesselbarth (5):
->   PCI: mvebu: move clock enable before register access
->   PCI: mvebu: increment nports only for registered ports
->   PCI: mvebu: remove subsys_initcall
->   PCI: mvebu: add support for reset on GPIO
->   PCI: mvebu: add support for Marvell Dove SoCs
-> 
->  .../devicetree/bindings/pci/mvebu-pci.txt          |    7 ++
->  drivers/pci/host/Kconfig                           |    2 +-
->  drivers/pci/host/pci-mvebu.c                       |   99 +++++++++++++-------
->  3 files changed, 71 insertions(+), 37 deletions(-)
+-- 
+Thanks!
+Yijing
 
-Should be pretty isolated.
-
-thx,
-
-Jason.
