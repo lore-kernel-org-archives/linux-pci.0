@@ -1,49 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:51950 "EHLO
-	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755631Ab3GKOTr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2013 10:19:47 -0400
-Message-ID: <1373552385.1349.2.camel@x61.thuisdomein>
-Subject: Re: [PATCH -v2 0/3] Use PCIe DSN to improve pciehp_resume
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Rafael <rjw@sisk.pl>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
-Date: Thu, 11 Jul 2013 16:19:45 +0200
-In-Reply-To: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
-References: <1373535825-49972-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from szxga01-in.huawei.com ([119.145.14.64]:22083 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751112Ab3HABX7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jul 2013 21:23:59 -0400
+Message-ID: <51F9B89D.1010803@huawei.com>
+Date: Thu, 1 Aug 2013 09:23:41 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>, Joe Jin <joe.jin@oracle.com>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+References: <1360036520-31032-1-git-send-email-wangyijing@huawei.com> <51A42137.9090908@huawei.com> <CAErSpo7iyiq6H-BsPNO0Nyc1SF+JteOzBqNQ+d_D=RYE_pdTEA@mail.gmail.com> <51F73108.4070905@huawei.com> <CAErSpo4mHTwqrW-yq_1BkjD0GyFtVYZRm9+eGfASJ_aJCOagjg@mail.gmail.com> <CAErSpo4xJk7bHQihtdN1UP+6Y17TOrBFhEsO_Zwyvz8iQMEXsw@mail.gmail.com> <51F8D5C9.4020309@huawei.com> <CAErSpo5GUTXyo4GeCGvh_GauKUA4decbDWUnD47qKPr6E65g9w@mail.gmail.com> <CAErSpo6yuxdngHepJ96w72SOSapud2URwc2GHPT_-CZh0e1CSA@mail.gmail.com>
+In-Reply-To: <CAErSpo6yuxdngHepJ96w72SOSapud2URwc2GHPT_-CZh0e1CSA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-07-11 at 17:43 +0800, Yijing Wang wrote:
-> v1->v2: Modify pci_get_dsn to pci_device_serial_number,
-> 	    power off slot before remove the old device during resume to avoid
-> 		old .remove() method to touch new hardware.
-> 		Fix other typo and fail check problems.
-> 		Split the list_empty() guard into new patch.
-> 		
+>> Yes, I think that would be safe.  If the switch is set to a larger MPS
+>> than the hot-added device supports, I don't think we can safely use
+>> the device.
 > 
-> Yijing Wang (3):
->   PCI: introduce PCIe Device Serial Number Capability support
->   PCI,pciehp: avoid add a device already exist before suspend during
->     resume
->   PCI,pciehp: use PCIe DSN to identify device change during suspend
+> I opened a bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+> for this problem.  Please correct any mistakes in my summary and
+> reference it in your changelog.
+
+OK, thanks!
+
 > 
->  drivers/pci/hotplug/pciehp_core.c |   54 ++++++++++++++++++++++++++++++++++--
->  drivers/pci/pci.c                 |   27 ++++++++++++++++++
->  drivers/pci/probe.c               |    2 +
->  include/linux/pci.h               |    3 ++
->  4 files changed, 83 insertions(+), 3 deletions(-)
-
-Series applies cleanly to v3.10 (but there was a small problem with 3/3,
-which I'll mention in a reply to that patch). Compiles without warning.
-Those two errors on every resume are now gone!
-
-Thanks.
+> Bjorn
+> 
+> 
 
 
-Paul Bolle
+-- 
+Thanks!
+Yijing
 
