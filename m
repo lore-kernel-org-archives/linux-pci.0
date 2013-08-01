@@ -1,47 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <52012B96.9000207@tilera.com>
-Date: Tue, 6 Aug 2013 13:00:06 -0400
-From: Chris Metcalf <cmetcalf@tilera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:38942 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754648Ab3HAVmR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 17:42:17 -0400
+Received: by mail-ob0-f182.google.com with SMTP id wo10so5029167obc.27
+        for <linux-pci@vger.kernel.org>; Thu, 01 Aug 2013 14:42:16 -0700 (PDT)
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 06/20] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
-References: <cover.1375733180.git.cmetcalf@tilera.com> <a8a7d279ad8633c6aa3b5031aa9da4a76f2487c3.1375733180.git.cmetcalf@tilera.com> <20130805205235.GB24122@phenom.dumpdata.com>
-In-Reply-To: <20130805205235.GB24122@phenom.dumpdata.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <51FAD170.4000302@redhat.com>
+References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
+ <1374937868-24437-2-git-send-email-yinghai@kernel.org> <CAErSpo7xk-NGp+4ZFo-jnVnQSEomY=7=CXDSbZPzrhdjZ4zVSA@mail.gmail.com>
+ <51F6D161.1040106@redhat.com> <CAErSpo5d2+mCkwED-RYV4=3LCvpj7HNxT_6yHxqNA-kcHSHF2g@mail.gmail.com>
+ <51FAD170.4000302@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 1 Aug 2013 15:41:56 -0600
+Message-ID: <CAErSpo7ueW+mQSYHVqcVLymDeefP8RwEQJkjYT=MCAtnRUFb+g@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] PCI: Stop sriov after stop PF if PF's driver skip that
+To: Don Dutile <ddutile@redhat.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/5/2013 4:52 PM, Konrad Rzeszutek Wilk wrote:
-> On Mon, Aug 05, 2013 at 04:06:20PM -0400, Chris Metcalf wrote:
->> The LSI MEGARAID SAS HBA suffers from the problem where it can do
->> 64-bit DMA to streaming buffers but not to consistent buffers.
->> In other words, 64-bit DMA is used for disk data transfers and 32-bit
->> DMA must be used for control message transfers. According to LSI,
->> the firmware is not fully functional yet. This change implements a
->> kind of hybrid dma_ops to support this.
-> If this is generic to LSI MegaRAID HBA shouldn't this change also be
-> done for the other platforms?
->
-> Or perhaps some other changes to make it work with other devices?
+On Thu, Aug 1, 2013 at 3:21 PM, Don Dutile <ddutile@redhat.com> wrote:
+> On 08/01/2013 04:16 PM, Bjorn Helgaas wrote:
+>>
+>> On Mon, Jul 29, 2013 at 2:32 PM, Don Dutile<ddutile@redhat.com>  wrote:
+>>>
+>>> On 07/29/2013 03:58 PM, Bjorn Helgaas wrote:
+>>>>
+>>>>
+>>>> On Sat, Jul 27, 2013 at 9:11 AM, Yinghai Lu<yinghai@kernel.org>   wrote:
+>>>>>
+>>>>>
+>>>>> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
+>>>>> (PCI: Simplify IOV implementation and fix reference count races)
+>>>>> VF need to be removed via virtfn_remove to make sure ref to PF
+>>>>> is put back.
+>>
+>>
+>> OK, I'm lost here.  I think this is the scenario where Yinghai saw a
+>> regression (please correct me if not):
+>>
+>>    00:03.0 Root port to [bus 02]
+>>    02:00.0 SR-IOV NIC (PF in slot 2)
+>>    02:00.1 VF (for example)
+>>
+>>    # echo -n 0>  /sys/bus/pci/slots/2/power
+>>    02:00.0 PF is powered off
+>>    02:00.0 PF pci_dev is released, but VF 02:00.1 pci_dev still exists
+>> and holds a reference to the PF pci_dev, so the 02:00.0 pci_dev is not
+>> actually deallocated
+>>
+>>    # echo -n 1>  /sys/bus/pci/slots/2/power
+>>    pciehp 0000:00:03.0:pcie04: Device 0000:02:00.0 already exists at
+>> 0000:02:00, cannot hot-add
+>>
+>> Prior to dc087f2f6 ("Simplify IOV implementation and fix reference
+>> count races"), this scenario (powering the slot off then back on)
+>> apparently worked, and hot-adding 02:00.0 worked fine.
+>>
+>> But what about the VF pci_devs?  Prior to dc087f2f6, I assume they
+>> still existed even after we removed power from the PF.  But obviously
+>> the hardware VFs are disabled when we power the slot back up.  It
+>> doesn't make sense to me to have pci_devs for these VFs that are no
+>> longer enabled, so maybe I'm missing something here.
+>>
+>>>>> Some driver (like ixgbe) does not call pci_disable_sriov() if
+>>>>> sriov is enabled via /sys/.../sriov_numvfs setting.
+>>>>> ixgbe does allow driver for PF get detached, but still have VFs
+>>>>> around.
+>>>>
+>>>>
+>>>> Is this something ixgbe should be doing differently?
+>>>>
+>>>> I'm not 100% sold on the idea of the VFs staying active after the
+>>>> driver releases the PF.  It seems asymmetric because I think the
+>>>> driver has to claim the PF to *enable* the VFs, but we don't disable
+>>>> them when releasing the PF.
+>>>>
+>>>> What's the use case for detaching the PF driver while the VFs are
+>>>> active?
+>>>>
+>>> VF's assigned to (KVM) guest (via device-assignment).
+>>> Virtually, it's as if the enet cable is unplugged to the VF in the guest
+>>> --
+>>> the device is still there (the PF wasn't unplugged, just the driver
+>>> de-configured).
+>>
+>>
+>> OK, but why is it necessary to detach and reattach the PF driver at
+>> all?  Are you trying to update the PF driver or something?  Change the
+>> number of VFs?
+>>
+> One case is to update the PF driver; the other is 'operator error' :-/
+> Want to not crash the guest w/VFs, and allow operator to 'mend their error',
+> i.e., re-load the PF driver back.
 
-No, it's really specific to how tilegx maps the 64-bit PCI space, 32-bit PCI space, and memory.  I'll add more commentary to the git commit message to make this clearer.
+Neither of these sounds very compelling to me.
 
->> @@ -573,6 +573,11 @@ int dma_set_coherent_mask(struct device *dev, u64 mask)
->>  	if (((dma_ops == gx_pci_dma_map_ops) ||
->>  	    (dma_ops == gx_legacy_pci_dma_map_ops)) &&
->>  	    (mask <= DMA_BIT_MASK(32))) {
->> +		if (dma_ops == gx_pci_dma_map_ops) {
->> +			dma_ops->alloc = tile_swiotlb_alloc_coherent;
->> +			dma_ops->free = tile_swiotlb_free_coherent;
->> +		}
->> +
-> So.. that would change it for all of the devices on the host, not just
-> for this specific one. That is not good is it?
+We don't support updating drivers for non-SR-IOV devices; why should
+we bother doing something different just because this device has
+SR-IOV enabled?
 
-Yes, good point; doing it this way might have some performance impact on other devices on the same host.  See following email for a revised change that updates the dma_ops pointer for that single device instead.
-
--- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
-
+Is there a way to address the operator error issue by making rmmod
+fail if there are VFs assigned to a guest?
