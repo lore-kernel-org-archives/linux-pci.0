@@ -1,38 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:47671 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966063Ab3HHUEK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 16:04:10 -0400
-Message-ID: <5203F978.2050504@infradead.org>
-Date: Thu, 08 Aug 2013 13:03:04 -0700
-From: Randy Dunlap <rdunlap@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37098 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756511Ab3HAQzO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Aug 2013 12:55:14 -0400
+Subject: [PATCH v3 0/9] pci: bus and slot reset interfaces
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 Aug 2013 10:55:08 -0600
+Message-ID: <20130801164652.16145.79918.stgit@bling.home>
 MIME-Version: 1.0
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-CC: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: linux-next: Tree for Aug 8 (not CONFIG_PCI_MSI conflict)
-References: <20130808170822.82bf33d3cf5100f5e2646815@canb.auug.org.au>
-In-Reply-To: <20130808170822.82bf33d3cf5100f5e2646815@canb.auug.org.au>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/08/13 00:08, Stephen Rothwell wrote:
-> Hi all,
-> 
-> Changes since 20130807:
-> 
+I posted a v2 of this back in May, but nack'd it because it had issues
+in cases where PCI hotplug was built as a module.  I pulled some of
+the code into core pci to alleviate that and module options are being
+removed from core pci hotplug and pciehp, so I think it's completely
+fixed now.  Since the RFC a couple days ago I've done more testing and
+added the last two patches, which tunes the delays for holding the bus
+in reset and allowing initialization time after.  These are my best
+interpretation of the spec, if anyone wants to adjust them, please
+suggest new values and spec or hardware evidence to support it.  We
+can also remove the duplicate bus reset code in AER, which is done in
+the last patch.  Including my most recent description of why we need
+this series below.  Thanks,
 
-on i386 and x86_64:
-when CONFIG_PCI_MSI is not enabled:
+Alex
 
-There are many of these errors:
-include/linux/msi.h:65:6: error: expected identifier or '(' before 'void'
-include/linux/msi.h:65:6: error: expected ')' before numeric constant
+This series adds PCI bus and slot reset interfaces to the already
+existing function reset interface.  I need this for two reasons, the
+first is that not all devices support function level reset.  Even
+some of those that we detect as supporting a PM reset on D3hot->D0
+transition actually don't do any reset.  Others have no reset
+capability at all.  We currently implement a secondary bus reset
+escalation from the function reset path, but only when there is a
+single devfn on the bus.  Drivers like vfio can have ownership of
+all of the devices on a bus and should therefore have a path to
+initiate a secondary bus reset with multiple devices.  This is
+particularly required for use of GPUs by userspace, where none of
+the predominant GPUs implement a useful function level reset.
 
-because arch/x86/include/asm/pci.h defines:
-#define default_teardown_msi_irqs	NULL
+The second reason is that even the current function reset escalating
+to a secondary bus reset can cause problems with hotplug controllers.
+If a root port supports PCIe HP with suprise removal, a bus reset
+can trigger a presence detection change, which results in an attempt
+to remove the struct device.  By having a slot reset interface, we
+can involve the hotplug controllers to allow for a controlled bus
+reset and avoid this spurious removal attempt.
+
+---
+
+Alex Williamson (9):
+      pci: Create pci_reset_bridge_secondary_bus()
+      pci: Add hotplug_slot_ops.reset_slot()
+      pci: Implement reset_slot for pciehp
+      pci: Add slot reset option to pci_dev_reset
+      pci: Split out pci_dev lock/unlock and save/restore
+      pci: Add slot and bus reset interfaces
+      pci: Wake-up devices before save for reset
+      pci: Tune secondary bus reset timing
+      pci: Remove aer_do_secondary_bus_reset()
 
 
--- 
-~Randy
+ drivers/pci/hotplug/pciehp.h       |    1 
+ drivers/pci/hotplug/pciehp_core.c  |   12 +
+ drivers/pci/hotplug/pciehp_hpc.c   |   31 +++
+ drivers/pci/pci.c                  |  331 +++++++++++++++++++++++++++++++++---
+ drivers/pci/pcie/aer/aerdrv.c      |    2 
+ drivers/pci/pcie/aer/aerdrv.h      |    1 
+ drivers/pci/pcie/aer/aerdrv_core.c |   35 ----
+ include/linux/pci.h                |    3 
+ include/linux/pci_hotplug.h        |    4 
+ 9 files changed, 358 insertions(+), 62 deletions(-)
