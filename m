@@ -1,95 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:40134 "EHLO hydra.sisk.pl"
+Received: from mx1.redhat.com ([209.132.183.28]:38030 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755934Ab3HLWoa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Aug 2013 18:44:30 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stefan Seyfried <stefan.seyfried@googlemail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg KH <gregkh@linux.com>, Oliver Neukum <oneukum@suse.de>
-Subject: Re: acpiphp and pciehp not working together on Thinkpad X200s
-Date: Tue, 13 Aug 2013 00:54:54 +0200
-Message-ID: <1743905.OR1bJmeKAL@vostro.rjw.lan>
-In-Reply-To: <CAErSpo6HThAr7MXX1-qpzryy7=F7+eMfNK_zWuP9j5arLb1RXA@mail.gmail.com>
-References: <520747B6.8010309@message-id.googlemail.com> <11028683.ZZQRkho7yW@vostro.rjw.lan> <CAErSpo6HThAr7MXX1-qpzryy7=F7+eMfNK_zWuP9j5arLb1RXA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S1754291Ab3HAMmu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Aug 2013 08:42:50 -0400
+Message-ID: <1375360934.31262.156.camel@ul30vt.home>
+Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: bhelgaas@google.com, rjw@sisk.pl, vgoyal@redhat.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	ishii.hironobu@jp.fujitsu.com, ddutile@redhat.com,
+	bill.sumner@hp.com, hbabu@us.ibm.com, linux-acpi@vger.kernel.org
+Date: Thu, 01 Aug 2013 06:42:14 -0600
+In-Reply-To: <51FA015E.10901@jp.fujitsu.com>
+References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
+	 <51F85BCC.2070103@jp.fujitsu.com>
+	 <CAErSpo4yJ2yqCWv7GT7jWSVd_8SktU=xJXT78m8Vxp_wLA4Fow@mail.gmail.com>
+	 <1699397.FXoFYIGzbk@vostro.rjw.lan> <51FA015E.10901@jp.fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, August 12, 2013 11:21:56 AM Bjorn Helgaas wrote:
-> On Sun, Aug 11, 2013 at 3:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Sunday, August 11, 2013 11:18:48 PM Stefan Seyfried wrote:
-> >> Hi Rafael,
+On Thu, 2013-08-01 at 15:34 +0900, Takao Indoh wrote:
+> (2013/08/01 6:23), Rafael J. Wysocki wrote:
+> > On Wednesday, July 31, 2013 03:08:03 PM Bjorn Helgaas wrote:
+> >> [+cc Rafael, linux-acpi]
 > >>
-> >> Am 11.08.2013 23:25, schrieb Rafael J. Wysocki:
-> >> > On Sunday, August 11, 2013 10:13:42 AM Stefan Seyfried wrote:
+> >> On Tue, Jul 30, 2013 at 6:35 PM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
 > >>
-> >> >>  kernel: pci 0000:03:00.0: PME# supported from D0 D3hot D3cold
-> >> >>  kernel: pci 0000:00:1c.1: PCI bridge to [bus 03]
-> >> >>  kernel: pci 0000:00:1c.1:   bridge window [mem 0xf2500000-0xf25fffff]
-> >> >> -kernel: acpiphp: Slot [1] registered
-> >> >>  kernel: pci 0000:00:1c.3: PCI bridge to [bus 05-0c]
-> >> >>  kernel: pci 0000:00:1c.3:   bridge window [io  0x2000-0x2fff]
-> >> >>  kernel: pci 0000:00:1c.3:   bridge window [mem 0xf0000000-0xf1ffffff]
+> >>> On x86, currently IOMMU initialization run *after* PCI enumeration, but
+> >>> what you are talking about is that it should be changed so that x86
+> >>> IOMMU initialization is done *before* PCI enumeration like sparc, right?
 > >>
-> >> >>  kernel: pciehp 0000:00:1c.1:pcie04: HPC vendor_id 8086 device_id 2942 ss_vid 17aa ss_did 20f3
-> >> >>  kernel: pciehp 0000:00:1c.1:pcie04: service driver pciehp loaded
-> >> >>  kernel: pciehp 0000:00:1c.3:pcie04: HPC vendor_id 8086 device_id 2946 ss_vid 17aa ss_did 20f3
-> >> >> -kernel: pciehp 0000:00:1c.3:pcie04: pci_hp_register failed with error -16
-> >> >> -kernel: pciehp 0000:00:1c.3:pcie04: Slot already registered by another hotplug driver
-> >> >> +kernel: pciehp 0000:00:1c.3:pcie04: service driver pciehp loaded
+> >> Yes.  I don't know whether or when that initialization order will ever
+> >> be changed, but I do think we should avoid building more
+> >> infrastructure that depends on the current order.
 > >>
-> >> >> Greg told me to report the issue here, so I'm doing that :-)
-> >> >>
-> >> >> If you need more information (would a complete dmesg of both cases
-> >> >> be useful?), just let me know.
-> >> >
-> >> > Which kernel is that?
-> >>
-> >> That's 3.11rc4, openSUSE Kernel:HEAD repository.
-> >
-> > OK
-> >
-> > Please use the acpiphp.disable=1 workaround for how.  The problem is kind of
-> > known and we'll address it some time in the future, but it is hard to say
-> > when that's going to happen and this point.
-> >
-> > There's some ACPIPHP rework material queued up for 3.12 in linux-next, but
-> > I doubt it'll make a difference on your machine.  Anyway, if you want to
-> > try it, you can just pull the linux-next branch of my linux-pm.git tree
-> > (to avoid pulling all of the other linux-next material in addition to it).
+> >> Changing the order is a pretty big deal because it's a lot more than
+> >> just the IOMMU.  Basically I think we should be enumerating ACPI
+> >> devices, including the IOMMU, before PCI devices, but there's a lot of
+> >> legacy involved in that area.  Added Rafael in case he has any
+> >> thoughts.
+> > 
+> > Well, actually, I'm not really familiar with IOMMUs, sorry.
+> > 
+> > I do think that initializing IOMMU before PCI enumeration would be better,
+> > however.  At least if the ordering should be the same on all architectures,
+> > which I suppose is the case, that's the one I'd choose.
 > 
-> Thanks for the report, Stefan.  I opened
-> https://bugzilla.kernel.org/show_bug.cgi?id=60736 so we don't forget
-> about this.  If you could attach complete dmesg logs for both cases
-> (working and failing) to that bugzilla, that would be great.  An
-> acpidump might also be interesting, since the ACPI namespace
-> determines what acpiphp does.
+> Ok guys. If x86 IOMMU maintainer also thinks changing order is
+> necessary, maybe I need to give up device reset in kdump kernel and
+> consider doing it in panic kernel.
 > 
-> I suspect that we're being too aggressive about determining when we
-> should use one or the other of acpiphp and pciehp.  We basically
-> decide up front which one we expect the platform to use, and we only
-> listen to signals from that one.  But I wonder if we should just
-> prepare for signals from both.
+> Either way, I need bus reset interface to reset devices. Bjorn, could
+> you review the bus reset patches Alex posted yesterday?
 
-I think we should.
-
-Since both have to be built-in now, we can actually enforce certain ordering
-between them.  I don't care which one goes first, but it should be consistent
-between boots etc. IMO.
-
-Now, regardless of which one goes first, the second one should just check if
-the slot has already been registered and simply add itself to the existing slot
-if so.
-
-The removal may be a bit more trickier from what I can say.
-
+I'll post a non-RFC version today, I've made a couple cleanups, tuned
+the delays and rolled in the AER version of secondary bus reset.
 Thanks,
-Rafael
+
+Alex
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
