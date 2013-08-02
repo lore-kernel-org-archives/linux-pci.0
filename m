@@ -1,52 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16216 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754757Ab3HEThU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Aug 2013 15:37:20 -0400
-Subject: [PATCH v4 2/9] pci: Add hotplug_slot_ops.reset_slot()
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: ddutile@redhat.com, indou.takao@jp.fujitsu.com,
-	linux-kernel@vger.kernel.org
-Date: Mon, 05 Aug 2013 13:37:16 -0600
-Message-ID: <20130805193715.9260.21461.stgit@bling.home>
-In-Reply-To: <20130805193200.9260.38729.stgit@bling.home>
-References: <20130805193200.9260.38729.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:53722 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753672Ab3HBSm0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 14:42:26 -0400
+Message-ID: <1375468943.1460.4.camel@x61.thuisdomein>
+Subject: Re: [PATCH -v4 6/6] PCI,pciehp: identify device change during
+ suspend
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Date: Fri, 02 Aug 2013 20:42:23 +0200
+In-Reply-To: <1375362389-26096-7-git-send-email-wangyijing@huawei.com>
+References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
+	 <1375362389-26096-7-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This optional callback allows htoplug controllers to perform slot
-specific resets.  These may be necessary in cases where a normal
-secondary bus reset can interact with controller logic and expose
-spurious hotplugs.
+Yijing,
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- include/linux/pci_hotplug.h |    4 ++++
- 1 file changed, 4 insertions(+)
+On Thu, 2013-08-01 at 21:06 +0800, Yijing Wang wrote:
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 7fe9dbd..db5f597 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> [...]
+> @@ -315,10 +317,36 @@ static int pciehp_resume (struct pcie_device *dev)
+>  	if (status) {
+>  		if (list_empty(&pbus->devices))
+>  			pciehp_enable_slot(slot);
+> -	} else if (!list_empty(&pbus->devices)) {
+> -		pciehp_disable_slot(slot);
+> +
+> +		pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
+> +		if (!pdev)
+> +			return 0;
+> +		ret = pci_serial_number_changed(pdev);
+> +		pci_dev_put(pdev);
+> +		if (ret) {
+> +			/*
+> +			 * first power off slot, avoid the old driver
+> +			 * .remove() method touch the new hardware
+> +			 */
+> +			if (POWER_CTRL(ctrl)) {
+> +				ret = pciehp_power_off_slot(slot);
+> +				if (ret) {
+> +					ctrl_err(ctrl,
+> +						"Issue of Slot Disable command failed\n");
+> +					return 0;
+> +				}
+> +				msleep(1000);
+> +				pciehp_unconfigure_device(slot);
+> +				/* call child devices driver->suspend() for symmetry */
+> +				list_for_each_entry(pdev, &pbus->devices, bus_list)
+> +					if (pdev->driver)
+> +						pdev->driver->driver.pm->suspend(&pdev->dev);
+> +				pciehp_enable_slot(slot);
+> +			}
+> +		} else if (!list_empty(&pbus->devices)) {
+> +			pciehp_disable_slot(slot);
+> +		}
+>  	}
+> -	
 
-diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-index 8db71dc..bd32109 100644
---- a/include/linux/pci_hotplug.h
-+++ b/include/linux/pci_hotplug.h
-@@ -63,6 +63,9 @@ enum pcie_link_width {
-  * @get_adapter_status: Called to get see if an adapter is present in the slot or not.
-  *	If this field is NULL, the value passed in the struct hotplug_slot_info
-  *	will be used when this value is requested by a user.
-+ * @reset_slot: Optional interface to allow override of a bus reset for the
-+ *	slot for cases where a secondary bus reset can result in spurious
-+ *	hotplug events or where a slot can be reset independent of the bus.
-  *
-  * The table of function pointers that is passed to the hotplug pci core by a
-  * hotplug pci driver.  These functions are called by the hotplug pci core when
-@@ -80,6 +83,7 @@ struct hotplug_slot_ops {
- 	int (*get_attention_status)	(struct hotplug_slot *slot, u8 *value);
- 	int (*get_latch_status)		(struct hotplug_slot *slot, u8 *value);
- 	int (*get_adapter_status)	(struct hotplug_slot *slot, u8 *value);
-+	int (*reset_slot)		(struct hotplug_slot *slot, int probe);
- };
- 
- /**
+I ran into a problem with this change. This line, removing a line
+consisting of only a single tab, appears to conflict with a patch
+earlier in this series. I had to manually remove just the change that
+removed that line to get this patch to apply. Any idea what's going on?
+
+>  	return 0;
+>  }
+>  #endif /* PM */
+
+
+Paul Bolle
 
