@@ -1,50 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 12 Aug 2013 08:33:55 -0300
-From: Mauro Carvalho Chehab <m.chehab@samsung.com>
-To: Borislav Petkov <bp@alien8.de>
-Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
-	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
- event
-Message-id: <20130812083355.47c1bae8@samsung.com>
-In-reply-to: <20130810180322.GC4155@pd.tnic>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:36870 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755055Ab3HBX4n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 2 Aug 2013 19:56:43 -0400
+Message-ID: <1375487788.15999.75.camel@pasglop>
+Subject: Re: RFC: vfio-pci API for PCI bus/slot (hot) resets
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, kvm <kvm@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Sat, 03 Aug 2013 09:56:28 +1000
+In-Reply-To: <1375486647.31262.351.camel@ul30vt.home>
+References: <1375395497.31262.271.camel@ul30vt.home>
+	 <1375420202.3743.97.camel@pasglop> <1375461387.31262.314.camel@ul30vt.home>
+	 <1375478934.15999.33.camel@pasglop>
+	 <CAErSpo42yK=K55J30V3xd_Ki6KEUOU6q7sUpNrAYe517=CdiDA@mail.gmail.com>
+	 <1375485348.15999.66.camel@pasglop>
+	 <1375486647.31262.351.camel@ul30vt.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Sat, 10 Aug 2013 20:03:22 +0200
-Borislav Petkov <bp@alien8.de> escreveu:
+On Fri, 2013-08-02 at 17:37 -0600, Alex Williamson wrote:
 
-> On Thu, Aug 08, 2013 at 04:38:22PM -0300, Mauro Carvalho Chehab wrote:
-> > Em Thu, 08 Aug 2013 23:57:51 +0530
-> > "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
+> > Yes.
 > > 
-> > > Enable memory error trace event in cper.c
+> > We have that similar issue with error handling, when the driver doesn't
+> > have the right hooks, we simulate an unplug, reset, then replug.
 > > 
-> > Why do we need to do that? Memory error events are already handled
-> > via edac_ghes module,
+> > Maybe we could provide generic helpers to do that...
 > 
-> If APEI gives me all the required information in order to deal with the
-> hardware error - and it looks like it does - then the additional layer
-> of ghes_edac is not needed.
+> Devices going away and coming back is pretty difficult for vfio to
+> handle.  Perhaps helpers to rescan a device in-place would be easier.
 
-APEI is just the mechanism that collects the data, not the mechanism
-that reports to userspace.
+Well, in the error handling case (and *maybe* in the "FW update" case)
+we need to unbind and rebind the driver as well. The whole point is that
+we have to do that because the driver doesn't have the right hooks.
 
-The current implementation is that APEI already reports those errors
-via ghes_edac driver. It also reports the very same error via MCE
-(although the APEI interface to MCE is currently broken for everything
-that it is not Nehalem-EX - as it basically emulates the MCE log for
-that specific architecture).
+In the VFIO case, we will have to implement something here so that the
+VFIO driver stub doesn't get handled that treatment :-) We'll probably
+need some arch specific stuff in vfio_pci unfortunately, so that the
+errors get forwarded to the guest via our EEH interfaces, and let the
+guest handle it's error handling.
 
-I really don't see any sense on adding yet-another-way to report the
-very same error.
+Of course that leaves an interesting problem as to what state the device
+is in when it comes back to the host ...
 
-Regards,
-Mauro
+This is made a LOT more complicated in the VFIO model than it is in the
+"pHyp" model (our proprietary hypervisor).
+
+Under pHyp, the PE doesn't have a concept of being used outside of a
+guest, and it always reset before being assigned/unassigned. The guest
+can mess around all it wants (bus numbers, BARs, etc...) it can only
+hurt itself. The hypervisor doesn't keep track of any of that.
+
+> On the QEMU side we'd need to rescan the device after each reset, which
+> would be rather tedious for the typical case where it doesn't change.
+
+This is a direct consequence of your model :-) It makes things more
+complex for us as well, but we have to bite that bullet now. Maybe we
+can consider an alternate/simpler model in the future, more akin to what
+pHyp does, where we "unplug" the device from the host when assigning it
+to a guest (and the whole hierarchy below it if it's a bridge) and let
+the guest do what it wants with it. 
+
+Doing so means we no longer have to emulate/filter config space
+(provided your HW handles MSI virtualization properly), care about bus
+numbers, BARs, etc... nor do we need to keep track of a lot of this in
+qemu. All we need is reset the whole & lot and re-probe the bus leg when
+returning the devices to the host.
+ 
+Cheers,
+Ben.
+
+> Thanks,
+> 
+> Alex
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe kvm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
