@@ -1,88 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43344 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754541Ab3HEIjr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Aug 2013 04:39:47 -0400
-Date: Mon, 5 Aug 2013 10:39:43 +0200
-From: Michal Marek <mmarek@suse.cz>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Yann E. MORIN" <yann.morin.1998@free.fr>,
-	linux-kbuild <linux-kbuild@vger.kernel.org>
-Subject: Warnings from silentoldconfig (Re: [GIT PULL] PCI updates for v3.11)
-Message-ID: <20130805083943.GA14782@sepie.suse.cz>
-References: <20130802181740.GA27100@google.com>
- <CA+55aFzSG8ny=79_MFik5xP99c7eb-LMKh0JzTKpbiEB8Wt=5Q@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+To: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<dougthompson@xmission.com>, <bp@alien8.de>, <bhelgaas@google.com>,
+	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Subject: [PATCH 2/3 V2] EDAC, AMD64_EDAC: Add relevant condition checks as F15h M30h does not support GART or L3.
+Date: Fri, 2 Aug 2013 17:43:03 -0500
+Message-ID: <1375483384-2302-3-git-send-email-Aravind.Gopalakrishnan@amd.com>
+In-Reply-To: <1375483384-2302-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+References: <1375483384-2302-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFzSG8ny=79_MFik5xP99c7eb-LMKh0JzTKpbiEB8Wt=5Q@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 02, 2013 at 01:28:25PM -0700, Linus Torvalds wrote:
-> On Fri, Aug 2, 2013 at 11:17 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >
-> > Yinghai is still working on another SR-IOV-related fix or two, which
-> > will be simpler if pciehp is non-modular, so I included the Kconfig
-> > changes now to get them in earlier.
-> 
-> Hmm. Doing a trivial "make allmoconfig" for testing, I get
-> 
->   include/config/auto.conf:3014:warning: symbol value 'm' invalid for
-> HOTPLUG_PCI_PCIE
->   include/config/auto.conf:4711:warning: symbol value 'm' invalid for
-> HOTPLUG_PCI
-> 
-> but that may be a build system issue with stale data from the
-> *previous* "make allmodconfig". Regardless, that makes me worried.
-> 
-> Adding Michal Marek to the discussion. I'm currently doing a new "make
-> allmodconfig" after having done a "git clean -dqfx" to see if the
-> error remains. If it does, I will unpull. If it is gone, I'm going to
-> assume the Kconfig changes are ok, but that our build system is
-> missing some dependency.
+Adding code to check for specific model (F15h, M30h) and if yes,
+do not add flag AMD_NB_GART. Also check cpuid_edx(0x80000006) for
+prescence of L3. If no L3, do not add any L3 flags.
 
-Added Yann and the linux-kbuild list to CC. Reproducer:
+Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
 
-  git checkout 1fe0135
-  make mrproper
-  make allmodconfig
-  make silentoldconfig
-  git checkout aa8032b
-  make allmodconfig
-  make silentoldconfig
-
-conf_write_autoconf() first calls conf_split_config() to generate the
-include/config/**.h hierarchy, then generates include/config/auto.conf.
-For some reason, conf_split_config() reads include/config/auto.conf,
-which may not exist yet or may be out of date. Yann, can anything break
-if we simply do not read that file from conf_split_config(), like this?
-
-diff --git a/scripts/kconfig/confdata.c b/scripts/kconfig/confdata.c
-index c55c227..8c90835 100644
---- a/scripts/kconfig/confdata.c
-+++ b/scripts/kconfig/confdata.c
-@@ -829,16 +829,12 @@ next:
+diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+index 3048ded..3ee7a4d 100644
+--- a/arch/x86/kernel/amd_nb.c
++++ b/arch/x86/kernel/amd_nb.c
+@@ -20,6 +20,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
+ 	{}
+ };
+@@ -27,6 +28,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
  
- static int conf_split_config(void)
- {
--	const char *name;
- 	char path[PATH_MAX+1];
- 	char *s, *d, c;
- 	struct symbol *sym;
- 	struct stat sb;
- 	int res, i, fd;
+ static const struct pci_device_id amd_nb_link_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
+ 	{}
+ };
+@@ -81,13 +83,21 @@ int amd_cache_northbridges(void)
+ 			next_northbridge(misc, amd_nb_misc_ids);
+ 		node_to_amd_nb(i)->link = link =
+ 			next_northbridge(link, amd_nb_link_ids);
+-        }
++	}
  
--	name = conf_get_autoconfig_name();
--	conf_read_simple(name, S_DEF_AUTO);
--
- 	if (chdir("include/config"))
- 		return 1;
++	/* GART present only on Fam15h upto model 0fh */
+ 	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
+-	    boot_cpu_data.x86 == 0x15)
++	    (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model < 0x10))
+ 		amd_northbridges.flags |= AMD_NB_GART;
  
-Thanks,
-Michal
+ 	/*
++	 * Check CPUID Fn8000_0006_EDX: L3 Cache Identifiers.
++	 * If == 0, then no need to proceed as there is no L3.
++	 */
++	if (cpuid_edx(0x80000006) == 0)
++		return 0;
++
++	/*
+ 	 * Some CPU families support L3 Cache Index Disable. There are some
+ 	 * limitations because of E382 and E388 on family 0x10.
+ 	 */
+-- 
+1.7.10.4
+
+
