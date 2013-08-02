@@ -1,90 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from up.free-electrons.com ([94.23.35.102]:53495 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751551Ab3HANZ1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:25:27 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Received: from quartz.orcorp.ca ([184.70.90.242]:57700 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752437Ab3HBRnz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 2 Aug 2013 13:43:55 -0400
+Date: Fri, 2 Aug 2013 11:43:50 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv6 06/13] irqdomain: add support to associate an irq_domain with a msi_chip
-Date: Thu,  1 Aug 2013 15:25:09 +0200
-Message-Id: <1375363516-2620-7-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 3.11-rc] pci: mvebu: disable prefetchable memory support
+ in PCI-to-PCI bridge
+Message-ID: <20130802174350.GA15787@obsidianresearch.com>
+References: <1375364659-3228-1-git-send-email-thomas.petazzoni@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1375364659-3228-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Message Signaled Interrupts are a PCI-specific mechanism that allows
-PCI devices to notify interrupts to the CPU using in-band
-messages. The PCI subsystem represents an MSI-capable interrupt
-controller as an msi_chip structure, and this patch improves the
-irqdomain subsystem with a new pointer associating an irq_domain with
-the corresponding msi_chip.
+On Thu, Aug 01, 2013 at 03:44:19PM +0200, Thomas Petazzoni wrote:
+> The Marvell PCIe driver uses an emulated PCI-to-PCI bridge to be able
+> to dynamically set up MBus address decoding windows for PCI I/O and
+> memory regions depending on the PCI devices enumerated by Linux.
+> 
+> However, this emulated PCI-to-PCI bridge logic makes the Linux PCI
+> core believe that prefetchable memory regions are supported (because
+> the registers are read/write), while in fact no adress decoding window
+> is ever created for such regions. Since the Marvell MBus address
+> decoding windows do not distinguish memory regions and prefetchable
+> memory regions, this patch takes a simple approach: change the
+> PCI-to-PCI bridge emulation to let the Linux PCI core know that we
+> don't support prefetchable memory regions.
+> 
+> To achieve this, we simply make the prefetchable memory base a
+> read-only register that always returns 0. Reading/writing all the
+> other prefetchable memory related registers has no effect.
 
-The irq_domain structure gains a pointer to a msi_chip structure, and
-a new helper function irq_domain_add_msi() is added to help in
-allocating, initializing and registering an irq_domain for a MSI-type
-interrupt controller.
+Looks good to me. It is very good that you were able to merge the
+downstream prefetchable BARs into the normal MMIO window.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- include/linux/irqdomain.h | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+Though looking at the original thread I really wonder if something
+else is wrong here as well. The ethernet should not have only
+prefetchable BARs.
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 7113941..b0504ff 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -38,6 +38,7 @@
- struct device_node;
- struct irq_domain;
- struct of_device_id;
-+struct msi_chip;
- 
- /* Number of irqs reserved for a legacy isa controller */
- #define NUM_ISA_INTERRUPTS	16
-@@ -101,6 +102,7 @@ struct irq_domain {
- 	/* Optional data */
- 	struct device_node *of_node;
- 	struct irq_domain_chip_generic *gc;
-+	struct msi_chip *msi_chip;
- 
- 	/* reverse map data. The linear map gets appended to the irq_domain */
- 	irq_hw_number_t hwirq_max;
-@@ -177,6 +179,22 @@ static inline struct irq_domain *irq_domain_add_tree(struct device_node *of_node
- 		__irq_domain_register(d);
- 	return d;
- }
-+static inline struct irq_domain *irq_domain_add_msi(struct device_node *of_node,
-+						    unsigned int size,
-+						    const struct irq_domain_ops *ops,
-+						    struct msi_chip *msi_chip,
-+						    void *host_data)
-+{
-+	struct irq_domain *d;
-+	d = __irq_domain_alloc(of_node, size, size, 0, ops, host_data);
-+	if (d) {
-+		d->msi_chip = msi_chip;
-+		__irq_domain_register(d);
-+	}
-+
-+	return d;
-+}
-+
- 
- extern void irq_domain_remove(struct irq_domain *host);
- 
--- 
-1.8.1.2
+For instance, I found this link:
 
+https://bugzilla.redhat.com/show_bug.cgi?id=448712
+
+Which shows a more resonable arrangement:
+
+02:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 02)
+        Region 0: I/O ports at e800 [size=256]
+        Region 2: Memory at dffff000 (64-bit, non-prefetchable) [size=4K]
+        Region 4: Memory at deff0000 (64-bit, prefetchable) [size=64K]
+        Expansion ROM at dffc0000 [disabled] [size=128K]
+
+vs Finn's:
+
+01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller (rev)
+         Subsystem: Realtek Semiconductor Co., Ltd. TEG-ECTX Gigabit PCI-E Adapter [Trendnet]
+         Flags: bus master, fast devsel, latency 0, IRQ 9
+         I/O ports at 10000 [size=256]
+         Memory at e0014000 (64-bit, prefetchable) [size=4K]
+         Memory at e0010000 (64-bit, prefetchable) [size=16K]
+
+Regards,
+Jason
