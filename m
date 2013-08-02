@@ -1,67 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:58891 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755951Ab3HONvI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Aug 2013 09:51:08 -0400
-Date: Thu, 15 Aug 2013 15:51:06 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>
-Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	"Luck, Tony" <tony.luck@intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aristeu Rozanski Filho <arozansk@redhat.com>
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Message-ID: <20130815135106.GG27616@pd.tnic>
-References: <5208D80D.5030206@linux.vnet.ibm.com>
- <20130812114404.3bd64fa0@samsung.com>
- <520A1B5E.8040105@linux.vnet.ibm.com>
- <20130813094147.062317f8@concha.lan>
- <520A6A30.1030406@linux.vnet.ibm.com>
- <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
- <520B603E.3040002@linux.vnet.ibm.com>
- <20130814211504.393cf138@concha.lan>
- <20130815100132.GC27616@pd.tnic>
- <20130815103421.178a5224@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130815103421.178a5224@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1375485348.15999.66.camel@pasglop>
+Subject: Re: RFC: vfio-pci API for PCI bus/slot (hot) resets
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	kvm <kvm@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Sat, 03 Aug 2013 09:15:48 +1000
+In-Reply-To: <CAErSpo42yK=K55J30V3xd_Ki6KEUOU6q7sUpNrAYe517=CdiDA@mail.gmail.com>
+References: <1375395497.31262.271.camel@ul30vt.home>
+	 <1375420202.3743.97.camel@pasglop> <1375461387.31262.314.camel@ul30vt.home>
+	 <1375478934.15999.33.camel@pasglop>
+	 <CAErSpo42yK=K55J30V3xd_Ki6KEUOU6q7sUpNrAYe517=CdiDA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 15, 2013 at 10:34:21AM -0300, Mauro Carvalho Chehab wrote:
-> Yes, but the thing is that it is not safe to use the hardware driver
-> if the BIOS is also reading the hardware error registers directly, as,
-> on several hardware, a read cause the error data to be cleaned on such
-> register.
+On Fri, 2013-08-02 at 16:49 -0600, Bjorn Helgaas wrote:
+> [+cc linux-pci]
+> 
+> On Fri, Aug 2, 2013 at 3:28 PM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+> 
+> > Right. Another use case is, I know of devices that need a fundamental
+> > reset (PERST) after applying a FW update.
+> 
+> This is a tangent from the real discussion here, but the question of
+> resetting a device after a firmware update concerns me.  Many if not
+> all of our current reset interfaces save & restore the architected
+> parts of config space around the reset.  But a reset after a firmware
+> update may change things like the number and type of BARs or even the
+> functionality of the device, so I don't think the restore is safe in
+> general.
 
-Here's the deal:
+Right.
 
-* We parse some APEI table and disable those MCA banks which the BIOS
-wants to handle first.
+> I doubt this is a big problem in general, but I have found reports of
+> people having to do a system reset or reboot after updating, e.g.,
+> FPGA images.  I suppose at least some of these could be worked around
+> with the right hotplug incantations.
 
-* When the BIOS decides to report an error from that handling, it does
-so over another BIOS table.
+Yes.
 
-* Now you have two possibilities:
+We have that similar issue with error handling, when the driver doesn't
+have the right hooks, we simulate an unplug, reset, then replug.
 
-** On systems without an edac driver or where it doesn't make sense to
-have the ghes_edac driver, we call trace_mc_event() straight from APEI
-code (this is what we're currently discussung).
+Maybe we could provide generic helpers to do that...
 
-** On other systems, where we need ghes_edac, we *don't* use the
-trace_mc_event() tracepoint in the APEI code but let it come from
-ghes_edac with additional information collected by edac.
+Cheers,
+Ben.
 
--- 
-Regards/Gruss,
-    Boris.
+> http://forums.xilinx.com/t5/PCI-Express/PC-is-hung-if-run-the-second-program-FPGA-by-JTAG/td-p/20871
+> http://www.alteraforum.com/forum/archive/index.php/t-28477.html
+> http://www.alteraforum.com/forum/showthread.php?t=35091
+> https://github.com/NetFPGA/NetFPGA-public/wiki/Restore-PCIE-Configuration
+> http://lkml.indiana.edu/hypermail/linux/kernel/1104.3/02544.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe kvm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+
