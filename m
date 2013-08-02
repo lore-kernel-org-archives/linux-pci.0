@@ -1,70 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:38083 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754142Ab3HKVPV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 11 Aug 2013 17:15:21 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Stefan Seyfried <stefan.seyfried@googlemail.com>
-Cc: linux-pci@vger.kernel.org, Greg KH <gregkh@linux.com>,
-	Oliver Neukum <oneukum@suse.de>
-Subject: Re: acpiphp and pciehp not working together on Thinkpad X200s
-Date: Sun, 11 Aug 2013 23:25:39 +0200
-Message-ID: <1880950.SYaKzZm9j7@vostro.rjw.lan>
-In-Reply-To: <520747B6.8010309@message-id.googlemail.com>
-References: <520747B6.8010309@message-id.googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:58418 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758247Ab3HBJdo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 05:33:44 -0400
+Received: from /spool/local
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 2 Aug 2013 14:58:14 +0530
+Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 4156DE0055
+	for <linux-pci@vger.kernel.org>; Fri,  2 Aug 2013 15:03:48 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r729XYpD45219970
+	for <linux-pci@vger.kernel.org>; Fri, 2 Aug 2013 15:03:34 +0530
+Received: from d28av04.in.ibm.com (loopback [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r729XYa3030961
+	for <linux-pci@vger.kernel.org>; Fri, 2 Aug 2013 19:33:36 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linuxram@us.ibm.com, shangw@linux.vnet.ibm.com,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH 2/4] PCI: add comment for pbus_size_mem() parameter
+Date: Fri,  2 Aug 2013 17:31:04 +0800
+Message-Id: <1375435866-16332-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, August 11, 2013 10:13:42 AM Stefan Seyfried wrote:
-> Hi all,
-> 
-> after openSUSE changed its kernel config to statically build in acpiphp
-> and pciehp, my ExpressCard slot does not work anymore. The workaround
-> is to disable acpiphp with acpiphp.disable=1
-> 
-> To be honest, I cannot say if it ever worked with both drivers loaded,
-> since I always had to load pciehp manually to get the slot working. I
-> don't think I ever tried acpiphp before. If necessary, I can either
-> build a kernel with both drivers modularized or just boot an old kernel
-> from before the config change.
-> 
-> I did diff both dmesg outputs and the only differences I can see are:
-> 
-> -kernel: acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
-> +kernel: acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5, disabled by user; please report a bug
-> 
-> @@ -401,7 +400,6 @@
->  kernel: pci 0000:03:00.0: PME# supported from D0 D3hot D3cold
->  kernel: pci 0000:00:1c.1: PCI bridge to [bus 03]
->  kernel: pci 0000:00:1c.1:   bridge window [mem 0xf2500000-0xf25fffff]
-> -kernel: acpiphp: Slot [1] registered
->  kernel: pci 0000:00:1c.3: PCI bridge to [bus 05-0c]
->  kernel: pci 0000:00:1c.3:   bridge window [io  0x2000-0x2fff]
->  kernel: pci 0000:00:1c.3:   bridge window [mem 0xf0000000-0xf1ffffff]
-> 
-> @@ -585,8 +583,7 @@
->  kernel: pciehp 0000:00:1c.1:pcie04: HPC vendor_id 8086 device_id 2942 ss_vid 17aa ss_did 20f3
->  kernel: pciehp 0000:00:1c.1:pcie04: service driver pciehp loaded
->  kernel: pciehp 0000:00:1c.3:pcie04: HPC vendor_id 8086 device_id 2946 ss_vid 17aa ss_did 20f3
-> -kernel: pciehp 0000:00:1c.3:pcie04: pci_hp_register failed with error -16
-> -kernel: pciehp 0000:00:1c.3:pcie04: Slot already registered by another hotplug driver
-> +kernel: pciehp 0000:00:1c.3:pcie04: service driver pciehp loaded
->  kernel: pciehp: PCI Express Hot Plug Controller Driver version: 0.4
->  kernel: intel_idle: does not run on family 6 model 23
->  kernel: GHES: HEST is not enabled!
-> 
-> The other changes are
-> * kernel command line (obviously)
-> * timing related (small difference in cpu freq / jiffies)
-> 
-> Greg told me to report the issue here, so I'm doing that :-)
-> 
-> If you need more information (would a complete dmesg of both cases
-> be useful?), just let me know.
+In the comment of pbus_size_mem(), the comment of two parameters are missed.
 
-Which kernel is that?
+This patch fills in the missing description for two parameters of
+pbus_size_mem().
 
-Rafael
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/setup-bus.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6dbe562..939ca1b 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -838,6 +838,8 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
+  * pbus_size_mem() - size the memory window of a given bus
+  *
+  * @bus : the bus
++ * @mask: mask the resource flag, then compare it with type
++ * @type: the type of free resource from bridge
+  * @min_size : the minimum memory window that must to be allocated
+  * @add_size : additional optional memory window
+  * @realloc_head : track the additional memory window on this list
+-- 
+1.7.5.4
 
