@@ -1,114 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:50915 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800Ab3H0SMT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 14:12:19 -0400
-Received: by mail-oa0-f52.google.com with SMTP id f4so5929050oah.39
-        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 11:12:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1377626563.5825.8.camel@jekeller-desk1.amr.corp.intel.com>
-References: <CAErSpo6pCzw6Gjn+SCFhu7PnBpHkUz0oqO+tGmmOH8NxoMiH6g@mail.gmail.com>
- <1377621883-6707-1-git-send-email-liuj97@gmail.com> <CAErSpo4B8XTfgq+eQsPZwrEkJ0cG81CskPrtFZWTwuoRBkp8ww@mail.gmail.com>
- <1377626563.5825.8.camel@jekeller-desk1.amr.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 27 Aug 2013 12:11:58 -0600
-Message-ID: <CAErSpo6m96iE4rShiXqHpU_N0qQXKTfSi3qTR+TV=PU3erQ0Jg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: correctly check availability of PCIe Link
- Cap/Status/Control registers
-To: "Keller, Jacob E" <jacob.e.keller@intel.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yuval Mintz <yuvalmin@broadcom.com>,
-	"Zhao, Yu" <yu.zhao@intel.com>, Jiang Liu <jiang.liu@huawei.com>,
-	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:56689 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758081Ab3HBJcb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 05:32:31 -0400
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 2 Aug 2013 14:54:04 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id AFE1DE0053
+	for <linux-pci@vger.kernel.org>; Fri,  2 Aug 2013 15:02:33 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r729WIHm43712714
+	for <linux-pci@vger.kernel.org>; Fri, 2 Aug 2013 15:02:18 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r729WLiH012993
+	for <linux-pci@vger.kernel.org>; Fri, 2 Aug 2013 15:02:21 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linuxram@us.ibm.com, shangw@linux.vnet.ibm.com,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH 1/4] PCI: optimize pci_bus_get_depth() by enumerating on pci bus hierachy
+Date: Fri,  2 Aug 2013 17:31:03 +0800
+Message-Id: <1375435866-16332-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 27, 2013 at 12:02 PM, Keller, Jacob E
-<jacob.e.keller@intel.com> wrote:
-> On Tue, 2013-08-27 at 11:07 -0600, Bjorn Helgaas wrote:
->> On Tue, Aug 27, 2013 at 10:44 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> > From: Jiang Liu <jiang.liu@huawei.com>
->> >
->> > PCIe Base Spec 1.0 Section 5.8 states that "The PCI Express Capabilities,
->> > Device Capabilities, Device Status/Control, Link Capabilities and
->> > Link Status/Control registers are required for all PCI Express devices."
->>
->> And spec 1.1 amended that (in sec 7.8, not 5.8) to say that the link
->> registers are not required for Root Complex Integrated Endpoints.
->> Integrated endpoints and event collectors don't have links, so even if
->> some RC-integrated devices do implement link registers per spec 1.0, I
->> don't think there's any point in allowing access to them.
->>
->
-> Does this mean that pcie_get_minimum_link should be modified to check to
-> make sure the device has a linkstatus, and only keep track of values for
-> which there is a minimum?
+Normally, on one pci bus there would be more devices than pci buses. When
+calculating the depth of pci bus, it would be more time efficient by
+enumerating through the child buses instead of the child devices.
 
-That doesn't seem necessary to me.  pcie_get_minimum_link() is only
-looking at bridge devices (Downstream Ports, Upstream Ports, and Root
-Ports).  All of those are required to implement the Link Status
-register, so I think checking would be unnecessary complication.
+Also by doing so, the code seems more self explaining. Previously, it go
+through the pci devices and check whether a bridge introduce a child bus or
+not, which needs more background knowledge to understand it.
 
-The RC-integrated devices can't be bridges, so pcie_get_minimum_link()
-should never even iterate over any of them.
+This patch caculating the depth by enumerating on pci bus hierachy.
 
->> > And PCIe Base Spec 3.0 Section 7.8 states that "The Link Capabilities,
->> > Link Status, and Link Control registers are required for all Root Ports,
->> > Switch Ports, Bridges, and Endpoints that are not Root Complex Integrated
->> > Endpoints."
->> >
->> > Changeset 1b6b8ce2ac372e "PCI: only save/restore existent registers in the
->> > PCIe capability" introduces pcie_cap_has_lnkctl(), which assumes:
->> > 1) PCIe root port, endpoint and legacy endpoint with 1.0 PCIe Capability
->> >    implement Link Cap/Status/Control registers.
->> > 2) All PCIe devices with 2.0 PCIe Capability implemnet Link Cap/Status/
->> >    Control registers.
->> >
->> > The above assumptions don't conform to PCIe base specifications, so change
->> > pcie_cap_has_lnkctl() to follow PCIe specifications.
->> >
->> > Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> > ---
->> > Hi Bjorn,
->> >         Yuval has a PCIe 1.0 swither, so triggers the bug.  I'm not sure
->> > why Yu Zhao has implemented pcie_cap_has_linctl() in that way, any special
->> > consideration here?
->> >
->> > Hi Yuval,
->> >         Could you please help to test this patch? Due to hardware resource
->> > constraints, I have just compiled the patch on my laptop without testing.
->> >
->> > Thanks!
->> >
->> > ---
->> >  drivers/pci/access.c | 12 ++++++++----
->> >  1 file changed, 8 insertions(+), 4 deletions(-)
->> >
->> > diff --git a/drivers/pci/access.c b/drivers/pci/access.c
->> > index 1cc2366..23ff366 100644
->> > --- a/drivers/pci/access.c
->> > +++ b/drivers/pci/access.c
->> > @@ -484,10 +484,14 @@ static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
->> >  {
->> >         int type = pci_pcie_type(dev);
->> >
->> > -       return pcie_cap_version(dev) > 1 ||
->> > -              type == PCI_EXP_TYPE_ROOT_PORT ||
->> > -              type == PCI_EXP_TYPE_ENDPOINT ||
->> > -              type == PCI_EXP_TYPE_LEG_END;
->> > +       return  pcie_cap_version(dev) == 1 ||
->> > +               type == PCI_EXP_TYPE_ENDPOINT ||
->> > +               type == PCI_EXP_TYPE_LEG_END ||
->> > +               type == PCI_EXP_TYPE_ROOT_PORT ||
->> > +               type == PCI_EXP_TYPE_UPSTREAM ||
->> > +               type == PCI_EXP_TYPE_DOWNSTREAM ||
->> > +               type == PCI_EXP_TYPE_PCI_BRIDGE ||
->> > +               type == PCI_EXP_TYPE_PCIE_BRIDGE;
->> >  }
->> >
->> >  static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
->> > --
->> > 1.8.1.2
->> >
->
->
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/setup-bus.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d254e23..6dbe562 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1300,15 +1300,12 @@ static void pci_bus_dump_resources(struct pci_bus *bus)
+ static int __init pci_bus_get_depth(struct pci_bus *bus)
+ {
+ 	int depth = 0;
+-	struct pci_dev *dev;
++	struct pci_bus *child_bus;
+ 
+-	list_for_each_entry(dev, &bus->devices, bus_list) {
++	list_for_each_entry(child_bus, &bus->children, node){
+ 		int ret;
+-		struct pci_bus *b = dev->subordinate;
+-		if (!b)
+-			continue;
+ 
+-		ret = pci_bus_get_depth(b);
++		ret = pci_bus_get_depth(child_bus);
+ 		if (ret + 1 > depth)
+ 			depth = ret + 1;
+ 	}
+-- 
+1.7.5.4
+
