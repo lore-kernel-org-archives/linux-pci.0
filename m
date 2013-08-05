@@ -1,72 +1,107 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41285 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754947Ab3HETiD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Aug 2013 15:38:03 -0400
+Subject: [PATCH v4 9/9] pci: Remove aer_do_secondary_bus_reset()
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: ddutile@redhat.com, indou.takao@jp.fujitsu.com,
+	linux-kernel@vger.kernel.org
+Date: Mon, 05 Aug 2013 13:37:59 -0600
+Message-ID: <20130805193759.9260.35576.stgit@bling.home>
+In-Reply-To: <20130805193200.9260.38729.stgit@bling.home>
+References: <20130805193200.9260.38729.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVSRMdinMKQdJUB_q8pAK-ei-Q-if+8K5yyz=HRTHbCTA@mail.gmail.com>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-	<1376189294-32022-27-git-send-email-yinghai@kernel.org>
-	<CANVTcTYhdiptB_sOUyveBfieg0VkTGdor16kCHKkJDemHzcWXw@mail.gmail.com>
-	<CAE9FiQVSRMdinMKQdJUB_q8pAK-ei-Q-if+8K5yyz=HRTHbCTA@mail.gmail.com>
-Date: Tue, 27 Aug 2013 14:44:28 +0800
-Message-ID: <CANVTcTZT-0bg=GBdo06=1--NgyMEM6-pFX8DjMxh=7JYtaTLpw@mail.gmail.com>
-Subject: Re: [PATCH v4 26/28] PCI, x86, ACPI: Link acpi ioapic register to ioapic
-From: rui wang <ruiv.wang@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/27/13, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Aug 23, 2013 at 5:51 PM, rui wang <ruiv.wang@gmail.com> wrote:
->> On 8/11/13, Yinghai Lu <yinghai@kernel.org> wrote:
->>> During ioapic hotplug, acpi_register_ioapic will be called.
->>> Now for x86, that function is blank.
->>> Fill that will update __mp_register_ioapic to use those ioapic.
->>>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> ---
->>>  arch/x86/kernel/acpi/boot.c | 10 ++++++----
->>>  1 file changed, 6 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
->>> index 5be15d1..4a5336d 100644
->>> --- a/arch/x86/kernel/acpi/boot.c
->>> +++ b/arch/x86/kernel/acpi/boot.c
->>> @@ -707,16 +707,18 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
->>>
->>>  int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32
->>> gsi_base)
->>>  {
->>> -     /* TBD */
->>> -     return -EINVAL;
->>> +     unsigned long long id = 0;
->>> +
->>> +     acpi_evaluate_integer(handle, "_UID", NULL, &id);
->>
->> We cannot assume that "_UID" is an integer. "_UID" can be either an
->> integer or a string. Need to consider the case when it is a string.
->
-> Yes.
->
-> But do you have test case for ioapic that _UID is not integer?
->
+One PCI bus reset function to rule them all.
 
-Yes I have an IOAPIC with an _UID of:
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pcie/aer/aerdrv.c      |    2 +-
+ drivers/pci/pcie/aer/aerdrv.h      |    1 -
+ drivers/pci/pcie/aer/aerdrv_core.c |   35 +----------------------------------
+ 3 files changed, 2 insertions(+), 36 deletions(-)
 
-        Name (_UID, "IOAPIC01")  // _UID: Unique ID
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 76ef634..0bf82a2 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -352,7 +352,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+ 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
+ 
+-	aer_do_secondary_bus_reset(dev);
++	pci_reset_bridge_secondary_bus(dev);
+ 	dev_printk(KERN_DEBUG, &dev->dev, "Root Port link has been reset\n");
+ 
+ 	/* Clear Root Error Status */
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+index 90ea3e8..84420b7 100644
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ b/drivers/pci/pcie/aer/aerdrv.h
+@@ -106,7 +106,6 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
+ }
+ 
+ extern struct bus_type pcie_port_bus_type;
+-void aer_do_secondary_bus_reset(struct pci_dev *dev);
+ int aer_init(struct pcie_device *dev);
+ void aer_isr(struct work_struct *work);
+ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 8b68ae5..85ca36f 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -367,39 +367,6 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ }
+ 
+ /**
+- * aer_do_secondary_bus_reset - perform secondary bus reset
+- * @dev: pointer to bridge's pci_dev data structure
+- *
+- * Invoked when performing link reset at Root Port or Downstream Port.
+- */
+-void aer_do_secondary_bus_reset(struct pci_dev *dev)
+-{
+-	u16 p2p_ctrl;
+-
+-	/* Assert Secondary Bus Reset */
+-	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &p2p_ctrl);
+-	p2p_ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
+-
+-	/*
+-	 * we should send hot reset message for 2ms to allow it time to
+-	 * propagate to all downstream ports
+-	 */
+-	msleep(2);
+-
+-	/* De-assert Secondary Bus Reset */
+-	p2p_ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
+-
+-	/*
+-	 * System software must wait for at least 100ms from the end
+-	 * of a reset of one or more device before it is permitted
+-	 * to issue Configuration Requests to those devices.
+-	 */
+-	msleep(200);
+-}
+-
+-/**
+  * default_reset_link - default reset function
+  * @dev: pointer to pci_dev data structure
+  *
+@@ -408,7 +375,7 @@ void aer_do_secondary_bus_reset(struct pci_dev *dev)
+  */
+ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ {
+-	aer_do_secondary_bus_reset(dev);
++	pci_reset_bridge_secondary_bus(dev);
+ 	dev_printk(KERN_DEBUG, &dev->dev, "downstream link has been reset\n");
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
 
-It's a bit challenge how you'll conjure unique identifiers from both
-integers and strings. If you have a new patch I can help try it out.
-
-Thanks
-Rui
-
-> Thanks
->
-> Yinghai
->
