@@ -1,51 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:48278 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757250Ab3HAQIT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 12:08:19 -0400
-Message-ID: <51FA87EE.60601@wwwdotorg.org>
-Date: Thu, 01 Aug 2013 10:08:14 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-qa0-f54.google.com ([209.85.216.54]:60409 "EHLO
+	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755680Ab3HEWVk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 18:21:40 -0400
+Received: by mail-qa0-f54.google.com with SMTP id bv4so1290723qab.13
+        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 15:21:39 -0700 (PDT)
+Date: Mon, 5 Aug 2013 16:21:35 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
+ pbus_size_io()
+Message-ID: <20130805222135.GA29875@google.com>
+References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
+ <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
+ <20130805195149.GA19127@google.com>
+ <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
+ <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
+ <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCHv6 00/13] MSI support for Marvell EBU PCIe driver
-References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/01/2013 07:25 AM, Thomas Petazzoni wrote:
-> Hello,
+On Mon, Aug 05, 2013 at 02:09:27PM -0700, Yinghai Lu wrote:
+> On Mon, Aug 5, 2013 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> then, we should drop that 4k capping.
+> >> I was thinking there could be strange or wild res with bigger than 4k.
+> >
+> > If there *were* an I/O BAR larger than 4KB, how should it be handled?
+> > I don't think capping the alignment to 4KB sounds like the best way.
+> > For example, a 16KB I/O BAR would still need to be aligned on 16KB.
+> >
+> > And I think capping to 4KB as you did above will break the powerpc
+> > pcibios_window_alignment() implementation.  For example, if
+> > pcibios_window_alignment() returned 16KB, and we later capped it to
+> > 4KB, we're going to allocate space for the bridge window with the
+> > wrong alignment.
 > 
-> This set of patches introduces Message Signaled Interrupt support in
-> the Marvell EBU PCIe driver. It has been successfully tested on the
-> Armada XP GP platform with an Intel e1000e PCIe network card that
-> supports MSI.
-> 
-> This patch set is intended for merging in 3.12, so the respective
-> maintainers of the different areas are invited to review/ack the
-> patches, see below for the details. Note that several of those patches
-> are also needed for the Tegra PCIe driver.
-> 
-> There are still missing ACKs from Grant Likely (5, 6, 7), Thomas
-> Gleixner (8, 9) and Bjorn Helgaas (2, 12).
+> Agree.
 
-Recall that Grant gave up most/all of his maintainerships, so you
-probably want someone else to approve patches 5/6/7. It looks like
-Benjamin Herrenschmidt <benh@kernel.crashing.org> is listed in
-MAINTAINERS for those patches.
+OK.  Can you guys try this out and see whether it fixes the problem?
+I don't know what the actual problem *is*, so I can't tell whether
+this is a possible fix.
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d4f1ad9..8333c92 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -749,12 +749,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+ 	resource_size_t children_add_size = 0;
+-	resource_size_t min_align, io_align, align;
++	resource_size_t min_align, align;
+ 
+ 	if (!b_res)
+  		return;
+ 
+-	io_align = min_align = window_alignment(bus, IORESOURCE_IO);
++	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+@@ -781,9 +781,6 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		}
+ 	}
+ 
+-	if (min_align > io_align)
+-		min_align = io_align;
+-
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+ 	if (children_add_size > add_size)
