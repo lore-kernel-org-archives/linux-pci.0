@@ -1,50 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1376953365.2657.36.camel@ul30vt.home>
-Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Date: Mon, 19 Aug 2013 17:02:45 -0600
-In-Reply-To: <1376952280.25016.87.camel@pasglop>
-References: <20130814200845.21923.64284.stgit@bling.home>
-	 <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
-	 <1376521578.13642.65.camel@ul30vt.home>
-	 <1376937682.2657.15.camel@ul30vt.home>
-	 <CAErSpo50ve+ZMqcX=13hKvrB75LyWmUddC-qyX7Esfr=P5StcA@mail.gmail.com>
-	 <1376943632.2657.25.camel@ul30vt.home> <1376952280.25016.87.camel@pasglop>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:64282 "EHLO
+	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751303Ab3HEMBt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 08:01:49 -0400
+Message-ID: <1375704104.1415.5.camel@x61.thuisdomein>
+Subject: Re: [PATCH -v5 0/6] Use PCI Serial Number to identify device change
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Rafael <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
+Date: Mon, 05 Aug 2013 14:01:44 +0200
+In-Reply-To: <1375692898-27476-1-git-send-email-wangyijing@huawei.com>
+References: <1375692898-27476-1-git-send-email-wangyijing@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-08-20 at 08:44 +1000, Benjamin Herrenschmidt wrote:
-> On Mon, 2013-08-19 at 14:20 -0600, Alex Williamson wrote:
-> > I try to handle the slot as opaque, only caring that the slot pointer
-> > matches, so I think our implementation is ok... so long as we only get
-> > one driver claiming to manage a slot, but that's not a vfio problem ;)
-> > Thanks,
-> 
-> By why bother with slots ? Why do you even think about slots in that
-> context ? slots are a badly defined thing in our current PCI stack,
-> pretty much intricated with hotplug. I don't see why the reset semantics
-> would be tied to slots at all.
+On Mon, 2013-08-05 at 16:54 +0800, Yijing Wang wrote:
+> v4->v5: update patch 6/6, correct some mistakes in this patch, thank Paul for help
+> 		test this series.
+>[...]
+> I tested to apply this series to Linus 3.11-rc4 and Bjorn's pci-next branch, and
+> result is ok.
 
-See my other reply, hotplug presence detection and secondary bus resets
-don't just work.
+And I tested this series on top of v3.10.5 (on x86_64). It applied
+cleanly, and it compiled cleanly. No pciehp related errors at resume.
+And, more importantly, the severe issues of v4 are gone: a few suspend
+and resume cycles showed no obvious problems.
 
-> The only case where it *might* make some sense (and even then ...) is if
-> you want to start exposing slot power control and PERST but that would
-> imply a pile of platform specific gunk anyway.
+Thanks!
 
-But that platform specific gunk can be hidden away in the hotplug
-controller.  We just need to be able to ask if it can reset a slot and
-tell it to do it.  If it happens via a slot power control or a secondary
-bus reset, do we care?  Thanks,
 
-Alex
+Paul Bolle
 
