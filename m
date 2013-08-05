@@ -1,102 +1,135 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v4 20/28] x86, irq: More strict checking about registering ioapic
-Date: Sat, 10 Aug 2013 19:48:06 -0700
-Message-Id: <1376189294-32022-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:48944 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753427Ab3HEUxM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 16:53:12 -0400
+Date: Mon, 5 Aug 2013 16:52:35 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Chris Metcalf <cmetcalf@tilera.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 06/20] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
+Message-ID: <20130805205235.GB24122@phenom.dumpdata.com>
+References: <cover.1375733180.git.cmetcalf@tilera.com>
+ <a8a7d279ad8633c6aa3b5031aa9da4a76f2487c3.1375733180.git.cmetcalf@tilera.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a8a7d279ad8633c6aa3b5031aa9da4a76f2487c3.1375733180.git.cmetcalf@tilera.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. check overlaping gsi range
-for hot-add ioapic case, BIOS may have some entries in MADT
-and also have setting in pci root bus with _GSB of DSDT.
+On Mon, Aug 05, 2013 at 04:06:20PM -0400, Chris Metcalf wrote:
+> The LSI MEGARAID SAS HBA suffers from the problem where it can do
+> 64-bit DMA to streaming buffers but not to consistent buffers.
+> In other words, 64-bit DMA is used for disk data transfers and 32-bit
+> DMA must be used for control message transfers. According to LSI,
+> the firmware is not fully functional yet. This change implements a
+> kind of hybrid dma_ops to support this.
 
-2. check if entries is in right range.
+If this is generic to LSI MegaRAID HBA shouldn't this change also be
+done for the other platforms?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c | 30 ++++++++++++++++++++++++------
- 1 file changed, 24 insertions(+), 6 deletions(-)
+Or perhaps some other changes to make it work with other devices?
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index b026cc7..60c6706 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3818,12 +3818,9 @@ void __init ioapic_insert_resources(void)
- 	}
- }
- 
--int mp_find_ioapic(u32 gsi)
-+static int __mp_find_ioapic(u32 gsi)
- {
--	int i = 0;
--
--	if (nr_ioapics == 0)
--		return -1;
-+	int i;
- 
- 	/* Find the IOAPIC that manages this GSI. */
- 	for_each_ioapic(i) {
-@@ -3833,10 +3830,19 @@ int mp_find_ioapic(u32 gsi)
- 			return i;
- 	}
- 
--	printk(KERN_ERR "ERROR: Unable to locate IOAPIC for GSI %d\n", gsi);
- 	return -1;
- }
- 
-+int mp_find_ioapic(u32 gsi)
-+{
-+	int ret = __mp_find_ioapic(gsi);
-+
-+	if (ret == -1)
-+		pr_err("ERROR: Unable to locate IOAPIC for GSI %d\n", gsi);
-+
-+	return ret;
-+}
-+
- int mp_find_ioapic_pin(int ioapic, u32 gsi)
- {
- 	struct mp_ioapic_gsi *gsi_cfg;
-@@ -3888,6 +3894,11 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	if (bad_ioapic(address))
- 		return;
- 
-+	/* already registered ? */
-+	idx = __mp_find_ioapic(gsi_base);
-+	if (idx >= 0)
-+		return;
-+
- 	idx = find_first_zero_bit(ioapics_mask, MAX_IO_APICS);
- 	if (idx >= MAX_IO_APICS) {
- 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded, skipping\n",
-@@ -3914,6 +3925,13 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
- 	 */
- 	entries = io_apic_get_redir_entries(idx);
-+
-+	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
-+		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+		memset(&ioapics[idx], 0, sizeof(struct ioapic));
-+		return;
-+	}
-+
- 	gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	gsi_cfg->gsi_base = gsi_base;
- 	gsi_cfg->gsi_end = gsi_base + entries - 1;
--- 
-1.8.1.4
+> 
+> Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+> ---
+>  arch/tile/include/asm/dma-mapping.h |  4 ++--
+>  arch/tile/kernel/pci-dma.c          | 17 +++++++++++------
+>  2 files changed, 13 insertions(+), 8 deletions(-)
+> 
+> diff --git a/arch/tile/include/asm/dma-mapping.h b/arch/tile/include/asm/dma-mapping.h
+> index f2ff191..6da0540 100644
+> --- a/arch/tile/include/asm/dma-mapping.h
+> +++ b/arch/tile/include/asm/dma-mapping.h
+> @@ -44,12 +44,12 @@ static inline void set_dma_offset(struct device *dev, dma_addr_t off)
+>  
+>  static inline dma_addr_t phys_to_dma(struct device *dev, phys_addr_t paddr)
+>  {
+> -	return paddr + get_dma_offset(dev);
+> +	return paddr;
+>  }
+>  
+>  static inline phys_addr_t dma_to_phys(struct device *dev, dma_addr_t daddr)
+>  {
+> -	return daddr - get_dma_offset(dev);
+> +	return daddr;
+>  }
+>  
+>  static inline void dma_mark_clean(void *addr, size_t size) {}
+> diff --git a/arch/tile/kernel/pci-dma.c b/arch/tile/kernel/pci-dma.c
+> index b9fe80e..7e98371 100644
+> --- a/arch/tile/kernel/pci-dma.c
+> +++ b/arch/tile/kernel/pci-dma.c
+> @@ -357,7 +357,7 @@ static void *tile_pci_dma_alloc_coherent(struct device *dev, size_t size,
+>  
+>  	addr = page_to_phys(pg);
+>  
+> -	*dma_handle = phys_to_dma(dev, addr);
+> +	*dma_handle = addr + get_dma_offset(dev);
+>  
+>  	return page_address(pg);
+>  }
+> @@ -387,7 +387,7 @@ static int tile_pci_dma_map_sg(struct device *dev, struct scatterlist *sglist,
+>  		sg->dma_address = sg_phys(sg);
+>  		__dma_prep_pa_range(sg->dma_address, sg->length, direction);
+>  
+> -		sg->dma_address = phys_to_dma(dev, sg->dma_address);
+> +		sg->dma_address = sg->dma_address + get_dma_offset(dev);
+>  #ifdef CONFIG_NEED_SG_DMA_LENGTH
+>  		sg->dma_length = sg->length;
+>  #endif
+> @@ -422,7 +422,7 @@ static dma_addr_t tile_pci_dma_map_page(struct device *dev, struct page *page,
+>  	BUG_ON(offset + size > PAGE_SIZE);
+>  	__dma_prep_page(page, offset, size, direction);
+>  
+> -	return phys_to_dma(dev, page_to_pa(page) + offset);
+> +	return page_to_pa(page) + offset + get_dma_offset(dev);
+>  }
+>  
+>  static void tile_pci_dma_unmap_page(struct device *dev, dma_addr_t dma_address,
+> @@ -432,7 +432,7 @@ static void tile_pci_dma_unmap_page(struct device *dev, dma_addr_t dma_address,
+>  {
+>  	BUG_ON(!valid_dma_direction(direction));
+>  
+> -	dma_address = dma_to_phys(dev, dma_address);
+> +	dma_address -= get_dma_offset(dev);
+>  
+>  	__dma_complete_page(pfn_to_page(PFN_DOWN(dma_address)),
+>  			    dma_address & PAGE_OFFSET, size, direction);
+> @@ -445,7 +445,7 @@ static void tile_pci_dma_sync_single_for_cpu(struct device *dev,
+>  {
+>  	BUG_ON(!valid_dma_direction(direction));
+>  
+> -	dma_handle = dma_to_phys(dev, dma_handle);
+> +	dma_handle -= get_dma_offset(dev);
+>  
+>  	__dma_complete_pa_range(dma_handle, size, direction);
+>  }
+> @@ -456,7 +456,7 @@ static void tile_pci_dma_sync_single_for_device(struct device *dev,
+>  						enum dma_data_direction
+>  						direction)
+>  {
+> -	dma_handle = dma_to_phys(dev, dma_handle);
+> +	dma_handle -= get_dma_offset(dev);
+>  
+>  	__dma_prep_pa_range(dma_handle, size, direction);
+>  }
+> @@ -573,6 +573,11 @@ int dma_set_coherent_mask(struct device *dev, u64 mask)
+>  	if (((dma_ops == gx_pci_dma_map_ops) ||
+>  	    (dma_ops == gx_legacy_pci_dma_map_ops)) &&
+>  	    (mask <= DMA_BIT_MASK(32))) {
+> +		if (dma_ops == gx_pci_dma_map_ops) {
+> +			dma_ops->alloc = tile_swiotlb_alloc_coherent;
+> +			dma_ops->free = tile_swiotlb_free_coherent;
+> +		}
+> +
 
+So.. that would change it for all of the devices on the host, not just
+for this specific one. That is not good is it?
+
+>  		if (mask > dev->archdata.max_direct_dma_addr)
+>  			mask = dev->archdata.max_direct_dma_addr;
+>  	}
+> -- 
+> 1.8.3.1
+> 
