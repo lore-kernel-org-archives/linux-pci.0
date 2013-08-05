@@ -1,163 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp10.uk.ibm.com ([195.75.94.106]:59707 "EHLO
-	e06smtp10.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013Ab3HTOlI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 10:41:08 -0400
-Received: from /spool/local
-	by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
-	Tue, 20 Aug 2013 15:38:04 +0100
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-	by d06dlp03.portsmouth.uk.ibm.com (Postfix) with ESMTP id 4EA031B08066
-	for <linux-pci@vger.kernel.org>; Tue, 20 Aug 2013 15:41:05 +0100 (BST)
-Received: from d06av04.portsmouth.uk.ibm.com (d06av04.portsmouth.uk.ibm.com [9.149.37.216])
-	by b06cxnps4075.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r7KEeqm022478946
-	for <linux-pci@vger.kernel.org>; Tue, 20 Aug 2013 14:40:52 GMT
-Received: from d06av04.portsmouth.uk.ibm.com (localhost [127.0.0.1])
-	by d06av04.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r7KEf35K013676
-	for <linux-pci@vger.kernel.org>; Tue, 20 Aug 2013 08:41:03 -0600
-Date: Tue, 20 Aug 2013 16:41:02 +0200 (CEST)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:19029 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754938Ab3HEI4E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 04:56:04 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-cc: linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: add hibernation hooks
-Message-ID: <alpine.LFD.2.03.1308201637390.1566@linux.vnet.ibm.com>
+CC: <linux-pci@vger.kernel.org>, Rafael <rjw@sisk.pl>,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v5 2/6] PCI: introduce PCIe Device Serial Number Capability support
+Date: Mon, 5 Aug 2013 16:54:54 +0800
+Message-ID: <1375692898-27476-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1375692898-27476-1-git-send-email-wangyijing@huawei.com>
+References: <1375692898-27476-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+Introduce PCIe Ext Capability Device Serial Number support,
+so we can use the unique device serial number to identify
+the physical device. During system suspend, if the PCIe
+device was removed and reinserted a new same device, during
+system resume there is no good way to identify it, maybe
+Device Serial Number is a good choice if device support.
 
-I'm currently trying to implement hibernate support for pci on s390. To access
-the config space of a pci function on s390 the function has to be enabled first.
-So I need some kind of callback to achieve this before the pci core or the device
-driver tries to access the function after a resume from hibernate.
-
-Would you be OK with the following patch?
-
-Regards,
-Sebastian
-
+Reviewed-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
 ---
-PCI: add hibernation hooks
+ drivers/pci/pci.c   |   29 +++++++++++++++++++++++++++++
+ drivers/pci/pci.h   |    2 +-
+ drivers/pci/probe.c |    2 ++
+ include/linux/pci.h |    1 +
+ 4 files changed, 33 insertions(+), 1 deletions(-)
 
-Platforms may want to provide architecture-specific functionality when
-a PCI device is doing a hibernate transition. Add a weak symbol
-pcibios_pm_ops that architectures can override to do so.
-
-Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
----
- drivers/pci/pci-driver.c |   30 ++++++++++++++++++++++++++++++
- include/linux/pci.h      |    4 ++++
- 2 files changed, 34 insertions(+)
-
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -763,6 +763,13 @@ static int pci_pm_resume(struct device *
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 84a3c09..cfc0f7f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2048,6 +2048,35 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
+ }
  
- #ifdef CONFIG_HIBERNATE_CALLBACKS
- 
-+
-+/*
-+ * pcibios_pm_ops - provide arch specific hooks when a pci device is doing
-+ * a hibernate transition
+ /**
++ * pci_device_serial_number - get device serial number
++ * @dev: the PCI device
++ *
++ * return the device serial number if device support,
++ * otherwise return 0.
 + */
-+struct dev_pm_ops __weak pcibios_pm_ops;
++static u64 pci_device_serial_number(struct pci_dev *dev)
++{
++	int pos;
++	u32 lo, hi;
 +
- static int pci_pm_freeze(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
-@@ -786,6 +793,9 @@ static int pci_pm_freeze(struct device *
- 			return error;
- 	}
- 
-+	if (pcibios_pm_ops.freeze)
-+		pcibios_pm_ops.freeze(dev);
++	if (!pci_is_pcie(dev))
++		return 0;
 +
- 	return 0;
- }
- 
-@@ -811,6 +821,9 @@ static int pci_pm_freeze_noirq(struct de
- 
- 	pci_pm_set_unknown_state(pci_dev);
- 
-+	if (pcibios_pm_ops.freeze_noirq)
-+		pcibios_pm_ops.freeze_noirq(dev);
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
++	if (!pos)
++		return 0;
 +
- 	return 0;
- }
- 
-@@ -820,6 +833,9 @@ static int pci_pm_thaw_noirq(struct devi
- 	struct device_driver *drv = dev->driver;
- 	int error = 0;
- 
-+	if (pcibios_pm_ops.thaw_noirq)
-+		pcibios_pm_ops.thaw_noirq(dev);
++	pci_read_config_dword(dev, pos + 4, &lo);
++	pci_read_config_dword(dev, pos + 8, &hi);
++	return ((u64)hi << 32) | lo;
++}
 +
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_resume_early(dev);
- 
-@@ -837,6 +853,9 @@ static int pci_pm_thaw(struct device *de
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 	int error = 0;
- 
-+	if (pcibios_pm_ops.thaw)
-+		pcibios_pm_ops.thaw(dev);
++void pci_dsn_init(struct pci_dev *dev)
++{
++	dev->sn = pci_device_serial_number(dev);
++}
 +
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_resume(dev);
++/**
+  * pci_configure_ari - enable or disable ARI forwarding
+  * @dev: the PCI device
+  *
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 816c297..2b2a9cc 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -207,7 +207,7 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				      struct list_head *realloc_head,
+ 				      struct list_head *fail_head);
+-
++void pci_dsn_init(struct pci_dev *dev);
+ /**
+  * pci_ari_enabled - query ARI forwarding status
+  * @bus: the PCI bus
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 83172bc..0c5da76 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1325,6 +1325,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	/* Vital Product Data */
+ 	pci_vpd_pci22_init(dev);
  
-@@ -878,6 +897,9 @@ static int pci_pm_poweroff(struct device
-  Fixup:
- 	pci_fixup_device(pci_fixup_suspend, pci_dev);
- 
-+	if (pcibios_pm_ops.poweroff)
-+		pcibios_pm_ops.poweroff(dev);
++	pci_dsn_init(dev);
 +
- 	return 0;
- }
+ 	/* Alternative Routing-ID Forwarding */
+ 	pci_configure_ari(dev);
  
-@@ -911,6 +933,9 @@ static int pci_pm_poweroff_noirq(struct
- 	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
- 		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
- 
-+	if (pcibios_pm_ops.poweroff_noirq)
-+		pcibios_pm_ops.poweroff_noirq(dev);
-+
- 	return 0;
- }
- 
-@@ -920,6 +945,9 @@ static int pci_pm_restore_noirq(struct d
- 	struct device_driver *drv = dev->driver;
- 	int error = 0;
- 
-+	if (pcibios_pm_ops.restore_noirq)
-+		pcibios_pm_ops.restore_noirq(dev);
-+
- 	pci_pm_default_resume_early(pci_dev);
- 
- 	if (pci_has_legacy_pm_support(pci_dev))
-@@ -937,6 +965,8 @@ static int pci_pm_restore(struct device
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 	int error = 0;
- 
-+	if (pcibios_pm_ops.restore)
-+		pcibios_pm_ops.restore(dev);
- 	/*
- 	 * This is necessary for the hibernation error path in which restore is
- 	 * called without restoring the standard config registers of the device.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..4354eaf 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -1648,6 +1648,10 @@ int pcibios_set_pcie_reset_state(struct
- int pcibios_add_device(struct pci_dev *dev);
- void pcibios_release_device(struct pci_dev *dev);
- 
-+#ifdef CONFIG_HIBERNATE_CALLBACKS
-+extern struct dev_pm_ops pcibios_pm_ops;
-+#endif
-+
- #ifdef CONFIG_PCI_MMCONFIG
- void __init pci_mmcfg_early_init(void);
- void __init pci_mmcfg_late_init(void);
+@@ -342,6 +342,7 @@ struct pci_dev {
+ 	struct list_head msi_list;
+ 	struct kset *msi_kset;
+ #endif
++	u64 sn;		/* device serial number, 0 if not support */
+ 	struct pci_vpd *vpd;
+ #ifdef CONFIG_PCI_ATS
+ 	union {
+-- 
+1.7.1
+
 
