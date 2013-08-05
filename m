@@ -1,80 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 2/9] PCI: mvebu: increment nports only for registered ports
-Date: Mon, 12 Aug 2013 20:46:48 +0200
-Message-Id: <1376333215-12885-3-git-send-email-sebastian.hesselbarth@gmail.com>
-In-Reply-To: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
-References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:16216 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754757Ab3HEThU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Aug 2013 15:37:20 -0400
+Subject: [PATCH v4 2/9] pci: Add hotplug_slot_ops.reset_slot()
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: ddutile@redhat.com, indou.takao@jp.fujitsu.com,
+	linux-kernel@vger.kernel.org
+Date: Mon, 05 Aug 2013 13:37:16 -0600
+Message-ID: <20130805193715.9260.21461.stgit@bling.home>
+In-Reply-To: <20130805193200.9260.38729.stgit@bling.home>
+References: <20130805193200.9260.38729.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The number of ports is probed by counting the number of available child nodes.
-Later on, the registration of a port can fail and cause a mismatch between
-the ->nports counter and registered ports. This patch modifies the counting
-strategy, to make ->nports represent the number of registered ports instead
-of the number of available childs.
+This optional callback allows htoplug controllers to perform slot
+specific resets.  These may be necessary in cases where a normal
+secondary bus reset can interact with controller logic and expose
+spurious hotplugs.
 
-Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Andrew Lunn <andrew@lunn.ch>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/host/pci-mvebu.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ include/linux/pci_hotplug.h |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index d5fe674..0a359d7 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -842,21 +842,21 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 	}
+diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+index 8db71dc..bd32109 100644
+--- a/include/linux/pci_hotplug.h
++++ b/include/linux/pci_hotplug.h
+@@ -63,6 +63,9 @@ enum pcie_link_width {
+  * @get_adapter_status: Called to get see if an adapter is present in the slot or not.
+  *	If this field is NULL, the value passed in the struct hotplug_slot_info
+  *	will be used when this value is requested by a user.
++ * @reset_slot: Optional interface to allow override of a bus reset for the
++ *	slot for cases where a secondary bus reset can result in spurious
++ *	hotplug events or where a slot can be reset independent of the bus.
+  *
+  * The table of function pointers that is passed to the hotplug pci core by a
+  * hotplug pci driver.  These functions are called by the hotplug pci core when
+@@ -80,6 +83,7 @@ struct hotplug_slot_ops {
+ 	int (*get_attention_status)	(struct hotplug_slot *slot, u8 *value);
+ 	int (*get_latch_status)		(struct hotplug_slot *slot, u8 *value);
+ 	int (*get_adapter_status)	(struct hotplug_slot *slot, u8 *value);
++	int (*reset_slot)		(struct hotplug_slot *slot, int probe);
+ };
  
-+	i = 0;
- 	for_each_child_of_node(pdev->dev.of_node, child) {
- 		if (!of_device_is_available(child))
- 			continue;
--		pcie->nports++;
-+		i++;
- 	}
- 
--	pcie->ports = devm_kzalloc(&pdev->dev, pcie->nports *
-+	pcie->ports = devm_kzalloc(&pdev->dev, i *
- 				   sizeof(struct mvebu_pcie_port),
- 				   GFP_KERNEL);
- 	if (!pcie->ports)
- 		return -ENOMEM;
- 
--	i = 0;
- 	for_each_child_of_node(pdev->dev.of_node, child) {
--		struct mvebu_pcie_port *port = &pcie->ports[i];
-+		struct mvebu_pcie_port *port = &pcie->ports[pcie->nports];
- 
- 		if (!of_device_is_available(child))
- 			continue;
-@@ -929,7 +929,7 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 		port->dn = child;
- 		spin_lock_init(&port->conf_lock);
- 		mvebu_sw_pci_bridge_init(port);
--		i++;
-+		pcie->nports++;
- 	}
- 
- 	mvebu_pcie_msi_enable(pcie);
--- 
-1.7.10.4
+ /**
 
