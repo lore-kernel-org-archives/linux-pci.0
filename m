@@ -1,74 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:35951 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753532Ab3HANHF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:07:05 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH -v4 1/6] PCI,pciehp: avoid add a device already exist before suspend during resume
-Date: Thu, 1 Aug 2013 21:06:24 +0800
-Message-ID: <1375362389-26096-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
-References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:49985 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754247Ab3HEVJ1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 17:09:27 -0400
+Received: by mail-oa0-f53.google.com with SMTP id k18so7532250oag.12
+        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 14:09:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
+References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	<1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
+	<CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
+	<CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
+	<20130805195149.GA19127@google.com>
+	<CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
+	<CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
+Date: Mon, 5 Aug 2013 14:09:27 -0700
+Message-ID: <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in pbus_size_io()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pciehp_resume() try to hot add device if the slot adapter
-status return true. But if there are already some devices exist,
-namely list_empty(bus->devices) return false. We should not add the device
-again, because the device add action will fail. Also print some uncomfortable
-messages like this:
-	pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
-	pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
+On Mon, Aug 5, 2013 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> then, we should drop that 4k capping.
+>> I was thinking there could be strange or wild res with bigger than 4k.
+>
+> If there *were* an I/O BAR larger than 4KB, how should it be handled?
+> I don't think capping the alignment to 4KB sounds like the best way.
+> For example, a 16KB I/O BAR would still need to be aligned on 16KB.
+>
+> And I think capping to 4KB as you did above will break the powerpc
+> pcibios_window_alignment() implementation.  For example, if
+> pcibios_window_alignment() returned 16KB, and we later capped it to
+> 4KB, we're going to allocate space for the bridge window with the
+> wrong alignment.
 
-Tested-by: Paul Bolle <pebolle@tiscali.nl>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/hotplug/pciehp_core.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 7d72c5e..7fe9dbd 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -300,6 +300,7 @@ static int pciehp_resume (struct pcie_device *dev)
- {
- 	struct controller *ctrl;
- 	struct slot *slot;
-+	struct pci_bus *pbus = dev->port->subordinate;
- 	u8 status;
- 
- 	ctrl = get_service_data(dev);
-@@ -311,10 +312,13 @@ static int pciehp_resume (struct pcie_device *dev)
- 
- 	/* Check if slot is occupied */
- 	pciehp_get_adapter_status(slot, &status);
--	if (status)
--		pciehp_enable_slot(slot);
--	else
-+	if (status) {
-+		if (list_empty(&pbus->devices))
-+			pciehp_enable_slot(slot);
-+	} else if (!list_empty(&pbus->devices)) {
- 		pciehp_disable_slot(slot);
-+	}
-+
- 	return 0;
- }
- #endif /* PM */
--- 
-1.7.1
-
-
+Agree.
