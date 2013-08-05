@@ -1,45 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:40560 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966964Ab3HIF7a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Aug 2013 01:59:30 -0400
-Message-ID: <1376027920.32100.11.camel@pasglop>
-Subject: Re: [PATCHv8 00/10] MSI support for Marvell EBU PCIe driver
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Date: Fri, 09 Aug 2013 15:58:40 +1000
-In-Reply-To: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v4 4/9] pci: Add slot reset option to pci_dev_reset
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: ddutile@redhat.com, indou.takao@jp.fujitsu.com,
+	linux-kernel@vger.kernel.org
+Date: Mon, 05 Aug 2013 13:37:28 -0600
+Message-ID: <20130805193728.9260.69693.stgit@bling.home>
+In-Reply-To: <20130805193200.9260.38729.stgit@bling.home>
+References: <20130805193200.9260.38729.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-08-09 at 00:17 +0200, Thomas Petazzoni wrote:
-> Hello,
-> 
-> This set of patches introduces Message Signaled Interrupt support in
-> the Marvell EBU PCIe driver. It has been successfully tested on the
-> Armada XP GP platform with an Intel e1000e PCIe network card that
-> supports MSI.
+If the hotplug controller provides a way to reset a slot, use that
+before a direct parent bus reset.  Like the bus reset option, this is
+only available when a single pci_dev occupies the slot.
 
-Appart from the build breakage when not using CONFIG_PCI_MSI which
-I reported in a previous email, I'm fine with the series. No need
-to add my acks to all of the ARM specific stuff.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-Cheers,
-Ben.
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d468608..9407aab 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -22,6 +22,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
++#include <linux/pci_hotplug.h>
+ #include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include "pci.h"
+@@ -3256,6 +3257,35 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
++static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
++{
++	int rc = -ENOTTY;
++
++	if (!hotplug || !try_module_get(hotplug->ops->owner))
++		return rc;
++
++	if (hotplug->ops->reset_slot)
++		rc = hotplug->ops->reset_slot(hotplug, probe);
++
++	module_put(hotplug->ops->owner);
++
++	return rc;
++}
++
++static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
++{
++	struct pci_dev *pdev;
++
++	if (dev->subordinate || !dev->slot)
++		return -ENOTTY;
++
++	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
++		if (pdev != dev && pdev->slot == dev->slot)
++			return -ENOTTY;
++
++	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
++}
++
+ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+ {
+ 	int rc;
+@@ -3278,6 +3308,10 @@ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+ 	if (rc != -ENOTTY)
+ 		goto done;
+ 
++	rc = pci_dev_reset_slot_function(dev, probe);
++	if (rc != -ENOTTY)
++		goto done;
++
+ 	rc = pci_parent_bus_reset(dev, probe);
+ done:
+ 	return rc;
 
