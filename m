@@ -1,85 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:40349 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757614Ab3HIOtp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:45 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v6 04/14] ARM: tegra: harmony: Initialize PCIe from DT
-Date: Fri,  9 Aug 2013 16:49:22 +0200
-Message-Id: <1376059772-16669-5-git-send-email-treding@nvidia.com>
-In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
-References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51109 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754933Ab3HEHVo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 03:21:44 -0400
+Message-ID: <51FF527F.7080904@oracle.com>
+Date: Mon, 05 Aug 2013 15:21:35 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
+MIME-Version: 1.0
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Subject: [PATCH 2/3 v2] Refactor msi/msix restore code Part2
+Content-Type: text/plain; charset=GB2312
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
+in dom0. It's better to do the same in default_restore_msi_irqs for baremetal.
 
-With the device tree support in place, probe the PCIe controller from
-the device tree and remove the corresponding workaround in the board
-file.
+Move restore of mask in default_restore_msi_irqs, this could avoid mask
+restored twice in dom0, and the logic for baremetal keep same.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+First mask restore is in xen_initdom_restore_msi_irqs->PHYSDEVOP_restore_msi,
+Second restore is __pci_restore_msix_state->msix_mask_irq.
+
+Mask bits are under full control of xen, and the entry->masked in dom0 kernel
+is invalid. restore an invalid value to mask register could mask the msix
+interrupt.
+
+Without fix, qlcnic driver calling pci_reset_function will lost interrupt
+in dom0.
+
+Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
 ---
- arch/arm/boot/dts/tegra20-harmony.dts | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ drivers/pci/msi.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm/boot/dts/tegra20-harmony.dts b/arch/arm/boot/dts/tegra20-harmony.dts
-index d9f89cd..8724dc7 100644
---- a/arch/arm/boot/dts/tegra20-harmony.dts
-+++ b/arch/arm/boot/dts/tegra20-harmony.dts
-@@ -335,7 +335,7 @@
- 					regulator-always-on;
- 				};
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 87223ae..922fb49 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
+ #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
+ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+ {
++	int pos;
++	u16 control;
+ 	struct msi_desc *entry;
  
--				ldo0 {
-+				pci_clk_reg: ldo0 {
- 					regulator-name = "vdd_ldo0,vddio_pex_clk";
- 					regulator-min-microvolt = <3300000>;
- 					regulator-max-microvolt = <3300000>;
-@@ -425,6 +425,20 @@
- 		nvidia,sys-clock-req-active-high;
- 	};
+ 	entry = NULL;
+@@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+ 		entry = irq_get_msi_desc(irq);
+ 	}
  
-+	pcie-controller {
-+		pex-clk-supply = <&pci_clk_reg>;
-+		vdd-supply = <&pci_vdd_reg>;
-+		status = "okay";
-+
-+		pci@1,0 {
-+			status = "okay";
-+		};
-+
-+		pci@2,0 {
-+			status = "okay";
-+		};
-+	};
-+
- 	usb@c5000000 {
- 		status = "okay";
- 	};
-@@ -643,7 +657,7 @@
- 			enable-active-high;
- 		};
+-	if (entry)
++	if (entry) {
+ 		write_msi_msg(irq, &entry->msg);
++		if (dev->msix_enabled) {
++			msix_mask_irq(entry, entry->masked);
++			readl(entry->mask_base);
++		} else {
++			pos = entry->msi_attrib.pos;
++			pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
++					     &control);
++			msi_mask_irq(entry, msi_capable_mask(control),
++				     entry->masked);
++		}
++	}
+ }
+ #endif
  
--		regulator@3 {
-+		pci_vdd_reg: regulator@3 {
- 			compatible = "regulator-fixed";
- 			reg = <3>;
- 			regulator-name = "vdd_1v05";
-@@ -651,8 +665,6 @@
- 			regulator-max-microvolt = <1050000>;
- 			gpio = <&pmic 2 GPIO_ACTIVE_HIGH>;
- 			enable-active-high;
--			/* Hack until board-harmony-pcie.c is removed */
--			status = "disabled";
- 		};
+@@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+ 	arch_restore_msi_irqs(dev, dev->irq);
  
- 		regulator@4 {
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+-	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
+ 	control &= ~PCI_MSI_FLAGS_QSIZE;
+ 	control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
+ 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+@@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+ 		arch_restore_msi_irqs(dev, entry->irq);
+-		msix_mask_irq(entry, entry->masked);
+ 	}
+ 
+ 	control &= ~PCI_MSIX_FLAGS_MASKALL;
 -- 
-1.8.3.4
+1.7.3
 
