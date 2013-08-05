@@ -1,119 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <a8a7d279ad8633c6aa3b5031aa9da4a76f2487c3.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 06/20] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:39025 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567Ab3HEVAO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 17:00:14 -0400
+Received: by mail-oa0-f50.google.com with SMTP id i4so7386950oah.37
+        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 14:00:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
+References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
+ <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
+ <20130805195149.GA19127@google.com> <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 5 Aug 2013 14:59:51 -0600
+Message-ID: <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in pbus_size_io()
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The LSI MEGARAID SAS HBA suffers from the problem where it can do
-64-bit DMA to streaming buffers but not to consistent buffers.
-In other words, 64-bit DMA is used for disk data transfers and 32-bit
-DMA must be used for control message transfers. According to LSI,
-the firmware is not fully functional yet. This change implements a
-kind of hybrid dma_ops to support this.
+On Mon, Aug 5, 2013 at 2:52 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Aug 5, 2013 at 12:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> @@ -848,8 +848,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+>>>               }
+>>>       }
+>>>
+>>> -     if (min_align > io_align)
+>>> -             min_align = io_align;
+>>> +     if (min_align > PCI_P2P_DEFAULT_IO_ALIGN)
+>>> +             min_align = PCI_P2P_DEFAULT_IO_ALIGN;
+>>
+>> But I still don't understand this one.  As far as I can tell,
+>> "min_align > 4096" can happen only for arch-specific I/O window
+>> requirements.  It can never happen because of a large device I/O BAR.
+>>
+>> Let's assume "min_align = window_alignment(bus, IORESOURCE_IO)" above set
+>> min_align to 16KB because that's what pnv_pci_window_alignment() returned.
+>> Why would we cap it to 4KB here?  I think we should set this:
+>>
+>>     b_res->start = 16384;
+>>     b_res->end = b_res->start + size0 - 1;
+>>     b_res->flags |= IORESOURCE_STARTALIGN;
+>>
+>> to indicate that the bridge needs a 16KB-aligned I/O window.
+>>
+>> In what case do we need to cap min_align to 4KB?
+>>
+>>>       size0 = calculate_iosize(size, min_size, size1,
+>>>                       resource_size(b_res), min_align);
+>
+> then, we should drop that 4k capping.
+> I was thinking there could be strange or wild res with bigger than 4k.
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/tile/include/asm/dma-mapping.h |  4 ++--
- arch/tile/kernel/pci-dma.c          | 17 +++++++++++------
- 2 files changed, 13 insertions(+), 8 deletions(-)
+If there *were* an I/O BAR larger than 4KB, how should it be handled?
+I don't think capping the alignment to 4KB sounds like the best way.
+For example, a 16KB I/O BAR would still need to be aligned on 16KB.
 
-diff --git a/arch/tile/include/asm/dma-mapping.h b/arch/tile/include/asm/dma-mapping.h
-index f2ff191..6da0540 100644
---- a/arch/tile/include/asm/dma-mapping.h
-+++ b/arch/tile/include/asm/dma-mapping.h
-@@ -44,12 +44,12 @@ static inline void set_dma_offset(struct device *dev, dma_addr_t off)
- 
- static inline dma_addr_t phys_to_dma(struct device *dev, phys_addr_t paddr)
- {
--	return paddr + get_dma_offset(dev);
-+	return paddr;
- }
- 
- static inline phys_addr_t dma_to_phys(struct device *dev, dma_addr_t daddr)
- {
--	return daddr - get_dma_offset(dev);
-+	return daddr;
- }
- 
- static inline void dma_mark_clean(void *addr, size_t size) {}
-diff --git a/arch/tile/kernel/pci-dma.c b/arch/tile/kernel/pci-dma.c
-index b9fe80e..7e98371 100644
---- a/arch/tile/kernel/pci-dma.c
-+++ b/arch/tile/kernel/pci-dma.c
-@@ -357,7 +357,7 @@ static void *tile_pci_dma_alloc_coherent(struct device *dev, size_t size,
- 
- 	addr = page_to_phys(pg);
- 
--	*dma_handle = phys_to_dma(dev, addr);
-+	*dma_handle = addr + get_dma_offset(dev);
- 
- 	return page_address(pg);
- }
-@@ -387,7 +387,7 @@ static int tile_pci_dma_map_sg(struct device *dev, struct scatterlist *sglist,
- 		sg->dma_address = sg_phys(sg);
- 		__dma_prep_pa_range(sg->dma_address, sg->length, direction);
- 
--		sg->dma_address = phys_to_dma(dev, sg->dma_address);
-+		sg->dma_address = sg->dma_address + get_dma_offset(dev);
- #ifdef CONFIG_NEED_SG_DMA_LENGTH
- 		sg->dma_length = sg->length;
- #endif
-@@ -422,7 +422,7 @@ static dma_addr_t tile_pci_dma_map_page(struct device *dev, struct page *page,
- 	BUG_ON(offset + size > PAGE_SIZE);
- 	__dma_prep_page(page, offset, size, direction);
- 
--	return phys_to_dma(dev, page_to_pa(page) + offset);
-+	return page_to_pa(page) + offset + get_dma_offset(dev);
- }
- 
- static void tile_pci_dma_unmap_page(struct device *dev, dma_addr_t dma_address,
-@@ -432,7 +432,7 @@ static void tile_pci_dma_unmap_page(struct device *dev, dma_addr_t dma_address,
- {
- 	BUG_ON(!valid_dma_direction(direction));
- 
--	dma_address = dma_to_phys(dev, dma_address);
-+	dma_address -= get_dma_offset(dev);
- 
- 	__dma_complete_page(pfn_to_page(PFN_DOWN(dma_address)),
- 			    dma_address & PAGE_OFFSET, size, direction);
-@@ -445,7 +445,7 @@ static void tile_pci_dma_sync_single_for_cpu(struct device *dev,
- {
- 	BUG_ON(!valid_dma_direction(direction));
- 
--	dma_handle = dma_to_phys(dev, dma_handle);
-+	dma_handle -= get_dma_offset(dev);
- 
- 	__dma_complete_pa_range(dma_handle, size, direction);
- }
-@@ -456,7 +456,7 @@ static void tile_pci_dma_sync_single_for_device(struct device *dev,
- 						enum dma_data_direction
- 						direction)
- {
--	dma_handle = dma_to_phys(dev, dma_handle);
-+	dma_handle -= get_dma_offset(dev);
- 
- 	__dma_prep_pa_range(dma_handle, size, direction);
- }
-@@ -573,6 +573,11 @@ int dma_set_coherent_mask(struct device *dev, u64 mask)
- 	if (((dma_ops == gx_pci_dma_map_ops) ||
- 	    (dma_ops == gx_legacy_pci_dma_map_ops)) &&
- 	    (mask <= DMA_BIT_MASK(32))) {
-+		if (dma_ops == gx_pci_dma_map_ops) {
-+			dma_ops->alloc = tile_swiotlb_alloc_coherent;
-+			dma_ops->free = tile_swiotlb_free_coherent;
-+		}
-+
- 		if (mask > dev->archdata.max_direct_dma_addr)
- 			mask = dev->archdata.max_direct_dma_addr;
- 	}
--- 
-1.8.3.1
+And I think capping to 4KB as you did above will break the powerpc
+pcibios_window_alignment() implementation.  For example, if
+pcibios_window_alignment() returned 16KB, and we later capped it to
+4KB, we're going to allocate space for the bridge window with the
+wrong alignment.
 
+Bjorn
