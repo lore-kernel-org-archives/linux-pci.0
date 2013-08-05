@@ -1,394 +1,560 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47799 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933005Ab3HNUKa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Aug 2013 16:10:30 -0400
-Subject: [PATCH] vfio-pci: PCI hot reset interface
-To: alex.williamson@redhat.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, benh@kernel.crashing.org
-Date: Wed, 14 Aug 2013 14:10:26 -0600
-Message-ID: <20130814200845.21923.64284.stgit@bling.home>
+Received: from usmamail.tilera.com ([12.216.194.151]:50983 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755209Ab3HEUnH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 16:43:07 -0400
+Message-ID: <dff046ec3c0e00596fa272b86193483b039c5858.1375733180.git.cmetcalf@tilera.com>
+In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
+References: <cover.1375733180.git.cmetcalf@tilera.com>
+From: Chris Metcalf <cmetcalf@tilera.com>
+Date: Mon, 5 Aug 2013 16:06:20 -0400
+Subject: [PATCH 14/20] tile PCI RC: bomb comments and whitespace format
+To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current VFIO_DEVICE_RESET interface only maps to PCI use cases
-where we can isolate the reset to the individual PCI function.  This
-means the device must support FLR (PCIe or AF), PM reset on D3hot->D0
-transition, device specific reset, or be a singleton device on a bus
-for a secondary bus reset.  FLR does not have widespread support,
-PM reset is not very reliable, and bus topology is dictated by the
-system and device design.  We need to provide a means for a user to
-induce a bus reset in cases where the existing mechanisms are not
-available or not reliable.
+This change is purely stylistic but improves the readability
+of the tile PCI RC driver.
 
-This device specific extension to VFIO provides the user with this
-ability.  Two new ioctls are introduced:
- - VFIO_DEVICE_PCI_GET_HOT_RESET_INFO
- - VFIO_DEVICE_PCI_HOT_RESET
-
-The first provides the user with information about the extent of
-devices affected by a hot reset.  This is essentially a list of
-devices and the IOMMU groups they belong to.  The user may then
-initiate a hot reset by calling the second ioctl.  We must be
-careful that the user has ownership of all the affected devices
-found via the first ioctl, so the second ioctl takes a list of file
-descriptors for the VFIO groups affected by the reset.  Each group
-must have IOMMU protection established for the ioctl to succeed.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
 ---
+ arch/tile/kernel/pci_gx.c | 180 +++++++++++++++-------------------------------
+ 1 file changed, 56 insertions(+), 124 deletions(-)
 
-This patch is dependent on v5 "pci: bus and slot reset interfaces" as
-well as "pci: Add probe functions for bus and slot reset".
-
- drivers/vfio/pci/vfio_pci.c |  272 +++++++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/vfio.h   |   38 ++++++
- 2 files changed, 309 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index cef6002..eb69bf3 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -227,6 +227,97 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index 6837be2..8352d85 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -108,17 +108,15 @@ static struct pci_ops tile_cfg_ops;
+ /* Mask of CPUs that should receive PCIe interrupts. */
+ static struct cpumask intr_cpus_map;
+ 
+-/*
+- * We don't need to worry about the alignment of resources.
+- */
++/* We don't need to worry about the alignment of resources. */
+ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+-				resource_size_t size, resource_size_t align)
++				       resource_size_t size,
++				       resource_size_t align)
+ {
+ 	return res->start;
+ }
+ EXPORT_SYMBOL(pcibios_align_resource);
+ 
+-
+ /*
+  * Pick a CPU to receive and handle the PCIe interrupts, based on the IRQ #.
+  * For now, we simply send interrupts to non-dataplane CPUs.
+@@ -146,25 +144,19 @@ static int tile_irq_cpu(int irq)
+ 	return cpu;
+ }
+ 
+-/*
+- * Open a file descriptor to the TRIO shim.
+- */
++/* Open a file descriptor to the TRIO shim. */
+ static int tile_pcie_open(int trio_index)
+ {
+ 	gxio_trio_context_t *context = &trio_contexts[trio_index];
+ 	int ret;
+ 	int mac;
+ 
+-	/*
+-	 * This opens a file descriptor to the TRIO shim.
+-	 */
++	/* This opens a file descriptor to the TRIO shim. */
+ 	ret = gxio_trio_init(context, trio_index);
+ 	if (ret < 0)
+ 		goto gxio_trio_init_failure;
+ 
+-	/*
+-	 * Allocate an ASID for the kernel.
+-	 */
++	/* Allocate an ASID for the kernel. */
+ 	ret = gxio_trio_alloc_asids(context, 1, 0, 0);
+ 	if (ret < 0) {
+ 		pr_err("PCI: ASID alloc failure on TRIO %d, give up\n",
+@@ -285,20 +277,17 @@ static int __init tile_trio_init(void)
+ }
+ postcore_initcall(tile_trio_init);
+ 
+-static void
+-tilegx_legacy_irq_ack(struct irq_data *d)
++static void tilegx_legacy_irq_ack(struct irq_data *d)
+ {
+ 	__insn_mtspr(SPR_IPI_EVENT_RESET_K, 1UL << d->irq);
+ }
+ 
+-static void
+-tilegx_legacy_irq_mask(struct irq_data *d)
++static void tilegx_legacy_irq_mask(struct irq_data *d)
+ {
+ 	__insn_mtspr(SPR_IPI_MASK_SET_K, 1UL << d->irq);
+ }
+ 
+-static void
+-tilegx_legacy_irq_unmask(struct irq_data *d)
++static void tilegx_legacy_irq_unmask(struct irq_data *d)
+ {
+ 	__insn_mtspr(SPR_IPI_MASK_RESET_K, 1UL << d->irq);
+ }
+@@ -319,8 +308,7 @@ static struct irq_chip tilegx_legacy_irq_chip = {
+  * to Linux which just calls handle_level_irq() after clearing the
+  * MAC INTx Assert status bit associated with this interrupt.
+  */
+-static void
+-trio_handle_level_irq(unsigned int irq, struct irq_desc *desc)
++static void trio_handle_level_irq(unsigned int irq, struct irq_desc *desc)
+ {
+ 	struct pci_controller *controller = irq_desc_get_handler_data(desc);
+ 	gxio_trio_context_t *trio_context = controller->trio;
+@@ -386,9 +374,7 @@ static int tile_init_irqs(struct pci_controller *controller)
+ 			goto free_irqs;
+ 		}
+ 
+-		/*
+-		 * Register the IRQ handler with the kernel.
+-		 */
++		/* Register the IRQ handler with the kernel. */
+ 		irq_set_chip_and_handler(irq, &tilegx_legacy_irq_chip,
+ 					trio_handle_level_irq);
+ 		irq_set_chip_data(irq, (void *)(uint64_t)i);
+@@ -471,15 +457,11 @@ int __init tile_pci_init(void)
+ 		}
+ 	}
+ 
+-	/*
+-	 * Return if no PCIe ports are configured to operate in RC mode.
+-	 */
++	/* Return if no PCIe ports are configured to operate in RC mode. */
+ 	if (num_rc_controllers == 0)
+ 		return 0;
+ 
+-	/*
+-	 * Set the TRIO pointer and MAC index for each PCIe RC port.
+-	 */
++	/* Set the TRIO pointer and MAC index for each PCIe RC port. */
+ 	for (i = 0; i < TILEGX_NUM_TRIO; i++) {
+ 		for (j = 0; j < TILEGX_TRIO_PCIES; j++) {
+ 			if (pcie_rc[i][j]) {
+@@ -495,14 +477,10 @@ int __init tile_pci_init(void)
+ 	}
+ 
+ out:
+-	/*
+-	 * Configure each PCIe RC port.
+-	 */
++	/* Configure each PCIe RC port. */
+ 	for (i = 0; i < num_rc_controllers; i++) {
+-		/*
+-		 * Configure the PCIe MAC to run in RC mode.
+-		 */
+ 
++		/* Configure the PCIe MAC to run in RC mode. */
+ 		struct pci_controller *controller = &pci_controllers[i];
+ 
+ 		controller->index = i;
+@@ -525,7 +503,6 @@ out:
+ 		 * is in range [3GB, 4GB - 1] of a 4GB space beyond the
+ 		 * PA space.
+ 		 */
+-
+ 		controller->mem_offset = TILE_PCI_MEM_START +
+ 			(i * TILE_PCI_BAR_WINDOW_TOP);
+ 		controller->mem_space.start = controller->mem_offset +
+@@ -553,7 +530,6 @@ static int tile_map_irq(const struct pci_dev *dev, u8 device, u8 pin)
+ 	return controller->irq_intx_table[pin - 1];
+ }
+ 
+-
+ static void fixup_read_and_payload_sizes(struct pci_controller *controller)
+ {
+ 	gxio_trio_context_t *trio_context = controller->trio;
+@@ -567,9 +543,7 @@ static void fixup_read_and_payload_sizes(struct pci_controller *controller)
+ 
+ 	mac = controller->mac;
+ 
+-	/*
+-	 * Set our max read request size to be 4KB.
+-	 */
++	/* Set our max read request size to be 4KB. */
+ 	reg_offset =
+ 		(TRIO_PCIE_RC_DEVICE_CONTROL <<
+ 			TRIO_CFG_REGION_ADDR__REG_SHIFT) |
+@@ -578,10 +552,10 @@ static void fixup_read_and_payload_sizes(struct pci_controller *controller)
+ 		(mac << TRIO_CFG_REGION_ADDR__MAC_SEL_SHIFT);
+ 
+ 	dev_control.word = __gxio_mmio_read32(trio_context->mmio_base_mac +
+-						reg_offset);
++					      reg_offset);
+ 	dev_control.max_read_req_sz = 5;
+ 	__gxio_mmio_write32(trio_context->mmio_base_mac + reg_offset,
+-						dev_control.word);
++			    dev_control.word);
+ 
+ 	/*
+ 	 * Set the max payload size supported by this Gx PCIe MAC.
+@@ -597,10 +571,10 @@ static void fixup_read_and_payload_sizes(struct pci_controller *controller)
+ 		(mac << TRIO_CFG_REGION_ADDR__MAC_SEL_SHIFT);
+ 
+ 	rc_dev_cap.word = __gxio_mmio_read32(trio_context->mmio_base_mac +
+-						reg_offset);
++					     reg_offset);
+ 	rc_dev_cap.mps_sup = 1;
+ 	__gxio_mmio_write32(trio_context->mmio_base_mac + reg_offset,
+-						rc_dev_cap.word);
++			    rc_dev_cap.word);
+ 
+ 	/* Configure PCI Express MPS setting. */
+ 	list_for_each_entry(child, &root_bus->children, node) {
+@@ -628,7 +602,7 @@ static void fixup_read_and_payload_sizes(struct pci_controller *controller)
+ 				    dev_control.max_payload_size,
+ 				    dev_control.max_read_req_sz,
+ 				    mac);
+-        if (err < 0) {
++	if (err < 0) {
+ 		pr_err("PCI: PCIE_CONFIGURE_MAC_MPS_MRS failure, "
+ 			"MAC %d on TRIO %d\n",
+ 			mac, controller->trio_index);
+@@ -672,9 +646,7 @@ static int setup_pcie_rc_delay(char *str)
+ }
+ early_param("pcie_rc_delay", setup_pcie_rc_delay);
+ 
+-/*
+- * PCI initialization entry point, called by subsys_initcall.
+- */
++/* PCI initialization entry point, called by subsys_initcall. */
+ int __init pcibios_init(void)
+ {
+ 	resource_size_t offset;
+@@ -744,9 +716,7 @@ int __init pcibios_init(void)
+ 		pr_info("PCI: Found PCI controller #%d on TRIO %d MAC %d\n", i,
+ 			trio_index, controller->mac);
+ 
+-		/*
+-		 * Delay the bus probe if needed.
+-		 */
++		/* Delay the bus probe if needed. */
+ 		if (rc_delay[trio_index][mac]) {
+ 			pr_info("Delaying PCIe RC bus enumerating %d sec"
+ 				" on MAC %d on TRIO %d\n",
+@@ -761,9 +731,7 @@ int __init pcibios_init(void)
+ 			msleep(1000);
+ 		}
+ 
+-		/*
+-		 * Check for PCIe link-up status again.
+-		 */
++		/* Check for PCIe link-up status again. */
+ 		port_status.word =
+ 			__gxio_mmio_read(trio_context->mmio_base_mac +
+ 					 reg_offset);
+@@ -801,7 +769,6 @@ int __init pcibios_init(void)
+ 		 * Change the device ID so that Linux bus crawl doesn't confuse
+ 		 * the internal bridge with any Tilera endpoints.
+ 		 */
+-
+ 		reg_offset =
+ 			(TRIO_PCIE_RC_DEVICE_ID_VEN_ID <<
+ 				TRIO_CFG_REGION_ADDR__REG_SHIFT) |
+@@ -814,10 +781,7 @@ int __init pcibios_init(void)
+ 				    TRIO_PCIE_RC_DEVICE_ID_VEN_ID__DEV_ID_SHIFT) |
+ 				    TILERA_VENDOR_ID);
+ 
+-		/*
+-		 * Set the internal P2P bridge class code.
+-		 */
+-
++		/* Set the internal P2P bridge class code. */
+ 		reg_offset =
+ 			(TRIO_PCIE_RC_REVISION_ID <<
+ 				TRIO_CFG_REGION_ADDR__REG_SHIFT) |
+@@ -828,26 +792,22 @@ int __init pcibios_init(void)
+ 		class_code_revision =
+ 			__gxio_mmio_read32(trio_context->mmio_base_mac +
+ 					   reg_offset);
+-		class_code_revision = (class_code_revision & 0xff ) |
+-					(PCI_CLASS_BRIDGE_PCI << 16);
++		class_code_revision = (class_code_revision & 0xff) |
++			(PCI_CLASS_BRIDGE_PCI << 16);
+ 
+ 		__gxio_mmio_write32(trio_context->mmio_base_mac +
+ 				    reg_offset, class_code_revision);
+ 
+ #ifdef USE_SHARED_PCIE_CONFIG_REGION
+ 
+-		/*
+-		 * Map in the MMIO space for the PIO region.
+-		 */
++		/* Map in the MMIO space for the PIO region. */
+ 		offset = HV_TRIO_PIO_OFFSET(trio_context->pio_cfg_index) |
+ 			(((unsigned long long)mac) <<
+ 			TRIO_TILE_PIO_REGION_SETUP_CFG_ADDR__MAC_SHIFT);
+ 
+ #else
+ 
+-		/*
+-		 * Alloc a PIO region for PCI config access per MAC.
+-		 */
++		/* Alloc a PIO region for PCI config access per MAC. */
+ 		ret = gxio_trio_alloc_pio_regions(trio_context, 1, 0, 0);
+ 		if (ret < 0) {
+ 			pr_err("PCI: PCI CFG PIO alloc failure for mac %d "
+@@ -858,9 +818,7 @@ int __init pcibios_init(void)
+ 
+ 		trio_context->pio_cfg_index[mac] = ret;
+ 
+-		/*
+-		 * For PIO CFG, the bus_address_hi parameter is 0.
+-		 */
++		/* For PIO CFG, the bus_address_hi parameter is 0. */
+ 		ret = gxio_trio_init_pio_region_aux(trio_context,
+ 			trio_context->pio_cfg_index[mac],
+ 			mac, 0, HV_TRIO_PIO_FLAG_CONFIG_SPACE);
+@@ -887,9 +845,7 @@ int __init pcibios_init(void)
+ 			continue;
+ 		}
+ 
+-		/*
+-		 * Initialize the PCIe interrupts.
+-		 */
++		/* Initialize the PCIe interrupts. */
+ 		if (tile_init_irqs(controller)) {
+ 			pr_err("PCI: IRQs init failure for mac %d on TRIO %d\n",
+ 				mac, trio_index);
+@@ -921,7 +877,6 @@ int __init pcibios_init(void)
+ 	 * It allocates all of the resources (I/O memory, etc)
+ 	 * associated with the devices read in above.
+ 	 */
+-
+ 	pci_assign_unassigned_resources();
+ 
+ 	/* Record the I/O resources in the PCI controller structure. */
+@@ -942,14 +897,12 @@ int __init pcibios_init(void)
+ 		/* Configure the max_payload_size values for this domain. */
+ 		fixup_read_and_payload_sizes(controller);
+ 
+-		/*
+-		 * Alloc a PIO region for PCI memory access for each RC port.
+-		 */
++		/* Alloc a PIO region for PCI memory access for each RC port. */
+ 		ret = gxio_trio_alloc_pio_regions(trio_context, 1, 0, 0);
+ 		if (ret < 0) {
+ 			pr_err("PCI: MEM PIO alloc failure on TRIO %d mac %d, "
+-				"give up\n", controller->trio_index,
+-				controller->mac);
++			       "give up\n", controller->trio_index,
++			       controller->mac);
+ 
+ 			continue;
+ 		}
+@@ -967,8 +920,8 @@ int __init pcibios_init(void)
+ 						    0);
+ 		if (ret < 0) {
+ 			pr_err("PCI: MEM PIO init failure on TRIO %d mac %d, "
+-				"give up\n", controller->trio_index,
+-				controller->mac);
++			       "give up\n", controller->trio_index,
++			       controller->mac);
+ 
+ 			continue;
+ 		}
+@@ -980,8 +933,8 @@ int __init pcibios_init(void)
+ 		ret = gxio_trio_alloc_pio_regions(trio_context, 1, 0, 0);
+ 		if (ret < 0) {
+ 			pr_err("PCI: I/O PIO alloc failure on TRIO %d mac %d, "
+-				"give up\n", controller->trio_index,
+-				controller->mac);
++			       "give up\n", controller->trio_index,
++			       controller->mac);
+ 
+ 			continue;
+ 		}
+@@ -999,8 +952,8 @@ int __init pcibios_init(void)
+ 						    HV_TRIO_PIO_FLAG_IO_SPACE);
+ 		if (ret < 0) {
+ 			pr_err("PCI: I/O PIO init failure on TRIO %d mac %d, "
+-				"give up\n", controller->trio_index,
+-				controller->mac);
++			       "give up\n", controller->trio_index,
++			       controller->mac);
+ 
+ 			continue;
+ 		}
+@@ -1020,9 +973,9 @@ int __init pcibios_init(void)
+ 							  0);
+ 			if (ret < 0) {
+ 				pr_err("PCI: Mem-Map alloc failure on TRIO %d "
+-					"mac %d for MC %d, give up\n",
+-					controller->trio_index,
+-					controller->mac, j);
++				       "mac %d for MC %d, give up\n",
++				       controller->trio_index,
++				       controller->mac, j);
+ 
+ 				goto alloc_mem_map_failed;
+ 			}
+@@ -1053,9 +1006,9 @@ int __init pcibios_init(void)
+ 				GXIO_TRIO_ORDER_MODE_UNORDERED);
+ 			if (ret < 0) {
+ 				pr_err("PCI: Mem-Map init failure on TRIO %d "
+-					"mac %d for MC %d, give up\n",
+-					controller->trio_index,
+-					controller->mac, j);
++				       "mac %d for MC %d, give up\n",
++				       controller->trio_index,
++				       controller->mac, j);
+ 
+ 				goto alloc_mem_map_failed;
+ 			}
+@@ -1064,22 +1017,18 @@ int __init pcibios_init(void)
+ alloc_mem_map_failed:
+ 			break;
+ 		}
+-
+ 	}
+ 
+ 	return 0;
+ }
+ subsys_initcall(pcibios_init);
+ 
+-/* Note: to be deleted after Linux 3.6 merge. */
++/* No bus fixups needed. */
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+ }
+ 
+-/*
+- * This can be called from the generic PCI layer, but doesn't need to
+- * do anything.
+- */
++/* Process any "pci=" kernel boot arguments. */
+ char *pcibios_setup(char *str)
+ {
+ 	if (!strcmp(str, "off")) {
+@@ -1130,7 +1079,6 @@ void __iomem *ioremap(resource_size_t phys_addr, unsigned long size)
+ 	 * By searching phys_addr in each controller's mem_space, we can
+ 	 * determine the controller that should accept the PCI memory access.
+ 	 */
+-
+ 	for (i = 0; i < num_rc_controllers; i++) {
+ 		/*
+ 		 * Skip controllers that are not properly initialized or
+@@ -1158,9 +1106,7 @@ void __iomem *ioremap(resource_size_t phys_addr, unsigned long size)
+ 
+ 	offset = HV_TRIO_PIO_OFFSET(controller->pio_mem_index) + start;
+ 
+-	/*
+-	 * We need to keep the PCI bus address's in-page offset in the VA.
+-	 */
++	/* We need to keep the PCI bus address's in-page offset in the VA. */
+ 	return iorpc_ioremap(trio_fd, offset, size) +
+ 		(start & (PAGE_SIZE - 1));
+ }
+@@ -1186,7 +1132,6 @@ void __iomem *ioport_map(unsigned long port, unsigned int size)
+ 	 * By searching the port in each controller's io_space, we can
+ 	 * determine the controller that should accept the PCI I/O access.
+ 	 */
+-
+ 	for (i = 0; i < num_rc_controllers; i++) {
+ 		/*
+ 		 * Skip controllers that are not properly initialized or
+@@ -1214,9 +1159,7 @@ void __iomem *ioport_map(unsigned long port, unsigned int size)
+ 
+ 	offset = HV_TRIO_PIO_OFFSET(controller->pio_io_index) + port;
+ 
+-	/*
+-	 * We need to keep the PCI bus address's in-page offset in the VA.
+-	 */
++	/* We need to keep the PCI bus address's in-page offset in the VA. */
+ 	return iorpc_ioremap(trio_fd, offset, size) + (port & (PAGE_SIZE - 1));
+ }
+ EXPORT_SYMBOL(ioport_map);
+@@ -1249,7 +1192,6 @@ EXPORT_SYMBOL(pci_iounmap);
+  * offset is in bytes, from the start of config space for the
+  * specified bus & device.
+  */
+-
+ static int tile_cfg_read(struct pci_bus *bus, unsigned int devfn, int offset,
+ 			 int size, u32 *val)
+ {
+@@ -1299,7 +1241,6 @@ static int tile_cfg_read(struct pci_bus *bus, unsigned int devfn, int offset,
+ 	 * Accesses to the directly attached device have to be
+ 	 * sent as type-0 configs.
+ 	 */
+-
+ 	if (busnum == (controller->first_busno + 1)) {
+ 		/*
+ 		 * There is only one device off of our built-in P2P bridge.
+@@ -1321,9 +1262,8 @@ static int tile_cfg_read(struct pci_bus *bus, unsigned int devfn, int offset,
+ 	 * Note that we don't set the mac field in cfg_addr because the
+ 	 * mapping is per port.
+ 	 */
+-
+ 	mmio_addr = trio_context->mmio_base_pio_cfg[controller->mac] +
+-			cfg_addr.word;
++		cfg_addr.word;
+ 
+ valid_device:
+ 
+@@ -1427,7 +1367,6 @@ static int tile_cfg_write(struct pci_bus *bus, unsigned int devfn, int offset,
+ 	 * Accesses to the directly attached device have to be
+ 	 * sent as type-0 configs.
+ 	 */
+-
+ 	if (busnum == (controller->first_busno + 1)) {
+ 		/*
+ 		 * There is only one device off of our built-in P2P bridge.
+@@ -1449,7 +1388,6 @@ static int tile_cfg_write(struct pci_bus *bus, unsigned int devfn, int offset,
+ 	 * Note that we don't set the mac field in cfg_addr because the
+ 	 * mapping is per port.
+ 	 */
+-
+ 	mmio_addr = trio_context->mmio_base_pio_cfg[controller->mac] +
+ 			cfg_addr.word;
+ 
+@@ -1487,11 +1425,8 @@ static struct pci_ops tile_cfg_ops = {
+ };
+ 
+ 
+-/*
+- * MSI support starts here.
+- */
+-static unsigned int
+-tilegx_msi_startup(struct irq_data *d)
++/* MSI support starts here. */
++static unsigned int tilegx_msi_startup(struct irq_data *d)
+ {
+ 	if (d->msi_desc)
+ 		unmask_msi_irq(d);
+@@ -1499,21 +1434,18 @@ tilegx_msi_startup(struct irq_data *d)
  	return 0;
  }
  
-+static int vfio_pci_count_devs(struct pci_dev *pdev, void *data)
-+{
-+	(*(int *)data)++;
-+	return 0;
-+}
-+
-+struct vfio_pci_fill_info {
-+	int max;
-+	int cur;
-+	struct vfio_pci_dependent_device *devices;
-+};
-+
-+static int vfio_pci_fill_devs(struct pci_dev *pdev, void *data)
-+{
-+	struct vfio_pci_fill_info *info = data;
-+	struct iommu_group *iommu_group;
-+
-+	if (info->cur == info->max)
-+		return -EAGAIN; /* Something changed, try again */
-+
-+	iommu_group = iommu_group_get(&pdev->dev);
-+	if (!iommu_group)
-+		return -EPERM; /* Cannot reset non-isolated devices */
-+
-+	info->devices[info->cur].group_id = iommu_group_id(iommu_group);
-+	info->devices[info->cur].segment = pci_domain_nr(pdev->bus);
-+	info->devices[info->cur].bus = pdev->bus->number;
-+	info->devices[info->cur].devfn = pdev->devfn;
-+	info->cur++;
-+	iommu_group_put(iommu_group);
-+	return 0;
-+}
-+
-+struct vfio_pci_group {
-+	struct vfio_group *group;
-+	int id;
-+};
-+
-+struct vfio_pci_group_info {
-+	int count;
-+	struct vfio_pci_group *groups;
-+};
-+
-+static int vfio_pci_validate_devs(struct pci_dev *pdev, void *data)
-+{
-+	struct vfio_pci_group_info *info = data;
-+	struct iommu_group *group;
-+	int id, i;
-+
-+	group = iommu_group_get(&pdev->dev);
-+	if (!group)
-+		return -EPERM;
-+
-+	id = iommu_group_id(group);
-+
-+	for (i = 0; i < info->count; i++)
-+		if (info->groups[i].id == id)
-+			break;
-+
-+	iommu_group_put(group);
-+
-+	return (i == info->count) ? -EINVAL : 0;
-+}
-+
-+static int vfio_pci_for_each_slot_or_bus(struct pci_dev *pdev,
-+					 int (*fn)(struct pci_dev *,
-+						   void *data), void *data,
-+					 bool slot)
-+{
-+	struct pci_dev *tmp;
-+	int ret = 0;
-+
-+	list_for_each_entry(tmp, &pdev->bus->devices, bus_list) {
-+		if (slot && tmp->slot != pdev->slot)
-+			continue;
-+
-+		ret = fn(tmp, data);
-+		if (ret)
-+			break;
-+
-+		if (tmp->subordinate) {
-+			ret = vfio_pci_for_each_slot_or_bus(tmp, fn,
-+							    data, false);
-+			if (ret)
-+				break;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
- static long vfio_pci_ioctl(void *device_data,
- 			   unsigned int cmd, unsigned long arg)
+-static void
+-tilegx_msi_ack(struct irq_data *d)
++static void tilegx_msi_ack(struct irq_data *d)
  {
-@@ -407,10 +498,189 @@ static long vfio_pci_ioctl(void *device_data,
- 
- 		return ret;
- 
--	} else if (cmd == VFIO_DEVICE_RESET)
-+	} else if (cmd == VFIO_DEVICE_RESET) {
- 		return vdev->reset_works ?
- 			pci_reset_function(vdev->pdev) : -EINVAL;
- 
-+	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
-+		struct vfio_pci_hot_reset_info hdr;
-+		struct vfio_pci_fill_info fill = { 0 };
-+		struct vfio_pci_dependent_device *devices = NULL;
-+		bool slot = false;
-+		int ret = 0;
-+
-+		minsz = offsetofend(struct vfio_pci_hot_reset_info, count);
-+
-+		if (copy_from_user(&hdr, (void __user *)arg, minsz))
-+			return -EFAULT;
-+
-+		if (hdr.argsz < minsz)
-+			return -EINVAL;
-+
-+		hdr.flags = 0;
-+
-+		/* Can we do a slot or bus reset or neither? */
-+		if (!pci_probe_reset_slot(vdev->pdev->slot))
-+			slot = true;
-+		else if (pci_probe_reset_bus(vdev->pdev->bus))
-+			return -ENODEV;
-+
-+		/* How many devices are affected? */
-+		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
-+						    vfio_pci_count_devs,
-+						    &fill.max, slot);
-+		if (ret)
-+			return ret;
-+
-+		WARN_ON(!fill.max); /* Should always be at least one */
-+
-+		/*
-+		 * If there's enough space, fill it now, otherwise return
-+		 * -ENOSPC and the number of devices affected.
-+		 */
-+		if (hdr.argsz < sizeof(hdr) + (fill.max * sizeof(*devices))) {
-+			ret = -ENOSPC;
-+			hdr.count = fill.max;
-+			goto reset_info_exit;
-+		}
-+
-+		devices = kcalloc(fill.max, sizeof(*devices), GFP_KERNEL);
-+		if (!devices)
-+			return -ENOMEM;
-+
-+		fill.devices = devices;
-+
-+		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
-+						    vfio_pci_fill_devs,
-+						    &fill, slot);
-+
-+		/*
-+		 * If a device was removed between counting and filling,
-+		 * we may come up short of fill.max.  If a device was
-+		 * added, we'll have a return of -EAGAIN above.
-+		 */
-+		if (!ret)
-+			hdr.count = fill.cur;
-+
-+reset_info_exit:
-+		if (copy_to_user((void __user *)arg, &hdr, minsz))
-+			ret = -EFAULT;
-+
-+		if (!ret) {
-+			if (copy_to_user((void __user *)(arg + minsz), devices,
-+					 hdr.count * sizeof(*devices)))
-+				ret = -EFAULT;
-+		}
-+
-+		kfree(devices);
-+		return ret;
-+
-+	} else if (cmd == VFIO_DEVICE_PCI_HOT_RESET) {
-+		struct vfio_pci_hot_reset hdr;
-+		int32_t *group_fds;
-+		struct vfio_pci_group *groups;
-+		struct vfio_pci_group_info info;
-+		bool slot = false;
-+		int i, count = 0, ret = 0;
-+
-+		minsz = offsetofend(struct vfio_pci_hot_reset, count);
-+
-+		if (copy_from_user(&hdr, (void __user *)arg, minsz))
-+			return -EFAULT;
-+
-+		if (hdr.argsz < minsz || hdr.flags)
-+			return -EINVAL;
-+
-+		/* Can we do a slot or bus reset or neither? */
-+		if (!pci_probe_reset_slot(vdev->pdev->slot))
-+			slot = true;
-+		else if (pci_probe_reset_bus(vdev->pdev->bus))
-+			return -ENODEV;
-+
-+		/*
-+		 * We can't let userspace give us an arbitrarily large
-+		 * buffer to copy, so verify how many we think there
-+		 * could be.  Note groups can have multiple devices so
-+		 * one group per device is the max.
-+		 */
-+		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
-+						    vfio_pci_count_devs,
-+						    &count, slot);
-+		if (ret)
-+			return ret;
-+
-+		/* Somewhere between 1 and count is OK */
-+		if (!hdr.count || hdr.count > count)
-+			return -EINVAL;
-+
-+		group_fds = kcalloc(hdr.count, sizeof(*group_fds), GFP_KERNEL);
-+		groups = kcalloc(hdr.count, sizeof(*groups), GFP_KERNEL);
-+		if (!group_fds || !groups) {
-+			kfree(group_fds);
-+			kfree(groups);
-+			return -ENOMEM;
-+		}
-+
-+		if (copy_from_user(group_fds, (void __user *)(arg + minsz),
-+				   hdr.count * sizeof(*group_fds))) {
-+			kfree(group_fds);
-+			kfree(groups);
-+			return -EFAULT;
-+		}
-+
-+		/*
-+		 * For each group_fd, get the group through the vfio external
-+		 * user interface and store the group and iommu ID.  This
-+		 * ensures the group is held across the reset.
-+		 */
-+		for (i = 0; i < hdr.count; i++) {
-+			struct vfio_group *group;
-+			struct fd f = fdget(group_fds[i]);
-+			if (!f.file) {
-+				ret = -EBADF;
-+				break;
-+			}
-+
-+			group = vfio_group_get_external_user(f.file);
-+			fdput(f);
-+			if (IS_ERR(group)) {
-+				ret = PTR_ERR(group);
-+				break;
-+			}
-+
-+			groups[i].group = group;
-+			groups[i].id = vfio_external_user_iommu_id(group);
-+		}
-+
-+		kfree(group_fds);
-+
-+		/* release reference to groups on error */
-+		if (ret)
-+			goto hot_reset_release;
-+
-+		info.count = hdr.count;
-+		info.groups = groups;
-+
-+		/*
-+		 * Test whether all the affected devices are contained
-+		 * by the set of groups provided by the user.
-+		 */
-+		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
-+						    vfio_pci_validate_devs,
-+						    &info, slot);
-+		if (!ret)
-+			/* User has access, do the reset */
-+			ret = slot ? pci_reset_slot(vdev->pdev->slot) :
-+				     pci_reset_bus(vdev->pdev->bus);
-+
-+hot_reset_release:
-+		for (i--; i >= 0; i--)
-+			vfio_group_put_external_user(groups[i].group);
-+
-+		kfree(groups);
-+		return ret;;
-+	}
-+
- 	return -ENOTTY;
+ 	__insn_mtspr(SPR_IPI_EVENT_RESET_K, 1UL << d->irq);
  }
  
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 916e444..0fd47f5 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -324,6 +324,44 @@ enum {
- 	VFIO_PCI_NUM_IRQS
- };
+-static void
+-tilegx_msi_mask(struct irq_data *d)
++static void tilegx_msi_mask(struct irq_data *d)
+ {
+ 	mask_msi_irq(d);
+ 	__insn_mtspr(SPR_IPI_MASK_SET_K, 1UL << d->irq);
+ }
  
-+/**
-+ * VFIO_DEVICE_GET_PCI_HOT_RESET_INFO - _IORW(VFIO_TYPE, VFIO_BASE + 12,
-+ *					      struct vfio_pci_hot_reset_info)
-+ *
-+ * Return: 0 on success, -errno on failure:
-+ *	-enospc = insufficient buffer, -enodev = unsupported for device.
-+ */
-+struct vfio_pci_dependent_device {
-+	__u32	group_id;
-+	__u16	segment;
-+	__u8	bus;
-+	__u8	devfn; /* Use PCI_SLOT/PCI_FUNC */
-+};
-+
-+struct vfio_pci_hot_reset_info {
-+	__u32	argsz;
-+	__u32	flags;
-+	__u32	count;
-+	struct vfio_pci_dependent_device	devices[];
-+};
-+
-+#define VFIO_DEVICE_GET_PCI_HOT_RESET_INFO	_IO(VFIO_TYPE, VFIO_BASE + 12)
-+
-+/**
-+ * VFIO_DEVICE_PCI_HOT_RESET - _IOW(VFIO_TYPE, VFIO_BASE + 13,
-+ *				    struct vfio_pci_hot_reset)
-+ *
-+ * Return: 0 on success, -errno on failure.
-+ */
-+struct vfio_pci_hot_reset {
-+	__u32	argsz;
-+	__u32	flags;
-+	__u32	count;
-+	__s32	group_fds[];
-+};
-+
-+#define VFIO_DEVICE_PCI_HOT_RESET	_IO(VFIO_TYPE, VFIO_BASE + 13)
-+
- /* -------- API for Type1 VFIO IOMMU -------- */
- 
- /**
+-static void
+-tilegx_msi_unmask(struct irq_data *d)
++static void tilegx_msi_unmask(struct irq_data *d)
+ {
+ 	__insn_mtspr(SPR_IPI_MASK_RESET_K, 1UL << d->irq);
+ 	unmask_msi_irq(d);
+-- 
+1.8.3.1
 
