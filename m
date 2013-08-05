@@ -1,52 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-o-3.desy.de ([131.169.56.156]:48248 "EHLO smtp-o-3.desy.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752305Ab3H0IDN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Aug 2013 04:03:13 -0400
-Received: from smtp-map-3.desy.de (smtp-map-3.desy.de [131.169.56.68])
-	by smtp-o-3.desy.de (DESY-O-3) with ESMTP id 855BD2802C5
-	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 09:53:38 +0200 (CEST)
-Received: from ZITSWEEP2.win.desy.de (zitsweep2.win.desy.de [131.169.97.96])
-	by smtp-map-3.desy.de (DESY_MAP_3) with ESMTP id 6F13B10BD
-	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 09:53:36 +0200 (MEST)
-Received: from smtp-intra-3.desy.de (lb-40-26.desy.de) by ZITSWEEP2.win.desy.de
- (Clearswift SMTPRS 5.4.1) with ESMTP id <Tadcb9a19c283a961601bdc@ZITSWEEP2.win.desy.de> for <linux-pci@vger.kernel.org>;
- Tue, 27 Aug 2013 09:53:36 +0200
-Received: from [131.169.146.36] (mcspetros.desy.de [131.169.146.36])
-	by smtp-intra-3.desy.de (DESY-INTRA-3) with ESMTP id CAE3310BD
-	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 09:53:35 +0200 (MEST)
-Message-ID: <521C5AFF.90209@desy.de>
-Date: Tue, 27 Aug 2013 09:53:35 +0200
-From: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
+Received: from usmamail.tilera.com ([12.216.194.151]:50988 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755360Ab3HEUnT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 16:43:19 -0400
+Message-ID: <ce158413650f70a6551c6af726e07d40b6ba7cc5.1375733180.git.cmetcalf@tilera.com>
+In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
+References: <cover.1375733180.git.cmetcalf@tilera.com>
+From: Chris Metcalf <cmetcalf@tilera.com>
+Date: Mon, 5 Aug 2013 16:06:20 -0400
+Subject: [PATCH 19/20] tile PCI RC: reduce driver's vmalloc space usage
+To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-Subject: PCIe endpoint crosstalk
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi ALL
+We can take advantage of the fact that bit 29 is hard-wired
+to zero in register TRIO_TILE_PIO_REGION_SETUP_CFG_ADDR.
+This is handy since at the moment we only allocate one 4GB
+region for vmalloc, and with this change we can allocate
+four or more TRIO MACs without using up all the vmalloc space.
 
-my name is Ludwig Petrosyan, I am developing PCIe endpoint drivers under
-Ubuntu.
+Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+---
+ arch/tile/kernel/pci_gx.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-I have got the problem and think it is on pciport driver level.
-I will try to describe the problem and maybe some body could help me.
-
-So: I use microTCA system with PCIe bus, there are two AMC cards (PCIe
-endpoints), lets call card A and card B.
-as well there are two device drivers for A and B. Card B has bug, after
-PCIe memory write  operation (MWr) the card sends back Completion
-packet without data (Cpl) (I now it is wrong, but card designed in this
-way and has to be changed).
-User process Ua reads data from Card A in loop, everything is OK , but
-then I start second user process Ub which writes in loop data to card B
-(bugged card) the Ua gets wrong data. After improving card B the problem
-was solved, but could be it has to be checked on the PCIe driver level
-as well.
-
-with best regards
-
-Ludwig Petrosyan
-
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index f2bf200..4843881 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -860,9 +860,15 @@ int __init pcibios_init(void)
+ 
+ #endif
+ 
++		/*
++		 * To save VMALLOC space, we take advantage of the fact that
++		 * bit 29 in the PIO CFG address format is reserved 0. With
++		 * TRIO_TILE_PIO_REGION_SETUP_CFG_ADDR__MAC_SHIFT being 30,
++		 * this cuts VMALLOC space usage from 1GB to 512MB per mac.
++		 */
+ 		trio_context->mmio_base_pio_cfg[mac] =
+-			iorpc_ioremap(trio_context->fd, offset,
+-			(1 << TRIO_TILE_PIO_REGION_SETUP_CFG_ADDR__MAC_SHIFT));
++			iorpc_ioremap(trio_context->fd, offset, (1UL <<
++			(TRIO_TILE_PIO_REGION_SETUP_CFG_ADDR__MAC_SHIFT - 1)));
+ 		if (trio_context->mmio_base_pio_cfg[mac] == NULL) {
+ 			pr_err("PCI: PIO map failure for mac %d on TRIO %d\n",
+ 				mac, trio_index);
+-- 
+1.8.3.1
 
