@@ -1,56 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCH V2] PCI: exynos: add support for MSI
-Date: Sun, 25 Aug 2013 22:28:20 +0200
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <003d01ce9fc6$9c0f1c20$d42d5460$%han@samsung.com> <20130823083539.GB3937@pratyush-vbox> <20130823092238.GJ3535@ulmo>
-In-Reply-To: <20130823092238.GJ3535@ulmo>
+	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] acpi, acpi_pci_irq_enable must return an error if ACPI cannot map an IRQ.
+Date: Mon, 05 Aug 2013 15:30:16 +0200
+Message-ID: <2316212.cUEmm9I6aI@vostro.rjw.lan>
+In-Reply-To: <51FEE549.3050001@redhat.com>
+References: <1373900260-1599-1-git-send-email-prarit@redhat.com> <51F0F67F.8070200@redhat.com> <51FEE549.3050001@redhat.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201308252228.20843.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 23 August 2013, Thierry Reding wrote:
-> > > +       if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> > > +               if (of_property_read_u32(np, "msi-base", &pp->msi_irq_start)) {
-> > > +                       dev_err(pp->dev, "Failed to parse the number of lanes\n");
-> > > +                       return -EINVAL;
-> > > +               }
-> > > +       }
-> > > +
+On Sunday, August 04, 2013 07:35:37 PM Prarit Bhargava wrote:
+> 
+> On 07/25/2013 05:57 AM, Prarit Bhargava wrote:
 > > 
-> > What if an implementor want to use irq_domain method for msi_irq_start
-> > allocation? Is it fine to return error if msi-base is not passed from
-> > dt?
+> > 
+> > On 07/24/2013 08:01 PM, Prarit Bhargava wrote:
+> >>
+> >>
+> >> On 07/24/2013 07:35 PM, Rafael J. Wysocki wrote:
+> >>> On Monday, July 15, 2013 10:57:40 AM Prarit Bhargava wrote:
+> >>>> Driver probe's currently do the following
+> >>>>
+> >>>> 	pci_enable_device();
+> >>>> 	/* ... do some other init stuff, and eventually call ... */
+> >>>> 	request_irq();
+> >>>>
+> >>>> After pci_enable_device() is called it is assumed that the device's irq
+> >>>> value (pci_dev->irq) has been appropriately set on success.  This value
+> >>>> is passed into the request_irq() call.
+> >>>>
+> >>>> In the case that ACPI is used to determine the irq value, it is possible
+> >>>> that the ACPI IRQ look up for a specific device fails and success is
+> >>>> returned by pci_enable_device().
+> >>>>
+> >>>> The call sequence is:
+> >>>>
+> >>>> pci_enable_device();
+> >>>> 	-> pci_enable_device_flags();
+> >>>> 		->do_pci_enable_device();
+> >>>> 			-> pcibios_enable_device() which, if the device
+> >>>> 			   does not use MSI calls
+> >>>> 			   -> pcibios_enable_irq() which maps to
+> >>>> 			      acpi_pci_irq_enable()
+> >>>> 				-> acpi_pci_irq_lookup()
+> >>>>
+> >>>> If acpi_pci_irq_lookup() cannot map the device's IRQ value it returns NULL
+> >>>> as an error.  The error is returned to acpi_pci_irq_enable(), but is not
+> >>>> propagated further.  This can result in the driver returning success for
+> >>>> pci_enable_device() and the driver probe attempting to call request_irq()
+> >>>> with dev->irq = 0.
+> >>>>
+> >>>> This patch modifies acpi_pci_irq_enable() to return an error in the case
+> >>>> that an entry is not found in the ACPI tables.
+> >>>
+> >>> Is there any known system on which this leads to observable misbehavior?
+> >>>
+> >>> If so, what's that system?
+> >>>
+> >>
+> >> Dell PowerEdge 840.  The end result is an genirq warning about the irq flags of
+> >> irq 0:
+> >>
+> >> [   14.126845] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT B
+> >> [   14.133473] i801_smbus 0000:00:1f.3: PCI INT B: no GSI
+> >> [   14.795122] genirq: Flags mismatch irq 0. 00000080 (i801_smbus) vs. 00015a20
+> >> (timer)
+> >> [   14.796037] CPU: 0 PID: 427 Comm: systemd-udevd Tainted: G        W
+> >> --------------   3.10.0-0.rc4.60.el7.x86_64.debug #1
+> >> [   14.796037] Hardware name: Dell Computer Corporation PowerEdge 840/0RH822,
+> >> BIOS A05 10/04/2007
+> >> [   14.796037]  ffff880075643b80 ffff88007a743aa8 ffffffff816b8bbd ffff88007a743af8
+> >> [   14.796037]  ffffffff8111ed8d ffffffff811bf5d1 0000000000000296 ffff880075b93800
+> >> [   14.796037]  ffffffffa03d2240 0000000000000080 0000000000000000 ffff88007ad7e000
+> >> [   14.796037] Call Trace:
+> >> [   14.796037]  [<ffffffff816b8bbd>] dump_stack+0x19/0x1b
+> >> [   14.796037]  [<ffffffff8111ed8d>] __setup_irq+0x51d/0x550
+> >> [   14.796037]  [<ffffffff811bf5d1>] ? kmem_cache_alloc_trace+0x111/0x340
+> >> [   14.796037]  [<ffffffffa03d2240>] ? i801_check_pre.isra.6+0xe0/0xe0 [i2c_i801]
+> >> [   14.796037]  [<ffffffff8111ef1c>] request_threaded_irq+0xcc/0x170
+> >> [   14.796037]  [<ffffffffa03d388d>] i801_probe+0x34d/0x52c [i2c_i801]
+> >> [   14.796037]  [<ffffffff810ddecd>] ? trace_hardirqs_on+0xd/0x10
+> >> [   14.796037]  [<ffffffff813876be>] local_pci_probe+0x3e/0x70
+> >> [   14.796037]  [<ffffffff813889a1>] pci_device_probe+0x111/0x120
+> >> [   14.796037]  [<ffffffff8144ff77>] driver_probe_device+0x87/0x390
+> >> [   14.796037]  [<ffffffff81450353>] __driver_attach+0x93/0xa0
+> >> [   14.796037]  [<ffffffff814502c0>] ? __device_attach+0x40/0x40
+> >> [   14.796037]  [<ffffffff8144de93>] bus_for_each_dev+0x63/0xa0
+> >> [   14.796037]  [<ffffffff8144f9ae>] driver_attach+0x1e/0x20
+> >> [   14.796037]  [<ffffffff8144f540>] bus_add_driver+0x1f0/0x2a0
+> >> [   14.796037]  [<ffffffffa03d8000>] ? 0xffffffffa03d7fff
+> >> [   14.796037]  [<ffffffff814509d1>] driver_register+0x71/0x150
+> >> [   14.796037]  [<ffffffffa03d8000>] ? 0xffffffffa03d7fff
+> >> [   14.796037]  [<ffffffff81387540>] __pci_register_driver+0x60/0x70
+> >> [   14.796037]  [<ffffffffa03d80af>] i2c_i801_init+0xaf/0x1000 [i2c_i801]
+> >> [   14.796037]  [<ffffffffa03d8000>] ? 0xffffffffa03d7fff
+> >> [   14.796037]  [<ffffffff810020e2>] do_one_initcall+0xe2/0x1a0
+> >> [   14.796037]  [<ffffffff810ee09f>] load_module+0xf4f/0x14d0
+> >> [   14.796037]  [<ffffffff81375d20>] ? ddebug_proc_write+0xf0/0xf0
+> >> [   14.796037]  [<ffffffff8136088d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
+> >> [   14.796037]  [<ffffffff810ee6e1>] SyS_init_module+0xc1/0x110
+> >> [   14.796037]  [<ffffffff816ca299>] system_call_fastpath+0x16/0x1b
+> >>
+> > 
+> > Rafael,
+> > 
+> > One other thing -- the core issue here is that the BIOS is broken and does not
+> > supply an ACPI entry for the IRQ.  I think the kernel should do a better job of
+> > reacting to that instead of just continuing down a broken path.
+> > 
+> > In either case, the end result is the same -- the i801 driver does not load, but
+> > with my patch the warning is not displayed, which IMO is the correct way to fail.
+> > 
+> > P.
 > 
-> I agree. This should be using an IRQ domain to represent the MSI
-> controller. Both Tegra and Marvell drivers do that already and if Exynos
-> can follow that same path it will increase the chances of refactoring
-> common bits.
+> Hey Rafael,
 > 
-> Also the error message doesn't quite match up with what the code is
-> doing. =)
+> I know you're busy but I was just wondering if this was queued up anywhere or if
+> you had any other questions?
 
-Agreed. Besides the encoding of "base" irq values in the device tree is always
-wrong, since the numbers are not at all a hardware property but an implementation
-detail of how Linux currently uses interrupt numbers. When using DT probing,
-you *have* to use IRQ domains, and the rest of Exynos does that.
+Should be qeued up for 3.12 (currently in linux-next).
 
-	Arnd
+Thanks,
+Rafael
+
