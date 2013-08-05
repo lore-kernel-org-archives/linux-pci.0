@@ -1,111 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:55851 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987Ab3HFHYS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 03:24:18 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Jon Mason <jdmason@kudzu.us>, <stable@vger.kernel.org>
-Subject: [PATCH -v2] PCI: update device mps when doing pci hotplug
-Date: Tue, 6 Aug 2013 15:23:58 +0800
-Message-ID: <1375773838-33572-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:44562 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754281Ab3HEUws (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 16:52:48 -0400
+Received: by mail-oa0-f50.google.com with SMTP id i4so7277868oah.23
+        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 13:52:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130805195149.GA19127@google.com>
+References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	<1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
+	<CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
+	<CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
+	<20130805195149.GA19127@google.com>
+Date: Mon, 5 Aug 2013 13:52:47 -0700
+Message-ID: <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in pbus_size_io()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v1->v2: Update patch log, remove Joe's reported-by, because his problem
-        was mainly caused by BIOS incorrect setting. But this patch mainly
-		to fix the bug caused by device hot add. Conservatively, this 
-		version only update the mps problem when hot add. When the device
-		mps < parent mps found, this patch try to update device mps.
-		It seems unlikely device mps > parent mps after hot add device.
-		So we don't care that situation.
+On Mon, Aug 5, 2013 at 12:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> @@ -848,8 +848,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+>>               }
+>>       }
+>>
+>> -     if (min_align > io_align)
+>> -             min_align = io_align;
+>> +     if (min_align > PCI_P2P_DEFAULT_IO_ALIGN)
+>> +             min_align = PCI_P2P_DEFAULT_IO_ALIGN;
+>
+> But I still don't understand this one.  As far as I can tell,
+> "min_align > 4096" can happen only for arch-specific I/O window
+> requirements.  It can never happen because of a large device I/O BAR.
+>
+> Let's assume "min_align = window_alignment(bus, IORESOURCE_IO)" above set
+> min_align to 16KB because that's what pnv_pci_window_alignment() returned.
+> Why would we cap it to 4KB here?  I think we should set this:
+>
+>     b_res->start = 16384;
+>     b_res->end = b_res->start + size0 - 1;
+>     b_res->flags |= IORESOURCE_STARTALIGN;
+>
+> to indicate that the bridge needs a 16KB-aligned I/O window.
+>
+> In what case do we need to cap min_align to 4KB?
+>
+>>       size0 = calculate_iosize(size, min_size, size1,
+>>                       resource_size(b_res), min_align);
 
-This patch need to be applied to stable 3.4+
+then, we should drop that 4k capping.
+I was thinking there could be strange or wild res with bigger than 4k.
 
-Currently we don't update device's mps vaule when doing
-pci device hot-add. The hot-added device's mps will be set
-to default value (128B). But the upstream port device's mps
-may be larger than 128B which was set by firmware during
-system bootup. In this case the new added device may not
-work normally. This patch try to update the hot added device
-mps euqal to its parent mps, if device mpss < parent mps,
-print warning.
+Thanks
 
-References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
-Reported-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Cc: stable@vger.kernel.org
----
- drivers/pci/probe.c |   43 +++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 43 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cf57fe7..9b0e634 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1603,6 +1603,40 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
- 	return 0;
- }
- 
-+static int pcie_bus_update_set(struct pci_dev *dev, void *data)
-+{
-+	int mps, p_mps;
-+
-+	if (!pci_is_pcie(dev) || !dev->bus->self)
-+		return 0;
-+
-+	mps = pcie_get_mps(dev);
-+	p_mps = pcie_get_mps(dev->bus->self);
-+
-+	if (mps < p_mps)
-+		goto update;
-+
-+	return 0;
-+
-+update:
-+	/* If current mpss is lager than upstream, use upstream mps to update
-+	 * current mps, otherwise print warning info.
-+	 */
-+	if ((128 << dev->pcie_mpss) >= p_mps)
-+		pcie_write_mps(dev, p_mps);
-+	else
-+		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
-+				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
-+				mps, 128 << dev->pcie_mpss, p_mps);
-+	return 0;
-+}
-+
-+static void pcie_bus_update_setting(struct pci_bus *bus)
-+{
-+	if (bus->self->is_hotplug_bridge)
-+		pci_walk_bus(bus, pcie_bus_update_set, NULL);
-+}
-+
- /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
-  * parents then children fashion.  If this changes, then this code will not
-  * work as designed.
-@@ -1614,6 +1648,15 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- 	if (!pci_is_pcie(bus->self))
- 		return;
- 
-+	/* Sometimes we should update device mps here,
-+	 * eg. after hot add, device mps value will be
-+	 * set to default(128B), but the upstream port
-+	 * mps value may be larger than 128B, if we do
-+	 * not update the device mps, it maybe can not
-+	 * work normally.
-+	 */
-+	pcie_bus_update_setting(bus);
-+
- 	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
- 		return;
- 
--- 
-1.7.1
-
-
+Yinghai
