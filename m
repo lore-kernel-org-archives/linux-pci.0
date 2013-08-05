@@ -1,91 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:45935 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757206Ab3HGHAA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 03:00:00 -0400
-Received: by mail-bk0-f44.google.com with SMTP id mz10so443843bkb.17
-        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 23:59:59 -0700 (PDT)
-Date: Wed, 7 Aug 2013 08:59:56 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCHv6 00/13] MSI support for Marvell EBU PCIe driver
-Message-ID: <20130807065954.GA22906@manwe>
-References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130806200256.GB19280@titan.lakedaemon.net>
+Received: from mx1.redhat.com ([209.132.183.28]:60591 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754601Ab3HEThi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Aug 2013 15:37:38 -0400
+Subject: [PATCH v4 5/9] pci: Split out pci_dev lock/unlock and save/restore
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: ddutile@redhat.com, indou.takao@jp.fujitsu.com,
+	linux-kernel@vger.kernel.org
+Date: Mon, 05 Aug 2013 13:37:34 -0600
+Message-ID: <20130805193734.9260.69622.stgit@bling.home>
+In-Reply-To: <20130805193200.9260.38729.stgit@bling.home>
+References: <20130805193200.9260.38729.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ibTvN161/egqYuK8"
-In-Reply-To: <20130806200256.GB19280@titan.lakedaemon.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Only cosmetic code changes to existing paths.  Expand the comment in
+the new pci_dev_save_and_disable() function since there's a lot
+hidden in that Command register write.
 
---ibTvN161/egqYuK8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c |   55 +++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 38 insertions(+), 17 deletions(-)
 
-On Tue, Aug 06, 2013 at 04:02:56PM -0400, Jason Cooper wrote:
-> Thomas,
->=20
-> In order to get some testing in -next, I've *tentatively* applied this
-> series in the following way:
->=20
-> +---+ mvebu/msi_common (1,2,3,10)
->     |
->     +---+---+ mvebu/msi_irq (4-9)
->             |
->             +---+---+ mvebu/msi_mvebu (11-13)
->=20
-> I had to make one change to patch #9, I protected the last two blocks
-> with #ifdef CONFIG_PCI_MSI to prevent a build failure at that point.
->=20
-> mvebu/msi_common should be appropriate for Thierry to base off, however,
-> I make no guarantees about the stability of the branch until I send a
-> PR for it.  Code-wise, it should be fine, but the commit-ids may change
-> due to adding Tested-by's, etc.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9407aab..4a0275c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3317,22 +3317,49 @@ done:
+ 	return rc;
+ }
+ 
++static void pci_dev_lock(struct pci_dev *dev)
++{
++	pci_cfg_access_lock(dev);
++	/* block PM suspend, driver probe, etc. */
++	device_lock(&dev->dev);
++}
++
++static void pci_dev_unlock(struct pci_dev *dev)
++{
++	device_unlock(&dev->dev);
++	pci_cfg_access_unlock(dev);
++}
++
++static void pci_dev_save_and_disable(struct pci_dev *dev)
++{
++	pci_save_state(dev);
++	/*
++	 * Disable the device by clearing the Command register, except for
++	 * INTx-disable which is set.  This not only disable MMIO and I/O port
++	 * BARs, but also prevents the device from being Bus Master, preventing
++	 * DMA from the device including MSI/MSI-X interrupts.  For PCI 2.3
++	 * compliant devices, INTx-disable prevents legacy interrupts.
++	 */
++	pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
++}
++
++static void pci_dev_restore(struct pci_dev *dev)
++{
++	pci_restore_state(dev);
++}
++
+ static int pci_dev_reset(struct pci_dev *dev, int probe)
+ {
+ 	int rc;
+ 
+-	if (!probe) {
+-		pci_cfg_access_lock(dev);
+-		/* block PM suspend, driver probe, etc. */
+-		device_lock(&dev->dev);
+-	}
++	if (!probe)
++		pci_dev_lock(dev);
+ 
+ 	rc = __pci_dev_reset(dev, probe);
+ 
+-	if (!probe) {
+-		device_unlock(&dev->dev);
+-		pci_cfg_access_unlock(dev);
+-	}
++	if (!probe)
++		pci_dev_unlock(dev);
++
+ 	return rc;
+ }
+ /**
+@@ -3423,17 +3450,11 @@ int pci_reset_function(struct pci_dev *dev)
+ 	if (rc)
+ 		return rc;
+ 
+-	pci_save_state(dev);
+-
+-	/*
+-	 * both INTx and MSI are disabled after the Interrupt Disable bit
+-	 * is set and the Bus Master bit is cleared.
+-	 */
+-	pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
++	pci_dev_save_and_disable(dev);
+ 
+ 	rc = pci_dev_reset(dev, 0);
+ 
+-	pci_restore_state(dev);
++	pci_dev_restore(dev);
+ 
+ 	return rc;
+ }
 
-I noticed that patch 10 has my Reviewed-by, even though my comments
-weren't addressed. They were about stylistic issues but I'd still like
-to see them fixed now rather than having to fix them up later. Also I
-think I gave my Tested-by on those patches somewhere already and I think
-it's unlikely that anybody else will test them, so with the consistency
-style fixes applied I don't see any reason why that branch can't be
-stabilized right away.
-
-Thierry
-
---ibTvN161/egqYuK8
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSAfBqAAoJEN0jrNd/PrOhPKgQAKSZL7xAfnJiIg1jeRw0KxJZ
-sU+fV3AbwZB6xCdulXfgKDmPEfvazbtBCVrjvsjKr45NfYyQnBdQi2RIIIbmFMYc
-+MJ4mjbsYrJ5FgKfy/blxdx02dEp0h3HU4Tg5G5J2r87sQc124pkBoSaoH5rYiLA
-1CapxUTr96en5/KZgVmYTl/1VNBZTkMqaXqZxbGTyBbdNEL2b7ALDx+GtrVKkmG0
-ZUMWwg5PpHyeAxK1VJt7dpAgq0o+WECIIjL+kxW2BQ5C13ctQBdQvgqusrxa+uue
-upjJxGdtbtftdTHI0JNzCLRxiWM38oX8AOYRtJWiJ3ToE1cFw17anBrMNmPKlzSC
-hXLMYQx0gYfJtYu8j6UrMfS4dmhMRM7BCtQW0a8mp3QOgzBSSNeeCLc3nJzEqZQX
-hBHhcggkHTb853khVJgjBgT/wpfnTfDU5vtyoj1FzdEEp6nOILP+B05La6ByRQKJ
-2V2BRyUSGlowZdz+hxcl6iN1BWXri7E8HsKXE/C2TS1o7ghKNKd69kYqM2Czd4tg
-Qb2D03tb0l3l9KlXhC3OScHdwbuw5mycod91aoxkNpULvmGmpOLdnUd4gmhqHDsB
-xCh/xd4cFuqOJ3R2yK+KA61gqKm0puSeFzhNln5+dKNLtNRdqhF7y+i4RNQV6SML
-KBBv9vF8kAw8+fD30tK0
-=Pz4o
------END PGP SIGNATURE-----
-
---ibTvN161/egqYuK8--
