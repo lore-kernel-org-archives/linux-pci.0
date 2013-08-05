@@ -1,94 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51234 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933833Ab3HHImC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Aug 2013 04:42:02 -0400
-Message-ID: <1375951274.12551.31.camel@pasglop>
-Subject: Re: [PATCHv7 07/13] irqdomain: add function to find a MSI irq_domain
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Date: Thu, 08 Aug 2013 18:41:14 +1000
-In-Reply-To: <20130808102255.05fd79d8@skate>
-References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	 <1375867954-2320-8-git-send-email-thomas.petazzoni@free-electrons.com>
-	 <1375908620.9300.3.camel@pasglop> <20130808000443.17f57875@skate>
-	 <1375914665.12551.5.camel@pasglop> <1375915344.12551.6.camel@pasglop>
-	 <1375915536.12551.9.camel@pasglop> <20130808102255.05fd79d8@skate>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:56960 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754342Ab3HEDMT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Aug 2013 23:12:19 -0400
+Message-ID: <51FF1803.5090202@huawei.com>
+Date: Mon, 5 Aug 2013 11:12:03 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Paul Bolle <pebolle@tiscali.nl>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: Re: [PATCH -v4 1/6] PCI,pciehp: avoid add a device already exist
+ before suspend during resume
+References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>  <1375362389-26096-2-git-send-email-wangyijing@huawei.com> <1375469567.1460.15.camel@x61.thuisdomein>
+In-Reply-To: <1375469567.1460.15.camel@x61.thuisdomein>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-08-08 at 10:22 +0200, Thomas Petazzoni wrote:
-> Dear Benjamin Herrenschmidt,
-
-> I'm sorry, but I'm not buying this. There must be some continuity when
-> the maintenance of one subsystem transitions from one maintainer to
-> another. I'm perfectly ok with accepting some hick-ups, but not radical
-> changes in design decisions.
-
-Well, I wrote it in the first place :-)
-
-> What you're asking me to do is to go completely backwards compared to
-> the comments and review Grant made. The irqdomain-based allocator was
-> suggested by Grant (see my previous e-mail, or Grant reply at
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2013-June/175430.html)
-> and was even Acked-by Grant in
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2013-July/187082.html.
 > 
-> Note that this patch set has been posted at the following dates:
+> 0) There's no 0/6 in my mailbox, so I reply to this message.
+>
+
+Sorry, I forgot adding your cc into patch 0.
+
+> 1) This series applies cleanly on top of v3.10.5-rc1 (except for some
+> odd problem in 6/6, which I mentioned in my reply to 6/6).
 > 
->  * PATCH version 7 sent on August, 7th 2013
->  * PATCH version 6 sent on August, 1st 2013
->  * PATCH version 5 sent on July, 15th 2013
->  * PATCH version 4 sent on July, 1st 2013
->  * PATCH version 3 sent on June, 19th 2013
->  * PATCH version 2 sent on June, 6th 2013
->  * RFC version 1 sent on March, 26th 2013
+> 2) However, this series doesn't appear to work on v3.10.5-rc1. After the
+> first resume the wireless connection appears to be gone (in Gnome 3).
+> iwl4965 is still loaded, but I can't reconnect. That should happen
+> automagically.
 
-I'm really sorry and I feel your pain. I have not actively been
-monitoring any of that stuff, and you might have gotten away without
-CC'ing me or asking for my point of view but you did (and I thank you
-for that), and sadly this is my opinion.
+I found some mistakes in my patch 6/6, I'm very sorry about that.
+Will be more careful next time, I will refresh this patch, can your help
+to test it again? I will update this patch and resend it soon.
 
-> So it has been around since 4 months, I've taken into account all the
-> comments from the various maintainers who were involved, and especially
-> the comments from Grant. You cannot ask me now, as we are approaching
-> the next merge window for which this code is intended, to take
-> completely opposite design choices than what the previous irqdomain
-> maintainer was suggesting.
-
-I can and I do. However, I also leave the opportunity of bringing in a
-third party into the debate with a well known track record to overrule
-me if he thinks I'm being unnecessarily obstructive.
-
-> Could you contact Grant and align with him on those design decisions?
-> It would also be good if you could read the past discussions on this
-> patch set, because all what you're pointing at has already been
-> discussed at length, as I pointed out in my previous e-mail.
-
-I can try... Grant, are you around ? (I've added you to the CC list), we
-might be able to catch up on IRC and discuss it ...
-
-Cheers,
-Ben.
-
-
-> Thanks,
 > 
-> Thomas
+> 3) And the second resume apparently hangs the system. Not sure how it
+> hangs exactly, but I have to manually shutdown the laptop by pressing
+> the power button for a few seconds.
+> 
+> 4) I guess I'll have to respin v3.10.5-rc1 without this series to
+> determine if v3.10.5-rc1 or this series causes these issues. But feel
+> free to prod me for further tests.
 
+Thanks!
+Yijing.
+
+
+
+
+-- 
+Thanks!
+Yijing
 
