@@ -1,123 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] ACPI / PM: Hold acpi_scan_lock over system PM transitions
-Date: Tue, 20 Aug 2013 01:47:57 +0200
-Message-ID: <2852781.TfChGuuEkJ@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usmamail.tilera.com ([12.216.194.151]:50972 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755195Ab3HEUmn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 16:42:43 -0400
+Message-ID: <b84ca0e291d737d028a68e761aec83b85c7b3ed2.1375733180.git.cmetcalf@tilera.com>
+In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
+References: <cover.1375733180.git.cmetcalf@tilera.com>
+From: Chris Metcalf <cmetcalf@tilera.com>
+Date: Mon, 5 Aug 2013 16:06:20 -0400
+Subject: [PATCH 05/20] tile PCI RC: handle case that PCI link is already up
+To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+If we are rebooting (e.g. via kexec) then the PCI RC link may
+already be up.  In that case, we don't want to do the software
+fixup to force the link up, since that can degrade it to Gen1.
 
-Bad things happen if ACPI hotplug events are handled during system
-PM transitions, especially if devices are removed as a result.
-To prevent those bad things from happening, acquire acpi_scan_lock
-when a transition is started and release it when that transition
-is complete or has been aborted.
-
-This fixes resume lockup on my test-bed Acer Aspire S5 that happens
-when Thunderbolt devices are disconnected from the machine while
-suspended.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
 ---
+ arch/tile/kernel/pci_gx.c | 41 ++++++++++++++++++++++++++++-------------
+ 1 file changed, 28 insertions(+), 13 deletions(-)
 
-Applies on top of the linux-next branch of the linux-pm.git tree.
-
-Thanks,
-Rafael
-
----
- drivers/acpi/sleep.c |   39 ++++++++++++++++++++++++---------------
- 1 file changed, 24 insertions(+), 15 deletions(-)
-
-Index: linux-pm/drivers/acpi/sleep.c
-===================================================================
---- linux-pm.orig/drivers/acpi/sleep.c
-+++ linux-pm/drivers/acpi/sleep.c
-@@ -420,10 +420,21 @@ static void acpi_pm_finish(void)
- }
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index e99809e..2cc3e64 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -674,10 +674,33 @@ int __init pcibios_init(void)
+ 			continue;
+ 		}
  
- /**
-- *	acpi_pm_end - Finish up suspend sequence.
-+ * acpi_pm_start - Start system PM transition.
-+ */
-+static void acpi_pm_start(u32 acpi_state)
-+{
-+	acpi_target_sleep_state = acpi_state;
-+	acpi_sleep_tts_switch(acpi_target_sleep_state);
-+	acpi_scan_lock_acquire();
-+}
+-		ret = gxio_trio_force_rc_link_up(trio_context, mac);
+-		if (ret < 0)
+-			pr_err("PCI: PCIE_FORCE_LINK_UP failure, "
+-				"MAC %d on TRIO %d\n", mac, trio_index);
++		/*
++		 * Check for PCIe link-up status to decide if we need
++		 * to force the link to come up.
++		 */
++		reg_offset =
++			(TRIO_PCIE_INTFC_PORT_STATUS <<
++				TRIO_CFG_REGION_ADDR__REG_SHIFT) |
++			(TRIO_CFG_REGION_ADDR__INTFC_VAL_MAC_INTERFACE <<
++				TRIO_CFG_REGION_ADDR__INTFC_SHIFT) |
++			(mac << TRIO_CFG_REGION_ADDR__MAC_SEL_SHIFT);
 +
-+/**
-+ * acpi_pm_end - Finish up system PM transition.
-  */
- static void acpi_pm_end(void)
- {
-+	acpi_scan_lock_release();
- 	/*
- 	 * This is necessary in case acpi_pm_finish() is not called during a
- 	 * failing transition to a sleep state.
-@@ -451,21 +462,19 @@ static u32 acpi_suspend_states[] = {
- static int acpi_suspend_begin(suspend_state_t pm_state)
- {
- 	u32 acpi_state = acpi_suspend_states[pm_state];
--	int error = 0;
-+	int error;
- 
- 	error = (nvs_nosave || nvs_nosave_s3) ? 0 : suspend_nvs_alloc();
- 	if (error)
- 		return error;
- 
--	if (sleep_states[acpi_state]) {
--		acpi_target_sleep_state = acpi_state;
--		acpi_sleep_tts_switch(acpi_target_sleep_state);
--	} else {
--		printk(KERN_ERR "ACPI does not support this state: %d\n",
--			pm_state);
--		error = -ENOSYS;
-+	if (!sleep_states[acpi_state]) {
-+		pr_err("ACPI does not support sleep state S%u\n", acpi_state);
-+		return -ENOSYS;
- 	}
--	return error;
-+
-+	acpi_pm_start(acpi_state);
-+	return 0;
- }
- 
- /**
-@@ -631,10 +640,8 @@ static int acpi_hibernation_begin(void)
- 	int error;
- 
- 	error = nvs_nosave ? 0 : suspend_nvs_alloc();
--	if (!error) {
--		acpi_target_sleep_state = ACPI_STATE_S4;
--		acpi_sleep_tts_switch(acpi_target_sleep_state);
--	}
-+	if (!error)
-+		acpi_pm_start(ACPI_STATE_S4);
- 
- 	return error;
- }
-@@ -713,8 +720,10 @@ static int acpi_hibernation_begin_old(vo
- 	if (!error) {
- 		if (!nvs_nosave)
- 			error = suspend_nvs_alloc();
--		if (!error)
-+		if (!error) {
- 			acpi_target_sleep_state = ACPI_STATE_S4;
-+			acpi_scan_lock_acquire();
++		port_status.word =
++			__gxio_mmio_read(trio_context->mmio_base_mac +
++					 reg_offset);
++		if (!port_status.dl_up) {
++			if (rc_delay[trio_index][mac]) {
++				pr_info("Delaying PCIe RC TRIO init %d sec"
++					" on MAC %d on TRIO %d\n",
++					rc_delay[trio_index][mac], mac,
++					trio_index);
++				msleep(rc_delay[trio_index][mac] * 1000);
++			}
++			ret = gxio_trio_force_rc_link_up(trio_context, mac);
++			if (ret < 0)
++				pr_err("PCI: PCIE_FORCE_LINK_UP failure, "
++					"MAC %d on TRIO %d\n", mac, trio_index);
 +		}
- 	}
- 	return error;
- }
+ 
+ 		pr_info("PCI: Found PCI controller #%d on TRIO %d MAC %d\n", i,
+ 			trio_index, controller->mac);
+@@ -700,16 +723,8 @@ int __init pcibios_init(void)
+ 		}
+ 
+ 		/*
+-		 * Check for PCIe link-up status.
++		 * Check for PCIe link-up status again.
+ 		 */
+-
+-		reg_offset =
+-			(TRIO_PCIE_INTFC_PORT_STATUS <<
+-				TRIO_CFG_REGION_ADDR__REG_SHIFT) |
+-			(TRIO_CFG_REGION_ADDR__INTFC_VAL_MAC_INTERFACE <<
+-				TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+-			(mac << TRIO_CFG_REGION_ADDR__MAC_SEL_SHIFT);
+-
+ 		port_status.word =
+ 			__gxio_mmio_read(trio_context->mmio_base_mac +
+ 					 reg_offset);
+-- 
+1.8.3.1
 
