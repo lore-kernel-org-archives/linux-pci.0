@@ -1,170 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:43246 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331Ab3HTRJR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 13:09:17 -0400
-Received: by mail-ob0-f173.google.com with SMTP id ta17so1062335obb.18
-        for <linux-pci@vger.kernel.org>; Tue, 20 Aug 2013 10:09:16 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:9811 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753443Ab3HFIKI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 04:10:08 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Jon Mason <jdmason@kudzu.us>, <stable@vger.kernel.org.#.3.4+>
+Subject: [PATCH -v3] PCI: update device mps when doing pci hotplug
+Date: Tue, 6 Aug 2013 16:09:00 +0800
+Message-ID: <1375776540-23988-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.03.1308201637390.1566@linux.vnet.ibm.com>
-References: <alpine.LFD.2.03.1308201637390.1566@linux.vnet.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 20 Aug 2013 11:08:56 -0600
-Message-ID: <CAErSpo4qnDyQQt+sZi=1tj0PP+HUmLfMp4zQ2hdqjJ+mOcAzYA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add hibernation hooks
-To: Sebastian Ott <sebott@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 20, 2013 at 8:41 AM, Sebastian Ott
-<sebott@linux.vnet.ibm.com> wrote:
-> Hello Bjorn,
->
-> I'm currently trying to implement hibernate support for pci on s390. To access
-> the config space of a pci function on s390 the function has to be enabled first.
-> So I need some kind of callback to achieve this before the pci core or the device
-> driver tries to access the function after a resume from hibernate.
->
-> Would you be OK with the following patch?
+v2->v3: Update CC stable tag suggested by Li Zefan.
+v1->v2: Update patch log, remove Joe's reported-by, because his problem
+        was mainly caused by BIOS incorrect setting. But this patch mainly
+		to fix the bug caused by device hot add. Conservatively, this 
+		version only update the mps problem when hot add. When the device
+		mps < parent mps found, this patch try to update device mps.
+		It seems unlikely device mps > parent mps after hot add device.
+		So we don't care that situation.
 
-I think doing something like this is fine.
+Currently we don't update device's mps vaule when doing
+pci device hot-add. The hot-added device's mps will be set
+to default value (128B). But the upstream port device's mps
+may be larger than 128B which was set by firmware during
+system bootup. In this case the new added device may not
+work normally. This patch try to update the hot added device
+mps euqal to its parent mps, if device mpss < parent mps,
+print warning.
 
-What would it look like if we provided empty weak definitions of the
-eight functions you need to hook: pcibios_pm_freeze(),
-pcibios_pm_freeze_noirq(), etc.?  Then the callers wouldn't have to do
-a test before making the call.  Not sure which would be better, but it
-might be more obvious that this is a build-time binding rather than a
-dynamic binding.
+References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>
+Cc: stable@vger.kernel.org # 3.4+
+---
+ drivers/pci/probe.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 43 insertions(+), 0 deletions(-)
 
-Should we check return values from the arch code?
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cf57fe7..9b0e634 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1603,6 +1603,40 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+ 	return 0;
+ }
+ 
++static int pcie_bus_update_set(struct pci_dev *dev, void *data)
++{
++	int mps, p_mps;
++
++	if (!pci_is_pcie(dev) || !dev->bus->self)
++		return 0;
++
++	mps = pcie_get_mps(dev);
++	p_mps = pcie_get_mps(dev->bus->self);
++
++	if (mps < p_mps)
++		goto update;
++
++	return 0;
++
++update:
++	/* If current mpss is lager than upstream, use upstream mps to update
++	 * current mps, otherwise print warning info.
++	 */
++	if ((128 << dev->pcie_mpss) >= p_mps)
++		pcie_write_mps(dev, p_mps);
++	else
++		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
++				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
++				mps, 128 << dev->pcie_mpss, p_mps);
++	return 0;
++}
++
++static void pcie_bus_update_setting(struct pci_bus *bus)
++{
++	if (bus->self->is_hotplug_bridge)
++		pci_walk_bus(bus, pcie_bus_update_set, NULL);
++}
++
+ /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+  * parents then children fashion.  If this changes, then this code will not
+  * work as designed.
+@@ -1614,6 +1648,15 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ 	if (!pci_is_pcie(bus->self))
+ 		return;
+ 
++	/* Sometimes we should update device mps here,
++	 * eg. after hot add, device mps value will be
++	 * set to default(128B), but the upstream port
++	 * mps value may be larger than 128B, if we do
++	 * not update the device mps, it maybe can not
++	 * work normally.
++	 */
++	pcie_bus_update_setting(bus);
++
+ 	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+ 		return;
+ 
+-- 
+1.7.1
 
-> ---
-> PCI: add hibernation hooks
->
-> Platforms may want to provide architecture-specific functionality when
-> a PCI device is doing a hibernate transition. Add a weak symbol
-> pcibios_pm_ops that architectures can override to do so.
->
-> Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
-> ---
->  drivers/pci/pci-driver.c |   30 ++++++++++++++++++++++++++++++
->  include/linux/pci.h      |    4 ++++
->  2 files changed, 34 insertions(+)
->
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -763,6 +763,13 @@ static int pci_pm_resume(struct device *
->
->  #ifdef CONFIG_HIBERNATE_CALLBACKS
->
-> +
-> +/*
-> + * pcibios_pm_ops - provide arch specific hooks when a pci device is doing
-> + * a hibernate transition
-> + */
-> +struct dev_pm_ops __weak pcibios_pm_ops;
 
-For example:
-
-int __weak pcibios_pm_freeze(struct device *) { return 0; }
-
->  static int pci_pm_freeze(struct device *dev)
->  {
->         struct pci_dev *pci_dev = to_pci_dev(dev);
-> @@ -786,6 +793,9 @@ static int pci_pm_freeze(struct device *
->                         return error;
->         }
->
-> +       if (pcibios_pm_ops.freeze)
-> +               pcibios_pm_ops.freeze(dev);
-
-    return pcibios_pm_freeze(dev);
-
->         return 0;
->  }
->
-> @@ -811,6 +821,9 @@ static int pci_pm_freeze_noirq(struct de
->
->         pci_pm_set_unknown_state(pci_dev);
->
-> +       if (pcibios_pm_ops.freeze_noirq)
-> +               pcibios_pm_ops.freeze_noirq(dev);
-> +
->         return 0;
->  }
->
-> @@ -820,6 +833,9 @@ static int pci_pm_thaw_noirq(struct devi
->         struct device_driver *drv = dev->driver;
->         int error = 0;
->
-> +       if (pcibios_pm_ops.thaw_noirq)
-> +               pcibios_pm_ops.thaw_noirq(dev);
-> +
->         if (pci_has_legacy_pm_support(pci_dev))
->                 return pci_legacy_resume_early(dev);
->
-> @@ -837,6 +853,9 @@ static int pci_pm_thaw(struct device *de
->         const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->         int error = 0;
->
-> +       if (pcibios_pm_ops.thaw)
-> +               pcibios_pm_ops.thaw(dev);
-> +
->         if (pci_has_legacy_pm_support(pci_dev))
->                 return pci_legacy_resume(dev);
->
-> @@ -878,6 +897,9 @@ static int pci_pm_poweroff(struct device
->   Fixup:
->         pci_fixup_device(pci_fixup_suspend, pci_dev);
->
-> +       if (pcibios_pm_ops.poweroff)
-> +               pcibios_pm_ops.poweroff(dev);
-> +
->         return 0;
->  }
->
-> @@ -911,6 +933,9 @@ static int pci_pm_poweroff_noirq(struct
->         if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
->                 pci_write_config_word(pci_dev, PCI_COMMAND, 0);
->
-> +       if (pcibios_pm_ops.poweroff_noirq)
-> +               pcibios_pm_ops.poweroff_noirq(dev);
-> +
->         return 0;
->  }
->
-> @@ -920,6 +945,9 @@ static int pci_pm_restore_noirq(struct d
->         struct device_driver *drv = dev->driver;
->         int error = 0;
->
-> +       if (pcibios_pm_ops.restore_noirq)
-> +               pcibios_pm_ops.restore_noirq(dev);
-> +
->         pci_pm_default_resume_early(pci_dev);
->
->         if (pci_has_legacy_pm_support(pci_dev))
-> @@ -937,6 +965,8 @@ static int pci_pm_restore(struct device
->         const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->         int error = 0;
->
-> +       if (pcibios_pm_ops.restore)
-> +               pcibios_pm_ops.restore(dev);
->         /*
->          * This is necessary for the hibernation error path in which restore is
->          * called without restoring the standard config registers of the device.
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1648,6 +1648,10 @@ int pcibios_set_pcie_reset_state(struct
->  int pcibios_add_device(struct pci_dev *dev);
->  void pcibios_release_device(struct pci_dev *dev);
->
-> +#ifdef CONFIG_HIBERNATE_CALLBACKS
-> +extern struct dev_pm_ops pcibios_pm_ops;
-> +#endif
-> +
->  #ifdef CONFIG_PCI_MMCONFIG
->  void __init pci_mmcfg_early_init(void);
->  void __init pci_mmcfg_late_init(void);
->
