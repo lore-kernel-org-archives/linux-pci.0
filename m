@@ -1,436 +1,147 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:45901 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754783Ab3HFGPo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 02:15:44 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 6 Aug 2013 15:59:24 +1000
+Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 2E2A43578051
+	for <linux-pci@vger.kernel.org>; Tue,  6 Aug 2013 16:15:39 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r765xxlG9306412
+	for <linux-pci@vger.kernel.org>; Tue, 6 Aug 2013 15:59:59 +1000
+Received: from d23av02.au.ibm.com (loopback [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r766FaPW023258
+	for <linux-pci@vger.kernel.org>; Tue, 6 Aug 2013 16:15:38 +1000
+Date: Tue, 6 Aug 2013 14:15:34 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
+ pbus_size_io()
+Message-ID: <20130806061534.GA10876@weiyang.vnet.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
+ <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
+ <20130805195149.GA19127@google.com>
+ <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
+ <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
+ <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
+ <20130805222135.GA29875@google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXCMFMCSEZPa=viyJD9GokkbavJhSLtiEmaaFzR_aKi1w@mail.gmail.com>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-	<1376189294-32022-29-git-send-email-yinghai@kernel.org>
-	<CANVTcTYhSfU+Su9s1B+mTTBfgsZgqvQxHiTsLck1zT_vg1Cs4g@mail.gmail.com>
-	<CANVTcTb2+qX6XMBqrzeLho9yFS55AnztVJ85JBMuxjoH11qzaQ@mail.gmail.com>
-	<CAOLK0pwQJVvcT5xA-+Ftb85FzbjHN-OZmXO=n7r4EWh4nFjSBA@mail.gmail.com>
-	<CAE9FiQWnGaa6omcLW0zxLj+UMspRGxjVoYXUsH3ndydGD51T9w@mail.gmail.com>
-	<CAE9FiQXFcM+FZnp00RP5Z8a2FhtjB7BuUUi4TuABF4-O9W+c8Q@mail.gmail.com>
-	<CAE9FiQXMfTCSfK8no6gYmHYn6=OURg6444BPu-aiBR3BsAvziA@mail.gmail.com>
-	<CAOLK0pxxAFBiDTac_5yPYO7X96Y4Tnd4kjwZ-Wvk1mZ3bD-w2A@mail.gmail.com>
-	<CAE9FiQXCMFMCSEZPa=viyJD9GokkbavJhSLtiEmaaFzR_aKi1w@mail.gmail.com>
-Date: Tue, 27 Aug 2013 22:56:31 +0800
-Message-ID: <CAOLK0pwb+fPaUL2AYXFS4kTRwWt=m=kVxJ3xjXH+dip038_jaw@mail.gmail.com>
-Subject: Re: [PATCH v4 28/28] PCI, x86, ACPI: get ioapic address from acpi device
-From: Lan Tianyu <lantianyu1986@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	rui wang <ruiv.wang@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger kernel org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130805222135.GA29875@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/8/27 Yinghai Lu <yinghai@kernel.org>:
-> On Mon, Aug 26, 2013 at 8:46 AM, Lan Tianyu <lantianyu1986@gmail.com> wrote:
->> 2013/8/24 Yinghai Lu <yinghai@kernel.org>:
->>> On Fri, Aug 23, 2013 at 12:04 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> On Fri, Aug 23, 2013 at 11:38 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>>> On Fri, Aug 23, 2013 at 8:34 AM, Lan Tianyu <lantianyu1986@gmail.com> wrote:
->>>>>>> I worked around the problem by replacing acpi_resource_to_address64()
->>>>>>> with resource_to_addr().  But resource_to_addr() is a static function
->>>>>>> in arch/x86/pci/acpi.c, not very convenient to use. Here's what I did:
->>>>>>>
->>>>>>
->>>>>> Hi Rui&Yinghai:
->>>>>>            How about using the following code to translate struct
->>>>>>  acpi_resource to struct resouce in this setup_res()?
->>>>>>
->>>>>>          if (acpi_dev_resource_address_space(...)
->>>>>>                 || acpi_dev_resource_memory(..))
->>>>>>               return AE_OK;
->>>>>
->>>>> Yest, that could be better, will update that.
->>>>>
->>>>> Also can you submit patch that will use that in res_to_addr of
->>>>> arch/x86/pci/acpi.c?
->>>>
->>>> looks acpi_dev_resource_address_space... does not handle
->>>> PREFTCH and translation offset.
->>>>
->>>> So now i have to use res_to_addr alike one.
->>>
->>> Raphael,
->>>
->>> Maybe we should move resource_to_addr to acpi generic.
->>>
->>> Please check if you are ok with attached.
->>>
->>> Thanks
->>>
->>> Yinghai
->>
->> Hi Rafael & Yinghai:
->>             I wrote 4 proposal patches to try to make acpi resource
->> functions to replace
->>  resource_to_addr() in the arch/x86/pci/acpi.c. From my opinion,
->> resource_to_addr()
->> does most work which acpi resource functions have done. So please have
->> a look. Thanks.
->> The following patches just passed through compiling test.
+On Mon, Aug 05, 2013 at 04:21:35PM -0600, Bjorn Helgaas wrote:
+>On Mon, Aug 05, 2013 at 02:09:27PM -0700, Yinghai Lu wrote:
+>> On Mon, Aug 5, 2013 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >> then, we should drop that 4k capping.
+>> >> I was thinking there could be strange or wild res with bigger than 4k.
+>> >
+>> > If there *were* an I/O BAR larger than 4KB, how should it be handled?
+>> > I don't think capping the alignment to 4KB sounds like the best way.
+>> > For example, a 16KB I/O BAR would still need to be aligned on 16KB.
+>> >
+>> > And I think capping to 4KB as you did above will break the powerpc
+>> > pcibios_window_alignment() implementation.  For example, if
+>> > pcibios_window_alignment() returned 16KB, and we later capped it to
+>> > 4KB, we're going to allocate space for the bridge window with the
+>> > wrong alignment.
+>> 
+>> Agree.
 >
-> Thanks for doing that.
->
-> Overall it's Good to me.
->
-> some comments inline.
->
->>
->> Patch 1
->> -------------------
->> commit 1800bc9dda7318314607fbae7afda8be38e056dc
->> Author: Lan Tianyu <tianyu.lan@intel.com>
->> Date:   Mon Aug 26 14:40:39 2013 +0800
->>
->>     ACPI/Resource: Add setting PREFETCH flag support
->>
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index b7201fc..23a560b 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -35,7 +35,7 @@
->>  #endif
->>
->>  static unsigned long acpi_dev_memresource_flags(u64 len, u8 write_protect,
->> -                        bool window)
->> +                        bool window, bool prefetchable)
->>  {
->>      unsigned long flags = IORESOURCE_MEM;
->>
->> @@ -48,6 +48,9 @@ static unsigned long acpi_dev_memresource_flags(u64
->> len, u8 write_protect,
->>      if (window)
->>          flags |= IORESOURCE_WINDOW;
->>
->> +    if (prefetchable)
->> +        flags |= IORESOURCE_PREFETCH;
->> +
->>      return flags;
->>  }
->>
->> @@ -56,7 +59,8 @@ static void acpi_dev_get_memresource(struct resource
->> *res, u64 start, u64 len,
->>  {
->>      res->start = start;
->>      res->end = start + len - 1;
->> -    res->flags = acpi_dev_memresource_flags(len, write_protect, false);
->> +    res->flags = acpi_dev_memresource_flags(len, write_protect,
->> +                        false, false);
->>  }
->
-> passing write_protect, window then pref looks silly.
->
-> may use | IO_REOURCE_... etc outside of acpi_dev_memresource_flags directly.
+>OK.  Can you guys try this out and see whether it fixes the problem?
+>I don't know what the actual problem *is*, so I can't tell whether
+>this is a possible fix.
 >
 
-Yes, this looks better.
+Thanks all for the comments, this makes me re-consider the cases. Let me do a
+summary. Maybe I misunderstand the idea, please fix me~
 
->>
->>  /**
->> @@ -175,7 +179,7 @@ bool acpi_dev_resource_address_space(struct
->> acpi_resource *ares,
->>  {
->>      acpi_status status;
->>      struct acpi_resource_address64 addr;
->> -    bool window;
->> +    bool window, prefetchable;
->>      u64 len;
->>      u8 io_decode;
->>
->> @@ -199,9 +203,11 @@ bool acpi_dev_resource_address_space(struct
->> acpi_resource *ares,
->>      switch(addr.resource_type) {
->>      case ACPI_MEMORY_RANGE:
->>          len = addr.maximum - addr.minimum + 1;
->> +        prefetchable =
->> +            addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY;
->>          res->flags = acpi_dev_memresource_flags(len,
->>                          addr.info.mem.write_protect,
->> -                        window);
->> +                        window, prefetchable);
->>          break;
->>      case ACPI_IO_RANGE:
->>          io_decode = addr.granularity == 0xfff ?
->> @@ -252,7 +258,7 @@ bool acpi_dev_resource_ext_address_space(struct
->> acpi_resource *ares,
->>          len = ext_addr->maximum - ext_addr->minimum + 1;
->>          res->flags = acpi_dev_memresource_flags(len,
->>                      ext_addr->info.mem.write_protect,
->> -                    window);
->> +                    window, false);
->>          break;
->>      case ACPI_IO_RANGE:
->>          io_decode = ext_addr->granularity == 0xfff ?
->>
->> Patch 2
->> -----------
->> commit a3ff8345ffb51885b216ba0ae231252cd88d4e76
->> Author: Lan Tianyu <tianyu.lan@intel.com>
->> Date:   Mon Aug 26 15:57:14 2013 +0800
->>
->>     ACPI/Resource: Add address translation support
->>
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index 23a560b..439ee44 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -196,8 +196,8 @@ bool acpi_dev_resource_address_space(struct
->> acpi_resource *ares,
->>      if (ACPI_FAILURE(status))
->>          return true;
->>
->> -    res->start = addr.minimum;
->> -    res->end = addr.maximum;
->> +    res->start = addr.minimum + addr.translation_offset;
->> +    res->end = addr.maximum + addr.translation_offset;
->>      window = addr.producer_consumer == ACPI_PRODUCER;
->>
->>      switch(addr.resource_type) {
->>
->>
->> Patch 3
->> ---------------
->> commit 68bfefe619b49baa5d372e0664a6cb6d5138fad1
->> Author: Lan Tianyu <tianyu.lan@intel.com>
->> Date:   Mon Aug 26 21:45:32 2013 +0800
->>
->>     ACPI: Add new acpi_dev_resource_address_space_with_addr() function
->>
->>     Add new function which can return the converted struct
->> acpi_resource_address64.
->> This will be used to get transaction offset in the setup_resource().
->>
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index 439ee44..98a6c35 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -174,11 +174,11 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
->>   * and if that's the case, use the information in it to populate the generic
->>   * resource object pointed to by @res.
->>   */
->> -bool acpi_dev_resource_address_space(struct acpi_resource *ares,
->> +bool acpi_dev_resource_address_space_with_addr(struct acpi_resource *ares,
->> +                     struct acpi_resource_address64 *addr,
->>                       struct resource *res)
->>  {
->>      acpi_status status;
->> -    struct acpi_resource_address64 addr;
->>      bool window, prefetchable;
->>      u64 len;
->>      u8 io_decode;
->> @@ -192,28 +192,28 @@ bool acpi_dev_resource_address_space(struct
->> acpi_resource *ares,
->>          return false;
->>      }
->>
->> -    status = acpi_resource_to_address64(ares, &addr);
->> +    status = acpi_resource_to_address64(ares, addr);
->>      if (ACPI_FAILURE(status))
->>          return true;
->>
->> -    res->start = addr.minimum + addr.translation_offset;
->> -    res->end = addr.maximum + addr.translation_offset;
->> -    window = addr.producer_consumer == ACPI_PRODUCER;
->> +    res->start = addr->minimum + addr->translation_offset;
->> +    res->end = addr->maximum + addr->translation_offset;
->> +    window = addr->producer_consumer == ACPI_PRODUCER;
->>
->> -    switch(addr.resource_type) {
->> +    switch (addr->resource_type) {
->>      case ACPI_MEMORY_RANGE:
->> -        len = addr.maximum - addr.minimum + 1;
->> +        len = addr->maximum - addr->minimum + 1;
->>          prefetchable =
->> -            addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY;
->> +            addr->info.mem.caching == ACPI_PREFETCHABLE_MEMORY;
->>          res->flags = acpi_dev_memresource_flags(len,
->> -                        addr.info.mem.write_protect,
->> +                        addr->info.mem.write_protect,
->>                          window, prefetchable);
->>          break;
->>      case ACPI_IO_RANGE:
->> -        io_decode = addr.granularity == 0xfff ?
->> +        io_decode = addr->granularity == 0xfff ?
->>                  ACPI_DECODE_10 : ACPI_DECODE_16;
->> -        res->flags = acpi_dev_ioresource_flags(addr.minimum,
->> -                               addr.maximum,
->> +        res->flags = acpi_dev_ioresource_flags(addr->minimum,
->> +                               addr->maximum,
->>                                 io_decode, window);
->>          break;
->>      case ACPI_BUS_NUMBER_RANGE:
->> @@ -225,6 +225,16 @@ bool acpi_dev_resource_address_space(struct
->> acpi_resource *ares,
->>
->>      return true;
->>  }
->> +EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space_with_addr);
->> +
->> +bool acpi_dev_resource_address_space(struct acpi_resource *ares,
->> +                     struct resource *res)
->> +{
->> +    struct acpi_resource_address64 addr;
->> +
->> +    return acpi_dev_resource_address_space_with_addr(ares, &addr,
->> +                             res);
->> +}
->>  EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
->>
->>  /**
->> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
->> index a5db4ae..9f5c0d5 100644
->> --- a/include/linux/acpi.h
->> +++ b/include/linux/acpi.h
->> @@ -260,6 +260,9 @@ bool acpi_dev_resource_memory(struct acpi_resource
->> *ares, struct resource *res);
->>  bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res);
->>  bool acpi_dev_resource_address_space(struct acpi_resource *ares,
->>                       struct resource *res);
->> +bool acpi_dev_resource_address_space_with_addr(struct acpi_resource *ares,
->> +                struct acpi_resource_address64 *addr,
->> +                struct resource *res);
->>  bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
->>                       struct resource *res);
->>  unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
->>
->> Patch 4
->> --------------
->> commit a8733a1da756a257d55e68994268174b84b33670
->> Author: Lan Tianyu <tianyu.lan@intel.com>
->> Date:   Mon Aug 26 22:53:38 2013 +0800
->>
->>     X86/PCI/ACPI: Rework setup_resource() via functions acpi resource functions
->>
->> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
->> index d641897..d4f85a1 100644
->> --- a/arch/x86/pci/acpi.c
->> +++ b/arch/x86/pci/acpi.c
->> @@ -219,62 +219,15 @@ static void teardown_mcfg_map(struct pci_root_info *info)
->>  #endif
->>
->>  static acpi_status
->> -resource_to_addr(struct acpi_resource *resource,
->> -            struct acpi_resource_address64 *addr)
->> -{
->> -    acpi_status status;
->> -    struct acpi_resource_memory24 *memory24;
->> -    struct acpi_resource_memory32 *memory32;
->> -    struct acpi_resource_fixed_memory32 *fixed_memory32;
->> -
->> -    memset(addr, 0, sizeof(*addr));
->> -    switch (resource->type) {
->> -    case ACPI_RESOURCE_TYPE_MEMORY24:
->> -        memory24 = &resource->data.memory24;
->> -        addr->resource_type = ACPI_MEMORY_RANGE;
->> -        addr->minimum = memory24->minimum;
->> -        addr->address_length = memory24->address_length;
->> -        addr->maximum = addr->minimum + addr->address_length - 1;
->> -        return AE_OK;
->> -    case ACPI_RESOURCE_TYPE_MEMORY32:
->> -        memory32 = &resource->data.memory32;
->> -        addr->resource_type = ACPI_MEMORY_RANGE;
->> -        addr->minimum = memory32->minimum;
->> -        addr->address_length = memory32->address_length;
->> -        addr->maximum = addr->minimum + addr->address_length - 1;
->> -        return AE_OK;
->> -    case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
->> -        fixed_memory32 = &resource->data.fixed_memory32;
->> -        addr->resource_type = ACPI_MEMORY_RANGE;
->> -        addr->minimum = fixed_memory32->address;
->> -        addr->address_length = fixed_memory32->address_length;
->> -        addr->maximum = addr->minimum + addr->address_length - 1;
->> -        return AE_OK;
->> -    case ACPI_RESOURCE_TYPE_ADDRESS16:
->> -    case ACPI_RESOURCE_TYPE_ADDRESS32:
->> -    case ACPI_RESOURCE_TYPE_ADDRESS64:
->> -        status = acpi_resource_to_address64(resource, addr);
->> -        if (ACPI_SUCCESS(status) &&
->> -            (addr->resource_type == ACPI_MEMORY_RANGE ||
->> -            addr->resource_type == ACPI_IO_RANGE) &&
->> -            addr->address_length > 0) {
->> -            return AE_OK;
->> -        }
->> -        break;
->> -    }
->> -    return AE_ERROR;
->> -}
->> -
->> -static acpi_status
->>  count_resource(struct acpi_resource *acpi_res, void *data)
->>  {
->>      struct pci_root_info *info = data;
->> -    struct acpi_resource_address64 addr;
->> -    acpi_status status;
->> +    struct resource res;
->>
->> -    status = resource_to_addr(acpi_res, &addr);
->> -    if (ACPI_SUCCESS(status))
->> +    if (acpi_dev_resource_address_space(acpi_res, &res)
->> +        || acpi_dev_resource_memory(acpi_res, &res))
->>          info->res_num++;
->> +
->>      return AE_OK;
->>  }
->>
->> @@ -282,27 +235,18 @@ static acpi_status
->>  setup_resource(struct acpi_resource *acpi_res, void *data)
->>  {
->>      struct pci_root_info *info = data;
->> -    struct resource *res;
->> +    struct resource *res = &info->res[info->res_num];
->>      struct acpi_resource_address64 addr;
->> -    acpi_status status;
->> -    unsigned long flags;
->>      u64 start, orig_end, end;
->>
->> -    status = resource_to_addr(acpi_res, &addr);
->> -    if (!ACPI_SUCCESS(status))
->> -        return AE_OK;
->> +    memset(&addr, 0x00, sizeof(addr));
->>
->> -    if (addr.resource_type == ACPI_MEMORY_RANGE) {
->> -        flags = IORESOURCE_MEM;
->> -        if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
->> -            flags |= IORESOURCE_PREFETCH;
->> -    } else if (addr.resource_type == ACPI_IO_RANGE) {
->> -        flags = IORESOURCE_IO;
->> -    } else
->> +    if (!(acpi_dev_resource_address_space_with_addr(acpi_res, &addr, res)
->> +        || acpi_dev_resource_memory(acpi_res, res)))
->
-> acpi_dev_resource_address_space_with_addr(acpi_res, &addr, res)
->
-> passing extra addr, just for translation_offset?
->
+Requirement from PCI Spec
+============================================================================
+1. I/O BAR for non-bridge PCI devices are limited to 256 bytes
+2. Most I/O window for PCI bridge is 4k aligned
+3. Some bridge support 1k aligned I/O window
 
-For this case,  it's "Yes", . For some other cases(e.g
-arch/ia64/pci/pci.c add_window()),
-whole addr maybe necessary. To be more general, I hope it can return more infos
+Ancient time -- when 1k aligned I/O window is not there
+============================================================================
+The alignment is 4k in all cases. (As it is hard coded.)
 
-> maybe pass res_offset directly?
->
->
->
->
->>          return AE_OK;
->>
->> -    start = addr.minimum + addr.translation_offset;
->> -    orig_end = end = addr.maximum + addr.translation_offset;
->> +    start = res->start;
->> +    orig_end = end = res->end;
->
-> Yinghai
+    For devices under this bridge, I/O BAR is less then 256.
+    
+    For downstream port, I/O window is 4k aligned, since the IORESOURCE_STARTALIGN
+    is set. This means even the downstream port connects other bridge, the
+    alignment is still 4k.
+
+Middle Age -- when 1k aligned I/O window is introduced
+============================================================================
+This introduce two other cases: 
+1. All downstream port is 1k aligned
+2. One of the downstream port is 4k aligned.
+
+Case 1: the "min_align" should be set to 1k. This could save some I/O resource.
+Case 2: the "min_align" should be set to 4k, even itself anounced could support
+        1k alignment.
+	               ^--- Fix me, if not correct.
+
+The "min_align" could be set to other value? Previously, I thought it could
+be, for example 2k. Now I think no, the list_for_each_entry loop will iterate
+on two kinds of resources: 1. Device I/O BAR; 2. Bridge I/O window.
+
+Device I/O BAR is less then 256 bytes, it won't contribut to the alignment.
+Bridge I/O window will be 1k or 4k aligned.
+
+This means only two possible value for "min_align": 1k or 4k.
+	               ^--- Fix me, if not correct.
 
 
+Back to Yinghai's commit(fd5913411), the "min_align" is set to 1k at the
+beginning. During the list_for_each_entry loop, (align > min_align) is true
+means align is 4k.
+
+And this (min_align > 4096) will never be true, since at most "min_align" is
+4k. So, I think, this comparison could be removed in commit(fd5913411).
+	               ^--- Fix me, if not correct.
+
+
+Present Age -- when architecture require specific alignment for bridge window
+============================================================================
+This introduce 3 cases:
+1. 1k < 4k < arch_align
+2. 1k < arch_align < 4k
+3. arch_align < 1k < 4k
+
+Case 1: the "min_align" should be arch_align.
+Case 2: this is a little complicated. downstream port could be all 1k aligned
+        or one of the downstream port is 4k aligned.
+	a. all 1k aligned, the "min_align" should be arch_align
+	b. one is 4k aligned, the "min_align" should be 4k
+Case 3: this is the same as before
+
+The final result of "min_align" in these three cases are all the biggest one
+of upstream/downstream/arch alignment. So the algorithm could be changed to
+calculate the biggest one of the three.
+
+
+Personal Conclusion
+============================================================================
+I think Bjorn's patch works.
+Will test on powernv platform and give the result.
+
+Last but not the least, please fix me, if I am not correct. :-)
 
 -- 
-Best regards
-Tianyu Lan
+Richard Yang
+Help you, Help me
+
