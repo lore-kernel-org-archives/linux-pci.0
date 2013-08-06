@@ -1,179 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v4 21/28] x86, irq: Make mp_register_ioapic handle hot-added ioapic
-Date: Sat, 10 Aug 2013 19:48:07 -0700
-Message-Id: <1376189294-32022-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail1.bemta5.messagelabs.com ([195.245.231.145]:49124 "EHLO
+	mail1.bemta5.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753940Ab3HFHM7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 03:12:59 -0400
+Date: Tue, 6 Aug 2013 09:07:03 +0200
+From: Johannes Thumshirn <johannes.thumshirn@men.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Leon Ravich <lravich@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: PCIE device errors after linux kernel upgrade
+Message-ID: <20130806070703.GA20622@jtlinux>
+References: <CAPWoNkJ3NKM-_g93LdRpjvdNFtLt-Pjpg4d4oEKC9CvkpzZ-Wg@mail.gmail.com>
+ <CAPWoNkLQUbFG2vZ7wqoqqVNj4uxKz3Fa_vsSH=1_TDD=XC1f2A@mail.gmail.com>
+ <CAErSpo5ZZgdpkK+QdQUEnNCEXcG_T+QBWTVoQnMTghxkX7n2HA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAErSpo5ZZgdpkK+QdQUEnNCEXcG_T+QBWTVoQnMTghxkX7n2HA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It needs to reserve irq range in allocated_irqs bitmaps
-and irq_base will be used to get right irq for ioapic/pin or gsi.
+On Mon, Aug 05, 2013 at 09:38:45AM -0600, Bjorn Helgaas wrote:
+> [+cc linuxppc-dev]
+>
+> On Mon, Aug 5, 2013 at 5:17 AM, Leon Ravich <lravich@gmail.com> wrote:
+> > Hi all ,
+> > I am trying to upgrade ours embedded device (freescale powerPC P2020 cpu)
+> > linux kernel  , till now we used 2.6.32 I am trying to upgrade to 3.8.13 .
+> > I took the source from freescale git:
+> > git://git.freescale.com/ppc/sdk/linux.git
+> >
+> > on our embedded device we have an FPGA connected through PCIE .
+> >
+> > on each boot we loading the rbf design to the FPGA and the rescan pci bus to let
+> > kernel detect it .
+> >
+> > during the rescan I getting error messages:
+> >  genirq: Setting trigger mode 0 for irq 27 failed
+> > (mpc8xxx_irq_set_type+0x0/0xec)
+> > [   22.060898] genirq: Setting trigger mode 0 for irq 28 failed
+> > (mpc8xxx_irq_set_type+0x0/0xec)
+> > [   22.069461] genirq: Setting trigger mode 0 for irq 31 failed
+> > (mpc8xxx_irq_set_type+0x0/0xec)
+> > [   22.078010] genirq: Setting trigger mode 0 for irq 32 failed
+> > (mpc8xxx_irq_set_type+0x0/0xec)
+> > [   22.086576] genirq: Setting trigger mode 0 for irq 33 failed
+> > (mpc8xxx_irq_set_type+0x0/0xec)
+> > [   22.095143] genirq: Setting trigger mode 0 for irq 37 failed
+> > (mpc8xxx_irq_set_type+0x0/0xec)
+> > [   22.103715] genirq: Setting trigger mode 0 for irq 38 failed
+> > (mpc8xxx_irq_set_type+0x0/0xec)
+> > [   22.112282] genirq: Setting trigger mode 0 for irq 39 failed
+> > (mpc8xxx_irq_set_type+0x0/0xec)
+>
+> Hmm, I don't know much about IRQ issues.
+>
+> > [   37.945785] pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't
+> > match header type 01)
+>
+> There's a recent patch related to this:
+> http://lkml.kernel.org/r/1374823418-1550-1-git-send-email-Chunhe.Lan@freescale.com
+>
+> > [   37.953640] PCIE error(s) detected
+> > [   37.953858] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+> > [   37.953988] pci 0000:00:00.0: BAR 8: assigned [mem 0xc0000000-0xdfffffff]
+> > [   37.953994] pci 0000:00:00.0: BAR 7: can't assign io (size 0x10000)
+> > [   37.954000] pci 0000:01:00.0: BAR 0: assigned [mem 0xc0000000-0xc00fffff]
+> > [   37.954013] pci 0000:01:00.0: BAR 1: assigned [mem 0xc0100000-0xc017ffff]
+> > [   37.954025] pci 0000:01:00.0: BAR 2: assigned [mem 0xc0180000-0xc01fffff]
+> > [   37.954036] pci 0000:00:00.0: PCI bridge to [bus 01]
+> > [   37.954041] pci 0000:00:00.0:   bridge window [mem 0xc0000000-0xdfffffff]
+> > [   38.007354] PCIE ERR_DR register: 0x80020000
+> > [   38.011613] PCIE ERR_CAP_STAT register: 0x00000041
+> > [   38.016392] PCIE ERR_CAP_R0 register: 0x00000800
+> > [   38.020997] PCIE ERR_CAP_R1 register: 0x00000000
+> > [   38.025602] PCIE ERR_CAP_R2 register: 0x00000000
+> > [   38.030207] PCIE ERR_CAP_R3 register: 0x00000000
+> >
+> >
+> > and after a few minutes I linux reboot it self,
+> >
+> >
+> > where can I start debugging it??
+>
+> I'd start by applying the header quirk patch above, then comparing the
+> complete console log (boot with "ignore_loglevel") from 2.6.32 and
+> 3.8.13.
+>
+> Bjorn
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/linuxppc-dev
 
-also need to use lock to protect ioapics_mask to avoid racing.
+Hi,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/include/asm/mpspec.h  |  1 +
- arch/x86/kernel/apic/io_apic.c | 68 ++++++++++++++++++++++++++++++++----------
- 2 files changed, 54 insertions(+), 15 deletions(-)
+I have a similar problem here on a P4080 based board with the same 3.8 Kernel
+from freescale git. Does your system panic (maybe due to a machine check
+exception)?  If yes could it be the first read from the PCI device?
 
-diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
-index 626cf70..13cf60c 100644
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -96,6 +96,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
- 
- void generic_processor_info(int apicid, int version);
- #ifdef CONFIG_ACPI
-+int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
- extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- 				   u32 gsi);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 60c6706..1616a35 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -94,6 +94,16 @@ static struct ioapic {
- } ioapics[MAX_IO_APICS];
- 
- DECLARE_BITMAP(ioapics_mask, MAX_IO_APICS);
-+static DEFINE_MUTEX(ioapics_mask_lock);
-+
-+static void lock_ioapics(void)
-+{
-+	mutex_lock(&ioapics_mask_lock);
-+}
-+static void unlock_ioapics(void)
-+{
-+	mutex_unlock(&ioapics_mask_lock);
-+}
- 
- #define mpc_ioapic_ver(ioapic_idx)	ioapics[ioapic_idx].mp_config.apicver
- 
-@@ -3885,25 +3895,28 @@ static __init int bad_ioapic_register(int idx)
- 	return 0;
- }
- 
--void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
-+int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hotadd)
- {
- 	int idx;
- 	int entries;
- 	struct mp_ioapic_gsi *gsi_cfg;
-+	int ret = -EINVAL;
- 
- 	if (bad_ioapic(address))
--		return;
-+		return ret;
-+
-+	lock_ioapics();
- 
- 	/* already registered ? */
- 	idx = __mp_find_ioapic(gsi_base);
- 	if (idx >= 0)
--		return;
-+		goto out;
- 
- 	idx = find_first_zero_bit(ioapics_mask, MAX_IO_APICS);
- 	if (idx >= MAX_IO_APICS) {
- 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded, skipping\n",
- 			MAX_IO_APICS);
--		return;
-+		goto out;
- 	}
- 
- 	ioapics[idx].mp_config.type = MP_IOAPIC;
-@@ -3912,10 +3925,8 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 
- 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
- 
--	if (bad_ioapic_register(idx)) {
--		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
--		return;
--	}
-+	if (bad_ioapic_register(idx))
-+		goto clear_out;
- 
- 	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
- 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
-@@ -3926,11 +3937,8 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	 */
- 	entries = io_apic_get_redir_entries(idx);
- 
--	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
--		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
--		memset(&ioapics[idx], 0, sizeof(struct ioapic));
--		return;
--	}
-+	if (!entries || entries > MP_MAX_IOAPIC_PIN)
-+		goto clear_out;
- 
- 	gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	gsi_cfg->gsi_base = gsi_base;
-@@ -3941,8 +3949,21 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	 */
- 	ioapics[idx].nr_registers = entries;
- 
--	if (gsi_cfg->gsi_end >= gsi_top)
--		gsi_top = gsi_cfg->gsi_end + 1;
-+	if (!hotadd) {
-+		/*
-+		 * irqs will be reserved in arch_early_irq_init()
-+		 * don't need to update gsi_top for hot add case
-+		 */
-+		if (gsi_cfg->gsi_end >= gsi_top)
-+			gsi_top = gsi_cfg->gsi_end + 1;
-+	} else {
-+		int irq = reserve_ioapic_gsi_irq_base(idx);
-+
-+		if (irq < 0)
-+			goto clear_out;
-+
-+		alloc_ioapic_saved_registers(idx);
-+	}
- 
- 	pr_info("IOAPIC[%d]: apic_id %d, version %d, address 0x%x, GSI %d-%d\n",
- 		idx, mpc_ioapic_id(idx),
-@@ -3951,6 +3972,23 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 
- 	set_bit(idx, ioapics_mask);
- 	nr_ioapics = bitmap_weight(ioapics_mask, MAX_IO_APICS);
-+
-+	unlock_ioapics();
-+
-+	return 0;
-+
-+clear_out:
-+	clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+	memset(&ioapics[idx], 0, sizeof(struct ioapic));
-+out:
-+	unlock_ioapics();
-+
-+	return ret;
-+}
-+
-+void mp_register_ioapic(int id, u32 address, u32 gsi_base)
-+{
-+	__mp_register_ioapic(id, address, gsi_base, false);
- }
- 
- /* Enable IOAPIC early just for system timer */
--- 
-1.8.1.4
-
+Johannes
