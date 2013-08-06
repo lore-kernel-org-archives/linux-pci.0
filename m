@@ -1,51 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:21006 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933044Ab3HGNaA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Aug 2013 09:30:00 -0400
-Date: Wed, 7 Aug 2013 16:29:20 +0300
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] acpi, acpi_pci_irq_enable must return an error if ACPI
- cannot map an IRQ.
-Message-ID: <20130807132920.GA27208@xps8300>
-References: <1373900260-1599-1-git-send-email-prarit@redhat.com>
- <20130805140416.GA3882@xps8300>
- <52010A40.1040409@redhat.com>
- <86005101.W2j5ifU8yA@vostro.rjw.lan>
- <52023FE6.9010503@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <52012B96.9000207@tilera.com>
+Date: Tue, 6 Aug 2013 13:00:06 -0400
+From: Chris Metcalf <cmetcalf@tilera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52023FE6.9010503@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 06/20] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
+References: <cover.1375733180.git.cmetcalf@tilera.com> <a8a7d279ad8633c6aa3b5031aa9da4a76f2487c3.1375733180.git.cmetcalf@tilera.com> <20130805205235.GB24122@phenom.dumpdata.com>
+In-Reply-To: <20130805205235.GB24122@phenom.dumpdata.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 8/5/2013 4:52 PM, Konrad Rzeszutek Wilk wrote:
+> On Mon, Aug 05, 2013 at 04:06:20PM -0400, Chris Metcalf wrote:
+>> The LSI MEGARAID SAS HBA suffers from the problem where it can do
+>> 64-bit DMA to streaming buffers but not to consistent buffers.
+>> In other words, 64-bit DMA is used for disk data transfers and 32-bit
+>> DMA must be used for control message transfers. According to LSI,
+>> the firmware is not fully functional yet. This change implements a
+>> kind of hybrid dma_ops to support this.
+> If this is generic to LSI MegaRAID HBA shouldn't this change also be
+> done for the other platforms?
+>
+> Or perhaps some other changes to make it work with other devices?
 
-On Wed, Aug 07, 2013 at 08:39:02AM -0400, Prarit Bhargava wrote:
-> On 08/06/2013 06:44 PM, Rafael J. Wysocki wrote:
-> > In the meantime I've dropped that commit from linux-next as it caused the xHCI
-> > breakage to happen.
-> 
-> Thanks Rafael.
-> 
-> Heikki, I tested your patch and found that it solves my problem.  Sorry for the
-> breakage :(
-> 
-> Can you add a
-> 
-> Tested-by: Prarit Bhargava <prarit@redhat.com>
-> 
-> to your patch?
+No, it's really specific to how tilegx maps the 64-bit PCI space, 32-bit PCI space, and memory.  I'll add more commentary to the git commit message to make this clearer.
 
-Well, it would be more clear to me if you send new version of the
-patch that combines the two, since Rafael dropped the original.
+>> @@ -573,6 +573,11 @@ int dma_set_coherent_mask(struct device *dev, u64 mask)
+>>  	if (((dma_ops == gx_pci_dma_map_ops) ||
+>>  	    (dma_ops == gx_legacy_pci_dma_map_ops)) &&
+>>  	    (mask <= DMA_BIT_MASK(32))) {
+>> +		if (dma_ops == gx_pci_dma_map_ops) {
+>> +			dma_ops->alloc = tile_swiotlb_alloc_coherent;
+>> +			dma_ops->free = tile_swiotlb_free_coherent;
+>> +		}
+>> +
+> So.. that would change it for all of the devices on the host, not just
+> for this specific one. That is not good is it?
 
-Thanks,
+Yes, good point; doing it this way might have some performance impact on other devices on the same host.  See following email for a revised change that updates the dma_ops pointer for that single device instead.
 
 -- 
-heikki
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
+
