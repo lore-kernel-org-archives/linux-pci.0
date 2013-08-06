@@ -1,170 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:40957 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758609Ab3HOCCB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 22:02:01 -0400
-Message-ID: <520C3673.1010306@huawei.com>
-Date: Thu, 15 Aug 2013 10:01:23 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Jon Mason <jdmason@kudzu.us>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	<stable@vger.kernel.org>
-Subject: Re: [PATCH v4 2/2] PCI: update device mps when doing pci hotplug
-References: <1376470912-40264-1-git-send-email-wangyijing@huawei.com> <1376470912-40264-3-git-send-email-wangyijing@huawei.com> <CAPoiz9zBktaJTwKuRw2F3QYbYEFF60_An+eK0Hv_hnf1u9oqyA@mail.gmail.com>
-In-Reply-To: <CAPoiz9zBktaJTwKuRw2F3QYbYEFF60_An+eK0Hv_hnf1u9oqyA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from stargate.chelsio.com ([67.207.112.58]:31955 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755922Ab3HFKZv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 06:25:51 -0400
+From: Vipul Pandya <vipul@chelsio.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, leedom@chelsio.com, tomreu@chelsio.com,
+	vipul@chelsio.com, divy@chelsio.com, dm@chelsio.com,
+	nirranjan@chelsio.com, eilong@broadcom.com, netdev@vger.kernel.org
+Subject: [PATCH V2 3/4] bnx2x: Use pci_wait_for_pending_transaction instead of for loop
+Date: Tue,  6 Aug 2013 15:48:38 +0530
+Message-Id: <1375784319-25760-4-git-send-email-vipul@chelsio.com>
+In-Reply-To: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
+References: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jon,
-   Thanks for your review and comments!
+From: Casey Leedom <leedom@chelsio.com>
 
-On 2013/8/15 0:59, Jon Mason wrote:
-> On Wed, Aug 14, 2013 at 2:01 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Currently we don't update device's mps vaule when doing
-> 
-> Spelling nit, "value"
+New routine has been added to avoid duplication of waiting for pending pci
+transaction code. This patch makes use of that routine.
 
-Will update, thanks!
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Vipul Pandya <vipul@chelsio.com>
+---
+V2: Added pci_wait_for_pending_transaction routine and replaced it at respective
+places. Made the patch series for the same.
+V2: Used dev->msix_cap directly for capability offset
+V2: Removed use of 'rc' variable.
 
-> 
->> pci device hot-add. The hot-added device's mps will be set
->> to default value (128B). But the upstream port device's mps
->> may be larger than 128B which was set by firmware during
->> system bootup. In this case the new added device may not
->> work normally. This patch try to update the hot added device
->> mps euqal to its parent mps, if device mpss < parent mps,
-> 
-> Spelling nit, "equal".
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c | 18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
 
-Will update.
-
-> 
->> print warning.
->>
->> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
->> Reported-by: Yijing Wang <wangyijing@huawei.com>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Cc: Jon Mason <jdmason@kudzu.us>
->> Cc: stable@vger.kernel.org # 3.4+
->> ---
->>  drivers/pci/probe.c |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
->>  1 files changed, 49 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 0699ec0..0d47b4a 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1621,6 +1621,45 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->>         return 0;
->>  }
->>
->> +static int pcie_bus_update_set(struct pci_dev *dev, void *data)
->> +{
->> +       int mps, p_mps, mpss;
->> +       struct pci_dev *parent;
->> +
->> +       if (!pci_is_pcie(dev) || !dev->bus->self)
->> +               return 0;
->> +
->> +       parent = dev->bus->self;
->> +       mps = pcie_get_mps(dev);
->> +       p_mps = pcie_get_mps(dev->bus->self);
->> +
->> +       if (mps >= p_mps)
-> 
-> I'm probably overly paranoid, but I worry what would happen in the >
-> case.  Should we try and force the device MPS to a sane value or are
-> we confident that this will never happen?
-
-In the original patch, this patch will update the mps if mps != p_mps.
-For conservative, this patch only to fix the issue occurs in hot-plug(mps will never larger than p_mps).
-I don't know whether BIOS will set mps like mps > p_mps for certain purposes.:)
-
-> 
->> +               return 0;
->> +
->> +       /* we only update the device mps, unless its parent device is root port,
->> +        * and it is the only slot directly connected to root port.
->> +        */
->> +       if ((128 << dev->pcie_mpss) >= p_mps) {
->> +               pcie_write_mps(dev, p_mps);
->> +       } else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT &&
->> +                       pci_only_one_slot(dev->bus)) {
->> +               mpss = 128 << dev->pcie_mpss;
-> 
-> OCD nit, you could move the above line up 4 lines and reuse the
-> variable in the first if-statement.
-
-Good, thanks!
-
-> 
->> +               pcie_write_mps(parent, mpss);
->> +               pcie_write_mps(dev, mpss);
->> +       } else {
->> +               dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
->> +                               "If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
->> +                               mps, 128 << dev->pcie_mpss, p_mps);
->> +       }
-> 
-> Nit, braces are unnecessary in the else.  I think
-> scripts/checkpatch.pl would've complained if you ran it on the patch.
-
-I used scripts/checkpatch.pl to check patch, result is ok.
-So if I use scripts/checkpatch.pl to check patch without the pair braces, and result is ok,
-I will remove it. Thanks!
-
-> 
-> If you/Bjorn want to disregard my paranoia and nits, it looks fine to me.
-> 
->> +       return 0;
->> +}
->> +
->> +static void pcie_bus_update_setting(struct pci_bus *bus)
->> +{
->> +       if (bus->self->is_hotplug_bridge)
->> +               pci_walk_bus(bus, pcie_bus_update_set, NULL);
->> +}
->> +
->>  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
->>   * parents then children fashion.  If this changes, then this code will not
->>   * work as designed.
->> @@ -1632,8 +1671,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->>         if (!pci_is_pcie(bus->self))
->>                 return;
->>
->> -       if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
->> +       if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
->> +               /* Sometimes we should update device mps here,
->> +                * eg. after hot add, device mps value will be
->> +                * set to default(128B), but the upstream port
->> +                * mps value may be larger than 128B, if we do
->> +                * not update the device mps, it maybe can not
->> +                * work normally.
->> +                */
->> +               pcie_bus_update_setting(bus);
->>                 return;
->> +       }
->>
->>         /* FIXME - Peer to peer DMA is possible, though the endpoint would need
->>          * to be aware to the MPS of the destination.  To work around this,
->> --
->> 1.7.1
->>
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe stable" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+index e5da078..c51d2f8 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+@@ -9935,8 +9935,6 @@ static int bnx2x_prev_mark_path(struct bnx2x *bp, bool after_undi)
+ 
+ static int bnx2x_do_flr(struct bnx2x *bp)
+ {
+-	int i;
+-	u16 status;
+ 	struct pci_dev *dev = bp->pdev;
+ 
+ 	if (CHIP_IS_E1x(bp)) {
+@@ -9951,20 +9949,8 @@ static int bnx2x_do_flr(struct bnx2x *bp)
+ 		return -EINVAL;
+ 	}
+ 
+-	/* Wait for Transaction Pending bit clean */
+-	for (i = 0; i < 4; i++) {
+-		if (i)
+-			msleep((1 << (i - 1)) * 100);
+-
+-		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
+-		if (!(status & PCI_EXP_DEVSTA_TRPND))
+-			goto clear;
+-	}
+-
+-	dev_err(&dev->dev,
+-		"transaction is not cleared; proceeding with reset anyway\n");
+-
+-clear:
++	if (!pci_wait_for_pending_transaction(dev))
++		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+ 
+ 	BNX2X_DEV_INFO("Initiating FLR\n");
+ 	bnx2x_fw_command(bp, DRV_MSG_CODE_INITIATE_FLR, 0);
 -- 
-Thanks!
-Yijing
+1.8.0
 
