@@ -1,137 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:46259 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688Ab3HETvy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 15:51:54 -0400
-Received: by mail-qc0-f169.google.com with SMTP id m15so1958280qcq.28
-        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 12:51:53 -0700 (PDT)
-Date: Mon, 5 Aug 2013 13:51:49 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
- pbus_size_io()
-Message-ID: <20130805195149.GA19127@google.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
- <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
+Received: from mail.skyhub.de ([78.46.96.112]:39005 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756235Ab3HFUT2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 Aug 2013 16:19:28 -0400
+Date: Tue, 6 Aug 2013 22:19:25 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	dougthompson@xmission.com, bhelgaas@google.com, jbeulich@suse.com,
+	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/3 V2] EDAC, AMD64_EDAC: Add relevant condition checks
+ as F15h M30h does not support GART or L3.
+Message-ID: <20130806201925.GG14891@pd.tnic>
+References: <1375483384-2302-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+ <1375483384-2302-3-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1375483384-2302-3-git-send-email-Aravind.Gopalakrishnan@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 05, 2013 at 12:05:03PM -0700, Yinghai Lu wrote:
-> On Mon, Aug 5, 2013 at 10:58 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > [+cc Yinghai]
-> >
-> > After the loop we have this (added by Yinghai in fd5913411):
-> >
-> >     if (min_align > io_align)
-> >         min_align = io_align;
-> >
-> > I don't understand this.  There are three cases:
-> >
-> > 1) No downstream bridges: min_align <= 256 because I/O BARs are
-> > limited to 256 bytes.
-> > 2) All downstream bridges have 1K extension: min_align = 1024.
-> > 3) At least one downstream bridge requires 4K alignment: min_align = 4096.
-> >
-> > "io_align" is the minimum alignment enforced by the bridge.  This is
-> > independent of any devices below the bridge, so "io_align >= 1024" in
-> > all cases.
-> >
-> > Therefore, the "min_align = io_align" assignment only happens in case
-> > 3, when a downstream bridge requires 4K alignment and *this* bridge
-> > supports the 1K extension.  But that seems wrong.  The downstream
-> > bridge's 4K requirement also applies to all bridges all the way
-> > upstream.
-> >
-> > It looks to me like this test should instead be:
-> >
-> >     if (min_align < io_align)
-> >         min_align = io_align;
+On Fri, Aug 02, 2013 at 05:43:03PM -0500, Aravind Gopalakrishnan wrote:
+> Adding code to check for specific model (F15h, M30h) and if yes,
+> do not add flag AMD_NB_GART. Also check cpuid_edx(0x80000006) for
+> prescence of L3. If no L3, do not add any L3 flags.
 > 
-> before my change, min_align always set to 4096.
-> in the loop to get min_align, dev resource could have size bigger than
-> 4k, those resource will have SIZEALIGN, so final min_align could be
-> more than 4096.
-> so at last we cap it to 4096 again.
-
-To make sure I understand this, I think (correct me if I'm wrong):
-
-  - Every device BAR resource will have IORESOURCE_SIZEALIGN set since it
-    must be naturally aligned on its size (sec 6.2.5.1 of PCI spec r3.0).
-
-  - Bridge window resources will have IORESOURCE_STARTALIGN set and
-    res->start contains the required alignment, i.e., 1MB for MEM windows,
-    4K for architected I/O windows, 1K for bridges with 1K extension, or
-    larger values for arch-specific requirements.
-
-> But according to your findings: "I/O BARs are limited to 256 bytes"
-> we should not worry about that.
-
-This is also per sec 6.2.5.1 of PCI spec r3.0: "Devices that map control
-functions into I/O Space must not consume more than 256 bytes per I/O Base
-Address register."
-
-> So we should just drop io_align and checking like attached patch.
-> (min_align is already set to 1k or 4k before the looping.)
+> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
 > 
-> and that should solve Wei Yang's problem.
-
-[I inlined your patch for commenting.  You're welcome :)]
-
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 64a7de2..edaa9e8 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -816,12 +816,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->  	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
->  	unsigned long size = 0, size0 = 0, size1 = 0;
->  	resource_size_t children_add_size = 0;
-> -	resource_size_t min_align, io_align, align;
-> +	resource_size_t min_align, align;
+> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+> index 3048ded..3ee7a4d 100644
+> --- a/arch/x86/kernel/amd_nb.c
+> +++ b/arch/x86/kernel/amd_nb.c
+> @@ -20,6 +20,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
+>  	{}
+>  };
+> @@ -27,6 +28,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
 >  
->  	if (!b_res)
->   		return;
+>  static const struct pci_device_id amd_nb_link_ids[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
+>  	{}
+>  };
+> @@ -81,13 +83,21 @@ int amd_cache_northbridges(void)
+>  			next_northbridge(misc, amd_nb_misc_ids);
+>  		node_to_amd_nb(i)->link = link =
+>  			next_northbridge(link, amd_nb_link_ids);
+> -        }
+> +	}
 >  
-> -	io_align = min_align = window_alignment(bus, IORESOURCE_IO);
-> +	min_align = window_alignment(bus, IORESOURCE_IO);
-
-I like this change.
-
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
->  		int i;
+> +	/* GART present only on Fam15h upto model 0fh */
+>  	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
+> -	    boot_cpu_data.x86 == 0x15)
+> +	    (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model < 0x10))
+>  		amd_northbridges.flags |= AMD_NB_GART;
 >  
-> @@ -848,8 +848,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->  		}
->  	}
->  
-> -	if (min_align > io_align)
-> -		min_align = io_align;
-> +	if (min_align > PCI_P2P_DEFAULT_IO_ALIGN)
-> +		min_align = PCI_P2P_DEFAULT_IO_ALIGN;
+>  	/*
+> +	 * Check CPUID Fn8000_0006_EDX: L3 Cache Identifiers.
+> +	 * If == 0, then no need to proceed as there is no L3.
 
-But I still don't understand this one.  As far as I can tell,
-"min_align > 4096" can happen only for arch-specific I/O window
-requirements.  It can never happen because of a large device I/O BAR.
+This comment explains the code. Just sit down and think about it: does
+it make any sense to have that in a comment?
 
-Let's assume "min_align = window_alignment(bus, IORESOURCE_IO)" above set
-min_align to 16KB because that's what pnv_pci_window_alignment() returned.
-Why would we cap it to 4KB here?  I think we should set this:
+> +	 */
+> +	if (cpuid_edx(0x80000006) == 0)
+> +		return 0;
+> +
+> +	/*
+>  	 * Some CPU families support L3 Cache Index Disable. There are some
+>  	 * limitations because of E382 and E388 on family 0x10.
+>  	 */
+> --
 
-    b_res->start = 16384;
-    b_res->end = b_res->start + size0 - 1;
-    b_res->flags |= IORESOURCE_STARTALIGN;
+I fixed it up like this:
 
-to indicate that the bridge needs a 16KB-aligned I/O window.
+commit a0cb1bab68823648def0fda19bf307ad08eb25d2
+Author: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Date:   Fri Aug 2 17:43:03 2013 -0500
 
-In what case do we need to cap min_align to 4KB?
+    x86, amd_nb: Clarify F15h, model 30h GART and L3 support
+    
+    F15h, models 0x30 and later don't have a GART. Note that. Also check
+    cpuid_edx(0x80000006) for prescence of L3 because there are models which
+    don't sport an L3.
+    
+    Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+    [ Boris: rewrite commit message, cleanup comments. ]
+    Signed-off-by: Borislav Petkov <bp@suse.de>
 
->  	size0 = calculate_iosize(size, min_size, size1,
->  			resource_size(b_res), min_align);
+diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+index 3048ded1b598..59554dca96ec 100644
+--- a/arch/x86/kernel/amd_nb.c
++++ b/arch/x86/kernel/amd_nb.c
+@@ -20,6 +20,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
+ 	{}
+ };
+@@ -27,6 +28,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
+ 
+ static const struct pci_device_id amd_nb_link_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
+ 	{}
+ };
+@@ -81,13 +83,20 @@ int amd_cache_northbridges(void)
+ 			next_northbridge(misc, amd_nb_misc_ids);
+ 		node_to_amd_nb(i)->link = link =
+ 			next_northbridge(link, amd_nb_link_ids);
+-        }
++	}
+ 
++	/* GART present only on Fam15h upto model 0fh */
+ 	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
+-	    boot_cpu_data.x86 == 0x15)
++	    (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model < 0x10))
+ 		amd_northbridges.flags |= AMD_NB_GART;
+ 
+ 	/*
++	 * Check for L3 cache presence.
++	 */
++	if (!cpuid_edx(0x80000006))
++		return 0;
++
++	/*
+ 	 * Some CPU families support L3 Cache Index Disable. There are some
+ 	 * limitations because of E382 and E388 on family 0x10.
+ 	 */
+
+
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
