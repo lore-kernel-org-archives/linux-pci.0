@@ -1,66 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.w2.samsung.com ([211.189.100.11]:10388 "EHLO
-	usmailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755720Ab3HLOtl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 10:49:41 -0400
-Date: Mon, 12 Aug 2013 11:49:32 -0300
-From: Mauro Carvalho Chehab <m.chehab@samsung.com>
-To: Borislav Petkov <bp@alien8.de>
-Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
-	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
- event
-Message-id: <20130812114932.52bb0314@samsung.com>
-In-reply-to: <20130812123813.GD18018@pd.tnic>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
- <20130812083355.47c1bae8@samsung.com> <20130812123813.GD18018@pd.tnic>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:54943 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754802Ab3HFGTi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 02:19:38 -0400
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 6 Aug 2013 11:41:05 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 0465F1258053
+	for <linux-pci@vger.kernel.org>; Tue,  6 Aug 2013 11:49:06 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r766Kdgl36110490
+	for <linux-pci@vger.kernel.org>; Tue, 6 Aug 2013 11:50:39 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r766JSL4032646
+	for <linux-pci@vger.kernel.org>; Tue, 6 Aug 2013 11:49:29 +0530
+Date: Tue, 6 Aug 2013 14:19:24 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
+ pbus_size_io()
+Message-ID: <20130806061924.GB10876@weiyang.vnet.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Mon, 12 Aug 2013 14:38:13 +0200
-Borislav Petkov <bp@alien8.de> escreveu:
+On Mon, Aug 05, 2013 at 11:58:50AM -0600, Bjorn Helgaas wrote:
+>[+cc Yinghai]
+>
+>On Fri, Aug 2, 2013 at 3:31 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> In commit 462d9303 ("PCI: Align P2P windows using pcibios_window_alignment()"),
+>> it introduce a new method to calculate the window alignment of P2P bridge.
+>>
+>> When the io_window_1k is set,  the calculation for the io resource alignment
+>> is different from the original one. In the original logic before 462d9303,
+>> the alignment is no bigger than 4K even the io_window_1k is set. The logic
+>> introduced in 462d9303 will limit the alignment to 1k in this case.
+>>
+>> This patch fix this issue.
+>
+>Presumably this fixes a bug, but you don't say what it is.  "different
+>from the original" is not a description of a problem.  You need
+>something like "with the current code, we allocate the wrong window
+>size in situation X, or we allocate a window with incorrect alignment
+>in situation Y, etc."
+>
 
-> On Mon, Aug 12, 2013 at 08:33:55AM -0300, Mauro Carvalho Chehab wrote:
-> > APEI is just the mechanism that collects the data, not the mechanism
-> > that reports to userspace.
-> 
-> Both methods add a tracepoint - no difference.
-> 
-> > I really don't see any sense on adding yet-another-way to report the
-> > very same error.
-> 
-> Well, your suggested way through the layers is this:
-> 
-> Hardware->APEI->EDAC.
-> 
-> His is
-> 
-> Hardware->APEI.
-> 
-> If I can lose the EDAC layer, then this is a clear win.
+With current code, we allocate the wrong window size when upstream bridge
+could be 1k aligned and one of the downstream port is 4k aligned.
 
-Clear win from what PoV? Userspace will need to decode a different type
-of tracing, and implement a different logic for APEI. So, it will be
-reinventing the wheel, with a different trace format, and will require
-userspace to implement another tracing event for the same thing that
-EDAC already provides.
+In this case, the "min_align" should be 4k. But the current code set
+"min_align" to 1k.
 
-Also, if both ghes_edac and this new tracing is enabled, userspace will
-receive twice the same event, as two traces will be received for the
-same thing.
-
-Worse than that, how userspace is supposed to merge those two events
-into one?
-> 
-
-
--- 
-
-Cheers,
-Mauro
