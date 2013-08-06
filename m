@@ -1,46 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36040 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031243Ab3HIVzt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Aug 2013 17:55:49 -0400
-Message-ID: <1376085258.32100.40.camel@pasglop>
-Subject: Re: [PATCHv8 04/10] of: pci: add registry of MSI chips
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Date: Sat, 10 Aug 2013 07:54:18 +1000
-In-Reply-To: <20130809142724.GD25111@titan.lakedaemon.net>
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	 <1376000268-18397-5-git-send-email-thomas.petazzoni@free-electrons.com>
-	 <1376027346.32100.8.camel@pasglop>
-	 <20130809134427.GC25111@titan.lakedaemon.net> <20130809141806.GA15973@ulmo>
-	 <20130809142724.GD25111@titan.lakedaemon.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from stargate.chelsio.com ([67.207.112.58]:20657 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755922Ab3HFKZy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 06:25:54 -0400
+From: Vipul Pandya <vipul@chelsio.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, leedom@chelsio.com, tomreu@chelsio.com,
+	vipul@chelsio.com, divy@chelsio.com, dm@chelsio.com,
+	nirranjan@chelsio.com, eilong@broadcom.com, netdev@vger.kernel.org
+Subject: [PATCH V2 4/4] pci: Use pci_wait_for_pending_transaction instead of for loop
+Date: Tue,  6 Aug 2013 15:48:39 +0530
+Message-Id: <1375784319-25760-5-git-send-email-vipul@chelsio.com>
+In-Reply-To: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
+References: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-08-09 at 10:27 -0400, Jason Cooper wrote:
-> 
-> You're correct, I sent this a little too hastily.  I thought Ben knew
-> something I didn't (see above), but the error was only where you
-> indicated.  I'm revising my fix to just append the semi-colon after
-> the
-> NULL.
+From: Casey Leedom <leedom@chelsio.com>
 
-I messed up in my reply, I was talking about the one after the NULL.
+New routine has been added to avoid duplication of waiting for pending pci
+transaction code. This patch makes use of that function.
 
-Cheers,
-Ben.
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Vipul Pandya <vipul@chelsio.com>
+---
+V2: Added pci_wait_for_pending_transaction routine and replaced it at respective
+places. Made the patch series for the same.
+V2: Used dev->msix_cap directly for capability offset
+V2: Removed use of 'rc' variable.
 
+ drivers/pci/quirks.c | 18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 4a64fc4..ea9108d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3126,9 +3126,6 @@ static int reset_intel_generic_dev(struct pci_dev *dev, int probe)
+ 
+ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+ {
+-	int i;
+-	u16 status;
+-
+ 	/*
+ 	 * http://www.intel.com/content/dam/doc/datasheet/82599-10-gbe-controller-datasheet.pdf
+ 	 *
+@@ -3140,20 +3137,9 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+ 	if (probe)
+ 		return 0;
+ 
+-	/* Wait for Transaction Pending bit clean */
+-	for (i = 0; i < 4; i++) {
+-		if (i)
+-			msleep((1 << (i - 1)) * 100);
+-
+-		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
+-		if (!(status & PCI_EXP_DEVSTA_TRPND))
+-			goto clear;
+-	}
+-
+-	dev_err(&dev->dev, "transaction is not cleared; "
+-			"proceeding with reset anyway\n");
++	if (!pci_wait_for_pending_transaction(dev))
++		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+ 
+-clear:
+ 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+ 
+ 	msleep(100);
+-- 
+1.8.0
 
