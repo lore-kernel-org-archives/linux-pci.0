@@ -1,83 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.w2.samsung.com ([211.189.100.14]:19060 "EHLO
-	usmailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929Ab3HNX4r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 19:56:47 -0400
-Date: Wed, 14 Aug 2013 20:56:38 -0300
-From: Mauro Carvalho Chehab <m.chehab@samsung.com>
-To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
-Cc: Borislav Petkov <bp@alien8.de>, tony.luck@intel.com,
-	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
-	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Aristeu Rozanski Filho <arozansk@redhat.com>
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
- event
-Message-id: <20130814205638.1ebcfd3e@concha.lan>
-In-reply-to: <520A6A30.1030406@linux.vnet.ibm.com>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
- <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com>
- <20130812114404.3bd64fa0@samsung.com> <520A1B5E.8040105@linux.vnet.ibm.com>
- <20130813094147.062317f8@concha.lan> <520A6A30.1030406@linux.vnet.ibm.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
+Received: from mail-gh0-f178.google.com ([209.85.160.178]:40328 "EHLO
+	mail-gh0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751915Ab3HFNm4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 09:42:56 -0400
+Received: by mail-gh0-f178.google.com with SMTP id g15so103950ghb.37
+        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 06:42:56 -0700 (PDT)
+Date: Tue, 6 Aug 2013 07:42:51 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
+ pbus_size_io()
+Message-ID: <20130806134251.GC31970@google.com>
+References: <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
+ <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
+ <20130805195149.GA19127@google.com>
+ <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
+ <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
+ <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
+ <20130805222135.GA29875@google.com>
+ <20130806032227.GA7736@shangw.(null)>
+ <20130806062624.GC10876@weiyang.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130806062624.GC10876@weiyang.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Tue, 13 Aug 2013 22:47:36 +0530
-"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
-
-> On 08/13/2013 06:11 PM, Mauro Carvalho Chehab wrote:
-> > Em Tue, 13 Aug 2013 17:11:18 +0530
-> > "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
-> >
-> >> On 08/12/2013 08:14 PM, Mauro Carvalho Chehab wrote:
-> >>>> But, this only seems to expose the APEI data as a string
-> >>>> and doesn't look to really make all the fields available to user-space
-> >>>> in a raw manner. Not sure how well this can be utilised by a user-space
-> >>>> tool. Do you have suggestions on how we can do this?
-> >>>
-> >>> There's already an userspace tool that handes it:
-> >>> 	https://git.fedorahosted.org/cgit/rasdaemon.git/
-> >>>
-> >>> What is missing there on the current version is the bits that would allow
-> >>> to translate from APEI way to report an error (memory node, card, module,
-> >>> bank, device) into a DIMM label[1].
+On Tue, Aug 06, 2013 at 02:26:24PM +0800, Wei Yang wrote:
+> On Tue, Aug 06, 2013 at 11:22:27AM +0800, Gavin Shan wrote:
+> >On Mon, Aug 05, 2013 at 04:21:35PM -0600, Bjorn Helgaas wrote:
+> >>On Mon, Aug 05, 2013 at 02:09:27PM -0700, Yinghai Lu wrote:
+> >>> On Mon, Aug 5, 2013 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >>> >> then, we should drop that 4k capping.
+> >>> >> I was thinking there could be strange or wild res with bigger than 4k.
+> >>> >
+> >>> > If there *were* an I/O BAR larger than 4KB, how should it be handled?
+> >>> > I don't think capping the alignment to 4KB sounds like the best way.
+> >>> > For example, a 16KB I/O BAR would still need to be aligned on 16KB.
+> >>> >
+> >>> > And I think capping to 4KB as you did above will break the powerpc
+> >>> > pcibios_window_alignment() implementation.  For example, if
+> >>> > pcibios_window_alignment() returned 16KB, and we later capped it to
+> >>> > 4KB, we're going to allocate space for the bridge window with the
+> >>> > wrong alignment.
+> >>> 
+> >>> Agree.
 > >>
-> >> If I'm reading this right, all APEI data seems to be squashed into a
-> >> string in mc_event.
+> >>OK.  Can you guys try this out and see whether it fixes the problem?
+> >>I don't know what the actual problem *is*, so I can't tell whether
+> >>this is a possible fix.
+> >>
 > >
-> > Yes. We had lots of discussion about how to map memory errors over the
-> > last couple years. Basically, it was decided that the information that
-> > could be decoded into a DIMM to be mapped as integers, and all other
-> > driver-specific data to be added as strings.
+> >The code looks simpler, but it potentially breaks PowerNV platforms.
+> >Lets have inline description if I understand everything here.
 > >
-> > On the tests I did, different machines/vendors fill the APEI data on
-> > a different way, with makes harder to associate them to a DIMM.
+> >>diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> >>index d4f1ad9..8333c92 100644
+> >>--- a/drivers/pci/setup-bus.c
+> >>+++ b/drivers/pci/setup-bus.c
+> >>@@ -749,12 +749,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+> >> 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
+> >> 	resource_size_t size = 0, size0 = 0, size1 = 0;
+> >> 	resource_size_t children_add_size = 0;
+> >>-	resource_size_t min_align, io_align, align;
+> >>+	resource_size_t min_align, align;
+> >>
+> >> 	if (!b_res)
+> >>  		return;
+> >>
+> >>-	io_align = min_align = window_alignment(bus, IORESOURCE_IO);
+> >>+	min_align = window_alignment(bus, IORESOURCE_IO);
+> >> 	list_for_each_entry(dev, &bus->devices, bus_list) {
+> >> 		int i;
+> >>
+> >
+> >"min_align" here indicates the IO segment size on PowerNV platform.
+> >On PowerNV platform, the IO range of specific PHB (PCI controller)
+> >is divided evenly and each piece of that is called IO segment. For
+> >example, the IO segment size ("min_align") is 64K initially. If one
+> >of specific IO BAR has size of 96K (it's possible?), "min_align"
+> >becomes 96K eventually, which isn't IO segment aligned.
 > 
-> Ok, so it looks like ghes_edac isn't quite useful yet.
+> I think this caes will not happen. 
 > 
-> In the meantime, like Boris suggests, I think we can have a different 
-> trace event for raw APEI reports - userspace can use it as it pleases.
-
-"In the meantime" is something that worries me the most. Kernel APIs should
-be stable. We cannot randomly change it on each new kernel version.
-
-Better to spend a little more time discussing than implementing a new trace
-that will be removed on a near future.
+> As I analysised in previous letter. During the list_for_each_entry loop, the
+> resources could be in two cased: 1. bridge I/O window(IORESOURCE_STARTALIGN);
+> 2. device I/O BAR(IORESOURCE_SIZEALIGN).
 > 
-> Once ghes_edac gets better, users can decide whether they want raw APEI 
-> reports or the EDAC-processed version and choose one or the other trace 
-> event.
+>     Bridge I/O window is 64k aligned, as the platform required.
+>     Device I/O BAR is less than 256 bytes according to the specification.
 > 
-> Regards,
-> Naveen
+> So the 96k size is not possible. 
+
+It's not possible because of the power-of-2 size requirement.  The spec
+does say I/O BARs should be 256 bytes or smaller, but one could imagine
+a BAR that violated that requirement.  But the power-of-2 requirement is
+more fundamental because of the way BARs are sized (low-order bits are
+hardwired to zero, and the number of hardwired bits determines the size)
+and PCI really cannot support a non-power-of-2 sized BAR at all.
+
+> Please fix me, if I am not correct.
 > 
-
-
--- 
-
-Cheers,
-Mauro
+> >
+> >>@@ -781,9 +781,6 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+> >> 		}
+> >> 	}
+> >>
+> >>-	if (min_align > io_align)
+> >>-		min_align = io_align;
+> >>-
+> >> 	size0 = calculate_iosize(size, min_size, size1,
+> >> 			resource_size(b_res), min_align);
+> >> 	if (children_add_size > add_size)
+> >>
+> >
+> >Thanks,
+> >Gavin
+> 
+> -- 
+> Richard Yang
+> Help you, Help me
+> 
