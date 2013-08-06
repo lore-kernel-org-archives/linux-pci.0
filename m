@@ -1,81 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:48087 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864Ab3HOUsw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Aug 2013 16:48:52 -0400
-Received: by mail-ie0-f181.google.com with SMTP id x14so2127976ief.12
-        for <linux-pci@vger.kernel.org>; Thu, 15 Aug 2013 13:48:52 -0700 (PDT)
+Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:22529 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751837Ab3HFU6a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 16:58:30 -0400
+Message-ID: <52016370.1000502@amd.com>
+Date: Tue, 6 Aug 2013 15:58:24 -0500
+From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
-References: <20130808200444.2932.17381.stgit@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 15 Aug 2013 14:48:31 -0600
-Message-ID: <CAErSpo6v2sKuHnLweh_o1GtV+A-3ckoMG10rhOEwMXHLMTMsgg@mail.gmail.com>
-Subject: Re: [PATCH v5 0/9] pci: bus and slot reset interfaces
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Borislav Petkov <bp@alien8.de>
+CC: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<dougthompson@xmission.com>, <bhelgaas@google.com>,
+	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/3 V2] EDAC, AMD64_EDAC: Add relevant condition checks
+ as F15h M30h does not support GART or L3.
+References: <1375483384-2302-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <1375483384-2302-3-git-send-email-Aravind.Gopalakrishnan@amd.com> <20130806201925.GG14891@pd.tnic>
+In-Reply-To: <20130806201925.GG14891@pd.tnic>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 8, 2013 at 2:09 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> v5: Increase length of time we assert reset in the final common
->     secondary bus reset function to 2ms and document that this is
->     to ensure that reset on the bus is seen for at least a full
->     1ms (per converstation with Alex Duyck)
+On 8/6/2013 3:19 PM, Borislav Petkov wrote:
+> On Fri, Aug 02, 2013 at 05:43:03PM -0500, Aravind Gopalakrishnan wrote:
+>> Adding code to check for specific model (F15h, M30h) and if yes,
+>> do not add flag AMD_NB_GART. Also check cpuid_edx(0x80000006) for
+>> prescence of L3. If no L3, do not add any L3 flags.
+>>
+>> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+>>
+>> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+>> index 3048ded..3ee7a4d 100644
+>> --- a/arch/x86/kernel/amd_nb.c
+>> +++ b/arch/x86/kernel/amd_nb.c
+>> @@ -20,6 +20,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC) },
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
+>>   	{}
+>>   };
+>> @@ -27,6 +28,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
+>>   
+>>   static const struct pci_device_id amd_nb_link_ids[] = {
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
+>>   	{}
+>>   };
+>> @@ -81,13 +83,21 @@ int amd_cache_northbridges(void)
+>>   			next_northbridge(misc, amd_nb_misc_ids);
+>>   		node_to_amd_nb(i)->link = link =
+>>   			next_northbridge(link, amd_nb_link_ids);
+>> -        }
+>> +	}
+>>   
+>> +	/* GART present only on Fam15h upto model 0fh */
+>>   	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
+>> -	    boot_cpu_data.x86 == 0x15)
+>> +	    (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model < 0x10))
+>>   		amd_northbridges.flags |= AMD_NB_GART;
+>>   
+>>   	/*
+>> +	 * Check CPUID Fn8000_0006_EDX: L3 Cache Identifiers.
+>> +	 * If == 0, then no need to proceed as there is no L3.
+> This comment explains the code. Just sit down and think about it: does
+> it make any sense to have that in a comment?
+>> +	 */
+>> +	if (cpuid_edx(0x80000006) == 0)
+>> +		return 0;
+>> +
+>> +	/*
+>>   	 * Some CPU families support L3 Cache Index Disable. There are some
+>>   	 * limitations because of E382 and E388 on family 0x10.
+>>   	 */
+>> --
+> I fixed it up like this:
 >
-> Thanks,
-> Alex
+> commit a0cb1bab68823648def0fda19bf307ad08eb25d2
+> Author: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+> Date:   Fri Aug 2 17:43:03 2013 -0500
 >
-> This series adds PCI bus and slot reset interfaces to the already
-> existing function reset interface.  I need this for two reasons, the
-> first is that not all devices support function level reset.  Even
-> some of those that we detect as supporting a PM reset on D3hot->D0
-> transition actually don't do any reset.  Others have no reset
-> capability at all.  We currently implement a secondary bus reset
-> escalation from the function reset path, but only when there is a
-> single devfn on the bus.  Drivers like vfio can have ownership of
-> all of the devices on a bus and should therefore have a path to
-> initiate a secondary bus reset with multiple devices.  This is
-> particularly required for use of GPUs by userspace, where none of
-> the predominant GPUs implement a useful function level reset.
->
-> The second reason is that even the current function reset escalating
-> to a secondary bus reset can cause problems with hotplug controllers.
-> If a root port supports PCIe HP with suprise removal, a bus reset
-> can trigger a presence detection change, which results in an attempt
-> to remove the struct device.  By having a slot reset interface, we
-> can involve the hotplug controllers to allow for a controlled bus
-> reset and avoid this spurious removal attempt.
->
-> ---
->
-> Alex Williamson (9):
->       pci: Create pci_reset_bridge_secondary_bus()
->       pci: Add hotplug_slot_ops.reset_slot()
->       pci: Implement reset_slot for pciehp
->       pci: Add slot reset option to pci_dev_reset
->       pci: Split out pci_dev lock/unlock and save/restore
->       pci: Add slot and bus reset interfaces
->       pci: Wake-up devices before save for reset
->       pci: Tune secondary bus reset timing
->       pci: Remove aer_do_secondary_bus_reset()
->
->
->  drivers/pci/hotplug/pciehp.h       |    1
->  drivers/pci/hotplug/pciehp_core.c  |   12 +
->  drivers/pci/hotplug/pciehp_hpc.c   |   31 +++
->  drivers/pci/pci.c                  |  349 +++++++++++++++++++++++++++++++++---
->  drivers/pci/pcie/aer/aerdrv.c      |    2
->  drivers/pci/pcie/aer/aerdrv.h      |    1
->  drivers/pci/pcie/aer/aerdrv_core.c |   35 ----
->  include/linux/pci.h                |    3
->  include/linux/pci_hotplug.h        |    4
->  9 files changed, 376 insertions(+), 62 deletions(-)
+>      x86, amd_nb: Clarify F15h, model 30h GART and L3 support
+>      
+>      F15h, models 0x30 and later don't have a GART. Note that. Also check
+>      cpuid_edx(0x80000006) for prescence of L3 because there are models which
+>      don't sport an L3.
+>      
+>      Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+>      [ Boris: rewrite commit message, cleanup comments. ]
+>      Signed-off-by: Borislav Petkov <bp@suse.de>
 
-Merged to the PCI "next" branch for v3.12, thanks!
+Okay, Thanks!
+> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+> index 3048ded1b598..59554dca96ec 100644
+> --- a/arch/x86/kernel/amd_nb.c
+> +++ b/arch/x86/kernel/amd_nb.c
+> @@ -20,6 +20,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
+>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC) },
+>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
+>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
+>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
+>   	{}
+>   };
+> @@ -27,6 +28,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
+>   
+>   static const struct pci_device_id amd_nb_link_ids[] = {
+>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
+>   	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
+>   	{}
+>   };
+> @@ -81,13 +83,20 @@ int amd_cache_northbridges(void)
+>   			next_northbridge(misc, amd_nb_misc_ids);
+>   		node_to_amd_nb(i)->link = link =
+>   			next_northbridge(link, amd_nb_link_ids);
+> -        }
+> +	}
+>   
+> +	/* GART present only on Fam15h upto model 0fh */
+>   	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
+> -	    boot_cpu_data.x86 == 0x15)
+> +	    (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model < 0x10))
+>   		amd_northbridges.flags |= AMD_NB_GART;
+>   
+>   	/*
+> +	 * Check for L3 cache presence.
+> +	 */
+> +	if (!cpuid_edx(0x80000006))
+> +		return 0;
+> +
+> +	/*
+>   	 * Some CPU families support L3 Cache Index Disable. There are some
+>   	 * limitations because of E382 and E388 on family 0x10.
+>   	 */
+>
+>
+>
+
+
