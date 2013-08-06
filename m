@@ -1,56 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f51.google.com ([209.85.213.51]:37081 "EHLO
-	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753092Ab3H1T11 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 15:27:27 -0400
-Received: by mail-yh0-f51.google.com with SMTP id c41so1755166yho.38
-        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 12:27:26 -0700 (PDT)
-Subject: [PATCH 4/4] PCI: Remove pcie_cap_has_devctl()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yuval Mintz <yuvalmin@broadcom.com>,
-	Jacob Keller <jacob.e.keller@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>
-Date: Wed, 28 Aug 2013 13:27:23 -0600
-Message-ID: <20130828192723.5895.68711.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130828192627.5895.26558.stgit@bhelgaas-glaptop>
-References: <20130828192627.5895.26558.stgit@bhelgaas-glaptop>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20130806123933.2f33828b@skate>
+References: <1370864113-17895-14-git-send-email-tushar.behera@linaro.org>
+ <1371460573-30004-1-git-send-email-tushar.behera@linaro.org>
+ <CAErSpo7hHSmO6euUtJABLB-xeK9u+J2h6z905e5DrcZv5gZoEA@mail.gmail.com> <20130806123933.2f33828b@skate>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 6 Aug 2013 12:10:25 -0600
+Message-ID: <CAErSpo6z+3Viex4EmeMhsuS8wfxpZ74QaM=p4Ri3Px3dA26TCQ@mail.gmail.com>
+Subject: Re: [PATCH V2 6/6] pci: mvebu: Convert to use devm_ioremap_resource
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Tushar Behera <tushar.behera@linaro.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>, patches@linaro.org,
+	sachin.kamat@linaro.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	=?ISO-8859-1?Q?Gregory_Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie_cap_has_devctl() does nothing, so remove it.  Simplicity over
-consistency in this case.  No functional change.
+On Tue, Aug 6, 2013 at 4:39 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> Dear Bjorn Helgaas,
+>
+> [+cc Jason Cooper, Gregory Clement and Ezequiel Garcia]
+>
+> On Tue, 23 Jul 2013 12:38:28 -0600, Bjorn Helgaas wrote:
+>> [+cc Thomas]
+>>
+>> On Mon, Jun 17, 2013 at 3:16 AM, Tushar Behera <tushar.behera@linaro.org> wrote:
+>> > Commit 75096579c3ac ("lib: devres: Introduce devm_ioremap_resource()")
+>> > introduced devm_ioremap_resource() and deprecated the use of
+>> > devm_request_and_ioremap().
+>> >
+>> > While at it, modify mvebu_pcie_map_registers() to propagate error code.
+>> >
+>> > Signed-off-by: Tushar Behera <tushar.behera@linaro.org>
+>> > CC: linux-pci@vger.kernel.org
+>> > CC: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> Thomas has a bunch of mvebu patches in the pipeline, so I assume he
+>> will incorporate this if appropriate.  I don't want to put it in my
+>> tree and cause conflicts with his changes.  Let me know if I should do
+>> something else here.
+>
+> I don't really have that many pci-mvebu.c patches in the pipeline
+> actually. The only one I have is to enable MSI support, and it's a
+> fairly light one that should not conflict too badly with this one.
+>
+> Therefore, Bjorn, I believe this patch could go through your tree,
+> either for 3.11 or 3.12 as you prefer.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/access.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+Added to pci/misc for v3.12.  Thanks.
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 061da8c..0857ca9 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -475,11 +475,6 @@ static inline int pcie_cap_version(const struct pci_dev *dev)
- 	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
- }
- 
--static inline bool pcie_cap_has_devctl(const struct pci_dev *dev)
--{
--	return true;
--}
--
- static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
- {
- 	int type = pci_pcie_type(dev);
-@@ -521,7 +516,7 @@ static bool pcie_capability_reg_implemented(struct pci_dev *dev, int pos)
- 	case PCI_EXP_DEVCAP:
- 	case PCI_EXP_DEVCTL:
- 	case PCI_EXP_DEVSTA:
--		return pcie_cap_has_devctl(dev);
-+		return true;
- 	case PCI_EXP_LNKCAP:
- 	case PCI_EXP_LNKCTL:
- 	case PCI_EXP_LNKSTA:
-
+Bjorn
