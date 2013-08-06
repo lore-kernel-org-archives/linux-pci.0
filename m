@@ -1,85 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe004.messaging.microsoft.com ([216.32.180.187]:49572
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753361Ab3HWXHy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 19:07:54 -0400
-Message-ID: <5217EB44.3020302@amd.com>
-Date: Fri, 23 Aug 2013 18:07:48 -0500
-From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
-MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<dougthompson@xmission.com>, <bhelgaas@google.com>,
-	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
-	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/1] AMD64_EDAC: Fix incorrect wrap arounds due to left
- shift beyond 32 bits.
-References: <1376958472-2150-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <1376958472-2150-2-git-send-email-Aravind.Gopalakrishnan@amd.com> <20130823213725.GC15521@pd.tnic>
-In-Reply-To: <20130823213725.GC15521@pd.tnic>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from top.free-electrons.com ([176.31.233.9]:53368 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753194Ab3HFKgj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 06:36:39 -0400
+Date: Tue, 6 Aug 2013 12:36:18 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Finn Hoffmann <finn@uni-bremen.de>
+Subject: Re: [PATCH 3.11-rc] pci: mvebu: disable prefetchable memory support
+ in PCI-to-PCI bridge
+Message-ID: <20130806123618.6b95224e@skate>
+In-Reply-To: <20130802174350.GA15787@obsidianresearch.com>
+References: <1375364659-3228-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130802174350.GA15787@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/23/2013 4:37 PM, Borislav Petkov wrote:
-> On Mon, Aug 19, 2013 at 07:27:52PM -0500, Aravind Gopalakrishnan wrote:
->> Link to the bug report:
->> http://marc.info/?l=linux-edac&m=137692201732220&w=2
->>
->> dct_base and dct_limit obtain 32 bit register values when they read their
->> respective pci config space registers. A left shift beyond 32 bits will
->> cause them to wrap around. Similar case for chan_addr as can be seen from
->> the bug report. In the patch, we rectify this by casting chan_addr to u64
->> and by comparing dct_base and dct_limit against (sys_addr >> 27)
->>
->> Tested on F15h, M30h with ECC turned on and works fine.
->>
->> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
->>
->> diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
->> index b86228c..eb4793e 100644
->> --- a/drivers/edac/amd64_edac.c
->> +++ b/drivers/edac/amd64_edac.c
->> @@ -1558,11 +1558,12 @@ static int f15_m30h_match_to_this_node(struct amd64_pvt *pvt, unsigned range,
->>   	}
->>   
->>   	/* Verify sys_addr is within DCT Range. */
->> -	dct_base = (dct_sel_baseaddr(pvt) << 27);
->> -	dct_limit = (((dct_cont_limit_reg >> 11) & 0x1FFF) << 27) | 0x7FFFFFF;
->> +	dct_base = dct_sel_baseaddr(pvt);
-> This can't be correct.
->
-> So the original patch takes the shifted dct_base while your change
-> doesn't anymore...
->
->> +	dct_limit = (dct_cont_limit_reg >> 11) & 0x1FFF;
->>   
->>   	if (!(dct_cont_base_reg & BIT(0)) &&
->> -	    !(dct_base <= sys_addr && dct_limit >= sys_addr))
->> +	    !(dct_base <= (sys_addr >> 27) &&
->> +	      dct_limit >= (sys_addr >> 27)))
-> ... and while this comparison shifts sys_addr to use the proper bits,
-> the code does this assignment later:
->
-> 	chan_offset = dct_base;
->
-> Now, chan_offset has the << 27 version of dct_base which makes the following
-> calculation wrong:
->
-> 	chan_addr = sys_addr - chan_offset;
-Oops. my apologies.
-> because sys_addr is the full 64-bit, unshifted value.
->
-> The right thing to do would be to do:
->
-> 	chan_offset = dct_base << 27;
->
-> Or am I missing something?
->
-No, you are right.
+Dear Jason Gunthorpe,
 
-I am re-sending the patch.
+On Fri, 2 Aug 2013 11:43:50 -0600, Jason Gunthorpe wrote:
 
-Thanks,
--Aravind.
+> > To achieve this, we simply make the prefetchable memory base a
+> > read-only register that always returns 0. Reading/writing all the
+> > other prefetchable memory related registers has no effect.
+> 
+> Looks good to me. It is very good that you were able to merge the
+> downstream prefetchable BARs into the normal MMIO window.
 
+Thanks.
 
+> Though looking at the original thread I really wonder if something
+> else is wrong here as well. The ethernet should not have only
+> prefetchable BARs.
+> 
+> For instance, I found this link:
+> 
+> https://bugzilla.redhat.com/show_bug.cgi?id=448712
+> 
+> Which shows a more resonable arrangement:
+> 
+> 02:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 02)
+>         Region 0: I/O ports at e800 [size=256]
+>         Region 2: Memory at dffff000 (64-bit, non-prefetchable) [size=4K]
+>         Region 4: Memory at deff0000 (64-bit, prefetchable) [size=64K]
+>         Expansion ROM at dffc0000 [disabled] [size=128K]
+> 
+> vs Finn's:
+> 
+> 01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller (rev)
+>          Subsystem: Realtek Semiconductor Co., Ltd. TEG-ECTX Gigabit PCI-E Adapter [Trendnet]
+>          Flags: bus master, fast devsel, latency 0, IRQ 9
+>          I/O ports at 10000 [size=256]
+>          Memory at e0014000 (64-bit, prefetchable) [size=4K]
+>          Memory at e0010000 (64-bit, prefetchable) [size=16K]
+
+Right, but Finn had the same output in 3.10, where the old Kirkwood PCI
+driver was used. So it doesn't seem to be related to the driver, but
+maybe to how the hardware works?
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
