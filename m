@@ -1,72 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 15 Aug 2013 18:11:53 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>
-Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
-	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Message-ID: <20130815161153.GI27616@pd.tnic>
-References: <520A16BD.30201@linux.vnet.ibm.com>
- <20130813124258.GC4077@pd.tnic>
- <520A6D98.9060204@linux.vnet.ibm.com>
- <20130813175809.GE4077@pd.tnic>
- <520B6282.6030906@linux.vnet.ibm.com>
- <20130814212211.544ee6a4@concha.lan>
- <20130815093831.GA27616@pd.tnic>
- <20130815102607.7168a930@samsung.com>
- <20130815134454.GF27616@pd.tnic>
- <20130815111407.4080a744@samsung.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qe0-f41.google.com ([209.85.128.41]:35725 "EHLO
+	mail-qe0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756325Ab3HFR7B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 13:59:01 -0400
+Received: by mail-qe0-f41.google.com with SMTP id a11so410454qen.28
+        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 10:59:00 -0700 (PDT)
+Date: Tue, 6 Aug 2013 11:58:56 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
+ pbus_size_io()
+Message-ID: <20130806175856.GA1246@google.com>
+References: <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
+ <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
+ <20130805195149.GA19127@google.com>
+ <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
+ <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
+ <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
+ <20130805222135.GA29875@google.com>
+ <20130806061534.GA10876@weiyang.vnet.ibm.com>
+ <20130806133929.GB31970@google.com>
+ <20130806153410.GA10680@weiyang.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130815111407.4080a744@samsung.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130806153410.GA10680@weiyang.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 15, 2013 at 11:14:07AM -0300, Mauro Carvalho Chehab wrote:
-> I don't see why should we have those two alternatives, as, at worse
-> case (e. g. if ghes_edac can't enrich the APEI data with labels),
-> they'll basically provide the very same data to userspace, and the
-> EDAC extra overhead is small, on its error report logic.
+On Tue, Aug 06, 2013 at 11:34:10PM +0800, Wei Yang wrote:
+> On Tue, Aug 06, 2013 at 07:39:29AM -0600, Bjorn Helgaas wrote:
+> >> Personal Conclusion
+> >> ============================================================================
+> >> I think Bjorn's patch works.
+> >> Will test on powernv platform and give the result.
+> >
+> >Great, let me know what happens.
+> 
+> In both case, with/with out your patch, the assignment result is the same.
+> Below is the /proc/ioports file.
+> 
+> 00010000-0080ffff : /io-hub@3efe00000000/pciex@3efe00080000
+>   00010000-00010fff : Legacy IO
+>   00020000-0003ffff : PCI Bus 0000:01
+>     00020000-0003ffff : PCI Bus 0000:02
+>       00020000-0002ffff : PCI Bus 0000:40
+>       00030000-0003ffff : PCI Bus 0000:a0
+> 00820000-0101ffff : /io-hub@3efe00000000/pciex@3efe00090000
+>   00820000-00820fff : Legacy IO
+>   00830000-0083ffff : PCI Bus 0001:01
+> 01030000-0182ffff : /io-hub@3efe00000000/pciex@3efe000a0000
+>   01030000-01030fff : Legacy IO
+>   01040000-0104ffff : PCI Bus 0002:01
+> 01840000-0203ffff : /io-hub@3efe00000000/pciex@3efe000b0000
+>   01840000-01840fff : Legacy IO
+>   01850000-0185ffff : PCI Bus 0003:01
+> 02050000-0284ffff : /io-hub@3efe00000000/pciex@3efe000c0000
+>   02050000-02050fff : Legacy IO
+>   02060000-0206ffff : PCI Bus 0004:01
+> 02860000-0305ffff : /io-hub@3efe00000000/pciex@3efe000d0000
+>   02860000-02860fff : Legacy IO
+>   02870000-0287ffff : PCI Bus 0005:01
+> 
+> The arch_align is 0x10000. When sizing for Bus 0000:01, its child has a I/O
+> bridge window with size 0x20000/alignment 0x10000. And the result
+> [0x20000,0x3ffff] looks like size 0x20000/alignment 0x20000 or size
+> 0x20000/alignment 0x10000. 
 
-Well, a couple of reasons.
+Obviously, an address with alignment of 0x20000 is *also* aligned to
+0x10000.
 
-The first and foremost one is having another layer which needs
-registration, etc. because ghes_edac pulls the whole edac core stuff
-with it. The thinner we are, the less overhead we cause. And this is
-a must for RAS.
+> But I still think the alignment is 0x10000.
 
-Actually, this is a must for all kernel code - the faster we can get
-done and the thinner we are, the better. We absolutely definitely don't
-want to have a useless layer in the error reporting path just because it
-is easier.
+Yes, as it should be.  These are all bridge windows, which never have to be
+aligned at more than 1K (if supported), 4K, or the arch alignment,
+whichever is largest.
 
-This short path will pay out later in error storms and other
-resources-constrained situations.
+I *think* you're saying that the patch works correctly.
 
-Furthermore, dealing with another edac driver is not trivial for
-distros, like going around and telling people that all of a sudden
-they need to enable ghes_edac. This is tangential to the issue which
-Naveen raised that on some machines, you want not only ghes_edac but the
-platform-specific one. Which doesn't work currently and we don't have a
-clear solution on how to get it working yet.
-
-Finally, userspace doesn't care where it gets its TP data from as long
-as it is there.
-
-> The risk of doing the very same thing on two different places is that
-> the logic to encapsulate APEI data into trace_mc_event() would be on
-> two separate places. It risks that someone would change one of the
-> drivers and forget to apply the very same change on the other, causing
-> parse errors on userspace, depending on the source.
-
-We'll make sure that doesn't happen.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+Bjorn
