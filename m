@@ -1,81 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:9995 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752079Ab3HZSlf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Aug 2013 14:41:35 -0400
-From: "Sumner, William" <bill.sumner@hp.com>
-To: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"ddutile@redhat.com" <ddutile@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>
-Subject: "crashdump accepting active iommu" prototype successful
-Date: Mon, 26 Aug 2013 18:41:07 +0000
-Message-ID: <875D89B79D1D86448A583A7302C022A055A3BA47@G4W3299.americas.hpqcorp.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from stargate.chelsio.com ([67.207.112.58]:15340 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755674Ab3HFKZn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 06:25:43 -0400
+From: Vipul Pandya <vipul@chelsio.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, leedom@chelsio.com, tomreu@chelsio.com,
+	vipul@chelsio.com, divy@chelsio.com, dm@chelsio.com,
+	nirranjan@chelsio.com, eilong@broadcom.com, netdev@vger.kernel.org
+Subject: [PATCH V2 1/4] pci: Add pci_wait_for_pending_transaction to wait for pending pci transaction
+Date: Tue,  6 Aug 2013 15:48:36 +0530
+Message-Id: <1375784319-25760-2-git-send-email-vipul@chelsio.com>
+In-Reply-To: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
+References: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A while ago we discussed the concept of the crashdump kernel dealing with the legacy DMA from the (old) panic'd kernel by allowing the (new) crashdump kernel: to accept the iommu hardware in an active state, to leave the current translations in-place so that legacy DMA will continue using its current buffers until the device drivers in the crashdump kernel initialize, and to use different portions of the iova address ranges for the device drivers in the crashdump kernel.   
+From: Casey Leedom <leedom@chelsio.com>
 
-As time permitted I have created prototype code to explore this concept.
+New routine to avoid duplication of waiting for pending pci transaction code.
 
-The "crashdump accepting active iommu" prototype/proof-of-concept code has successfully completed its first crashdump and rebooted the machine.  The latest version of the 'crash' utility reads the vmcore dump file that was created.
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Vipul Pandya <vipul@chelsio.com>
+---
+V2: Added pci_wait_for_pending_transaction routine and replaced it at respective
+places. Made the patch series for the same.
+V2: Used dev->msix_cap directly for capability offset
+V2: Removed use of 'rc' variable.
 
+ drivers/pci/pci.c   | 38 +++++++++++++++++++++++++-------------
+ include/linux/pci.h |  1 +
+ 2 files changed, 26 insertions(+), 13 deletions(-)
 
-At a high-level, here are the changes I made:
-The code is entirely within intel-iommu.c 
-A key concept is that the active translation tables are mapped into kernel virtual addresses in the new kernel. This allows most of the existing iommu code to operate without change.
-
-Hardware initialization:
-------------------------
-In intel_iommu_init(void)
-* If (This is the crash kernel)
-  .  Set flag: crashdump_accepting_active_iommu (all changes below check this)
-  .  Skip disabling the iommu hardware translations
-
-In init_dmars()
-* Copy the intel iommu translation tables from the old kernel into the new kernel
-  . The root-entry table, all context-entry tables, and all page-translation-entry tables
-  . The copied tables contain updated physical addresses to link them together.
-  . The copied tables are also mapped into kernel virtual addresses in the new kernel 
-    which allows most of the existing iommu code to operate without change.
-  . Do some minimal sanity-checks during the copy
-  . Place the address of the new root-entry structure into "struct intel_iommu"
-
-* Skip setting-up new domains for 'si', 'rmrr', 'isa' 
-  . Translations for 'rmrr' and 'isa' ranges have been copied from the old kernel
-  . This prototype does not yet handle pass-through
-
-* Existing (unchanged) code near the end of dmar_init:
-  . Loads the address of the (now new) root-entry structure from "struct intel_iommu"
-    into the iommu hardware and does the proper iommu hardware flushes. This changes the 
-    active translation tables from the ones in the old kernel to the copies in the new kernel.
-  . This is legal because the translations in the two sets of tables are currently identical:
-    - Intel(r) Virtualization Technology for Directed I/O. Architecture Specification,
-      February 2011, Rev. 1.3  (section 11.2, paragraph 2) 
-
-In iommu_init_domains()
-* Mark as in-use all domain-id's from the old kernel
-  . In case the new kernel contains a device that was not in the old kernel
-    and a new, unused domain-id is actually needed, the bitmap will give us one.
-
-
-When a new domain is created for a device:
-------------------------------------------
-* If (this device has a context in the old kernel)
-  . Get domain-id, address-width, and IOVA ranges from the old kernel context;
-  . Get adr(page-entry-tables) from the copy in the new kernel;
-  . And apply all of the above values to the new domain structure.
-* Else
-  . Create a new domain as normal
-
-Most of the code to implement the new functionality was added at the end of intel-iommu.c
-Bill
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a8d5fd0..7d6ce2e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3159,19 +3159,17 @@ int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask)
+ }
+ EXPORT_SYMBOL(pci_set_dma_seg_boundary);
+ 
+-static int pcie_flr(struct pci_dev *dev, int probe)
++/**
++ * pci_wait_for_pending_transaction - waits for pending transaction
++ * @dev: the PCI device to operate on
++ *
++ * Return 0 if transaction is pending 1 otherwise.
++ */
++int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ {
+ 	int i;
+-	u32 cap;
+ 	u16 status;
+ 
+-	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+-	if (!(cap & PCI_EXP_DEVCAP_FLR))
+-		return -ENOTTY;
+-
+-	if (probe)
+-		return 0;
+-
+ 	/* Wait for Transaction Pending bit clean */
+ 	for (i = 0; i < 4; i++) {
+ 		if (i)
+@@ -3179,13 +3177,27 @@ static int pcie_flr(struct pci_dev *dev, int probe)
+ 
+ 		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
+ 		if (!(status & PCI_EXP_DEVSTA_TRPND))
+-			goto clear;
++			return 1;
+ 	}
+ 
+-	dev_err(&dev->dev, "transaction is not cleared; "
+-			"proceeding with reset anyway\n");
++	return 0;
++}
++EXPORT_SYMBOL(pci_wait_for_pending_transaction);
++
++static int pcie_flr(struct pci_dev *dev, int probe)
++{
++	u32 cap;
++
++	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
++	if (!(cap & PCI_EXP_DEVCAP_FLR))
++		return -ENOTTY;
++
++	if (probe)
++		return 0;
++
++	if (!pci_wait_for_pending_transaction(dev))
++		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+ 
+-clear:
+ 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+ 
+ 	msleep(100);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..e647001 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -914,6 +914,7 @@ bool pci_check_and_unmask_intx(struct pci_dev *dev);
+ void pci_msi_off(struct pci_dev *dev);
+ int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size);
+ int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask);
++int pci_wait_for_pending_transaction(struct pci_dev *dev);
+ int pcix_get_max_mmrbc(struct pci_dev *dev);
+ int pcix_get_mmrbc(struct pci_dev *dev);
+ int pcix_set_mmrbc(struct pci_dev *dev, int mmrbc);
+-- 
+1.8.0
 
