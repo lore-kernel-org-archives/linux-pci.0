@@ -1,44 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:12835 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757573Ab3HMPLk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 11:11:40 -0400
-Date: Tue, 13 Aug 2013 11:11:23 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 0/5] ARM: dove: DT PCIe support
-Message-ID: <20130813151123.GB25111@titan.lakedaemon.net>
-References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
- <20130813140130.GA25111@titan.lakedaemon.net>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:64902 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752353Ab3HFIEa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 04:04:30 -0400
+Message-ID: <5200ADF7.80006@huawei.com>
+Date: Tue, 6 Aug 2013 16:04:07 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130813140130.GA25111@titan.lakedaemon.net>
+To: Li Zefan <lizefan@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Jon Mason <jdmason@kudzu.us>, <stable@vger.kernel.org>
+Subject: Re: [PATCH -v2] PCI: update device mps when doing pci hotplug
+References: <1375773838-33572-1-git-send-email-wangyijing@huawei.com> <5200A7D2.3080001@huawei.com>
+In-Reply-To: <5200A7D2.3080001@huawei.com>
+Content-Type: text/plain; charset="GB2312"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 13, 2013 at 10:01:30AM -0400, Jason Cooper wrote:
-> Bjorn,
+On 2013/8/6 15:37, Li Zefan wrote:
+> On 2013/8/6 15:23, Yijing Wang wrote:
+>> v1->v2: Update patch log, remove Joe's reported-by, because his problem
+>>         was mainly caused by BIOS incorrect setting. But this patch mainly
+>> 		to fix the bug caused by device hot add. Conservatively, this 
+>> 		version only update the mps problem when hot add. When the device
+>> 		mps < parent mps found, this patch try to update device mps.
+>> 		It seems unlikely device mps > parent mps after hot add device.
+>> 		So we don't care that situation.
+>>
+>> This patch need to be applied to stable 3.4+
 > 
-> On Tue, Aug 13, 2013 at 02:25:19PM +0200, Sebastian Hesselbarth wrote:
-> > This patch set adds support for the PCIe controllers found on Marvell
-> > Dove SoCs. It depends on mvebu-pci patches sent by Thomas Petazzoni.
+> In this case...
 > 
-> Well, when it rains, it pours.  If this series looks good to you, I'll
-> go ahead and add it on top of Thomas' patches.
+>>
+>> Currently we don't update device's mps vaule when doing
+>> pci device hot-add. The hot-added device's mps will be set
+>> to default value (128B). But the upstream port device's mps
+>> may be larger than 128B which was set by firmware during
+>> system bootup. In this case the new added device may not
+>> work normally. This patch try to update the hot added device
+>> mps euqal to its parent mps, if device mpss < parent mps,
+>> print warning.
+>>
+>> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+>> Reported-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Cc: Jon Mason <jdmason@kudzu.us>
+>> Cc: stable@vger.kernel.org
+> 
+> The better tag is:
+> 
+> Cc: <stable@vger.kernel.org> # 3.4+
+> 
+> Otherwise you won't be notified if it can be applied to the most recent
+> stable version but failed in older versions.
 
-And I can confirm, this series definitely depends on mvebu/boards,
-mvebu/mbus_dt, and mvebu/msi_mvebu (which, in turn, depends on
-mvebu/msi_irq and mvebu/msi_pci).
+Will update, thanks!
 
-thx,
+> 
+> 
+> .
+> 
 
-Jason.
+
+-- 
+Thanks!
+Yijing
+
