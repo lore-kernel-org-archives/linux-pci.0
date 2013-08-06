@@ -1,57 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:5623 "EHLO SMTP02.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754526Ab3HVWT1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Aug 2013 18:19:27 -0400
-From: Zoltan Kiss <zoltan.kiss@citrix.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Zoltan Kiss <zoltan.kiss@citrix.com>
-Subject: [PATCH] pci: avoid unnecessary writing of the command register during probe
-Date: Thu, 22 Aug 2013 23:19:18 +0100
-Message-ID: <1377209958-26362-1-git-send-email-zoltan.kiss@citrix.com>
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:37710
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753996Ab3HFU7T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 16:59:19 -0400
+Message-ID: <520163A1.6040901@amd.com>
+Date: Tue, 6 Aug 2013 15:59:13 -0500
+From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Borislav Petkov <bp@alien8.de>
+CC: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<dougthompson@xmission.com>, <bhelgaas@google.com>,
+	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/3 V2] EDAC, AMD64_EDAC: Add PCI Device ID Functions
+ 3 and 4 for newer F15h models.
+References: <1375483384-2302-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <1375483384-2302-2-git-send-email-Aravind.Gopalakrishnan@amd.com> <20130806201742.GF14891@pd.tnic>
+In-Reply-To: <20130806201742.GF14891@pd.tnic>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While I tracked an another bug, I noticed that the PCI command register is
-quite often updated here unnecessarily.
-
-Signed-off-by: Zoltan Kiss <zoltan.kiss@citrix.com>
----
- drivers/pci/probe.c |   11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 46ada5c..54f6bec 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -178,8 +178,12 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 	/* No printks while decoding is disabled! */
- 	if (!dev->mmio_always_on) {
- 		pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
--		pci_write_config_word(dev, PCI_COMMAND,
--			orig_cmd & ~(PCI_COMMAND_MEMORY | PCI_COMMAND_IO));
-+		if (orig_cmd & (PCI_COMMAND_MEMORY | PCI_COMMAND_IO)) {
-+			pci_write_config_word(dev,
-+				PCI_COMMAND,
-+				orig_cmd &
-+				~(PCI_COMMAND_MEMORY | PCI_COMMAND_IO));
-+		}
- 	}
- 
- 	res->name = pci_name(dev);
-@@ -293,7 +297,8 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- fail:
- 	res->flags = 0;
- out:
--	if (!dev->mmio_always_on)
-+	if (!dev->mmio_always_on &&
-+		(orig_cmd & (PCI_COMMAND_MEMORY | PCI_COMMAND_IO)))
- 		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
- 
- 	if (bar_too_big)
--- 
-1.7.9.5
+On 8/6/2013 3:17 PM, Borislav Petkov wrote:
+> On Fri, Aug 02, 2013 at 05:43:02PM -0500, Aravind Gopalakrishnan wrote:
+>> Adding PCI_DEVICE_ID_AMD_15H_NB_M30H_F3 and PCI_DEVICE_ID_AMD_15H_NB_M30H_F4
+>> for F15h model 30h. This is required for the file amd_nb.c
+> ... and amd64_edac.c
+>
+> Also, remember to read the comment at the beginning of
+> include/linux/pci_ids.h!
+>
+> I fixed up the commit message when applying.
+>
+Okay, Thanks!
 
