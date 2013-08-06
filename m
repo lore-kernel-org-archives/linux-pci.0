@@ -1,94 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:53421 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334Ab3HSMMz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 08:12:55 -0400
-Date: Mon, 19 Aug 2013 14:12:39 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
- devm_ioremap_resource
-Message-ID: <20130819121238.GB5740@ulmo>
-References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
- <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr>
- <20130819120249.GA5740@ulmo>
- <alpine.DEB.2.02.1308191405450.2313@hadrien>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:46940 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756235Ab3HFUIW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 16:08:22 -0400
+Message-ID: <520157B2.8080205@wwwdotorg.org>
+Date: Tue, 06 Aug 2013 14:08:18 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="1UWUbFP1cBYEclgG"
-In-Reply-To: <alpine.DEB.2.02.1308191405450.2313@hadrien>
+To: Jason Cooper <jason@lakedaemon.net>
+CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv6 00/13] MSI support for Marvell EBU PCIe driver
+References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130806200256.GB19280@titan.lakedaemon.net>
+In-Reply-To: <20130806200256.GB19280@titan.lakedaemon.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 08/06/2013 02:02 PM, Jason Cooper wrote:
+> Thomas,
+> 
+> In order to get some testing in -next, I've *tentatively* applied this
+> series in the following way:
+> 
+> +---+ mvebu/msi_common (1,2,3,10)
+>     |
+>     +---+---+ mvebu/msi_irq (4-9)
+>             |
+>             +---+---+ mvebu/msi_mvebu (11-13)
+> 
+> I had to make one change to patch #9, I protected the last two blocks
+> with #ifdef CONFIG_PCI_MSI to prevent a build failure at that point.
+> 
+> mvebu/msi_common should be appropriate for Thierry to base off, however,
+> I make no guarantees about the stability of the branch until I send a
+> PR for it.  Code-wise, it should be fine, but the commit-ids may change
+> due to adding Tested-by's, etc.
 
---1UWUbFP1cBYEclgG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Aug 19, 2013 at 02:07:54PM +0200, Julia Lawall wrote:
->=20
->=20
-> On Mon, 19 Aug 2013, Thierry Reding wrote:
->=20
-> > On Mon, Aug 19, 2013 at 01:20:35PM +0200, Julia Lawall wrote:
-> > > From: Julia Lawall <Julia.Lawall@lip6.fr>
-> > >
-> > > Use devm_ioremap_resource instead of devm_request_and_ioremap.
-> > >
-> > > This was done using the semantic patch
-> > > scripts/coccinelle/api/devm_ioremap_resource.cocci
-> > >
-> > > Error-handling code was manually removed from the associated calls to
-> > > platform_get_resource.
-> > >
-> > > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> > >
-> > > ---
-> > > The first block of modified code is followed by a call to
-> > > devm_request_mem_region for pcie->cs with no associated ioremap.  Sho=
-uld
-> > > ioremap be used in this case as well?
-> >
-> > No. The pcie->cs resource is 256 MiB so it's challenging to map it at
-> > once. Furthermore it requires a non-linear mapping so we do it on
-> > demand.
->=20
-> OK, thanks for the explanation.  Is the comment, though, a little
-> misleading, since the mapping is not done here?
->=20
-> /* request and remap configuration space */
-
-Yes, that's misleading. Given that it doesn't really add anything useful
-information either, perhaps I should just remove it.
-
-Thanks,
-Thierry
-
---1UWUbFP1cBYEclgG
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSEgu2AAoJEN0jrNd/PrOhmpsQAKb6aXgLHss4xGOsb3X9t/bT
-Q7DlJBlTdTfUqsbBGt/GvzZBA5H4w3I9KY95L2zJSd8gRHq85Wg/zz7cs1DfnsAF
-TG9QNplpaVXZjrSKD7s+FByxT/gzf+b9qkqT1XnDN9X5x34wegRhaZt4k8yKBVn5
-VH7Rm4QsIWzPq9DPi8+FjbuK0fBLrWB9pMbw+Ebd1kGormHbMuIJ5uz5GvwxYyCS
-/wG1eYkW7W/UEoI9VqRrtRLfxyFcdqnj1MM6ZScsVGt41LbVK6DUjTVYbbYN+T9C
-clSzi7JEj8IJOlIaEJRGYkcvkwl0UnBPCSJRy/Pds4znDLrwFDGPzP2xGAihgH9g
-RTAeAFN5QuT8+Ik3uZ/NhySTg57C0qcLJXBnSsSbPOE86xjyKnAOw1bvFnS0Hpsf
-ijA8Hc9DbdfMzlZMpcKtdKM3DT80/aK2yI/+XOx02i4thavJkLq68gi1zZT4WoW0
-cUMXoK08qvUTD8z/c4u5Q/kA+KkDrlMciMC5CpPOPY+k2Hg88qcelY3xFCBo2Oqg
-nabPvbB63o2UG0v1WcIB5ud1/3T0Im+xa04CV6H975CZ/OZR9x60yUQQWWYZoOfy
-ANhe5qBlEo92LnQTqbFSNY6VR5THF3Wt4LZUzrwvyzVBNYjNJshs0vl8Fz03BsuC
-yZMGobA1UNTUhzPz46GD
-=M3fL
------END PGP SIGNATURE-----
-
---1UWUbFP1cBYEclgG--
+When do you intend to send the pull-request? I need a stable branch
+before I can even apply Thierry's changes, and I'd prefer to get those
+changes applied and in linux-next well before I send my pull requests to
+arm-soc. At the very latest, I need enough time to apply Thierry's
+patches on top of your final version of that branch, get it briefly
+tested, and then send a pull-request to arm-soc before -rc6 is out, so
+if your pull request goes in just before -rc6, that's going to be a problem.
