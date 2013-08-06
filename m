@@ -1,71 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:39025 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753567Ab3HEVAO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 17:00:14 -0400
-Received: by mail-oa0-f50.google.com with SMTP id i4so7386950oah.37
-        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 14:00:11 -0700 (PDT)
+Received: from mga14.intel.com ([143.182.124.37]:9649 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751305Ab3HFX1i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 Aug 2013 19:27:38 -0400
+Message-ID: <52018664.1080103@intel.com>
+Date: Tue, 06 Aug 2013 16:27:32 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
- <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
- <20130805195149.GA19127@google.com> <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 5 Aug 2013 14:59:51 -0600
-Message-ID: <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in pbus_size_io()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org, ddutile@redhat.com,
+	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 8/9] pci: Tune secondary bus reset timing
+References: <20130805193200.9260.38729.stgit@bling.home> <20130805193753.9260.35206.stgit@bling.home>
+In-Reply-To: <20130805193753.9260.35206.stgit@bling.home>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 5, 2013 at 2:52 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Aug 5, 2013 at 12:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> @@ -848,8 +848,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->>>               }
->>>       }
->>>
->>> -     if (min_align > io_align)
->>> -             min_align = io_align;
->>> +     if (min_align > PCI_P2P_DEFAULT_IO_ALIGN)
->>> +             min_align = PCI_P2P_DEFAULT_IO_ALIGN;
->>
->> But I still don't understand this one.  As far as I can tell,
->> "min_align > 4096" can happen only for arch-specific I/O window
->> requirements.  It can never happen because of a large device I/O BAR.
->>
->> Let's assume "min_align = window_alignment(bus, IORESOURCE_IO)" above set
->> min_align to 16KB because that's what pnv_pci_window_alignment() returned.
->> Why would we cap it to 4KB here?  I think we should set this:
->>
->>     b_res->start = 16384;
->>     b_res->end = b_res->start + size0 - 1;
->>     b_res->flags |= IORESOURCE_STARTALIGN;
->>
->> to indicate that the bridge needs a 16KB-aligned I/O window.
->>
->> In what case do we need to cap min_align to 4KB?
->>
->>>       size0 = calculate_iosize(size, min_size, size1,
->>>                       resource_size(b_res), min_align);
->
-> then, we should drop that 4k capping.
-> I was thinking there could be strange or wild res with bigger than 4k.
+On 08/05/2013 12:37 PM, Alex Williamson wrote:
+> The PCI spec indicates that with stable power, reset needs to be
+> asserted for a minimum of 1ms (Trst).  Seems like we should be able
+> to assume power is stable for a runtime secondary bus reset.  The
+> current code has always used 100ms with no explanation where that
+> came from.  The aer_do_secondary_bus_reset() function uses 2ms, but
+> that seems to be a misinterpretation of the PCIe spec, where hot
+> reset is implemented by TS1 ordered sets containing the hot reset
+> command.  After a 2ms delay the state machine enters the detect state,
+> but to generate a link down, only two consecutive TS1 hot reset
+> ordered sets are requred.  1ms should be plenty for that.
 
-If there *were* an I/O BAR larger than 4KB, how should it be handled?
-I don't think capping the alignment to 4KB sounds like the best way.
-For example, a 16KB I/O BAR would still need to be aligned on 16KB.
+The reason for doing a 2ms sleep is because the are supposed to be
+sending the Hot Reset TS1 Ordered-Sets continuously for 2ms per all of
+the documents I have read.  The 1ms number you quote is the minimum time
+for a conventional PCI bus.  I'm not completely sure of that applies as
+well to PCIe, nor does it represent the maximum recommended value.
 
-And I think capping to 4KB as you did above will break the powerpc
-pcibios_window_alignment() implementation.  For example, if
-pcibios_window_alignment() returned 16KB, and we later capped it to
-4KB, we're going to allocate space for the bridge window with the
-wrong alignment.
+If we stop early we risk not resetting the full device tree on the
+secondary bus which is the bug I was resolving by adding the 2ms delay. 
+Previously we saw that some devices were only getting their PCIe link
+retrained without performing a hot reset when the bit was not held for
+long enough.  I would prefer to keep this at 2 ms in order to account
+for the fact that PCIe has to go though link recovery states before it
+can perform the hot reset.
 
-Bjorn
+Thanks,
+
+Alex
+
+
