@@ -1,89 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:52564 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755750Ab3HOSlw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Aug 2013 14:41:52 -0400
-Date: Thu, 15 Aug 2013 20:41:49 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: "Luck, Tony" <tony.luck@intel.com>
-Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aristeu Rozanski Filho <arozansk@redhat.com>
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Message-ID: <20130815184149.GJ27616@pd.tnic>
-References: <520A1B5E.8040105@linux.vnet.ibm.com>
- <20130813094147.062317f8@concha.lan>
- <520A6A30.1030406@linux.vnet.ibm.com>
- <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
- <520B603E.3040002@linux.vnet.ibm.com>
- <20130814211504.393cf138@concha.lan>
- <20130815100132.GC27616@pd.tnic>
- <20130815103421.178a5224@samsung.com>
- <20130815135106.GG27616@pd.tnic>
- <3908561D78D1C84285E8C5FCA982C28F31CBCE72@ORSMSX106.amr.corp.intel.com>
+Received: from mail-we0-f182.google.com ([74.125.82.182]:45876 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754786Ab3HFXpW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 19:45:22 -0400
+Received: by mail-we0-f182.google.com with SMTP id u55so963117wes.27
+        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 16:45:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F31CBCE72@ORSMSX106.amr.corp.intel.com>
+In-Reply-To: <1375776540-23988-1-git-send-email-wangyijing@huawei.com>
+References: <1375776540-23988-1-git-send-email-wangyijing@huawei.com>
+Date: Tue, 6 Aug 2013 16:45:21 -0700
+Message-ID: <CAPoiz9wAufM8HV_Drdxg50zs5=1AduBUN5oXNRBHYqjwMCOTaQ@mail.gmail.com>
+Subject: Re: [PATCH -v3] PCI: update device mps when doing pci hotplug
+From: Jon Mason <jdmason@kudzu.us>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 15, 2013 at 06:16:48PM +0000, Luck, Tony wrote:
-> > * We parse some APEI table and disable those MCA banks which the BIOS
-> > wants to handle first.
+On Tue, Aug 6, 2013 at 1:09 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> v2->v3: Update CC stable tag suggested by Li Zefan.
+> v1->v2: Update patch log, remove Joe's reported-by, because his problem
+>         was mainly caused by BIOS incorrect setting. But this patch mainly
+>                 to fix the bug caused by device hot add. Conservatively, this
+>                 version only update the mps problem when hot add. When the device
+>                 mps < parent mps found, this patch try to update device mps.
+>                 It seems unlikely device mps > parent mps after hot add device.
+>                 So we don't care that situation.
 >
-> We have no idea which errors the BIOS has chosen for itself. We just
-> know which bank numbers ...
-
-Well, those which BIOS hasn't chosen for itself get simply handled up
-through, HEST it is, I think. So it all goes out in APEI anyway...
-
-> and Intel processors change mappings of which errors are logged in
-> which banks in every new processor tock (and sometimes tick). Some
-> banks are documented in processor datasheet. most are not. Most common
-> case might well be memory ... but it could be cache, or I/O, or ...
+> Currently we don't update device's mps vaule when doing
+> pci device hot-add. The hot-added device's mps will be set
+> to default value (128B). But the upstream port device's mps
+> may be larger than 128B which was set by firmware during
+> system bootup. In this case the new added device may not
+> work normally. This patch try to update the hot added device
+> mps euqal to its parent mps, if device mpss < parent mps,
+> print warning.
 >
-> So this doesn't help Mauro figure out whether to allow loading of an
-> EDAC driver that will peek and poke at chipset specific registers in
-> possibly racy ways with BIOS code doing the same thing.
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+> Reported-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Jon Mason <jdmason@kudzu.us>
+> Cc: stable@vger.kernel.org # 3.4+
+> ---
+>  drivers/pci/probe.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 43 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index cf57fe7..9b0e634 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1603,6 +1603,40 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>         return 0;
+>  }
+>
+> +static int pcie_bus_update_set(struct pci_dev *dev, void *data)
+> +{
+> +       int mps, p_mps;
+> +
+> +       if (!pci_is_pcie(dev) || !dev->bus->self)
+> +               return 0;
+> +
+> +       mps = pcie_get_mps(dev);
+> +       p_mps = pcie_get_mps(dev->bus->self);
+> +
+> +       if (mps < p_mps)
+> +               goto update;
 
-That doesn't matter - the only thing that matters is if an EDAC driver
-has anything additional to bring to the table. If it does, then it gets
-to see the errors before they're dumped to userspace. If not, then APEI
-should report them directly.
+It would be more clear to have it return 0 if mps >= p_mps, and not
+have the goto statement.
 
-Mind you, if we've disabled an MCA bank for the kernel then no EDAC
-driver gets to see errors from it either because APEI has taken
-responsibility. Unless said driver is poking around MCA registers -
-which it shouldn't.
+> +
+> +       return 0;
+> +
+> +update:
+> +       /* If current mpss is lager than upstream, use upstream mps to update
+> +        * current mps, otherwise print warning info.
+> +        */
+> +       if ((128 << dev->pcie_mpss) >= p_mps)
+> +               pcie_write_mps(dev, p_mps);
+> +       else
+> +               dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
+> +                               "If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
+> +                               mps, 128 << dev->pcie_mpss, p_mps);
+> +       return 0;
+> +}
+> +
+> +static void pcie_bus_update_setting(struct pci_bus *bus)
+> +{
+> +       if (bus->self->is_hotplug_bridge)
+> +               pci_walk_bus(bus, pcie_bus_update_set, NULL);
 
-So I'd guess the decision to load an EDAC driver should be a platform
-one. A platform which gives *sufficient* information in APEI tables for
-an error doesn't need an EDAC driver. Older platforms or platforms which
-cannot supply sufficient information for, say, properly pinpointing the
-DIMM, should use the additional help of an EDAC driver for that, if
-possible.
+Why not just call pcie_bus_configure_set(bus->self, &smpss); with smpss of 0?
 
-Which begs the most important question: do we even have a platform that
-can give us sufficient information without the need for an EDAC driver?
+> +}
+> +
+>  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+>   * parents then children fashion.  If this changes, then this code will not
+>   * work as designed.
+> @@ -1614,6 +1648,15 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+>         if (!pci_is_pcie(bus->self))
+>                 return;
+>
+> +       /* Sometimes we should update device mps here,
+> +        * eg. after hot add, device mps value will be
+> +        * set to default(128B), but the upstream port
+> +        * mps value may be larger than 128B, if we do
+> +        * not update the device mps, it maybe can not
+> +        * work normally.
 
-Because if not, we should stop wasting energy pointlessly and simply
-drop this discussion: we basically load an EDAC driver and do not do the
-APEI tracepoint because it simply doesn't make any sense and there's no
-actual platform giving us that info.
+This is slightly confusing to me.  It would be more clear to say:
+There are situations (i.e., hot add) where the upstream port might
+have a larger MPS than the device.  In these situations, the port MPS
+needs to be reconfigured to the lower value or the device will not
+operate properly.
 
-So, which is it?
+> +        */
+> +       pcie_bus_update_setting(bus);
 
--- 
-Regards/Gruss,
-    Boris.
+This only seems to be necessary in the "TUNE_OFF" case.  It would be
+best to move it under that, just 2 lines down.
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+> +
+>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+
+Perhaps it is time to make "SAFE" the default option, per the
+discussion at last years PCI mini-summit.
+Bjorn, thoughts?
+
+
+Thanks,
+Jon
+
+>                 return;
+>
+> --
+> 1.7.1
+>
+>
