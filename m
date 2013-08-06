@@ -1,58 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:54080 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752369Ab3HUXjc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 19:39:32 -0400
-Received: by mail-ob0-f169.google.com with SMTP id wc20so2242018obb.0
-        for <linux-pci@vger.kernel.org>; Wed, 21 Aug 2013 16:39:31 -0700 (PDT)
-Subject: [PATCH v7 3/5] PCI: Remove unnecessary check for pcie_get_mps()
- failure
-To: Yijing Wang <wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-	jiang.liu@huawei.com, Hanjun Guo <guohanjun@huawei.com>
-Date: Wed, 21 Aug 2013 17:39:29 -0600
-Message-ID: <20130821233929.2300.74057.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130821233722.2300.81773.stgit@bhelgaas-glaptop>
-References: <20130821233722.2300.81773.stgit@bhelgaas-glaptop>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:41078 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755491Ab3HFHiG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 03:38:06 -0400
+Message-ID: <5200A7D2.3080001@huawei.com>
+Date: Tue, 6 Aug 2013 15:37:54 +0800
+From: Li Zefan <lizefan@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Jon Mason <jdmason@kudzu.us>, <stable@vger.kernel.org>
+Subject: Re: [PATCH -v2] PCI: update device mps when doing pci hotplug
+References: <1375773838-33572-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1375773838-33572-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="GB2312"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing@huawei.com>
+On 2013/8/6 15:23, Yijing Wang wrote:
+> v1->v2: Update patch log, remove Joe's reported-by, because his problem
+>         was mainly caused by BIOS incorrect setting. But this patch mainly
+> 		to fix the bug caused by device hot add. Conservatively, this 
+> 		version only update the mps problem when hot add. When the device
+> 		mps < parent mps found, this patch try to update device mps.
+> 		It seems unlikely device mps > parent mps after hot add device.
+> 		So we don't care that situation.
+> 
+> This patch need to be applied to stable 3.4+
 
-After 59875ae489 ("PCI/core: Use PCI Express Capability accessors"),
-pcie_get_mps() never returns an error, so don't bother to check for it.
+In this case...
 
-No functional change.
+> 
+> Currently we don't update device's mps vaule when doing
+> pci device hot-add. The hot-added device's mps will be set
+> to default value (128B). But the upstream port device's mps
+> may be larger than 128B which was set by firmware during
+> system bootup. In this case the new added device may not
+> work normally. This patch try to update the hot added device
+> mps euqal to its parent mps, if device mpss < parent mps,
+> print warning.
+> 
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+> Reported-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Jon Mason <jdmason@kudzu.us>
+> Cc: stable@vger.kernel.org
 
-[bhelgaas: changelog, fix pcie_get_mps() doc]
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c |    3 ---
- 1 file changed, 3 deletions(-)
+The better tag is:
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e37fea6..5bb97ee 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3525,8 +3525,6 @@ int pcie_set_readrq(struct pci_dev *dev, int rq)
- 	if (pcie_bus_config == PCIE_BUS_PERFORMANCE) {
- 		int mps = pcie_get_mps(dev);
- 
--		if (mps < 0)
--			return mps;
- 		if (mps < rq)
- 			rq = mps;
- 	}
-@@ -3543,7 +3541,6 @@ EXPORT_SYMBOL(pcie_set_readrq);
-  * @dev: PCI device to query
-  *
-  * Returns maximum payload size in bytes
-- *    or appropriate error value.
-  */
- int pcie_get_mps(struct pci_dev *dev)
- {
+Cc: <stable@vger.kernel.org> # 3.4+
+
+Otherwise you won't be notified if it can be applied to the most recent
+stable version but failed in older versions.
 
