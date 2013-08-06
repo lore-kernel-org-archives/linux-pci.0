@@ -1,114 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:54602 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933927Ab3HIOtw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:52 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v6 08/14] ARM: tegra: Add Tegra30 PCIe support
-Date: Fri,  9 Aug 2013 16:49:26 +0200
-Message-Id: <1376059772-16669-9-git-send-email-treding@nvidia.com>
-In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
-References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:51118 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755113Ab3HFPeR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 11:34:17 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 7 Aug 2013 12:29:05 +1000
+Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5A35F2BB0052
+	for <linux-pci@vger.kernel.org>; Wed,  7 Aug 2013 01:34:13 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r76FY28c66126042
+	for <linux-pci@vger.kernel.org>; Wed, 7 Aug 2013 01:34:02 +1000
+Received: from d23av02.au.ibm.com (loopback [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r76FYCRH006644
+	for <linux-pci@vger.kernel.org>; Wed, 7 Aug 2013 01:34:13 +1000
+Date: Tue, 6 Aug 2013 23:34:10 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
+ pbus_size_io()
+Message-ID: <20130806153410.GA10680@weiyang.vnet.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
+ <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
+ <20130805195149.GA19127@google.com>
+ <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
+ <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
+ <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
+ <20130805222135.GA29875@google.com>
+ <20130806061534.GA10876@weiyang.vnet.ibm.com>
+ <20130806133929.GB31970@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130806133929.GB31970@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the top-level pcie-controller node for the Tegra30 SoC. Tegra30 has
-three root ports that can use different lane layouts.
+On Tue, Aug 06, 2013 at 07:39:29AM -0600, Bjorn Helgaas wrote:
+>> Personal Conclusion
+>> ============================================================================
+>> I think Bjorn's patch works.
+>> Will test on powernv platform and give the result.
+>
+>Great, let me know what happens.
 
-Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v5:
-- use symbolic constants for interrupts and clocks
+In both case, with/with out your patch, the assignment result is the same.
+Below is the /proc/ioports file.
 
- arch/arm/boot/dts/tegra30.dtsi | 70 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 70 insertions(+)
+00010000-0080ffff : /io-hub@3efe00000000/pciex@3efe00080000
+  00010000-00010fff : Legacy IO
+  00020000-0003ffff : PCI Bus 0000:01
+    00020000-0003ffff : PCI Bus 0000:02
+      00020000-0002ffff : PCI Bus 0000:40
+      00030000-0003ffff : PCI Bus 0000:a0
+00820000-0101ffff : /io-hub@3efe00000000/pciex@3efe00090000
+  00820000-00820fff : Legacy IO
+  00830000-0083ffff : PCI Bus 0001:01
+01030000-0182ffff : /io-hub@3efe00000000/pciex@3efe000a0000
+  01030000-01030fff : Legacy IO
+  01040000-0104ffff : PCI Bus 0002:01
+01840000-0203ffff : /io-hub@3efe00000000/pciex@3efe000b0000
+  01840000-01840fff : Legacy IO
+  01850000-0185ffff : PCI Bus 0003:01
+02050000-0284ffff : /io-hub@3efe00000000/pciex@3efe000c0000
+  02050000-02050fff : Legacy IO
+  02060000-0206ffff : PCI Bus 0004:01
+02860000-0305ffff : /io-hub@3efe00000000/pciex@3efe000d0000
+  02860000-02860fff : Legacy IO
+  02870000-0287ffff : PCI Bus 0005:01
 
-diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
-index d8783f0..c8facca 100644
---- a/arch/arm/boot/dts/tegra30.dtsi
-+++ b/arch/arm/boot/dts/tegra30.dtsi
-@@ -16,6 +16,76 @@
- 		serial4 = &uarte;
- 	};
- 
-+	pcie-controller {
-+		compatible = "nvidia,tegra30-pcie";
-+		device_type = "pci";
-+		reg = <0x00003000 0x00000800   /* PADS registers */
-+		       0x00003800 0x00000200   /* AFI registers */
-+		       0x10000000 0x10000000>; /* configuration space */
-+		reg-names = "pads", "afi", "cs";
-+		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH   /* controller interrupt */
-+			      GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
-+		interrupt-names = "intr", "msi";
-+
-+		bus-range = <0x00 0xff>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
-+			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
-+			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
-+			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
-+			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
-+			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
-+
-+		clocks = <&tegra_car TEGRA30_CLK_PCIE>,
-+			 <&tegra_car TEGRA30_CLK_AFI>,
-+			 <&tegra_car TEGRA30_CLK_PCIEX>,
-+			 <&tegra_car TEGRA30_CLK_PLL_E>,
-+			 <&tegra_car TEGRA30_CLK_CML0>;
-+		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
-+		status = "disabled";
-+
-+		pci@1,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82000800 0 0x00000000 0 0x1000>;
-+			reg = <0x000800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@2,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001000 0 0x00001000 0 0x1000>;
-+			reg = <0x001000 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@3,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001800 0 0x00004000 0 0x1000>;
-+			reg = <0x001800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+	};
-+
- 	host1x {
- 		compatible = "nvidia,tegra30-host1x", "simple-bus";
- 		reg = <0x50000000 0x00024000>;
+The arch_align is 0x10000. When sizing for Bus 0000:01, its child has a I/O
+bridge window with size 0x20000/alignment 0x10000. And the result
+[0x20000,0x3ffff] looks like size 0x20000/alignment 0x20000 or size
+0x20000/alignment 0x10000. 
+
+But I still think the alignment is 0x10000.
+
+>
+>Bjorn
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.8.3.4
+Richard Yang
+Help you, Help me
 
