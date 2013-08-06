@@ -1,67 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp09.in.ibm.com ([122.248.162.9]:58444 "EHLO
-	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758247Ab3HBJdr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 05:33:47 -0400
-Received: from /spool/local
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 2 Aug 2013 14:58:16 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id E6770E0053
-	for <linux-pci@vger.kernel.org>; Fri,  2 Aug 2013 15:03:51 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r729Xcs747644820
-	for <linux-pci@vger.kernel.org>; Fri, 2 Aug 2013 15:03:38 +0530
-Received: from d28av03.in.ibm.com (loopback [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r729Xdti020153
-	for <linux-pci@vger.kernel.org>; Fri, 2 Aug 2013 19:33:40 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linuxram@us.ibm.com, shangw@linux.vnet.ibm.com,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH 3/4] PCI: trivial cleanup in pbus_size_io()
-Date: Fri,  2 Aug 2013 17:31:05 +0800
-Message-Id: <1375435866-16332-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from top.free-electrons.com ([176.31.233.9]:53394 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755965Ab3HFKju (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 06:39:50 -0400
+Date: Tue, 6 Aug 2013 12:39:33 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tushar Behera <tushar.behera@linaro.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>, patches@linaro.org,
+	sachin.kamat@linaro.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: Re: [PATCH V2 6/6] pci: mvebu: Convert to use devm_ioremap_resource
+Message-ID: <20130806123933.2f33828b@skate>
+In-Reply-To: <CAErSpo7hHSmO6euUtJABLB-xeK9u+J2h6z905e5DrcZv5gZoEA@mail.gmail.com>
+References: <1370864113-17895-14-git-send-email-tushar.behera@linaro.org>
+	<1371460573-30004-1-git-send-email-tushar.behera@linaro.org>
+	<CAErSpo7hHSmO6euUtJABLB-xeK9u+J2h6z905e5DrcZv5gZoEA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch did several cleanup in pbus_size_io():
-1. change the type of size to resource_size_t
-2. fix the warning in dev_printk() for the change of type
+Dear Bjorn Helgaas,
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/setup-bus.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+[+cc Jason Cooper, Gregory Clement and Ezequiel Garcia]
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 939ca1b..d4f1ad9 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -747,7 +747,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- {
- 	struct pci_dev *dev;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
--	unsigned long size = 0, size0 = 0, size1 = 0;
-+	resource_size_t size = 0, size0 = 0, size1 = 0;
- 	resource_size_t children_add_size = 0;
- 	resource_size_t min_align, io_align, align;
- 
-@@ -807,8 +807,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		add_to_list(realloc_head, bus->self, b_res, size1-size0,
- 			    min_align);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
--				 "%pR to %pR add_size %lx\n", b_res,
--				 &bus->busn_res, size1-size0);
-+				 "%pR to %pR add_size %llx\n", b_res,
-+				 &bus->busn_res,
-+				 (unsigned long long)size1-size0);
- 	}
- }
- 
+On Tue, 23 Jul 2013 12:38:28 -0600, Bjorn Helgaas wrote:
+> [+cc Thomas]
+> 
+> On Mon, Jun 17, 2013 at 3:16 AM, Tushar Behera <tushar.behera@linaro.org> wrote:
+> > Commit 75096579c3ac ("lib: devres: Introduce devm_ioremap_resource()")
+> > introduced devm_ioremap_resource() and deprecated the use of
+> > devm_request_and_ioremap().
+> >
+> > While at it, modify mvebu_pcie_map_registers() to propagate error code.
+> >
+> > Signed-off-by: Tushar Behera <tushar.behera@linaro.org>
+> > CC: linux-pci@vger.kernel.org
+> > CC: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Thomas has a bunch of mvebu patches in the pipeline, so I assume he
+> will incorporate this if appropriate.  I don't want to put it in my
+> tree and cause conflicts with his changes.  Let me know if I should do
+> something else here.
+
+I don't really have that many pci-mvebu.c patches in the pipeline
+actually. The only one I have is to enable MSI support, and it's a
+fairly light one that should not conflict too badly with this one.
+
+Therefore, Bjorn, I believe this patch could go through your tree,
+either for 3.11 or 3.12 as you prefer.
+
+Best regards,
+
+Thomas Petazzoni
 -- 
-1.7.5.4
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
