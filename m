@@ -1,289 +1,153 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 29 Aug 2013 14:12:31 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3] ACPI: Fix osc flag setup ordering to allow pcie
- hotplug use when available
-Message-ID: <20130829181231.GA2285@hmsreliant.think-freely.org>
-References: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com>
- <1377531553-17716-1-git-send-email-nhorman@tuxdriver.com>
- <20130829174713.GA6489@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:47894 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753591Ab3HFIeo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 04:34:44 -0400
+Received: by mail-wg0-f47.google.com with SMTP id j13so89153wgh.26
+        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 01:34:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130829174713.GA6489@google.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20130806073633.GA21492@jtlinux>
+References: <CAPWoNkJ3NKM-_g93LdRpjvdNFtLt-Pjpg4d4oEKC9CvkpzZ-Wg@mail.gmail.com>
+ <CAPWoNkLQUbFG2vZ7wqoqqVNj4uxKz3Fa_vsSH=1_TDD=XC1f2A@mail.gmail.com>
+ <CAErSpo5ZZgdpkK+QdQUEnNCEXcG_T+QBWTVoQnMTghxkX7n2HA@mail.gmail.com>
+ <20130806070703.GA20622@jtlinux> <CAPWoNkKo6Cfg0Hr2QYBXVnUrC-UQwES65UUHfSvR3nBvZrfFoA@mail.gmail.com>
+ <20130806073633.GA21492@jtlinux>
+From: Leon Ravich <lravich@gmail.com>
+Date: Tue, 6 Aug 2013 11:34:22 +0300
+Message-ID: <CAPWoNkJN-BnqZZdM9Y0dGnnuYemkjg9BY4j-exEL50mqfBO66w@mail.gmail.com>
+Subject: Re: PCIE device errors after linux kernel upgrade
+To: Johannes Thumshirn <johannes.thumshirn@men.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 29, 2013 at 11:47:13AM -0600, Bjorn Helgaas wrote:
-> On Mon, Aug 26, 2013 at 11:39:13AM -0400, Neil Horman wrote:
-> > Somewhere between 3.9 and 3.10 it seems the order in which pcie and acpi probed
-> > slots for hotplug capabilites got reversed.  While this isn't a big deal, it did
-> > uncover a bug in the ACPI bus setup path.  Specifically, acpi_pci_root_add calls
-> > pci_acpi_scan_root before setting the osc flags for the device handle.
-> > pci_acpi_scan_root, among other things uses device_is_managed_by_native_pciehp()
-> > to determine if a given slot has pcie hotplug capabilties, whcih checks the
-> > devices OSC_PCI_EXPRESS_NATIVE_HP_CONTROL flag.  Since that flag is not set
-> > until after pci_acpi_scan_root_completes, the acpi code never sees that pcie
-> > slots are hotplug capable and configures them all to use acpi instead.
-> > 
-> > Fix is pretty simple, just defer the scan until after the osc flags have been
-> > set on the device.  Tested by myself and it seems to work well.
-> > 
-> > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> > CC: Len Brown <lenb@kernel.org>
-> > CC: "Rafael J. Wysocki" <rjw@sisk.pl>
-> > CC: Bjorn Helgaas <bhelgaas@google.com>
-> > CC: linux-acpi@vger.kernel.org
-> > CC: linux-pci@vger.kernel.org
-> > 
-> > ---
-> > Change notes:
-> > v2) eferred the disabling of aspm until after the acpi scan of the pci bus is
-> > complete.  This was done to allow proper handling of pcie 1.1 devices, as per:
-> > 
-> > commit b8178f130e25c1bdac1c33e0996f1ff6e20ec08e
-> > Author: Bjorn Helgaas <bhelgaas@google.com>
-> > Date:   Mon Apr 1 15:47:39 2013 -0600
-> > 
-> >     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
-> > 
-> > As discussed previously in the thread the disable logic for aspm needs to be
-> > untangled and refactored, which is not something I'm sufficently versed in teh
-> > hotplug code to do right now, but this fixes the problem above, and prevents the
-> > problem that necessitated the revert without adding any visible complexity to
-> > the user, so I think its ok.
-> > 
-> > v3) Fixup stupid authorship error
-> > ---
-> >  drivers/acpi/pci_root.c | 54 +++++++++++++++++++++++++++++--------------------
-> >  1 file changed, 32 insertions(+), 22 deletions(-)
-> > 
-> > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> > index 5917839..1e80a90 100644
-> > --- a/drivers/acpi/pci_root.c
-> > +++ b/drivers/acpi/pci_root.c
-> > @@ -378,6 +378,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >  	struct acpi_pci_root *root;
-> >  	u32 flags, base_flags;
-> >  	acpi_handle handle = device->handle;
-> > +	bool no_aspm = false;
-> >  
-> >  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
-> >  	if (!root)
-> > @@ -437,27 +438,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >  	flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
-> >  	acpi_pci_osc_support(root, flags);
-> >  
-> > -	/*
-> > -	 * TBD: Need PCI interface for enumeration/configuration of roots.
-> > -	 */
-> > -
-> > -	/*
-> > -	 * Scan the Root Bridge
-> > -	 * --------------------
-> > -	 * Must do this prior to any attempt to bind the root device, as the
-> > -	 * PCI namespace does not get created until this call is made (and
-> > -	 * thus the root bridge's pci_dev does not exist).
-> > -	 */
-> > -	root->bus = pci_acpi_scan_root(root);
-> > -	if (!root->bus) {
-> > -		dev_err(&device->dev,
-> > -			"Bus %04x:%02x not present in PCI namespace\n",
-> > -			root->segment, (unsigned int)root->secondary.start);
-> > -		result = -ENODEV;
-> > -		goto end;
-> > -	}
-> > -
-> > -	/* Indicate support for various _OSC capabilities. */
-> >  	if (pci_ext_cfg_avail())
-> >  		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
-> >  	if (pcie_aspm_support_enabled()) {
-> > @@ -512,7 +492,14 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >  				acpi_format_exception(status), flags);
-> >  			dev_info(&device->dev,
-> >  				 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
-> > -			pcie_no_aspm();
-> > +			/*
-> > +			 * We want to disable aspm here, but aspm_disabled
-> > +			 * needs to remain in its state from boot so that we
-> > +			 * properly handle pcie 1.1 devices.  So we set this
-> > +			 * flag here, to defer the action until after the acpi
-> > +			 * root scan
-> > +			 */
-> > +			no_aspm = true;
-> >  		}
-> >  	} else {
-> >  		dev_info(&device->dev,
-> > @@ -520,6 +507,29 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >  			 "(_OSC support mask: 0x%02x)\n", flags);
-> >  	}
-> >  
-> > +	/*
-> > +	 * TBD: Need PCI interface for enumeration/configuration of roots.
-> > +	 */
-> > +
-> > +	/*
-> > +	 * Scan the Root Bridge
-> > +	 * --------------------
-> > +	 * Must do this prior to any attempt to bind the root device, as the
-> > +	 * PCI namespace does not get created until this call is made (and
-> > +	 * thus the root bridge's pci_dev does not exist).
-> > +	 */
-> > +	root->bus = pci_acpi_scan_root(root);
-> > +	if (!root->bus) {
-> > +		dev_err(&device->dev,
-> > +			"Bus %04x:%02x not present in PCI namespace\n",
-> > +			root->segment, (unsigned int)root->secondary.start);
-> > +		result = -ENODEV;
-> > +		goto end;
-> > +	}
-> > +
-> > +	if (no_aspm)
-> > +		pcie_no_aspm();
-> > +
-> >  	pci_acpi_add_bus_pm_notifier(device, root->bus);
-> >  	if (device->wakeup.flags.run_wake)
-> >  		device_set_run_wake(root->bus->bridge, true);
-> 
-> I think there are two problems with this patch:
-> 
->   1) There's another call of pcie_no_aspm() at line 454 (in the
->   error path when acpi_pci_osc_support() fails), which happens
->   before scanning the bus.  I think this needs to be converted to
->   "no_aspm = true" as you did for the one in the error path when
->   acpi_pci_osc_control_set() fails.
-> 
-I was wondering about that.  I left it alone because this patch didn't introduce
-that condition (callingpcie_no_aspm at line 454).  I thought perhaps there was
-something there I didn't completely understand, but yes, I agree, it seems like
-it should use the no_aspm just like the call I converted.
+>> Have you looked up the error values from the EDAC driver?
+[   37.961580] PCIE error(s) detected
+[   37.964971] PCIE ERR_DR register: 0x00020000
+    => Invalid CONFIG_ADDR/PEX_CONFIG_DATA access detected
+[   37.969229] PCIE ERR_CAP_STAT register: 0x00000041               =>
+Transaction originated from PEX_CONFIG_ADDR/PEX_CONFIG_DATA.
+[   37.974008] PCIE ERR_CAP_R0 register: 0x00000800
+=> PCI Express packet format 0,  PCI express packet type  4
+[   37.978614] PCIE ERR_CAP_R1 register: 0x00000000
+[   37.983218] PCIE ERR_CAP_R2 register: 0x00000000
+[   37.987823] PCIE ERR_CAP_R3 register: 0x00000000
 
->   2) You effectively moved the call of "pcie_clear_aspm(root->bus)"
->   so it now happens before scanning the bus, which will cause a
->   NULL pointer dereference if we take that path.
-> 
-Yes, you're correct, and I missed that, we need to defer that call just like we
-do with pcie_no_aspm.
+>> If it's just a reboot without panic, could there be a watchdog resetting the
+>> board?
+
+does not look like a  watch dog , no watch dog printout. no freeze .
 
 
-> I think we need something like the patch below on top of your
-> v3 patch.  Can you take a look and see if this makes sense, and
-> if so, update your patch to include these or similar fixes?
-> 
-I agree, I'll send a v4 tomorrow, with these changes incorporated, and an
-updated changelog reflecting the exact problem we're solving here.
 
-Thanks!
-Neil
+On 6 August 2013 10:36, Johannes Thumshirn <johannes.thumshirn@men.de> wrote:
+> On Tue, Aug 06, 2013 at 10:26:18AM +0300, Leon Ravich wrote:
+>> Hi Johannes
+>> no panic just reboot.
+>> it is not the first read, it takes few minutes of work with pcie to reboot.
+>>
+>
+> Ah, OK. Unfortunately I can't really help you then.
+>
+> Have you looked up the error values from the EDAC driver?
+>
+> If it's just a reboot without panic, could there be a watchdog resetting the
+> board?
+>
+>
+>>
+>>
+>> On 6 August 2013 10:07, Johannes Thumshirn <johannes.thumshirn@men.de> wrote:
+>> > On Mon, Aug 05, 2013 at 09:38:45AM -0600, Bjorn Helgaas wrote:
+>> >> [+cc linuxppc-dev]
+>> >>
+>> >> On Mon, Aug 5, 2013 at 5:17 AM, Leon Ravich <lravich@gmail.com> wrote:
+>> >> > Hi all ,
+>> >> > I am trying to upgrade ours embedded device (freescale powerPC P2020 cpu)
+>> >> > linux kernel  , till now we used 2.6.32 I am trying to upgrade to 3.8.13 .
+>> >> > I took the source from freescale git:
+>> >> > git://git.freescale.com/ppc/sdk/linux.git
+>> >> >
+>> >> > on our embedded device we have an FPGA connected through PCIE .
+>> >> >
+>> >> > on each boot we loading the rbf design to the FPGA and the rescan pci bus to let
+>> >> > kernel detect it .
+>> >> >
+>> >> > during the rescan I getting error messages:
+>> >> >  genirq: Setting trigger mode 0 for irq 27 failed
+>> >> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> >> > [   22.060898] genirq: Setting trigger mode 0 for irq 28 failed
+>> >> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> >> > [   22.069461] genirq: Setting trigger mode 0 for irq 31 failed
+>> >> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> >> > [   22.078010] genirq: Setting trigger mode 0 for irq 32 failed
+>> >> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> >> > [   22.086576] genirq: Setting trigger mode 0 for irq 33 failed
+>> >> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> >> > [   22.095143] genirq: Setting trigger mode 0 for irq 37 failed
+>> >> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> >> > [   22.103715] genirq: Setting trigger mode 0 for irq 38 failed
+>> >> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> >> > [   22.112282] genirq: Setting trigger mode 0 for irq 39 failed
+>> >> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> >>
+>> >> Hmm, I don't know much about IRQ issues.
+>> >>
+>> >> > [   37.945785] pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't
+>> >> > match header type 01)
+>> >>
+>> >> There's a recent patch related to this:
+>> >> http://lkml.kernel.org/r/1374823418-1550-1-git-send-email-Chunhe.Lan@freescale.com
+>> >>
+>> >> > [   37.953640] PCIE error(s) detected
+>> >> > [   37.953858] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+>> >> > [   37.953988] pci 0000:00:00.0: BAR 8: assigned [mem 0xc0000000-0xdfffffff]
+>> >> > [   37.953994] pci 0000:00:00.0: BAR 7: can't assign io (size 0x10000)
+>> >> > [   37.954000] pci 0000:01:00.0: BAR 0: assigned [mem 0xc0000000-0xc00fffff]
+>> >> > [   37.954013] pci 0000:01:00.0: BAR 1: assigned [mem 0xc0100000-0xc017ffff]
+>> >> > [   37.954025] pci 0000:01:00.0: BAR 2: assigned [mem 0xc0180000-0xc01fffff]
+>> >> > [   37.954036] pci 0000:00:00.0: PCI bridge to [bus 01]
+>> >> > [   37.954041] pci 0000:00:00.0:   bridge window [mem 0xc0000000-0xdfffffff]
+>> >> > [   38.007354] PCIE ERR_DR register: 0x80020000
+>> >> > [   38.011613] PCIE ERR_CAP_STAT register: 0x00000041
+>> >> > [   38.016392] PCIE ERR_CAP_R0 register: 0x00000800
+>> >> > [   38.020997] PCIE ERR_CAP_R1 register: 0x00000000
+>> >> > [   38.025602] PCIE ERR_CAP_R2 register: 0x00000000
+>> >> > [   38.030207] PCIE ERR_CAP_R3 register: 0x00000000
+>> >> >
+>> >> >
+>> >> > and after a few minutes I linux reboot it self,
+>> >> >
+>> >> >
+>> >> > where can I start debugging it??
+>> >>
+>> >> I'd start by applying the header quirk patch above, then comparing the
+>> >> complete console log (boot with "ignore_loglevel") from 2.6.32 and
+>> >> 3.8.13.
+>> >>
+>> >> Bjorn
+>> >> _______________________________________________
+>> >> Linuxppc-dev mailing list
+>> >> Linuxppc-dev@lists.ozlabs.org
+>> >> https://lists.ozlabs.org/listinfo/linuxppc-dev
+>> >
+>> > Hi,
+>> >
+>> > I have a similar problem here on a P4080 based board with the same 3.8 Kernel
+>> > from freescale git. Does your system panic (maybe due to a machine check
+>> > exception)?  If yes could it be the first read from the PCI device?
+>> >
+>> > Johannes
+>>
+>>
+>>
+>> --
+>> Leonid Ravich
 
-> Here are my notes about where the ASPM and root->osc_control_set 
-> setting and testing happen.
-> 
-> Before your patch:
-> 
->     acpi_pci_root_add
->       root = kzalloc			# root->osc_control_set = 0
->       acpi_pci_osc_support		# indicate OS support for segments
->       root->bus = pci_acpi_scan_root	# SCAN BUS
-> 	pci_create_root_bus
-> 	  pcibios_add_bus
-> 	    acpi_pci_add_bus
-> 	      acpiphp_enumerate_slots
-> 		acpi_walk_namespace(..., register_slot, ...)
-> 		  register_slot
-> 		    device_is_managed_by_native_pciehp
-> 		      <test root->osc_control_set>	# root->osc_control_set == 0
-> 		    return if OS has PCIe hotplug control (we never do)
-> 		    acpiphp_register_hotplug_slot (so we always do this)
->       acpi_pci_osc_support		# indicate OS support for MSI, ASPM, etc
->       if (_osc_support() failed)
-> 	pci_no_aspm
->       acpi_pci_osc_control_set		# request OS control of hotplug, PME, AER, etc
-> 	root->osc_control_set = XX
->       if (_osc_control_set() succeeded) {
-> 	if (FADT NO_ASPM bit)
-> 	  pcie_clear_aspm
-> 	    list_for_each_entry(..., &bus->devices, ...)
->       } else
-> 	pcie_no_aspm			# _osc_control_set() failed
-> 
-> After your patch:
-> 
->     acpi_pci_root_add
->       root = kzalloc			# root->osc_control_set = 0
->       acpi_pci_osc_support		# indicate OS support for segments
->       if (_osc_support() failed)
-> 	pci_no_aspm			# ** (1) before bus scan
->       acpi_pci_osc_support		# indicate OS support for MSI, ASPM, etc
->       acpi_pci_osc_control_set		# request OS control of hotplug, PME, AER, etc
-> 	root->osc_control_set = XX
->       if (_osc_control_set() succeeded) {
-> 	if (FADT NO_ASPM bit)
-> 	  pcie_clear_aspm(root->bus)	# ** (2) root->bus == NULL
-> 	    list_for_each_entry(..., &bus->devices, ...)
->       } else
-> 	no_aspm = true			# _osc_control_set() failed
->       root->bus = pci_acpi_scan_root	# SCAN BUS
-> 	pci_create_root_bus
-> 	  pcibios_add_bus
-> 	    acpi_pci_add_bus
-> 	      acpiphp_enumerate_slots
-> 		acpi_walk_namespace(..., register_slot, ...)
-> 		  register_slot
-> 		    device_is_managed_by_native_pciehp
-> 		      <test root->osc_control_set>
-> 		    return if OS has PCIe hotplug control
-> 		    acpiphp_register_hotplug_slot
->       if (no_aspm)
-> 	pcie_no_aspm
-> 
-> 
-> Bjorn
-> 
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index a37a372..a67853e 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -378,7 +378,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	struct acpi_pci_root *root;
->  	u32 flags, base_flags;
->  	acpi_handle handle = device->handle;
-> -	bool no_aspm = false;
-> +	bool no_aspm = false, clear_aspm = false;
->  
->  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
->  	if (!root)
-> @@ -451,7 +451,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		if (ACPI_FAILURE(status)) {
->  			dev_info(&device->dev, "ACPI _OSC support "
->  				"notification failed, disabling PCIe ASPM\n");
-> -			pcie_no_aspm();
-> +			no_aspm = true;
->  			flags = base_flags;
->  		}
->  	}
-> @@ -483,7 +483,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  				 * We have ASPM control, but the FADT indicates
->  				 * that it's unsupported. Clear it.
->  				 */
-> -				pcie_clear_aspm(root->bus);
-> +				clear_aspm = true;
->  			}
->  		} else {
->  			dev_info(&device->dev,
-> @@ -527,6 +527,10 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		goto end;
->  	}
->  
-> +	if (clear_aspm) {
-> +		dev_info(&device->dev, "Disabling ASPM (FADT indicates it is unsupported)\n");
-> +		pcie_clear_aspm(root->bus);
-> +	}
->  	if (no_aspm)
->  		pcie_no_aspm();
->  
-> 
+
+
+-- 
+Leonid Ravich
