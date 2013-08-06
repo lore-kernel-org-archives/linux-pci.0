@@ -1,96 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:35955 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754957Ab3HANHJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:07:09 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH -v4 6/6] PCI,pciehp: identify device change during suspend
-Date: Thu, 1 Aug 2013 21:06:29 +0800
-Message-ID: <1375362389-26096-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
-References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:32903 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754986Ab3HFH0k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 03:26:40 -0400
+Received: by mail-wg0-f53.google.com with SMTP id c11so36904wgh.20
+        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 00:26:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130806070703.GA20622@jtlinux>
+References: <CAPWoNkJ3NKM-_g93LdRpjvdNFtLt-Pjpg4d4oEKC9CvkpzZ-Wg@mail.gmail.com>
+ <CAPWoNkLQUbFG2vZ7wqoqqVNj4uxKz3Fa_vsSH=1_TDD=XC1f2A@mail.gmail.com>
+ <CAErSpo5ZZgdpkK+QdQUEnNCEXcG_T+QBWTVoQnMTghxkX7n2HA@mail.gmail.com> <20130806070703.GA20622@jtlinux>
+From: Leon Ravich <lravich@gmail.com>
+Date: Tue, 6 Aug 2013 10:26:18 +0300
+Message-ID: <CAPWoNkKo6Cfg0Hr2QYBXVnUrC-UQwES65UUHfSvR3nBvZrfFoA@mail.gmail.com>
+Subject: Re: PCIE device errors after linux kernel upgrade
+To: Johannes Thumshirn <johannes.thumshirn@men.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If device was removed from slot and reinsert a new device during
-suspend, pciehp can not identify the physical device change now.
-So the old driver .resume() method will be called for the new device,
-this is bad. If device support device serial number capability,
-we can identify this by DSN. So the reasonable way is first remove
-the old device, then enable the new device.
+Hi Johannes
+no panic just reboot.
+it is not the first read, it takes few minutes of work with pcie to reboot.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/hotplug/pciehp_core.c |   34 +++++++++++++++++++++++++++++++---
- 1 files changed, 31 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 7fe9dbd..db5f597 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -301,6 +301,8 @@ static int pciehp_resume (struct pcie_device *dev)
- 	struct controller *ctrl;
- 	struct slot *slot;
- 	struct pci_bus *pbus = dev->port->subordinate;
-+	struct pci_dev *pdev;
-+	int ret = 0;
- 	u8 status;
- 
- 	ctrl = get_service_data(dev);
-@@ -315,10 +317,36 @@ static int pciehp_resume (struct pcie_device *dev)
- 	if (status) {
- 		if (list_empty(&pbus->devices))
- 			pciehp_enable_slot(slot);
--	} else if (!list_empty(&pbus->devices)) {
--		pciehp_disable_slot(slot);
-+
-+		pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
-+		if (!pdev)
-+			return 0;
-+		ret = pci_serial_number_changed(pdev);
-+		pci_dev_put(pdev);
-+		if (ret) {
-+			/*
-+			 * first power off slot, avoid the old driver
-+			 * .remove() method touch the new hardware
-+			 */
-+			if (POWER_CTRL(ctrl)) {
-+				ret = pciehp_power_off_slot(slot);
-+				if (ret) {
-+					ctrl_err(ctrl,
-+						"Issue of Slot Disable command failed\n");
-+					return 0;
-+				}
-+				msleep(1000);
-+				pciehp_unconfigure_device(slot);
-+				/* call child devices driver->suspend() for symmetry */
-+				list_for_each_entry(pdev, &pbus->devices, bus_list)
-+					if (pdev->driver)
-+						pdev->driver->driver.pm->suspend(&pdev->dev);
-+				pciehp_enable_slot(slot);
-+			}
-+		} else if (!list_empty(&pbus->devices)) {
-+			pciehp_disable_slot(slot);
-+		}
- 	}
--	
- 	return 0;
- }
- #endif /* PM */
+
+On 6 August 2013 10:07, Johannes Thumshirn <johannes.thumshirn@men.de> wrote:
+> On Mon, Aug 05, 2013 at 09:38:45AM -0600, Bjorn Helgaas wrote:
+>> [+cc linuxppc-dev]
+>>
+>> On Mon, Aug 5, 2013 at 5:17 AM, Leon Ravich <lravich@gmail.com> wrote:
+>> > Hi all ,
+>> > I am trying to upgrade ours embedded device (freescale powerPC P2020 cpu)
+>> > linux kernel  , till now we used 2.6.32 I am trying to upgrade to 3.8.13 .
+>> > I took the source from freescale git:
+>> > git://git.freescale.com/ppc/sdk/linux.git
+>> >
+>> > on our embedded device we have an FPGA connected through PCIE .
+>> >
+>> > on each boot we loading the rbf design to the FPGA and the rescan pci bus to let
+>> > kernel detect it .
+>> >
+>> > during the rescan I getting error messages:
+>> >  genirq: Setting trigger mode 0 for irq 27 failed
+>> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> > [   22.060898] genirq: Setting trigger mode 0 for irq 28 failed
+>> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> > [   22.069461] genirq: Setting trigger mode 0 for irq 31 failed
+>> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> > [   22.078010] genirq: Setting trigger mode 0 for irq 32 failed
+>> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> > [   22.086576] genirq: Setting trigger mode 0 for irq 33 failed
+>> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> > [   22.095143] genirq: Setting trigger mode 0 for irq 37 failed
+>> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> > [   22.103715] genirq: Setting trigger mode 0 for irq 38 failed
+>> > (mpc8xxx_irq_set_type+0x0/0xec)
+>> > [   22.112282] genirq: Setting trigger mode 0 for irq 39 failed
+>> > (mpc8xxx_irq_set_type+0x0/0xec)
+>>
+>> Hmm, I don't know much about IRQ issues.
+>>
+>> > [   37.945785] pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't
+>> > match header type 01)
+>>
+>> There's a recent patch related to this:
+>> http://lkml.kernel.org/r/1374823418-1550-1-git-send-email-Chunhe.Lan@freescale.com
+>>
+>> > [   37.953640] PCIE error(s) detected
+>> > [   37.953858] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+>> > [   37.953988] pci 0000:00:00.0: BAR 8: assigned [mem 0xc0000000-0xdfffffff]
+>> > [   37.953994] pci 0000:00:00.0: BAR 7: can't assign io (size 0x10000)
+>> > [   37.954000] pci 0000:01:00.0: BAR 0: assigned [mem 0xc0000000-0xc00fffff]
+>> > [   37.954013] pci 0000:01:00.0: BAR 1: assigned [mem 0xc0100000-0xc017ffff]
+>> > [   37.954025] pci 0000:01:00.0: BAR 2: assigned [mem 0xc0180000-0xc01fffff]
+>> > [   37.954036] pci 0000:00:00.0: PCI bridge to [bus 01]
+>> > [   37.954041] pci 0000:00:00.0:   bridge window [mem 0xc0000000-0xdfffffff]
+>> > [   38.007354] PCIE ERR_DR register: 0x80020000
+>> > [   38.011613] PCIE ERR_CAP_STAT register: 0x00000041
+>> > [   38.016392] PCIE ERR_CAP_R0 register: 0x00000800
+>> > [   38.020997] PCIE ERR_CAP_R1 register: 0x00000000
+>> > [   38.025602] PCIE ERR_CAP_R2 register: 0x00000000
+>> > [   38.030207] PCIE ERR_CAP_R3 register: 0x00000000
+>> >
+>> >
+>> > and after a few minutes I linux reboot it self,
+>> >
+>> >
+>> > where can I start debugging it??
+>>
+>> I'd start by applying the header quirk patch above, then comparing the
+>> complete console log (boot with "ignore_loglevel") from 2.6.32 and
+>> 3.8.13.
+>>
+>> Bjorn
+>> _______________________________________________
+>> Linuxppc-dev mailing list
+>> Linuxppc-dev@lists.ozlabs.org
+>> https://lists.ozlabs.org/listinfo/linuxppc-dev
+>
+> Hi,
+>
+> I have a similar problem here on a P4080 based board with the same 3.8 Kernel
+> from freescale git. Does your system panic (maybe due to a machine check
+> exception)?  If yes could it be the first read from the PCI device?
+>
+> Johannes
+
+
+
 -- 
-1.7.1
-
-
+Leonid Ravich
