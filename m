@@ -1,401 +1,232 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19395 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751024Ab3HSUJf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Aug 2013 16:09:35 -0400
-Subject: [PATCH v2] vfio-pci: PCI hot reset interface
-To: alex.williamson@redhat.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-	benh@kernel.crashing.org
-Date: Mon, 19 Aug 2013 14:09:31 -0600
-Message-ID: <20130819200812.9513.97467.stgit@bling.home>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:60296 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756504Ab3HFRsZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 13:48:25 -0400
+Received: by mail-oa0-f46.google.com with SMTP id l10so1383730oag.33
+        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 10:48:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <201308061702.r76H2ORe011248@farm-0021.internal.tilera.com>
+References: <52012B96.9000207@tilera.com> <201308061702.r76H2ORe011248@farm-0021.internal.tilera.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 6 Aug 2013 11:48:04 -0600
+Message-ID: <CAErSpo57cmg2ynLLLZw0yXH5Q1B0MZBdqSgFXUu2NpS=8W6Y2g@mail.gmail.com>
+Subject: Re: [PATCH v2] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
+To: Chris Metcalf <cmetcalf@tilera.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	adam radford <aradford@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current VFIO_DEVICE_RESET interface only maps to PCI use cases
-where we can isolate the reset to the individual PCI function.  This
-means the device must support FLR (PCIe or AF), PM reset on D3hot->D0
-transition, device specific reset, or be a singleton device on a bus
-for a secondary bus reset.  FLR does not have widespread support,
-PM reset is not very reliable, and bus topology is dictated by the
-system and device design.  We need to provide a means for a user to
-induce a bus reset in cases where the existing mechanisms are not
-available or not reliable.
+[+cc Myron, Adam]
 
-This device specific extension to VFIO provides the user with this
-ability.  Two new ioctls are introduced:
- - VFIO_DEVICE_PCI_GET_HOT_RESET_INFO
- - VFIO_DEVICE_PCI_HOT_RESET
+On Fri, Aug 2, 2013 at 10:24 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+> The LSI MEGARAID SAS HBA suffers from the problem where it can do
+> 64-bit DMA to streaming buffers but not to consistent buffers.
+> In other words, 64-bit DMA is used for disk data transfers and 32-bit
+> DMA must be used for control message transfers.
 
-The first provides the user with information about the extent of
-devices affected by a hot reset.  This is essentially a list of
-devices and the IOMMU groups they belong to.  The user may then
-initiate a hot reset by calling the second ioctl.  We must be
-careful that the user has ownership of all the affected devices
-found via the first ioctl, so the second ioctl takes a list of file
-descriptors for the VFIO groups affected by the reset.  Each group
-must have IOMMU protection established for the ioctl to succeed.
+Is this related at all to the make_local_pdev() hacks in megaraid.c?
+The intent there seems to be to use a 32-bit DMA mask for certain
+transactions and a 64-bit mask for others.  But I think it's actually
+broken, because the implementation changes the mask to 32-bit for
+*all* future transactions, not just the one using make_local_pdev().
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+> According to LSI,
+> the firmware is not fully functional yet. This change implements a
+> kind of hybrid dma_ops to support this.
+>
+> Note that on most other platforms, the 64-bit DMA addressing space is the
+> same as the 32-bit DMA space and they overlap the physical memory space.
+> No special arrangement is needed to support this kind of mixed DMA
+> capability.  On TILE-Gx, the 64-bit DMA space is completely separate
+> from the 32-bit DMA space.
 
-v2: Use PCI bus iterators.  Depends on pci_walk_slot() patch
+Help me understand what's going on here.  My understanding is that on
+typical systems, the 32-bit DMA space is a subset of the 64-bit DMA
+space.  In conventional PCI, "a master that supports 64-bit addressing
+must generate a SAC, instead of a DAC, when the upper 32 bits of the
+address are zero" (PCI spec r3.0, sec 3.9).  PCIe doesn't have
+SAC/DAC, but it has both 32-bit and 64-bit address headers and has a
+similar requirement: "For Addresses below 4GB, Requesters must use the
+32-bit format" (PCIe spec r3.0, sec 2.2.4.1).
 
- drivers/vfio/pci/vfio_pci.c |  279 +++++++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/vfio.h   |   38 ++++++
- 2 files changed, 316 insertions(+), 1 deletion(-)
+Those imply to me that the 0-4GB region of the 64-bit DMA space must
+be identical to the 0-4GB 32-bit DMA space, and in fact, the receiver
+of a transaction shouldn't be able to distinguish them.
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index cef6002..2c57482 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -227,6 +227,104 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
- 	return 0;
- }
- 
-+struct vfio_pci_walk_info {
-+	int ret;
-+	void *data;
-+};
-+
-+static int vfio_pci_count_devs(struct pci_dev *pdev, void *data)
-+{
-+	struct vfio_pci_walk_info *walk = data;
-+	int *count = walk->data;
-+
-+	(*count)++;
-+	return walk->ret;
-+}
-+
-+struct vfio_pci_fill_info {
-+	int max;
-+	int cur;
-+	struct vfio_pci_dependent_device *devices;
-+};
-+
-+static int vfio_pci_fill_devs(struct pci_dev *pdev, void *data)
-+{
-+	struct vfio_pci_walk_info *walk = data;
-+	struct vfio_pci_fill_info *fill = walk->data;
-+	struct iommu_group *iommu_group;
-+
-+	if (fill->cur == fill->max) {
-+		walk->ret = -EAGAIN; /* Something changed, try again */
-+		return walk->ret;
-+	}
-+
-+	iommu_group = iommu_group_get(&pdev->dev);
-+	if (!iommu_group) {
-+		walk->ret = -EPERM; /* Cannot reset non-isolated devices */
-+		return walk->ret;
-+	}
-+
-+	fill->devices[fill->cur].group_id = iommu_group_id(iommu_group);
-+	fill->devices[fill->cur].segment = pci_domain_nr(pdev->bus);
-+	fill->devices[fill->cur].bus = pdev->bus->number;
-+	fill->devices[fill->cur].devfn = pdev->devfn;
-+	fill->cur++;
-+	iommu_group_put(iommu_group);
-+	return walk->ret;
-+}
-+
-+struct vfio_pci_group_entry {
-+	struct vfio_group *group;
-+	int id;
-+};
-+
-+struct vfio_pci_group_info {
-+	int count;
-+	struct vfio_pci_group_entry *groups;
-+};
-+
-+static int vfio_pci_validate_devs(struct pci_dev *pdev, void *data)
-+{
-+	struct vfio_pci_walk_info *walk = data;
-+	struct vfio_pci_group_info *info = walk->data;
-+	struct iommu_group *group;
-+	int id, i;
-+
-+	group = iommu_group_get(&pdev->dev);
-+	if (!group) {
-+		walk->ret = -EPERM;
-+		return walk->ret;
-+	}
-+
-+	id = iommu_group_id(group);
-+
-+	for (i = 0; i < info->count; i++)
-+		if (info->groups[i].id == id)
-+			break;
-+
-+	iommu_group_put(group);
-+
-+	if (i == info->count)
-+		walk->ret = -EINVAL;
-+
-+	return walk->ret;
-+}
-+
-+static int vfio_pci_for_each_slot_or_bus(struct pci_dev *pdev,
-+					 int (*fn)(struct pci_dev *,
-+						   void *data), void *data,
-+					 bool slot)
-+{
-+	struct vfio_pci_walk_info info = { .ret = 0, .data = data };
-+
-+	if (slot)
-+		pci_walk_slot(pdev->slot, fn, &info);
-+	else
-+		pci_walk_bus(pdev->bus, fn, &info);
-+
-+	return info.ret;
-+}
-+
- static long vfio_pci_ioctl(void *device_data,
- 			   unsigned int cmd, unsigned long arg)
- {
-@@ -407,10 +505,189 @@ static long vfio_pci_ioctl(void *device_data,
- 
- 		return ret;
- 
--	} else if (cmd == VFIO_DEVICE_RESET)
-+	} else if (cmd == VFIO_DEVICE_RESET) {
- 		return vdev->reset_works ?
- 			pci_reset_function(vdev->pdev) : -EINVAL;
- 
-+	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
-+		struct vfio_pci_hot_reset_info hdr;
-+		struct vfio_pci_fill_info fill = { 0 };
-+		struct vfio_pci_dependent_device *devices = NULL;
-+		bool slot = false;
-+		int ret = 0;
-+
-+		minsz = offsetofend(struct vfio_pci_hot_reset_info, count);
-+
-+		if (copy_from_user(&hdr, (void __user *)arg, minsz))
-+			return -EFAULT;
-+
-+		if (hdr.argsz < minsz)
-+			return -EINVAL;
-+
-+		hdr.flags = 0;
-+
-+		/* Can we do a slot or bus reset or neither? */
-+		if (!pci_probe_reset_slot(vdev->pdev->slot))
-+			slot = true;
-+		else if (pci_probe_reset_bus(vdev->pdev->bus))
-+			return -ENODEV;
-+
-+		/* How many devices are affected? */
-+		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
-+						    vfio_pci_count_devs,
-+						    &fill.max, slot);
-+		if (ret)
-+			return ret;
-+
-+		WARN_ON(!fill.max); /* Should always be at least one */
-+
-+		/*
-+		 * If there's enough space, fill it now, otherwise return
-+		 * -ENOSPC and the number of devices affected.
-+		 */
-+		if (hdr.argsz < sizeof(hdr) + (fill.max * sizeof(*devices))) {
-+			ret = -ENOSPC;
-+			hdr.count = fill.max;
-+			goto reset_info_exit;
-+		}
-+
-+		devices = kcalloc(fill.max, sizeof(*devices), GFP_KERNEL);
-+		if (!devices)
-+			return -ENOMEM;
-+
-+		fill.devices = devices;
-+
-+		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
-+						    vfio_pci_fill_devs,
-+						    &fill, slot);
-+
-+		/*
-+		 * If a device was removed between counting and filling,
-+		 * we may come up short of fill.max.  If a device was
-+		 * added, we'll have a return of -EAGAIN above.
-+		 */
-+		if (!ret)
-+			hdr.count = fill.cur;
-+
-+reset_info_exit:
-+		if (copy_to_user((void __user *)arg, &hdr, minsz))
-+			ret = -EFAULT;
-+
-+		if (!ret) {
-+			if (copy_to_user((void __user *)(arg + minsz), devices,
-+					 hdr.count * sizeof(*devices)))
-+				ret = -EFAULT;
-+		}
-+
-+		kfree(devices);
-+		return ret;
-+
-+	} else if (cmd == VFIO_DEVICE_PCI_HOT_RESET) {
-+		struct vfio_pci_hot_reset hdr;
-+		int32_t *group_fds;
-+		struct vfio_pci_group_entry *groups;
-+		struct vfio_pci_group_info info;
-+		bool slot = false;
-+		int i, count = 0, ret = 0;
-+
-+		minsz = offsetofend(struct vfio_pci_hot_reset, count);
-+
-+		if (copy_from_user(&hdr, (void __user *)arg, minsz))
-+			return -EFAULT;
-+
-+		if (hdr.argsz < minsz || hdr.flags)
-+			return -EINVAL;
-+
-+		/* Can we do a slot or bus reset or neither? */
-+		if (!pci_probe_reset_slot(vdev->pdev->slot))
-+			slot = true;
-+		else if (pci_probe_reset_bus(vdev->pdev->bus))
-+			return -ENODEV;
-+
-+		/*
-+		 * We can't let userspace give us an arbitrarily large
-+		 * buffer to copy, so verify how many we think there
-+		 * could be.  Note groups can have multiple devices so
-+		 * one group per device is the max.
-+		 */
-+		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
-+						    vfio_pci_count_devs,
-+						    &count, slot);
-+		if (ret)
-+			return ret;
-+
-+		/* Somewhere between 1 and count is OK */
-+		if (!hdr.count || hdr.count > count)
-+			return -EINVAL;
-+
-+		group_fds = kcalloc(hdr.count, sizeof(*group_fds), GFP_KERNEL);
-+		groups = kcalloc(hdr.count, sizeof(*groups), GFP_KERNEL);
-+		if (!group_fds || !groups) {
-+			kfree(group_fds);
-+			kfree(groups);
-+			return -ENOMEM;
-+		}
-+
-+		if (copy_from_user(group_fds, (void __user *)(arg + minsz),
-+				   hdr.count * sizeof(*group_fds))) {
-+			kfree(group_fds);
-+			kfree(groups);
-+			return -EFAULT;
-+		}
-+
-+		/*
-+		 * For each group_fd, get the group through the vfio external
-+		 * user interface and store the group and iommu ID.  This
-+		 * ensures the group is held across the reset.
-+		 */
-+		for (i = 0; i < hdr.count; i++) {
-+			struct vfio_group *group;
-+			struct fd f = fdget(group_fds[i]);
-+			if (!f.file) {
-+				ret = -EBADF;
-+				break;
-+			}
-+
-+			group = vfio_group_get_external_user(f.file);
-+			fdput(f);
-+			if (IS_ERR(group)) {
-+				ret = PTR_ERR(group);
-+				break;
-+			}
-+
-+			groups[i].group = group;
-+			groups[i].id = vfio_external_user_iommu_id(group);
-+		}
-+
-+		kfree(group_fds);
-+
-+		/* release reference to groups on error */
-+		if (ret)
-+			goto hot_reset_release;
-+
-+		info.count = hdr.count;
-+		info.groups = groups;
-+
-+		/*
-+		 * Test whether all the affected devices are contained
-+		 * by the set of groups provided by the user.
-+		 */
-+		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
-+						    vfio_pci_validate_devs,
-+						    &info, slot);
-+		if (!ret)
-+			/* User has access, do the reset */
-+			ret = slot ? pci_reset_slot(vdev->pdev->slot) :
-+				     pci_reset_bus(vdev->pdev->bus);
-+
-+hot_reset_release:
-+		for (i--; i >= 0; i--)
-+			vfio_group_put_external_user(groups[i].group);
-+
-+		kfree(groups);
-+		return ret;
-+	}
-+
- 	return -ENOTTY;
- }
- 
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 916e444..0fd47f5 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -324,6 +324,44 @@ enum {
- 	VFIO_PCI_NUM_IRQS
- };
- 
-+/**
-+ * VFIO_DEVICE_GET_PCI_HOT_RESET_INFO - _IORW(VFIO_TYPE, VFIO_BASE + 12,
-+ *					      struct vfio_pci_hot_reset_info)
-+ *
-+ * Return: 0 on success, -errno on failure:
-+ *	-enospc = insufficient buffer, -enodev = unsupported for device.
-+ */
-+struct vfio_pci_dependent_device {
-+	__u32	group_id;
-+	__u16	segment;
-+	__u8	bus;
-+	__u8	devfn; /* Use PCI_SLOT/PCI_FUNC */
-+};
-+
-+struct vfio_pci_hot_reset_info {
-+	__u32	argsz;
-+	__u32	flags;
-+	__u32	count;
-+	struct vfio_pci_dependent_device	devices[];
-+};
-+
-+#define VFIO_DEVICE_GET_PCI_HOT_RESET_INFO	_IO(VFIO_TYPE, VFIO_BASE + 12)
-+
-+/**
-+ * VFIO_DEVICE_PCI_HOT_RESET - _IOW(VFIO_TYPE, VFIO_BASE + 13,
-+ *				    struct vfio_pci_hot_reset)
-+ *
-+ * Return: 0 on success, -errno on failure.
-+ */
-+struct vfio_pci_hot_reset {
-+	__u32	argsz;
-+	__u32	flags;
-+	__u32	count;
-+	__s32	group_fds[];
-+};
-+
-+#define VFIO_DEVICE_PCI_HOT_RESET	_IO(VFIO_TYPE, VFIO_BASE + 13)
-+
- /* -------- API for Type1 VFIO IOMMU -------- */
- 
- /**
+But it sounds like something's different on TILE-Gx?  Does it
+translate bus addresses to physical memory addresses based on the type
+of the transaction (SAC vs DAC, or 32-bit vs 64-bit header) in
+addition to the address?  Even if it does, the spec doesn't allow a
+DAC cycle or a 64-bit header where the 32 high-order bits are zero, so
+it shouldn't matter.
 
+Bjorn
+
+>  Due to the use of the IOMMU, the 64-bit DMA
+> space doesn't overlap the physical memory space.  On the other hand,
+> the 32-bit DMA space overlaps the physical memory space under 4GB.
+> The separate address spaces make it necessary to have separate dma_ops.
+>
+> Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+> ---
+>  arch/tile/include/asm/dma-mapping.h | 10 +++++++---
+>  arch/tile/kernel/pci-dma.c          | 40 ++++++++++++++++++++++++++++---------
+>  2 files changed, 38 insertions(+), 12 deletions(-)
+>
+> diff --git a/arch/tile/include/asm/dma-mapping.h b/arch/tile/include/asm/dma-mapping.h
+> index f2ff191..4a60059 100644
+> --- a/arch/tile/include/asm/dma-mapping.h
+> +++ b/arch/tile/include/asm/dma-mapping.h
+> @@ -23,6 +23,7 @@
+>  extern struct dma_map_ops *tile_dma_map_ops;
+>  extern struct dma_map_ops *gx_pci_dma_map_ops;
+>  extern struct dma_map_ops *gx_legacy_pci_dma_map_ops;
+> +extern struct dma_map_ops *gx_hybrid_pci_dma_map_ops;
+>
+>  static inline struct dma_map_ops *get_dma_ops(struct device *dev)
+>  {
+> @@ -44,12 +45,12 @@ static inline void set_dma_offset(struct device *dev, dma_addr_t off)
+>
+>  static inline dma_addr_t phys_to_dma(struct device *dev, phys_addr_t paddr)
+>  {
+> -       return paddr + get_dma_offset(dev);
+> +       return paddr;
+>  }
+>
+>  static inline phys_addr_t dma_to_phys(struct device *dev, dma_addr_t daddr)
+>  {
+> -       return daddr - get_dma_offset(dev);
+> +       return daddr;
+>  }
+>
+>  static inline void dma_mark_clean(void *addr, size_t size) {}
+> @@ -88,7 +89,10 @@ dma_set_mask(struct device *dev, u64 mask)
+>         struct dma_map_ops *dma_ops = get_dma_ops(dev);
+>
+>         /* Handle legacy PCI devices with limited memory addressability. */
+> -       if ((dma_ops == gx_pci_dma_map_ops) && (mask <= DMA_BIT_MASK(32))) {
+> +       if ((dma_ops == gx_pci_dma_map_ops ||
+> +            dma_ops == gx_hybrid_pci_dma_map_ops ||
+> +            dma_ops == gx_legacy_pci_dma_map_ops) &&
+> +           (mask <= DMA_BIT_MASK(32))) {
+>                 set_dma_ops(dev, gx_legacy_pci_dma_map_ops);
+>                 set_dma_offset(dev, 0);
+>                 if (mask > dev->archdata.max_direct_dma_addr)
+> diff --git a/arch/tile/kernel/pci-dma.c b/arch/tile/kernel/pci-dma.c
+> index b9fe80e..7e22e73 100644
+> --- a/arch/tile/kernel/pci-dma.c
+> +++ b/arch/tile/kernel/pci-dma.c
+> @@ -357,7 +357,7 @@ static void *tile_pci_dma_alloc_coherent(struct device *dev, size_t size,
+>
+>         addr = page_to_phys(pg);
+>
+> -       *dma_handle = phys_to_dma(dev, addr);
+> +       *dma_handle = addr + get_dma_offset(dev);
+>
+>         return page_address(pg);
+>  }
+> @@ -387,7 +387,7 @@ static int tile_pci_dma_map_sg(struct device *dev, struct scatterlist *sglist,
+>                 sg->dma_address = sg_phys(sg);
+>                 __dma_prep_pa_range(sg->dma_address, sg->length, direction);
+>
+> -               sg->dma_address = phys_to_dma(dev, sg->dma_address);
+> +               sg->dma_address = sg->dma_address + get_dma_offset(dev);
+>  #ifdef CONFIG_NEED_SG_DMA_LENGTH
+>                 sg->dma_length = sg->length;
+>  #endif
+> @@ -422,7 +422,7 @@ static dma_addr_t tile_pci_dma_map_page(struct device *dev, struct page *page,
+>         BUG_ON(offset + size > PAGE_SIZE);
+>         __dma_prep_page(page, offset, size, direction);
+>
+> -       return phys_to_dma(dev, page_to_pa(page) + offset);
+> +       return page_to_pa(page) + offset + get_dma_offset(dev);
+>  }
+>
+>  static void tile_pci_dma_unmap_page(struct device *dev, dma_addr_t dma_address,
+> @@ -432,7 +432,7 @@ static void tile_pci_dma_unmap_page(struct device *dev, dma_addr_t dma_address,
+>  {
+>         BUG_ON(!valid_dma_direction(direction));
+>
+> -       dma_address = dma_to_phys(dev, dma_address);
+> +       dma_address -= get_dma_offset(dev);
+>
+>         __dma_complete_page(pfn_to_page(PFN_DOWN(dma_address)),
+>                             dma_address & PAGE_OFFSET, size, direction);
+> @@ -445,7 +445,7 @@ static void tile_pci_dma_sync_single_for_cpu(struct device *dev,
+>  {
+>         BUG_ON(!valid_dma_direction(direction));
+>
+> -       dma_handle = dma_to_phys(dev, dma_handle);
+> +       dma_handle -= get_dma_offset(dev);
+>
+>         __dma_complete_pa_range(dma_handle, size, direction);
+>  }
+> @@ -456,7 +456,7 @@ static void tile_pci_dma_sync_single_for_device(struct device *dev,
+>                                                 enum dma_data_direction
+>                                                 direction)
+>  {
+> -       dma_handle = dma_to_phys(dev, dma_handle);
+> +       dma_handle -= get_dma_offset(dev);
+>
+>         __dma_prep_pa_range(dma_handle, size, direction);
+>  }
+> @@ -558,21 +558,43 @@ static struct dma_map_ops pci_swiotlb_dma_ops = {
+>         .mapping_error = swiotlb_dma_mapping_error,
+>  };
+>
+> +static struct dma_map_ops pci_hybrid_dma_ops = {
+> +       .alloc = tile_swiotlb_alloc_coherent,
+> +       .free = tile_swiotlb_free_coherent,
+> +       .map_page = tile_pci_dma_map_page,
+> +       .unmap_page = tile_pci_dma_unmap_page,
+> +       .map_sg = tile_pci_dma_map_sg,
+> +       .unmap_sg = tile_pci_dma_unmap_sg,
+> +       .sync_single_for_cpu = tile_pci_dma_sync_single_for_cpu,
+> +       .sync_single_for_device = tile_pci_dma_sync_single_for_device,
+> +       .sync_sg_for_cpu = tile_pci_dma_sync_sg_for_cpu,
+> +       .sync_sg_for_device = tile_pci_dma_sync_sg_for_device,
+> +       .mapping_error = tile_pci_dma_mapping_error,
+> +       .dma_supported = tile_pci_dma_supported
+> +};
+> +
+>  struct dma_map_ops *gx_legacy_pci_dma_map_ops = &pci_swiotlb_dma_ops;
+> +struct dma_map_ops *gx_hybrid_pci_dma_map_ops = &pci_hybrid_dma_ops;
+>  #else
+>  struct dma_map_ops *gx_legacy_pci_dma_map_ops;
+> +struct dma_map_ops *gx_hybrid_pci_dma_map_ops;
+>  #endif
+>  EXPORT_SYMBOL(gx_legacy_pci_dma_map_ops);
+> +EXPORT_SYMBOL(gx_hybrid_pci_dma_map_ops);
+>
+>  #ifdef CONFIG_ARCH_HAS_DMA_SET_COHERENT_MASK
+>  int dma_set_coherent_mask(struct device *dev, u64 mask)
+>  {
+>         struct dma_map_ops *dma_ops = get_dma_ops(dev);
+>
+> -       /* Handle legacy PCI devices with limited memory addressability. */
+> -       if (((dma_ops == gx_pci_dma_map_ops) ||
+> -           (dma_ops == gx_legacy_pci_dma_map_ops)) &&
+> +       /* Handle hybrid PCI devices with limited memory addressability. */
+> +       if ((dma_ops == gx_pci_dma_map_ops ||
+> +            dma_ops == gx_hybrid_pci_dma_map_ops ||
+> +            dma_ops == gx_legacy_pci_dma_map_ops) &&
+>             (mask <= DMA_BIT_MASK(32))) {
+> +               if (dma_ops == gx_pci_dma_map_ops)
+> +                       set_dma_ops(dev, gx_hybrid_pci_dma_map_ops);
+> +
+>                 if (mask > dev->archdata.max_direct_dma_addr)
+>                         mask = dev->archdata.max_direct_dma_addr;
+>         }
+> --
+> 1.8.3.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
