@@ -1,256 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from up.free-electrons.com ([94.23.35.102]:53533 "EHLO
+Received: from top.free-electrons.com ([176.31.233.9]:35306 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751551Ab3HANZc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:25:32 -0400
+	with ESMTP id S933147Ab3HGWFD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 18:05:03 -0400
+Date: Thu, 8 Aug 2013 00:04:43 +0200
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
 	Rob Herring <rob.herring@calxeda.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
 	linux-arm-kernel@lists.infradead.org,
 	Maen Suleiman <maen@marvell.com>,
 	Lior Amsalem <alior@marvell.com>,
 	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv6 09/13] irqchip: armada-370-xp: implement MSI support
-Date: Thu,  1 Aug 2013 15:25:12 +0200
-Message-Id: <1375363516-2620-10-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCHv7 07/13] irqdomain: add function to find a MSI
+ irq_domain
+Message-ID: <20130808000443.17f57875@skate>
+In-Reply-To: <1375908620.9300.3.camel@pasglop>
+References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1375867954-2320-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1375908620.9300.3.camel@pasglop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit introduces the support for the MSI interrupts in the
-armada-370-xp interrupt controller driver. It registers an MSI chip to
-the MSI chip registry, which will be used by the Marvell PCIe host
-controller driver.
+Dear Benjamin Herrenschmidt,
 
-The MSI interrupts use the 16 high doorbells, and are therefore
-notified using IRQ1 of the main interrupt controller.
+On Thu, 08 Aug 2013 06:50:20 +1000, Benjamin Herrenschmidt wrote:
+> On Wed, 2013-08-07 at 11:32 +0200, Thomas Petazzoni wrote:
+> > Now that an irq_domain can be associated to a msi_chip structure, a
+> > given PCIe driver will want to find this irq_domain, based on the
+> > Device Tree node of the interrupt controller, as pointed by the
+> > 'msi-controller' DT property.
+> 
+> I still don't quite understand why you have to do all that.
+> 
+> > However, since on those platforms a single piece of hardware,
+> > represented by a single DT node can provide both a "normal" IRQ domain
+> > and a MSI-type IRQ domain, we need separate lookup functions to
+> > distinguish them.
+> 
+> At least on power we have cases where an mpic does both MSIs and LSIs,
+> we have the XICS that happily mixes both in a single large domain,
+> etc... and never needed any of that.
+> 
+> I don't quite understand what problem that stuff is trying to solve
+> really. Are you trying to avoid having an added MSI bitmap allocator for
+> the MSI side of the PIC and use the irq domain stuff both as your virq
+> and your hwirq allocator ?
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- .../devicetree/bindings/arm/armada-370-xp-mpic.txt |   3 +
- drivers/irqchip/irq-armada-370-xp.c                | 133 ++++++++++++++++++++-
- 2 files changed, 135 insertions(+), 1 deletion(-)
+Yes. Originally, the allocator was in the driver, but Grant Likely
+suggested that it should be done by the irqdomain code itself. If
+needed, I can dig the link, but I already gave you the pointers to each
+iteration of this patch series, and the comment from Grant is
+definitely part of one of those threads.
 
-diff --git a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
-index 61df564..d74091a 100644
---- a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
-+++ b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
-@@ -4,6 +4,8 @@ Marvell Armada 370 and Armada XP Interrupt Controller
- Required properties:
- - compatible: Should be "marvell,mpic"
- - interrupt-controller: Identifies the node as an interrupt controller.
-+- msi-controller: Identifies the node as an PCI Message Signaled
-+  Interrupt controller.
- - #interrupt-cells: The number of cells to define the interrupts. Should be 1.
-   The cell is the IRQ number
- 
-@@ -24,6 +26,7 @@ Example:
-               #address-cells = <1>;
-               #size-cells = <1>;
-               interrupt-controller;
-+              msi-controller;
-               reg = <0xd0020a00 0x1d0>,
-                     <0xd0021070 0x58>;
-         };
-diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
-index 26adc74..7627ded 100644
---- a/drivers/irqchip/irq-armada-370-xp.c
-+++ b/drivers/irqchip/irq-armada-370-xp.c
-@@ -21,7 +21,10 @@
- #include <linux/io.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
-+#include <linux/of_pci.h>
- #include <linux/irqdomain.h>
-+#include <linux/slab.h>
-+#include <linux/msi.h>
- #include <asm/mach/arch.h>
- #include <asm/exception.h>
- #include <asm/smp_plat.h>
-@@ -51,12 +54,20 @@
- #define IPI_DOORBELL_START                      (0)
- #define IPI_DOORBELL_END                        (8)
- #define IPI_DOORBELL_MASK                       0xFF
-+#define PCI_MSI_DOORBELL_START                  (16)
-+#define PCI_MSI_DOORBELL_NR                     (16)
-+#define PCI_MSI_DOORBELL_END                    (32)
-+#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
- 
- static DEFINE_RAW_SPINLOCK(irq_controller_lock);
- 
- static void __iomem *per_cpu_int_base;
- static void __iomem *main_int_base;
- static struct irq_domain *armada_370_xp_mpic_domain;
-+#ifdef CONFIG_PCI_MSI
-+static struct irq_domain *armada_370_xp_msi_domain;
-+static phys_addr_t msi_doorbell_addr;
-+#endif
- 
- /*
-  * In SMP mode:
-@@ -87,6 +98,94 @@ static void armada_370_xp_irq_unmask(struct irq_data *d)
- 				ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
- }
- 
-+#ifdef CONFIG_PCI_MSI
-+
-+static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
-+				       struct pci_dev *pdev,
-+				       struct msi_desc *desc)
-+{
-+	struct msi_msg msg;
-+	irq_hw_number_t hwirq;
-+	int virq;
-+
-+	virq = irq_alloc_mapping(armada_370_xp_msi_domain, &hwirq);
-+	if (!virq)
-+		return -EINVAL;
-+
-+	irq_set_msi_desc(virq, desc);
-+
-+	msg.address_lo = msi_doorbell_addr;
-+	msg.address_hi = 0;
-+	msg.data = 0xf00 | (hwirq + 16);
-+
-+	write_msi_msg(virq, &msg);
-+	return 0;
-+}
-+
-+static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
-+					   unsigned int irq)
-+{
-+	irq_dispose_mapping(irq);
-+}
-+
-+static struct irq_chip armada_370_xp_msi_irq_chip = {
-+	.name = "armada_370_xp_msi_irq",
-+	.irq_enable = unmask_msi_irq,
-+	.irq_disable = mask_msi_irq,
-+	.irq_mask = mask_msi_irq,
-+	.irq_unmask = unmask_msi_irq,
-+};
-+
-+static int armada_370_xp_msi_map(struct irq_domain *domain, unsigned int virq,
-+				 irq_hw_number_t hw)
-+{
-+	irq_set_chip_and_handler(virq, &armada_370_xp_msi_irq_chip,
-+				 handle_simple_irq);
-+	set_irq_flags(virq, IRQF_VALID);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops armada_370_xp_msi_irq_ops = {
-+	.map = armada_370_xp_msi_map,
-+};
-+
-+static int armada_370_xp_msi_init(struct device_node *node)
-+{
-+	struct msi_chip *msi_chip;
-+	u32 reg;
-+
-+	msi_chip = kzalloc(sizeof(*msi_chip), GFP_KERNEL);
-+	if (!msi_chip)
-+		return -ENOMEM;
-+
-+	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
-+	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
-+
-+	armada_370_xp_msi_domain =
-+		irq_domain_add_msi(node, PCI_MSI_DOORBELL_NR,
-+				   &armada_370_xp_msi_irq_ops,
-+				   msi_chip, NULL);
-+	if (!armada_370_xp_msi_domain) {
-+		kfree(msi_chip);
-+		return -ENOMEM;
-+	}
-+
-+	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
-+		| PCI_MSI_DOORBELL_MASK;
-+
-+	writel(reg, per_cpu_int_base +
-+	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
-+
-+	/* Unmask IPI interrupt */
-+	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
-+
-+	return 0;
-+}
-+#else
-+static inline int armada_370_xp_msi_init(struct device_node *node) { return 0; }
-+#endif
-+
- #ifdef CONFIG_SMP
- static int armada_xp_set_affinity(struct irq_data *d,
- 				  const struct cpumask *mask_val, bool force)
-@@ -214,12 +313,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
- 		if (irqnr > 1022)
- 			break;
- 
--		if (irqnr > 0) {
-+		if (irqnr > 1) {
- 			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
- 					irqnr);
- 			handle_IRQ(irqnr, regs);
- 			continue;
- 		}
-+
-+#ifdef CONFIG_PCI_MSI
-+		/* MSI handling */
-+		if (irqnr == 1) {
-+			u32 msimask, msinr;
-+
-+			msimask = readl_relaxed(per_cpu_int_base +
-+						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
-+				& PCI_MSI_DOORBELL_MASK;
-+
-+			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
-+			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
-+
-+			for (msinr = PCI_MSI_DOORBELL_START;
-+			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
-+				int irq;
-+
-+				if (!(msimask & BIT(msinr)))
-+					continue;
-+
-+				irq = irq_find_mapping(armada_370_xp_msi_domain,
-+						       msinr - 16);
-+				handle_IRQ(irq, regs);
-+			}
-+		}
-+#endif
-+
- #ifdef CONFIG_SMP
- 		/* IPI Handling */
- 		if (irqnr == 0) {
-@@ -269,6 +395,9 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 				   resource_size(&per_cpu_int_res));
- 	BUG_ON(!per_cpu_int_base);
- 
-+	msi_doorbell_addr = main_int_res.start +
-+		ARMADA_370_XP_SW_TRIG_INT_OFFS;
-+
- 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
- 
- 	armada_370_xp_mpic_domain =
-@@ -292,6 +421,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 
- #endif
- 
-+	armada_370_xp_msi_init(node);
-+
- 	set_handle_irq(armada_370_xp_handle_irq);
- 
- 	return 0;
+Basically, the PCIe driver in drivers/pci/host/pci-mvebu.c needs to
+give the Linux PCI core a pointer to a msi_chip, which contains
+operations to setup/teardown an MSI irq.
+
+On Marvell platforms, it's directly the main interrupt controller that
+provides the MSI mechanism. So the msi_chip is created and handled by
+the drivers/irqchip/irq-armada-370-xp.c driver. It implements the
+->setup_irq() and ->teardown_irq() operations of the msi_chip
+structure, using irq_domain functions, as Grant suggested that the
+irq_domain infrastructure should be used instead of having another
+bitmap allocator in each MSI driver.
+
+Then, we need to "connect" the PCI driver and the IRQ driver. Arnd
+Bergmann suggested that the DT should look like this:
+
+	mpic {
+		interrupt-controller;
+		msi-controller;
+		...
+	};
+
+	pcie-controller {
+		msi-parent = <&mpic>;
+		...
+	};
+
+So, the pcie-controller needs to be able, from a DT node pointer to
+"mpic" to get the corresponding msi_chip. The way to do this has gone
+through different steps over the different iteration of the patch
+series:
+
+ (1) A small registry in drivers/pci that associates a device_node*
+     with a msi_chip*. The IRQ driver registers the msi_chip* with the
+     corresponding device_node*, and the PCI driver lookups the right
+     msi_chip* using the device_node* pointer by the 'msi-parent'
+     property.
+
+     Bjorn Helgaas disliked that and suggested that the registry should
+     be in drivers/of/
+
+ (2) The same registry was moved to drivers/of/, with the same
+     principle, except that the functions were renamed to match the
+     conventions of drivers/of/.
+
+     Rob Herring (drivers/of maintainer) ACKed this approach. However,
+     later, Grant Likely came in the discussion and NAKed this
+     approach, and suggested instead that the irq_domain should be
+     associated with the msi_chip directly.
+
+ (3) The current approach, where irq_domain contains a pointer to the
+     msi_chip. So the PCI driver can look up an irq_domain using the
+     device_node* pointer to by its 'msi-parent' property. However,
+     there are *two* irq_domain that are related to the same 'mpic'
+     node: the irq_domain for normal interrupts, and the irq_domain for
+     MSI interrupts. And they should not be confused together. This is
+     what this patch does: it makes sure that irq_find_host() matches
+     only "normal irq_domain", while irq_find_msi_host() matches only
+     "MSI irq_domain".
+
+Again, this has been discussed at lengths in the previous iterations,
+for which I already gave you all the links, as you requested in a
+private e-mail. It'd be great if this discussion was read seriously,
+because I really have the feeling we are restarting from zero on this
+whole MSI thing...
+
+Thanks,
+
+Thomas Petazzoni
 -- 
-1.8.1.2
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
