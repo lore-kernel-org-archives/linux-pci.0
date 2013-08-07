@@ -1,54 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:57231 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755708Ab3HARFK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 13:05:10 -0400
-Received: by mail-ob0-f173.google.com with SMTP id ta17so4361537obb.18
-        for <linux-pci@vger.kernel.org>; Thu, 01 Aug 2013 10:05:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375362327-25404-1-git-send-email-wangyijing@huawei.com>
-References: <1375362327-25404-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 1 Aug 2013 11:04:49 -0600
-Message-ID: <CAErSpo5Z-UQrXu_M1aMK5w++7P6EW-WDCG0qMPbvh9g8bLeT0w@mail.gmail.com>
-Subject: Re: [PATCH] PCI/trivial: Fix comment typo for pci_add_cap_save_buffer()
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from top.free-electrons.com ([176.31.233.9]:58764 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932166Ab3HGJIr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:08:47 -0400
+Date: Wed, 7 Aug 2013 11:03:41 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: Re: [PATCHv6 00/13] MSI support for Marvell EBU PCIe driver
+Message-ID: <20130807110341.4be97aa8@skate>
+In-Reply-To: <1375828754.12557.70.camel@pasglop>
+References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130806201000.3e97c63b@skate>
+	<1375828754.12557.70.camel@pasglop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 1, 2013 at 7:05 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Fix trivial comment typo for pci_add_cap_save_buffer().
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Dear Benjamin Herrenschmidt,
 
-Applied to pci/misc for v3.12, thanks!
+On Wed, 07 Aug 2013 08:39:14 +1000, Benjamin Herrenschmidt wrote:
 
-> ---
->  drivers/pci/pci.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a599a6b..a8d5fd0 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1992,7 +1992,7 @@ static void pci_add_saved_cap(struct pci_dev *pci_dev,
->  }
->
->  /**
-> - * pci_add_save_buffer - allocate buffer for saving given capability registers
-> + * pci_add_cap_save_buffer - allocate buffer for saving given capability registers
->   * @dev: the PCI device
->   * @cap: the capability to allocate the buffer for
->   * @size: requested size of the buffer
-> --
-> 1.7.1
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Would you mind having a look at:
+> > 
+> >  * Patches 4, 5, 6, 7 for Benjamin as the irqdomain maintainer.
+> 
+> Ah sorry, I wasn't aware you were actually waiting for my acks, I didn't
+> read the whole thread, my bad. I'm not irqdomain maintainer btw.
+
+Hum, interesting. This is not what my 3.11-rc3 kernel tree says:
+
+IRQ DOMAINS (IRQ NUMBER MAPPING LIBRARY)
+M:      Benjamin Herrenschmidt <benh@kernel.crashing.org>
+S:      Maintained
+
+As of a0062d4e3a0a ('MAINTAINERS: Remove Grant Likely'), Grant resigned
+as the maintainer of IRQ DOMAINS, so you are now the only maintainer
+for this subsystem.
+
+> I wrote the original powerpc implementation but since then it has been taken
+> over by Grant and others. But I can certainly comment :-)
+
+As the official maintainer, your comments would certainly be
+appreciated.
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
