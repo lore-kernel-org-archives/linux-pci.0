@@ -1,153 +1,560 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27135 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932071Ab3HAVzo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 Aug 2013 17:55:44 -0400
-Message-ID: <51FAD95F.9010501@intel.com>
-Date: Thu, 01 Aug 2013 14:55:43 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Peter Wu <lekensteyn@gmail.com>,
+	Vladimir Lalov <mail@vlalov.com>
+Subject: Re: [PATCH] ACPI: Try harder to resolve _ADR collisions for bridges
+Date: Thu, 08 Aug 2013 00:26:21 +0200
+Message-ID: <50982631.HQStBttgLi@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7eztwpoZDXLoqnGjUkMFg7fd725r0O1RMRgSN5fn6xmQ@mail.gmail.com>
+References: <7877671.J2kQMTu2H0@vostro.rjw.lan> <CAErSpo7eztwpoZDXLoqnGjUkMFg7fd725r0O1RMRgSN5fn6xmQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Greg Rose <gregory.v.rose@intel.com>
-Subject: Re: [PATCH v2 3/3] PCI: Stop sriov after stop PF if PF's driver skip
- that
-References: <1374937868-24437-1-git-send-email-yinghai@kernel.org> <1374937868-24437-2-git-send-email-yinghai@kernel.org> <CAErSpo7xk-NGp+4ZFo-jnVnQSEomY=7=CXDSbZPzrhdjZ4zVSA@mail.gmail.com> <51F6D161.1040106@redhat.com> <CAErSpo5d2+mCkwED-RYV4=3LCvpj7HNxT_6yHxqNA-kcHSHF2g@mail.gmail.com> <51FAD170.4000302@redhat.com>
-In-Reply-To: <51FAD170.4000302@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/01/2013 02:21 PM, Don Dutile wrote:
-> On 08/01/2013 04:16 PM, Bjorn Helgaas wrote:
->> On Mon, Jul 29, 2013 at 2:32 PM, Don Dutile<ddutile@redhat.com>  wrote:
->>> On 07/29/2013 03:58 PM, Bjorn Helgaas wrote:
->>>>
->>>> On Sat, Jul 27, 2013 at 9:11 AM, Yinghai Lu<yinghai@kernel.org>  
->>>> wrote:
->>>>>
->>>>> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
->>>>> (PCI: Simplify IOV implementation and fix reference count races)
->>>>> VF need to be removed via virtfn_remove to make sure ref to PF
->>>>> is put back.
->>
->> OK, I'm lost here.  I think this is the scenario where Yinghai saw a
->> regression (please correct me if not):
->>
->>    00:03.0 Root port to [bus 02]
->>    02:00.0 SR-IOV NIC (PF in slot 2)
->>    02:00.1 VF (for example)
->>
->>    # echo -n 0>  /sys/bus/pci/slots/2/power
->>    02:00.0 PF is powered off
->>    02:00.0 PF pci_dev is released, but VF 02:00.1 pci_dev still exists
->> and holds a reference to the PF pci_dev, so the 02:00.0 pci_dev is not
->> actually deallocated
->>
->>    # echo -n 1>  /sys/bus/pci/slots/2/power
->>    pciehp 0000:00:03.0:pcie04: Device 0000:02:00.0 already exists at
->> 0000:02:00, cannot hot-add
->>
->> Prior to dc087f2f6 ("Simplify IOV implementation and fix reference
->> count races"), this scenario (powering the slot off then back on)
->> apparently worked, and hot-adding 02:00.0 worked fine.
->>
->> But what about the VF pci_devs?  Prior to dc087f2f6, I assume they
->> still existed even after we removed power from the PF.  But obviously
->> the hardware VFs are disabled when we power the slot back up.  It
->> doesn't make sense to me to have pci_devs for these VFs that are no
->> longer enabled, so maybe I'm missing something here.
->>
+On Wednesday, August 07, 2013 11:49:26 AM Bjorn Helgaas wrote:
+> On Tue, Aug 6, 2013 at 5:00 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > In theory, under a given ACPI namespace node there should be only
+> > one child device object with _ADR whose value matches a given bus
+> > address exactly.  In practice, however, there are systems in which
+> > multiple child device objects under a given parent have _ADR matching
+> > exactly the same address.  In those cases we use _STA to determine
+> > which of the multiple matching devices is enabled, since some systems
+> > are known to indicate which ACPI device object to associate with the
+> > given physical (usually PCI) device this way.
+> >
+> > Unfortunately, as it turns out, there are systems in which many
+> > device objects under the same parent have _ADR matching exactly the
+> > same bus address and none of them has _STA, in which case they all
+> > should be regarded as enabled according to the spec.  Still, if
+> > those device objects are supposed to represent bridges (e.g. this
+> > is the case for device objects corresponding to PCIe ports), we can
+> > try harder and skip the ones that have no child device objects in the
+> > ACPI namespace.  With luck, we can avoid using device objects that we
+> > are not expected to use this way.
+> >
+> > Although this only works for bridges whose children also have ACPI
+> > namespace representation, it is sufficient to address graphics
+> > adapter detection issues on some systems, so rework the code finding
+> > a matching device ACPI handle for a given bus address to implement
+> > this idea.
 
-Actually this is part of what I don't understand as well.  I would have
-thought that if the device was hot-plugged that the VF devices would
-have been removed as devices on the PCI bus since they all lived on the
-same bus.  Why is it the VFs are still present to hold a reference to
-the PF at all?
+[*] ->
 
-I'm not sure why we even have to disable SR-IOV in this case.  It seems
-like the hot-plug should have walked though the bus already and removed
-the VFs.
+> > Introduce a new function, acpi_find_child(), taking three arguments:
+> > the ACPI handle of the device's parent, a bus address suitable for
+> > the device's bus type and a bool indicating if the device is a
+> > bridge and make it work as outlined above.  Reimplement the function
+> > currently used for this purpose, acpi_get_child(), as a call to
+> > acpi_find_child() with the last argument set to 'false' and make
+> > the PCI subsystem use acpi_find_child() with the bridge information
+> > passed as the last argument to it.  [Lan Tianyu notices that it is
+> > not sufficient to use pci_is_bridge() for that, because the device's
+> > subordinate pointer hasn't been set yet at this point, so use
+> > hdr_type instead.]
+> >
+> > This change fixes a regression introduced inadvertently by commit
+> > 33f767d (ACPI: Rework acpi_get_child() to be more efficient) which
+> > overlooked the fact that for acpi_walk_namespace() "post-order" means
+> > "after all children have been visited" rather than "on the way back",
+> > so for device objects without children and for namespace walks of
+> > depth 1, as in the acpi_get_child() case, the "post-order" callbacks
+> > ordering is actually the same as the ordering of "pre-order" ones.
+> > Since that commit changed the namespace walk in acpi_get_child() to
+> > terminate after finding the first matching object instead of going
+> > through all of them and returning the last one, it effectively
+> > changed the result returned by that function in some rare cases and
+> > that led to problems (the switch from a "pre-order" to a "post-order"
+> > callback was supposed to prevent that from happening, but it was
+> > ineffective).
+> >
+> > As it turns out, the systems where the change made by commit
+> > 33f767d actually matters are those where there are multiple ACPI
+> > device objects representing the same PCIe port (which effectively
+> > is a bridge).  Moreover, only one of them, and the one we are
+> > expected to use, has child device objects in the ACPI namespace,
+> > so the regression can be addressed as described above.
+> 
+> I hesitate to suggest making the changelog even longer, but it sounds
+> like the user-visible effect of this patch is that it fixes some sort
+> of video problem?
 
->>>>> Some driver (like ixgbe) does not call pci_disable_sriov() if
->>>>> sriov is enabled via /sys/.../sriov_numvfs setting.
->>>>> ixgbe does allow driver for PF get detached, but still have VFs
->>>>> around.
->>>>
->>>> Is this something ixgbe should be doing differently?
->>>>
->>>> I'm not 100% sold on the idea of the VFs staying active after the
->>>> driver releases the PF.  It seems asymmetric because I think the
->>>> driver has to claim the PF to *enable* the VFs, but we don't disable
->>>> them when releasing the PF.
->>>>
->>>> What's the use case for detaching the PF driver while the VFs are
->>>> active?
->>>>
->>> VF's assigned to (KVM) guest (via device-assignment).
->>> Virtually, it's as if the enet cable is unplugged to the VF in the
->>> guest --
->>> the device is still there (the PF wasn't unplugged, just the driver
->>> de-configured).
->>
->> OK, but why is it necessary to detach and reattach the PF driver at
->> all?  Are you trying to update the PF driver or something?  Change the
->> number of VFs?
->>
-> One case is to update the PF driver; the other is 'operator error' :-/
-> Want to not crash the guest w/VFs, and allow operator to 'mend their
-> error',
-> i.e., re-load the PF driver back.
->
+-> It already says that video detection is the problem in the paragraph
+above the [*].
 
-That pretty much matches my understanding of things.  Basically we
-cannot modify the number of VFs until all of the VFs are unassigned.
+> > References: https://bugzilla.kernel.org/show_bug.cgi?id=60561
+> > Reported-by: Peter Wu <lekensteyn@gmail.com>
+> > Tested-by: Vladimir Lalov <mail@vlalov.com>
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: 3.9+ <stable@vger.kernel.org> # 3.9+
+> 
+> I'm OK with this as-is, and expect that you'll merge this via your
+> tree.
 
->>> Pre-sysfs-based configuration, the std way to configure the VFs into
->>> a system was to unload the PF driver, and reload it with a vf-enabling
->>> parameter
->>> (like max_vfs=<n>  in the case of ixgbe, igb).
->>
->> Yes.  But I assume the first time the PF was loaded, there were no VFs
->> enabled.  So disabling VFs at unload wouldn't cause any problem there.
->>   Then you reload the driver with "max_vfs=<n>".  The driver enables
->> VFs.  Is there any reason to unload the PF driver again?
->>
->>> Now, if someone unloaded the PF driver in the host, the unplanned
->>> removal
->>> of the PF enabled the VF to crash the host (maybe AlexD can provide the
->>> details how that occurred).
->>> So, the solution was to 'pause' the VF operation and let packets drop
->>> in the guest, and re-enable the VF operation if the PF driver was
->>> re-configured.
->>
->> I don't get this.  Why should we tolerate "unplanned removal of the
->> PF"?  If you yank the card, I would *expect* anything using it to
->> crash.
->>
-> Last time I checked, PCIe handles surprise removal, electrically,
-> on unplanned removal -- it's capacitively coupled so crashes due to
-> odd signalling transition can be handled (malformed pcie packet, w/c,
-> which aer handles/dismisses).
->
+I will.
 
-PCIe handles the surprise removal, but the kernel doesn't do much about
-it.  From what I have seen in the past surprise removal results in
-completion timeouts and reads returning ~0.  The device itself doesn't
-get removed from the bus by the device going away.
+> A few nits below, feel free to address or ignore at your discretion.
 
-> Note, the i(x)gb(e) code was designed to handle operator error around
-> PF driver removal.  hot plug/unplug was probably not tested against
-> the 'save the VF state' code in the i(x)gb(e)vf drivers.
-> Again, try asking the driver owner(s).
+I actually attempted to address some of them.  Updated patch is appended for
+completeness.
 
-I'm suspecting hot-plug will probably cause the same issues the we saw
-with the PF driver removal.  I'm still waiting on the response from
-testing before I know one way or the other.
+> If you need it:
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Thanks!
+
+> > ---
+> >  drivers/acpi/glue.c     |   99 +++++++++++++++++++++++++++++++++++++++---------
+> >  drivers/pci/pci-acpi.c  |   14 ++++--
+> >  include/acpi/acpi_bus.h |    6 ++
+> >  3 files changed, 97 insertions(+), 22 deletions(-)
+> >
+> > Index: linux-pm/drivers/acpi/glue.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/acpi/glue.c
+> > +++ linux-pm/drivers/acpi/glue.c
+> > @@ -79,34 +79,99 @@ static struct acpi_bus_type *acpi_get_bu
+> >         return ret;
+> >  }
+> >
+> > -static acpi_status do_acpi_find_child(acpi_handle handle, u32 lvl_not_used,
+> > -                                     void *addr_p, void **ret_p)
+> > +static acpi_status acpi_dev_check(acpi_handle handle, u32 lvl_not_used,
+> > +                                 void *not_used, void **ret_p)
+> 
+> "acpi_dev_check()" isn't very descriptive because it doesn't indicate
+> what we're checking for.  I guess it has to do with whether the handle
+> has a corresponding acpi_device.
+
+Your guess is correct.  I changed it to acpi_dev_present() FWIW.
+
+> >  {
+> > -       unsigned long long addr, sta;
+> > -       acpi_status status;
+> > +       struct acpi_device *adev = NULL;
+> >
+> > -       status = acpi_evaluate_integer(handle, METHOD_NAME__ADR, NULL, &addr);
+> > -       if (ACPI_SUCCESS(status) && addr == *((u64 *)addr_p)) {
+> > +       acpi_bus_get_device(handle, &adev);
+> > +       if (adev) {
+> >                 *ret_p = handle;
+> > -               status = acpi_bus_get_status_handle(handle, &sta);
+> > -               if (ACPI_SUCCESS(status) && (sta & ACPI_STA_DEVICE_ENABLED))
+> > -                       return AE_CTRL_TERMINATE;
+> > +               return AE_CTRL_TERMINATE;
+> >         }
+> >         return AE_OK;
+> >  }
+> >
+> > -acpi_handle acpi_get_child(acpi_handle parent, u64 address)
+> > +static bool acpi_dev_suitable(acpi_handle handle, bool is_bridge)
+> 
+> Same comment for "acpi_dev_suitable()".  It'd be nice to have a hint
+> about what makes it suitable.  I wish I understood better what's going
+> on so I could suggest possibilities, but I really don't.
+
+The idea is that if there's more matching objects than one, the one that we
+choose should pass some extra checks.
+
+Currently, the checks are that (1) it should be enabled and (2) if it is
+supposed to be a bridge, there should be at least one child device object
+(with struct acpi_device) below it.  They may be changed in the future,
+however, if we find more corner cases to address.
+
+I renamed that function to acpi_extra_checks_passed().
+
+> 
+> >  {
+> > -       void *ret = NULL;
+> > +       unsigned long long sta;
+> > +       acpi_status status;
+> >
+> > -       if (!parent)
+> > -               return NULL;
+> > +       status = acpi_bus_get_status_handle(handle, &sta);
+> > +       if (ACPI_FAILURE(status) || !(sta & ACPI_STA_DEVICE_ENABLED))
+> > +               return false;
+> > +
+> > +       if (is_bridge) {
+> > +               void *test = NULL;
+> > +
+> > +               /* Check if this object has at least one child device. */
+> > +               acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1, acpi_dev_check,
+> > +                                   NULL, NULL, &test);
+> > +               return !!test;
+> > +       }
+> > +       return true;
+> > +}
+> >
+> > -       acpi_walk_namespace(ACPI_TYPE_DEVICE, parent, 1, NULL,
+> > -                           do_acpi_find_child, &address, &ret);
+> > -       return (acpi_handle)ret;
+> > +struct find_child_context {
+> > +       u64 addr;
+> > +       bool is_bridge;
+> > +       acpi_handle ret;
+> > +       bool ret_checked;
+> > +};
+> > +
+> > +static acpi_status do_find_child(acpi_handle handle, u32 lvl_not_used,
+> > +                                void *data, void **not_used)
+> > +{
+> > +       struct find_child_context *context = data;
+> > +       unsigned long long addr;
+> > +       acpi_status status;
+> > +
+> > +       status = acpi_evaluate_integer(handle, METHOD_NAME__ADR, NULL, &addr);
+> > +       if (ACPI_FAILURE(status) || addr != context->addr)
+> > +               return AE_OK;
+> > +
+> > +       if (!context->ret) {
+> > +               /* This is the first matching object.  Save its handle. */
+> > +               context->ret = handle;
+> > +               return AE_OK;
+> > +       }
+> > +       /*
+> > +        * There is one more matching object with the same _ADR value.  That
+> 
+> "more than one matching object ..."?
+
+Yes, that sounds better.
+
+> > +        * really shouldn't happen, so we are kind of beyond the scope of the
+> > +        * spec here.  We have to choose which one to return, though.
+> 
+> I don't know enough about ACPI to know whether multiple objects with
+> the same _ADR are legal.  I haven't seen an explicit prohibition in
+> the spec, so it's one of those cases where I have to wonder if we're
+> trying to force a square Linux peg into a round BIOS hole.
+> 
+> The example at https://bugzilla.kernel.org/show_bug.cgi?id=60561#c16
+> is a case where two devices have the same _ADR but really don't seem
+> to conflict with each other.
+
+That's all beyond what the spec says, so we're speculating here.
+
+My interpretation of what the spec says is that if _ADR is defined, the ACPI
+object in question is supposed to represent a device on a specific bus and the
+value of _ADR is supposed to represent the adress of that device on that bus.
+Thus if there are two ACPI objects with the same _ADR value below one parent,
+they are supposed to represent the same device and so they should be the same.
+
+That seems to be consistent with what we see in the field, because we evidently
+are expected to choose one of the matching objects instead of somehow "combining"
+them together in pretty much every case I have seen so far.
+
+> > +        *
+> > +        * First, check if the previously found object is good enough and return
+> > +        * its handle if so.  Second, check the same for the object that we've
+> > +        * just found.
+> > +        */
+> > +       if (!context->ret_checked) {
+> > +               if (acpi_dev_suitable(context->ret, context->is_bridge))
+> > +                       return AE_CTRL_TERMINATE;
+> > +               else
+> > +                       context->ret_checked = true;
+> > +       }
+> > +       if (acpi_dev_suitable(handle, context->is_bridge)) {
+> > +               context->ret = handle;
+> > +               return AE_CTRL_TERMINATE;
+> > +       }
+> > +       return AE_OK;
+> > +}
+> > +
+> > +acpi_handle acpi_find_child(acpi_handle parent, u64 addr, bool is_bridge)
+> > +{
+> > +       if (parent) {
+> > +               struct find_child_context context = {
+> > +                       .addr = addr,
+> > +                       .is_bridge = is_bridge,
+> > +               };
+> > +
+> > +               acpi_walk_namespace(ACPI_TYPE_DEVICE, parent, 1, do_find_child,
+> > +                                   NULL, &context, NULL);
+> > +               return context.ret;
+> > +       }
+> > +       return NULL;
+> >  }
+> > -EXPORT_SYMBOL(acpi_get_child);
+> > +EXPORT_SYMBOL_GPL(acpi_find_child);
+> >
+> >  int acpi_bind_one(struct device *dev, acpi_handle handle)
+> >  {
+> > Index: linux-pm/include/acpi/acpi_bus.h
+> > ===================================================================
+> > --- linux-pm.orig/include/acpi/acpi_bus.h
+> > +++ linux-pm/include/acpi/acpi_bus.h
+> > @@ -439,7 +439,11 @@ struct acpi_pci_root {
+> >  };
+> >
+> >  /* helper */
+> > -acpi_handle acpi_get_child(acpi_handle, u64);
+> > +acpi_handle acpi_find_child(acpi_handle, u64, bool);
+> > +static inline acpi_handle acpi_get_child(acpi_handle handle, u64 addr)
+> > +{
+> > +       return acpi_find_child(handle, addr, false);
+> > +}
+> 
+> The use of "get" in acpi_get_child() has nothing to do with
+> refcounting, does it?
+
+No, it doesn't.  It's just misleading ...
+
+> In PCI, "get" typically implies that the function does acquire a reference
+> and the caller is responsible for disposing of it.
+
+Yes, but that's not the case here.
+
+> >  int acpi_is_root_bridge(acpi_handle);
+> >  struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle);
+> >  #define DEVICE_ACPI_HANDLE(dev) ((acpi_handle)ACPI_HANDLE(dev))
+> > Index: linux-pm/drivers/pci/pci-acpi.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/pci/pci-acpi.c
+> > +++ linux-pm/drivers/pci/pci-acpi.c
+> > @@ -309,13 +309,19 @@ void acpi_pci_remove_bus(struct pci_bus
+> >  /* ACPI bus type */
+> >  static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
+> >  {
+> > -       struct pci_dev * pci_dev;
+> > -       u64     addr;
+> > +       struct pci_dev *pci_dev = to_pci_dev(dev);
+> 
+> A blank line is typical here.
+
+It's there below, but the comment is in an unusual place.  I rearranged it in
+the new version.
+
+> > +       /*
+> > +        * pci_is_bridge() is not suitable here, because pci_dev->subordinate
+> > +        * is set only after acpi_pci_find_device() has been called for the
+> > +        * given device.
+> > +        */
+> > +       bool is_bridge = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
+> > +                       || pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+> > +       u64 addr;
+> >
+> > -       pci_dev = to_pci_dev(dev);
+> >         /* Please ref to ACPI spec for the syntax of _ADR */
+> >         addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+> > -       *handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), addr);
+> > +       *handle = acpi_find_child(ACPI_HANDLE(dev->parent), addr, is_bridge);
+> >         if (!*handle)
+> >                 return -ENODEV;
+> >         return 0;
+> 
+> It's trivial, but I do agree with Bob's preference for not modifying
+> the return value when returning failure, e.g.,
+
+I agree with that too, but that would be a change for a separate patch to me.
+
+>     h = acpi_find_child(...);
+>     if (!h)
+>         return -ENODEV;
+> 
+>     *handle = h;
+>     return 0;
+> 
+> That makes it clear that there's only one way to check for success.
+> If we return -ENODEV and also set "*handle = NULL", a sloppy caller
+> could check "*handle" for NULL, which would appear to work but isn't
+> actually correct.
+
+Agreed.
 
 Thanks,
+Rafael
 
-Alex
+
+---
+
+[Unmodified changelog.]
+
+References: https://bugzilla.kernel.org/show_bug.cgi?id=60561
+Reported-by: Peter Wu <lekensteyn@gmail.com>
+Tested-by: Vladimir Lalov <mail@vlalov.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: 3.9+ <stable@vger.kernel.org> # 3.9+
+---
+ drivers/acpi/glue.c     |   99 +++++++++++++++++++++++++++++++++++++++---------
+ drivers/pci/pci-acpi.c  |   15 +++++--
+ include/acpi/acpi_bus.h |    6 ++
+ 3 files changed, 98 insertions(+), 22 deletions(-)
+
+Index: linux-pm/drivers/acpi/glue.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -79,34 +79,99 @@ static struct acpi_bus_type *acpi_get_bu
+ 	return ret;
+ }
+ 
+-static acpi_status do_acpi_find_child(acpi_handle handle, u32 lvl_not_used,
+-				      void *addr_p, void **ret_p)
++static acpi_status acpi_dev_present(acpi_handle handle, u32 lvl_not_used,
++				  void *not_used, void **ret_p)
+ {
+-	unsigned long long addr, sta;
+-	acpi_status status;
++	struct acpi_device *adev = NULL;
+ 
+-	status = acpi_evaluate_integer(handle, METHOD_NAME__ADR, NULL, &addr);
+-	if (ACPI_SUCCESS(status) && addr == *((u64 *)addr_p)) {
++	acpi_bus_get_device(handle, &adev);
++	if (adev) {
+ 		*ret_p = handle;
+-		status = acpi_bus_get_status_handle(handle, &sta);
+-		if (ACPI_SUCCESS(status) && (sta & ACPI_STA_DEVICE_ENABLED))
+-			return AE_CTRL_TERMINATE;
++		return AE_CTRL_TERMINATE;
+ 	}
+ 	return AE_OK;
+ }
+ 
+-acpi_handle acpi_get_child(acpi_handle parent, u64 address)
++static bool acpi_extra_checks_passed(acpi_handle handle, bool is_bridge)
+ {
+-	void *ret = NULL;
++	unsigned long long sta;
++	acpi_status status;
+ 
+-	if (!parent)
+-		return NULL;
++	status = acpi_bus_get_status_handle(handle, &sta);
++	if (ACPI_FAILURE(status) || !(sta & ACPI_STA_DEVICE_ENABLED))
++		return false;
++
++	if (is_bridge) {
++		void *test = NULL;
++
++		/* Check if this object has at least one child device. */
++		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
++				    acpi_dev_present, NULL, NULL, &test);
++		return !!test;
++	}
++	return true;
++}
+ 
+-	acpi_walk_namespace(ACPI_TYPE_DEVICE, parent, 1, NULL,
+-			    do_acpi_find_child, &address, &ret);
+-	return (acpi_handle)ret;
++struct find_child_context {
++	u64 addr;
++	bool is_bridge;
++	acpi_handle ret;
++	bool ret_checked;
++};
++
++static acpi_status do_find_child(acpi_handle handle, u32 lvl_not_used,
++				 void *data, void **not_used)
++{
++	struct find_child_context *context = data;
++	unsigned long long addr;
++	acpi_status status;
++
++	status = acpi_evaluate_integer(handle, METHOD_NAME__ADR, NULL, &addr);
++	if (ACPI_FAILURE(status) || addr != context->addr)
++		return AE_OK;
++
++	if (!context->ret) {
++		/* This is the first matching object.  Save its handle. */
++		context->ret = handle;
++		return AE_OK;
++	}
++	/*
++	 * There is more than one matching object with the same _ADR value.
++	 * That really is unexpected, so we are kind of beyond the scope of the
++	 * spec here.  We have to choose which one to return, though.
++	 *
++	 * First, check if the previously found object is good enough and return
++	 * its handle if so.  Second, check the same for the object that we've
++	 * just found.
++	 */
++	if (!context->ret_checked) {
++		if (acpi_extra_checks_passed(context->ret, context->is_bridge))
++			return AE_CTRL_TERMINATE;
++		else
++			context->ret_checked = true;
++	}
++	if (acpi_extra_checks_passed(handle, context->is_bridge)) {
++		context->ret = handle;
++		return AE_CTRL_TERMINATE;
++	}
++	return AE_OK;
++}
++
++acpi_handle acpi_find_child(acpi_handle parent, u64 addr, bool is_bridge)
++{
++	if (parent) {
++		struct find_child_context context = {
++			.addr = addr,
++			.is_bridge = is_bridge,
++		};
++
++		acpi_walk_namespace(ACPI_TYPE_DEVICE, parent, 1, do_find_child,
++				    NULL, &context, NULL);
++		return context.ret;
++	}
++	return NULL;
+ }
+-EXPORT_SYMBOL(acpi_get_child);
++EXPORT_SYMBOL_GPL(acpi_find_child);
+ 
+ int acpi_bind_one(struct device *dev, acpi_handle handle)
+ {
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -439,7 +439,11 @@ struct acpi_pci_root {
+ };
+ 
+ /* helper */
+-acpi_handle acpi_get_child(acpi_handle, u64);
++acpi_handle acpi_find_child(acpi_handle, u64, bool);
++static inline acpi_handle acpi_get_child(acpi_handle handle, u64 addr)
++{
++	return acpi_find_child(handle, addr, false);
++}
+ int acpi_is_root_bridge(acpi_handle);
+ struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle);
+ #define DEVICE_ACPI_HANDLE(dev) ((acpi_handle)ACPI_HANDLE(dev))
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -309,13 +309,20 @@ void acpi_pci_remove_bus(struct pci_bus
+ /* ACPI bus type */
+ static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
+ {
+-	struct pci_dev * pci_dev;
+-	u64	addr;
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	bool is_bridge;
++	u64 addr;
+ 
+-	pci_dev = to_pci_dev(dev);
++	/*
++	 * pci_is_bridge() is not suitable here, because pci_dev->subordinate
++	 * is set only after acpi_pci_find_device() has been called for the
++	 * given device.
++	 */
++	is_bridge = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
++			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+ 	/* Please ref to ACPI spec for the syntax of _ADR */
+ 	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+-	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), addr);
++	*handle = acpi_find_child(ACPI_HANDLE(dev->parent), addr, is_bridge);
+ 	if (!*handle)
+ 		return -ENODEV;
+ 	return 0;
+
