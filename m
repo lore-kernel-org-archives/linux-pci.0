@@ -1,230 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:50976 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755026Ab3HEUmu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 16:42:50 -0400
-Message-ID: <e8189dce6211e996056d8c52e3e669ac5f49c486.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 07/20] tile PCI RC: support more MSI-X interrupt vectors
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from top.free-electrons.com ([176.31.233.9]:59051 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932266Ab3HGJdl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:33:41 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv7 07/13] irqdomain: add function to find a MSI irq_domain
+Date: Wed,  7 Aug 2013 11:32:28 +0200
+Message-Id: <1375867954-2320-8-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To support PCIe devices with higher number of MSI-X interrupt vectors,
-e.g. 16 for the LSI RAID card, enhance the Gx RC stack to provide more
-MSI-X vectors by using the TRIO Scatter Queues, which provide 8 more
-vectors in addition to ~10 from the Map Mem regions.
+Now that an irq_domain can be associated to a msi_chip structure, a
+given PCIe driver will want to find this irq_domain, based on the
+Device Tree node of the interrupt controller, as pointed by the
+'msi-controller' DT property.
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+However, since on those platforms a single piece of hardware,
+represented by a single DT node can provide both a "normal" IRQ domain
+and a MSI-type IRQ domain, we need separate lookup functions to
+distinguish them.
+
+This patch makes irq_find_host() find only non-MSI-type IRQ domains,
+and introduces irq_find_msi_host() to find only MSI-type IRQ
+domains. It does so by factorizing the irq_find_host() logic into
+__irq_find_host().
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Daniel Price <daniel.price@gmail.com>
 ---
- arch/tile/gxio/iorpc_trio.c         | 23 +++++++++++++++
- arch/tile/include/arch/trio.h       | 39 ++++++++++++++++++++++++
- arch/tile/include/gxio/iorpc_trio.h |  5 ++++
- arch/tile/kernel/pci_gx.c           | 59 ++++++++++++++++++++++++-------------
- 4 files changed, 106 insertions(+), 20 deletions(-)
+ include/linux/irqdomain.h | 21 ++++++++++++++++++++-
+ kernel/irq/irqdomain.c    | 13 ++++++++++---
+ 2 files changed, 30 insertions(+), 4 deletions(-)
 
-diff --git a/arch/tile/gxio/iorpc_trio.c b/arch/tile/gxio/iorpc_trio.c
-index cef4b22..da6e18e 100644
---- a/arch/tile/gxio/iorpc_trio.c
-+++ b/arch/tile/gxio/iorpc_trio.c
-@@ -61,6 +61,29 @@ int gxio_trio_alloc_memory_maps(gxio_trio_context_t * context,
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index b0504ff..fc669b4 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -129,7 +129,8 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
+ 					 irq_hw_number_t first_hwirq,
+ 					 const struct irq_domain_ops *ops,
+ 					 void *host_data);
+-extern struct irq_domain *irq_find_host(struct device_node *node);
++struct irq_domain *__irq_find_host(struct device_node *node,
++				   bool findmsi);
+ extern void irq_set_default_host(struct irq_domain *host);
  
- EXPORT_SYMBOL(gxio_trio_alloc_memory_maps);
+ /**
+@@ -196,6 +197,24 @@ static inline struct irq_domain *irq_domain_add_msi(struct device_node *of_node,
+ }
  
-+struct alloc_scatter_queues_param {
-+	unsigned int count;
-+	unsigned int first;
-+	unsigned int flags;
-+};
-+
-+int gxio_trio_alloc_scatter_queues(gxio_trio_context_t * context,
-+				   unsigned int count, unsigned int first,
-+				   unsigned int flags)
+ 
++/**
++ * irq_find_host() - Locates a domain for a given device node
++ * @node: device-tree node of the interrupt controller
++ */
++static inline struct irq_domain *irq_find_host(struct device_node *node)
 +{
-+	struct alloc_scatter_queues_param temp;
-+	struct alloc_scatter_queues_param *params = &temp;
-+
-+	params->count = count;
-+	params->first = first;
-+	params->flags = flags;
-+
-+	return hv_dev_pwrite(context->fd, 0, (HV_VirtAddr) params,
-+			     sizeof(*params),
-+			     GXIO_TRIO_OP_ALLOC_SCATTER_QUEUES);
++	return __irq_find_host(node, false);
 +}
 +
-+EXPORT_SYMBOL(gxio_trio_alloc_scatter_queues);
- 
- struct alloc_pio_regions_param {
- 	unsigned int count;
-diff --git a/arch/tile/include/arch/trio.h b/arch/tile/include/arch/trio.h
-index d3000a8..c0ddedc 100644
---- a/arch/tile/include/arch/trio.h
-+++ b/arch/tile/include/arch/trio.h
-@@ -23,6 +23,45 @@
- #ifndef __ASSEMBLER__
- 
- /*
-+ * Map SQ Doorbell Format.
-+ * This describes the format of the write-only doorbell register that exists
-+ * in the last 8-bytes of the MAP_SQ_BASE/LIM range.  This register is only
-+ * writable from PCIe space.  Writes to this register will not be written to
-+ * Tile memory space and thus no IO VA translation is required if the last
-+ * page of the BASE/LIM range is not otherwise written.
++/**
++ * irq_find_msi_host() - Locates a MSI domain for a given device node
++ * @node: device-tree node of the interrupt controller
 + */
-+
-+__extension__
-+typedef union
++static inline struct irq_domain *irq_find_msi_host(struct device_node *node)
 +{
-+  struct
-+  {
-+#ifndef __BIG_ENDIAN__
-+    /*
-+     * When written with a 1, the associated MAP_SQ region's doorbell
-+     * interrupt will be triggered once all previous writes are visible to
-+     * Tile software.
-+     */
-+    uint_reg_t doorbell   : 1;
-+    /*
-+     * When written with a 1, the descriptor at the head of the associated
-+     * MAP_SQ's FIFO will be dequeued.
-+     */
-+    uint_reg_t pop        : 1;
-+    /* Reserved. */
-+    uint_reg_t __reserved : 62;
-+#else   /* __BIG_ENDIAN__ */
-+    uint_reg_t __reserved : 62;
-+    uint_reg_t pop        : 1;
-+    uint_reg_t doorbell   : 1;
-+#endif
-+  };
++	return __irq_find_host(node, true);
++}
 +
-+  uint_reg_t word;
-+} TRIO_MAP_SQ_DOORBELL_FMT_t;
-+
-+
-+/*
-  * Tile PIO Region Configuration - CFG Address Format.
-  * This register describes the address format for PIO accesses when the
-  * associated region is setup with TYPE=CFG.
-diff --git a/arch/tile/include/gxio/iorpc_trio.h b/arch/tile/include/gxio/iorpc_trio.h
-index 58105c3..d95b96f 100644
---- a/arch/tile/include/gxio/iorpc_trio.h
-+++ b/arch/tile/include/gxio/iorpc_trio.h
-@@ -30,6 +30,7 @@
+ extern void irq_domain_remove(struct irq_domain *host);
  
- #define GXIO_TRIO_OP_ALLOC_MEMORY_MAPS IORPC_OPCODE(IORPC_FORMAT_NONE, 0x1404)
+ extern int irq_domain_associate(struct irq_domain *domain, unsigned int irq,
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 8d02af7..6d066e2 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -197,10 +197,14 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
+ EXPORT_SYMBOL_GPL(irq_domain_add_legacy);
  
-+#define GXIO_TRIO_OP_ALLOC_SCATTER_QUEUES IORPC_OPCODE(IORPC_FORMAT_NONE, 0x140e)
- #define GXIO_TRIO_OP_ALLOC_PIO_REGIONS IORPC_OPCODE(IORPC_FORMAT_NONE, 0x1412)
- 
- #define GXIO_TRIO_OP_INIT_PIO_REGION_AUX IORPC_OPCODE(IORPC_FORMAT_NONE, 0x1414)
-@@ -54,6 +55,10 @@ int gxio_trio_alloc_memory_maps(gxio_trio_context_t * context,
- 				unsigned int flags);
- 
- 
-+int gxio_trio_alloc_scatter_queues(gxio_trio_context_t * context,
-+				   unsigned int count, unsigned int first,
-+				   unsigned int flags);
-+
- int gxio_trio_alloc_pio_regions(gxio_trio_context_t * context,
- 				unsigned int count, unsigned int first,
- 				unsigned int flags);
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index 2cc3e64..e0d6664 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -1474,32 +1474,55 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- 	trio_context = controller->trio;
- 
- 	/*
--	 * Allocate the Mem-Map that will accept the MSI write and
--	 * trigger the TILE-side interrupts.
-+	 * Allocate a scatter-queue that will accept the MSI write and
-+	 * trigger the TILE-side interrupts. We use the scatter-queue regions
-+	 * before the mem map regions, because the latter are needed by more
-+	 * applications.
+ /**
+- * irq_find_host() - Locates a domain for a given device node
++ * __irq_find_host() - Locates a domain for a given device node,
++ * taking into account whether the domain is of MSI-type or not.
+  * @node: device-tree node of the interrupt controller
++ * @findmsi: true when the domain being search is of MSI-type, false
++ * otherwise.
+  */
+-struct irq_domain *irq_find_host(struct device_node *node)
++struct irq_domain *__irq_find_host(struct device_node *node,
++				   bool findmsi)
+ {
+ 	struct irq_domain *h, *found = NULL;
+ 	int rc;
+@@ -212,6 +216,9 @@ struct irq_domain *irq_find_host(struct device_node *node)
  	 */
--	mem_map = gxio_trio_alloc_memory_maps(trio_context, 1, 0, 0);
--	if (mem_map < 0) {
--		dev_printk(KERN_INFO, &pdev->dev,
--			"%s Mem-Map alloc failure. "
--			"Failed to initialize MSI interrupts. "
--			"Falling back to legacy interrupts.\n",
--			desc->msi_attrib.is_msix ? "MSI-X" : "MSI");
-+	mem_map = gxio_trio_alloc_scatter_queues(trio_context, 1, 0, 0);
-+	if (mem_map >= 0) {
-+		TRIO_MAP_SQ_DOORBELL_FMT_t doorbell_template = {{
-+			.pop = 0,
-+			.doorbell = 1,
-+		}};
-+
-+		mem_map += TRIO_NUM_MAP_MEM_REGIONS;
-+		mem_map_base = MEM_MAP_INTR_REGIONS_BASE +
-+			mem_map * MEM_MAP_INTR_REGION_SIZE;
-+		mem_map_limit = mem_map_base + MEM_MAP_INTR_REGION_SIZE - 1;
-+
-+		msi_addr = mem_map_base + MEM_MAP_INTR_REGION_SIZE - 8;
-+		msg.data = (unsigned int)doorbell_template.word;
-+	} else {
-+		/* SQ regions are out, allocate from map mem regions. */
-+		mem_map = gxio_trio_alloc_memory_maps(trio_context, 1, 0, 0);
-+		if (mem_map < 0) {
-+			dev_printk(KERN_INFO, &pdev->dev,
-+				"%s Mem-Map alloc failure. "
-+				"Failed to initialize MSI interrupts. "
-+				"Falling back to legacy interrupts.\n",
-+				desc->msi_attrib.is_msix ? "MSI-X" : "MSI");
-+			ret = -ENOMEM;
-+			goto msi_mem_map_alloc_failure;
-+		}
+ 	mutex_lock(&irq_domain_mutex);
+ 	list_for_each_entry(h, &irq_domain_list, link) {
++		if ((findmsi && !h->msi_chip) ||
++		    (!findmsi && h->msi_chip))
++			continue;
+ 		if (h->ops->match)
+ 			rc = h->ops->match(h, node);
+ 		else
+@@ -225,7 +232,7 @@ struct irq_domain *irq_find_host(struct device_node *node)
+ 	mutex_unlock(&irq_domain_mutex);
+ 	return found;
+ }
+-EXPORT_SYMBOL_GPL(irq_find_host);
++EXPORT_SYMBOL_GPL(__irq_find_host);
  
--		ret = -ENOMEM;
--		goto msi_mem_map_alloc_failure;
-+		mem_map_base = MEM_MAP_INTR_REGIONS_BASE +
-+			mem_map * MEM_MAP_INTR_REGION_SIZE;
-+		mem_map_limit = mem_map_base + MEM_MAP_INTR_REGION_SIZE - 1;
-+
-+		msi_addr = mem_map_base + TRIO_MAP_MEM_REG_INT3 -
-+			TRIO_MAP_MEM_REG_INT0;
-+
-+		msg.data = mem_map;
- 	}
- 
- 	/* We try to distribute different IRQs to different tiles. */
- 	cpu = tile_irq_cpu(irq);
- 
- 	/*
--	 * Now call up to the HV to configure the Mem-Map interrupt and
-+	 * Now call up to the HV to configure the MSI interrupt and
- 	 * set up the IPI binding.
- 	 */
--	mem_map_base = MEM_MAP_INTR_REGIONS_BASE +
--		mem_map * MEM_MAP_INTR_REGION_SIZE;
--	mem_map_limit = mem_map_base + MEM_MAP_INTR_REGION_SIZE - 1;
--
- 	ret = gxio_trio_config_msi_intr(trio_context, cpu_x(cpu), cpu_y(cpu),
- 					KERNEL_PL, irq, controller->mac,
- 					mem_map, mem_map_base, mem_map_limit,
-@@ -1512,13 +1535,9 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- 
- 	irq_set_msi_desc(irq, desc);
- 
--	msi_addr = mem_map_base + TRIO_MAP_MEM_REG_INT3 - TRIO_MAP_MEM_REG_INT0;
--
- 	msg.address_hi = msi_addr >> 32;
- 	msg.address_lo = msi_addr & 0xffffffff;
- 
--	msg.data = mem_map;
--
- 	write_msi_msg(irq, &msg);
- 	irq_set_chip_and_handler(irq, &tilegx_msi_chip, handle_level_irq);
- 	irq_set_handler_data(irq, controller);
+ /**
+  * irq_set_default_host() - Set a "default" irq domain
 -- 
-1.8.3.1
+1.8.1.2
 
