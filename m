@@ -1,66 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4570 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754187Ab3HBXhh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 2 Aug 2013 19:37:37 -0400
-Message-ID: <1375486647.31262.351.camel@ul30vt.home>
-Subject: Re: RFC: vfio-pci API for PCI bus/slot (hot) resets
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, kvm <kvm@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Fri, 02 Aug 2013 17:37:27 -0600
-In-Reply-To: <1375485348.15999.66.camel@pasglop>
-References: <1375395497.31262.271.camel@ul30vt.home>
-	 <1375420202.3743.97.camel@pasglop> <1375461387.31262.314.camel@ul30vt.home>
-	 <1375478934.15999.33.camel@pasglop>
-	 <CAErSpo42yK=K55J30V3xd_Ki6KEUOU6q7sUpNrAYe517=CdiDA@mail.gmail.com>
-	 <1375485348.15999.66.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from top.free-electrons.com ([176.31.233.9]:59018 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932266Ab3HGJd2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:33:28 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv7 04/13] irqdomain: add irq_alloc_mapping() function
+Date: Wed,  7 Aug 2013 11:32:25 +0200
+Message-Id: <1375867954-2320-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2013-08-03 at 09:15 +1000, Benjamin Herrenschmidt wrote:
-> On Fri, 2013-08-02 at 16:49 -0600, Bjorn Helgaas wrote:
-> > [+cc linux-pci]
-> > 
-> > On Fri, Aug 2, 2013 at 3:28 PM, Benjamin Herrenschmidt
-> > <benh@kernel.crashing.org> wrote:
-> > 
-> > > Right. Another use case is, I know of devices that need a fundamental
-> > > reset (PERST) after applying a FW update.
-> > 
-> > This is a tangent from the real discussion here, but the question of
-> > resetting a device after a firmware update concerns me.  Many if not
-> > all of our current reset interfaces save & restore the architected
-> > parts of config space around the reset.  But a reset after a firmware
-> > update may change things like the number and type of BARs or even the
-> > functionality of the device, so I don't think the restore is safe in
-> > general.
-> 
-> Right.
-> 
-> > I doubt this is a big problem in general, but I have found reports of
-> > people having to do a system reset or reboot after updating, e.g.,
-> > FPGA images.  I suppose at least some of these could be worked around
-> > with the right hotplug incantations.
-> 
-> Yes.
-> 
-> We have that similar issue with error handling, when the driver doesn't
-> have the right hooks, we simulate an unplug, reset, then replug.
-> 
-> Maybe we could provide generic helpers to do that...
+This commit extends the irqdomain subsystem with an
+irq_alloc_mapping() function which allows to let the irqdomain code
+find an available hwirq number in the range [ 0 ; domain size ] for
+the given domain, and create a virq mapping for it.
 
-Devices going away and coming back is pretty difficult for vfio to
-handle.  Perhaps helpers to rescan a device in-place would be easier.
-On the QEMU side we'd need to rescan the device after each reset, which
-would be rather tedious for the typical case where it doesn't change.
-Thanks,
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Acked-by: Grant Likely <grant.likely@linaro.org>
+Tested-by: Daniel Price <daniel.price@gmail.com>
+---
+ include/linux/irqdomain.h |  2 ++
+ kernel/irq/irqdomain.c    | 36 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-Alex
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index c983ed1..1ffa336 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -195,6 +195,8 @@ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
+ extern unsigned int irq_find_mapping(struct irq_domain *host,
+ 				     irq_hw_number_t hwirq);
+ extern unsigned int irq_create_direct_mapping(struct irq_domain *host);
++extern unsigned int irq_alloc_mapping(struct irq_domain *host,
++				      irq_hw_number_t *hwirq);
+ extern int irq_create_strict_mappings(struct irq_domain *domain,
+ 				      unsigned int irq_base,
+ 				      irq_hw_number_t hwirq_base, int count);
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 706724e..034bbac 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -375,6 +375,42 @@ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
+ EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
+ 
+ /**
++ * irq_alloc_mapping() - Allocate an irq for mapping
++ * @domain: domain to allocate the irq for or NULL for default domain
++ * @hwirq:  reference to the returned hwirq
++ *
++ * This routine are used for irq controllers which can choose the
++ * hardware interrupt number from a range [ 0 ; domain size ], such as
++ * is often the case with PCI MSI controllers. The function will
++ * returned the allocated hwirq number in the hwirq pointer, and the
++ * corresponding virq number as the return value.
++ */
++unsigned int irq_alloc_mapping(struct irq_domain *domain,
++			       irq_hw_number_t *out_hwirq)
++{
++	irq_hw_number_t hwirq;
++	int rc;
++
++	pr_debug("irq_alloc_mapping(0x%p)\n", domain);
++
++	for (hwirq = 0; hwirq < domain->revmap_size; hwirq++)
++		if (domain->linear_revmap[hwirq] == 0)
++			break;
++
++	if (hwirq == domain->hwirq_max) {
++		pr_debug("-> no available hwirq found\n");
++		return 0;
++	}
++
++	rc = irq_create_mapping(domain, hwirq);
++	if (rc)
++		*out_hwirq = hwirq;
++
++	return rc;
++}
++EXPORT_SYMBOL_GPL(irq_alloc_mapping);
++
++/**
+  * irq_create_mapping() - Map a hardware interrupt into linux irq space
+  * @domain: domain owning this hardware interrupt or NULL for default domain
+  * @hwirq: hardware irq number in that domain space
+-- 
+1.8.1.2
 
