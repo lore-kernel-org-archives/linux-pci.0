@@ -1,60 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:37334 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757566Ab3GYR5Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jul 2013 13:57:16 -0400
-Received: by mail-ob0-f174.google.com with SMTP id wd20so2196897obb.19
-        for <linux-pci@vger.kernel.org>; Thu, 25 Jul 2013 10:57:15 -0700 (PDT)
-Subject: [PATCH 0/2] PCI: Convert hotplug core and pciehp to be builtin only
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>, Tony Luck <tony.luck@intel.com>,
-	linux-ia64@vger.kernel.org, linux-sh@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org
-Date: Thu, 25 Jul 2013 11:57:12 -0600
-Message-ID: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:49536 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756833Ab3HGC4g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 Aug 2013 22:56:36 -0400
+Message-ID: <1375844191.3509.15.camel@ul30vt.home>
+Subject: Re: [PATCH v4 8/9] pci: Tune secondary bus reset timing
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, ddutile@redhat.com,
+	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Tue, 06 Aug 2013 20:56:31 -0600
+In-Reply-To: <52018664.1080103@intel.com>
+References: <20130805193200.9260.38729.stgit@bling.home>
+	 <20130805193753.9260.35206.stgit@bling.home> <52018664.1080103@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai is working on a regression fix ("PCI: Separate stop and remove
-devices in pciehp") that needs to go into v3.11, and his fix will be
-simpler if we remove the module option for pciehp in v3.11.  That will mean
-he won't have to export pci_stop_bus_device() and pci_remove_bus_device()
-for use by modules.
+On Tue, 2013-08-06 at 16:27 -0700, Alexander Duyck wrote:
+> On 08/05/2013 12:37 PM, Alex Williamson wrote:
+> > The PCI spec indicates that with stable power, reset needs to be
+> > asserted for a minimum of 1ms (Trst).  Seems like we should be able
+> > to assume power is stable for a runtime secondary bus reset.  The
+> > current code has always used 100ms with no explanation where that
+> > came from.  The aer_do_secondary_bus_reset() function uses 2ms, but
+> > that seems to be a misinterpretation of the PCIe spec, where hot
+> > reset is implemented by TS1 ordered sets containing the hot reset
+> > command.  After a 2ms delay the state machine enters the detect state,
+> > but to generate a link down, only two consecutive TS1 hot reset
+> > ordered sets are requred.  1ms should be plenty for that.
+> 
+> The reason for doing a 2ms sleep is because the are supposed to be
+> sending the Hot Reset TS1 Ordered-Sets continuously for 2ms per all of
+> the documents I have read.
 
-So these two patches convert CONFIG_HOTPLUG_PCI and CONFIG_HOTPLUG_PCI_PCIE
-to be bool (not tristate) and update defconfig files that had
-CONFIG_HOTPLUG_PCI=m.
+Could you point to one of those references?  In the PCIe v3 spec I'm
+seeing things like 4.2.6.11 Hot Reset:
 
-The motivation was for CONFIG_HOTPLUG_PCI_PCIE, but I also converted
-CONFIG_HOTPLUG_PCI to bool because the CONFIG_HOTPLUG_PCI=m and
-CONFIG_HOTPLUG_PCI_PCIE=y combination was accepted by Kconfig and builds a
-kernel, but pciehp doesn't actually work in that case (pointed out by
-Yinghai, thanks!)
+      * If two consecutive TS1 Ordered Sets are received on any Lane
+        with the Hot Reset bit asserted and configured Link and Lane
+        numbers, then:
+              * LinkUp = 0b (False)
+              * If no higher Layer is directing the Physical Layer to
+                remain in Hot Reset, the next state is Detect
+              * Otherwise, all Lanes in the configured Link continue to
+                transmit TS1 Ordered Sets with the Hot Reset bit
+                asserted and the configured Link and Lane numbers.
+      * Otherwise, after a 2 ms timeout next state is Detect.
 
-These are intended for v3.11.
+The next section has something similar for propagation of hot resets.
 
----
+Nowhere there does it say TS1 Ordered Sets need to be sent continuously
+for 2ms.  A hot reset is initiated only by two consecutive TS1 Ordered
+Sets with the Hot Reset bit asserted.  The 2ms timeout seems to be the
+delay before the link moves to the Detect state after we stop asserting
+hot reset.  1ms seems like more than enough time for two TS1 Ordered
+Sets to propagate down a multi-level hierarchy at 2.5GT/s. 
 
-Bjorn Helgaas (2):
-      PCI: hotplug: Convert to be builtin only, not modular
-      PCI: pciehp: Convert pciehp to be builtin only, not modular
+> The 1ms number you quote is the minimum time
+> for a conventional PCI bus.  I'm not completely sure of that applies as
+> well to PCIe, nor does it represent the maximum recommended value.
 
+Correct, 1ms comes from conventional PCI.  PCIe is designed to be
+software compatible with conventional PCI so it makes sense that PCIe
+would do something within the timing boundaries of conventional PCI.  I
+didn't see any reference to a maximum recommended value for this
+parameter.
 
- arch/ia64/configs/generic_defconfig    |    2 +-
- arch/ia64/configs/gensparse_defconfig  |    2 +-
- arch/ia64/configs/tiger_defconfig      |    2 +-
- arch/ia64/configs/xen_domu_defconfig   |    2 +-
- arch/powerpc/configs/ppc64_defconfig   |    2 +-
- arch/powerpc/configs/ppc64e_defconfig  |    2 +-
- arch/powerpc/configs/pseries_defconfig |    2 +-
- arch/sh/configs/sh03_defconfig         |    2 +-
- drivers/pci/hotplug/Kconfig            |    5 +----
- drivers/pci/pcie/Kconfig               |    5 +----
- 10 files changed, 10 insertions(+), 16 deletions(-)
+> If we stop early we risk not resetting the full device tree on the
+> secondary bus which is the bug I was resolving by adding the 2ms delay. 
+> Previously we saw that some devices were only getting their PCIe link
+> retrained without performing a hot reset when the bit was not held for
+> long enough.  I would prefer to keep this at 2 ms in order to account
+> for the fact that PCIe has to go though link recovery states before it
+> can perform the hot reset.
+
+I'm not going to sweat over 1ms or 2ms but I do want to be able to
+document why we're setting it to one or the other.  If it's warm
+fuzzies, so be it, but I'd prefer if we could find actual spec or
+hardware examples to back it up.  Thanks,
+
+Alex
+
