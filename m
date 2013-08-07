@@ -1,190 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:43655 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754050Ab3H0XBv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 19:01:51 -0400
-Received: by mail-oa0-f41.google.com with SMTP id j17so2010488oag.14
-        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 16:01:51 -0700 (PDT)
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:44246 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757089Ab3HGGee (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 02:34:34 -0400
+Received: by mail-ob0-f182.google.com with SMTP id wo10so3029666obc.27
+        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 23:34:34 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <F6FB0E698C9B3143BDF729DF222866466FD44279@ORSMSX110.amr.corp.intel.com>
-References: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
- <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
- <CAErSpo5AiRw7HvGQMq-n596ZkHJs_KJNn346yf+jc7yti-xpUw@mail.gmail.com>
- <CAErSpo4E9LNrfqTq1_WUoAx68_krw23BjSYbPpJPOr=zbq98xA@mail.gmail.com>
- <CAErSpo6Ky1FQeRjjbhja2KC7EYGJ2nR1ZNuYjYi89DoqLse2cw@mail.gmail.com>
- <CAErSpo7m=YB=1cHSBTwufTHAiAd+k9Re2s-ro509BELOgK8j7Q@mail.gmail.com>
- <F6FB0E698C9B3143BDF729DF222866466FD4418D@ORSMSX110.amr.corp.intel.com>
- <20130823185240.GA1507@google.com> <F6FB0E698C9B3143BDF729DF222866466FD4421F@ORSMSX110.amr.corp.intel.com>
- <CAErSpo4VLBon21cSzaigVqy6dS7=qfVRuPTTGuWAz+GLJWmNog@mail.gmail.com> <F6FB0E698C9B3143BDF729DF222866466FD44279@ORSMSX110.amr.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 27 Aug 2013 17:01:30 -0600
-Message-ID: <CAErSpo6pLsDTOPRgV0Qb3W9OSGZXkNOeBk+i47RyoFjK-xPEJw@mail.gmail.com>
-Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
- to PF Nacked" messages
-To: "Skidmore, Donald C" <donald.c.skidmore@intel.com>
-Cc: "e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20130807040112.GA14662@google.com>
+References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
+	<20130807040112.GA14662@google.com>
+Date: Tue, 6 Aug 2013 23:34:33 -0700
+Message-ID: <CAE9FiQVXhg299RKsoa8eCqoN7b9c0HaeTGHCnxQY=9vkSYaJJg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] PCI: Separate stop and remove devices in pciehp
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 23, 2013 at 3:41 PM, Skidmore, Donald C
-<donald.c.skidmore@intel.com> wrote:
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Friday, August 23, 2013 1:43 PM
->> To: Skidmore, Donald C
->> Cc: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org; linux-
->> kernel@vger.kernel.org; Don Dutile
->> Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
->> to PF Nacked" messages
->>
->> On Fri, Aug 23, 2013 at 2:37 PM, Skidmore, Donald C
->> <donald.c.skidmore@intel.com> wrote:
->> >> -----Original Message-----
->> >> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> >> Sent: Friday, August 23, 2013 11:53 AM
->> >> To: Skidmore, Donald C
->> >> Cc: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org;
->> >> linux- kernel@vger.kernel.org; Don Dutile
->> >> Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of
->> >> type 00 to PF Nacked" messages
->> >>
->> >> On Fri, Aug 23, 2013 at 06:25:06PM +0000, Skidmore, Donald C wrote:
->> >> > > -----Original Message-----
->> >> > > From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> >> > > Sent: Friday, August 23, 2013 9:53 AM
->> >> > > To: Skidmore, Donald C
->> >> > > Cc: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org;
->> >> > > linux- kernel@vger.kernel.org; Don Dutile
->> >> > > Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last
->> >> > > Request of type 00 to PF Nacked" messages
->> >> > >
->> >> > > On Tue, Aug 20, 2013 at 5:37 PM, Bjorn Helgaas
->> >> > > <bhelgaas@google.com>
->> >> > > wrote:
->> >> > > > On Tue, Aug 20, 2013 at 5:08 PM, Bjorn Helgaas
->> >> > > > <bhelgaas@google.com>
->> >> > > wrote:
->> >> > > >> On Tue, Aug 13, 2013 at 8:23 PM, Bjorn Helgaas
->> >> > > >> <bhelgaas@google.com>
->> >> > > wrote:
->> >> > > >
->> >> > > >>> I played with this a little more and found this:
->> >> > > >>>
->> >> > > >>> 1) Magma card in z420, connected to chassis containing X540:
->> >> > > >>> fails (original report)
->> >> > > >>> 2) X540 in z420, Magma card in z420, connected to empty chassis:
->> >> > > >>> fails
->> >> > > >>> 3) X540 in z420, Magma card in z420 but no cable to chassis:
->> >> > > >>> works
->> >> > > >
->> >> > > > For what it's worth, I tried config 3 again with v3.11-rc6, and
->> >> > > > it failed the same way.  I haven't bothered with config 2.
->> >> > > > It's not 100% reproducible, but at least it doesn't seem
->> >> > > > related to the expansion chassis.
->> >> > > >
->> >> > > > I attached the logs from config 3 to
->> >> > > > https://bugzilla.kernel.org/show_bug.cgi?id=60776
->> >> > >
->> >> > > Is there anything I can do to help debug this?  Add
->> >> > > instrumentation, etc.?  It seems like I'm doing the simplest
->> >> > > possible thing -- just writing to the sysfs sriov_num_vfs file to enable
->> VFs.
->> >> > >
->> >> > > I almost think it must be related to my config somehow if nobody
->> >> > > else is seeing this, but at the same time, my config also seems
->> >> > > the simplest possible, so I don't know what I could be doing that's
->> unusual.
->> >> > >
->> >> > > Bjorn
->> >> >
->> >> > Hey Bjorn,
->> >> >
->> >> > I'm may be little confused so bear with me.
->> >> >
->> >> > Option 1 = (your normal set up), Magma card plugged to chasis, X540
->> >> > in
->> >> chasis.
->> >> > Option 2 = Magma card plugged to chasis, X540 in z420 system.
->> >> > Option 3 = Magma card UNplugged from chasis, x540 in z420 system.
->> >> >
->> >> > Options 1 & 2 - always fail
->> >> > Option 3 - sometimes fails (unsure at what rate failure occurs)
->> >> >
->> >> > Please correct me if I messed any of that up. :)
->> >>
->> >> Generally correct.  I've seen failures in all three configs, so I'm
->> >> only concerned with the simplest for now (config 3, no expansion chassis).
->> >>
->> >> > Another question I have relates to the lspci output you supplied in
->> >> > the
->> >> bugzilla.  I'm not seeing the VF devices (i.e. 08:10.0) did you run
->> >> lspci before you created the VF's?  If so could we see one while the failure
->> was occurring?
->> >>
->> >> That's correct, I collected the lspci output before reproducing the
->> >> problem.  I can't easily collect lspci afterwards because the machine
->> >> isn't responsive after the problem starts.
->> >>
->> >> > Also could you download the latest ixgbevf from source forge?
->> >> >
->> >> > https://sourceforge.net/projects/e1000/files/ixgbevf%20stable/
->> >> >
->> >> > If we add debugging messages it will be easier to patch this driver
->> >> > and it
->> >> contains our latest validated code base.
->> >>
->> >> I can do that if it turns out to be necessary.  But John Haller gave
->> >> me a good clue off-list:
->> >>
->> >> John wrote:
->> >> > I assume you want the VFs to be instantiated in a VM.  To do this,
->> >> > you need to blacklist the ixgbevf driver in the host (or not
->> >> > compile it into the host), or it will try to associate the driver
->> >> > in the host, rather than in the VM where you want it.  Then, the VM
->> >> > needs the ixgbevf driver, which will hopefully do a better job of
->> >> > talking to the mailbox in the host.  There is some work to assign
->> >> > the VF(s) to the VM, but I don't remember that offhand.
->> >>
->> >> I don't have any VMs (I started this whole thing because I was
->> >> looking at a PCI hotplug issue related to SR-IOV, so I don't really care
->> about VMs).
->> >>
->> >> So the ixgbevf driver on the *host* is claiming the new VFs, and it
->> >> sounds like maybe it can't handle that?
->> >>
->> >> Bjorn
->> >
->> > Not to speak for John, but I believe he was saying if you want to use your
->> VF's in a VM you need to make sure you don't run the ixgbevf driver on the
->> host as it will "claim" the VF's.  If you are NOT running any VM's then it is
->> perfectly fine to have both ixgbe and ixgbevf loaded.
->>
->> OK.  It certainly *seemed* surprising to have the ixgbevf driver blow up,
->> even if it was an error on my part to load it in the host.  Just let me know if
->> there's any more testing I can do.
->>
->> Bjorn
+On Tue, Aug 6, 2013 at 9:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Kenji]
 >
-> Something is leading to the mbx messages being messed up as event by the " Last Request of type 03 to PF Nacked" messages.   Have you tried reseting the ixgbevf port (ethtool -r <your port>)?  Is it even possible to do this as you mentioned that in the failure state the machine isn't very responsive?
+> On Sat, Jul 27, 2013 at 08:11:06AM -0700, Yinghai Lu wrote:
+>> commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
+>> (PCI: Simplify IOV implementation and fix reference count races)
+>> broke the pcie native hotplug with SRIOV enabled: PF is not freed
+>> during hot-remove, and later hot-add do not work as old pci_dev
+>> is still around, and can not create new pci_dev.
+>>
+>> That commit need VFs to be removed via pci_disable_sriov/virtfn_remove
+>> to make sure ref to PF is put back.
 >
-> If it might be worthwhile to add logging into the ixgbevf and ixgbe drivers around the mbx messages, with the hope being that it would help show what is going between the two.  There have been some changes in that area of the ixgbevf code as of late, so working off the latest source forge driver would the easiest for me to send you patch on.  Sadly we haven't been able to recreate the failure here so it makes it rather hard to debug.
+> Huh.  I wish we didn't have virtfn_remove() at all.  I wish the
+> normal device removal path, i.e., pci_stop_and_remove_bus_device(),
+> could deal with VFs directly.  I don't know all the history there,
+> so maybe there's some reason that's not feasible.
 
-I haven't been able to reproduce the problem with the 2.10.3 ixgbevf
-driver from http://sourceforge.net/projects/e1000/files/ixgbevf%20stable/
+I had one draft version, but looks more confusing.
 
-I did notice what looks like a printk format problem and what appears
-to be a bare MAC address with no label:
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 21a7182..5f8d217 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -132,6 +132,24 @@ failed:
+     return rc;
+ }
 
-[  316.699504] ixgbevf: eth%d: ixgbevf_init_interrupt_scheme:
-Multiqueue Disabled: Rx Queue count = 1, Tx Queue count = 1
-[  316.710897] ixgbevf: eth3: ixgbevf_probe: Intel(R) X540 Virtual Function
-[  316.717608] 08:88:ff:ff:0d:ec
++void virtfn_release(struct pci_dev *virtfn)
++{
++    struct pci_dev *dev;
++    struct pci_sriov *iov;
++    int locked;
++
++    if (!virtfn->is_virtfn)
++        return;
++
++    dev = virtfn->physfn;
++    iov = dev->sriov;
++    locked = mutex_trylock(&iov->dev->sriov->lock);
++    virtfn_remove_bus(dev->bus, virtfn->bus);
++    if (locked)
++        mutex_unlock(&iov->dev->sriov->lock);
++    pci_dev_put(dev);
++}
++
+ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ {
+     char buf[VIRTFN_ID_LEN];
+@@ -161,12 +179,10 @@ static void virtfn_remove(struct pci_dev *dev,
+int id, int reset)
 
-Sorry for wasting so much time on something that appears to be already fixed.
+     mutex_lock(&iov->dev->sriov->lock);
+     pci_stop_and_remove_bus_device(virtfn);
+-    virtfn_remove_bus(dev->bus, virtfn->bus);
+     mutex_unlock(&iov->dev->sriov->lock);
 
-Bjorn
+     /* balance pci_get_domain_bus_and_slot() */
+     pci_dev_put(virtfn);
+-    pci_dev_put(dev);
+ }
+
+ static int sriov_migration(struct pci_dev *dev)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 8a00c06..1d78e95 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -262,6 +262,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+ void pci_restore_iov_state(struct pci_dev *dev);
+ int pci_iov_bus_range(struct pci_bus *bus);
++void virtfn_release(struct pci_dev *dev);
+
+ #else
+ static inline int pci_iov_init(struct pci_dev *dev)
+@@ -284,6 +285,9 @@ static inline int pci_iov_bus_range(struct pci_bus *bus)
+ {
+     return 0;
+ }
++void virtfn_release(struct pci_dev *dev)
++{
++}
+
+ #endif /* CONFIG_PCI_IOV */
+
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8fc54b7..46d9ec8 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -38,6 +38,8 @@ static void pci_destroy_dev(struct pci_dev *dev)
+     list_del(&dev->bus_list);
+     up_write(&pci_bus_sem);
+
++    virtfn_release(dev);
++
+     pci_free_resources(dev);
+     put_device(&dev->dev);
+ }
+
+
+>> +     }
+>> +
+>> +     list_for_each_entry_safe(dev, temp, &parent->devices, bus_list) {
+>> +             pci_dev_get(dev);
+>> +             pci_remove_bus_device(dev);
+>>               pci_dev_put(dev);
+>
+> I don't see the point of the pci_dev_get()/pci_dev_put() here.  It
+> doesn't do anything useful, does it?
+>
+> The pci_dev_get() doesn't help: it will keep a racing path from
+> removing the dev *after* we call pci_dev_get(), but that racing path
+> could just as easily remove the dev *before* we call pci_dev_get().
+>
+> And there's no reason to hold onto a reference after we call
+> pci_remove_bus_device(), because we don't do anything else with the
+> device before we call pci_dev_put().
+
+should be ok, just like remove one device from /sys.
+device_schedule will keep the last one ref and be put back
+after the put from pci_destroy_dev.
+
+Yinghai
