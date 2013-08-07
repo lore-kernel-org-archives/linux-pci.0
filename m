@@ -1,88 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13165 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751723Ab3HAV3d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 Aug 2013 17:29:33 -0400
-Message-ID: <51FAD338.5000306@redhat.com>
-Date: Thu, 01 Aug 2013 17:29:28 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 8/9] pci: Tune secondary bus reset timing
-References: <20130801164652.16145.79918.stgit@bling.home> <20130801165557.16145.57324.stgit@bling.home>
-In-Reply-To: <20130801165557.16145.57324.stgit@bling.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from top.free-electrons.com ([176.31.233.9]:59067 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932266Ab3HGJd6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:33:58 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv7 08/13] irqchip: armada-370-xp: properly request resources
+Date: Wed,  7 Aug 2013 11:32:29 +0200
+Message-Id: <1375867954-2320-9-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/01/2013 12:55 PM, Alex Williamson wrote:
-> The PCI spec indicates that with stable power, reset needs to be
-> asserted for a minimum of 1ms (Trst).  Seems like we should be able
-> to assume power is stable for a runtime secondary bus reset.  The
-> current code has always used 100ms with no explanation where that
-> came from.  The aer_do_secondary_bus_reset() function uses 2ms, but
-> that seems to be a misinterpretation of the PCIe spec, where hot
-> reset is implemented by TS1 ordered sets containing the hot reset
-> command.  After a 2ms delay the state machine enters the detect state,
-> but to generate a link down, only two consecutive TS1 hot reset
-> ordered sets are requred.  1ms should be plenty for that.
->
-> After reset is de-asserted we must wait for devices to complete
-> initialization.  The specs refer to this as "recovery time" (Trhfa).
-> For PCI this is 2^25 clock cycles or 2^26 for PCI-X.  For minimum
-> bus speeds, both of those come to 1s.  PCIe "softens" this
-> requirement with the Configuration Request Retry Status (CRS)
-> completion status.  Theoretically we could use CRS to shorten the
-> wait time.  We don't make use of that here, using a fixed 1s delay
-> to allow devices to re-initialize.
-Unfortunately, I don't think CRS is widely supported to make it worth
-the additional checking & use, atm.
+Instead of using of_iomap(), we now use of_address_to_resource(),
+request_mem_region() and ioremap(). This allows the corresponding I/O
+regions to be properly requested and visible in /proc/iomem.
 
->
-> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
-> ---
->   drivers/pci/pci.c |   15 +++++++++++++--
->   1 file changed, 13 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 3e71887..a5c6a9b 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3291,11 +3291,22 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
->   	pci_read_config_word(dev, PCI_BRIDGE_CONTROL,&ctrl);
->   	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
->   	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-> -	msleep(100);
-> +	/*
-> +	 * PCI spec v3.0 7.6.4.2 requires minimum Trst of 1ms.
-> +	 */
-> +	msleep(1);
->
->   	ctrl&= ~PCI_BRIDGE_CTL_BUS_RESET;
->   	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-> -	msleep(100);
-> +
-> +	/*
-> +	 * Trhfa for conventional PCI is 2^25 clock cycles.
-> +	 * Assuming a minimum 33MHz clock this results in a 1s
-> +	 * delay before we can consider subordinate devices to
-> +	 * be re-initialized.  PCIe has some ways to shorten this,
-> +	 * but we don't make use of them yet.
-> +	 */
-> +	ssleep(1);
-Can't bus speed be determined from (config space) status bits, so
-this time can be minimized, esp. on modern, PCIe busses/links ?
-Not too many 33Mhz, legacy PCI busses that this type of
-timing is desired, or will be done to (for device assignment/vfio). :-/
+The main motivation for this change is that the introduction of the
+MSI support requires us to get the physical address of the main
+interrupt controller registers, so we will need the corresponding
+'struct resource' anyway.
 
->   }
->   EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+We also take this opportunity to change a panic() to BUG_ON(), in
+order to be consistent with the rest of the driver.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Daniel Price <daniel.price@gmail.com>
+---
+ drivers/irqchip/irq-armada-370-xp.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index bb328a3..26adc74 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -248,12 +248,25 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 					     struct device_node *parent)
+ {
++	struct resource main_int_res, per_cpu_int_res;
+ 	u32 control;
+ 
+-	main_int_base = of_iomap(node, 0);
+-	per_cpu_int_base = of_iomap(node, 1);
++	BUG_ON(of_address_to_resource(node, 0, &main_int_res));
++	BUG_ON(of_address_to_resource(node, 1, &per_cpu_int_res));
+ 
++	BUG_ON(!request_mem_region(main_int_res.start,
++				   resource_size(&main_int_res),
++				   node->full_name));
++	BUG_ON(!request_mem_region(per_cpu_int_res.start,
++				   resource_size(&per_cpu_int_res),
++				   node->full_name));
++
++	main_int_base = ioremap(main_int_res.start,
++				resource_size(&main_int_res));
+ 	BUG_ON(!main_int_base);
++
++	per_cpu_int_base = ioremap(per_cpu_int_res.start,
++				   resource_size(&per_cpu_int_res));
+ 	BUG_ON(!per_cpu_int_base);
+ 
+ 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
+@@ -262,8 +275,7 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 		irq_domain_add_linear(node, (control >> 2) & 0x3ff,
+ 				&armada_370_xp_mpic_irq_ops, NULL);
+ 
+-	if (!armada_370_xp_mpic_domain)
+-		panic("Unable to add Armada_370_Xp MPIC irq domain (DT)\n");
++	BUG_ON(!armada_370_xp_mpic_domain);
+ 
+ 	irq_set_default_host(armada_370_xp_mpic_domain);
+ 
+-- 
+1.8.1.2
 
