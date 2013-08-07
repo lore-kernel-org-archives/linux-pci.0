@@ -1,82 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:59458 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751580Ab3HSXwS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Aug 2013 19:52:18 -0400
-Message-ID: <1376956328.25016.105.camel@pasglop>
-Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Date: Tue, 20 Aug 2013 09:52:08 +1000
-In-Reply-To: <1376953177.2657.33.camel@ul30vt.home>
-References: <20130814200845.21923.64284.stgit@bling.home>
-	 <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
-	 <1376521578.13642.65.camel@ul30vt.home>
-	 <1376937682.2657.15.camel@ul30vt.home>
-	 <CAErSpo50ve+ZMqcX=13hKvrB75LyWmUddC-qyX7Esfr=P5StcA@mail.gmail.com>
-	 <1376952167.25016.85.camel@pasglop> <1376953177.2657.33.camel@ul30vt.home>
-Content-Type: text/plain; charset="UTF-8"
+Received: from top.free-electrons.com ([176.31.233.9]:32881 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932464Ab3HGPGg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 11:06:36 -0400
+Date: Wed, 7 Aug 2013 17:06:29 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: [PATCHv5 08/11] ARM: pci: add ->add_bus() and ->remove_bus()
+ hooks to hw_pci
+Message-ID: <20130807170629.76ca63c1@skate>
+In-Reply-To: <20130807133719.GA26302@manwe>
+References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130725165302.GA27802@dhcp-172-17-186-34.nvidia.com>
+	<20130807111354.5e29a74c@skate>
+	<20130807133719.GA26302@manwe>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-08-19 at 16:59 -0600, Alex Williamson wrote:
-> On Tue, 2013-08-20 at 08:42 +1000, Benjamin Herrenschmidt wrote:
-> > On Mon, 2013-08-19 at 14:02 -0600, Bjorn Helgaas wrote:
-> > > I guess.  And supply the pci_slot rather than the pci_dev?  I'm a
-> > > little bit worried because the idea of a "slot" is not well-defined in
-> > > the spec, and we have sort of an ad hoc method of discovering and
-> > > managing them, e.g., acpiphp and pciehp might discover the same slot.
-> > > But I guess that's no reason to bury generic code in vfio.
+Dear Thierry Reding,
+
+On Wed, 7 Aug 2013 15:37:20 +0200, Thierry Reding wrote:
+
+> > Hum, I must be missing something here. Looking at the patch you're
+> > quoting, and my code, I see one tab before 'void' in both cases, and
+> > spaces between 'void' and the (*function) in both cases.
 > > 
-> > And I don't have pci_slot's at all yet on powerpc "powernv" (the host
-> > platform for KVM) since at this stage we don't support physical hotplug
-> > on the target machines...
-> > 
-> > Alex, why specifically looking for "slots" here ? I don't quite
-> > understand. It makes sense to be able to reset individual devices
-> > whether they are on the otherboard, behind extension chassis or directly
-> > on slots...
+> > Am I missing something here?
 > 
-> a) resetting a slot may have a smaller footprint than resetting a bus,
+> Perhaps I should've said "alignment" instead of "indentation" to make it
+> more explicit. All other members use tabs to separate the data type and
+> the field name, while the lines that you add use spaces.
 
-*May* ... at least on PCIe there is no difference. I suppose PCI pre-E
-slots might have individual reset controls.... though the way to get
-them is fairly platform specific.
+Ah, right, I understand now. Unfortunately, I've already sent PATCHv7
+with some other fixes. So either Jason Cooper can fix this when
+applying, or I'll fix it if a PATCHv8 is needed for some other reason.
 
-> b) hotplug controllers sometimes need to be involved in a bus reset.
-> For b) I have a specific example where my Lenovo S20 workstation has an
-> onboard tg3 NIC attached to a root port supporting pciehp (go figure
-> since the tg3 is soldered onto the motherboard) and doing a secondary
-> bus reset at the root port triggers a presence detection change and
-> therefore tries to do a surprise removal.  By doing a "slot" reset, I
-> have the hotplug controller code manage the bus reset by disabling
-> presence detection around the bus reset.  If you don't have slots and
-> you don't need anything special around a secondary bus reset, you're
-> fine.  It's just an opportunity to provide a hook for the hotplug
-> controller to participate.  Thanks,
+Thanks!
 
-Yuck, junk HW again ... oh well, I suppose that's never going to end...
-
-As long as the code works without the slots I'm fine :-) As I mentioned,
-we might have to do a whole different infrastructure for EEH anyway
-(which sucks but we have little choice in the matter).
-
-Cheers,
-Ben.
-
-> Alex
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe kvm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
