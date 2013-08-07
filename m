@@ -1,46 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:44264 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741Ab3HSDrU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 Aug 2013 23:47:20 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2] PCI: clean up dead code in pcie_get_mps()
-Date: Mon, 19 Aug 2013 11:47:00 +0800
-Message-ID: <1376884020-37104-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from top.free-electrons.com ([176.31.233.9]:59111 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932340Ab3HGJeS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:34:18 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv7 12/13] PCI: mvebu: add support for MSI
+Date: Wed,  7 Aug 2013 11:32:33 +0200
+Message-Id: <1375867954-2320-13-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v1->v2: rename patch name and update patch log
-        the v1 patch https://patchwork.kernel.org/patch/2837637/
+This commit adds support for Message Signaled Interrupts in the
+Marvell PCIe host controller. The work is very simple: it simply gets
+a reference to the msi_chip associated to the PCIe controller thanks
+to the msi-parent DT property, and stores this reference in the
+pci_bus structure. This is enough to let the Linux PCI core use the
+functions of msi_chip to setup and teardown MSIs.
 
-After commit 59875ae489, pcie_get_mps() will never
-return negative value. So we can remove two lines
-of dead code.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Daniel Price <daniel.price@gmail.com>
 ---
- drivers/pci/pci.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/pci/mvebu-pci.txt          |  3 +++
+ drivers/pci/host/pci-mvebu.c                       | 31 ++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 10e3c4e..86beb31 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3919,8 +3919,6 @@ int pcie_set_readrq(struct pci_dev *dev, int rq)
- 	if (pcie_bus_config == PCIE_BUS_PERFORMANCE) {
- 		int mps = pcie_get_mps(dev);
+diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+index f8d4058..77e0ffe 100644
+--- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
++++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+@@ -12,6 +12,8 @@ Mandatory properties:
+ - device_type, set to "pci"
+ - ranges: ranges for the PCI memory and I/O regions, as well as the
+   MMIO registers to control the PCIe interfaces.
++- msi-parent: Link to the hardware entity that serves as the Message
++  Signaled Interrupt controller for this PCI controller.
  
--		if (mps < 0)
--			return mps;
- 		if (mps < rq)
- 			rq = mps;
+ In addition, the Device Tree node must have sub-nodes describing each
+ PCIe interface, having the following mandatory properties:
+@@ -46,6 +48,7 @@ pcie-controller {
+ 	#size-cells = <2>;
+ 
+ 	bus-range = <0x00 0xff>;
++	msi-parent = <&mpic>;
+ 
+ 	ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
+ 		  0x82000000 0 0xd0042000 0xd0042000 0 0x00002000   /* Port 2.0 registers */
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 13a633b..884cf82 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -11,6 +11,7 @@
+ #include <linux/clk.h>
+ #include <linux/module.h>
+ #include <linux/mbus.h>
++#include <linux/msi.h>
+ #include <linux/slab.h>
+ #include <linux/platform_device.h>
+ #include <linux/of_address.h>
+@@ -107,6 +108,7 @@ struct mvebu_pcie_port;
+ struct mvebu_pcie {
+ 	struct platform_device *pdev;
+ 	struct mvebu_pcie_port *ports;
++	struct msi_chip *msi;
+ 	struct resource io;
+ 	struct resource realio;
+ 	struct resource mem;
+@@ -695,6 +697,12 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	return bus;
+ }
+ 
++void mvebu_pcie_add_bus(struct pci_bus *bus)
++{
++	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
++	bus->msi = pcie->msi;
++}
++
+ resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 					  const struct resource *res,
+ 					  resource_size_t start,
+@@ -731,6 +739,7 @@ static void __init mvebu_pcie_enable(struct mvebu_pcie *pcie)
+ 	hw.map_irq        = mvebu_pcie_map_irq;
+ 	hw.ops            = &mvebu_pcie_ops;
+ 	hw.align_resource = mvebu_pcie_align_resource;
++	hw.add_bus        = mvebu_pcie_add_bus;
+ 
+ 	pci_common_init(&hw);
+ }
+@@ -755,6 +764,26 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
+ 	return devm_request_and_ioremap(&pdev->dev, &regs);
+ }
+ 
++static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
++{
++	struct device_node *msi_node;
++	struct irq_domain *msi_domain;
++
++	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
++				    "msi-parent", 0);
++	if (!msi_node)
++		return;
++
++	msi_domain = irq_find_msi_host(msi_node);
++	if (!msi_domain)
++		return;
++
++	pcie->msi = msi_domain->msi_chip;
++
++	if (pcie->msi)
++		pcie->msi->dev = &pcie->pdev->dev;
++}
++
+ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct mvebu_pcie *pcie;
+@@ -879,6 +908,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+ 		i++;
  	}
+ 
++	mvebu_pcie_msi_enable(pcie);
++
+ 	mvebu_pcie_enable(pcie);
+ 
+ 	return 0;
 -- 
-1.7.1
-
+1.8.1.2
 
