@@ -1,52 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:64290 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754407Ab3HBWts (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 18:49:48 -0400
-Received: by mail-ob0-f173.google.com with SMTP id ta17so2198032obb.4
-        for <linux-pci@vger.kernel.org>; Fri, 02 Aug 2013 15:49:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375478934.15999.33.camel@pasglop>
-References: <1375395497.31262.271.camel@ul30vt.home> <1375420202.3743.97.camel@pasglop>
- <1375461387.31262.314.camel@ul30vt.home> <1375478934.15999.33.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 2 Aug 2013 16:49:27 -0600
-Message-ID: <CAErSpo42yK=K55J30V3xd_Ki6KEUOU6q7sUpNrAYe517=CdiDA@mail.gmail.com>
-Subject: Re: RFC: vfio-pci API for PCI bus/slot (hot) resets
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	kvm <kvm@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from gate.crashing.org ([63.228.1.57]:36879 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933320Ab3HGWqe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Aug 2013 18:46:34 -0400
+Message-ID: <1375915536.12551.9.camel@pasglop>
+Subject: Re: [PATCHv7 07/13] irqdomain: add function to find a MSI irq_domain
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Date: Thu, 08 Aug 2013 08:45:36 +1000
+In-Reply-To: <1375915344.12551.6.camel@pasglop>
+References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	 <1375867954-2320-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	 <1375908620.9300.3.camel@pasglop> <20130808000443.17f57875@skate>
+	 <1375914665.12551.5.camel@pasglop> <1375915344.12551.6.camel@pasglop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+On Thu, 2013-08-08 at 08:42 +1000, Benjamin Herrenschmidt wrote:
+> On Thu, 2013-08-08 at 08:31 +1000, Benjamin Herrenschmidt wrote:
+> > On Thu, 2013-08-08 at 00:04 +0200, Thomas Petazzoni wrote:
+> > > Again, this has been discussed at lengths in the previous iterations,
+> > > for which I already gave you all the links, as you requested in a
+> > > private e-mail. It'd be great if this discussion was read seriously,
+> > > because I really have the feeling we are restarting from zero on this
+> > > whole MSI thing...
+> > 
+> > Well, two things here:
+> > 
+> >  - You don't need my ack since I am not the maintainer of the irqdomain
+> > code anymore, Grant is :-)
+> 
+> Hrm, I'm being told Grant isn't anymore... I can step in and take it all
+> back but you might not like the result ....
 
-On Fri, Aug 2, 2013 at 3:28 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
+Oh but it looks like MAINTAINERS says I am :-)
 
-> Right. Another use case is, I know of devices that need a fundamental
-> reset (PERST) after applying a FW update.
+Ok so from that perspective, I don't like it at all. You can try to
+convince me otherwise but I don't think we need to introduce a
+dependency to something like msi into the core remapper. It's already to
+complex.
 
-This is a tangent from the real discussion here, but the question of
-resetting a device after a firmware update concerns me.  Many if not
-all of our current reset interfaces save & restore the architected
-parts of config space around the reset.  But a reset after a firmware
-update may change things like the number and type of BARs or even the
-functionality of the device, so I don't think the restore is safe in
-general.
+Why don't you move the powerpc bitmap allocator over to a generic
+place ? I feel like it would be actually simpler but feel free to prove
+me wrong.
 
-I doubt this is a big problem in general, but I have found reports of
-people having to do a system reset or reboot after updating, e.g.,
-FPGA images.  I suppose at least some of these could be worked around
-with the right hotplug incantations.
+Ben.
 
-http://forums.xilinx.com/t5/PCI-Express/PC-is-hung-if-run-the-second-program-FPGA-by-JTAG/td-p/20871
-http://www.alteraforum.com/forum/archive/index.php/t-28477.html
-http://www.alteraforum.com/forum/showthread.php?t=35091
-https://github.com/NetFPGA/NetFPGA-public/wiki/Restore-PCIE-Configuration
-http://lkml.indiana.edu/hypermail/linux/kernel/1104.3/02544.html
+
