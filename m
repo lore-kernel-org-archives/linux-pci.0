@@ -1,74 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 9 Aug 2013 14:50:36 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: linux-next: Tree for Aug 8 (not CONFIG_PCI_MSI conflict)
-Message-ID: <20130809185036.GG25111@titan.lakedaemon.net>
-References: <20130808170822.82bf33d3cf5100f5e2646815@canb.auug.org.au>
- <5203F978.2050504@infradead.org>
- <20130809145939.GE25111@titan.lakedaemon.net>
- <52051BC2.2060004@infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([78.46.96.112]:39352 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966162Ab3HHTRe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Aug 2013 15:17:34 -0400
+Date: Thu, 8 Aug 2013 21:17:32 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
+	rjw@sisk.pl, lance.ortiz@hp.com, m.chehab@samsung.com,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] mce: acpi/apei: trace: Add trace event for ghes
+ memory error
+Message-ID: <20130808191732.GE27974@pd.tnic>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <1375986471-27113-3-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52051BC2.2060004@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1375986471-27113-3-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Randy,
+On Thu, Aug 08, 2013 at 11:57:50PM +0530, Naveen N. Rao wrote:
+> +TRACE_EVENT(ghes_platform_memory_event,
+> +	TP_PROTO(const struct acpi_hest_generic_status *estatus,
+> +		 const struct acpi_hest_generic_data *gdata,
+> +		 const struct cper_sec_mem_err *mem),
+> +
+> +	TP_ARGS(estatus, gdata, mem),
+> +
+> +	TP_STRUCT__entry(
+> +		__field(	u32,	estatus_block_status		)
+> +		__field(	u32,	estatus_raw_data_offset		)
+> +		__field(	u32,	estatus_raw_data_length		)
+> +		__field(	u32,	estatus_data_length		)
+> +		__field(	u32,	estatus_error_severity		)
+> +		__array(	u8,	gdata_section_type,	16	)
+> +		__field(	u32,	gdata_error_severity		)
+> +		__field(	u16,	gdata_revision			)
+> +		__field(	u8,	gdata_validation_bits		)
+> +		__field(	u8,	gdata_flags			)
+> +		__field(	u32,	gdata_error_data_length		)
+> +		__array(	u8,	gdata_fru_id,		16	)
+> +		__array(	u8,	gdata_fru_text,		20	)
+> +		__field(	u64,	mem_validation_bits		)
+> +		__field(	u64,	mem_error_status		)
+> +		__field(	u64,	mem_physical_addr		)
+> +		__field(	u64,	mem_physical_addr_mask		)
+> +		__field(	u16,	mem_node			)
+> +		__field(	u16,	mem_card			)
+> +		__field(	u16,	mem_module			)
+> +		__field(	u16,	mem_bank			)
+> +		__field(	u16,	mem_device			)
+> +		__field(	u16,	mem_row				)
+> +		__field(	u16,	mem_column			)
+> +		__field(	u16,	mem_bit_pos			)
+> +		__field(	u64,	mem_requestor_id		)
+> +		__field(	u64,	mem_responder_id		)
+> +		__field(	u64,	mem_target_id			)
+> +		__field(	u8,	mem_error_type			)
+> +	),
 
-On Fri, Aug 09, 2013 at 09:41:38AM -0700, Randy Dunlap wrote:
-> On 08/09/13 07:59, Jason Cooper wrote:
-> > Randy,
-> > 
-> > On Thu, Aug 08, 2013 at 01:03:04PM -0700, Randy Dunlap wrote:
-> >> On 08/08/13 00:08, Stephen Rothwell wrote:
-> >>> Hi all,
-> >>>
-> >>> Changes since 20130807:
-> >>>
-> >>
-> >> on i386 and x86_64:
-> >> when CONFIG_PCI_MSI is not enabled:
-> >>
-> >> There are many of these errors:
-> >> include/linux/msi.h:65:6: error: expected identifier or '(' before 'void'
-> >> include/linux/msi.h:65:6: error: expected ')' before numeric constant
-> >>
-> >> because arch/x86/include/asm/pci.h defines:
-> >> #define default_teardown_msi_irqs	NULL
-> > 
-> > Do you have an example config you used?
-> 
-> Sure, attached. (or I have 14 of them)
+Without looking at the rest, a trace record from this tracepoint is
+going to be 160 bytes IINM, which looks kinda fat to me. And during an
+error storm we're probably not going to be able to log them all, maybe?
+Yes, no, maybe I'm off base...
 
-Thanks, I was able to reproduce the error.  I'm not real familiar with
-this area of the code, but the relief is it doesn't appear to be caused
-by the mvebu changes (well, relief for us ;-) ).
+In any case, are we sure we want all those fields above? Can we make
+them smaller, drop some of them from the tracepoint, etc, etc? Can we
+compute some of them in userspace with information we already have?
 
-At any rate, give this a spin and see if it works for you
+Hmmm.
 
-If it's acceptable, I'll do an official patch for Bjorn.
+-- 
+Regards/Gruss,
+    Boris.
 
-thx,
-
-Jason.
-
----------->8----------
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index d9e9e6c..6169414 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -138,8 +138,8 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
- #else
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
--#define default_teardown_msi_irqs	NULL
--#define default_restore_msi_irqs	NULL
-+void __weak default_teardown_msi_irqs(struct pci_dev *dev) { }
-+void __weak default_restore_msi_irqs(struct pci_dev *dev, int irq) { }
- #endif
- 
- #define PCI_DMA_BUS_IS_PHYS (dma_ops->is_phys)
+Sent from a fat crate under my desk. Formatting is fine.
+--
