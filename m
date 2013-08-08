@@ -1,168 +1,298 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20390 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772Ab3H2Cwa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 22:52:30 -0400
-Message-ID: <521EB76B.8090903@oracle.com>
-Date: Thu, 29 Aug 2013 10:52:27 +0800
-From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Reply-To: zhenzhong.duan@oracle.com
-MIME-Version: 1.0
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Feng Jin <joe.jin@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Subject: [PATCH 2/3 v3] Refactor MSI restore call-chain to drop unnecessary
- argument
-Content-Type: text/plain; charset=GB2312
+Received: from top.free-electrons.com ([176.31.233.9]:41366 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758212Ab3HHWSN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 18:18:13 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv8 06/10] irqchip: armada-370-xp: implement MSI support
+Date: Fri,  9 Aug 2013 00:17:44 +0200
+Message-Id: <1376000268-18397-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Driver init call graph under baremetal:
-driver_init->
-    msix_capability_init->
-        msix_program_entries->
-            msix_mask_irq->
-                entry->masked = 1
-    request_irq->
-        __setup_irq->
-            irq_startup->
-                unmask_msi_irq->
-                    msix_mask_irq->
-                        entry->masked = 0
+This commit introduces the support for the MSI interrupts in the
+armada-370-xp interrupt controller driver. It registers an MSI chip to
+the MSI chip registry, which will be used by the Marvell PCIe host
+controller driver.
 
-So entry->masked is always updated with newest value and its value could be used
-to restore to mask register in device.
+The MSI interrupts use the 16 high doorbells, and are therefore
+notified using IRQ1 of the main interrupt controller.
 
-But in initial domain (aka priviliged guest), it's different.
-Driver init call graph under initial domain:
-driver_init->
-    msix_capability_init->
-        msix_program_entries->
-            msix_mask_irq->
-                entry->masked = 1
-    request_irq->
-        __setup_irq->
-            irq_startup->
-                __startup_pirq->
-                    EVTCHNOP_bind_pirq hypercall    (trap into Xen)
-[Xen:]
-pirq_guest_bind->
-    startup_msi_irq->
-        unmask_msi_irq->
-            msi_set_mask_bit->
-                entry->msi_attrib.masked = 0
-
-So entry->msi_attrib.masked in xen side always has newest value. entry->masked
-in initial domain is untouched and is 1 after msix_capability_init.
-
-Based on above, it's Xen's duty to restore entry->msi_attrib.masked to device,
-but with current code, entry->masked is used and MSI-x interrupt is masked.
-
-Before patch, restore call graph under initial domain:
-pci_reset_function->
-    pci_restore_state->
-        __pci_restore_msix_state->
-            arch_restore_msi_irqs->
-                xen_initdom_restore_msi_irqs->
-                    PHYSDEVOP_restore_msi hypercall (first mask restore)
-            msix_mask_irq(entry, entry->masked)     (second mask restore)
-
-So msix_mask_irq call in initial domain call graph needs to be removed.
-
-Based on this we can move the restore of the mask in default_restore_msi_irqs
-which would avoid restoring the invalid mask under Xen. Furthermore this
-simplifies the API by making everything related to restoring an MSI be in the
-platform specific APIs instead of just parts of it.
-
-After patch, restore call graph under initial domain:
-pci_reset_function->
-    pci_restore_state->
-        __pci_restore_msix_state->
-            arch_restore_msi_irqs->
-                xen_initdom_restore_msi_irqs->
-                    PHYSDEVOP_restore_msi hypercall (first mask restore)
-
-Logic for baremetal is not changed.
-Before patch, restore call graph under baremetal:
-pci_reset_function->
-    pci_restore_state->
-        __pci_restore_msix_state->
-            arch_restore_msi_irqs->
-                default_restore_msi_irqs->
-            msix_mask_irq(entry, entry->masked)     (first mask restore)
-
-After patch, restore call graph under baremetal:
-pci_reset_function->
-    pci_restore_state->
-        __pci_restore_msix_state->
-            arch_restore_msi_irqs->
-                default_restore_msi_irqs->
-                    msix_mask_irq(entry, entry->masked) (first mask restore)
-
-The process for MSI code is similiar.
-
--v3: Update patch description per Konrad suggestion, thanks.
-
-Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/msi.c |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
+ .../devicetree/bindings/arm/armada-370-xp-mpic.txt |   3 +
+ drivers/irqchip/irq-armada-370-xp.c                | 182 ++++++++++++++++++++-
+ 2 files changed, 184 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 87223ae..922fb49 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
- #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
- void default_restore_msi_irqs(struct pci_dev *dev, int irq)
- {
-+	int pos;
-+	u16 control;
- 	struct msi_desc *entry;
+diff --git a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+index 61df564..d74091a 100644
+--- a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
++++ b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+@@ -4,6 +4,8 @@ Marvell Armada 370 and Armada XP Interrupt Controller
+ Required properties:
+ - compatible: Should be "marvell,mpic"
+ - interrupt-controller: Identifies the node as an interrupt controller.
++- msi-controller: Identifies the node as an PCI Message Signaled
++  Interrupt controller.
+ - #interrupt-cells: The number of cells to define the interrupts. Should be 1.
+   The cell is the IRQ number
  
- 	entry = NULL;
-@@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
- 		entry = irq_get_msi_desc(irq);
- 	}
+@@ -24,6 +26,7 @@ Example:
+               #address-cells = <1>;
+               #size-cells = <1>;
+               interrupt-controller;
++              msi-controller;
+               reg = <0xd0020a00 0x1d0>,
+                     <0xd0021070 0x58>;
+         };
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index 26adc74..433cc85 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -21,7 +21,10 @@
+ #include <linux/io.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
++#include <linux/of_pci.h>
+ #include <linux/irqdomain.h>
++#include <linux/slab.h>
++#include <linux/msi.h>
+ #include <asm/mach/arch.h>
+ #include <asm/exception.h>
+ #include <asm/smp_plat.h>
+@@ -51,12 +54,22 @@
+ #define IPI_DOORBELL_START                      (0)
+ #define IPI_DOORBELL_END                        (8)
+ #define IPI_DOORBELL_MASK                       0xFF
++#define PCI_MSI_DOORBELL_START                  (16)
++#define PCI_MSI_DOORBELL_NR                     (16)
++#define PCI_MSI_DOORBELL_END                    (32)
++#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
  
--	if (entry)
-+	if (entry) {
- 		write_msi_msg(irq, &entry->msg);
-+		if (dev->msix_enabled) {
-+			msix_mask_irq(entry, entry->masked);
-+			readl(entry->mask_base);
-+		} else {
-+			pos = entry->msi_attrib.pos;
-+			pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
-+					     &control);
-+			msi_mask_irq(entry, msi_capable_mask(control),
-+				     entry->masked);
-+		}
-+	}
+ static DEFINE_RAW_SPINLOCK(irq_controller_lock);
+ 
+ static void __iomem *per_cpu_int_base;
+ static void __iomem *main_int_base;
+ static struct irq_domain *armada_370_xp_mpic_domain;
++#ifdef CONFIG_PCI_MSI
++static struct irq_domain *armada_370_xp_msi_domain;
++static DECLARE_BITMAP(msi_used, PCI_MSI_DOORBELL_NR);
++static DEFINE_MUTEX(msi_used_lock);
++static phys_addr_t msi_doorbell_addr;
++#endif
+ 
+ /*
+  * In SMP mode:
+@@ -87,6 +100,144 @@ static void armada_370_xp_irq_unmask(struct irq_data *d)
+ 				ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
  }
+ 
++#ifdef CONFIG_PCI_MSI
++
++static int armada_370_xp_alloc_msi(void)
++{
++	int hwirq;
++
++	mutex_lock(&msi_used_lock);
++	hwirq = find_first_zero_bit(&msi_used, PCI_MSI_DOORBELL_NR);
++	if (hwirq >= PCI_MSI_DOORBELL_NR)
++		hwirq = -ENOSPC;
++	else
++		set_bit(hwirq, msi_used);
++	mutex_unlock(&msi_used_lock);
++
++	return hwirq;
++}
++
++static void armada_370_xp_free_msi(int hwirq)
++{
++	mutex_lock(&msi_used_lock);
++	if (!test_bit(hwirq, msi_used))
++		pr_err("trying to free unused MSI#%d\n", hwirq);
++	else
++		clear_bit(hwirq, msi_used);
++	mutex_unlock(&msi_used_lock);
++}
++
++static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
++				       struct pci_dev *pdev,
++				       struct msi_desc *desc)
++{
++	struct msi_msg msg;
++	irq_hw_number_t hwirq;
++	int virq;
++
++	hwirq = armada_370_xp_alloc_msi();
++	if (hwirq < 0)
++		return hwirq;
++
++	virq = irq_create_mapping(armada_370_xp_msi_domain, hwirq);
++	if (!virq) {
++		armada_370_xp_free_msi(hwirq);
++		return -EINVAL;
++	}
++
++	irq_set_msi_desc(virq, desc);
++
++	msg.address_lo = msi_doorbell_addr;
++	msg.address_hi = 0;
++	msg.data = 0xf00 | (hwirq + 16);
++
++	write_msi_msg(virq, &msg);
++	return 0;
++}
++
++static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
++					   unsigned int irq)
++{
++	struct irq_data *d = irq_get_irq_data(irq);
++	irq_dispose_mapping(irq);
++	armada_370_xp_free_msi(d->hwirq);
++}
++
++static struct irq_chip armada_370_xp_msi_irq_chip = {
++	.name = "armada_370_xp_msi_irq",
++	.irq_enable = unmask_msi_irq,
++	.irq_disable = mask_msi_irq,
++	.irq_mask = mask_msi_irq,
++	.irq_unmask = unmask_msi_irq,
++};
++
++static int armada_370_xp_msi_map(struct irq_domain *domain, unsigned int virq,
++				 irq_hw_number_t hw)
++{
++	irq_set_chip_and_handler(virq, &armada_370_xp_msi_irq_chip,
++				 handle_simple_irq);
++	set_irq_flags(virq, IRQF_VALID);
++
++	return 0;
++}
++
++static const struct irq_domain_ops armada_370_xp_msi_irq_ops = {
++	.map = armada_370_xp_msi_map,
++};
++
++static int armada_370_xp_msi_init(struct device_node *node,
++				  phys_addr_t main_int_phys_base)
++{
++	struct msi_chip *msi_chip;
++	u32 reg;
++	int ret;
++
++	msi_doorbell_addr = main_int_phys_base +
++		ARMADA_370_XP_SW_TRIG_INT_OFFS;
++
++	msi_chip = kzalloc(sizeof(*msi_chip), GFP_KERNEL);
++	if (!msi_chip)
++		return -ENOMEM;
++
++	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
++	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
++	msi_chip->of_node = node;
++
++	armada_370_xp_msi_domain =
++		irq_domain_add_linear(NULL, PCI_MSI_DOORBELL_NR,
++				      &armada_370_xp_msi_irq_ops,
++				      NULL);
++	if (!armada_370_xp_msi_domain) {
++		kfree(msi_chip);
++		return -ENOMEM;
++	}
++
++	ret = of_pci_msi_chip_add(msi_chip);
++	if (ret < 0) {
++		irq_domain_remove(armada_370_xp_msi_domain);
++		kfree(msi_chip);
++		return ret;
++	}
++
++	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
++		| PCI_MSI_DOORBELL_MASK;
++
++	writel(reg, per_cpu_int_base +
++	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
++
++	/* Unmask IPI interrupt */
++	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
++
++	return 0;
++}
++#else
++static inline int armada_370_xp_msi_init(struct device_node *node,
++					 phys_addr_t main_int_phys_base)
++{
++	return 0;
++}
++#endif
++
+ #ifdef CONFIG_SMP
+ static int armada_xp_set_affinity(struct irq_data *d,
+ 				  const struct cpumask *mask_val, bool force)
+@@ -214,12 +365,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ 		if (irqnr > 1022)
+ 			break;
+ 
+-		if (irqnr > 0) {
++		if (irqnr > 1) {
+ 			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
+ 					irqnr);
+ 			handle_IRQ(irqnr, regs);
+ 			continue;
+ 		}
++
++#ifdef CONFIG_PCI_MSI
++		/* MSI handling */
++		if (irqnr == 1) {
++			u32 msimask, msinr;
++
++			msimask = readl_relaxed(per_cpu_int_base +
++						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
++				& PCI_MSI_DOORBELL_MASK;
++
++			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
++			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
++
++			for (msinr = PCI_MSI_DOORBELL_START;
++			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
++				int irq;
++
++				if (!(msimask & BIT(msinr)))
++					continue;
++
++				irq = irq_find_mapping(armada_370_xp_msi_domain,
++						       msinr - 16);
++				handle_IRQ(irq, regs);
++			}
++		}
++#endif
++
+ #ifdef CONFIG_SMP
+ 		/* IPI Handling */
+ 		if (irqnr == 0) {
+@@ -292,6 +470,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 
  #endif
  
-@@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 	arch_restore_msi_irqs(dev, dev->irq);
++	armada_370_xp_msi_init(node, main_int_res.start);
++
+ 	set_handle_irq(armada_370_xp_handle_irq);
  
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
--	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
- 	control &= ~PCI_MSI_FLAGS_QSIZE;
- 	control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
- 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-@@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
- 
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		arch_restore_msi_irqs(dev, entry->irq);
--		msix_mask_irq(entry, entry->masked);
- 	}
- 
- 	control &= ~PCI_MSIX_FLAGS_MASKALL;
+ 	return 0;
 -- 
-1.7.3
+1.8.1.2
 
