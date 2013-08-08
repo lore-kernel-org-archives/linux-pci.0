@@ -1,52 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:27472 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752922Ab3H2IKE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 04:10:04 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSA00D3D9AVM2F0@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 29 Aug 2013 17:10:02 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Seungwon Jeon' <tgih.jun@samsung.com>, linux-pci@vger.kernel.org
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <001c01cea3e5$37716660$a6543320$%jun@samsung.com>
-In-reply-to: <001c01cea3e5$37716660$a6543320$%jun@samsung.com>
-Subject: Re: [PATCH 1/3] PCI: dw_pcie: amend I/O access functions
-Date: Thu, 29 Aug 2013 17:10:01 +0900
-Message-id: <001101cea48f$29417f80$7bc47e80$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v5 4/9] pci: Add slot reset option to pci_dev_reset
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
+	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 08 Aug 2013 14:09:43 -0600
+Message-ID: <20130808200943.2932.42781.stgit@bling.home>
+In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
+References: <20130808200444.2932.17381.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, August 28, 2013 8:54 PM, Seungwon Jeon wrote:
-> 
-> This changes puts the 'dbi_base' into dw_pcie_readl_rc/
-> dw_pcie_writel_rc. So usage of these funcions doesn't
-> need to consider I/O base adddress anymore.
-> 
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+If the hotplug controller provides a way to reset a slot, use that
+before a direct parent bus reset.  Like the bus reset option, this is
+only available when a single pci_dev occupies the slot.
 
-CC'ed Pratyush Anand, Mohit KUMAR, Kishon Vijay Abraham I
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-Thank you for sending the patch.
-It looks good. Also, I tested this patch on Exynos5440.
-
-Acked-by: Jingoo Han <jg1.han@samsung.com>
-
-Best regards,
-Jingoo Han
-
-> ---
->  drivers/pci/host/pcie-designware.c |  135 +++++++++++++++---------------------
->  1 files changed, 55 insertions(+), 80 deletions(-)
->
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d468608..9407aab 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -22,6 +22,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
++#include <linux/pci_hotplug.h>
+ #include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include "pci.h"
+@@ -3256,6 +3257,35 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
++static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
++{
++	int rc = -ENOTTY;
++
++	if (!hotplug || !try_module_get(hotplug->ops->owner))
++		return rc;
++
++	if (hotplug->ops->reset_slot)
++		rc = hotplug->ops->reset_slot(hotplug, probe);
++
++	module_put(hotplug->ops->owner);
++
++	return rc;
++}
++
++static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
++{
++	struct pci_dev *pdev;
++
++	if (dev->subordinate || !dev->slot)
++		return -ENOTTY;
++
++	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
++		if (pdev != dev && pdev->slot == dev->slot)
++			return -ENOTTY;
++
++	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
++}
++
+ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+ {
+ 	int rc;
+@@ -3278,6 +3308,10 @@ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+ 	if (rc != -ENOTTY)
+ 		goto done;
+ 
++	rc = pci_dev_reset_slot_function(dev, probe);
++	if (rc != -ENOTTY)
++		goto done;
++
+ 	rc = pci_parent_bus_reset(dev, probe);
+ done:
+ 	return rc;
 
