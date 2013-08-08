@@ -1,113 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60122 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:21980 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751117Ab3HSUEM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Aug 2013 16:04:12 -0400
-Subject: [PATCH] pci: Add pci_walk_slot() interface
-To: bhelgaas@google.com
+	id S966282Ab3HHUKe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Aug 2013 16:10:34 -0400
+Subject: [PATCH v5 7/9] pci: Wake-up devices before save for reset
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
 From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 19 Aug 2013 14:04:10 -0600
-Message-ID: <20130819195917.9062.43580.stgit@bling.home>
+Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
+	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 08 Aug 2013 14:10:02 -0600
+Message-ID: <20130808201001.2932.66514.stgit@bling.home>
+In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
+References: <20130808200444.2932.17381.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have a pci_walk_bus() interface, but it's exceptionally cumbersome
-for the callback function to figure out if the device is relevant if
-the caller is trying to walk all the devices in or below a slot.  Add
-a variant to walk only slot devices.
+Devices come out of reset in D0.  Restoring a device to a different
+post-reset state takes more smarts than our simple config space
+restore, which can leave devices in an inconsistent state.  For
+example, if a device is reset in D3, but the restore doesn't
+successfully return the device to D3, then the actual state of the
+device and dev->current_state are contradictory.  Put everything
+in D0 going into the reset, then we don't need to do anything
+special on the way out.
 
 Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
+ drivers/pci/pci.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-This allows me to use pci_walk_bus() and pci_walk_slot() instead of
-rolling my own for iterating devices for bus/slot reset.  Please
-consider for 3.12 to go with the rest of the bus/slot infrastructure.
-
- drivers/pci/bus.c   |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    2 ++
- 2 files changed, 58 insertions(+)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index b1ff02a..316579a 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -283,6 +283,62 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- }
- EXPORT_SYMBOL_GPL(pci_walk_bus);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1dba7dd..b204206 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3332,6 +3332,13 @@ static void pci_dev_unlock(struct pci_dev *dev)
  
-+/** pci_walk_slot - walk devices in/under slot, calling callback.
-+ *  @slot     slot whose devices should be walked
-+ *  @cb       callback to be called for each device found
-+ *  @userdata arbitrary pointer to be passed to callback.
-+ *
-+ *  Walk the given slot, including any bridged devices
-+ *  on buses under this slot.  Call the provided callback
-+ *  on each device found.
-+ *
-+ *  We check the return of @cb each time. If it returns anything
-+ *  other than 0, we break out.
-+ *
-+ */
-+void pci_walk_slot(struct pci_slot *slot, int (*cb)(struct pci_dev *, void *),
-+		   void *userdata)
-+{
-+	struct pci_dev *dev;
-+	struct pci_bus *bus;
-+	struct list_head *next;
-+	int retval;
-+
-+	bus = slot->bus;
-+	down_read(&pci_bus_sem);
-+	next = slot->bus->devices.next;
-+	for (;;) {
-+		if (next == &bus->devices) {
-+			/* end of this bus, go up or finish */
-+			if (bus == slot->bus)
-+				break;
-+			next = bus->self->bus_list.next;
-+			bus = bus->self->bus;
-+			continue;
-+		}
-+		dev = list_entry(next, struct pci_dev, bus_list);
-+
-+		/* skip anything on the top level bus not in our slot */
-+		if (dev->bus == slot->bus && dev->slot != slot) {
-+			next = dev->bus_list.next;
-+			continue;
-+		}
-+
-+		if (dev->subordinate) {
-+			/* this is a pci-pci bridge, do its devices next */
-+			next = dev->subordinate->devices.next;
-+			bus = dev->subordinate;
-+		} else
-+			next = dev->bus_list.next;
-+
-+		retval = cb(dev, userdata);
-+		if (retval)
-+			break;
-+	}
-+	up_read(&pci_bus_sem);
-+}
-+EXPORT_SYMBOL_GPL(pci_walk_slot);
-+
- struct pci_bus *pci_bus_get(struct pci_bus *bus)
+ static void pci_dev_save_and_disable(struct pci_dev *dev)
  {
- 	if (bus)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index daf40cd..cbb291b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1087,6 +1087,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 
- void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- 		  void *userdata);
-+void pci_walk_slot(struct pci_slot *slot, int (*cb)(struct pci_dev *, void *),
-+		  void *userdata);
- int pci_cfg_space_size_ext(struct pci_dev *dev);
- int pci_cfg_space_size(struct pci_dev *dev);
- unsigned char pci_bus_max_busnr(struct pci_bus *bus);
++	/*
++	 * Wake-up device prior to save.  PM registers default to D0 after
++	 * reset and a simple register restore doesn't reliably return
++	 * to a non-D0 state anyway.
++	 */
++	pci_set_power_state(dev, PCI_D0);
++
+ 	pci_save_state(dev);
+ 	/*
+ 	 * Disable the device by clearing the Command register, except for
 
