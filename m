@@ -1,18 +1,17 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:42888 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757239Ab3HHByf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 21:54:35 -0400
-Received: by mail-ob0-f173.google.com with SMTP id ta17so4701836obb.18
-        for <linux-pci@vger.kernel.org>; Wed, 07 Aug 2013 18:54:34 -0700 (PDT)
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:57725 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757029Ab3HHBt0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 21:49:26 -0400
+Received: by mail-oa0-f43.google.com with SMTP id i10so4529761oag.2
+        for <linux-pci@vger.kernel.org>; Wed, 07 Aug 2013 18:49:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWftukxyNiyM2znVPh7x82de3nhRMQwGHigZtOvU6xQ6g@mail.gmail.com>
+In-Reply-To: <CAE9FiQVXhg299RKsoa8eCqoN7b9c0HaeTGHCnxQY=9vkSYaJJg@mail.gmail.com>
 References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
 	<20130807040112.GA14662@google.com>
 	<CAE9FiQVXhg299RKsoa8eCqoN7b9c0HaeTGHCnxQY=9vkSYaJJg@mail.gmail.com>
-	<CAE9FiQWftukxyNiyM2znVPh7x82de3nhRMQwGHigZtOvU6xQ6g@mail.gmail.com>
-Date: Wed, 7 Aug 2013 18:54:34 -0700
-Message-ID: <CAE9FiQUyEaakfHia4DAb_KriGtzNwLei7jX2Y+31hTb4XvieWA@mail.gmail.com>
+Date: Wed, 7 Aug 2013 18:49:25 -0700
+Message-ID: <CAE9FiQWftukxyNiyM2znVPh7x82de3nhRMQwGHigZtOvU6xQ6g@mail.gmail.com>
 Subject: Re: [PATCH v2 2/3] PCI: Separate stop and remove devices in pciehp
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
@@ -20,41 +19,125 @@ Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Jiang Liu <liuj97@gmail.com>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed; boundary=001a11c2e74c35998804e365de70
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 7, 2013 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Aug 6, 2013 at 11:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Tue, Aug 6, 2013 at 9:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>
->>> Huh.  I wish we didn't have virtfn_remove() at all.  I wish the
->>> normal device removal path, i.e., pci_stop_and_remove_bus_device(),
->>> could deal with VFs directly.  I don't know all the history there,
->>> so maybe there's some reason that's not feasible.
+--001a11c2e74c35998804e365de70
+Content-Type: text/plain; charset=ISO-8859-1
+
+On Tue, Aug 6, 2013 at 11:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Aug 6, 2013 at 9:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 >>
->> I had one draft version, but looks more confusing.
+>> Huh.  I wish we didn't have virtfn_remove() at all.  I wish the
+>> normal device removal path, i.e., pci_stop_and_remove_bus_device(),
+>> could deal with VFs directly.  I don't know all the history there,
+>> so maybe there's some reason that's not feasible.
 >
-> please check attached that make pci_stop_and_remove_bus_device()
-> could be used with VF.
+> I had one draft version, but looks more confusing.
 
-If this solution could be used, we can revert
+please check attached that make pci_stop_and_remove_bus_device()
+could be used with VF.
 
-commit dfab88beda88d6c24111e5966b08ecf813c3a18a
-Author: Jiang Liu <liuj97@gmail.com>
-Date:   Fri May 31 12:21:31 2013 +0800
+It could replace
+https://patchwork.kernel.org/patch/2834638/
+https://patchwork.kernel.org/patch/2834639/
 
-    PCI: Hide remove and rescan sysfs interfaces for SR-IOV virtual functions
+Please choose one of the solutions.
 
+but we still need
+https://patchwork.kernel.org/patch/2834640/
+as VFs that does not use ARI could be on other virtual bus.
+so they will not be removed directly.
 
->
-> It could replace
-> https://patchwork.kernel.org/patch/2834638/
-> https://patchwork.kernel.org/patch/2834639/
->
-> Please choose one of the solutions.
->
-> but we still need
-> https://patchwork.kernel.org/patch/2834640/
-> as VFs that does not use ARI could be on other virtual bus.
-> so they will not be removed directly.
+Thanks
+
+Yinghai
+
+--001a11c2e74c35998804e365de70
+Content-Type: application/octet-stream; name="virtfn_release.patch"
+Content-Disposition: attachment; filename="virtfn_release.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hk3aycp30
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IFJlbGVhc2UgUEYgcmVmIGR1cmluZyByZW1vdmluZyBWRgpG
+cm9tOiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+Cgpjb21taXQgZGMwODdmMmY2YTI5
+MjVlODE4MzFmMzAxNmI5Y2JiNmU0NzBlNzQyMwooUENJOiBTaW1wbGlmeSBJT1YgaW1wbGVtZW50
+YXRpb24gYW5kIGZpeCByZWZlcmVuY2UgY291bnQgcmFjZXMpCmJyb2tlIHRoZSBwY2llIG5hdGl2
+ZSBob3RwbHVnIHdpdGggU1JJT1YgZW5hYmxlZDogUEYgaXMgbm90IGZyZWVkCmR1cmluZyBob3Qt
+cmVtb3ZlLCBhbmQgbGF0ZXIgaG90LWFkZCBkbyBub3Qgd29yayBhcyBvbGQgcGNpX2RldgppcyBz
+dGlsbCBhcm91bmQsIGFuZCBjYW4gbm90IGNyZWF0ZSBuZXcgcGNpX2Rldi4KClRoYXQgY29tbWl0
+IG5lZWQgVkZzIHRvIGJlIHJlbW92ZWQgdmlhIHBjaV9kaXNhYmxlX3NyaW92L3ZpcnRmbl9yZW1v
+dmUKdG8gbWFrZSBzdXJlIHJlZiB0byBQRiBpcyBwdXQgYmFjay4KClNvIHdlIGNhbiBub3QgY2Fs
+bCBzdG9wX2FuZF9yZW1vdmUgZm9yIFZGIGJlZm9yZSBQRiwgdGhhdCB3aWxsCm1ha2UgVkYgZ2V0
+IHJlbW92ZWQgZGlyZWN0bHkgYmVmb3JlIFBGJ3MgZHJpdmVyIHRyeSB0byB1c2UKcGNpX2Rpc2Fi
+bGVfc3Jpb3YvdmlydGZuX3JlbW92ZSB0byBkbyBpdC4KClNvbHV0aW9uIHdvdWxkIGJlCjEuIHNl
+cGFyYXRpbmcgc3RvcCBhbmQgcmVtb3ZlIGluIHR3byBpdGVyYXRpb25zLgoyLiBvciBtYWtlIHBj
+aV9zdG9wX2FuZF9yZW1vdmVfYnVzX2RldmljZSBjb3VsZCBiZSB1c2VkIG9uIFZGLgoKVGhpcyBw
+YXRjaCBpcyBzZWNvbmQgc29sdXRpb246ClNlcGFyYXRlIFBGIHJlZiByZWxlYXNpbmcgZnJvbSB2
+aXJ0Zm5fcmVtb3ZlLCBhbGwgdGhhdCBkdXJpbmcKcGNpX2Rlc3Ryb3lfZGV2IGZvciBWRnMuCgpT
+aWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZl
+cnMvcGNpL2lvdi5jICAgIHwgICAzNCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0t
+CiBkcml2ZXJzL3BjaS9wY2kuaCAgICB8ICAgIDQgKysrKwogZHJpdmVycy9wY2kvcmVtb3ZlLmMg
+fCAgIDE3ICsrKysrKysrKysrKysrKysrCiAzIGZpbGVzIGNoYW5nZWQsIDUwIGluc2VydGlvbnMo
+KyksIDUgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL2lvdi5jCj09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL2lvdi5jCisrKyBsaW51eC0y
+LjYvZHJpdmVycy9wY2kvaW92LmMKQEAgLTEzMiw5ICsxMzIsMzcgQEAgZmFpbGVkOgogCXJldHVy
+biByYzsKIH0KIAotc3RhdGljIHZvaWQgdmlydGZuX3JlbW92ZShzdHJ1Y3QgcGNpX2RldiAqZGV2
+LCBpbnQgaWQsIGludCByZXNldCkKK3ZvaWQgdmlydGZuX3JlbGVhc2Uoc3RydWN0IHBjaV9kZXYg
+KnZpcnRmbikKIHsKKwlpbnQgaTsKKwlzdHJ1Y3QgcGNpX2RldiAqZGV2OwogCWNoYXIgYnVmW1ZJ
+UlRGTl9JRF9MRU5dOworCisJaWYgKCF2aXJ0Zm4tPmlzX3ZpcnRmbikKKwkJcmV0dXJuOworCisJ
+ZGV2ID0gdmlydGZuLT5waHlzZm47CisKKwkvKgorCSAqIFJlbW92ZSBsaW5rIHRvIHZpcnRmbiBm
+b3IgUEYuCisJICogcGNpX2Rpc2FibGVfc3Jpb3YoKSBjb3VsZCBiZSBjYWxsZWQgYWZ0ZXIgcGNp
+X3N0b3BfZGV2KCkgaXMKKwkgKiBjYWxsZWQgZm9yIFBGLiBTbyBjaGVjayBzZCB0byBhdm9pZCBz
+cHVyaW91cyBzZnNmcyB3YXJuaW5nLgorCSAqLworCWlmIChkZXYtPmRldi5rb2JqLnNkKQorCQlm
+b3IgKGkgPSAwOyBpIDwgZGV2LT5zcmlvdi0+bnVtX1ZGczsgaSsrKQorCQkJaWYgKCh2aXJ0Zm5f
+YnVzKGRldiwgaSkgPT0gdmlydGZuLT5idXMtPm51bWJlcikgJiYKKwkJCSAgICAodmlydGZuX2Rl
+dmZuKGRldiwgaSkgPT0gdmlydGZuLT5kZXZmbikpIHsKKwkJCQlzcHJpbnRmKGJ1ZiwgInZpcnRm
+biV1IiwgaSk7CisJCQkJc3lzZnNfcmVtb3ZlX2xpbmsoJmRldi0+ZGV2LmtvYmosIGJ1Zik7CisJ
+CQkJYnJlYWs7CisJCQl9CisKKwl2aXJ0Zm5fcmVtb3ZlX2J1cyhkZXYtPmJ1cywgdmlydGZuLT5i
+dXMpOworCXBjaV9kZXZfcHV0KGRldik7Cit9CisKK3N0YXRpYyB2b2lkIHZpcnRmbl9yZW1vdmUo
+c3RydWN0IHBjaV9kZXYgKmRldiwgaW50IGlkLCBpbnQgcmVzZXQpCit7CiAJc3RydWN0IHBjaV9k
+ZXYgKnZpcnRmbjsKIAlzdHJ1Y3QgcGNpX3NyaW92ICppb3YgPSBkZXYtPnNyaW92OwogCkBAIC0x
+NDksOCArMTc3LDYgQEAgc3RhdGljIHZvaWQgdmlydGZuX3JlbW92ZShzdHJ1Y3QgcGNpX2Rldgog
+CQlfX3BjaV9yZXNldF9mdW5jdGlvbih2aXJ0Zm4pOwogCX0KIAotCXNwcmludGYoYnVmLCAidmly
+dGZuJXUiLCBpZCk7Ci0Jc3lzZnNfcmVtb3ZlX2xpbmsoJmRldi0+ZGV2LmtvYmosIGJ1Zik7CiAJ
+LyoKIAkgKiBwY2lfc3RvcF9kZXYoKSBjb3VsZCBoYXZlIGJlZW4gY2FsbGVkIGZvciB0aGlzIHZp
+cnRmbiBhbHJlYWR5LAogCSAqIHNvIHRoZSBkaXJlY3RvcnkgZm9yIHRoZSB2aXJ0Zm4gbWF5IGhh
+dmUgYmVlbiByZW1vdmVkIGJlZm9yZS4KQEAgLTE2MSwxMiArMTg3LDEwIEBAIHN0YXRpYyB2b2lk
+IHZpcnRmbl9yZW1vdmUoc3RydWN0IHBjaV9kZXYKIAogCW11dGV4X2xvY2soJmlvdi0+ZGV2LT5z
+cmlvdi0+bG9jayk7CiAJcGNpX3N0b3BfYW5kX3JlbW92ZV9idXNfZGV2aWNlKHZpcnRmbik7Ci0J
+dmlydGZuX3JlbW92ZV9idXMoZGV2LT5idXMsIHZpcnRmbi0+YnVzKTsKIAltdXRleF91bmxvY2so
+Jmlvdi0+ZGV2LT5zcmlvdi0+bG9jayk7CiAKIAkvKiBiYWxhbmNlIHBjaV9nZXRfZG9tYWluX2J1
+c19hbmRfc2xvdCgpICovCiAJcGNpX2Rldl9wdXQodmlydGZuKTsKLQlwY2lfZGV2X3B1dChkZXYp
+OwogfQogCiBzdGF0aWMgaW50IHNyaW92X21pZ3JhdGlvbihzdHJ1Y3QgcGNpX2RldiAqZGV2KQpJ
+bmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3BjaS5oCj09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIu
+Ni5vcmlnL2RyaXZlcnMvcGNpL3BjaS5oCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpLmgK
+QEAgLTI2Miw2ICsyNjIsNyBAQCBpbnQgcGNpX2lvdl9yZXNvdXJjZV9iYXIoc3RydWN0IHBjaV9k
+ZXYKIHJlc291cmNlX3NpemVfdCBwY2lfc3Jpb3ZfcmVzb3VyY2VfYWxpZ25tZW50KHN0cnVjdCBw
+Y2lfZGV2ICpkZXYsIGludCByZXNubyk7CiB2b2lkIHBjaV9yZXN0b3JlX2lvdl9zdGF0ZShzdHJ1
+Y3QgcGNpX2RldiAqZGV2KTsKIGludCBwY2lfaW92X2J1c19yYW5nZShzdHJ1Y3QgcGNpX2J1cyAq
+YnVzKTsKK3ZvaWQgdmlydGZuX3JlbGVhc2Uoc3RydWN0IHBjaV9kZXYgKmRldik7CiAKICNlbHNl
+CiBzdGF0aWMgaW5saW5lIGludCBwY2lfaW92X2luaXQoc3RydWN0IHBjaV9kZXYgKmRldikKQEAg
+LTI4NCw2ICsyODUsOSBAQCBzdGF0aWMgaW5saW5lIGludCBwY2lfaW92X2J1c19yYW5nZShzdHJ1
+CiB7CiAJcmV0dXJuIDA7CiB9Cit2b2lkIHZpcnRmbl9yZWxlYXNlKHN0cnVjdCBwY2lfZGV2ICpk
+ZXYpCit7Cit9CiAKICNlbmRpZiAvKiBDT05GSUdfUENJX0lPViAqLwogCkluZGV4OiBsaW51eC0y
+LjYvZHJpdmVycy9wY2kvcmVtb3ZlLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJp
+dmVycy9wY2kvcmVtb3ZlLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9yZW1vdmUuYwpAQCAt
+MzgsNiArMzgsOCBAQCBzdGF0aWMgdm9pZCBwY2lfZGVzdHJveV9kZXYoc3RydWN0IHBjaV9kCiAJ
+bGlzdF9kZWwoJmRldi0+YnVzX2xpc3QpOwogCXVwX3dyaXRlKCZwY2lfYnVzX3NlbSk7CiAKKwl2
+aXJ0Zm5fcmVsZWFzZShkZXYpOworCiAJcGNpX2ZyZWVfcmVzb3VyY2VzKGRldik7CiAJcHV0X2Rl
+dmljZSgmZGV2LT5kZXYpOwogfQpAQCAtMTA3LDggKzEwOSwyMyBAQCBzdGF0aWMgdm9pZCBwY2lf
+cmVtb3ZlX2J1c19kZXZpY2Uoc3RydWN0CiAgKi8KIHZvaWQgcGNpX3N0b3BfYW5kX3JlbW92ZV9i
+dXNfZGV2aWNlKHN0cnVjdCBwY2lfZGV2ICpkZXYpCiB7CisjaWZkZWYgQ09ORklHX1BDSV9BVFMK
+KwlzdHJ1Y3QgcGNpX3NyaW92ICppb3YgPSBOVUxMOworCWludCBsb2NrZWQgPSAwOworCisJaWYg
+KGRldi0+aXNfdmlydGZuKSB7CisJCWlvdiA9IGRldi0+cGh5c2ZuLT5zcmlvdjsKKwkJbG9ja2Vk
+ID0gbXV0ZXhfdHJ5bG9jaygmaW92LT5kZXYtPnNyaW92LT5sb2NrKTsKKwl9CisjZW5kaWYKKwog
+CXBjaV9zdG9wX2J1c19kZXZpY2UoZGV2KTsKIAlwY2lfcmVtb3ZlX2J1c19kZXZpY2UoZGV2KTsK
+KworI2lmZGVmIENPTkZJR19QQ0lfQVRTCisJaWYgKGxvY2tlZCkKKwkJbXV0ZXhfdW5sb2NrKCZp
+b3YtPmRldi0+c3Jpb3YtPmxvY2spOworI2VuZGlmCiB9CiBFWFBPUlRfU1lNQk9MKHBjaV9zdG9w
+X2FuZF9yZW1vdmVfYnVzX2RldmljZSk7CiAK
+--001a11c2e74c35998804e365de70--
