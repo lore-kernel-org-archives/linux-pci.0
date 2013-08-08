@@ -1,165 +1,274 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:51131 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932426Ab3HGQ4W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 12:56:22 -0400
-Received: by mail-wg0-f49.google.com with SMTP id y10so1773251wgg.16
-        for <linux-pci@vger.kernel.org>; Wed, 07 Aug 2013 09:56:21 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v5 6/9] pci: Add slot and bus reset interfaces
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
+	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 08 Aug 2013 14:09:55 -0600
+Message-ID: <20130808200955.2932.30491.stgit@bling.home>
+In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
+References: <20130808200444.2932.17381.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <5201A877.2080303@huawei.com>
-References: <1375776540-23988-1-git-send-email-wangyijing@huawei.com>
-	<CAPoiz9wAufM8HV_Drdxg50zs5=1AduBUN5oXNRBHYqjwMCOTaQ@mail.gmail.com>
-	<5201A877.2080303@huawei.com>
-Date: Wed, 7 Aug 2013 09:56:20 -0700
-Message-ID: <CAPoiz9z1yS=-GwWuBjbxCUk4s+K5KtEBLwaWsO5XVT_uePeHHg@mail.gmail.com>
-Subject: Re: [PATCH -v3] PCI: update device mps when doing pci hotplug
-From: Jon Mason <jdmason@kudzu.us>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
-	stable@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 6:52 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> +static int pcie_bus_update_set(struct pci_dev *dev, void *data)
->>> +{
->>> +       int mps, p_mps;
->>> +
->>> +       if (!pci_is_pcie(dev) || !dev->bus->self)
->>> +               return 0;
->>> +
->>> +       mps = pcie_get_mps(dev);
->>> +       p_mps = pcie_get_mps(dev->bus->self);
->>> +
->>> +       if (mps < p_mps)
->>> +               goto update;
->
-> Hi Jon,
->    Thanks for your review and comments!
->
->>
->> It would be more clear to have it return 0 if mps >= p_mps, and not
->> have the goto statement.
->
-> OK, will update.
->
->
->>
->>> +
->>> +       return 0;
->>> +
->>> +update:
->>> +       /* If current mpss is lager than upstream, use upstream mps to update
->>> +        * current mps, otherwise print warning info.
->>> +        */
->>> +       if ((128 << dev->pcie_mpss) >= p_mps)
->>> +               pcie_write_mps(dev, p_mps);
->>> +       else
->>> +               dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
->>> +                               "If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
->>> +                               mps, 128 << dev->pcie_mpss, p_mps);
->>> +       return 0;
->>> +}
->>> +
->>> +static void pcie_bus_update_setting(struct pci_bus *bus)
->>> +{
->>> +       if (bus->self->is_hotplug_bridge)
->>> +               pci_walk_bus(bus, pcie_bus_update_set, NULL);
->>
->> Why not just call pcie_bus_configure_set(bus->self, &smpss); with smpss of 0?
->
-> Because for safety, I won't touch the running pcie device(RP, UP/DP,EP) mps.
-> Consider the following case:
-> Root Port------>Upstream Port------>Downstream Port 1 ---->Endpoint device A (newly inserted device)
-> mps=256          256               |    256                     128
->                                    |Downstream Port 2 ---->Endpoint device B
->                                         256                     256
->
-> This patch try to update device A's mps equal to its parent DP 1 mps (256).
-> Because EP A device is not running, newly inserted, not configure yet. So configure its mps
-> to 256B is safe.
+Sometimes pci_reset_function is not sufficient.  We have cases where
+devices do not support any kind of reset, but there might be multiple
+functions on the bus preventing pci_reset_function from doing a
+secondary bus reset.  We also have cases where a device will advertise
+that it supports a PM reset, but really does nothing on D3hot->D0
+(graphics cards are notorious for this).  These devices often also
+have more than one function, so even blacklisting PM reset for them
+wouldn't allow a secondary bus reset through pci_reset_function.
 
-I understand your logic now and agree.
+If a driver supports multiple devices it should have the ability to
+induce a bus reset when it needs to.  This patch provides that ability
+through pci_reset_slot and pci_reset_bus.  It's the caller's
+responsibility when using these interfaces to understand that all of
+the devices in or below the slot (or on or below the bus) will be
+reset and therefore should be under control of the caller.  PCI state
+of all the affected devices is saved and restored around these resets,
+but internal state of all of the affected devices is reset (which
+should be the intention).
 
-> But if we try to configure DP 1 mps to 128B, it's not safe. its parent Upstream port still is 256.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c   |  209 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    2 
+ 2 files changed, 211 insertions(+)
 
-This is exactly the case that the "PERFORMANCE" option is trying to
-allow.  If the MRRS is set to the MPS of the device, it should work.
-If not, then we should rip out all of the "PERFORMANCE" code.  Is this
-something you can verify?
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4a0275c..1dba7dd 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3460,6 +3460,215 @@ int pci_reset_function(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(pci_reset_function);
+ 
++/* Lock devices from the top of the tree down */
++static void pci_bus_lock(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		pci_dev_lock(dev);
++		if (dev->subordinate)
++			pci_bus_lock(dev->subordinate);
++	}
++}
++
++/* Unlock devices from the bottom of the tree up */
++static void pci_bus_unlock(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if (dev->subordinate)
++			pci_bus_unlock(dev->subordinate);
++		pci_dev_unlock(dev);
++	}
++}
++
++/* Lock devices from the top of the tree down */
++static void pci_slot_lock(struct pci_slot *slot)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
++		if (!dev->slot || dev->slot != slot)
++			continue;
++		pci_dev_lock(dev);
++		if (dev->subordinate)
++			pci_bus_lock(dev->subordinate);
++	}
++}
++
++/* Unlock devices from the bottom of the tree up */
++static void pci_slot_unlock(struct pci_slot *slot)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
++		if (!dev->slot || dev->slot != slot)
++			continue;
++		if (dev->subordinate)
++			pci_bus_unlock(dev->subordinate);
++		pci_dev_unlock(dev);
++	}
++}
++
++/* Save and disable devices from the top of the tree down */
++static void pci_bus_save_and_disable(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		pci_dev_save_and_disable(dev);
++		if (dev->subordinate)
++			pci_bus_save_and_disable(dev->subordinate);
++	}
++}
++
++/*
++ * Restore devices from top of the tree down - parent bridges need to be
++ * restored before we can get to subordinate devices.
++ */
++static void pci_bus_restore(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		pci_dev_restore(dev);
++		if (dev->subordinate)
++			pci_bus_restore(dev->subordinate);
++	}
++}
++
++/* Save and disable devices from the top of the tree down */
++static void pci_slot_save_and_disable(struct pci_slot *slot)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
++		if (!dev->slot || dev->slot != slot)
++			continue;
++		pci_dev_save_and_disable(dev);
++		if (dev->subordinate)
++			pci_bus_save_and_disable(dev->subordinate);
++	}
++}
++
++/*
++ * Restore devices from top of the tree down - parent bridges need to be
++ * restored before we can get to subordinate devices.
++ */
++static void pci_slot_restore(struct pci_slot *slot)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
++		if (!dev->slot || dev->slot != slot)
++			continue;
++		pci_dev_restore(dev);
++		if (dev->subordinate)
++			pci_bus_restore(dev->subordinate);
++	}
++}
++
++static int pci_slot_reset(struct pci_slot *slot, int probe)
++{
++	int rc;
++
++	if (!slot)
++		return -ENOTTY;
++
++	if (!probe)
++		pci_slot_lock(slot);
++
++	might_sleep();
++
++	rc = pci_reset_hotplug_slot(slot->hotplug, probe);
++
++	if (!probe)
++		pci_slot_unlock(slot);
++
++	return rc;
++}
++
++/**
++ * pci_reset_slot - reset a PCI slot
++ * @slot: PCI slot to reset
++ *
++ * A PCI bus may host multiple slots, each slot may support a reset mechanism
++ * independent of other slots.  For instance, some slots may support slot power
++ * control.  In the case of a 1:1 bus to slot architecture, this function may
++ * wrap the bus reset to avoid spurious slot related events such as hotplug.
++ * Generally a slot reset should be attempted before a bus reset.  All of the
++ * function of the slot and any subordinate buses behind the slot are reset
++ * through this function.  PCI config space of all devices in the slot and
++ * behind the slot is saved before and restored after reset.
++ *
++ * Return 0 on success, non-zero on error.
++ */
++int pci_reset_slot(struct pci_slot *slot)
++{
++	int rc;
++
++	rc = pci_slot_reset(slot, 1);
++	if (rc)
++		return rc;
++
++	pci_slot_save_and_disable(slot);
++
++	rc = pci_slot_reset(slot, 0);
++
++	pci_slot_restore(slot);
++
++	return rc;
++}
++EXPORT_SYMBOL_GPL(pci_reset_slot);
++
++static int pci_bus_reset(struct pci_bus *bus, int probe)
++{
++	if (!bus->self)
++		return -ENOTTY;
++
++	if (probe)
++		return 0;
++
++	pci_bus_lock(bus);
++
++	might_sleep();
++
++	pci_reset_bridge_secondary_bus(bus->self);
++
++	pci_bus_unlock(bus);
++
++	return 0;
++}
++
++/**
++ * pci_reset_bus - reset a PCI bus
++ * @bus: top level PCI bus to reset
++ *
++ * Do a bus reset on the given bus and any subordinate buses, saving
++ * and restoring state of all devices.
++ *
++ * Return 0 on success, non-zero on error.
++ */
++int pci_reset_bus(struct pci_bus *bus)
++{
++	int rc;
++
++	rc = pci_bus_reset(bus, 1);
++	if (rc)
++		return rc;
++
++	pci_bus_save_and_disable(bus);
++
++	rc = pci_bus_reset(bus, 0);
++
++	pci_bus_restore(bus);
++
++	return rc;
++}
++EXPORT_SYMBOL_GPL(pci_reset_bus);
++
+ /**
+  * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
+  * @dev: PCI device to query
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 35c1bc4..1a8fd34 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -924,6 +924,8 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int __pci_reset_function(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
++int pci_reset_slot(struct pci_slot *slot);
++int pci_reset_bus(struct pci_bus *bus);
+ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
 
-Thanks,
-Jon
-
->>
->>> +}
->>> +
->>>  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
->>>   * parents then children fashion.  If this changes, then this code will not
->>>   * work as designed.
->>> @@ -1614,6 +1648,15 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->>>         if (!pci_is_pcie(bus->self))
->>>                 return;
->>>
->>> +       /* Sometimes we should update device mps here,
->>> +        * eg. after hot add, device mps value will be
->>> +        * set to default(128B), but the upstream port
->>> +        * mps value may be larger than 128B, if we do
->>> +        * not update the device mps, it maybe can not
->>> +        * work normally.
->>
->> This is slightly confusing to me.  It would be more clear to say:
->> There are situations (i.e., hot add) where the upstream port might
->> have a larger MPS than the device.  In these situations, the port MPS
->> needs to be reconfigured to the lower value or the device will not
->> operate properly.
->
-> Sorry for my poor English, I mean the device  is the newly hot added device, not
-> the port device. So we will only reconfigure the newly hot added device mps.
->
->>
->>> +        */
->>> +       pcie_bus_update_setting(bus);
->>
->> This only seems to be necessary in the "TUNE_OFF" case.  It would be
->> best to move it under that, just 2 lines down.
->
-> Good idea, will update, thanks!
->
->
-> Thanks!
-> Yijing.
->>
->>> +
->>>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
->>
->> Perhaps it is time to make "SAFE" the default option, per the
->> discussion at last years PCI mini-summit.
->> Bjorn, thoughts?
->>
->>
->> Thanks,
->> Jon
->>
->>>                 return;
->>>
->>> --
->>> 1.7.1
->>>
->>>
->>
->> .
->>
->
->
-> --
-> Thanks!
-> Yijing
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
