@@ -1,101 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 20 Aug 2013 11:13:14 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Thierry Reding <thierry.reding@gmail.com>
-cc: Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
- devm_ioremap_resource
-In-Reply-To: <20130819193339.GB4961@mithrandir>
-Message-ID: <alpine.DEB.2.02.1308201112400.2269@hadrien>
-References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr> <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr> <20130819120249.GA5740@ulmo> <alpine.DEB.2.02.1308191405450.2313@hadrien> <20130819121238.GB5740@ulmo> <alpine.DEB.2.02.1308191414360.2313@hadrien>
- <20130819193339.GB4961@mithrandir>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:42888 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757239Ab3HHByf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 21:54:35 -0400
+Received: by mail-ob0-f173.google.com with SMTP id ta17so4701836obb.18
+        for <linux-pci@vger.kernel.org>; Wed, 07 Aug 2013 18:54:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQWftukxyNiyM2znVPh7x82de3nhRMQwGHigZtOvU6xQ6g@mail.gmail.com>
+References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
+	<20130807040112.GA14662@google.com>
+	<CAE9FiQVXhg299RKsoa8eCqoN7b9c0HaeTGHCnxQY=9vkSYaJJg@mail.gmail.com>
+	<CAE9FiQWftukxyNiyM2znVPh7x82de3nhRMQwGHigZtOvU6xQ6g@mail.gmail.com>
+Date: Wed, 7 Aug 2013 18:54:34 -0700
+Message-ID: <CAE9FiQUyEaakfHia4DAb_KriGtzNwLei7jX2Y+31hTb4XvieWA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] PCI: Separate stop and remove devices in pciehp
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On Wed, Aug 7, 2013 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Aug 6, 2013 at 11:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Tue, Aug 6, 2013 at 9:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>
+>>> Huh.  I wish we didn't have virtfn_remove() at all.  I wish the
+>>> normal device removal path, i.e., pci_stop_and_remove_bus_device(),
+>>> could deal with VFs directly.  I don't know all the history there,
+>>> so maybe there's some reason that's not feasible.
+>>
+>> I had one draft version, but looks more confusing.
+>
+> please check attached that make pci_stop_and_remove_bus_device()
+> could be used with VF.
 
-Use devm_ioremap_resource instead of devm_request_and_ioremap.
+If this solution could be used, we can revert
 
-This was done using the semantic patch
-scripts/coccinelle/api/devm_ioremap_resource.cocci
+commit dfab88beda88d6c24111e5966b08ecf813c3a18a
+Author: Jiang Liu <liuj97@gmail.com>
+Date:   Fri May 31 12:21:31 2013 +0800
 
-Error-handling code was manually removed from the associated calls to
-platform_get_resource.
+    PCI: Hide remove and rescan sysfs interfaces for SR-IOV virtual functions
 
-Adjust the comment at the third platform_get_resource_byname to make clear
-why ioremap is not done at this point.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-Acked-by: Thierry Reding <thierry.reding@gmail.com>
-Tested-by: Thierry Reding <thierry.reding@gmail.com>
-
----
-v2: add the change to the comment
-
- drivers/pci/host/pci-tegra.c |   31 ++++++++++---------------------
- 1 file changed, 10 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 7356741..2e9888a 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -1031,32 +1031,21 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 		return err;
- 	}
-
--	/* request and remap controller registers */
- 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
--	if (!pads) {
--		err = -EADDRNOTAVAIL;
-+	pcie->pads = devm_ioremap_resource(&pdev->dev, pads);
-+	if (IS_ERR(pcie->pads)) {
-+		err = PTR_ERR(pcie->pads);
- 		goto poweroff;
- 	}
-
- 	afi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "afi");
--	if (!afi) {
--		err = -EADDRNOTAVAIL;
--		goto poweroff;
--	}
--
--	pcie->pads = devm_request_and_ioremap(&pdev->dev, pads);
--	if (!pcie->pads) {
--		err = -EADDRNOTAVAIL;
--		goto poweroff;
--	}
--
--	pcie->afi = devm_request_and_ioremap(&pdev->dev, afi);
--	if (!pcie->afi) {
--		err = -EADDRNOTAVAIL;
-+	pcie->afi = devm_ioremap_resource(&pdev->dev, afi);
-+	if (IS_ERR(pcie->afi)) {
-+		err = PTR_ERR(pcie->afi);
- 		goto poweroff;
- 	}
-
--	/* request and remap configuration space */
-+	/* request configuration space, but remap later, on demand */
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cs");
- 	if (!res) {
- 		err = -EADDRNOTAVAIL;
-@@ -1492,9 +1481,9 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		rp->lanes = value;
- 		rp->pcie = pcie;
-
--		rp->base = devm_request_and_ioremap(pcie->dev, &rp->regs);
--		if (!rp->base)
--			return -EADDRNOTAVAIL;
-+		rp->base = devm_ioremap_resource(pcie->dev, &rp->regs);
-+		if (IS_ERR(rp->base))
-+			return PTR_ERR(rp->base);
-
- 		list_add_tail(&rp->list, &pcie->ports);
- 	}
+>
+> It could replace
+> https://patchwork.kernel.org/patch/2834638/
+> https://patchwork.kernel.org/patch/2834639/
+>
+> Please choose one of the solutions.
+>
+> but we still need
+> https://patchwork.kernel.org/patch/2834640/
+> as VFs that does not use ARI could be on other virtual bus.
+> so they will not be removed directly.
