@@ -1,152 +1,215 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:27157 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753259Ab3HLToK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 15:44:10 -0400
-Message-ID: <52093B09.7030301@tilera.com>
-Date: Mon, 12 Aug 2013 15:44:09 -0400
-From: Chris Metcalf <cmetcalf@tilera.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+Received: from mga02.intel.com ([134.134.136.20]:8614 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965129Ab3HHK7R convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 06:59:17 -0400
+From: "Wang, Rui Y" <rui.y.wang@intel.com>
+To: "liuj97@gmail.com" <liuj97@gmail.com>
+CC: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>,
+	"Koul, Vinod" <vinod.koul@intel.com>,
+	"chenkeping@huawei.com" <chenkeping@huawei.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	adam radford <aradford@gmail.com>
-Subject: Re: [PATCH v2] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
-References: <52012B96.9000207@tilera.com> <201308061702.r76H2ORe011248@farm-0021.internal.tilera.com> <CAErSpo57cmg2ynLLLZw0yXH5Q1B0MZBdqSgFXUu2NpS=8W6Y2g@mail.gmail.com> <5203CB8E.60509@tilera.com> <20130809224228.GA31372@google.com>
-In-Reply-To: <20130809224228.GA31372@google.com>
-Content-Type: text/plain; charset="UTF-8"
+	"Luck, Tony" <tony.luck@intel.com>,
+	"Guo, Chaohong" <chaohong.guo@intel.com>
+Subject: RE: [RFC PATCH v2 3/7] dmaengine: enhance dmaengine to support DMA
+ device hotplug
+Date: Thu, 8 Aug 2013 10:59:03 +0000
+Message-ID: <FC9702EC51E4CA40A875703BEBD6CEF80183DA88@SHSMSX101.ccr.corp.intel.com>
+References: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
+	<1337003229-9158-4-git-send-email-jiang.liu@huawei.com>
+ <CANVTcTan9N=Bvf=-vDwOQhS13y+JtWfqApF75yuksQuFBBVDZw@mail.gmail.com>
+In-Reply-To: <CANVTcTan9N=Bvf=-vDwOQhS13y+JtWfqApF75yuksQuFBBVDZw@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(Oops, resending without the helpful [SPAM] marker that our
-mail system appears to have injected into the subject line.)
+(resend adding cc list)
 
-On 8/9/2013 6:42 PM, Bjorn Helgaas wrote:
-> On Thu, Aug 08, 2013 at 12:47:10PM -0400, Chris Metcalf wrote:
->> On 8/6/2013 1:48 PM, Bjorn Helgaas wrote:
->>> [+cc Myron, Adam]
->>>
->>> On Fri, Aug 2, 2013 at 10:24 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
->>>> According to LSI,
->>>> the firmware is not fully functional yet. This change implements a
->>>> kind of hybrid dma_ops to support this.
->>>>
->>>> Note that on most other platforms, the 64-bit DMA addressing space is the
->>>> same as the 32-bit DMA space and they overlap the physical memory space.
->>>> No special arrangement is needed to support this kind of mixed DMA
->>>> capability.  On TILE-Gx, the 64-bit DMA space is completely separate
->>>> from the 32-bit DMA space.
->>> Help me understand what's going on here.  My understanding is that on
->>> typical systems, the 32-bit DMA space is a subset of the 64-bit DMA
->>> space.  In conventional PCI, "a master that supports 64-bit addressing
->>> must generate a SAC, instead of a DAC, when the upper 32 bits of the
->>> address are zero" (PCI spec r3.0, sec 3.9).  PCIe doesn't have
->>> SAC/DAC, but it has both 32-bit and 64-bit address headers and has a
->>> similar requirement: "For Addresses below 4GB, Requesters must use the
->>> 32-bit format" (PCIe spec r3.0, sec 2.2.4.1).
->>>
->>> Those imply to me that the 0-4GB region of the 64-bit DMA space must
->>> be identical to the 0-4GB 32-bit DMA space, and in fact, the receiver
->>> of a transaction shouldn't be able to distinguish them.
->>>
->>> But it sounds like something's different on TILE-Gx?  Does it
->>> translate bus addresses to physical memory addresses based on the type
->>> of the transaction (SAC vs DAC, or 32-bit vs 64-bit header) in
->>> addition to the address?  Even if it does, the spec doesn't allow a
->>> DAC cycle or a 64-bit header where the 32 high-order bits are zero, so
->>> it shouldn't matter.
->> No, we don't translate based on the type of the transaction. Using
->> "DMA space" in the commit message was probably misleading. What's
->> really going on is different DMA windows. 32-bit DMA has the
->> obvious naive implementation where [0,4GB] in DMA space maps to
->> [0,4GB] in PA space.  However, for 64-bit DMA, we use DMA
->> addresses with a non-zero high 32 bits, in the [1TB,2TB] range,
->> but map the results down to PA [0,1TB] using our IOMMU.
-> I guess this means devices can DMA to physical addresses [0,3GB]
-> using either 32-bit bus addresses in the [0,3GB] range or 64-bit bus
-> addresses in the [1TB,1TB+3GB] range, right?
+Hi Jiang,
+See my comments inline.
 
-True in general, but not true for any specific individual device.
+> -----Original Message-----
+> From: Jiang Liu <liuj97@gmail.com>
+> Date: Mon, 14 May 2012 21:47:05 +0800
+> Subject: [RFC PATCH v2 3/7] dmaengine: enhance dmaengine to support DMA
+> device hotplug
+> To: Dan Williams <dan.j.williams@intel.com>, Maciej Sosnowski
+> <maciej.sosnowski@intel.com>, Vinod Koul <vinod.koul@intel.com>
+> Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
+> linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+> 
+> From: Jiang Liu <liuj97@gmail.com>
+> 
+> From: Jiang Liu <liuj97@gmail.com>
+> 
+> To support DMA device hotplug, dmaengine must correctly manage reference
+> count for DMA channels. On the other hand, DMA hot path is performance
+> critical, reference count management code should avoid polluting global shared
+> cachelines, otherwise it may cause heavy performance penalty.
+> 
+> This patch introduces a lightweight DMA channel reference count management
+> mechanism by using percpu counter. When DMA device hotplug is disabled,
+> there's no performance penalty. When hotplug is enabled, a
+> dma_find_channel()/dma_put_channel() pair adds two local memory accesses
+> to the hot path.
+> 
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> ---
+>  drivers/dma/dmaengine.c   |  112
+> +++++++++++++++++++++++++++++++++++++++++----
+>  include/linux/dmaengine.h |   29 +++++++++++-
+>  2 files changed, 129 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c index
+> d3b1c48..eca45c0 100644
+> --- a/drivers/dma/dmaengine.c
+> +++ b/drivers/dma/dmaengine.c
+> @@ -61,12 +61,20 @@
+>  #include <linux/rculist.h>
+>  #include <linux/idr.h>
+>  #include <linux/slab.h>
+> +#include <linux/sched.h>
+> 
+>  static DEFINE_MUTEX(dma_list_mutex);
+>  static DEFINE_IDR(dma_idr);
+>  static LIST_HEAD(dma_device_list);
+>  static long dmaengine_client_count;
+> 
+> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
+> +static atomic_t dmaengine_dirty;
+> +static struct static_key dmaengine_quiesce = STATIC_KEY_INIT_FALSE;
+> +static DECLARE_WAIT_QUEUE_HEAD(dmaengine_wait_queue);
+> +DEFINE_PER_CPU(long, dmaengine_chan_ref_count);
+> +#endif	/* CONFIG_DMA_ENGINE_HOTPLUG */
+> +
+>  /* --- sysfs implementation --- */
+> 
+>  /**
+> @@ -305,10 +313,40 @@ arch_initcall(dma_channel_table_init);
+>   */
+>  struct dma_chan *dma_find_channel(enum dma_transaction_type tx_type)
+> {
+> -	return this_cpu_read(channel_table[tx_type]->chan);
+> +	struct dma_chan *chan = this_cpu_read(channel_table[tx_type]->chan);
+> +
+> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
+> +	this_cpu_inc(dmaengine_chan_ref_count);
+> +	if (static_key_false(&dmaengine_quiesce))
+> +		chan = NULL;
+> +#endif
+> +
+> +	return chan;
+>  }
+>  EXPORT_SYMBOL(dma_find_channel);
+> 
+> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
+> +struct dma_chan *dma_get_channel(struct dma_chan *chan) {
+> +	if (static_key_false(&dmaengine_quiesce))
+> +		atomic_inc(&dmaengine_dirty);
+> +	this_cpu_inc(dmaengine_chan_ref_count);
+> +
+> +	return chan;
+> +}
+> +EXPORT_SYMBOL(dma_get_channel);
+> +#endif
+> +
+> +/**
+> + * dma_has_capability - check whether any channel supports tx_type
+> + * @tx_type: transaction type
+> + */
+> +bool dma_has_capability(enum dma_transaction_type tx_type) {
+> +	return !!this_cpu_read(channel_table[tx_type]->chan);
+> +}
+> +EXPORT_SYMBOL(dma_has_capability);
+> +
+>  /*
+>   * net_dma_find_channel - find a channel for net_dma
+>   * net_dma has alignment requirements
+> @@ -316,10 +354,15 @@ EXPORT_SYMBOL(dma_find_channel);  struct
+> dma_chan *net_dma_find_channel(void)  {
+>  	struct dma_chan *chan = dma_find_channel(DMA_MEMCPY);
+> -	if (chan && !is_dma_copy_aligned(chan->device, 1, 1, 1))
+> -		return NULL;
+> 
+> -	return chan;
+> +	if (chan && is_dma_copy_aligned(chan->device, 1, 1, 1))
+> +		return chan;
+> +
+> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
+> +	this_cpu_dec(dmaengine_chan_ref_count);
+> +#endif
+> +
+> +	return NULL;
+>  }
+>  EXPORT_SYMBOL(net_dma_find_channel);
+> 
+> @@ -393,6 +436,37 @@ static struct dma_chan *nth_chan(enum
+> dma_transaction_type cap, int n)
+>  	return ret;
+>  }
+> 
+> +static void dma_channel_quiesce(void)
+> +{
+> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
+> +	int cpu;
+> +	long ref_count;
+> +	int quiesce_count = 0;
+> +
+> +	static_key_slow_inc(&dmaengine_quiesce);
+> +
+> +	do {
+> +		atomic_set(&dmaengine_dirty, 0);
+> +		schedule_timeout(1);
+> +
+> +		if (atomic_read(&dmaengine_dirty)) {
+> +			quiesce_count = 0;
+> +			continue;
+> +		}
+> +
+> +		ref_count = 0;
+> +		for_each_possible_cpu(cpu)
+> +			ref_count += per_cpu(dmaengine_chan_ref_count, cpu);
+> +		if (ref_count == 0)
+> +			quiesce_count++;
+> +		else
+> +			quiesce_count = 0;
+> +	} while (quiesce_count < 10);
+> +
+> +	static_key_slow_dec(&dmaengine_quiesce);
+> +#endif
+> +}
+> +
 
-64-bit capable devices won’t generate 32-bit bus addresses, because
-the dma_ops makes sure that only bus/DMA addresses in [1TB,1TB+3GB]
-are handed out to the devices.
+The purpose of dma_channel_quiesce() is unclear to me. It waits until dmaengine_chan_ref_count is 0, but how do you prevent someone from using dma after it returns?
 
-32-bit only devices use bus addresses in [0,3GB] to access the PA [0,3GB].
-PA in [3GB, 4GB] is not accessed by the 32-bit only devices because the
-bounce buffers are allocated under 3GB limit.
+<snip>
 
->> We did consider having the 64-bit DMA window be [0,1TB] and map
->> directly to PA space, like the 32-bit window. But this design
->> suffers from the “PCI hole” problem. Basically, the BAR space is
->> usually under 4GB (it occupies the range [3GB, 4GB] on tilegx) and
->> the host bridge uses negative decoding in passing DMA traffic
->> upstream. That is, DMA traffic with target address in [3GB, 4GB]
->> are not passed to the host memory. This means that the same amount
->> of physical memory as the BAR space cannot be used for DMA
->> purpose. And because it is not easy avoid this region in
->> allocating DMA memory, the kernel is simply told to not use this
->> chunk of PA at all, so it is wasted.
-> OK, so physical memory in the [3GB,4GB] range is unreachable via DMA
-> as you describe.  And even if DMA *could* reach it, the CPU couldn't
-> see it because CPU accesses to that range would go to PCI for the
-> memory-mapped BAR space, not to memory.
+> @@ -767,14 +848,22 @@ void dma_async_device_unregister(struct
+> dma_device *device)
+> 
+>  	mutex_lock(&dma_list_mutex);
+>  	list_del_rcu(&device->global_node);
+> -	dma_channel_rebalance();
+> +	dma_channel_rebalance(true);
+>  	mutex_unlock(&dma_list_mutex);
+> 
+>  	/* Check whether it's called from module exit function. */
+>  	if (try_module_get(device->dev->driver->owner)) {
+> +#ifndef	CONFIG_DMA_ENGINE_HOTPLUG
+>  		dev_warn(device->dev,
+>  			"%s isn't called from module exit function.\n",
+>  			__func__);
+> +#else
+> +		list_for_each_entry(chan, &device->channels, device_node) {
+> +			/* TODO: notify clients to release channels*/
+> +			wait_event(dmaengine_wait_queue,
+> +				   chan->client_count == 0);
+> +		}
 
-Right.  Unreachability is only a problem if the DMA window overlaps
-[3G, 4G], and since the 64-bit DMA window is [1TB,2TB], the whole PA
-space can be reached by 64-bit capable devices.
+How do you notify clients to release the channels? Is there an updated version which handles this? There're resources (e.g. timers) that must be free'd, which can only happen when someone calls dma_chan_put() until client_count reaches 0 and device_free_chan_resources() gets called. 
 
-> But I can't figure out why Tile needs to do something special.  I
-> think other arches handle the PCI hole for MMIO space the same way.
->
-> I don't know if other arches alias the [0,3GB] physical address
-> range in both 32-bit and 64-bit DMA space like you do, but if that's
-> part of the problem, it seems like you could easily avoid the
-> aliasing by making the 64-bit DMA space [1TB+4GB,2TB] instead of
-> [1TB,2TB].
+Rui Wang
 
-Perhaps, but since 64-bit capable devices can't actually see the
-aliasing (since they aren't offered the [0,4GB] address range) they
-only see an un-aliased space.
-
->> For the LSI device, the way we manage it is to ensure that the
->> device’s streaming buffers and the consistent buffers come from
->> different pools, with the latter using the under-4GB bounce
->> buffers. Obviously, normal devices use the same buffer pool for
->> both streaming and consistent, either under 4GB or the whole PA.
-> It seems like you could make your DMA space be the union of [0,3GB]
-> and [1TB+4GB,2TB], then use pci_set_dma_mask(dev, DMA_BIT_MASK(64))
-> and pci_set_consistent_dma_mask(dev, DMA_BIT_MASK(32)) (I assume the
-> driver already sets those masks correctly if it works on other
-> arches).
-
-Unfortunately, the Megaraid driver doesn’t even call
-pci_set_consistent_dma_mask(dev, DMA_BIT_MASK(32)).
-
-More generally, your proposed DMA space suggestion isn't optimal because
-then the PA in [3GB, 4GB] can’t be reached by 64-bit capable devices.
-
->> Given all of that, does this change make sense? I can certainly
->> amend the commit description to include more commentary.
-> Obviously, I'm missing something.  I guess it really doesn't matter
-> because this is all arch code and I don't need to understand it, but
-> it does niggle at me somehow.
-
-I will add the following comment to <asm/pci.h> in hopes of making it a
-bit clearer:
-
- /*
- [...]
-+ * This design lets us avoid the "PCI hole" problem where the host bridge
-+ * won't pass DMA traffic with target addresses that happen to fall within the
-+ * BAR space. This enables us to use all the physical memory for DMA, instead
-+ * of wasting the same amount of physical memory as the BAR window size.
-  */
- #define        TILE_PCI_MEM_MAP_BASE_OFFSET    (1ULL << CHIP_PA_WIDTH())
-
--- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
 
