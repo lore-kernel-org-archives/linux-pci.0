@@ -1,211 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:59029 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932266Ab3HGJdb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:33:31 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv7 05/13] irqdomain: refactor __irq_domain_add()
-Date: Wed,  7 Aug 2013 11:32:26 +0200
-Message-Id: <1375867954-2320-6-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: =?UTF-8?q?Radim=20Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Isaku Yamahata <yamahata@valinux.co.jp>
+Subject: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
+Date: Thu,  8 Aug 2013 15:57:07 +0200
+Message-Id: <1375970227-14794-1-git-send-email-rkrcmar@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, the __irq_domain_add() function does both the irq_domain
-allocation *and* registration. This is a problem for
-irq_domain_add_*() helpers that need to do something between the
-allocation and the registration, such as for example setting a
-d->msi_chip pointer in the irq_domain structure before this structure
-is made globally visible by being registered.
+PCIe switch can be connected directly to the PCIe root complex in QEMU;
+ASPM does not expect this topology and dereferences NULL pointer when
+initializing.
 
-Moreover, the comment in __irq_domain_add() also suggests that an
-irq_domain_register() function should exist.
+Downstream port can be also connected to the root complex without
+upstream one, so code checks for both, otherwise they dereference NULL
+on line drivers/pci/pcie/aspm.c:530 (alloc_pcie_link_state+13):
+  		parent = pdev->bus->parent->self->link_state;
+"pdev->bus->parent->self == NULL" if upstream port is connected directly
+to the root bus and "pdev->bus->parent == NULL" in the second case.
 
-Therefore, this commit:
+v1 -> v2: (https://lkml.org/lkml/2013/6/19/753)
+ - Initialization is aborted in pcie_aspm_init_link_state, where other
+   special cases are being handled
+ - pci_is_root_bus is used
+ - Warning is printed
 
- * Splits __irq_domain_add() into __irq_domain_alloc() (allocation and
-   initialization of the irq_domain) and __irq_domain_register()
-   (registration of the irq_domain to the global list)
+Reproducer for "downstream -- root" and "downstream -- upstream -- root"
+(used qemu-kvm 1.5, q35 machine type might be missing on older ones)
 
- * Modifies the existing users of __irq_domain_add() to use those two
-   functions.
+  for parent in pcie.0 upstream; do
+   qemu-kvm -m 128 -M q35 -nographic -no-reboot \
+     -device x3130-upstream,bus=pcie.0,id=upstream \
+     -device xio3130-downstream,bus=$parent,id=downstream,chassis=1 \
+     -device virtio-blk-pci,bus=downstream,id=virtio-zero,drive=zero \
+     -drive  file=/dev/zero,id=zero,format=raw \
+     -kernel bzImage -append "console=ttyS0 panic=3" # pcie_aspm=off
+  done
 
-A next commit will make another use of it when introducing support for
-msi_chip in the irqdomain code.
+ASPM in QEMU works if we connect upstream through root port
+  -device ioh3420,bus=pcie.0,id=root.0 \
+  -device x3130-upstream,bus=root.0,id=upstream
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Tested-by: Daniel Price <daniel.price@gmail.com>
+Signed-off-by: Radim Krčmář <rkrcmar@redhat.com>
 ---
- include/linux/irqdomain.h | 21 +++++++++++++++++----
- kernel/irq/irqdomain.c    | 40 +++++++++++++++++++++++++++-------------
- 2 files changed, 44 insertions(+), 17 deletions(-)
+ drivers/pci/pcie/aspm.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 1ffa336..7113941 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -111,10 +111,11 @@ struct irq_domain {
- };
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 403a443..209cd7f 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -570,6 +570,15 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 	    pdev->bus->self)
+ 		return;
  
- #ifdef CONFIG_IRQ_DOMAIN
--struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
-+struct irq_domain *__irq_domain_alloc(struct device_node *of_node, int size,
- 				    irq_hw_number_t hwirq_max, int direct_max,
- 				    const struct irq_domain_ops *ops,
- 				    void *host_data);
-+void __irq_domain_register(struct irq_domain *domain);
- struct irq_domain *irq_domain_add_simple(struct device_node *of_node,
- 					 unsigned int size,
- 					 unsigned int first_irq,
-@@ -141,14 +142,22 @@ static inline struct irq_domain *irq_domain_add_linear(struct device_node *of_no
- 					 const struct irq_domain_ops *ops,
- 					 void *host_data)
- {
--	return __irq_domain_add(of_node, size, size, 0, ops, host_data);
-+	struct irq_domain *d;
-+	d = __irq_domain_alloc(of_node, size, size, 0, ops, host_data);
-+	if (d)
-+		__irq_domain_register(d);
-+	return d;
- }
- static inline struct irq_domain *irq_domain_add_nomap(struct device_node *of_node,
- 					 unsigned int max_irq,
- 					 const struct irq_domain_ops *ops,
- 					 void *host_data)
- {
--	return __irq_domain_add(of_node, 0, max_irq, max_irq, ops, host_data);
-+	struct irq_domain *d;
-+	d = __irq_domain_alloc(of_node, 0, max_irq, max_irq, ops, host_data);
-+	if (d)
-+		__irq_domain_register(d);
-+	return d;
- }
- static inline struct irq_domain *irq_domain_add_legacy_isa(
- 				struct device_node *of_node,
-@@ -162,7 +171,11 @@ static inline struct irq_domain *irq_domain_add_tree(struct device_node *of_node
- 					 const struct irq_domain_ops *ops,
- 					 void *host_data)
- {
--	return __irq_domain_add(of_node, 0, ~0, 0, ops, host_data);
-+	struct irq_domain *d;
-+	d = __irq_domain_alloc(of_node, 0, ~0, 0, ops, host_data);
-+	if (d)
-+		__irq_domain_register(d);
-+	return d;
- }
- 
- extern void irq_domain_remove(struct irq_domain *host);
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 034bbac..8d02af7 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -23,7 +23,7 @@ static DEFINE_MUTEX(revmap_trees_mutex);
- static struct irq_domain *irq_default_domain;
- 
- /**
-- * __irq_domain_add() - Allocate a new irq_domain data structure
-+ * __irq_domain_alloc() - Allocate a new irq_domain data structure
-  * @of_node: optional device-tree node of the interrupt controller
-  * @size: Size of linear map; 0 for radix mapping only
-  * @direct_max: Maximum value of direct maps; Use ~0 for no limit; 0 for no
-@@ -31,14 +31,15 @@ static struct irq_domain *irq_default_domain;
-  * @ops: map/unmap domain callbacks
-  * @host_data: Controller private data pointer
-  *
-- * Allocates and initialize and irq_domain structure.  Caller is expected to
-- * register allocated irq_domain with irq_domain_register().  Returns pointer
-- * to IRQ domain, or NULL on failure.
-+ * Allocates and initializes an irq_domain structure.  Caller is
-+ * expected to register the allocated irq_domain with
-+ * __irq_domain_register().  Returns pointer to IRQ domain, or NULL on
-+ * failure.
-  */
--struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
--				    irq_hw_number_t hwirq_max, int direct_max,
--				    const struct irq_domain_ops *ops,
--				    void *host_data)
-+struct irq_domain *__irq_domain_alloc(struct device_node *of_node, int size,
-+				      irq_hw_number_t hwirq_max, int direct_max,
-+				      const struct irq_domain_ops *ops,
-+				      void *host_data)
- {
- 	struct irq_domain *domain;
- 
-@@ -56,14 +57,24 @@ struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
- 	domain->revmap_size = size;
- 	domain->revmap_direct_max_irq = direct_max;
- 
-+	return domain;
-+}
-+EXPORT_SYMBOL_GPL(__irq_domain_alloc);
++	/* We require at least two ports between downstream and root bus */
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM &&
++	    (pci_is_root_bus(pdev->bus) ||
++	     pci_is_root_bus(pdev->bus->parent))) {
++		dev_warn(&pdev->dev, "ASPM disabled"
++		                     " (connected directly to root bus)\n");
++		return;
++	}
 +
-+/**
-+ * __irq_domain_register() - Register a new irq_domain that has been
-+ * previously allocated with __irq_domain_alloc().
-+ * @domain: irq_domain to registers
-+ */
-+void __irq_domain_register(struct irq_domain *domain)
-+{
- 	mutex_lock(&irq_domain_mutex);
- 	list_add(&domain->link, &irq_domain_list);
- 	mutex_unlock(&irq_domain_mutex);
- 
- 	pr_debug("Added domain %s\n", domain->name);
--	return domain;
- }
--EXPORT_SYMBOL_GPL(__irq_domain_add);
-+EXPORT_SYMBOL_GPL(__irq_domain_register);
- 
- /**
-  * irq_domain_remove() - Remove an irq domain.
-@@ -127,7 +138,7 @@ struct irq_domain *irq_domain_add_simple(struct device_node *of_node,
- {
- 	struct irq_domain *domain;
- 
--	domain = __irq_domain_add(of_node, size, size, 0, ops, host_data);
-+	domain = __irq_domain_alloc(of_node, size, size, 0, ops, host_data);
- 	if (!domain)
- 		return NULL;
- 
-@@ -143,6 +154,8 @@ struct irq_domain *irq_domain_add_simple(struct device_node *of_node,
- 		irq_domain_associate_many(domain, first_irq, 0, size);
- 	}
- 
-+	__irq_domain_register(domain);
-+
- 	return domain;
- }
- EXPORT_SYMBOL_GPL(irq_domain_add_simple);
-@@ -171,12 +184,13 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
- {
- 	struct irq_domain *domain;
- 
--	domain = __irq_domain_add(of_node, first_hwirq + size,
--				  first_hwirq + size, 0, ops, host_data);
-+	domain = __irq_domain_alloc(of_node, first_hwirq + size,
-+				    first_hwirq + size, 0, ops, host_data);
- 	if (!domain)
- 		return NULL;
- 
- 	irq_domain_associate_many(domain, first_irq, first_hwirq, size);
-+	__irq_domain_register(domain);
- 
- 	return domain;
- }
+ 	down_read(&pci_bus_sem);
+ 	if (list_empty(&pdev->subordinate->devices))
+ 		goto out;
 -- 
-1.8.1.2
+1.8.3.1
 
