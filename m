@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:46413 "EHLO
+Received: from top.free-electrons.com ([176.31.233.9]:41403 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1031049Ab3HIU13 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 16:27:29 -0400
+	with ESMTP id S1758212Ab3HHWSW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 18:18:22 -0400
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Russell King <linux@arm.linux.org.uk>,
@@ -16,192 +16,123 @@ Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
 	linux-arm-kernel@lists.infradead.org,
 	Maen Suleiman <maen@marvell.com>,
 	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
-Subject: [PATCHv9 02/10] PCI: remove ARCH_SUPPORTS_MSI kconfig option
-Date: Fri,  9 Aug 2013 22:27:07 +0200
-Message-Id: <1376080035-29344-3-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv8 09/10] PCI: mvebu: add support for MSI
+Date: Fri,  9 Aug 2013 00:17:47 +0200
+Message-Id: <1376000268-18397-10-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we have weak versions for each of the PCI MSI architecture
-functions, we can actually build the MSI support for all platforms,
-regardless of whether they provide or not architecture-specific
-versions of those functions. For this reason, the ARCH_SUPPORTS_MSI
-hidden kconfig boolean becomes useless, and this patch gets rid of it.
+This commit adds support for Message Signaled Interrupts in the
+Marvell PCIe host controller. The work is very simple: it simply gets
+a reference to the msi_chip associated to the PCIe controller thanks
+to the msi-parent DT property, and stores this reference in the
+pci_bus structure. This is enough to let the Linux PCI core use the
+functions of msi_chip to setup and teardown MSIs.
 
 Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Tested-by: Daniel Price <daniel.price@gmail.com>
-Tested-by: Thierry Reding <thierry.reding@gmail.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: linux390@de.ibm.com
-Cc: linux-s390@vger.kernel.org
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-mips@linux-mips.org
-Cc: David S. Miller <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
-Cc: Chris Metcalf <cmetcalf@tilera.com>
 ---
- arch/arm/Kconfig     | 1 -
- arch/ia64/Kconfig    | 1 -
- arch/mips/Kconfig    | 2 --
- arch/powerpc/Kconfig | 1 -
- arch/s390/Kconfig    | 1 -
- arch/sparc/Kconfig   | 1 -
- arch/tile/Kconfig    | 1 -
- arch/x86/Kconfig     | 1 -
- drivers/pci/Kconfig  | 4 ----
- 9 files changed, 13 deletions(-)
+ .../devicetree/bindings/pci/mvebu-pci.txt          |  3 +++
+ drivers/pci/host/pci-mvebu.c                       | 26 ++++++++++++++++++++++
+ 2 files changed, 29 insertions(+)
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 37c0f4e..41b6c96 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -441,7 +441,6 @@ config ARCH_NETX
- config ARCH_IOP13XX
- 	bool "IOP13xx-based"
- 	depends on MMU
--	select ARCH_SUPPORTS_MSI
- 	select CPU_XSC3
- 	select NEED_MACH_MEMORY_H
- 	select NEED_RET_TO_USER
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index 5a768ad..098602b 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -9,7 +9,6 @@ config IA64
- 	select PCI if (!IA64_HP_SIM)
- 	select ACPI if (!IA64_HP_SIM)
- 	select PM if (!IA64_HP_SIM)
--	select ARCH_SUPPORTS_MSI
- 	select HAVE_UNSTABLE_SCHED_CLOCK
- 	select HAVE_IDE
- 	select HAVE_OPROFILE
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index c3abed3..01b5f5a 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -726,7 +726,6 @@ config CAVIUM_OCTEON_SOC
- 	select SYS_HAS_CPU_CAVIUM_OCTEON
- 	select SWAP_IO_SPACE
- 	select HW_HAS_PCI
--	select ARCH_SUPPORTS_MSI
- 	select ZONE_DMA32
- 	select USB_ARCH_HAS_OHCI
- 	select USB_ARCH_HAS_EHCI
-@@ -762,7 +761,6 @@ config NLM_XLR_BOARD
- 	select CEVT_R4K
- 	select CSRC_R4K
- 	select IRQ_CPU
--	select ARCH_SUPPORTS_MSI
- 	select ZONE_DMA32 if 64BIT
- 	select SYNC_R4K
- 	select SYS_HAS_EARLY_PRINTK
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index 3bf72cd..183a165 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -727,7 +727,6 @@ config PCI
- 	default y if !40x && !CPM2 && !8xx && !PPC_83xx \
- 		&& !PPC_85xx && !PPC_86xx && !GAMECUBE_COMMON
- 	default PCI_QSPAN if !4xx && !CPM2 && 8xx
--	select ARCH_SUPPORTS_MSI
- 	select GENERIC_PCI_IOMAP
- 	help
- 	  Find out whether your system includes a PCI bus. PCI is the name of
-diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-index 22f75b5..e9982a3 100644
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -428,7 +428,6 @@ menuconfig PCI
- 	bool "PCI support"
- 	default n
- 	depends on 64BIT
--	select ARCH_SUPPORTS_MSI
- 	select PCI_MSI
- 	help
- 	  Enable PCI support.
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index a00cbd3..1570ad2 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -52,7 +52,6 @@ config SPARC32
+diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+index f8d4058..77e0ffe 100644
+--- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
++++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+@@ -12,6 +12,8 @@ Mandatory properties:
+ - device_type, set to "pci"
+ - ranges: ranges for the PCI memory and I/O regions, as well as the
+   MMIO registers to control the PCIe interfaces.
++- msi-parent: Link to the hardware entity that serves as the Message
++  Signaled Interrupt controller for this PCI controller.
  
- config SPARC64
- 	def_bool 64BIT
--	select ARCH_SUPPORTS_MSI
- 	select HAVE_FUNCTION_TRACER
- 	select HAVE_FUNCTION_GRAPH_TRACER
- 	select HAVE_FUNCTION_GRAPH_FP_TEST
-diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
-index 24565a7..74dff90 100644
---- a/arch/tile/Kconfig
-+++ b/arch/tile/Kconfig
-@@ -380,7 +380,6 @@ config PCI
- 	select PCI_DOMAINS
- 	select GENERIC_PCI_IOMAP
- 	select TILE_GXIO_TRIO if TILEGX
--	select ARCH_SUPPORTS_MSI if TILEGX
- 	select PCI_MSI if TILEGX
- 	---help---
- 	  Enable PCI root complex support, so PCIe endpoint devices can
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index b32ebf9..5db62ef 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2014,7 +2014,6 @@ menu "Bus options (PCI etc.)"
- config PCI
- 	bool "PCI support"
- 	default y
--	select ARCH_SUPPORTS_MSI if (X86_LOCAL_APIC && X86_IO_APIC)
- 	---help---
- 	  Find out whether you have a PCI motherboard. PCI is the name of a
- 	  bus system, i.e. the way the CPU talks to the other stuff inside
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 81944fb..b6a99f7 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -1,13 +1,9 @@
- #
- # PCI configuration
- #
--config ARCH_SUPPORTS_MSI
--	bool
--
- config PCI_MSI
- 	bool "Message Signaled Interrupts (MSI and MSI-X)"
- 	depends on PCI
--	depends on ARCH_SUPPORTS_MSI
- 	help
- 	   This allows device drivers to enable MSI (Message Signaled
- 	   Interrupts).  Message Signaled Interrupts enable a device to
+ In addition, the Device Tree node must have sub-nodes describing each
+ PCIe interface, having the following mandatory properties:
+@@ -46,6 +48,7 @@ pcie-controller {
+ 	#size-cells = <2>;
+ 
+ 	bus-range = <0x00 0xff>;
++	msi-parent = <&mpic>;
+ 
+ 	ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
+ 		  0x82000000 0 0xd0042000 0xd0042000 0 0x00002000   /* Port 2.0 registers */
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 13a633b..5715a97 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -11,6 +11,7 @@
+ #include <linux/clk.h>
+ #include <linux/module.h>
+ #include <linux/mbus.h>
++#include <linux/msi.h>
+ #include <linux/slab.h>
+ #include <linux/platform_device.h>
+ #include <linux/of_address.h>
+@@ -107,6 +108,7 @@ struct mvebu_pcie_port;
+ struct mvebu_pcie {
+ 	struct platform_device *pdev;
+ 	struct mvebu_pcie_port *ports;
++	struct msi_chip *msi;
+ 	struct resource io;
+ 	struct resource realio;
+ 	struct resource mem;
+@@ -695,6 +697,12 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	return bus;
+ }
+ 
++void mvebu_pcie_add_bus(struct pci_bus *bus)
++{
++	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
++	bus->msi = pcie->msi;
++}
++
+ resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 					  const struct resource *res,
+ 					  resource_size_t start,
+@@ -731,6 +739,7 @@ static void __init mvebu_pcie_enable(struct mvebu_pcie *pcie)
+ 	hw.map_irq        = mvebu_pcie_map_irq;
+ 	hw.ops            = &mvebu_pcie_ops;
+ 	hw.align_resource = mvebu_pcie_align_resource;
++	hw.add_bus        = mvebu_pcie_add_bus;
+ 
+ 	pci_common_init(&hw);
+ }
+@@ -755,6 +764,21 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
+ 	return devm_request_and_ioremap(&pdev->dev, &regs);
+ }
+ 
++static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
++{
++	struct device_node *msi_node;
++
++	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
++				    "msi-parent", 0);
++	if (!msi_node)
++		return;
++
++	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
++
++	if (pcie->msi)
++		pcie->msi->dev = &pcie->pdev->dev;
++}
++
+ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct mvebu_pcie *pcie;
+@@ -879,6 +903,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+ 		i++;
+ 	}
+ 
++	mvebu_pcie_msi_enable(pcie);
++
+ 	mvebu_pcie_enable(pcie);
+ 
+ 	return 0;
 -- 
 1.8.1.2
 
