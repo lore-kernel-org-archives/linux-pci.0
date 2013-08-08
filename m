@@ -1,60 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:37191 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753315Ab3HFNo0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 09:44:26 -0400
-Received: by mail-qc0-f182.google.com with SMTP id c11so201247qcv.27
-        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 06:44:25 -0700 (PDT)
-Date: Tue, 6 Aug 2013 07:44:21 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
- pbus_size_io()
-Message-ID: <20130806134421.GD31970@google.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
- <20130806061924.GB10876@weiyang.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130806061924.GB10876@weiyang.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 8 Aug 2013 15:23:29 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: tony.luck@intel.com, bp@alien8.de, bhelgaas@google.com,
+	rjw@sisk.pl, lance.ortiz@hp.com, m.chehab@samsung.com,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] mce: acpi/apei: trace: Include PCIe AER trace event
+ conditionally
+Message-ID: <20130808152329.1f98b5e0@gandalf.local.home>
+In-Reply-To: <1375986471-27113-2-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+	<1375986471-27113-2-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 06, 2013 at 02:19:24PM +0800, Wei Yang wrote:
-> On Mon, Aug 05, 2013 at 11:58:50AM -0600, Bjorn Helgaas wrote:
-> >[+cc Yinghai]
-> >
-> >On Fri, Aug 2, 2013 at 3:31 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> >> In commit 462d9303 ("PCI: Align P2P windows using pcibios_window_alignment()"),
-> >> it introduce a new method to calculate the window alignment of P2P bridge.
-> >>
-> >> When the io_window_1k is set,  the calculation for the io resource alignment
-> >> is different from the original one. In the original logic before 462d9303,
-> >> the alignment is no bigger than 4K even the io_window_1k is set. The logic
-> >> introduced in 462d9303 will limit the alignment to 1k in this case.
-> >>
-> >> This patch fix this issue.
-> >
-> >Presumably this fixes a bug, but you don't say what it is.  "different
-> >from the original" is not a description of a problem.  You need
-> >something like "with the current code, we allocate the wrong window
-> >size in situation X, or we allocate a window with incorrect alignment
-> >in situation Y, etc."
-> >
-> 
-> With current code, we allocate the wrong window size when upstream bridge
-> could be 1k aligned and one of the downstream port is 4k aligned.
-> 
-> In this case, the "min_align" should be 4k. But the current code set
-> "min_align" to 1k.
+[ attempting to try out claws-mail, hopefully this messages isn't
+scrambled ;-) ]
 
-I would expect that we allocate a window with incorrect *alignment*,
-not incorrect size.  If you include a dmesg log and lspci output and point
-out the problem, that will avoid a lot of confusion.
+On Thu,  8 Aug 2013 23:57:49 +0530
+"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> wrote:
 
-Bjorn
+> Since we'll be adding multiple trace events to ras.h, we need to protect
+> each block appropriately so that they only get included in the right
+> places. Update PCIe AER trace event for this purpose.
+
+Why not make a separate file for each? You will have to define
+TRACE_EVENT_PCIE_AER for the users as well. That is, the places that
+include ras.h and use the trace_aer_*() tracepoints.
+
+
+> 
+> Signed-off-by: Naveen N. Rao <naveen.n.rao@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/pcie/aer/aerdrv_errprint.c | 1 +
+>  include/trace/events/ras.h             | 2 +-
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index 2c7c9f5..4d06859 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -24,6 +24,7 @@
+>  #include "aerdrv.h"
+>  
+>  #define CREATE_TRACE_POINTS
+> +#define TRACE_EVENT_PCIE_AER
+>  #include <trace/events/ras.h>
+>  
+>  #define AER_AGENT_RECEIVER		0
+> diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+> index 88b8783..4a66142 100644
+> --- a/include/trace/events/ras.h
+> +++ b/include/trace/events/ras.h
+> @@ -1,7 +1,7 @@
+>  #undef TRACE_SYSTEM
+>  #define TRACE_SYSTEM ras
+>  
+> -#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
+> +#if (!defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)) && defined()
+
+I think it would look cleaner to encapsulate the one define with the
+other:
+
+#ifdef TRACE_EVENT_PCIE_AER
+#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
+
+
+-- Steve
+
+>  #define _TRACE_AER_H
+>  
+>  #include <linux/tracepoint.h>
+
