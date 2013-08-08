@@ -1,93 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:1124 "EHLO
-	mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751289Ab3HSLVA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 07:21:00 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by devm_ioremap_resource
-Date: Mon, 19 Aug 2013 13:20:35 +0200
-Message-Id: <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr>
-In-Reply-To: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from gate.crashing.org ([63.228.1.57]:51234 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933833Ab3HHImC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Aug 2013 04:42:02 -0400
+Message-ID: <1375951274.12551.31.camel@pasglop>
+Subject: Re: [PATCHv7 07/13] irqdomain: add function to find a MSI irq_domain
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Date: Thu, 08 Aug 2013 18:41:14 +1000
+In-Reply-To: <20130808102255.05fd79d8@skate>
+References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	 <1375867954-2320-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	 <1375908620.9300.3.camel@pasglop> <20130808000443.17f57875@skate>
+	 <1375914665.12551.5.camel@pasglop> <1375915344.12551.6.camel@pasglop>
+	 <1375915536.12551.9.camel@pasglop> <20130808102255.05fd79d8@skate>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On Thu, 2013-08-08 at 10:22 +0200, Thomas Petazzoni wrote:
+> Dear Benjamin Herrenschmidt,
 
-Use devm_ioremap_resource instead of devm_request_and_ioremap.
+> I'm sorry, but I'm not buying this. There must be some continuity when
+> the maintenance of one subsystem transitions from one maintainer to
+> another. I'm perfectly ok with accepting some hick-ups, but not radical
+> changes in design decisions.
 
-This was done using the semantic patch
-scripts/coccinelle/api/devm_ioremap_resource.cocci
+Well, I wrote it in the first place :-)
 
-Error-handling code was manually removed from the associated calls to
-platform_get_resource.
+> What you're asking me to do is to go completely backwards compared to
+> the comments and review Grant made. The irqdomain-based allocator was
+> suggested by Grant (see my previous e-mail, or Grant reply at
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2013-June/175430.html)
+> and was even Acked-by Grant in
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2013-July/187082.html.
+> 
+> Note that this patch set has been posted at the following dates:
+> 
+>  * PATCH version 7 sent on August, 7th 2013
+>  * PATCH version 6 sent on August, 1st 2013
+>  * PATCH version 5 sent on July, 15th 2013
+>  * PATCH version 4 sent on July, 1st 2013
+>  * PATCH version 3 sent on June, 19th 2013
+>  * PATCH version 2 sent on June, 6th 2013
+>  * RFC version 1 sent on March, 26th 2013
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+I'm really sorry and I feel your pain. I have not actively been
+monitoring any of that stuff, and you might have gotten away without
+CC'ing me or asking for my point of view but you did (and I thank you
+for that), and sadly this is my opinion.
 
----
-The first block of modified code is followed by a call to
-devm_request_mem_region for pcie->cs with no associated ioremap.  Should
-ioremap be used in this case as well?
+> So it has been around since 4 months, I've taken into account all the
+> comments from the various maintainers who were involved, and especially
+> the comments from Grant. You cannot ask me now, as we are approaching
+> the next merge window for which this code is intended, to take
+> completely opposite design choices than what the previous irqdomain
+> maintainer was suggesting.
 
- drivers/pci/host/pci-tegra.c |   29 +++++++++--------------------
- 1 file changed, 9 insertions(+), 20 deletions(-)
+I can and I do. However, I also leave the opportunity of bringing in a
+third party into the debate with a well known track record to overrule
+me if he thinks I'm being unnecessarily obstructive.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 7356741..db2ddc5 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -1031,28 +1031,17 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 		return err;
- 	}
- 
--	/* request and remap controller registers */
- 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
--	if (!pads) {
--		err = -EADDRNOTAVAIL;
-+	pcie->pads = devm_ioremap_resource(&pdev->dev, pads);
-+	if (IS_ERR(pcie->pads)) {
-+		err = PTR_ERR(pcie->pads);
- 		goto poweroff;
- 	}
- 
- 	afi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "afi");
--	if (!afi) {
--		err = -EADDRNOTAVAIL;
--		goto poweroff;
--	}
--
--	pcie->pads = devm_request_and_ioremap(&pdev->dev, pads);
--	if (!pcie->pads) {
--		err = -EADDRNOTAVAIL;
--		goto poweroff;
--	}
--
--	pcie->afi = devm_request_and_ioremap(&pdev->dev, afi);
--	if (!pcie->afi) {
--		err = -EADDRNOTAVAIL;
-+	pcie->afi = devm_ioremap_resource(&pdev->dev, afi);
-+	if (IS_ERR(pcie->afi)) {
-+		err = PTR_ERR(pcie->afi);
- 		goto poweroff;
- 	}
- 
-@@ -1492,9 +1481,9 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		rp->lanes = value;
- 		rp->pcie = pcie;
- 
--		rp->base = devm_request_and_ioremap(pcie->dev, &rp->regs);
--		if (!rp->base)
--			return -EADDRNOTAVAIL;
-+		rp->base = devm_ioremap_resource(pcie->dev, &rp->regs);
-+		if (IS_ERR(rp->base))
-+			return PTR_ERR(rp->base);
- 
- 		list_add_tail(&rp->list, &pcie->ports);
- 	}
+> Could you contact Grant and align with him on those design decisions?
+> It would also be good if you could read the past discussions on this
+> patch set, because all what you're pointing at has already been
+> discussed at length, as I pointed out in my previous e-mail.
+
+I can try... Grant, are you around ? (I've added you to the CC list), we
+might be able to catch up on IRC and discuss it ...
+
+Cheers,
+Ben.
+
+
+> Thanks,
+> 
+> Thomas
+
 
