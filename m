@@ -1,30 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:31931 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751133Ab3HTA2B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 20:28:01 -0400
-From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-To: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<dougthompson@xmission.com>, <bp@alien8.de>, <bhelgaas@google.com>,
-	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
-	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Subject: [PATCH 0/1] AMD64_EDAC: Fix incorrect wrap arounds due to left shift beyond 32 bits. 
-Date: Mon, 19 Aug 2013 19:27:51 -0500
-Message-ID: <1376958472-2150-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v5 5/9] pci: Split out pci_dev lock/unlock and save/restore
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
+	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 08 Aug 2013 14:09:49 -0600
+Message-ID: <20130808200949.2932.29059.stgit@bling.home>
+In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
+References: <20130808200444.2932.17381.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Aravind Gopalakrishnan (1):
-  AMD64_EDAC: Fix incorrect wrap arounds due to left shift beyond 32
-    bits.
+Only cosmetic code changes to existing paths.  Expand the comment in
+the new pci_dev_save_and_disable() function since there's a lot
+hidden in that Command register write.
 
- drivers/edac/amd64_edac.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c |   55 +++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 38 insertions(+), 17 deletions(-)
 
--- 
-1.7.10.4
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9407aab..4a0275c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3317,22 +3317,49 @@ done:
+ 	return rc;
+ }
+ 
++static void pci_dev_lock(struct pci_dev *dev)
++{
++	pci_cfg_access_lock(dev);
++	/* block PM suspend, driver probe, etc. */
++	device_lock(&dev->dev);
++}
++
++static void pci_dev_unlock(struct pci_dev *dev)
++{
++	device_unlock(&dev->dev);
++	pci_cfg_access_unlock(dev);
++}
++
++static void pci_dev_save_and_disable(struct pci_dev *dev)
++{
++	pci_save_state(dev);
++	/*
++	 * Disable the device by clearing the Command register, except for
++	 * INTx-disable which is set.  This not only disable MMIO and I/O port
++	 * BARs, but also prevents the device from being Bus Master, preventing
++	 * DMA from the device including MSI/MSI-X interrupts.  For PCI 2.3
++	 * compliant devices, INTx-disable prevents legacy interrupts.
++	 */
++	pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
++}
++
++static void pci_dev_restore(struct pci_dev *dev)
++{
++	pci_restore_state(dev);
++}
++
+ static int pci_dev_reset(struct pci_dev *dev, int probe)
+ {
+ 	int rc;
+ 
+-	if (!probe) {
+-		pci_cfg_access_lock(dev);
+-		/* block PM suspend, driver probe, etc. */
+-		device_lock(&dev->dev);
+-	}
++	if (!probe)
++		pci_dev_lock(dev);
+ 
+ 	rc = __pci_dev_reset(dev, probe);
+ 
+-	if (!probe) {
+-		device_unlock(&dev->dev);
+-		pci_cfg_access_unlock(dev);
+-	}
++	if (!probe)
++		pci_dev_unlock(dev);
++
+ 	return rc;
+ }
+ /**
+@@ -3423,17 +3450,11 @@ int pci_reset_function(struct pci_dev *dev)
+ 	if (rc)
+ 		return rc;
+ 
+-	pci_save_state(dev);
+-
+-	/*
+-	 * both INTx and MSI are disabled after the Interrupt Disable bit
+-	 * is set and the Bus Master bit is cleared.
+-	 */
+-	pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
++	pci_dev_save_and_disable(dev);
+ 
+ 	rc = pci_dev_reset(dev, 0);
+ 
+-	pci_restore_state(dev);
++	pci_dev_restore(dev);
+ 
+ 	return rc;
+ }
 
