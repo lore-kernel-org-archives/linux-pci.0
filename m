@@ -1,61 +1,208 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50321 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750816Ab3HSW7m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Aug 2013 18:59:42 -0400
-Message-ID: <1376953177.2657.33.camel@ul30vt.home>
-Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Wang, Rui Y" <rui.y.wang@intel.com>
+To: "liuj97@gmail.com" <liuj97@gmail.com>
+CC: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>,
+	"dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+	"Koul, Vinod" <vinod.koul@intel.com>,
+	"chenkeping@huawei.com" <chenkeping@huawei.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Date: Mon, 19 Aug 2013 16:59:37 -0600
-In-Reply-To: <1376952167.25016.85.camel@pasglop>
-References: <20130814200845.21923.64284.stgit@bling.home>
-	 <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
-	 <1376521578.13642.65.camel@ul30vt.home>
-	 <1376937682.2657.15.camel@ul30vt.home>
-	 <CAErSpo50ve+ZMqcX=13hKvrB75LyWmUddC-qyX7Esfr=P5StcA@mail.gmail.com>
-	 <1376952167.25016.85.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [RFC PATCH v2 3/7] dmaengine: enhance dmaengine to support DMA
+ device hotplug
+Date: Thu, 8 Aug 2013 10:45:58 +0000
+Message-ID: <FC9702EC51E4CA40A875703BEBD6CEF80183DA53@SHSMSX101.ccr.corp.intel.com>
+References: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
+	<1337003229-9158-4-git-send-email-jiang.liu@huawei.com>
+ <CANVTcTan9N=Bvf=-vDwOQhS13y+JtWfqApF75yuksQuFBBVDZw@mail.gmail.com>
+In-Reply-To: <CANVTcTan9N=Bvf=-vDwOQhS13y+JtWfqApF75yuksQuFBBVDZw@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-08-20 at 08:42 +1000, Benjamin Herrenschmidt wrote:
-> On Mon, 2013-08-19 at 14:02 -0600, Bjorn Helgaas wrote:
-> > I guess.  And supply the pci_slot rather than the pci_dev?  I'm a
-> > little bit worried because the idea of a "slot" is not well-defined in
-> > the spec, and we have sort of an ad hoc method of discovering and
-> > managing them, e.g., acpiphp and pciehp might discover the same slot.
-> > But I guess that's no reason to bury generic code in vfio.
-> 
-> And I don't have pci_slot's at all yet on powerpc "powernv" (the host
-> platform for KVM) since at this stage we don't support physical hotplug
-> on the target machines...
-> 
-> Alex, why specifically looking for "slots" here ? I don't quite
-> understand. It makes sense to be able to reset individual devices
-> whether they are on the otherboard, behind extension chassis or directly
-> on slots...
+Hi Jiang,
+See my comments inline.
 
-a) resetting a slot may have a smaller footprint than resetting a bus,
-b) hotplug controllers sometimes need to be involved in a bus reset.
-For b) I have a specific example where my Lenovo S20 workstation has an
-onboard tg3 NIC attached to a root port supporting pciehp (go figure
-since the tg3 is soldered onto the motherboard) and doing a secondary
-bus reset at the root port triggers a presence detection change and
-therefore tries to do a surprise removal.  By doing a "slot" reset, I
-have the hotplug controller code manage the bus reset by disabling
-presence detection around the bus reset.  If you don't have slots and
-you don't need anything special around a secondary bus reset, you're
-fine.  It's just an opportunity to provide a hook for the hotplug
-controller to participate.  Thanks,
+> -----Original Message-----
+> From: Jiang Liu <liuj97@gmail.com>
+> Date: Mon, 14 May 2012 21:47:05 +0800
+> Subject: [RFC PATCH v2 3/7] dmaengine: enhance dmaengine to support DMA
+> device hotplug
+> To: Dan Williams <dan.j.williams@intel.com>, Maciej Sosnowski
+> <maciej.sosnowski@intel.com>, Vinod Koul <vinod.koul@intel.com>
+> Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
+> linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+> 
+> From: Jiang Liu <liuj97@gmail.com>
+> 
+> From: Jiang Liu <liuj97@gmail.com>
+> 
+> To support DMA device hotplug, dmaengine must correctly manage reference
+> count for DMA channels. On the other hand, DMA hot path is performance
+> critical, reference count management code should avoid polluting global shared
+> cachelines, otherwise it may cause heavy performance penalty.
+> 
+> This patch introduces a lightweight DMA channel reference count management
+> mechanism by using percpu counter. When DMA device hotplug is disabled,
+> there's no performance penalty. When hotplug is enabled, a
+> dma_find_channel()/dma_put_channel() pair adds two local memory accesses
+> to the hot path.
+> 
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> ---
+>  drivers/dma/dmaengine.c   |  112
+> +++++++++++++++++++++++++++++++++++++++++----
+>  include/linux/dmaengine.h |   29 +++++++++++-
+>  2 files changed, 129 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c index
+> d3b1c48..eca45c0 100644
+> --- a/drivers/dma/dmaengine.c
+> +++ b/drivers/dma/dmaengine.c
+> @@ -61,12 +61,20 @@
+>  #include <linux/rculist.h>
+>  #include <linux/idr.h>
+>  #include <linux/slab.h>
+> +#include <linux/sched.h>
+> 
+>  static DEFINE_MUTEX(dma_list_mutex);
+>  static DEFINE_IDR(dma_idr);
+>  static LIST_HEAD(dma_device_list);
+>  static long dmaengine_client_count;
+> 
+> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
+> +static atomic_t dmaengine_dirty;
+> +static struct static_key dmaengine_quiesce = STATIC_KEY_INIT_FALSE;
+> +static DECLARE_WAIT_QUEUE_HEAD(dmaengine_wait_queue);
+> +DEFINE_PER_CPU(long, dmaengine_chan_ref_count);
+> +#endif	/* CONFIG_DMA_ENGINE_HOTPLUG */
+> +
+>  /* --- sysfs implementation --- */
+> 
+>  /**
+> @@ -305,10 +313,40 @@ arch_initcall(dma_channel_table_init);
+>   */
+>  struct dma_chan *dma_find_channel(enum dma_transaction_type tx_type)
+> {
+> -	return this_cpu_read(channel_table[tx_type]->chan);
+> +	struct dma_chan *chan = this_cpu_read(channel_table[tx_type]->chan);
+> +
+> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
+> +	this_cpu_inc(dmaengine_chan_ref_count);
+> +	if (static_key_false(&dmaengine_quiesce))
+> +		chan = NULL;
+> +#endif
+> +
+> +	return chan;
+>  }
+>  EXPORT_SYMBOL(dma_find_channel);
+> 
+> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
+> +struct dma_chan *dma_get_channel(struct dma_chan *chan) {
+> +	if (static_key_false(&dmaengine_quiesce))
+> +		atomic_inc(&dmaengine_dirty);
+> +	this_cpu_inc(dmaengine_chan_ref_count);
+> +
+> +	return chan;
+> +}
+> +EXPORT_SYMBOL(dma_get_channel);
+> +#endif
+> +
+> +/**
+> + * dma_has_capability - check whether any channel supports tx_type
+> + * @tx_type: transaction type
+> + */
+> +bool dma_has_capability(enum dma_transaction_type tx_type) {
+> +	return !!this_cpu_read(channel_table[tx_type]->chan);
+> +}
+> +EXPORT_SYMBOL(dma_has_capability);
+> +
+>  /*
+>   * net_dma_find_channel - find a channel for net_dma
+>   * net_dma has alignment requirements
+> @@ -316,10 +354,15 @@ EXPORT_SYMBOL(dma_find_channel);  struct
+> dma_chan *net_dma_find_channel(void)  {
+>  	struct dma_chan *chan = dma_find_channel(DMA_MEMCPY);
+> -	if (chan && !is_dma_copy_aligned(chan->device, 1, 1, 1))
+> -		return NULL;
+> 
+> -	return chan;
+> +	if (chan && is_dma_copy_aligned(chan->device, 1, 1, 1))
+> +		return chan;
+> +
+> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
+> +	this_cpu_dec(dmaengine_chan_ref_count);
+> +#endif
+> +
+> +	return NULL;
+>  }
+>  EXPORT_SYMBOL(net_dma_find_channel);
+> 
+> @@ -393,6 +436,37 @@ static struct dma_chan *nth_chan(enum
+> dma_transaction_type cap, int n)
+>  	return ret;
+>  }
+> 
+> +static void dma_channel_quiesce(void)
+> +{
+> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
+> +	int cpu;
+> +	long ref_count;
+> +	int quiesce_count = 0;
+> +
+> +	static_key_slow_inc(&dmaengine_quiesce);
+> +
+> +	do {
+> +		atomic_set(&dmaengine_dirty, 0);
+> +		schedule_timeout(1);
+> +
+> +		if (atomic_read(&dmaengine_dirty)) {
+> +			quiesce_count = 0;
+> +			continue;
+> +		}
+> +
+> +		ref_count = 0;
+> +		for_each_possible_cpu(cpu)
+> +			ref_count += per_cpu(dmaengine_chan_ref_count, cpu);
+> +		if (ref_count == 0)
+> +			quiesce_count++;
+> +		else
+> +			quiesce_count = 0;
+> +	} while (quiesce_count < 10);
+> +
+> +	static_key_slow_dec(&dmaengine_quiesce);
+> +#endif
+> +}
+> +
 
-Alex
+The purpose of dma_channel_quiesce() is unclear to me. It waits until dmaengine_chan_ref_count is 0, but how do you prevent someone from using dma after it returns?
+
+<snip>
+
+> @@ -767,14 +848,22 @@ void dma_async_device_unregister(struct
+> dma_device *device)
+> 
+>  	mutex_lock(&dma_list_mutex);
+>  	list_del_rcu(&device->global_node);
+> -	dma_channel_rebalance();
+> +	dma_channel_rebalance(true);
+>  	mutex_unlock(&dma_list_mutex);
+> 
+>  	/* Check whether it's called from module exit function. */
+>  	if (try_module_get(device->dev->driver->owner)) {
+> +#ifndef	CONFIG_DMA_ENGINE_HOTPLUG
+>  		dev_warn(device->dev,
+>  			"%s isn't called from module exit function.\n",
+>  			__func__);
+> +#else
+> +		list_for_each_entry(chan, &device->channels, device_node) {
+> +			/* TODO: notify clients to release channels*/
+> +			wait_event(dmaengine_wait_queue,
+> +				   chan->client_count == 0);
+> +		}
+
+How do you notify clients to release the channels? Is there an updated version which handles this? There're resources (e.g. timers) that must be free'd, which can only happen when someone calls dma_chan_put() until client_count reaches 0 and device_free_chan_resources() gets called. 
+
+Rui Wang
 
 
