@@ -1,108 +1,135 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v5 5/9] pci: Split out pci_dev lock/unlock and save/restore
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
-	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Thu, 08 Aug 2013 14:09:49 -0600
-Message-ID: <20130808200949.2932.29059.stgit@bling.home>
-In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
-References: <20130808200444.2932.17381.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:41339 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758212Ab3HHWSH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 18:18:07 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv8 04/10] of: pci: add registry of MSI chips
+Date: Fri,  9 Aug 2013 00:17:42 +0200
+Message-Id: <1376000268-18397-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Only cosmetic code changes to existing paths.  Expand the comment in
-the new pci_dev_save_and_disable() function since there's a lot
-hidden in that Command register write.
+This commit adds a very basic registry of msi_chip structures, so that
+an IRQ controller driver can register an msi_chip, and a PCIe host
+controller can find it, based on a 'struct device_node'.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/pci.c |   55 +++++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 38 insertions(+), 17 deletions(-)
+ drivers/of/of_pci.c    | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/msi.h    |  2 ++
+ include/linux/of_pci.h | 12 ++++++++++++
+ 3 files changed, 59 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 9407aab..4a0275c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3317,22 +3317,49 @@ done:
- 	return rc;
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 42c687a..e5ca008 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -89,3 +89,48 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+ 	return 0;
  }
- 
-+static void pci_dev_lock(struct pci_dev *dev)
+ EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
++
++#ifdef CONFIG_PCI_MSI
++
++static LIST_HEAD(of_pci_msi_chip_list);
++static DEFINE_MUTEX(of_pci_msi_chip_mutex);
++
++int of_pci_msi_chip_add(struct msi_chip *chip)
 +{
-+	pci_cfg_access_lock(dev);
-+	/* block PM suspend, driver probe, etc. */
-+	device_lock(&dev->dev);
-+}
++	if (!of_property_read_bool(chip->of_node, "msi-controller"))
++		return -EINVAL;
 +
-+static void pci_dev_unlock(struct pci_dev *dev)
++	mutex_lock(&of_pci_msi_chip_mutex);
++	list_add(&chip->list, &of_pci_msi_chip_list);
++	mutex_unlock(&of_pci_msi_chip_mutex);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(of_pci_msi_chip_add);
++
++void of_pci_msi_chip_remove(struct msi_chip *chip)
 +{
-+	device_unlock(&dev->dev);
-+	pci_cfg_access_unlock(dev);
++	mutex_lock(&of_pci_msi_chip_mutex);
++	list_del(&chip->list);
++	mutex_unlock(&of_pci_msi_chip_mutex);
 +}
++EXPORT_SYMBOL_GPL(of_pci_msi_chip_remove);
 +
-+static void pci_dev_save_and_disable(struct pci_dev *dev)
++struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node)
 +{
-+	pci_save_state(dev);
-+	/*
-+	 * Disable the device by clearing the Command register, except for
-+	 * INTx-disable which is set.  This not only disable MMIO and I/O port
-+	 * BARs, but also prevents the device from being Bus Master, preventing
-+	 * DMA from the device including MSI/MSI-X interrupts.  For PCI 2.3
-+	 * compliant devices, INTx-disable prevents legacy interrupts.
-+	 */
-+	pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
++	struct msi_chip *c;
++
++	mutex_lock(&of_pci_msi_chip_mutex);
++	list_for_each_entry(c, &of_pci_msi_chip_list, list) {
++		if (c->of_node == of_node) {
++			mutex_unlock(&of_pci_msi_chip_mutex);
++			return c;
++		}
++	}
++	mutex_unlock(&of_pci_msi_chip_mutex);
++
++	return NULL;
 +}
++EXPORT_SYMBOL_GPL(of_pci_find_msi_chip_by_node);
 +
-+static void pci_dev_restore(struct pci_dev *dev)
-+{
-+	pci_restore_state(dev);
-+}
++#endif /* CONFIG_PCI_MSI */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 090ddad..b17ead8 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -68,6 +68,8 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+ struct msi_chip {
+ 	struct module *owner;
+ 	struct device *dev;
++	struct device_node *of_node;
++	struct list_head list;
+ 
+ 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 7a04826..29631eb 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -2,6 +2,7 @@
+ #define __OF_PCI_H
+ 
+ #include <linux/pci.h>
++#include <linux/msi.h>
+ 
+ struct pci_dev;
+ struct of_irq;
+@@ -13,4 +14,15 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ int of_pci_get_devfn(struct device_node *np);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ 
++#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
++int of_pci_msi_chip_add(struct msi_chip *chip);
++void of_pci_msi_chip_remove(struct msi_chip *chip);
++struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node);
++#else
++static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; }
++static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
++static inline struct msi_chip *
++of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL };
++#endif
 +
- static int pci_dev_reset(struct pci_dev *dev, int probe)
- {
- 	int rc;
- 
--	if (!probe) {
--		pci_cfg_access_lock(dev);
--		/* block PM suspend, driver probe, etc. */
--		device_lock(&dev->dev);
--	}
-+	if (!probe)
-+		pci_dev_lock(dev);
- 
- 	rc = __pci_dev_reset(dev, probe);
- 
--	if (!probe) {
--		device_unlock(&dev->dev);
--		pci_cfg_access_unlock(dev);
--	}
-+	if (!probe)
-+		pci_dev_unlock(dev);
-+
- 	return rc;
- }
- /**
-@@ -3423,17 +3450,11 @@ int pci_reset_function(struct pci_dev *dev)
- 	if (rc)
- 		return rc;
- 
--	pci_save_state(dev);
--
--	/*
--	 * both INTx and MSI are disabled after the Interrupt Disable bit
--	 * is set and the Bus Master bit is cleared.
--	 */
--	pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
-+	pci_dev_save_and_disable(dev);
- 
- 	rc = pci_dev_reset(dev, 0);
- 
--	pci_restore_state(dev);
-+	pci_dev_restore(dev);
- 
- 	return rc;
- }
+ #endif
+-- 
+1.8.1.2
 
