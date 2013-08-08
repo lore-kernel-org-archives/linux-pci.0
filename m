@@ -1,307 +1,325 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:42603 "EHLO
+Received: from top.free-electrons.com ([176.31.233.9]:41281 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030395Ab3HIGou (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 02:44:50 -0400
-Message-ID: <52048FDE.30003@free-electrons.com>
-Date: Fri, 09 Aug 2013 08:44:46 +0200
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	with ESMTP id S1758182Ab3HHWR6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 18:17:58 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Russell King <linux@arm.linux.org.uk>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rob Herring <rob.herring@calxeda.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
 	linux-arm-kernel@lists.infradead.org,
 	Maen Suleiman <maen@marvell.com>,
 	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCHv8 06/10] irqchip: armada-370-xp: implement MSI support
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com> <1376000268-18397-7-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376000268-18397-7-git-send-email-thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thierry Reding <thierry.reding@gmail.com>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
+Subject: [PATCHv8 01/10] PCI: use weak functions for MSI arch-specific functions
+Date: Fri,  9 Aug 2013 00:17:39 +0200
+Message-Id: <1376000268-18397-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/08/2013 00:17, Thomas Petazzoni wrote:
-> This commit introduces the support for the MSI interrupts in the
-> armada-370-xp interrupt controller driver. It registers an MSI chip to
-> the MSI chip registry, which will be used by the Marvell PCIe host
-> controller driver.
-> 
-> The MSI interrupts use the 16 high doorbells, and are therefore
-> notified using IRQ1 of the main interrupt controller.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Acked-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-> ---
->  .../devicetree/bindings/arm/armada-370-xp-mpic.txt |   3 +
->  drivers/irqchip/irq-armada-370-xp.c                | 182 ++++++++++++++++++++-
->  2 files changed, 184 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
-> index 61df564..d74091a 100644
-> --- a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
-> +++ b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
-> @@ -4,6 +4,8 @@ Marvell Armada 370 and Armada XP Interrupt Controller
->  Required properties:
->  - compatible: Should be "marvell,mpic"
->  - interrupt-controller: Identifies the node as an interrupt controller.
-> +- msi-controller: Identifies the node as an PCI Message Signaled
-> +  Interrupt controller.
->  - #interrupt-cells: The number of cells to define the interrupts. Should be 1.
->    The cell is the IRQ number
->  
-> @@ -24,6 +26,7 @@ Example:
->                #address-cells = <1>;
->                #size-cells = <1>;
->                interrupt-controller;
-> +              msi-controller;
->                reg = <0xd0020a00 0x1d0>,
->                      <0xd0021070 0x58>;
->          };
-> diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
-> index 26adc74..433cc85 100644
-> --- a/drivers/irqchip/irq-armada-370-xp.c
-> +++ b/drivers/irqchip/irq-armada-370-xp.c
-> @@ -21,7 +21,10 @@
->  #include <linux/io.h>
->  #include <linux/of_address.h>
->  #include <linux/of_irq.h>
-> +#include <linux/of_pci.h>
->  #include <linux/irqdomain.h>
-> +#include <linux/slab.h>
-> +#include <linux/msi.h>
->  #include <asm/mach/arch.h>
->  #include <asm/exception.h>
->  #include <asm/smp_plat.h>
-> @@ -51,12 +54,22 @@
->  #define IPI_DOORBELL_START                      (0)
->  #define IPI_DOORBELL_END                        (8)
->  #define IPI_DOORBELL_MASK                       0xFF
-> +#define PCI_MSI_DOORBELL_START                  (16)
-> +#define PCI_MSI_DOORBELL_NR                     (16)
-> +#define PCI_MSI_DOORBELL_END                    (32)
-> +#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
->  
->  static DEFINE_RAW_SPINLOCK(irq_controller_lock);
->  
->  static void __iomem *per_cpu_int_base;
->  static void __iomem *main_int_base;
->  static struct irq_domain *armada_370_xp_mpic_domain;
-> +#ifdef CONFIG_PCI_MSI
-> +static struct irq_domain *armada_370_xp_msi_domain;
-> +static DECLARE_BITMAP(msi_used, PCI_MSI_DOORBELL_NR);
-> +static DEFINE_MUTEX(msi_used_lock);
-> +static phys_addr_t msi_doorbell_addr;
-> +#endif
->  
->  /*
->   * In SMP mode:
-> @@ -87,6 +100,144 @@ static void armada_370_xp_irq_unmask(struct irq_data *d)
->  				ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
->  }
->  
-> +#ifdef CONFIG_PCI_MSI
-> +
-> +static int armada_370_xp_alloc_msi(void)
-> +{
-> +	int hwirq;
-> +
-> +	mutex_lock(&msi_used_lock);
-> +	hwirq = find_first_zero_bit(&msi_used, PCI_MSI_DOORBELL_NR);
-> +	if (hwirq >= PCI_MSI_DOORBELL_NR)
-> +		hwirq = -ENOSPC;
-> +	else
-> +		set_bit(hwirq, msi_used);
-> +	mutex_unlock(&msi_used_lock);
-> +
-> +	return hwirq;
-> +}
-> +
-> +static void armada_370_xp_free_msi(int hwirq)
-> +{
-> +	mutex_lock(&msi_used_lock);
-> +	if (!test_bit(hwirq, msi_used))
-> +		pr_err("trying to free unused MSI#%d\n", hwirq);
-> +	else
-> +		clear_bit(hwirq, msi_used);
-> +	mutex_unlock(&msi_used_lock);
-> +}
-> +
-> +static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
-> +				       struct pci_dev *pdev,
-> +				       struct msi_desc *desc)
-> +{
-> +	struct msi_msg msg;
-> +	irq_hw_number_t hwirq;
-> +	int virq;
-> +
-> +	hwirq = armada_370_xp_alloc_msi();
-> +	if (hwirq < 0)
-> +		return hwirq;
-> +
-> +	virq = irq_create_mapping(armada_370_xp_msi_domain, hwirq);
-> +	if (!virq) {
-> +		armada_370_xp_free_msi(hwirq);
-> +		return -EINVAL;
-> +	}
-> +
-> +	irq_set_msi_desc(virq, desc);
-> +
-> +	msg.address_lo = msi_doorbell_addr;
-> +	msg.address_hi = 0;
-> +	msg.data = 0xf00 | (hwirq + 16);
-> +
-> +	write_msi_msg(virq, &msg);
-> +	return 0;
-> +}
-> +
-> +static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
-> +					   unsigned int irq)
-> +{
-> +	struct irq_data *d = irq_get_irq_data(irq);
-> +	irq_dispose_mapping(irq);
-> +	armada_370_xp_free_msi(d->hwirq);
-> +}
-> +
-> +static struct irq_chip armada_370_xp_msi_irq_chip = {
-> +	.name = "armada_370_xp_msi_irq",
-> +	.irq_enable = unmask_msi_irq,
-> +	.irq_disable = mask_msi_irq,
-> +	.irq_mask = mask_msi_irq,
-> +	.irq_unmask = unmask_msi_irq,
-> +};
-> +
-> +static int armada_370_xp_msi_map(struct irq_domain *domain, unsigned int virq,
-> +				 irq_hw_number_t hw)
-> +{
-> +	irq_set_chip_and_handler(virq, &armada_370_xp_msi_irq_chip,
-> +				 handle_simple_irq);
-> +	set_irq_flags(virq, IRQF_VALID);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct irq_domain_ops armada_370_xp_msi_irq_ops = {
-> +	.map = armada_370_xp_msi_map,
-> +};
-> +
-> +static int armada_370_xp_msi_init(struct device_node *node,
-> +				  phys_addr_t main_int_phys_base)
-> +{
-> +	struct msi_chip *msi_chip;
-> +	u32 reg;
-> +	int ret;
-> +
-> +	msi_doorbell_addr = main_int_phys_base +
-> +		ARMADA_370_XP_SW_TRIG_INT_OFFS;
-> +
-> +	msi_chip = kzalloc(sizeof(*msi_chip), GFP_KERNEL);
-> +	if (!msi_chip)
-> +		return -ENOMEM;
-> +
-> +	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
-> +	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
-> +	msi_chip->of_node = node;
-> +
-> +	armada_370_xp_msi_domain =
-> +		irq_domain_add_linear(NULL, PCI_MSI_DOORBELL_NR,
-> +				      &armada_370_xp_msi_irq_ops,
-> +				      NULL);
-> +	if (!armada_370_xp_msi_domain) {
-> +		kfree(msi_chip);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	ret = of_pci_msi_chip_add(msi_chip);
-> +	if (ret < 0) {
-> +		irq_domain_remove(armada_370_xp_msi_domain);
-> +		kfree(msi_chip);
-> +		return ret;
-> +	}
-> +
-> +	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
-> +		| PCI_MSI_DOORBELL_MASK;
-> +
-> +	writel(reg, per_cpu_int_base +
-> +	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
-> +
-> +	/* Unmask IPI interrupt */
-> +	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
-> +
-> +	return 0;
-> +}
-> +#else
-> +static inline int armada_370_xp_msi_init(struct device_node *node,
-> +					 phys_addr_t main_int_phys_base)
-> +{
-> +	return 0;
-> +}
-> +#endif
-> +
->  #ifdef CONFIG_SMP
->  static int armada_xp_set_affinity(struct irq_data *d,
->  				  const struct cpumask *mask_val, bool force)
-> @@ -214,12 +365,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
->  		if (irqnr > 1022)
->  			break;
->  
-> -		if (irqnr > 0) {
-> +		if (irqnr > 1) {
->  			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
->  					irqnr);
->  			handle_IRQ(irqnr, regs);
->  			continue;
->  		}
-> +
-> +#ifdef CONFIG_PCI_MSI
-> +		/* MSI handling */
-> +		if (irqnr == 1) {
-> +			u32 msimask, msinr;
-> +
-> +			msimask = readl_relaxed(per_cpu_int_base +
-> +						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
-> +				& PCI_MSI_DOORBELL_MASK;
-> +
-> +			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
-> +			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
-> +
-> +			for (msinr = PCI_MSI_DOORBELL_START;
-> +			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
-> +				int irq;
-> +
-> +				if (!(msimask & BIT(msinr)))
-> +					continue;
-> +
-> +				irq = irq_find_mapping(armada_370_xp_msi_domain,
-> +						       msinr - 16);
-> +				handle_IRQ(irq, regs);
-> +			}
-> +		}
-> +#endif
-> +
->  #ifdef CONFIG_SMP
->  		/* IPI Handling */
->  		if (irqnr == 0) {
-> @@ -292,6 +470,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
->  
->  #endif
->  
-> +	armada_370_xp_msi_init(node, main_int_res.start);
-> +
->  	set_handle_irq(armada_370_xp_handle_irq);
->  
->  	return 0;
-> 
+Until now, the MSI architecture-specific functions could be overloaded
+using a fairly complex set of #define and compile-time
+conditionals. In order to prepare for the introduction of the msi_chip
+infrastructure, it is desirable to switch all those functions to use
+the 'weak' mechanism. This commit converts all the architectures that
+were overidding those MSI functions to use the new strategy.
 
+Note that we keep two separate, non-weak, functions
+default_teardown_msi_irqs() and default_restore_msi_irqs() for the
+default behavior of the arch_teardown_msi_irqs() and
+arch_restore_msi_irqs(), as the default behavior is needed by x86 PCI
+code.
 
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Daniel Price <daniel.price@gmail.com>
+Tested-by: Thierry Reding <thierry.reding@gmail.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: linux390@de.ibm.com
+Cc: linux-s390@vger.kernel.org
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: x86@kernel.org
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-mips@linux-mips.org
+Cc: David S. Miller <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+Cc: Chris Metcalf <cmetcalf@tilera.com>
+---
+ arch/mips/include/asm/pci.h    |  5 -----
+ arch/powerpc/include/asm/pci.h |  5 -----
+ arch/s390/include/asm/pci.h    |  4 ----
+ arch/x86/include/asm/pci.h     | 28 ------------------------
+ arch/x86/kernel/x86_init.c     | 21 ++++++++++++++++++
+ drivers/pci/msi.c              | 48 +++++++++++++++++++++---------------------
+ include/linux/msi.h            |  8 ++++++-
+ 7 files changed, 52 insertions(+), 67 deletions(-)
+
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index fa8e0aa..f194c08 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -136,11 +136,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ 	return channel ? 15 : 14;
+ }
+ 
+-#ifdef CONFIG_CPU_CAVIUM_OCTEON
+-/* MSI arch hook for OCTEON */
+-#define arch_setup_msi_irqs arch_setup_msi_irqs
+-#endif
+-
+ extern char * (*pcibios_plat_setup)(char *str);
+ 
+ #ifdef CONFIG_OF
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 6653f27..95145a1 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -113,11 +113,6 @@ extern int pci_domain_nr(struct pci_bus *bus);
+ /* Decide whether to display the domain number in /proc */
+ extern int pci_proc_domain(struct pci_bus *bus);
+ 
+-/* MSI arch hooks */
+-#define arch_setup_msi_irqs arch_setup_msi_irqs
+-#define arch_teardown_msi_irqs arch_teardown_msi_irqs
+-#define arch_msi_check_device arch_msi_check_device
+-
+ struct vm_area_struct;
+ /* Map a range of PCI memory or I/O space for a device into user space */
+ int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
+index 6e577ba..262b91b 100644
+--- a/arch/s390/include/asm/pci.h
++++ b/arch/s390/include/asm/pci.h
+@@ -21,10 +21,6 @@ void pci_iounmap(struct pci_dev *, void __iomem *);
+ int pci_domain_nr(struct pci_bus *);
+ int pci_proc_domain(struct pci_bus *);
+ 
+-/* MSI arch hooks */
+-#define arch_setup_msi_irqs	arch_setup_msi_irqs
+-#define arch_teardown_msi_irqs	arch_teardown_msi_irqs
+-
+ #define ZPCI_BUS_NR			0	/* default bus number */
+ #define ZPCI_DEVFN			0	/* default device number */
+ 
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index d9e9e6c..8c61de0 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -100,29 +100,6 @@ static inline void early_quirks(void) { }
+ extern void pci_iommu_alloc(void);
+ 
+ #ifdef CONFIG_PCI_MSI
+-/* MSI arch specific hooks */
+-static inline int x86_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+-{
+-	return x86_msi.setup_msi_irqs(dev, nvec, type);
+-}
+-
+-static inline void x86_teardown_msi_irqs(struct pci_dev *dev)
+-{
+-	x86_msi.teardown_msi_irqs(dev);
+-}
+-
+-static inline void x86_teardown_msi_irq(unsigned int irq)
+-{
+-	x86_msi.teardown_msi_irq(irq);
+-}
+-static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
+-{
+-	x86_msi.restore_msi_irqs(dev, irq);
+-}
+-#define arch_setup_msi_irqs x86_setup_msi_irqs
+-#define arch_teardown_msi_irqs x86_teardown_msi_irqs
+-#define arch_teardown_msi_irq x86_teardown_msi_irq
+-#define arch_restore_msi_irqs x86_restore_msi_irqs
+ /* implemented in arch/x86/kernel/apic/io_apic. */
+ struct msi_desc;
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+@@ -130,11 +107,6 @@ void native_teardown_msi_irq(unsigned int irq);
+ void native_restore_msi_irqs(struct pci_dev *dev, int irq);
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 		  unsigned int irq_base, unsigned int irq_offset);
+-/* default to the implementation in drivers/lib/msi.c */
+-#define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
+-#define HAVE_DEFAULT_MSI_RESTORE_IRQS
+-void default_teardown_msi_irqs(struct pci_dev *dev);
+-void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+ #else
+ #define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 5f24c71..4c374a9 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -116,6 +116,27 @@ struct x86_msi_ops x86_msi = {
+ 	.setup_hpet_msi		= default_setup_hpet_msi,
+ };
+ 
++/* MSI arch specific hooks */
++int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++{
++	return x86_msi.setup_msi_irqs(dev, nvec, type);
++}
++
++void arch_teardown_msi_irqs(struct pci_dev *dev)
++{
++	x86_msi.teardown_msi_irqs(dev);
++}
++
++void arch_teardown_msi_irq(unsigned int irq)
++{
++	x86_msi.teardown_msi_irq(irq);
++}
++
++void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
++{
++	x86_msi.restore_msi_irqs(dev, irq);
++}
++
+ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.init			= native_io_apic_init_mappings,
+ 	.read			= native_io_apic_read,
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index aca7578..823c386 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -30,20 +30,21 @@ static int pci_msi_enable = 1;
+ 
+ /* Arch hooks */
+ 
+-#ifndef arch_msi_check_device
+-int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+-	return 0;
++	return -EINVAL;
+ }
+-#endif
+ 
+-#ifndef arch_setup_msi_irqs
+-# define arch_setup_msi_irqs default_setup_msi_irqs
+-# define HAVE_DEFAULT_MSI_SETUP_IRQS
+-#endif
++void __weak arch_teardown_msi_irq(unsigned int irq)
++{
++}
+ 
+-#ifdef HAVE_DEFAULT_MSI_SETUP_IRQS
+-int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++{
++	return 0;
++}
++
++int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
+@@ -65,14 +66,11 @@ int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ 	return 0;
+ }
+-#endif
+-
+-#ifndef arch_teardown_msi_irqs
+-# define arch_teardown_msi_irqs default_teardown_msi_irqs
+-# define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
+-#endif
+ 
+-#ifdef HAVE_DEFAULT_MSI_TEARDOWN_IRQS
++/*
++ * We have a default implementation available as a separate non-weak
++ * function, as it is used by the Xen x86 PCI code
++ */
+ void default_teardown_msi_irqs(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
+@@ -89,14 +87,12 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
+ 			arch_teardown_msi_irq(entry->irq + i);
+ 	}
+ }
+-#endif
+ 
+-#ifndef arch_restore_msi_irqs
+-# define arch_restore_msi_irqs default_restore_msi_irqs
+-# define HAVE_DEFAULT_MSI_RESTORE_IRQS
+-#endif
++void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
++{
++	return default_teardown_msi_irqs(dev);
++}
+ 
+-#ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
+ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+ {
+ 	struct msi_desc *entry;
+@@ -114,7 +110,11 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+ 	if (entry)
+ 		write_msi_msg(irq, &entry->msg);
+ }
+-#endif
++
++void __weak arch_restore_msi_irqs(struct pci_dev *dev, int irq)
++{
++	return default_restore_msi_irqs(dev, irq);
++}
+ 
+ static void msi_set_enable(struct pci_dev *dev, int enable)
+ {
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index ee66f3a..271dfd1 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -51,12 +51,18 @@ struct msi_desc {
+ };
+ 
+ /*
+- * The arch hook for setup up msi irqs
++ * The arch hooks to setup up msi irqs. Those functions are
++ * implemented as weak symbols so that they /can/ be overriden by
++ * architecture specific code if needed.
+  */
+ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
+ void arch_teardown_msi_irq(unsigned int irq);
+ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void arch_teardown_msi_irqs(struct pci_dev *dev);
+ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
++void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
++
++void default_teardown_msi_irqs(struct pci_dev *dev);
++void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+ 
+ #endif /* LINUX_MSI_H */
 -- 
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.8.1.2
+
