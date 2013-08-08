@@ -1,91 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:59127 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932347Ab3HGJeS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:34:18 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv7 13/13] ARM: mvebu: link PCIe controllers to the MSI controller
-Date: Wed,  7 Aug 2013 11:32:34 +0200
-Message-Id: <1375867954-2320-14-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:32334
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965436Ab3HHRRH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 13:17:07 -0400
+Message-ID: <5203D287.1010608@amd.com>
+Date: Thu, 8 Aug 2013 12:16:55 -0500
+From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@alien8.de>
+CC: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<dougthompson@xmission.com>, <bhelgaas@google.com>,
+	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 3/3 V2] EDAC, AMD64_EDAC: Add ECC decoding support for
+ newer F15h models.
+References: <1375483384-2302-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <1375483384-2302-4-git-send-email-Aravind.Gopalakrishnan@amd.com> <20130806202323.GH14891@pd.tnic> <520162C1.2080603@amd.com>
+In-Reply-To: <520162C1.2080603@amd.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adjusts the Armada 370 and Armada XP PCIe controllers
-Device Tree informations to reference their MSI controller. In the
-case of this platform, the MSI controller is implemented by the MPIC.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Tested-by: Daniel Price <daniel.price@gmail.com>
----
- arch/arm/boot/dts/armada-370.dtsi        | 1 +
- arch/arm/boot/dts/armada-xp-mv78230.dtsi | 1 +
- arch/arm/boot/dts/armada-xp-mv78260.dtsi | 1 +
- arch/arm/boot/dts/armada-xp-mv78460.dtsi | 1 +
- 4 files changed, 4 insertions(+)
+>
+>>>           addr -= 0x100;
+>>>       }
+>>>   @@ -205,8 +213,9 @@ static int amd64_set_scrub_rate(struct 
+>>> mem_ctl_info *mci, u32 bw)
+>>>       if (boot_cpu_data.x86 == 0xf)
+>>>           min_scrubrate = 0x0;
+>>>   -    /* F15h Erratum #505 */
+>>> -    if (boot_cpu_data.x86 == 0x15)
+>>> +    /* F15h Models 0x00 - 0x0f Erratum #505 */
+>> Hmm, are you sure this erratum is fixed in SR? Talk to Eric about it
+>> first, please. RG says "No fix planned".
+>>
+>>> +    if (boot_cpu_data.x86 == 0x15 &&
+>>> +        boot_cpu_data.x86_model != 0x30)
+>>>           f15h_select_dct(pvt, 0);
+>>>         return __amd64_set_scrub_rate(pvt->F3, bw, min_scrubrate);
+>>> @@ -218,8 +227,9 @@ static int amd64_get_scrub_rate(struct 
+>>> mem_ctl_info *mci)
+>>>       u32 scrubval = 0;
+>>>       int i, retval = -EINVAL;
+>>>   -    /* F15h Erratum #505 */
+>>> -    if (boot_cpu_data.x86 == 0x15)
+>>> +    /* F15h Models 0x00 - 0x0f Erratum #505 */
+>> ditto.
+>
+> I have pinged some people about it, will let you know..
+>
+ From email conversations internally, here are the current status of the 
+errata:
+* Erratum 505: Should not be carried over to newer Fam15h models.
+* Erratum 637: Not fixed.
 
-diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
-index fa3dfc6..a60018d 100644
---- a/arch/arm/boot/dts/armada-370.dtsi
-+++ b/arch/arm/boot/dts/armada-370.dtsi
-@@ -178,6 +178,7 @@
- 				#address-cells = <3>;
- 				#size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
-diff --git a/arch/arm/boot/dts/armada-xp-mv78230.dtsi b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-index f8eaa38..4a9a305 100644
---- a/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-@@ -91,6 +91,7 @@
- #address-cells = <3>;
- #size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
-diff --git a/arch/arm/boot/dts/armada-xp-mv78260.dtsi b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-index 2d9335d..dd23e96 100644
---- a/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-@@ -111,6 +111,7 @@
- 				#address-cells = <3>;
- 				#size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
-diff --git a/arch/arm/boot/dts/armada-xp-mv78460.dtsi b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-index c7b1f4d..77db2bc 100644
---- a/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-@@ -127,6 +127,7 @@
- 				#address-cells = <3>;
- 				#size-cells = <2>;
- 
-+				msi-parent = <&mpic>;
- 				bus-range = <0x00 0xff>;
- 
- 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
--- 
-1.8.1.2
+I have taken this into account and changed the code to workaround only E637.
+
+> will send out changes in V3;
+>
+> Thanks,
+> Aravind.
+Corrected the indentations; Removed unnecessary comments;
+Sending out changes in  [PATCH 3/3 V3].
+Thanks,
+-Aravind.
+
 
