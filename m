@@ -1,61 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:44155 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754606Ab3HILic (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 07:38:32 -0400
-Date: Fri, 9 Aug 2013 08:38:26 -0300
-From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Lior Amsalem <alior@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: mvebu: make Marvell PCIe driver depend on OF
-Message-ID: <20130809113825.GD2848@localhost>
-References: <1376044550-30572-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42379 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965961Ab3HHUJ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Aug 2013 16:09:29 -0400
+Subject: [PATCH v5 1/9] pci: Create pci_reset_bridge_secondary_bus()
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
+	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 08 Aug 2013 14:09:24 -0600
+Message-ID: <20130808200924.2932.63092.stgit@bling.home>
+In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
+References: <20130808200444.2932.17381.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1376044550-30572-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 09, 2013 at 12:35:50PM +0200, Thomas Petazzoni wrote:
-> The Marvell PCIe host controller driver is heavily tied to Device Tree
-> APIs, and can only be used on platforms where the Device Tree is
-> used. Therefore, it should "depends on OF" to avoid build failures on
-> !OF configurations.
-> 
-> Reported-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Move the secondary bus reset code from pci_parent_bus_reset() into its own
+function.  Export it as we'll later be calling it from hotplug controllers
+and elsewhere.
 
-Tested-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c   |   32 +++++++++++++++++++++++---------
+ include/linux/pci.h |    1 +
+ 2 files changed, 24 insertions(+), 9 deletions(-)
 
-> ---
-> Bjorn, you can take this one through your tree. Either for 3.11 or
-> 3.12, at your preference.
-> ---
->  drivers/pci/host/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 1184ff6..e5ba4eb 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -4,6 +4,7 @@ menu "PCI host controller drivers"
->  config PCI_MVEBU
->  	bool "Marvell EBU PCIe controller"
->  	depends on ARCH_MVEBU || ARCH_KIRKWOOD
-> +	depends on OF
->  
->  config PCIE_DW
->  	bool
-> -- 
-> 1.8.1.2
-> 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e37fea6..d468608 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3215,9 +3215,30 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
+-static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
++/**
++ * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
++ * @dev: Bridge device
++ *
++ * Use the bridge control register to assert reset on the secondary bus.
++ * Devices on the secondary bus are left in power-on state.
++ */
++void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
+ {
+ 	u16 ctrl;
++
++	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
++	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++	msleep(100);
++
++	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++	msleep(100);
++}
++EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
++
++static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
++{
+ 	struct pci_dev *pdev;
+ 
+ 	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
+@@ -3230,14 +3251,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 	if (probe)
+ 		return 0;
+ 
+-	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
+-	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
+-	msleep(100);
+-
+-	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
+-	msleep(100);
++	pci_reset_bridge_secondary_bus(dev->bus->self);
+ 
+ 	return 0;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..35c1bc4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -924,6 +924,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int __pci_reset_function(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
++void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
 
--- 
-Ezequiel García, Free Electrons
-Embedded Linux, Kernel and Android Engineering
-http://free-electrons.com
