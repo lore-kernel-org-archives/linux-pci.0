@@ -1,97 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:36076 "EHLO mga02.intel.com"
+Received: from hydra.sisk.pl ([212.160.235.94]:60614 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932768Ab3HNSiL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Aug 2013 14:38:11 -0400
-From: "Luck, Tony" <tony.luck@intel.com>
-To: Borislav Petkov <bp@alien8.de>
-CC: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Date: Wed, 14 Aug 2013 18:38:09 +0000
-Message-ID: <3908561D78D1C84285E8C5FCA982C28F31CBAAFA@ORSMSX106.amr.corp.intel.com>
-References: <20130812083355.47c1bae8@samsung.com>
- <5208D80D.5030206@linux.vnet.ibm.com> <20130812125343.GE18018@pd.tnic>
- <520A16BD.30201@linux.vnet.ibm.com> <20130813124258.GC4077@pd.tnic>
- <520A6D98.9060204@linux.vnet.ibm.com> <20130813175809.GE4077@pd.tnic>
- <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
- <20130813181004.GF4077@pd.tnic>
- <3908561D78D1C84285E8C5FCA982C28F31CB9150@ORSMSX106.amr.corp.intel.com>
- <20130814054322.GA9158@pd.tnic>
-In-Reply-To: <20130814054322.GA9158@pd.tnic>
-Content-Type: text/plain; charset="utf-8"
+	id S1757850Ab3HHNrv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Aug 2013 09:47:51 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Prarit Bhargava <prarit@redhat.com>, linux-acpi@vger.kernel.org,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ACPI / PCI: remove an extra check from acpi_pci_irq_enable()
+Date: Thu, 08 Aug 2013 15:58:10 +0200
+Message-ID: <2190379.Yl0SdRsOJp@vostro.rjw.lan>
+In-Reply-To: <1375965314-24232-3-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1375965314-24232-1-git-send-email-heikki.krogerus@linux.intel.com> <1375965314-24232-3-git-send-email-heikki.krogerus@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBEaWRuJ3Qgd2Ugc2F5IGF0IHNvbWUgcG9pbnQsICJsb2cgb25seSB0aGUgcGFuaWMgbWVzc3Nh
-Z2Ugd2hpY2gga2lsbHMNCj4gdGhlIG1hY2hpbmUiPw0KDQpXZSd2ZSB3YW5kZXJlZCBhcm91bmQg
-ZGlmZmVyZW50IHN0cmF0ZWdpZXMgaGVyZS4gV2UgZGVmaW5pdGVseSB3YW50DQp0aGUgcGFuaWMg
-bG9nLiAgU29tZSBwZW9wbGUgd2FudCBhbGwgb3RoZXIgImtlcm5lbCBleGl0IiBsb2dzIChzaHV0
-ZG93biwNCnJlYm9vdCwga2V4ZWMpLiAgV2hlbiB0aGVyZSBpcyBlbm91Z2ggc3BhY2UgaW4gdGhl
-IHBzdG9yZSBiYWNrZW5kIHdlDQptaWdodCBhbHNvIHdhbnQgdGhlICJvb3BzIiB0aGF0IHByZWNl
-ZWRlZCB0aGUgcGFuaWMuICAoT2YgY291cnNlIHdoZW4NCnRoZSBvb3BzIGhhcHBlbnMgd2UgZG9u
-J3Qga25vdyB0aGUgZnV0dXJlLCBzbyBoYXZlIHRvIHNhdmUgaXQganVzdCBpbg0KY2FzZSAuLi4g
-dGhlbiBpZiBtb3JlICJvb3BzIiBoYXBwZW4gd2UgaGF2ZSB0byBkZWNpZGUgd2hldGhlciB0byBr
-ZWVwDQp0aGUgb2xkIG9vcHMgbG9nLCBvciBzYXZlIHRoZSBuZXdlciBvbmUpLg0KDQo+IEhvd2V2
-ZXIsIHdlIHByb2JhYmx5IGNvdWxkIHVzZSBtb3JlIHRoZSBtZXNzYWdlcyBiZWZvcmUgdGhhdA0K
-PiBjYXRhc3Ryb3BoaWMgZXZlbnQgYmVjYXVzZSB0aGV5IGNvdWxkIGdpdmUgdXMgaGludHMgYWJv
-dXQgd2hhdCBsZWFkIHRvDQo+IHRoZSBwYW5pYyBidXQgaW4gdGhhdCBjYXNlIG1heWJlIGEgbGlt
-aXRlZCBwc3RvcmUgaXMgdGhlIHdyb25nIGxvZ2dpbmcNCj4gbWVkaXVtLg0KWWVzIC0gbG9uZ2Vy
-IGxvZ3MgYXJlIGJldHRlci4gIFNhZCB0aGF0IHRoZSBwc3RvcmUgYmFja2VuZCBkZXZpY2VzIGFy
-ZQ0KbWVhc3VyZWQgaW4ga2lsb2J5dGVzIDotKQ0KDQo+IEFjdHVhbGx5LCBJIGNhbiBpbWFnaW5l
-IHRoZSBmdWxsIHNlcmlhbC9uZXR3b3JrIGxvZ3Mgb2YgInNwZWNpYWwiDQo+IHRyYWNlcG9pbnRz
-ICsgZG1lc2cgdG8gYmUgdGhlIG9wdGltYWwgdGhpbmcuDQpJZiB5b3UgZ3Vlc3MgdGhlIHJpZ2h0
-ICJzcGVjaWFsIiB0cmFjZXBvaW50cyB0byBsb2cgLSB0aGVuIHllcy4NCg0KPiBBY3R1YWxseSwg
-ZG9lcyB0aGUgcHN0b3JlIGFjdCBsaWtlIGEgY2lyY3VsYXIgYnVmZmVyPyBCZWNhdXNlIGlmIGl0
-DQo+IGNvbnRhaW5zIHRoZSBsYXN0IE4gcmVsZXZhbnQgbWVzc2FnZXMgKGZvciBhbiBhcmJpdHJh
-cnkgZGVmaW5pdGlvbiBvZg0KPiByZWxldmFudCkgYmVmb3JlIHRoZSBzeXN0ZW0gZGllcywgdGhl
-biB0aGF0IGNvdWxkIG1vcmUgaGVscGZ1bCB0aGFuIG9ubHkNCj4gdGhlIGVycm9yIG1lc3NhZ2Vz
-Lg0KTm8gLSB3cml0ZSBzcGVlZCBmb3IgdGhlIHBlcnNpc3RlbnQgc3RvcmFnZSBiYWNraW5nIHBz
-dG9yZSAoZmxhc2gpIG1lYW5zIHdlDQpkb24ndCBsb2cgYXMgd2UgZ28uIFdlIHdhaXQgZm9yIGEg
-cGFuaWMgYW5kIHRoZW4gb3VyIHJlZ2lzdGVyZWQgZnVuY3Rpb24NCmdldHMgY2FsbGVkIHNvIHdl
-IGNhbiBzbmFwc2hvdCB3aGF0IGlzIGluIHRoZSBjb25zb2xlIGxvZyBhdCB0aGF0IHBvaW50Lg0K
-V2UgYWxzbyBkb24ndCB3YW50IHRvIHdlYXIgb3V0IHRoZSBmbGFzaCB3aGljaCBtYXkgYmUgc29s
-ZGVyZWQgdG8gdGhlDQptb3RoZXJib2FyZC4NCg0KDQo+IE9rLCBsZXQncyBzb3J0Og0KDQo+ICog
-Rmlyc3Qgd2UgaGF2ZSB0aGUgbm90LXNvLWNyaXRpY2FsIGh3IGVycm9yIG1lc3NhZ2VzLiBXZSB3
-YW50IHRvIGNhcnJ5DQo+IHRob3NlIG91dC1vZi1iYW5kLCBpLmUuIG5vdCBpbiBkbWVzZyBzbyB0
-aGF0IHBlb3BsZSBkb24ndCBoYXZlIHRvIHBhcnNlDQo+IGFuZCBjb2xsZWN0IGRtZXNnIGJ1dCBo
-YXZlIGEgc3BlY2lhbGl6ZWQgc29sdXRpb24gd2hpY2ggZ2l2ZXMgdGhlbQ0KPiBzdHJ1Y3R1cmVk
-IGxvZ3MgYW5kIHRvb2xzIGNhbiBhbmFseXplLCBjb2xsZWN0IGFuZCAuLi4gdGhvc2UgZXJyb3Jz
-Lg0KDQpBZ3JlZWQgLSB3ZSBzaG91bGRuJ3QgY2x1dHRlciBsb2dzIHdpdGggZGV0YWlscyBvZiBj
-b3JyZWN0ZWQgZXJyb3JzLg0KQXQgbW9zdCB3ZSBzaG91bGQgaGF2ZSBhIHJhdGUtbGltaXRlZCBs
-b2cgc2hvd2luZyB0aGUgY291bnQgb2YgY29ycmVjdGVkIGVycm9ycw0Kc28gdGhhdCBzb21lb25l
-IHdobyBqdXN0IHdhdGNoZXMgZG1lc2cga25vd3MgdGhleSBzaG91bGQgZ28gZGlnIGRlZXBlcg0K
-aWYgdGhleSBzZWUgc29tZSBiaWcgbnVtYmVyIG9mIGNvcnJlY3RlZCBlcnJvcnMuDQoNCj4gKiBX
-aGVuIGEgY3JpdGljYWwgZXJyb3IgaGFwcGVucywgdGhlIGFib3ZlIHVzYWdlIGlzIG5vdCBuZWNl
-c3NhcmlseQ0KPiBhZHZhbnRhZ2VvdXMgYW55bW9yZSBpbiB0aGUgc2Vuc2UgdGhhdCwgaW4gb3Jk
-ZXIgdG8gZGVidWcgd2hhdCBjYXVzZWQNCj4gdGhlIG1hY2hpbmUgdG8gY3Jhc2gsIHdlIGRvbid0
-IHNpbXBseSBuZWNlc3NhcmlseSB3YW50IG9ubHkgdGhlIGNyYXNoDQo+IG1lc3NhZ2UgYnV0IGFs
-c28gdGhlIHdob2xlIHN5c3RlbSBhY3Rpdml0eSB0aGF0IGxlYWQgdG8gaXQuDQoNClllcy4gIFRo
-ZXJlIGFyZSBwZW9wbGUgbG9va2luZyBhdCB2YXJpb3VzICJmbGlnaHQgcmVjb3JkZXIiIG1vZGVz
-IGZvciB0cmFjaW5nDQp0aGF0IGtlZXAgbG9ncyBvZiBub3JtYWwgZXZlbnRzIGluIGEgY2lyY3Vs
-YXIgYnVmZmVyIGluIFJBTSAuLi4gaWYgdGhlc2UgZXhpc3QNCnRoZXkgc2hvdWxkIGJlIHNhdmVk
-IGF0IGNyYXNoIHRpbWUgKGFuZCB0aGV5IGFyZSBpbiB0aGUga2V4ZWMva2R1bXAgcGF0aCwNCmJ1
-dCBJIGRvbuKAmXQga25vdyBpZiBhbnlvbmUgZG9lcyBhbnl0aGluZyBpbiB0aGUgbm9uLWtkdW1w
-IGNhc2UpLg0KDQo+IEluIHdoaWNoIGNhc2UsIHdlIHByb2JhYmx5IGFjdHVhbGx5IHdhbnQgdG8g
-dHVybiBvZmYvaWdub3JlIHRoZSBlcnJvcg0KPiBsb2dnaW5nIHRyYWNlcG9pbnRzIGFuZCB3cml0
-ZSAqb25seSogdG8gZG1lc2cgd2hpY2ggZ29lcyBvdXQgb3ZlciBzZXJpYWwNCj4gYW5kIHRvIHBz
-dG9yZS4gUmlnaHQ/DQpUcmFjZXBvaW50cyBmb3IgZXJyb3JzIHRoYXQgYXJlIGdvaW5nIHRvIGxl
-YWQgdG8gc3lzdGVtIGNyYXNoIHdvdWxkIG9ubHkgYmUNCnVzZWZ1bCB0b2dldGhlciB3aXRoIGEg
-ZmxpZ2h0IHJlY29yZGVyIHRvIG1ha2Ugc3VyZSB0aGV5IGdldCBzYXZlZC4gSSB0aGluaw0KdHJh
-Y2Vwb2ludHMgZm9yIGNvcnJlY3RlZCBlcnJvcnMgYXJlIGJldHRlciB0aGFuIGRtZXNnIGxvZ3Mu
-DQoNCj4gQmVjYXVzZSBpbiBzdWNoIGNhc2VzIEkgd2FudCB0byBoYXZlICphbGwqICpyZWxldmFu
-dCogbWVzc2FnZXMgdGhhdCBsZWFkDQo+IHRvIHRoZSBleHBsb3Npb24gKyB0aGUgZXhwbG9zaW9u
-IG1lc3NhZ2UgaXRzZWxmLg0KDQpJbiBhIHBlcmZlY3Qgd29ybGQgeWVzIC0gSSBkb24ndCBrbm93
-IHRoYXQgd2UgY2FuIGFjaGlldmUgcGVyZmVjdGlvbiAtIGJ1dCB3ZQ0KY2FuIGl0ZXJhdGUgdGhy
-b3VnaCBnb29kLCBiZXR0ZXIsIGV2ZW4gYmV0dGVyLiAgVGhlIHJlYWxseSBoYXJkIHBhcnQgb2Yg
-dGhpcyBpcw0KZmlndXJpbmcgb3V0IHdoYXQgaXMgKnJlbGV2YW50KiB0byBzYXZlIGJlZm9yZSBh
-IHBhcnRpY3VsYXIgY3Jhc2ggaGFwcGVucy4NCg0KLVRvbnkNCg==
+On Thursday, August 08, 2013 03:35:14 PM Heikki Krogerus wrote:
+> acpi_isa_irq_to_gsi() will check if the irq is within
+> accepted rage so there is no need to check it separately.
+> 
+> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+
+Hi Bjorn,
+
+Does this look OK to you?
+
+Rafael
+
+
+> ---
+>  drivers/acpi/pci_irq.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+> index 902ed1c..e71e7fa 100644
+> --- a/drivers/acpi/pci_irq.c
+> +++ b/drivers/acpi/pci_irq.c
+> @@ -427,9 +427,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>  			return -ENOENT;
+>  		}
+>  
+> -		/* Interrupt Line values above 0xF are forbidden */
+> -		if ((dev->irq <= 0xF) &&
+> -		    (acpi_isa_irq_to_gsi(dev->irq, &dev_gsi) == 0)) {
+> +		if (acpi_isa_irq_to_gsi(dev->irq, &dev_gsi) == 0) {
+>  			dev_warn(&dev->dev, "PCI INT %c: no GSI - using ISA IRQ %d\n",
+>  				 pin_name(pin), dev->irq);
+>  			acpi_register_gsi(&dev->dev, dev_gsi,
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
