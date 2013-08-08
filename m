@@ -1,30 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:42775 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753927Ab3H2UJa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 16:09:30 -0400
-Received: by mail-ie0-f173.google.com with SMTP id qa5so1411046ieb.18
-        for <linux-pci@vger.kernel.org>; Thu, 29 Aug 2013 13:09:30 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:34657 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965961Ab3HHUJX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Aug 2013 16:09:23 -0400
+Subject: [PATCH v5 0/9] pci: bus and slot reset interfaces
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
+	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
+Date: Thu, 08 Aug 2013 14:09:18 -0600
+Message-ID: <20130808200444.2932.17381.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <001c01cea3e5$37716660$a6543320$%jun@samsung.com>
-References: <001c01cea3e5$37716660$a6543320$%jun@samsung.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 29 Aug 2013 14:09:09 -0600
-Message-ID: <CAErSpo6E0-BGx33fDwsi4QyOHCX3cfAPiNnM2sK-_Jcv9FNpGA@mail.gmail.com>
-Subject: Re: [PATCH 1/3] PCI: dw_pcie: amend I/O access functions
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 28, 2013 at 5:53 AM, Seungwon Jeon <tgih.jun@samsung.com> wrote:
-> This changes puts the 'dbi_base' into dw_pcie_readl_rc/
-> dw_pcie_writel_rc. So usage of these funcions doesn't
-> need to consider I/O base adddress anymore.
->
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+v5: Increase length of time we assert reset in the final common
+    secondary bus reset function to 2ms and document that this is
+    to ensure that reset on the bus is seen for at least a full
+    1ms (per converstation with Alex Duyck)
 
-Applied to pci/misc for v3.12, thanks!
+Thanks,
+Alex
+
+This series adds PCI bus and slot reset interfaces to the already
+existing function reset interface.  I need this for two reasons, the
+first is that not all devices support function level reset.  Even
+some of those that we detect as supporting a PM reset on D3hot->D0
+transition actually don't do any reset.  Others have no reset
+capability at all.  We currently implement a secondary bus reset
+escalation from the function reset path, but only when there is a
+single devfn on the bus.  Drivers like vfio can have ownership of
+all of the devices on a bus and should therefore have a path to
+initiate a secondary bus reset with multiple devices.  This is
+particularly required for use of GPUs by userspace, where none of
+the predominant GPUs implement a useful function level reset.
+
+The second reason is that even the current function reset escalating
+to a secondary bus reset can cause problems with hotplug controllers.
+If a root port supports PCIe HP with suprise removal, a bus reset
+can trigger a presence detection change, which results in an attempt
+to remove the struct device.  By having a slot reset interface, we
+can involve the hotplug controllers to allow for a controlled bus
+reset and avoid this spurious removal attempt.
+
+---
+
+Alex Williamson (9):
+      pci: Create pci_reset_bridge_secondary_bus()
+      pci: Add hotplug_slot_ops.reset_slot()
+      pci: Implement reset_slot for pciehp
+      pci: Add slot reset option to pci_dev_reset
+      pci: Split out pci_dev lock/unlock and save/restore
+      pci: Add slot and bus reset interfaces
+      pci: Wake-up devices before save for reset
+      pci: Tune secondary bus reset timing
+      pci: Remove aer_do_secondary_bus_reset()
+
+
+ drivers/pci/hotplug/pciehp.h       |    1 
+ drivers/pci/hotplug/pciehp_core.c  |   12 +
+ drivers/pci/hotplug/pciehp_hpc.c   |   31 +++
+ drivers/pci/pci.c                  |  349 +++++++++++++++++++++++++++++++++---
+ drivers/pci/pcie/aer/aerdrv.c      |    2 
+ drivers/pci/pcie/aer/aerdrv.h      |    1 
+ drivers/pci/pcie/aer/aerdrv_core.c |   35 ----
+ include/linux/pci.h                |    3 
+ include/linux/pci_hotplug.h        |    4 
+ 9 files changed, 376 insertions(+), 62 deletions(-)
