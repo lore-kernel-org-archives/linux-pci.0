@@ -1,43 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:56136 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752877Ab3H2AlT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 20:41:19 -0400
-Received: by mail-pa0-f54.google.com with SMTP id kx10so164187pab.27
-        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 17:41:19 -0700 (PDT)
-Message-ID: <521E98AA.1090308@gmail.com>
-Date: Thu, 29 Aug 2013 08:41:14 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
-	Jacob Keller <jacob.e.keller@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH 0/4] PCIe Capability accessor fix and cleanups
-References: <20130828192627.5895.26558.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130828192627.5895.26558.stgit@bhelgaas-glaptop>
-Content-Type: text/plain; charset=UTF-8
+Received: from top.free-electrons.com ([176.31.233.9]:46511 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1031006Ab3HIU1v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 16:27:51 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv9 10/10] ARM: mvebu: link PCIe controllers to the MSI controller
+Date: Fri,  9 Aug 2013 22:27:15 +0200
+Message-Id: <1376080035-29344-11-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/29/2013 03:26 AM, Bjorn Helgaas wrote:
-> The first patch fixes a Link Control issue reported by Yuval Mintz.
-> The rest simplify the code a bit.
-> 
-> ---
-> 
-> Bjorn Helgaas (4):
->       PCI: Allow PCIe Capability link-related register access for switches
->       PCI: Remove PCIe Capability version checks
->       PCI: Support PCIe Capability Slot registers only for ports with slots
->       PCI: Remove pcie_cap_has_devctl()
-> 
-> 
->  drivers/pci/access.c |   26 +++++++++++---------------
->  1 file changed, 11 insertions(+), 15 deletions(-)
-> 
-Hi Bjorn,
-	Good changes! We avoid some unnecessary hardware accesses for
-unavailable registers.
+This commit adjusts the Armada 370 and Armada XP PCIe controllers
+Device Tree informations to reference their MSI controller. In the
+case of this platform, the MSI controller is implemented by the MPIC.
 
-Reviewed-By: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Daniel Price <daniel.price@gmail.com>
+Acked-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-370.dtsi        | 1 +
+ arch/arm/boot/dts/armada-xp-mv78230.dtsi | 1 +
+ arch/arm/boot/dts/armada-xp-mv78260.dtsi | 1 +
+ arch/arm/boot/dts/armada-xp-mv78460.dtsi | 1 +
+ 4 files changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
+index fa3dfc6..a60018d 100644
+--- a/arch/arm/boot/dts/armada-370.dtsi
++++ b/arch/arm/boot/dts/armada-370.dtsi
+@@ -178,6 +178,7 @@
+ 				#address-cells = <3>;
+ 				#size-cells = <2>;
+ 
++				msi-parent = <&mpic>;
+ 				bus-range = <0x00 0xff>;
+ 
+ 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
+diff --git a/arch/arm/boot/dts/armada-xp-mv78230.dtsi b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
+index f8eaa38..4a9a305 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78230.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
+@@ -91,6 +91,7 @@
+ #address-cells = <3>;
+ #size-cells = <2>;
+ 
++				msi-parent = <&mpic>;
+ 				bus-range = <0x00 0xff>;
+ 
+ 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
+diff --git a/arch/arm/boot/dts/armada-xp-mv78260.dtsi b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
+index 2d9335d..dd23e96 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78260.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
+@@ -111,6 +111,7 @@
+ 				#address-cells = <3>;
+ 				#size-cells = <2>;
+ 
++				msi-parent = <&mpic>;
+ 				bus-range = <0x00 0xff>;
+ 
+ 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
+diff --git a/arch/arm/boot/dts/armada-xp-mv78460.dtsi b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
+index c7b1f4d..77db2bc 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78460.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
+@@ -127,6 +127,7 @@
+ 				#address-cells = <3>;
+ 				#size-cells = <2>;
+ 
++				msi-parent = <&mpic>;
+ 				bus-range = <0x00 0xff>;
+ 
+ 				ranges = <0x82000000 0 0x40000 0x40000 0 0x00002000   /* Port 0.0 registers */
+-- 
+1.8.1.2
+
