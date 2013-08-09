@@ -1,206 +1,228 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:41313 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758182Ab3HHWSB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 18:18:01 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
-Subject: [PATCHv8 02/10] PCI: remove ARCH_SUPPORTS_MSI kconfig option
-Date: Fri,  9 Aug 2013 00:17:40 +0200
-Message-Id: <1376000268-18397-3-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:48387 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751569Ab3HIREK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 13:04:10 -0400
+Received: by mail-pa0-f53.google.com with SMTP id lb1so5108249pab.40
+        for <linux-pci@vger.kernel.org>; Fri, 09 Aug 2013 10:04:09 -0700 (PDT)
+Date: Fri, 9 Aug 2013 11:04:04 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Subject: Re: [PATCH v2 2/3] PCI: Separate stop and remove devices in pciehp
+Message-ID: <20130809170404.GA29690@google.com>
+References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
+ <20130807040112.GA14662@google.com>
+ <CAE9FiQVXhg299RKsoa8eCqoN7b9c0HaeTGHCnxQY=9vkSYaJJg@mail.gmail.com>
+ <CAE9FiQWftukxyNiyM2znVPh7x82de3nhRMQwGHigZtOvU6xQ6g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQWftukxyNiyM2znVPh7x82de3nhRMQwGHigZtOvU6xQ6g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we have weak versions for each of the PCI MSI architecture
-functions, we can actually build the MSI support for all platforms,
-regardless of whether they provide or not architecture-specific
-versions of those functions. For this reason, the ARCH_SUPPORTS_MSI
-hidden kconfig boolean becomes useless, and this patch gets rid of it.
+On Wed, Aug 07, 2013 at 06:49:25PM -0700, Yinghai Lu wrote:
+> On Tue, Aug 6, 2013 at 11:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Tue, Aug 6, 2013 at 9:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >>
+> >> Huh.  I wish we didn't have virtfn_remove() at all.  I wish the
+> >> normal device removal path, i.e., pci_stop_and_remove_bus_device(),
+> >> could deal with VFs directly.  I don't know all the history there,
+> >> so maybe there's some reason that's not feasible.
+> >
+> > I had one draft version, but looks more confusing.
+> 
+> please check attached that make pci_stop_and_remove_bus_device()
+> could be used with VF.
+> 
+> It could replace
+> https://patchwork.kernel.org/patch/2834638/
+> https://patchwork.kernel.org/patch/2834639/
+> 
+> Please choose one of the solutions.
+> 
+> but we still need
+> https://patchwork.kernel.org/patch/2834640/
+> as VFs that does not use ARI could be on other virtual bus.
+> so they will not be removed directly.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Daniel Price <daniel.price@gmail.com>
-Tested-by: Thierry Reding <thierry.reding@gmail.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: linux390@de.ibm.com
-Cc: linux-s390@vger.kernel.org
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-mips@linux-mips.org
-Cc: David S. Miller <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
-Cc: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/arm/Kconfig     | 1 -
- arch/ia64/Kconfig    | 1 -
- arch/mips/Kconfig    | 2 --
- arch/powerpc/Kconfig | 1 -
- arch/s390/Kconfig    | 1 -
- arch/sparc/Kconfig   | 1 -
- arch/tile/Kconfig    | 1 -
- arch/x86/Kconfig     | 1 -
- drivers/pci/Kconfig  | 4 ----
- 9 files changed, 13 deletions(-)
+[I inlined your patch below for convenience]
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 37c0f4e..41b6c96 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -441,7 +441,6 @@ config ARCH_NETX
- config ARCH_IOP13XX
- 	bool "IOP13xx-based"
- 	depends on MMU
--	select ARCH_SUPPORTS_MSI
- 	select CPU_XSC3
- 	select NEED_MACH_MEMORY_H
- 	select NEED_RET_TO_USER
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index 5a768ad..098602b 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -9,7 +9,6 @@ config IA64
- 	select PCI if (!IA64_HP_SIM)
- 	select ACPI if (!IA64_HP_SIM)
- 	select PM if (!IA64_HP_SIM)
--	select ARCH_SUPPORTS_MSI
- 	select HAVE_UNSTABLE_SCHED_CLOCK
- 	select HAVE_IDE
- 	select HAVE_OPROFILE
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index c3abed3..01b5f5a 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -726,7 +726,6 @@ config CAVIUM_OCTEON_SOC
- 	select SYS_HAS_CPU_CAVIUM_OCTEON
- 	select SWAP_IO_SPACE
- 	select HW_HAS_PCI
--	select ARCH_SUPPORTS_MSI
- 	select ZONE_DMA32
- 	select USB_ARCH_HAS_OHCI
- 	select USB_ARCH_HAS_EHCI
-@@ -762,7 +761,6 @@ config NLM_XLR_BOARD
- 	select CEVT_R4K
- 	select CSRC_R4K
- 	select IRQ_CPU
--	select ARCH_SUPPORTS_MSI
- 	select ZONE_DMA32 if 64BIT
- 	select SYNC_R4K
- 	select SYS_HAS_EARLY_PRINTK
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index 3bf72cd..183a165 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -727,7 +727,6 @@ config PCI
- 	default y if !40x && !CPM2 && !8xx && !PPC_83xx \
- 		&& !PPC_85xx && !PPC_86xx && !GAMECUBE_COMMON
- 	default PCI_QSPAN if !4xx && !CPM2 && 8xx
--	select ARCH_SUPPORTS_MSI
- 	select GENERIC_PCI_IOMAP
- 	help
- 	  Find out whether your system includes a PCI bus. PCI is the name of
-diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-index 22f75b5..e9982a3 100644
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -428,7 +428,6 @@ menuconfig PCI
- 	bool "PCI support"
- 	default n
- 	depends on 64BIT
--	select ARCH_SUPPORTS_MSI
- 	select PCI_MSI
- 	help
- 	  Enable PCI support.
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index a00cbd3..1570ad2 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -52,7 +52,6 @@ config SPARC32
- 
- config SPARC64
- 	def_bool 64BIT
--	select ARCH_SUPPORTS_MSI
- 	select HAVE_FUNCTION_TRACER
- 	select HAVE_FUNCTION_GRAPH_TRACER
- 	select HAVE_FUNCTION_GRAPH_FP_TEST
-diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
-index 24565a7..74dff90 100644
---- a/arch/tile/Kconfig
-+++ b/arch/tile/Kconfig
-@@ -380,7 +380,6 @@ config PCI
- 	select PCI_DOMAINS
- 	select GENERIC_PCI_IOMAP
- 	select TILE_GXIO_TRIO if TILEGX
--	select ARCH_SUPPORTS_MSI if TILEGX
- 	select PCI_MSI if TILEGX
- 	---help---
- 	  Enable PCI root complex support, so PCIe endpoint devices can
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index b32ebf9..5db62ef 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2014,7 +2014,6 @@ menu "Bus options (PCI etc.)"
- config PCI
- 	bool "PCI support"
- 	default y
--	select ARCH_SUPPORTS_MSI if (X86_LOCAL_APIC && X86_IO_APIC)
- 	---help---
- 	  Find out whether you have a PCI motherboard. PCI is the name of a
- 	  bus system, i.e. the way the CPU talks to the other stuff inside
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 81944fb..b6a99f7 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -1,13 +1,9 @@
- #
- # PCI configuration
- #
--config ARCH_SUPPORTS_MSI
--	bool
--
- config PCI_MSI
- 	bool "Message Signaled Interrupts (MSI and MSI-X)"
- 	depends on PCI
--	depends on ARCH_SUPPORTS_MSI
- 	help
- 	   This allows device drivers to enable MSI (Message Signaled
- 	   Interrupts).  Message Signaled Interrupts enable a device to
--- 
-1.8.1.2
+> Subject: [PATCH] PCI: Release PF ref during removing VF
+> From: Yinghai Lu <yinghai@kernel.org>
+> 
+> commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
+> (PCI: Simplify IOV implementation and fix reference count races)
+> broke the pcie native hotplug with SRIOV enabled: PF is not freed
+> during hot-remove, and later hot-add do not work as old pci_dev
+> is still around, and can not create new pci_dev.
+> 
+> That commit need VFs to be removed via pci_disable_sriov/virtfn_remove
+> to make sure ref to PF is put back.
+> 
+> So we can not call stop_and_remove for VF before PF, that will
+> make VF get removed directly before PF's driver try to use
+> pci_disable_sriov/virtfn_remove to do it.
+> 
+> Solution would be
+> 1. separating stop and remove in two iterations.
+> 2. or make pci_stop_and_remove_bus_device could be used on VF.
+> 
+> This patch is second solution:
+> Separate PF ref releasing from virtfn_remove, all that during
+> pci_destroy_dev for VFs.
 
+I like the second approach better, but I think the call path and
+locking is way too messy:
+
+    virtfn_remove
+      mutex_lock(&iov->dev->sriov->lock)          <--
+      pci_stop_and_remove_bus_device
+        mutex_trylock(&iov->dev->sriov->lock)     <--
+        pci_stop_bus_device
+        pci_remove_bus_device
+          pci_destroy_dev
+            virtfn_release
+              virtfn_remove_bus
+              pci_dev_put
+
+I think it could be fixed, but it would require significant SR-IOV
+rework, and I'm dubious that we can get it done in time for v3.11.
+
+What would happen if we just reverted dc087f2f6a2 for now?  Jiang?
+
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/iov.c    |   34 +++++++++++++++++++++++++++++-----
+>  drivers/pci/pci.h    |    4 ++++
+>  drivers/pci/remove.c |   17 +++++++++++++++++
+>  3 files changed, 50 insertions(+), 5 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/iov.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/iov.c
+> +++ linux-2.6/drivers/pci/iov.c
+> @@ -132,9 +132,37 @@ failed:
+>  	return rc;
+>  }
+>  
+> -static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+> +void virtfn_release(struct pci_dev *virtfn)
+>  {
+> +	int i;
+> +	struct pci_dev *dev;
+>  	char buf[VIRTFN_ID_LEN];
+> +
+> +	if (!virtfn->is_virtfn)
+> +		return;
+> +
+> +	dev = virtfn->physfn;
+> +
+> +	/*
+> +	 * Remove link to virtfn for PF.
+> +	 * pci_disable_sriov() could be called after pci_stop_dev() is
+> +	 * called for PF. So check sd to avoid spurious sfsfs warning.
+> +	 */
+> +	if (dev->dev.kobj.sd)
+> +		for (i = 0; i < dev->sriov->num_VFs; i++)
+> +			if ((virtfn_bus(dev, i) == virtfn->bus->number) &&
+> +			    (virtfn_devfn(dev, i) == virtfn->devfn)) {
+> +				sprintf(buf, "virtfn%u", i);
+> +				sysfs_remove_link(&dev->dev.kobj, buf);
+> +				break;
+> +			}
+> +
+> +	virtfn_remove_bus(dev->bus, virtfn->bus);
+> +	pci_dev_put(dev);
+> +}
+> +
+> +static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+> +{
+>  	struct pci_dev *virtfn;
+>  	struct pci_sriov *iov = dev->sriov;
+>  
+> @@ -149,8 +177,6 @@ static void virtfn_remove(struct pci_dev
+>  		__pci_reset_function(virtfn);
+>  	}
+>  
+> -	sprintf(buf, "virtfn%u", id);
+> -	sysfs_remove_link(&dev->dev.kobj, buf);
+>  	/*
+>  	 * pci_stop_dev() could have been called for this virtfn already,
+>  	 * so the directory for the virtfn may have been removed before.
+> @@ -161,12 +187,10 @@ static void virtfn_remove(struct pci_dev
+>  
+>  	mutex_lock(&iov->dev->sriov->lock);
+>  	pci_stop_and_remove_bus_device(virtfn);
+> -	virtfn_remove_bus(dev->bus, virtfn->bus);
+>  	mutex_unlock(&iov->dev->sriov->lock);
+>  
+>  	/* balance pci_get_domain_bus_and_slot() */
+>  	pci_dev_put(virtfn);
+> -	pci_dev_put(dev);
+>  }
+>  
+>  static int sriov_migration(struct pci_dev *dev)
+> Index: linux-2.6/drivers/pci/pci.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.h
+> +++ linux-2.6/drivers/pci/pci.h
+> @@ -262,6 +262,7 @@ int pci_iov_resource_bar(struct pci_dev
+>  resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+>  void pci_restore_iov_state(struct pci_dev *dev);
+>  int pci_iov_bus_range(struct pci_bus *bus);
+> +void virtfn_release(struct pci_dev *dev);
+>  
+>  #else
+>  static inline int pci_iov_init(struct pci_dev *dev)
+> @@ -284,6 +285,9 @@ static inline int pci_iov_bus_range(stru
+>  {
+>  	return 0;
+>  }
+> +void virtfn_release(struct pci_dev *dev)
+> +{
+> +}
+>  
+>  #endif /* CONFIG_PCI_IOV */
+>  
+> Index: linux-2.6/drivers/pci/remove.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/remove.c
+> +++ linux-2.6/drivers/pci/remove.c
+> @@ -38,6 +38,8 @@ static void pci_destroy_dev(struct pci_d
+>  	list_del(&dev->bus_list);
+>  	up_write(&pci_bus_sem);
+>  
+> +	virtfn_release(dev);
+> +
+>  	pci_free_resources(dev);
+>  	put_device(&dev->dev);
+>  }
+> @@ -107,8 +109,23 @@ static void pci_remove_bus_device(struct
+>   */
+>  void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+>  {
+> +#ifdef CONFIG_PCI_ATS
+> +	struct pci_sriov *iov = NULL;
+> +	int locked = 0;
+> +
+> +	if (dev->is_virtfn) {
+> +		iov = dev->physfn->sriov;
+> +		locked = mutex_trylock(&iov->dev->sriov->lock);
+> +	}
+> +#endif
+> +
+>  	pci_stop_bus_device(dev);
+>  	pci_remove_bus_device(dev);
+> +
+> +#ifdef CONFIG_PCI_ATS
+> +	if (locked)
+> +		mutex_unlock(&iov->dev->sriov->lock);
+> +#endif
+>  }
+>  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+>  
