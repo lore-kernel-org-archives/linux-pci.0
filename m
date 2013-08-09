@@ -1,179 +1,210 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:41609 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755021Ab3HWTit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 15:38:49 -0400
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:44973 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966931Ab3HIArL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 20:47:11 -0400
+Received: by mail-wi0-f182.google.com with SMTP id hi8so1168015wib.3
+        for <linux-pci@vger.kernel.org>; Thu, 08 Aug 2013 17:47:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXFcM+FZnp00RP5Z8a2FhtjB7BuUUi4TuABF4-O9W+c8Q@mail.gmail.com>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-	<1376189294-32022-29-git-send-email-yinghai@kernel.org>
-	<CANVTcTYhSfU+Su9s1B+mTTBfgsZgqvQxHiTsLck1zT_vg1Cs4g@mail.gmail.com>
-	<CANVTcTb2+qX6XMBqrzeLho9yFS55AnztVJ85JBMuxjoH11qzaQ@mail.gmail.com>
-	<CAOLK0pwQJVvcT5xA-+Ftb85FzbjHN-OZmXO=n7r4EWh4nFjSBA@mail.gmail.com>
-	<CAE9FiQWnGaa6omcLW0zxLj+UMspRGxjVoYXUsH3ndydGD51T9w@mail.gmail.com>
-	<CAE9FiQXFcM+FZnp00RP5Z8a2FhtjB7BuUUi4TuABF4-O9W+c8Q@mail.gmail.com>
-Date: Fri, 23 Aug 2013 12:38:48 -0700
-Message-ID: <CAE9FiQXMfTCSfK8no6gYmHYn6=OURg6444BPu-aiBR3BsAvziA@mail.gmail.com>
-Subject: Re: [PATCH v4 28/28] PCI, x86, ACPI: get ioapic address from acpi device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Lan Tianyu <lantianyu1986@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: rui wang <ruiv.wang@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger kernel org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=e89a8ff2528a3944e504e4a28e09
+In-Reply-To: <520306E9.5050901@huawei.com>
+References: <1375776540-23988-1-git-send-email-wangyijing@huawei.com>
+	<CAPoiz9wAufM8HV_Drdxg50zs5=1AduBUN5oXNRBHYqjwMCOTaQ@mail.gmail.com>
+	<5201A877.2080303@huawei.com>
+	<CAPoiz9z1yS=-GwWuBjbxCUk4s+K5KtEBLwaWsO5XVT_uePeHHg@mail.gmail.com>
+	<520306E9.5050901@huawei.com>
+Date: Thu, 8 Aug 2013 17:47:09 -0700
+Message-ID: <CAPoiz9zDQjvj1jYyW=0+0=qX60gu-FSZTHpYj2Yq2okg1WDOXA@mail.gmail.com>
+Subject: Re: [PATCH -v3] PCI: update device mps when doing pci hotplug
+From: Jon Mason <jdmason@kudzu.us>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---e89a8ff2528a3944e504e4a28e09
-Content-Type: text/plain; charset=ISO-8859-1
+On Wed, Aug 7, 2013 at 7:48 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> Because for safety, I won't touch the running pcie device(RP, UP/DP,EP) mps.
+>>> Consider the following case:
+>>> Root Port------>Upstream Port------>Downstream Port 1 ---->Endpoint device A (newly inserted device)
+>>> mps=256          256               |    256                     128
+>>>                                    |Downstream Port 2 ---->Endpoint device B
+>>>                                         256                     256
+>>>
+>>> This patch try to update device A's mps equal to its parent DP 1 mps (256).
+>>> Because EP A device is not running, newly inserted, not configure yet. So configure its mps
+>>> to 256B is safe.
+>>
+>> I understand your logic now and agree.
+>
+> Hi Jon,
+>    Thanks for your comments!
+> I think we can improve this logic a little . As your comments in pcie_find_smpss(), if the PCI hotplug
+> slot is directly connected to the root port and there are not other devices on the fabric, then this
+> is not an issue..  So I think in this case, we can first update the newly hot added device mps as above logic.
+> if newly hot added device mpss < root port mps, then we can modify both root port device and newly hot added device
+> mps to device mpss. What do you think?
+>
+> eg.
+> Root port --------------> slot (mps is default 128,assume mpss is 256)
+> (mps 512)
+>
+> Only in this case, I think we try to update the parent device is safe.
+>
+> after update:
+> Root port --------------> slot (mps is default 128,assume mpss is 256)
+> (mps 512-->256)         mps 128--->256
 
-On Fri, Aug 23, 2013 at 12:04 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Aug 23, 2013 at 11:38 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, Aug 23, 2013 at 8:34 AM, Lan Tianyu <lantianyu1986@gmail.com> wrote:
->>>> I worked around the problem by replacing acpi_resource_to_address64()
->>>> with resource_to_addr().  But resource_to_addr() is a static function
->>>> in arch/x86/pci/acpi.c, not very convenient to use. Here's what I did:
+
+Yes, but this is where it get difficult.  You can only do it if the
+parent bus is the root port.  Otherwise, the other devices on the bus
+will already have their MPS configured and changing the root port MPS
+will do bad things.  That is why I have the check in pcie_find_smpss()
+of
+
+        if (dev->is_hotplug_bridge && (!list_is_singular(&dev->bus->devices) ||
+             (dev->bus->self &&
+              pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)))
+
+So, you either need to mimic this code in your new function or make
+PCIE_BUS_SAFE the default option.  I'm leaning towards the latter, but
+if you need something for the stable tree then we should temporarily
+have a patch which does it the former.
+
+Thoughts?
+
+>
+>>
+>>> But if we try to configure DP 1 mps to 128B, it's not safe. its parent Upstream port still is 256.
+>>
+>> This is exactly the case that the "PERFORMANCE" option is trying to
+>> allow.  If the MRRS is set to the MPS of the device, it should work.
+>> If not, then we should rip out all of the "PERFORMANCE" code.  Is this
+>> something you can verify?
+>
+> Hi Jon,
+>    I am not very clear about what the role of MRRS. So if I understand wrong, please correct me, thanks.
+>
+> eg.
+> DP1 ----------------> EP A
+> mps=256                 mps=128
+>
+> MRRS can control the read request TLP size when the Function as a Requester.
+> So if we set the EP A MRRS to mps value(128), EP A won't generate
+> TLP larger than 128, so Request stream from EP A to DP1 is safe.
+>
+> But if EP A is as a receiver, DP 1 generate completion TLP (larger than 128) to EP A.
+> these TLPs will be discarded by EP A, right?
+
+Yes
+
+> So in my idea, If we set both mps and mrrs of EP A to 128, we can insure TLPs stream from EP A is safe.
+> But How do we guarantee that DP1 won't generate TLPs to EP A is larger than 128?
+
+The device will never do any reads of larger than the MRRS, but writes
+to the device are an issue.  Assuming that all I/O is between CPU/RAM
+and the device and there are no peer-to-peer transfers, we should be
+safe (but is that a safe assumption?).  So my question to you is that
+the setup you have that is failing due to MPS sizes being off, can you
+set the only MRRS to 128 and get it working?
+
+> Jon, PCIe Spec only involves mps and mrrs setting a little, Are there any other specs about this?
+
+I have the Mindshare PCIE book, but it doesn't go very deep into this.
+ Most of this is an idea from benh, which I attempted to implement.
+If it works then all credit goes to him, if it breaks then it is my
+fault :)
+
+Thanks,
+Jon
+
+>
+>
+> Thanks!
+> Yijing.
+>
+>
+>>
+>> Thanks,
+>> Jon
+>>
+>>>>
+>>>>> +}
+>>>>> +
+>>>>>  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+>>>>>   * parents then children fashion.  If this changes, then this code will not
+>>>>>   * work as designed.
+>>>>> @@ -1614,6 +1648,15 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+>>>>>         if (!pci_is_pcie(bus->self))
+>>>>>                 return;
+>>>>>
+>>>>> +       /* Sometimes we should update device mps here,
+>>>>> +        * eg. after hot add, device mps value will be
+>>>>> +        * set to default(128B), but the upstream port
+>>>>> +        * mps value may be larger than 128B, if we do
+>>>>> +        * not update the device mps, it maybe can not
+>>>>> +        * work normally.
+>>>>
+>>>> This is slightly confusing to me.  It would be more clear to say:
+>>>> There are situations (i.e., hot add) where the upstream port might
+>>>> have a larger MPS than the device.  In these situations, the port MPS
+>>>> needs to be reconfigured to the lower value or the device will not
+>>>> operate properly.
+>>>
+>>> Sorry for my poor English, I mean the device  is the newly hot added device, not
+>>> the port device. So we will only reconfigure the newly hot added device mps.
+>>>
+>>>>
+>>>>> +        */
+>>>>> +       pcie_bus_update_setting(bus);
+>>>>
+>>>> This only seems to be necessary in the "TUNE_OFF" case.  It would be
+>>>> best to move it under that, just 2 lines down.
+>>>
+>>> Good idea, will update, thanks!
+>>>
+>>>
+>>> Thanks!
+>>> Yijing.
+>>>>
+>>>>> +
+>>>>>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+>>>>
+>>>> Perhaps it is time to make "SAFE" the default option, per the
+>>>> discussion at last years PCI mini-summit.
+>>>> Bjorn, thoughts?
+>>>>
+>>>>
+>>>> Thanks,
+>>>> Jon
+>>>>
+>>>>>                 return;
+>>>>>
+>>>>> --
+>>>>> 1.7.1
+>>>>>
+>>>>>
+>>>>
+>>>> .
 >>>>
 >>>
->>> Hi Rui&Yinghai:
->>>            How about using the following code to translate struct
->>>  acpi_resource to struct resouce in this setup_res()?
 >>>
->>>          if (acpi_dev_resource_address_space(...)
->>>                 || acpi_dev_resource_memory(..))
->>>               return AE_OK;
+>>> --
+>>> Thanks!
+>>> Yijing
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>
->> Yest, that could be better, will update that.
+>> .
 >>
->> Also can you submit patch that will use that in res_to_addr of
->> arch/x86/pci/acpi.c?
 >
-> looks acpi_dev_resource_address_space... does not handle
-> PREFTCH and translation offset.
 >
-> So now i have to use res_to_addr alike one.
-
-Raphael,
-
-Maybe we should move resource_to_addr to acpi generic.
-
-Please check if you are ok with attached.
-
-Thanks
-
-Yinghai
-
---e89a8ff2528a3944e504e4a28e09
-Content-Type: application/octet-stream; name="move_res_to_addr.patch"
-Content-Disposition: attachment; filename="move_res_to_addr.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hkpsy5m60
-
-U3ViamVjdDogW1BBVENIXSBBQ1BJLCB4ODYvUENJOiBNb3ZlIHJlc291cmNlX3RvX2FkZHIoKSB0
-byBhY3BpIGdlbmVyaWMKClJ1aSB3YW5nIHJlcG9ydGVkIGlvYXBpYyBob3QtYWRkIGRvZXMgbm90
-IHdvcmsgb24gaGlzIG1hY2hpbmUKdGhhdCBfQ1JTIGhhdmUgTUVNT1JZX0ZJWEVELgpIZSBhbHNv
-IHByb3Bvc2VkIHRvIGV4cG9zZSByZXNvdXJjZV90b19hZGRyKCkgYW5kIHVzZSBpdCBmb3IgaW9h
-cGljLgoKV2Ugc2hvdWxkIG1vdmUgaXQgdG8gYWNwaSBnZW5lcmljLCBhcyBpb2FwaS5jIGN1cnJl
-bnQgaXMgaW4KZHJpdmVycy9wY2kvLgoKT3Igc2hvdWxkIG1vdmUgaXQgdG8gYWNwaWNhPwoKU2ln
-bmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBhcmNoL3g4
-Ni9wY2kvYWNwaS5jICAgICB8ICAgNTEgKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tCiBkcml2ZXJzL2FjcGkvcmVzb3VyY2UuYyB8ICAgNDYgKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwogaW5jbHVkZS9saW51eC9hY3BpLmgg
-ICAgfCAgICAzICsrCiAzIGZpbGVzIGNoYW5nZWQsIDUxIGluc2VydGlvbnMoKyksIDQ5IGRlbGV0
-aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9wY2kvYWNwaS5jCj09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
-LS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L3BjaS9hY3BpLmMKKysrIGxpbnV4LTIuNi9hcmNo
-L3g4Ni9wY2kvYWNwaS5jCkBAIC0yMTksNjAgKzIxOSwxMyBAQCBzdGF0aWMgdm9pZCB0ZWFyZG93
-bl9tY2ZnX21hcChzdHJ1Y3QgcGNpCiAjZW5kaWYKIAogc3RhdGljIGFjcGlfc3RhdHVzCi1yZXNv
-dXJjZV90b19hZGRyKHN0cnVjdCBhY3BpX3Jlc291cmNlICpyZXNvdXJjZSwKLQkJCXN0cnVjdCBh
-Y3BpX3Jlc291cmNlX2FkZHJlc3M2NCAqYWRkcikKLXsKLQlhY3BpX3N0YXR1cyBzdGF0dXM7Ci0J
-c3RydWN0IGFjcGlfcmVzb3VyY2VfbWVtb3J5MjQgKm1lbW9yeTI0OwotCXN0cnVjdCBhY3BpX3Jl
-c291cmNlX21lbW9yeTMyICptZW1vcnkzMjsKLQlzdHJ1Y3QgYWNwaV9yZXNvdXJjZV9maXhlZF9t
-ZW1vcnkzMiAqZml4ZWRfbWVtb3J5MzI7Ci0KLQltZW1zZXQoYWRkciwgMCwgc2l6ZW9mKCphZGRy
-KSk7Ci0Jc3dpdGNoIChyZXNvdXJjZS0+dHlwZSkgewotCWNhc2UgQUNQSV9SRVNPVVJDRV9UWVBF
-X01FTU9SWTI0OgotCQltZW1vcnkyNCA9ICZyZXNvdXJjZS0+ZGF0YS5tZW1vcnkyNDsKLQkJYWRk
-ci0+cmVzb3VyY2VfdHlwZSA9IEFDUElfTUVNT1JZX1JBTkdFOwotCQlhZGRyLT5taW5pbXVtID0g
-bWVtb3J5MjQtPm1pbmltdW07Ci0JCWFkZHItPmFkZHJlc3NfbGVuZ3RoID0gbWVtb3J5MjQtPmFk
-ZHJlc3NfbGVuZ3RoOwotCQlhZGRyLT5tYXhpbXVtID0gYWRkci0+bWluaW11bSArIGFkZHItPmFk
-ZHJlc3NfbGVuZ3RoIC0gMTsKLQkJcmV0dXJuIEFFX09LOwotCWNhc2UgQUNQSV9SRVNPVVJDRV9U
-WVBFX01FTU9SWTMyOgotCQltZW1vcnkzMiA9ICZyZXNvdXJjZS0+ZGF0YS5tZW1vcnkzMjsKLQkJ
-YWRkci0+cmVzb3VyY2VfdHlwZSA9IEFDUElfTUVNT1JZX1JBTkdFOwotCQlhZGRyLT5taW5pbXVt
-ID0gbWVtb3J5MzItPm1pbmltdW07Ci0JCWFkZHItPmFkZHJlc3NfbGVuZ3RoID0gbWVtb3J5MzIt
-PmFkZHJlc3NfbGVuZ3RoOwotCQlhZGRyLT5tYXhpbXVtID0gYWRkci0+bWluaW11bSArIGFkZHIt
-PmFkZHJlc3NfbGVuZ3RoIC0gMTsKLQkJcmV0dXJuIEFFX09LOwotCWNhc2UgQUNQSV9SRVNPVVJD
-RV9UWVBFX0ZJWEVEX01FTU9SWTMyOgotCQlmaXhlZF9tZW1vcnkzMiA9ICZyZXNvdXJjZS0+ZGF0
-YS5maXhlZF9tZW1vcnkzMjsKLQkJYWRkci0+cmVzb3VyY2VfdHlwZSA9IEFDUElfTUVNT1JZX1JB
-TkdFOwotCQlhZGRyLT5taW5pbXVtID0gZml4ZWRfbWVtb3J5MzItPmFkZHJlc3M7Ci0JCWFkZHIt
-PmFkZHJlc3NfbGVuZ3RoID0gZml4ZWRfbWVtb3J5MzItPmFkZHJlc3NfbGVuZ3RoOwotCQlhZGRy
-LT5tYXhpbXVtID0gYWRkci0+bWluaW11bSArIGFkZHItPmFkZHJlc3NfbGVuZ3RoIC0gMTsKLQkJ
-cmV0dXJuIEFFX09LOwotCWNhc2UgQUNQSV9SRVNPVVJDRV9UWVBFX0FERFJFU1MxNjoKLQljYXNl
-IEFDUElfUkVTT1VSQ0VfVFlQRV9BRERSRVNTMzI6Ci0JY2FzZSBBQ1BJX1JFU09VUkNFX1RZUEVf
-QUREUkVTUzY0OgotCQlzdGF0dXMgPSBhY3BpX3Jlc291cmNlX3RvX2FkZHJlc3M2NChyZXNvdXJj
-ZSwgYWRkcik7Ci0JCWlmIChBQ1BJX1NVQ0NFU1Moc3RhdHVzKSAmJgotCQkgICAgKGFkZHItPnJl
-c291cmNlX3R5cGUgPT0gQUNQSV9NRU1PUllfUkFOR0UgfHwKLQkJICAgIGFkZHItPnJlc291cmNl
-X3R5cGUgPT0gQUNQSV9JT19SQU5HRSkgJiYKLQkJICAgIGFkZHItPmFkZHJlc3NfbGVuZ3RoID4g
-MCkgewotCQkJcmV0dXJuIEFFX09LOwotCQl9Ci0JCWJyZWFrOwotCX0KLQlyZXR1cm4gQUVfRVJS
-T1I7Ci19Ci0KLXN0YXRpYyBhY3BpX3N0YXR1cwogY291bnRfcmVzb3VyY2Uoc3RydWN0IGFjcGlf
-cmVzb3VyY2UgKmFjcGlfcmVzLCB2b2lkICpkYXRhKQogewogCXN0cnVjdCBwY2lfcm9vdF9pbmZv
-ICppbmZvID0gZGF0YTsKIAlzdHJ1Y3QgYWNwaV9yZXNvdXJjZV9hZGRyZXNzNjQgYWRkcjsKIAlh
-Y3BpX3N0YXR1cyBzdGF0dXM7CiAKLQlzdGF0dXMgPSByZXNvdXJjZV90b19hZGRyKGFjcGlfcmVz
-LCAmYWRkcik7CisJc3RhdHVzID0gYWNwaV9tZW1fYWRkcl9yZXNvdXJjZV90b19hZGRyZXNzNjQo
-YWNwaV9yZXMsICZhZGRyKTsKIAlpZiAoQUNQSV9TVUNDRVNTKHN0YXR1cykpCiAJCWluZm8tPnJl
-c19udW0rKzsKIAlyZXR1cm4gQUVfT0s7CkBAIC0yODgsNyArMjQxLDcgQEAgc2V0dXBfcmVzb3Vy
-Y2Uoc3RydWN0IGFjcGlfcmVzb3VyY2UgKmFjcAogCXVuc2lnbmVkIGxvbmcgZmxhZ3M7CiAJdTY0
-IHN0YXJ0LCBvcmlnX2VuZCwgZW5kOwogCi0Jc3RhdHVzID0gcmVzb3VyY2VfdG9fYWRkcihhY3Bp
-X3JlcywgJmFkZHIpOworCXN0YXR1cyA9IGFjcGlfbWVtX2FkZHJfcmVzb3VyY2VfdG9fYWRkcmVz
-czY0KGFjcGlfcmVzLCAmYWRkcik7CiAJaWYgKCFBQ1BJX1NVQ0NFU1Moc3RhdHVzKSkKIAkJcmV0
-dXJuIEFFX09LOwogCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9hY3BpL3Jlc291cmNlLmMKPT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9hY3BpL3Jlc291cmNlLmMKKysrIGxp
-bnV4LTIuNi9kcml2ZXJzL2FjcGkvcmVzb3VyY2UuYwpAQCAtNDE0LDYgKzQxNCw1MiBAQCB2b2lk
-IGFjcGlfZGV2X2ZyZWVfcmVzb3VyY2VfbGlzdChzdHJ1Y3QKIH0KIEVYUE9SVF9TWU1CT0xfR1BM
-KGFjcGlfZGV2X2ZyZWVfcmVzb3VyY2VfbGlzdCk7CiAKK2FjcGlfc3RhdHVzIGFjcGlfbWVtX2Fk
-ZHJfcmVzb3VyY2VfdG9fYWRkcmVzczY0KHN0cnVjdCBhY3BpX3Jlc291cmNlICpyZXNvdXJjZSwK
-KwkJCXN0cnVjdCBhY3BpX3Jlc291cmNlX2FkZHJlc3M2NCAqYWRkcikKK3sKKwlhY3BpX3N0YXR1
-cyBzdGF0dXM7CisJc3RydWN0IGFjcGlfcmVzb3VyY2VfbWVtb3J5MjQgKm1lbW9yeTI0OworCXN0
-cnVjdCBhY3BpX3Jlc291cmNlX21lbW9yeTMyICptZW1vcnkzMjsKKwlzdHJ1Y3QgYWNwaV9yZXNv
-dXJjZV9maXhlZF9tZW1vcnkzMiAqZml4ZWRfbWVtb3J5MzI7CisKKwltZW1zZXQoYWRkciwgMCwg
-c2l6ZW9mKCphZGRyKSk7CisJc3dpdGNoIChyZXNvdXJjZS0+dHlwZSkgeworCWNhc2UgQUNQSV9S
-RVNPVVJDRV9UWVBFX01FTU9SWTI0OgorCQltZW1vcnkyNCA9ICZyZXNvdXJjZS0+ZGF0YS5tZW1v
-cnkyNDsKKwkJYWRkci0+cmVzb3VyY2VfdHlwZSA9IEFDUElfTUVNT1JZX1JBTkdFOworCQlhZGRy
-LT5taW5pbXVtID0gbWVtb3J5MjQtPm1pbmltdW07CisJCWFkZHItPmFkZHJlc3NfbGVuZ3RoID0g
-bWVtb3J5MjQtPmFkZHJlc3NfbGVuZ3RoOworCQlhZGRyLT5tYXhpbXVtID0gYWRkci0+bWluaW11
-bSArIGFkZHItPmFkZHJlc3NfbGVuZ3RoIC0gMTsKKwkJcmV0dXJuIEFFX09LOworCWNhc2UgQUNQ
-SV9SRVNPVVJDRV9UWVBFX01FTU9SWTMyOgorCQltZW1vcnkzMiA9ICZyZXNvdXJjZS0+ZGF0YS5t
-ZW1vcnkzMjsKKwkJYWRkci0+cmVzb3VyY2VfdHlwZSA9IEFDUElfTUVNT1JZX1JBTkdFOworCQlh
-ZGRyLT5taW5pbXVtID0gbWVtb3J5MzItPm1pbmltdW07CisJCWFkZHItPmFkZHJlc3NfbGVuZ3Ro
-ID0gbWVtb3J5MzItPmFkZHJlc3NfbGVuZ3RoOworCQlhZGRyLT5tYXhpbXVtID0gYWRkci0+bWlu
-aW11bSArIGFkZHItPmFkZHJlc3NfbGVuZ3RoIC0gMTsKKwkJcmV0dXJuIEFFX09LOworCWNhc2Ug
-QUNQSV9SRVNPVVJDRV9UWVBFX0ZJWEVEX01FTU9SWTMyOgorCQlmaXhlZF9tZW1vcnkzMiA9ICZy
-ZXNvdXJjZS0+ZGF0YS5maXhlZF9tZW1vcnkzMjsKKwkJYWRkci0+cmVzb3VyY2VfdHlwZSA9IEFD
-UElfTUVNT1JZX1JBTkdFOworCQlhZGRyLT5taW5pbXVtID0gZml4ZWRfbWVtb3J5MzItPmFkZHJl
-c3M7CisJCWFkZHItPmFkZHJlc3NfbGVuZ3RoID0gZml4ZWRfbWVtb3J5MzItPmFkZHJlc3NfbGVu
-Z3RoOworCQlhZGRyLT5tYXhpbXVtID0gYWRkci0+bWluaW11bSArIGFkZHItPmFkZHJlc3NfbGVu
-Z3RoIC0gMTsKKwkJcmV0dXJuIEFFX09LOworCWNhc2UgQUNQSV9SRVNPVVJDRV9UWVBFX0FERFJF
-U1MxNjoKKwljYXNlIEFDUElfUkVTT1VSQ0VfVFlQRV9BRERSRVNTMzI6CisJY2FzZSBBQ1BJX1JF
-U09VUkNFX1RZUEVfQUREUkVTUzY0OgorCQlzdGF0dXMgPSBhY3BpX3Jlc291cmNlX3RvX2FkZHJl
-c3M2NChyZXNvdXJjZSwgYWRkcik7CisJCWlmIChBQ1BJX1NVQ0NFU1Moc3RhdHVzKSAmJgorCQkg
-ICAgKGFkZHItPnJlc291cmNlX3R5cGUgPT0gQUNQSV9NRU1PUllfUkFOR0UgfHwKKwkJICAgIGFk
-ZHItPnJlc291cmNlX3R5cGUgPT0gQUNQSV9JT19SQU5HRSkgJiYKKwkJICAgIGFkZHItPmFkZHJl
-c3NfbGVuZ3RoID4gMCkgeworCQkJcmV0dXJuIEFFX09LOworCQl9CisJCWJyZWFrOworCX0KKwly
-ZXR1cm4gQUVfRVJST1I7Cit9CisKIHN0cnVjdCByZXNfcHJvY19jb250ZXh0IHsKIAlzdHJ1Y3Qg
-bGlzdF9oZWFkICpsaXN0OwogCWludCAoKnByZXByb2MpKHN0cnVjdCBhY3BpX3Jlc291cmNlICos
-IHZvaWQgKik7CkluZGV4OiBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9hY3BpLmgKPT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PQotLS0gbGludXgtMi42Lm9yaWcvaW5jbHVkZS9saW51eC9hY3BpLmgKKysrIGxpbnV4LTIuNi9p
-bmNsdWRlL2xpbnV4L2FjcGkuaApAQCAtMjU5LDYgKzI1OSw5IEBAIHVuc2lnbmVkIGxvbmcgYWNw
-aV9kZXZfaXJxX2ZsYWdzKHU4IHRyaWcKIGJvb2wgYWNwaV9kZXZfcmVzb3VyY2VfaW50ZXJydXB0
-KHN0cnVjdCBhY3BpX3Jlc291cmNlICphcmVzLCBpbnQgaW5kZXgsCiAJCQkJIHN0cnVjdCByZXNv
-dXJjZSAqcmVzKTsKIAorYWNwaV9zdGF0dXMgYWNwaV9tZW1fYWRkcl9yZXNvdXJjZV90b19hZGRy
-ZXNzNjQoc3RydWN0IGFjcGlfcmVzb3VyY2UgKnJlc291cmNlLAorCQkJc3RydWN0IGFjcGlfcmVz
-b3VyY2VfYWRkcmVzczY0ICphZGRyKTsKKwogc3RydWN0IHJlc291cmNlX2xpc3RfZW50cnkgewog
-CXN0cnVjdCBsaXN0X2hlYWQgbm9kZTsKIAlzdHJ1Y3QgcmVzb3VyY2UgcmVzOwo=
---e89a8ff2528a3944e504e4a28e09--
+> --
+> Thanks!
+> Yijing
+>
