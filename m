@@ -1,61 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:49669 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964777Ab3HJPPd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 10 Aug 2013 11:15:33 -0400
-Date: Sat, 10 Aug 2013 17:15:31 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	dougthompson@xmission.com, bhelgaas@google.com, jbeulich@suse.com,
-	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/3 V4] EDAC, AMD64_EDAC: Add ECC decoding support for
- newer F15h models.
-Message-ID: <20130810151530.GA4155@pd.tnic>
-References: <1376067289-2753-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1376067289-2753-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:53532 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933939Ab3HIOty (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:54 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v6 09/14] ARM: tegra: Enable PCIe controller on Cardhu
+Date: Fri,  9 Aug 2013 16:49:27 +0200
+Message-Id: <1376059772-16669-10-git-send-email-treding@nvidia.com>
+In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 09, 2013 at 11:54:49AM -0500, Aravind Gopalakrishnan wrote:
-> Adding support for handling ECC error decoding for new F15 models.
-> On newer models, support has been included for upto 4 DCT's, however,
-> only DCT0 and DCT3 are currently configured. (Refer BKDG Section 2.10)
-> Routing DRAM Requests algorithm is different for F15h M30h.
-> It is cleaner to use a brand new function rather than
-> adding quirks in the more generic 'f1x_match_to_this_node'
-> Refer "2.10.5 DRAM Routing Requests" in BKDG for info.
-> 
-> Tested on Fam15h M30h with ECC turned on using mce_amd_inj facility and
-> verified to be functionally correct.
-> 
-> Changes from V3:
-> 	- Remove compiler warnings
->         - Recheck models that need erratum workaround for E505:
-> 	  - From looking up history of the bug, we find that
->             the workaround holds true only for Fam15 models upto 1h
->             and only upto stepping 0h. CPU revisions after these
->             do not need the workaround.
-> 
-> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+From: Jay Agarwal <jagarwal@nvidia.com>
 
-Ok, I've taken it and applied a cleanup ontop which uses the locally
-cached family, model, stepping (sending it as a reply to this message).
+Root port 2 is routed to the bottom connector on Cardhu and is used by
+the development dock to provide gigabit ethernet and USB functionality.
 
-I'd appreciate it if you tested the branch here
+Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ arch/arm/boot/dts/tegra30-cardhu.dtsi | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-git://git.kernel.org/pub/scm/linux/kernel/git/bp/bp.git amd-f15-m30
-
-just to make sure everything is still kosher.
-
-Thanks.
-
+diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+index c011b67..ee8fff8 100644
+--- a/arch/arm/boot/dts/tegra30-cardhu.dtsi
++++ b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+@@ -31,6 +31,26 @@
+ 		reg = <0x80000000 0x40000000>;
+ 	};
+ 
++	pcie-controller {
++		status = "okay";
++		pex-clk-supply = <&pex_hvdd_3v3_reg>;
++		vdd-supply = <&ldo1_reg>;
++		avdd-supply = <&ldo2_reg>;
++
++		pci@1,0 {
++			nvidia,num-lanes = <4>;
++		};
++
++		pci@2,0 {
++			nvidia,num-lanes = <1>;
++		};
++
++		pci@3,0 {
++			status = "okay";
++			nvidia,num-lanes = <1>;
++		};
++	};
++
+ 	pinmux {
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&state_default>;
 -- 
-Regards/Gruss,
-    Boris.
+1.8.3.4
 
-Sent from a fat crate under my desk. Formatting is fine.
---
