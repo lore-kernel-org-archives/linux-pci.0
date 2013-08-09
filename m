@@ -1,103 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:59018 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932266Ab3HGJd2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:33:28 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv7 04/13] irqdomain: add irq_alloc_mapping() function
-Date: Wed,  7 Aug 2013 11:32:25 +0200
-Message-Id: <1375867954-2320-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:34543 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031121Ab3HIV1q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Aug 2013 17:27:46 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Myron Stowe <myron.stowe@gmail.com>
+Cc: thomas.petazzoni@free-electrons.com,
+	jgunthorpe@obsidianresearch.com, thierry.reding@avionic-design.de,
+	swarren@wwwdotorg.org, linux@arm.linux.org.uk,
+	rob.herring@calxeda.com, linux-arm-kernel@lists.infradead.org,
+	linux-pci <linux-pci@vger.kernel.org>,
+	iommu@lists.linux-foundation.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	mika.westerberg@linux.intel.com,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Don Dutile <ddutile@redhat.com>, liuj97@gmail.com,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: Re: Linux Plumbers ACPI/PM, PCI Microconference
+Date: Fri, 09 Aug 2013 23:37:56 +0200
+Message-ID: <19119445.uFrsn6yGJd@vostro.rjw.lan>
+In-Reply-To: <CAL-B5D1-CPNcOzjHx4ej5SenawvDqwC4Hef5oDkoxCb9Dz5dUw@mail.gmail.com>
+References: <CAL-B5D1-CPNcOzjHx4ej5SenawvDqwC4Hef5oDkoxCb9Dz5dUw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit extends the irqdomain subsystem with an
-irq_alloc_mapping() function which allows to let the irqdomain code
-find an available hwirq number in the range [ 0 ; domain size ] for
-the given domain, and create a virq mapping for it.
+On Friday, August 09, 2013 12:12:24 PM Myron Stowe wrote:
+> Time is passing quickly and there are still a few topic areas that we
+> would like discussed during the microconference but still do not have
+> any proposals/knowledgable speakers for.
+> 
+> For the following people I'm specifically picking on: Are you going to
+> plumbers, would you be willing to cover the following areas?  If you
+> are not going, do you know someone who is and could cover?
+> 
+> Yinghai: host bridge hot-plug - what has been accomplished to date and
+> what still remains to be done?
+> 
+> Mika: Thunderbolt activities?
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Acked-by: Grant Likely <grant.likely@linaro.org>
-Tested-by: Daniel Price <daniel.price@gmail.com>
----
- include/linux/irqdomain.h |  2 ++
- kernel/irq/irqdomain.c    | 36 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+)
+That falls under my hotplug topic (that's been submitted already).
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index c983ed1..1ffa336 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -195,6 +195,8 @@ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
- extern unsigned int irq_find_mapping(struct irq_domain *host,
- 				     irq_hw_number_t hwirq);
- extern unsigned int irq_create_direct_mapping(struct irq_domain *host);
-+extern unsigned int irq_alloc_mapping(struct irq_domain *host,
-+				      irq_hw_number_t *hwirq);
- extern int irq_create_strict_mappings(struct irq_domain *domain,
- 				      unsigned int irq_base,
- 				      irq_hw_number_t hwirq_base, int count);
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 706724e..034bbac 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -375,6 +375,42 @@ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
- EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
- 
- /**
-+ * irq_alloc_mapping() - Allocate an irq for mapping
-+ * @domain: domain to allocate the irq for or NULL for default domain
-+ * @hwirq:  reference to the returned hwirq
-+ *
-+ * This routine are used for irq controllers which can choose the
-+ * hardware interrupt number from a range [ 0 ; domain size ], such as
-+ * is often the case with PCI MSI controllers. The function will
-+ * returned the allocated hwirq number in the hwirq pointer, and the
-+ * corresponding virq number as the return value.
-+ */
-+unsigned int irq_alloc_mapping(struct irq_domain *domain,
-+			       irq_hw_number_t *out_hwirq)
-+{
-+	irq_hw_number_t hwirq;
-+	int rc;
-+
-+	pr_debug("irq_alloc_mapping(0x%p)\n", domain);
-+
-+	for (hwirq = 0; hwirq < domain->revmap_size; hwirq++)
-+		if (domain->linear_revmap[hwirq] == 0)
-+			break;
-+
-+	if (hwirq == domain->hwirq_max) {
-+		pr_debug("-> no available hwirq found\n");
-+		return 0;
-+	}
-+
-+	rc = irq_create_mapping(domain, hwirq);
-+	if (rc)
-+		*out_hwirq = hwirq;
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(irq_alloc_mapping);
-+
-+/**
-  * irq_create_mapping() - Map a hardware interrupt into linux irq space
-  * @domain: domain owning this hardware interrupt or NULL for default domain
-  * @hwirq: hardware irq number in that domain space
--- 
-1.8.1.2
+> Jiang Liu, Gu Zheng: Would you be willing to cover your recent efforts
+> with PCI device (hot-plug) reference counting?
+> 
+> Russel, Rob, Stephen, Thomas, Jason, Thierry: ARM - especially any
+> PCI(e) ideosynchronicies along with ARM's IOMMU arch and how that
+> relates to PCI.
+> 
+> Alex Williamson: you want/need to cover any of the following - PCI
+> secondary bus resets; pci_is_pcie() - Not just for PCIe capabilities;
+> I/O port pci-sysfs resource files (fix or remove)?
+> 
+> Of course anyone else is free to propose something or sign up for
+> covering one of the proposed topics listed at
+> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
+> 
+> 
+> The instructions for submitting proposals should be at:
+> 
+> http://www.linuxplumbersconf.org/2013/submitting-topic/
+> 
+> The Microconference link is at:
+> 
+> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
+
+Yes, everyone, if you are going to attend the LPC and have a topic for
+discussion during the ACPI/PM+PCI uconf, please submit a proposal.
+
+We should be able to accommodate 7-8 30-minutes slots.
+
+Thanks,
+Rafael
 
