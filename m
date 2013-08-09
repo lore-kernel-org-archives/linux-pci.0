@@ -1,93 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18419 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756977Ab3HAQzU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 Aug 2013 12:55:20 -0400
-Subject: [PATCH v3 1/9] pci: Create pci_reset_bridge_secondary_bus()
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Thu, 01 Aug 2013 10:55:15 -0600
-Message-ID: <20130801165514.16145.62825.stgit@bling.home>
-In-Reply-To: <20130801164652.16145.79918.stgit@bling.home>
-References: <20130801164652.16145.79918.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from top.free-electrons.com ([176.31.233.9]:46449 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1031006Ab3HIU1h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 16:27:37 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv9 05/10] irqchip: armada-370-xp: properly request resources
+Date: Fri,  9 Aug 2013 22:27:10 +0200
+Message-Id: <1376080035-29344-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move the secondary bus reset code from pci_parent_bus_reset() into its own
-function.  Export it as we'll later be calling it from hotplug controllers
-and elsewhere.
+Instead of using of_iomap(), we now use of_address_to_resource(),
+request_mem_region() and ioremap(). This allows the corresponding I/O
+regions to be properly requested and visible in /proc/iomem.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+The main motivation for this change is that the introduction of the
+MSI support requires us to get the physical address of the main
+interrupt controller registers, so we will need the corresponding
+'struct resource' anyway.
+
+We also take this opportunity to change a panic() to BUG_ON(), in
+order to be consistent with the rest of the driver.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Daniel Price <daniel.price@gmail.com>
+Acked-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
 ---
- drivers/pci/pci.c   |   32 +++++++++++++++++++++++---------
- include/linux/pci.h |    1 +
- 2 files changed, 24 insertions(+), 9 deletions(-)
+ drivers/irqchip/irq-armada-370-xp.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a599a6b..bfd629c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3276,9 +3276,30 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
--static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
-+/**
-+ * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
-+ * @dev: Bridge device
-+ *
-+ * Use the bridge control register to assert reset on the secondary bus.
-+ * Devices on the secondary bus are left in power-on state.
-+ */
-+void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index bb328a3..26adc74 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -248,12 +248,25 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 					     struct device_node *parent)
  {
- 	u16 ctrl;
-+
-+	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
-+	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
-+	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-+	msleep(100);
-+
-+	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-+	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-+	msleep(100);
-+}
-+EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
-+
-+static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
-+{
- 	struct pci_dev *pdev;
++	struct resource main_int_res, per_cpu_int_res;
+ 	u32 control;
  
- 	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
-@@ -3291,14 +3312,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- 	if (probe)
- 		return 0;
+-	main_int_base = of_iomap(node, 0);
+-	per_cpu_int_base = of_iomap(node, 1);
++	BUG_ON(of_address_to_resource(node, 0, &main_int_res));
++	BUG_ON(of_address_to_resource(node, 1, &per_cpu_int_res));
  
--	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
--	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
--	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
--	msleep(100);
--
--	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
--	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
--	msleep(100);
-+	pci_reset_bridge_secondary_bus(dev->bus->self);
++	BUG_ON(!request_mem_region(main_int_res.start,
++				   resource_size(&main_int_res),
++				   node->full_name));
++	BUG_ON(!request_mem_region(per_cpu_int_res.start,
++				   resource_size(&per_cpu_int_res),
++				   node->full_name));
++
++	main_int_base = ioremap(main_int_res.start,
++				resource_size(&main_int_res));
+ 	BUG_ON(!main_int_base);
++
++	per_cpu_int_base = ioremap(per_cpu_int_res.start,
++				   resource_size(&per_cpu_int_res));
+ 	BUG_ON(!per_cpu_int_base);
  
- 	return 0;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..35c1bc4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -924,6 +924,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
- int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
-+void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+ 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
+@@ -262,8 +275,7 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 		irq_domain_add_linear(node, (control >> 2) & 0x3ff,
+ 				&armada_370_xp_mpic_irq_ops, NULL);
+ 
+-	if (!armada_370_xp_mpic_domain)
+-		panic("Unable to add Armada_370_Xp MPIC irq domain (DT)\n");
++	BUG_ON(!armada_370_xp_mpic_domain);
+ 
+ 	irq_set_default_host(armada_370_xp_mpic_domain);
+ 
+-- 
+1.8.1.2
 
