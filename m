@@ -1,98 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:60291 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188Ab3HTTbf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 15:31:35 -0400
-Date: Tue, 20 Aug 2013 21:31:31 +0200
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:55716 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030274Ab3HIOSL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:18:11 -0400
+Received: by mail-bk0-f42.google.com with SMTP id my10so1115324bkb.29
+        for <linux-pci@vger.kernel.org>; Fri, 09 Aug 2013 07:18:09 -0700 (PDT)
+Date: Fri, 9 Aug 2013 16:18:07 +0200
 From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
- devm_ioremap_resource
-Message-ID: <20130820193130.GA14170@mithrandir>
-References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
- <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr>
- <20130819120249.GA5740@ulmo>
- <alpine.DEB.2.02.1308191405450.2313@hadrien>
- <20130819121238.GB5740@ulmo>
- <alpine.DEB.2.02.1308191414360.2313@hadrien>
- <20130819193339.GB4961@mithrandir>
- <alpine.DEB.2.02.1308201112400.2269@hadrien>
- <CAErSpo4WLt7zbyfkKfvMbXMQGmp0MAS=7AFiomUjtUCfdprDUA@mail.gmail.com>
- <5213BB2C.60908@wwwdotorg.org>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv8 04/10] of: pci: add registry of MSI chips
+Message-ID: <20130809141806.GA15973@ulmo>
+References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1376000268-18397-5-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1376027346.32100.8.camel@pasglop>
+ <20130809134427.GC25111@titan.lakedaemon.net>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Qxx1br4bt0+wmkIi"
-In-Reply-To: <5213BB2C.60908@wwwdotorg.org>
+	protocol="application/pgp-signature"; boundary="vtzGhvizbBRQ85DL"
+In-Reply-To: <20130809134427.GC25111@titan.lakedaemon.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
---Qxx1br4bt0+wmkIi
+--vtzGhvizbBRQ85DL
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Aug 20, 2013 at 12:53:32PM -0600, Stephen Warren wrote:
-> On 08/20/2013 10:26 AM, Bjorn Helgaas wrote:
-> > On Tue, Aug 20, 2013 at 3:13 AM, Julia Lawall <julia.lawall@lip6.fr> wr=
-ote:
-> >> From: Julia Lawall <Julia.Lawall@lip6.fr>
-> >>
-> >> Use devm_ioremap_resource instead of devm_request_and_ioremap.
-> >>
-> >> This was done using the semantic patch
-> >> scripts/coccinelle/api/devm_ioremap_resource.cocci
-> >>
-> >> Error-handling code was manually removed from the associated calls to
-> >> platform_get_resource.
-> >>
-> >> Adjust the comment at the third platform_get_resource_byname to make c=
-lear
-> >> why ioremap is not done at this point.
-> >>
-> >> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> >> Acked-by: Thierry Reding <thierry.reding@gmail.com>
-> >> Tested-by: Thierry Reding <thierry.reding@gmail.com>
+On Fri, Aug 09, 2013 at 09:44:27AM -0400, Jason Cooper wrote:
+> On Fri, Aug 09, 2013 at 03:49:06PM +1000, Benjamin Herrenschmidt wrote:
+> > On Fri, 2013-08-09 at 00:17 +0200, Thomas Petazzoni wrote:
+> > >=20
+> > > +#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+> > > +int of_pci_msi_chip_add(struct msi_chip *chip);
+> > > +void of_pci_msi_chip_remove(struct msi_chip *chip);
+> > > +struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node
+> > > *of_node);
+> > > +#else
+> > > +static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return
+> > > -EINVAL; }
+> > > +static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
 > >=20
-> > I'm hoping this goes via arm-soc.  Let me know if you need me to do
-> > something.  If you need it:
+> > Missing a ; at the end of the above line... breaks the build of
+> > CONFIG_PCI_MSI is not set.
 > >=20
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > +static inline struct msi_chip *
+> > > +of_pci_find_msi_chip_by_node(struct device_node *of_node) { return
+> > > NULL };
+> > > +#endif
+> > > +
+> > >  #endif
 >=20
-> In that case, Thierry, can you please bounce it to arm@kernel.org to be
-> applied on top of wherever Tegra's for-3.12/soc branch was merged.
+> Reproduced, fixed and builds clean !CONFIG_OF and !CONFIG_PCI_MSI with:
 >=20
-> Acked-by: Stephen Warren <swarren@nvidia.com>
+> ---------------->8----------------
+> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> index 29631eb..9f69507 100644
+> --- a/include/linux/of_pci.h
+> +++ b/include/linux/of_pci.h
+> @@ -19,10 +19,11 @@ int of_pci_msi_chip_add(struct msi_chip *chip);
+>  void of_pci_msi_chip_remove(struct msi_chip *chip);
+>  struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_nod=
+e);
+>  #else
+> -static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return -E=
+INVAL; }
+> -static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
+> +static inline int
+> +of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; };
+> +static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { };
+>  static inline struct msi_chip *
+> -of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL =
+};
+> +of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL;=
+ };
+>  #endif
+> =20
+>  #endif
 
-Yes, I can do that. Thanks everyone.
+So why do we need a semi-colon after a closing brace? I can understand
+how the missing semi-colon after NULL would cause the compiler to flag
+an error, but all the other changes look unnecessary to me.
 
 Thierry
 
---Qxx1br4bt0+wmkIi
+--vtzGhvizbBRQ85DL
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.20 (GNU/Linux)
 
-iQIcBAEBAgAGBQJSE8QSAAoJEN0jrNd/PrOha7cP/jHHviDSOEEdhLvAlWNYXNIA
-YZeqSc3FoIx0oYpfA0gJqrBI7TUKExYMgRB6pX64UObkql/p14MPI39Fwy0BSmIM
-YThoFDC8sPvbCdaHCc5EDaxxQVysgg39/lrmJcccQRKxJdPTiEvkzPfyQoxex/hY
-uMu1K49oGWZc7uSf/JYvPLo/C4YC1jPnxuvWi3BEtgUJcWfjH9YjDxT6OdUTcGY3
-AA5GQ/1fC81s+QjWtkqz9rQYylTTqW7kCXsdf8UCJoVYNcP6P3hCtD3K6eIVSBoa
-JKC0Rbgp4s6kDH21XcRfrSzODMKMBS903QZ403HltDiZJ7GV/lzvtIduFE0zT2Y+
-4bZuz8z17dkkLVWQ64VnSHv6mkT7hY5nR6fIbBsdaX02za2BqRSshPa/fkki1V82
-Z5kAGFF4wnMRJfylvu6Min5mNx/YA7eUll66h/02ZYG/piKSEJvvL5ERosbxDkNw
-aZoYye2jUcpdFCd7RmfNbfgLEo/KKOMxLlUSYeizYeeIQqFNOJLtWbPRt6zliXVg
-la6RMrEcIBxSQm9Fba067gQJKlsMmmGTxjZvn56PEfzJBpJ89NY4gn3LiVUG8p/w
-ilgualt13rvm7EsgGBtOhHpM+Z9JGiPv1lgn4vTJ50Bl5Rc+v2CxDbnw3CT73nfi
-5ruM8fJ8Db/OHwOY56I2
-=S6/L
+iQIcBAEBAgAGBQJSBPoeAAoJEN0jrNd/PrOhB2IP/2BsgXh4lxSBAxAdoEkLexiW
+nycd/tEmGsboWXNZOGLmpetzZFUdvbghneYiz7Z2OPZa3ackBcCvp6foM/ZC+2Ow
+DA70QGt2xjCor+ofvizMLZbW81viaORUJOkib3PJp6IQ5ILD/Tg3BXm+dhD0XI4K
+YxNfxTErgin1nU7dqx10uE/hFshahU38vcLljhHU4LaMKBePP8Jwl4qyboLFBSxA
+FT10YvtBP7HrFjBIHPkG9R7Z74o7Ta9uLZCmvcVD2u6APC0il3nUNVujreiEWA37
+U+2Q/rVkZkZa50+0diuoy3JPVUnN0KIlEhjSNmCn+8KeQ4LGYKRkmgGaRwHKLCAM
+JiKG1gXIPdKAcMUxAR4bW73nYZh0Zsfb+mR5zpOpAlPLKIo66LRZ1lVILBjr4SOJ
+uWMJybOJPCfPy4XSUUn5TpOI6wLkLDHSdC4qiRlk1ot1J511Ftl/WoQ0ekAhijG6
+92qJtMC8fvMKrf/e6luCO3YqprANrEFZ9lUYeEE3RR2WxV018dpbAhYyqxMLA1cT
+swMYWvT0X8qsf0SIp6x51tYQh5GTzq2ommcH+WEW3XypVjFoRsDjUhfp3O0GHBjj
+nQ46wxi9eu+M4iCSEnzEHTkNNPaSjhghdwmloxR2lWZ07/ua1HsNMKbFr3gbBluN
+ZhLrr26pQQGp8lhwH8gQ
+=YITc
 -----END PGP SIGNATURE-----
 
---Qxx1br4bt0+wmkIi--
+--vtzGhvizbBRQ85DL--
