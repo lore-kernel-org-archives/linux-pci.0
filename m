@@ -1,232 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:60296 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756504Ab3HFRsZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 13:48:25 -0400
-Received: by mail-oa0-f46.google.com with SMTP id l10so1383730oag.33
-        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 10:48:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201308061702.r76H2ORe011248@farm-0021.internal.tilera.com>
-References: <52012B96.9000207@tilera.com> <201308061702.r76H2ORe011248@farm-0021.internal.tilera.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 6 Aug 2013 11:48:04 -0600
-Message-ID: <CAErSpo57cmg2ynLLLZw0yXH5Q1B0MZBdqSgFXUu2NpS=8W6Y2g@mail.gmail.com>
-Subject: Re: [PATCH v2] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
-To: Chris Metcalf <cmetcalf@tilera.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	adam radford <aradford@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from top.free-electrons.com ([176.31.233.9]:46439 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1031006Ab3HIU1f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 16:27:35 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCHv9 04/10] of: pci: add registry of MSI chips
+Date: Fri,  9 Aug 2013 22:27:09 +0200
+Message-Id: <1376080035-29344-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Myron, Adam]
+This commit adds a very basic registry of msi_chip structures, so that
+an IRQ controller driver can register an msi_chip, and a PCIe host
+controller can find it, based on a 'struct device_node'.
 
-On Fri, Aug 2, 2013 at 10:24 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
-> The LSI MEGARAID SAS HBA suffers from the problem where it can do
-> 64-bit DMA to streaming buffers but not to consistent buffers.
-> In other words, 64-bit DMA is used for disk data transfers and 32-bit
-> DMA must be used for control message transfers.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Acked-by: Rob Herring <rob.herring@calxeda.com>
+---
+ drivers/of/of_pci.c    | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/msi.h    |  2 ++
+ include/linux/of_pci.h | 12 ++++++++++++
+ 3 files changed, 59 insertions(+)
 
-Is this related at all to the make_local_pdev() hacks in megaraid.c?
-The intent there seems to be to use a 32-bit DMA mask for certain
-transactions and a 64-bit mask for others.  But I think it's actually
-broken, because the implementation changes the mask to 32-bit for
-*all* future transactions, not just the one using make_local_pdev().
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 42c687a..e5ca008 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -89,3 +89,48 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
++
++#ifdef CONFIG_PCI_MSI
++
++static LIST_HEAD(of_pci_msi_chip_list);
++static DEFINE_MUTEX(of_pci_msi_chip_mutex);
++
++int of_pci_msi_chip_add(struct msi_chip *chip)
++{
++	if (!of_property_read_bool(chip->of_node, "msi-controller"))
++		return -EINVAL;
++
++	mutex_lock(&of_pci_msi_chip_mutex);
++	list_add(&chip->list, &of_pci_msi_chip_list);
++	mutex_unlock(&of_pci_msi_chip_mutex);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(of_pci_msi_chip_add);
++
++void of_pci_msi_chip_remove(struct msi_chip *chip)
++{
++	mutex_lock(&of_pci_msi_chip_mutex);
++	list_del(&chip->list);
++	mutex_unlock(&of_pci_msi_chip_mutex);
++}
++EXPORT_SYMBOL_GPL(of_pci_msi_chip_remove);
++
++struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node)
++{
++	struct msi_chip *c;
++
++	mutex_lock(&of_pci_msi_chip_mutex);
++	list_for_each_entry(c, &of_pci_msi_chip_list, list) {
++		if (c->of_node == of_node) {
++			mutex_unlock(&of_pci_msi_chip_mutex);
++			return c;
++		}
++	}
++	mutex_unlock(&of_pci_msi_chip_mutex);
++
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(of_pci_find_msi_chip_by_node);
++
++#endif /* CONFIG_PCI_MSI */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 090ddad..b17ead8 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -68,6 +68,8 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+ struct msi_chip {
+ 	struct module *owner;
+ 	struct device *dev;
++	struct device_node *of_node;
++	struct list_head list;
+ 
+ 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 7a04826..fd9c408 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -2,6 +2,7 @@
+ #define __OF_PCI_H
+ 
+ #include <linux/pci.h>
++#include <linux/msi.h>
+ 
+ struct pci_dev;
+ struct of_irq;
+@@ -13,4 +14,15 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ int of_pci_get_devfn(struct device_node *np);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ 
++#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
++int of_pci_msi_chip_add(struct msi_chip *chip);
++void of_pci_msi_chip_remove(struct msi_chip *chip);
++struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node);
++#else
++static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; }
++static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
++static inline struct msi_chip *
++of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL; }
++#endif
++
+ #endif
+-- 
+1.8.1.2
 
-> According to LSI,
-> the firmware is not fully functional yet. This change implements a
-> kind of hybrid dma_ops to support this.
->
-> Note that on most other platforms, the 64-bit DMA addressing space is the
-> same as the 32-bit DMA space and they overlap the physical memory space.
-> No special arrangement is needed to support this kind of mixed DMA
-> capability.  On TILE-Gx, the 64-bit DMA space is completely separate
-> from the 32-bit DMA space.
-
-Help me understand what's going on here.  My understanding is that on
-typical systems, the 32-bit DMA space is a subset of the 64-bit DMA
-space.  In conventional PCI, "a master that supports 64-bit addressing
-must generate a SAC, instead of a DAC, when the upper 32 bits of the
-address are zero" (PCI spec r3.0, sec 3.9).  PCIe doesn't have
-SAC/DAC, but it has both 32-bit and 64-bit address headers and has a
-similar requirement: "For Addresses below 4GB, Requesters must use the
-32-bit format" (PCIe spec r3.0, sec 2.2.4.1).
-
-Those imply to me that the 0-4GB region of the 64-bit DMA space must
-be identical to the 0-4GB 32-bit DMA space, and in fact, the receiver
-of a transaction shouldn't be able to distinguish them.
-
-But it sounds like something's different on TILE-Gx?  Does it
-translate bus addresses to physical memory addresses based on the type
-of the transaction (SAC vs DAC, or 32-bit vs 64-bit header) in
-addition to the address?  Even if it does, the spec doesn't allow a
-DAC cycle or a 64-bit header where the 32 high-order bits are zero, so
-it shouldn't matter.
-
-Bjorn
-
->  Due to the use of the IOMMU, the 64-bit DMA
-> space doesn't overlap the physical memory space.  On the other hand,
-> the 32-bit DMA space overlaps the physical memory space under 4GB.
-> The separate address spaces make it necessary to have separate dma_ops.
->
-> Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
-> ---
->  arch/tile/include/asm/dma-mapping.h | 10 +++++++---
->  arch/tile/kernel/pci-dma.c          | 40 ++++++++++++++++++++++++++++---------
->  2 files changed, 38 insertions(+), 12 deletions(-)
->
-> diff --git a/arch/tile/include/asm/dma-mapping.h b/arch/tile/include/asm/dma-mapping.h
-> index f2ff191..4a60059 100644
-> --- a/arch/tile/include/asm/dma-mapping.h
-> +++ b/arch/tile/include/asm/dma-mapping.h
-> @@ -23,6 +23,7 @@
->  extern struct dma_map_ops *tile_dma_map_ops;
->  extern struct dma_map_ops *gx_pci_dma_map_ops;
->  extern struct dma_map_ops *gx_legacy_pci_dma_map_ops;
-> +extern struct dma_map_ops *gx_hybrid_pci_dma_map_ops;
->
->  static inline struct dma_map_ops *get_dma_ops(struct device *dev)
->  {
-> @@ -44,12 +45,12 @@ static inline void set_dma_offset(struct device *dev, dma_addr_t off)
->
->  static inline dma_addr_t phys_to_dma(struct device *dev, phys_addr_t paddr)
->  {
-> -       return paddr + get_dma_offset(dev);
-> +       return paddr;
->  }
->
->  static inline phys_addr_t dma_to_phys(struct device *dev, dma_addr_t daddr)
->  {
-> -       return daddr - get_dma_offset(dev);
-> +       return daddr;
->  }
->
->  static inline void dma_mark_clean(void *addr, size_t size) {}
-> @@ -88,7 +89,10 @@ dma_set_mask(struct device *dev, u64 mask)
->         struct dma_map_ops *dma_ops = get_dma_ops(dev);
->
->         /* Handle legacy PCI devices with limited memory addressability. */
-> -       if ((dma_ops == gx_pci_dma_map_ops) && (mask <= DMA_BIT_MASK(32))) {
-> +       if ((dma_ops == gx_pci_dma_map_ops ||
-> +            dma_ops == gx_hybrid_pci_dma_map_ops ||
-> +            dma_ops == gx_legacy_pci_dma_map_ops) &&
-> +           (mask <= DMA_BIT_MASK(32))) {
->                 set_dma_ops(dev, gx_legacy_pci_dma_map_ops);
->                 set_dma_offset(dev, 0);
->                 if (mask > dev->archdata.max_direct_dma_addr)
-> diff --git a/arch/tile/kernel/pci-dma.c b/arch/tile/kernel/pci-dma.c
-> index b9fe80e..7e22e73 100644
-> --- a/arch/tile/kernel/pci-dma.c
-> +++ b/arch/tile/kernel/pci-dma.c
-> @@ -357,7 +357,7 @@ static void *tile_pci_dma_alloc_coherent(struct device *dev, size_t size,
->
->         addr = page_to_phys(pg);
->
-> -       *dma_handle = phys_to_dma(dev, addr);
-> +       *dma_handle = addr + get_dma_offset(dev);
->
->         return page_address(pg);
->  }
-> @@ -387,7 +387,7 @@ static int tile_pci_dma_map_sg(struct device *dev, struct scatterlist *sglist,
->                 sg->dma_address = sg_phys(sg);
->                 __dma_prep_pa_range(sg->dma_address, sg->length, direction);
->
-> -               sg->dma_address = phys_to_dma(dev, sg->dma_address);
-> +               sg->dma_address = sg->dma_address + get_dma_offset(dev);
->  #ifdef CONFIG_NEED_SG_DMA_LENGTH
->                 sg->dma_length = sg->length;
->  #endif
-> @@ -422,7 +422,7 @@ static dma_addr_t tile_pci_dma_map_page(struct device *dev, struct page *page,
->         BUG_ON(offset + size > PAGE_SIZE);
->         __dma_prep_page(page, offset, size, direction);
->
-> -       return phys_to_dma(dev, page_to_pa(page) + offset);
-> +       return page_to_pa(page) + offset + get_dma_offset(dev);
->  }
->
->  static void tile_pci_dma_unmap_page(struct device *dev, dma_addr_t dma_address,
-> @@ -432,7 +432,7 @@ static void tile_pci_dma_unmap_page(struct device *dev, dma_addr_t dma_address,
->  {
->         BUG_ON(!valid_dma_direction(direction));
->
-> -       dma_address = dma_to_phys(dev, dma_address);
-> +       dma_address -= get_dma_offset(dev);
->
->         __dma_complete_page(pfn_to_page(PFN_DOWN(dma_address)),
->                             dma_address & PAGE_OFFSET, size, direction);
-> @@ -445,7 +445,7 @@ static void tile_pci_dma_sync_single_for_cpu(struct device *dev,
->  {
->         BUG_ON(!valid_dma_direction(direction));
->
-> -       dma_handle = dma_to_phys(dev, dma_handle);
-> +       dma_handle -= get_dma_offset(dev);
->
->         __dma_complete_pa_range(dma_handle, size, direction);
->  }
-> @@ -456,7 +456,7 @@ static void tile_pci_dma_sync_single_for_device(struct device *dev,
->                                                 enum dma_data_direction
->                                                 direction)
->  {
-> -       dma_handle = dma_to_phys(dev, dma_handle);
-> +       dma_handle -= get_dma_offset(dev);
->
->         __dma_prep_pa_range(dma_handle, size, direction);
->  }
-> @@ -558,21 +558,43 @@ static struct dma_map_ops pci_swiotlb_dma_ops = {
->         .mapping_error = swiotlb_dma_mapping_error,
->  };
->
-> +static struct dma_map_ops pci_hybrid_dma_ops = {
-> +       .alloc = tile_swiotlb_alloc_coherent,
-> +       .free = tile_swiotlb_free_coherent,
-> +       .map_page = tile_pci_dma_map_page,
-> +       .unmap_page = tile_pci_dma_unmap_page,
-> +       .map_sg = tile_pci_dma_map_sg,
-> +       .unmap_sg = tile_pci_dma_unmap_sg,
-> +       .sync_single_for_cpu = tile_pci_dma_sync_single_for_cpu,
-> +       .sync_single_for_device = tile_pci_dma_sync_single_for_device,
-> +       .sync_sg_for_cpu = tile_pci_dma_sync_sg_for_cpu,
-> +       .sync_sg_for_device = tile_pci_dma_sync_sg_for_device,
-> +       .mapping_error = tile_pci_dma_mapping_error,
-> +       .dma_supported = tile_pci_dma_supported
-> +};
-> +
->  struct dma_map_ops *gx_legacy_pci_dma_map_ops = &pci_swiotlb_dma_ops;
-> +struct dma_map_ops *gx_hybrid_pci_dma_map_ops = &pci_hybrid_dma_ops;
->  #else
->  struct dma_map_ops *gx_legacy_pci_dma_map_ops;
-> +struct dma_map_ops *gx_hybrid_pci_dma_map_ops;
->  #endif
->  EXPORT_SYMBOL(gx_legacy_pci_dma_map_ops);
-> +EXPORT_SYMBOL(gx_hybrid_pci_dma_map_ops);
->
->  #ifdef CONFIG_ARCH_HAS_DMA_SET_COHERENT_MASK
->  int dma_set_coherent_mask(struct device *dev, u64 mask)
->  {
->         struct dma_map_ops *dma_ops = get_dma_ops(dev);
->
-> -       /* Handle legacy PCI devices with limited memory addressability. */
-> -       if (((dma_ops == gx_pci_dma_map_ops) ||
-> -           (dma_ops == gx_legacy_pci_dma_map_ops)) &&
-> +       /* Handle hybrid PCI devices with limited memory addressability. */
-> +       if ((dma_ops == gx_pci_dma_map_ops ||
-> +            dma_ops == gx_hybrid_pci_dma_map_ops ||
-> +            dma_ops == gx_legacy_pci_dma_map_ops) &&
->             (mask <= DMA_BIT_MASK(32))) {
-> +               if (dma_ops == gx_pci_dma_map_ops)
-> +                       set_dma_ops(dev, gx_hybrid_pci_dma_map_ops);
-> +
->                 if (mask > dev->archdata.max_direct_dma_addr)
->                         mask = dev->archdata.max_direct_dma_addr;
->         }
-> --
-> 1.8.3.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
