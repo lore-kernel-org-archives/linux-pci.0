@@ -1,112 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 08 Aug 2013 16:38:22 -0300
-From: Mauro Carvalho Chehab <m.chehab@samsung.com>
-To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
-Cc: tony.luck@intel.com, bp@alien8.de, bhelgaas@google.com,
-	rostedt@goodmis.org, rjw@sisk.pl, lance.ortiz@hp.com,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
- event
-Message-id: <20130808163822.67e0828a@samsung.com>
-In-reply-to: <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:56738 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933972Ab3HIPId (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 11:08:33 -0400
+Date: Fri, 9 Aug 2013 11:08:31 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 00/14] Rewrite Tegra PCIe driver
+Message-ID: <20130809150831.GF25111@titan.lakedaemon.net>
+References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Thu, 08 Aug 2013 23:57:51 +0530
-"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
-
-> Enable memory error trace event in cper.c
-
-Why do we need to do that? Memory error events are already handled
-via edac_ghes module, in a standard way that allows the same
-tracing to be used by either BIOS or by direct hardware error
-report mechanism.
-
-Adding an extra tracing for the same thing here will just make
-userspace more complex, and will create duplicated error events
-for the very same error.
-
-Ok, if the interface there is poor, let's improve it, but adding
-yet another interface to report the same error doesn't sound
-reasonable on my eyes.
-
-Regards,
-Mauro
+On Fri, Aug 09, 2013 at 04:49:18PM +0200, Thierry Reding wrote:
+> Hi Stephen,
 > 
-> Signed-off-by: Naveen N. Rao <naveen.n.rao@linux.vnet.ibm.com>
-> ---
->  drivers/acpi/apei/cper.c | 21 ++++++++++++++++-----
->  1 file changed, 16 insertions(+), 5 deletions(-)
+> This is the latest version of the Tegra PCIe driver patch series. I've
+> dropped the PCI xclk clamping code as discussed and successfully tested
+> on Beaver. The patches that touch the PCI subsystem have Bjorn's
+> Acked-by and I've tested this on top of next-20130809, which has Jason's
+> common branch. Once he's comfortable with making the branch stable you
+> should be able to merge that branch and apply these patches on top.
+
+Just an FYI, I'm mostly happy with what we have now, except that I'd
+like to confirm that the build failure Randy discovered isn't caused by
+us:
+
+Randy wrote some time later:
+> On 08/08/13 00:08, Stephen Rothwell wrote:
+> > Hi all,
+> >
+> > Changes since 20130807:
+> >
 > 
-> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-> index 33dc6a0..19a9c0b 100644
-> --- a/drivers/acpi/apei/cper.c
-> +++ b/drivers/acpi/apei/cper.c
-> @@ -32,6 +32,10 @@
->  #include <linux/pci.h>
->  #include <linux/aer.h>
->  
-> +#define CREATE_TRACE_POINTS
-> +#define TRACE_EVENT_GHES
-> +#include <trace/events/ras.h>
-> +
->  /*
->   * CPER record ID need to be unique even after reboot, because record
->   * ID is used as index for ERST storage, while CPER records from
-> @@ -193,8 +197,13 @@ static const char *cper_mem_err_type_strs[] = {
->  	"scrub uncorrected error",
->  };
->  
-> -static void cper_print_mem(const char *pfx, const struct cper_sec_mem_err *mem)
-> +static void cper_print_mem(const char *pfx,
-> +		const struct acpi_hest_generic_status *estatus,
-> +		const struct acpi_hest_generic_data *gdata,
-> +		const struct cper_sec_mem_err *mem)
->  {
-> +	trace_ghes_platform_memory_event(estatus, gdata, mem);
-> +
->  	if (mem->validation_bits & CPER_MEM_VALID_ERROR_STATUS)
->  		printk("%s""error_status: 0x%016llx\n", pfx, mem->error_status);
->  	if (mem->validation_bits & CPER_MEM_VALID_PHYSICAL_ADDRESS)
-> @@ -292,8 +301,10 @@ static const char *apei_estatus_section_flag_strs[] = {
->  	"latent error",
->  };
->  
-> -static void apei_estatus_print_section(
-> -	const char *pfx, const struct acpi_hest_generic_data *gdata, int sec_no)
-> +static void apei_estatus_print_section(const char *pfx,
-> +		const struct acpi_hest_generic_status *estatus,
-> +		const struct acpi_hest_generic_data *gdata,
-> +		int sec_no)
->  {
->  	uuid_le *sec_type = (uuid_le *)gdata->section_type;
->  	__u16 severity;
-> @@ -320,7 +331,7 @@ static void apei_estatus_print_section(
->  		struct cper_sec_mem_err *mem_err = (void *)(gdata + 1);
->  		printk("%s""section_type: memory error\n", pfx);
->  		if (gdata->error_data_length >= sizeof(*mem_err))
-> -			cper_print_mem(pfx, mem_err);
-> +			cper_print_mem(pfx, estatus, gdata, mem_err);
->  		else
->  			goto err_section_too_small;
->  	} else if (!uuid_le_cmp(*sec_type, CPER_SEC_PCIE)) {
-> @@ -355,7 +366,7 @@ void apei_estatus_print(const char *pfx,
->  	gdata = (struct acpi_hest_generic_data *)(estatus + 1);
->  	while (data_len > sizeof(*gdata)) {
->  		gedata_len = gdata->error_data_length;
-> -		apei_estatus_print_section(pfx, gdata, sec_no);
-> +		apei_estatus_print_section(pfx, estatus, gdata, sec_no);
->  		data_len -= gedata_len + sizeof(*gdata);
->  		gdata = (void *)(gdata + 1) + gedata_len;
->  		sec_no++;
+> on i386 and x86_64:
+> when CONFIG_PCI_MSI is not enabled:
+> 
+> There are many of these errors:
+> include/linux/msi.h:65:6: error: expected identifier or '(' before 'void'
+> include/linux/msi.h:65:6: error: expected ')' before numeric constant
+> 
+> because arch/x86/include/asm/pci.h defines:
+> #define default_teardown_msi_irqs NULL
 
+I'm having a helluva time reproducing it :(
 
--- 
+The next run of linux-next isn't until Sunday evening (AUS Monday
+morning), so we have some time to figure it out.
 
-Cheers,
-Mauro
+Also, I've renamed the branch mvebu/msi_pci to more accurately describe
+the changes it contains.
+
+thx,
+
+Jason.
