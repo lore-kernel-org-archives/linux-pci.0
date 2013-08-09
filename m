@@ -1,221 +1,307 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 29 Aug 2013 17:40:52 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4] ACPI: Fix osc flag setup ordering to allow pcie
- hotplug use when available
-Message-ID: <20130829234052.GA22252@google.com>
-References: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com>
- <1377807425-27423-1-git-send-email-nhorman@tuxdriver.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:42603 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030395Ab3HIGou (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 02:44:50 -0400
+Message-ID: <52048FDE.30003@free-electrons.com>
+Date: Fri, 09 Aug 2013 08:44:46 +0200
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1377807425-27423-1-git-send-email-nhorman@tuxdriver.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: Re: [PATCHv8 06/10] irqchip: armada-370-xp: implement MSI support
+References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com> <1376000268-18397-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1376000268-18397-7-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 29, 2013 at 04:17:05PM -0400, Neil Horman wrote:
-> This is a fix for:
-> https://bugzilla.kernel.org/show_bug.cgi?id=60736
+On 09/08/2013 00:17, Thomas Petazzoni wrote:
+> This commit introduces the support for the MSI interrupts in the
+> armada-370-xp interrupt controller driver. It registers an MSI chip to
+> the MSI chip registry, which will be used by the Marvell PCIe host
+> controller driver.
 > 
-> During the 3.8 devel cycle:
+> The MSI interrupts use the 16 high doorbells, and are therefore
+> notified using IRQ1 of the main interrupt controller.
 > 
-> commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6
-> Author: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> Date:   Tue Oct 30 15:27:13 2012 +0900
-> 
->     PCI/ACPI: Request _OSC control before scanning PCI root bus
-> 
-> went in to allow us to query the pcie hotplug flags during the acpi bus scan.
-> It however caused problems with the disabling of pcie aspm, and so:
-> commit b8178f130e25c1bdac1c33e0996f1ff6e20ec08e
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Mon Apr 1 15:47:39 2013 -0600
-> 
->     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
-> 
-> Backed it out.  This of course brought back the problem in which acpi took over
-> hotplug ports that were meant to be controlled by pcie.
-> 
-> This patch gives us both items.  It lets us request _OSC control before scanning
-> the pci root bus, but defers any disabling of aspm until after the scan is
-> complete, allowing us to properly handle old pcie 1.1 devices aspm settings
-> properly, as b8178f130e documents.
-> 
-> Tested successfully by myself.
-> 
-> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> CC: Len Brown <lenb@kernel.org>
-> CC: "Rafael J. Wysocki" <rjw@sisk.pl>
-> CC: linux-acpi@vger.kernel.org
-> CC: linux-pci@vger.kernel.org
-
-I added Yinghai's ack and a stable tag and put this in pci/misc
-for v3.12.  Thanks!
-
-I reworked the changelog because I think the actual cause of the
-regression was 3b63aaa70e, not the _OSC commits you mentioned:
-
-8c33f51df4 ("PCI/ACPI: Request _OSC control before scanning PCI root bus")
-appeared in v3.8 and broke ASPM but not acpiphp.
-
-b8178f130e ('Revert "PCI/ACPI: Request _OSC control before scanning PCI
-root bus"') appeared in v3.9 and fixed ASPM, leaving acpiphp working.
-
-3b63aaa70e ("PCI: acpiphp: Do not use ACPI PCI subdriver mechanism")
-appeared in v3.10, and I believe this is what actually broke acpiphp
-because it moved the acpiphp initialization earlier, into the bus scan.
-
-in v3.8:
-    acpi_pci_root_add
-      acpi_pci_osc_control_set          # request OS control
-      pci_acpi_scan_root                # scan bus
-    acpi_pci_root_start
-      add_bridge                        # acpi_pci_driver .add method
-        ...
-          device_is_managed_by_native_pciehp	# OK
-
-in v3.9:
-    acpi_pci_root_add
-      pci_acpi_scan_root                # scan bus
-      acpi_pci_osc_control_set          # request OS control
-      add_bridge                        # acpi_pci_driver .add method
-        ...
-          device_is_managed_by_native_pciehp	# OK
-
-in v3.10:
-    acpi_pci_root_add
-      pci_acpi_scan_root                # scan bus
-        ...
-          acpiphp_enumerate_slots
-            ...
-              device_is_managed_by_native_pciehp	# PROBLEM
-      acpi_pci_osc_control_set          # request OS control
-
-So I added a stable tag for v3.10+ only.  I'll ask Linus to merge it
-directly during the merge window for v3.12, and hopefully it will be
-backported to the v3.10 and v3.11 stable trees soon after that.
-
-Bjorn
-
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Acked-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
 > ---
->  drivers/acpi/pci_root.c | 62 ++++++++++++++++++++++++++++++-------------------
->  1 file changed, 38 insertions(+), 24 deletions(-)
+>  .../devicetree/bindings/arm/armada-370-xp-mpic.txt |   3 +
+>  drivers/irqchip/irq-armada-370-xp.c                | 182 ++++++++++++++++++++-
+>  2 files changed, 184 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 5917839..6110fd2 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -378,6 +378,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	struct acpi_pci_root *root;
->  	u32 flags, base_flags;
->  	acpi_handle handle = device->handle;
-> +	bool no_aspm = false, clear_aspm = false;
+> diff --git a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+> index 61df564..d74091a 100644
+> --- a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+> +++ b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+> @@ -4,6 +4,8 @@ Marvell Armada 370 and Armada XP Interrupt Controller
+>  Required properties:
+>  - compatible: Should be "marvell,mpic"
+>  - interrupt-controller: Identifies the node as an interrupt controller.
+> +- msi-controller: Identifies the node as an PCI Message Signaled
+> +  Interrupt controller.
+>  - #interrupt-cells: The number of cells to define the interrupts. Should be 1.
+>    The cell is the IRQ number
 >  
->  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
->  	if (!root)
-> @@ -437,27 +438,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
->  	acpi_pci_osc_support(root, flags);
+> @@ -24,6 +26,7 @@ Example:
+>                #address-cells = <1>;
+>                #size-cells = <1>;
+>                interrupt-controller;
+> +              msi-controller;
+>                reg = <0xd0020a00 0x1d0>,
+>                      <0xd0021070 0x58>;
+>          };
+> diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+> index 26adc74..433cc85 100644
+> --- a/drivers/irqchip/irq-armada-370-xp.c
+> +++ b/drivers/irqchip/irq-armada-370-xp.c
+> @@ -21,7 +21,10 @@
+>  #include <linux/io.h>
+>  #include <linux/of_address.h>
+>  #include <linux/of_irq.h>
+> +#include <linux/of_pci.h>
+>  #include <linux/irqdomain.h>
+> +#include <linux/slab.h>
+> +#include <linux/msi.h>
+>  #include <asm/mach/arch.h>
+>  #include <asm/exception.h>
+>  #include <asm/smp_plat.h>
+> @@ -51,12 +54,22 @@
+>  #define IPI_DOORBELL_START                      (0)
+>  #define IPI_DOORBELL_END                        (8)
+>  #define IPI_DOORBELL_MASK                       0xFF
+> +#define PCI_MSI_DOORBELL_START                  (16)
+> +#define PCI_MSI_DOORBELL_NR                     (16)
+> +#define PCI_MSI_DOORBELL_END                    (32)
+> +#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
 >  
-> -	/*
-> -	 * TBD: Need PCI interface for enumeration/configuration of roots.
-> -	 */
-> -
-> -	/*
-> -	 * Scan the Root Bridge
-> -	 * --------------------
-> -	 * Must do this prior to any attempt to bind the root device, as the
-> -	 * PCI namespace does not get created until this call is made (and
-> -	 * thus the root bridge's pci_dev does not exist).
-> -	 */
-> -	root->bus = pci_acpi_scan_root(root);
-> -	if (!root->bus) {
-> -		dev_err(&device->dev,
-> -			"Bus %04x:%02x not present in PCI namespace\n",
-> -			root->segment, (unsigned int)root->secondary.start);
-> -		result = -ENODEV;
-> -		goto end;
-> -	}
-> -
-> -	/* Indicate support for various _OSC capabilities. */
->  	if (pci_ext_cfg_avail())
->  		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
->  	if (pcie_aspm_support_enabled()) {
-> @@ -471,7 +451,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		if (ACPI_FAILURE(status)) {
->  			dev_info(&device->dev, "ACPI _OSC support "
->  				"notification failed, disabling PCIe ASPM\n");
-> -			pcie_no_aspm();
-> +			no_aspm = true;
->  			flags = base_flags;
->  		}
->  	}
-> @@ -503,7 +483,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  				 * We have ASPM control, but the FADT indicates
->  				 * that it's unsupported. Clear it.
->  				 */
-> -				pcie_clear_aspm(root->bus);
-> +				clear_aspm = true;
->  			}
->  		} else {
->  			dev_info(&device->dev,
-> @@ -512,7 +492,14 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  				acpi_format_exception(status), flags);
->  			dev_info(&device->dev,
->  				 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
-> -			pcie_no_aspm();
-> +			/*
-> +			 * We want to disable aspm here, but aspm_disabled 
-> +			 * needs to remain in its state from boot so that we
-> +			 * properly handle pcie 1.1 devices.  So we set this
-> +			 * flag here, to defer the action until after the acpi
-> +			 * root scan
-> +			 */
-> +			no_aspm = true;
->  		}
->  	} else {
->  		dev_info(&device->dev,
-> @@ -520,6 +507,33 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  			 "(_OSC support mask: 0x%02x)\n", flags);
->  	}
+>  static DEFINE_RAW_SPINLOCK(irq_controller_lock);
 >  
-> +	/*
-> +	 * TBD: Need PCI interface for enumeration/configuration of roots.
-> +	 */
+>  static void __iomem *per_cpu_int_base;
+>  static void __iomem *main_int_base;
+>  static struct irq_domain *armada_370_xp_mpic_domain;
+> +#ifdef CONFIG_PCI_MSI
+> +static struct irq_domain *armada_370_xp_msi_domain;
+> +static DECLARE_BITMAP(msi_used, PCI_MSI_DOORBELL_NR);
+> +static DEFINE_MUTEX(msi_used_lock);
+> +static phys_addr_t msi_doorbell_addr;
+> +#endif
+>  
+>  /*
+>   * In SMP mode:
+> @@ -87,6 +100,144 @@ static void armada_370_xp_irq_unmask(struct irq_data *d)
+>  				ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
+>  }
+>  
+> +#ifdef CONFIG_PCI_MSI
 > +
-> +	/*
-> +	 * Scan the Root Bridge
-> +	 * --------------------
-> +	 * Must do this prior to any attempt to bind the root device, as the
-> +	 * PCI namespace does not get created until this call is made (and
-> +	 * thus the root bridge's pci_dev does not exist).
-> +	 */
-> +	root->bus = pci_acpi_scan_root(root);
-> +	if (!root->bus) {
-> +		dev_err(&device->dev,
-> +			"Bus %04x:%02x not present in PCI namespace\n",
-> +			root->segment, (unsigned int)root->secondary.start);
-> +		result = -ENODEV;
-> +		goto end;
+> +static int armada_370_xp_alloc_msi(void)
+> +{
+> +	int hwirq;
+> +
+> +	mutex_lock(&msi_used_lock);
+> +	hwirq = find_first_zero_bit(&msi_used, PCI_MSI_DOORBELL_NR);
+> +	if (hwirq >= PCI_MSI_DOORBELL_NR)
+> +		hwirq = -ENOSPC;
+> +	else
+> +		set_bit(hwirq, msi_used);
+> +	mutex_unlock(&msi_used_lock);
+> +
+> +	return hwirq;
+> +}
+> +
+> +static void armada_370_xp_free_msi(int hwirq)
+> +{
+> +	mutex_lock(&msi_used_lock);
+> +	if (!test_bit(hwirq, msi_used))
+> +		pr_err("trying to free unused MSI#%d\n", hwirq);
+> +	else
+> +		clear_bit(hwirq, msi_used);
+> +	mutex_unlock(&msi_used_lock);
+> +}
+> +
+> +static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
+> +				       struct pci_dev *pdev,
+> +				       struct msi_desc *desc)
+> +{
+> +	struct msi_msg msg;
+> +	irq_hw_number_t hwirq;
+> +	int virq;
+> +
+> +	hwirq = armada_370_xp_alloc_msi();
+> +	if (hwirq < 0)
+> +		return hwirq;
+> +
+> +	virq = irq_create_mapping(armada_370_xp_msi_domain, hwirq);
+> +	if (!virq) {
+> +		armada_370_xp_free_msi(hwirq);
+> +		return -EINVAL;
 > +	}
 > +
-> +	if (clear_aspm) {
-> +		dev_info(&device->dev, "Disabling ASPM (FADT indicates it is unsupported)\n");
-> +		pcie_clear_aspm(root->bus);
-> +	}
-> +	if (no_aspm)
-> +		pcie_no_aspm();
+> +	irq_set_msi_desc(virq, desc);
 > +
->  	pci_acpi_add_bus_pm_notifier(device, root->bus);
->  	if (device->wakeup.flags.run_wake)
->  		device_set_run_wake(root->bus->bridge, true);
-> -- 
-> 1.8.1.4
+> +	msg.address_lo = msi_doorbell_addr;
+> +	msg.address_hi = 0;
+> +	msg.data = 0xf00 | (hwirq + 16);
+> +
+> +	write_msi_msg(virq, &msg);
+> +	return 0;
+> +}
+> +
+> +static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
+> +					   unsigned int irq)
+> +{
+> +	struct irq_data *d = irq_get_irq_data(irq);
+> +	irq_dispose_mapping(irq);
+> +	armada_370_xp_free_msi(d->hwirq);
+> +}
+> +
+> +static struct irq_chip armada_370_xp_msi_irq_chip = {
+> +	.name = "armada_370_xp_msi_irq",
+> +	.irq_enable = unmask_msi_irq,
+> +	.irq_disable = mask_msi_irq,
+> +	.irq_mask = mask_msi_irq,
+> +	.irq_unmask = unmask_msi_irq,
+> +};
+> +
+> +static int armada_370_xp_msi_map(struct irq_domain *domain, unsigned int virq,
+> +				 irq_hw_number_t hw)
+> +{
+> +	irq_set_chip_and_handler(virq, &armada_370_xp_msi_irq_chip,
+> +				 handle_simple_irq);
+> +	set_irq_flags(virq, IRQF_VALID);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct irq_domain_ops armada_370_xp_msi_irq_ops = {
+> +	.map = armada_370_xp_msi_map,
+> +};
+> +
+> +static int armada_370_xp_msi_init(struct device_node *node,
+> +				  phys_addr_t main_int_phys_base)
+> +{
+> +	struct msi_chip *msi_chip;
+> +	u32 reg;
+> +	int ret;
+> +
+> +	msi_doorbell_addr = main_int_phys_base +
+> +		ARMADA_370_XP_SW_TRIG_INT_OFFS;
+> +
+> +	msi_chip = kzalloc(sizeof(*msi_chip), GFP_KERNEL);
+> +	if (!msi_chip)
+> +		return -ENOMEM;
+> +
+> +	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
+> +	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
+> +	msi_chip->of_node = node;
+> +
+> +	armada_370_xp_msi_domain =
+> +		irq_domain_add_linear(NULL, PCI_MSI_DOORBELL_NR,
+> +				      &armada_370_xp_msi_irq_ops,
+> +				      NULL);
+> +	if (!armada_370_xp_msi_domain) {
+> +		kfree(msi_chip);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	ret = of_pci_msi_chip_add(msi_chip);
+> +	if (ret < 0) {
+> +		irq_domain_remove(armada_370_xp_msi_domain);
+> +		kfree(msi_chip);
+> +		return ret;
+> +	}
+> +
+> +	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
+> +		| PCI_MSI_DOORBELL_MASK;
+> +
+> +	writel(reg, per_cpu_int_base +
+> +	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
+> +
+> +	/* Unmask IPI interrupt */
+> +	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
+> +
+> +	return 0;
+> +}
+> +#else
+> +static inline int armada_370_xp_msi_init(struct device_node *node,
+> +					 phys_addr_t main_int_phys_base)
+> +{
+> +	return 0;
+> +}
+> +#endif
+> +
+>  #ifdef CONFIG_SMP
+>  static int armada_xp_set_affinity(struct irq_data *d,
+>  				  const struct cpumask *mask_val, bool force)
+> @@ -214,12 +365,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+>  		if (irqnr > 1022)
+>  			break;
+>  
+> -		if (irqnr > 0) {
+> +		if (irqnr > 1) {
+>  			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
+>  					irqnr);
+>  			handle_IRQ(irqnr, regs);
+>  			continue;
+>  		}
+> +
+> +#ifdef CONFIG_PCI_MSI
+> +		/* MSI handling */
+> +		if (irqnr == 1) {
+> +			u32 msimask, msinr;
+> +
+> +			msimask = readl_relaxed(per_cpu_int_base +
+> +						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
+> +				& PCI_MSI_DOORBELL_MASK;
+> +
+> +			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
+> +			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
+> +
+> +			for (msinr = PCI_MSI_DOORBELL_START;
+> +			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
+> +				int irq;
+> +
+> +				if (!(msimask & BIT(msinr)))
+> +					continue;
+> +
+> +				irq = irq_find_mapping(armada_370_xp_msi_domain,
+> +						       msinr - 16);
+> +				handle_IRQ(irq, regs);
+> +			}
+> +		}
+> +#endif
+> +
+>  #ifdef CONFIG_SMP
+>  		/* IPI Handling */
+>  		if (irqnr == 0) {
+> @@ -292,6 +470,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+>  
+>  #endif
+>  
+> +	armada_370_xp_msi_init(node, main_int_res.start);
+> +
+>  	set_handle_irq(armada_370_xp_handle_irq);
+>  
+>  	return 0;
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
