@@ -1,108 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:46472 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1031006Ab3HIU1n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 16:27:43 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+Received: from gate.crashing.org ([63.228.1.57]:36284 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966964Ab3HIFul (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Aug 2013 01:50:41 -0400
+Message-ID: <1376027346.32100.8.camel@pasglop>
+Subject: Re: [PATCHv8 04/10] of: pci: add registry of MSI chips
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rob Herring <rob.herring@calxeda.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
 	linux-arm-kernel@lists.infradead.org,
 	Maen Suleiman <maen@marvell.com>,
 	Lior Amsalem <alior@marvell.com>,
 	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv9 07/10] ARM: pci: add ->add_bus() and ->remove_bus() hooks to hw_pci
-Date: Fri,  9 Aug 2013 22:27:12 +0200
-Message-Id: <1376080035-29344-8-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Date: Fri, 09 Aug 2013 15:49:06 +1000
+In-Reply-To: <1376000268-18397-5-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	 <1376000268-18397-5-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some PCI drivers may need to adjust the pci_bus structure after it has
-been allocated by the Linux PCI core. The PCI core allows
-architectures to implement the pcibios_add_bus() and
-pcibios_remove_bus() for this purpose. This commit therefore extends
-the hw_pci and pci_sys_data structures of the ARM PCI core to allow
-PCI drivers to register ->add_bus() and ->remove_bus() in hw_pci,
-which will get called when a bus is added or removed from the system.
+On Fri, 2013-08-09 at 00:17 +0200, Thomas Petazzoni wrote:
+> 
+> +#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+> +int of_pci_msi_chip_add(struct msi_chip *chip);
+> +void of_pci_msi_chip_remove(struct msi_chip *chip);
+> +struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node
+> *of_node);
+> +#else
+> +static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return
+> -EINVAL; }
+> +static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
 
-This will be used for example by the Marvell PCIe driver to connect a
-particular PCI bus with its corresponding MSI chip to handle Message
-Signaled Interrupts.
+Missing a ; at the end of the above line... breaks the build of
+CONFIG_PCI_MSI is not set.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
-Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
-Tested-by: Daniel Price <daniel.price@gmail.com>
-Tested-by: Thierry Reding <thierry.reding@gmail.com>
----
- arch/arm/include/asm/mach/pci.h |  4 ++++
- arch/arm/kernel/bios32.c        | 16 ++++++++++++++++
- 2 files changed, 20 insertions(+)
+> +static inline struct msi_chip *
+> +of_pci_find_msi_chip_by_node(struct device_node *of_node) { return
+> NULL };
+> +#endif
+> +
+>  #endif
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index a1c90d7..454d642 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -36,6 +36,8 @@ struct hw_pci {
- 					  resource_size_t start,
- 					  resource_size_t size,
- 					  resource_size_t align);
-+	void		(*add_bus)(struct pci_bus *bus);
-+	void		(*remove_bus)(struct pci_bus *bus);
- };
- 
- /*
-@@ -63,6 +65,8 @@ struct pci_sys_data {
- 					  resource_size_t start,
- 					  resource_size_t size,
- 					  resource_size_t align);
-+	void		(*add_bus)(struct pci_bus *bus);
-+	void		(*remove_bus)(struct pci_bus *bus);
- 	void		*private_data;	/* platform controller private data	*/
- };
- 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 261fcc8..1ec9c87 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -363,6 +363,20 @@ void pcibios_fixup_bus(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pcibios_fixup_bus);
- 
-+void pcibios_add_bus(struct pci_bus *bus)
-+{
-+	struct pci_sys_data *sys = bus->sysdata;
-+	if (sys->add_bus)
-+		sys->add_bus(bus);
-+}
-+
-+void pcibios_remove_bus(struct pci_bus *bus)
-+{
-+	struct pci_sys_data *sys = bus->sysdata;
-+	if (sys->remove_bus)
-+		sys->remove_bus(bus);
-+}
-+
- /*
-  * Swizzle the device pin each time we cross a bridge.  If a platform does
-  * not provide a swizzle function, we perform the standard PCI swizzling.
-@@ -464,6 +478,8 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
- 		sys->align_resource = hw->align_resource;
-+		sys->add_bus = hw->add_bus;
-+		sys->remove_bus = hw->remove_bus;
- 		INIT_LIST_HEAD(&sys->resources);
- 
- 		if (hw->private_data)
--- 
-1.8.1.2
 
