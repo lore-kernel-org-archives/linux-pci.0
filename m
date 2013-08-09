@@ -1,98 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:58854 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717Ab3HOKe6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Aug 2013 06:34:58 -0400
-Date: Thu, 15 Aug 2013 12:34:52 +0200
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:54602 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933927Ab3HIOtw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:52 -0400
 From: Thierry Reding <thierry.reding@gmail.com>
 To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Thierry Reding <treding@nvidia.com>
-Subject: Re: [RFC 3/3] PCI: tegra: Support driver unbinding
-Message-ID: <20130815103452.GA13740@ulmo>
-References: <1376392346-14127-1-git-send-email-treding@nvidia.com>
- <1376392346-14127-4-git-send-email-treding@nvidia.com>
- <520BFA0C.5070001@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GvXjxJ+pjyke8COw"
-In-Reply-To: <520BFA0C.5070001@wwwdotorg.org>
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v6 08/14] ARM: tegra: Add Tegra30 PCIe support
+Date: Fri,  9 Aug 2013 16:49:26 +0200
+Message-Id: <1376059772-16669-9-git-send-email-treding@nvidia.com>
+In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add the top-level pcie-controller node for the Tegra30 SoC. Tegra30 has
+three root ports that can use different lane layouts.
 
---GvXjxJ+pjyke8COw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+Changes in v5:
+- use symbolic constants for interrupts and clocks
 
-On Wed, Aug 14, 2013 at 03:43:40PM -0600, Stephen Warren wrote:
-> On 08/13/2013 05:12 AM, Thierry Reding wrote:
-> > Implement the platform driver's .remove() callback to free all resources
-> > allocated during driver setup and call pci_common_exit() to cleanup ARM
-> > specific datastructures. Unmap the fixed PCI I/O mapping by calling the
-> > new pci_iounmap_io() function in the new .teardown() callback.
-> >=20
-> > Finally, no longer set the .suppress_bind_attrs field to true to allow
-> > the driver to unbind from a device.
->=20
-> > +static int tegra_pcie_remove(struct platform_device *pdev)
-> > +{
-> > +	struct tegra_pcie *pcie =3D platform_get_drvdata(pdev);
-> > +	struct tegra_pcie_bus *bus, *tmp;
-> > +	int err;
-> > +
-> > +	pci_common_exit(&pcie->sys);
-> > +
-> > +	list_for_each_entry_safe(bus, tmp, &pcie->busses, list) {
-> > +		vunmap(bus->area->addr);
-> > +		kfree(bus);
-> > +	}
-> > +
-> > +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> > +		err =3D tegra_pcie_disable_msi(pcie);
-> > +		if (err < 0)
-> > +			return err;
-> > +	}
->=20
-> Wouldn't it make sense to do that as early as possible in the function,
-> to make sure that no MSI accidentally fires after some of the cleanup
-> has already happened?
+ arch/arm/boot/dts/tegra30.dtsi | 70 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
 
-I don't think that's strictly necessary in this case. After the call to
-pci_common_exit() there are no PCI devices left, there's not even a bus
-left. All MSI users should have cleaned up after themselves.
+diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
+index d8783f0..c8facca 100644
+--- a/arch/arm/boot/dts/tegra30.dtsi
++++ b/arch/arm/boot/dts/tegra30.dtsi
+@@ -16,6 +16,76 @@
+ 		serial4 = &uarte;
+ 	};
+ 
++	pcie-controller {
++		compatible = "nvidia,tegra30-pcie";
++		device_type = "pci";
++		reg = <0x00003000 0x00000800   /* PADS registers */
++		       0x00003800 0x00000200   /* AFI registers */
++		       0x10000000 0x10000000>; /* configuration space */
++		reg-names = "pads", "afi", "cs";
++		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH   /* controller interrupt */
++			      GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
++		interrupt-names = "intr", "msi";
++
++		bus-range = <0x00 0xff>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++
++		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
++			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
++			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
++			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
++			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
++
++		clocks = <&tegra_car TEGRA30_CLK_PCIE>,
++			 <&tegra_car TEGRA30_CLK_AFI>,
++			 <&tegra_car TEGRA30_CLK_PCIEX>,
++			 <&tegra_car TEGRA30_CLK_PLL_E>,
++			 <&tegra_car TEGRA30_CLK_CML0>;
++		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
++		status = "disabled";
++
++		pci@1,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82000800 0 0x00000000 0 0x1000>;
++			reg = <0x000800 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <2>;
++		};
++
++		pci@2,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82001000 0 0x00001000 0 0x1000>;
++			reg = <0x001000 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <2>;
++		};
++
++		pci@3,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82001800 0 0x00004000 0 0x1000>;
++			reg = <0x001800 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <2>;
++		};
++	};
++
+ 	host1x {
+ 		compatible = "nvidia,tegra30-host1x", "simple-bus";
+ 		reg = <0x50000000 0x00024000>;
+-- 
+1.8.3.4
 
-Given that I thought it more useful to mirror the setup done in .probe()
-to make it clearer what's being undone (and potentially what's missing).
-
-Thierry
-
---GvXjxJ+pjyke8COw
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSDK7MAAoJEN0jrNd/PrOh0m8QALzBtXwsLkiXEr0+v4xvtudS
-1Vnb6gV6JhHl09DNYs3KYcCX8CsFzs7AJ19wgJj6Q++QuHou0m8kSfvHx8r6k8zO
-UApq3rEsi1ujh6+ICS+7smKZCqKrb+m/rDSmJ68EjyA1zqvbgkXloNganOAD5wxM
-o22uq6DZyi+BhE/pX/51bODLrLw3vrUbn6MCgU1XNgK/A0+YlPj30D2NUNofmVtG
-ejnJ5g9UskhwMOzyZoFoyn7eEgCI0nY4OfoPqWakAQJlc3WHEbkp9lhBN3K924/Y
-ZltIcNyb+CmhSfCgCgcx4w99gyt4QRcSlChaVergD28rG2c3mJWyZc4M6UmgFfbT
-ZeVTaAc1cZu6QwGbUqV4sLTj0bRn5k8CvFLEKf+AIxXPZjV2zdmYYWCaI9Z2jfiK
-sdjoZOEbSlHMIuXW2riDYfg2dFA3BVzax8I4Obffsj8iJ222vOTRR05d7+aKNS2w
-Kzdy1uSQvZIoawqXAQTrHUNojgAID3yDUnsQ5w4bwlglUgtBpFPabeOxY9guNqwv
-uXizyXnggK0ZMNhLyn3lP1nDz63Hv7d0dHsMXOltbGLFuYhWeWV8gL1vtWUa/mJN
-OtaSVXNzzjLRNeHS4iL8S59/pWnwQvIK0Dc/m15wrTgaC8v92NsHQHVs3/YFJiKt
-jF72U0N4upufhDkop6SV
-=vhvx
------END PGP SIGNATURE-----
-
---GvXjxJ+pjyke8COw--
