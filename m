@@ -1,118 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:44913 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752806Ab3HVDZc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 23:25:32 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v8 5/6] PCI: Don't restrict MPS for slots below Root Ports
-Date: Thu, 22 Aug 2013 11:24:47 +0800
-Message-ID: <1377141888-7000-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
-References: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:64654 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758146Ab3HIO1t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:27:49 -0400
+Date: Fri, 9 Aug 2013 10:27:24 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv8 04/10] of: pci: add registry of MSI chips
+Message-ID: <20130809142724.GD25111@titan.lakedaemon.net>
+References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1376000268-18397-5-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1376027346.32100.8.camel@pasglop>
+ <20130809134427.GC25111@titan.lakedaemon.net>
+ <20130809141806.GA15973@ulmo>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130809141806.GA15973@ulmo>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When booting with "pci=pcie_bus_safe", we previously limited the
-fabric MPS to 128 when we found:
+On Fri, Aug 09, 2013 at 04:18:07PM +0200, Thierry Reding wrote:
+> On Fri, Aug 09, 2013 at 09:44:27AM -0400, Jason Cooper wrote:
+> > On Fri, Aug 09, 2013 at 03:49:06PM +1000, Benjamin Herrenschmidt wrote:
+> > > On Fri, 2013-08-09 at 00:17 +0200, Thomas Petazzoni wrote:
+> > > > 
+> > > > +#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+> > > > +int of_pci_msi_chip_add(struct msi_chip *chip);
+> > > > +void of_pci_msi_chip_remove(struct msi_chip *chip);
+> > > > +struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node
+> > > > *of_node);
+> > > > +#else
+> > > > +static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return
+> > > > -EINVAL; }
+> > > > +static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
+> > > 
+> > > Missing a ; at the end of the above line... breaks the build of
+> > > CONFIG_PCI_MSI is not set.
+> > > 
+> > > > +static inline struct msi_chip *
+> > > > +of_pci_find_msi_chip_by_node(struct device_node *of_node) { return
+> > > > NULL };
+> > > > +#endif
+> > > > +
+> > > >  #endif
+> > 
+> > Reproduced, fixed and builds clean !CONFIG_OF and !CONFIG_PCI_MSI with:
+> > 
+> > ---------------->8----------------
+> > diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> > index 29631eb..9f69507 100644
+> > --- a/include/linux/of_pci.h
+> > +++ b/include/linux/of_pci.h
+> > @@ -19,10 +19,11 @@ int of_pci_msi_chip_add(struct msi_chip *chip);
+> >  void of_pci_msi_chip_remove(struct msi_chip *chip);
+> >  struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node);
+> >  #else
+> > -static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; }
+> > -static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
+> > +static inline int
+> > +of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; };
+> > +static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { };
+> >  static inline struct msi_chip *
+> > -of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL };
+> > +of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL; };
+> >  #endif
+> >  
+> >  #endif
+> 
+> So why do we need a semi-colon after a closing brace? I can understand
+> how the missing semi-colon after NULL would cause the compiler to flag
+> an error, but all the other changes look unnecessary to me.
 
-  (1) A hotplug-capable Downstream Port ("dev->is_hotplug_bridge &&
-      pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT"), or
+You're correct, I sent this a little too hastily.  I thought Ben knew
+something I didn't (see above), but the error was only where you
+indicated.  I'm revising my fix to just append the semi-colon after the
+NULL.
 
-  (2) A hotplug-capable Root Port with a slot that was either empty or
-      contained a multi-function device ("dev->is_hotplug_bridge &&
-      !list_is_singular(&dev->bus->devices)")
+thx,
 
-Part (1) is valid, but part (2) is not.
-
-After a hot-add in the slot below a Root Port, we can reconfigure all
-MPS values in the fabric below the Root Port because the new device is
-the only thing below the Root Port and there are no active drivers.
-Therefore, there's no reason to limit the MPS for Root Ports, no
-matter what's in the slot.
-
-Test info:
-
-    -+-[0000:40]-+-07.0-[0000:46]--+-00.0  Intel 82576 NIC
-                                   \-00.1  Intel 82576 NIC
-
-    0000:40:07.0 Root Port bridge to [bus 46] (MPS supported=256)
-    0000:46:00.0 Endpoint                     (MPS supported=512)
-    0000:46:00.1 Endpoint                     (MPS supported=512)
-
-    # echo 0 > /sys/bus/pci/slots/7/power
-    # echo 1 > /sys/bus/pci/slots/7/power
-    # dmesg
-    ...
-    pcieport 0000:40:07.0: PCI-E Max Payload Size set to 256/ 256 (was 256)
-    pci 0000:46:00.0:      PCI-E Max Payload Size set to 256/ 512 (was 128)
-    pci 0000:46:00.1:      PCI-E Max Payload Size set to 256/ 512 (was 128)
-
-Before this change, we set MPS to 128 for the Root Port and both NICs
-because the slot contained a multi-function device and
-
-    dev->is_hotplug_bridge && !list_is_singular(&dev->bus->devices)
-
-was true.  After this change, we set it to 256.
-
-[bhelgaas: changelog, comments, split out upstream bridge check]
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jon Mason <jdmason@kudzu.us>
----
- drivers/pci/probe.c |   32 ++++++++++++++++----------------
- 1 files changed, 16 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 87be31b..4afd158 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1491,23 +1491,23 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
- 	if (!pci_is_pcie(dev))
- 		return 0;
- 
--	/* For PCIE hotplug enabled slots not connected directly to a
--	 * PCI-E root port, there can be problems when hotplugging
--	 * devices.  This is due to the possibility of hotplugging a
--	 * device into the fabric with a smaller MPS that the devices
--	 * currently running have configured.  Modifying the MPS on the
--	 * running devices could cause a fatal bus error due to an
--	 * incoming frame being larger than the newly configured MPS.
--	 * To work around this, the MPS for the entire fabric must be
--	 * set to the minimum size.  Any devices hotplugged into this
--	 * fabric will have the minimum MPS set.  If the PCI hotplug
--	 * slot is directly connected to the root port and there are not
--	 * other devices on the fabric (which seems to be the most
--	 * common case), then this is not an issue and MPS discovery
--	 * will occur as normal.
-+	/*
-+	 * We don't have a way to change MPS settings on devices that have
-+	 * drivers attached.  A hot-added device might support only the minimum
-+	 * MPS setting (MPS=128).  Therefore, if the fabric contains a bridge
-+	 * where devices may be hot-added, we limit the fabric MPS to 128 so
-+	 * hot-added devices will work correctly.
-+	 *
-+	 * However, if we hot-add a device to a slot directly below a Root
-+	 * Port, it's impossible for there to be other existing devices below
-+	 * the port.  We don't limit the MPS in this case because we can
-+	 * reconfigure MPS on both the Root Port and the hot-added device,
-+	 * and there are no other devices involved.
-+	 *
-+	 * Note that this PCIE_BUS_SAFE path assumes no peer-to-peer DMA.
- 	 */
--	if (dev->is_hotplug_bridge && (!list_is_singular(&dev->bus->devices) ||
--	    pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT))
-+	if (dev->is_hotplug_bridge &&
-+	    pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
- 		*smpss = 0;
- 
- 	if (*smpss > dev->pcie_mpss)
--- 
-1.7.1
-
-
+Jason.
