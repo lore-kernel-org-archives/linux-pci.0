@@ -1,163 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:63029 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754582Ab3HLUmV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 16:42:21 -0400
-Received: by mail-ie0-f182.google.com with SMTP id tp5so9238174ieb.27
-        for <linux-pci@vger.kernel.org>; Mon, 12 Aug 2013 13:42:20 -0700 (PDT)
+Received: from top.free-electrons.com ([176.31.233.9]:44155 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754606Ab3HILic (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 07:38:32 -0400
+Date: Fri, 9 Aug 2013 08:38:26 -0300
+From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Lior Amsalem <alior@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: mvebu: make Marvell PCIe driver depend on OF
+Message-ID: <20130809113825.GD2848@localhost>
+References: <1376044550-30572-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Aug 2013 14:42:00 -0600
-Message-ID: <CAErSpo6SzUF44pk3HVyR5UUN0BJUHUz+Z5egWKCoGG70VuB6wg@mail.gmail.com>
-Subject: Re: [PATCH v2] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
-To: Chris Metcalf <cmetcalf@tilera.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	adam radford <aradford@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1376044550-30572-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 12, 2013 at 1:42 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
-> On 8/9/2013 6:42 PM, Bjorn Helgaas wrote:
->> On Thu, Aug 08, 2013 at 12:47:10PM -0400, Chris Metcalf wrote:
->>> On 8/6/2013 1:48 PM, Bjorn Helgaas wrote:
->>>> [+cc Myron, Adam]
->>>>
->>>> On Fri, Aug 2, 2013 at 10:24 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
->>>>> According to LSI,
->>>>> the firmware is not fully functional yet. This change implements a
->>>>> kind of hybrid dma_ops to support this.
->>>>>
->>>>> Note that on most other platforms, the 64-bit DMA addressing space is the
->>>>> same as the 32-bit DMA space and they overlap the physical memory space.
->>>>> No special arrangement is needed to support this kind of mixed DMA
->>>>> capability.  On TILE-Gx, the 64-bit DMA space is completely separate
->>>>> from the 32-bit DMA space.
->>>> Help me understand what's going on here.  My understanding is that on
->>>> typical systems, the 32-bit DMA space is a subset of the 64-bit DMA
->>>> space.  In conventional PCI, "a master that supports 64-bit addressing
->>>> must generate a SAC, instead of a DAC, when the upper 32 bits of the
->>>> address are zero" (PCI spec r3.0, sec 3.9).  PCIe doesn't have
->>>> SAC/DAC, but it has both 32-bit and 64-bit address headers and has a
->>>> similar requirement: "For Addresses below 4GB, Requesters must use the
->>>> 32-bit format" (PCIe spec r3.0, sec 2.2.4.1).
->>>>
->>>> Those imply to me that the 0-4GB region of the 64-bit DMA space must
->>>> be identical to the 0-4GB 32-bit DMA space, and in fact, the receiver
->>>> of a transaction shouldn't be able to distinguish them.
->>>>
->>>> But it sounds like something's different on TILE-Gx?  Does it
->>>> translate bus addresses to physical memory addresses based on the type
->>>> of the transaction (SAC vs DAC, or 32-bit vs 64-bit header) in
->>>> addition to the address?  Even if it does, the spec doesn't allow a
->>>> DAC cycle or a 64-bit header where the 32 high-order bits are zero, so
->>>> it shouldn't matter.
->>> No, we don't translate based on the type of the transaction. Using
->>> "DMA space" in the commit message was probably misleading. What's
->>> really going on is different DMA windows. 32-bit DMA has the
->>> obvious naive implementation where [0,4GB] in DMA space maps to
->>> [0,4GB] in PA space.  However, for 64-bit DMA, we use DMA
->>> addresses with a non-zero high 32 bits, in the [1TB,2TB] range,
->>> but map the results down to PA [0,1TB] using our IOMMU.
->> I guess this means devices can DMA to physical addresses [0,3GB]
->> using either 32-bit bus addresses in the [0,3GB] range or 64-bit bus
->> addresses in the [1TB,1TB+3GB] range, right?
->
-> True in general, but not true for any specific individual device.
->
-> 64-bit capable devices wonít generate 32-bit bus addresses, because the dma_ops makes sure that only bus/DMA addresses in [1TB,1TB+3GB] are handed out to the devices.
->
-> 32-bit only devices use bus addresses in [0,3GB] to access the PA [0,3GB].  PA in [3GB, 4GB] is not accessed by the 32-bit only devices because the bounce buffers are allocated under 3GB limit.
->
->>> We did consider having the 64-bit DMA window be [0,1TB] and map
->>> directly to PA space, like the 32-bit window. But this design
->>> suffers from the ìPCI holeî problem. Basically, the BAR space is
->>> usually under 4GB (it occupies the range [3GB, 4GB] on tilegx) and
->>> the host bridge uses negative decoding in passing DMA traffic
->>> upstream. That is, DMA traffic with target address in [3GB, 4GB]
->>> are not passed to the host memory. This means that the same amount
->>> of physical memory as the BAR space cannot be used for DMA
->>> purpose. And because it is not easy avoid this region in
->>> allocating DMA memory, the kernel is simply told to not use this
->>> chunk of PA at all, so it is wasted.
->> OK, so physical memory in the [3GB,4GB] range is unreachable via DMA
->> as you describe.  And even if DMA *could* reach it, the CPU couldn't
->> see it because CPU accesses to that range would go to PCI for the
->> memory-mapped BAR space, not to memory.
->
-> Right.  Unreachability is only a problem if the DMA window overlaps [3G, 4G], and since the 64-bit DMA window is [1TB,2TB], the whole PA space can be reached by 64-bit capable devices.
+On Fri, Aug 09, 2013 at 12:35:50PM +0200, Thomas Petazzoni wrote:
+> The Marvell PCIe host controller driver is heavily tied to Device Tree
+> APIs, and can only be used on platforms where the Device Tree is
+> used. Therefore, it should "depends on OF" to avoid build failures on
+> !OF configurations.
+> 
+> Reported-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-So the [0-1TB] memory range (including [3GB-4GB]) is reachable by
-64-bit DMA to bus addresses [1TB-2TB].  But if the CPU can't see
-physical memory from [3GB-4GB], how is it useful to DMA there?
+Tested-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
 
->> But I can't figure out why Tile needs to do something special.  I
->> think other arches handle the PCI hole for MMIO space the same way.
->>
->> I don't know if other arches alias the [0,3GB] physical address
->> range in both 32-bit and 64-bit DMA space like you do, but if that's
->> part of the problem, it seems like you could easily avoid the
->> aliasing by making the 64-bit DMA space [1TB+4GB,2TB] instead of
->> [1TB,2TB].
->
-> Perhaps, but since 64-bit capable devices can't actually see the aliasing (since they aren't offered the [0,4GB] address range) they only see an un-aliased space.
->
->>> For the LSI device, the way we manage it is to ensure that the
->>> deviceís streaming buffers and the consistent buffers come from
->>> different pools, with the latter using the under-4GB bounce
->>> buffers. Obviously, normal devices use the same buffer pool for
->>> both streaming and consistent, either under 4GB or the whole PA.
->> It seems like you could make your DMA space be the union of [0,3GB]
->> and [1TB+4GB,2TB], then use pci_set_dma_mask(dev, DMA_BIT_MASK(64))
->> and pci_set_consistent_dma_mask(dev, DMA_BIT_MASK(32)) (I assume the
->> driver already sets those masks correctly if it works on other
->> arches).
->
-> Unfortunately, the Megaraid driver doesnít even call pci_set_consistent_dma_mask(dev, DMA_BIT_MASK(32)).
+> ---
+> Bjorn, you can take this one through your tree. Either for 3.11 or
+> 3.12, at your preference.
+> ---
+>  drivers/pci/host/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 1184ff6..e5ba4eb 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -4,6 +4,7 @@ menu "PCI host controller drivers"
+>  config PCI_MVEBU
+>  	bool "Marvell EBU PCIe controller"
+>  	depends on ARCH_MVEBU || ARCH_KIRKWOOD
+> +	depends on OF
+>  
+>  config PCIE_DW
+>  	bool
+> -- 
+> 1.8.1.2
+> 
 
-If the Megaraid driver needs that call, but it's missing, why wouldn't
-we just add it?
-
-> More generally, your proposed DMA space suggestion isn't optimal because then the PA in [3GB, 4GB] canít be reached by 64-bit capable devices.
-
-True.  I assumed it wasn't useful to DMA there because the CPU
-couldn't see that memory anyway.  But apparently that assumption was
-wrong?
-
->>> Given all of that, does this change make sense? I can certainly
->>> amend the commit description to include more commentary.
->> Obviously, I'm missing something.  I guess it really doesn't matter
->> because this is all arch code and I don't need to understand it, but
->> it does niggle at me somehow.
->
-> I will add the following comment to <asm/pci.h> in hopes of making it a bit clearer:
->
->  /*
->  [...]
-> + * This design lets us avoid the "PCI hole" problem where the host bridge
-> + * won't pass DMA traffic with target addresses that happen to fall within the
-> + * BAR space. This enables us to use all the physical memory for DMA, instead
-> + * of wasting the same amount of physical memory as the BAR window size.
-
-By "target addresses", I guess you mean the bus address, not the CPU
-address, right?
-
-The whole reason I'm interested in this is to figure out whether this
-change is really specific to Tile, or whether other architectures need
-similar changes.  I think host bridges on other arches behave the same
-way (they don't allow DMA to addresses in the PCI hole), so I still
-haven't figured out what is truly Tile-specific.
-
-I guess the ability for 64-bit DMA to reach the PCI hole (3GB-4GB)
-might be unique, but it doesn't sound useful.
-
->   */
->  #define        TILE_PCI_MEM_MAP_BASE_OFFSET    (1ULL << CHIP_PA_WIDTH())
->
-> --
-> Chris Metcalf, Tilera Corp.
-> http://www.tilera.com
->
+-- 
+Ezequiel Garc√≠a, Free Electrons
+Embedded Linux, Kernel and Android Engineering
+http://free-electrons.com
