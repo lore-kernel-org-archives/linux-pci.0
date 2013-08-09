@@ -1,53 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:58364 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751122Ab3HMIak (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 04:30:40 -0400
-Date: Tue, 13 Aug 2013 10:30:30 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:41140 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758223Ab3HIOtq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:46 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
-Message-ID: <20130813103030.1e4156a1@skate>
-In-Reply-To: <20130813080956.GE9316@ulmo>
-References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
-	<1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
-	<20130813080956.GE9316@ulmo>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v6 05/14] ARM: tegra: trimslice: Initialize PCIe from DT
+Date: Fri,  9 Aug 2013 16:49:23 +0200
+Message-Id: <1376059772-16669-6-git-send-email-treding@nvidia.com>
+In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-On Tue, 13 Aug 2013 10:09:56 +0200, Thierry Reding wrote:
+With the device tree support in place, probe the PCIe controller from
+the device tree and remove the corresponding workaround in the board
+file.
 
-> > +- reset-gpios: optional gpio to PERST#
-> > +- reset-delay-ms: delay in ms to wait after reset de-assertion
-> 
-> I remember some recent discussion about this, and we now have this reset
-> framework, so perhaps it makes more sense to use the reset binding for
-> this? Cc'ing Stephen (as part of the device tree bindings maintainers
-> team) who was involved in that recent reset bindings discussion.
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+Changes in v2:
+- add missing dummy regulator nodes by Stephen Warren
+- rename port 0 DT node and disable unused port 1
 
-I also thought about this, but the reset framework seems to be designed
-for "reset controller" IPs, i.e special IPs that are controlling reset
-signals. Looking at Documentation/devicetree/bindings/reset/reset.txt,
-I'm not sure to see how this would apply to GPIO-controlled reset
-signals.
+ arch/arm/boot/dts/tegra20-trimslice.dts | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-Best regards,
-
-Thomas
+diff --git a/arch/arm/boot/dts/tegra20-trimslice.dts b/arch/arm/boot/dts/tegra20-trimslice.dts
+index 906e07f..cc3e742 100644
+--- a/arch/arm/boot/dts/tegra20-trimslice.dts
++++ b/arch/arm/boot/dts/tegra20-trimslice.dts
+@@ -310,6 +310,16 @@
+ 		nvidia,sys-clock-req-active-high;
+ 	};
+ 
++	pcie-controller {
++		status = "okay";
++		pex-clk-supply = <&pci_clk_reg>;
++		vdd-supply = <&pci_vdd_reg>;
++
++		pci@1,0 {
++			status = "okay";
++		};
++	};
++
+ 	usb@c5000000 {
+ 		status = "okay";
+ 	};
+@@ -412,6 +422,24 @@
+ 			enable-active-high;
+ 			gpio = <&gpio TEGRA_GPIO(V, 2) 0>;
+ 		};
++
++		pci_clk_reg: regulator@3 {
++			compatible = "regulator-fixed";
++			reg = <3>;
++			regulator-name = "pci_clk";
++			regulator-min-microvolt = <3300000>;
++			regulator-max-microvolt = <3300000>;
++			regulator-always-on;
++		};
++
++		pci_vdd_reg: regulator@4 {
++			compatible = "regulator-fixed";
++			reg = <4>;
++			regulator-name = "pci_vdd";
++			regulator-min-microvolt = <1050000>;
++			regulator-max-microvolt = <1050000>;
++			regulator-always-on;
++		};
+ 	};
+ 
+ 	sound {
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.8.3.4
+
