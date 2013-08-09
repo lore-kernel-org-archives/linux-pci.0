@@ -1,112 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:15340 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755674Ab3HFKZn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 06:25:43 -0400
-From: Vipul Pandya <vipul@chelsio.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, leedom@chelsio.com, tomreu@chelsio.com,
-	vipul@chelsio.com, divy@chelsio.com, dm@chelsio.com,
-	nirranjan@chelsio.com, eilong@broadcom.com, netdev@vger.kernel.org
-Subject: [PATCH V2 1/4] pci: Add pci_wait_for_pending_transaction to wait for pending pci transaction
-Date: Tue,  6 Aug 2013 15:48:36 +0530
-Message-Id: <1375784319-25760-2-git-send-email-vipul@chelsio.com>
-In-Reply-To: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
-References: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
+Received: from top.free-electrons.com ([176.31.233.9]:46421 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1031006Ab3HIU1c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 16:27:32 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: [PATCHv9 03/10] PCI: Introduce new MSI chip infrastructure
+Date: Fri,  9 Aug 2013 22:27:08 +0200
+Message-Id: <1376080035-29344-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-New routine to avoid duplication of waiting for pending pci transaction code.
+The new struct msi_chip is used to associated an MSI controller with a
+PCI bus. It is automatically handed down from the root to its children
+during bus enumeration.
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Vipul Pandya <vipul@chelsio.com>
+This patch provides default (weak) implementations for the architecture-
+specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
+and arch_msi_check_device()) which check if a PCI device's bus has an
+attached MSI chip and forward the call appropriately.
+
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Daniel Price <daniel.price@gmail.com>
+Tested-by: Thierry Reding <thierry.reding@gmail.com>
 ---
-V2: Added pci_wait_for_pending_transaction routine and replaced it at respective
-places. Made the patch series for the same.
-V2: Used dev->msix_cap directly for capability offset
-V2: Removed use of 'rc' variable.
-
- drivers/pci/pci.c   | 38 +++++++++++++++++++++++++-------------
+ drivers/pci/msi.c   | 27 +++++++++++++++++++++++++--
+ drivers/pci/probe.c |  1 +
+ include/linux/msi.h | 11 +++++++++++
  include/linux/pci.h |  1 +
- 2 files changed, 26 insertions(+), 13 deletions(-)
+ 4 files changed, 38 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a8d5fd0..7d6ce2e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3159,19 +3159,17 @@ int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask)
- }
- EXPORT_SYMBOL(pci_set_dma_seg_boundary);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 823c386..2837285 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -32,16 +32,39 @@ static int pci_msi_enable = 1;
  
--static int pcie_flr(struct pci_dev *dev, int probe)
-+/**
-+ * pci_wait_for_pending_transaction - waits for pending transaction
-+ * @dev: the PCI device to operate on
-+ *
-+ * Return 0 if transaction is pending 1 otherwise.
-+ */
-+int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
  {
- 	int i;
--	u32 cap;
- 	u16 status;
- 
--	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
--	if (!(cap & PCI_EXP_DEVCAP_FLR))
--		return -ENOTTY;
--
--	if (probe)
--		return 0;
--
- 	/* Wait for Transaction Pending bit clean */
- 	for (i = 0; i < 4; i++) {
- 		if (i)
-@@ -3179,13 +3177,27 @@ static int pcie_flr(struct pci_dev *dev, int probe)
- 
- 		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
- 		if (!(status & PCI_EXP_DEVSTA_TRPND))
--			goto clear;
-+			return 1;
- 	}
- 
--	dev_err(&dev->dev, "transaction is not cleared; "
--			"proceeding with reset anyway\n");
+-	return -EINVAL;
++	struct msi_chip *chip = dev->bus->msi;
++	int err;
++
++	if (!chip || !chip->setup_irq)
++		return -EINVAL;
++
++	err = chip->setup_irq(chip, dev, desc);
++	if (err < 0)
++		return err;
++
++	irq_set_chip_data(desc->irq, chip);
++
 +	return 0;
-+}
-+EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+ }
+ 
+ void __weak arch_teardown_msi_irq(unsigned int irq)
+ {
++	struct msi_chip *chip = irq_get_chip_data(irq);
 +
-+static int pcie_flr(struct pci_dev *dev, int probe)
-+{
-+	u32 cap;
++	if (!chip || !chip->teardown_irq)
++		return;
 +
-+	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
-+	if (!(cap & PCI_EXP_DEVCAP_FLR))
-+		return -ENOTTY;
++	chip->teardown_irq(chip, irq);
+ }
+ 
+ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ {
+-	return 0;
++	struct msi_chip *chip = dev->bus->msi;
 +
-+	if (probe)
++	if (!chip || !chip->check_device)
 +		return 0;
 +
-+	if (!pci_wait_for_pending_transaction(dev))
-+		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
++	return chip->check_device(chip, dev, nvec, type);
+ }
  
--clear:
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 46ada5c..b8eaa81 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -666,6 +666,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
  
- 	msleep(100);
+ 	child->parent = parent;
+ 	child->ops = parent->ops;
++	child->msi = parent->msi;
+ 	child->sysdata = parent->sysdata;
+ 	child->bus_flags = parent->bus_flags;
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 271dfd1..090ddad 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -65,4 +65,15 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+ 
++struct msi_chip {
++	struct module *owner;
++	struct device *dev;
++
++	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
++			 struct msi_desc *desc);
++	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
++	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
++			    int nvec, int type);
++};
++
+ #endif /* LINUX_MSI_H */
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..e647001 100644
+index 0fd1f15..4044e3c 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -914,6 +914,7 @@ bool pci_check_and_unmask_intx(struct pci_dev *dev);
- void pci_msi_off(struct pci_dev *dev);
- int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size);
- int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask);
-+int pci_wait_for_pending_transaction(struct pci_dev *dev);
- int pcix_get_max_mmrbc(struct pci_dev *dev);
- int pcix_get_mmrbc(struct pci_dev *dev);
- int pcix_set_mmrbc(struct pci_dev *dev, int mmrbc);
+@@ -433,6 +433,7 @@ struct pci_bus {
+ 	struct resource busn_res;	/* bus numbers routed to this bus */
+ 
+ 	struct pci_ops	*ops;		/* configuration access functions */
++	struct msi_chip	*msi;		/* MSI controller */
+ 	void		*sysdata;	/* hook for sys-specific extension */
+ 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
+ 
 -- 
-1.8.0
+1.8.1.2
 
