@@ -1,68 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:53394 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755965Ab3HFKju (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 06:39:50 -0400
-Date: Tue, 6 Aug 2013 12:39:33 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tushar Behera <tushar.behera@linaro.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>, patches@linaro.org,
-	sachin.kamat@linaro.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:36101 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757623Ab3HIOtn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:43 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCH V2 6/6] pci: mvebu: Convert to use devm_ioremap_resource
-Message-ID: <20130806123933.2f33828b@skate>
-In-Reply-To: <CAErSpo7hHSmO6euUtJABLB-xeK9u+J2h6z905e5DrcZv5gZoEA@mail.gmail.com>
-References: <1370864113-17895-14-git-send-email-tushar.behera@linaro.org>
-	<1371460573-30004-1-git-send-email-tushar.behera@linaro.org>
-	<CAErSpo7hHSmO6euUtJABLB-xeK9u+J2h6z905e5DrcZv5gZoEA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v6 03/14] ARM: tegra: tec: Add PCIe support
+Date: Fri,  9 Aug 2013 16:49:21 +0200
+Message-Id: <1376059772-16669-4-git-send-email-treding@nvidia.com>
+In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn Helgaas,
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-[+cc Jason Cooper, Gregory Clement and Ezequiel Garcia]
+Enable the first PCIe root port which is connected to an FPGA on the
+Tamonten Evaluation Carrier and add device nodes for each of the PCI
+endpoints available in the standard configuration.
 
-On Tue, 23 Jul 2013 12:38:28 -0600, Bjorn Helgaas wrote:
-> [+cc Thomas]
-> 
-> On Mon, Jun 17, 2013 at 3:16 AM, Tushar Behera <tushar.behera@linaro.org> wrote:
-> > Commit 75096579c3ac ("lib: devres: Introduce devm_ioremap_resource()")
-> > introduced devm_ioremap_resource() and deprecated the use of
-> > devm_request_and_ioremap().
-> >
-> > While at it, modify mvebu_pcie_map_registers() to propagate error code.
-> >
-> > Signed-off-by: Tushar Behera <tushar.behera@linaro.org>
-> > CC: linux-pci@vger.kernel.org
-> > CC: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Thomas has a bunch of mvebu patches in the pipeline, so I assume he
-> will incorporate this if appropriate.  I don't want to put it in my
-> tree and cause conflicts with his changes.  Let me know if I should do
-> something else here.
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+Changes in v2:
+- remove duplicate nodes and properties defined in tegra20-tamonten.dtsi
 
-I don't really have that many pci-mvebu.c patches in the pipeline
-actually. The only one I have is to enable MSI support, and it's a
-fairly light one that should not conflict too badly with this one.
+Changes in v3:
+- remove PCIe endpoint device tree nodes, all devices can be discovered
+  via standard PCI enumeration
 
-Therefore, Bjorn, I believe this patch could go through your tree,
-either for 3.11 or 3.12 as you prefer.
+ arch/arm/boot/dts/tegra20-tec.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Best regards,
-
-Thomas Petazzoni
+diff --git a/arch/arm/boot/dts/tegra20-tec.dts b/arch/arm/boot/dts/tegra20-tec.dts
+index c572c43..3ada3cb 100644
+--- a/arch/arm/boot/dts/tegra20-tec.dts
++++ b/arch/arm/boot/dts/tegra20-tec.dts
+@@ -32,6 +32,14 @@
+ 		};
+ 	};
+ 
++	pcie-controller {
++		status = "okay";
++
++		pci@1,0 {
++			status = "okay";
++		};
++	};
++
+ 	sound {
+ 		compatible = "ad,tegra-audio-wm8903-tec",
+ 			     "nvidia,tegra-audio-wm8903";
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.8.3.4
+
