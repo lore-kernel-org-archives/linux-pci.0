@@ -1,73 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 15 Aug 2013 12:01:32 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>
-Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	"Luck, Tony" <tony.luck@intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aristeu Rozanski Filho <arozansk@redhat.com>
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Message-ID: <20130815100132.GC27616@pd.tnic>
-References: <20130810180322.GC4155@pd.tnic>
- <20130812083355.47c1bae8@samsung.com>
- <5208D80D.5030206@linux.vnet.ibm.com>
- <20130812114404.3bd64fa0@samsung.com>
- <520A1B5E.8040105@linux.vnet.ibm.com>
- <20130813094147.062317f8@concha.lan>
- <520A6A30.1030406@linux.vnet.ibm.com>
- <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
- <520B603E.3040002@linux.vnet.ibm.com>
- <20130814211504.393cf138@concha.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130814211504.393cf138@concha.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Date: Fri, 9 Aug 2013 12:12:24 -0600
+Message-ID: <CAL-B5D1-CPNcOzjHx4ej5SenawvDqwC4Hef5oDkoxCb9Dz5dUw@mail.gmail.com>
+Subject: Linux Plumbers ACPI/PM, PCI Microconference
+From: Myron Stowe <myron.stowe@gmail.com>
+To: thomas.petazzoni@free-electrons.com,
+	jgunthorpe@obsidianresearch.com, thierry.reding@avionic-design.de,
+	swarren@wwwdotorg.org, linux@arm.linux.org.uk,
+	rob.herring@calxeda.com, linux-arm-kernel@lists.infradead.org,
+	linux-pci <linux-pci@vger.kernel.org>,
+	iommu@lists.linux-foundation.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	mika.westerberg@linux.intel.com,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Don Dutile <ddutile@redhat.com>, liuj97@gmail.com,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 14, 2013 at 09:15:04PM -0300, Mauro Carvalho Chehab wrote:
-> > - Two, if ghes_edac is enabled, it prevents other edac drivers
-> > from being loaded. It looks like the assumption here is that if
-> > ghes/firmware first is enabled, then *all* memory errors are
-> > reported through ghes which is not true. We could have (a subset
-> > of) corrected errors reported through ghes, some through CMCI
-> > and uncorrected errors through MCE. So, if I'm not mistaken, if
-> > ghes_edac is enabled, we will only receive ghes error events through
-> > mc_event and not the others. Mauro, is this accurate?
-> 
-> Yes, that's the current assumption. It prevents to have both BIOS and a
-> direct-hardware-access-EDAC-driver to race, as this is known to have
-> serious issues.
+Time is passing quickly and there are still a few topic areas that we
+would like discussed during the microconference but still do not have
+any proposals/knowledgable speakers for.
 
-Ok, this is getting confusing so let's shed some more light.
+For the following people I'm specifically picking on: Are you going to
+plumbers, would you be willing to cover the following areas?  If you
+are not going, do you know someone who is and could cover?
 
-* First of all, Naveen is asking whether other *edac* drivers can
-be loaded. And no, they cannot once the ghes thing is loaded which
-potentially is a problem.
+Yinghai: host bridge hot-plug - what has been accomplished to date and
+what still remains to be done?
 
-For example, if the chipset-specific driver has additional functionality
-from ghes_edac, then that functionality is gone when ghes_edac loads
-first. This might be a problem in some cases, we probably need to think
-about this more in depth.
+Mika: Thunderbolt activities?
 
-* Then, there's the trace_mce_record() TP which comes straight
-from mce.c This one is always enabled unless the mce_disable_bank
-functionality kicks in which you, Naveen, added :-).
+Jiang Liu, Gu Zheng: Would you be willing to cover your recent efforts
+with PCI device (hot-plug) reference counting?
 
-* The CMCI stuff should be synchronized with the MCE TP so that should
-be ok.
+Russel, Rob, Stephen, Thomas, Jason, Thierry: ARM - especially any
+PCI(e) ideosynchronicies along with ARM's IOMMU arch and how that
+relates to PCI.
 
-I think those are our current error reporting paths...
+Alex Williamson: you want/need to cover any of the following - PCI
+secondary bus resets; pci_is_pcie() - Not just for PCIe capabilities;
+I/O port pci-sysfs resource files (fix or remove)?
 
--- 
-Regards/Gruss,
-    Boris.
+Of course anyone else is free to propose something or sign up for
+covering one of the proposed topics listed at
+http://wiki.linuxplumbersconf.org/2013:pci_subsystem
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+
+The instructions for submitting proposals should be at:
+
+http://www.linuxplumbersconf.org/2013/submitting-topic/
+
+The Microconference link is at:
+
+http://wiki.linuxplumbersconf.org/2013:pci_subsystem
