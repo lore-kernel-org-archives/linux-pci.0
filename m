@@ -1,82 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:58043 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754645Ab3HMHPt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 03:15:49 -0400
-Date: Tue, 13 Aug 2013 09:15:39 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:41220 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933939Ab3HIOtz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:55 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/9] PCI: mvebu: increment nports only for registered
- ports
-Message-ID: <20130813091539.20d4b6a3@skate>
-In-Reply-To: <1376333215-12885-3-git-send-email-sebastian.hesselbarth@gmail.com>
-References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
-	<1376333215-12885-3-git-send-email-sebastian.hesselbarth@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v6 10/14] ARM: tegra: Enable PCIe controller on Beaver
+Date: Fri,  9 Aug 2013 16:49:28 +0200
+Message-Id: <1376059772-16669-11-git-send-email-treding@nvidia.com>
+In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Sebastian Hesselbarth,
+From: Thierry Reding <thierry.reding@gmail.com>
 
-On Mon, 12 Aug 2013 20:46:48 +0200, Sebastian Hesselbarth wrote:
+PCIe lane 0 is connected to an onboard Gigabit Ethernet (RTL8168evl) and
+lane 4 is routed to the board's miniPCIe slot.
 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index d5fe674..0a359d7 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -842,21 +842,21 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
->  		return ret;
->  	}
->  
-> +	i = 0;
->  	for_each_child_of_node(pdev->dev.of_node, child) {
->  		if (!of_device_is_available(child))
->  			continue;
-> -		pcie->nports++;
-> +		i++;
->  	}
->  
-> -	pcie->ports = devm_kzalloc(&pdev->dev, pcie->nports *
-> +	pcie->ports = devm_kzalloc(&pdev->dev, i *
->  				   sizeof(struct mvebu_pcie_port),
->  				   GFP_KERNEL);
->  	if (!pcie->ports)
->  		return -ENOMEM;
->  
-> -	i = 0;
->  	for_each_child_of_node(pdev->dev.of_node, child) {
-> -		struct mvebu_pcie_port *port = &pcie->ports[i];
-> +		struct mvebu_pcie_port *port = &pcie->ports[pcie->nports];
->  
->  		if (!of_device_is_available(child))
->  			continue;
-> @@ -929,7 +929,7 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
->  		port->dn = child;
->  		spin_lock_init(&port->conf_lock);
->  		mvebu_sw_pci_bridge_init(port);
-> -		i++;
-> +		pcie->nports++;
->  	}
+Signed-off-by: Thierry Reding <thierry.reding@gmail.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ arch/arm/boot/dts/tegra30-beaver.dts | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-I think I'd prefer using 'i' in this loop, and then after the loop have
-a:
-
-	pcie->nports = i;
-
-assignment. That's nitpicking, but I don't like the fact that within
-the loop 'pcie->nports' doesn't mean "Number of enabled PCIe ports",
-but means "Last enabled PCIe port".
-
-Thomas
+diff --git a/arch/arm/boot/dts/tegra30-beaver.dts b/arch/arm/boot/dts/tegra30-beaver.dts
+index 87c5f7b..4d9fa31 100644
+--- a/arch/arm/boot/dts/tegra30-beaver.dts
++++ b/arch/arm/boot/dts/tegra30-beaver.dts
+@@ -10,6 +10,27 @@
+ 		reg = <0x80000000 0x7ff00000>;
+ 	};
+ 
++	pcie-controller {
++		status = "okay";
++		pex-clk-supply = <&sys_3v3_pexs_reg>;
++		vdd-supply = <&ldo1_reg>;
++		avdd-supply = <&ldo2_reg>;
++
++		pci@1,0 {
++			status = "okay";
++			nvidia,num-lanes = <4>;
++		};
++
++		pci@2,0 {
++			status = "okay";
++			nvidia,num-lanes = <1>;
++		};
++
++		pci@3,0 {
++			nvidia,num-lanes = <1>;
++		};
++	};
++
+ 	pinmux {
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&state_default>;
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.8.3.4
+
