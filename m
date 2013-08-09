@@ -1,158 +1,234 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:57095 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752369Ab3HUXjY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 19:39:24 -0400
-Received: by mail-oa0-f51.google.com with SMTP id h1so2143925oag.24
-        for <linux-pci@vger.kernel.org>; Wed, 21 Aug 2013 16:39:24 -0700 (PDT)
-Subject: [PATCH v7 2/5] PCI: Simplify pcie_bus_configure_settings() interface
-To: Yijing Wang <wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-	jiang.liu@huawei.com, Hanjun Guo <guohanjun@huawei.com>
-Date: Wed, 21 Aug 2013 17:39:22 -0600
-Message-ID: <20130821233922.2300.55535.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130821233722.2300.81773.stgit@bhelgaas-glaptop>
-References: <20130821233722.2300.81773.stgit@bhelgaas-glaptop>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:64549 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966748Ab3HIADx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 20:03:53 -0400
+Received: by mail-wi0-f178.google.com with SMTP id j17so1148372wiw.5
+        for <linux-pci@vger.kernel.org>; Thu, 08 Aug 2013 17:03:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <FC9702EC51E4CA40A875703BEBD6CEF80183DA88@SHSMSX101.ccr.corp.intel.com>
+References: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
+	<1337003229-9158-4-git-send-email-jiang.liu@huawei.com>
+	<CANVTcTan9N=Bvf=-vDwOQhS13y+JtWfqApF75yuksQuFBBVDZw@mail.gmail.com>
+	<FC9702EC51E4CA40A875703BEBD6CEF80183DA88@SHSMSX101.ccr.corp.intel.com>
+Date: Thu, 8 Aug 2013 17:03:51 -0700
+Message-ID: <CAPoiz9wm=K0jLhYQzRbuOe5gP376W6ovoU6pxCqe1Fqmv8W28Q@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 3/7] dmaengine: enhance dmaengine to support DMA
+ device hotplug
+From: Jon Mason <jdmason@kudzu.us>
+To: "Wang, Rui Y" <rui.y.wang@intel.com>
+Cc: "liuj97@gmail.com" <liuj97@gmail.com>,
+	"Sosnowski, Maciej" <maciej.sosnowski@intel.com>,
+	"Koul, Vinod" <vinod.koul@intel.com>,
+	"chenkeping@huawei.com" <chenkeping@huawei.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Luck, Tony" <tony.luck@intel.com>,
+	"Guo, Chaohong" <chaohong.guo@intel.com>,
+	Dan Williams <djbw@fb.com>, Dave Jiang <dave.jiang@intel.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Based on a patch by Jon Mason (see URL below).
+On Thu, Aug 8, 2013 at 3:59 AM, Wang, Rui Y <rui.y.wang@intel.com> wrote:
+> (resend adding cc list)
 
-All users of pcie_bus_configure_settings() pass arguments of the form
-"bus, bus->self->pcie_mpss".  The "mpss" argument is redundant since we
-can easily look it up internally.  In addition, all callers check
-"bus->self" for NULL, which we can also do internally.
+The e-mail you are responding to is over a year old, but doesn't
+appear to have been accepted.  I suppose late is better than never...
 
-This patch simplifies the interface and the callers.  No functional change.
+Adding Dan Williams new e-mail address and Dave Jiang.
 
-Reference: http://lkml.kernel.org/r/1317048850-30728-2-git-send-email-mason@myri.com
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/powerpc/kernel/pci-common.c |    8 ++------
- arch/tile/kernel/pci_gx.c        |    9 ++-------
- arch/x86/pci/acpi.c              |    9 ++-------
- drivers/pci/hotplug/pcihp_slot.c |    5 ++---
- drivers/pci/probe.c              |    7 +++++--
- include/linux/pci.h              |    2 +-
- 6 files changed, 14 insertions(+), 26 deletions(-)
+Thanks,
+Jon
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index f46914a..d35ec34 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1672,12 +1672,8 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 	/* Configure PCI Express settings */
- 	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
--		list_for_each_entry(child, &bus->children, node) {
--			struct pci_dev *self = child->self;
--			if (!self)
--				continue;
--			pcie_bus_configure_settings(child, self->pcie_mpss);
--		}
-+		list_for_each_entry(child, &bus->children, node)
-+			pcie_bus_configure_settings(child);
- 	}
- }
- 
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index 1142563..6640e7b 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -508,13 +508,8 @@ static void fixup_read_and_payload_sizes(struct pci_controller *controller)
- 						rc_dev_cap.word);
- 
- 	/* Configure PCI Express MPS setting. */
--	list_for_each_entry(child, &root_bus->children, node) {
--		struct pci_dev *self = child->self;
--		if (!self)
--			continue;
--
--		pcie_bus_configure_settings(child, self->pcie_mpss);
--	}
-+	list_for_each_entry(child, &root_bus->children, node)
-+		pcie_bus_configure_settings(child);
- 
- 	/*
- 	 * Set the mac_config register in trio based on the MPS/MRS of the link.
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index d641897..b30e937 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -568,13 +568,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	 */
- 	if (bus) {
- 		struct pci_bus *child;
--		list_for_each_entry(child, &bus->children, node) {
--			struct pci_dev *self = child->self;
--			if (!self)
--				continue;
--
--			pcie_bus_configure_settings(child, self->pcie_mpss);
--		}
-+		list_for_each_entry(child, &bus->children, node)
-+			pcie_bus_configure_settings(child);
- 	}
- 
- 	if (bus && node != -1) {
-diff --git a/drivers/pci/hotplug/pcihp_slot.c b/drivers/pci/hotplug/pcihp_slot.c
-index fec2d5b..16f9203 100644
---- a/drivers/pci/hotplug/pcihp_slot.c
-+++ b/drivers/pci/hotplug/pcihp_slot.c
-@@ -160,9 +160,8 @@ void pci_configure_slot(struct pci_dev *dev)
- 			(dev->class >> 8) == PCI_CLASS_BRIDGE_PCI)))
- 		return;
- 
--	if (dev->bus && dev->bus->self)
--		pcie_bus_configure_settings(dev->bus,
--					    dev->bus->self->pcie_mpss);
-+	if (dev->bus)
-+		pcie_bus_configure_settings(dev->bus);
- 
- 	memset(&hpp, 0, sizeof(hpp));
- 	ret = pci_get_hp_params(dev, &hpp);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9a33430..ecae7f2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1607,10 +1607,13 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
-  * parents then children fashion.  If this changes, then this code will not
-  * work as designed.
-  */
--void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
-+void pcie_bus_configure_settings(struct pci_bus *bus)
- {
- 	u8 smpss;
- 
-+	if (!bus->self)
-+		return;
-+
- 	if (!pci_is_pcie(bus->self))
- 		return;
- 
-@@ -1625,7 +1628,7 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- 		smpss = 0;
- 
- 	if (pcie_bus_config == PCIE_BUS_SAFE) {
--		smpss = mpss;
-+		smpss = bus->self->pcie_mpss;
- 
- 		pcie_find_smpss(bus->self, &smpss);
- 		pci_walk_bus(bus, pcie_find_smpss, &smpss);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..57062b7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -675,7 +675,7 @@ struct pci_driver {
- /* these external functions are only available when PCI support is enabled */
- #ifdef CONFIG_PCI
- 
--void pcie_bus_configure_settings(struct pci_bus *bus, u8 smpss);
-+void pcie_bus_configure_settings(struct pci_bus *bus);
- 
- enum pcie_bus_config_types {
- 	PCIE_BUS_TUNE_OFF,
-
+>
+> Hi Jiang,
+> See my comments inline.
+>
+>> -----Original Message-----
+>> From: Jiang Liu <liuj97@gmail.com>
+>> Date: Mon, 14 May 2012 21:47:05 +0800
+>> Subject: [RFC PATCH v2 3/7] dmaengine: enhance dmaengine to support DMA
+>> device hotplug
+>> To: Dan Williams <dan.j.williams@intel.com>, Maciej Sosnowski
+>> <maciej.sosnowski@intel.com>, Vinod Koul <vinod.koul@intel.com>
+>> Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
+>> linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+>>
+>> From: Jiang Liu <liuj97@gmail.com>
+>>
+>> From: Jiang Liu <liuj97@gmail.com>
+>>
+>> To support DMA device hotplug, dmaengine must correctly manage reference
+>> count for DMA channels. On the other hand, DMA hot path is performance
+>> critical, reference count management code should avoid polluting global shared
+>> cachelines, otherwise it may cause heavy performance penalty.
+>>
+>> This patch introduces a lightweight DMA channel reference count management
+>> mechanism by using percpu counter. When DMA device hotplug is disabled,
+>> there's no performance penalty. When hotplug is enabled, a
+>> dma_find_channel()/dma_put_channel() pair adds two local memory accesses
+>> to the hot path.
+>>
+>> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+>> ---
+>>  drivers/dma/dmaengine.c   |  112
+>> +++++++++++++++++++++++++++++++++++++++++----
+>>  include/linux/dmaengine.h |   29 +++++++++++-
+>>  2 files changed, 129 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c index
+>> d3b1c48..eca45c0 100644
+>> --- a/drivers/dma/dmaengine.c
+>> +++ b/drivers/dma/dmaengine.c
+>> @@ -61,12 +61,20 @@
+>>  #include <linux/rculist.h>
+>>  #include <linux/idr.h>
+>>  #include <linux/slab.h>
+>> +#include <linux/sched.h>
+>>
+>>  static DEFINE_MUTEX(dma_list_mutex);
+>>  static DEFINE_IDR(dma_idr);
+>>  static LIST_HEAD(dma_device_list);
+>>  static long dmaengine_client_count;
+>>
+>> +#ifdef       CONFIG_DMA_ENGINE_HOTPLUG
+>> +static atomic_t dmaengine_dirty;
+>> +static struct static_key dmaengine_quiesce = STATIC_KEY_INIT_FALSE;
+>> +static DECLARE_WAIT_QUEUE_HEAD(dmaengine_wait_queue);
+>> +DEFINE_PER_CPU(long, dmaengine_chan_ref_count);
+>> +#endif       /* CONFIG_DMA_ENGINE_HOTPLUG */
+>> +
+>>  /* --- sysfs implementation --- */
+>>
+>>  /**
+>> @@ -305,10 +313,40 @@ arch_initcall(dma_channel_table_init);
+>>   */
+>>  struct dma_chan *dma_find_channel(enum dma_transaction_type tx_type)
+>> {
+>> -     return this_cpu_read(channel_table[tx_type]->chan);
+>> +     struct dma_chan *chan = this_cpu_read(channel_table[tx_type]->chan);
+>> +
+>> +#ifdef       CONFIG_DMA_ENGINE_HOTPLUG
+>> +     this_cpu_inc(dmaengine_chan_ref_count);
+>> +     if (static_key_false(&dmaengine_quiesce))
+>> +             chan = NULL;
+>> +#endif
+>> +
+>> +     return chan;
+>>  }
+>>  EXPORT_SYMBOL(dma_find_channel);
+>>
+>> +#ifdef       CONFIG_DMA_ENGINE_HOTPLUG
+>> +struct dma_chan *dma_get_channel(struct dma_chan *chan) {
+>> +     if (static_key_false(&dmaengine_quiesce))
+>> +             atomic_inc(&dmaengine_dirty);
+>> +     this_cpu_inc(dmaengine_chan_ref_count);
+>> +
+>> +     return chan;
+>> +}
+>> +EXPORT_SYMBOL(dma_get_channel);
+>> +#endif
+>> +
+>> +/**
+>> + * dma_has_capability - check whether any channel supports tx_type
+>> + * @tx_type: transaction type
+>> + */
+>> +bool dma_has_capability(enum dma_transaction_type tx_type) {
+>> +     return !!this_cpu_read(channel_table[tx_type]->chan);
+>> +}
+>> +EXPORT_SYMBOL(dma_has_capability);
+>> +
+>>  /*
+>>   * net_dma_find_channel - find a channel for net_dma
+>>   * net_dma has alignment requirements
+>> @@ -316,10 +354,15 @@ EXPORT_SYMBOL(dma_find_channel);  struct
+>> dma_chan *net_dma_find_channel(void)  {
+>>       struct dma_chan *chan = dma_find_channel(DMA_MEMCPY);
+>> -     if (chan && !is_dma_copy_aligned(chan->device, 1, 1, 1))
+>> -             return NULL;
+>>
+>> -     return chan;
+>> +     if (chan && is_dma_copy_aligned(chan->device, 1, 1, 1))
+>> +             return chan;
+>> +
+>> +#ifdef       CONFIG_DMA_ENGINE_HOTPLUG
+>> +     this_cpu_dec(dmaengine_chan_ref_count);
+>> +#endif
+>> +
+>> +     return NULL;
+>>  }
+>>  EXPORT_SYMBOL(net_dma_find_channel);
+>>
+>> @@ -393,6 +436,37 @@ static struct dma_chan *nth_chan(enum
+>> dma_transaction_type cap, int n)
+>>       return ret;
+>>  }
+>>
+>> +static void dma_channel_quiesce(void)
+>> +{
+>> +#ifdef       CONFIG_DMA_ENGINE_HOTPLUG
+>> +     int cpu;
+>> +     long ref_count;
+>> +     int quiesce_count = 0;
+>> +
+>> +     static_key_slow_inc(&dmaengine_quiesce);
+>> +
+>> +     do {
+>> +             atomic_set(&dmaengine_dirty, 0);
+>> +             schedule_timeout(1);
+>> +
+>> +             if (atomic_read(&dmaengine_dirty)) {
+>> +                     quiesce_count = 0;
+>> +                     continue;
+>> +             }
+>> +
+>> +             ref_count = 0;
+>> +             for_each_possible_cpu(cpu)
+>> +                     ref_count += per_cpu(dmaengine_chan_ref_count, cpu);
+>> +             if (ref_count == 0)
+>> +                     quiesce_count++;
+>> +             else
+>> +                     quiesce_count = 0;
+>> +     } while (quiesce_count < 10);
+>> +
+>> +     static_key_slow_dec(&dmaengine_quiesce);
+>> +#endif
+>> +}
+>> +
+>
+> The purpose of dma_channel_quiesce() is unclear to me. It waits until dmaengine_chan_ref_count is 0, but how do you prevent someone from using dma after it returns?
+>
+> <snip>
+>
+>> @@ -767,14 +848,22 @@ void dma_async_device_unregister(struct
+>> dma_device *device)
+>>
+>>       mutex_lock(&dma_list_mutex);
+>>       list_del_rcu(&device->global_node);
+>> -     dma_channel_rebalance();
+>> +     dma_channel_rebalance(true);
+>>       mutex_unlock(&dma_list_mutex);
+>>
+>>       /* Check whether it's called from module exit function. */
+>>       if (try_module_get(device->dev->driver->owner)) {
+>> +#ifndef      CONFIG_DMA_ENGINE_HOTPLUG
+>>               dev_warn(device->dev,
+>>                       "%s isn't called from module exit function.\n",
+>>                       __func__);
+>> +#else
+>> +             list_for_each_entry(chan, &device->channels, device_node) {
+>> +                     /* TODO: notify clients to release channels*/
+>> +                     wait_event(dmaengine_wait_queue,
+>> +                                chan->client_count == 0);
+>> +             }
+>
+> How do you notify clients to release the channels? Is there an updated version which handles this? There're resources (e.g. timers) that must be free'd, which can only happen when someone calls dma_chan_put() until client_count reaches 0 and device_free_chan_resources() gets called.
+>
+> Rui Wang
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
