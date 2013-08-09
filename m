@@ -1,67 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:50970 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755171Ab3HEUmj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 16:42:39 -0400
-Message-ID: <aa84d2c5c743cae82a089bb187cfe648c928d79f.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 03/20] tile PCI RC: support pci=off boot arg for tilepro
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:53228 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592Ab3HIRIO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 13:08:14 -0400
+Received: by mail-pa0-f48.google.com with SMTP id kp13so5141705pab.35
+        for <linux-pci@vger.kernel.org>; Fri, 09 Aug 2013 10:08:13 -0700 (PDT)
+Date: Fri, 9 Aug 2013 11:08:09 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: linux-pci@vger.kernel.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Lior Amsalem <alior@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: mvebu: make Marvell PCIe driver depend on OF
+Message-ID: <20130809170809.GB29690@google.com>
+References: <1376044550-30572-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1376044550-30572-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/tile/kernel/pci.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+On Fri, Aug 09, 2013 at 12:35:50PM +0200, Thomas Petazzoni wrote:
+> The Marvell PCIe host controller driver is heavily tied to Device Tree
+> APIs, and can only be used on platforms where the Device Tree is
+> used. Therefore, it should "depends on OF" to avoid build failures on
+> !OF configurations.
+> 
+> Reported-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+> Bjorn, you can take this one through your tree. Either for 3.11 or
+> 3.12, at your preference.
 
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index 1dae3b2..af75835 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -51,6 +51,8 @@
-  *
-  */
- 
-+static int pci_probe = 1;
-+
- /*
-  * This flag tells if the platform is TILEmpower that needs
-  * special configuration for the PLX switch chip.
-@@ -143,6 +145,11 @@ int __init tile_pci_init(void)
- {
- 	int i;
- 
-+	if (!pci_probe) {
-+		pr_info("PCI: disabled by boot argument\n");
-+		return 0;
-+	}
-+
- 	pr_info("PCI: Searching for controllers...\n");
- 
- 	/* Re-init number of PCIe controllers to support hot-plug feature. */
-@@ -378,6 +385,16 @@ void pcibios_set_master(struct pci_dev *dev)
- 	/* No special bus mastering setup handling. */
- }
- 
-+/* Process any "pci=" kernel boot arguments. */
-+char * __init pcibios_setup(char *str)
-+{
-+	if (!strcmp(str, "off")) {
-+		pci_probe = 0;
-+		return NULL;
-+	}
-+	return str;
-+}
-+
- /*
-  * Enable memory and/or address decoding, as appropriate, for the
-  * device described by the 'dev' struct.
--- 
-1.8.3.1
+Applied to pci/misc for v3.12, thanks!
 
+> ---
+>  drivers/pci/host/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 1184ff6..e5ba4eb 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -4,6 +4,7 @@ menu "PCI host controller drivers"
+>  config PCI_MVEBU
+>  	bool "Marvell EBU PCIe controller"
+>  	depends on ARCH_MVEBU || ARCH_KIRKWOOD
+> +	depends on OF
+>  
+>  config PCIE_DW
+>  	bool
+> -- 
+> 1.8.1.2
+> 
