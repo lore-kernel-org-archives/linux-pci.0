@@ -1,139 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:37333 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754269Ab3H1TTN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 15:19:13 -0400
-Received: by mail-ie0-f173.google.com with SMTP id qa5so5372428ieb.4
-        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 12:19:13 -0700 (PDT)
+Received: from mail.skyhub.de ([78.46.96.112]:49669 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964777Ab3HJPPd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 10 Aug 2013 11:15:33 -0400
+Date: Sat, 10 Aug 2013 17:15:31 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	dougthompson@xmission.com, bhelgaas@google.com, jbeulich@suse.com,
+	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/3 V4] EDAC, AMD64_EDAC: Add ECC decoding support for
+ newer F15h models.
+Message-ID: <20130810151530.GA4155@pd.tnic>
+References: <1376067289-2753-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 28 Aug 2013 13:18:52 -0600
-Message-ID: <CAErSpo4rF6BUhQ98djrLpcyfQXdi7-BR0BROP1mbv+LxVV+BoA@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: correctly check availability of PCIe Link
- Cap/Status/Control registers
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yuval Mintz <yuvalmin@broadcom.com>,
-	"jacob . e . keller @ intel . com" <jacob.e.keller@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1376067289-2753-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 28, 2013 at 11:23 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
->
-> According to PCIe Base Specification 3.0, devices are guarenteed to
-> return zero for unimplemented V2 PCI Express Capability registers.
-> But there's no such guarantee for unimplemented V1 PCI Express
-> Capability registers, so we need to explicitly check availability of
-> V1 PCI Express Capability registers and return zero for unimplemented
-> registers.
->
-> Changeset 1b6b8ce2ac372e "PCI: only save/restore existent registers in
-> the PCIe capability" introduces pcie_cap_has_lnkctl(), which assumes that
-> PCIe root port, endpoint and legacy endpoint with 1.0 PCIe Capability
-> implement Link Cap/Status/Control registers.
->
-> On the other hand, section 7.8 of PCIe Base Spec V1.1 and V3.0 states that
-> "The Link Capabilities, Link Status, and Link Control registers are
-> required for all Root Ports, Switch Ports, Bridges, and Endpoints that
-> are not Root Complex Integrated Endpoints."
-> That means Link Capability/Status/Control registers are also available
-> for PCIe Upstream Port, Downstream Port, PCIe-to-PCI bridge and PCI-to-PCIe
-> bridge. So change pcie_cap_has_lnkctl() to follow PCIe specifications.
->
-> Also refine pcie_cap_has_sltctl() and pcie_cap_has_rtctl() for readability.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Reported-by: Yuval Mintz <yuvalmin@broadcom.com>
-> ---
->  drivers/pci/access.c | 39 ++++++++++++++++++++++++++++-----------
->  1 file changed, 28 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index 1cc2366..b9af3d1 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -470,6 +470,13 @@ void pci_cfg_access_unlock(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_cfg_access_unlock);
->
-> +/*
-> + * According to PCIe base spec 3.0, devices are guarenteed to return zero for
-> + * unimplemented V2 PCI Express Capability registers. But there's no such
-> + * guarantee for unimplemented V1 PCI Express Capability registers, so
-> + * explicitly check availability of V1 PCI Express Capability registers
-> + * and return zero for unimplemented registers.
-> + */
->  static inline int pcie_cap_version(const struct pci_dev *dev)
->  {
->         return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
-> @@ -484,29 +491,39 @@ static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
->  {
->         int type = pci_pcie_type(dev);
->
-> -       return pcie_cap_version(dev) > 1 ||
-> -              type == PCI_EXP_TYPE_ROOT_PORT ||
-> -              type == PCI_EXP_TYPE_ENDPOINT ||
-> -              type == PCI_EXP_TYPE_LEG_END;
-> +       if (pcie_cap_version(dev) == 1)
-> +               return  type == PCI_EXP_TYPE_ENDPOINT ||
-> +                       type == PCI_EXP_TYPE_LEG_END ||
-> +                       type == PCI_EXP_TYPE_ROOT_PORT ||
-> +                       type == PCI_EXP_TYPE_UPSTREAM ||
-> +                       type == PCI_EXP_TYPE_DOWNSTREAM ||
-> +                       type == PCI_EXP_TYPE_PCI_BRIDGE ||
-> +                       type == PCI_EXP_TYPE_PCIE_BRIDGE;
+On Fri, Aug 09, 2013 at 11:54:49AM -0500, Aravind Gopalakrishnan wrote:
+> Adding support for handling ECC error decoding for new F15 models.
+> On newer models, support has been included for upto 4 DCT's, however,
+> only DCT0 and DCT3 are currently configured. (Refer BKDG Section 2.10)
+> Routing DRAM Requests algorithm is different for F15h M30h.
+> It is cleaner to use a brand new function rather than
+> adding quirks in the more generic 'f1x_match_to_this_node'
+> Refer "2.10.5 DRAM Routing Requests" in BKDG for info.
+> 
+> Tested on Fam15h M30h with ECC turned on using mce_amd_inj facility and
+> verified to be functionally correct.
+> 
+> Changes from V3:
+> 	- Remove compiler warnings
+>         - Recheck models that need erratum workaround for E505:
+> 	  - From looking up history of the bug, we find that
+>             the workaround holds true only for Fam15 models upto 1h
+>             and only upto stepping 0h. CPU revisions after these
+>             do not need the workaround.
+> 
+> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
 
-I split this out into a separate patch because it's a bug fix, and I
-don't want to clutter the bugfix with the readability changes.
+Ok, I've taken it and applied a cleanup ontop which uses the locally
+cached family, model, stepping (sending it as a reply to this message).
 
-And I think I changed my mind about the capability version checks.
-You previously suggested removing the check, at least for
-pcie_cap_has_lnkctl().  I think that's a good idea for all the
-pcie_cap_has_*() functions because it makes the code cleaner and
-easier to read.
+I'd appreciate it if you tested the branch here
 
-I'll post the tweaks I have in mind as a separate series; see what you think.
+git://git.kernel.org/pub/scm/linux/kernel/git/bp/bp.git amd-f15-m30
 
-Bjorn
+just to make sure everything is still kosher.
 
-> +
-> +       return true;
->  }
->
->  static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
->  {
->         int type = pci_pcie_type(dev);
->
-> -       return pcie_cap_version(dev) > 1 ||
-> -              type == PCI_EXP_TYPE_ROOT_PORT ||
-> -              (type == PCI_EXP_TYPE_DOWNSTREAM &&
-> -               pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT);
-> +       if (pcie_cap_version(dev) == 1)
-> +               return type == PCI_EXP_TYPE_ROOT_PORT ||
-> +                      (type == PCI_EXP_TYPE_DOWNSTREAM &&
-> +                       pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT);
-> +
-> +       return true;
->  }
->
->  static inline bool pcie_cap_has_rtctl(const struct pci_dev *dev)
->  {
->         int type = pci_pcie_type(dev);
->
-> -       return pcie_cap_version(dev) > 1 ||
-> -              type == PCI_EXP_TYPE_ROOT_PORT ||
-> -              type == PCI_EXP_TYPE_RC_EC;
-> +       if (pcie_cap_version(dev) == 1)
-> +               return type == PCI_EXP_TYPE_ROOT_PORT ||
-> +                      type == PCI_EXP_TYPE_RC_EC;
-> +
-> +       return true;
->  }
->
->  static bool pcie_capability_reg_implemented(struct pci_dev *dev, int pos)
-> --
-> 1.8.1.2
->
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
