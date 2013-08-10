@@ -1,69 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:45172 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754188Ab3HMKkf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 06:40:35 -0400
-Message-ID: <520A0D1D.4050609@gmail.com>
-Date: Tue, 13 Aug 2013 12:40:29 +0200
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Sascha Hauer <s.hauer@pengutronix.de>
-Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
-References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com> <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com> <20130813080956.GE9316@ulmo> <20130813103030.1e4156a1@skate> <20130813100348.GA28762@ulmo>
-In-Reply-To: <20130813100348.GA28762@ulmo>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:46242
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752974Ab3HJS2z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 14:28:55 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+Subject: Re: [PATCH 3/3 V4] EDAC, AMD64_EDAC: Add ECC decoding support for newer F15h models.
+From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+In-Reply-To: <20130810151530.GA4155@pd.tnic>
+Date: Sat, 10 Aug 2013 13:28:44 -0500
+CC: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<dougthompson@xmission.com>, <bhelgaas@google.com>,
+	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Message-ID: <1C4E3222-0A71-4603-BA8B-AAEF2924D30B@amd.com>
+References: <1376067289-2753-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <20130810151530.GA4155@pd.tnic>
+To: Borislav Petkov <bp@alien8.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/13/13 12:03, Thierry Reding wrote:
-> On Tue, Aug 13, 2013 at 10:30:30AM +0200, Thomas Petazzoni wrote:
->> Dear Thierry Reding,
->>
->> On Tue, 13 Aug 2013 10:09:56 +0200, Thierry Reding wrote:
->>
->>>> +- reset-gpios: optional gpio to PERST#
->>>> +- reset-delay-ms: delay in ms to wait after reset de-assertion
->>>
->>> I remember some recent discussion about this, and we now have this reset
->>> framework, so perhaps it makes more sense to use the reset binding for
->>> this? Cc'ing Stephen (as part of the device tree bindings maintainers
->>> team) who was involved in that recent reset bindings discussion.
->>
->> I also thought about this, but the reset framework seems to be designed
->> for "reset controller" IPs, i.e special IPs that are controlling reset
->> signals. Looking at Documentation/devicetree/bindings/reset/reset.txt,
->> I'm not sure to see how this would apply to GPIO-controlled reset
->> signals.
->
-> See:
->
-> 	http://www.mail-archive.com/devicetree-discuss@lists.ozlabs.org/msg36900.html
->
-> which seems to have carried over to this at some point:
->
-> 	http://www.spinics.net/lists/devicetree/msg00521.html
->
-> Some of the messages in between I can't find in any archive, sorry.
 
-Thierry, Sascha,
+On Aug 10, 2013, at 10:15 AM, Borislav Petkov <bp@alien8.de>
+wrote:
 
-thanks for the input. Flipping through the above discussion, I guess
-using "reset-gpios" and "reset-delay-us" should be fine?
+> On Fri, Aug 09, 2013 at 11:54:49AM -0500, Aravind Gopalakrishnan wrote:
+>> Adding support for handling ECC error decoding for new F15 models.
+>> On newer models, support has been included for upto 4 DCT's, however,
+>> only DCT0 and DCT3 are currently configured. (Refer BKDG Section 2.10)
+>> Routing DRAM Requests algorithm is different for F15h M30h.
+>> It is cleaner to use a brand new function rather than
+>> adding quirks in the more generic 'f1x_match_to_this_node'
+>> Refer "2.10.5 DRAM Routing Requests" in BKDG for info.
+>> 
+>> Tested on Fam15h M30h with ECC turned on using mce_amd_inj facility and
+>> verified to be functionally correct.
+>> 
+>> Changes from V3:
+>> 	- Remove compiler warnings
+>>      - Recheck models that need erratum workaround for E505:
+>> 	  - From looking up history of the bug, we find that
+>>          the workaround holds true only for Fam15 models upto 1h
+>>          and only upto stepping 0h. CPU revisions after these
+>>          do not need the workaround.
+>> 
+>> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+> 
+> Ok, I've taken it and applied a cleanup ontop which uses the locally
+> cached family, model, stepping (sending it as a reply to this message).
+> 
+> I'd appreciate it if you tested the branch here
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/bp/bp.git amd-f15-m30
+> 
+> just to make sure everything is still kosher.
+> 
 
-I can also remove the delay property for now, as I cannot find a final
-conclusion about the configurable delay.
+Thanks!
+I have tested the branch and it works fine.
 
-In the driver, I will stick to bare gpiolib and wait for gpio-reset
-driver to become available. Currently, we don't have sophisticated
-reset handling in pci-mvebu anyway.
+-Aravind. 
 
-Sebastian
+> Thanks.
+> 
+> -- 
+> Regards/Gruss,
+>  Boris.
+> 
+> Sent from a fat crate under my desk. Formatting is fine.
+> --
+> 
+
 
