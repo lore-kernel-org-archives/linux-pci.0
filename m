@@ -1,83 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:43916 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757422Ab3HMLAd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 07:00:33 -0400
-Message-ID: <1376391580.4039.8.camel@pizza.hi.pengutronix.de>
-Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
-From: Philipp Zabel <p.zabel@pengutronix.de>
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Date: Tue, 13 Aug 2013 12:59:40 +0200
-In-Reply-To: <520A0D1D.4050609@gmail.com>
-References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
-	 <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
-	 <20130813080956.GE9316@ulmo> <20130813103030.1e4156a1@skate>
-	 <20130813100348.GA28762@ulmo> <520A0D1D.4050609@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Donald Dutile <ddutile@redhat.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	stable@vger.kernel.org
+Subject: [PATCH 10/28] iommu, irq: Allocate irq_desc for dmar_msi with local node
+Date: Sat, 10 Aug 2013 19:45:21 -0700
+Message-Id: <1376189139-31856-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sebastian,
+iommu irq's irq_desc should be on local node ram.
 
-Am Dienstag, den 13.08.2013, 12:40 +0200 schrieb Sebastian Hesselbarth:
-> On 08/13/13 12:03, Thierry Reding wrote:
-> > On Tue, Aug 13, 2013 at 10:30:30AM +0200, Thomas Petazzoni wrote:
-> >> Dear Thierry Reding,
-> >>
-> >> On Tue, 13 Aug 2013 10:09:56 +0200, Thierry Reding wrote:
-> >>
-> >>>> +- reset-gpios: optional gpio to PERST#
-> >>>> +- reset-delay-ms: delay in ms to wait after reset de-assertion
-> >>>
-> >>> I remember some recent discussion about this, and we now have this reset
-> >>> framework, so perhaps it makes more sense to use the reset binding for
-> >>> this? Cc'ing Stephen (as part of the device tree bindings maintainers
-> >>> team) who was involved in that recent reset bindings discussion.
-> >>
-> >> I also thought about this, but the reset framework seems to be designed
-> >> for "reset controller" IPs, i.e special IPs that are controlling reset
-> >> signals. Looking at Documentation/devicetree/bindings/reset/reset.txt,
-> >> I'm not sure to see how this would apply to GPIO-controlled reset
-> >> signals.
-> >
-> > See:
-> >
-> > 	http://www.mail-archive.com/devicetree-discuss@lists.ozlabs.org/msg36900.html
-> >
-> > which seems to have carried over to this at some point:
-> >
-> > 	http://www.spinics.net/lists/devicetree/msg00521.html
-> >
-> > Some of the messages in between I can't find in any archive, sorry.
-> 
-> Thierry, Sascha,
-> 
-> thanks for the input. Flipping through the above discussion, I guess
-> using "reset-gpios" and "reset-delay-us" should be fine?
-> 
-> I can also remove the delay property for now, as I cannot find a final
-> conclusion about the configurable delay.
+Fix the return value checking problem.
+  create_irq() will return -1 when fail to allocate.
+  create_irq_nr() will return 0 when fail to allocate.
+here only check !irq, so need to change it to use create_irq_nr instead.
 
-Yes, I'm in favor of using 'reset-gpios'. If we can agree on this
-binding, I'll add support to the reset framework core.
+-v2: According to Sebastian, add cc to stable.
 
-> In the driver, I will stick to bare gpiolib and wait for gpio-reset
-> driver to become available. Currently, we don't have sophisticated
-> reset handling in pci-mvebu anyway.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Donald Dutile <ddutile@redhat.com>
+Acked-by: Donald Dutile <ddutile@redhat.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: stable@vger.kernel.org
+---
+ drivers/iommu/dmar.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Sounds good to me.
-
-regards
-Philipp
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 785675a..db41e36 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -1277,7 +1277,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
+ 	if (iommu->irq)
+ 		return 0;
+ 
+-	irq = create_irq();
++	irq = create_irq_nr(0, iommu->node);
+ 	if (!irq) {
+ 		pr_err("IOMMU: no free vectors\n");
+ 		return -EINVAL;
+-- 
+1.8.1.4
 
