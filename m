@@ -1,114 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
 	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J. Wysocki" <rjw@sisk.pl>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 00/28] x86, irq: Support ioapic controller hotplug
-Date: Sat, 10 Aug 2013 19:47:46 -0700
-Message-Id: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v4 13/28] x86, irq: Add alloc_reserved_irq_and_cfg_at()
+Date: Sat, 10 Aug 2013 19:47:59 -0700
+Message-Id: <1376189294-32022-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+For ioapic hot-add support, it would be easy if we have continuous
+irq numbers for new added ioapic controller.
 
-Intel cpu (from IVB) include cpu cores, mem controller, and IIO.
-When hotplug cpu physically, it will involve cpu hotplug, mem hotplug,
-and pci root hotplug.
+We can reserve irq range at first, then allocate those
+pre-reserved one when it is needed.
 
-IIO includes pci host bridge, ioapic controller and iommu etc.
-pci devices will need to use ioapic and iommu.
-So to make pci root bus hotplug working, we need ioapic hotplug support.
+Add alloc_reserved_irq_and_cfg_at() to really allocate irq_desc and cfg,
+because pre-reserved only mark bits in allocate_irqs bit maps.
 
-Now ioapics are with ACPI MADT table. During booting, kernel will parse
-MADT and put info into ioapic arrays.
-Also Bjorn added one pci device based driver, but it is not wired in yet,
-as it need to call acpi_register_ioapic, and that is TBD.
+Also fallback to alloc_irq_and_cfg_at(), and it is needed as
+we do not actually reserved irq for io apic irq yet.
 
-This patchset will
-1. extend genirq to support reserve/alloc_reserved method.
-   because we want irqs for one ioapic controller to be linear mapping
-   to the gsi range.
-2. change ioapic array operation code so we could insert new ioapic and
-   remove one leave the blank slot.
-3. record irq_base in gsi_config in ioapic struct, and use it to convert gsi
-   to irq for pci device using that ioapic controller
-4. make static ioapic path (from MADT) use same code as hot-add path,
-   with reserve/alloc_reserved method.
-5. change ioapic add/remove to use acpi way, as that is only needed when
-   pci root bus hotplug.
-6. also support the case that ioapic controller is hiding in pci
-   config space or ioapic address is not managed by pci reallocation subsys.
+This patch is x86 arch code.
 
-Also include some cleanups
-1. print MSI-X clearly in /proc/interrupts and dmesg.
-2. convert ioapic irq_2_pin to be generic list.
+-v2: update changelog by adding reasons, requested by Konrad.
+-v3: according to tglx, separate to another patch, and use
+     alloc_reserved_... instead of realloc_...
+     also add handling for one possible path in
+       alloc_reserved_irq_and_cfg_at().
 
-It is based on linus's tree of 2013/08/10 aka v3.11-rc4.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
-could get them from:
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
-
--v3: split last patch to 4 patches per request from Bjorn.
-     drop one patch that will put pci device name in proc/interrupts
-     update changelog.
--v4: address review from tglx, change to realloc to alloc_reserved.
-     separate x86 code and core code into different patches.
-
-Yinghai Lu (28):
-  genirq: Split __irq_reserve_irqs from irq_alloc_descs
-  genirq: Add irq_alloc_reserved_desc()
-  genirq: Do not free unallocated irq descriptors
-  x86, irq: Change irq_remap_modify_chip_defaults() to static
-  x86, irq: Modify irq chip once for irq remapping
-  x86, irq: Show MSI-X clearly in debug message
-  x86, irq: Show MSI-X in /proc/interrupt
-  x86, irq: Make dmar_msi/hpet_msi irq_chip name consistent
-  ia64, irq: Add dummy create_irq_nr()
-  iommu, irq: Allocate irq_desc for dmar_msi with local node
-  x86, irq: Kill create_irq()
-  x86, irq: Convert irq_2_pin list to generic list
-  x86, irq: Add alloc_reserved_irq_and_cfg_at()
-  x86, irq: Move down arch_early_irq_init()
-  x86, irq: Split out alloc_ioapic_save_registers()
-  xen, irq: Call irq_alloc_reserved_desc_at() at first
-  x86, irq: Reserve irq range and alloc_reserved for booting path
-  x86, irq: Add ioapic_gsi_to_irq
-  x86, irq: Add for_each_ioapic helper
-  x86, irq: More strict checking about registering ioapic
-  x86, irq: Make mp_register_ioapic handle hot-added ioapic
-  x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
-  x86, ioapic: Find usable ioapic id for 64bit.
-  x86: Move declaration for mp_register_ioapic()
-  PCI, x86: Make ioapic hotplug support built-in
-  PCI, x86, ACPI: Link acpi ioapic register to ioapic
-  PCI, x86, ACPI: Enable ioapic hotplug support with acpi host bridge.
-  PCI, x86, ACPI: get ioapic address from acpi device
-
- arch/ia64/kernel/irq_ia64.c          |  10 +
- arch/x86/include/asm/hw_irq.h        |   2 +-
- arch/x86/include/asm/io_apic.h       |  13 +
- arch/x86/include/asm/irq_remapping.h |  14 +-
- arch/x86/include/asm/mpspec.h        |  21 +-
- arch/x86/kernel/acpi/boot.c          |  32 +--
- arch/x86/kernel/apic/apic.c          |   9 +-
- arch/x86/kernel/apic/io_apic.c       | 480 +++++++++++++++++++++++++----------
- arch/x86/kernel/devicetree.c         |   2 +-
- drivers/acpi/pci_root.c              |   4 +
- drivers/iommu/amd_iommu_init.c       |   2 +-
- drivers/iommu/dmar.c                 |   2 +-
- drivers/iommu/intel_irq_remapping.c  |   2 +-
- drivers/iommu/irq_remapping.c        |  18 +-
- drivers/pci/Kconfig                  |   3 +-
- drivers/pci/ioapic.c                 | 229 ++++++++++++-----
- drivers/xen/events.c                 |   8 +-
- include/linux/irq.h                  |   4 +
- include/linux/pci-acpi.h             |   8 +
- kernel/irq/irqdesc.c                 |  80 ++++--
- 20 files changed, 679 insertions(+), 264 deletions(-)
-
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index ef2d530..c883da9 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -301,6 +301,29 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
+ 	irq_free_desc(at);
+ }
+ 
++static struct irq_cfg *alloc_reserved_irq_and_cfg_at(unsigned int at, int node)
++{
++	struct irq_cfg *cfg;
++	int res;
++
++	res = irq_alloc_reserved_desc_at(at, node);
++
++	if (res >= 0) {
++		cfg = irq_desc_get_chip_data(irq_to_desc(at));
++		if (cfg)
++			return cfg;
++
++		cfg = alloc_irq_cfg(at, node);
++		if (cfg)
++			irq_set_chip_data(at, cfg);
++		else
++			irq_free_desc(at);
++
++		return cfg;
++	}
++
++	return alloc_irq_and_cfg_at(at, node);
++}
+ 
+ struct io_apic {
+ 	unsigned int index;
+@@ -3352,7 +3375,7 @@ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+ static int
+ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
+ {
+-	struct irq_cfg *cfg = alloc_irq_and_cfg_at(irq, node);
++	struct irq_cfg *cfg = alloc_reserved_irq_and_cfg_at(irq, node);
+ 	int ret;
+ 
+ 	if (!cfg)
 -- 
 1.8.1.4
 
