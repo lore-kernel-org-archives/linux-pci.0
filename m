@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34760 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753063Ab3HKCs4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:48:56 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
 	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
@@ -13,12 +9,12 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Joerg Roedel <joro@8bytes.org>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v4 08/28] x86, irq: Make dmar_msi/hpet_msi irq_chip name consistent
-Date: Sat, 10 Aug 2013 19:47:54 -0700
-Message-Id: <1376189294-32022-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH 08/28] x86, irq: Make dmar_msi/hpet_msi irq_chip name consistent
+Date: Sat, 10 Aug 2013 19:45:19 -0700
+Message-Id: <1376189139-31856-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 All others are using "-" instead of "_".
