@@ -1,46 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34748 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752924Ab3HKCss (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:48:48 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] acpi, acpi_pci_irq_enable must return an error if ACPI cannot map an IRQ.
-Date: Wed, 07 Aug 2013 00:44:21 +0200
-Message-ID: <86005101.W2j5ifU8yA@vostro.rjw.lan>
-In-Reply-To: <52010A40.1040409@redhat.com>
-References: <1373900260-1599-1-git-send-email-prarit@redhat.com> <20130805140416.GA3882@xps8300> <52010A40.1040409@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v4 04/28] x86, irq: Change irq_remap_modify_chip_defaults() to static
+Date: Sat, 10 Aug 2013 19:47:50 -0700
+Message-Id: <1376189294-32022-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, August 06, 2013 10:37:52 AM Prarit Bhargava wrote:
-> On 08/05/2013 10:04 AM, Heikki Krogerus wrote:
-> > Hi,
-> > 
-> > On Mon, Aug 05, 2013 at 03:30:16PM +0200, Rafael J. Wysocki wrote:
-> >> On Sunday, August 04, 2013 07:35:37 PM Prarit Bhargava wrote:
-> >>> Hey Rafael,
-> >>>
-> >>> I know you're busy but I was just wondering if this was queued up anywhere or if
-> >>> you had any other questions?
-> >>
-> >> Should be qeued up for 3.12 (currently in linux-next).
-> > 
-> > This breaks my xHCI :(
-> > 
-> > If the issues is that you are not getting any interrupt, then should
-> > it not be checked separately and only fail in that case? I'm attaching
-> > a patch that I made on top of linux-next, where I do just that. Would
-> > that work for you?
-> > 
-> 
-> Testing this right now ... I'll get back to everyone when I have results.
+Change irq_remap_modify_chip_defaults() to static, as we have no
+outside user.
 
-In the meantime I've dropped that commit from linux-next as it caused the xHCI
-breakage to happen.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/irq_remapping.h | 6 ------
+ drivers/iommu/irq_remapping.c        | 2 +-
+ 2 files changed, 1 insertion(+), 7 deletions(-)
 
-Thanks,
-Rafael
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index d806b22..606f42e 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -56,8 +56,6 @@ extern bool setup_remapped_irq(int irq,
+ 			       struct irq_cfg *cfg,
+ 			       struct irq_chip *chip);
+ 
+-void irq_remap_modify_chip_defaults(struct irq_chip *chip);
+-
+ #else  /* CONFIG_IRQ_REMAP */
+ 
+ static inline void setup_irq_remapping_ops(void) { }
+@@ -91,10 +89,6 @@ static inline void panic_if_irq_remap(const char *msg)
+ {
+ }
+ 
+-static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+-{
+-}
+-
+ static inline bool setup_remapped_irq(int irq,
+ 				      struct irq_cfg *cfg,
+ 				      struct irq_chip *chip)
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 39f81ae..85ae2cf 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -375,7 +375,7 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ 	seq_printf(p, " IR-%s", data->chip->name);
+ }
+ 
+-void irq_remap_modify_chip_defaults(struct irq_chip *chip)
++static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ {
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+-- 
+1.8.1.4
 
