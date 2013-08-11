@@ -1,85 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3685 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752391Ab3H0W2V convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 18:28:21 -0400
-From: "Yuval Mintz" <yuvalmin@broadcom.com>
-To: "Bjorn Helgaas" <bhelgaas@google.com>,
-	"Keller, Jacob E" <jacob.e.keller@intel.com>
-cc: "Jiang Liu" <liuj97@gmail.com>, "Zhao, Yu" <yu.zhao@intel.com>,
-	"Jiang Liu" <jiang.liu@huawei.com>,
-	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH] PCI: correctly check availability of PCIe Link
- Cap/Status/Control registers
-Date: Tue, 27 Aug 2013 22:28:13 +0000
-Message-ID: <979A8436335E3744ADCD3A9F2A2B68A52AD155DE@SJEXCHMB10.corp.ad.broadcom.com>
-References: <CAErSpo6pCzw6Gjn+SCFhu7PnBpHkUz0oqO+tGmmOH8NxoMiH6g@mail.gmail.com>
- <1377621883-6707-1-git-send-email-liuj97@gmail.com>
- <CAErSpo4B8XTfgq+eQsPZwrEkJ0cG81CskPrtFZWTwuoRBkp8ww@mail.gmail.com>
- <1377626563.5825.8.camel@jekeller-desk1.amr.corp.intel.com>
- <CAErSpo6m96iE4rShiXqHpU_N0qQXKTfSi3qTR+TV=PU3erQ0Jg@mail.gmail.com>
-In-Reply-To: <CAErSpo6m96iE4rShiXqHpU_N0qQXKTfSi3qTR+TV=PU3erQ0Jg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+Received: from aserp1040.oracle.com ([141.146.126.69]:34499 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751804Ab3HKCqK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:46:10 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH 01/28] genirq: Split __irq_reserve_irqs from irq_alloc_descs
+Date: Sat, 10 Aug 2013 19:45:11 -0700
+Message-Id: <1376189139-31856-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Tue, Aug 27, 2013 at 12:02 PM, Keller, Jacob E
-> >> > From: Jiang Liu <jiang.liu@huawei.com>
-> >> > ---
-> >> > Hi Bjorn,
-> >> >         Yuval has a PCIe 1.0 swither, so triggers the bug.  I'm not sure
-> >> > why Yu Zhao has implemented pcie_cap_has_linctl() in that way, any
-> special
-> >> > consideration here?
-> >> >
-> >> > Hi Yuval,
-> >> >         Could you please help to test this patch? Due to hardware resource
-> >> > constraints, I have just compiled the patch on my laptop without testing.
-> >> >
+irq_alloc_descs and irq_reserve_irqs are almost the same.
+Separate code out to __irq_reserved_irqs, and other two reuse
+__irq_reserve_irqs.
 
-Hi,
+We will use __irq_reserve_irqs for coming ioapic hotplug support.
 
-Don't know whether your fix is correct or not (I'm leaving that to you PCI guys),
-but it solved my issue - width now returns as x4. Thanks.
+-v2: fix func docbook related comments, pointed out by tglx.
 
-Tested-by: Yuval Mintz <yuvalmin@broadcom.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>
+Reviewed-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ include/linux/irq.h  |  1 +
+ kernel/irq/irqdesc.c | 54 ++++++++++++++++++++++++++++++----------------------
+ 2 files changed, 32 insertions(+), 23 deletions(-)
 
-> >> > Thanks!
-> >> >
-> >> > ---
-> >> >  drivers/pci/access.c | 12 ++++++++----
-> >> >  1 file changed, 8 insertions(+), 4 deletions(-)
-> >> >
-> >> > diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> >> > index 1cc2366..23ff366 100644
-> >> > --- a/drivers/pci/access.c
-> >> > +++ b/drivers/pci/access.c
-> >> > @@ -484,10 +484,14 @@ static inline bool pcie_cap_has_lnkctl(const
-> struct pci_dev *dev)
-> >> >  {
-> >> >         int type = pci_pcie_type(dev);
-> >> >
-> >> > -       return pcie_cap_version(dev) > 1 ||
-> >> > -              type == PCI_EXP_TYPE_ROOT_PORT ||
-> >> > -              type == PCI_EXP_TYPE_ENDPOINT ||
-> >> > -              type == PCI_EXP_TYPE_LEG_END;
-> >> > +       return  pcie_cap_version(dev) == 1 ||
-> >> > +               type == PCI_EXP_TYPE_ENDPOINT ||
-> >> > +               type == PCI_EXP_TYPE_LEG_END ||
-> >> > +               type == PCI_EXP_TYPE_ROOT_PORT ||
-> >> > +               type == PCI_EXP_TYPE_UPSTREAM ||
-> >> > +               type == PCI_EXP_TYPE_DOWNSTREAM ||
-> >> > +               type == PCI_EXP_TYPE_PCI_BRIDGE ||
-> >> > +               type == PCI_EXP_TYPE_PCIE_BRIDGE;
-> >> >  }
-> >> >
-> >> >  static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
-> >> > --
-> >> > 1.8.1.2
-> >> >
-> >
-> >
-
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index f04d3ba..8c46cb2 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -611,6 +611,7 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 
+ void irq_free_descs(unsigned int irq, unsigned int cnt);
+ int irq_reserve_irqs(unsigned int from, unsigned int cnt);
++int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
+ 
+ static inline void irq_free_desc(unsigned int irq)
+ {
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 192a302..a151db6 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -340,18 +340,15 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
+ EXPORT_SYMBOL_GPL(irq_free_descs);
+ 
+ /**
+- * irq_alloc_descs - allocate and initialize a range of irq descriptors
+- * @irq:	Allocate for specific irq number if irq >= 0
++ * __irq_reserve_irqs - reserve a range of irqs
++ * @irq:	Reserve for specific irq number if irq >= 0
+  * @from:	Start the search from this irq number
+- * @cnt:	Number of consecutive irqs to allocate.
+- * @node:	Preferred node on which the irq descriptor should be allocated
+- * @owner:	Owning module (can be NULL)
++ * @cnt:	Number of consecutive irqs to reserve.
+  *
+  * Returns the first irq number or error code
+  */
+ int __ref
+-__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+-		  struct module *owner)
++__irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt)
+ {
+ 	int start, ret;
+ 
+@@ -369,7 +366,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
+ 					   from, cnt, 0);
+ 	ret = -EEXIST;
+-	if (irq >=0 && start != irq)
++	if (irq >= 0 && start != irq)
+ 		goto err;
+ 
+ 	if (start + cnt > nr_irqs) {
+@@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 
+ 	bitmap_set(allocated_irqs, start, cnt);
+ 	mutex_unlock(&sparse_irq_lock);
+-	return alloc_descs(start, cnt, node, owner);
++	return start;
+ 
+ err:
+ 	mutex_unlock(&sparse_irq_lock);
+ 	return ret;
+ }
++
++/**
++ * __irq_alloc_descs - allocate and initialize a range of irq descriptors
++ * @irq:	Allocate for specific irq number if irq >= 0
++ * @from:	Start the search from this irq number
++ * @cnt:	Number of consecutive irqs to allocate.
++ * @node:	Preferred node on which the irq descriptor should be allocated
++ * @owner:	Owning module (can be NULL)
++ *
++ * Returns the first irq number or error code
++ */
++int __ref
++__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
++		  struct module *owner)
++{
++	int start;
++
++	start = __irq_reserve_irqs(irq, from, cnt);
++
++	if (start < 0)
++		return start;
++
++	return alloc_descs(start, cnt, node, owner);
++}
+ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+ 
+ /**
+@@ -397,20 +418,7 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+  */
+ int irq_reserve_irqs(unsigned int from, unsigned int cnt)
+ {
+-	unsigned int start;
+-	int ret = 0;
+-
+-	if (!cnt || (from + cnt) > nr_irqs)
+-		return -EINVAL;
+-
+-	mutex_lock(&sparse_irq_lock);
+-	start = bitmap_find_next_zero_area(allocated_irqs, nr_irqs, from, cnt, 0);
+-	if (start == from)
+-		bitmap_set(allocated_irqs, start, cnt);
+-	else
+-		ret = -EEXIST;
+-	mutex_unlock(&sparse_irq_lock);
+-	return ret;
++	return __irq_reserve_irqs(from, from, cnt);
+ }
+ 
+ /**
+-- 
+1.8.1.4
 
