@@ -1,65 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34907 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753658Ab3HKCth (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:49:37 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
 	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J. Wysocki" <rjw@sisk.pl>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 25/28] PCI, x86: Make ioapic hotplug support built-in
-Date: Sat, 10 Aug 2013 19:48:11 -0700
-Message-Id: <1376189294-32022-26-git-send-email-yinghai@kernel.org>
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v4 07/28] x86, irq: Show MSI-X in /proc/interrupt
+Date: Sat, 10 Aug 2013 19:47:53 -0700
+Message-Id: <1376189294-32022-8-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
 References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ioapic hotplug should be built-in like pci root bus hotplug.
+Now MSI-X is shown as MSI in /proc/interrupt.
 
-Also need to make it depends on X86_IO_APIC.
+We could use new added irq_print_chip() interface to append -X for MSI-X.
+
+After this patch, we will have PCI-MSI-X-edge IR-PCI-MSI-X-edge for MSI-X
+instead of PCI-MSI-edge IR-PCI-MSI-edge in the /proc/interrupt.
+
+-v2: do not need to check if msi_desc is null in msi_irq_print_chip().
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
- drivers/pci/Kconfig  | 3 ++-
- drivers/pci/ioapic.c | 6 +++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ arch/x86/kernel/apic/io_apic.c | 7 +++++++
+ drivers/iommu/irq_remapping.c  | 5 ++++-
+ 2 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 81944fb..6c9ede2 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -109,9 +109,10 @@ config PCI_PASID
- 	  If unsure, say N.
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 119fdf8..cf320fb 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3087,6 +3087,12 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 	return IRQ_SET_MASK_OK_NOCOPY;
+ }
  
- config PCI_IOAPIC
--	tristate "PCI IO-APIC hotplug support" if X86
-+	bool "PCI IO-APIC hotplug support" if X86
- 	depends on PCI
- 	depends on ACPI
-+	depends on X86_IO_APIC
- 	default !X86
- 
- config PCI_LABEL
-diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-index 1b90579..7d6b157 100644
---- a/drivers/pci/ioapic.c
-+++ b/drivers/pci/ioapic.c
-@@ -113,6 +113,10 @@ static struct pci_driver ioapic_driver = {
- 	.remove		= ioapic_remove,
++static void msi_irq_print_chip(struct irq_data *data, struct seq_file *p)
++{
++	seq_printf(p, " %s%s", data->chip->name,
++			data->msi_desc->msi_attrib.is_msix ? "-X" : "");
++}
++
+ /*
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+@@ -3098,6 +3104,7 @@ struct irq_chip msi_chip = {
+ 	.irq_ack		= ack_apic_edge,
+ 	.irq_set_affinity	= msi_set_affinity,
+ 	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_print_chip		= msi_irq_print_chip,
  };
  
--module_pci_driver(ioapic_driver);
-+static int __init ioapic_init(void)
-+{
-+	return pci_register_driver(&ioapic_driver);
-+}
-+module_init(ioapic_init);
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 8e4e3af..6893d75 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -372,7 +372,10 @@ static void ir_ack_apic_level(struct irq_data *data)
  
- MODULE_LICENSE("GPL");
+ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ {
+-	seq_printf(p, " IR-%s", data->chip->name);
++	seq_printf(p, " IR-%s%s", data->chip->name,
++			data->msi_desc ?
++			 (data->msi_desc->msi_attrib.is_msix ? "-X" : "")
++			 : "");
+ }
+ 
+ static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
 -- 
 1.8.1.4
 
