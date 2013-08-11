@@ -1,78 +1,152 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5212868D.2050604@wwwdotorg.org>
-Date: Mon, 19 Aug 2013 14:56:45 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>
-CC: Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by devm_ioremap_resource
-References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr> <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr> <20130819120249.GA5740@ulmo> <alpine.DEB.2.02.1308191405450.2313@hadrien> <20130819121238.GB5740@ulmo> <alpine.DEB.2.02.1308191414360.2313@hadrien> <20130819193339.GB4961@mithrandir>
-In-Reply-To: <20130819193339.GB4961@mithrandir>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Pavel Machek <pavel@ucw.cz>, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v4 18/28] x86, irq: Add ioapic_gsi_to_irq
+Date: Sat, 10 Aug 2013 19:48:04 -0700
+Message-Id: <1376189294-32022-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/19/2013 01:33 PM, Thierry Reding wrote:
-> On Mon, Aug 19, 2013 at 02:15:39PM +0200, Julia Lawall wrote:
->> 
->> 
->> On Mon, 19 Aug 2013, Thierry Reding wrote:
->> 
->>> On Mon, Aug 19, 2013 at 02:07:54PM +0200, Julia Lawall wrote:
->>>> 
->>>> 
->>>> On Mon, 19 Aug 2013, Thierry Reding wrote:
->>>> 
->>>>> On Mon, Aug 19, 2013 at 01:20:35PM +0200, Julia Lawall
->>>>> wrote:
->>>>>> From: Julia Lawall <Julia.Lawall@lip6.fr>
->>>>>> 
->>>>>> Use devm_ioremap_resource instead of
->>>>>> devm_request_and_ioremap.
->>>>>> 
->>>>>> This was done using the semantic patch 
->>>>>> scripts/coccinelle/api/devm_ioremap_resource.cocci
->>>>>> 
->>>>>> Error-handling code was manually removed from the
->>>>>> associated calls to platform_get_resource.
->>>>>> 
->>>>>> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->>>>>> 
->>>>>> --- The first block of modified code is followed by a
->>>>>> call to devm_request_mem_region for pcie->cs with no
->>>>>> associated ioremap.  Should ioremap be used in this case
->>>>>> as well?
->>>>> 
->>>>> No. The pcie->cs resource is 256 MiB so it's challenging to
->>>>> map it at once. Furthermore it requires a non-linear
->>>>> mapping so we do it on demand.
->>>> 
->>>> OK, thanks for the explanation.  Is the comment, though, a
->>>> little misleading, since the mapping is not done here?
->>>> 
->>>> /* request and remap configuration space */
->>> 
->>> Yes, that's misleading. Given that it doesn't really add
->>> anything useful information either, perhaps I should just
->>> remove it.
->> 
->> OK, or maybe something like
->> 
->> /* request configuration space, but remap later, on demand */
->> 
->> To make it clear that something different is intended than the 
->> devm_ioremap_resources that come just before..
-> 
-> Yes, that works for me too. Can you respin the patch with the
-> comment updated and my Acked-by and Tested-by so Bjorn can pick it
-> up?
+For hot add ioapic, irq_base is not equal to gsi_base.
+We need a way to do mapping between gsi and irq.
 
-Just a note though: Since the Tegra PCIe driver is only being added in
-v3.12-rc1, and that add is happening in the Tegra/arm-soc tree, Bjorn
-won't be able to accept the patch until after v3.12-rc1. Perhaps the
-arm-soc tree could take the patch before then though...
+Also remove irq_to_gsi() that is confusing, just use that array
+directly as we only have one caller and it already check
+input irq before use it.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/io_apic.h |  1 +
+ arch/x86/kernel/acpi/boot.c    | 22 +++++-----------------
+ arch/x86/kernel/apic/io_apic.c | 29 ++++++++++++++++++++++++++++-
+ 3 files changed, 34 insertions(+), 18 deletions(-)
+
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 8181fd8..02ac411 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -180,6 +180,7 @@ struct mp_ioapic_gsi{
+ };
+ extern struct mp_ioapic_gsi  mp_gsi_routing[];
+ extern u32 gsi_top;
++int ioapic_gsi_to_irq(u32 gsi);
+ int mp_find_ioapic(u32 gsi);
+ int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 2627a81..5be15d1 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -112,6 +112,10 @@ static unsigned int gsi_to_irq(unsigned int gsi)
+ 		}
+ 	}
+ 
++#ifdef CONFIG_X86_IO_APIC
++	if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
++		return ioapic_gsi_to_irq(gsi);
++#endif
+ 	/* Provide an identity mapping of gsi == irq
+ 	 * except on truly weird platforms that have
+ 	 * non isa irqs in the first 16 gsis.
+@@ -124,22 +128,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
+ 	return irq;
+ }
+ 
+-static u32 irq_to_gsi(int irq)
+-{
+-	unsigned int gsi;
+-
+-	if (irq < NR_IRQS_LEGACY)
+-		gsi = isa_irq_to_gsi[irq];
+-	else if (irq < gsi_top)
+-		gsi = irq;
+-	else if (irq < (gsi_top + NR_IRQS_LEGACY))
+-		gsi = irq - gsi_top;
+-	else
+-		gsi = 0xffffffff;
+-
+-	return gsi;
+-}
+-
+ /*
+  * Temporarily use the virtual area starting from FIX_IO_APIC_BASE_END,
+  * to map the target physical address. The problem is that set_fixmap()
+@@ -529,7 +517,7 @@ int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
+ {
+ 	if (isa_irq >= 16)
+ 		return -1;
+-	*gsi = irq_to_gsi(isa_irq);
++	*gsi = isa_irq_to_gsi[isa_irq];
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index cb272c9..8d087f1 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1041,13 +1041,16 @@ static int pin_2_irq(int idx, int apic, int pin)
+ 
+ 	if (test_bit(bus, mp_bus_not_pci)) {
+ 		irq = mp_irqs[idx].srcbusirq;
+-	} else {
++	} else if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
+ 		u32 gsi = gsi_cfg->gsi_base + pin;
+ 
+ 		if (gsi >= NR_IRQS_LEGACY)
+ 			irq = gsi;
+ 		else
+ 			irq = gsi_top + gsi;
++	} else {
++		/* hotadd ioapic */
++		irq = gsi_cfg->irq_base + pin;
+ 	}
+ 
+ #ifdef CONFIG_X86_32
+@@ -1473,6 +1476,30 @@ static void __init setup_IO_APIC_irqs(void)
+ 		__io_apic_setup_irqs(ioapic_idx);
+ }
+ 
++int ioapic_gsi_to_irq(u32 gsi)
++{
++	int ioapic_idx = 0, irq = gsi;
++	struct mp_ioapic_gsi *gsi_cfg;
++
++	ioapic_idx = mp_find_ioapic(gsi);
++	if (ioapic_idx < 0)
++		return -1;
++
++	gsi_cfg = mp_ioapic_gsi_routing(ioapic_idx);
++	if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
++		if (gsi < NR_IRQS_LEGACY)
++			irq = gsi_top + gsi;
++	} else {
++		int pin = mp_find_ioapic_pin(ioapic_idx, gsi);
++
++		if (pin < 0)
++			return -1;
++		/* hotadd ioapic */
++		irq = gsi_cfg->irq_base + pin;
++	}
++
++	return irq;
++}
+ /*
+  * for the gsit that is not in first ioapic
+  * but could not use acpi_register_gsi()
+-- 
+1.8.1.4
 
