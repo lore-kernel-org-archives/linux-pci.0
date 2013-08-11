@@ -1,61 +1,142 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5208D80D.5030206@linux.vnet.ibm.com>
-Date: Mon, 12 Aug 2013 18:11:49 +0530
-From: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
-MIME-Version: 1.0
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>
-CC: Borislav Petkov <bp@alien8.de>, tony.luck@intel.com,
-	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
-	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
- event
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic> <20130812083355.47c1bae8@samsung.com>
-In-Reply-To: <20130812083355.47c1bae8@samsung.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v4 14/28] x86, irq: Move down arch_early_irq_init()
+Date: Sat, 10 Aug 2013 19:48:00 -0700
+Message-Id: <1376189294-32022-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/12/2013 05:03 PM, Mauro Carvalho Chehab wrote:
-> Em Sat, 10 Aug 2013 20:03:22 +0200
-> Borislav Petkov <bp@alien8.de> escreveu:
->
->> On Thu, Aug 08, 2013 at 04:38:22PM -0300, Mauro Carvalho Chehab wrote:
->>> Em Thu, 08 Aug 2013 23:57:51 +0530
->>> "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
->>>
->>>> Enable memory error trace event in cper.c
->>>
->>> Why do we need to do that? Memory error events are already handled
->>> via edac_ghes module,
->>
->> If APEI gives me all the required information in order to deal with the
->> hardware error - and it looks like it does - then the additional layer
->> of ghes_edac is not needed.
->
-> APEI is just the mechanism that collects the data, not the mechanism
-> that reports to userspace.
+Change position only.
 
-I think what Boris is saying is that ghes_edac isn't adding anything 
-more here given what we get from APEI structures. So, there doesn't seem 
-to be a need to add dependency on edac for this purpose.
+Prepare to update arch_early_irq_init() that needs to call some static
+functions.
 
-Further, ghes_edac seems to require EDAC_MM_EDAC to be compiled into the 
-kernel (not a module). So, more dependencies.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c | 89 +++++++++++++++++++++---------------------
+ 1 file changed, 44 insertions(+), 45 deletions(-)
 
->
-> The current implementation is that APEI already reports those errors
-> via ghes_edac driver. It also reports the very same error via MCE
-> (although the APEI interface to MCE is currently broken for everything
-> that it is not Nehalem-EX - as it basically emulates the MCE log for
-> that specific architecture).
-
-So, I looked at ghes_edac and it basically seems to boil down to 
-trace_mc_event. But, this only seems to expose the APEI data as a string 
-and doesn't look to really make all the fields available to user-space 
-in a raw manner. Not sure how well this can be utilised by a user-space 
-tool. Do you have suggestions on how we can do this?
-
-Thanks,
-Naveen
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index c883da9..18b123b 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -185,51 +185,6 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
+ 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
+ }
+ 
+-
+-/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
+-static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
+-
+-int __init arch_early_irq_init(void)
+-{
+-	struct irq_cfg *cfg;
+-	int count, node, i;
+-
+-	if (!legacy_pic->nr_legacy_irqs)
+-		io_apic_irqs = ~0UL;
+-
+-	for (i = 0; i < nr_ioapics; i++) {
+-		ioapics[i].saved_registers =
+-			kzalloc(sizeof(struct IO_APIC_route_entry) *
+-				ioapics[i].nr_registers, GFP_KERNEL);
+-		if (!ioapics[i].saved_registers)
+-			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
+-	}
+-
+-	cfg = irq_cfgx;
+-	count = ARRAY_SIZE(irq_cfgx);
+-	node = cpu_to_node(0);
+-
+-	/* Make sure the legacy interrupts are marked in the bitmap */
+-	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
+-
+-	for (i = 0; i < count; i++) {
+-		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
+-		irq_set_chip_data(i, &cfg[i]);
+-		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
+-		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
+-		/*
+-		 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+-		 */
+-		if (i < legacy_pic->nr_legacy_irqs) {
+-			cfg[i].vector = IRQ0_VECTOR + i;
+-			cpumask_setall(cfg[i].domain);
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+ 	return irq_get_chip_data(irq);
+@@ -325,6 +280,50 @@ static struct irq_cfg *alloc_reserved_irq_and_cfg_at(unsigned int at, int node)
+ 	return alloc_irq_and_cfg_at(at, node);
+ }
+ 
++/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
++static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
++
++int __init arch_early_irq_init(void)
++{
++	struct irq_cfg *cfg;
++	int count, node, i;
++
++	if (!legacy_pic->nr_legacy_irqs)
++		io_apic_irqs = ~0UL;
++
++	for (i = 0; i < nr_ioapics; i++) {
++		ioapics[i].saved_registers =
++			kzalloc(sizeof(struct IO_APIC_route_entry) *
++				ioapics[i].nr_registers, GFP_KERNEL);
++		if (!ioapics[i].saved_registers)
++			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
++	}
++
++	cfg = irq_cfgx;
++	count = ARRAY_SIZE(irq_cfgx);
++	node = cpu_to_node(0);
++
++	/* Make sure the legacy interrupts are marked in the bitmap */
++	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
++
++	for (i = 0; i < count; i++) {
++		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
++		irq_set_chip_data(i, &cfg[i]);
++		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
++		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
++		/*
++		 * For legacy IRQ's, start with assigning irq0 to irq15 to
++		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
++		 */
++		if (i < legacy_pic->nr_legacy_irqs) {
++			cfg[i].vector = IRQ0_VECTOR + i;
++			cpumask_setall(cfg[i].domain);
++		}
++	}
++
++	return 0;
++}
++
+ struct io_apic {
+ 	unsigned int index;
+ 	unsigned int unused[3];
+-- 
+1.8.1.4
 
