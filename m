@@ -1,102 +1,148 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5d806e6622b33c80dc421025619fe574a121863d.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 15/20] tile PCI RC: use proper accessor function
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34722 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717Ab3HKCsi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:48:38 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH v4 01/28] genirq: Split __irq_reserve_irqs from irq_alloc_descs
+Date: Sat, 10 Aug 2013 19:47:47 -0700
+Message-Id: <1376189294-32022-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Using the low-level hv_dev_pread() API makes assumptions about the
-layout of datastructures in the Tilera hypervisor API; it's better to
-use the gxio_XXX accessor and the pcie_trio_ports_property struct.
+irq_alloc_descs and irq_reserve_irqs are almost the same.
+Separate code out to __irq_reserved_irqs, and other two reuse
+__irq_reserve_irqs.
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+We will use __irq_reserve_irqs for coming ioapic hotplug support.
+
+-v2: fix func docbook related comments, pointed out by tglx.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>
+Reviewed-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- arch/tile/kernel/pci_gx.c | 24 +++++++++++-------------
- 1 file changed, 11 insertions(+), 13 deletions(-)
+ include/linux/irq.h  |  1 +
+ kernel/irq/irqdesc.c | 54 ++++++++++++++++++++++++++++++----------------------
+ 2 files changed, 32 insertions(+), 23 deletions(-)
 
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index 8352d85..de5008b 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -91,7 +91,7 @@ static int rc_delay[TILEGX_NUM_TRIO][TILEGX_TRIO_PCIES];
- 	TRIO_PCIE_INTFC_PORT_CONFIG__STRAP_STATE_VAL_AUTO_CONFIG_ENDPOINT_G1
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index f04d3ba..8c46cb2 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -611,6 +611,7 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
  
- /* Array of the PCIe ports configuration info obtained from the BIB. */
--struct pcie_port_property pcie_ports[TILEGX_NUM_TRIO][TILEGX_TRIO_PCIES];
-+struct pcie_trio_ports_property pcie_ports[TILEGX_NUM_TRIO];
+ void irq_free_descs(unsigned int irq, unsigned int cnt);
+ int irq_reserve_irqs(unsigned int from, unsigned int cnt);
++int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
  
- /* Number of configured TRIO instances. */
- int num_trio_shims;
-@@ -195,10 +195,7 @@ static int tile_pcie_open(int trio_index)
- #endif
+ static inline void irq_free_desc(unsigned int irq)
+ {
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 192a302..a151db6 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -340,18 +340,15 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
+ EXPORT_SYMBOL_GPL(irq_free_descs);
  
- 	/* Get the properties of the PCIe ports on this TRIO instance. */
--	ret = hv_dev_pread(context->fd, 0,
--		(HV_VirtAddr)&pcie_ports[trio_index][0],
--		sizeof(struct pcie_port_property) * TILEGX_TRIO_PCIES,
--		GXIO_TRIO_OP_GET_PORT_PROPERTY);
-+	ret = gxio_trio_get_port_property(context, &pcie_ports[trio_index]);
- 	if (ret < 0) {
- 		pr_err("PCI: PCIE_GET_PORT_PROPERTY failure, error %d,"
- 		       " on TRIO %d\n", ret, trio_index);
-@@ -221,8 +218,8 @@ static int tile_pcie_open(int trio_index)
- 		unsigned int reg_offset;
+ /**
+- * irq_alloc_descs - allocate and initialize a range of irq descriptors
+- * @irq:	Allocate for specific irq number if irq >= 0
++ * __irq_reserve_irqs - reserve a range of irqs
++ * @irq:	Reserve for specific irq number if irq >= 0
+  * @from:	Start the search from this irq number
+- * @cnt:	Number of consecutive irqs to allocate.
+- * @node:	Preferred node on which the irq descriptor should be allocated
+- * @owner:	Owning module (can be NULL)
++ * @cnt:	Number of consecutive irqs to reserve.
+  *
+  * Returns the first irq number or error code
+  */
+ int __ref
+-__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+-		  struct module *owner)
++__irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt)
+ {
+ 	int start, ret;
  
- 		/* Ignore ports that are not specified in the BIB. */
--		if (!pcie_ports[trio_index][mac].allow_rc &&
--		    !pcie_ports[trio_index][mac].allow_ep)
-+		if (!pcie_ports[trio_index].ports[mac].allow_rc &&
-+		    !pcie_ports[trio_index].ports[mac].allow_ep)
- 			continue;
+@@ -369,7 +366,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
+ 					   from, cnt, 0);
+ 	ret = -EEXIST;
+-	if (irq >=0 && start != irq)
++	if (irq >= 0 && start != irq)
+ 		goto err;
  
- 		reg_offset =
-@@ -243,7 +240,7 @@ static int tile_pcie_open(int trio_index)
- 			 */
- 			if (port_config.strap_state == AUTO_CONFIG_EP ||
- 			    port_config.strap_state == AUTO_CONFIG_EP_G1)
--				pcie_ports[trio_index][mac].allow_ep = 1;
-+				pcie_ports[trio_index].ports[mac].allow_ep = 1;
- 		}
- 	}
+ 	if (start + cnt > nr_irqs) {
+@@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
  
-@@ -438,9 +435,10 @@ int __init tile_pci_init(void)
- 		return 0;
+ 	bitmap_set(allocated_irqs, start, cnt);
+ 	mutex_unlock(&sparse_irq_lock);
+-	return alloc_descs(start, cnt, node, owner);
++	return start;
  
- 	/*
--	 * Now determine which PCIe ports are configured to operate in RC mode.
--	 * We look at the Board Information Block first and then see if there
--	 * are any overriding configuration by the HW strapping pin.
-+	 * Now determine which PCIe ports are configured to operate in RC
-+	 * mode.  To use a port, it must be allowed to be in RC mode by the
-+	 * Board Information Block, and the hardware strapping pins must be
-+	 * set to RC mode.
- 	 */
- 	for (i = 0; i < TILEGX_NUM_TRIO; i++) {
- 		gxio_trio_context_t *context = &trio_contexts[i];
-@@ -449,7 +447,7 @@ int __init tile_pci_init(void)
- 			continue;
+ err:
+ 	mutex_unlock(&sparse_irq_lock);
+ 	return ret;
+ }
++
++/**
++ * __irq_alloc_descs - allocate and initialize a range of irq descriptors
++ * @irq:	Allocate for specific irq number if irq >= 0
++ * @from:	Start the search from this irq number
++ * @cnt:	Number of consecutive irqs to allocate.
++ * @node:	Preferred node on which the irq descriptor should be allocated
++ * @owner:	Owning module (can be NULL)
++ *
++ * Returns the first irq number or error code
++ */
++int __ref
++__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
++		  struct module *owner)
++{
++	int start;
++
++	start = __irq_reserve_irqs(irq, from, cnt);
++
++	if (start < 0)
++		return start;
++
++	return alloc_descs(start, cnt, node, owner);
++}
+ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
  
- 		for (j = 0; j < TILEGX_TRIO_PCIES; j++) {
--			if (pcie_ports[i][j].allow_rc &&
-+			if (pcie_ports[i].ports[j].allow_rc &&
- 			    strapped_for_rc(context, j)) {
- 				pcie_rc[i][j] = 1;
- 				num_rc_controllers++;
-@@ -736,7 +734,7 @@ int __init pcibios_init(void)
- 			__gxio_mmio_read(trio_context->mmio_base_mac +
- 					 reg_offset);
- 		if (!port_status.dl_up) {
--			if (pcie_ports[trio_index][mac].removable) {
-+			if (pcie_ports[trio_index].ports[mac].removable) {
- 				pr_info("PCI: link is down, MAC %d on TRIO %d\n",
- 					mac, trio_index);
- 				pr_info("This is expected if no PCIe card"
+ /**
+@@ -397,20 +418,7 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+  */
+ int irq_reserve_irqs(unsigned int from, unsigned int cnt)
+ {
+-	unsigned int start;
+-	int ret = 0;
+-
+-	if (!cnt || (from + cnt) > nr_irqs)
+-		return -EINVAL;
+-
+-	mutex_lock(&sparse_irq_lock);
+-	start = bitmap_find_next_zero_area(allocated_irqs, nr_irqs, from, cnt, 0);
+-	if (start == from)
+-		bitmap_set(allocated_irqs, start, cnt);
+-	else
+-		ret = -EEXIST;
+-	mutex_unlock(&sparse_irq_lock);
+-	return ret;
++	return __irq_reserve_irqs(from, from, cnt);
+ }
+ 
+ /**
 -- 
-1.8.3.1
+1.8.1.4
 
