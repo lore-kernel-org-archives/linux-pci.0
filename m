@@ -1,51 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:38606 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756721Ab3HOTnM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Aug 2013 15:43:12 -0400
-Date: Thu, 15 Aug 2013 21:43:09 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: "Luck, Tony" <tony.luck@intel.com>
-Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Message-ID: <20130815194309.GL27616@pd.tnic>
-References: <20130813124258.GC4077@pd.tnic>
- <520A6D98.9060204@linux.vnet.ibm.com>
- <20130813175809.GE4077@pd.tnic>
- <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
- <20130813181004.GF4077@pd.tnic>
- <3908561D78D1C84285E8C5FCA982C28F31CB9150@ORSMSX106.amr.corp.intel.com>
- <20130814054322.GA9158@pd.tnic>
- <3908561D78D1C84285E8C5FCA982C28F31CBAAFA@ORSMSX106.amr.corp.intel.com>
- <20130815101432.GE27616@pd.tnic>
- <3908561D78D1C84285E8C5FCA982C28F31CBD158@ORSMSX106.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F31CBD158@ORSMSX106.amr.corp.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:25527 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830Ab3HKCqL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:46:11 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH 06/28] x86, irq: Show MSI-X clearly in debug message
+Date: Sat, 10 Aug 2013 19:45:17 -0700
+Message-Id: <1376189139-31856-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 15, 2013 at 07:14:34PM +0000, Luck, Tony wrote:
-> Yes - but the serial port is too slow to log everything that you might
-> conceivably need to debug your problem. Imagine trying to log every
-> interrupt and every pagefault on every processor down a single 115200
-> baud connection. Thus my earlier comments about guessing what to log.
+Print out exact MSI or MSI-X instead of MSI/MSI-X.
 
-Right, but a normally sized dmesg usually gets through ok. Selecting
-what to log could be a very tedious and error-prone process...
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index eda56ad..119fdf8 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3125,7 +3125,8 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 
+-	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for MSI/MSI-X\n", irq);
++	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for MSI%s\n", irq,
++			 msidesc->msi_attrib.is_msix ? "-X" : "");
+ 
+ 	return 0;
+ }
 -- 
-Regards/Gruss,
-    Boris.
+1.8.1.4
 
-Sent from a fat crate under my desk. Formatting is fine.
---
