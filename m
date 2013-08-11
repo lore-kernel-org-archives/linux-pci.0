@@ -1,63 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:61170 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753230Ab3HBSwt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 14:52:49 -0400
-Message-ID: <1375469567.1460.15.camel@x61.thuisdomein>
-Subject: Re: [PATCH -v4 1/6] PCI,pciehp: avoid add a device already exist
- before suspend during resume
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Date: Fri, 02 Aug 2013 20:52:47 +0200
-In-Reply-To: <1375362389-26096-2-git-send-email-wangyijing@huawei.com>
-References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
-	 <1375362389-26096-2-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:34907 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753658Ab3HKCth (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:49:37 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 25/28] PCI, x86: Make ioapic hotplug support built-in
+Date: Sat, 10 Aug 2013 19:48:11 -0700
+Message-Id: <1376189294-32022-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yijing,
+ioapic hotplug should be built-in like pci root bus hotplug.
 
-On Thu, 2013-08-01 at 21:06 +0800, Yijing Wang wrote:
-> Currently, pciehp_resume() try to hot add device if the slot adapter
-> status return true. But if there are already some devices exist,
-> namely list_empty(bus->devices) return false. We should not add the device
-> again, because the device add action will fail. Also print some uncomfortable
-> messages like this:
-> 	pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
-> 	pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
-> 
-> Tested-by: Paul Bolle <pebolle@tiscali.nl>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Paul Bolle <pebolle@tiscali.nl>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: Oliver Neukum <oneukum@suse.de>
-> Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> Cc: linux-pci@vger.kernel.org
+Also need to make it depends on X86_IO_APIC.
 
-0) There's no 0/6 in my mailbox, so I reply to this message.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/Kconfig  | 3 ++-
+ drivers/pci/ioapic.c | 6 +++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-1) This series applies cleanly on top of v3.10.5-rc1 (except for some
-odd problem in 6/6, which I mentioned in my reply to 6/6).
-
-2) However, this series doesn't appear to work on v3.10.5-rc1. After the
-first resume the wireless connection appears to be gone (in Gnome 3).
-iwl4965 is still loaded, but I can't reconnect. That should happen
-automagically.
-
-3) And the second resume apparently hangs the system. Not sure how it
-hangs exactly, but I have to manually shutdown the laptop by pressing
-the power button for a few seconds.
-
-4) I guess I'll have to respin v3.10.5-rc1 without this series to
-determine if v3.10.5-rc1 or this series causes these issues. But feel
-free to prod me for further tests.
-
-
-Paul Bolle
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 81944fb..6c9ede2 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -109,9 +109,10 @@ config PCI_PASID
+ 	  If unsure, say N.
+ 
+ config PCI_IOAPIC
+-	tristate "PCI IO-APIC hotplug support" if X86
++	bool "PCI IO-APIC hotplug support" if X86
+ 	depends on PCI
+ 	depends on ACPI
++	depends on X86_IO_APIC
+ 	default !X86
+ 
+ config PCI_LABEL
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 1b90579..7d6b157 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -113,6 +113,10 @@ static struct pci_driver ioapic_driver = {
+ 	.remove		= ioapic_remove,
+ };
+ 
+-module_pci_driver(ioapic_driver);
++static int __init ioapic_init(void)
++{
++	return pci_register_driver(&ioapic_driver);
++}
++module_init(ioapic_init);
+ 
+ MODULE_LICENSE("GPL");
+-- 
+1.8.1.4
 
