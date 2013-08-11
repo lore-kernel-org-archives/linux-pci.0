@@ -1,240 +1,239 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:39458 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754081Ab3HWAC7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Aug 2013 20:02:59 -0400
-Received: by mail-oa0-f47.google.com with SMTP id g12so4858520oah.20
-        for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2013 17:02:58 -0700 (PDT)
-Date: Thu, 22 Aug 2013 18:02:52 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Radim =?utf-8?B?S3LEjW3DocWZ?= <rkrcmar@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Isaku Yamahata <yamahata@valinux.co.jp>
-Subject: Re: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
-Message-ID: <20130823000252.GA29441@google.com>
-References: <1375970227-14794-1-git-send-email-rkrcmar@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1375970227-14794-1-git-send-email-rkrcmar@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34757 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753043Ab3HKCs4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:48:56 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Joerg Roedel <joro@8bytes.org>
+Subject: [PATCH v4 05/28] x86, irq: Modify irq chip once for irq remapping
+Date: Sat, 10 Aug 2013 19:47:51 -0700
+Message-Id: <1376189294-32022-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 08, 2013 at 03:57:07PM +0200, Radim Krčmář wrote:
-> PCIe switch can be connected directly to the PCIe root complex in QEMU;
-> ASPM does not expect this topology and dereferences NULL pointer when
-> initializing.
-> 
-> Downstream port can be also connected to the root complex without
-> upstream one, so code checks for both, otherwise they dereference NULL
-> on line drivers/pci/pcie/aspm.c:530 (alloc_pcie_link_state+13):
->   		parent = pdev->bus->parent->self->link_state;
-> "pdev->bus->parent->self == NULL" if upstream port is connected directly
-> to the root bus and "pdev->bus->parent == NULL" in the second case.
-> 
-> v1 -> v2: (https://lkml.org/lkml/2013/6/19/753)
->  - Initialization is aborted in pcie_aspm_init_link_state, where other
->    special cases are being handled
->  - pci_is_root_bus is used
->  - Warning is printed
-> 
-> Reproducer for "downstream -- root" and "downstream -- upstream -- root"
-> (used qemu-kvm 1.5, q35 machine type might be missing on older ones)
-> 
->   for parent in pcie.0 upstream; do
->    qemu-kvm -m 128 -M q35 -nographic -no-reboot \
->      -device x3130-upstream,bus=pcie.0,id=upstream \
->      -device xio3130-downstream,bus=$parent,id=downstream,chassis=1 \
->      -device virtio-blk-pci,bus=downstream,id=virtio-zero,drive=zero \
->      -drive  file=/dev/zero,id=zero,format=raw \
->      -kernel bzImage -append "console=ttyS0 panic=3" # pcie_aspm=off
->   done
-> 
-> ASPM in QEMU works if we connect upstream through root port
->   -device ioh3420,bus=pcie.0,id=root.0 \
->   -device x3130-upstream,bus=root.0,id=upstream
-> 
-> Signed-off-by: Radim Krčmář <rkrcmar@redhat.com>
-> ---
->  drivers/pci/pcie/aspm.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 403a443..209cd7f 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -570,6 +570,15 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
->  	    pdev->bus->self)
->  		return;
->  
-> +	/* We require at least two ports between downstream and root bus */
-> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM &&
-> +	    (pci_is_root_bus(pdev->bus) ||
-> +	     pci_is_root_bus(pdev->bus->parent))) {
-> +		dev_warn(&pdev->dev, "ASPM disabled"
-> +		                     " (connected directly to root bus)\n");
-> +		return;
-> +	}
+Current code: after irq remapping is enabled, irq_chip fields are modified
+during every irq setup.
+	mp_register_gsi
+		io_apic_set_pci_routing
+			io_apic_setup_irq_pin
+				setup_ioapic_irq
+					ioapic_register_intr
+						setup_remapped_irq
+	native_setup_msi_irqs
+		setup_msi_irq
+			setup_remapped_irq
+	default_setup_hpet_msi
+		setup_remapped_irq
+that is not efficient.
 
-I don't really want to detect invalid topologies piecemeal -- we will
-likely find other areas (MPS, AER, link speed management, etc.) that
-have similar dependencies.  I'd rather do it generically, maybe with
-something like the following patch.
+We only need to modify those irq chip one time after we enable
+irq remapping.
 
-I tried this with the following qemu invocation:
+Change irq_remap_modify_chip_defaults() to __init as it only gets
+called during booting stage, via irq_remap_modify_chips().
 
-    $ /usr/local/bin/qemu-system-x86_64 -M q35 -enable-kvm -m 512   -device x3130-upstream,bus=pcie.0,id=upstream   -device xio3130-downstream,bus=upstream,id=downstream,chassis=1   -drive file=ubuntu.img,if=none,id=mydisk   -device ide-drive,drive=mydisk,bus=ide.0   -drive file=scratch.img,id=disk1 -device virtio-blk-pci,bus=downstream,id=virtio-disk1,drive=disk1 -nographic -kernel ~/linux/arch/x86/boot/bzImage   -append "console=ttyS0,115200n8 root=/dev/sda1 ignore_loglevel"
+Affected irq_chip: ioapic_chip, msi_chip, hpet_msi_type.
+We don't need to use #ifdef in irq_remap_modify_chips():
+IRQ_REMAP only support x86_64 && X86_IO_APIC && PCI_MSI.
+HPET_TIMER is selected when x86_64 is set.
+When we have IRQ_REMAP enabled, al three chips are defined and
+used.
 
-With unmodified v3.11-rc2, I see the NULL pointer dereference, but with
-the patch below applied, we just ignore the 00:03.0 device and the kernel
-boots fine.
+-v3: Remove irq_chip in setup_remapped_irq according to Sebastian.
+     also add missing "\n" in printk.
 
-Bjorn
-
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Joerg Roedel <joro@8bytes.org>
 ---
- arch/powerpc/kernel/pci_of_scan.c |    7 ++++++-
- arch/sparc/kernel/pci.c           |    7 ++++++-
- drivers/pci/probe.c               |   37 +++++++++++++++++++++++++++++++++----
- include/linux/pci.h               |    2 +-
- 4 files changed, 46 insertions(+), 7 deletions(-)
+ arch/x86/include/asm/io_apic.h       |  5 +++++
+ arch/x86/include/asm/irq_remapping.h |  8 ++------
+ arch/x86/kernel/apic/apic.c          |  9 ++++++++-
+ arch/x86/kernel/apic/io_apic.c       | 14 ++++++--------
+ drivers/iommu/irq_remapping.c        | 13 ++++++++++---
+ 5 files changed, 31 insertions(+), 18 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 6b0ba58..f6ef4dd 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -143,7 +143,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
- 	dev->devfn = devfn;
- 	dev->multifunction = 0;		/* maybe a lie? */
- 	dev->needs_freset = 0;		/* pcie fundamental reset required */
--	set_pcie_port_type(dev);
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 459e50a..eaff3ad 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -215,6 +215,11 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
  
- 	list_for_each_entry(slot, &dev->bus->slots, list)
- 		if (PCI_SLOT(dev->devfn) == slot->number)
-@@ -164,6 +163,12 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
- 	pr_debug("    class: 0x%x\n", dev->class);
- 	pr_debug("    revision: 0x%x\n", dev->revision);
+ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
  
-+	if (set_pcie_port_type(dev)) {
-+		pci_bus_put(dev->bus);
-+		kfree(dev);
-+		return NULL;
-+	}
++extern struct irq_chip ioapic_chip;
++extern struct irq_chip msi_chip;
++extern struct irq_chip hpet_msi_type;
++void irq_remap_modify_chips(void);
 +
- 	dev->current_state = PCI_UNKNOWN;	/* unknown power state */
- 	dev->error_state = pci_channel_io_normal;
- 	dev->dma_mask = 0xffffffff;
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index bc4d3f5..5600849 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -287,7 +287,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
- 	dev->dev.of_node = of_node_get(node);
- 	dev->devfn = devfn;
- 	dev->multifunction = 0;		/* maybe a lie? */
--	set_pcie_port_type(dev);
+ #else  /* !CONFIG_X86_IO_APIC */
  
- 	list_for_each_entry(slot, &dev->bus->slots, list)
- 		if (PCI_SLOT(dev->devfn) == slot->number)
-@@ -319,6 +318,12 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
- 		printk("    class: 0x%x device name: %s\n",
- 		       dev->class, pci_name(dev));
+ #define io_apic_assign_pci_irqs 0
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 606f42e..304c93f 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -52,9 +52,7 @@ extern void compose_remapped_msi_msg(struct pci_dev *pdev,
+ 				     struct msi_msg *msg, u8 hpet_id);
+ extern int setup_hpet_msi_remapped(unsigned int irq, unsigned int id);
+ extern void panic_if_irq_remap(const char *msg);
+-extern bool setup_remapped_irq(int irq,
+-			       struct irq_cfg *cfg,
+-			       struct irq_chip *chip);
++extern bool setup_remapped_irq(int irq, struct irq_cfg *cfg);
  
-+	if (set_pcie_port_type(dev)) {
-+		pci_bus_put(dev->bus);
-+		kfree(dev);
-+		return NULL;
-+	}
-+
- 	/* I have seen IDE devices which will not respond to
- 	 * the bmdma simplex check reads if bus mastering is
- 	 * disabled.
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cf57fe7..a8cc929 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -970,20 +970,47 @@ static void pci_read_irq(struct pci_dev *dev)
- 	dev->irq = irq;
- }
+ #else  /* CONFIG_IRQ_REMAP */
  
--void set_pcie_port_type(struct pci_dev *pdev)
-+int set_pcie_port_type(struct pci_dev *pdev)
+@@ -89,9 +87,7 @@ static inline void panic_if_irq_remap(const char *msg)
  {
--	int pos;
-+	int pos, type;
- 	u16 reg16;
-+	struct pci_dev *parent;
- 
- 	pos = pci_find_capability(pdev, PCI_CAP_ID_EXP);
- 	if (!pos)
--		return;
-+		return 0;
-+
- 	pdev->is_pcie = 1;
- 	pdev->pcie_cap = pos;
- 	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
- 	pdev->pcie_flags_reg = reg16;
- 	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
- 	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
-+
-+	type = pci_pcie_type(pdev);
-+	parent = pdev->bus->self;
-+
-+	/* An Upstream Port must be below a Root Port or a Downstream Port */
-+	if (type == PCI_EXP_TYPE_UPSTREAM) {
-+		if (!parent ||
-+		    (pci_pcie_type(parent) != PCI_EXP_TYPE_ROOT_PORT &&
-+		     pci_pcie_type(parent) != PCI_EXP_TYPE_DOWNSTREAM)) {
-+			dev_warn(&pdev->dev,
-+				 "ignoring improperly connected PCIe switch\n");
-+			return -EINVAL;
-+		}
-+	}
-+
-+	/* A Downstream Port must be directly below an Upstream Port */
-+	if (type == PCI_EXP_TYPE_DOWNSTREAM) {
-+		if (!parent ||
-+		    pci_pcie_type(parent) != PCI_EXP_TYPE_UPSTREAM) {
-+			dev_warn(&pdev->dev, "ignoring malformed PCIe switch (no Upstream Port)\n");
-+			return -EINVAL;
-+		}
-+	}
-+
-+	return 0;
  }
  
- void set_pcie_hotplug_bridge(struct pci_dev *pdev)
-@@ -1025,7 +1052,6 @@ int pci_setup_device(struct pci_dev *dev)
- 	dev->hdr_type = hdr_type & 0x7f;
- 	dev->multifunction = !!(hdr_type & 0x80);
- 	dev->error_state = pci_channel_io_normal;
--	set_pcie_port_type(dev);
- 
- 	list_for_each_entry(slot, &dev->bus->slots, list)
- 		if (PCI_SLOT(dev->devfn) == slot->number)
-@@ -1046,6 +1072,9 @@ int pci_setup_device(struct pci_dev *dev)
- 	dev_printk(KERN_DEBUG, &dev->dev, "[%04x:%04x] type %02x class %#08x\n",
- 		   dev->vendor, dev->device, dev->hdr_type, dev->class);
- 
-+	if (set_pcie_port_type(dev))
-+		return -EINVAL;
+-static inline bool setup_remapped_irq(int irq,
+-				      struct irq_cfg *cfg,
+-				      struct irq_chip *chip)
++static inline bool setup_remapped_irq(int irq, struct irq_cfg *cfg)
+ {
+ 	return false;
+ }
+diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
+index eca89c5..9b64203 100644
+--- a/arch/x86/kernel/apic/apic.c
++++ b/arch/x86/kernel/apic/apic.c
+@@ -1571,6 +1571,8 @@ void enable_x2apic(void)
+ int __init enable_IR(void)
+ {
+ #ifdef CONFIG_IRQ_REMAP
++	int ret;
 +
- 	/* need to have dev->class ready */
- 	dev->cfg_size = pci_cfg_space_size(dev);
+ 	if (!irq_remapping_supported()) {
+ 		pr_debug("intr-remapping not supported\n");
+ 		return -1;
+@@ -1582,7 +1584,12 @@ int __init enable_IR(void)
+ 		return -1;
+ 	}
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 89ed123..a61134b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -982,7 +982,7 @@ void pci_disable_ltr(struct pci_dev *dev);
- int pci_set_ltr(struct pci_dev *dev, int snoop_lat_ns, int nosnoop_lat_ns);
+-	return irq_remapping_enable();
++	ret = irq_remapping_enable();
++
++	if (ret >= 0)
++		irq_remap_modify_chips();
++
++	return ret;
+ #endif
+ 	return -1;
+ }
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9ed796c..eda56ad 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1238,8 +1238,6 @@ void __setup_vector_irq(int cpu)
+ 	raw_spin_unlock(&vector_lock);
+ }
  
- /* For use by arch with custom probe code */
--void set_pcie_port_type(struct pci_dev *pdev);
-+int set_pcie_port_type(struct pci_dev *pdev);
- void set_pcie_hotplug_bridge(struct pci_dev *pdev);
+-static struct irq_chip ioapic_chip;
+-
+ #ifdef CONFIG_X86_32
+ static inline int IO_APIC_irq_trigger(int irq)
+ {
+@@ -1280,7 +1278,7 @@ static void ioapic_register_intr(unsigned int irq, struct irq_cfg *cfg,
+ 		fasteoi = false;
+ 	}
  
- /* Functions for PCI Hotplug drivers to use */
+-	if (setup_remapped_irq(irq, cfg, chip))
++	if (setup_remapped_irq(irq, cfg))
+ 		fasteoi = trigger != 0;
+ 
+ 	hdl = fasteoi ? handle_fasteoi_irq : handle_edge_irq;
+@@ -2511,7 +2509,7 @@ static void ack_apic_level(struct irq_data *data)
+ 	ioapic_irqd_unmask(data, cfg, masked);
+ }
+ 
+-static struct irq_chip ioapic_chip __read_mostly = {
++struct irq_chip ioapic_chip __read_mostly = {
+ 	.name			= "IO-APIC",
+ 	.irq_startup		= startup_ioapic_irq,
+ 	.irq_mask		= mask_ioapic_irq,
+@@ -3093,7 +3091,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+  */
+-static struct irq_chip msi_chip = {
++struct irq_chip msi_chip = {
+ 	.name			= "PCI-MSI",
+ 	.irq_unmask		= unmask_msi_irq,
+ 	.irq_mask		= mask_msi_irq,
+@@ -3123,7 +3121,7 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 	if (!irq_offset)
+ 		write_msi_msg(irq, &msg);
+ 
+-	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
++	setup_remapped_irq(irq, irq_get_chip_data(irq));
+ 
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 
+@@ -3240,7 +3238,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ 	return IRQ_SET_MASK_OK_NOCOPY;
+ }
+ 
+-static struct irq_chip hpet_msi_type = {
++struct irq_chip hpet_msi_type = {
+ 	.name = "HPET_MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+@@ -3261,7 +3259,7 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+ 
+ 	hpet_msi_write(irq_get_handler_data(irq), &msg);
+ 	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+-	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
++	setup_remapped_irq(irq, irq_get_chip_data(irq));
+ 
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 	return 0;
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 85ae2cf..8e4e3af 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -375,19 +375,26 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ 	seq_printf(p, " IR-%s", data->chip->name);
+ }
+ 
+-static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
++static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ {
++	printk(KERN_DEBUG "irq_chip: %s ==> IR-%s\n", chip->name, chip->name);
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+ 	chip->irq_eoi = ir_ack_apic_level;
+ 	chip->irq_set_affinity = x86_io_apic_ops.set_affinity;
+ }
+ 
+-bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
++void __init irq_remap_modify_chips(void)
++{
++	irq_remap_modify_chip_defaults(&ioapic_chip);
++	irq_remap_modify_chip_defaults(&msi_chip);
++	irq_remap_modify_chip_defaults(&hpet_msi_type);
++}
++
++bool setup_remapped_irq(int irq, struct irq_cfg *cfg)
+ {
+ 	if (!irq_remapped(cfg))
+ 		return false;
+ 	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+-	irq_remap_modify_chip_defaults(chip);
+ 	return true;
+ }
+-- 
+1.8.1.4
+
