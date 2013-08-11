@@ -1,166 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v4 17/28] x86, irq: Reserve irq range and alloc_reserved for booting path
-Date: Sat, 10 Aug 2013 19:48:03 -0700
-Message-Id: <1376189294-32022-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:38083 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754142Ab3HKVPV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 11 Aug 2013 17:15:21 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Stefan Seyfried <stefan.seyfried@googlemail.com>
+Cc: linux-pci@vger.kernel.org, Greg KH <gregkh@linux.com>,
+	Oliver Neukum <oneukum@suse.de>
+Subject: Re: acpiphp and pciehp not working together on Thinkpad X200s
+Date: Sun, 11 Aug 2013 23:25:39 +0200
+Message-ID: <1880950.SYaKzZm9j7@vostro.rjw.lan>
+In-Reply-To: <520747B6.8010309@message-id.googlemail.com>
+References: <520747B6.8010309@message-id.googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We will use reserve and alloc_reserved_irq_and_cfg_at for hotplug ioapic path.
+On Sunday, August 11, 2013 10:13:42 AM Stefan Seyfried wrote:
+> Hi all,
+> 
+> after openSUSE changed its kernel config to statically build in acpiphp
+> and pciehp, my ExpressCard slot does not work anymore. The workaround
+> is to disable acpiphp with acpiphp.disable=1
+> 
+> To be honest, I cannot say if it ever worked with both drivers loaded,
+> since I always had to load pciehp manually to get the slot working. I
+> don't think I ever tried acpiphp before. If necessary, I can either
+> build a kernel with both drivers modularized or just boot an old kernel
+> from before the config change.
+> 
+> I did diff both dmesg outputs and the only differences I can see are:
+> 
+> -kernel: acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
+> +kernel: acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5, disabled by user; please report a bug
+> 
+> @@ -401,7 +400,6 @@
+>  kernel: pci 0000:03:00.0: PME# supported from D0 D3hot D3cold
+>  kernel: pci 0000:00:1c.1: PCI bridge to [bus 03]
+>  kernel: pci 0000:00:1c.1:   bridge window [mem 0xf2500000-0xf25fffff]
+> -kernel: acpiphp: Slot [1] registered
+>  kernel: pci 0000:00:1c.3: PCI bridge to [bus 05-0c]
+>  kernel: pci 0000:00:1c.3:   bridge window [io  0x2000-0x2fff]
+>  kernel: pci 0000:00:1c.3:   bridge window [mem 0xf0000000-0xf1ffffff]
+> 
+> @@ -585,8 +583,7 @@
+>  kernel: pciehp 0000:00:1c.1:pcie04: HPC vendor_id 8086 device_id 2942 ss_vid 17aa ss_did 20f3
+>  kernel: pciehp 0000:00:1c.1:pcie04: service driver pciehp loaded
+>  kernel: pciehp 0000:00:1c.3:pcie04: HPC vendor_id 8086 device_id 2946 ss_vid 17aa ss_did 20f3
+> -kernel: pciehp 0000:00:1c.3:pcie04: pci_hp_register failed with error -16
+> -kernel: pciehp 0000:00:1c.3:pcie04: Slot already registered by another hotplug driver
+> +kernel: pciehp 0000:00:1c.3:pcie04: service driver pciehp loaded
+>  kernel: pciehp: PCI Express Hot Plug Controller Driver version: 0.4
+>  kernel: intel_idle: does not run on family 6 model 23
+>  kernel: GHES: HEST is not enabled!
+> 
+> The other changes are
+> * kernel command line (obviously)
+> * timing related (small difference in cpu freq / jiffies)
+> 
+> Greg told me to report the issue here, so I'm doing that :-)
+> 
+> If you need more information (would a complete dmesg of both cases
+> be useful?), just let me know.
 
-To make thing simple, we could make booting path use same code.
+Which kernel is that?
 
-All irq range for all GSIs will be reserved at first, and alloc_reserved
-will really allocate those irq_desc/cfg when it is used.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/include/asm/io_apic.h |  1 +
- arch/x86/kernel/apic/io_apic.c | 80 +++++++++++++++++++++++++++++++-----------
- 2 files changed, 60 insertions(+), 21 deletions(-)
-
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index eaff3ad..8181fd8 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -176,6 +176,7 @@ extern void setup_ioapic_ids_from_mpc_nocheck(void);
- struct mp_ioapic_gsi{
- 	u32 gsi_base;
- 	u32 gsi_end;
-+	u32 irq_base;
- };
- extern struct mp_ioapic_gsi  mp_gsi_routing[];
- extern u32 gsi_top;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 3e0530c..cb272c9 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -280,8 +280,47 @@ static struct irq_cfg *alloc_reserved_irq_and_cfg_at(unsigned int at, int node)
- 	return alloc_irq_and_cfg_at(at, node);
- }
- 
--/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
--static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
-+static int reserve_ioapic_gsi_irq_base(int idx)
-+{
-+	int irq;
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
-+	int cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
-+
-+	irq = __irq_reserve_irqs(-1, gsi_cfg->gsi_base, cnt);
-+	if (irq >= 0) {
-+		gsi_cfg->irq_base = irq;
-+		apic_printk(APIC_VERBOSE, KERN_INFO
-+			"IOAPIC[%d]: apic_id %d, GSI %d-%d ==> irq %d-%d reserved\n",
-+			idx, mpc_ioapic_id(idx),
-+			gsi_cfg->gsi_base, gsi_cfg->gsi_end,
-+			irq, irq + cnt - 1);
-+	} else
-+		apic_printk(APIC_VERBOSE, KERN_WARNING
-+			"IOAPIC[%d]: apic_id %d, GSI %d-%d ==> irq reserve failed\n",
-+			idx, mpc_ioapic_id(idx),
-+			gsi_cfg->gsi_base, gsi_cfg->gsi_end);
-+
-+	return irq;
-+}
-+
-+static void __init reserve_ioapic_gsi_irq_extra(void)
-+{
-+	int irq;
-+
-+	/* to prevent hot add ioapic taking those slots */
-+	if (gsi_top) {
-+		irq = irq_reserve_irqs(gsi_top, NR_IRQS_LEGACY);
-+		if (irq >= 0)
-+			apic_printk(APIC_VERBOSE, KERN_INFO
-+				"IOAPIC[extra]: GSI %d-%d ==> irq %d-%d reserved\n",
-+				gsi_top, gsi_top + NR_IRQS_LEGACY - 1,
-+				irq, irq + NR_IRQS_LEGACY - 1);
-+		else
-+			apic_printk(APIC_VERBOSE, KERN_WARNING
-+				"IOAPIC[extra]: GSI %d-%d ==> irq reserve failed\n",
-+				gsi_top, gsi_top + NR_IRQS_LEGACY - 1);
-+	}
-+}
- 
- static void alloc_ioapic_saved_registers(int idx)
- {
-@@ -298,8 +337,9 @@ static void alloc_ioapic_saved_registers(int idx)
- 
- int __init arch_early_irq_init(void)
- {
-+	int node = cpu_to_node(0);
- 	struct irq_cfg *cfg;
--	int count, node, i;
-+	int i;
- 
- 	if (!legacy_pic->nr_legacy_irqs)
- 		io_apic_irqs = ~0UL;
-@@ -307,26 +347,23 @@ int __init arch_early_irq_init(void)
- 	for (i = 0; i < nr_ioapics; i++)
- 		alloc_ioapic_saved_registers(i);
- 
--	cfg = irq_cfgx;
--	count = ARRAY_SIZE(irq_cfgx);
--	node = cpu_to_node(0);
-+	for (i = 0; i < nr_ioapics; i++)
-+		reserve_ioapic_gsi_irq_base(i);
- 
--	/* Make sure the legacy interrupts are marked in the bitmap */
--	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
-+	reserve_ioapic_gsi_irq_extra();
- 
--	for (i = 0; i < count; i++) {
--		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
--		irq_set_chip_data(i, &cfg[i]);
--		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
--		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
--		/*
--		 * For legacy IRQ's, start with assigning irq0 to irq15 to
--		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
--		 */
--		if (i < legacy_pic->nr_legacy_irqs) {
--			cfg[i].vector = IRQ0_VECTOR + i;
--			cpumask_setall(cfg[i].domain);
-+	/*
-+	 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+	 */
-+	for (i = 0; i < legacy_pic->nr_legacy_irqs; i++) {
-+		cfg = alloc_reserved_irq_and_cfg_at(i, node);
-+		if (!cfg) {
-+			pr_warn("can not allocate irq_desc/cfg for %d\n", i);
-+			continue;
- 		}
-+		cfg->vector = IRQ0_VECTOR + i;
-+		cpumask_setall(cfg->domain);
- 	}
- 
- 	return 0;
-@@ -3460,7 +3497,8 @@ int __init arch_probe_nr_irqs(void)
- 	if (nr < nr_irqs)
- 		nr_irqs = nr;
- 
--	return NR_IRQS_LEGACY;
-+	/* x86 arch code will allocate irq_desc/cfg */
-+	return 0;
- }
- 
- int io_apic_set_pci_routing(struct device *dev, int irq,
--- 
-1.8.1.4
+Rafael
 
