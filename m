@@ -1,77 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:45729 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757485Ab3HGWcP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Aug 2013 18:32:15 -0400
-Message-ID: <1375914665.12551.5.camel@pasglop>
-Subject: Re: [PATCHv7 07/13] irqdomain: add function to find a MSI irq_domain
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Date: Thu, 08 Aug 2013 08:31:05 +1000
-In-Reply-To: <20130808000443.17f57875@skate>
-References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	 <1375867954-2320-8-git-send-email-thomas.petazzoni@free-electrons.com>
-	 <1375908620.9300.3.camel@pasglop> <20130808000443.17f57875@skate>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH 02/28] genirq: Add irq_alloc_reserved_desc()
+Date: Sat, 10 Aug 2013 19:45:12 -0700
+Message-Id: <1376189139-31856-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-08-08 at 00:04 +0200, Thomas Petazzoni wrote:
-> Again, this has been discussed at lengths in the previous iterations,
-> for which I already gave you all the links, as you requested in a
-> private e-mail. It'd be great if this discussion was read seriously,
-> because I really have the feeling we are restarting from zero on this
-> whole MSI thing...
+For ioapic hot-add support, it would be easy if we have continuous
+irq numbers for hot added ioapic controller.
 
-Well, two things here:
+We can reserve irq range at first, and later allocate desc for those
+pre-reserved irqs when they are needed.
 
- - You don't need my ack since I am not the maintainer of the irqdomain
-code anymore, Grant is :-)
+The reasons for not allocating them during reserving:
+1. only several pins of one ioapic are used, allocate for all pins, will
+   waste memory for not used pins.
+2. allocate later when is needed could make sure irq_desc is allocated
+   on local node ram, as dev->node is set at that point.
 
- - I still don't like it. I find that it's looking more and more like
-over engineering. I don't like having any kind of infrastructure
-relationship between MSI stuff and irqdomain, ie, a PCI/PCIe specific
-construct and a generic interrupt remapper.
+-v2: update changelog by adding reasons, requested by Konrad.
+-v3: according to tglx:
+       separate core code change with arch code change.
+       change function name to irq_alloc_reserved_desc.
+       kill __irq_is_reserved().
+       remove not need exports.
+     according to Sebastian:
+       spare one comments by put two functions together.
 
-Trying to use irqdomain for HW number allocation seems to be pushing it
-where it wasn't designed to go. Are those interrupts really different
-domains ? Do they have separate number spaces, separate DT encodings and
-overall characteristics ?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ include/linux/irq.h  |  3 +++
+ kernel/irq/irqdesc.c | 23 +++++++++++++++++++++++
+ 2 files changed, 26 insertions(+)
 
-What's wrong with the bitmap allocator in the PIC driver ? It's simple,
-and does the job just fine. If anything, take it from powerpc and sparc
-and move it to generic. It's already a "generic" (ie shared)
-infrastructure in powerpc.
-
-Let's ask somebody of well known taste ... Thomas ! :-) (Yes, you tglx,
-I know you are lurking ...). What do you reckon ?
-
-That series makes me feel nervous, it feels like a hack. I really don't
-like creating that relationship between msi_chip and irqdomain. In fact,
-I think it makes it harder to understand what's happening in the code
-and following things.
-
-It's a LOT clearer to me to have an irq domain for the PIC and an
-explicit bitmap allocation for MSIs, I see where things come from, I can
-follow the code path etc... much more easily.
-
-I suspect we have a case of over-abstracting happening here. This is a
-dangerous illness and can be contagious :-)
-
-Cheers,
-Ben.
-
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 8c46cb2..b998ea7 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -592,10 +592,13 @@ static inline u32 irq_get_trigger_type(unsigned int irq)
+ 
+ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 		struct module *owner);
++int __irq_alloc_reserved_desc(int at, int node, struct module *owner);
+ 
+ /* use macros to avoid needing export.h for THIS_MODULE */
+ #define irq_alloc_descs(irq, from, cnt, node)	\
+ 	__irq_alloc_descs(irq, from, cnt, node, THIS_MODULE)
++#define irq_alloc_reserved_desc_at(at, node)	\
++	__irq_alloc_reserved_desc(at, node, THIS_MODULE)
+ 
+ #define irq_alloc_desc(node)			\
+ 	irq_alloc_descs(-1, 0, 1, node)
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index a151db6..1166545 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -410,6 +410,29 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+ 
+ /**
++ * __irq_alloc_reserved_desc - allocate irq descriptor for irq that is already reserved
++ * @irq:	Allocate for specific irq number if irq >= 0
++ * @node:	Preferred node on which the irq descriptor should be allocated
++ * @owner:	Owning module (can be NULL)
++ *
++ * Returns the irq number or error code
++ */
++int __ref __irq_alloc_reserved_desc(int irq, int node, struct module *owner)
++{
++	mutex_lock(&sparse_irq_lock);
++	if (!test_bit(irq, allocated_irqs)) {
++		mutex_unlock(&sparse_irq_lock);
++		return -EINVAL;
++	}
++	mutex_unlock(&sparse_irq_lock);
++
++	if (irq_to_desc(irq))
++		return irq;
++
++	return alloc_descs(irq, 1, node, owner);
++}
++
++/**
+  * irq_reserve_irqs - mark irqs allocated
+  * @from:	mark from irq number
+  * @cnt:	number of irqs to mark
+-- 
+1.8.1.4
 
