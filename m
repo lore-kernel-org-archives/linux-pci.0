@@ -1,140 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47251 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755174Ab3HWUhx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 16:37:53 -0400
-From: "Skidmore, Donald C" <donald.c.skidmore@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>
-Subject: RE: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type
- 00 to PF Nacked" messages
-Date: Fri, 23 Aug 2013 20:37:52 +0000
-Message-ID: <F6FB0E698C9B3143BDF729DF222866466FD4421F@ORSMSX110.amr.corp.intel.com>
-References: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
- <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
- <CAErSpo5AiRw7HvGQMq-n596ZkHJs_KJNn346yf+jc7yti-xpUw@mail.gmail.com>
- <CAErSpo4E9LNrfqTq1_WUoAx68_krw23BjSYbPpJPOr=zbq98xA@mail.gmail.com>
- <CAErSpo6Ky1FQeRjjbhja2KC7EYGJ2nR1ZNuYjYi89DoqLse2cw@mail.gmail.com>
- <CAErSpo7m=YB=1cHSBTwufTHAiAd+k9Re2s-ro509BELOgK8j7Q@mail.gmail.com>
- <F6FB0E698C9B3143BDF729DF222866466FD4418D@ORSMSX110.amr.corp.intel.com>
- <20130823185240.GA1507@google.com>
-In-Reply-To: <20130823185240.GA1507@google.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 00/28] x86, irq: Support ioapic controller hotplug
+Date: Sat, 10 Aug 2013 19:47:46 -0700
+Message-Id: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Friday, August 23, 2013 11:53 AM
-> To: Skidmore, Donald C
-> Cc: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Don Dutile
-> Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
-> to PF Nacked" messages
-> 
-> On Fri, Aug 23, 2013 at 06:25:06PM +0000, Skidmore, Donald C wrote:
-> > > -----Original Message-----
-> > > From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> > > Sent: Friday, August 23, 2013 9:53 AM
-> > > To: Skidmore, Donald C
-> > > Cc: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org;
-> > > linux- kernel@vger.kernel.org; Don Dutile
-> > > Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request
-> > > of type 00 to PF Nacked" messages
-> > >
-> > > On Tue, Aug 20, 2013 at 5:37 PM, Bjorn Helgaas <bhelgaas@google.com>
-> > > wrote:
-> > > > On Tue, Aug 20, 2013 at 5:08 PM, Bjorn Helgaas
-> > > > <bhelgaas@google.com>
-> > > wrote:
-> > > >> On Tue, Aug 13, 2013 at 8:23 PM, Bjorn Helgaas
-> > > >> <bhelgaas@google.com>
-> > > wrote:
-> > > >
-> > > >>> I played with this a little more and found this:
-> > > >>>
-> > > >>> 1) Magma card in z420, connected to chassis containing X540:
-> > > >>> fails (original report)
-> > > >>> 2) X540 in z420, Magma card in z420, connected to empty chassis:
-> > > >>> fails
-> > > >>> 3) X540 in z420, Magma card in z420 but no cable to chassis:
-> > > >>> works
-> > > >
-> > > > For what it's worth, I tried config 3 again with v3.11-rc6, and it
-> > > > failed the same way.  I haven't bothered with config 2.  It's not
-> > > > 100% reproducible, but at least it doesn't seem related to the
-> > > > expansion chassis.
-> > > >
-> > > > I attached the logs from config 3 to
-> > > > https://bugzilla.kernel.org/show_bug.cgi?id=60776
-> > >
-> > > Is there anything I can do to help debug this?  Add instrumentation,
-> > > etc.?  It seems like I'm doing the simplest possible thing -- just
-> > > writing to the sysfs sriov_num_vfs file to enable VFs.
-> > >
-> > > I almost think it must be related to my config somehow if nobody
-> > > else is seeing this, but at the same time, my config also seems the
-> > > simplest possible, so I don't know what I could be doing that's unusual.
-> > >
-> > > Bjorn
-> >
-> > Hey Bjorn,
-> >
-> > I'm may be little confused so bear with me.
-> >
-> > Option 1 = (your normal set up), Magma card plugged to chasis, X540 in
-> chasis.
-> > Option 2 = Magma card plugged to chasis, X540 in z420 system.
-> > Option 3 = Magma card UNplugged from chasis, x540 in z420 system.
-> >
-> > Options 1 & 2 - always fail
-> > Option 3 - sometimes fails (unsure at what rate failure occurs)
-> >
-> > Please correct me if I messed any of that up. :)
-> 
-> Generally correct.  I've seen failures in all three configs, so I'm only
-> concerned with the simplest for now (config 3, no expansion chassis).
-> 
-> > Another question I have relates to the lspci output you supplied in the
-> bugzilla.  I'm not seeing the VF devices (i.e. 08:10.0) did you run lspci before
-> you created the VF's?  If so could we see one while the failure was occurring?
-> 
-> That's correct, I collected the lspci output before reproducing the problem.  I
-> can't easily collect lspci afterwards because the machine isn't responsive
-> after the problem starts.
-> 
-> > Also could you download the latest ixgbevf from source forge?
-> >
-> > https://sourceforge.net/projects/e1000/files/ixgbevf%20stable/
-> >
-> > If we add debugging messages it will be easier to patch this driver and it
-> contains our latest validated code base.
-> 
-> I can do that if it turns out to be necessary.  But John Haller gave me a good
-> clue off-list:
-> 
-> John wrote:
-> > I assume you want the VFs to be instantiated in a VM.  To do this, you
-> > need to blacklist the ixgbevf driver in the host (or not compile it
-> > into the host), or it will try to associate the driver in the host,
-> > rather than in the VM where you want it.  Then, the VM needs the
-> > ixgbevf driver, which will hopefully do a better job of talking to the
-> > mailbox in the host.  There is some work to assign the VF(s) to the
-> > VM, but I don't remember that offhand.
-> 
-> I don't have any VMs (I started this whole thing because I was looking at a PCI
-> hotplug issue related to SR-IOV, so I don't really care about VMs).
-> 
-> So the ixgbevf driver on the *host* is claiming the new VFs, and it sounds like
-> maybe it can't handle that?
-> 
-> Bjorn
+Hi,
 
-Not to speak for John, but I believe he was saying if you want to use your VF's in a VM you need to make sure you don't run the ixgbevf driver on the host as it will "claim" the VF's.  If you are NOT running any VM's then it is perfectly fine to have both ixgbe and ixgbevf loaded.
+Intel cpu (from IVB) include cpu cores, mem controller, and IIO.
+When hotplug cpu physically, it will involve cpu hotplug, mem hotplug,
+and pci root hotplug.
 
--Don Skidmore <donald.c.skidmore@intel.com>
+IIO includes pci host bridge, ioapic controller and iommu etc.
+pci devices will need to use ioapic and iommu.
+So to make pci root bus hotplug working, we need ioapic hotplug support.
+
+Now ioapics are with ACPI MADT table. During booting, kernel will parse
+MADT and put info into ioapic arrays.
+Also Bjorn added one pci device based driver, but it is not wired in yet,
+as it need to call acpi_register_ioapic, and that is TBD.
+
+This patchset will
+1. extend genirq to support reserve/alloc_reserved method.
+   because we want irqs for one ioapic controller to be linear mapping
+   to the gsi range.
+2. change ioapic array operation code so we could insert new ioapic and
+   remove one leave the blank slot.
+3. record irq_base in gsi_config in ioapic struct, and use it to convert gsi
+   to irq for pci device using that ioapic controller
+4. make static ioapic path (from MADT) use same code as hot-add path,
+   with reserve/alloc_reserved method.
+5. change ioapic add/remove to use acpi way, as that is only needed when
+   pci root bus hotplug.
+6. also support the case that ioapic controller is hiding in pci
+   config space or ioapic address is not managed by pci reallocation subsys.
+
+Also include some cleanups
+1. print MSI-X clearly in /proc/interrupts and dmesg.
+2. convert ioapic irq_2_pin to be generic list.
+
+It is based on linus's tree of 2013/08/10 aka v3.11-rc4.
+
+could get them from:
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
+
+-v3: split last patch to 4 patches per request from Bjorn.
+     drop one patch that will put pci device name in proc/interrupts
+     update changelog.
+-v4: address review from tglx, change to realloc to alloc_reserved.
+     separate x86 code and core code into different patches.
+
+Yinghai Lu (28):
+  genirq: Split __irq_reserve_irqs from irq_alloc_descs
+  genirq: Add irq_alloc_reserved_desc()
+  genirq: Do not free unallocated irq descriptors
+  x86, irq: Change irq_remap_modify_chip_defaults() to static
+  x86, irq: Modify irq chip once for irq remapping
+  x86, irq: Show MSI-X clearly in debug message
+  x86, irq: Show MSI-X in /proc/interrupt
+  x86, irq: Make dmar_msi/hpet_msi irq_chip name consistent
+  ia64, irq: Add dummy create_irq_nr()
+  iommu, irq: Allocate irq_desc for dmar_msi with local node
+  x86, irq: Kill create_irq()
+  x86, irq: Convert irq_2_pin list to generic list
+  x86, irq: Add alloc_reserved_irq_and_cfg_at()
+  x86, irq: Move down arch_early_irq_init()
+  x86, irq: Split out alloc_ioapic_save_registers()
+  xen, irq: Call irq_alloc_reserved_desc_at() at first
+  x86, irq: Reserve irq range and alloc_reserved for booting path
+  x86, irq: Add ioapic_gsi_to_irq
+  x86, irq: Add for_each_ioapic helper
+  x86, irq: More strict checking about registering ioapic
+  x86, irq: Make mp_register_ioapic handle hot-added ioapic
+  x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
+  x86, ioapic: Find usable ioapic id for 64bit.
+  x86: Move declaration for mp_register_ioapic()
+  PCI, x86: Make ioapic hotplug support built-in
+  PCI, x86, ACPI: Link acpi ioapic register to ioapic
+  PCI, x86, ACPI: Enable ioapic hotplug support with acpi host bridge.
+  PCI, x86, ACPI: get ioapic address from acpi device
+
+ arch/ia64/kernel/irq_ia64.c          |  10 +
+ arch/x86/include/asm/hw_irq.h        |   2 +-
+ arch/x86/include/asm/io_apic.h       |  13 +
+ arch/x86/include/asm/irq_remapping.h |  14 +-
+ arch/x86/include/asm/mpspec.h        |  21 +-
+ arch/x86/kernel/acpi/boot.c          |  32 +--
+ arch/x86/kernel/apic/apic.c          |   9 +-
+ arch/x86/kernel/apic/io_apic.c       | 480 +++++++++++++++++++++++++----------
+ arch/x86/kernel/devicetree.c         |   2 +-
+ drivers/acpi/pci_root.c              |   4 +
+ drivers/iommu/amd_iommu_init.c       |   2 +-
+ drivers/iommu/dmar.c                 |   2 +-
+ drivers/iommu/intel_irq_remapping.c  |   2 +-
+ drivers/iommu/irq_remapping.c        |  18 +-
+ drivers/pci/Kconfig                  |   3 +-
+ drivers/pci/ioapic.c                 | 229 ++++++++++++-----
+ drivers/xen/events.c                 |   8 +-
+ include/linux/irq.h                  |   4 +
+ include/linux/pci-acpi.h             |   8 +
+ kernel/irq/irqdesc.c                 |  80 ++++--
+ 20 files changed, 679 insertions(+), 264 deletions(-)
+
+-- 
+1.8.1.4
+
