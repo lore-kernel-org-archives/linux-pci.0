@@ -1,143 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:45876 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754786Ab3HFXpW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 19:45:22 -0400
-Received: by mail-we0-f182.google.com with SMTP id u55so963117wes.27
-        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 16:45:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375776540-23988-1-git-send-email-wangyijing@huawei.com>
-References: <1375776540-23988-1-git-send-email-wangyijing@huawei.com>
-Date: Tue, 6 Aug 2013 16:45:21 -0700
-Message-ID: <CAPoiz9wAufM8HV_Drdxg50zs5=1AduBUN5oXNRBHYqjwMCOTaQ@mail.gmail.com>
-Subject: Re: [PATCH -v3] PCI: update device mps when doing pci hotplug
-From: Jon Mason <jdmason@kudzu.us>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Donald Dutile <ddutile@redhat.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
 	stable@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH v4 10/28] iommu, irq: Allocate irq_desc for dmar_msi with local node
+Date: Sat, 10 Aug 2013 19:47:56 -0700
+Message-Id: <1376189294-32022-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 1:09 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> v2->v3: Update CC stable tag suggested by Li Zefan.
-> v1->v2: Update patch log, remove Joe's reported-by, because his problem
->         was mainly caused by BIOS incorrect setting. But this patch mainly
->                 to fix the bug caused by device hot add. Conservatively, this
->                 version only update the mps problem when hot add. When the device
->                 mps < parent mps found, this patch try to update device mps.
->                 It seems unlikely device mps > parent mps after hot add device.
->                 So we don't care that situation.
->
-> Currently we don't update device's mps vaule when doing
-> pci device hot-add. The hot-added device's mps will be set
-> to default value (128B). But the upstream port device's mps
-> may be larger than 128B which was set by firmware during
-> system bootup. In this case the new added device may not
-> work normally. This patch try to update the hot added device
-> mps euqal to its parent mps, if device mpss < parent mps,
-> print warning.
->
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
-> Reported-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Jon Mason <jdmason@kudzu.us>
-> Cc: stable@vger.kernel.org # 3.4+
-> ---
->  drivers/pci/probe.c |   43 +++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 43 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cf57fe7..9b0e634 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1603,6 +1603,40 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->         return 0;
->  }
->
-> +static int pcie_bus_update_set(struct pci_dev *dev, void *data)
-> +{
-> +       int mps, p_mps;
-> +
-> +       if (!pci_is_pcie(dev) || !dev->bus->self)
-> +               return 0;
-> +
-> +       mps = pcie_get_mps(dev);
-> +       p_mps = pcie_get_mps(dev->bus->self);
-> +
-> +       if (mps < p_mps)
-> +               goto update;
+iommu irq's irq_desc should be on local node ram.
 
-It would be more clear to have it return 0 if mps >= p_mps, and not
-have the goto statement.
+Fix the return value checking problem.
+  create_irq() will return -1 when fail to allocate.
+  create_irq_nr() will return 0 when fail to allocate.
+here only check !irq, so need to change it to use create_irq_nr instead.
 
-> +
-> +       return 0;
-> +
-> +update:
-> +       /* If current mpss is lager than upstream, use upstream mps to update
-> +        * current mps, otherwise print warning info.
-> +        */
-> +       if ((128 << dev->pcie_mpss) >= p_mps)
-> +               pcie_write_mps(dev, p_mps);
-> +       else
-> +               dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
-> +                               "If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
-> +                               mps, 128 << dev->pcie_mpss, p_mps);
-> +       return 0;
-> +}
-> +
-> +static void pcie_bus_update_setting(struct pci_bus *bus)
-> +{
-> +       if (bus->self->is_hotplug_bridge)
-> +               pci_walk_bus(bus, pcie_bus_update_set, NULL);
+-v2: According to Sebastian, add cc to stable.
 
-Why not just call pcie_bus_configure_set(bus->self, &smpss); with smpss of 0?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Donald Dutile <ddutile@redhat.com>
+Acked-by: Donald Dutile <ddutile@redhat.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: stable@vger.kernel.org
+---
+ drivers/iommu/dmar.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> +}
-> +
->  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
->   * parents then children fashion.  If this changes, then this code will not
->   * work as designed.
-> @@ -1614,6 +1648,15 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->         if (!pci_is_pcie(bus->self))
->                 return;
->
-> +       /* Sometimes we should update device mps here,
-> +        * eg. after hot add, device mps value will be
-> +        * set to default(128B), but the upstream port
-> +        * mps value may be larger than 128B, if we do
-> +        * not update the device mps, it maybe can not
-> +        * work normally.
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 785675a..db41e36 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -1277,7 +1277,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
+ 	if (iommu->irq)
+ 		return 0;
+ 
+-	irq = create_irq();
++	irq = create_irq_nr(0, iommu->node);
+ 	if (!irq) {
+ 		pr_err("IOMMU: no free vectors\n");
+ 		return -EINVAL;
+-- 
+1.8.1.4
 
-This is slightly confusing to me.  It would be more clear to say:
-There are situations (i.e., hot add) where the upstream port might
-have a larger MPS than the device.  In these situations, the port MPS
-needs to be reconfigured to the lower value or the device will not
-operate properly.
-
-> +        */
-> +       pcie_bus_update_setting(bus);
-
-This only seems to be necessary in the "TUNE_OFF" case.  It would be
-best to move it under that, just 2 lines down.
-
-> +
->         if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
-
-Perhaps it is time to make "SAFE" the default option, per the
-discussion at last years PCI mini-summit.
-Bjorn, thoughts?
-
-
-Thanks,
-Jon
-
->                 return;
->
-> --
-> 1.7.1
->
->
