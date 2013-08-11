@@ -1,63 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:53532 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933939Ab3HIOty (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:54 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v6 09/14] ARM: tegra: Enable PCIe controller on Cardhu
-Date: Fri,  9 Aug 2013 16:49:27 +0200
-Message-Id: <1376059772-16669-10-git-send-email-treding@nvidia.com>
-In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
-References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 03/28] genirq: Do not free unallocated irq descriptors
+Date: Sat, 10 Aug 2013 19:45:13 -0700
+Message-Id: <1376189139-31856-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jay Agarwal <jagarwal@nvidia.com>
+Hot-added interrupt controllers can reserve a range of interrupt
+numbers, but only allocate some of them. To simplify the release on
+hot-remove allow them to iterate over the reserved range, let the
+free_desc() code return early when the descriptor does not exist
 
-Root port 2 is routed to the bottom connector on Cardhu and is used by
-the development dock to provide gigabit ethernet and USB functionality.
+-v2: changelog from tglx
 
-Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/arm/boot/dts/tegra30-cardhu.dtsi | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ kernel/irq/irqdesc.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
-index c011b67..ee8fff8 100644
---- a/arch/arm/boot/dts/tegra30-cardhu.dtsi
-+++ b/arch/arm/boot/dts/tegra30-cardhu.dtsi
-@@ -31,6 +31,26 @@
- 		reg = <0x80000000 0x40000000>;
- 	};
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 1166545..bbf0601 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -165,6 +165,9 @@ static void free_desc(unsigned int irq)
+ {
+ 	struct irq_desc *desc = irq_to_desc(irq);
  
-+	pcie-controller {
-+		status = "okay";
-+		pex-clk-supply = <&pex_hvdd_3v3_reg>;
-+		vdd-supply = <&ldo1_reg>;
-+		avdd-supply = <&ldo2_reg>;
++	if (!desc)
++		return;
 +
-+		pci@1,0 {
-+			nvidia,num-lanes = <4>;
-+		};
-+
-+		pci@2,0 {
-+			nvidia,num-lanes = <1>;
-+		};
-+
-+		pci@3,0 {
-+			status = "okay";
-+			nvidia,num-lanes = <1>;
-+		};
-+	};
-+
- 	pinmux {
- 		pinctrl-names = "default";
- 		pinctrl-0 = <&state_default>;
+ 	unregister_irq_proc(irq, desc);
+ 
+ 	mutex_lock(&sparse_irq_lock);
 -- 
-1.8.3.4
+1.8.1.4
 
