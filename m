@@ -1,122 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:36334 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900Ab3HSV7z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 17:59:55 -0400
-Message-ID: <52129552.8040608@wwwdotorg.org>
-Date: Mon, 19 Aug 2013 15:59:46 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>
-CC: Russell King <linux@arm.linux.org.uk>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Thierry Reding <treding@nvidia.com>
-Subject: Re: [RFC 3/3] PCI: tegra: Support driver unbinding
-References: <1376392346-14127-1-git-send-email-treding@nvidia.com> <1376392346-14127-4-git-send-email-treding@nvidia.com> <520BFA0C.5070001@wwwdotorg.org> <20130815103452.GA13740@ulmo> <520CF211.6060003@wwwdotorg.org> <20130819201623.GD5191@mithrandir> <52128650.7090009@wwwdotorg.org> <20130819215208.GC9885@mithrandir>
-In-Reply-To: <20130819215208.GC9885@mithrandir>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH 07/28] x86, irq: Show MSI-X in /proc/interrupt
+Date: Sat, 10 Aug 2013 19:45:18 -0700
+Message-Id: <1376189139-31856-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/19/2013 03:52 PM, Thierry Reding wrote:
-> On Mon, Aug 19, 2013 at 02:55:44PM -0600, Stephen Warren wrote:
->> On 08/19/2013 02:16 PM, Thierry Reding wrote:
->>> On Thu, Aug 15, 2013 at 09:21:53AM -0600, Stephen Warren
->>> wrote:
->>>> On 08/15/2013 04:34 AM, Thierry Reding wrote:
->>>>> On Wed, Aug 14, 2013 at 03:43:40PM -0600, Stephen Warren 
->>>>> wrote:
->>>>>> On 08/13/2013 05:12 AM, Thierry Reding wrote:
->>>>>>> Implement the platform driver's .remove() callback to
->>>>>>> free all resources allocated during driver setup and
->>>>>>> call pci_common_exit() to cleanup ARM specific
->>>>>>> datastructures. Unmap the fixed PCI I/O mapping by
->>>>>>> calling the new pci_iounmap_io() function in the new
->>>>>>> .teardown() callback.
->>>>>>> 
->>>>>>> Finally, no longer set the .suppress_bind_attrs field
->>>>>>> to true to allow the driver to unbind from a device.
->>>>>> 
->>>>>>> +static int tegra_pcie_remove(struct platform_device
->>>>>>> *pdev) +{ +	struct tegra_pcie *pcie =
->>>>>>> platform_get_drvdata(pdev); + struct tegra_pcie_bus
->>>>>>> *bus, *tmp; +	int err; + + pci_common_exit(&pcie->sys);
->>>>>>> + + list_for_each_entry_safe(bus, tmp, &pcie->busses,
->>>>>>> list) { + vunmap(bus->area->addr); + kfree(bus); +	} +
->>>>>>> +	if (IS_ENABLED(CONFIG_PCI_MSI)) { +		err = 
->>>>>>> tegra_pcie_disable_msi(pcie); +		if (err < 0) +
->>>>>>> return err; + }
->>>>>> 
->>>>>> Wouldn't it make sense to do that as early as possible
->>>>>> in the function, to make sure that no MSI accidentally
->>>>>> fires after some of the cleanup has already happened?
->>>>> 
->>>>> I don't think that's strictly necessary in this case.
->>>>> After the call to pci_common_exit() there are no PCI
->>>>> devices left, there's not even a bus left. All MSI users
->>>>> should have cleaned up after themselves.
->>>>> 
->>>>> Given that I thought it more useful to mirror the setup
->>>>> done in .probe() to make it clearer what's being undone
->>>>> (and potentially what's missing).
->>>> 
->>>> That makes sense SW-wise, but what about mis-behaving HW
->>>> that triggers an MSI even when it's been told not to? I
->>>> assume that tegra_pcie_disable_msi() unrequests the IRQ,
->>>> hence solves that problem, if done early enough.
->>> 
->>> To be honest, I'm not sure about the side-effects that this
->>> will have. tegra_pcie_disable_msi() does quite a bit more than
->>> just masking the interrupts. It also completely removes the IRQ
->>> domain that provides the MSI interrupts. While I haven't tried
->>> it yet I can imagine that it will cause crashes at a later
->>> point when drivers want to disable MSI on a device and the IRQ
->>> domain having vanished from underneath.
->> 
->> Surely by the time the PCIe controller device has been remove()d
->> then all devices for PCIe "client" devices have also been
->> removed.
-> 
-> The PCIe controller is the device being removed. Part of that
-> removal involves stopping and removing all PCI devices. That's done
-> as part of pci_common_exit().
-> 
-> But I was under the impression that you were arguing that the call
-> to tegra_pcie_disable_msi() should be the first call in .remove()
-> in order to prevent any spurious MSIs from occurring. That in turn
-> would mean calling tegra_pcie_disable_msi() before
-> pci_common_exit(), and that would lead to the problem that I
-> described.
+Now MSI-X is shown as MSI in /proc/interrupt.
 
-Earlier yes, but perhaps not first. Right now the order is:
+We could use new added irq_print_chip() interface to append -X for MSI-X.
 
-1) pci_common_exit
+After this patch, we will have PCI-MSI-X-edge IR-PCI-MSI-X-edge for MSI-X
+instead of PCI-MSI-edge IR-PCI-MSI-edge in the /proc/interrupt.
 
-2) unmap some memory, free some buses
+-v2: do not need to check if msi_desc is null in msi_irq_print_chip().
 
-3) tear down MSI infra-structure
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c | 7 +++++++
+ drivers/iommu/irq_remapping.c  | 5 ++++-
+ 2 files changed, 11 insertions(+), 1 deletion(-)
 
-I suppose if the MSI IRQ handler is guaranteed to never touch the
-stuff torn down by (2) then the code is fine as-is, but it might be
-clearer to do the following instead:
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 119fdf8..cf320fb 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3087,6 +3087,12 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 	return IRQ_SET_MASK_OK_NOCOPY;
+ }
+ 
++static void msi_irq_print_chip(struct irq_data *data, struct seq_file *p)
++{
++	seq_printf(p, " %s%s", data->chip->name,
++			data->msi_desc->msi_attrib.is_msix ? "-X" : "");
++}
++
+ /*
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+@@ -3098,6 +3104,7 @@ struct irq_chip msi_chip = {
+ 	.irq_ack		= ack_apic_edge,
+ 	.irq_set_affinity	= msi_set_affinity,
+ 	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_print_chip		= msi_irq_print_chip,
+ };
+ 
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 8e4e3af..6893d75 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -372,7 +372,10 @@ static void ir_ack_apic_level(struct irq_data *data)
+ 
+ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ {
+-	seq_printf(p, " IR-%s", data->chip->name);
++	seq_printf(p, " IR-%s%s", data->chip->name,
++			data->msi_desc ?
++			 (data->msi_desc->msi_attrib.is_msix ? "-X" : "")
++			 : "");
+ }
+ 
+ static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
+-- 
+1.8.1.4
 
-1) pci_common_exit
-
-2) tear down MSI infra-structure (and indeed unregister non-MSI IRQ too)
-
-3) unmap some memory, free some buses
-
-... since then no matter what, no IRQ can be handled before any
-resource is torn down.
-
-also, perhaps when initially responding I missed that
-pci_common_exit() is what forcibly removed all PCIe "client" device
-drivers; in other sub-systems, client devices take refcounts on their
-resources, so the resource can't be .remove()d until all the objects
-referencing them have been manually removed, but PCIe apparently works
-the other way around - removing the controller removes all the users?
