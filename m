@@ -1,94 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.w2.samsung.com ([211.189.100.13]:51591 "EHLO
-	usmailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757632Ab3HMMWI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 08:22:08 -0400
-Date: Tue, 13 Aug 2013 09:21:54 -0300
-From: Mauro Carvalho Chehab <m.chehab@samsung.com>
-To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
-Cc: Borislav Petkov <bp@alien8.de>, tony.luck@intel.com,
-	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
-	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Aristeu Rozanski Filho <arozansk@redhat.com>
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
- event
-Message-id: <20130813092154.1e17385f@concha.lan>
-In-reply-to: <520A1A2E.9080500@linux.vnet.ibm.com>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
- <20130812083355.47c1bae8@samsung.com> <20130812123813.GD18018@pd.tnic>
- <20130812114932.52bb0314@samsung.com> <20130812150424.GH18018@pd.tnic>
- <20130812142557.2a43f155@samsung.com> <20130812175631.GI18018@pd.tnic>
- <520A1A2E.9080500@linux.vnet.ibm.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v4 02/28] genirq: Add irq_alloc_reserved_desc()
+Date: Sat, 10 Aug 2013 19:47:48 -0700
+Message-Id: <1376189294-32022-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Tue, 13 Aug 2013 17:06:14 +0530
-"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
+For ioapic hot-add support, it would be easy if we have continuous
+irq numbers for hot added ioapic controller.
 
-> On 08/12/2013 11:26 PM, Borislav Petkov wrote:
-> > On Mon, Aug 12, 2013 at 02:25:57PM -0300, Mauro Carvalho Chehab wrote:
-> >> Userspace still needs the EDAC sysfs, in order to identify how the
-> >> memory is organized, and do the proper memory labels association.
-> >>
-> >> What edac_ghes does is to fill those sysfs nodes, and to call the
-> >> existing tracing to report errors.
-> 
-> I suppose you're referring to the entries under /sys/devices/system/edac/mc?
+We can reserve irq range at first, and later allocate desc for those
+pre-reserved irqs when they are needed.
 
-Yes.
+The reasons for not allocating them during reserving:
+1. only several pins of one ioapic are used, allocate for all pins, will
+   waste memory for not used pins.
+2. allocate later when is needed could make sure irq_desc is allocated
+   on local node ram, as dev->node is set at that point.
 
-> 
-> I'm not sure I understand how this helps. ghes_edac seems to just be 
-> populating this based on dmi, which if I'm not mistaken, can be obtained 
-> in userspace (mcelog as an example).
-> 
-> Also, on my system, all DIMMs are being reported under mc0. I doubt if 
-> the labels there are accurate.
+-v2: update changelog by adding reasons, requested by Konrad.
+-v3: according to tglx:
+       separate core code change with arch code change.
+       change function name to irq_alloc_reserved_desc.
+       kill __irq_is_reserved().
+       remove not need exports.
+     according to Sebastian:
+       spare one comments by put two functions together.
 
-Yes, this is the current status of ghes_edac, where BIOS doesn't provide any
-reliable way to associate a given APEI report to a physical DIMM slot label.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ include/linux/irq.h  |  3 +++
+ kernel/irq/irqdesc.c | 23 +++++++++++++++++++++++
+ 2 files changed, 26 insertions(+)
 
-The plan is to add more logic there as BIOSes start to provide some reliable
-way to do such association. I discussed this subject with a few vendors
-while I was working at Red Hat.
-
-> >
-> > This is the only reason which justifies EDAC's existence. Naveen, can
-> > your BIOS directly report the silkscreen label of the DIMM in error?
-> > Generally, can any BIOS do that?
-> >
-> > More specifically, what are those gdata_fru_id and gdata_fru_text
-> > things?
-> 
-> My understanding was that this provides the DIMM serial number, but I'm 
-> double checking just to be sure.
-
-If it provides the DIMM serial number, then it is possible to improve the
-ghes_edac driver to associate them. One option could be to write an I2C
-driver and dig those information directly from the memories, although 
-doing that could be risky, as BIOS could also try to access the same I2C
-buses.
-
-> 
-> Thanks,
-> Naveen
-> 
-> >
-> > Because if it can, then having the memory error tracepoint come direct
-> > from APEI should be enough. The ghes_edac functionality could be then
-> > fallback for BIOSes which cannot report the silkscreen label and in such
-> > case I can imagine keeping both tracepoints, but disabling one of the
-> > two...
-> >
-> 
-
-
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 8c46cb2..b998ea7 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -592,10 +592,13 @@ static inline u32 irq_get_trigger_type(unsigned int irq)
+ 
+ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 		struct module *owner);
++int __irq_alloc_reserved_desc(int at, int node, struct module *owner);
+ 
+ /* use macros to avoid needing export.h for THIS_MODULE */
+ #define irq_alloc_descs(irq, from, cnt, node)	\
+ 	__irq_alloc_descs(irq, from, cnt, node, THIS_MODULE)
++#define irq_alloc_reserved_desc_at(at, node)	\
++	__irq_alloc_reserved_desc(at, node, THIS_MODULE)
+ 
+ #define irq_alloc_desc(node)			\
+ 	irq_alloc_descs(-1, 0, 1, node)
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index a151db6..1166545 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -410,6 +410,29 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+ 
+ /**
++ * __irq_alloc_reserved_desc - allocate irq descriptor for irq that is already reserved
++ * @irq:	Allocate for specific irq number if irq >= 0
++ * @node:	Preferred node on which the irq descriptor should be allocated
++ * @owner:	Owning module (can be NULL)
++ *
++ * Returns the irq number or error code
++ */
++int __ref __irq_alloc_reserved_desc(int irq, int node, struct module *owner)
++{
++	mutex_lock(&sparse_irq_lock);
++	if (!test_bit(irq, allocated_irqs)) {
++		mutex_unlock(&sparse_irq_lock);
++		return -EINVAL;
++	}
++	mutex_unlock(&sparse_irq_lock);
++
++	if (irq_to_desc(irq))
++		return irq;
++
++	return alloc_descs(irq, 1, node, owner);
++}
++
++/**
+  * irq_reserve_irqs - mark irqs allocated
+  * @from:	mark from irq number
+  * @cnt:	number of irqs to mark
 -- 
+1.8.1.4
 
-Cheers,
-Mauro
