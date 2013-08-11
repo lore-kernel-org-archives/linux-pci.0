@@ -1,50 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:44477 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933939Ab3HIOt7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:59 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v6 12/14] ARM: tegra: Update default configuration (PCIe)
-Date: Fri,  9 Aug 2013 16:49:30 +0200
-Message-Id: <1376059772-16669-13-git-send-email-treding@nvidia.com>
-In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
-References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v4 06/28] x86, irq: Show MSI-X clearly in debug message
+Date: Sat, 10 Aug 2013 19:47:52 -0700
+Message-Id: <1376189294-32022-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable PCI and MSI support as well as the new Tegra PCIe controller
-driver.
+Print out exact MSI or MSI-X instead of MSI/MSI-X.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
-Changes in v5:
-- enable PCI Express support (CONFIG_PCIEPORTBUS)
+ arch/x86/kernel/apic/io_apic.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
- arch/arm/configs/tegra_defconfig | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/arch/arm/configs/tegra_defconfig b/arch/arm/configs/tegra_defconfig
-index 36ad70c..1586dda 100644
---- a/arch/arm/configs/tegra_defconfig
-+++ b/arch/arm/configs/tegra_defconfig
-@@ -27,8 +27,11 @@ CONFIG_ARCH_TEGRA=y
- CONFIG_ARCH_TEGRA_2x_SOC=y
- CONFIG_ARCH_TEGRA_3x_SOC=y
- CONFIG_ARCH_TEGRA_114_SOC=y
--CONFIG_TEGRA_PCI=y
- CONFIG_TEGRA_EMC_SCALING_ENABLE=y
-+CONFIG_PCI=y
-+CONFIG_PCI_MSI=y
-+CONFIG_PCI_TEGRA=y
-+CONFIG_PCIEPORTBUS=y
- CONFIG_SMP=y
- CONFIG_PREEMPT=y
- CONFIG_AEABI=y
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index eda56ad..119fdf8 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3125,7 +3125,8 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 
+-	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for MSI/MSI-X\n", irq);
++	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for MSI%s\n", irq,
++			 msidesc->msi_attrib.is_msix ? "-X" : "");
+ 
+ 	return 0;
+ }
 -- 
-1.8.3.4
+1.8.1.4
 
