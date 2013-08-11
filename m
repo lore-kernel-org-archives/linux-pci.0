@@ -1,103 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:57833 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751468Ab3HNFnZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Aug 2013 01:43:25 -0400
-Date: Wed, 14 Aug 2013 07:43:22 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: "Luck, Tony" <tony.luck@intel.com>
-Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Message-ID: <20130814054322.GA9158@pd.tnic>
-References: <20130812083355.47c1bae8@samsung.com>
- <5208D80D.5030206@linux.vnet.ibm.com>
- <20130812125343.GE18018@pd.tnic>
- <520A16BD.30201@linux.vnet.ibm.com>
- <20130813124258.GC4077@pd.tnic>
- <520A6D98.9060204@linux.vnet.ibm.com>
- <20130813175809.GE4077@pd.tnic>
- <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
- <20130813181004.GF4077@pd.tnic>
- <3908561D78D1C84285E8C5FCA982C28F31CB9150@ORSMSX106.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F31CB9150@ORSMSX106.amr.corp.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 00/28] x86, irq: Support ioapic controller hotplug
+Date: Sat, 10 Aug 2013 19:45:10 -0700
+Message-Id: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 13, 2013 at 08:13:56PM +0000, Luck, Tony wrote:
-> Generic tracepoints are architected to be able to fire at very high
-> rates and log huge amounts of information. So we'd need something
-> special to say just log these special tracepoints to network/serial.
->
-> > Which reminds me, pstore could also be a good thing to use, in addition.
-> > Only put error info there as it is limited anyway.
-> 
-> Yes - space is very limited.  I don't know how to assign priority for logging
-> the dmesg data vs. some error logs.
+Hi,
 
-Didn't we say at some point, "log only the panic messsage which kills
-the machine"?
+Intel cpu (from IVB) include cpu cores, mem controller, and IIO.
+When hotplug cpu physically, it will involve cpu hotplug, mem hotplug,
+and pci root hotplug.
 
-However, we probably could use more the messages before that
-catastrophic event because they could give us hints about what lead to
-the panic but in that case maybe a limited pstore is the wrong logging
-medium.
+IIO includes pci host bridge, ioapic controller and iommu etc.
+pci devices will need to use ioapic and iommu.
+So to make pci root bus hotplug working, we need ioapic hotplug support.
 
-Actually, I can imagine the full serial/network logs of "special"
-tracepoints + dmesg to be the optimal thing.
+Now ioapics are with ACPI MADT table. During booting, kernel will parse
+MADT and put info into ioapic arrays.
+Also Bjorn added one pci device based driver, but it is not wired in yet,
+as it need to call acpi_register_ioapic, and that is TBD.
 
-> If we just "printk()" the most important parts - then that data will
-> automatically flow to the serial console and to pstore.
+This patchset will
+1. extend genirq to support reserve/alloc_reserved method.
+   because we want irqs for one ioapic controller to be linear mapping
+   to the gsi range.
+2. change ioapic array operation code so we could insert new ioapic and
+   remove one leave the blank slot.
+3. record irq_base in gsi_config in ioapic struct, and use it to convert gsi
+   to irq for pci device using that ioapic controller
+4. make static ioapic path (from MADT) use same code as hot-add path,
+   with reserve/alloc_reserved method.
+5. change ioapic add/remove to use acpi way, as that is only needed when
+   pci root bus hotplug.
+6. also support the case that ioapic controller is hiding in pci
+   config space or ioapic address is not managed by pci reallocation subsys.
 
-Actually, does the pstore act like a circular buffer? Because if it
-contains the last N relevant messages (for an arbitrary definition of
-relevant) before the system dies, then that could more helpful than only
-the error messages.
+Also include some cleanups
+1. print MSI-X clearly in /proc/interrupts and dmesg.
+2. convert ioapic irq_2_pin to be generic list.
 
-And with the advent of UEFI, pretty much every system has a pstore. Too
-bad that we have to limit it to 50% of size so that the boxes don't
-brick. :-P
+It is based on linus's tree of 2013/08/10 aka v3.11-rc4.
 
-> Then we have multiple paths for the critical bits of the error log
-> - and the tracepoints give us more details for the cases where the
-> machine doesn't spontaneously explode.
+could get them from:
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
 
-Ok, let's sort:
+-v3: split last patch to 4 patches per request from Bjorn.
+     drop one patch that will put pci device name in proc/interrupts
+     update changelog.
+-v4: address review from tglx, change to realloc to alloc_reserved.
+     separate x86 code and core code into different patches.
 
-* First we have the not-so-critical hw error messages. We want to carry
-those out-of-band, i.e. not in dmesg so that people don't have to parse
-and collect dmesg but have a specialized solution which gives them
-structured logs and tools can analyze, collect and ... those errors.
+Yinghai Lu (28):
+  genirq: Split __irq_reserve_irqs from irq_alloc_descs
+  genirq: Add irq_alloc_reserved_desc()
+  genirq: Do not free unallocated irq descriptors
+  x86, irq: Change irq_remap_modify_chip_defaults() to static
+  x86, irq: Modify irq chip once for irq remapping
+  x86, irq: Show MSI-X clearly in debug message
+  x86, irq: Show MSI-X in /proc/interrupt
+  x86, irq: Make dmar_msi/hpet_msi irq_chip name consistent
+  ia64, irq: Add dummy create_irq_nr()
+  iommu, irq: Allocate irq_desc for dmar_msi with local node
+  x86, irq: Kill create_irq()
+  x86, irq: Convert irq_2_pin list to generic list
+  x86, irq: Add alloc_reserved_irq_and_cfg_at()
+  x86, irq: Move down arch_early_irq_init()
+  x86, irq: Split out alloc_ioapic_save_registers()
+  xen, irq: Call irq_alloc_reserved_desc_at() at first
+  x86, irq: Reserve irq range and alloc_reserved for booting path
+  x86, irq: Add ioapic_gsi_to_irq
+  x86, irq: Add for_each_ioapic helper
+  x86, irq: More strict checking about registering ioapic
+  x86, irq: Make mp_register_ioapic handle hot-added ioapic
+  x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
+  x86, ioapic: Find usable ioapic id for 64bit.
+  x86: Move declaration for mp_register_ioapic()
+  PCI, x86: Make ioapic hotplug support built-in
+  PCI, x86, ACPI: Link acpi ioapic register to ioapic
+  PCI, x86, ACPI: Enable ioapic hotplug support with acpi host bridge.
+  PCI, x86, ACPI: get ioapic address from acpi device
 
-* When a critical error happens, the above usage is not necessarily
-advantageous anymore in the sense that, in order to debug what caused
-the machine to crash, we don't simply necessarily want only the crash
-message but also the whole system activity that lead to it.
-
-In which case, we probably actually want to turn off/ignore the error
-logging tracepoints and write *only* to dmesg which goes out over serial
-and to pstore. Right?
-
-Because in such cases I want to have *all* *relevant* messages that lead
-to the explosion + the explosion message itself.
-
-Makes sense? Yes, no? Aspects I've missed?
-
-Thanks.
+ arch/ia64/kernel/irq_ia64.c          |  10 +
+ arch/x86/include/asm/hw_irq.h        |   2 +-
+ arch/x86/include/asm/io_apic.h       |  13 +
+ arch/x86/include/asm/irq_remapping.h |  14 +-
+ arch/x86/include/asm/mpspec.h        |  21 +-
+ arch/x86/kernel/acpi/boot.c          |  32 +--
+ arch/x86/kernel/apic/apic.c          |   9 +-
+ arch/x86/kernel/apic/io_apic.c       | 480 +++++++++++++++++++++++++----------
+ arch/x86/kernel/devicetree.c         |   2 +-
+ drivers/acpi/pci_root.c              |   4 +
+ drivers/iommu/amd_iommu_init.c       |   2 +-
+ drivers/iommu/dmar.c                 |   2 +-
+ drivers/iommu/intel_irq_remapping.c  |   2 +-
+ drivers/iommu/irq_remapping.c        |  18 +-
+ drivers/pci/Kconfig                  |   3 +-
+ drivers/pci/ioapic.c                 | 229 ++++++++++++-----
+ drivers/xen/events.c                 |   8 +-
+ include/linux/irq.h                  |   4 +
+ include/linux/pci-acpi.h             |   8 +
+ kernel/irq/irqdesc.c                 |  80 ++++--
+ 20 files changed, 679 insertions(+), 264 deletions(-)
 
 -- 
-Regards/Gruss,
-    Boris.
+1.8.1.4
 
-Sent from a fat crate under my desk. Formatting is fine.
---
