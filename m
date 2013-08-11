@@ -1,43 +1,71 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Luck, Tony" <tony.luck@intel.com>
-To: Borislav Petkov <bp@alien8.de>,
-	Mauro Carvalho Chehab <m.chehab@samsung.com>
-CC: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Aristeu Rozanski Filho" <arozansk@redhat.com>
-Subject: RE: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Date: Thu, 15 Aug 2013 18:16:48 +0000
-Message-ID: <3908561D78D1C84285E8C5FCA982C28F31CBCE72@ORSMSX106.amr.corp.intel.com>
-References: <5208D80D.5030206@linux.vnet.ibm.com>
- <20130812114404.3bd64fa0@samsung.com> <520A1B5E.8040105@linux.vnet.ibm.com>
- <20130813094147.062317f8@concha.lan> <520A6A30.1030406@linux.vnet.ibm.com>
- <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
- <520B603E.3040002@linux.vnet.ibm.com> <20130814211504.393cf138@concha.lan>
- <20130815100132.GC27616@pd.tnic> <20130815103421.178a5224@samsung.com>
- <20130815135106.GG27616@pd.tnic>
-In-Reply-To: <20130815135106.GG27616@pd.tnic>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH 04/28] x86, irq: Change irq_remap_modify_chip_defaults() to static
+Date: Sat, 10 Aug 2013 19:45:14 -0700
+Message-Id: <1376189139-31856-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
+References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAqIFdlIHBhcnNlIHNvbWUgQVBFSSB0YWJsZSBhbmQgZGlzYWJsZSB0aG9zZSBNQ0EgYmFua3Mg
-d2hpY2ggdGhlIEJJT1MNCj4gd2FudHMgdG8gaGFuZGxlIGZpcnN0Lg0KDQpXZSBoYXZlIG5vIGlk
-ZWEgd2hpY2ggZXJyb3JzIHRoZSBCSU9TIGhhcyBjaG9zZW4gZm9yIGl0c2VsZi4gIFdlIGp1c3Qg
-a25vdyB3aGljaA0KYmFuayBudW1iZXJzIC4uLiBhbmQgSW50ZWwgcHJvY2Vzc29ycyBjaGFuZ2Ug
-bWFwcGluZ3Mgb2Ygd2hpY2ggZXJyb3JzIGFyZSBsb2dnZWQNCmluIHdoaWNoIGJhbmtzIGluIGV2
-ZXJ5IG5ldyBwcm9jZXNzb3IgdG9jayAoYW5kIHNvbWV0aW1lcyB0aWNrKS4gIFNvbWUgYmFua3MN
-CmFyZSBkb2N1bWVudGVkIGluIHByb2Nlc3NvciBkYXRhc2hlZXQuIG1vc3QgYXJlIG5vdC4gTW9z
-dCBjb21tb24gY2FzZSBtaWdodA0Kd2VsbCBiZSBtZW1vcnkgLi4uIGJ1dCBpdCBjb3VsZCBiZSBj
-YWNoZSwgb3IgSS9PLCBvciAuLi4NCg0KU28gdGhpcyBkb2Vzbid0IGhlbHAgTWF1cm8gZmlndXJl
-IG91dCB3aGV0aGVyIHRvIGFsbG93IGxvYWRpbmcgb2YgYW4NCkVEQUMgZHJpdmVyIHRoYXQgd2ls
-bCBwZWVrIGFuZCBwb2tlIGF0IGNoaXBzZXQgc3BlY2lmaWMgcmVnaXN0ZXJzIGluDQpwb3NzaWJs
-eSByYWN5IHdheXMgd2l0aCBCSU9TIGNvZGUgZG9pbmcgdGhlIHNhbWUgdGhpbmcuDQoNCi1Ub255
-DQo=
+Change irq_remap_modify_chip_defaults() to static, as we have no
+outside user.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/irq_remapping.h | 6 ------
+ drivers/iommu/irq_remapping.c        | 2 +-
+ 2 files changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index d806b22..606f42e 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -56,8 +56,6 @@ extern bool setup_remapped_irq(int irq,
+ 			       struct irq_cfg *cfg,
+ 			       struct irq_chip *chip);
+ 
+-void irq_remap_modify_chip_defaults(struct irq_chip *chip);
+-
+ #else  /* CONFIG_IRQ_REMAP */
+ 
+ static inline void setup_irq_remapping_ops(void) { }
+@@ -91,10 +89,6 @@ static inline void panic_if_irq_remap(const char *msg)
+ {
+ }
+ 
+-static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+-{
+-}
+-
+ static inline bool setup_remapped_irq(int irq,
+ 				      struct irq_cfg *cfg,
+ 				      struct irq_chip *chip)
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 39f81ae..85ae2cf 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -375,7 +375,7 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ 	seq_printf(p, " IR-%s", data->chip->name);
+ }
+ 
+-void irq_remap_modify_chip_defaults(struct irq_chip *chip)
++static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ {
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+-- 
+1.8.1.4
+
