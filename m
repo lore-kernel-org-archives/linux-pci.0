@@ -1,143 +1,279 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f42.google.com ([209.85.216.42]:63825 "EHLO
-	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751762Ab3HFNjh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 09:39:37 -0400
-Received: by mail-qa0-f42.google.com with SMTP id bv4so1648556qab.15
-        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 06:39:35 -0700 (PDT)
-Date: Tue, 6 Aug 2013 07:39:29 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
- pbus_size_io()
-Message-ID: <20130806133929.GB31970@google.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
- <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
- <20130805195149.GA19127@google.com>
- <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
- <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
- <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
- <20130805222135.GA29875@google.com>
- <20130806061534.GA10876@weiyang.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130806061534.GA10876@weiyang.vnet.ibm.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34926 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753723Ab3HKCtm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:49:42 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 27/28] PCI, x86, ACPI: Enable ioapic hotplug support with acpi host bridge.
+Date: Sat, 10 Aug 2013 19:48:13 -0700
+Message-Id: <1376189294-32022-28-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 06, 2013 at 02:15:34PM +0800, Wei Yang wrote:
-> On Mon, Aug 05, 2013 at 04:21:35PM -0600, Bjorn Helgaas wrote:
-> >On Mon, Aug 05, 2013 at 02:09:27PM -0700, Yinghai Lu wrote:
-> >> On Mon, Aug 5, 2013 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> >> then, we should drop that 4k capping.
-> >> >> I was thinking there could be strange or wild res with bigger than 4k.
-> >> >
-> >> > If there *were* an I/O BAR larger than 4KB, how should it be handled?
-> >> > I don't think capping the alignment to 4KB sounds like the best way.
-> >> > For example, a 16KB I/O BAR would still need to be aligned on 16KB.
-> >> >
-> >> > And I think capping to 4KB as you did above will break the powerpc
-> >> > pcibios_window_alignment() implementation.  For example, if
-> >> > pcibios_window_alignment() returned 16KB, and we later capped it to
-> >> > 4KB, we're going to allocate space for the bridge window with the
-> >> > wrong alignment.
-> >> 
-> >> Agree.
-> >
-> >OK.  Can you guys try this out and see whether it fixes the problem?
-> >I don't know what the actual problem *is*, so I can't tell whether
-> >this is a possible fix.
-> >
-> 
-> Thanks all for the comments, this makes me re-consider the cases. Let me do a
-> summary. Maybe I misunderstand the idea, please fix me~
-> 
-> Requirement from PCI Spec
-> ============================================================================
-> 1. I/O BAR for non-bridge PCI devices are limited to 256 bytes
-> 2. Most I/O window for PCI bridge is 4k aligned
-> 3. Some bridge support 1k aligned I/O window
-> 
-> Ancient time -- when 1k aligned I/O window is not there
-> ============================================================================
-> The alignment is 4k in all cases. (As it is hard coded.)
-> 
->     For devices under this bridge, I/O BAR is less then 256.
->     
->     For downstream port, I/O window is 4k aligned, since the IORESOURCE_STARTALIGN
->     is set. This means even the downstream port connects other bridge, the
->     alignment is still 4k.
+We need to have ioapic setup before normal pci drivers.
+otherwise other pci driver can not setup irq.
 
-Right.
+So we should not treat them as normal pci devices.
+Also we will need to support ioapic hotplug without pci device around.
 
-> Middle Age -- when 1k aligned I/O window is introduced
-> ============================================================================
-> This introduce two other cases: 
-> 1. All downstream port is 1k aligned
-> 2. One of the downstream port is 4k aligned.
-> 
-> Case 1: the "min_align" should be set to 1k. This could save some I/O resource.
-> Case 2: the "min_align" should be set to 4k, even itself anounced could support
->         1k alignment.
-> 	               ^--- Fix me, if not correct.
+We need to call ioapic add/remove during host-bridge add/remove.
 
-Right.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c  |   4 ++
+ drivers/pci/ioapic.c     | 147 ++++++++++++++++++++++++++++++-----------------
+ include/linux/pci-acpi.h |   8 +++
+ 3 files changed, 106 insertions(+), 53 deletions(-)
 
-> The "min_align" could be set to other value? Previously, I thought it could
-> be, for example 2k. Now I think no, the list_for_each_entry loop will iterate
-> on two kinds of resources: 1. Device I/O BAR; 2. Bridge I/O window.
-> 
-> Device I/O BAR is less then 256 bytes, it won't contribut to the alignment.
-> Bridge I/O window will be 1k or 4k aligned.
-> 
-> This means only two possible value for "min_align": 1k or 4k.
-> 	               ^--- Fix me, if not correct.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 5917839..7577175 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -532,6 +532,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		pci_enable_bridges(root->bus);
+ 	}
+ 
++	acpi_pci_ioapic_add(root);
++
+ 	pci_bus_add_devices(root->bus);
+ 	return 1;
+ 
+@@ -546,6 +548,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ 
+ 	pci_stop_root_bus(root->bus);
+ 
++	acpi_pci_ioapic_remove(root);
++
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 7d6b157..60351b2 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -22,101 +22,142 @@
+ #include <linux/slab.h>
+ #include <acpi/acpi_bus.h>
+ 
+-struct ioapic {
+-	acpi_handle	handle;
++struct acpi_pci_ioapic {
++	acpi_handle	root_handle;
+ 	u32		gsi_base;
++	struct pci_dev *pdev;
++	struct list_head list;
+ };
+ 
+-static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
++static LIST_HEAD(ioapic_list);
++static DEFINE_MUTEX(ioapic_list_lock);
++
++static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
++				 u32 *pgsi_base)
+ {
+-	acpi_handle handle;
+ 	acpi_status status;
+ 	unsigned long long gsb;
+-	struct ioapic *ioapic;
++	struct pci_dev *dev;
++	u32 gsi_base;
+ 	int ret;
+ 	char *type;
+-	struct resource *res;
++	struct resource r;
++	struct resource *res = &r;
++	char objname[64];
++	struct acpi_buffer buffer = {sizeof(objname), objname};
+ 
+-	handle = DEVICE_ACPI_HANDLE(&dev->dev);
+-	if (!handle)
+-		return -EINVAL;
++	*pdev = NULL;
++	*pgsi_base = 0;
+ 
+ 	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
+-	if (ACPI_FAILURE(status))
+-		return -EINVAL;
+-
+-	/*
+-	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
+-	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
+-	 */
++	if (ACPI_FAILURE(status) || !gsb)
++		return;
+ 
+-	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
+-	if (!ioapic)
+-		return -ENOMEM;
++	dev = acpi_get_pci_dev(handle);
++	if (!dev)
++		return;
+ 
+-	ioapic->handle = handle;
+-	ioapic->gsi_base = (u32) gsb;
++	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+-	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+-		type = "IOAPIC";
+-	else
+-		type = "IOxAPIC";
++	gsi_base = gsb;
++	type = "IOxAPIC";
+ 
+ 	ret = pci_enable_device(dev);
+ 	if (ret < 0)
+-		goto exit_free;
++		goto exit_put;
+ 
+ 	pci_set_master(dev);
+ 
++	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
++		type = "IOAPIC";
++
+ 	if (pci_request_region(dev, 0, type))
+ 		goto exit_disable;
+ 
+ 	res = &dev->resource[0];
+-	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
++
++	if (acpi_register_ioapic(handle, res->start, gsi_base))
+ 		goto exit_release;
+ 
+-	pci_set_drvdata(dev, ioapic);
+-	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
+-	return 0;
++	pr_info("%s %s %s at %pR, GSI %u\n",
++		dev_name(&dev->dev), objname, type,
++		res, gsi_base);
++
++	*pdev = dev;
++	*pgsi_base = gsi_base;
++	return;
+ 
+ exit_release:
+ 	pci_release_region(dev, 0);
+ exit_disable:
+ 	pci_disable_device(dev);
+-exit_free:
+-	kfree(ioapic);
+-	return -ENODEV;
++exit_put:
++	pci_dev_put(dev);
+ }
+ 
+-static void ioapic_remove(struct pci_dev *dev)
++static void handle_ioapic_remove(acpi_handle handle, struct pci_dev *dev,
++				  u32 gsi_base)
+ {
+-	struct ioapic *ioapic = pci_get_drvdata(dev);
++	acpi_unregister_ioapic(handle, gsi_base);
+ 
+-	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
+ 	pci_release_region(dev, 0);
+ 	pci_disable_device(dev);
+-	kfree(ioapic);
++	pci_dev_put(dev);
+ }
+ 
++static acpi_status register_ioapic(acpi_handle handle, u32 lvl,
++					void *context, void **rv)
++{
++	acpi_handle root_handle = context;
++	struct pci_dev *pdev;
++	u32 gsi_base;
++	struct acpi_pci_ioapic *ioapic;
+ 
+-static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(pci, ioapic_devices);
++	handle_ioapic_add(handle, &pdev, &gsi_base);
++	if (!gsi_base)
++		return AE_OK;
+ 
+-static struct pci_driver ioapic_driver = {
+-	.name		= "ioapic",
+-	.id_table	= ioapic_devices,
+-	.probe		= ioapic_probe,
+-	.remove		= ioapic_remove,
+-};
++	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
++	if (!ioapic) {
++		pr_err("%s: cannot allocate memory\n", __func__);
++		handle_ioapic_remove(root_handle, pdev, gsi_base);
++		return AE_OK;
++	}
++	ioapic->root_handle = root_handle;
++	ioapic->pdev = pdev;
++	ioapic->gsi_base = gsi_base;
++
++	mutex_lock(&ioapic_list_lock);
++	list_add(&ioapic->list, &ioapic_list);
++	mutex_unlock(&ioapic_list_lock);
++
++	return AE_OK;
++}
+ 
+-static int __init ioapic_init(void)
++void acpi_pci_ioapic_add(struct acpi_pci_root *root)
+ {
+-	return pci_register_driver(&ioapic_driver);
++	acpi_status status;
++
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
++				     (u32)1, register_ioapic, NULL,
++				     root->device->handle,
++				     NULL);
++	if (ACPI_FAILURE(status))
++		pr_err("%s: register_ioapic failure - %d", __func__, status);
+ }
+-module_init(ioapic_init);
+ 
+-MODULE_LICENSE("GPL");
++void acpi_pci_ioapic_remove(struct acpi_pci_root *root)
++{
++	struct acpi_pci_ioapic *ioapic, *tmp;
++
++	mutex_lock(&ioapic_list_lock);
++	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
++		if (root->device->handle != ioapic->root_handle)
++			continue;
++		list_del(&ioapic->list);
++		handle_ioapic_remove(ioapic->root_handle, ioapic->pdev,
++					ioapic->gsi_base);
++		kfree(ioapic);
++	}
++	mutex_unlock(&ioapic_list_lock);
++}
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 1704479..b2a2ced 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -69,6 +69,14 @@ static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
+ static inline void acpiphp_check_host_bridge(acpi_handle handle) { }
+ #endif
+ 
++#ifdef CONFIG_PCI_IOAPIC
++void acpi_pci_ioapic_add(struct acpi_pci_root *root);
++void acpi_pci_ioapic_remove(struct acpi_pci_root *root);
++#else
++static inline void acpi_pci_ioapic_add(struct acpi_pci_root *root) { }
++static inline void acpi_pci_ioapic_remove(struct acpi_pci_root *root) { }
++#endif
++
+ #else	/* CONFIG_ACPI */
+ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+ static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
+-- 
+1.8.1.4
 
-Right.
-
-> Back to Yinghai's commit(fd5913411), the "min_align" is set to 1k at the
-> beginning. During the list_for_each_entry loop, (align > min_align) is true
-> means align is 4k.
-> 
-> And this (min_align > 4096) will never be true, since at most "min_align" is
-> 4k. So, I think, this comparison could be removed in commit(fd5913411).
-> 	               ^--- Fix me, if not correct.
-
-Right.  I think Yinghai was considering the case of an I/O BAR larger
-than 4K.  But that's illegal per spec, and I think we would want to keep
-the larger alignment even if it were legal.
-
-> Present Age -- when architecture require specific alignment for bridge window
-> ============================================================================
-> This introduce 3 cases:
-> 1. 1k < 4k < arch_align
-> 2. 1k < arch_align < 4k
-> 3. arch_align < 1k < 4k
-> 
-> Case 1: the "min_align" should be arch_align.
-> Case 2: this is a little complicated. downstream port could be all 1k aligned
->         or one of the downstream port is 4k aligned.
-> 	a. all 1k aligned, the "min_align" should be arch_align
-> 	b. one is 4k aligned, the "min_align" should be 4k
-> Case 3: this is the same as before
-> 
-> The final result of "min_align" in these three cases are all the biggest one
-> of upstream/downstream/arch alignment. So the algorithm could be changed to
-> calculate the biggest one of the three.
-
-Right.
-
-> Personal Conclusion
-> ============================================================================
-> I think Bjorn's patch works.
-> Will test on powernv platform and give the result.
-
-Great, let me know what happens.
-
-Bjorn
