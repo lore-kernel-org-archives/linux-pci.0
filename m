@@ -1,44 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:22840 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966402Ab3HHURP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 16:17:15 -0400
-Date: Thu, 8 Aug 2013 16:17:09 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: linux-next: Tree for Aug 8 (not CONFIG_PCI_MSI conflict)
-Message-ID: <20130808201709.GN8204@titan.lakedaemon.net>
-References: <20130808170822.82bf33d3cf5100f5e2646815@canb.auug.org.au>
- <5203F978.2050504@infradead.org>
+Received: from eu1sys200aog104.obsmtp.com ([207.126.144.117]:58050 "EHLO
+	eu1sys200aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755478Ab3HLLrs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 07:47:48 -0400
+Date: Mon, 12 Aug 2013 17:17:22 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Thierry Reding <thierry.reding@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	Arnd Bergmann <arnd@arndb.de>, 'Sean Cross' <xobs@kosagi.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH] PCI: exynos: add support for MSI
+Message-ID: <20130812114722.GA14050@pratyush-vbox>
+References: <000401ce9739$e0a65410$a1f2fc30$@samsung.com>
+ <20130812105638.GA12042@ulmo>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5203F978.2050504@infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20130812105638.GA12042@ulmo>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 08, 2013 at 01:03:04PM -0700, Randy Dunlap wrote:
-> On 08/08/13 00:08, Stephen Rothwell wrote:
-> > Hi all,
-> > 
-> > Changes since 20130807:
-> > 
+On Mon, Aug 12, 2013 at 06:56:40PM +0800, Thierry Reding wrote:
+> On Mon, Aug 12, 2013 at 05:56:47PM +0900, Jingoo Han wrote:
+> [...]
+> > diff --git a/arch/arm/mach-exynos/Kconfig b/arch/arm/mach-exynos/Kconfig
+> > index 855d4a7..9ef1c95 100644
+> > --- a/arch/arm/mach-exynos/Kconfig
+> > +++ b/arch/arm/mach-exynos/Kconfig
+> > @@ -93,6 +93,7 @@ config SOC_EXYNOS5440
+> >  	default y
+> >  	depends on ARCH_EXYNOS5
+> >  	select ARCH_HAS_OPP
+> > +	select ARCH_SUPPORTS_MSI
 > 
-> on i386 and x86_64:
-> when CONFIG_PCI_MSI is not enabled:
+> This symbol goes away in Thomas Petazzoni's MSI patch series which is
+> targetted at 3.12, so I don't think you should add that here.
 > 
-> There are many of these errors:
-> include/linux/msi.h:65:6: error: expected identifier or '(' before 'void'
-> include/linux/msi.h:65:6: error: expected ')' before numeric constant
+> > +#ifdef CONFIG_PCI_MSI
+> > +static void exynos_pcie_clear_irq_level(struct pcie_port *pp)
+> > +{
+> > +	u32 val;
+> > +	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+> > +	void __iomem *elbi_base = exynos_pcie->elbi_base;
+> > +
+> > +	val = readl(elbi_base + PCIE_IRQ_LEVEL);
+> > +	writel(val, elbi_base + PCIE_IRQ_LEVEL);
+> > +	return;
+> > +}
 > 
-> because arch/x86/include/asm/pci.h defines:
-> #define default_teardown_msi_irqs	NULL
+> I'm a little confused by this: the above code seems to access the PCIe
+> controller registers to clear an interrupt, but you pass in a PCIe
+> port...
+> 
 
-Grrr.  That's us (mvebu tree)  I've forwarded this to Thomas, the author
-of the patch.  Hopefully we'll have this worked out soon.
+One struct pcie_port is associated with one controller and it has been
+assumed that there is only one root port per controller. 
 
-Thanks for testing,
+[...]
 
-Jason.
+> > +void dw_pcie_msi_init(struct pcie_port *pp)
+> > +{
+> > +	/* program the msi_data */
+> > +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+> > +			__virt_to_phys((u32)(&msi_data)));
+> 
+> That's slightly odd. You convert the virtual address of a local variable
+> (local to the file) to a physical address and program that into a
+> register. I assume that it works since you've probably tested this, but
+> I wonder if it's safe to do this. Perhaps a better way would be to
+> allocate a single free page (__get_free_pages(GFP_KERNEL, 0)) and write
+> the physical address of that into the register instead.
+> 
+
+also msi_data must be different for different controller. Something
+like &msi_data[pp->port].
+
+[...]
+
+> > +void arch_teardown_msi_irq(unsigned int irq)
+> > +{
+> > +	clear_irq(irq);
+> > +}
+> 
+> And we've reworked this largely so that drivers no longer provide arch_*
+> functions because that prevents multi-platform support. So I think you
+> need to port this to the new msi_chip infrastructure that's being
+> introduced in 3.12.
+
+Yes, its needed.
+
+Regards
+Pratyush
+
+> 
+> Thierry
+
+
