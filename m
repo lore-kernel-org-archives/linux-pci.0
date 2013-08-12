@@ -1,56 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1231 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752297Ab3HZXhG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Aug 2013 19:37:06 -0400
-From: "Yuval Mintz" <yuvalmin@broadcom.com>
-To: "Bjorn Helgaas" <bhelgaas@google.com>
-cc: "jacob.e.keller@intel.com" <jacob.e.keller@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: RE: pcie_get_minimum_link returns 0 width
-Date: Mon, 26 Aug 2013 23:36:50 +0000
-Message-ID: <979A8436335E3744ADCD3A9F2A2B68A52AD13D0C@SJEXCHMB10.corp.ad.broadcom.com>
-References: <20130825100157.GA16500@lb-tlvb-yuvalmin.il.broadcom.com>
- <979A8436335E3744ADCD3A9F2A2B68A52AD136BE@SJEXCHMB10.corp.ad.broadcom.com>
- <CAErSpo4NmL0RWcBompuweHNYmhNmLXU_21_gvaqfDEzi+HBp5g@mail.gmail.com>
-In-Reply-To: <CAErSpo4NmL0RWcBompuweHNYmhNmLXU_21_gvaqfDEzi+HBp5g@mail.gmail.com>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:41584 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754419Ab3HLLhM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 07:37:12 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <naveen.n.rao@linux.vnet.ibm.com>;
+	Tue, 13 Aug 2013 08:31:49 +1000
+Message-ID: <5208C8DD.3050204@linux.vnet.ibm.com>
+Date: Mon, 12 Aug 2013 17:07:01 +0530
+From: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+To: Steven Rostedt <rostedt@goodmis.org>
+CC: tony.luck@intel.com, bp@alien8.de, bhelgaas@google.com,
+	rjw@sisk.pl, lance.ortiz@hp.com, m.chehab@samsung.com,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] mce: acpi/apei: trace: Include PCIe AER trace event
+ conditionally
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <1375986471-27113-2-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <20130808152329.1f98b5e0@gandalf.local.home>
+In-Reply-To: <20130808152329.1f98b5e0@gandalf.local.home>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > Hi,
-> >
-> > I tried adding support for the newly added 'pcie_get_minimum_link' into
-> the
-> > bnx2x driver, but found out the some of my devices started showing width
-> x0.
-> >
-> > By adding debug prints, I've found out there were devices up the chain that
-> > Showed 0 when their PCI_EXP_LNKSTA was read by said function.
-> > However, when I tried looking via lspci the output claimed the width was
-> x4.
-> 
-> I don't see a 'pcie_get_minimum_link()' function in my current tree
-> (git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git "next"
-> branch).  Maybe seeing your patch (with the debug prints) would give
-> me a hook for somewhere to start looking.
+On 08/09/2013 12:53 AM, Steven Rostedt wrote:
+> [ attempting to try out claws-mail, hopefully this messages isn't
+> scrambled ;-) ]
 
-You've acked the patch and it was applied in net-next; Obviously it has yet
-to migrate to your tree. 
+Works just fine :)
 
-> 
-> Can you figure out why lspci shows the correct value and this kernel
-> interface does not?  The current lspci source is in
-> git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git and the
-> relevant code is probably in cap_express_link() here:
-> http://git.kernel.org/cgit/utils/pciutils/pciutils.git/tree/ls-caps.c#n750
+>
+> On Thu,  8 Aug 2013 23:57:49 +0530
+> "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> wrote:
+>
+>> Since we'll be adding multiple trace events to ras.h, we need to protect
+>> each block appropriately so that they only get included in the right
+>> places. Update PCIe AER trace event for this purpose.
+>
+> Why not make a separate file for each? You will have to define
 
-Traced the read as going via the pci-sysfs. Where should I look for the bus's
-read ops?
+The idea was to have all RAS-related trace points in a single place. 
+This was discussed back when the PCIe AER trace event was added and so I 
+chose to add the new event here as well.
+
+> TRACE_EVENT_PCIE_AER for the users as well. That is, the places that
+> include ras.h and use the trace_aer_*() tracepoints.
+
+Do you mean the change I've done to aerdrv-errprint.c below? This trace 
+point is currently only used there, so I guess we are ok?
 
 Thanks,
-Yuval
+Naveen
+
+
+>
+>
+>>
+>> Signed-off-by: Naveen N. Rao <naveen.n.rao@linux.vnet.ibm.com>
+>> ---
+>>   drivers/pci/pcie/aer/aerdrv_errprint.c | 1 +
+>>   include/trace/events/ras.h             | 2 +-
+>>   2 files changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> index 2c7c9f5..4d06859 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> @@ -24,6 +24,7 @@
+>>   #include "aerdrv.h"
+>>
+>>   #define CREATE_TRACE_POINTS
+>> +#define TRACE_EVENT_PCIE_AER
+>>   #include <trace/events/ras.h>
+>>
+>>   #define AER_AGENT_RECEIVER		0
+>> diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+>> index 88b8783..4a66142 100644
+>> --- a/include/trace/events/ras.h
+>> +++ b/include/trace/events/ras.h
+>> @@ -1,7 +1,7 @@
+>>   #undef TRACE_SYSTEM
+>>   #define TRACE_SYSTEM ras
+>>
+>> -#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
+>> +#if (!defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)) && defined()
+>
+> I think it would look cleaner to encapsulate the one define with the
+> other:
+>
+> #ifdef TRACE_EVENT_PCIE_AER
+> #if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
+>
+>
+> -- Steve
+>
+>>   #define _TRACE_AER_H
+>>
+>>   #include <linux/tracepoint.h>
+>
 
