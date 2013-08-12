@@ -1,59 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:50967 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755026Ab3HEUmc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 16:42:32 -0400
-Message-ID: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 00/20] PCI root complex changes for tile architecture
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 5/9] PCI: mvebu: add support for Marvell Dove SoCs
+Date: Mon, 12 Aug 2013 20:46:51 +0200
+Message-Id: <1376333215-12885-6-git-send-email-sebastian.hesselbarth@gmail.com>
+In-Reply-To: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
+References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These changes add new features and fix bugs in the Tilera PCI
-root complex subsystem.  Among the new tilegx features are support
-for I/O space access, more MXI-X interrupt vectors, and support for
-TRIO 0 MAC 0 on Gx72 systems.
+This patch adds a compatible for the PCIe controller found on Marvell
+Dove SoCs. Binding documentation and Kconfig entry are also updated.
 
-Chris Metcalf (20):
-  tile PCI RC: cleanups for tilepro PCI RC
-  tile PCI RC: tilepro conflict with PCI and RAM addresses
-  tile PCI RC: support pci=off boot arg for tilepro
-  tile PCI RC: tweak the the pcie_rc_delay support
-  tile PCI RC: handle case that PCI link is already up
-  tile: support LSI MEGARAID SAS HBA hybrid dma_ops
-  tile PCI RC: support more MSI-X interrupt vectors
-  tile PCI RC: gentler warning for missing plug-in PCI
-  tile PCI RC: support I/O space access
-  tile PCI DMA: handle a NULL dev argument properly
-  tile PCI RC: restructure TRIO initialization
-  tile PCI RC: eliminate pci_controller.mem_resources field
-  tile PCI RC: include pci/pcie/Kconfig
-  tile PCI RC: bomb comments and whitespace format
-  tile PCI RC: use proper accessor function
-  tile PCI RC: add dma_get_required_mask()
-  tile PCI DMA: fix bug in non-page-aligned accessors
-  tile PCI RC: support PCIe TRIO 0 MAC 0 on Gx72 system
-  tile PCI RC: reduce driver's vmalloc space usage
-  tile PCI RC: remove stale include of linux/numa.h
+Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+---
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org
+---
+ Documentation/devicetree/bindings/pci/mvebu-pci.txt |    1 +
+ drivers/pci/host/Kconfig                            |    2 +-
+ drivers/pci/host/pci-mvebu.c                        |    1 +
+ 3 files changed, 3 insertions(+), 1 deletion(-)
 
- arch/tile/Kconfig                    |  12 +
- arch/tile/gxio/iorpc_trio.c          |  23 ++
- arch/tile/include/arch/trio.h        |  39 ++
- arch/tile/include/asm/dma-mapping.h  |   8 +-
- arch/tile/include/asm/io.h           | 126 ++++++-
- arch/tile/include/asm/pci.h          |  17 +-
- arch/tile/include/gxio/iorpc_trio.h  |   5 +
- arch/tile/include/hv/drv_trio_intf.h |   8 +-
- arch/tile/kernel/pci-dma.c           |  44 ++-
- arch/tile/kernel/pci.c               |  33 +-
- arch/tile/kernel/pci_gx.c            | 710 ++++++++++++++++++++---------------
- arch/tile/kernel/setup.c             |   9 +-
- 12 files changed, 678 insertions(+), 356 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+index f2fa261..cf470a9 100644
+--- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
++++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+@@ -5,6 +5,7 @@ Mandatory properties:
+ - compatible: one of the following values:
+     marvell,armada-370-pcie
+     marvell,armada-xp-pcie
++    marvell,dove-pcie
+     marvell,kirkwood-pcie
+ - #address-cells, set to <3>
+ - #size-cells, set to <2>
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 1184ff6..492eec9 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -3,7 +3,7 @@ menu "PCI host controller drivers"
+ 
+ config PCI_MVEBU
+ 	bool "Marvell EBU PCIe controller"
+-	depends on ARCH_MVEBU || ARCH_KIRKWOOD
++	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_KIRKWOOD
+ 
+ config PCIE_DW
+ 	bool
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index bdad4d4..b204c1d 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -986,6 +986,7 @@ static int mvebu_pcie_remove(struct platform_device *pdev)
+ static const struct of_device_id mvebu_pcie_of_match_table[] = {
+ 	{ .compatible = "marvell,armada-xp-pcie", },
+ 	{ .compatible = "marvell,armada-370-pcie", },
++	{ .compatible = "marvell,dove-pcie", },
+ 	{ .compatible = "marvell,kirkwood-pcie", },
+ 	{},
+ };
 -- 
-1.8.3.1
+1.7.10.4
 
