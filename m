@@ -1,47 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:48723 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751251Ab3HTUNF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 16:13:05 -0400
-Received: by mail-oa0-f48.google.com with SMTP id o17so1785393oag.35
-        for <linux-pci@vger.kernel.org>; Tue, 20 Aug 2013 13:13:05 -0700 (PDT)
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:53265 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378Ab3HLVRZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 17:17:25 -0400
+Received: by mail-ie0-f180.google.com with SMTP id aq17so9111913iec.11
+        for <linux-pci@vger.kernel.org>; Mon, 12 Aug 2013 14:17:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <52135FB3.3090700@huawei.com>
-References: <1376533135-36708-1-git-send-email-wangyijing@huawei.com>
- <1376533135-36708-2-git-send-email-wangyijing@huawei.com> <20130816221716.GA25780@google.com>
- <521187A5.6030002@huawei.com> <CAPoiz9zpovgcnx=DG-g4v7VpA17H5P2EYv1spm7TGLOwO6zYCQ@mail.gmail.com>
- <CAErSpo7kxfJDrm1QwNrGd4onfKBzUW+jVV-8p14i1yJqkMFobg@mail.gmail.com>
- <CAErSpo7tf+9NUGT2U5WBcQUtZb9=ZT_4wAjxzhiiWh9n_KEbAA@mail.gmail.com>
- <CAPoiz9wMo+sr1EWp+fPdwKTBoJpQGjZg-dASRMHAtvPBE+G4Eg@mail.gmail.com>
- <5212DA84.6070409@huawei.com> <20130820044416.GA22188@google.com> <52135FB3.3090700@huawei.com>
+In-Reply-To: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
+References: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 20 Aug 2013 14:12:44 -0600
-Message-ID: <CAErSpo7e=KW11RHoSD3kAEkRNrage5V5gq_FuOtqQXue_HOSmw@mail.gmail.com>
-Subject: Re: [PATCH v5 1/2] PCI: fix the only slot identification in pcie_find_smpss()
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>
+Date: Mon, 12 Aug 2013 15:17:04 -0600
+Message-ID: <CAErSpo7=oBG3tJBpwscnL-4D-9kLhHUrQSZFrRRC4sBsT2_U2Q@mail.gmail.com>
+Subject: Re: [PATCH V2 0/4] Enable bus master till the FLR completes for
+ Chelsio T4
+To: Vipul Pandya <vipul@chelsio.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Casey Leedom <leedom@chelsio.com>, tomreu@chelsio.com,
+	divy@chelsio.com, dm@chelsio.com, nirranjan@chelsio.com,
+	eilong@broadcom.com, netdev <netdev@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 20, 2013 at 6:23 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-
->> I don't think we should look at the dev->bus->devices list at all
->> because that only applies to the current configuration and
->> doesn't account for any future hot-plugs.
+On Tue, Aug 6, 2013 at 4:18 AM, Vipul Pandya <vipul@chelsio.com> wrote:
+> This patch series adds device specific reset method for Chelsio T4 adapters.
 >
-> I think so.
+> The series also adds new routine, pci_wait_for_pending_transaction, to wait for
+> pending pci transaction. There are few places where waiting for pending pci
+> transaction code was duplicated. This patch series also replaces occurances of
+> duplicate code.
 >
-> If Jon agree too , I will update this patch.
+> This patch series is built against Bjorn Helgaas pci tree next branch. We would
+> like to merge this series via the same.
+>
+> I have Cced respective maintainers of the modified drivers. Kindly review and
+> let us know in case of any review comments.
+>
+> Thanks,
+> Vipul Pandya
+>
+> V2: Added pci_wait_for_pending_transaction routine and replaced it at respective
+> places. Made the patch series for the same.
+> V2: Used dev->msix_cap directly for capability offset
+> V2: Removed use of 'rc' variable.
+>
+> Casey Leedom (4):
+>   pci: Add pci_wait_for_pending_transaction to wait for pending pci
+>     transaction
+>   pci: Enable bus master till the FLR completes
+>   bnx2x: Use pci_wait_for_pending_transaction instead of for loop
+>   pci: Use pci_wait_for_pending_transaction instead of for loop
+>
+>  drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c | 18 +----
+>  drivers/pci/pci.c                                | 38 ++++++----
+>  drivers/pci/quirks.c                             | 97 ++++++++++++++++++++----
+>  include/linux/pci.h                              |  1 +
+>  4 files changed, 109 insertions(+), 45 deletions(-)
 
-No need to wait for Jon; this is a tiny patch, and things will go
-faster if you just go ahead and update the patch, test it, and post
-it.  Then we can all see exactly what change you propose, and it's
-always easier to comment on a concrete patch rather than an English
-description of it.  If Jon disagrees with the patch, we can discuss
-some more and go from there.
+Applied to my "next" branch for v3.12, thanks!
 
 Bjorn
