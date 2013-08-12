@@ -1,106 +1,37 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v4 23/28] x86, ioapic: Find usable ioapic id for 64bit.
-Date: Sat, 10 Aug 2013 19:48:09 -0700
-Message-Id: <1376189294-32022-24-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+Date: Mon, 12 Aug 2013 09:13:37 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: tony.luck@intel.com, bp@alien8.de, bhelgaas@google.com,
+	rjw@sisk.pl, lance.ortiz@hp.com, m.chehab@samsung.com,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] mce: acpi/apei: trace: Include PCIe AER trace event
+ conditionally
+Message-ID: <20130812091337.6f8c057d@gandalf.local.home>
+In-Reply-To: <5208C8DD.3050204@linux.vnet.ibm.com>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+	<1375986471-27113-2-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+	<20130808152329.1f98b5e0@gandalf.local.home>
+	<5208C8DD.3050204@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Checking the id in register, if that is duplicated, will pick one and
-update id register.
+On Mon, 12 Aug 2013 17:07:01 +0530
+"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c | 38 +++++++++++++++++++++++++++++++++-----
- 1 file changed, 33 insertions(+), 5 deletions(-)
+> > TRACE_EVENT_PCIE_AER for the users as well. That is, the places that
+> > include ras.h and use the trace_aer_*() tracepoints.
+> 
+> Do you mean the change I've done to aerdrv-errprint.c below? This trace 
+> point is currently only used there, so I guess we are ok?
+> 
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index a75e9d8..fb9bf06 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3652,19 +3652,22 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
- 	return apic_id;
- }
- 
--static u8 __init io_apic_unique_id(u8 id)
-+static u8 __init io_apic_unique_id(int idx, u8 id)
- {
- 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
- 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
--		return io_apic_get_unique_id(nr_ioapics, id);
-+		return io_apic_get_unique_id(idx, id);
- 	else
- 		return id;
- }
- #else
--static u8 __init io_apic_unique_id(u8 id)
-+static u8 io_apic_unique_id(int idx, u8 id)
- {
- 	int i;
-+	u8 new_id;
-+	unsigned long flags;
- 	DECLARE_BITMAP(used, 256);
-+	union IO_APIC_reg_00 reg_00;
- 
- 	bitmap_zero(used, 256);
- 	for_each_ioapic(i)
-@@ -3672,7 +3675,32 @@ static u8 __init io_apic_unique_id(u8 id)
- 
- 	if (!test_bit(id, used))
- 		return id;
--	return find_first_zero_bit(used, 256);
-+
-+	/* check register at first */
-+	raw_spin_lock_irqsave(&ioapic_lock, flags);
-+	reg_00.raw = io_apic_read(idx, 0);
-+	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
-+	new_id = reg_00.bits.ID;
-+	if (!test_bit(new_id, used)) {
-+		apic_printk(APIC_VERBOSE, KERN_INFO
-+			"IOAPIC[%d]: Using reg apic_id %d instead of %d\n",
-+			 idx, new_id, id);
-+		return new_id;
-+	}
-+
-+	new_id = find_first_zero_bit(used, 256);
-+	reg_00.bits.ID = new_id;
-+	raw_spin_lock_irqsave(&ioapic_lock, flags);
-+	io_apic_write(idx, 0, reg_00.raw);
-+	reg_00.raw = io_apic_read(idx, 0);
-+	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
-+
-+	/* Sanity check */
-+	if (reg_00.bits.ID != new_id)
-+		pr_warn("IOAPIC[%d]: Unable to change apic_id to %d!\n",
-+			idx, new_id);
-+
-+	return new_id;
- }
- #endif
- 
-@@ -3947,7 +3975,7 @@ int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hotadd)
- 	if (bad_ioapic_register(idx))
- 		goto clear_out;
- 
--	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
-+	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
- 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
- 
- 	/*
--- 
-1.8.1.4
 
+Yeah, if it's only used on one place, then it's fine. But if it gets
+used in other files, than those other files with have to define the
+macro as well.
+
+-- Steve
