@@ -1,47 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:58933 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753832Ab3H1NCh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 09:02:37 -0400
-Received: by mail-ie0-f180.google.com with SMTP id x14so8212141ief.25
-        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 06:02:37 -0700 (PDT)
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:54354 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752883Ab3HLVPf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 17:15:35 -0400
+Received: by mail-ie0-f173.google.com with SMTP id k5so9106957iea.18
+        for <linux-pci@vger.kernel.org>; Mon, 12 Aug 2013 14:15:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo461H=3qD5Xb7rKkMcQ1_ipyAQ5Tv2VhZD4j578A+Bd9w@mail.gmail.com>
-References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
- <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr> <20130819120249.GA5740@ulmo>
- <CAErSpo5oOnfhi+aRi-Z3kCwS1VpYSO6FX5O_MOZmWNLcfhhA9w@mail.gmail.com>
- <20130819201224.GC5191@mithrandir> <CAErSpo6U9i16gdaYGpWqgLaFteXpy1erCUw55SqkHLcbypP=vA@mail.gmail.com>
- <20130827081443.GI8686@ulmo> <521CCF9B.9000004@wwwdotorg.org> <CAErSpo461H=3qD5Xb7rKkMcQ1_ipyAQ5Tv2VhZD4j578A+Bd9w@mail.gmail.com>
+In-Reply-To: <2190379.Yl0SdRsOJp@vostro.rjw.lan>
+References: <1375965314-24232-1-git-send-email-heikki.krogerus@linux.intel.com>
+ <1375965314-24232-3-git-send-email-heikki.krogerus@linux.intel.com> <2190379.Yl0SdRsOJp@vostro.rjw.lan>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 28 Aug 2013 07:02:16 -0600
-Message-ID: <CAErSpo5LOig3KPGfyWJ1BWA61Ox3cyrguSo_XdVqw6SqxttXeA@mail.gmail.com>
-Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by devm_ioremap_resource
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Julia Lawall <Julia.Lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Mon, 12 Aug 2013 15:15:15 -0600
+Message-ID: <CAErSpo5ow1=mtCDKp=3F72hVzLSo_am=puO5N3w0x1JRsztsFQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] ACPI / PCI: remove an extra check from acpi_pci_irq_enable()
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 27, 2013 at 12:03 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On 08/27/2013 02:14 AM, Thierry Reding wrote:
-
->>> If Stephen's fine with it I suppose we could take pci-tegra.c
->>> driver changes through the Tegra tree. But I think it'd be good if
->>> we could still Cc you on patches so you're aware of what we're
->>> doing (that is the same for all drivers drivers/pci/host/*). And
->>> we're going to need your Acked-by on the patches as well.
+On Thu, Aug 8, 2013 at 7:58 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, August 08, 2013 03:35:14 PM Heikki Krogerus wrote:
+>> acpi_isa_irq_to_gsi() will check if the irq is within
+>> accepted rage so there is no need to check it separately.
+>>
+>> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 >
-> I think you have my Acked-by for this case already (from Aug 20).  And
-> feel free to copy me on anything you like; my delete key works well :)
+> Hi Bjorn,
+>
+> Does this look OK to you?
 
-I didn't mean for this to sound like "I'll just delete any email you
-send me"; I intended more like "feel free to copy me and if it's
-something I'm interested or knowledgeable about, I'll try to help and
-if not, it's easy for me to ignore it."
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Bjorn
+>> ---
+>>  drivers/acpi/pci_irq.c | 4 +---
+>>  1 file changed, 1 insertion(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+>> index 902ed1c..e71e7fa 100644
+>> --- a/drivers/acpi/pci_irq.c
+>> +++ b/drivers/acpi/pci_irq.c
+>> @@ -427,9 +427,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>>                       return -ENOENT;
+>>               }
+>>
+>> -             /* Interrupt Line values above 0xF are forbidden */
+>> -             if ((dev->irq <= 0xF) &&
+>> -                 (acpi_isa_irq_to_gsi(dev->irq, &dev_gsi) == 0)) {
+>> +             if (acpi_isa_irq_to_gsi(dev->irq, &dev_gsi) == 0) {
+>>                       dev_warn(&dev->dev, "PCI INT %c: no GSI - using ISA IRQ %d\n",
+>>                                pin_name(pin), dev->irq);
+>>                       acpi_register_gsi(&dev->dev, dev_gsi,
+>>
+> --
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
