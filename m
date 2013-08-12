@@ -1,142 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from up.free-electrons.com ([94.23.35.102]:53466 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754465Ab3HANZY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:25:24 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCHv6 03/13] PCI: Introduce new MSI chip infrastructure
-Date: Thu,  1 Aug 2013 15:25:06 +0200
-Message-Id: <1375363516-2620-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:56127 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752317Ab3HLVej (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 17:34:39 -0400
+Received: by mail-bk0-f51.google.com with SMTP id mx10so2044095bkb.24
+        for <linux-pci@vger.kernel.org>; Mon, 12 Aug 2013 14:34:37 -0700 (PDT)
+Message-ID: <520954EA.2060308@message-id.googlemail.com>
+Date: Mon, 12 Aug 2013 23:34:34 +0200
+From: Stefan Seyfried <stefan.seyfried@googlemail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg KH <gregkh@linux.com>, Oliver Neukum <oneukum@suse.de>
+Subject: Re: acpiphp and pciehp not working together on Thinkpad X200s
+References: <520747B6.8010309@message-id.googlemail.com> <1880950.SYaKzZm9j7@vostro.rjw.lan> <5207FFB8.3080202@message-id.googlemail.com> <11028683.ZZQRkho7yW@vostro.rjw.lan> <CAErSpo6HThAr7MXX1-qpzryy7=F7+eMfNK_zWuP9j5arLb1RXA@mail.gmail.com>
+In-Reply-To: <CAErSpo6HThAr7MXX1-qpzryy7=F7+eMfNK_zWuP9j5arLb1RXA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+Hi Bjorn,
 
-The new struct msi_chip is used to associated an MSI controller with a
-PCI bus. It is automatically handed down from the root to its children
-during bus enumeration.
+Am 12.08.2013 19:21, schrieb Bjorn Helgaas:
 
-This patch provides default (weak) implementations for the architecture-
-specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
-and arch_msi_check_device()) which check if a PCI device's bus has an
-attached MSI chip and forward the call appropriately.
+> Thanks for the report, Stefan.  I opened
+> https://bugzilla.kernel.org/show_bug.cgi?id=60736 so we don't forget
+> about this.  If you could attach complete dmesg logs for both cases
+> (working and failing) to that bugzilla, that would be great.  An
+> acpidump might also be interesting, since the ACPI namespace
+> determines what acpiphp does.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c   | 27 +++++++++++++++++++++++++--
- drivers/pci/probe.c |  1 +
- include/linux/msi.h | 11 +++++++++++
- include/linux/pci.h |  1 +
- 4 files changed, 38 insertions(+), 2 deletions(-)
+Ok, I added all that information to the bug.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index aa2f697..d5b6378 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -32,16 +32,39 @@ static int pci_msi_enable = 1;
- 
- int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
--	return -EINVAL;
-+	struct msi_chip *chip = dev->bus->msi;
-+	int err;
-+
-+	if (!chip || !chip->setup_irq)
-+		return -EINVAL;
-+
-+	err = chip->setup_irq(chip, dev, desc);
-+	if (err < 0)
-+		return err;
-+
-+	irq_set_chip_data(desc->irq, chip);
-+
-+	return 0;
- }
- 
- void __weak arch_teardown_msi_irq(unsigned int irq)
- {
-+	struct msi_chip *chip = irq_get_chip_data(irq);
-+
-+	if (!chip || !chip->teardown_irq)
-+		return;
-+
-+	chip->teardown_irq(chip, irq);
- }
- 
- int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
- {
--	return 0;
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (!chip || !chip->check_device)
-+		return 0;
-+
-+	return chip->check_device(chip, dev, nvec, type);
- }
- 
- int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 46ada5c..b8eaa81 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -666,6 +666,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 
- 	child->parent = parent;
- 	child->ops = parent->ops;
-+	child->msi = parent->msi;
- 	child->sysdata = parent->sysdata;
- 	child->bus_flags = parent->bus_flags;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 18870b0..cbf5d05 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -64,4 +64,15 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
- 
- void default_teardown_msi_irqs(struct pci_dev *dev);
- 
-+struct msi_chip {
-+	struct module *owner;
-+	struct device *dev;
-+
-+	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
-+			 struct msi_desc *desc);
-+	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-+	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-+			    int nvec, int type);
-+};
-+
- #endif /* LINUX_MSI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..4044e3c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -433,6 +433,7 @@ struct pci_bus {
- 	struct resource busn_res;	/* bus numbers routed to this bus */
- 
- 	struct pci_ops	*ops;		/* configuration access functions */
-+	struct msi_chip	*msi;		/* MSI controller */
- 	void		*sysdata;	/* hook for sys-specific extension */
- 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
- 
+> I suspect that we're being too aggressive about determining when we
+> should use one or the other of acpiphp and pciehp.  We basically
+> decide up front which one we expect the platform to use, and we only
+> listen to signals from that one.  But I wonder if we should just
+> prepare for signals from both.
+
+Actually I booted an older Kernel (3.7.10, openSUSE 12.3 kernel) which
+has both drivers configured as modules.
+The interesting thing is: I was not able to load acpiphp there, it
+errored out with ENODEV.
+So maybe something changed, making acpiphp more (too?) relaxed.
+
+Should I try building the latest kernel with both drivers as modules to
+see if this makes a difference?
+
+Best regards,
+
+	Stefan
 -- 
-1.8.1.2
+Stefan Seyfried
+Linux Consultant & Developer -- GPG Key: 0x731B665B
 
+B1 Systems GmbH
+Osterfeldstraße 7 / 85088 Vohburg / http://www.b1-systems.de
+GF: Ralph Dehner / Unternehmenssitz: Vohburg / AG: Ingolstadt,HRB 3537
