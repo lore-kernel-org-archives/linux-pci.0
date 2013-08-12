@@ -1,55 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:43904 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757279Ab3HLRJ5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 13:09:57 -0400
+Message-ID: <520916E0.5030404@wwwdotorg.org>
+Date: Mon, 12 Aug 2013 11:09:52 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Jason Cooper <jason@lakedaemon.net>
+CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH v4 09/28] ia64, irq: Add dummy create_irq_nr()
-Date: Sat, 10 Aug 2013 19:47:55 -0700
-Message-Id: <1376189294-32022-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv9 00/10] MSI support for Marvell EBU PCIe driver
+References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130812163723.GK25111@titan.lakedaemon.net>
+In-Reply-To: <20130812163723.GK25111@titan.lakedaemon.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-create_irq() will return -1 when fail to allocate.
-create_irq_nr() will return 0 when fail to allocate.
+On 08/12/2013 10:37 AM, Jason Cooper wrote:
+> Thomas,
+> 
+> Whole series applied as follows:
+> 
+> +---+ mvebu/msi_pci (1-4,7)
+>     |
+>     +---+---+ mvebu/msi_irq (5,6)
+>             |
+>             +---+---+ mvebu/msi_mvebu (8-10)
+> 
+> mvebu/msi_pci built successfully with Randy's config for x86_64.
+> 
+> Thierry, I've tagged mvebu/msi_pci.  Unless it all falls apart in -next,
+> those commit-id's won't change from what will be in arm-soc.
 
-Will use it to fix one return value checking for dmar_msi irq.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: stable@vger.kernel.org
----
- arch/ia64/kernel/irq_ia64.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/arch/ia64/kernel/irq_ia64.c b/arch/ia64/kernel/irq_ia64.c
-index 1034884..38e46df 100644
---- a/arch/ia64/kernel/irq_ia64.c
-+++ b/arch/ia64/kernel/irq_ia64.c
-@@ -429,6 +429,16 @@ int create_irq(void)
- 	return irq;
- }
- 
-+unsigned int create_irq_nr(unsigned int from, int node)
-+{
-+	int irq = create_irq();
-+
-+	if (irq < 0)
-+		irq = 0;
-+
-+	return irq;
-+}
-+
- void destroy_irq(unsigned int irq)
- {
- 	dynamic_irq_cleanup(irq);
--- 
-1.8.1.4
-
+So, the branch still isn't stable, hence I shouldn't use it as a
+baseline to apply Thierry's PCIe patches?
