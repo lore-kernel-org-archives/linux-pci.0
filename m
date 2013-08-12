@@ -1,136 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:27487 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755914Ab3HFKZv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 06:25:51 -0400
-From: Vipul Pandya <vipul@chelsio.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, leedom@chelsio.com, tomreu@chelsio.com,
-	vipul@chelsio.com, divy@chelsio.com, dm@chelsio.com,
-	nirranjan@chelsio.com, eilong@broadcom.com, netdev@vger.kernel.org
-Subject: [PATCH V2 2/4] pci: Enable bus master till the FLR completes
-Date: Tue,  6 Aug 2013 15:48:37 +0530
-Message-Id: <1375784319-25760-3-git-send-email-vipul@chelsio.com>
-In-Reply-To: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
-References: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:49619 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750952Ab3HLRpC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 13:45:02 -0400
+Date: Mon, 12 Aug 2013 13:44:39 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv9 00/10] MSI support for Marvell EBU PCIe driver
+Message-ID: <20130812174439.GO25111@titan.lakedaemon.net>
+References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130812163723.GK25111@titan.lakedaemon.net>
+ <520916E0.5030404@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <520916E0.5030404@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+On Mon, Aug 12, 2013 at 11:09:52AM -0600, Stephen Warren wrote:
+> On 08/12/2013 10:37 AM, Jason Cooper wrote:
+> > Thomas,
+> > 
+> > Whole series applied as follows:
+> > 
+> > +---+ mvebu/msi_pci (1-4,7)
+> >     |
+> >     +---+---+ mvebu/msi_irq (5,6)
+> >             |
+> >             +---+---+ mvebu/msi_mvebu (8-10)
+> > 
+> > mvebu/msi_pci built successfully with Randy's config for x86_64.
+> > 
+> > Thierry, I've tagged mvebu/msi_pci.  Unless it all falls apart in -next,
+> > those commit-id's won't change from what will be in arm-soc.
+> 
+> So, the branch still isn't stable, hence I shouldn't use it as a
+> baseline to apply Thierry's PCIe patches?
 
-T4 can wedge if there are DMAs in flight within the chip and Bus master has
-been disabled.  We need to have it on till the Function Level Reset completes.
-T4 can also suffer a Head Of Line blocking problem if MSI-X interrupts are
-disabled before the FLR has completed.
+It's as stable as I can make it.  I've tested it for all known build
+regressions (discovered in -next), and I see no reason to change it.
+Anything needing fixed after today, I'll append the fix to it's HEAD if
+appropriate.
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Vipul Pandya <vipul@chelsio.com>
----
-V2: Added pci_wait_for_pending_transaction routine and replaced it at respective
-places. Made the patch series for the same.
-V2: Used dev->msix_cap directly for capability offset
-V2: Removed use of 'rc' variable.
+thx,
 
- drivers/pci/quirks.c | 79 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 79 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2e2ea22..4a64fc4 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3208,6 +3208,83 @@ reset_complete:
- 	return 0;
- }
- 
-+/*
-+ * Device-specific reset method for Chelsio T4-based adapters.
-+ */
-+static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
-+{
-+	u16 old_command;
-+	u16 msix_flags;
-+
-+	/*
-+	 * If this isn't a Chelsio T4-based device, return -ENOTTY indicating
-+	 * that we have no device-specific reset method.
-+	 */
-+	if ((dev->device & 0xf000) != 0x4000)
-+		return -ENOTTY;
-+
-+	/*
-+	 * If this is the "probe" phase, return 0 indicating that we can
-+	 * reset this device.
-+	 */
-+	if (probe)
-+		return 0;
-+
-+	/*
-+	 * T4 can wedge if their are DMAs in flight within the chip and Bus
-+	 * master has been disabled.  We need to have it on till the Function
-+	 * Level Reset completes.  (BUS_MASTER is disabled in
-+	 * pci_reset_function()).
-+	 */
-+	pci_read_config_word(dev, PCI_COMMAND, &old_command);
-+	pci_write_config_word(dev, PCI_COMMAND,
-+			      old_command | PCI_COMMAND_MASTER);
-+
-+	/*
-+	 * Perform the actual device function reset, saving and restoring
-+	 * configuration information around the reset.
-+	 */
-+	pci_save_state(dev);
-+
-+	/*
-+	 * T4 also suffers a Head-Of-Line blocking problem if MSI-X interrupts
-+	 * are disabled when an MSI-X interrupt message needs to be delivered.
-+	 * So we briefly re-enable MSI-X interrupts for the duration of the
-+	 * FLR.  The pci_restore_state() below will restore the original
-+	 * MSI-X state.
-+	 */
-+	pci_read_config_word(dev, dev->msix_cap+PCI_MSIX_FLAGS, &msix_flags);
-+	if ((msix_flags & PCI_MSIX_FLAGS_ENABLE) == 0)
-+		pci_write_config_word(dev, dev->msix_cap+PCI_MSIX_FLAGS,
-+				      msix_flags |
-+				      PCI_MSIX_FLAGS_ENABLE |
-+				      PCI_MSIX_FLAGS_MASKALL);
-+
-+	/*
-+	 * Start of pcie_flr() code sequence.  This reset code is a copy of
-+	 * the guts of pcie_flr() because that's not an exported function.
-+	 */
-+
-+	if (!pci_wait_for_pending_transaction(dev))
-+		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
-+
-+	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
-+	msleep(100);
-+
-+	/*
-+	 * End of pcie_flr() code sequence.
-+	 */
-+
-+	/*
-+	 * Restore the configuration information (BAR values, etc.) including
-+	 * the original PCI Configuration Space Command word, and return
-+	 * success.
-+	 */
-+	pci_restore_state(dev);
-+	pci_write_config_word(dev, PCI_COMMAND, old_command);
-+	return 0;
-+}
-+
- #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
- #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
- #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
-@@ -3221,6 +3298,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 		reset_ivb_igd },
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
- 		reset_intel_generic_dev },
-+	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
-+		reset_chelsio_generic_dev },
- 	{ 0 }
- };
- 
--- 
-1.8.0
-
+Jason.
