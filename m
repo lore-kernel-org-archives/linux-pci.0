@@ -1,107 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:60947 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753648Ab3HLUzP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 16:55:15 -0400
-Received: by mail-ie0-f178.google.com with SMTP id f4so8832310iea.23
-        for <linux-pci@vger.kernel.org>; Mon, 12 Aug 2013 13:55:14 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
-References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
+In-Reply-To: <20130812131833.GI25111@titan.lakedaemon.net>
+References: <20130808170822.82bf33d3cf5100f5e2646815@canb.auug.org.au>
+ <5203F978.2050504@infradead.org> <20130809145939.GE25111@titan.lakedaemon.net>
+ <52051BC2.2060004@infradead.org> <20130809185036.GG25111@titan.lakedaemon.net>
+ <CAErSpo6S9uYTEhoS-+4EZv41pc0bu6jvcMaGX7WR9hY4o+2dsA@mail.gmail.com> <20130812131833.GI25111@titan.lakedaemon.net>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Aug 2013 14:54:54 -0600
-Message-ID: <CAErSpo6p1r=g8s-XYOJSNXJm3p18ZF9BYA4KM6_5F4=539wFwQ@mail.gmail.com>
-Subject: Re: [PATCH 0/9] ARM: dove: DT PCIe support
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, Olof Johansson <olof@lixom.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+Date: Mon, 12 Aug 2013 10:38:58 -0600
+Message-ID: <CAErSpo52KKY9mRc7wduFqYYpKQakEBa5KrJ0P3J9su6P5tJ6gQ@mail.gmail.com>
+Subject: Re: linux-next: Tree for Aug 8 (not CONFIG_PCI_MSI conflict)
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next list <linux-next@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+	linux-pci <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 12, 2013 at 12:46 PM, Sebastian Hesselbarth
-<sebastian.hesselbarth@gmail.com> wrote:
-> This patch set adds support for the PCIe controllers found on Marvell
-> Dove SoCs. It depends on mvebu-pci patches sent by Thomas Petazzoni.
-> Also, it adds support for the Globalscale D3Plug - a Dove based board
-> comprising a USB3.0 dual port controller and a mini-PCIe port. The
-> mini-PCIe port has not been tested, but USB controller and attached
-> USB stick has been detected.
+On Mon, Aug 12, 2013 at 7:18 AM, Jason Cooper <jason@lakedaemon.net> wrote:
+> On Sat, Aug 10, 2013 at 08:01:49AM -0600, Bjorn Helgaas wrote:
+>> On Fri, Aug 9, 2013 at 12:50 PM, Jason Cooper <jason@lakedaemon.net> wrote:
+>> > Randy,
+>> >
+>> > On Fri, Aug 09, 2013 at 09:41:38AM -0700, Randy Dunlap wrote:
+>> >> On 08/09/13 07:59, Jason Cooper wrote:
+>> >> > Randy,
+>> >> >
+>> >> > On Thu, Aug 08, 2013 at 01:03:04PM -0700, Randy Dunlap wrote:
+>> >> >> On 08/08/13 00:08, Stephen Rothwell wrote:
+>> >> >>> Hi all,
+>> >> >>>
+>> >> >>> Changes since 20130807:
+>> >> >>>
+>> >> >>
+>> >> >> on i386 and x86_64:
+>> >> >> when CONFIG_PCI_MSI is not enabled:
+>> >> >>
+>> >> >> There are many of these errors:
+>> >> >> include/linux/msi.h:65:6: error: expected identifier or '(' before 'void'
+>> >> >> include/linux/msi.h:65:6: error: expected ')' before numeric constant
+>> >> >>
+>> >> >> because arch/x86/include/asm/pci.h defines:
+>> >> >> #define default_teardown_msi_irqs  NULL
+>> >> >
+>> >> > Do you have an example config you used?
+>> >>
+>> >> Sure, attached. (or I have 14 of them)
+>> >
+>> > Thanks, I was able to reproduce the error.  I'm not real familiar with
+>> > this area of the code, but the relief is it doesn't appear to be caused
+>> > by the mvebu changes (well, relief for us ;-) ).
+>> >
+>> > At any rate, give this a spin and see if it works for you
+>> >
+>> > If it's acceptable, I'll do an official patch for Bjorn.
+>> >
+>> > thx,
+>> >
+>> > Jason.
+>> >
+>> > ---------->8----------
+>> > diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+>> > index d9e9e6c..6169414 100644
+>> > --- a/arch/x86/include/asm/pci.h
+>> > +++ b/arch/x86/include/asm/pci.h
+>> > @@ -138,8 +138,8 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+>> >  #else
+>> >  #define native_setup_msi_irqs          NULL
+>> >  #define native_teardown_msi_irq                NULL
+>> > -#define default_teardown_msi_irqs      NULL
+>> > -#define default_restore_msi_irqs       NULL
+>> > +void __weak default_teardown_msi_irqs(struct pci_dev *dev) { }
+>> > +void __weak default_restore_msi_irqs(struct pci_dev *dev, int irq) { }
+>>
+>> I don't really like this solution of putting the empty implementation
+>> in the header file, because then a weak body is generated in the
+>> object of every source file that includes the header.
+>>
+>> default_teardown_msi_irqs() and default_restore_msi_irqs() seem like
+>> fairly internal MSI functions, so I wonder why we need them defined at
+>> all when CONFIG_PCI_MSI=n.  It seems like any uses of them should be
+>> in code that's only compiled when CONFIG_PCI_MSI=y.  But I haven't
+>> reproduced the problem and investigated yet.
 >
-> The patch set can be separated into two main parts and should be
-> taken by the respective maintainers. First five patches belong to
-> PCI driver for MVEBU SoCs, while last four patches are Marvell Dove
-> related. It is based on (unstable) mvebu/for-next branch with MSI
-> patches applied and will be rebased on request.
+> I first tried commenting out the definitions after reproducing the
+> problem.  It also failed miserably.
 >
-> Devicetree and Doc MLs are not Cc'ed for the driver-only patches,
-> PCI ML and maintainer are not Cc'ed for the Dove-only patches.
+> Please take a look at Thomas' latest MSI patch series,
 >
-> Patches 1 and 2 fix some minor issues with pci-mvebu by moving
-> clk_prepare_enable before accessing any controller registers and
-> counting sucessfully registered ports only.
+>   [PATCHv9 01/10] PCI: use weak functions for MSI arch-specific functions
 >
-> Patch 3 converts pci-mvebu from subsys_initcall registration to
-> normal platform driver registration to allow it to fail with
-> EPROBE_DEFER later.
->
-> Patch 4 adds DT parsing for reset (PERST#) GPIO pins and delay to
-> wait for PCIe devices after reset de-assertion.
->
-> Patch 5 finally adds a compatible to pci-mvebu for Dove SoCs.
+> I think his solution is much nicer than mine.
 
-I'm happy to merge patches 1-5 for v3.12 if you like, given acks from Thomas.
+OK, I'll assume I don't need to do anything until I hear otherwise.
 
-> Patch 6 updates dove_defconfig with some useful options for the
-> Si5351 i2c clock generator found on SolidRun CuBox, PCIe driver,
-> and USB3.0 xHCI driver.
->
-> Patches 7 and 8 add PCIe controller nodes to Dove SoC DT and
-> add support for the Globalscale D3Plug where this patches have
-> been tested on.
->
-> Patch 8 finally removes legacy PCIe driver init and clock
-> gate workarounds from DT based Dove init.
->
-> Sebastian Hesselbarth (9):
->   PCI: mvebu: move clock enable before register access
->   PCI: mvebu: increment nports only for registered ports
->   PCI: mvebu: remove subsys_initcall
->   PCI: mvebu: add support for reset on GPIO
->   PCI: mvebu: add support for Marvell Dove SoCs
->   ARM: dove: update dove_defconfig with SI5351, PCI, and xHCI
->   ARM: dove: add PCIe controllers to SoC DT
->   ARM: dove: add initial DT file for Globalscale D3Plug
->   ARM: dove: remove legacy pcie and clock init
->
->  .../devicetree/bindings/pci/mvebu-pci.txt          |    3 +
->  arch/arm/boot/dts/Makefile                         |    1 +
->  arch/arm/boot/dts/dove-d3plug.dts                  |  103 ++++++++++++++++++
->  arch/arm/boot/dts/dove.dtsi                        |   54 ++++++++++
->  arch/arm/configs/dove_defconfig                    |    4 +
->  arch/arm/mach-dove/board-dt.c                      |   29 -----
->  drivers/pci/host/Kconfig                           |    2 +-
->  drivers/pci/host/pci-mvebu.c                       |  113 +++++++++++++-------
->  8 files changed, 241 insertions(+), 68 deletions(-)
->  create mode 100644 arch/arm/boot/dts/dove-d3plug.dts
-> ---
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Jason Cooper <jason@lakedaemon.net>
-> Cc: Andrew Lunn <andrew@lunn.ch>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Olof Johansson <olof@lixom.net>
-> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: devicetree@vger.kernel.org
-> Cc: linux-doc@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-pci@vger.kernel.org
-> --
-> 1.7.10.4
->
+Bjorn
