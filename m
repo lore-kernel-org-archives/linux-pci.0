@@ -1,129 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from up.free-electrons.com ([94.23.35.102]:52395 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751166Ab3HAJRH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 05:17:07 -0400
-Date: Thu, 1 Aug 2013 11:17:02 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv5 05/11] of: pci: add registry of MSI chips
-Message-ID: <20130801111702.5f85dc91@skate>
-In-Reply-To: <20130729125826.GH23152@manwe>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1373889167-27878-6-git-send-email-thomas.petazzoni@free-electrons.com>
-	<51E41F7A.4010502@gmail.com>
-	<20130728043310.6CF1D3E08FE@localhost>
-	<20130728162711.32a9a21e@skate>
-	<20130729065431.GA1115@manwe>
-	<20130729142600.63eeab50@skate>
-	<20130729125826.GH23152@manwe>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5208C6FB.8070807@linux.vnet.ibm.com>
+Date: Mon, 12 Aug 2013 16:58:59 +0530
+From: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@alien8.de>
+CC: tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
+	rjw@sisk.pl, lance.ortiz@hp.com, m.chehab@samsung.com,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] mce: acpi/apei: trace: Add trace event for ghes memory
+ error
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <1375986471-27113-3-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <20130808191732.GE27974@pd.tnic>
+In-Reply-To: <20130808191732.GE27974@pd.tnic>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
+On 08/09/2013 12:47 AM, Borislav Petkov wrote:
+> On Thu, Aug 08, 2013 at 11:57:50PM +0530, Naveen N. Rao wrote:
+>> +TRACE_EVENT(ghes_platform_memory_event,
+>> +	TP_PROTO(const struct acpi_hest_generic_status *estatus,
+>> +		 const struct acpi_hest_generic_data *gdata,
+>> +		 const struct cper_sec_mem_err *mem),
+>> +
+>> +	TP_ARGS(estatus, gdata, mem),
+>> +
+>> +	TP_STRUCT__entry(
+>> +		__field(	u32,	estatus_block_status		)
+>> +		__field(	u32,	estatus_raw_data_offset		)
+>> +		__field(	u32,	estatus_raw_data_length		)
+>> +		__field(	u32,	estatus_data_length		)
+>> +		__field(	u32,	estatus_error_severity		)
+>> +		__array(	u8,	gdata_section_type,	16	)
+>> +		__field(	u32,	gdata_error_severity		)
+>> +		__field(	u16,	gdata_revision			)
+>> +		__field(	u8,	gdata_validation_bits		)
+>> +		__field(	u8,	gdata_flags			)
+>> +		__field(	u32,	gdata_error_data_length		)
+>> +		__array(	u8,	gdata_fru_id,		16	)
+>> +		__array(	u8,	gdata_fru_text,		20	)
+>> +		__field(	u64,	mem_validation_bits		)
+>> +		__field(	u64,	mem_error_status		)
+>> +		__field(	u64,	mem_physical_addr		)
+>> +		__field(	u64,	mem_physical_addr_mask		)
+>> +		__field(	u16,	mem_node			)
+>> +		__field(	u16,	mem_card			)
+>> +		__field(	u16,	mem_module			)
+>> +		__field(	u16,	mem_bank			)
+>> +		__field(	u16,	mem_device			)
+>> +		__field(	u16,	mem_row				)
+>> +		__field(	u16,	mem_column			)
+>> +		__field(	u16,	mem_bit_pos			)
+>> +		__field(	u64,	mem_requestor_id		)
+>> +		__field(	u64,	mem_responder_id		)
+>> +		__field(	u64,	mem_target_id			)
+>> +		__field(	u8,	mem_error_type			)
+>> +	),
+>
+> Without looking at the rest, a trace record from this tracepoint is
+> going to be 160 bytes IINM, which looks kinda fat to me. And during an
+> error storm we're probably not going to be able to log them all, maybe?
+> Yes, no, maybe I'm off base...
+>
+> In any case, are we sure we want all those fields above? Can we make
+> them smaller, drop some of them from the tracepoint, etc, etc? Can we
+> compute some of them in userspace with information we already have?
 
-On Mon, 29 Jul 2013 14:58:27 +0200, Thierry Reding wrote:
+Good idea - I hadn't thought from that perspective. I think we can drop 
+a few fields there, especially the length/offset fields and perhaps the 
+section_type since we know this is a memory error. Will get back with a 
+new revision.
 
-> > +static inline struct irq_domain *irq_domain_add_msi(struct device_node *of_node,
-> > +						    unsigned int size,
-> > +						    const struct irq_domain_ops *ops,
-> > +						    struct msi_chip *msi_chip,
-> > +						    void *host_data)
-> > +{
-> > +	return __irq_domain_add(of_node, size, size, 0, ops,
-> > +				msi_chip, host_data);
-> >  }
-> 
-> Given that the majority of interrupt controllers probably don't have any
-> MSI functionality, I wonder if perhaps this should be done in a more
-> helper-oriented way, see below...
+Thanks,
+Naveen
 
-I'm not sure I get the relation between this comment on this specific
-part of the code and the match helpers suggestion that you did below.
-Could you explain?
-
-
-> > +struct irq_domain *irq_find_msi(struct device_node *node)
-> > +{
-> > +	struct irq_domain *h, *found = NULL;
-> > +
-> > +	mutex_lock(&irq_domain_mutex);
-> > +	list_for_each_entry(h, &irq_domain_list, link) {
-> > +		if (!h->msi_chip)
-> > +			continue;
-> > +		if (h->of_node && h->of_node == node) {
-> > +			found = h;
-> > +			break;
-> > +		}
-> > +	}
-> > +	mutex_unlock(&irq_domain_mutex);
-> > +	return found;
-> > +}
-> > +EXPORT_SYMBOL_GPL(irq_find_msi);
-> 
-> This doesn't quite copy what irq_find_host() does, since it ignores the
-> associated ops->match().
-> 
-> But given that ops->match() already provides a way to hook into the
-> lookup, perhaps we could add a function such as this:
-> 
-> 	int irq_domain_supports_msi(struct irq_domain *d, struct device_node *node)
-> 	{
-> 		if ((d->of_node == NULL) || (d->of_node != node))
-> 			return 0;
-> 
-> 		return d->msi_chip != NULL;
-> 	}
-> 
-> Then use that in drivers that expose MSI functionality via an IRQ domain
-> like this:
-> 
-> 	static const struct irq_domain_ops foo_irq_domain_ops = {
-> 		...
-> 		.match = irq_domain_supports_msi,
-> 		...
-> 	};
-> 
-> One problem with this is that it doesn't solve your problem where two
-> different IRQ domains are exposed by the same device, because the
-> irq_find_host() will still match the MSI IRQ domain for the non-MSI
-> device node as well. This could be solved by adding another match
-> function...
-
-I've given this some thought, and I don't see how ->match() functions
-can solve the problem. The irq_find_host() is simply given as input a
-DT node, and is asked to find the irqdomain attached to this DT node.
-To do so, for each irqdomain in the system, it calls the ->match()
-operation, or does some default DT node equality checking. However,
-nor the irq_find_host() function, nor a custom ->match() function has a
-way of knowing whether what you're looking for is the "normal" IRQ
-controller, or the MSI controller.
-
-> This goes in hand with the helper-style API that I mentioned above. But
-> it's really up to Grant to decide which way he wants this to go.
-
-Again, I am not sure what you meant with "helper-style API". I do
-understand the idea of providing a helper irq_domain_supports_msi()
-that can be used as the ->match() operation in irq_domain_ops, but I
-fail to see how this solves the problem.
-
-Thanks!
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
