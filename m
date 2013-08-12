@@ -1,87 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37022 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933022Ab3HNUGI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Aug 2013 16:06:08 -0400
-Subject: [PATCH] pci: Add probe functions for bus and slot reset
-To: bhelgaas@google.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 14 Aug 2013 14:06:05 -0600
-Message-ID: <20130814200549.21626.79779.stgit@bling.home>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:59729 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754815Ab3HLWcu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 18:32:50 -0400
+Received: by mail-ie0-f178.google.com with SMTP id f4so9573227iea.9
+        for <linux-pci@vger.kernel.org>; Mon, 12 Aug 2013 15:32:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAE9FiQV3ohndZGvWHByA76G=Cb3NEVn4ukpoF==zHsLw8oaopA@mail.gmail.com>
+References: <1375965314-24232-1-git-send-email-heikki.krogerus@linux.intel.com>
+ <1375965314-24232-2-git-send-email-heikki.krogerus@linux.intel.com>
+ <14983102.aCV009CSMA@vostro.rjw.lan> <CAErSpo6N65EOy6ieZSKN8eO09GoCFe05YOMRNMhx8RLHbqN=yw@mail.gmail.com>
+ <CAE9FiQV3ohndZGvWHByA76G=Cb3NEVn4ukpoF==zHsLw8oaopA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 12 Aug 2013 16:32:30 -0600
+Message-ID: <CAErSpo6dmSwcM5ensq1fKL=-mbLNyi9G+U+LPA1P=pP8j9=EoA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ACPI / PCI: don't allow PCI devices without irq to be enabled
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Users of pci_reset_bus() and pci_reset_slot() need a way to probe
-whether the bus or slot supports reset.  Add trivial helper functions
-and export them as vfio-pci will make use of these.
+On Mon, Aug 12, 2013 at 3:32 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Aug 12, 2013 at 2:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Aug 8, 2013 at 7:57 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>> On Thursday, August 08, 2013 03:35:13 PM Heikki Krogerus wrote:
+>>>> If there is no ACPI entry for the irq, returning error from
+>>>> acpi_pci_enable_irq() if the irq is 0.
+>>>>
+>>>> Prarit Bhargava reported an issue where he noticed that his
+>>>> Dell PowerEdge 840 has buggy BIOS that does not supply ACPI
+>>>> entries for irq with some devices. That lead into kernel
+>>>> generating a warning "genirq: Flags mismatch irq 0...". This
+>>>> will fix that issue.
+>>>>
+>>>> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+>>>> Tested-by: Prarit Bhargava <prarit@redhat.com>
+>>>
+>>> Hi Bjorn,
+>>>
+>>> Any objections to this?
+>>
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> some USB3 host controller does not have intx configured, but still
+> work with MSI?
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+Huh, OK, I take back my ack, at least while we investigate this.
 
-This is logically patch 10/9 for v5 pci: bus and slot reset interfaces.
-If there's a need to re-spin anything I'll roll this in.
-
- drivers/pci/pci.c   |   24 ++++++++++++++++++++++++
- include/linux/pci.h |    2 ++
- 2 files changed, 26 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ba68451..888d847 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3610,6 +3610,18 @@ static int pci_slot_reset(struct pci_slot *slot, int probe)
- }
- 
- /**
-+ * pci_probe_reset_slot - probe whether a PCI slot can be reset
-+ * @slot: PCI slot to probe
-+ *
-+ * Return 0 if slot can be reset, negative if a slot reset is not supported.
-+ */
-+int pci_probe_reset_slot(struct pci_slot *slot)
-+{
-+	return pci_slot_reset(slot, 1);
-+}
-+EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
-+
-+/**
-  * pci_reset_slot - reset a PCI slot
-  * @slot: PCI slot to reset
-  *
-@@ -3662,6 +3674,18 @@ static int pci_bus_reset(struct pci_bus *bus, int probe)
- }
- 
- /**
-+ * pci_probe_reset_bus - probe whether a PCI bus can be reset
-+ * @bus: PCI bus to probe
-+ *
-+ * Return 0 if bus can be reset, negative if a bus reset is not supported.
-+ */
-+int pci_probe_reset_bus(struct pci_bus *bus)
-+{
-+	return pci_bus_reset(bus, 1);
-+}
-+EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
-+
-+/**
-  * pci_reset_bus - reset a PCI bus
-  * @bus: top level PCI bus to reset
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1a8fd34..daf40cd 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -924,7 +924,9 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
- int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
-+int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_reset_slot(struct pci_slot *slot);
-+int pci_probe_reset_bus(struct pci_bus *bus);
- int pci_reset_bus(struct pci_bus *bus);
- void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
-
+Bjorn
