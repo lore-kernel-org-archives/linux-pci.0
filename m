@@ -1,50 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4709 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758094Ab3HMUN7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Aug 2013 16:13:59 -0400
-From: "Luck, Tony" <tony.luck@intel.com>
-To: Borislav Petkov <bp@alien8.de>
-CC: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Date: Tue, 13 Aug 2013 20:13:56 +0000
-Message-ID: <3908561D78D1C84285E8C5FCA982C28F31CB9150@ORSMSX106.amr.corp.intel.com>
-References: <20130808163822.67e0828a@samsung.com>
- <20130810180322.GC4155@pd.tnic> <20130812083355.47c1bae8@samsung.com>
- <5208D80D.5030206@linux.vnet.ibm.com> <20130812125343.GE18018@pd.tnic>
- <520A16BD.30201@linux.vnet.ibm.com> <20130813124258.GC4077@pd.tnic>
- <520A6D98.9060204@linux.vnet.ibm.com> <20130813175809.GE4077@pd.tnic>
- <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
- <20130813181004.GF4077@pd.tnic>
-In-Reply-To: <20130813181004.GF4077@pd.tnic>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <14983102.aCV009CSMA@vostro.rjw.lan>
+References: <1375965314-24232-1-git-send-email-heikki.krogerus@linux.intel.com>
+ <1375965314-24232-2-git-send-email-heikki.krogerus@linux.intel.com> <14983102.aCV009CSMA@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 12 Aug 2013 15:14:03 -0600
+Message-ID: <CAErSpo6N65EOy6ieZSKN8eO09GoCFe05YOMRNMhx8RLHbqN=yw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ACPI / PCI: don't allow PCI devices without irq to be enabled
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBXaGF0IGFib3V0IHNlbmRpbmcgdHJhY2Vwb2ludCBkYXRhIG92ZXIgc2VyaWFsIGFuZC9vciBu
-ZXR3b3JrPyBJIGFncmVlDQo+IHRoYXQgZG1lc2cgb3ZlciBzZXJpYWwgd291bGQgYmUgaGVscGZ1
-bCBidXQgd2UgbmVlZCBhIHNpbWlsYXIgc3VyZS1maXJlDQo+IHdheSBmb3IgY2FycnlpbmcgZXJy
-b3IgaW5mbyBvdXQuDQoNCkdlbmVyaWMgdHJhY2Vwb2ludHMgYXJlIGFyY2hpdGVjdGVkIHRvIGJl
-IGFibGUgdG8gZmlyZSBhdCB2ZXJ5IGhpZ2ggcmF0ZXMgYW5kDQpsb2cgaHVnZSBhbW91bnRzIG9m
-IGluZm9ybWF0aW9uLiAgU28gd2UnZCBuZWVkIHNvbWV0aGluZyBzcGVjaWFsIHRvIHNheQ0KanVz
-dCBsb2cgdGhlc2Ugc3BlY2lhbCB0cmFjZXBvaW50cyB0byBuZXR3b3JrL3NlcmlhbC4NCg0KPiBX
-aGljaCByZW1pbmRzIG1lLCBwc3RvcmUgY291bGQgYWxzbyBiZSBhIGdvb2QgdGhpbmcgdG8gdXNl
-LCBpbiBhZGRpdGlvbi4NCj4gT25seSBwdXQgZXJyb3IgaW5mbyB0aGVyZSBhcyBpdCBpcyBsaW1p
-dGVkIGFueXdheS4NCg0KWWVzIC0gc3BhY2UgaXMgdmVyeSBsaW1pdGVkLiAgSSBkb24ndCBrbm93
-IGhvdyB0byBhc3NpZ24gcHJpb3JpdHkgZm9yIGxvZ2dpbmcNCnRoZSBkbWVzZyBkYXRhIHZzLiBz
-b21lIGVycm9yIGxvZ3MuDQoNCg0KSWYgd2UganVzdCAicHJpbnRrKCkiIHRoZSBtb3N0IGltcG9y
-dGFudCBwYXJ0cyAtIHRoZW4gdGhhdCBkYXRhIHdpbGwgYXV0b21hdGljYWxseQ0KZmxvdyB0byB0
-aGUgc2VyaWFsIGNvbnNvbGUgYW5kIHRvIHBzdG9yZS4gIFRoZW4gd2UgaGF2ZSBtdWx0aXBsZSBw
-YXRocyBmb3IgdGhlDQpjcml0aWNhbCBiaXRzIG9mIHRoZSBlcnJvciBsb2cgLSBhbmQgdGhlIHRy
-YWNlcG9pbnRzIGdpdmUgdXMgbW9yZSBkZXRhaWxzIGZvciB0aGUNCmNhc2VzIHdoZXJlIHRoZSBt
-YWNoaW5lIGRvZXNuJ3Qgc3BvbnRhbmVvdXNseSBleHBsb2RlLg0KDQotVG9ueQ0K
+On Thu, Aug 8, 2013 at 7:57 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, August 08, 2013 03:35:13 PM Heikki Krogerus wrote:
+>> If there is no ACPI entry for the irq, returning error from
+>> acpi_pci_enable_irq() if the irq is 0.
+>>
+>> Prarit Bhargava reported an issue where he noticed that his
+>> Dell PowerEdge 840 has buggy BIOS that does not supply ACPI
+>> entries for irq with some devices. That lead into kernel
+>> generating a warning "genirq: Flags mismatch irq 0...". This
+>> will fix that issue.
+>>
+>> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+>> Tested-by: Prarit Bhargava <prarit@redhat.com>
+>
+> Hi Bjorn,
+>
+> Any objections to this?
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+>> ---
+>>  drivers/acpi/pci_irq.c | 10 +++++++++-
+>>  1 file changed, 9 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+>> index 41c5e1b..902ed1c 100644
+>> --- a/drivers/acpi/pci_irq.c
+>> +++ b/drivers/acpi/pci_irq.c
+>> @@ -419,8 +419,16 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>>        */
+>>       if (gsi < 0) {
+>>               u32 dev_gsi;
+>> +
+>> +             /* Not accepting 0 as valid PCI IRQ. */
+>> +             if (!dev->irq) {
+>> +                     dev_err(&dev->dev, "PCI INT %c: no IRQ\n",
+>> +                             pin_name(pin));
+>> +                     return -ENOENT;
+>> +             }
+>> +
+>>               /* Interrupt Line values above 0xF are forbidden */
+>> -             if (dev->irq > 0 && (dev->irq <= 0xF) &&
+>> +             if ((dev->irq <= 0xF) &&
+>>                   (acpi_isa_irq_to_gsi(dev->irq, &dev_gsi) == 0)) {
+>>                       dev_warn(&dev->dev, "PCI INT %c: no GSI - using ISA IRQ %d\n",
+>>                                pin_name(pin), dev->irq);
+>>
+> --
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
