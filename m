@@ -1,39 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7349 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752381Ab3H0WFy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Aug 2013 18:05:54 -0400
-Date: Wed, 28 Aug 2013 00:05:51 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 1/5] PCI: Rename PCIe capability definitions to follow
- convention
-Message-ID: <20130827220551.GD20329@zurbaran>
-References: <20130827185731.16595.52864.stgit@bhelgaas-glaptop>
- <20130827190025.16595.84911.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130827190025.16595.84911.stgit@bhelgaas-glaptop>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 12 Aug 2013 08:33:55 -0300
+From: Mauro Carvalho Chehab <m.chehab@samsung.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
+	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+Message-id: <20130812083355.47c1bae8@samsung.com>
+In-reply-to: <20130810180322.GC4155@pd.tnic>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Em Sat, 10 Aug 2013 20:03:22 +0200
+Borislav Petkov <bp@alien8.de> escreveu:
 
-On Tue, Aug 27, 2013 at 01:00:25PM -0600, Bjorn Helgaas wrote:
-> All other PCIe capability register fields include "PCI_EXP" + <reg-name> +
-> <field-name>.  This renames PCI_EXP_OBFF_MASK, PCI_EXP_IDO_REQ_EN,
-> PCI_EXP_LTR_EN, and related fields using the same convention.
-> No functional change.
+> On Thu, Aug 08, 2013 at 04:38:22PM -0300, Mauro Carvalho Chehab wrote:
+> > Em Thu, 08 Aug 2013 23:57:51 +0530
+> > "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
+> > 
+> > > Enable memory error trace event in cper.c
+> > 
+> > Why do we need to do that? Memory error events are already handled
+> > via edac_ghes module,
 > 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-For the MFD driver:
+> If APEI gives me all the required information in order to deal with the
+> hardware error - and it looks like it does - then the additional layer
+> of ghes_edac is not needed.
 
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+APEI is just the mechanism that collects the data, not the mechanism
+that reports to userspace.
 
-Cheers,
-Samuel.
+The current implementation is that APEI already reports those errors
+via ghes_edac driver. It also reports the very same error via MCE
+(although the APEI interface to MCE is currently broken for everything
+that it is not Nehalem-EX - as it basically emulates the MCE log for
+that specific architecture).
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+I really don't see any sense on adding yet-another-way to report the
+very same error.
+
+Regards,
+Mauro
