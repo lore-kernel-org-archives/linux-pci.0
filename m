@@ -1,70 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v4 8/9] pci: Tune secondary bus reset timing
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: ddutile@redhat.com, indou.takao@jp.fujitsu.com,
-	linux-kernel@vger.kernel.org
-Date: Mon, 05 Aug 2013 13:37:53 -0600
-Message-ID: <20130805193753.9260.35206.stgit@bling.home>
-In-Reply-To: <20130805193200.9260.38729.stgit@bling.home>
-References: <20130805193200.9260.38729.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:36396 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752388Ab3HLLJx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 07:09:53 -0400
+Date: Mon, 12 Aug 2013 13:09:50 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, Stephen Warren <swarren@nvidia.com>
+Subject: Re: [PATCH V3] ARM: tegra: disable LP2 cpuidle state if PCIe is
+ enabled
+Message-ID: <20130812110949.GB12042@ulmo>
+References: <1376078656-1378-1-git-send-email-swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="VrqPEDrXMn8OVzN4"
+In-Reply-To: <1376078656-1378-1-git-send-email-swarren@wwwdotorg.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI spec indicates that with stable power, reset needs to be
-asserted for a minimum of 1ms (Trst).  Seems like we should be able
-to assume power is stable for a runtime secondary bus reset.  The
-current code has always used 100ms with no explanation where that
-came from.  The aer_do_secondary_bus_reset() function uses 2ms, but
-that seems to be a misinterpretation of the PCIe spec, where hot
-reset is implemented by TS1 ordered sets containing the hot reset
-command.  After a 2ms delay the state machine enters the detect state,
-but to generate a link down, only two consecutive TS1 hot reset
-ordered sets are requred.  1ms should be plenty for that.
 
-After reset is de-asserted we must wait for devices to complete
-initialization.  The specs refer to this as "recovery time" (Trhfa).
-For PCI this is 2^25 clock cycles or 2^26 for PCI-X.  For minimum
-bus speeds, both of those come to 1s.  PCIe "softens" this
-requirement with the Configuration Request Retry Status (CRS)
-completion status.  Theoretically we could use CRS to shorten the
-wait time.  We don't make use of that here, using a fixed 1s delay
-to allow devices to re-initialize.
+--VrqPEDrXMn8OVzN4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+On Fri, Aug 09, 2013 at 02:04:16PM -0600, Stephen Warren wrote:
+> From: Stephen Warren <swarren@nvidia.com>
+>=20
+> Tegra20 HW appears to have a bug such that PCIe device interrupts, whether
+> they are legacy IRQs or MSI, are lost when LP2 is enabled. To work around
+> this, simply disable LP2 if the PCI driver and DT node are both enabled.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b204206..ba64a7e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3230,11 +3230,22 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
- 	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
- 	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
- 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
--	msleep(100);
-+	/*
-+	 * PCI spec v3.0 7.6.4.2 requires minimum Trst of 1ms.
-+	 */
-+	msleep(1);
- 
- 	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
- 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
--	msleep(100);
-+
-+	/*
-+	 * Trhfa for conventional PCI is 2^25 clock cycles.
-+	 * Assuming a minimum 33MHz clock this results in a 1s
-+	 * delay before we can consider subordinate devices to
-+	 * be re-initialized.  PCIe has some ways to shorten this,
-+	 * but we don't make use of them yet.
-+	 */
-+	ssleep(1);
- }
- EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
- 
+This description is no longer accurate.
 
+> Signed-off-by: Stephen Warren <swarren@nvidia.com>
+> ---
+> I intend to apply this on top of Thierry's Tegra PCIe driver series.
+>=20
+> v3: Only disable LP2 if a PCIe device that requests an interrupt is
+> actually present. This prevents the loss of power-saving when the WAR
+> isn't required.
+
+Currently I see the informational message about LP2 being disabled
+rather early in PCI setup. That's probably caused by the .map_irq()
+being called during enumeration/fixup. So effectively this disables LP2
+as soon as a PCI device is found, whether it needs the IRQ or not. But I
+don't think we can do any better than this, so that's fine.
+
+[...]
+> diff --git a/arch/arm/mach-tegra/cpuidle.c b/arch/arm/mach-tegra/cpuidle.c
+[...]
+> +void tegra_cpuidle_pcie_irqs_in_use(void)
+> +{
+> +	switch (tegra_chip_id) {
+> +	case TEGRA20:
+> +		if (IS_ENABLED(CONFIG_ARCH_TEGRA_2x_SOC))
+> +			tegra20_cpuidle_pcie_irqs_in_use();
+> +		break;
+> +	}
+> +}
+
+I plan to eventually (3.13 perhaps) support building the pci-tegra
+driver as a module since most or all prerequisites are now in place, so
+we'll need to export this function eventually. But we can do that when
+we actually need it. Perhaps somebody will find a better fix for the LP2
+problem until then.
+
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+[...]
+> @@ -41,6 +41,7 @@
+>  #include <linux/platform_device.h>
+>  #include <linux/sizes.h>
+>  #include <linux/slab.h>
+> +#include <linux/tegra-cpuidle.h>
+
+That file doesn't exist in any tree I have. Perhaps it's a new file and
+you forgot to add it in this commit?
+
+I've added that file locally to test the patch and verified that it
+works around the issue on TrimSlice while not causing any regressions on
+Beaver (it doesn't run any code on !ARCH_TEGRA_2x_SOC anyway, but better
+safe than sorry).
+
+So with the missing header file added:
+
+Tested-by: Thierry Reding <treding@nvidia.com>
+
+And with an updated commit message:
+
+Acked-by: Thierry Reding <treding@nvidia.com>
+
+Thierry
+
+--VrqPEDrXMn8OVzN4
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSCMJ9AAoJEN0jrNd/PrOhdo8P/03p3yqkc3HvN6D+HK87DmwP
+z0tAediv4IAgszwq6k9Vu2PNEGsA+9N40j7tUfRNIfQeUgN5DSig72EnORU35Psm
+IFLt8bEMvets05sE71dyiTNwU0cjIRGNWLmKl75UatSoCWLcCH4dgJ2c7AXwpQwM
+E8QW7WM6NP8r+IAFw64I9JtMOEPQKZzQmZ7q+6i+6nUu+ljBanqGzI9luDfnputK
+xJUgu0PHd+lEGWJVat3TowoH+bqX7PKJ3ON7IzNuFNn3cOI8LotHWWzK6+J35YNG
+bjbGIQxYetCII+SDRThjf6ILq1DIrOjTDqHLNxXeGg7Y493QwMvvVlWN3ZG8r3TH
+8XGj97M8yEJGPnLsg962oPcMt7zrvZRPbGPxgWLDRBur8/J4pyL3UmRIyHHBCjEV
+mGHdcR4R9ufgxbFCr6Dj2RQ7Lg9ExBFvoOQqbx0WLHkAEilMV1g1mEG9Me/iQL6u
+rCBnMobAIA4nfklqemAx6t1o+a8kLl5OLlVzX0kM1K5uBF2MYgTjbcIhXjB5MQV6
+ZAf+m1+w4diAnd+Q3Zcf90XrIF1XSLLtHHeKTt9Kr9Ze2EmT17vpoqSYBMJmdZwh
+/oUJa3kwme5/JWVyh/tw6lymOTxlbOOaX6qsBQkfCNaL1hBGQALQA36vmp0fqmcZ
+lgLYZQCR8B8JPnyw1K20
+=I//w
+-----END PGP SIGNATURE-----
+
+--VrqPEDrXMn8OVzN4--
