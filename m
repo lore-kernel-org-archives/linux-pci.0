@@ -1,65 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:42623 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030292Ab3HIGpN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 02:45:13 -0400
-Message-ID: <52048FF6.6030904@free-electrons.com>
-Date: Fri, 09 Aug 2013 08:45:10 +0200
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 12 Aug 2013 19:56:31 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
+	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130812175631.GI18018@pd.tnic>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <20130808163822.67e0828a@samsung.com>
+ <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com>
+ <20130812123813.GD18018@pd.tnic>
+ <20130812114932.52bb0314@samsung.com>
+ <20130812150424.GH18018@pd.tnic>
+ <20130812142557.2a43f155@samsung.com>
 MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCHv8 08/10] ARM: mvebu: the MPIC now provides MSI controller
- features
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com> <1376000268-18397-9-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376000268-18397-9-git-send-email-thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130812142557.2a43f155@samsung.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/08/2013 00:17, Thomas Petazzoni wrote:
-> Adds the 'msi-controller' property to the main interrupt controller
-> Device Tree node, to indicate that it can now behave as a MSI
-> controller.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
-> Tested-by: Daniel Price <daniel.price@gmail.com>
+On Mon, Aug 12, 2013 at 02:25:57PM -0300, Mauro Carvalho Chehab wrote:
+> Userspace still needs the EDAC sysfs, in order to identify how the
+> memory is organized, and do the proper memory labels association.
+>
+> What edac_ghes does is to fill those sysfs nodes, and to call the
+> existing tracing to report errors.
 
-Acked-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+This is the only reason which justifies EDAC's existence. Naveen, can
+your BIOS directly report the silkscreen label of the DIMM in error?
+Generally, can any BIOS do that?
 
-> ---
->  arch/arm/boot/dts/armada-370-xp.dtsi | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
-> index 90b1176..ac0bbc0 100644
-> --- a/arch/arm/boot/dts/armada-370-xp.dtsi
-> +++ b/arch/arm/boot/dts/armada-370-xp.dtsi
-> @@ -56,6 +56,7 @@
->  				#interrupt-cells = <1>;
->  				#size-cells = <1>;
->  				interrupt-controller;
-> +				msi-controller;
->  			};
->  
->  			coherency-fabric@20200 {
-> 
+More specifically, what are those gdata_fru_id and gdata_fru_text
+things?
 
+Because if it can, then having the memory error tracepoint come direct
+from APEI should be enough. The ghes_edac functionality could be then
+fallback for BIOSes which cannot report the silkscreen label and in such
+case I can imagine keeping both tracepoints, but disabling one of the
+two...
 
 -- 
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
