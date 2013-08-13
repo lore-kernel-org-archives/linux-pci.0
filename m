@@ -1,135 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:41339 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758212Ab3HHWSH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 18:18:07 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:43319 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929Ab3HMH6e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 03:58:34 -0400
+Date: Tue, 13 Aug 2013 09:58:31 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv8 04/10] of: pci: add registry of MSI chips
-Date: Fri,  9 Aug 2013 00:17:42 +0200
-Message-Id: <1376000268-18397-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/9] PCI: mvebu: move clock enable before register access
+Message-ID: <20130813075830.GC9316@ulmo>
+References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
+ <1376333215-12885-2-git-send-email-sebastian.hesselbarth@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ABTtc+pdwF7KHXCz"
+In-Reply-To: <1376333215-12885-2-git-send-email-sebastian.hesselbarth@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds a very basic registry of msi_chip structures, so that
-an IRQ controller driver can register an msi_chip, and a PCIe host
-controller can find it, based on a 'struct device_node'.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/of/of_pci.c    | 45 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/msi.h    |  2 ++
- include/linux/of_pci.h | 12 ++++++++++++
- 3 files changed, 59 insertions(+)
+--ABTtc+pdwF7KHXCz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 42c687a..e5ca008 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -89,3 +89,48 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-+
-+#ifdef CONFIG_PCI_MSI
-+
-+static LIST_HEAD(of_pci_msi_chip_list);
-+static DEFINE_MUTEX(of_pci_msi_chip_mutex);
-+
-+int of_pci_msi_chip_add(struct msi_chip *chip)
-+{
-+	if (!of_property_read_bool(chip->of_node, "msi-controller"))
-+		return -EINVAL;
-+
-+	mutex_lock(&of_pci_msi_chip_mutex);
-+	list_add(&chip->list, &of_pci_msi_chip_list);
-+	mutex_unlock(&of_pci_msi_chip_mutex);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_msi_chip_add);
-+
-+void of_pci_msi_chip_remove(struct msi_chip *chip)
-+{
-+	mutex_lock(&of_pci_msi_chip_mutex);
-+	list_del(&chip->list);
-+	mutex_unlock(&of_pci_msi_chip_mutex);
-+}
-+EXPORT_SYMBOL_GPL(of_pci_msi_chip_remove);
-+
-+struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node)
-+{
-+	struct msi_chip *c;
-+
-+	mutex_lock(&of_pci_msi_chip_mutex);
-+	list_for_each_entry(c, &of_pci_msi_chip_list, list) {
-+		if (c->of_node == of_node) {
-+			mutex_unlock(&of_pci_msi_chip_mutex);
-+			return c;
-+		}
-+	}
-+	mutex_unlock(&of_pci_msi_chip_mutex);
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_find_msi_chip_by_node);
-+
-+#endif /* CONFIG_PCI_MSI */
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 090ddad..b17ead8 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -68,6 +68,8 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
- struct msi_chip {
- 	struct module *owner;
- 	struct device *dev;
-+	struct device_node *of_node;
-+	struct list_head list;
- 
- 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
- 			 struct msi_desc *desc);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 7a04826..29631eb 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -2,6 +2,7 @@
- #define __OF_PCI_H
- 
- #include <linux/pci.h>
-+#include <linux/msi.h>
- 
- struct pci_dev;
- struct of_irq;
-@@ -13,4 +14,15 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- int of_pci_get_devfn(struct device_node *np);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- 
-+#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
-+int of_pci_msi_chip_add(struct msi_chip *chip);
-+void of_pci_msi_chip_remove(struct msi_chip *chip);
-+struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node);
-+#else
-+static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; }
-+static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
-+static inline struct msi_chip *
-+of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL };
-+#endif
-+
- #endif
--- 
-1.8.1.2
+On Mon, Aug 12, 2013 at 08:46:47PM +0200, Sebastian Hesselbarth wrote:
+[...]
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+[...]
+> @@ -897,6 +897,16 @@ static int __init mvebu_pcie_probe(struct platform_d=
+evice *pdev)
+>  			continue;
+>  		}
+> =20
+> +		port->clk =3D of_clk_get_by_name(child, NULL);
+> +		if (IS_ERR(port->clk)) {
+> +			dev_err(&pdev->dev, "PCIe%d.%d: cannot get clock\n",
+> +			       port->port, port->lane);
+> +			iounmap(port->base);
+> +			port->haslink =3D 0;
+> +			continue;
+> +		}
+> +		clk_prepare_enable(port->clk);
 
+I see that this was already wrong previously, but since you're changing
+the line anyway you should probably also check for failure of the
+clk_prepare_enable() call and error out if it can't be prepare/enabled.
+
+Thierry
+
+--ABTtc+pdwF7KHXCz
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSCecmAAoJEN0jrNd/PrOhLgIP/iuTZjOmdnHZG3MU4B/B96ti
+6MuJ3ANB+0R2f29ifhboYPHnaxjDiSYmpNDXnSm9Yn+4RVNJYaEm76xUaEFgHj78
+fLo1nVNClWEp8CtJNKWAIrlCnR9S/rH7+Gi6qyQ+XVRu7FhYOy611OiGStnKY3KY
+aLLH3ZWzFxk5E/+4SHC+NkzVEL54YaNDtxlf8A3SiNR2Lr62GvJIKR/OtF9io1lU
+p6jbyy/xzCSthAan2zNdts0DzLV0I63+FIgLBTJFVzLrZZZkODt8oPryuBbsBF9d
+bas2zCrQ0IbKqDjCwY7f8MnixI4LHXXcWha3VKfCglyNpM52YO6+pMuN5wj1QGYJ
+Ym6XfvCyDsaEiXPTmiWNzhmNQ30cjBq/PyErN6AyPV8McDz3pYZMtYc7Ee2fPQIe
+wiBeiPrHejDcDg/WowwCW76y847dDkNBpI5XUCC/mFEPGwrWt4K/4cz2Mg32p7SA
+dDUyfupBpSeUtgykEjhg7hof9yjvz9KJWyqzdwAXV84s9gDB4EeoWOhsvY1Fd6O9
+YzdlB4Pu9C57Bn1XOBw4OB0ma1qqHRu2Hn2G8eQCeqq1KbTni9hgEDVvDD2QDIw3
+jLA0DJRaNABkG0yMBJKESydUc+oCTm1q7bq93Z3ZWbnb4Nuls5vOO+dlTcMk/Bhv
+JHVgoxV2mHKxBEi+vpeW
+=vX32
+-----END PGP SIGNATURE-----
+
+--ABTtc+pdwF7KHXCz--
