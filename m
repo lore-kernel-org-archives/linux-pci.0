@@ -1,76 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37098 "EHLO mx1.redhat.com"
+Received: from mail.skyhub.de ([78.46.96.112]:52167 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756511Ab3HAQzO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 Aug 2013 12:55:14 -0400
-Subject: [PATCH v3 0/9] pci: bus and slot reset interfaces
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Thu, 01 Aug 2013 10:55:08 -0600
-Message-ID: <20130801164652.16145.79918.stgit@bling.home>
+	id S1757405Ab3HMMdo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 13 Aug 2013 08:33:44 -0400
+Date: Tue, 13 Aug 2013 14:33:43 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>, tony.luck@intel.com,
+	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
+	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Aristeu Rozanski Filho <arozansk@redhat.com>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130813123343.GB4077@pd.tnic>
+References: <20130808163822.67e0828a@samsung.com>
+ <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com>
+ <20130812123813.GD18018@pd.tnic>
+ <20130812114932.52bb0314@samsung.com>
+ <20130812150424.GH18018@pd.tnic>
+ <20130812142557.2a43f155@samsung.com>
+ <20130812175631.GI18018@pd.tnic>
+ <520A1A2E.9080500@linux.vnet.ibm.com>
+ <20130813092154.1e17385f@concha.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130813092154.1e17385f@concha.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I posted a v2 of this back in May, but nack'd it because it had issues
-in cases where PCI hotplug was built as a module.  I pulled some of
-the code into core pci to alleviate that and module options are being
-removed from core pci hotplug and pciehp, so I think it's completely
-fixed now.  Since the RFC a couple days ago I've done more testing and
-added the last two patches, which tunes the delays for holding the bus
-in reset and allowing initialization time after.  These are my best
-interpretation of the spec, if anyone wants to adjust them, please
-suggest new values and spec or hardware evidence to support it.  We
-can also remove the duplicate bus reset code in AER, which is done in
-the last patch.  Including my most recent description of why we need
-this series below.  Thanks,
+On Tue, Aug 13, 2013 at 09:21:54AM -0300, Mauro Carvalho Chehab wrote:
+> > > More specifically, what are those gdata_fru_id and gdata_fru_text
+> > > things?
+> > 
+> > My understanding was that this provides the DIMM serial number, but I'm 
+> > double checking just to be sure.
 
-Alex
+Hm, ok, then.
 
-This series adds PCI bus and slot reset interfaces to the already
-existing function reset interface.  I need this for two reasons, the
-first is that not all devices support function level reset.  Even
-some of those that we detect as supporting a PM reset on D3hot->D0
-transition actually don't do any reset.  Others have no reset
-capability at all.  We currently implement a secondary bus reset
-escalation from the function reset path, but only when there is a
-single devfn on the bus.  Drivers like vfio can have ownership of
-all of the devices on a bus and should therefore have a path to
-initiate a secondary bus reset with multiple devices.  This is
-particularly required for use of GPUs by userspace, where none of
-the predominant GPUs implement a useful function level reset.
+If this info is exported to userspace over i2c or DMI (I've seen
+it sometimes in dmidecode output too) then the information in the
+tracepoint can be used in conjunction with dmidecode output to map back
+to the DIMM or so...
 
-The second reason is that even the current function reset escalating
-to a secondary bus reset can cause problems with hotplug controllers.
-If a root port supports PCIe HP with suprise removal, a bus reset
-can trigger a presence detection change, which results in an attempt
-to remove the struct device.  By having a slot reset interface, we
-can involve the hotplug controllers to allow for a controlled bus
-reset and avoid this spurious removal attempt.
+-- 
+Regards/Gruss,
+    Boris.
 
----
-
-Alex Williamson (9):
-      pci: Create pci_reset_bridge_secondary_bus()
-      pci: Add hotplug_slot_ops.reset_slot()
-      pci: Implement reset_slot for pciehp
-      pci: Add slot reset option to pci_dev_reset
-      pci: Split out pci_dev lock/unlock and save/restore
-      pci: Add slot and bus reset interfaces
-      pci: Wake-up devices before save for reset
-      pci: Tune secondary bus reset timing
-      pci: Remove aer_do_secondary_bus_reset()
-
-
- drivers/pci/hotplug/pciehp.h       |    1 
- drivers/pci/hotplug/pciehp_core.c  |   12 +
- drivers/pci/hotplug/pciehp_hpc.c   |   31 +++
- drivers/pci/pci.c                  |  331 +++++++++++++++++++++++++++++++++---
- drivers/pci/pcie/aer/aerdrv.c      |    2 
- drivers/pci/pcie/aer/aerdrv.h      |    1 
- drivers/pci/pcie/aer/aerdrv_core.c |   35 ----
- include/linux/pci.h                |    3 
- include/linux/pci_hotplug.h        |    4 
- 9 files changed, 358 insertions(+), 62 deletions(-)
+Sent from a fat crate under my desk. Formatting is fine.
+--
