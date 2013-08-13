@@ -1,191 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:52225 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912Ab3HTDS1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 23:18:27 -0400
-Date: Tue, 20 Aug 2013 04:18:21 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	Davide Libenzi <davidel@xmailserver.org>,
-	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
-Message-ID: <20130820031821.GF27005@ZenIV.linux.org.uk>
-References: <20130814200845.21923.64284.stgit@bling.home>
- <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 13 Aug 2013 14:42:58 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>, tony.luck@intel.com,
+	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
+	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130813124258.GC4077@pd.tnic>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <20130808163822.67e0828a@samsung.com>
+ <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com>
+ <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812125343.GE18018@pd.tnic>
+ <520A16BD.30201@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <520A16BD.30201@linux.vnet.ibm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 14, 2013 at 04:42:14PM -0600, Bjorn Helgaas wrote:
-> [+cc Al, linux-fsdevel for fdget/fdput usage]
+On Tue, Aug 13, 2013 at 04:51:33PM +0530, Naveen N. Rao wrote:
+> You're right - my trace point makes all the data provided by apei
+> as-is to userspace. However, ghes_edac seems to squash some of this
+> data into a string when reporting through mc_event.
 
-fdget/fdput use looks sane, the only thing is that I would rather
-have an explicit include of linux/file.h instead of relying upon
-linux/eventfd.h pulling it.  Incidentally, there are only 5 files
-that include the latter without an explicit include of the former -
-drivers/vfio/pci/vfio_pci.c, drivers/vhost/scsi.c, kernel/cgroup.c,
-mm/memcontrol.c and mm/vmpressure.c.  And only kernel/cgroup.c (and,
-with this patch, vfio_pci.c) really wants anything from linux/file.h,
-so I'd rather kill that indirect include in eventfd.h and slapped
-an explicit include of file.h in these two files...
+Right, for systems which don't need EDAC to decode to the DIMM or for
+which there are no EDAC drivers written, they could use a tracepoint
+which carries APEI info as-is. Others, which need EDAC, should probably
+use trace_mc_event and disable the APEI tracepoint.
 
-BTW, most of the eventfd_fget() users might as well be using fget()
-(or fdget(), for that matter).  They tend to be immediately followed
-by eventfd_ctx_fileget(), which repeats the "is that an eventfd file?"
-check anyway.
+I think this should address Tony's concerns...
 
-Completely untested patch below does that to kernel/cgroup.c; Tejun,
-Davide - do you have any objections against the following?
+Btw, you could call your TP something simpler like
+trace_ghes_memory_event or so.
 
-Kill indirect include of file.h from eventfd.h, use fdget() in cgroup.c
+Btw 2, if GHES can report other types of errors (I'm pretty sure it can)
+maybe we can use a single tracepoint called trace_ghes_event for any
+types of errors coming out of it...
 
-kernel/cgroup.c is the only place in the tree that relies on eventfd.h
-pulling file.h; move that include there.  Switch from eventfd_fget()/fput()
-to fdget()/fdput(), while we are at it - eventfd_ctx_fileget() will fail
-on non-eventfd descriptors just fine, no need to do that check twice...
+Oh, and while at it, we probably need to start thinking of a mechanism
+to disable all the error printing, i.e. cper_print_mem() and such,
+if a userspace agent is listening in on the tracepoint and the error
+information is carried through it to userspace.
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
----
-diff --git a/include/linux/eventfd.h b/include/linux/eventfd.h
-index cf5d2af..ff0b981 100644
---- a/include/linux/eventfd.h
-+++ b/include/linux/eventfd.h
-@@ -9,7 +9,6 @@
- #define _LINUX_EVENTFD_H
- 
- #include <linux/fcntl.h>
--#include <linux/file.h>
- #include <linux/wait.h>
- 
- /*
-@@ -26,6 +25,8 @@
- #define EFD_SHARED_FCNTL_FLAGS (O_CLOEXEC | O_NONBLOCK)
- #define EFD_FLAGS_SET (EFD_SHARED_FCNTL_FLAGS | EFD_SEMAPHORE)
- 
-+struct file;
-+
- #ifdef CONFIG_EVENTFD
- 
- struct file *eventfd_file_create(unsigned int count, int flags);
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 781845a..f88ecaf 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -60,6 +60,7 @@
- #include <linux/poll.h>
- #include <linux/flex_array.h> /* used in cgroup_attach_task */
- #include <linux/kthread.h>
-+#include <linux/file.h>
- 
- #include <linux/atomic.h>
- 
-@@ -3969,8 +3970,8 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
- 	struct cgroup_event *event = NULL;
- 	struct cgroup *cgrp_cfile;
- 	unsigned int efd, cfd;
--	struct file *efile = NULL;
--	struct file *cfile = NULL;
-+	struct fd efile;
-+	struct fd cfile;
- 	char *endp;
- 	int ret;
- 
-@@ -3993,31 +3994,31 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
- 	init_waitqueue_func_entry(&event->wait, cgroup_event_wake);
- 	INIT_WORK(&event->remove, cgroup_event_remove);
- 
--	efile = eventfd_fget(efd);
--	if (IS_ERR(efile)) {
--		ret = PTR_ERR(efile);
--		goto fail;
-+	efile = fdget(efd);
-+	if (!efile.file) {
-+		ret = -EBADF;
-+		goto fail1;
- 	}
- 
--	event->eventfd = eventfd_ctx_fileget(efile);
-+	event->eventfd = eventfd_ctx_fileget(efile.file);
- 	if (IS_ERR(event->eventfd)) {
- 		ret = PTR_ERR(event->eventfd);
--		goto fail;
-+		goto fail2;
- 	}
- 
--	cfile = fget(cfd);
--	if (!cfile) {
-+	cfile = fdget(cfd);
-+	if (!cfile.file) {
- 		ret = -EBADF;
--		goto fail;
-+		goto fail3;
- 	}
- 
- 	/* the process need read permission on control file */
- 	/* AV: shouldn't we check that it's been opened for read instead? */
--	ret = inode_permission(file_inode(cfile), MAY_READ);
-+	ret = inode_permission(file_inode(cfile.file), MAY_READ);
- 	if (ret < 0)
- 		goto fail;
- 
--	event->cft = __file_cft(cfile);
-+	event->cft = __file_cft(cfile.file);
- 	if (IS_ERR(event->cft)) {
- 		ret = PTR_ERR(event->cft);
- 		goto fail;
-@@ -4027,7 +4028,7 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
- 	 * The file to be monitored must be in the same cgroup as
- 	 * cgroup.event_control is.
- 	 */
--	cgrp_cfile = __d_cgrp(cfile->f_dentry->d_parent);
-+	cgrp_cfile = __d_cgrp(cfile.file->f_dentry->d_parent);
- 	if (cgrp_cfile != cgrp) {
- 		ret = -EINVAL;
- 		goto fail;
-@@ -4043,7 +4044,7 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
- 	if (ret)
- 		goto fail;
- 
--	efile->f_op->poll(efile, &event->pt);
-+	efile.file->f_op->poll(efile.file, &event->pt);
- 
- 	/*
- 	 * Events should be removed after rmdir of cgroup directory, but before
-@@ -4056,21 +4057,18 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
- 	list_add(&event->list, &cgrp->event_list);
- 	spin_unlock(&cgrp->event_list_lock);
- 
--	fput(cfile);
--	fput(efile);
-+	fdput(cfile);
-+	fdput(efile);
- 
- 	return 0;
- 
- fail:
--	if (cfile)
--		fput(cfile);
--
--	if (event && event->eventfd && !IS_ERR(event->eventfd))
--		eventfd_ctx_put(event->eventfd);
--
--	if (!IS_ERR_OR_NULL(efile))
--		fput(efile);
--
-+	fdput(cfile);
-+fail3:
-+	eventfd_ctx_put(event->eventfd);
-+fail2:
-+	fdput(efile);
-+fail1:
- 	kfree(event);
- 
- 	return ret;
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
