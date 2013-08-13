@@ -1,72 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:60323 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754691Ab3HGPvw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 11:51:52 -0400
-Date: Wed, 7 Aug 2013 11:51:24 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:41675 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929Ab3HMIKA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 04:10:00 -0400
+Date: Tue, 13 Aug 2013 10:09:56 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv6 00/13] MSI support for Marvell EBU PCIe driver
-Message-ID: <20130807155124.GC19280@titan.lakedaemon.net>
-References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130806200256.GB19280@titan.lakedaemon.net>
- <520157B2.8080205@wwwdotorg.org>
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
+Message-ID: <20130813080956.GE9316@ulmo>
+References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
+ <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <520157B2.8080205@wwwdotorg.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="PPYy/fEw/8QCHSq3"
+In-Reply-To: <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 06, 2013 at 02:08:18PM -0600, Stephen Warren wrote:
-> On 08/06/2013 02:02 PM, Jason Cooper wrote:
-> > Thomas,
-> > 
-> > In order to get some testing in -next, I've *tentatively* applied this
-> > series in the following way:
-> > 
-> > +---+ mvebu/msi_common (1,2,3,10)
-> >     |
-> >     +---+---+ mvebu/msi_irq (4-9)
-> >             |
-> >             +---+---+ mvebu/msi_mvebu (11-13)
-> > 
-> > I had to make one change to patch #9, I protected the last two blocks
-> > with #ifdef CONFIG_PCI_MSI to prevent a build failure at that point.
-> > 
-> > mvebu/msi_common should be appropriate for Thierry to base off, however,
-> > I make no guarantees about the stability of the branch until I send a
-> > PR for it.  Code-wise, it should be fine, but the commit-ids may change
-> > due to adding Tested-by's, etc.
-> 
-> When do you intend to send the pull-request? I need a stable branch
-> before I can even apply Thierry's changes, and I'd prefer to get those
-> changes applied and in linux-next well before I send my pull requests to
-> arm-soc. At the very latest, I need enough time to apply Thierry's
-> patches on top of your final version of that branch, get it briefly
-> tested, and then send a pull-request to arm-soc before -rc6 is out, so
-> if your pull request goes in just before -rc6, that's going to be a problem.
 
-I'll tag the head of mvebu/msi_common once it makes it through -next
-successfully (I saw a linux-next email go by, but I haven't gotten that
-far down my inbox yet)
+--PPYy/fEw/8QCHSq3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hopefully today or tomorrow, depending on where the -next problem is.
-I'll send the PR along side that.  Once I tag it, you should be able to
-base off of it before it gets into arm-soc, since the commit-id won't
-change.
+On Mon, Aug 12, 2013 at 08:46:50PM +0200, Sebastian Hesselbarth wrote:
+> This patch adds a check for DT passed reset-gpios property and deasserts/
+> asserts reset pin on probe/remove with configurable delay. Corresponding
+> binding documentation is also updated.
+>=20
+> Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+> ---
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Jason Cooper <jason@lakedaemon.net>
+> Cc: Andrew Lunn <andrew@lunn.ch>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Cc: devicetree@vger.kernel.org
+> Cc: linux-doc@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  .../devicetree/bindings/pci/mvebu-pci.txt          |    2 ++
+>  drivers/pci/host/pci-mvebu.c                       |   33 ++++++++++++++=
++++++-
+>  2 files changed, 34 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Docume=
+ntation/devicetree/bindings/pci/mvebu-pci.txt
+> index 638673a..f2fa261 100644
+> --- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+> @@ -76,6 +76,8 @@ and the following optional properties:
+>  - marvell,pcie-lane: the physical PCIe lane number, for ports having
+>    multiple lanes. If this property is not found, we assume that the
+>    value is 0.
+> +- reset-gpios: optional gpio to PERST#
+> +- reset-delay-ms: delay in ms to wait after reset de-assertion
 
-thx,
+I remember some recent discussion about this, and we now have this reset
+framework, so perhaps it makes more sense to use the reset binding for
+this? Cc'ing Stephen (as part of the device tree bindings maintainers
+team) who was involved in that recent reset bindings discussion.
 
-Jason.
+Thierry
+
+--PPYy/fEw/8QCHSq3
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSCenUAAoJEN0jrNd/PrOh0Y0P/R/Hmnc5rssTfrOALDwNF3EB
+cOJoyEc4dYwFbyIAblONfy7x7HtMctmXMl1yFjPNiulimc18RcevGqCYJckxK9tx
+RwWV2kNLvAMiYodOrDfWUTzQ1Z5zzagSI4nhNACGmj/Jt67YwpoFBFaN64FJ45UY
+5XLRdkAeFoBDrfLagtQd3E2SRkhKdidTl1a2p2kBbnjQag9DgEwnQH8an4+KmAfq
+tXY/PBDIWQuVv3t5rTiLkI/vvLIy27F1r6rgluiXOeThGV6ft65C3rhnCTcBIQlM
+FVwb2Afnoa/mSSGHtviegt8zFai3O11PBmqFqFN9G3Hg4TmCLZzd3Kl6YP2LbY3W
+aXc96OjoZI9M6MBSplj6upBgPJAx/v+ZPD3w8k4VSWP8/nXifIusj5r0m8q8zJKx
+/VLejY0ZOnl+M6ybbECa8+l28o9sfhaoF9aXxyQJ1ltbQirSZFEqueqg+AQcweWL
+8xCf0hjbYz2x/XgFNJ0UPa8+RIhYvXGsU7GRve0f+aF8/6/seVrMvMgVCaNKTt5u
+ha7Hn1s00q873zh4cfCQajMxyK0ZNByYvyjTfdw2a3ztdh5dEMnBKICl1WDEJMv3
+jlydbc+ZKpr2kmpC0C0NOWwpIymRgwssnjNFDqWPNnwFZA3Ib+EBYtqGMV55o8vD
+UwYh0x5uVoa8JjTXEPTW
+=69K1
+-----END PGP SIGNATURE-----
+
+--PPYy/fEw/8QCHSq3--
