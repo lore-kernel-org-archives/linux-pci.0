@@ -1,83 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:41140 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758223Ab3HIOtq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:46 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v6 05/14] ARM: tegra: trimslice: Initialize PCIe from DT
-Date: Fri,  9 Aug 2013 16:49:23 +0200
-Message-Id: <1376059772-16669-6-git-send-email-treding@nvidia.com>
-In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
-References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:54880 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759272Ab3HMV0x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 17:26:53 -0400
+Date: Tue, 13 Aug 2013 17:26:40 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] PCI: mvebu: add support for reset on GPIO
+Message-ID: <20130813212640.GK25111@titan.lakedaemon.net>
+References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+ <1376396724-32048-5-git-send-email-sebastian.hesselbarth@gmail.com>
+ <20130813222943.46fdacff@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130813222943.46fdacff@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+On Tue, Aug 13, 2013 at 10:29:43PM +0200, Thomas Petazzoni wrote:
+> Dear Sebastian Hesselbarth,
+> 
+> On Tue, 13 Aug 2013 14:25:23 +0200, Sebastian Hesselbarth wrote:
+> 
+> > +		port->reset_gpio = of_get_named_gpio_flags(child,
+> > +						   "reset-gpios", 0, &flags);
+> > +		if (gpio_is_valid(port->reset_gpio)) {
+> > +			u32 reset_udelay = 20000;
+> > +
+> > +			port->reset_active_low = flags & OF_GPIO_ACTIVE_LOW;
+> > +			port->reset_name = kasprintf(GFP_KERNEL,
+> > +				     "pcie%d.%d-reset", port->port, port->lane);
+> > +			of_property_read_u32(child, "reset-delay-us",
+> > +					     &reset_udelay);
+> > +
+> > +			ret = devm_gpio_request_one(&pdev->dev,
+> > +			    port->reset_gpio, GPIOF_DIR_OUT, port->reset_name);
+> > +			if (ret) {
+> > +				if (ret == -EPROBE_DEFER)
+> > +					return ret;
+> > +				continue;
+> > +			}
+> > +
+> > +			gpio_set_value(port->reset_gpio,
+> > +				       (port->reset_active_low) ? 1 : 0);
+> > +			udelay(reset_udelay);
+> > +		}
+> 
+> Sorry for raising this only now, but I think I would have preferred to
+> see this reset-gpios handling be moved into a separate sub-function.
+> The loop initializing each PCIe interface is already quite large, and I
+> believe moving this reset-gpios thing to a sub-function would have made
+> sense.
+> 
+> But well, the patches have been applied, and we can always adjust this
+> with a followup patch.
 
-With the device tree support in place, probe the PCIe controller from
-the device tree and remove the corresponding workaround in the board
-file.
+The branch this is in will be the last PR, so if the patch is reworked
+by tomorrow, I'll just replace it.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v2:
-- add missing dummy regulator nodes by Stephen Warren
-- rename port 0 DT node and disable unused port 1
+> Jason, have you re-created your for-next branch with all those patches?
+> I'd like to give them a test if possible.
 
- arch/arm/boot/dts/tegra20-trimslice.dts | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+Yep.  Give it a go.
 
-diff --git a/arch/arm/boot/dts/tegra20-trimslice.dts b/arch/arm/boot/dts/tegra20-trimslice.dts
-index 906e07f..cc3e742 100644
---- a/arch/arm/boot/dts/tegra20-trimslice.dts
-+++ b/arch/arm/boot/dts/tegra20-trimslice.dts
-@@ -310,6 +310,16 @@
- 		nvidia,sys-clock-req-active-high;
- 	};
- 
-+	pcie-controller {
-+		status = "okay";
-+		pex-clk-supply = <&pci_clk_reg>;
-+		vdd-supply = <&pci_vdd_reg>;
-+
-+		pci@1,0 {
-+			status = "okay";
-+		};
-+	};
-+
- 	usb@c5000000 {
- 		status = "okay";
- 	};
-@@ -412,6 +422,24 @@
- 			enable-active-high;
- 			gpio = <&gpio TEGRA_GPIO(V, 2) 0>;
- 		};
-+
-+		pci_clk_reg: regulator@3 {
-+			compatible = "regulator-fixed";
-+			reg = <3>;
-+			regulator-name = "pci_clk";
-+			regulator-min-microvolt = <3300000>;
-+			regulator-max-microvolt = <3300000>;
-+			regulator-always-on;
-+		};
-+
-+		pci_vdd_reg: regulator@4 {
-+			compatible = "regulator-fixed";
-+			reg = <4>;
-+			regulator-name = "pci_vdd";
-+			regulator-min-microvolt = <1050000>;
-+			regulator-max-microvolt = <1050000>;
-+			regulator-always-on;
-+		};
- 	};
- 
- 	sound {
--- 
-1.8.3.4
+thx,
 
+Jason.
