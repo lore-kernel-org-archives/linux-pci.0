@@ -1,106 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55225 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751116Ab3HSUUi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Aug 2013 16:20:38 -0400
-Message-ID: <1376943632.2657.25.camel@ul30vt.home>
-Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Date: Mon, 19 Aug 2013 14:20:32 -0600
-In-Reply-To: <CAErSpo50ve+ZMqcX=13hKvrB75LyWmUddC-qyX7Esfr=P5StcA@mail.gmail.com>
-References: <20130814200845.21923.64284.stgit@bling.home>
-	 <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
-	 <1376521578.13642.65.camel@ul30vt.home>
-	 <1376937682.2657.15.camel@ul30vt.home>
-	 <CAErSpo50ve+ZMqcX=13hKvrB75LyWmUddC-qyX7Esfr=P5StcA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <520A6A30.1030406@linux.vnet.ibm.com>
+Date: Tue, 13 Aug 2013 22:47:36 +0530
+From: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+MIME-Version: 1.0
+To: Mauro Carvalho Chehab <m.chehab@samsung.com>
+CC: Borislav Petkov <bp@alien8.de>, tony.luck@intel.com,
+	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
+	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Aristeu Rozanski Filho <arozansk@redhat.com>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic> <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com> <20130812114404.3bd64fa0@samsung.com> <520A1B5E.8040105@linux.vnet.ibm.com> <20130813094147.062317f8@concha.lan>
+In-Reply-To: <20130813094147.062317f8@concha.lan>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-08-19 at 14:02 -0600, Bjorn Helgaas wrote:
-> On Mon, Aug 19, 2013 at 12:41 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Wed, 2013-08-14 at 17:06 -0600, Alex Williamson wrote:
-> >> On Wed, 2013-08-14 at 16:42 -0600, Bjorn Helgaas wrote:
-> >> > On Wed, Aug 14, 2013 at 2:10 PM, Alex Williamson
-> >> > <alex.williamson@redhat.com> wrote:
-> 
-> >> > > +static int vfio_pci_for_each_slot_or_bus(struct pci_dev *pdev,
-> >> > > +                                        int (*fn)(struct pci_dev *,
-> >> > > +                                                  void *data), void *data,
-> >> > > +                                        bool slot)
-> >> > > +{
-> >> > > +       struct pci_dev *tmp;
-> >> > > +       int ret = 0;
-> >> > > +
-> >> > > +       list_for_each_entry(tmp, &pdev->bus->devices, bus_list) {
-> >> > > +               if (slot && tmp->slot != pdev->slot)
-> >> > > +                       continue;
-> >> > > +
-> >> > > +               ret = fn(tmp, data);
-> >> > > +               if (ret)
-> >> > > +                       break;
-> >> > > +
-> >> > > +               if (tmp->subordinate) {
-> >> > > +                       ret = vfio_pci_for_each_slot_or_bus(tmp, fn,
-> >> > > +                                                           data, false);
-> >> > > +                       if (ret)
-> >> > > +                               break;
-> >> > > +               }
-> >> > > +       }
-> >> > > +
-> >> > > +       return ret;
-> >> > > +}
-> >> >
-> >> > vfio_pci_for_each_slot_or_bus() isn't really vfio-specific, is it?
-> >>
-> >> It's not, I originally has callbacks split out as PCI patches but I was
-> >> able to simplify some things in the code by customizing it to my usage,
-> >> so I left it here.
-> >>
-> >> > I mean, traversing the PCI hierarchy doesn't require vfio knowledge.  I
-> >> > think this loop (walking the bus->devices list) skips devices on
-> >> > "virtual buses" that may be added for SR-IOV.  I'm not sure that
-> >> > pci_walk_bus() handles that correctly either, but at least if you used
-> >> > that, we could fix the problem in one place.
-> >>
-> >> I didn't know about pci_walk_bus(), I'll look into switching to it.
-> >
-> > It looks like pci_walk_bus() is a poor replacement for when dealing with
-> > slots.  There might be multiple slots on a bus or a mix of slots and
-> > non-slots, so for each device pci_walk_bus() finds on a subordinate bus
-> > I'd need to walk up the tree to find the parent bridge on the original
-> > bus to figure out if it's in the same slot.
-> 
-> Do you really care about that scenario?  PCIe only supports a single
-> slot per bus, as far as I know.
+On 08/13/2013 06:11 PM, Mauro Carvalho Chehab wrote:
+> Em Tue, 13 Aug 2013 17:11:18 +0530
+> "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
+>
+>> On 08/12/2013 08:14 PM, Mauro Carvalho Chehab wrote:
+>>>> But, this only seems to expose the APEI data as a string
+>>>> and doesn't look to really make all the fields available to user-space
+>>>> in a raw manner. Not sure how well this can be utilised by a user-space
+>>>> tool. Do you have suggestions on how we can do this?
+>>>
+>>> There's already an userspace tool that handes it:
+>>> 	https://git.fedorahosted.org/cgit/rasdaemon.git/
+>>>
+>>> What is missing there on the current version is the bits that would allow
+>>> to translate from APEI way to report an error (memory node, card, module,
+>>> bank, device) into a DIMM label[1].
+>>
+>> If I'm reading this right, all APEI data seems to be squashed into a
+>> string in mc_event.
+>
+> Yes. We had lots of discussion about how to map memory errors over the
+> last couple years. Basically, it was decided that the information that
+> could be decoded into a DIMM to be mapped as integers, and all other
+> driver-specific data to be added as strings.
+>
+> On the tests I did, different machines/vendors fill the APEI data on
+> a different way, with makes harder to associate them to a DIMM.
 
-I believe that's true for pciehp, but I can easily imagine that it's not
-the case for other hotplug controllers.  I don't run into this scenario
-on any of my hardware, but I also don't want to embed any pciehp
-assumptions either.  So I care for the sake of completeness, but I'm not
-targeting specific hardware that needs this.
+Ok, so it looks like ghes_edac isn't quite useful yet.
 
-> > Should we have a pci_walk_slot() function?
-> 
-> I guess.  And supply the pci_slot rather than the pci_dev?  I'm a
-> little bit worried because the idea of a "slot" is not well-defined in
-> the spec, and we have sort of an ad hoc method of discovering and
-> managing them, e.g., acpiphp and pciehp might discover the same slot.
-> But I guess that's no reason to bury generic code in vfio.
+In the meantime, like Boris suggests, I think we can have a different 
+trace event for raw APEI reports - userspace can use it as it pleases.
 
-I try to handle the slot as opaque, only caring that the slot pointer
-matches, so I think our implementation is ok... so long as we only get
-one driver claiming to manage a slot, but that's not a vfio problem ;)
-Thanks,
+Once ghes_edac gets better, users can decide whether they want raw APEI 
+reports or the EDAC-processed version and choose one or the other trace 
+event.
 
-Alex
+Regards,
+Naveen
 
