@@ -1,76 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5208C6FB.8070807@linux.vnet.ibm.com>
-Date: Mon, 12 Aug 2013 16:58:59 +0530
-From: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:23865 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759124Ab3HMRjD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 13:39:03 -0400
+From: "Luck, Tony" <tony.luck@intel.com>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>
+CC: Borislav Petkov <bp@alien8.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Aristeu Rozanski Filho" <arozansk@redhat.com>
+Subject: RE: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Date: Tue, 13 Aug 2013 17:39:00 +0000
+Message-ID: <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812114404.3bd64fa0@samsung.com> <520A1B5E.8040105@linux.vnet.ibm.com>
+ <20130813094147.062317f8@concha.lan> <520A6A30.1030406@linux.vnet.ibm.com>
+In-Reply-To: <520A6A30.1030406@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
-	rjw@sisk.pl, lance.ortiz@hp.com, m.chehab@samsung.com,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] mce: acpi/apei: trace: Add trace event for ghes memory
- error
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <1375986471-27113-3-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <20130808191732.GE27974@pd.tnic>
-In-Reply-To: <20130808191732.GE27974@pd.tnic>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/09/2013 12:47 AM, Borislav Petkov wrote:
-> On Thu, Aug 08, 2013 at 11:57:50PM +0530, Naveen N. Rao wrote:
->> +TRACE_EVENT(ghes_platform_memory_event,
->> +	TP_PROTO(const struct acpi_hest_generic_status *estatus,
->> +		 const struct acpi_hest_generic_data *gdata,
->> +		 const struct cper_sec_mem_err *mem),
->> +
->> +	TP_ARGS(estatus, gdata, mem),
->> +
->> +	TP_STRUCT__entry(
->> +		__field(	u32,	estatus_block_status		)
->> +		__field(	u32,	estatus_raw_data_offset		)
->> +		__field(	u32,	estatus_raw_data_length		)
->> +		__field(	u32,	estatus_data_length		)
->> +		__field(	u32,	estatus_error_severity		)
->> +		__array(	u8,	gdata_section_type,	16	)
->> +		__field(	u32,	gdata_error_severity		)
->> +		__field(	u16,	gdata_revision			)
->> +		__field(	u8,	gdata_validation_bits		)
->> +		__field(	u8,	gdata_flags			)
->> +		__field(	u32,	gdata_error_data_length		)
->> +		__array(	u8,	gdata_fru_id,		16	)
->> +		__array(	u8,	gdata_fru_text,		20	)
->> +		__field(	u64,	mem_validation_bits		)
->> +		__field(	u64,	mem_error_status		)
->> +		__field(	u64,	mem_physical_addr		)
->> +		__field(	u64,	mem_physical_addr_mask		)
->> +		__field(	u16,	mem_node			)
->> +		__field(	u16,	mem_card			)
->> +		__field(	u16,	mem_module			)
->> +		__field(	u16,	mem_bank			)
->> +		__field(	u16,	mem_device			)
->> +		__field(	u16,	mem_row				)
->> +		__field(	u16,	mem_column			)
->> +		__field(	u16,	mem_bit_pos			)
->> +		__field(	u64,	mem_requestor_id		)
->> +		__field(	u64,	mem_responder_id		)
->> +		__field(	u64,	mem_target_id			)
->> +		__field(	u8,	mem_error_type			)
->> +	),
+> In the meantime, like Boris suggests, I think we can have a different 
+> trace event for raw APEI reports - userspace can use it as it pleases.
 >
-> Without looking at the rest, a trace record from this tracepoint is
-> going to be 160 bytes IINM, which looks kinda fat to me. And during an
-> error storm we're probably not going to be able to log them all, maybe?
-> Yes, no, maybe I'm off base...
->
-> In any case, are we sure we want all those fields above? Can we make
-> them smaller, drop some of them from the tracepoint, etc, etc? Can we
-> compute some of them in userspace with information we already have?
+> Once ghes_edac gets better, users can decide whether they want raw APEI 
+> reports or the EDAC-processed version and choose one or the other trace 
+> event.
 
-Good idea - I hadn't thought from that perspective. I think we can drop 
-a few fields there, especially the length/offset fields and perhaps the 
-section_type since we know this is a memory error. Will get back with a 
-new revision.
+It's cheap to add as many tracepoints as we like - but may be costly to maintain.
+Especially if we have to tinker with them later to adjust which things are logged,
+that puts a burden on user-space tools to be updated to adapt to the changing
+API.
 
-Thanks,
-Naveen
+Mauro has written his user-space tool to process the ghes-edac events:
+  git://git.fedorahosted.org/rasdaemon.git
 
+Who is writing the user space tools to process the new apei tracepoints
+you want to add?
+
+I'm not opposed to these patches - just wondering who is taking the next step
+to make them useful.
+
+-Tony
