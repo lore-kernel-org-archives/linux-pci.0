@@ -1,123 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1941 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756427Ab3HAQzb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 Aug 2013 12:55:31 -0400
-Subject: [PATCH v3 3/9] pci: Implement reset_slot for pciehp
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Thu, 01 Aug 2013 10:55:27 -0600
-Message-ID: <20130801165527.16145.8953.stgit@bling.home>
-In-Reply-To: <20130801164652.16145.79918.stgit@bling.home>
-References: <20130801164652.16145.79918.stgit@bling.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5209FA05.6090702@gmail.com>
+Date: Tue, 13 Aug 2013 11:19:01 +0200
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Kumar Gala <galak@codeaurora.org>
+CC: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ian.campbell@citrix.com>
+Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
+References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com> <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com> <BA285A30-3E38-4F7A-BD5E-3271AD1A46BE@codeaurora.org>
+In-Reply-To: <BA285A30-3E38-4F7A-BD5E-3271AD1A46BE@codeaurora.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe hotplug has a bus per slot, so we can just use a normal
-secondary bus reset.  However, if a slot supports surprise removal
-then a bus reset can be seen as a presence detection change triggering
-a hot-remove followed by a hot-add.  Disable presence detection from
-triggering an interrupt or being polled around the bus reset.
+[Added DT maintainers directly for a question below]
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/hotplug/pciehp.h      |    1 +
- drivers/pci/hotplug/pciehp_core.c |   12 ++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  |   31 +++++++++++++++++++++++++++++++
- 3 files changed, 44 insertions(+)
+On 08/13/13 02:56, Kumar Gala wrote:
+> On Aug 12, 2013, at 1:46 PM, Sebastian Hesselbarth wrote:
+>
+>> This patch adds a check for DT passed reset-gpios property and deasserts/
+>> asserts reset pin on probe/remove with configurable delay. Corresponding
+>> binding documentation is also updated.
+>>
+>> Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+[...]
+>> diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+>> index 638673a..f2fa261 100644
+>> --- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+>> +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+>> @@ -76,6 +76,8 @@ and the following optional properties:
+>> - marvell,pcie-lane: the physical PCIe lane number, for ports having
+>>    multiple lanes. If this property is not found, we assume that the
+>>    value is 0.
+>> +- reset-gpios: optional gpio to PERST#
+>> +- reset-delay-ms: delay in ms to wait after reset de-assertion
+>
+> Both of these should probably be marvell,reset...
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 7fb3269..541bbe6 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -155,6 +155,7 @@ void pciehp_green_led_off(struct slot *slot);
- void pciehp_green_led_blink(struct slot *slot);
- int pciehp_check_link_status(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
-+int pciehp_reset_slot(struct slot *slot, int probe);
- 
- static inline const char *slot_name(struct slot *slot)
- {
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 7d72c5e..f4a18f5 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -69,6 +69,7 @@ static int get_power_status	(struct hotplug_slot *slot, u8 *value);
- static int get_attention_status	(struct hotplug_slot *slot, u8 *value);
- static int get_latch_status	(struct hotplug_slot *slot, u8 *value);
- static int get_adapter_status	(struct hotplug_slot *slot, u8 *value);
-+static int reset_slot		(struct hotplug_slot *slot, int probe);
- 
- /**
-  * release_slot - free up the memory used by a slot
-@@ -111,6 +112,7 @@ static int init_slot(struct controller *ctrl)
- 	ops->disable_slot = disable_slot;
- 	ops->get_power_status = get_power_status;
- 	ops->get_adapter_status = get_adapter_status;
-+	ops->reset_slot = reset_slot;
- 	if (MRL_SENS(ctrl))
- 		ops->get_latch_status = get_latch_status;
- 	if (ATTN_LED(ctrl)) {
-@@ -223,6 +225,16 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- 	return pciehp_get_adapter_status(slot, value);
- }
- 
-+static int reset_slot(struct hotplug_slot *hotplug_slot, int probe)
-+{
-+	struct slot *slot = hotplug_slot->private;
-+
-+	ctrl_dbg(slot->ctrl, "%s: physical_slot = %s\n",
-+		 __func__, slot_name(slot));
-+
-+	return pciehp_reset_slot(slot, probe);
-+}
-+
- static int pciehp_probe(struct pcie_device *dev)
- {
- 	int rc;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index b225573..51f56ef 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -749,6 +749,37 @@ static void pcie_disable_notification(struct controller *ctrl)
- 		ctrl_warn(ctrl, "Cannot disable software notification\n");
- }
- 
-+/*
-+ * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
-+ * bus reset of the bridge, but if the slot supports surprise removal we need
-+ * to disable presence detection around the bus reset and clear any spurious
-+ * events after.
-+ */
-+int pciehp_reset_slot(struct slot *slot, int probe)
-+{
-+	struct controller *ctrl = slot->ctrl;
-+
-+	if (probe)
-+		return 0;
-+
-+	if (HP_SUPR_RM(ctrl)) {
-+		pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_PDCE);
-+		if (pciehp_poll_mode)
-+			del_timer_sync(&ctrl->poll_timer);
-+	}
-+
-+	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
-+
-+	if (HP_SUPR_RM(ctrl)) {
-+		pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_PDC);
-+		pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PDCE, PCI_EXP_SLTCTL_PDCE);
-+		if (pciehp_poll_mode)
-+			int_poll_timeout(ctrl->poll_timer.data);
-+	}
-+
-+	return 0;
-+}
-+
- int pcie_init_notification(struct controller *ctrl)
- {
- 	if (pciehp_request_irq(ctrl))
+Kumar,
+
+as Thomas already mentioned, non-prefixed "foo-gpios" are quite common.
+As reset gpios are likely to be common among SoC pci controller setups,
+I though I'd stick with the non-prefixed property. But I have no strong
+opinion about it - but let's see how DT jurisdiction will vote :)
+
+> Does reset-delay-ms vary per board? I can't remember where the
+discussion got to about configuration info.
+
+Hmm, for Dove SoC, I only have one board to test - but the driver
+currently is for 4 different SoCs. I just did some quick evaluation
+of the reset delay required to bring up the device on the D3Plug.
+Using 10ms was too short, 20ms worked.
+
+I guess there will be other SoC/boards requiring different delays
+but I am fine with hardcoded 20ms and re-introduce reset-delay property
+only if it is really required. The driver's default is 20ms anyway.
+
+>>
+>> Example:
+>
+> It's usually good to update example to show all optional properties.
+
+Ok, will add the properties to one of the example ports.
+
+Thanks,
+
+Sebastian
 
