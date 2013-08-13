@@ -1,46 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v4 06/28] x86, irq: Show MSI-X clearly in debug message
-Date: Sat, 10 Aug 2013 19:47:52 -0700
-Message-Id: <1376189294-32022-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/5] PCI: mvebu: increment nports only for registered ports
+Date: Tue, 13 Aug 2013 14:25:21 +0200
+Message-Id: <1376396724-32048-3-git-send-email-sebastian.hesselbarth@gmail.com>
+In-Reply-To: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Print out exact MSI or MSI-X instead of MSI/MSI-X.
+The number of ports is probed by counting the number of available child nodes.
+Later on, the registration of a port can fail and cause a mismatch between
+the ->nports counter and registered ports. This patch modifies the counting
+strategy, to make ->nports represent the number of registered ports instead
+of the number of available childs.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 ---
- arch/x86/kernel/apic/io_apic.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Changelog:
+v1->v2:
+- also use 'i' as iterator during port parsing and assign at the end of
+  probing (Reported by Thomas Pettazoni)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index eda56ad..119fdf8 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3125,7 +3125,8 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/host/pci-mvebu.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 1533fda..d2e9ae7 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -842,13 +842,14 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
  
- 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
++	i = 0;
+ 	for_each_child_of_node(pdev->dev.of_node, child) {
+ 		if (!of_device_is_available(child))
+ 			continue;
+-		pcie->nports++;
++		i++;
+ 	}
  
--	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for MSI/MSI-X\n", irq);
-+	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for MSI%s\n", irq,
-+			 msidesc->msi_attrib.is_msix ? "-X" : "");
+-	pcie->ports = devm_kzalloc(&pdev->dev, pcie->nports *
++	pcie->ports = devm_kzalloc(&pdev->dev, i *
+ 				   sizeof(struct mvebu_pcie_port),
+ 				   GFP_KERNEL);
+ 	if (!pcie->ports)
+@@ -934,8 +935,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+ 		i++;
+ 	}
+ 
++	pcie->nports = i;
+ 	mvebu_pcie_msi_enable(pcie);
+-
+ 	mvebu_pcie_enable(pcie);
  
  	return 0;
- }
 -- 
-1.8.1.4
+1.7.10.4
 
