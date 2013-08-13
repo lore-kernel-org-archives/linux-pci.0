@@ -1,9 +1,9 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:37344 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929Ab3HMIGo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 04:06:44 -0400
-Date: Tue, 13 Aug 2013 10:06:40 +0200
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:57867 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755120Ab3HMKDx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 06:03:53 -0400
+Date: Tue, 13 Aug 2013 12:03:49 +0200
 From: Thierry Reding <thierry.reding@gmail.com>
 To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
@@ -11,101 +11,79 @@ Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Andrew Lunn <andrew@lunn.ch>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/9] PCI: mvebu: remove subsys_initcall
-Message-ID: <20130813080639.GD9316@ulmo>
+Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
+Message-ID: <20130813100348.GA28762@ulmo>
 References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
- <1376333215-12885-4-git-send-email-sebastian.hesselbarth@gmail.com>
- <20130813091959.784b44f0@skate>
+ <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
+ <20130813080956.GE9316@ulmo>
+ <20130813103030.1e4156a1@skate>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="gE7i1rD7pdK0Ng3j"
-In-Reply-To: <20130813091959.784b44f0@skate>
+	protocol="application/pgp-signature"; boundary="mYCpIKhGyMATD0i+"
+In-Reply-To: <20130813103030.1e4156a1@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
---gE7i1rD7pdK0Ng3j
+--mYCpIKhGyMATD0i+
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Aug 13, 2013 at 09:19:59AM +0200, Thomas Petazzoni wrote:
-> Dear Sebastian Hesselbarth,
+On Tue, Aug 13, 2013 at 10:30:30AM +0200, Thomas Petazzoni wrote:
+> Dear Thierry Reding,
 >=20
-> On Mon, 12 Aug 2013 20:46:49 +0200, Sebastian Hesselbarth wrote:
-> > This removes the subsys_initcall from the driver and converts it to
-> > a normal platform_driver. Also, drvdata is set and a remove functions
-> > is added to disable the clock and free resources.
+> On Tue, 13 Aug 2013 10:09:56 +0200, Thierry Reding wrote:
+>=20
+> > > +- reset-gpios: optional gpio to PERST#
+> > > +- reset-delay-ms: delay in ms to wait after reset de-assertion
 > >=20
-> > Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+> > I remember some recent discussion about this, and we now have this reset
+> > framework, so perhaps it makes more sense to use the reset binding for
+> > this? Cc'ing Stephen (as part of the device tree bindings maintainers
+> > team) who was involved in that recent reset bindings discussion.
 >=20
-> I'm OK with this, just a comment below.
->=20
-> > +static int mvebu_pcie_remove(struct platform_device *pdev)
-> > +{
-> > +	struct mvebu_pcie *pcie =3D platform_get_drvdata(pdev);
-> > +	struct mvebu_pcie_port *port =3D &pcie->ports[0];
-> > +	int i;
-> > +
-> > +	for (i =3D 0; i < pcie->nports; i++, port++) {
-> > +		clk_disable_unprepare(port->clk);
-> > +		kfree(port->name);
-> > +	}
-> > +
-> > +	return 0;
-> > +}
->=20
-> I believe the ->remove() part is quite useless. The driver is a 'bool'
-> in Kconfig, so it cannot be compiled as a module, and I'm not sure
-> there a way to remove the platform device that corresponds to the PCIe
-> controller.
+> I also thought about this, but the reset framework seems to be designed
+> for "reset controller" IPs, i.e special IPs that are controlling reset
+> signals. Looking at Documentation/devicetree/bindings/reset/reset.txt,
+> I'm not sure to see how this would apply to GPIO-controlled reset
+> signals.
 
-There is. You can write the device's name to the driver's unbind file in
-sysfs. What I ended up doing for Tegra was not to provide a .remove() at
-all and set the struct device_driver's .suppress_bind_attrs to true.
+See:
 
-Those two things combined should make it impossible to unbind the device
-=66rom the driver.
+	http://www.mail-archive.com/devicetree-discuss@lists.ozlabs.org/msg36900.h=
+tml
 
-> And even if there was, then it would still not work because as far as I
-> know, the ARM PCI core doesn't provide functions to 'unregister' PCI
-> controllers, so it would keep pointers to functions located in the
-> driver, which would cause nasty things when unloading the module.
+which seems to have carried over to this at some point:
 
-I did some initial work to support driver unbinding (in order to support
-module unloading) on Tegra and things look pretty promising. The ARM PCI
-code would need something like pci_common_exit() to make sure there are
-no leaks.
+	http://www.spinics.net/lists/devicetree/msg00521.html
 
-Unfortunately I can't seem to find that branch anymore, so I will have
-to reconstruct it from memory...
-
-That said, I agree with Thomas that it's not useful (and potentially
-even dangerous) to add the .remove() at this point in time.
+Some of the messages in between I can't find in any archive, sorry.
 
 Thierry
 
---gE7i1rD7pdK0Ng3j
+--mYCpIKhGyMATD0i+
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.20 (GNU/Linux)
 
-iQIcBAEBAgAGBQJSCekPAAoJEN0jrNd/PrOhKLcP+wY6A6YFFnV2ZOaegG/2kvsw
-uxqFlhn4FqAnsM2fmbHJpDoem8gowF+aonwuAKw7oAnmE+tKiIQeAsiGhrMIRx+p
-L08j7HxQc0LGwBZQpqGQFeskruD7HzTr+ye26pqwhzHNUX68mL3skaUzI6lRvleb
-PzuiG0vaUnCFFBukIJu7VHXmvy8esghIaxUWW4BWNGiJF5tgjjku3OLswJujVkbT
-aLJFLXAUreXPr9O7XfSuBUgYQKsD/OklII7tsA53QJ9+twsaQMlMt20VwnKw/vO/
-wWmXTMwC64Ff7g69XJgTpdFlnhHxQeukUZF4rleS5JpssKl7b2HRQNN99xTOAyPo
-wnnefn0bOHO2mxKANkjJmzXCfGrfsRJWGHxNopd4fk4aPXh9+dpOMOrsa+8trrm3
-ivobxxYvW8yCdKtsc1oMAI1iWblyd2xStFEYjE7cyAMwOplwdgvgLU096OUHd4S+
-dCmrPbLokq1Uo72kQZYhzdEId79Y/Vlk5FFcJR9wLw945aA5Qj2+BmK+tAMW+YlH
-Qt4KaCl3nw7luq1VtcdPlM09CBiuCmAch6YZ9fUn8WB6veDxApPgMT56VD2xUbvG
-Z2ADUVBGfnkkKZeXTne/DUFxstsozA1yldJEBhG3sfIhFHH0imP3ZaP5ffy69IFt
-Unkb1fGPx8IzPrtJlfmt
-=BioH
+iQIcBAEBAgAGBQJSCgSEAAoJEN0jrNd/PrOhXqQP/00k9qpbbGmfxex3TNrgv2Is
+ocoESbsytg3Xz4eBN12343/Yc+goQeKF0W0yumiMceW8JsQ/u2J9x0YMIrHvPMFC
+abbcGgLsTdgs3IBgA1hYeFMCjSTzTeFtNEYjDTzJQY0+hVCVWlj2SOZQqeX/DZ8w
+GPxmeelIHUOxHEAsyCSiDu2g3DD8TJ0N3y3mSTuD2nFrgysgtfrhwlFeEeLfF4UU
+rkmRVLMPyFGN0AlXckrIkDk/BG7cyppM7BwhqtsigHmrt2yCQjXpA+ML6I2AAqvR
+LPW0obWNl+Mn4smudv49XiIc3+MHnOVtq+0NoW1YemXIJ49ggKXpoeLF1whg38VM
+m4O0qNoMCul/xv+RPCh5QgVY+vWdlG/8YWU4DZTXT+IhYti7xzY1+iFb3bHds0uC
+BNNouYq/pTrr6atjX4fTNZNxnN15eTJqiKvxBx355TUkMQbuJ/EKvaDXWpALbyVc
+Mn420vIa/X2f7INmjZigKDKDLEAzZUOGzLQLKErJBjW2qWP/ADzfr5lS/xRC4IFg
+9r40/MXSJDx1/V6hpLKRI+hP+cjkdcqNrNThJeVa1BMKniB7pPu08lGEtWhknGsv
+Ab//4nOjKv07qWJUcCDzRKb8jLO2nTxfunQNTlTlAchjDfysTjZJKnW+cWOzya00
+vrz6kNWJzKQGdNc4xmag
+=+4Qp
 -----END PGP SIGNATURE-----
 
---gE7i1rD7pdK0Ng3j--
+--mYCpIKhGyMATD0i+--
