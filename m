@@ -1,49 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:54124 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756216Ab3HLPE0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Aug 2013 11:04:26 -0400
-Date: Mon, 12 Aug 2013 17:04:24 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>
-Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
-	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Message-ID: <20130812150424.GH18018@pd.tnic>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <20130808163822.67e0828a@samsung.com>
- <20130810180322.GC4155@pd.tnic>
- <20130812083355.47c1bae8@samsung.com>
- <20130812123813.GD18018@pd.tnic>
- <20130812114932.52bb0314@samsung.com>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:12835 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757573Ab3HMPLk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 11:11:40 -0400
+Date: Tue, 13 Aug 2013 11:11:23 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 0/5] ARM: dove: DT PCIe support
+Message-ID: <20130813151123.GB25111@titan.lakedaemon.net>
+References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+ <20130813140130.GA25111@titan.lakedaemon.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130812114932.52bb0314@samsung.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130813140130.GA25111@titan.lakedaemon.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 12, 2013 at 11:49:32AM -0300, Mauro Carvalho Chehab wrote:
-> Clear win from what PoV? Userspace will need to decode a different type
-> of tracing, and implement a different logic for APEI.
+On Tue, Aug 13, 2013 at 10:01:30AM -0400, Jason Cooper wrote:
+> Bjorn,
+> 
+> On Tue, Aug 13, 2013 at 02:25:19PM +0200, Sebastian Hesselbarth wrote:
+> > This patch set adds support for the PCIe controllers found on Marvell
+> > Dove SoCs. It depends on mvebu-pci patches sent by Thomas Petazzoni.
+> 
+> Well, when it rains, it pours.  If this series looks good to you, I'll
+> go ahead and add it on top of Thomas' patches.
 
-There's no different type of tracing - it is the same info as in both
-cases it comes from APEI. And if it can be done in the APEI layer, then
-we don't need the next layer.
+And I can confirm, this series definitely depends on mvebu/boards,
+mvebu/mbus_dt, and mvebu/msi_mvebu (which, in turn, depends on
+mvebu/msi_irq and mvebu/msi_pci).
 
-> Also, if both ghes_edac and this new tracing is enabled, userspace
-> will receive twice the same event, as two traces will be received for
-> the same thing.
+thx,
 
-We are, of course, going to have only one tracepoint which reports
-memory errors, not two.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+Jason.
