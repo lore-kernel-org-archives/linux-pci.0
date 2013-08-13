@@ -1,59 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34497 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758Ab3HKCqJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:46:09 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH 09/28] ia64, irq: Add dummy create_irq_nr()
-Date: Sat, 10 Aug 2013 19:45:20 -0700
-Message-Id: <1376189139-31856-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
-References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 5/5] PCI: mvebu: add support for Marvell Dove SoCs
+Date: Tue, 13 Aug 2013 14:25:24 +0200
+Message-Id: <1376396724-32048-6-git-send-email-sebastian.hesselbarth@gmail.com>
+In-Reply-To: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-create_irq() will return -1 when fail to allocate.
-create_irq_nr() will return 0 when fail to allocate.
+This patch adds a compatible for the PCIe controller found on Marvell
+Dove SoCs. Binding documentation and Kconfig entry are also updated.
 
-Will use it to fix one return value checking for dmar_msi irq.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: stable@vger.kernel.org
+Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 ---
- arch/ia64/kernel/irq_ia64.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Changelog:
+v1->v2:
+- nothing changed
 
-diff --git a/arch/ia64/kernel/irq_ia64.c b/arch/ia64/kernel/irq_ia64.c
-index 1034884..38e46df 100644
---- a/arch/ia64/kernel/irq_ia64.c
-+++ b/arch/ia64/kernel/irq_ia64.c
-@@ -429,6 +429,16 @@ int create_irq(void)
- 	return irq;
- }
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org
+---
+ Documentation/devicetree/bindings/pci/mvebu-pci.txt |    1 +
+ drivers/pci/host/Kconfig                            |    2 +-
+ drivers/pci/host/pci-mvebu.c                        |    1 +
+ 3 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+index 8bb3245..08c716b 100644
+--- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
++++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+@@ -5,6 +5,7 @@ Mandatory properties:
+ - compatible: one of the following values:
+     marvell,armada-370-pcie
+     marvell,armada-xp-pcie
++    marvell,dove-pcie
+     marvell,kirkwood-pcie
+ - #address-cells, set to <3>
+ - #size-cells, set to <2>
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 1184ff6..492eec9 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -3,7 +3,7 @@ menu "PCI host controller drivers"
  
-+unsigned int create_irq_nr(unsigned int from, int node)
-+{
-+	int irq = create_irq();
-+
-+	if (irq < 0)
-+		irq = 0;
-+
-+	return irq;
-+}
-+
- void destroy_irq(unsigned int irq)
- {
- 	dynamic_irq_cleanup(irq);
+ config PCI_MVEBU
+ 	bool "Marvell EBU PCIe controller"
+-	depends on ARCH_MVEBU || ARCH_KIRKWOOD
++	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_KIRKWOOD
+ 
+ config PCIE_DW
+ 	bool
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index a9ad4b3..88c6790 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -975,6 +975,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ static const struct of_device_id mvebu_pcie_of_match_table[] = {
+ 	{ .compatible = "marvell,armada-xp-pcie", },
+ 	{ .compatible = "marvell,armada-370-pcie", },
++	{ .compatible = "marvell,dove-pcie", },
+ 	{ .compatible = "marvell,kirkwood-pcie", },
+ 	{},
+ };
 -- 
-1.8.1.4
+1.7.10.4
 
