@@ -1,102 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from up.free-electrons.com ([94.23.35.102]:53480 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750886Ab3HANZZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:25:25 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:34886 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751476Ab3HMJ74 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 05:59:56 -0400
+Date: Tue, 13 Aug 2013 11:59:41 +0200
+From: Sascha Hauer <s.hauer@pengutronix.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
 	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv6 04/13] irqdomain: add irq_alloc_mapping() function
-Date: Thu,  1 Aug 2013 15:25:07 +0200
-Message-Id: <1375363516-2620-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
+Message-ID: <20130813095941.GB30913@pengutronix.de>
+References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
+ <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
+ <20130813080956.GE9316@ulmo>
+ <20130813103030.1e4156a1@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130813103030.1e4156a1@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit extends the irqdomain subsystem with an
-irq_alloc_mapping() function which allows to let the irqdomain code
-find an available hwirq number in the range [ 0 ; domain size ] for
-the given domain, and create a virq mapping for it.
+On Tue, Aug 13, 2013 at 10:30:30AM +0200, Thomas Petazzoni wrote:
+> Dear Thierry Reding,
+> 
+> On Tue, 13 Aug 2013 10:09:56 +0200, Thierry Reding wrote:
+> 
+> > > +- reset-gpios: optional gpio to PERST#
+> > > +- reset-delay-ms: delay in ms to wait after reset de-assertion
+> > 
+> > I remember some recent discussion about this, and we now have this reset
+> > framework, so perhaps it makes more sense to use the reset binding for
+> > this? Cc'ing Stephen (as part of the device tree bindings maintainers
+> > team) who was involved in that recent reset bindings discussion.
+> 
+> I also thought about this, but the reset framework seems to be designed
+> for "reset controller" IPs, i.e special IPs that are controlling reset
+> signals. Looking at Documentation/devicetree/bindings/reset/reset.txt,
+> I'm not sure to see how this would apply to GPIO-controlled reset
+> signals.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Acked-by: Grant Likely <grant.likely@linaro.org>
----
- include/linux/irqdomain.h |  2 ++
- kernel/irq/irqdomain.c    | 36 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+)
+Search for:
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index c983ed1..1ffa336 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -195,6 +195,8 @@ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
- extern unsigned int irq_find_mapping(struct irq_domain *host,
- 				     irq_hw_number_t hwirq);
- extern unsigned int irq_create_direct_mapping(struct irq_domain *host);
-+extern unsigned int irq_alloc_mapping(struct irq_domain *host,
-+				      irq_hw_number_t *hwirq);
- extern int irq_create_strict_mappings(struct irq_domain *domain,
- 				      unsigned int irq_base,
- 				      irq_hw_number_t hwirq_base, int count);
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 706724e..034bbac 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -375,6 +375,42 @@ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
- EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
- 
- /**
-+ * irq_alloc_mapping() - Allocate an irq for mapping
-+ * @domain: domain to allocate the irq for or NULL for default domain
-+ * @hwirq:  reference to the returned hwirq
-+ *
-+ * This routine are used for irq controllers which can choose the
-+ * hardware interrupt number from a range [ 0 ; domain size ], such as
-+ * is often the case with PCI MSI controllers. The function will
-+ * returned the allocated hwirq number in the hwirq pointer, and the
-+ * corresponding virq number as the return value.
-+ */
-+unsigned int irq_alloc_mapping(struct irq_domain *domain,
-+			       irq_hw_number_t *out_hwirq)
-+{
-+	irq_hw_number_t hwirq;
-+	int rc;
-+
-+	pr_debug("irq_alloc_mapping(0x%p)\n", domain);
-+
-+	for (hwirq = 0; hwirq < domain->revmap_size; hwirq++)
-+		if (domain->linear_revmap[hwirq] == 0)
-+			break;
-+
-+	if (hwirq == domain->hwirq_max) {
-+		pr_debug("-> no available hwirq found\n");
-+		return 0;
-+	}
-+
-+	rc = irq_create_mapping(domain, hwirq);
-+	if (rc)
-+		*out_hwirq = hwirq;
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(irq_alloc_mapping);
-+
-+/**
-  * irq_create_mapping() - Map a hardware interrupt into linux irq space
-  * @domain: domain owning this hardware interrupt or NULL for default domain
-  * @hwirq: hardware irq number in that domain space
+[PATCH v10] reset: Add driver for gpio-controlled reset pins
+
+Which aims to be a solution for what you need here.
+
+Sascha
+
 -- 
-1.8.1.2
-
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
