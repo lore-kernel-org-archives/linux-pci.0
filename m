@@ -1,64 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.bemta5.messagelabs.com ([195.245.231.152]:52912 "EHLO
-	mail1.bemta5.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752630Ab3H1Ndt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 09:33:49 -0400
-Date: Wed, 28 Aug 2013 15:33:37 +0200
-From: Johannes Thumshirn <johannes.thumshirn@men.de>
-To: <linux-pci@vger.kernel.org>
-CC: <johannes.thumshirn@men.de>
-Subject: PCI reset problem
-Message-ID: <20130828133337.GA8544@jtlinux>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20130813140130.GA25111@titan.lakedaemon.net>
+References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+ <20130813140130.GA25111@titan.lakedaemon.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 13 Aug 2013 11:19:10 -0600
+Message-ID: <CAErSpo7DnfQBzoSX+rh6A0QrPO3Z3cjD=8ajZiFwKH0MBTG4og@mail.gmail.com>
+Subject: Re: [PATCH v2 0/5] ARM: dove: DT PCIe support
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	devicetree@vger.kernel.org,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi List,
+On Tue, Aug 13, 2013 at 8:01 AM, Jason Cooper <jason@lakedaemon.net> wrote:
+> Bjorn,
+>
+> On Tue, Aug 13, 2013 at 02:25:19PM +0200, Sebastian Hesselbarth wrote:
+>> This patch set adds support for the PCIe controllers found on Marvell
+>> Dove SoCs. It depends on mvebu-pci patches sent by Thomas Petazzoni.
+>
+> Well, when it rains, it pours.  If this series looks good to you, I'll
+> go ahead and add it on top of Thomas' patches.
 
-I have a rather odd problem with a PCIe swicht/bridge which does not get
-enumerated correctly. If I issue _two_ manual rescans of the PCI bus via sysfs,
-everything get setup correctly. To work around the problem I decided to make a
-platform specific PCI quirk (for the embedded system I'm on, to not break
-anything else) and issue the pci_rescan_bus() myself as a "final" fixup. However
-this does not have any effect at all.
+Yep, that's fine with me.  I consider the stuff in drivers/pci/host/
+as basically arch code that is collected as a convenience for code
+sharing.  I can't test it, and I can only evaluate it as far as
+looking for the most obvious things related to use of core PCI
+interfaces.
 
-Does anyone have an idea what I could do wrong?
-
-Example:
-root@generic-powerpc:~# lspci -tv
--[0000:00]---00.0-[01]--
-root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
-[...]
-root@generic-powerpc:~# lspci -tv
--[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]--
-                                           +-02.0-[04]--
-                                           \-03.0-[05]--
-root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
-[...]
-root@generic-powerpc:~# lspci -tv
--[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]----00.0  Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
-                                           +-02.0-[04]--
-                                           \-03.0-[05]--+-00.0  Pericom Semiconductor Device 400e
-                                                        +-00.1  Pericom Semiconductor Device 400e
-                                                        \-00.2  Pericom Semiconductor Device 400f
-
-
-"My" rescan quirk:
-#if CONFIG_PCI
-static DEFINE_MUTEX(rescan_mutex);
-static void xm51_fixup_bridge(struct pci_dev *dev)
-{
-        struct pci_bus *b = NULL;
-
-        mutex_lock(&rescan_mutex);
-        while((b = pci_find_next_bus(b)) != NULL)
-                pci_rescan_bus(b);
-        mutex_unlock(&rescan_mutex);
-}
-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, 0x0401, xm51_fixup_bridge);
-#endif
-
-
-Thanks in advance,
-Johannes
+Bjorn
