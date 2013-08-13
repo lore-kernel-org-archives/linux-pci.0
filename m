@@ -1,105 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:46763 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014Ab3HODsx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 23:48:53 -0400
-MIME-Version: 1.0
-In-Reply-To: <CALCETrVYKuRcRgKEroCVbvkqfHjOtAA1Rwn6b4uas19BXogkpA@mail.gmail.com>
-References: <CALCETrUHJg5qskadGG11fGvCVgbm=Zn0zuWv+CAgrEm9-Qcfdg@mail.gmail.com>
-	<CAErSpo6Gp34O=L1ASPRLLBxwQShn6SN5EfXjDT+G7XAg3qbL-g@mail.gmail.com>
-	<20130814213249.3c568da8@concha.lan>
-	<CALCETrVYKuRcRgKEroCVbvkqfHjOtAA1Rwn6b4uas19BXogkpA@mail.gmail.com>
-Date: Thu, 15 Aug 2013 11:48:51 +0800
-Message-ID: <CANVTcTZeMc3=3eF-jRg7Azj4ce728FdpV_x+xjAm07Yrdu9eSQ@mail.gmail.com>
-Subject: Re: PCI devices w/ multiple drivers at once? (sb_edac vs i2c-imc)
-From: rui wang <ruiv.wang@gmail.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-edac@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout3.w2.samsung.com ([211.189.100.13]:51591 "EHLO
+	usmailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757632Ab3HMMWI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 08:22:08 -0400
+Date: Tue, 13 Aug 2013 09:21:54 -0300
+From: Mauro Carvalho Chehab <m.chehab@samsung.com>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: Borislav Petkov <bp@alien8.de>, tony.luck@intel.com,
+	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
+	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Aristeu Rozanski Filho <arozansk@redhat.com>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+Message-id: <20130813092154.1e17385f@concha.lan>
+In-reply-to: <520A1A2E.9080500@linux.vnet.ibm.com>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com> <20130812123813.GD18018@pd.tnic>
+ <20130812114932.52bb0314@samsung.com> <20130812150424.GH18018@pd.tnic>
+ <20130812142557.2a43f155@samsung.com> <20130812175631.GI18018@pd.tnic>
+ <520A1A2E.9080500@linux.vnet.ibm.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/15/13, Andy Lutomirski <luto@amacapital.net> wrote:
-> On Wed, Aug 14, 2013 at 5:32 PM, Mauro Carvalho Chehab
-> <m.chehab@samsung.com> wrote:
->>
->> Em Wed, 14 Aug 2013 16:04:06 -0600
->> Bjorn Helgaas <bhelgaas@google.com> escreveu:
->>
->> > On Wed, Aug 14, 2013 at 3:45 PM, Andy Lutomirski <luto@amacapital.net>
->> > wrote:
->> > > I'm working on a driver for the Sandy Bridge iMC SMBUS controller.
->> > > It
->> > > (mostly) lives on pci device 15, function 0.  So my driver registers
->> > > as an ordinary PCI driver for that device (8086.3ca8).
->> > >
->> > > The problem is that sb_edac also registers for 8086.3ca8.  This means
->> > > that the drivers conflict.  The sb_edac driver is actually driving
->> > > functionality that's split between eleven (!) different pci devices,
->> > > none of which overlaps the stuff I'm driving.
->> > >
->> > > What's the Right Way (tm) to handle this?  Should I just modify
->> > > sb_edac to pick a different one of the 11 devices to probe?  Is there
->> > > some standard way to handle this in the PCI code?
->>
->> The sb-edac driver needs to see lots of different devices in order to
->> work, as the memory controller registers are on different PCI IDs.
->>
->> So, there's not much that can be done there, I'm afraid.
->
-> Would you be okay with changing the PCI ID that the sb_edac driver
-> binds to?  That is, let it claim any of the other mess of devices it
-> talks to.
->
-> Alternatively, I could shove the whole thing into the edac-sbridge module.
->
->>
+Em Tue, 13 Aug 2013 17:06:14 +0530
+"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
 
-What you really need is just to access a few registers on that device,
-which doesn't sound reasonable enough to claim the entire device.
-Sb_edac is much more generic.
+> On 08/12/2013 11:26 PM, Borislav Petkov wrote:
+> > On Mon, Aug 12, 2013 at 02:25:57PM -0300, Mauro Carvalho Chehab wrote:
+> >> Userspace still needs the EDAC sysfs, in order to identify how the
+> >> memory is organized, and do the proper memory labels association.
+> >>
+> >> What edac_ghes does is to fill those sysfs nodes, and to call the
+> >> existing tracing to report errors.
+> 
+> I suppose you're referring to the entries under /sys/devices/system/edac/mc?
 
-What I can suggest is that you may still let sb_edac own the device
-and handle the register access needed by you. Your iMC-SMB, if large
-enough, can be in a separate module calling into sb_edac.
+Yes.
+
+> 
+> I'm not sure I understand how this helps. ghes_edac seems to just be 
+> populating this based on dmi, which if I'm not mistaken, can be obtained 
+> in userspace (mcelog as an example).
+> 
+> Also, on my system, all DIMMs are being reported under mc0. I doubt if 
+> the labels there are accurate.
+
+Yes, this is the current status of ghes_edac, where BIOS doesn't provide any
+reliable way to associate a given APEI report to a physical DIMM slot label.
+
+The plan is to add more logic there as BIOSes start to provide some reliable
+way to do such association. I discussed this subject with a few vendors
+while I was working at Red Hat.
+
+> >
+> > This is the only reason which justifies EDAC's existence. Naveen, can
+> > your BIOS directly report the silkscreen label of the DIMM in error?
+> > Generally, can any BIOS do that?
+> >
+> > More specifically, what are those gdata_fru_id and gdata_fru_text
+> > things?
+> 
+> My understanding was that this provides the DIMM serial number, but I'm 
+> double checking just to be sure.
+
+If it provides the DIMM serial number, then it is possible to improve the
+ghes_edac driver to associate them. One option could be to write an I2C
+driver and dig those information directly from the memories, although 
+doing that could be risky, as BIOS could also try to access the same I2C
+buses.
+
+> 
+> Thanks,
+> Naveen
+> 
+> >
+> > Because if it can, then having the memory error tracepoint come direct
+> > from APEI should be enough. The ghes_edac functionality could be then
+> > fallback for BIOSes which cannot report the silkscreen label and in such
+> > case I can imagine keeping both tracepoints, but disabling one of the
+> > two...
+> >
+> 
 
 
->>
->> Btw, we almost added a code there to also access the SMBUS, in order to
->> enumerate the memories. We ended by not adding, because we were afraid
->> or risking to race with BIOS. A race while access an I2C EEPROM memory
->> can be very bad, as a read operation might be understood as write, thus
->> destroying the DIMM configuration.
->
-> The controller is, indeed, amazingly racy.  But I have access to
-> (NDAed) reference code for this, and I need it for NVDIMM support,
-> which is a real thing that AFAICT Intel's trying to support, so this
-> stuff is really supposed to work.  (The reference code performs
-> undocumented incantations that I can't (yet?) talk about.)
->
-> Is there any way to get sb_edac to expose, for each DIMM, the physical
-> address range that the DIMM maps to (or at least the range that
-> contains all the interleaved bits of it).  That would give me a nice
-> sanity check to validate that the firmware isn't lying about the
-> NVDIMM aperture.
->
-> (Don't use my old i2c_imc submission as a valid sample -- it blows up
-> terribly when closed-loop thermal throttling is on.)
->
+-- 
 
-Closed Loop Thermal Throttling is where the BIOS constantly accesses
-the SMBus and where the race occurs. If you solved the problem with
-NDAed information, wouldn't it violate your NDA?
-
-Thanks
-Rui
-
-> --Andy
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-edac" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Cheers,
+Mauro
