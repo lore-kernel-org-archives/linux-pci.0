@@ -1,55 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:47350 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753266Ab3H0TA7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 15:00:59 -0400
-Received: by mail-pb0-f45.google.com with SMTP id mc17so5201879pbc.18
-        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 12:00:58 -0700 (PDT)
-Subject: [PATCH 5/5] PCI: Add offsets of PCIe capability registers
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lee Jones <lee.jones@linaro.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Date: Tue, 27 Aug 2013 13:00:56 -0600
-Message-ID: <20130827190056.16595.97322.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130827185731.16595.52864.stgit@bhelgaas-glaptop>
-References: <20130827185731.16595.52864.stgit@bhelgaas-glaptop>
+Received: from mga02.intel.com ([134.134.136.20]:11436 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756904Ab3HMVyj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 17:54:39 -0400
+From: "Skidmore, Donald C" <donald.c.skidmore@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type
+ 00 to	PF Nacked" messages
+Date: Tue, 13 Aug 2013 21:54:15 +0000
+Message-ID: <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
+References: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
+In-Reply-To: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These offsets are not used, and in some cases are completely reserved
-even in the spec, but I'm adding them for completeness just to match
-the diagrams in the spec, e.g., PCIe spec r3.0, sec 7.8.
+Hey Bjorn,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/uapi/linux/pci_regs.h |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Sorry for the slow reply I was on vacation last week and have been playing catch up on my email.  
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 28c83ec..baa7852 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -565,15 +565,18 @@
- #define  PCI_EXP_DEVCTL2_OBFF_MSGA_EN	0x2000	/* Enable OBFF Message type A */
- #define  PCI_EXP_DEVCTL2_OBFF_MSGB_EN	0x4000	/* Enable OBFF Message type B */
- #define  PCI_EXP_DEVCTL2_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
-+#define PCI_EXP_DEVSTA2		42	/* Device Status 2 */
- #define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
--#define PCI_EXP_LNKCAP2		44	/* Link Capability 2 */
-+#define PCI_EXP_LNKCAP2		44	/* Link Capabilities 2 */
- #define  PCI_EXP_LNKCAP2_SLS_2_5GB	0x00000002 /* Supported Speed 2.5GT/s */
- #define  PCI_EXP_LNKCAP2_SLS_5_0GB	0x00000004 /* Supported Speed 5.0GT/s */
- #define  PCI_EXP_LNKCAP2_SLS_8_0GB	0x00000008 /* Supported Speed 8.0GT/s */
- #define  PCI_EXP_LNKCAP2_CROSSLINK	0x00000100 /* Crosslink supported */
- #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
- #define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
-+#define PCI_EXP_SLTCAP2		52	/* Slot Capabilities 2 */
- #define PCI_EXP_SLTCTL2		56	/* Slot Control 2 */
-+#define PCI_EXP_SLTSTA2		58	/* Slot Status 2 */
- 
- /* Extended Capabilities (PCI-X 2.0 and Express) */
- #define PCI_EXT_CAP_ID(header)		(header & 0x0000ffff)
+We were unable to recreate your failure here locally so I have some additional questions.  First off you mentioned it was failing as far back as v3.9, was it ever working for you?  If so bisecting would be really helpful as I mentioned we have been unable to cause the failure in house.  If not could you see if the problem still occurs without the external Magma PCIe expansion chassis, this is of course assuming that you can plug the X540 into your system without it.
 
+One other note we are in the process of testing several patch (in house) that touch on the code you are seeing the error in.  I can't say they would have any effect on what you are seeing, since I'm not sure what that is, but may be worth testing once they get upstream.
+
+Thanks,
+-Don Skidmore <donald.c.skidmore@intel.com>
+	
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Friday, August 09, 2013 10:19 AM
+> To: e1000-devel@lists.sourceforge.net
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00 to
+> PF Nacked" messages
+> 
+> When I enable VFs via sysfs on an Intel X540-AT, I see an endless stream of
+> 
+>     ixgbevf 0000:08:10.2: Last Request of type 03 to PF Nacked
+> 
+> messages.  This on an HP z420 with the Intel X540-AT in external Magma PCIe
+> expansion chassis.  No cable is attached to the X540-AT.
+> 
+> ixgbe is built as a module and is auto-loaded during boot, with no VFs
+> enabled.  The "Last request Nacked" messages start when I enable VFs
+> with:
+> 
+>     # echo -n 8 > /sys/bus/pci/devices/0000:08:00.0/sriov_numvfs
+>     ixgbe 0000:08:00.0 eth1: SR-IOV enabled with 8 VFs
+>     pci 0000:08:10.0: [8086:1515] type 00 class 0x020000
+>     pci 0000:08:10.2: [8086:1515] type 00 class 0x020000
+>     ...
+>     ixgbevf: Intel(R) 10 Gigabit PCI Express Virtual Function Network Driver -
+> version 2.7.12-k
+>     ...
+>     ixgbevf 0000:08:10.2: Last Request of type 03 to PF Nacked
+>     ...
+> 
+> This happens with v3.11-rc4, v3.10, and v3.9, which is as far back as I checked.
+> Complete console log and lspci output are here:
+> 
+>     http://helgaas.com/linux/ixgbe/z420.log
+>     http://helgaas.com/linux/ixgbe/lspci
+> 
+> ------------------------------------------------------------------------------
+> Get 100% visibility into Java/.NET code with AppDynamics Lite!
+> It's a free troubleshooting tool designed for production.
+> Get down to code-level detail for bottlenecks, with <2% overhead.
+> Download for free and get started troubleshooting in minutes.
+> http://pubads.g.doubleclick.net/gampad/clk?id=48897031&iu=/4140/ostg.clk
+> trk
+> _______________________________________________
+> E1000-devel mailing list
+> E1000-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/e1000-devel
+> To learn more about Intel&#174; Ethernet, visit
+> http://communities.intel.com/community/wired
