@@ -1,219 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:40575 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752407Ab3HAKgx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 06:36:53 -0400
-From: Rui Wang <ruiv.wang@gmail.com>
-To: bhelgaas@google.com
-Cc: tony.luck@intel.com, chaohong.guo@intel.com,
-	gong.chen@linux.intel.com, rafael.j.wysocki@intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Rui Wang <rui.y.wang@intel.com>
-Subject: [RFC v2 2/3] I/O Hook: kernel interface to manage the hook
-Date: Thu,  1 Aug 2013 18:31:32 +0800
-Message-Id: <1375353093-3206-3-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1375353093-3206-1-git-send-email-rui.y.wang@intel.com>
-References: <1375353093-3206-1-git-send-email-rui.y.wang@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <520A6D98.9060204@linux.vnet.ibm.com>
+Date: Tue, 13 Aug 2013 23:02:08 +0530
+From: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@alien8.de>
+CC: Mauro Carvalho Chehab <m.chehab@samsung.com>, tony.luck@intel.com,
+	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
+	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic> <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com> <20130812125343.GE18018@pd.tnic> <520A16BD.30201@linux.vnet.ibm.com> <20130813124258.GC4077@pd.tnic>
+In-Reply-To: <20130813124258.GC4077@pd.tnic>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the following kernel functions used to add/delete/query Register
-Overrides, and to start/stop the I/O Hook:
-	hook_add_ovrd
-	hook_query_ovrd
-	hook_cleanup_ovrd
-	hook_start_ovrd
-	hook_stop_ovrd
-	hook_get_status
+On 08/13/2013 06:12 PM, Borislav Petkov wrote:
+> On Tue, Aug 13, 2013 at 04:51:33PM +0530, Naveen N. Rao wrote:
+>> You're right - my trace point makes all the data provided by apei
+>> as-is to userspace. However, ghes_edac seems to squash some of this
+>> data into a string when reporting through mc_event.
+>
+> Right, for systems which don't need EDAC to decode to the DIMM or for
+> which there are no EDAC drivers written, they could use a tracepoint
+> which carries APEI info as-is. Others, which need EDAC, should probably
+> use trace_mc_event and disable the APEI tracepoint.
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- drivers/misc/iohook/iohook.c |  151 ++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 151 insertions(+), 0 deletions(-)
+If I'm not mistaken, even for systems that have EDAC drivers, it looks 
+to me like EDAC can't really decode to the DIMM given what is provided 
+by the bios in the APEI report currently. If and when ghes_edac gains 
+this capability, users will have a choice between raw APEI reports vs. 
+edac processed ones.
 
-diff --git a/drivers/misc/iohook/iohook.c b/drivers/misc/iohook/iohook.c
-index e410ece..be671d7 100644
---- a/drivers/misc/iohook/iohook.c
-+++ b/drivers/misc/iohook/iohook.c
-@@ -6,6 +6,7 @@
- #include "iohook.h"
- 
- static DEFINE_RAW_SPINLOCK(io_hook_lock);
-+static DEFINE_RAW_SPINLOCK(engine_lock);
- 
- LIST_HEAD(ovrd_io_reg_map);
- LIST_HEAD(ovrd_mem_reg_map);
-@@ -14,6 +15,150 @@ LIST_HEAD(ovrd_pci_conf_reg_map);
- struct static_key ovrdhw_enabled = STATIC_KEY_INIT_FALSE;
- EXPORT_SYMBOL(ovrdhw_enabled);
- 
-+int	g_ovrd_on;
-+/* query a Register Override given spaceid and index */
-+struct reg_ovrd *hook_query_ovrd(int spaceid, int idx)
-+{
-+	struct list_head *reg_ovrd;
-+	struct reg_ovrd *ovrdreg, *regentry;
-+	unsigned long lock_flags = 0;
-+	int n = 0;
-+
-+	if (spaceid == OVRD_SPACE_MEM)
-+		reg_ovrd = &ovrd_mem_reg_map;
-+	else if (spaceid == OVRD_SPACE_IO)
-+		reg_ovrd = &ovrd_io_reg_map;
-+	else
-+		reg_ovrd = &ovrd_pci_conf_reg_map;
-+
-+	regentry = NULL;
-+	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
-+	list_for_each_entry(ovrdreg, reg_ovrd, node) {
-+		if (n++ >= idx) {
-+			regentry = ovrdreg;
-+			break;
-+		}
-+	}
-+	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
-+
-+	pr_info("hook_query_ovrd() returns %p, idx=%d\n",
-+		regentry, idx);
-+	return regentry;
-+
-+}
-+
-+/* delete all Register Overrides from one space (IO/mem/pciconf) */
-+void hook_cleanup_ovrd(int spaceid)
-+{
-+	struct list_head *tmp, *next, *ovrd_list;
-+
-+	if (spaceid == OVRD_SPACE_MEM)
-+		ovrd_list = &ovrd_mem_reg_map;
-+	else if (spaceid == OVRD_SPACE_IO)
-+		ovrd_list = &ovrd_io_reg_map;
-+	else
-+		ovrd_list = &ovrd_pci_conf_reg_map;
-+
-+	list_for_each_safe(tmp, next, ovrd_list) {
-+		struct reg_ovrd *ovrdreg =
-+		    list_entry(tmp, struct reg_ovrd, node);
-+		list_del(tmp);
-+		kfree(ovrdreg);
-+	}
-+}
-+
-+/* for pci config space, address is encoded per PCI_ENCODE_ADDR() */
-+void hook_add_ovrd(int spaceid, u64 address, u64 value, u64 mask,
-+		u32 length, u8 attrib)
-+{
-+	struct list_head *reg_ovrd;
-+	struct reg_ovrd *ovrdreg;
-+	unsigned long lock_flags = 0;
-+
-+	if (spaceid == OVRD_SPACE_MEM)
-+		reg_ovrd = &ovrd_mem_reg_map;
-+	else if (spaceid == OVRD_SPACE_IO)
-+		reg_ovrd = &ovrd_io_reg_map;
-+	else
-+		reg_ovrd = &ovrd_pci_conf_reg_map;
-+
-+	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
-+	list_for_each_entry(ovrdreg, reg_ovrd, node) {
-+		if (ovrdreg->address == address &&
-+			ovrdreg->attrib == attrib &&
-+			ovrdreg->length == length) {
-+			/* if already added the address, just change the bits */
-+			ovrdreg->bit_mask |= mask;
-+			ovrdreg->val |= value;
-+			pr_info("hook_add_ovrd(): 0x%llx already added, changed to 0x%llx, mask:0x%llx, attrib:0x%x\n",
-+				address, ovrdreg->val, ovrdreg->bit_mask,
-+				attrib);
-+			goto out;
-+		} else if (address >= ovrdreg->address &&
-+			address < ovrdreg->address + ovrdreg->length) {
-+			pr_info("hook_add_ovrd(): conflicting reg at 0x%llx, length:%llx, mask:0x%llx, attrib:0x%x\n",
-+				address, ovrdreg->val, ovrdreg->bit_mask,
-+				attrib);
-+			goto out;
-+		}
-+	}
-+
-+	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
-+
-+	ovrdreg = kmalloc(sizeof(struct reg_ovrd), GFP_ATOMIC);
-+	if (!ovrdreg) {
-+		pr_info("failed to alloc Reg Override!\n");
-+		return;
-+	}
-+
-+	ovrdreg->address = address;
-+	ovrdreg->val = value;
-+	ovrdreg->length = length;
-+	ovrdreg->bit_mask = mask;
-+	ovrdreg->attrib = attrib;
-+	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
-+	list_add_tail(&ovrdreg->node, reg_ovrd);
-+out:
-+	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
-+
-+}
-+
-+/* to start the hook */
-+void hook_start_ovrd(void)
-+{
-+	unsigned long lock_flags = 0;
-+
-+	raw_spin_lock_irqsave(&engine_lock, lock_flags);
-+	if (g_ovrd_on)
-+		goto done;
-+
-+	static_key_slow_inc(&ovrdhw_enabled);
-+	g_ovrd_on = 1;
-+done:
-+	raw_spin_unlock_irqrestore(&engine_lock, lock_flags);
-+
-+}
-+
-+/* to stop the hook */
-+void hook_stop_ovrd(void)
-+{
-+	unsigned long lock_flags = 0;
-+
-+	raw_spin_lock_irqsave(&engine_lock, lock_flags);
-+	if (!g_ovrd_on)
-+		goto done;
-+	g_ovrd_on = 0;
-+	static_key_slow_dec(&ovrdhw_enabled);
-+done:
-+	raw_spin_unlock_irqrestore(&engine_lock, lock_flags);
-+
-+}
-+
-+int hook_get_status(void)
-+{
-+	return g_ovrd_on;
-+}
-+
- /* len should only be 1, 2, 4, 8 */
- static int mem_read(u64 address, int len, void *data)
- {
-@@ -165,6 +310,9 @@ int read_ovrd_common(int spaceid, u64 address, int len, void *value, void *bus)
- 
- 	ret = -EINVAL;
- 
-+	if (!g_ovrd_on)
-+		return ret;
-+
- 	if (spaceid == OVRD_SPACE_MEM) {
- 		/* in the case of memory, 'address' is virtual */
- 		vaddr = address;
-@@ -295,6 +443,9 @@ int write_ovrd_common(int spaceid, u64 address, int len, void *data, void *bus)
- 
- 	ret = -EINVAL;
- 
-+	if (!g_ovrd_on)
-+		return ret;
-+
- 	if (spaceid == OVRD_SPACE_MEM) {
- 		ovrd_list = &ovrd_mem_reg_map;
- 	} else if (spaceid == OVRD_SPACE_IO) {
--- 
-1.7.5.4
+>
+> I think this should address Tony's concerns...
+>
+> Btw, you could call your TP something simpler like
+> trace_ghes_memory_event or so.
+
+I started out with a simpler name, but eventually decided to use the 
+name from the CPER record so it is clear what this event carries. I 
+think this will be better when adding further ghes events for say, 
+processor generic, PCIe and others.
+
+>
+> Btw 2, if GHES can report other types of errors (I'm pretty sure it can)
+> maybe we can use a single tracepoint called trace_ghes_event for any
+> types of errors coming out of it...
+
+Two problems with this:
+- One, the record size will be really big since the cper records for 
+each type of error is large.
+- Two, it may be better to filter events based on the type of error 
+(memory error, processor, pcie, ...) rather than subscribing for all 
+ghes error reports.
+
+>
+> Oh, and while at it, we probably need to start thinking of a mechanism
+> to disable all the error printing, i.e. cper_print_mem() and such,
+> if a userspace agent is listening in on the tracepoint and the error
+> information is carried through it to userspace.
+
+Do you mean conditionally print the cper records based on whether the 
+tracepoint is enabled or not? Wouldn't that be confusing if someone is 
+monitoring dmesg as well?
+
+
+Thanks,
+Naveen
 
