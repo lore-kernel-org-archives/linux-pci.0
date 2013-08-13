@@ -1,33 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:37744 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933270Ab3HNVp5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 17:45:57 -0400
-Received: by mail-vc0-f174.google.com with SMTP id gd11so6662vcb.19
-        for <linux-pci@vger.kernel.org>; Wed, 14 Aug 2013 14:45:57 -0700 (PDT)
-MIME-Version: 1.0
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Wed, 14 Aug 2013 14:45:37 -0700
-Message-ID: <CALCETrUHJg5qskadGG11fGvCVgbm=Zn0zuWv+CAgrEm9-Qcfdg@mail.gmail.com>
-Subject: PCI devices w/ multiple drivers at once? (sb_edac vs i2c-imc)
-To: linux-pci@vger.kernel.org, linux-edac@vger.kernel.org
-Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from top.free-electrons.com ([176.31.233.9]:58364 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751122Ab3HMIak (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 04:30:40 -0400
+Date: Tue, 13 Aug 2013 10:30:30 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
+Message-ID: <20130813103030.1e4156a1@skate>
+In-Reply-To: <20130813080956.GE9316@ulmo>
+References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
+	<1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
+	<20130813080956.GE9316@ulmo>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm working on a driver for the Sandy Bridge iMC SMBUS controller.  It
-(mostly) lives on pci device 15, function 0.  So my driver registers
-as an ordinary PCI driver for that device (8086.3ca8).
+Dear Thierry Reding,
 
-The problem is that sb_edac also registers for 8086.3ca8.  This means
-that the drivers conflict.  The sb_edac driver is actually driving
-functionality that's split between eleven (!) different pci devices,
-none of which overlaps the stuff I'm driving.
+On Tue, 13 Aug 2013 10:09:56 +0200, Thierry Reding wrote:
 
-What's the Right Way (tm) to handle this?  Should I just modify
-sb_edac to pick a different one of the 11 devices to probe?  Is there
-some standard way to handle this in the PCI code?
+> > +- reset-gpios: optional gpio to PERST#
+> > +- reset-delay-ms: delay in ms to wait after reset de-assertion
+> 
+> I remember some recent discussion about this, and we now have this reset
+> framework, so perhaps it makes more sense to use the reset binding for
+> this? Cc'ing Stephen (as part of the device tree bindings maintainers
+> team) who was involved in that recent reset bindings discussion.
 
---Andy
+I also thought about this, but the reset framework seems to be designed
+for "reset controller" IPs, i.e special IPs that are controlling reset
+signals. Looking at Documentation/devicetree/bindings/reset/reset.txt,
+I'm not sure to see how this would apply to GPIO-controlled reset
+signals.
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
