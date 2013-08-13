@@ -1,273 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CANVTcTb2+qX6XMBqrzeLho9yFS55AnztVJ85JBMuxjoH11qzaQ@mail.gmail.com>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-	<1376189294-32022-29-git-send-email-yinghai@kernel.org>
-	<CANVTcTYhSfU+Su9s1B+mTTBfgsZgqvQxHiTsLck1zT_vg1Cs4g@mail.gmail.com>
-	<CANVTcTb2+qX6XMBqrzeLho9yFS55AnztVJ85JBMuxjoH11qzaQ@mail.gmail.com>
-Date: Fri, 23 Aug 2013 23:34:21 +0800
-Message-ID: <CAOLK0pwQJVvcT5xA-+Ftb85FzbjHN-OZmXO=n7r4EWh4nFjSBA@mail.gmail.com>
-Subject: Re: [PATCH v4 28/28] PCI, x86, ACPI: get ioapic address from acpi device
-From: Lan Tianyu <lantianyu1986@gmail.com>
-To: rui wang <ruiv.wang@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:48771 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756677Ab3HMStb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 14:49:31 -0400
+Date: Tue, 13 Aug 2013 14:49:16 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	Thierry Reding <thierry.reding@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger kernel org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 0/5] ARM: dove: DT PCIe support
+Message-ID: <20130813184916.GG25111@titan.lakedaemon.net>
+References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/8/23 rui wang <ruiv.wang@gmail.com>:
-> On 8/22/13, rui wang <ruiv.wang@gmail.com> wrote:
->> On 8/11/13, Yinghai Lu <yinghai@kernel.org> wrote:
->>> Some ioapic controllers do not show up on pci config space,
->>> or pci device is there but no bar is used and is set by firmware in
->>> other non standard registers.
->>>
->>> We can get ioapic address from ACPI0009's _CRS.
->>>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> ---
->>>  drivers/pci/ioapic.c | 86
->>> +++++++++++++++++++++++++++++++++++++++++++---------
->>>  1 file changed, 71 insertions(+), 15 deletions(-)
->>>
->>> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
->>> index 60351b2..41f7c69 100644
->>> --- a/drivers/pci/ioapic.c
->>> +++ b/drivers/pci/ioapic.c
->>> @@ -32,6 +32,36 @@ struct acpi_pci_ioapic {
->>>  static LIST_HEAD(ioapic_list);
->>>  static DEFINE_MUTEX(ioapic_list_lock);
->>>
->>> +static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
->>> +{
->>> +    struct resource *res;
->>> +    struct acpi_resource_address64 addr;
->>> +    acpi_status status;
->>> +    unsigned long flags;
->>> +    u64 start, end;
->>> +
->>> +    status = acpi_resource_to_address64(acpi_res, &addr);
->
-> I worked around the problem by replacing acpi_resource_to_address64()
-> with resource_to_addr().  But resource_to_addr() is a static function
-> in arch/x86/pci/acpi.c, not very convenient to use. Here's what I did:
->
+On Tue, Aug 13, 2013 at 02:25:19PM +0200, Sebastian Hesselbarth wrote:
+> This patch set adds support for the PCIe controllers found on Marvell
+> Dove SoCs. It depends on mvebu-pci patches sent by Thomas Petazzoni.
+> The ARM Dove related patches have already been taken by Jason Cooper
+> and have been removed from v2 of this patch set. Changelog is added
+> to the individual patch emails.
+> 
+> Patches 1 and 2 fix some minor issues with pci-mvebu by moving
+> clk_prepare_enable before accessing any controller registers and
+> counting sucessfully registered ports only.
+> 
+> Patch 3 converts pci-mvebu from subsys_initcall registration to
+> normal platform driver registration to allow it to fail with
+> EPROBE_DEFER later.
+> 
+> Patch 4 adds DT parsing for reset (PERST#) GPIO pins and delay to
+> wait for PCIe devices after reset de-assertion.
+> 
+> Patch 5 finally adds a compatible to pci-mvebu for Dove SoCs.
+> 
+> [Patch 6-9 have already been taken by Jason Cooper]
+> 
+> Sebastian Hesselbarth (5):
+>   PCI: mvebu: move clock enable before register access
+>   PCI: mvebu: increment nports only for registered ports
+>   PCI: mvebu: remove subsys_initcall
+>   PCI: mvebu: add support for reset on GPIO
+>   PCI: mvebu: add support for Marvell Dove SoCs
+> 
+>  .../devicetree/bindings/pci/mvebu-pci.txt          |    7 ++
+>  drivers/pci/host/Kconfig                           |    2 +-
+>  drivers/pci/host/pci-mvebu.c                       |   99 +++++++++++++-------
+>  3 files changed, 71 insertions(+), 37 deletions(-)
 
-Hi Rui&Yinghai:
-           How about using the following code to translate struct
- acpi_resource to struct resouce in this setup_res()?
+Ok, whole series applied to mvebu/dove_pcie-mbus-dt, which depends on
+mvebu/boards, mvebu/mbus_dt, and mvebu/msi_mvebu.
 
-         if (acpi_dev_resource_address_space(...)
-                || acpi_dev_resource_memory(..))
-              return AE_OK;
+sigh... if this branch makes it in, I'll be amazed*.  And someone will
+owe me a stiff drink.  Well, I'll take a drink in either case. :-P
 
+thx,
 
+Jason.
 
-
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index d641897..cb5940a 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -218,7 +218,7 @@ static void teardown_mcfg_map(struct pci_root_info *info)
->  }
->  #endif
->
-> -static acpi_status
-> +acpi_status
->  resource_to_addr(struct acpi_resource *resource,
->                         struct acpi_resource_address64 *addr)
->  {
-> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-> index 41f7c69..68d7395 100644
-> --- a/drivers/pci/ioapic.c
-> +++ b/drivers/pci/ioapic.c
-> @@ -40,7 +40,7 @@ static acpi_status setup_res(struct acpi_resource
-> *acpi_res, void *data)
->         unsigned long flags;
->         u64 start, end;
->
-> -       status = acpi_resource_to_address64(acpi_res, &addr);
-> +       status = resource_to_addr(acpi_res, &addr);
->         if (!ACPI_SUCCESS(status))
->                 return AE_OK;
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 94383a7..ae7f759 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -354,6 +354,10 @@ extern int unregister_acpi_notifier(struct
-> notifier_block *);
->
->  extern int register_acpi_bus_notifier(struct notifier_block *nb);
->  extern void unregister_acpi_bus_notifier(struct notifier_block *nb);
-> +extern acpi_status
-> +resource_to_addr(struct acpi_resource *resource,
-> +                        struct acpi_resource_address64 *addr);
-> +
->
-> Thanks
-> Rui
->
->
->>
->> The above function fails on my machine because it does not handle
->> Memory32Fixed resources. Is the following _CRS declaration allowed for
->> IOAPIC?
->>
->>             Device (APIC)
->>             {
->>                 Name (_HID, "ACPI0009")  // _HID: Hardware ID
->>                 Name (_CRS, ResourceTemplate ()  // _CRS: Current
->> Resource Settings
->>                 {
->>                     Memory32Fixed (ReadOnly,
->>                         0xFEC01000,         // Address Base
->>                         0x00001000,         // Address Length
->>                         )
->>                 })
->>                 Method(_GSB) {
->>                         return (0x18)
->>                 }
->>             }
->>
->>
->> Thanks
->> Rui
->>
->>> +    if (!ACPI_SUCCESS(status))
->>> +            return AE_OK;
->>> +
->>> +    if (addr.resource_type == ACPI_MEMORY_RANGE) {
->>> +            if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
->>> +                    return AE_OK;
->>> +            flags = IORESOURCE_MEM;
->>> +    } else
->>> +            return AE_OK;
->>> +
->>> +    start = addr.minimum + addr.translation_offset;
->>> +    end = addr.maximum + addr.translation_offset;
->>> +
->>> +    res = data;
->>> +    res->flags = flags;
->>> +    res->start = start;
->>> +    res->end = end;
->>> +
->>> +    return AE_OK;
->>> +}
->>> +
->>>  static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
->>>                               u32 *pgsi_base)
->>>  {
->>> @@ -54,33 +84,56 @@ static void handle_ioapic_add(acpi_handle handle,
->>> struct
->>> pci_dev **pdev,
->>>              return;
->>>
->>>      dev = acpi_get_pci_dev(handle);
->>> -    if (!dev)
->>> -            return;
->>> +    if (!dev || !pci_resource_len(dev, 0)) {
->>> +            struct acpi_device_info *info;
->>> +            char *hid = NULL;
->>> +
->>> +            status = acpi_get_object_info(handle, &info);
->>> +            if (ACPI_FAILURE(status))
->>> +                    goto exit_put;
->>> +            if (info->valid & ACPI_VALID_HID)
->>> +                    hid = info->hardware_id.string;
->>> +            if (!hid || strcmp(hid, "ACPI0009")) {
->>> +                    kfree(info);
->>> +                    goto exit_put;
->>> +            }
->>> +            kfree(info);
->>> +            memset(res, 0, sizeof(*res));
->>> +            acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
->>> +            if (!res->flags)
->>> +                    goto exit_put;
->>> +    }
->>>
->>>      acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
->>>
->>>      gsi_base = gsb;
->>>      type = "IOxAPIC";
->>> +    if (dev) {
->>> +            ret = pci_enable_device(dev);
->>> +            if (ret < 0)
->>> +                    goto exit_put;
->>>
->>> -    ret = pci_enable_device(dev);
->>> -    if (ret < 0)
->>> -            goto exit_put;
->>> -
->>> -    pci_set_master(dev);
->>> +            pci_set_master(dev);
->>>
->>> -    if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
->>> -            type = "IOAPIC";
->>> +            if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
->>> +                    type = "IOAPIC";
->>>
->>> -    if (pci_request_region(dev, 0, type))
->>> -            goto exit_disable;
->>> +            if (pci_resource_len(dev, 0)) {
->>> +                    if (pci_request_region(dev, 0, type))
->>> +                            goto exit_disable;
->>>
->>> -    res = &dev->resource[0];
->>> +                    res = &dev->resource[0];
->>> +            }
->>> +    }
->>>
->>> -    if (acpi_register_ioapic(handle, res->start, gsi_base))
->>> -            goto exit_release;
->>> +    if (acpi_register_ioapic(handle, res->start, gsi_base)) {
->>> +            if (dev)
->>> +                    goto exit_release;
->>> +            return;
->>> +    }
->>>
->>>      pr_info("%s %s %s at %pR, GSI %u\n",
->>> -            dev_name(&dev->dev), objname, type,
->>> +            dev ? dev_name(&dev->dev) : "", objname, type,
->>>              res, gsi_base);
->>>
->>>      *pdev = dev;
->>> @@ -100,6 +153,9 @@ static void handle_ioapic_remove(acpi_handle handle,
->>> struct pci_dev *dev,
->>>  {
->>>      acpi_unregister_ioapic(handle, gsi_base);
->>>
->>> +    if (!dev)
->>> +            return;
->>> +
->>>      pci_release_region(dev, 0);
->>>      pci_disable_device(dev);
->>>      pci_dev_put(dev);
->>> --
->>> 1.8.1.4
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-kernel"
->>> in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>> Please read the FAQ at  http://www.tux.org/lkml/
->>>
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-Best regards
-Tianyu Lan
+* because of the intricate dependencies, the changes are fine.
