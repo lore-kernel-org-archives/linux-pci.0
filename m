@@ -1,162 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:32965 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753419Ab3HVSSe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Aug 2013 14:18:34 -0400
-Received: by mail-ob0-f171.google.com with SMTP id tb18so4333437obb.16
-        for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2013 11:18:34 -0700 (PDT)
-Date: Thu, 22 Aug 2013 12:18:23 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
-	joe.jin@oracle.com
-Subject: Re: [PATCH v8 6/6] PCI: update device mps when doing pci hotplug
-Message-ID: <20130822181823.GA25721@google.com>
-References: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
- <1377141888-7000-7-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1377141888-7000-7-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Thierry Reding <treding@nvidia.com>
+Subject: [RFC 2/3] ARM: Introduce pci_common_exit()
+Date: Tue, 13 Aug 2013 13:12:25 +0200
+Message-Id: <1376392346-14127-3-git-send-email-treding@nvidia.com>
+In-Reply-To: <1376392346-14127-1-git-send-email-treding@nvidia.com>
+References: <1376392346-14127-1-git-send-email-treding@nvidia.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Joe]
+In order to support building PCI host drivers as modules, functionality
+is required to undo the steps performed by pci_common_init(). The PCI
+core provides much of the functionality already, so add a function that
+can be called by drivers to wrap the ARM specific bits.
 
-On Thu, Aug 22, 2013 at 11:24:48AM +0800, Yijing Wang wrote:
-> Currently we don't update device's mps value when doing
-> pci device hot-add. The hot-added device's mps will be set
-> to default value (128B). But the upstream port device's mps
-> may be larger than 128B which was set by firmware during
-> system bootup. In this case the new added device may not
-> work normally. This patch try to update the hot added device
-> mps equal to its parent mps, if device mpss < parent mps,
-> print warning.
-> 
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
-> Reported-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Jon Mason <jdmason@kudzu.us>
-> Cc: stable@vger.kernel.org # 3.4+
-> ---
->  drivers/pci/probe.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
->  1 files changed, 47 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 4afd158..06e88c5 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1602,6 +1602,43 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->  	return 0;
->  }
->  
-> +static int pcie_bus_update_set(struct pci_dev *dev, void *data)
-> +{
-> +	int mps, p_mps, mpss;
-> +	struct pci_dev *parent;
-> +
-> +	if (!pci_is_pcie(dev) || !dev->bus->self)
-> +		return 0;
-> +
-> +	parent = dev->bus->self;
-> +	mps = pcie_get_mps(dev);
-> +	p_mps = pcie_get_mps(dev->bus->self);
-> +
-> +	if (mps >= p_mps)
-> +		return 0;
-> +
-> +	/* we only update the device mps, unless its parent device is root port,
-> +	 * and it is the only slot directly connected to root port.
-> +	 */
-> +	mpss = 128 << dev->pcie_mpss;
-> +	if (mpss >= p_mps) {
-> +		pcie_write_mps(dev, p_mps);
-> +	} else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT) {
-> +		pcie_write_mps(parent, mpss);
-> +		pcie_write_mps(dev, mpss);
-> +	} else
-> +		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
-> +				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
-> +				mps, 128 << dev->pcie_mpss, p_mps);
-> +	return 0;
-> +}
-> +
-> +static void pcie_bus_update_setting(struct pci_bus *bus)
-> +{
-> +	if (bus->self->is_hotplug_bridge)
-> +		pci_walk_bus(bus, pcie_bus_update_set, NULL);
-> +}
-> +
->  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
->   * parents then children fashion.  If this changes, then this code will not
->   * work as designed.
-> @@ -1616,8 +1653,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus)
->  	if (!pci_is_pcie(bus->self))
->  		return;
->  
-> -	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
-> +	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
-> +		/* Sometimes we should update device mps here,
-> +		 * eg. after hot add, device mps value will be
-> +		 * set to default(128B), but the upstream port
-> +		 * mps value may be larger than 128B, if we do
-> +		 * not update the device mps, it maybe can not
-> +		 * work normally.
-> +		 */
-> +		pcie_bus_update_setting(bus);
+This patch does a number of things to achieve this: it adds a .nr field
+to struct pci_sys_data to keep track of the controller number that was
+used to initialize it during pci_common_init(). That field is passed to
+the new .teardown() callback during cleanup to undo what .setup() did.
 
-I think the strategy of updating the device MPS when possible makes
-sense, but I don't think we should do it in PCIE_BUS_TUNE_OFF mode.
-That mode is documented as "Disable PCIe MPS tuning and use the
-BIOS-configured MPS defaults."  This patch changes that to something
-like "Disable PCIe MPS tuning, except for hot-added devices" and there
-is no longer a way to tell Linux to never touch MPS.
+Furthermore the list of pci_sys_data structures setup can optionally be
+returned via the hw_pci structure's .sys field. If a driver initializes
+it, then it is assumed to be an empty list that pci_common_init() will
+append to. Otherwise the old behaviour of keeping a local list only is
+preserved.
 
-Eventually, I think the default mode should change to PCIE_BUS_SAFE,
-where Linux changes MPS settings at boot-time and at hotplug-time to
-make sure every device works.  (This mode assumes no peer-to-peer
-DMA.)  I know this was tried in the past, and we tripped over all
-sorts of issues, but it's not clear how many were problems with the
-Linux code and how many were unsolvable BIOS or platform issues.
+If a driver wants to support unloading, then it needs access to this
+list and pass it to pci_common_exit(). This will iterate over the list,
+call the new .teardown() callback and remove the root bus associated
+with each entry.
 
-Then we'd have these choices:
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ arch/arm/include/asm/mach/pci.h |  6 ++++++
+ arch/arm/kernel/bios32.c        | 29 ++++++++++++++++++++++++++---
+ 2 files changed, 32 insertions(+), 3 deletions(-)
 
-  PCIE_BUS_TUNE_OFF	Never touch MPS
-  PCIE_BUS_PEER2PEER	Set all MPS to 128, so peer-to-peer DMA works
-  PCIE_BUS_SAFE		Configure each device with largest safe MPS
-			(assumes no peer-to-peer DMA)
-  PCIE_BUS_PERFORMANCE	Use MRRS in addition to MPS
-			(assumes no peer-to-peer DMA)
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 454d642..d6c352a 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -25,6 +25,7 @@ struct hw_pci {
+ 	struct pci_ops	*ops;
+ 	int		nr_controllers;
+ 	void		**private_data;
++	struct list_head *sys;
+ 	int		(*setup)(int nr, struct pci_sys_data *);
+ 	struct pci_bus *(*scan)(int nr, struct pci_sys_data *);
+ 	void		(*preinit)(void);
+@@ -38,6 +39,7 @@ struct hw_pci {
+ 					  resource_size_t align);
+ 	void		(*add_bus)(struct pci_bus *bus);
+ 	void		(*remove_bus)(struct pci_bus *bus);
++	void		(*teardown)(int nr, struct pci_sys_data *);
+ };
+ 
+ /*
+@@ -49,6 +51,7 @@ struct pci_sys_data {
+ #endif
+ 	struct list_head node;
+ 	int		busnr;		/* primary bus number			*/
++	int		nr;		/* controller number			*/
+ 	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
+ 	unsigned long	io_offset;	/* bus->cpu IO mapping offset		*/
+ 	struct pci_bus	*bus;		/* PCI bus				*/
+@@ -67,6 +70,7 @@ struct pci_sys_data {
+ 					  resource_size_t align);
+ 	void		(*add_bus)(struct pci_bus *bus);
+ 	void		(*remove_bus)(struct pci_bus *bus);
++	void		(*teardown)(int nr, struct pci_sys_data *);
+ 	void		*private_data;	/* platform controller private data	*/
+ };
+ 
+@@ -84,6 +88,8 @@ static inline void pci_common_init(struct hw_pci *hw)
+ 	pci_common_init_dev(NULL, hw);
+ }
+ 
++void pci_common_exit(struct list_head *head);
++
+ /*
+  * Setup early fixed I/O mapping.
+  */
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 1ec9c87..6895520 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -475,11 +475,13 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 		sys->domain  = hw->domain;
+ #endif
+ 		sys->busnr   = busnr;
++		sys->nr      = nr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
+ 		sys->align_resource = hw->align_resource;
+ 		sys->add_bus = hw->add_bus;
+ 		sys->remove_bus = hw->remove_bus;
++		sys->teardown = hw->teardown;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
+ 		if (hw->private_data)
+@@ -517,18 +519,24 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+ {
+ 	struct pci_sys_data *sys;
+-	LIST_HEAD(head);
++	struct list_head *head;
++	LIST_HEAD(list);
++
++	if (hw->sys)
++		head = hw->sys;
++	else
++		head = &list;
+ 
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 	if (hw->preinit)
+ 		hw->preinit();
+-	pcibios_init_hw(parent, hw, &head);
++	pcibios_init_hw(parent, hw, head);
+ 	if (hw->postinit)
+ 		hw->postinit();
+ 
+ 	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
+ 
+-	list_for_each_entry(sys, &head, node) {
++	list_for_each_entry(sys, head, node) {
+ 		struct pci_bus *bus = sys->bus;
+ 
+ 		if (!pci_has_flag(PCI_PROBE_ONLY)) {
+@@ -555,6 +563,21 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+ 	}
+ }
+ 
++void pci_common_exit(struct list_head *head)
++{
++	struct pci_sys_data *sys, *tmp;
++
++	list_for_each_entry_safe(sys, tmp, head, node) {
++		if (sys->teardown)
++			sys->teardown(sys->nr, sys);
++
++		pci_stop_root_bus(sys->bus);
++		pci_remove_root_bus(sys->bus);
++		list_del(&sys->node);
++		kfree(sys);
++	}
++}
++
+ #ifndef CONFIG_PCI_HOST_ITE8152
+ void pcibios_set_master(struct pci_dev *dev)
+ {
+-- 
+1.8.3.4
 
-The hot-add issue [1] could be regarded as a BIOS bug -- the BIOS
-programmed a hotplug bridge with MPS=256.  A hot-added device powers
-up with MPS=128, so it's only safe for BIOS to set MPS=256 if the OS
-is smart enough to change the bridge MPS, the device MPS, or both, at
-hot-add time.  That doesn't seem like a good assumption for a BIOS to
-make.
-
-I think we should always *warn* about potential MPS issues, even in
-PCIE_BUS_TUNE_OFF mode.  That would help diagnose the hot-add issue as
-well as issues like the ones Joe Jin reported [2] and [3].
-
-I think what we should do is *always* call pcie_bus_configure_set(),
-no matter what mode we're in, but make pcie_bus_configure_set() smart
-enough to do different things (print warnings, adjust settings, do the
-stuff you added in pcie_bus_update_set(), etc.) depending on what mode
-we're in.
-
-Bjorn
-
->  		return;
-> +	}
->  
->  	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
->  	 * to be aware to the MPS of the destination.  To work around this,
-> -- 
-> 1.7.1
-> 
-> 
-
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=60671
-[2] http://lkml.kernel.org/r/4FFA9B96.6040901@oracle.com
-[3] http://lkml.kernel.org/r/509B5038.8090304@oracle.com
