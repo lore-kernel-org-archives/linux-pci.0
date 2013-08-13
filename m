@@ -1,138 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:46501 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1031006Ab3HIU1s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 16:27:48 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv9 09/10] PCI: mvebu: add support for MSI
-Date: Fri,  9 Aug 2013 22:27:14 +0200
-Message-Id: <1376080035-29344-10-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <520A1A2E.9080500@linux.vnet.ibm.com>
+Date: Tue, 13 Aug 2013 17:06:14 +0530
+From: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@alien8.de>
+CC: Mauro Carvalho Chehab <m.chehab@samsung.com>, tony.luck@intel.com,
+	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
+	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic> <20130812083355.47c1bae8@samsung.com> <20130812123813.GD18018@pd.tnic> <20130812114932.52bb0314@samsung.com> <20130812150424.GH18018@pd.tnic> <20130812142557.2a43f155@samsung.com> <20130812175631.GI18018@pd.tnic>
+In-Reply-To: <20130812175631.GI18018@pd.tnic>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds support for Message Signaled Interrupts in the
-Marvell PCIe host controller. The work is very simple: it simply gets
-a reference to the msi_chip associated to the PCIe controller thanks
-to the msi-parent DT property, and stores this reference in the
-pci_bus structure. This is enough to let the Linux PCI core use the
-functions of msi_chip to setup and teardown MSIs.
+On 08/12/2013 11:26 PM, Borislav Petkov wrote:
+> On Mon, Aug 12, 2013 at 02:25:57PM -0300, Mauro Carvalho Chehab wrote:
+>> Userspace still needs the EDAC sysfs, in order to identify how the
+>> memory is organized, and do the proper memory labels association.
+>>
+>> What edac_ghes does is to fill those sysfs nodes, and to call the
+>> existing tracing to report errors.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- .../devicetree/bindings/pci/mvebu-pci.txt          |  3 +++
- drivers/pci/host/pci-mvebu.c                       | 26 ++++++++++++++++++++++
- 2 files changed, 29 insertions(+)
+I suppose you're referring to the entries under /sys/devices/system/edac/mc?
 
-diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-index f8d4058..77e0ffe 100644
---- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-@@ -12,6 +12,8 @@ Mandatory properties:
- - device_type, set to "pci"
- - ranges: ranges for the PCI memory and I/O regions, as well as the
-   MMIO registers to control the PCIe interfaces.
-+- msi-parent: Link to the hardware entity that serves as the Message
-+  Signaled Interrupt controller for this PCI controller.
- 
- In addition, the Device Tree node must have sub-nodes describing each
- PCIe interface, having the following mandatory properties:
-@@ -46,6 +48,7 @@ pcie-controller {
- 	#size-cells = <2>;
- 
- 	bus-range = <0x00 0xff>;
-+	msi-parent = <&mpic>;
- 
- 	ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
- 		  0x82000000 0 0xd0042000 0xd0042000 0 0x00002000   /* Port 2.0 registers */
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 13a633b..5715a97 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -11,6 +11,7 @@
- #include <linux/clk.h>
- #include <linux/module.h>
- #include <linux/mbus.h>
-+#include <linux/msi.h>
- #include <linux/slab.h>
- #include <linux/platform_device.h>
- #include <linux/of_address.h>
-@@ -107,6 +108,7 @@ struct mvebu_pcie_port;
- struct mvebu_pcie {
- 	struct platform_device *pdev;
- 	struct mvebu_pcie_port *ports;
-+	struct msi_chip *msi;
- 	struct resource io;
- 	struct resource realio;
- 	struct resource mem;
-@@ -695,6 +697,12 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	return bus;
- }
- 
-+void mvebu_pcie_add_bus(struct pci_bus *bus)
-+{
-+	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	bus->msi = pcie->msi;
-+}
-+
- resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 					  const struct resource *res,
- 					  resource_size_t start,
-@@ -731,6 +739,7 @@ static void __init mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.map_irq        = mvebu_pcie_map_irq;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
-+	hw.add_bus        = mvebu_pcie_add_bus;
- 
- 	pci_common_init(&hw);
- }
-@@ -755,6 +764,21 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
- 	return devm_request_and_ioremap(&pdev->dev, &regs);
- }
- 
-+static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
-+{
-+	struct device_node *msi_node;
-+
-+	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
-+				    "msi-parent", 0);
-+	if (!msi_node)
-+		return;
-+
-+	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
-+
-+	if (pcie->msi)
-+		pcie->msi->dev = &pcie->pdev->dev;
-+}
-+
- static int __init mvebu_pcie_probe(struct platform_device *pdev)
- {
- 	struct mvebu_pcie *pcie;
-@@ -879,6 +903,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 		i++;
- 	}
- 
-+	mvebu_pcie_msi_enable(pcie);
-+
- 	mvebu_pcie_enable(pcie);
- 
- 	return 0;
--- 
-1.8.1.2
+I'm not sure I understand how this helps. ghes_edac seems to just be 
+populating this based on dmi, which if I'm not mistaken, can be obtained 
+in userspace (mcelog as an example).
+
+Also, on my system, all DIMMs are being reported under mc0. I doubt if 
+the labels there are accurate.
+
+>
+> This is the only reason which justifies EDAC's existence. Naveen, can
+> your BIOS directly report the silkscreen label of the DIMM in error?
+> Generally, can any BIOS do that?
+>
+> More specifically, what are those gdata_fru_id and gdata_fru_text
+> things?
+
+My understanding was that this provides the DIMM serial number, but I'm 
+double checking just to be sure.
+
+Thanks,
+Naveen
+
+>
+> Because if it can, then having the memory error tracepoint come direct
+> from APEI should be enough. The ghes_edac functionality could be then
+> fallback for BIOSes which cannot report the silkscreen label and in such
+> case I can imagine keeping both tracepoints, but disabling one of the
+> two...
+>
 
