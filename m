@@ -1,101 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:55677 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758247Ab3HBJds (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 05:33:48 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 2 Aug 2013 19:23:14 +1000
-Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5DDF92BB004F
-	for <linux-pci@vger.kernel.org>; Fri,  2 Aug 2013 19:33:42 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r729XWau10748278
-	for <linux-pci@vger.kernel.org>; Fri, 2 Aug 2013 19:33:32 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r729Xf1D009849
-	for <linux-pci@vger.kernel.org>; Fri, 2 Aug 2013 19:33:42 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linuxram@us.ibm.com, shangw@linux.vnet.ibm.com,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH 4/4] PCI: fix the io resource alignment calculation in pbus_size_io()
-Date: Fri,  2 Aug 2013 17:31:06 +0800
-Message-Id: <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx2.parallels.com ([199.115.105.18]:33324 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757021Ab3HMVxP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 17:53:15 -0400
+From: James Bottomley <jbottomley@parallels.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Chris Metcalf <cmetcalf@tilera.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"adam radford" <aradford@gmail.com>
+Subject: Re: [PATCH v2] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
+Date: Tue, 13 Aug 2013 21:53:11 +0000
+Message-ID: <1376430790.3467.85.camel@dabdike.int.hansenpartnership.com>
+References: <CAErSpo6SzUF44pk3HVyR5UUN0BJUHUz+Z5egWKCoGG70VuB6wg@mail.gmail.com>
+	 <520A5B01.2010207@tilera.com>
+	 <CAErSpo4sFPiuPLboJ_wsg2cketUaciP7EgmufJmuEEryJmDW7Q@mail.gmail.com>
+In-Reply-To: <CAErSpo4sFPiuPLboJ_wsg2cketUaciP7EgmufJmuEEryJmDW7Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In commit 462d9303 ("PCI: Align P2P windows using pcibios_window_alignment()"),
-it introduce a new method to calculate the window alignment of P2P bridge.
-
-When the io_window_1k is set,  the calculation for the io resource alignment
-is different from the original one. In the original logic before 462d9303,
-the alignment is no bigger than 4K even the io_window_1k is set. The logic
-introduced in 462d9303 will limit the alignment to 1k in this case.
-
-This patch fix this issue.
-
-Here is an example for this case.
-
-Assume:
-        1. pcibios_window_alignment() return 1.
-        2. window_alignment() return PCI_P2P_DEFAULT_IO_ALIGN_1K.
-        3. one of the child device has an IO resource with size of 2K.
-
-Result comparison:
-
-                    Before 462d9303             After 462d9303
-    min_align       1k                          1k
-                                        |
-                             after loop |
-                                        V
-    min_align       2k                          2k
-                                        |
-                         check boundary |
-                                        V
-    min_align       2k                          1k
-
-After applying the change:
-
-Result comparison:
-
-                    with  462d9303             with this patch
-    min_align       1k                          1k
-    io_align        1k                          4k
-                                        |
-                             after loop |
-                                        V
-    min_align       2k                          2k
-    io_align        1k                          4k
-                                        |
-                         check boundary |
-                                        V
-    min_align       1k                          2k
-    io_align        1k                          1k
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/setup-bus.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d4f1ad9..6c111e9 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -755,6 +755,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
-  		return;
- 
- 	io_align = min_align = window_alignment(bus, IORESOURCE_IO);
-+	/* Don't exceed 4KiB for windows requesting 1KiB alignment */
-+	if (bus->self->io_window_1k && io_align == PCI_P2P_DEFAULT_IO_ALIGN_1K)
-+		io_align = PCI_P2P_DEFAULT_IO_ALIGN;
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
--- 
-1.7.5.4
-
+T24gVHVlLCAyMDEzLTA4LTEzIGF0IDE0OjMwIC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
+PiBbK2NjIEphbWVzIGluIGNhc2UgaGUgaGFzIG9waW5pb25zIG9uIHRoZSBETUEgbWFzayBxdWVz
+dGlvbl0NCj4gDQo+IE9uIFR1ZSwgQXVnIDEzLCAyMDEzIGF0IDEwOjEyIEFNLCBDaHJpcyBNZXRj
+YWxmIDxjbWV0Y2FsZkB0aWxlcmEuY29tPiB3cm90ZToNCj4gPiAoVHJpbW1pbmcgdGhlIHF1b3Rl
+ZCBtYXRlcmlhbCBhIGxpdHRsZSB0byB0cnkgdG8ga2VlcCB0aGlzIGVtYWlsIHVuZGVyIGNvbnRy
+b2wuKQ0KPiA+DQo+ID4gT24gOC8xMi8yMDEzIDQ6NDIgUE0sIEJqb3JuIEhlbGdhYXMgd3JvdGU6
+DQo+ID4+IE9uIE1vbiwgQXVnIDEyLCAyMDEzIGF0IDE6NDIgUE0sIENocmlzIE1ldGNhbGYgPGNt
+ZXRjYWxmQHRpbGVyYS5jb20+IHdyb3RlOg0KPiA+Pj4gT24gOC85LzIwMTMgNjo0MiBQTSwgQmpv
+cm4gSGVsZ2FhcyB3cm90ZToNCj4gPj4+PiBPSywgc28gcGh5c2ljYWwgbWVtb3J5IGluIHRoZSBb
+M0dCLDRHQl0gcmFuZ2UgaXMgdW5yZWFjaGFibGUgdmlhIERNQQ0KPiA+Pj4+IGFzIHlvdSBkZXNj
+cmliZS4gIEFuZCBldmVuIGlmIERNQSAqY291bGQqIHJlYWNoIGl0LCB0aGUgQ1BVIGNvdWxkbid0
+DQo+ID4+Pj4gc2VlIGl0IGJlY2F1c2UgQ1BVIGFjY2Vzc2VzIHRvIHRoYXQgcmFuZ2Ugd291bGQg
+Z28gdG8gUENJIGZvciB0aGUNCj4gPj4+PiBtZW1vcnktbWFwcGVkIEJBUiBzcGFjZSwgbm90IHRv
+IG1lbW9yeS4NCj4gPj4+IFJpZ2h0LiAgVW5yZWFjaGFiaWxpdHkgaXMgb25seSBhIHByb2JsZW0g
+aWYgdGhlIERNQSB3aW5kb3cgb3ZlcmxhcHMgWzNHLCA0R10sIGFuZCBzaW5jZSB0aGUgNjQtYml0
+IERNQSB3aW5kb3cgaXMgWzFUQiwyVEJdLCB0aGUgd2hvbGUgUEEgc3BhY2UgY2FuIGJlIHJlYWNo
+ZWQgYnkgNjQtYml0IGNhcGFibGUgZGV2aWNlcy4NCj4gPj4gU28gdGhlIFswLTFUQl0gbWVtb3J5
+IHJhbmdlIChpbmNsdWRpbmcgWzNHQi00R0JdKSBpcyByZWFjaGFibGUgYnkNCj4gPj4gNjQtYml0
+IERNQSB0byBidXMgYWRkcmVzc2VzIFsxVEItMlRCXS4gIEJ1dCBpZiB0aGUgQ1BVIGNhbid0IHNl
+ZQ0KPiA+PiBwaHlzaWNhbCBtZW1vcnkgZnJvbSBbM0dCLTRHQl0sIGhvdyBpcyBpdCB1c2VmdWwg
+dG8gRE1BIHRoZXJlPw0KPiA+DQo+ID4gU29ycnksIGxvb2tpbmcgYmFjayBJIGNhbiBzZWUgdGhh
+dCB0aGUgdGhyZWFkIGlzIGEgbGl0dGxlIGNvbmZ1c2luZy4NCj4gPiBUaGUgQ1BVIGNhbiBzZWUg
+dGhlIHdob2xlIFBBIHNwYWNlLiBUaGUgY29uZnVzaW9uIGNvbWVzIGZyb20gdGhlIEJBUiBzcGFj
+ZQ0KPiA+IGluIFszR0IsIDRHQl0uDQo+ID4NCj4gPiBPbiBUaWxlLCB3ZSBkZWZpbmUgdGhlIENQ
+VSBtZW1vcnkgc3BhY2UgYXMgZm9sbG93czoNCj4gPg0KPiA+IFswLCAxVEJdOiBQQQ0KPiA+IFsx
+VEIgKyAzR0IsIDFUQiArIDRHQl06IEJBUiBzcGFjZSBmb3IgUkMgcG9ydCAwLCBpbiBbM0dCLCA0
+R0JdDQo+ID4gWzFUQiArIDNHQiArIE4qNEdCLCAxVEIgKyAoMSArIE4pKjRHQl06IEJBUiBzcGFj
+ZSBmb3IgUkMgcG9ydCBOLCBpbiBbM0dCLCA0R0JdDQo+ID4NCj4gPiBUaGUgbWFwcGluZyBmcm9t
+IFsxVEIgKyAzR0IgKyBOKjRHQiwgMVRCICsgKDEgKyBOKSo0R0JdIHRvIFszR0IsIDRHQl0gaXMg
+ZG9uZSBieSBhDQo+ID4gaGFyZHdhcmUgUElPIHJlZ2lvbiwgd2hpY2ggZ2VuZXJhdGVzIFBDSSBi
+dXMgYWRkcmVzc2VzIGluIFszR0IsIDRHQl0gZm9yIE1NSU9zIHRvDQo+ID4gdGhlIEJBUiBzcGFj
+ZS4NCj4gDQo+IE9LLCBJIHRoaW5rIEkgZ2V0IGl0IG5vdy4gIENQVSBhZGRyZXNzIHNwYWNlOg0K
+PiAgIFswLCAxVEJdOiBwaHlzaWNhbCBtZW1vcnkNCj4gICBbMVRCICsgM0dCLCAxVEIgKyA0R0Jd
+OiB0cmFuc2xhdGVkIHRvIGJ1cyBhZGRyZXNzIFszR0IsIDRHQl0gdW5kZXIgUkMgcG9ydCAwDQo+
+ICAgWzFUQiArIDNHQiArIE4qNEdCLCAxVEIgKyAoMSArIE4pKjRHQl06IHRyYW5zbGF0ZWQgdG8g
+YnVzIGFkZHJlc3MNCj4gWzNHQiwgNEdCXSB1bmRlciBSQyBwb3J0IE4NCj4gDQo+IEJ1cyBhZGRy
+ZXNzIHNwYWNlOg0KPiAgIFswLCAzR0JdOiAzMi1iaXQgRE1BIHJlYWNoZXMgcGh5c2ljYWwgbWVt
+b3J5IFswLCAzR0JdDQo+ICAgWzNHQiwgNEdCXTogMzItYml0IERNQSAocGVlci10by1wZWVyIERN
+QSB1bmRlciBsb2NhbCBSQyBwb3J0LCBJIGd1ZXNzPykNCj4gICBbMVRCLCAyVEJdOiA2NC1iaXQg
+RE1BIG1hcHBlZCB2aWEgSU9NTVUgdG8gcGh5c2ljYWwgbWVtb3J5IFswLCAxVEJdDQo+IA0KPiBJ
+IGd1ZXNzIHRoZSBwcm9ibGVtIGlzIHRoYXQgMzItYml0IERNQSBjYW4ndCByZWFjaCBwaHlzaWNh
+bCBtZW1vcnkNCj4gWzNHQiwgNEdCXSwgc28geW91J3JlIHVzaW5nIGJvdW5jZSBidWZmZXJzIHNv
+IHRoZSBidXMgYWRkcmVzcyBpcyBpbg0KPiBbMCwgM0dCXS4gIFRoYXQgbWFrZXMgc2Vuc2UsIGFu
+ZCBJIGRvbid0IHNlZSBhbm90aGVyIHBvc3NpYmlsaXR5IG90aGVyDQo+IHRoYW4ganVzdCB0aHJv
+d2luZyBhd2F5IHRoZSBbM0dCLCA0R0JdIHJhbmdlIGJ5IGxlYXZpbmcgaXQgb3V0IG9mIHRoZQ0K
+PiBrZXJuZWwgYWxsb2NhdG9yIGFsdG9nZXRoZXIsIG9yIHVzaW5nICBoYXJkd2FyZSAod2hpY2gg
+dGlsZWd4IHByb2JhYmx5DQo+IGRvZXNuJ3QgaGF2ZSkgdG8gcmVtYXAgaXQgc29tZXdoZXJlIGVs
+c2UuDQoNClRoaXMgaXMgcmVtYXJrYWJseSBmYW1pbGlhci4gIEkgdGhpbmsgYWxtb3N0IGV2ZXJ5
+IHN5c3RlbSBvbiBlYXJ0aCBoYXMgYQ0KY29uZmlndXJhdGlvbiBzaW1pbGFyIHRvIHRoaXMuICBP
+biBQQVJJU0MsIHRoZSB0b3AgMjU2TUIgb2YgbWVtb3J5IG9uIGENCjMyIGJpdCBzeXN0ZW0gaXMg
+cmVzZXJ2ZWQgZm9yIEkvTyBhY2Nlc3MgYW5kIGlzIGRlc2lnbmF0ZWQgYXMgIkYgU3BhY2UiLg0K
+DQpXaGF0IGlzIHVudXN1YWwgaXMgdGhhdCB5b3Ugc2VlbSB0byBoYXZlIHJlc3BvbmRpbmcgbWVt
+b3J5IGJlaGluZCB0aGUgRg0KU3BhY2Ugd2hpY2ggaXMgYWNjZXNzaWJsZSB0byBzb21lIGJ1cyBl
+bnRpdGllcy4gIE9uIFBBUklTQyAzMiBiaXQsIHRoZQ0KbWVtb3J5IGlzIGp1c3QgbG9zdCAoaW5h
+Y2Nlc3NpYmxlKSBvbiA2NCBiaXQsIGl0J3MgcmVtYXBwZWQgYWJvdmUgMzJHQg0KKGFuZCB0aGUg
+bG93IEYgU3BhY2Ugd2luZG93IGV4cGFuZGVkIHRvIDFHQikuDQoNCj4gU28gaXQgc2VlbXMgbGlr
+ZSBqdXN0IGEgcXVlc3Rpb24gb2YgaG93IHlvdSB3cmFwIHRoaXMgYWxsIHVwIGluDQo+IGRtYV9v
+cHMsIGFuZCAqdGhhdCogaXMgYWxsIGFyY2ggc3R1ZmYgdGhhdCBJIGRvbid0IGhhdmUgYW4gb3Bp
+bmlvbiBvbi4NCj4gDQo+ID4+PiBVbmZvcnR1bmF0ZWx5LCB0aGUgTWVnYXJhaWQgZHJpdmVyIGRv
+ZXNu4oCZdCBldmVuIGNhbGwgcGNpX3NldF9jb25zaXN0ZW50X2RtYV9tYXNrKGRldiwgRE1BX0JJ
+VF9NQVNLKDMyKSkuDQo+ID4+IElmIHRoZSBNZWdhcmFpZCBkcml2ZXIgbmVlZHMgdGhhdCBjYWxs
+LCBidXQgaXQncyBtaXNzaW5nLCB3aHkgd291bGRuJ3QNCj4gPj4gd2UganVzdCBhZGQgaXQ/DQo+
+ID4NCj4gPiBUaGUgTWVnYXJhaWQgZHJpdmVyIGRvZXNu4oCZdCBzdHJpY3RseSBuZWVkIHRoYXQg
+Y2FsbCBvbiBvdGhlciBwbGF0Zm9ybXMsIGJlY2F1c2UNCj4gPiBieSBkZWZhdWx0IHRoZSBkZXZp
+Y2UgY29oZXJlbnRfZG1hX21hc2sgaXMgRE1BX0JJVF9NQVNLKDMyKSBhbmQgdGhlIGNvbnNpc3Rl
+bnQNCj4gPiBtZW1vcnkgcG9vbCBkb2VzbuKAmXQgY29tZSBmcm9tIHRoZSBib3VuY2UgYnVmZmVy
+cyBvbiBtb3N0IG90aGVyIHBsYXRmb3Jtcy4NCj4gPg0KPiA+IE9mIGNvdXJzZSwgZm9yIHRoZSBz
+YWtlIG9mIGNvcnJlY3RuZXNzLCB0aGlzIGNhbGwgc2hvdWxkIGJlIGFkZGVkIGFjcm9zcyBhbGwg
+cGxhdGZvcm1zLg0KPiA+IC4uLg0KPiANCj4gPiBXaGF0IGlzIHVuaXF1ZSBhYm91dCBUaWxlIGlz
+IHRoYXQgdGhlIFBDSSBkcml2ZXJzIG11c3QgZXhwbGljaXRseSBkZWNsYXJlDQo+ID4gaXRzIERN
+QSBjYXBhYmlsaXR5IGJ5IGNhbGxpbmcgcGNpX3NldF9kbWFfbWFzaygpIGFuZCBwY2lfc2V0X2Nv
+bnNpc3RlbnRfZG1hX21hc2soKS4NCj4gDQo+IEl0IGxvb2tzIGxpa2UgdGhlIHJlYXNvbiB5b3Ug
+bmVlZCBkcml2ZXJzIHRvIGV4cGxpY2l0bHkgY2FsbA0KPiBwY2lfc2V0X2RtYV9tYXNrKCkgYW5k
+IHBjaV9zZXRfY29uc2lzdGVudF9kbWFfbWFzaygpIGlzIGJlY2F1c2UgeW91DQo+IGhhdmUgaG9v
+a3MgaW4gdGhvc2UgZnVuY3Rpb25zIHRvIHR3ZWFrIHRoZSBkbWFfb3BzLCBldmVuIHRob3VnaCB0
+aGUNCj4gbWFzayBpdHNlbGYgbWlnaHQgbm90IGJlIGNoYW5nZWQuDQo+IA0KPiBUaGF0IGRvZXNu
+J3Qgc291bmQgbGlrZSBhIHJvYnVzdCBzb2x1dGlvbjogd2UgaGF2ZSB3ZWxsLWtub3duIGRlZmF1
+bHRzDQo+IGZvciB0aGUgbWFzayBzaXplcywgYW5kIEkgZG9uJ3QgdGhpbmsgaXQncyByZWFzb25h
+YmxlIHRvIGV4cGVjdA0KPiBkcml2ZXJzIHRvIGV4cGxpY2l0bHkgc2V0IHRoZSBtYXNrIGV2ZW4g
+aWYgdGhleSBhcmUgaGFwcHkgd2l0aCB0aGUNCj4gZGVmYXVsdHMgKHRob3VnaCBEb2N1bWVudGF0
+aW9uL0RNQS1BUEktSE9XVE8udHh0IGRvZXMgc2F5IHRoYXQgYmVpbmcNCj4gZXhwbGljaXQgaXMg
+Z29vZCBzdHlsZSkuICBJJ20gYWZyYWlkIHlvdSdsbCBqdXN0IGtlZXAgdHJpcHBpbmcgb3Zlcg0K
+PiBkcml2ZXJzIHRoYXQgZG9uJ3Qgd29yayBvbiB0aWxlZ3ggYmVjYXVzZSB0aGV5IGRvbid0IHNl
+dCB0aGUgbWFzay4NCg0KUmlnaHQsIGl0J3Mgbm90IGEgcm9idXN0IHNvbHV0aW9uIGF0IGFsbC4g
+IEEgRE1BIG1hc2sgaXMganVzdCB0aGF0OiBhbg0KYWNjZXNzaWJpbGl0eSBtYXNrLiAgVGhlIGZv
+dW5kaW5nIGFzc3VtcHRpb24gaXMgdGhhdCBhbiBhZGRyZXNzIGxpbmUgaXMNCmVpdGhlciBjb25u
+ZWN0ZWQgb3Igbm90LCB3aGljaCBpcyB3aHkgdGhlIG1hc2sgd29ya3MuICBXaGF0IHlvdSBoYXZl
+IGlzDQp0d28gZGlmZmVyZW50IGNsYXNzZXMgb2YgbWVtb3J5OiAwLTNHQiB3aGljaCBpcyB1c2Fi
+bGUgZm9yIEkvTyBhbmQgMy00R0INCndoaWNoIGlzbid0LiAgU3VyZWx5IHdoYXQgeW91IG5lZWQg
+dG8gZG8gaXMgaW1wbGVtZW50IFpPTkVfRE1BMzI/IHdoaWNoDQpzdHJldGNoZXMgZnJvbSAwLTNH
+Qiwgd2hpY2ggbWVhbnMgYWxsIGttYWxsb2NzIGluIHRoZSBkcml2ZXIgd2lsbCBiZSBpbg0KdGhl
+IHJpZ2h0IHJhbmdlLiAgVGhlbiB5b3UgbmVlZCBhIGJvdW5jZSBwZm4gYXQgM0dCIHdoaWNoIG1l
+YW5zIHRoYXQNCnVzZXIgc3BhY2Ugd2hpY2ggZ2V0cyB0aGUgMy00R0IgaXMgYm91bmNlZC4gIFRo
+ZXJlJ3MgYSBtYWdpYyBwZm4gaW4NCkJMS19CT1VOQ0VfSElHSCB0aGF0IHdhcyBkZXNpZ25lZCBm
+b3IgdGhpcywgYnV0IEknbSBub3Qgc3VyZSB0aGUgZGVzaWduDQpjb250ZW1wbGF0ZWQgQkxLX0JP
+VU5DRV9ISUdIIGJlaW5nIGRpZmZlcmVudCBmb3IgNjQgYW5kIDMyIGJpdC4NCg0KSmFtZXMNCg0K
