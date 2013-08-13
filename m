@@ -1,49 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34715 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956Ab3HKCsf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:48:35 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+Received: from smtp.codeaurora.org ([198.145.11.231]:37513 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756428Ab3HMA4i convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 20:56:38 -0400
+Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
+Mime-Version: 1.0 (Apple Message framework v1283)
+Content-Type: text/plain; charset=us-ascii
+From: Kumar Gala <galak@codeaurora.org>
+In-Reply-To: <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
+Date: Mon, 12 Aug 2013 19:56:33 -0500
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 03/28] genirq: Do not free unallocated irq descriptors
-Date: Sat, 10 Aug 2013 19:47:49 -0700
-Message-Id: <1376189294-32022-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Message-Id: <BA285A30-3E38-4F7A-BD5E-3271AD1A46BE@codeaurora.org>
+References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com> <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hot-added interrupt controllers can reserve a range of interrupt
-numbers, but only allocate some of them. To simplify the release on
-hot-remove allow them to iterate over the reserved range, let the
-free_desc() code return early when the descriptor does not exist
 
--v2: changelog from tglx
+On Aug 12, 2013, at 1:46 PM, Sebastian Hesselbarth wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- kernel/irq/irqdesc.c | 3 +++
- 1 file changed, 3 insertions(+)
+> This patch adds a check for DT passed reset-gpios property and deasserts/
+> asserts reset pin on probe/remove with configurable delay. Corresponding
+> binding documentation is also updated.
+> 
+> Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+> ---
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Jason Cooper <jason@lakedaemon.net>
+> Cc: Andrew Lunn <andrew@lunn.ch>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Cc: devicetree@vger.kernel.org
+> Cc: linux-doc@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+> .../devicetree/bindings/pci/mvebu-pci.txt          |    2 ++
+> drivers/pci/host/pci-mvebu.c                       |   33 +++++++++++++++++++-
+> 2 files changed, 34 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+> index 638673a..f2fa261 100644
+> --- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+> @@ -76,6 +76,8 @@ and the following optional properties:
+> - marvell,pcie-lane: the physical PCIe lane number, for ports having
+>   multiple lanes. If this property is not found, we assume that the
+>   value is 0.
+> +- reset-gpios: optional gpio to PERST#
+> +- reset-delay-ms: delay in ms to wait after reset de-assertion
 
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 1166545..bbf0601 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -165,6 +165,9 @@ static void free_desc(unsigned int irq)
- {
- 	struct irq_desc *desc = irq_to_desc(irq);
- 
-+	if (!desc)
-+		return;
-+
- 	unregister_irq_proc(irq, desc);
- 
- 	mutex_lock(&sparse_irq_lock);
--- 
-1.8.1.4
+Both of these should probably be marvell,reset...
+
+Does reset-delay-ms vary per board?  I can't remember where the discussion got to about configuration info.
+
+> 
+> Example:
+
+It's usually good to update example to show all optional properties.
+
+- k
+--
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
