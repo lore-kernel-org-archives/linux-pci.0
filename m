@@ -1,88 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:42728 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755149Ab3H2Rkz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 13:40:55 -0400
-Received: by mail-ob0-f172.google.com with SMTP id er7so815769obc.17
-        for <linux-pci@vger.kernel.org>; Thu, 29 Aug 2013 10:40:55 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 13 Aug 2013 20:10:04 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130813181004.GF4077@pd.tnic>
+References: <20130808163822.67e0828a@samsung.com>
+ <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com>
+ <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812125343.GE18018@pd.tnic>
+ <520A16BD.30201@linux.vnet.ibm.com>
+ <20130813124258.GC4077@pd.tnic>
+ <520A6D98.9060204@linux.vnet.ibm.com>
+ <20130813175809.GE4077@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20130829082941.GA11203@jtlinux>
-References: <20130828133337.GA8544@jtlinux>
-	<CAErSpo5sa2cJXOUhfe5VDzxwabf0Um42ZfBwOMhF1TbwCW9G=w@mail.gmail.com>
-	<20130829082941.GA11203@jtlinux>
-Date: Thu, 29 Aug 2013 10:40:53 -0700
-Message-ID: <CAE9FiQXdgNptWeykPQCrMva2J3MMGUk=Pbw-o4tEq9uXQT0Z4Q@mail.gmail.com>
-Subject: Re: PCI reset problem
-From: Yinghai Lu <yinghai@kernel.org>
-To: Johannes Thumshirn <johannes.thumshirn@men.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 29, 2013 at 1:29 AM, Johannes Thumshirn
-<johannes.thumshirn@men.de> wrote:
-> On Wed, Aug 28, 2013 at 10:50:58AM -0600, Bjorn Helgaas wrote:
->> [+cc Yinghai]
-...
->> > I have a rather odd problem with a PCIe swicht/bridge which does not get
->> > enumerated correctly. If I issue _two_ manual rescans of the PCI bus via sysfs,
->> > everything get setup correctly. To work around the problem I decided to make a
-...
->> A rescan doesn't really do anything differently from the initial
->> boot-time scan.  Maybe there's an issue with the switch taking a long
->> time to respond after reset?  But that doesn't seem likely, because if
->> you do manual rescans via sysfs, that should give plenty of time and
->> you wouldn't have to do it *twice*.
+On Tue, Aug 13, 2013 at 06:05:02PM +0000, Luck, Tony wrote:
+> If the errors are serious (or a precursor to something serious) that
+> process may never get the chance to save the log.
 
-Can you confirm that? If you wait long enough, and you only need issue
-one rescan?
+What about sending tracepoint data over serial and/or network? I agree
+that dmesg over serial would be helpful but we need a similar sure-fire
+way for carrying error info out.
 
->>
->> Maybe there's some resource or bus number allocation issue such that
->> we don't even get down to the problem switch the first couple of
->> times?
->>
->> > Example:
->> > root@generic-powerpc:~# lspci -tv
->> > -[0000:00]---00.0-[01]--
->> > root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
->> > [...]
->> > root@generic-powerpc:~# lspci -tv
->> > -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]--
->> >                                            +-02.0-[04]--
->> >                                            \-03.0-[05]--
->> > root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
->> > [...]
->> > root@generic-powerpc:~# lspci -tv
->> > -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]----00.0  Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
->> >                                            +-02.0-[04]--
->> >                                            \-03.0-[05]--+-00.0  Pericom Semiconductor Device 400e
->> >                                                         +-00.1  Pericom Semiconductor Device 400e
->> >                                                         \-00.2  Pericom Semiconductor Device 400f
->>
->> I bet that's what's happening: the first lspci shows the 00:00.0
->> bridge leading only to bus 01.  The second lspci shows 00:00.0 leading
->> to [bus 01-05], so its bus number aperture has been reconfigured.
->>
->> On x86 the BIOS typically configures all the bridges so we can see all
->> the devices.  But it looks like your platform doesn't, and the Linux
->> paths that do similar configuration are not as well exercised.
->>
->
-> I'll have a look into my U-Boot again as well, maybe I can resolve it there.
->
->> Can you collect a complete dmesg log including initial boot and your
->> manual sysfs rescansand attach it to a new bugzilla report at
->> https://bugzilla.kernel.org/enter_bug.cgi?component=PCI&product=Drivers
->> ?  There might be some generic way we can fix this.
->>
->
-> I can do, though I have to say, it's a 3.8 Kernel from Freescale's SDK. I
-> don't really know if mainline wants to care about it.
+Which reminds me, pstore could also be a good thing to use, in addition.
+Only put error info there as it is limited anyway.
 
-let us know if you can test other kernel. If so, i would rebase pci-busn-alloc
-branch, so you could test on it.
+-- 
+Regards/Gruss,
+    Boris.
 
-Yinghai
+Sent from a fat crate under my desk. Formatting is fine.
+--
