@@ -1,79 +1,103 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: =?UTF-8?q?Radim=20Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Isaku Yamahata <yamahata@valinux.co.jp>
-Subject: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
-Date: Thu,  8 Aug 2013 15:57:07 +0200
-Message-Id: <1375970227-14794-1-git-send-email-rkrcmar@redhat.com>
+Message-ID: <520A5B01.2010207@tilera.com>
+Date: Tue, 13 Aug 2013 12:12:49 -0400
+From: Chris Metcalf <cmetcalf@tilera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	adam radford <aradford@gmail.com>
+Subject: Re: [PATCH v2] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
+References: <CAErSpo6SzUF44pk3HVyR5UUN0BJUHUz+Z5egWKCoGG70VuB6wg@mail.gmail.com>
+In-Reply-To: <CAErSpo6SzUF44pk3HVyR5UUN0BJUHUz+Z5egWKCoGG70VuB6wg@mail.gmail.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe switch can be connected directly to the PCIe root complex in QEMU;
-ASPM does not expect this topology and dereferences NULL pointer when
-initializing.
+(Trimming the quoted material a little to try to keep this email under control.)
 
-Downstream port can be also connected to the root complex without
-upstream one, so code checks for both, otherwise they dereference NULL
-on line drivers/pci/pcie/aspm.c:530 (alloc_pcie_link_state+13):
-  		parent = pdev->bus->parent->self->link_state;
-"pdev->bus->parent->self == NULL" if upstream port is connected directly
-to the root bus and "pdev->bus->parent == NULL" in the second case.
+On 8/12/2013 4:42 PM, Bjorn Helgaas wrote:
+> On Mon, Aug 12, 2013 at 1:42 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+>> On 8/9/2013 6:42 PM, Bjorn Helgaas wrote:
+>>> OK, so physical memory in the [3GB,4GB] range is unreachable via DMA
+>>> as you describe.  And even if DMA *could* reach it, the CPU couldn't
+>>> see it because CPU accesses to that range would go to PCI for the
+>>> memory-mapped BAR space, not to memory.
+>> Right.  Unreachability is only a problem if the DMA window overlaps [3G, 4G], and since the 64-bit DMA window is [1TB,2TB], the whole PA space can be reached by 64-bit capable devices.
+> So the [0-1TB] memory range (including [3GB-4GB]) is reachable by
+> 64-bit DMA to bus addresses [1TB-2TB].  But if the CPU can't see
+> physical memory from [3GB-4GB], how is it useful to DMA there?
 
-v1 -> v2: (https://lkml.org/lkml/2013/6/19/753)
- - Initialization is aborted in pcie_aspm_init_link_state, where other
-   special cases are being handled
- - pci_is_root_bus is used
- - Warning is printed
+Sorry, looking back I can see that the thread is a little confusing.
+The CPU can see the whole PA space. The confusion comes from the BAR space
+in [3GB, 4GB].
 
-Reproducer for "downstream -- root" and "downstream -- upstream -- root"
-(used qemu-kvm 1.5, q35 machine type might be missing on older ones)
+On Tile, we define the CPU memory space as follows:
 
-  for parent in pcie.0 upstream; do
-   qemu-kvm -m 128 -M q35 -nographic -no-reboot \
-     -device x3130-upstream,bus=pcie.0,id=upstream \
-     -device xio3130-downstream,bus=$parent,id=downstream,chassis=1 \
-     -device virtio-blk-pci,bus=downstream,id=virtio-zero,drive=zero \
-     -drive  file=/dev/zero,id=zero,format=raw \
-     -kernel bzImage -append "console=ttyS0 panic=3" # pcie_aspm=off
-  done
+[0, 1TB]: PA
+[1TB + 3GB, 1TB + 4GB]: BAR space for RC port 0, in [3GB, 4GB]
+[1TB + 3GB + N*4GB, 1TB + (1 + N)*4GB]: BAR space for RC port N, in [3GB, 4GB]
 
-ASPM in QEMU works if we connect upstream through root port
-  -device ioh3420,bus=pcie.0,id=root.0 \
-  -device x3130-upstream,bus=root.0,id=upstream
+The mapping from [1TB + 3GB + N*4GB, 1TB + (1 + N)*4GB] to [3GB, 4GB] is done by a
+hardware PIO region, which generates PCI bus addresses in [3GB, 4GB] for MMIOs to
+the BAR space.
 
-Signed-off-by: Radim Krƒçm√°≈ô <rkrcmar@redhat.com>
----
- drivers/pci/pcie/aspm.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+>> Unfortunately, the Megaraid driver doesnít even call pci_set_consistent_dma_mask(dev, DMA_BIT_MASK(32)).
+> If the Megaraid driver needs that call, but it's missing, why wouldn't
+> we just add it?
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 403a443..209cd7f 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -570,6 +570,15 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- 	    pdev->bus->self)
- 		return;
- 
-+	/* We require at least two ports between downstream and root bus */
-+	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM &&
-+	    (pci_is_root_bus(pdev->bus) ||
-+	     pci_is_root_bus(pdev->bus->parent))) {
-+		dev_warn(&pdev->dev, "ASPM disabled"
-+		                     " (connected directly to root bus)\n");
-+		return;
-+	}
-+
- 	down_read(&pci_bus_sem);
- 	if (list_empty(&pdev->subordinate->devices))
- 		goto out;
+The Megaraid driver doesnít strictly need that call on other platforms, because
+by default the device coherent_dma_mask is DMA_BIT_MASK(32) and the consistent
+memory pool doesnít come from the bounce buffers on most other platforms.
+
+Of course, for the sake of correctness, this call should be added across all platforms.
+
+>> More generally, your proposed DMA space suggestion isn't optimal because then the PA in [3GB, 4GB] canít be reached by 64-bit capable devices.
+> True.  I assumed it wasn't useful to DMA there because the CPU
+> couldn't see that memory anyway.  But apparently that assumption was
+> wrong?
+
+Correct.
+
+>>>> Given all of that, does this change make sense? I can certainly
+>>>> amend the commit description to include more commentary.
+>>> Obviously, I'm missing something.  I guess it really doesn't matter
+>>> because this is all arch code and I don't need to understand it, but
+>>> it does niggle at me somehow.
+>> I will add the following comment to <asm/pci.h> in hopes of making it a bit clearer:
+>>
+>>  /*
+>>  [...]
+>> + * This design lets us avoid the "PCI hole" problem where the host bridge
+>> + * won't pass DMA traffic with target addresses that happen to fall within the
+>> + * BAR space. This enables us to use all the physical memory for DMA, instead
+>> + * of wasting the same amount of physical memory as the BAR window size.
+> By "target addresses", I guess you mean the bus address, not the CPU
+> address, right?
+
+Correct.
+
+> The whole reason I'm interested in this is to figure out whether this
+> change is really specific to Tile, or whether other architectures need
+> similar changes.  I think host bridges on other arches behave the same
+> way (they don't allow DMA to addresses in the PCI hole), so I still
+> haven't figured out what is truly Tile-specific.
+
+What is unique about Tile is that the PCI drivers must explicitly declare
+its DMA capability by calling pci_set_dma_mask() and pci_set_consistent_dma_mask().
+
+This is why we must patch those drivers that donít call pci_set_consistent_dma_mask(),
+as is the case in the Megaraid driver.
+
+> I guess the ability for 64-bit DMA to reach the PCI hole (3GB-4GB)
+> might be unique, but it doesn't sound useful.
+
+It seems like other architectures might benefit from the approach we've taken
+with tile, but it's certainly disruptive enough that it might not be worth it.
+
 -- 
-1.8.3.1
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
 
