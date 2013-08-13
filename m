@@ -1,102 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:38904 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754128Ab3HETFF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 15:05:05 -0400
-Received: by mail-oa0-f53.google.com with SMTP id k18so7218435oag.12
-        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 12:05:04 -0700 (PDT)
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:34488 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758995Ab3HMUaw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 16:30:52 -0400
+Received: by mail-ie0-f176.google.com with SMTP id 9so11162711iec.21
+        for <linux-pci@vger.kernel.org>; Tue, 13 Aug 2013 13:30:51 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	<1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
-	<CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
-Date: Mon, 5 Aug 2013 12:05:03 -0700
-Message-ID: <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in pbus_size_io()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+In-Reply-To: <520A5B01.2010207@tilera.com>
+References: <CAErSpo6SzUF44pk3HVyR5UUN0BJUHUz+Z5egWKCoGG70VuB6wg@mail.gmail.com>
+ <520A5B01.2010207@tilera.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 13 Aug 2013 14:30:31 -0600
+Message-ID: <CAErSpo4sFPiuPLboJ_wsg2cketUaciP7EgmufJmuEEryJmDW7Q@mail.gmail.com>
+Subject: Re: [PATCH v2] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
+To: Chris Metcalf <cmetcalf@tilera.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Content-Type: multipart/mixed; boundary=089e0122a988660e5b04e337fc1b
+	Myron Stowe <myron.stowe@redhat.com>,
+	adam radford <aradford@gmail.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---089e0122a988660e5b04e337fc1b
-Content-Type: text/plain; charset=ISO-8859-1
+[+cc James in case he has opinions on the DMA mask question]
 
-On Mon, Aug 5, 2013 at 10:58 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Yinghai]
+On Tue, Aug 13, 2013 at 10:12 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+> (Trimming the quoted material a little to try to keep this email under control.)
 >
-> After the loop we have this (added by Yinghai in fd5913411):
+> On 8/12/2013 4:42 PM, Bjorn Helgaas wrote:
+>> On Mon, Aug 12, 2013 at 1:42 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+>>> On 8/9/2013 6:42 PM, Bjorn Helgaas wrote:
+>>>> OK, so physical memory in the [3GB,4GB] range is unreachable via DMA
+>>>> as you describe.  And even if DMA *could* reach it, the CPU couldn't
+>>>> see it because CPU accesses to that range would go to PCI for the
+>>>> memory-mapped BAR space, not to memory.
+>>> Right.  Unreachability is only a problem if the DMA window overlaps [3G, 4G], and since the 64-bit DMA window is [1TB,2TB], the whole PA space can be reached by 64-bit capable devices.
+>> So the [0-1TB] memory range (including [3GB-4GB]) is reachable by
+>> 64-bit DMA to bus addresses [1TB-2TB].  But if the CPU can't see
+>> physical memory from [3GB-4GB], how is it useful to DMA there?
 >
->     if (min_align > io_align)
->         min_align = io_align;
+> Sorry, looking back I can see that the thread is a little confusing.
+> The CPU can see the whole PA space. The confusion comes from the BAR space
+> in [3GB, 4GB].
 >
-> I don't understand this.  There are three cases:
+> On Tile, we define the CPU memory space as follows:
 >
-> 1) No downstream bridges: min_align <= 256 because I/O BARs are
-> limited to 256 bytes.
-> 2) All downstream bridges have 1K extension: min_align = 1024.
-> 3) At least one downstream bridge requires 4K alignment: min_align = 4096.
+> [0, 1TB]: PA
+> [1TB + 3GB, 1TB + 4GB]: BAR space for RC port 0, in [3GB, 4GB]
+> [1TB + 3GB + N*4GB, 1TB + (1 + N)*4GB]: BAR space for RC port N, in [3GB, 4GB]
 >
-> "io_align" is the minimum alignment enforced by the bridge.  This is
-> independent of any devices below the bridge, so "io_align >= 1024" in
-> all cases.
+> The mapping from [1TB + 3GB + N*4GB, 1TB + (1 + N)*4GB] to [3GB, 4GB] is done by a
+> hardware PIO region, which generates PCI bus addresses in [3GB, 4GB] for MMIOs to
+> the BAR space.
+
+OK, I think I get it now.  CPU address space:
+  [0, 1TB]: physical memory
+  [1TB + 3GB, 1TB + 4GB]: translated to bus address [3GB, 4GB] under RC port 0
+  [1TB + 3GB + N*4GB, 1TB + (1 + N)*4GB]: translated to bus address
+[3GB, 4GB] under RC port N
+
+Bus address space:
+  [0, 3GB]: 32-bit DMA reaches physical memory [0, 3GB]
+  [3GB, 4GB]: 32-bit DMA (peer-to-peer DMA under local RC port, I guess?)
+  [1TB, 2TB]: 64-bit DMA mapped via IOMMU to physical memory [0, 1TB]
+
+I guess the problem is that 32-bit DMA can't reach physical memory
+[3GB, 4GB], so you're using bounce buffers so the bus address is in
+[0, 3GB].  That makes sense, and I don't see another possibility other
+than just throwing away the [3GB, 4GB] range by leaving it out of the
+kernel allocator altogether, or using  hardware (which tilegx probably
+doesn't have) to remap it somewhere else.
+
+So it seems like just a question of how you wrap this all up in
+dma_ops, and *that* is all arch stuff that I don't have an opinion on.
+
+>>> Unfortunately, the Megaraid driver doesn’t even call pci_set_consistent_dma_mask(dev, DMA_BIT_MASK(32)).
+>> If the Megaraid driver needs that call, but it's missing, why wouldn't
+>> we just add it?
 >
-> Therefore, the "min_align = io_align" assignment only happens in case
-> 3, when a downstream bridge requires 4K alignment and *this* bridge
-> supports the 1K extension.  But that seems wrong.  The downstream
-> bridge's 4K requirement also applies to all bridges all the way
-> upstream.
+> The Megaraid driver doesn’t strictly need that call on other platforms, because
+> by default the device coherent_dma_mask is DMA_BIT_MASK(32) and the consistent
+> memory pool doesn’t come from the bounce buffers on most other platforms.
 >
-> It looks to me like this test should instead be:
->
->     if (min_align < io_align)
->         min_align = io_align;
+> Of course, for the sake of correctness, this call should be added across all platforms.
+> ...
 
-before my change, min_align always set to 4096.
-in the loop to get min_align, dev resource could have size bigger than
-4k, those resource will have SIZEALIGN, so final min_align could be
-more than 4096.
-so at last we cap it to 4096 again.
+> What is unique about Tile is that the PCI drivers must explicitly declare
+> its DMA capability by calling pci_set_dma_mask() and pci_set_consistent_dma_mask().
 
-But according to your findings: "I/O BARs are limited to 256 bytes"
-we should not worry about that.
+It looks like the reason you need drivers to explicitly call
+pci_set_dma_mask() and pci_set_consistent_dma_mask() is because you
+have hooks in those functions to tweak the dma_ops, even though the
+mask itself might not be changed.
 
-So we should just drop io_align and checking like attached patch.
-(min_align is already set to 1k or 4k before the looping.)
+That doesn't sound like a robust solution: we have well-known defaults
+for the mask sizes, and I don't think it's reasonable to expect
+drivers to explicitly set the mask even if they are happy with the
+defaults (though Documentation/DMA-API-HOWTO.txt does say that being
+explicit is good style).  I'm afraid you'll just keep tripping over
+drivers that don't work on tilegx because they don't set the mask.
 
-and that should solve Wei Yang's problem.
-
-Thanks
-
-Yinghai
-
---089e0122a988660e5b04e337fc1b
-Content-Type: application/octet-stream; name="fix_io_align_checking.patch"
-Content-Disposition: attachment; filename="fix_io_align_checking.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hk01tjcr0
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jIGIvZHJpdmVycy9wY2kvc2V0dXAt
-YnVzLmMKaW5kZXggNjRhN2RlMi4uZWRhYTllOCAxMDA2NDQKLS0tIGEvZHJpdmVycy9wY2kvc2V0
-dXAtYnVzLmMKKysrIGIvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTgxNiwxMiArODE2LDEy
-IEBAIHN0YXRpYyB2b2lkIHBidXNfc2l6ZV9pbyhzdHJ1Y3QgcGNpX2J1cyAqYnVzLCByZXNvdXJj
-ZV9zaXplX3QgbWluX3NpemUsCiAJc3RydWN0IHJlc291cmNlICpiX3JlcyA9IGZpbmRfZnJlZV9i
-dXNfcmVzb3VyY2UoYnVzLCBJT1JFU09VUkNFX0lPKTsKIAl1bnNpZ25lZCBsb25nIHNpemUgPSAw
-LCBzaXplMCA9IDAsIHNpemUxID0gMDsKIAlyZXNvdXJjZV9zaXplX3QgY2hpbGRyZW5fYWRkX3Np
-emUgPSAwOwotCXJlc291cmNlX3NpemVfdCBtaW5fYWxpZ24sIGlvX2FsaWduLCBhbGlnbjsKKwly
-ZXNvdXJjZV9zaXplX3QgbWluX2FsaWduLCBhbGlnbjsKIAogCWlmICghYl9yZXMpCiAgCQlyZXR1
-cm47CiAKLQlpb19hbGlnbiA9IG1pbl9hbGlnbiA9IHdpbmRvd19hbGlnbm1lbnQoYnVzLCBJT1JF
-U09VUkNFX0lPKTsKKwltaW5fYWxpZ24gPSB3aW5kb3dfYWxpZ25tZW50KGJ1cywgSU9SRVNPVVJD
-RV9JTyk7CiAJbGlzdF9mb3JfZWFjaF9lbnRyeShkZXYsICZidXMtPmRldmljZXMsIGJ1c19saXN0
-KSB7CiAJCWludCBpOwogCkBAIC04NDgsOCArODQ4LDggQEAgc3RhdGljIHZvaWQgcGJ1c19zaXpl
-X2lvKHN0cnVjdCBwY2lfYnVzICpidXMsIHJlc291cmNlX3NpemVfdCBtaW5fc2l6ZSwKIAkJfQog
-CX0KIAotCWlmIChtaW5fYWxpZ24gPiBpb19hbGlnbikKLQkJbWluX2FsaWduID0gaW9fYWxpZ247
-CisJaWYgKG1pbl9hbGlnbiA+IFBDSV9QMlBfREVGQVVMVF9JT19BTElHTikKKwkJbWluX2FsaWdu
-ID0gUENJX1AyUF9ERUZBVUxUX0lPX0FMSUdOOwogCiAJc2l6ZTAgPSBjYWxjdWxhdGVfaW9zaXpl
-KHNpemUsIG1pbl9zaXplLCBzaXplMSwKIAkJCXJlc291cmNlX3NpemUoYl9yZXMpLCBtaW5fYWxp
-Z24pOwo=
---089e0122a988660e5b04e337fc1b--
+Bjorn
