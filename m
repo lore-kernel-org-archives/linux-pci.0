@@ -1,55 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:23865 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759124Ab3HMRjD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 13:39:03 -0400
-From: "Luck, Tony" <tony.luck@intel.com>
-To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	Mauro Carvalho Chehab <m.chehab@samsung.com>
-CC: Borislav Petkov <bp@alien8.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Aristeu Rozanski Filho" <arozansk@redhat.com>
-Subject: RE: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Date: Tue, 13 Aug 2013 17:39:00 +0000
-Message-ID: <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
- <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com>
- <20130812114404.3bd64fa0@samsung.com> <520A1B5E.8040105@linux.vnet.ibm.com>
- <20130813094147.062317f8@concha.lan> <520A6A30.1030406@linux.vnet.ibm.com>
-In-Reply-To: <520A6A30.1030406@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:56532 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755707Ab3HMXBC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 19:01:02 -0400
+Received: by mail-ie0-f171.google.com with SMTP id 10so1976969ied.2
+        for <linux-pci@vger.kernel.org>; Tue, 13 Aug 2013 16:01:01 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <520AAADF.7080801@chelsio.com>
+References: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
+ <CAErSpo7=oBG3tJBpwscnL-4D-9kLhHUrQSZFrRRC4sBsT2_U2Q@mail.gmail.com> <520AAADF.7080801@chelsio.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 13 Aug 2013 17:00:40 -0600
+Message-ID: <CAErSpo7jt485wC15yV7eWs0XEs90xQyvPGNyMCUCK3qmQkk71Q@mail.gmail.com>
+Subject: Re: [PATCH V2 0/4] Enable bus master till the FLR completes for
+ Chelsio T4
+To: Casey Leedom <leedom@chelsio.com>
+Cc: Vipul Pandya <vipul@chelsio.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	tomreu@chelsio.com, divy@chelsio.com, dm@chelsio.com,
+	nirranjan@chelsio.com, eilong@broadcom.com,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> In the meantime, like Boris suggests, I think we can have a different 
-> trace event for raw APEI reports - userspace can use it as it pleases.
+On Tue, Aug 13, 2013 at 3:53 PM, Casey Leedom <leedom@chelsio.com> wrote:
 >
-> Once ghes_edac gets better, users can decide whether they want raw APEI 
-> reports or the EDAC-processed version and choose one or the other trace 
-> event.
+> On 08/12/13 14:17, Bjorn Helgaas wrote:
+>>
+>> On Tue, Aug 6, 2013 at 4:18 AM, Vipul Pandya <vipul@chelsio.com> wrote:
+>>>
+>>> This patch series adds device specific reset method for Chelsio T4
+>>> adapters.
+>>>
+>>> ...
+>>
+>> Applied to my "next" branch for v3.12, thanks!
+>>
+>
+>   Thanks Bjorn!  Do you have an idea when these commits will hit Linus'
+> repository and what their git commit IDs will be?  We have a customer using
+> SLES11sp2 who needs this and once the commits hit Linus' repository we'll
+> need to send a request to Novell to pull the change sets into SLES11sp2.
 
-It's cheap to add as many tracepoints as we like - but may be costly to maintain.
-Especially if we have to tinker with them later to adjust which things are logged,
-that puts a burden on user-space tools to be updated to adapt to the changing
-API.
+They should appear in Linus' repository a few days after the v3.11
+release, which will likely be in the first half of September.
 
-Mauro has written his user-space tool to process the ghes-edac events:
-  git://git.fedorahosted.org/rasdaemon.git
+The commit IDs should be the same as those in my repo, which you can
+see here: http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/vipul-chelsio-reset-v2
 
-Who is writing the user space tools to process the new apei tracepoints
-you want to add?
-
-I'm not opposed to these patches - just wondering who is taking the next step
-to make them useful.
-
--Tony
+Bjorn
