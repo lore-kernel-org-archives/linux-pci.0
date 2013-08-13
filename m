@@ -1,80 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:63153 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754074Ab3HELR1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 07:17:27 -0400
-Received: by mail-we0-f179.google.com with SMTP id t57so2373279wes.10
-        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 04:17:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAPWoNkJ3NKM-_g93LdRpjvdNFtLt-Pjpg4d4oEKC9CvkpzZ-Wg@mail.gmail.com>
-References: <CAPWoNkJ3NKM-_g93LdRpjvdNFtLt-Pjpg4d4oEKC9CvkpzZ-Wg@mail.gmail.com>
-From: Leon Ravich <lravich@gmail.com>
-Date: Mon, 5 Aug 2013 14:17:05 +0300
-Message-ID: <CAPWoNkLQUbFG2vZ7wqoqqVNj4uxKz3Fa_vsSH=1_TDD=XC1f2A@mail.gmail.com>
-Subject: Fwd: PCIE device errors after linux kernel upgrade
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:43916 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757422Ab3HMLAd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 07:00:33 -0400
+Message-ID: <1376391580.4039.8.camel@pizza.hi.pengutronix.de>
+Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
+From: Philipp Zabel <p.zabel@pengutronix.de>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Date: Tue, 13 Aug 2013 12:59:40 +0200
+In-Reply-To: <520A0D1D.4050609@gmail.com>
+References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
+	 <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
+	 <20130813080956.GE9316@ulmo> <20130813103030.1e4156a1@skate>
+	 <20130813100348.GA28762@ulmo> <520A0D1D.4050609@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all ,
-I am trying to upgrade ours embedded device (freescale powerPC P2020 cpu)
-linux kernel  , till now we used 2.6.32 I am trying to upgrade to 3.8.13 .
-I took the source from freescale git:
-git://git.freescale.com/ppc/sdk/linux.git
+Hi Sebastian,
 
-on our embedded device we have an FPGA connected through PCIE .
+Am Dienstag, den 13.08.2013, 12:40 +0200 schrieb Sebastian Hesselbarth:
+> On 08/13/13 12:03, Thierry Reding wrote:
+> > On Tue, Aug 13, 2013 at 10:30:30AM +0200, Thomas Petazzoni wrote:
+> >> Dear Thierry Reding,
+> >>
+> >> On Tue, 13 Aug 2013 10:09:56 +0200, Thierry Reding wrote:
+> >>
+> >>>> +- reset-gpios: optional gpio to PERST#
+> >>>> +- reset-delay-ms: delay in ms to wait after reset de-assertion
+> >>>
+> >>> I remember some recent discussion about this, and we now have this reset
+> >>> framework, so perhaps it makes more sense to use the reset binding for
+> >>> this? Cc'ing Stephen (as part of the device tree bindings maintainers
+> >>> team) who was involved in that recent reset bindings discussion.
+> >>
+> >> I also thought about this, but the reset framework seems to be designed
+> >> for "reset controller" IPs, i.e special IPs that are controlling reset
+> >> signals. Looking at Documentation/devicetree/bindings/reset/reset.txt,
+> >> I'm not sure to see how this would apply to GPIO-controlled reset
+> >> signals.
+> >
+> > See:
+> >
+> > 	http://www.mail-archive.com/devicetree-discuss@lists.ozlabs.org/msg36900.html
+> >
+> > which seems to have carried over to this at some point:
+> >
+> > 	http://www.spinics.net/lists/devicetree/msg00521.html
+> >
+> > Some of the messages in between I can't find in any archive, sorry.
+> 
+> Thierry, Sascha,
+> 
+> thanks for the input. Flipping through the above discussion, I guess
+> using "reset-gpios" and "reset-delay-us" should be fine?
+> 
+> I can also remove the delay property for now, as I cannot find a final
+> conclusion about the configurable delay.
 
-on each boot we loading the rbf design to the FPGA and the rescan pci bus to let
-kernel detect it .
+Yes, I'm in favor of using 'reset-gpios'. If we can agree on this
+binding, I'll add support to the reset framework core.
 
-during the rescan I getting error messages:
- genirq: Setting trigger mode 0 for irq 27 failed
-(mpc8xxx_irq_set_type+0x0/0xec)
-[   22.060898] genirq: Setting trigger mode 0 for irq 28 failed
-(mpc8xxx_irq_set_type+0x0/0xec)
-[   22.069461] genirq: Setting trigger mode 0 for irq 31 failed
-(mpc8xxx_irq_set_type+0x0/0xec)
-[   22.078010] genirq: Setting trigger mode 0 for irq 32 failed
-(mpc8xxx_irq_set_type+0x0/0xec)
-[   22.086576] genirq: Setting trigger mode 0 for irq 33 failed
-(mpc8xxx_irq_set_type+0x0/0xec)
-[   22.095143] genirq: Setting trigger mode 0 for irq 37 failed
-(mpc8xxx_irq_set_type+0x0/0xec)
-[   22.103715] genirq: Setting trigger mode 0 for irq 38 failed
-(mpc8xxx_irq_set_type+0x0/0xec)
-[   22.112282] genirq: Setting trigger mode 0 for irq 39 failed
-(mpc8xxx_irq_set_type+0x0/0xec)
+> In the driver, I will stick to bare gpiolib and wait for gpio-reset
+> driver to become available. Currently, we don't have sophisticated
+> reset handling in pci-mvebu anyway.
 
-[   37.945785] pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't
-match header type 01)
-[   37.953640] PCIE error(s) detected
-[   37.953858] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
-[   37.953988] pci 0000:00:00.0: BAR 8: assigned [mem 0xc0000000-0xdfffffff]
-[   37.953994] pci 0000:00:00.0: BAR 7: can't assign io (size 0x10000)
-[   37.954000] pci 0000:01:00.0: BAR 0: assigned [mem 0xc0000000-0xc00fffff]
-[   37.954013] pci 0000:01:00.0: BAR 1: assigned [mem 0xc0100000-0xc017ffff]
-[   37.954025] pci 0000:01:00.0: BAR 2: assigned [mem 0xc0180000-0xc01fffff]
-[   37.954036] pci 0000:00:00.0: PCI bridge to [bus 01]
-[   37.954041] pci 0000:00:00.0:   bridge window [mem 0xc0000000-0xdfffffff]
-[   38.007354] PCIE ERR_DR register: 0x80020000
-[   38.011613] PCIE ERR_CAP_STAT register: 0x00000041
-[   38.016392] PCIE ERR_CAP_R0 register: 0x00000800
-[   38.020997] PCIE ERR_CAP_R1 register: 0x00000000
-[   38.025602] PCIE ERR_CAP_R2 register: 0x00000000
-[   38.030207] PCIE ERR_CAP_R3 register: 0x00000000
+Sounds good to me.
 
+regards
+Philipp
 
-and after a few minutes I linux reboot it self,
-
-
-where can I start debugging it??
-
-
--- 
-Leonid Ravich
-
-
-
--- 
-Leonid Ravich
