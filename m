@@ -1,138 +1,159 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:41403 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758212Ab3HHWSW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 18:18:22 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv8 09/10] PCI: mvebu: add support for MSI
-Date: Fri,  9 Aug 2013 00:17:47 +0200
-Message-Id: <1376000268-18397-10-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 3/5] PCI: mvebu: remove subsys_initcall
+Date: Tue, 13 Aug 2013 14:25:22 +0200
+Message-Id: <1376396724-32048-4-git-send-email-sebastian.hesselbarth@gmail.com>
+In-Reply-To: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds support for Message Signaled Interrupts in the
-Marvell PCIe host controller. The work is very simple: it simply gets
-a reference to the msi_chip associated to the PCIe controller thanks
-to the msi-parent DT property, and stores this reference in the
-pci_bus structure. This is enough to let the Linux PCI core use the
-functions of msi_chip to setup and teardown MSIs.
+This removes the subsys_initcall from the driver and converts it to
+a normal platform_driver. Also, drvdata is set and a remove functions
+is added to disable the clock and free resources. As pci driver removal
+currently is not supported, set .suppress_bind_attrs to permit unbinding.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 ---
- .../devicetree/bindings/pci/mvebu-pci.txt          |  3 +++
- drivers/pci/host/pci-mvebu.c                       | 26 ++++++++++++++++++++++
- 2 files changed, 29 insertions(+)
+Changelog:
+v1->v2:
+- do not add .remove and set .suppress_bind_attrs to permit currently
+  unsupported driver unloading/unbinding (Reported by Thierry Reding and
+  Thomas Petazzoni)
+- Note: I left the platform_set_drvdata(), as we will require that later
+  for device removal.
 
-diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-index f8d4058..77e0ffe 100644
---- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-@@ -12,6 +12,8 @@ Mandatory properties:
- - device_type, set to "pci"
- - ranges: ranges for the PCI memory and I/O regions, as well as the
-   MMIO registers to control the PCIe interfaces.
-+- msi-parent: Link to the hardware entity that serves as the Message
-+  Signaled Interrupt controller for this PCI controller.
- 
- In addition, the Device Tree node must have sub-nodes describing each
- PCIe interface, having the following mandatory properties:
-@@ -46,6 +48,7 @@ pcie-controller {
- 	#size-cells = <2>;
- 
- 	bus-range = <0x00 0xff>;
-+	msi-parent = <&mpic>;
- 
- 	ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
- 		  0x82000000 0 0xd0042000 0xd0042000 0 0x00002000   /* Port 2.0 registers */
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/host/pci-mvebu.c |   33 ++++++++++++++-------------------
+ 1 file changed, 14 insertions(+), 19 deletions(-)
+
 diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 13a633b..5715a97 100644
+index d2e9ae7..bd7092a 100644
 --- a/drivers/pci/host/pci-mvebu.c
 +++ b/drivers/pci/host/pci-mvebu.c
-@@ -11,6 +11,7 @@
- #include <linux/clk.h>
- #include <linux/module.h>
- #include <linux/mbus.h>
-+#include <linux/msi.h>
- #include <linux/slab.h>
- #include <linux/platform_device.h>
- #include <linux/of_address.h>
-@@ -107,6 +108,7 @@ struct mvebu_pcie_port;
- struct mvebu_pcie {
- 	struct platform_device *pdev;
- 	struct mvebu_pcie_port *ports;
-+	struct msi_chip *msi;
- 	struct resource io;
- 	struct resource realio;
- 	struct resource mem;
-@@ -695,6 +697,12 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	return bus;
+@@ -165,7 +165,7 @@ static void mvebu_pcie_set_local_dev_nr(struct mvebu_pcie_port *port, int nr)
+  * BAR[0,2] -> disabled, BAR[1] -> covers all DRAM banks
+  * WIN[0-3] -> DRAM bank[0-3]
+  */
+-static void __init mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
++static void mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
+ {
+ 	const struct mbus_dram_target_info *dram;
+ 	u32 size;
+@@ -217,7 +217,7 @@ static void __init mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
+ 	       port->base + PCIE_BAR_CTRL_OFF(1));
  }
  
-+void mvebu_pcie_add_bus(struct pci_bus *bus)
-+{
-+	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	bus->msi = pcie->msi;
-+}
-+
- resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 					  const struct resource *res,
- 					  resource_size_t start,
-@@ -731,6 +739,7 @@ static void __init mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.map_irq        = mvebu_pcie_map_irq;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
-+	hw.add_bus        = mvebu_pcie_add_bus;
+-static void __init mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
++static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
+ {
+ 	u16 cmd;
+ 	u32 mask;
+@@ -628,7 +628,7 @@ static struct pci_ops mvebu_pcie_ops = {
+ 	.write = mvebu_pcie_wr_conf,
+ };
  
- 	pci_common_init(&hw);
- }
-@@ -755,6 +764,21 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
- 	return devm_request_and_ioremap(&pdev->dev, &regs);
+-static int __init mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
++static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+ {
+ 	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+ 	int i;
+@@ -647,7 +647,7 @@ static int __init mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	return 1;
  }
  
-+static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
-+{
-+	struct device_node *msi_node;
-+
-+	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
-+				    "msi-parent", 0);
-+	if (!msi_node)
-+		return;
-+
-+	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
-+
-+	if (pcie->msi)
-+		pcie->msi->dev = &pcie->pdev->dev;
-+}
-+
- static int __init mvebu_pcie_probe(struct platform_device *pdev)
+-static int __init mvebu_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++static int mvebu_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	struct of_irq oirq;
+ 	int ret;
+@@ -704,7 +704,7 @@ resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 		return start;
+ }
+ 
+-static void __init mvebu_pcie_enable(struct mvebu_pcie *pcie)
++static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+ {
+ 	struct hw_pci hw;
+ 
+@@ -727,10 +727,8 @@ static void __init mvebu_pcie_enable(struct mvebu_pcie *pcie)
+  * <...> property for one that matches the given port/lane. Once
+  * found, maps it.
+  */
+-static void __iomem * __init
+-mvebu_pcie_map_registers(struct platform_device *pdev,
+-			 struct device_node *np,
+-			 struct mvebu_pcie_port *port)
++static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
++		      struct device_node *np, struct mvebu_pcie_port *port)
+ {
+ 	struct resource regs;
+ 	int ret = 0;
+@@ -786,7 +784,7 @@ static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
+ 	return -ENOENT;
+ }
+ 
+-static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
++static void mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
+ {
+ 	struct device_node *msi_node;
+ 
+@@ -801,7 +799,7 @@ static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
+ 		pcie->msi->dev = &pcie->pdev->dev;
+ }
+ 
+-static int __init mvebu_pcie_probe(struct platform_device *pdev)
++static int mvebu_pcie_probe(struct platform_device *pdev)
  {
  	struct mvebu_pcie *pcie;
-@@ -879,6 +903,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 		i++;
- 	}
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -814,6 +812,7 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
  
-+	mvebu_pcie_msi_enable(pcie);
-+
- 	mvebu_pcie_enable(pcie);
+ 	pcie->pdev = pdev;
++	platform_set_drvdata(pdev, pcie);
  
- 	return 0;
+ 	/* Get the PCIe memory and I/O aperture */
+ 	mvebu_mbus_get_pcie_mem_aperture(&pcie->mem);
+@@ -956,16 +955,12 @@ static struct platform_driver mvebu_pcie_driver = {
+ 		.name = "mvebu-pcie",
+ 		.of_match_table =
+ 		   of_match_ptr(mvebu_pcie_of_match_table),
++		/* driver unloading/unbinding currently not supported */
++		.suppress_bind_attrs = true,
+ 	},
++	.probe = mvebu_pcie_probe,
+ };
+-
+-static int __init mvebu_pcie_init(void)
+-{
+-	return platform_driver_probe(&mvebu_pcie_driver,
+-				     mvebu_pcie_probe);
+-}
+-
+-subsys_initcall(mvebu_pcie_init);
++module_platform_driver(mvebu_pcie_driver);
+ 
+ MODULE_AUTHOR("Thomas Petazzoni <thomas.petazzoni@free-electrons.com>");
+ MODULE_DESCRIPTION("Marvell EBU PCIe driver");
 -- 
-1.8.1.2
+1.7.10.4
 
