@@ -1,85 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:47525 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755844Ab3HWVh1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Aug 2013 17:37:27 -0400
-Date: Fri, 23 Aug 2013 23:37:25 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	dougthompson@xmission.com, bhelgaas@google.com, jbeulich@suse.com,
-	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/1] AMD64_EDAC: Fix incorrect wrap arounds due to left
- shift beyond 32 bits.
-Message-ID: <20130823213725.GC15521@pd.tnic>
-References: <1376958472-2150-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <1376958472-2150-2-git-send-email-Aravind.Gopalakrishnan@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1376958472-2150-2-git-send-email-Aravind.Gopalakrishnan@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Thierry Reding <treding@nvidia.com>
+Subject: [RFC 0/3] ARM: Allow PCI host drivers to be unloaded
+Date: Tue, 13 Aug 2013 13:12:23 +0200
+Message-Id: <1376392346-14127-1-git-send-email-treding@nvidia.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 19, 2013 at 07:27:52PM -0500, Aravind Gopalakrishnan wrote:
-> Link to the bug report:
-> http://marc.info/?l=linux-edac&m=137692201732220&w=2
-> 
-> dct_base and dct_limit obtain 32 bit register values when they read their
-> respective pci config space registers. A left shift beyond 32 bits will
-> cause them to wrap around. Similar case for chan_addr as can be seen from
-> the bug report. In the patch, we rectify this by casting chan_addr to u64
-> and by comparing dct_base and dct_limit against (sys_addr >> 27)
-> 
-> Tested on F15h, M30h with ECC turned on and works fine.
-> 
-> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-> 
-> diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
-> index b86228c..eb4793e 100644
-> --- a/drivers/edac/amd64_edac.c
-> +++ b/drivers/edac/amd64_edac.c
-> @@ -1558,11 +1558,12 @@ static int f15_m30h_match_to_this_node(struct amd64_pvt *pvt, unsigned range,
->  	}
->  
->  	/* Verify sys_addr is within DCT Range. */
-> -	dct_base = (dct_sel_baseaddr(pvt) << 27);
-> -	dct_limit = (((dct_cont_limit_reg >> 11) & 0x1FFF) << 27) | 0x7FFFFFF;
-> +	dct_base = dct_sel_baseaddr(pvt);
+Hi,
 
-This can't be correct.
+This is a set of experimental patches that allow ARM PCI host drivers to
+be unloaded. The first two patches enhance the ARM core PCI code with
+functions to tear down fixed PCI I/O mappings and unregister a PCI host
+bridge. The third patch uses the new functionality to allow the Tegra
+PCIe driver to unbind from a device.
 
-So the original patch takes the shifted dct_base while your change
-doesn't anymore...
+I'm sending this as an RFC because, while I've been able to successfully
+unbind and rebind the Tegra PCIe driver and verifying that a NIC
+connected via PCIe still works after each new probe, I haven't fully
+investigated yet whether there may be memory leaks due to missing
+cleanup.
 
-> +	dct_limit = (dct_cont_limit_reg >> 11) & 0x1FFF;
->  
->  	if (!(dct_cont_base_reg & BIT(0)) &&
-> -	    !(dct_base <= sys_addr && dct_limit >= sys_addr))
-> +	    !(dct_base <= (sys_addr >> 27) &&
-> +	      dct_limit >= (sys_addr >> 27)))
+Thierry
 
-... and while this comparison shifts sys_addr to use the proper bits,
-the code does this assignment later:
+Thierry Reding (3):
+  ARM: Allow unmapping of fixed PCI I/O mappings
+  ARM: Introduce pci_common_exit()
+  PCI: tegra: Support driver unbinding
 
-	chan_offset = dct_base;
-
-Now, chan_offset has the << 27 version of dct_base which makes the following
-calculation wrong:
-
-	chan_addr = sys_addr - chan_offset;
-
-because sys_addr is the full 64-bit, unshifted value.
-
-The right thing to do would be to do:
-
-	chan_offset = dct_base << 27;
-
-Or am I missing something?
+ arch/arm/include/asm/io.h       |  1 +
+ arch/arm/include/asm/mach/pci.h |  6 ++++++
+ arch/arm/kernel/bios32.c        | 29 ++++++++++++++++++++++++++---
+ arch/arm/mm/ioremap.c           |  6 ++++++
+ drivers/pci/host/pci-tegra.c    | 37 ++++++++++++++++++++++++++++++++++++-
+ 5 files changed, 75 insertions(+), 4 deletions(-)
 
 -- 
-Regards/Gruss,
-    Boris.
+1.8.3.4
 
-Sent from a fat crate under my desk. Formatting is fine.
---
