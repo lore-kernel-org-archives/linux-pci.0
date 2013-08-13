@@ -1,48 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:57502 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752361Ab3HFBXg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 21:23:36 -0400
-Message-ID: <52005000.9000200@huawei.com>
-Date: Tue, 6 Aug 2013 09:23:12 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <520A16BD.30201@linux.vnet.ibm.com>
+Date: Tue, 13 Aug 2013 16:51:33 +0530
+From: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Paul Bolle <pebolle@tiscali.nl>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
-Subject: Re: [PATCH -v5 0/6] Use PCI Serial Number to identify device change
-References: <1375692898-27476-1-git-send-email-wangyijing@huawei.com> <1375704104.1415.5.camel@x61.thuisdomein>
-In-Reply-To: <1375704104.1415.5.camel@x61.thuisdomein>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>
+CC: Mauro Carvalho Chehab <m.chehab@samsung.com>, tony.luck@intel.com,
+	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
+	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic> <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com> <20130812125343.GE18018@pd.tnic>
+In-Reply-To: <20130812125343.GE18018@pd.tnic>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/8/5 20:01, Paul Bolle wrote:
-> On Mon, 2013-08-05 at 16:54 +0800, Yijing Wang wrote:
->> v4->v5: update patch 6/6, correct some mistakes in this patch, thank Paul for help
->> 		test this series.
->> [...]
->> I tested to apply this series to Linus 3.11-rc4 and Bjorn's pci-next branch, and
->> result is ok.
-> 
-> And I tested this series on top of v3.10.5 (on x86_64). It applied
-> cleanly, and it compiled cleanly. No pciehp related errors at resume.
-> And, more importantly, the severe issues of v4 are gone: a few suspend
-> and resume cycles showed no obvious problems.
-> 
+On 08/12/2013 06:23 PM, Borislav Petkov wrote:
+> On Mon, Aug 12, 2013 at 06:11:49PM +0530, Naveen N. Rao wrote:
+>> So, I looked at ghes_edac and it basically seems to boil down to
+>> trace_mc_event. But, this only seems to expose the APEI data as a
+>> string and doesn't look to really make all the fields available to
+>> user-space in a raw manner. Not sure how well this can be utilised
+>> by a user-space tool.
+>
+> Well, your tracepoint dumps the decoded memory error too. So all the
+> information we need is already there, without edac. Or am I missing some
+> bits?
+>
+> Thus why I'm saying is that we don't need the additional edac layer.
+>
 
-Hi Paul,
-   Thanks for your test very much!
+You're right - my trace point makes all the data provided by apei as-is 
+to userspace. However, ghes_edac seems to squash some of this data into 
+a string when reporting through mc_event.
 
-Thanks!
-Yijing.
-
-> 
-
-
--- 
-Thanks!
-Yijing
+Regards,
+Naveen
 
