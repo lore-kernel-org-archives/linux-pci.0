@@ -1,58 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:60560 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753089Ab3HOJij (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Aug 2013 05:38:39 -0400
-Date: Thu, 15 Aug 2013 11:38:31 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>
-Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-	tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
-	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Message-ID: <20130815093831.GA27616@pd.tnic>
-References: <20130810180322.GC4155@pd.tnic>
- <20130812083355.47c1bae8@samsung.com>
- <5208D80D.5030206@linux.vnet.ibm.com>
- <20130812125343.GE18018@pd.tnic>
- <520A16BD.30201@linux.vnet.ibm.com>
- <20130813124258.GC4077@pd.tnic>
- <520A6D98.9060204@linux.vnet.ibm.com>
- <20130813175809.GE4077@pd.tnic>
- <520B6282.6030906@linux.vnet.ibm.com>
- <20130814212211.544ee6a4@concha.lan>
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:37344 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929Ab3HMIGo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 04:06:44 -0400
+Date: Tue, 13 Aug 2013 10:06:40 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/9] PCI: mvebu: remove subsys_initcall
+Message-ID: <20130813080639.GD9316@ulmo>
+References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
+ <1376333215-12885-4-git-send-email-sebastian.hesselbarth@gmail.com>
+ <20130813091959.784b44f0@skate>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130814212211.544ee6a4@concha.lan>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gE7i1rD7pdK0Ng3j"
+In-Reply-To: <20130813091959.784b44f0@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 14, 2013 at 09:22:11PM -0300, Mauro Carvalho Chehab wrote:
-> 	1) EDAC core needs to know that it should reject "hardware first"
-> drivers.
 
--ENOPARSE. What do you mean?
+--gE7i1rD7pdK0Ng3j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->  3) If BIOS vendors add later some solution to enumerate the DIMMS
-> per memory controller, channel, socket with APEI, the addition to the
-> existing driver would be trivial.
+On Tue, Aug 13, 2013 at 09:19:59AM +0200, Thomas Petazzoni wrote:
+> Dear Sebastian Hesselbarth,
+>=20
+> On Mon, 12 Aug 2013 20:46:49 +0200, Sebastian Hesselbarth wrote:
+> > This removes the subsys_initcall from the driver and converts it to
+> > a normal platform_driver. Also, drvdata is set and a remove functions
+> > is added to disable the clock and free resources.
+> >=20
+> > Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+>=20
+> I'm OK with this, just a comment below.
+>=20
+> > +static int mvebu_pcie_remove(struct platform_device *pdev)
+> > +{
+> > +	struct mvebu_pcie *pcie =3D platform_get_drvdata(pdev);
+> > +	struct mvebu_pcie_port *port =3D &pcie->ports[0];
+> > +	int i;
+> > +
+> > +	for (i =3D 0; i < pcie->nports; i++, port++) {
+> > +		clk_disable_unprepare(port->clk);
+> > +		kfree(port->name);
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+>=20
+> I believe the ->remove() part is quite useless. The driver is a 'bool'
+> in Kconfig, so it cannot be compiled as a module, and I'm not sure
+> there a way to remove the platform device that corresponds to the PCIe
+> controller.
 
-Actually, with BIOS vendors wanting to do firmware-first strategy with
-DRAM errors, they must have a pretty good and intimate picture of the
-memory topology at hand. So it is only a logical consequence for them,
-when reporting a memory error to the OS to tell us the silkscreen label
-too, while at it.
+There is. You can write the device's name to the driver's unbind file in
+sysfs. What I ended up doing for Tegra was not to provide a .remove() at
+all and set the struct device_driver's .suppress_bind_attrs to true.
 
-And if they do that, we don't need the additional layer - just a
-tracepoint from APEI and a userspace script.
+Those two things combined should make it impossible to unbind the device
+=66rom the driver.
 
-It's a whole another question if they don't do that.
+> And even if there was, then it would still not work because as far as I
+> know, the ARM PCI core doesn't provide functions to 'unregister' PCI
+> controllers, so it would keep pointers to functions located in the
+> driver, which would cause nasty things when unloading the module.
 
--- 
-Regards/Gruss,
-    Boris.
+I did some initial work to support driver unbinding (in order to support
+module unloading) on Tegra and things look pretty promising. The ARM PCI
+code would need something like pci_common_exit() to make sure there are
+no leaks.
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+Unfortunately I can't seem to find that branch anymore, so I will have
+to reconstruct it from memory...
+
+That said, I agree with Thomas that it's not useful (and potentially
+even dangerous) to add the .remove() at this point in time.
+
+Thierry
+
+--gE7i1rD7pdK0Ng3j
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSCekPAAoJEN0jrNd/PrOhKLcP+wY6A6YFFnV2ZOaegG/2kvsw
+uxqFlhn4FqAnsM2fmbHJpDoem8gowF+aonwuAKw7oAnmE+tKiIQeAsiGhrMIRx+p
+L08j7HxQc0LGwBZQpqGQFeskruD7HzTr+ye26pqwhzHNUX68mL3skaUzI6lRvleb
+PzuiG0vaUnCFFBukIJu7VHXmvy8esghIaxUWW4BWNGiJF5tgjjku3OLswJujVkbT
+aLJFLXAUreXPr9O7XfSuBUgYQKsD/OklII7tsA53QJ9+twsaQMlMt20VwnKw/vO/
+wWmXTMwC64Ff7g69XJgTpdFlnhHxQeukUZF4rleS5JpssKl7b2HRQNN99xTOAyPo
+wnnefn0bOHO2mxKANkjJmzXCfGrfsRJWGHxNopd4fk4aPXh9+dpOMOrsa+8trrm3
+ivobxxYvW8yCdKtsc1oMAI1iWblyd2xStFEYjE7cyAMwOplwdgvgLU096OUHd4S+
+dCmrPbLokq1Uo72kQZYhzdEId79Y/Vlk5FFcJR9wLw945aA5Qj2+BmK+tAMW+YlH
+Qt4KaCl3nw7luq1VtcdPlM09CBiuCmAch6YZ9fUn8WB6veDxApPgMT56VD2xUbvG
+Z2ADUVBGfnkkKZeXTne/DUFxstsozA1yldJEBhG3sfIhFHH0imP3ZaP5ffy69IFt
+Unkb1fGPx8IzPrtJlfmt
+=BioH
+-----END PGP SIGNATURE-----
+
+--gE7i1rD7pdK0Ng3j--
