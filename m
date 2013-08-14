@@ -1,84 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v4 4/9] pci: Add slot reset option to pci_dev_reset
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37022 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933022Ab3HNUGI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 Aug 2013 16:06:08 -0400
+Subject: [PATCH] pci: Add probe functions for bus and slot reset
+To: bhelgaas@google.com
 From: Alex Williamson <alex.williamson@redhat.com>
-Cc: ddutile@redhat.com, indou.takao@jp.fujitsu.com,
-	linux-kernel@vger.kernel.org
-Date: Mon, 05 Aug 2013 13:37:28 -0600
-Message-ID: <20130805193728.9260.69693.stgit@bling.home>
-In-Reply-To: <20130805193200.9260.38729.stgit@bling.home>
-References: <20130805193200.9260.38729.stgit@bling.home>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 14 Aug 2013 14:06:05 -0600
+Message-ID: <20130814200549.21626.79779.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the hotplug controller provides a way to reset a slot, use that
-before a direct parent bus reset.  Like the bus reset option, this is
-only available when a single pci_dev occupies the slot.
+Users of pci_reset_bus() and pci_reset_slot() need a way to probe
+whether the bus or slot supports reset.  Add trivial helper functions
+and export them as vfio-pci will make use of these.
 
 Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/pci.c |   34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+
+This is logically patch 10/9 for v5 pci: bus and slot reset interfaces.
+If there's a need to re-spin anything I'll roll this in.
+
+ drivers/pci/pci.c   |   24 ++++++++++++++++++++++++
+ include/linux/pci.h |    2 ++
+ 2 files changed, 26 insertions(+)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d468608..9407aab 100644
+index ba68451..888d847 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -22,6 +22,7 @@
- #include <linux/interrupt.h>
- #include <linux/device.h>
- #include <linux/pm_runtime.h>
-+#include <linux/pci_hotplug.h>
- #include <asm-generic/pci-bridge.h>
- #include <asm/setup.h>
- #include "pci.h"
-@@ -3256,6 +3257,35 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- 	return 0;
+@@ -3610,6 +3610,18 @@ static int pci_slot_reset(struct pci_slot *slot, int probe)
  }
  
-+static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
+ /**
++ * pci_probe_reset_slot - probe whether a PCI slot can be reset
++ * @slot: PCI slot to probe
++ *
++ * Return 0 if slot can be reset, negative if a slot reset is not supported.
++ */
++int pci_probe_reset_slot(struct pci_slot *slot)
 +{
-+	int rc = -ENOTTY;
-+
-+	if (!hotplug || !try_module_get(hotplug->ops->owner))
-+		return rc;
-+
-+	if (hotplug->ops->reset_slot)
-+		rc = hotplug->ops->reset_slot(hotplug, probe);
-+
-+	module_put(hotplug->ops->owner);
-+
-+	return rc;
++	return pci_slot_reset(slot, 1);
 +}
++EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
 +
-+static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
-+{
-+	struct pci_dev *pdev;
-+
-+	if (dev->subordinate || !dev->slot)
-+		return -ENOTTY;
-+
-+	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
-+		if (pdev != dev && pdev->slot == dev->slot)
-+			return -ENOTTY;
-+
-+	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
-+}
-+
- static int __pci_dev_reset(struct pci_dev *dev, int probe)
- {
- 	int rc;
-@@ -3278,6 +3308,10 @@ static int __pci_dev_reset(struct pci_dev *dev, int probe)
- 	if (rc != -ENOTTY)
- 		goto done;
++/**
+  * pci_reset_slot - reset a PCI slot
+  * @slot: PCI slot to reset
+  *
+@@ -3662,6 +3674,18 @@ static int pci_bus_reset(struct pci_bus *bus, int probe)
+ }
  
-+	rc = pci_dev_reset_slot_function(dev, probe);
-+	if (rc != -ENOTTY)
-+		goto done;
+ /**
++ * pci_probe_reset_bus - probe whether a PCI bus can be reset
++ * @bus: PCI bus to probe
++ *
++ * Return 0 if bus can be reset, negative if a bus reset is not supported.
++ */
++int pci_probe_reset_bus(struct pci_bus *bus)
++{
++	return pci_bus_reset(bus, 1);
++}
++EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
 +
- 	rc = pci_parent_bus_reset(dev, probe);
- done:
- 	return rc;
++/**
+  * pci_reset_bus - reset a PCI bus
+  * @bus: top level PCI bus to reset
+  *
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1a8fd34..daf40cd 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -924,7 +924,9 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int __pci_reset_function(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
++int pci_probe_reset_slot(struct pci_slot *slot);
+ int pci_reset_slot(struct pci_slot *slot);
++int pci_probe_reset_bus(struct pci_bus *bus);
+ int pci_reset_bus(struct pci_bus *bus);
+ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
 
