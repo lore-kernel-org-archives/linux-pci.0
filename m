@@ -1,84 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:65084 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754323Ab3HWQGP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 12:06:15 -0400
-Received: by mail-ie0-f176.google.com with SMTP id s9so1054267iec.7
-        for <linux-pci@vger.kernel.org>; Fri, 23 Aug 2013 09:06:15 -0700 (PDT)
-Date: Fri, 23 Aug 2013 10:06:12 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Zoltan Kiss <zoltan.kiss@citrix.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: avoid unnecessary writing of the command register
- during probe
-Message-ID: <20130823160612.GA13605@google.com>
-References: <1377209958-26362-1-git-send-email-zoltan.kiss@citrix.com>
+Received: from mail.skyhub.de ([78.46.96.112]:57833 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751468Ab3HNFnZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 Aug 2013 01:43:25 -0400
+Date: Wed, 14 Aug 2013 07:43:22 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130814054322.GA9158@pd.tnic>
+References: <20130812083355.47c1bae8@samsung.com>
+ <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812125343.GE18018@pd.tnic>
+ <520A16BD.30201@linux.vnet.ibm.com>
+ <20130813124258.GC4077@pd.tnic>
+ <520A6D98.9060204@linux.vnet.ibm.com>
+ <20130813175809.GE4077@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
+ <20130813181004.GF4077@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CB9150@ORSMSX106.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1377209958-26362-1-git-send-email-zoltan.kiss@citrix.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F31CB9150@ORSMSX106.amr.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 22, 2013 at 11:19:18PM +0100, Zoltan Kiss wrote:
-> While I tracked an another bug, I noticed that the PCI command register is
-> quite often updated here unnecessarily.
+On Tue, Aug 13, 2013 at 08:13:56PM +0000, Luck, Tony wrote:
+> Generic tracepoints are architected to be able to fire at very high
+> rates and log huge amounts of information. So we'd need something
+> special to say just log these special tracepoints to network/serial.
+>
+> > Which reminds me, pstore could also be a good thing to use, in addition.
+> > Only put error info there as it is limited anyway.
 > 
-> Signed-off-by: Zoltan Kiss <zoltan.kiss@citrix.com>
+> Yes - space is very limited.  I don't know how to assign priority for logging
+> the dmesg data vs. some error logs.
 
-I applied this to pci/misc with minor tweaks as follows.  Let me know
-if you see anything wrong.
+Didn't we say at some point, "log only the panic messsage which kills
+the machine"?
 
-Bjorn
+However, we probably could use more the messages before that
+catastrophic event because they could give us hints about what lead to
+the panic but in that case maybe a limited pstore is the wrong logging
+medium.
 
+Actually, I can imagine the full serial/network logs of "special"
+tracepoints + dmesg to be the optimal thing.
 
-PCI: Disable decoding for BAR sizing only when it was actually enabled
+> If we just "printk()" the most important parts - then that data will
+> automatically flow to the serial console and to pstore.
 
-From: Zoltan Kiss <zoltan.kiss@citrix.com>
+Actually, does the pstore act like a circular buffer? Because if it
+contains the last N relevant messages (for an arbitrary definition of
+relevant) before the system dies, then that could more helpful than only
+the error messages.
 
-We disable BARs while sizing them so we don't cause conflicts with other
-devices (see 253d2e5498 and bbffe43524).  But if device decoding is already
-disabled before we size the BAR, we don't need to disable it again.
+And with the advent of UEFI, pretty much every system has a pstore. Too
+bad that we have to limit it to 50% of size so that the boxes don't
+brick. :-P
 
-[bhelgaas: changelog, add PCI_COMMAND_DECODING_ENABLE for readability]
-Signed-off-by: Zoltan Kiss <zoltan.kiss@citrix.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |   11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+> Then we have multiple paths for the critical bits of the error log
+> - and the tracepoints give us more details for the cases where the
+> machine doesn't spontaneously explode.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cf57fe7..2c6f328 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -165,6 +165,8 @@ static inline unsigned long decode_bar(struct pci_dev *dev, u32 bar)
-  *
-  * Returns 1 if the BAR is 64-bit, or 0 if 32-bit.
-  */
-+#define PCI_COMMAND_DECODE_ENABLE	(PCI_COMMAND_MEMORY | PCI_COMMAND_IO)
-+
- int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			struct resource *res, unsigned int pos)
- {
-@@ -178,8 +180,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 	/* No printks while decoding is disabled! */
- 	if (!dev->mmio_always_on) {
- 		pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
--		pci_write_config_word(dev, PCI_COMMAND,
--			orig_cmd & ~(PCI_COMMAND_MEMORY | PCI_COMMAND_IO));
-+		if (orig_cmd & PCI_COMMAND_DECODE_ENABLE) {
-+			pci_write_config_word(dev, PCI_COMMAND,
-+				orig_cmd & ~PCI_COMMAND_DECODE_ENABLE);
-+		}
- 	}
- 
- 	res->name = pci_name(dev);
-@@ -293,7 +297,8 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- fail:
- 	res->flags = 0;
- out:
--	if (!dev->mmio_always_on)
-+	if (!dev->mmio_always_on &&
-+	    (orig_cmd & PCI_COMMAND_DECODE_ENABLE))
- 		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
- 
- 	if (bar_too_big)
+Ok, let's sort:
+
+* First we have the not-so-critical hw error messages. We want to carry
+those out-of-band, i.e. not in dmesg so that people don't have to parse
+and collect dmesg but have a specialized solution which gives them
+structured logs and tools can analyze, collect and ... those errors.
+
+* When a critical error happens, the above usage is not necessarily
+advantageous anymore in the sense that, in order to debug what caused
+the machine to crash, we don't simply necessarily want only the crash
+message but also the whole system activity that lead to it.
+
+In which case, we probably actually want to turn off/ignore the error
+logging tracepoints and write *only* to dmesg which goes out over serial
+and to pstore. Right?
+
+Because in such cases I want to have *all* *relevant* messages that lead
+to the explosion + the explosion message itself.
+
+Makes sense? Yes, no? Aspects I've missed?
+
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
