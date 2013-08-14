@@ -1,74 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:20657 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755922Ab3HFKZy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 06:25:54 -0400
-From: Vipul Pandya <vipul@chelsio.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, leedom@chelsio.com, tomreu@chelsio.com,
-	vipul@chelsio.com, divy@chelsio.com, dm@chelsio.com,
-	nirranjan@chelsio.com, eilong@broadcom.com, netdev@vger.kernel.org
-Subject: [PATCH V2 4/4] pci: Use pci_wait_for_pending_transaction instead of for loop
-Date: Tue,  6 Aug 2013 15:48:39 +0530
-Message-Id: <1375784319-25760-5-git-send-email-vipul@chelsio.com>
-In-Reply-To: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
-References: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:20609 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759471Ab3HNJCs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 05:02:48 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	<stable@vger.kernel.org.#.3.4+>
+Subject: [PATCH v4 2/2] PCI: update device mps when doing pci hotplug
+Date: Wed, 14 Aug 2013 17:01:52 +0800
+Message-ID: <1376470912-40264-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1376470912-40264-1-git-send-email-wangyijing@huawei.com>
+References: <1376470912-40264-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+Currently we don't update device's mps vaule when doing
+pci device hot-add. The hot-added device's mps will be set
+to default value (128B). But the upstream port device's mps
+may be larger than 128B which was set by firmware during
+system bootup. In this case the new added device may not
+work normally. This patch try to update the hot added device
+mps euqal to its parent mps, if device mpss < parent mps,
+print warning.
 
-New routine has been added to avoid duplication of waiting for pending pci
-transaction code. This patch makes use of that function.
-
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Vipul Pandya <vipul@chelsio.com>
+References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>
+Cc: stable@vger.kernel.org # 3.4+
 ---
-V2: Added pci_wait_for_pending_transaction routine and replaced it at respective
-places. Made the patch series for the same.
-V2: Used dev->msix_cap directly for capability offset
-V2: Removed use of 'rc' variable.
+ drivers/pci/probe.c |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 49 insertions(+), 1 deletions(-)
 
- drivers/pci/quirks.c | 18 ++----------------
- 1 file changed, 2 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4a64fc4..ea9108d 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3126,9 +3126,6 @@ static int reset_intel_generic_dev(struct pci_dev *dev, int probe)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 0699ec0..0d47b4a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1621,6 +1621,45 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+ 	return 0;
+ }
  
- static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- {
--	int i;
--	u16 status;
--
- 	/*
- 	 * http://www.intel.com/content/dam/doc/datasheet/82599-10-gbe-controller-datasheet.pdf
- 	 *
-@@ -3140,20 +3137,9 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- 	if (probe)
- 		return 0;
++static int pcie_bus_update_set(struct pci_dev *dev, void *data)
++{
++	int mps, p_mps, mpss;
++	struct pci_dev *parent;
++
++	if (!pci_is_pcie(dev) || !dev->bus->self)
++		return 0;
++
++	parent = dev->bus->self;
++	mps = pcie_get_mps(dev);
++	p_mps = pcie_get_mps(dev->bus->self);
++
++	if (mps >= p_mps)
++		return 0;
++
++	/* we only update the device mps, unless its parent device is root port,
++	 * and it is the only slot directly connected to root port.
++	 */
++	if ((128 << dev->pcie_mpss) >= p_mps) {
++		pcie_write_mps(dev, p_mps);
++	} else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT &&
++			pci_only_one_slot(dev->bus)) {
++		mpss = 128 << dev->pcie_mpss;
++		pcie_write_mps(parent, mpss);
++		pcie_write_mps(dev, mpss);
++	} else {
++		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
++				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
++				mps, 128 << dev->pcie_mpss, p_mps);
++	}
++	return 0;
++}
++
++static void pcie_bus_update_setting(struct pci_bus *bus)
++{
++	if (bus->self->is_hotplug_bridge)
++		pci_walk_bus(bus, pcie_bus_update_set, NULL);
++}
++
+ /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+  * parents then children fashion.  If this changes, then this code will not
+  * work as designed.
+@@ -1632,8 +1671,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ 	if (!pci_is_pcie(bus->self))
+ 		return;
  
--	/* Wait for Transaction Pending bit clean */
--	for (i = 0; i < 4; i++) {
--		if (i)
--			msleep((1 << (i - 1)) * 100);
--
--		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
--		if (!(status & PCI_EXP_DEVSTA_TRPND))
--			goto clear;
--	}
--
--	dev_err(&dev->dev, "transaction is not cleared; "
--			"proceeding with reset anyway\n");
-+	if (!pci_wait_for_pending_transaction(dev))
-+		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+-	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
++	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
++		/* Sometimes we should update device mps here,
++		 * eg. after hot add, device mps value will be
++		 * set to default(128B), but the upstream port
++		 * mps value may be larger than 128B, if we do
++		 * not update the device mps, it maybe can not
++		 * work normally.
++		 */
++		pcie_bus_update_setting(bus);
+ 		return;
++	}
  
--clear:
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
- 
- 	msleep(100);
+ 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
+ 	 * to be aware to the MPS of the destination.  To work around this,
 -- 
-1.8.0
+1.7.1
+
 
