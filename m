@@ -1,126 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:19029 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754938Ab3HEI4E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 04:56:04 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Rafael <rjw@sisk.pl>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH -v5 2/6] PCI: introduce PCIe Device Serial Number Capability support
-Date: Mon, 5 Aug 2013 16:54:54 +0800
-Message-ID: <1375692898-27476-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1375692898-27476-1-git-send-email-wangyijing@huawei.com>
-References: <1375692898-27476-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:42648 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758878Ab3HNCX5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 22:23:57 -0400
+Received: by mail-ie0-f169.google.com with SMTP id qd12so11813623ieb.14
+        for <linux-pci@vger.kernel.org>; Tue, 13 Aug 2013 19:23:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
+References: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
+ <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 13 Aug 2013 20:23:36 -0600
+Message-ID: <CAErSpo5AiRw7HvGQMq-n596ZkHJs_KJNn346yf+jc7yti-xpUw@mail.gmail.com>
+Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
+ to PF Nacked" messages
+To: "Skidmore, Donald C" <donald.c.skidmore@intel.com>
+Cc: "e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce PCIe Ext Capability Device Serial Number support,
-so we can use the unique device serial number to identify
-the physical device. During system suspend, if the PCIe
-device was removed and reinserted a new same device, during
-system resume there is no good way to identify it, maybe
-Device Serial Number is a good choice if device support.
+On Tue, Aug 13, 2013 at 3:54 PM, Skidmore, Donald C
+<donald.c.skidmore@intel.com> wrote:
 
-Reviewed-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/pci.c   |   29 +++++++++++++++++++++++++++++
- drivers/pci/pci.h   |    2 +-
- drivers/pci/probe.c |    2 ++
- include/linux/pci.h |    1 +
- 4 files changed, 33 insertions(+), 1 deletions(-)
+> We were unable to recreate your failure here locally so I have some additional questions.  First off you mentioned it was failing as far back as v3.9, was it ever working for you?  If so bisecting would be really helpful as I mentioned we have been unable to cause the failure in house.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 84a3c09..cfc0f7f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2048,6 +2048,35 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
- }
- 
- /**
-+ * pci_device_serial_number - get device serial number
-+ * @dev: the PCI device
-+ *
-+ * return the device serial number if device support,
-+ * otherwise return 0.
-+ */
-+static u64 pci_device_serial_number(struct pci_dev *dev)
-+{
-+	int pos;
-+	u32 lo, hi;
-+
-+	if (!pci_is_pcie(dev))
-+		return 0;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
-+	if (!pos)
-+		return 0;
-+
-+	pci_read_config_dword(dev, pos + 4, &lo);
-+	pci_read_config_dword(dev, pos + 8, &hi);
-+	return ((u64)hi << 32) | lo;
-+}
-+
-+void pci_dsn_init(struct pci_dev *dev)
-+{
-+	dev->sn = pci_device_serial_number(dev);
-+}
-+
-+/**
-  * pci_configure_ari - enable or disable ARI forwarding
-  * @dev: the PCI device
-  *
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 816c297..2b2a9cc 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -207,7 +207,7 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
- void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
- 				      struct list_head *realloc_head,
- 				      struct list_head *fail_head);
--
-+void pci_dsn_init(struct pci_dev *dev);
- /**
-  * pci_ari_enabled - query ARI forwarding status
-  * @bus: the PCI bus
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 83172bc..0c5da76 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1325,6 +1325,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Vital Product Data */
- 	pci_vpd_pci22_init(dev);
- 
-+	pci_dsn_init(dev);
-+
- 	/* Alternative Routing-ID Forwarding */
- 	pci_configure_ari(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..4354eaf 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -342,6 +342,7 @@ struct pci_dev {
- 	struct list_head msi_list;
- 	struct kset *msi_kset;
- #endif
-+	u64 sn;		/* device serial number, 0 if not support */
- 	struct pci_vpd *vpd;
- #ifdef CONFIG_PCI_ATS
- 	union {
--- 
-1.7.1
+I'm not aware of any working version.  I'm exercising in the sysfs
+SR-IOV configuration, which I think appeared in v3.8 or so.
 
+>  If not could you see if the problem still occurs without the external Magma PCIe expansion chassis, this is of course assuming that you can plug the X540 into your system without it.
 
+I played with this a little more and found this:
+
+1) Magma card in z420, connected to chassis containing X540: fails
+(original report)
+2) X540 in z420, Magma card in z420, connected to empty chassis: fails
+3) X540 in z420, Magma card in z420 but no cable to chassis: works
+
+The only difference I've noticed so far between configs 2 & 3 are
+different bus numbers and different IRQ assignments:
+
+Config 2 (failing):
+  pci 0000:0c:00.0: [8086:1528] type 00 class 0x020000
+  pci 0000:0c:00.0: reg 0x10: [mem 0xdac00000-0xdadfffff 64bit pref]
+  ixgbe 0000:0c:00.0: irq 82 for MSI/MSI-X
+  IRQ 79: 79
+  IRQ 80: eth0
+  IRQ 81: snd_hda_intel
+  IRQ: 82-93 eth1-TxRx-0 through eth1-TxRx-11
+  IRQ 94: eth1
+
+Config 3 (working):
+  pci 0000:04:00.0: [8086:1528] type 00 class 0x020000
+  pci 0000:04:00.0: reg 0x10: [mem 0xdac00000-0xdadfffff 64bit pref]
+  ixgbe 0000:04:00.0: irq 75 for MSI/MSI-X
+  IRQ 72: ahci
+  IRQ 73: eth0
+  IRQ 74: snd_hda_intel
+  IRQ 75-86: eth1-TxRx-0 through eth1-TxRx-11
+  IRQ 87: eth1
+
+I'll try to narrow this down a little more; I'm just giving you this
+preliminary info in case it rings any bells for you.
+
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> Sent: Friday, August 09, 2013 10:19 AM
+>> To: e1000-devel@lists.sourceforge.net
+>> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
+>> Subject: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00 to
+>> PF Nacked" messages
+>>
+>> When I enable VFs via sysfs on an Intel X540-AT, I see an endless stream of
+>>
+>>     ixgbevf 0000:08:10.2: Last Request of type 03 to PF Nacked
+>>
+>> messages.  This on an HP z420 with the Intel X540-AT in external Magma PCIe
+>> expansion chassis.  No cable is attached to the X540-AT.
+>>
+>> ixgbe is built as a module and is auto-loaded during boot, with no VFs
+>> enabled.  The "Last request Nacked" messages start when I enable VFs
+>> with:
+>>
+>>     # echo -n 8 > /sys/bus/pci/devices/0000:08:00.0/sriov_numvfs
+>>     ixgbe 0000:08:00.0 eth1: SR-IOV enabled with 8 VFs
+>>     pci 0000:08:10.0: [8086:1515] type 00 class 0x020000
+>>     pci 0000:08:10.2: [8086:1515] type 00 class 0x020000
+>>     ...
+>>     ixgbevf: Intel(R) 10 Gigabit PCI Express Virtual Function Network Driver -
+>> version 2.7.12-k
+>>     ...
+>>     ixgbevf 0000:08:10.2: Last Request of type 03 to PF Nacked
+>>     ...
+>>
+>> This happens with v3.11-rc4, v3.10, and v3.9, which is as far back as I checked.
+>> Complete console log and lspci output are here:
+>>
+>>     http://helgaas.com/linux/ixgbe/z420.log
+>>     http://helgaas.com/linux/ixgbe/lspci
+>>
+>> ------------------------------------------------------------------------------
+>> Get 100% visibility into Java/.NET code with AppDynamics Lite!
+>> It's a free troubleshooting tool designed for production.
+>> Get down to code-level detail for bottlenecks, with <2% overhead.
+>> Download for free and get started troubleshooting in minutes.
+>> http://pubads.g.doubleclick.net/gampad/clk?id=48897031&iu=/4140/ostg.clk
+>> trk
+>> _______________________________________________
+>> E1000-devel mailing list
+>> E1000-devel@lists.sourceforge.net
+>> https://lists.sourceforge.net/lists/listinfo/e1000-devel
+>> To learn more about Intel&#174; Ethernet, visit
+>> http://communities.intel.com/community/wired
