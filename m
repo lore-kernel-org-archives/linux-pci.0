@@ -1,175 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1376521578.13642.65.camel@ul30vt.home>
-Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
-From: Alex Williamson <alex.williamson@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:40601 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933111Ab3HNU6i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 16:58:38 -0400
+Received: by mail-ob0-f170.google.com with SMTP id eh20so7606760obb.1
+        for <linux-pci@vger.kernel.org>; Wed, 14 Aug 2013 13:58:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130814203606.GA9044@google.com>
+References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
+	<20130807040112.GA14662@google.com>
+	<CAE9FiQVXhg299RKsoa8eCqoN7b9c0HaeTGHCnxQY=9vkSYaJJg@mail.gmail.com>
+	<CAE9FiQWftukxyNiyM2znVPh7x82de3nhRMQwGHigZtOvU6xQ6g@mail.gmail.com>
+	<20130809170404.GA29690@google.com>
+	<CAE9FiQXuNPfhndRAm7uX4phvVqqVsQuuEzEqEi8at9f2oWPYOg@mail.gmail.com>
+	<CAErSpo5uYciz4dZtf6utfehXGnooRAT3BcVHyz+EoZ4m7tbitg@mail.gmail.com>
+	<CAE9FiQULOCz3snO26EHy_dumRULyOT34_iEjM_rZeP=pH8KGvw@mail.gmail.com>
+	<20130814203606.GA9044@google.com>
+Date: Wed, 14 Aug 2013 13:58:38 -0700
+Message-ID: <CAE9FiQVYy9G_F3WC2yQTMrVUW39QbDT8t_7ZXBxNUf2UfBWUYQ@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] PCI: Separate stop and remove devices in pciehp
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Date: Wed, 14 Aug 2013 17:06:18 -0600
-In-Reply-To: <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
-References: <20130814200845.21923.64284.stgit@bling.home>
-	 <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-08-14 at 16:42 -0600, Bjorn Helgaas wrote:
-> [+cc Al, linux-fsdevel for fdget/fdput usage]
-> 
-> On Wed, Aug 14, 2013 at 2:10 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > The current VFIO_DEVICE_RESET interface only maps to PCI use cases
-> > where we can isolate the reset to the individual PCI function.  This
-> > means the device must support FLR (PCIe or AF), PM reset on D3hot->D0
-> > transition, device specific reset, or be a singleton device on a bus
-> > for a secondary bus reset.  FLR does not have widespread support,
-> > PM reset is not very reliable, and bus topology is dictated by the
-> > system and device design.  We need to provide a means for a user to
-> > induce a bus reset in cases where the existing mechanisms are not
-> > available or not reliable.
-> >
-> > This device specific extension to VFIO provides the user with this
-> > ability.  Two new ioctls are introduced:
-> >  - VFIO_DEVICE_PCI_GET_HOT_RESET_INFO
-> >  - VFIO_DEVICE_PCI_HOT_RESET
-> >
-> > The first provides the user with information about the extent of
-> > devices affected by a hot reset.  This is essentially a list of
-> > devices and the IOMMU groups they belong to.  The user may then
-> > initiate a hot reset by calling the second ioctl.  We must be
-> > careful that the user has ownership of all the affected devices
-> > found via the first ioctl, so the second ioctl takes a list of file
-> > descriptors for the VFIO groups affected by the reset.  Each group
-> > must have IOMMU protection established for the ioctl to succeed.
-> >
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >
-> > This patch is dependent on v5 "pci: bus and slot reset interfaces" as
-> > well as "pci: Add probe functions for bus and slot reset".
-> >
-> >  drivers/vfio/pci/vfio_pci.c |  272 +++++++++++++++++++++++++++++++++++++++++++
-> >  include/uapi/linux/vfio.h   |   38 ++++++
-> >  2 files changed, 309 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> > index cef6002..eb69bf3 100644
-> > --- a/drivers/vfio/pci/vfio_pci.c
-> > +++ b/drivers/vfio/pci/vfio_pci.c
-> > @@ -227,6 +227,97 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
-> >         return 0;
-> >  }
-> >
-> > +static int vfio_pci_count_devs(struct pci_dev *pdev, void *data)
-> > +{
-> > +       (*(int *)data)++;
-> > +       return 0;
-> > +}
-> > +
-> > +struct vfio_pci_fill_info {
-> > +       int max;
-> > +       int cur;
-> > +       struct vfio_pci_dependent_device *devices;
-> > +};
-> > +
-> > +static int vfio_pci_fill_devs(struct pci_dev *pdev, void *data)
-> > +{
-> > +       struct vfio_pci_fill_info *info = data;
-> > +       struct iommu_group *iommu_group;
-> > +
-> > +       if (info->cur == info->max)
-> > +               return -EAGAIN; /* Something changed, try again */
-> > +
-> > +       iommu_group = iommu_group_get(&pdev->dev);
-> > +       if (!iommu_group)
-> > +               return -EPERM; /* Cannot reset non-isolated devices */
-> > +
-> > +       info->devices[info->cur].group_id = iommu_group_id(iommu_group);
-> > +       info->devices[info->cur].segment = pci_domain_nr(pdev->bus);
-> > +       info->devices[info->cur].bus = pdev->bus->number;
-> > +       info->devices[info->cur].devfn = pdev->devfn;
-> > +       info->cur++;
-> > +       iommu_group_put(iommu_group);
-> > +       return 0;
-> > +}
-> > +
-> > +struct vfio_pci_group {
-> > +       struct vfio_group *group;
-> > +       int id;
-> > +};
-> > +
-> > +struct vfio_pci_group_info {
-> > +       int count;
-> > +       struct vfio_pci_group *groups;
-> > +};
-> > +
-> > +static int vfio_pci_validate_devs(struct pci_dev *pdev, void *data)
-> > +{
-> > +       struct vfio_pci_group_info *info = data;
-> > +       struct iommu_group *group;
-> > +       int id, i;
-> > +
-> > +       group = iommu_group_get(&pdev->dev);
-> > +       if (!group)
-> > +               return -EPERM;
-> > +
-> > +       id = iommu_group_id(group);
-> > +
-> > +       for (i = 0; i < info->count; i++)
-> > +               if (info->groups[i].id == id)
-> > +                       break;
-> > +
-> > +       iommu_group_put(group);
-> > +
-> > +       return (i == info->count) ? -EINVAL : 0;
-> > +}
-> > +
-> > +static int vfio_pci_for_each_slot_or_bus(struct pci_dev *pdev,
-> > +                                        int (*fn)(struct pci_dev *,
-> > +                                                  void *data), void *data,
-> > +                                        bool slot)
-> > +{
-> > +       struct pci_dev *tmp;
-> > +       int ret = 0;
-> > +
-> > +       list_for_each_entry(tmp, &pdev->bus->devices, bus_list) {
-> > +               if (slot && tmp->slot != pdev->slot)
-> > +                       continue;
-> > +
-> > +               ret = fn(tmp, data);
-> > +               if (ret)
-> > +                       break;
-> > +
-> > +               if (tmp->subordinate) {
-> > +                       ret = vfio_pci_for_each_slot_or_bus(tmp, fn,
-> > +                                                           data, false);
-> > +                       if (ret)
-> > +                               break;
-> > +               }
-> > +       }
-> > +
-> > +       return ret;
-> > +}
-> 
-> vfio_pci_for_each_slot_or_bus() isn't really vfio-specific, is it?
+>> in your test: the PF is not get freed but it is removed for bus's device list.
+>> so pciehp_configure_device will create new one even the old is not
+>> really released.
+>
+> Yes.  As I said above, I do see the leak of the PF pci_dev, and
+> we certainly do need to fix that, but it's not a regression and
+> doesn't seem urgent.
+>
+>> Please check with attached patch, that only release that from link-list in
+>> pci_release device. I posted it a while back.
+>> After it get applied, you will not have chance to create new device in
+>> pciehp_configure_device.
+>
+> [I inlined your patch for convenience]
+>
+> I agree that the patch below looks like a good thing to do.
+> However, it is not in v3.11.  So if the problem only happens when
+> the patch below is applied, we don't need to fix the problem in
+> v3.11.
 
-It's not, I originally has callbacks split out as PCI patches but I was
-able to simplify some things in the code by customizing it to my usage,
-so I left it here.
+ok.
 
-> I mean, traversing the PCI hierarchy doesn't require vfio knowledge.  I
-> think this loop (walking the bus->devices list) skips devices on
-> "virtual buses" that may be added for SR-IOV.  I'm not sure that
-> pci_walk_bus() handles that correctly either, but at least if you used
-> that, we could fix the problem in one place.
+>
+> I've spent a LOT of time trying to reproduce this problem and
+> convince myself that we need to do something in v3.11.  If you're
+> telling me that my time was wasted because the problem does not
+> happen in v3.11-rc, but only happens with your out-of-tree patch,
+> I'm going to be very upset.
 
-I didn't know about pci_walk_bus(), I'll look into switching to it.
-Thanks,
+sorry, I did not notice that. I should test without that patch.
 
-Alex
-
+Yinghai
