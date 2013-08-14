@@ -1,48 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:20711 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751686Ab3HNLxn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 07:53:43 -0400
+Date: Wed, 14 Aug 2013 07:53:28 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] PCI: mvebu: add support for reset on GPIO
+Message-ID: <20130814115328.GA32395@titan.lakedaemon.net>
+References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
+ <1376396724-32048-5-git-send-email-sebastian.hesselbarth@gmail.com>
+ <20130814090715.GA2084@ulmo>
+ <520B4CEE.2050508@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOLK0pwQJVvcT5xA-+Ftb85FzbjHN-OZmXO=n7r4EWh4nFjSBA@mail.gmail.com>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-	<1376189294-32022-29-git-send-email-yinghai@kernel.org>
-	<CANVTcTYhSfU+Su9s1B+mTTBfgsZgqvQxHiTsLck1zT_vg1Cs4g@mail.gmail.com>
-	<CANVTcTb2+qX6XMBqrzeLho9yFS55AnztVJ85JBMuxjoH11qzaQ@mail.gmail.com>
-	<CAOLK0pwQJVvcT5xA-+Ftb85FzbjHN-OZmXO=n7r4EWh4nFjSBA@mail.gmail.com>
-Date: Fri, 23 Aug 2013 11:38:44 -0700
-Message-ID: <CAE9FiQWnGaa6omcLW0zxLj+UMspRGxjVoYXUsH3ndydGD51T9w@mail.gmail.com>
-Subject: Re: [PATCH v4 28/28] PCI, x86, ACPI: get ioapic address from acpi device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Lan Tianyu <lantianyu1986@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: rui wang <ruiv.wang@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger kernel org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <520B4CEE.2050508@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 23, 2013 at 8:34 AM, Lan Tianyu <lantianyu1986@gmail.com> wrote:
->> I worked around the problem by replacing acpi_resource_to_address64()
->> with resource_to_addr().  But resource_to_addr() is a static function
->> in arch/x86/pci/acpi.c, not very convenient to use. Here's what I did:
->>
->
-> Hi Rui&Yinghai:
->            How about using the following code to translate struct
->  acpi_resource to struct resouce in this setup_res()?
->
->          if (acpi_dev_resource_address_space(...)
->                 || acpi_dev_resource_memory(..))
->               return AE_OK;
+On Wed, Aug 14, 2013 at 11:25:02AM +0200, Sebastian Hesselbarth wrote:
+> On 08/14/2013 11:07 AM, Thierry Reding wrote:
+> >On Tue, Aug 13, 2013 at 02:25:23PM +0200, Sebastian Hesselbarth wrote:
+> >[...]
+> >>diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> >[...]
+> >>@@ -897,6 +904,30 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+> >[...]
+> >>+			u32 reset_udelay = 20000;
+> >[...]
+> >>+			udelay(reset_udelay);
+> >
+> >udelay(20000) is probably not a good idea. You should probably use
+> >something like usleep_range() or msleep() here. Also see:
+> >
+> >	Documentation/timers/timers-howto.txt
+> 
+> Thierry,
+> 
+> thanks for mentioning this. I clearly got distracted from ms to us
+> switch due to the different reset API convention. As the delay will
+> be most likely 10ms+, we should change the above to
+> msleep(reset_udelay/1000) instead.
 
-Yest, that could be better, will update that.
+I'll just go ahead and fix this up locally.  No need to resend.
 
-Also can you submit patch that will use that in res_to_addr of
-arch/x86/pci/acpi.c?
+thx,
 
-Thanks
-
-Yinghai
+Jason.
