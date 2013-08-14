@@ -1,143 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:58997 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932195Ab3HGJd2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:33:28 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCHv7 03/13] PCI: Introduce new MSI chip infrastructure
-Date: Wed,  7 Aug 2013 11:32:24 +0200
-Message-Id: <1375867954-2320-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:37744 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933270Ab3HNVp5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 17:45:57 -0400
+Received: by mail-vc0-f174.google.com with SMTP id gd11so6662vcb.19
+        for <linux-pci@vger.kernel.org>; Wed, 14 Aug 2013 14:45:57 -0700 (PDT)
+MIME-Version: 1.0
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Wed, 14 Aug 2013 14:45:37 -0700
+Message-ID: <CALCETrUHJg5qskadGG11fGvCVgbm=Zn0zuWv+CAgrEm9-Qcfdg@mail.gmail.com>
+Subject: PCI devices w/ multiple drivers at once? (sb_edac vs i2c-imc)
+To: linux-pci@vger.kernel.org, linux-edac@vger.kernel.org
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+I'm working on a driver for the Sandy Bridge iMC SMBUS controller.  It
+(mostly) lives on pci device 15, function 0.  So my driver registers
+as an ordinary PCI driver for that device (8086.3ca8).
 
-The new struct msi_chip is used to associated an MSI controller with a
-PCI bus. It is automatically handed down from the root to its children
-during bus enumeration.
+The problem is that sb_edac also registers for 8086.3ca8.  This means
+that the drivers conflict.  The sb_edac driver is actually driving
+functionality that's split between eleven (!) different pci devices,
+none of which overlaps the stuff I'm driving.
 
-This patch provides default (weak) implementations for the architecture-
-specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
-and arch_msi_check_device()) which check if a PCI device's bus has an
-attached MSI chip and forward the call appropriately.
+What's the Right Way (tm) to handle this?  Should I just modify
+sb_edac to pick a different one of the 11 devices to probe?  Is there
+some standard way to handle this in the PCI code?
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Daniel Price <daniel.price@gmail.com>
----
- drivers/pci/msi.c   | 27 +++++++++++++++++++++++++--
- drivers/pci/probe.c |  1 +
- include/linux/msi.h | 11 +++++++++++
- include/linux/pci.h |  1 +
- 4 files changed, 38 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 823c386..2837285 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -32,16 +32,39 @@ static int pci_msi_enable = 1;
- 
- int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
--	return -EINVAL;
-+	struct msi_chip *chip = dev->bus->msi;
-+	int err;
-+
-+	if (!chip || !chip->setup_irq)
-+		return -EINVAL;
-+
-+	err = chip->setup_irq(chip, dev, desc);
-+	if (err < 0)
-+		return err;
-+
-+	irq_set_chip_data(desc->irq, chip);
-+
-+	return 0;
- }
- 
- void __weak arch_teardown_msi_irq(unsigned int irq)
- {
-+	struct msi_chip *chip = irq_get_chip_data(irq);
-+
-+	if (!chip || !chip->teardown_irq)
-+		return;
-+
-+	chip->teardown_irq(chip, irq);
- }
- 
- int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
- {
--	return 0;
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (!chip || !chip->check_device)
-+		return 0;
-+
-+	return chip->check_device(chip, dev, nvec, type);
- }
- 
- int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 46ada5c..b8eaa81 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -666,6 +666,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 
- 	child->parent = parent;
- 	child->ops = parent->ops;
-+	child->msi = parent->msi;
- 	child->sysdata = parent->sysdata;
- 	child->bus_flags = parent->bus_flags;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 271dfd1..090ddad 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -65,4 +65,15 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev, int irq);
- 
-+struct msi_chip {
-+	struct module *owner;
-+	struct device *dev;
-+
-+	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
-+			 struct msi_desc *desc);
-+	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-+	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-+			    int nvec, int type);
-+};
-+
- #endif /* LINUX_MSI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..4044e3c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -433,6 +433,7 @@ struct pci_bus {
- 	struct resource busn_res;	/* bus numbers routed to this bus */
- 
- 	struct pci_ops	*ops;		/* configuration access functions */
-+	struct msi_chip	*msi;		/* MSI controller */
- 	void		*sysdata;	/* hook for sys-specific extension */
- 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
- 
--- 
-1.8.1.2
-
+--Andy
