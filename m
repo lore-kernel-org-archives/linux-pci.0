@@ -1,55 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:33138
-	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933310Ab3HHALb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 20:11:31 -0400
-Message-ID: <5202E22E.4070408@chelsio.com>
-Date: Wed, 07 Aug 2013 17:11:26 -0700
-From: Casey Leedom <leedom@chelsio.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 14 Aug 2013 14:18:11 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: "Luck, Tony" <tony.luck@intel.com>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aristeu Rozanski Filho <arozansk@redhat.com>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130814121811.GC9158@pd.tnic>
+References: <20130808163822.67e0828a@samsung.com>
+ <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com>
+ <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812114404.3bd64fa0@samsung.com>
+ <520A1B5E.8040105@linux.vnet.ibm.com>
+ <20130813094147.062317f8@concha.lan>
+ <520A6A30.1030406@linux.vnet.ibm.com>
+ <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
+ <520B603E.3040002@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: vipul@chelsio.com, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	tomreu@chelsio.com, divy@chelsio.com, dm@chelsio.com,
-	nirranjan@chelsio.com, eilong@broadcom.com, netdev@vger.kernel.org
-Subject: Re: [PATCH V2 0/4] Enable bus master till the FLR completes for Chelsio
- T4
-References: <1375784319-25760-1-git-send-email-vipul@chelsio.com> <20130807.170836.1214269360365516393.davem@davemloft.net>
-In-Reply-To: <20130807.170836.1214269360365516393.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <520B603E.3040002@linux.vnet.ibm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Aug 14, 2013 at 04:17:26PM +0530, Naveen N. Rao wrote:
+> - One, the logging format for APEI data is a bit verbose and hard
+> to parse. But, I suppose we could work with this if we make a few
+> changes. Is it ok to change how the APEI data is made available
+> through mc_event->driver_detail?
 
-On 08/07/13 17:08, David Miller wrote:
-> From: Vipul Pandya <vipul@chelsio.com>
-> Date: Tue,  6 Aug 2013 15:48:35 +0530
->
->> This patch series adds device specific reset method for Chelsio T4 adapters.
->>
->> The series also adds new routine, pci_wait_for_pending_transaction, to wait for
->> pending pci transaction. There are few places where waiting for pending pci
->> transaction code was duplicated. This patch series also replaces occurances of
->> duplicate code.
->>
->> This patch series is built against Bjorn Helgaas pci tree next branch. We would
->> like to merge this series via the same.
->>
->> I have Cced respective maintainers of the modified drivers. Kindly review and
->> let us know in case of any review comments.
-> Please push this via the PCI tree, and for the networking bits you can add:
->
-> Acked-by: David S. Miller <davem@davemloft.net>
->
-> Thanks.
+How?
 
-Thanks David.  I ~think~ that's covered and we've already gone through 
-one round of reviews that Bjorn Helgaas graciously provided.
+> - Two, if ghes_edac is enabled, it prevents other edac drivers
+> from being loaded. It looks like the assumption here is that if
+> ghes/firmware first is enabled, then *all* memory errors are reported
+> through ghes which is not true. We could have (a subset of) corrected
+> errors reported through ghes, some through CMCI and uncorrected errors
+> through MCE. So, if I'm not mistaken, if ghes_edac is enabled, we will
+> only receive ghes error events through mc_event and not the others.
 
-Note that this patch should also obviate the need for the patch which we 
-attempted to get into the Chelsio T4 network driver cxgb4 several months 
-ago which monitored the chip for a hang caused by KVM detaching a T4 
-Virtual Function from a Virtual Machine.  You were unhappy with that 
-patch and requested that we approach the problem differently.  Thanks 
-for your push.
+The idea is to have a single tracepoint reporting memory errors. Where
+you call it from shouldn't matter. Now, we have to make sure that we
+don't report the same event more than once over different paths.
 
-Casey
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
