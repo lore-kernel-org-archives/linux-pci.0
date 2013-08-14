@@ -1,58 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:20711 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751686Ab3HNLxn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 07:53:43 -0400
-Date: Wed, 14 Aug 2013 07:53:28 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] PCI: mvebu: add support for reset on GPIO
-Message-ID: <20130814115328.GA32395@titan.lakedaemon.net>
-References: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
- <1376396724-32048-5-git-send-email-sebastian.hesselbarth@gmail.com>
- <20130814090715.GA2084@ulmo>
- <520B4CEE.2050508@gmail.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:36033 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933191Ab3HNVWi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 17:22:38 -0400
+Received: by mail-ie0-f174.google.com with SMTP id w15so2957185iea.19
+        for <linux-pci@vger.kernel.org>; Wed, 14 Aug 2013 14:22:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <520B4CEE.2050508@gmail.com>
+In-Reply-To: <20130808200943.2932.42781.stgit@bling.home>
+References: <20130808200444.2932.17381.stgit@bling.home> <20130808200943.2932.42781.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 14 Aug 2013 15:22:17 -0600
+Message-ID: <CAErSpo4rvankxEA-wQ-yGg2MRVtS49dKctEGdn08GVFt8PdjeQ@mail.gmail.com>
+Subject: Re: [PATCH v5 4/9] pci: Add slot reset option to pci_dev_reset
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 14, 2013 at 11:25:02AM +0200, Sebastian Hesselbarth wrote:
-> On 08/14/2013 11:07 AM, Thierry Reding wrote:
-> >On Tue, Aug 13, 2013 at 02:25:23PM +0200, Sebastian Hesselbarth wrote:
-> >[...]
-> >>diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> >[...]
-> >>@@ -897,6 +904,30 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
-> >[...]
-> >>+			u32 reset_udelay = 20000;
-> >[...]
-> >>+			udelay(reset_udelay);
-> >
-> >udelay(20000) is probably not a good idea. You should probably use
-> >something like usleep_range() or msleep() here. Also see:
-> >
-> >	Documentation/timers/timers-howto.txt
-> 
-> Thierry,
-> 
-> thanks for mentioning this. I clearly got distracted from ms to us
-> switch due to the different reset API convention. As the delay will
-> be most likely 10ms+, we should change the above to
-> msleep(reset_udelay/1000) instead.
+On Thu, Aug 8, 2013 at 2:09 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> If the hotplug controller provides a way to reset a slot, use that
+> before a direct parent bus reset.  Like the bus reset option, this is
+> only available when a single pci_dev occupies the slot.
+>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/pci/pci.c |   34 ++++++++++++++++++++++++++++++++++
+>  1 file changed, 34 insertions(+)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d468608..9407aab 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/device.h>
+>  #include <linux/pm_runtime.h>
+> +#include <linux/pci_hotplug.h>
+>  #include <asm-generic/pci-bridge.h>
+>  #include <asm/setup.h>
+>  #include "pci.h"
+> @@ -3256,6 +3257,35 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+>         return 0;
+>  }
+>
+> +static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
+> +{
+> +       int rc = -ENOTTY;
+> +
+> +       if (!hotplug || !try_module_get(hotplug->ops->owner))
+> +               return rc;
+> +
+> +       if (hotplug->ops->reset_slot)
+> +               rc = hotplug->ops->reset_slot(hotplug, probe);
+> +
+> +       module_put(hotplug->ops->owner);
+> +
+> +       return rc;
+> +}
+> +
+> +static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
+> +{
+> +       struct pci_dev *pdev;
+> +
+> +       if (dev->subordinate || !dev->slot)
+> +               return -ENOTTY;
+> +
+> +       list_for_each_entry(pdev, &dev->bus->devices, bus_list)
+> +               if (pdev != dev && pdev->slot == dev->slot)
+> +                       return -ENOTTY;
+> +
+> +       return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
 
-I'll just go ahead and fix this up locally.  No need to resend.
+I don't think this is hotplug-safe.  It looks like pci_bus_sem might
+be the right semaphore to hold while verifying that we won't reset any
+unintended devices.  But I think most users of the bus->devices list
+are unprotected, so there's no point in trying to fix just this one.
 
-thx,
-
-Jason.
+> +}
+> +
+>  static int __pci_dev_reset(struct pci_dev *dev, int probe)
+>  {
+>         int rc;
+> @@ -3278,6 +3308,10 @@ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+>         if (rc != -ENOTTY)
+>                 goto done;
+>
+> +       rc = pci_dev_reset_slot_function(dev, probe);
+> +       if (rc != -ENOTTY)
+> +               goto done;
+> +
+>         rc = pci_parent_bus_reset(dev, probe);
+>  done:
+>         return rc;
+>
