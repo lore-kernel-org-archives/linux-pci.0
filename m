@@ -1,132 +1,286 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:47359 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754953Ab3HFG0c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 02:26:32 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 6 Aug 2013 16:16:31 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id A082E2BB0052
-	for <linux-pci@vger.kernel.org>; Tue,  6 Aug 2013 16:26:27 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r766Adug2884004
-	for <linux-pci@vger.kernel.org>; Tue, 6 Aug 2013 16:10:39 +1000
-Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r766QQjX010274
-	for <linux-pci@vger.kernel.org>; Tue, 6 Aug 2013 16:26:27 +1000
-Date: Tue, 6 Aug 2013 14:26:24 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
- pbus_size_io()
-Message-ID: <20130806062624.GC10876@weiyang.vnet.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
- <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
- <20130805195149.GA19127@google.com>
- <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
- <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
- <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
- <20130805222135.GA29875@google.com>
- <20130806032227.GA7736@shangw.(null)>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130806032227.GA7736@shangw.(null)>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20130808200955.2932.30491.stgit@bling.home>
+References: <20130808200444.2932.17381.stgit@bling.home> <20130808200955.2932.30491.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 14 Aug 2013 15:24:35 -0600
+Message-ID: <CAErSpo5DrPB4L8FrK=amZe2nt6=oSntGG_AxugrQ4msa+fziOg@mail.gmail.com>
+Subject: Re: [PATCH v5 6/9] pci: Add slot and bus reset interfaces
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 06, 2013 at 11:22:27AM +0800, Gavin Shan wrote:
->On Mon, Aug 05, 2013 at 04:21:35PM -0600, Bjorn Helgaas wrote:
->>On Mon, Aug 05, 2013 at 02:09:27PM -0700, Yinghai Lu wrote:
->>> On Mon, Aug 5, 2013 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> >> then, we should drop that 4k capping.
->>> >> I was thinking there could be strange or wild res with bigger than 4k.
->>> >
->>> > If there *were* an I/O BAR larger than 4KB, how should it be handled?
->>> > I don't think capping the alignment to 4KB sounds like the best way.
->>> > For example, a 16KB I/O BAR would still need to be aligned on 16KB.
->>> >
->>> > And I think capping to 4KB as you did above will break the powerpc
->>> > pcibios_window_alignment() implementation.  For example, if
->>> > pcibios_window_alignment() returned 16KB, and we later capped it to
->>> > 4KB, we're going to allocate space for the bridge window with the
->>> > wrong alignment.
->>> 
->>> Agree.
->>
->>OK.  Can you guys try this out and see whether it fixes the problem?
->>I don't know what the actual problem *is*, so I can't tell whether
->>this is a possible fix.
->>
+On Thu, Aug 8, 2013 at 2:09 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> Sometimes pci_reset_function is not sufficient.  We have cases where
+> devices do not support any kind of reset, but there might be multiple
+> functions on the bus preventing pci_reset_function from doing a
+> secondary bus reset.  We also have cases where a device will advertise
+> that it supports a PM reset, but really does nothing on D3hot->D0
+> (graphics cards are notorious for this).  These devices often also
+> have more than one function, so even blacklisting PM reset for them
+> wouldn't allow a secondary bus reset through pci_reset_function.
 >
->The code looks simpler, but it potentially breaks PowerNV platforms.
->Lets have inline description if I understand everything here.
+> If a driver supports multiple devices it should have the ability to
+> induce a bus reset when it needs to.  This patch provides that ability
+> through pci_reset_slot and pci_reset_bus.  It's the caller's
+> responsibility when using these interfaces to understand that all of
+> the devices in or below the slot (or on or below the bus) will be
+> reset and therefore should be under control of the caller.
+
+How does the caller check or ensure this?  If there's a bridge
+involved, I'm not sure the caller *can* ensure this, because the
+caller can't hold pci_bus_sem or whatever we use to protect hotplug
+changes.
+
+> PCI state
+> of all the affected devices is saved and restored around these resets,
+> but internal state of all of the affected devices is reset (which
+> should be the intention).
 >
->>diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->>index d4f1ad9..8333c92 100644
->>--- a/drivers/pci/setup-bus.c
->>+++ b/drivers/pci/setup-bus.c
->>@@ -749,12 +749,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->> 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
->> 	resource_size_t size = 0, size0 = 0, size1 = 0;
->> 	resource_size_t children_add_size = 0;
->>-	resource_size_t min_align, io_align, align;
->>+	resource_size_t min_align, align;
->>
->> 	if (!b_res)
->>  		return;
->>
->>-	io_align = min_align = window_alignment(bus, IORESOURCE_IO);
->>+	min_align = window_alignment(bus, IORESOURCE_IO);
->> 	list_for_each_entry(dev, &bus->devices, bus_list) {
->> 		int i;
->>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/pci/pci.c   |  209 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |    2
+>  2 files changed, 211 insertions(+)
 >
->"min_align" here indicates the IO segment size on PowerNV platform.
->On PowerNV platform, the IO range of specific PHB (PCI controller)
->is divided evenly and each piece of that is called IO segment. For
->example, the IO segment size ("min_align") is 64K initially. If one
->of specific IO BAR has size of 96K (it's possible?), "min_align"
->becomes 96K eventually, which isn't IO segment aligned.
-
-I think this caes will not happen. 
-
-As I analysised in previous letter. During the list_for_each_entry loop, the
-resources could be in two cased: 1. bridge I/O window(IORESOURCE_STARTALIGN);
-2. device I/O BAR(IORESOURCE_SIZEALIGN).
-
-    Bridge I/O window is 64k aligned, as the platform required.
-    Device I/O BAR is less than 256 bytes according to the specification.
-
-So the 96k size is not possible. 
-
-Please fix me, if I am not correct.
-
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 4a0275c..1dba7dd 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3460,6 +3460,215 @@ int pci_reset_function(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_reset_function);
 >
->>@@ -781,9 +781,6 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->> 		}
->> 	}
->>
->>-	if (min_align > io_align)
->>-		min_align = io_align;
->>-
->> 	size0 = calculate_iosize(size, min_size, size1,
->> 			resource_size(b_res), min_align);
->> 	if (children_add_size > add_size)
->>
+> +/* Lock devices from the top of the tree down */
+> +static void pci_bus_lock(struct pci_bus *bus)
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &bus->devices, bus_list) {
+> +               pci_dev_lock(dev);
+> +               if (dev->subordinate)
+> +                       pci_bus_lock(dev->subordinate);
+> +       }
+> +}
+> +
+> +/* Unlock devices from the bottom of the tree up */
+> +static void pci_bus_unlock(struct pci_bus *bus)
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &bus->devices, bus_list) {
+> +               if (dev->subordinate)
+> +                       pci_bus_unlock(dev->subordinate);
+> +               pci_dev_unlock(dev);
+> +       }
+> +}
+> +
+> +/* Lock devices from the top of the tree down */
+> +static void pci_slot_lock(struct pci_slot *slot)
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+> +               if (!dev->slot || dev->slot != slot)
+> +                       continue;
+> +               pci_dev_lock(dev);
+> +               if (dev->subordinate)
+> +                       pci_bus_lock(dev->subordinate);
+> +       }
+> +}
+> +
+> +/* Unlock devices from the bottom of the tree up */
+> +static void pci_slot_unlock(struct pci_slot *slot)
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+> +               if (!dev->slot || dev->slot != slot)
+> +                       continue;
+> +               if (dev->subordinate)
+> +                       pci_bus_unlock(dev->subordinate);
+> +               pci_dev_unlock(dev);
+> +       }
+> +}
+> +
+> +/* Save and disable devices from the top of the tree down */
+> +static void pci_bus_save_and_disable(struct pci_bus *bus)
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &bus->devices, bus_list) {
+> +               pci_dev_save_and_disable(dev);
+> +               if (dev->subordinate)
+> +                       pci_bus_save_and_disable(dev->subordinate);
+> +       }
+> +}
+> +
+> +/*
+> + * Restore devices from top of the tree down - parent bridges need to be
+> + * restored before we can get to subordinate devices.
+> + */
+> +static void pci_bus_restore(struct pci_bus *bus)
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &bus->devices, bus_list) {
+> +               pci_dev_restore(dev);
+> +               if (dev->subordinate)
+> +                       pci_bus_restore(dev->subordinate);
+> +       }
+> +}
+> +
+> +/* Save and disable devices from the top of the tree down */
+> +static void pci_slot_save_and_disable(struct pci_slot *slot)
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+> +               if (!dev->slot || dev->slot != slot)
+> +                       continue;
+> +               pci_dev_save_and_disable(dev);
+> +               if (dev->subordinate)
+> +                       pci_bus_save_and_disable(dev->subordinate);
+> +       }
+> +}
+> +
+> +/*
+> + * Restore devices from top of the tree down - parent bridges need to be
+> + * restored before we can get to subordinate devices.
+> + */
+> +static void pci_slot_restore(struct pci_slot *slot)
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+> +               if (!dev->slot || dev->slot != slot)
+> +                       continue;
+> +               pci_dev_restore(dev);
+> +               if (dev->subordinate)
+> +                       pci_bus_restore(dev->subordinate);
+> +       }
+> +}
+> +
+> +static int pci_slot_reset(struct pci_slot *slot, int probe)
+> +{
+> +       int rc;
+> +
+> +       if (!slot)
+> +               return -ENOTTY;
+> +
+> +       if (!probe)
+> +               pci_slot_lock(slot);
+> +
+> +       might_sleep();
+> +
+> +       rc = pci_reset_hotplug_slot(slot->hotplug, probe);
+> +
+> +       if (!probe)
+> +               pci_slot_unlock(slot);
+> +
+> +       return rc;
+> +}
+> +
+> +/**
+> + * pci_reset_slot - reset a PCI slot
+> + * @slot: PCI slot to reset
+> + *
+> + * A PCI bus may host multiple slots, each slot may support a reset mechanism
+> + * independent of other slots.  For instance, some slots may support slot power
+> + * control.  In the case of a 1:1 bus to slot architecture, this function may
+> + * wrap the bus reset to avoid spurious slot related events such as hotplug.
+> + * Generally a slot reset should be attempted before a bus reset.  All of the
+> + * function of the slot and any subordinate buses behind the slot are reset
+> + * through this function.  PCI config space of all devices in the slot and
+> + * behind the slot is saved before and restored after reset.
+> + *
+> + * Return 0 on success, non-zero on error.
+> + */
+> +int pci_reset_slot(struct pci_slot *slot)
+> +{
+> +       int rc;
+> +
+> +       rc = pci_slot_reset(slot, 1);
+> +       if (rc)
+> +               return rc;
+> +
+> +       pci_slot_save_and_disable(slot);
+> +
+> +       rc = pci_slot_reset(slot, 0);
+> +
+> +       pci_slot_restore(slot);
+> +
+> +       return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_reset_slot);
+> +
+> +static int pci_bus_reset(struct pci_bus *bus, int probe)
+> +{
+> +       if (!bus->self)
+> +               return -ENOTTY;
+> +
+> +       if (probe)
+> +               return 0;
+> +
+> +       pci_bus_lock(bus);
+> +
+> +       might_sleep();
+> +
+> +       pci_reset_bridge_secondary_bus(bus->self);
+> +
+> +       pci_bus_unlock(bus);
+> +
+> +       return 0;
+> +}
+> +
+> +/**
+> + * pci_reset_bus - reset a PCI bus
+> + * @bus: top level PCI bus to reset
+> + *
+> + * Do a bus reset on the given bus and any subordinate buses, saving
+> + * and restoring state of all devices.
+> + *
+> + * Return 0 on success, non-zero on error.
+> + */
+> +int pci_reset_bus(struct pci_bus *bus)
+> +{
+> +       int rc;
+> +
+> +       rc = pci_bus_reset(bus, 1);
+> +       if (rc)
+> +               return rc;
+> +
+> +       pci_bus_save_and_disable(bus);
+> +
+> +       rc = pci_bus_reset(bus, 0);
+> +
+> +       pci_bus_restore(bus);
+> +
+> +       return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_reset_bus);
+> +
+>  /**
+>   * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
+>   * @dev: PCI device to query
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 35c1bc4..1a8fd34 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -924,6 +924,8 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+>  int __pci_reset_function(struct pci_dev *dev);
+>  int __pci_reset_function_locked(struct pci_dev *dev);
+>  int pci_reset_function(struct pci_dev *dev);
+> +int pci_reset_slot(struct pci_slot *slot);
+> +int pci_reset_bus(struct pci_bus *bus);
+>  void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+>  void pci_update_resource(struct pci_dev *dev, int resno);
+>  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
 >
->Thanks,
->Gavin
-
--- 
-Richard Yang
-Help you, Help me
-
