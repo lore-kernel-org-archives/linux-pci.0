@@ -1,63 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36879 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933320Ab3HGWqe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Aug 2013 18:46:34 -0400
-Message-ID: <1375915536.12551.9.camel@pasglop>
-Subject: Re: [PATCHv7 07/13] irqdomain: add function to find a MSI irq_domain
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Date: Thu, 08 Aug 2013 08:45:36 +1000
-In-Reply-To: <1375915344.12551.6.camel@pasglop>
-References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	 <1375867954-2320-8-git-send-email-thomas.petazzoni@free-electrons.com>
-	 <1375908620.9300.3.camel@pasglop> <20130808000443.17f57875@skate>
-	 <1375914665.12551.5.camel@pasglop> <1375915344.12551.6.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mailout4.w2.samsung.com ([211.189.100.14]:18995 "EHLO
+	usmailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929Ab3HNXyn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 19:54:43 -0400
+Date: Wed, 14 Aug 2013 20:54:33 -0300
+From: Mauro Carvalho Chehab <m.chehab@samsung.com>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: Borislav Petkov <bp@alien8.de>, tony.luck@intel.com,
+	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
+	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Aristeu Rozanski Filho <arozansk@redhat.com>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+Message-id: <20130814205433.452ef58d@concha.lan>
+In-reply-to: <520A651E.3050604@linux.vnet.ibm.com>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com> <20130812123813.GD18018@pd.tnic>
+ <20130812114932.52bb0314@samsung.com> <20130812150424.GH18018@pd.tnic>
+ <20130812142557.2a43f155@samsung.com> <20130812175631.GI18018@pd.tnic>
+ <520A1A2E.9080500@linux.vnet.ibm.com> <20130813092154.1e17385f@concha.lan>
+ <520A651E.3050604@linux.vnet.ibm.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-08-08 at 08:42 +1000, Benjamin Herrenschmidt wrote:
-> On Thu, 2013-08-08 at 08:31 +1000, Benjamin Herrenschmidt wrote:
-> > On Thu, 2013-08-08 at 00:04 +0200, Thomas Petazzoni wrote:
-> > > Again, this has been discussed at lengths in the previous iterations,
-> > > for which I already gave you all the links, as you requested in a
-> > > private e-mail. It'd be great if this discussion was read seriously,
-> > > because I really have the feeling we are restarting from zero on this
-> > > whole MSI thing...
-> > 
-> > Well, two things here:
-> > 
-> >  - You don't need my ack since I am not the maintainer of the irqdomain
-> > code anymore, Grant is :-)
+Em Tue, 13 Aug 2013 22:25:58 +0530
+"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
+
+(sorry for a late answer, I had to do a small travel yesterday)
+
+> On 08/13/2013 05:51 PM, Mauro Carvalho Chehab wrote:
+> > Em Tue, 13 Aug 2013 17:06:14 +0530
+> > "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
+> >
+> >> On 08/12/2013 11:26 PM, Borislav Petkov wrote:
+> >>> On Mon, Aug 12, 2013 at 02:25:57PM -0300, Mauro Carvalho Chehab wrote:
+> >>>> Userspace still needs the EDAC sysfs, in order to identify how the
+> >>>> memory is organized, and do the proper memory labels association.
+> >>>>
+> >>>> What edac_ghes does is to fill those sysfs nodes, and to call the
+> >>>> existing tracing to report errors.
+> >>
+> >> I suppose you're referring to the entries under /sys/devices/system/edac/mc?
+> >
+> > Yes.
+> >
+> >>
+> >> I'm not sure I understand how this helps. ghes_edac seems to just be
+> >> populating this based on dmi, which if I'm not mistaken, can be obtained
+> >> in userspace (mcelog as an example).
+> >>
+> >> Also, on my system, all DIMMs are being reported under mc0. I doubt if
+> >> the labels there are accurate.
+> >
+> > Yes, this is the current status of ghes_edac, where BIOS doesn't provide any
+> > reliable way to associate a given APEI report to a physical DIMM slot label.
+> >
+> > The plan is to add more logic there as BIOSes start to provide some reliable
+> > way to do such association. I discussed this subject with a few vendors
+> > while I was working at Red Hat.
 > 
-> Hrm, I'm being told Grant isn't anymore... I can step in and take it all
-> back but you might not like the result ....
+> Hmm... is there anything specific in the APEI report that could help? 
 
-Oh but it looks like MAINTAINERS says I am :-)
+I didn't see anything at APEI spec that would allow to describe how the
+memory is organized. So, it is hard for the ghes_edac driver to discover
+how many memory controllers, channels and slots are available. This data
+is needed, in order to allow userspace to pass the labels for each DIMM,
+or for the Kernel to auto-discover.
 
-Ok so from that perspective, I don't like it at all. You can try to
-convince me otherwise but I don't think we need to introduce a
-dependency to something like msi into the core remapper. It's already to
-complex.
+> More importantly, is there a need to do this in-kernel rather than in 
+> user-space?
 
-Why don't you move the powerpc bitmap allocator over to a generic
-place ? I feel like it would be actually simpler but feel free to prove
-me wrong.
+Yes, due to 2 aspects:
 
-Ben.
+On a critical error, the machine will die. The EDAC core will print the
+error at dmesg, but no other record to be latter parsed will be available;
 
+With hot pluggable memories, dynamic channel rerouting, memory poisoning
+and other funny things, it could not be possible to point to a DIMM, 
+if the parsing is done on a latter time.
 
+Regards,
+Mauro
