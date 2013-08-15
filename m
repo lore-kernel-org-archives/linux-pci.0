@@ -1,68 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 0/5] ARM: dove: DT PCIe support
-Date: Tue, 13 Aug 2013 14:25:19 +0200
-Message-Id: <1376396724-32048-1-git-send-email-sebastian.hesselbarth@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Luck, Tony" <tony.luck@intel.com>
+To: Borislav Petkov <bp@alien8.de>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>
+CC: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Aristeu Rozanski Filho" <arozansk@redhat.com>
+Subject: RE: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Date: Thu, 15 Aug 2013 18:16:48 +0000
+Message-ID: <3908561D78D1C84285E8C5FCA982C28F31CBCE72@ORSMSX106.amr.corp.intel.com>
+References: <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812114404.3bd64fa0@samsung.com> <520A1B5E.8040105@linux.vnet.ibm.com>
+ <20130813094147.062317f8@concha.lan> <520A6A30.1030406@linux.vnet.ibm.com>
+ <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
+ <520B603E.3040002@linux.vnet.ibm.com> <20130814211504.393cf138@concha.lan>
+ <20130815100132.GC27616@pd.tnic> <20130815103421.178a5224@samsung.com>
+ <20130815135106.GG27616@pd.tnic>
+In-Reply-To: <20130815135106.GG27616@pd.tnic>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set adds support for the PCIe controllers found on Marvell
-Dove SoCs. It depends on mvebu-pci patches sent by Thomas Petazzoni.
-The ARM Dove related patches have already been taken by Jason Cooper
-and have been removed from v2 of this patch set. Changelog is added
-to the individual patch emails.
-
-Patches 1 and 2 fix some minor issues with pci-mvebu by moving
-clk_prepare_enable before accessing any controller registers and
-counting sucessfully registered ports only.
-
-Patch 3 converts pci-mvebu from subsys_initcall registration to
-normal platform driver registration to allow it to fail with
-EPROBE_DEFER later.
-
-Patch 4 adds DT parsing for reset (PERST#) GPIO pins and delay to
-wait for PCIe devices after reset de-assertion.
-
-Patch 5 finally adds a compatible to pci-mvebu for Dove SoCs.
-
-[Patch 6-9 have already been taken by Jason Cooper]
-
-Sebastian Hesselbarth (5):
-  PCI: mvebu: move clock enable before register access
-  PCI: mvebu: increment nports only for registered ports
-  PCI: mvebu: remove subsys_initcall
-  PCI: mvebu: add support for reset on GPIO
-  PCI: mvebu: add support for Marvell Dove SoCs
-
- .../devicetree/bindings/pci/mvebu-pci.txt          |    7 ++
- drivers/pci/host/Kconfig                           |    2 +-
- drivers/pci/host/pci-mvebu.c                       |   99 +++++++++++++-------
- 3 files changed, 71 insertions(+), 37 deletions(-)
-
----
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Andrew Lunn <andrew@lunn.ch>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>
-Cc: devicetree@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org
--- 
-1.7.10.4
-
+PiAqIFdlIHBhcnNlIHNvbWUgQVBFSSB0YWJsZSBhbmQgZGlzYWJsZSB0aG9zZSBNQ0EgYmFua3Mg
+d2hpY2ggdGhlIEJJT1MNCj4gd2FudHMgdG8gaGFuZGxlIGZpcnN0Lg0KDQpXZSBoYXZlIG5vIGlk
+ZWEgd2hpY2ggZXJyb3JzIHRoZSBCSU9TIGhhcyBjaG9zZW4gZm9yIGl0c2VsZi4gIFdlIGp1c3Qg
+a25vdyB3aGljaA0KYmFuayBudW1iZXJzIC4uLiBhbmQgSW50ZWwgcHJvY2Vzc29ycyBjaGFuZ2Ug
+bWFwcGluZ3Mgb2Ygd2hpY2ggZXJyb3JzIGFyZSBsb2dnZWQNCmluIHdoaWNoIGJhbmtzIGluIGV2
+ZXJ5IG5ldyBwcm9jZXNzb3IgdG9jayAoYW5kIHNvbWV0aW1lcyB0aWNrKS4gIFNvbWUgYmFua3MN
+CmFyZSBkb2N1bWVudGVkIGluIHByb2Nlc3NvciBkYXRhc2hlZXQuIG1vc3QgYXJlIG5vdC4gTW9z
+dCBjb21tb24gY2FzZSBtaWdodA0Kd2VsbCBiZSBtZW1vcnkgLi4uIGJ1dCBpdCBjb3VsZCBiZSBj
+YWNoZSwgb3IgSS9PLCBvciAuLi4NCg0KU28gdGhpcyBkb2Vzbid0IGhlbHAgTWF1cm8gZmlndXJl
+IG91dCB3aGV0aGVyIHRvIGFsbG93IGxvYWRpbmcgb2YgYW4NCkVEQUMgZHJpdmVyIHRoYXQgd2ls
+bCBwZWVrIGFuZCBwb2tlIGF0IGNoaXBzZXQgc3BlY2lmaWMgcmVnaXN0ZXJzIGluDQpwb3NzaWJs
+eSByYWN5IHdheXMgd2l0aCBCSU9TIGNvZGUgZG9pbmcgdGhlIHNhbWUgdGhpbmcuDQoNCi1Ub255
+DQo=
