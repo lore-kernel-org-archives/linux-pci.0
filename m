@@ -1,96 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:39569 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715Ab3H0RHl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 13:07:41 -0400
-Received: by mail-ob0-f171.google.com with SMTP id tb18so5095474obb.2
-        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 10:07:41 -0700 (PDT)
+Received: from mail.skyhub.de ([78.46.96.112]:38606 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756721Ab3HOTnM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Aug 2013 15:43:12 -0400
+Date: Thu, 15 Aug 2013 21:43:09 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130815194309.GL27616@pd.tnic>
+References: <20130813124258.GC4077@pd.tnic>
+ <520A6D98.9060204@linux.vnet.ibm.com>
+ <20130813175809.GE4077@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
+ <20130813181004.GF4077@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CB9150@ORSMSX106.amr.corp.intel.com>
+ <20130814054322.GA9158@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CBAAFA@ORSMSX106.amr.corp.intel.com>
+ <20130815101432.GE27616@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CBD158@ORSMSX106.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1377621883-6707-1-git-send-email-liuj97@gmail.com>
-References: <CAErSpo6pCzw6Gjn+SCFhu7PnBpHkUz0oqO+tGmmOH8NxoMiH6g@mail.gmail.com>
- <1377621883-6707-1-git-send-email-liuj97@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 27 Aug 2013 11:07:20 -0600
-Message-ID: <CAErSpo4B8XTfgq+eQsPZwrEkJ0cG81CskPrtFZWTwuoRBkp8ww@mail.gmail.com>
-Subject: Re: [PATCH] PCI: correctly check availability of PCIe Link
- Cap/Status/Control registers
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yuval Mintz <yuvalmin@broadcom.com>,
-	"jacob . e . keller @ intel . com" <jacob.e.keller@intel.com>,
-	Yu Zhao <yu.zhao@intel.com>, Jiang Liu <jiang.liu@huawei.com>,
-	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F31CBD158@ORSMSX106.amr.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 27, 2013 at 10:44 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
->
-> PCIe Base Spec 1.0 Section 5.8 states that "The PCI Express Capabilities,
-> Device Capabilities, Device Status/Control, Link Capabilities and
-> Link Status/Control registers are required for all PCI Express devices."
+On Thu, Aug 15, 2013 at 07:14:34PM +0000, Luck, Tony wrote:
+> Yes - but the serial port is too slow to log everything that you might
+> conceivably need to debug your problem. Imagine trying to log every
+> interrupt and every pagefault on every processor down a single 115200
+> baud connection. Thus my earlier comments about guessing what to log.
 
-And spec 1.1 amended that (in sec 7.8, not 5.8) to say that the link
-registers are not required for Root Complex Integrated Endpoints.
-Integrated endpoints and event collectors don't have links, so even if
-some RC-integrated devices do implement link registers per spec 1.0, I
-don't think there's any point in allowing access to them.
+Right, but a normally sized dmesg usually gets through ok. Selecting
+what to log could be a very tedious and error-prone process...
 
-> And PCIe Base Spec 3.0 Section 7.8 states that "The Link Capabilities,
-> Link Status, and Link Control registers are required for all Root Ports,
-> Switch Ports, Bridges, and Endpoints that are not Root Complex Integrated
-> Endpoints."
->
-> Changeset 1b6b8ce2ac372e "PCI: only save/restore existent registers in the
-> PCIe capability" introduces pcie_cap_has_lnkctl(), which assumes:
-> 1) PCIe root port, endpoint and legacy endpoint with 1.0 PCIe Capability
->    implement Link Cap/Status/Control registers.
-> 2) All PCIe devices with 2.0 PCIe Capability implemnet Link Cap/Status/
->    Control registers.
->
-> The above assumptions don't conform to PCIe base specifications, so change
-> pcie_cap_has_lnkctl() to follow PCIe specifications.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
-> Hi Bjorn,
->         Yuval has a PCIe 1.0 swither, so triggers the bug.  I'm not sure
-> why Yu Zhao has implemented pcie_cap_has_linctl() in that way, any special
-> consideration here?
->
-> Hi Yuval,
->         Could you please help to test this patch? Due to hardware resource
-> constraints, I have just compiled the patch on my laptop without testing.
->
-> Thanks!
->
-> ---
->  drivers/pci/access.c | 12 ++++++++----
->  1 file changed, 8 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index 1cc2366..23ff366 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -484,10 +484,14 @@ static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
->  {
->         int type = pci_pcie_type(dev);
->
-> -       return pcie_cap_version(dev) > 1 ||
-> -              type == PCI_EXP_TYPE_ROOT_PORT ||
-> -              type == PCI_EXP_TYPE_ENDPOINT ||
-> -              type == PCI_EXP_TYPE_LEG_END;
-> +       return  pcie_cap_version(dev) == 1 ||
-> +               type == PCI_EXP_TYPE_ENDPOINT ||
-> +               type == PCI_EXP_TYPE_LEG_END ||
-> +               type == PCI_EXP_TYPE_ROOT_PORT ||
-> +               type == PCI_EXP_TYPE_UPSTREAM ||
-> +               type == PCI_EXP_TYPE_DOWNSTREAM ||
-> +               type == PCI_EXP_TYPE_PCI_BRIDGE ||
-> +               type == PCI_EXP_TYPE_PCIE_BRIDGE;
->  }
->
->  static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
-> --
-> 1.8.1.2
->
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
