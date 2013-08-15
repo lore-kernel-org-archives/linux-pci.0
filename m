@@ -1,73 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f46.google.com ([209.85.128.46]:33779 "EHLO
-	mail-qe0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756557Ab3HFSCA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 14:02:00 -0400
-Received: by mail-qe0-f46.google.com with SMTP id i11so405840qej.5
-        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 11:01:59 -0700 (PDT)
-Date: Tue, 6 Aug 2013 12:01:55 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
- pbus_size_io()
-Message-ID: <20130806180155.GB1246@google.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
- <20130806061924.GB10876@weiyang.vnet.ibm.com>
- <20130806134421.GD31970@google.com>
- <20130806154742.GB10680@weiyang.vnet.ibm.com>
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:55158 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047Ab3HOXYY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Aug 2013 19:24:24 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130806154742.GB10680@weiyang.vnet.ibm.com>
+In-Reply-To: <CAErSpo4rvankxEA-wQ-yGg2MRVtS49dKctEGdn08GVFt8PdjeQ@mail.gmail.com>
+References: <20130808200444.2932.17381.stgit@bling.home>
+	<20130808200943.2932.42781.stgit@bling.home>
+	<CAErSpo4rvankxEA-wQ-yGg2MRVtS49dKctEGdn08GVFt8PdjeQ@mail.gmail.com>
+Date: Fri, 16 Aug 2013 07:24:22 +0800
+Message-ID: <CANVTcTbH9ZkM8GErc2e=t-1a=F5hdyf9UnSZMyONk7G1NVX2+Q@mail.gmail.com>
+Subject: Re: [PATCH v5 4/9] pci: Add slot reset option to pci_dev_reset
+From: rui wang <ruiv.wang@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 06, 2013 at 11:47:42PM +0800, Wei Yang wrote:
-> On Tue, Aug 06, 2013 at 07:44:21AM -0600, Bjorn Helgaas wrote:
-> >On Tue, Aug 06, 2013 at 02:19:24PM +0800, Wei Yang wrote:
-> >> On Mon, Aug 05, 2013 at 11:58:50AM -0600, Bjorn Helgaas wrote:
-> >> >[+cc Yinghai]
-> >> >
-> >> >On Fri, Aug 2, 2013 at 3:31 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> >> >> In commit 462d9303 ("PCI: Align P2P windows using pcibios_window_alignment()"),
-> >> >> it introduce a new method to calculate the window alignment of P2P bridge.
-> >> >>
-> >> >> When the io_window_1k is set,  the calculation for the io resource alignment
-> >> >> is different from the original one. In the original logic before 462d9303,
-> >> >> the alignment is no bigger than 4K even the io_window_1k is set. The logic
-> >> >> introduced in 462d9303 will limit the alignment to 1k in this case.
-> >> >>
-> >> >> This patch fix this issue.
-> >> >
-> >> >Presumably this fixes a bug, but you don't say what it is.  "different
-> >> >from the original" is not a description of a problem.  You need
-> >> >something like "with the current code, we allocate the wrong window
-> >> >size in situation X, or we allocate a window with incorrect alignment
-> >> >in situation Y, etc."
-> >> >
-> >> 
-> >> With current code, we allocate the wrong window size when upstream bridge
-> >> could be 1k aligned and one of the downstream port is 4k aligned.
-> >> 
-> >> In this case, the "min_align" should be 4k. But the current code set
-> >> "min_align" to 1k.
-> >
-> 
-> Hmm... sorry I should say. 
-> 
-> With current code, we allocate the wrong window size and alignment when upstream 
-> bridge could be 1k aligned and one of the downstream port is 4k aligned.
-> 
-> In this case, the "min_align" should be 4k. But the current code set
-> "min_align" to 1k.
+On 8/15/13, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Aug 8, 2013 at 2:09 PM, Alex Williamson
+<snip>
+> I don't think this is hotplug-safe.  It looks like pci_bus_sem might
+> be the right semaphore to hold while verifying that we won't reset any
+> unintended devices.
 
-Actually, I think only the alignment is wrong (not the size).  But I do
-agree that this looks like a problem in the current code.  I'll write
-this up and post the patch soon.
+Something like pci_bus_sem locks all the buses, which may pose a big
+overhead. So it doesn't seem like an ideal solution. A better approach
+is to lock only one parent to protect only a sub-tree. At least that's
+what I've seen in some other operating systems dealing with PCI
+hotplug. But that requires a significant amount of change.
 
-Bjorn
+Thanks
+Rui
+
+  But I think most users of the bus->devices list
+> are unprotected, so there's no point in trying to fix just this one.
+>
+>> +}
+>> +
+>>  static int __pci_dev_reset(struct pci_dev *dev, int probe)
+>>  {
+>>         int rc;
+>> @@ -3278,6 +3308,10 @@ static int __pci_dev_reset(struct pci_dev *dev, int
+>> probe)
+>>         if (rc != -ENOTTY)
+>>                 goto done;
+>>
+>> +       rc = pci_dev_reset_slot_function(dev, probe);
+>> +       if (rc != -ENOTTY)
+>> +               goto done;
+>> +
+>>         rc = pci_parent_bus_reset(dev, probe);
+>>  done:
+>>         return rc;
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
