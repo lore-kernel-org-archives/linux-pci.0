@@ -1,177 +1,101 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5ddf090f5ff168deb4fc415ced11c75b040f84d4.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 12/20] tile PCI RC: eliminate pci_controller.mem_resources field
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
+Date: Thu, 15 Aug 2013 11:14:07 -0300
+From: Mauro Carvalho Chehab <m.chehab@samsung.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
+	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+Message-id: <20130815111407.4080a744@samsung.com>
+In-reply-to: <20130815134454.GF27616@pd.tnic>
+References: <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812125343.GE18018@pd.tnic> <520A16BD.30201@linux.vnet.ibm.com>
+ <20130813124258.GC4077@pd.tnic> <520A6D98.9060204@linux.vnet.ibm.com>
+ <20130813175809.GE4077@pd.tnic> <520B6282.6030906@linux.vnet.ibm.com>
+ <20130814212211.544ee6a4@concha.lan> <20130815093831.GA27616@pd.tnic>
+ <20130815102607.7168a930@samsung.com> <20130815134454.GF27616@pd.tnic>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The .mem_resources[] field in the pci_controller struct
-is now obsoleted by the .mem_space and .io_space fields.
+Em Thu, 15 Aug 2013 15:44:54 +0200
+Borislav Petkov <bp@alien8.de> escreveu:
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/tile/include/asm/pci.h |  3 --
- arch/tile/kernel/pci_gx.c   | 71 ++++++++-------------------------------------
- 2 files changed, 12 insertions(+), 62 deletions(-)
+> On Thu, Aug 15, 2013 at 10:26:07AM -0300, Mauro Carvalho Chehab wrote:
+> > I mean that the edac core needs to know that, on a given system, the
+> > BIOS is accessing the hardware registers and sending the data via
+> > ghes_edac.
+> 
+> Right, that's the firmware-first thing which Naveen did - see
+> mce_disable_bank.
+> 
+> > No. As we want that fatal errors to also be properly reported, the
+> > kernel will still need to know the memory layout.
+> 
+> Read what I said: if you have the silkscreen label you don't need the
+> memory layout - you *already* *know* which DIMM is affected.
 
-diff --git a/arch/tile/include/asm/pci.h b/arch/tile/include/asm/pci.h
-index 1f1b654..2c001b2 100644
---- a/arch/tile/include/asm/pci.h
-+++ b/arch/tile/include/asm/pci.h
-@@ -173,9 +173,6 @@ struct pci_controller {
- 
- 	/* Table that maps the INTx numbers to Linux irq numbers. */
- 	int irq_intx_table[4];
--
--	/* Address ranges that are routed to this controller/bridge. */
--	struct resource mem_resources[3];
- };
- 
- extern struct pci_controller pci_controllers[TILEGX_NUM_TRIO * TILEGX_TRIO_PCIES];
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index 8051638..6837be2 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -929,9 +929,6 @@ int __init pcibios_init(void)
- 		struct pci_controller *controller = &pci_controllers[i];
- 		gxio_trio_context_t *trio_context = controller->trio;
- 		struct pci_bus *root_bus = pci_controllers[i].root_bus;
--		struct pci_bus *next_bus;
--		uint32_t bus_address_hi;
--		struct pci_dev *dev;
- 		int ret;
- 		int j;
- 
-@@ -945,35 +942,6 @@ int __init pcibios_init(void)
- 		/* Configure the max_payload_size values for this domain. */
- 		fixup_read_and_payload_sizes(controller);
- 
--		list_for_each_entry(dev, &root_bus->devices, bus_list) {
--			/* Find the PCI host controller, ie. the 1st bridge. */
--			if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
--				(PCI_SLOT(dev->devfn) == 0)) {
--				next_bus = dev->subordinate;
--				pci_controllers[i].mem_resources[0] =
--					*next_bus->resource[0];
--				pci_controllers[i].mem_resources[1] =
--					*next_bus->resource[1];
--				pci_controllers[i].mem_resources[2] =
--					*next_bus->resource[2];
--
--				break;
--			}
--		}
--
--		if (pci_controllers[i].mem_resources[1].flags & IORESOURCE_MEM)
--			bus_address_hi =
--				pci_controllers[i].mem_resources[1].start >> 32;
--		else if (pci_controllers[i].mem_resources[2].flags & IORESOURCE_PREFETCH)
--			bus_address_hi =
--				pci_controllers[i].mem_resources[2].start >> 32;
--		else {
--			/* This is unlikely. */
--			pr_err("PCI: no memory resources on TRIO %d mac %d\n",
--				controller->trio_index, controller->mac);
--			continue;
--		}
--
- 		/*
- 		 * Alloc a PIO region for PCI memory access for each RC port.
- 		 */
-@@ -1153,16 +1121,13 @@ void __iomem *ioremap(resource_size_t phys_addr, unsigned long size)
- 	resource_size_t start;
- 	resource_size_t end;
- 	int trio_fd;
--	int i, j;
-+	int i;
- 
- 	start = phys_addr;
- 	end = phys_addr + size - 1;
- 
- 	/*
--	 * In the following, each PCI controller's mem_resources[1]
--	 * represents its (non-prefetchable) PCI memory resource and
--	 * mem_resources[2] refers to its prefetchable PCI memory resource.
--	 * By searching phys_addr in each controller's mem_resources[], we can
-+	 * By searching phys_addr in each controller's mem_space, we can
- 	 * determine the controller that should accept the PCI memory access.
- 	 */
- 
-@@ -1174,25 +1139,18 @@ void __iomem *ioremap(resource_size_t phys_addr, unsigned long size)
- 		if (pci_controllers[i].root_bus == NULL)
- 			continue;
- 
--		for (j = 1; j < 3; j++) {
--			bar_start =
--				pci_controllers[i].mem_resources[j].start;
--			bar_end =
--				pci_controllers[i].mem_resources[j].end;
--
--			if ((start >= bar_start) && (end <= bar_end)) {
-+		bar_start = pci_controllers[i].mem_space.start;
-+		bar_end = pci_controllers[i].mem_space.end;
- 
--				controller = &pci_controllers[i];
--
--				goto got_it;
--			}
-+		if ((start >= bar_start) && (end <= bar_end)) {
-+			controller = &pci_controllers[i];
-+			break;
- 		}
- 	}
- 
- 	if (controller == NULL)
- 		return NULL;
- 
--got_it:
- 	trio_fd = controller->trio->fd;
- 
- 	/* Convert the resource start to the bus address offset. */
-@@ -1225,10 +1183,8 @@ void __iomem *ioport_map(unsigned long port, unsigned int size)
- 	end = port + size - 1;
- 
- 	/*
--	 * In the following, each PCI controller's mem_resources[0]
--	 * represents its PCI I/O resource. By searching port in each
--	 * controller's mem_resources[0], we can determine the controller
--	 * that should accept the PCI I/O access.
-+	 * By searching the port in each controller's io_space, we can
-+	 * determine the controller that should accept the PCI I/O access.
- 	 */
- 
- 	for (i = 0; i < num_rc_controllers; i++) {
-@@ -1239,21 +1195,18 @@ void __iomem *ioport_map(unsigned long port, unsigned int size)
- 		if (pci_controllers[i].root_bus == NULL)
- 			continue;
- 
--		bar_start = pci_controllers[i].mem_resources[0].start;
--		bar_end = pci_controllers[i].mem_resources[0].end;
-+		bar_start = pci_controllers[i].io_space.start;
-+		bar_end = pci_controllers[i].io_space.end;
- 
- 		if ((start >= bar_start) && (end <= bar_end)) {
--
- 			controller = &pci_controllers[i];
--
--			goto got_it;
-+			break;
- 		}
- 	}
- 
- 	if (controller == NULL)
- 		return NULL;
- 
--got_it:
- 	trio_fd = controller->trio->fd;
- 
- 	/* Convert the resource start to the bus address offset. */
+AFAIKT, APEI doesn't provide the silkscreen label. Some code (or some
+datasheet) is needed to translate between what APEI provides into the
+silkscreen label.
+
+Naveen, please correct me if I'm wrong.
+
+> Also, fatal errors are a whole different beast where we run in NMI
+> context or we even don't get to run the #MC handler on some systems.
+
+I see.
+
+Yes, APEI currently prints only a raw event on high severity errors
+at ghes_notify_nmi(), and doesn't call ghes_edac. Changing it would
+require to parse the error at __ghes_print_estatus(). Not sure how
+easy would be to change that.
+
+Em Thu, 15 Aug 2013 15:51:06 +0200
+Borislav Petkov <bp@alien8.de> escreveu:
+
+> On Thu, Aug 15, 2013 at 10:34:21AM -0300, Mauro Carvalho Chehab wrote:
+> > Yes, but the thing is that it is not safe to use the hardware driver
+> > if the BIOS is also reading the hardware error registers directly, as,
+> > on several hardware, a read cause the error data to be cleaned on such
+> > register.
+> 
+> Here's the deal:
+> 
+> * We parse some APEI table and disable those MCA banks which the BIOS
+> wants to handle first.
+> 
+> * When the BIOS decides to report an error from that handling, it does
+> so over another BIOS table.
+
+OK.
+
+> 
+> * Now you have two possibilities:
+> 
+> ** On systems without an edac driver or where it doesn't make sense to
+> have the ghes_edac driver, we call trace_mc_event() straight from APEI
+> code (this is what we're currently discussung).
+> 
+> ** On other systems, where we need ghes_edac, we *don't* use the
+> trace_mc_event() tracepoint in the APEI code but let it come from
+> ghes_edac with additional information collected by edac.
+
+I don't see why should we have those two alternatives, as, at worse
+case (e. g. if ghes_edac can't enrich the APEI data with labels),
+they'll basically provide the very same data to userspace, and the
+EDAC extra overhead is small, on its error report logic.
+
+The risk of doing the very same thing on two different places is that
+the logic to encapsulate APEI data into trace_mc_event() would be
+on two separate places. It risks that someone would change one of the
+drivers and forget to apply the very same change on the other, causing
+parse errors on userspace, depending on the source.
+
 -- 
-1.8.3.1
 
+Cheers,
+Mauro
