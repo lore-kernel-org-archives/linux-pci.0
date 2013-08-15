@@ -1,71 +1,111 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH 04/28] x86, irqi: Change irq_remap_modify_chip_defaults() to static
-Date: Sat, 10 Aug 2013 19:45:15 -0700
-Message-Id: <1376189139-31856-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
-References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:34659 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759963Ab3HOCTW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 22:19:22 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	<stable@vger.kernel.org.#.3.4+>
+Subject: [PATCH v5 2/2] PCI: update device mps when doing pci hotplug
+Date: Thu, 15 Aug 2013 10:18:55 +0800
+Message-ID: <1376533135-36708-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1376533135-36708-1-git-send-email-wangyijing@huawei.com>
+References: <1376533135-36708-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change irq_remap_modify_chip_defaults() to static, as we have no
-outside user.
+Currently we don't update device's mps value when doing
+pci device hot-add. The hot-added device's mps will be set
+to default value (128B). But the upstream port device's mps
+may be larger than 128B which was set by firmware during
+system bootup. In this case the new added device may not
+work normally. This patch try to update the hot added device
+mps equal to its parent mps, if device mpss < parent mps,
+print warning.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>
+Cc: stable@vger.kernel.org # 3.4+
 ---
- arch/x86/include/asm/irq_remapping.h | 6 ------
- drivers/iommu/irq_remapping.c        | 2 +-
- 2 files changed, 1 insertion(+), 7 deletions(-)
+ drivers/pci/probe.c |   49 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 48 insertions(+), 1 deletions(-)
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index d806b22..606f42e 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -56,8 +56,6 @@ extern bool setup_remapped_irq(int irq,
- 			       struct irq_cfg *cfg,
- 			       struct irq_chip *chip);
- 
--void irq_remap_modify_chip_defaults(struct irq_chip *chip);
--
- #else  /* CONFIG_IRQ_REMAP */
- 
- static inline void setup_irq_remapping_ops(void) { }
-@@ -91,10 +89,6 @@ static inline void panic_if_irq_remap(const char *msg)
- {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 0699ec0..9419745 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1621,6 +1621,44 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+ 	return 0;
  }
  
--static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
--{
--}
--
- static inline bool setup_remapped_irq(int irq,
- 				      struct irq_cfg *cfg,
- 				      struct irq_chip *chip)
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 39f81ae..85ae2cf 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -375,7 +375,7 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
- 	seq_printf(p, " IR-%s", data->chip->name);
- }
++static int pcie_bus_update_set(struct pci_dev *dev, void *data)
++{
++	int mps, p_mps, mpss;
++	struct pci_dev *parent;
++
++	if (!pci_is_pcie(dev) || !dev->bus->self)
++		return 0;
++
++	parent = dev->bus->self;
++	mps = pcie_get_mps(dev);
++	p_mps = pcie_get_mps(dev->bus->self);
++
++	if (mps >= p_mps)
++		return 0;
++
++	/* we only update the device mps, unless its parent device is root port,
++	 * and it is the only slot directly connected to root port.
++	 */
++	mpss = 128 << dev->pcie_mpss;
++	if (mpss >= p_mps) {
++		pcie_write_mps(dev, p_mps);
++	} else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT &&
++			pci_only_one_slot(dev->bus)) {
++		pcie_write_mps(parent, mpss);
++		pcie_write_mps(dev, mpss);
++	} else
++		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
++				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
++				mps, 128 << dev->pcie_mpss, p_mps);
++	return 0;
++}
++
++static void pcie_bus_update_setting(struct pci_bus *bus)
++{
++	if (bus->self->is_hotplug_bridge)
++		pci_walk_bus(bus, pcie_bus_update_set, NULL);
++}
++
+ /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+  * parents then children fashion.  If this changes, then this code will not
+  * work as designed.
+@@ -1632,8 +1670,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ 	if (!pci_is_pcie(bus->self))
+ 		return;
  
--void irq_remap_modify_chip_defaults(struct irq_chip *chip)
-+static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
- {
- 	chip->irq_print_chip = ir_print_prefix;
- 	chip->irq_ack = ir_ack_apic_edge;
+-	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
++	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
++		/* Sometimes we should update device mps here,
++		 * eg. after hot add, device mps value will be
++		 * set to default(128B), but the upstream port
++		 * mps value may be larger than 128B, if we do
++		 * not update the device mps, it maybe can not
++		 * work normally.
++		 */
++		pcie_bus_update_setting(bus);
+ 		return;
++	}
+ 
+ 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
+ 	 * to be aware to the MPS of the destination.  To work around this,
 -- 
-1.8.1.4
+1.7.1
+
 
