@@ -1,140 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:54410 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760061Ab3HNQl6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 12:41:58 -0400
-Received: by mail-wg0-f47.google.com with SMTP id j13so7624921wgh.2
-        for <linux-pci@vger.kernel.org>; Wed, 14 Aug 2013 09:41:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1376470912-40264-2-git-send-email-wangyijing@huawei.com>
-References: <1376470912-40264-1-git-send-email-wangyijing@huawei.com>
-	<1376470912-40264-2-git-send-email-wangyijing@huawei.com>
-Date: Wed, 14 Aug 2013 09:41:56 -0700
-Message-ID: <CAPoiz9w7SXFTMnw0KTPX5V1eJquhA7mrc0eoTxUitZMrvj4gSg@mail.gmail.com>
-Subject: Re: [PATCH v4 1/2] PCI: fix the only slot identification in pcie_find_smpss()
-From: Jon Mason <jdmason@kudzu.us>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mailout4.w2.samsung.com ([211.189.100.14]:19638 "EHLO
+	usmailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161Ab3HOAcz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 20:32:55 -0400
+Date: Wed, 14 Aug 2013 21:32:49 -0300
+From: Mauro Carvalho Chehab <m.chehab@samsung.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andy Lutomirski <luto@amacapital.net>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
-	stable@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-edac@vger.kernel.org
+Subject: Re: PCI devices w/ multiple drivers at once? (sb_edac vs i2c-imc)
+Message-id: <20130814213249.3c568da8@concha.lan>
+In-reply-to: <CAErSpo6Gp34O=L1ASPRLLBxwQShn6SN5EfXjDT+G7XAg3qbL-g@mail.gmail.com>
+References: <CALCETrUHJg5qskadGG11fGvCVgbm=Zn0zuWv+CAgrEm9-Qcfdg@mail.gmail.com>
+ <CAErSpo6Gp34O=L1ASPRLLBxwQShn6SN5EfXjDT+G7XAg3qbL-g@mail.gmail.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 14, 2013 at 2:01 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> We use list_is_singular() to identify the slot whether is
-> only slot directly connected to the root port in
-> pcie_find_smpss(). It's not correct, if we have only slot
-> connected to root port, and this slot has two function devices.
-> list_is_singular() return false. This patch introduces
-> pci_only_one_slot() to fix this issue. In addition, we should
-> pass subordinate bus devices list to list_is_singular(), not
-> its parent bus devices list.
->
-> -+-[0000:40]-+-00.0-[0000:41]--
->     ......................
->  |           +-07.0-[0000:46]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
->  |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
->
-> MPS configure after boot up, with boot command "pci=pcie_bus_safe"
->
-> linux-ha2:~ # lspci -vvv -s 40:07.0
-> 40:07.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 7 (rev 22) (prog-if 00 [Normal decode])
->         ...............
->         Capabilities: [90] Express (v2) Root Port (Slot+), MSI 00
->                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
->                         ExtTag+ RBE+ FLReset-
->                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
->                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
->                         MaxPayload 256 bytes, MaxReadReq 128 bytes
->
-> linux-ha2:~ # lspci -vvv -s 46:00.0
-> 46:00.0 Ethernet controller: Intel Corporation 82576 Gigabit Network Connection (rev 01)
->         ...............
->         Capabilities: [a0] Express (v2) Endpoint, MSI 00
->                 DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
->                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
->                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
->                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
->                         MaxPayload 256 bytes, MaxReadReq 512 bytes
->
-> linux-ha2:/sys/bus/pci/slots/7 # echo 0 > power     ------>power off slot
-> linux-ha2:/sys/bus/pci/slots/7 # echo 1 > power     ------>power on slot
-> linux-ha2:/sys/bus/pci/slots/7 # dmesg
-> ................
-> pcieport 0000:40:07.0: PCI-E Max Payload Size set to  128/ 256 (was  256), Max Read Rq  128
-> pci 0000:46:00.0: PCI-E Max Payload Size set to  128/ 512 (was  128), Max Read Rq  512
-> pci 0000:46:00.1: PCI-E Max Payload Size set to  128/ 512 (was  128), Max Read Rq  512
-> pcieport 0000:40:07.0: PCI-E Max Payload Size set to  128/ 256 (was  128), Max Read Rq  128
-> pci 0000:46:00.0: PCI-E Max Payload Size set to  128/ 512 (was  128), Max Read Rq  512
-> pci 0000:46:00.1: PCI-E Max Payload Size set to  128/ 512 (was  128), Max Read Rq  512
-> .....
->
-> Because 46:00.0 and 46:00.1 function devices are directly connected to root port 40:07.0.
-> After slot hot plug, root port mps is 256, slot fun devices(46:00.0/1) mps is 128.
-> We should both change root port and slot mps to 256, but now kernel change mps to 128.
->
->
-> After applied this patch, dmesg after hot plug:
-> ..............
-> pcieport 0000:40:07.0: PCI-E Max Payload Size set to  256/ 256 (was  256), Max Read Rq  128
-> pci 0000:46:00.0: PCI-E Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512
-> pci 0000:46:00.1: PCI-E Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512
-> pcieport 0000:40:07.0: PCI-E Max Payload Size set to  256/ 256 (was  256), Max Read Rq  128
-> pci 0000:46:00.0: PCI-E Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512
-> pci 0000:46:00.1: PCI-E Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Em Wed, 14 Aug 2013 16:04:06 -0600
+Bjorn Helgaas <bhelgaas@google.com> escreveu:
 
-Good catch!
-Acked-by: Jon Mason <jdmason@kudzu.us>
+> On Wed, Aug 14, 2013 at 3:45 PM, Andy Lutomirski <luto@amacapital.net> wrote:
+> > I'm working on a driver for the Sandy Bridge iMC SMBUS controller.  It
+> > (mostly) lives on pci device 15, function 0.  So my driver registers
+> > as an ordinary PCI driver for that device (8086.3ca8).
+> >
+> > The problem is that sb_edac also registers for 8086.3ca8.  This means
+> > that the drivers conflict.  The sb_edac driver is actually driving
+> > functionality that's split between eleven (!) different pci devices,
+> > none of which overlaps the stuff I'm driving.
+> >
+> > What's the Right Way (tm) to handle this?  Should I just modify
+> > sb_edac to pick a different one of the 11 devices to probe?  Is there
+> > some standard way to handle this in the PCI code?
 
-> Cc: Jon Mason <jdmason@kudzu.us>
-> Cc: stable@vger.kernel.org # 3.4+
-> ---
->  drivers/pci/probe.c |   20 +++++++++++++++++++-
->  1 files changed, 19 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cf57fe7..0699ec0 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1484,6 +1484,24 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
->         return nr;
->  }
->
-> +static bool pci_only_one_slot(struct pci_bus *pbus)
-> +{
-> +       u8 device;
-> +       struct pci_dev *pdev;
-> +
-> +       if (!pbus || list_empty(&pbus->devices))
-> +               return false;
-> +
-> +       pdev = list_entry(pbus->devices.next,
-> +                       struct pci_dev, bus_list);
-> +       device = PCI_SLOT(pdev->devfn);
-> +       list_for_each_entry(pdev, &pbus->devices, bus_list)
-> +               if (PCI_SLOT(pdev->devfn) != device)
-> +                       return false;
-> +
-> +       return true;
-> +}
-> +
->  static int pcie_find_smpss(struct pci_dev *dev, void *data)
->  {
->         u8 *smpss = data;
-> @@ -1506,7 +1524,7 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
->          * common case), then this is not an issue and MPS discovery
->          * will occur as normal.
->          */
-> -       if (dev->is_hotplug_bridge && (!list_is_singular(&dev->bus->devices) ||
-> +       if (dev->is_hotplug_bridge && (!pci_only_one_slot(dev->subordinate) ||
->              (dev->bus->self &&
->               pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)))
->                 *smpss = 0;
-> --
-> 1.7.1
->
->
+The sb-edac driver needs to see lots of different devices in order to
+work, as the memory controller registers are on different PCI IDs.
+
+So, there's not much that can be done there, I'm afraid.
+
+Btw, we almost added a code there to also access the SMBUS, in order to
+enumerate the memories. We ended by not adding, because we were afraid
+or risking to race with BIOS. A race while access an I2C EEPROM memory
+can be very bad, as a read operation might be understood as write, thus
+destroying the DIMM configuration.
+
+> 
+> Nope, there's no standard way to do this.
+> 
+> The single driver that claims a device is presumed to own all the
+> device's resources, including its config space, BARs, interrupts, etc.
+>  If two drivers need access to the same device, they need to
+> coordinate between themselves somehow.
+> 
+> Bjorn
+
+Regards,
+Mauro
