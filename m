@@ -1,92 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:51364 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756579Ab3HZIeE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Aug 2013 04:34:04 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
-Subject: [PATCH v9 2/2] PCI: Print warning message if unsafe mps detected
-Date: Mon, 26 Aug 2013 16:33:06 +0800
-Message-ID: <1377505986-7484-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1377505986-7484-1-git-send-email-wangyijing@huawei.com>
-References: <1377505986-7484-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:46763 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014Ab3HODsx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 23:48:53 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CALCETrVYKuRcRgKEroCVbvkqfHjOtAA1Rwn6b4uas19BXogkpA@mail.gmail.com>
+References: <CALCETrUHJg5qskadGG11fGvCVgbm=Zn0zuWv+CAgrEm9-Qcfdg@mail.gmail.com>
+	<CAErSpo6Gp34O=L1ASPRLLBxwQShn6SN5EfXjDT+G7XAg3qbL-g@mail.gmail.com>
+	<20130814213249.3c568da8@concha.lan>
+	<CALCETrVYKuRcRgKEroCVbvkqfHjOtAA1Rwn6b4uas19BXogkpA@mail.gmail.com>
+Date: Thu, 15 Aug 2013 11:48:51 +0800
+Message-ID: <CANVTcTZeMc3=3eF-jRg7Azj4ce728FdpV_x+xjAm07Yrdu9eSQ@mail.gmail.com>
+Subject: Re: PCI devices w/ multiple drivers at once? (sb_edac vs i2c-imc)
+From: rui wang <ruiv.wang@gmail.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-edac@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some broken BIOS configures incorrect mps for devices,
-eg. bridge mps larger than connected Endpoint device mps.
-So TLP packets maybe discarded by Endpoint device.
-These devices may not work normally. Joe Jin reported
-these problems, reference:
-http://lkml.kernel.org/r/4FFA9B96.6040901@oracle.com
-http://lkml.kernel.org/r/509B5038.8090304@oracle.com
-For easy detect this issue, try to detect the unsafe mps
-(unequal mps between device and its bridge device)
-setting. If unsafe mps setting found, print warning message.
+On 8/15/13, Andy Lutomirski <luto@amacapital.net> wrote:
+> On Wed, Aug 14, 2013 at 5:32 PM, Mauro Carvalho Chehab
+> <m.chehab@samsung.com> wrote:
+>>
+>> Em Wed, 14 Aug 2013 16:04:06 -0600
+>> Bjorn Helgaas <bhelgaas@google.com> escreveu:
+>>
+>> > On Wed, Aug 14, 2013 at 3:45 PM, Andy Lutomirski <luto@amacapital.net>
+>> > wrote:
+>> > > I'm working on a driver for the Sandy Bridge iMC SMBUS controller.
+>> > > It
+>> > > (mostly) lives on pci device 15, function 0.  So my driver registers
+>> > > as an ordinary PCI driver for that device (8086.3ca8).
+>> > >
+>> > > The problem is that sb_edac also registers for 8086.3ca8.  This means
+>> > > that the drivers conflict.  The sb_edac driver is actually driving
+>> > > functionality that's split between eleven (!) different pci devices,
+>> > > none of which overlaps the stuff I'm driving.
+>> > >
+>> > > What's the Right Way (tm) to handle this?  Should I just modify
+>> > > sb_edac to pick a different one of the 11 devices to probe?  Is there
+>> > > some standard way to handle this in the PCI code?
+>>
+>> The sb-edac driver needs to see lots of different devices in order to
+>> work, as the memory controller registers are on different PCI IDs.
+>>
+>> So, there's not much that can be done there, I'm afraid.
+>
+> Would you be okay with changing the PCI ID that the sb_edac driver
+> binds to?  That is, let it claim any of the other mess of devices it
+> talks to.
+>
+> Alternatively, I could shove the whole thing into the edac-sbridge module.
+>
+>>
 
-Reported-by: Joe Jin <joe.jin@oracle.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>
----
- drivers/pci/probe.c |   25 ++++++++++++++++++++++---
- 1 files changed, 22 insertions(+), 3 deletions(-)
+What you really need is just to access a few registers on that device,
+which doesn't sound reasonable enough to claim the entire device.
+Sb_edac is much more generic.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 21ca9a1..e442744 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1587,6 +1587,23 @@ static void pcie_write_mrrs(struct pci_dev *dev)
- 			"with pci=pcie_bus_safe.\n");
- }
- 
-+static void pcie_bus_detect_mps(struct pci_dev *dev)
-+{
-+	int mps, p_mps;
-+
-+	if (!dev->bus->self)
-+		return;
-+
-+	mps = pcie_get_mps(dev);
-+	p_mps = pcie_get_mps(dev->bus->self);
-+
-+	if (mps != p_mps)
-+		dev_warn(&dev->dev, "Non-optimal MPS value of %d being used. "
-+			"If problems are experienced, try running with "
-+			"pci=pcie_bus_safe.\n", mps);
-+	return;
-+}
-+
- static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
- {
- 	int mps, orig_mps;
-@@ -1594,6 +1611,11 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
- 	if (!pci_is_pcie(dev))
- 		return 0;
- 
-+	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
-+		pcie_bus_detect_mps(dev);
-+		return 0;
-+	}
-+
- 	mps = 128 << *(u8 *)data;
- 	orig_mps = pcie_get_mps(dev);
- 
-@@ -1621,9 +1643,6 @@ void pcie_bus_configure_settings(struct pci_bus *bus)
- 	if (!pci_is_pcie(bus->self))
- 		return;
- 
--	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
--		return;
--
- 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
- 	 * to be aware of the MPS of the destination.  To work around this,
- 	 * simply force the MPS of the entire system to the smallest possible.
--- 
-1.7.1
+What I can suggest is that you may still let sb_edac own the device
+and handle the register access needed by you. Your iMC-SMB, if large
+enough, can be in a separate module calling into sb_edac.
 
 
+>>
+>> Btw, we almost added a code there to also access the SMBUS, in order to
+>> enumerate the memories. We ended by not adding, because we were afraid
+>> or risking to race with BIOS. A race while access an I2C EEPROM memory
+>> can be very bad, as a read operation might be understood as write, thus
+>> destroying the DIMM configuration.
+>
+> The controller is, indeed, amazingly racy.  But I have access to
+> (NDAed) reference code for this, and I need it for NVDIMM support,
+> which is a real thing that AFAICT Intel's trying to support, so this
+> stuff is really supposed to work.  (The reference code performs
+> undocumented incantations that I can't (yet?) talk about.)
+>
+> Is there any way to get sb_edac to expose, for each DIMM, the physical
+> address range that the DIMM maps to (or at least the range that
+> contains all the interleaved bits of it).  That would give me a nice
+> sanity check to validate that the firmware isn't lying about the
+> NVDIMM aperture.
+>
+> (Don't use my old i2c_imc submission as a valid sample -- it blows up
+> terribly when closed-loop thermal throttling is on.)
+>
+
+Closed Loop Thermal Throttling is where the BIOS constantly accesses
+the SMBus and where the race occurs. If you solved the problem with
+NDAed information, wouldn't it violate your NDA?
+
+Thanks
+Rui
+
+> --Andy
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-edac" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
