@@ -1,80 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Shuah Khan <shuah.kh@samsung.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Shuah Khan <shuahkhan@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"virtualization@lists.linux-foundation.org"
-	<virtualization@lists.linux-foundation.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shuah Khan <shuah.kh@samsung.com>
-Subject: Re: [Announcement] Linux Plumbers ACPI/PM, PCI Microconference
-Date: Thu, 01 Aug 2013 19:45:35 +0000
-Message-id: <B8EFE96D1287C24090BAD9D858E15E617505EB@sisaex01sj>
-References: <CAL-B5D03ki8NHsM6EuESTH2K-Eh+XyFHNXPDYwgDq+oagDjtMQ@mail.gmail.com>
- <1755363.sGc8nLIQOW@vostro.rjw.lan>
- <CAKocOOPOqqS80D23z6xTVSNYYYWZ7ACg9MtSMz_hTqVA3Duo0w@mail.gmail.com>
- <7183196.Ov6Qetq3lO@vostro.rjw.lan>
-Content-type: text/plain; charset=us-ascii
-MIME-version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:28649 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752780Ab3HOTOg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Aug 2013 15:14:36 -0400
+From: "Luck, Tony" <tony.luck@intel.com>
+To: Borislav Petkov <bp@alien8.de>
+CC: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Date: Thu, 15 Aug 2013 19:14:34 +0000
+Message-ID: <3908561D78D1C84285E8C5FCA982C28F31CBD158@ORSMSX106.amr.corp.intel.com>
+References: <20130812125343.GE18018@pd.tnic>
+ <520A16BD.30201@linux.vnet.ibm.com> <20130813124258.GC4077@pd.tnic>
+ <520A6D98.9060204@linux.vnet.ibm.com> <20130813175809.GE4077@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
+ <20130813181004.GF4077@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CB9150@ORSMSX106.amr.corp.intel.com>
+ <20130814054322.GA9158@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CBAAFA@ORSMSX106.amr.corp.intel.com>
+ <20130815101432.GE27616@pd.tnic>
+In-Reply-To: <20130815101432.GE27616@pd.tnic>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/31/2013 03:07 PM, Rafael J. Wysocki wrote:
-> On Wednesday, July 31, 2013 10:35:05 AM Shuah Khan wrote:
->> On Wed, Jul 31, 2013 at 5:40 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>> Hi All,
->>>
->>> The original announcement didn't go to linux-pm, so again:
->>>
->>> On Tuesday, July 16, 2013 08:21:26 PM Myron Stowe wrote:
->>>> Linux Plumbers has approved an ACPI/PM, PCI microconference. The
->>>> overview page is here:
->>>>
->>>> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
->>>>
->>>> We would like to start receiving volunteers for presenting topics of
->>>> interest.  There is a lot of activity in these subsystems so please
->>>> respond by submitting presentation or discussion proposals that you
->>>> would be willing to cover for consideration.  You should also feel
->>>> free to submit ideas as proposals that others could cover.  The
->>>> instructions for submitting ideas should be at:
->>>>
->>>> http://www.linuxplumbersconf.org/2013/submitting-topic/
->>>
->>> If anyone who's going to attend the Linux Plumbers Conf this year is interested
->>> in any particular topic for discussion during the ACPI/PM+PCI uconf, please
->>> submit a formal topic proposal at:
->>>
->>> http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/proposals/new
->>>
->>> If you submit a topic, that doesn't mean you'll be expected to present anything
->>> (if accepted).  In fact, we are mostly interested in discussion topics and we'd
->>> like to know what is important to people.
->>>
->>> That said if you have a (short) presentation to make, please submit it too.
->>>
->>> We'll appreciate all submissions very much.
->>>
->>
->> What I have mind is a discussion topic for the Mini-conference, which
->> in-line with what you are asking for.
->> I will add it to the web.
->
-> Thank you!
-
-Rafael,
-
-Done. I submitted a topic for discussion.
-
--- Shuah
-
-Shuah Khan, Linux Kernel Developer - Open Source Group Samsung Research 
-America (Silicon Valley) shuah.kh@samsung.com | (970) 672-0658
+PiBXZWxsLCBpZiBJIGhhdmUgc2VyaWFsIGNvbm5lY3RlZCB0byB0aGUgYm94LCBpdCB3aWxsIGNv
+bnRhaW4gYmFzaWNhbGx5DQo+IGV2ZXJ5dGhpbmcgdGhlIG1hY2hpbmUgc2FpZCwgbm8/DQoNClll
+cyAtIGJ1dCB0aGUgc2VyaWFsIHBvcnQgaXMgdG9vIHNsb3cgdG8gbG9nIGV2ZXJ5dGhpbmcgdGhh
+dCB5b3UgbWlnaHQNCmNvbmNlaXZhYmx5IG5lZWQgdG8gZGVidWcgeW91ciBwcm9ibGVtLiAgSW1h
+Z2luZSB0cnlpbmcgdG8gbG9nIGV2ZXJ5DQppbnRlcnJ1cHQgYW5kIGV2ZXJ5IHBhZ2VmYXVsdCBv
+biBldmVyeSBwcm9jZXNzb3IgZG93biBhIHNpbmdsZSAxMTUyMDANCmJhdWQgY29ubmVjdGlvbi4g
+IFRodXMgbXkgZWFybGllciBjb21tZW50cyBhYm91dCBndWVzc2luZyB3aGF0IHRvDQpsb2cuDQoN
+Ci1Ub255DQo=
