@@ -1,71 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH 04/28] x86, irq: Change irq_remap_modify_chip_defaults() to static
-Date: Sat, 10 Aug 2013 19:45:14 -0700
-Message-Id: <1376189139-31856-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
-References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([78.46.96.112]:35991 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754821Ab3HONo5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Aug 2013 09:44:57 -0400
+Date: Thu, 15 Aug 2013 15:44:54 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Mauro Carvalho Chehab <m.chehab@samsung.com>
+Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
+	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130815134454.GF27616@pd.tnic>
+References: <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812125343.GE18018@pd.tnic>
+ <520A16BD.30201@linux.vnet.ibm.com>
+ <20130813124258.GC4077@pd.tnic>
+ <520A6D98.9060204@linux.vnet.ibm.com>
+ <20130813175809.GE4077@pd.tnic>
+ <520B6282.6030906@linux.vnet.ibm.com>
+ <20130814212211.544ee6a4@concha.lan>
+ <20130815093831.GA27616@pd.tnic>
+ <20130815102607.7168a930@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130815102607.7168a930@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change irq_remap_modify_chip_defaults() to static, as we have no
-outside user.
+On Thu, Aug 15, 2013 at 10:26:07AM -0300, Mauro Carvalho Chehab wrote:
+> I mean that the edac core needs to know that, on a given system, the
+> BIOS is accessing the hardware registers and sending the data via
+> ghes_edac.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/include/asm/irq_remapping.h | 6 ------
- drivers/iommu/irq_remapping.c        | 2 +-
- 2 files changed, 1 insertion(+), 7 deletions(-)
+Right, that's the firmware-first thing which Naveen did - see
+mce_disable_bank.
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index d806b22..606f42e 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -56,8 +56,6 @@ extern bool setup_remapped_irq(int irq,
- 			       struct irq_cfg *cfg,
- 			       struct irq_chip *chip);
- 
--void irq_remap_modify_chip_defaults(struct irq_chip *chip);
--
- #else  /* CONFIG_IRQ_REMAP */
- 
- static inline void setup_irq_remapping_ops(void) { }
-@@ -91,10 +89,6 @@ static inline void panic_if_irq_remap(const char *msg)
- {
- }
- 
--static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
--{
--}
--
- static inline bool setup_remapped_irq(int irq,
- 				      struct irq_cfg *cfg,
- 				      struct irq_chip *chip)
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 39f81ae..85ae2cf 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -375,7 +375,7 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
- 	seq_printf(p, " IR-%s", data->chip->name);
- }
- 
--void irq_remap_modify_chip_defaults(struct irq_chip *chip)
-+static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
- {
- 	chip->irq_print_chip = ir_print_prefix;
- 	chip->irq_ack = ir_ack_apic_edge;
+> No. As we want that fatal errors to also be properly reported, the
+> kernel will still need to know the memory layout.
+
+Read what I said: if you have the silkscreen label you don't need the
+memory layout - you *already* *know* which DIMM is affected.
+
+Also, fatal errors are a whole different beast where we run in NMI
+context or we even don't get to run the #MC handler on some systems.
+
 -- 
-1.8.1.4
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
