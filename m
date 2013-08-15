@@ -1,56 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:41078 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755491Ab3HFHiG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 03:38:06 -0400
-Message-ID: <5200A7D2.3080001@huawei.com>
-Date: Tue, 6 Aug 2013 15:37:54 +0800
-From: Li Zefan <lizefan@huawei.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Jon Mason <jdmason@kudzu.us>, <stable@vger.kernel.org>
-Subject: Re: [PATCH -v2] PCI: update device mps when doing pci hotplug
-References: <1375773838-33572-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1375773838-33572-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="GB2312"
+Received: from mailout2.w2.samsung.com ([211.189.100.12]:16219 "EHLO
+	usmailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752025Ab3HOAAo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 20:00:44 -0400
+Date: Wed, 14 Aug 2013 21:00:35 -0300
+From: Mauro Carvalho Chehab <m.chehab@samsung.com>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: Borislav Petkov <bp@alien8.de>, tony.luck@intel.com,
+	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
+	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+Message-id: <20130814210035.57096048@concha.lan>
+In-reply-to: <520A6D98.9060204@linux.vnet.ibm.com>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812125343.GE18018@pd.tnic> <520A16BD.30201@linux.vnet.ibm.com>
+ <20130813124258.GC4077@pd.tnic> <520A6D98.9060204@linux.vnet.ibm.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/8/6 15:23, Yijing Wang wrote:
-> v1->v2: Update patch log, remove Joe's reported-by, because his problem
->         was mainly caused by BIOS incorrect setting. But this patch mainly
-> 		to fix the bug caused by device hot add. Conservatively, this 
-> 		version only update the mps problem when hot add. When the device
-> 		mps < parent mps found, this patch try to update device mps.
-> 		It seems unlikely device mps > parent mps after hot add device.
-> 		So we don't care that situation.
+Em Tue, 13 Aug 2013 23:02:08 +0530
+"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
+
+> On 08/13/2013 06:12 PM, Borislav Petkov wrote:
+> > On Tue, Aug 13, 2013 at 04:51:33PM +0530, Naveen N. Rao wrote:
+> >> You're right - my trace point makes all the data provided by apei
+> >> as-is to userspace. However, ghes_edac seems to squash some of this
+> >> data into a string when reporting through mc_event.
+> >
+> > Right, for systems which don't need EDAC to decode to the DIMM or for
+> > which there are no EDAC drivers written, they could use a tracepoint
+> > which carries APEI info as-is. Others, which need EDAC, should probably
+> > use trace_mc_event and disable the APEI tracepoint.
 > 
-> This patch need to be applied to stable 3.4+
+> If I'm not mistaken, even for systems that have EDAC drivers, it looks 
+> to me like EDAC can't really decode to the DIMM given what is provided 
+> by the bios in the APEI report currently.
 
-In this case...
+Yes, the current APEI events, reported via EDAC, can't be decoded currently.
+
+> If and when ghes_edac gains 
+> this capability, users will have a choice between raw APEI reports vs. 
+> edac processed ones.
+
+An APEI-specific tracing won't fix it, as, AFAIKT, we don't have any way
+to map it, even on userspace.
 
 > 
-> Currently we don't update device's mps vaule when doing
-> pci device hot-add. The hot-added device's mps will be set
-> to default value (128B). But the upstream port device's mps
-> may be larger than 128B which was set by firmware during
-> system bootup. In this case the new added device may not
-> work normally. This patch try to update the hot added device
-> mps euqal to its parent mps, if device mpss < parent mps,
-> print warning.
+> >
+> > I think this should address Tony's concerns...
+> >
+> > Btw, you could call your TP something simpler like
+> > trace_ghes_memory_event or so.
 > 
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
-> Reported-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Jon Mason <jdmason@kudzu.us>
-> Cc: stable@vger.kernel.org
+> I started out with a simpler name, but eventually decided to use the 
+> name from the CPER record so it is clear what this event carries. I 
+> think this will be better when adding further ghes events for say, 
+> processor generic, PCIe and others.
+> 
+> >
+> > Btw 2, if GHES can report other types of errors (I'm pretty sure it can)
+> > maybe we can use a single tracepoint called trace_ghes_event for any
+> > types of errors coming out of it...
+> 
+> Two problems with this:
+> - One, the record size will be really big since the cper records for 
+> each type of error is large.
+> - Two, it may be better to filter events based on the type of error 
+> (memory error, processor, pcie, ...) rather than subscribing for all 
+> ghes error reports.
 
-The better tag is:
+I agree: per-type of error events is better than a big generic one.
+> 
+> >
+> > Oh, and while at it, we probably need to start thinking of a mechanism
+> > to disable all the error printing, i.e. cper_print_mem() and such,
+> > if a userspace agent is listening in on the tracepoint and the error
+> > information is carried through it to userspace.
+> 
+> Do you mean conditionally print the cper records based on whether the 
+> tracepoint is enabled or not? Wouldn't that be confusing if someone is 
+> monitoring dmesg as well?
+> 
+> 
+> Thanks,
+> Naveen
+> 
 
-Cc: <stable@vger.kernel.org> # 3.4+
 
-Otherwise you won't be notified if it can be applied to the most recent
-stable version but failed in older versions.
+-- 
 
+Cheers,
+Mauro
