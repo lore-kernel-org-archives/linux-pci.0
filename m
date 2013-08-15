@@ -1,55 +1,170 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:40957 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758609Ab3HOCCB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 22:02:01 -0400
+Message-ID: <520C3673.1010306@huawei.com>
+Date: Thu, 15 Aug 2013 10:01:23 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWnGaa6omcLW0zxLj+UMspRGxjVoYXUsH3ndydGD51T9w@mail.gmail.com>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-	<1376189294-32022-29-git-send-email-yinghai@kernel.org>
-	<CANVTcTYhSfU+Su9s1B+mTTBfgsZgqvQxHiTsLck1zT_vg1Cs4g@mail.gmail.com>
-	<CANVTcTb2+qX6XMBqrzeLho9yFS55AnztVJ85JBMuxjoH11qzaQ@mail.gmail.com>
-	<CAOLK0pwQJVvcT5xA-+Ftb85FzbjHN-OZmXO=n7r4EWh4nFjSBA@mail.gmail.com>
-	<CAE9FiQWnGaa6omcLW0zxLj+UMspRGxjVoYXUsH3ndydGD51T9w@mail.gmail.com>
-Date: Fri, 23 Aug 2013 12:04:01 -0700
-Message-ID: <CAE9FiQXFcM+FZnp00RP5Z8a2FhtjB7BuUUi4TuABF4-O9W+c8Q@mail.gmail.com>
-Subject: Re: [PATCH v4 28/28] PCI, x86, ACPI: get ioapic address from acpi device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Lan Tianyu <lantianyu1986@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: rui wang <ruiv.wang@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger kernel org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+To: Jon Mason <jdmason@kudzu.us>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	<stable@vger.kernel.org>
+Subject: Re: [PATCH v4 2/2] PCI: update device mps when doing pci hotplug
+References: <1376470912-40264-1-git-send-email-wangyijing@huawei.com> <1376470912-40264-3-git-send-email-wangyijing@huawei.com> <CAPoiz9zBktaJTwKuRw2F3QYbYEFF60_An+eK0Hv_hnf1u9oqyA@mail.gmail.com>
+In-Reply-To: <CAPoiz9zBktaJTwKuRw2F3QYbYEFF60_An+eK0Hv_hnf1u9oqyA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 23, 2013 at 11:38 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Aug 23, 2013 at 8:34 AM, Lan Tianyu <lantianyu1986@gmail.com> wrote:
->>> I worked around the problem by replacing acpi_resource_to_address64()
->>> with resource_to_addr().  But resource_to_addr() is a static function
->>> in arch/x86/pci/acpi.c, not very convenient to use. Here's what I did:
->>>
+Hi Jon,
+   Thanks for your review and comments!
+
+On 2013/8/15 0:59, Jon Mason wrote:
+> On Wed, Aug 14, 2013 at 2:01 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Currently we don't update device's mps vaule when doing
+> 
+> Spelling nit, "value"
+
+Will update, thanks!
+
+> 
+>> pci device hot-add. The hot-added device's mps will be set
+>> to default value (128B). But the upstream port device's mps
+>> may be larger than 128B which was set by firmware during
+>> system bootup. In this case the new added device may not
+>> work normally. This patch try to update the hot added device
+>> mps euqal to its parent mps, if device mpss < parent mps,
+> 
+> Spelling nit, "equal".
+
+Will update.
+
+> 
+>> print warning.
 >>
->> Hi Rui&Yinghai:
->>            How about using the following code to translate struct
->>  acpi_resource to struct resouce in this setup_res()?
+>> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+>> Reported-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Cc: Jon Mason <jdmason@kudzu.us>
+>> Cc: stable@vger.kernel.org # 3.4+
+>> ---
+>>  drivers/pci/probe.c |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
+>>  1 files changed, 49 insertions(+), 1 deletions(-)
 >>
->>          if (acpi_dev_resource_address_space(...)
->>                 || acpi_dev_resource_memory(..))
->>               return AE_OK;
->
-> Yest, that could be better, will update that.
->
-> Also can you submit patch that will use that in res_to_addr of
-> arch/x86/pci/acpi.c?
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 0699ec0..0d47b4a 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1621,6 +1621,45 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>         return 0;
+>>  }
+>>
+>> +static int pcie_bus_update_set(struct pci_dev *dev, void *data)
+>> +{
+>> +       int mps, p_mps, mpss;
+>> +       struct pci_dev *parent;
+>> +
+>> +       if (!pci_is_pcie(dev) || !dev->bus->self)
+>> +               return 0;
+>> +
+>> +       parent = dev->bus->self;
+>> +       mps = pcie_get_mps(dev);
+>> +       p_mps = pcie_get_mps(dev->bus->self);
+>> +
+>> +       if (mps >= p_mps)
+> 
+> I'm probably overly paranoid, but I worry what would happen in the >
+> case.  Should we try and force the device MPS to a sane value or are
+> we confident that this will never happen?
 
-looks acpi_dev_resource_address_space... does not handle
-PREFTCH and translation offset.
+In the original patch, this patch will update the mps if mps != p_mps.
+For conservative, this patch only to fix the issue occurs in hot-plug(mps will never larger than p_mps).
+I don't know whether BIOS will set mps like mps > p_mps for certain purposes.:)
 
-So now i have to use res_to_addr alike one.
+> 
+>> +               return 0;
+>> +
+>> +       /* we only update the device mps, unless its parent device is root port,
+>> +        * and it is the only slot directly connected to root port.
+>> +        */
+>> +       if ((128 << dev->pcie_mpss) >= p_mps) {
+>> +               pcie_write_mps(dev, p_mps);
+>> +       } else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT &&
+>> +                       pci_only_one_slot(dev->bus)) {
+>> +               mpss = 128 << dev->pcie_mpss;
+> 
+> OCD nit, you could move the above line up 4 lines and reuse the
+> variable in the first if-statement.
 
-Thanks
+Good, thanks!
 
-Yinghai
+> 
+>> +               pcie_write_mps(parent, mpss);
+>> +               pcie_write_mps(dev, mpss);
+>> +       } else {
+>> +               dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
+>> +                               "If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
+>> +                               mps, 128 << dev->pcie_mpss, p_mps);
+>> +       }
+> 
+> Nit, braces are unnecessary in the else.  I think
+> scripts/checkpatch.pl would've complained if you ran it on the patch.
+
+I used scripts/checkpatch.pl to check patch, result is ok.
+So if I use scripts/checkpatch.pl to check patch without the pair braces, and result is ok,
+I will remove it. Thanks!
+
+> 
+> If you/Bjorn want to disregard my paranoia and nits, it looks fine to me.
+> 
+>> +       return 0;
+>> +}
+>> +
+>> +static void pcie_bus_update_setting(struct pci_bus *bus)
+>> +{
+>> +       if (bus->self->is_hotplug_bridge)
+>> +               pci_walk_bus(bus, pcie_bus_update_set, NULL);
+>> +}
+>> +
+>>  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+>>   * parents then children fashion.  If this changes, then this code will not
+>>   * work as designed.
+>> @@ -1632,8 +1671,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+>>         if (!pci_is_pcie(bus->self))
+>>                 return;
+>>
+>> -       if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+>> +       if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>> +               /* Sometimes we should update device mps here,
+>> +                * eg. after hot add, device mps value will be
+>> +                * set to default(128B), but the upstream port
+>> +                * mps value may be larger than 128B, if we do
+>> +                * not update the device mps, it maybe can not
+>> +                * work normally.
+>> +                */
+>> +               pcie_bus_update_setting(bus);
+>>                 return;
+>> +       }
+>>
+>>         /* FIXME - Peer to peer DMA is possible, though the endpoint would need
+>>          * to be aware to the MPS of the destination.  To work around this,
+>> --
+>> 1.7.1
+>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe stable" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
