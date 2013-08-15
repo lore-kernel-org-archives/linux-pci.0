@@ -1,56 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog108.obsmtp.com ([207.126.144.125]:47325 "EHLO
-	eu1sys200aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755277Ab3H2Dpf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 23:45:35 -0400
-Date: Thu, 29 Aug 2013 09:15:08 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 15 Aug 2013 21:41:03 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH V2] PCI: exynos: add support for MSI
-Message-ID: <20130829034508.GA3025@pratyush-vbox>
-References: <003d01ce9fc6$9c0f1c20$d42d5460$%han@samsung.com>
- <20130823083539.GB3937@pratyush-vbox>
- <001801cea3c7$06bca9d0$1435fd70$%han@samsung.com>
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130815194103.GK27616@pd.tnic>
+References: <20130813124258.GC4077@pd.tnic>
+ <520A6D98.9060204@linux.vnet.ibm.com>
+ <20130813175809.GE4077@pd.tnic>
+ <520B6282.6030906@linux.vnet.ibm.com>
+ <20130814212211.544ee6a4@concha.lan>
+ <20130815093831.GA27616@pd.tnic>
+ <20130815102607.7168a930@samsung.com>
+ <20130815134454.GF27616@pd.tnic>
+ <20130815111407.4080a744@samsung.com>
+ <3908561D78D1C84285E8C5FCA982C28F31CBD184@ORSMSX106.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <001801cea3c7$06bca9d0$1435fd70$%han@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F31CBD184@ORSMSX106.amr.corp.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 28, 2013 at 04:17:24PM +0800, Jingoo Han wrote:
-> On Friday, August 23, 2013 5:36 PM, Pratyush Anand wrote:
-> > On Fri, Aug 23, 2013 at 02:04:20PM +0800, Jingoo Han wrote:
-> 
+On Thu, Aug 15, 2013 at 07:20:29PM +0000, Luck, Tony wrote:
+> In theory it could. The ACPI generic error structure used to report
+> includes a 20-byte free format field which a BIOS could use to
+> describe the location of the error. Haven't seen anyone do this yet -
+> and our internal BIOS people looked at me like I was crazy to suggest
+> such a thing. But I still entertain hopes that some OEM will do the
+> right thing and raise the bar of usefulness.
 
-[...]
+Sadly, I can report similar experiences.
 
-> > #define MAX_PCIE_PORT_SUPPORTED 3
-> > static DECLARE_BITMAP(msi_irq_in_use[MAX_PCIE_PORT_SUPPORTED],
-> >                   NUM_MSI_IRQS);
-> > static unsigned int *msi_data[MAX_PCIE_PORT_SUPPORTED];
-> 
-> No, there is no need to do it.
-> Without this, we can use 3 RCs by adding a node of 3rd RC to dt file.
-> 
+I did try to get the RAS hw people persuaded that spitting out the DIMM
+mapping is best done by the BIOS because it has that info already -
+it is a matter of carrying it out. Alas, more important events took
+place... :)
 
-Yes, you can use RCs by adding nodes to dt file. But you will need one 
-msi_irq_in_use and one msi_data per RC (ie per port in this driver), isn't it? 
+-- 
+Regards/Gruss,
+    Boris.
 
-Regards
-Pratyush
-
+Sent from a fat crate under my desk. Formatting is fine.
+-- 
