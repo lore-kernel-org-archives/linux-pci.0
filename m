@@ -1,147 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22229 "EHLO mx1.redhat.com"
+Received: from mail.skyhub.de ([78.46.96.112]:58513 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754436Ab3HVVt3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Aug 2013 17:49:29 -0400
-Message-ID: <1377208166.25163.31.camel@ul30vt.home>
-Subject: Re: [PATCH] pci: Add pci_walk_slot() interface
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	id S1753319Ab3HOKOf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Aug 2013 06:14:35 -0400
+Date: Thu, 15 Aug 2013 12:14:32 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Thu, 22 Aug 2013 15:49:26 -0600
-In-Reply-To: <CAErSpo5gUwm1nqME30DiUPOwhGfOttzjcvbtj-4aqSz4sLAcAg@mail.gmail.com>
-References: <20130819195917.9062.43580.stgit@bling.home>
-	 <CAErSpo5gUwm1nqME30DiUPOwhGfOttzjcvbtj-4aqSz4sLAcAg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130815101432.GE27616@pd.tnic>
+References: <20130812125343.GE18018@pd.tnic>
+ <520A16BD.30201@linux.vnet.ibm.com>
+ <20130813124258.GC4077@pd.tnic>
+ <520A6D98.9060204@linux.vnet.ibm.com>
+ <20130813175809.GE4077@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CB8F53@ORSMSX106.amr.corp.intel.com>
+ <20130813181004.GF4077@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CB9150@ORSMSX106.amr.corp.intel.com>
+ <20130814054322.GA9158@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CBAAFA@ORSMSX106.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F31CBAAFA@ORSMSX106.amr.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-08-22 at 15:34 -0600, Bjorn Helgaas wrote:
-> On Mon, Aug 19, 2013 at 2:04 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > We have a pci_walk_bus() interface, but it's exceptionally cumbersome
-> > for the callback function to figure out if the device is relevant if
-> > the caller is trying to walk all the devices in or below a slot.  Add
-> > a variant to walk only slot devices.
-> 
-> Is it really exceptionally cumbersome?  You can supply the top-level
-> slot in the userdata.  Can you then use something like this in the
-> callback?
-> 
->     bool dev_below_slot(struct pci_dev *dev, struct pci_slot *slot)
->     {
->         if (!dev)
->             return false;
->         if (dev->slot == slot)
->             return true;
->         return dev_below_slot(dev->bus->self, slot);
->     }
+On Wed, Aug 14, 2013 at 06:38:09PM +0000, Luck, Tony wrote:
+> We've wandered around different strategies here. We definitely
+> want the panic log. Some people want all other "kernel exit" logs
+> (shutdown, reboot, kexec). When there is enough space in the pstore
+> backend we might also want the "oops" that preceeded the panic. (Of
+> course when the oops happens we don't know the future, so have to
+> save it just in case ... then if more "oops" happen we have to decide
+> whether to keep the old oops log, or save the newer one).
 
-Maybe I should have said it's ugly and inefficient rather than
-cumbersome.  This feels like a backwards way to do it, but if you don't
-want a walk_slot interface, then it looks like this would work.  Thanks,
+Ok, dmesg over serial and *only* oops+panic in pstore. Right.
 
-Alex
+> Yes - longer logs are better. Sad that the pstore backend devices are
+> measured in kilobytes :-)
 
+Right, so good ole serial again to the rescue! There's no room for full
+dmesg in nvram because it needs space for the UEFI GUI and some other
+crap :-)
 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >
-> > This allows me to use pci_walk_bus() and pci_walk_slot() instead of
-> > rolling my own for iterating devices for bus/slot reset.  Please
-> > consider for 3.12 to go with the rest of the bus/slot infrastructure.
-> >
-> >  drivers/pci/bus.c   |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/pci.h |    2 ++
-> >  2 files changed, 58 insertions(+)
-> >
-> > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> > index b1ff02a..316579a 100644
-> > --- a/drivers/pci/bus.c
-> > +++ b/drivers/pci/bus.c
-> > @@ -283,6 +283,62 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_walk_bus);
-> >
-> > +/** pci_walk_slot - walk devices in/under slot, calling callback.
-> > + *  @slot     slot whose devices should be walked
-> > + *  @cb       callback to be called for each device found
-> > + *  @userdata arbitrary pointer to be passed to callback.
-> > + *
-> > + *  Walk the given slot, including any bridged devices
-> > + *  on buses under this slot.  Call the provided callback
-> > + *  on each device found.
-> > + *
-> > + *  We check the return of @cb each time. If it returns anything
-> > + *  other than 0, we break out.
-> > + *
-> > + */
-> > +void pci_walk_slot(struct pci_slot *slot, int (*cb)(struct pci_dev *, void *),
-> > +                  void *userdata)
-> > +{
-> > +       struct pci_dev *dev;
-> > +       struct pci_bus *bus;
-> > +       struct list_head *next;
-> > +       int retval;
-> > +
-> > +       bus = slot->bus;
-> > +       down_read(&pci_bus_sem);
-> > +       next = slot->bus->devices.next;
-> > +       for (;;) {
-> > +               if (next == &bus->devices) {
-> > +                       /* end of this bus, go up or finish */
-> > +                       if (bus == slot->bus)
-> > +                               break;
-> > +                       next = bus->self->bus_list.next;
-> > +                       bus = bus->self->bus;
-> > +                       continue;
-> > +               }
-> > +               dev = list_entry(next, struct pci_dev, bus_list);
-> > +
-> > +               /* skip anything on the top level bus not in our slot */
-> > +               if (dev->bus == slot->bus && dev->slot != slot) {
-> > +                       next = dev->bus_list.next;
-> > +                       continue;
-> > +               }
-> > +
-> > +               if (dev->subordinate) {
-> > +                       /* this is a pci-pci bridge, do its devices next */
-> > +                       next = dev->subordinate->devices.next;
-> > +                       bus = dev->subordinate;
-> > +               } else
-> > +                       next = dev->bus_list.next;
-> > +
-> > +               retval = cb(dev, userdata);
-> > +               if (retval)
-> > +                       break;
-> > +       }
-> > +       up_read(&pci_bus_sem);
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_walk_slot);
-> > +
-> >  struct pci_bus *pci_bus_get(struct pci_bus *bus)
-> >  {
-> >         if (bus)
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index daf40cd..cbb291b 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -1087,6 +1087,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
-> >
-> >  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
-> >                   void *userdata);
-> > +void pci_walk_slot(struct pci_slot *slot, int (*cb)(struct pci_dev *, void *),
-> > +                 void *userdata);
-> >  int pci_cfg_space_size_ext(struct pci_dev *dev);
-> >  int pci_cfg_space_size(struct pci_dev *dev);
-> >  unsigned char pci_bus_max_busnr(struct pci_bus *bus);
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> No - write speed for the persistent storage backing pstore (flash)
+> means we don't log as we go. We wait for a panic and then our
+> registered function gets called so we can snapshot what is in the
+> console log at that point. We also don't want to wear out the flash
+> which may be soldered to the motherboard.
 
+I suspected as much. So we can forget about using *only* pstore for hw
+errors logging. It would be cool to do so but the technology simply
+doesn't give it.
 
+> Agreed - we shouldn't clutter logs with details of corrected errors.
+> At most we should have a rate-limited log showing the count of
+> corrected errors so that someone who just watches dmesg knows they
+> should go dig deeper if they see some big number of corrected errors.
 
+/me nods.
+
+> Yes. There are people looking at various "flight recorder" modes for
+> tracing that keep logs of normal events in a circular buffer in RAM
+> ... if these exist they should be saved at crash time (and they are in
+> the kexec/kdump path, but I don’t know if anyone does anything in
+> the non-kdump case).
+
+Right, the cheapest solution is serial. Simply log everything to serial
+because we can. But this is the key thing I wanted to emphasize:
+
+For severe hardware errors we don't want to use any tracepoint -
+actually it is even a bad thing to do so because they would get lost in
+some side channels which, during a critical situation, might not get
+written to anything/survive the crash, etc.
+
+So what I'm saying is, we basically want severe hardware errors to land
+to good old dmesg and to all consoles. No fancy TP stuff for them.
+
+> Tracepoints for errors that are going to lead to system crash would
+> only be useful together with a flight recorder to make sure they get
+> saved. I think tracepoints for corrected errors are better than dmesg
+> logs.
+
+Yes, exactly.
+
+> In a perfect world yes - I don't know that we can achieve perfection
+> - but we can iterate through good, better, even better. The really
+> hard part of this is figuring out what is *relevant* to save before a
+> particular crash happens.
+
+Well, if I have serial connected to the box, it will contain basically
+everything the machine said, no?
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
