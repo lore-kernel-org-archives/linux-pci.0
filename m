@@ -1,60 +1,91 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH V5] pci: exynos: split into two parts such as Synopsys part
- and Exynos part
-Date: Wed, 07 Aug 2013 13:13:42 +0900
-Message-id: <002501ce9324$8066f5a0$8134e0e0$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+MIME-Version: 1.0
+In-Reply-To: <20130814200549.21626.79779.stgit@bling.home>
+References: <20130814200549.21626.79779.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 15 Aug 2013 14:50:04 -0600
+Message-ID: <CAErSpo6zfR2TQViyKTr9mjWHSnp9Veo9wRN_eQCJU2YtabPRTA@mail.gmail.com>
+Subject: Re: [PATCH] pci: Add probe functions for bus and slot reset
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 31, 2013 5:14 PM, Jingoo Han <jg1.han@samsung.com> wrote:
-> Exynos PCIe IP consists of Synopsys specific part and Exynos
-> specific part. Only core block is a Synopsys designware part;
-> other parts are Exynos specific.
-> Also, the Synopsys designware part can be shared with other
-> platforms; thus, it can be split two parts such as Synopsys
-> designware part and Exynos specific part.
-> 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> Cc: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+On Wed, Aug 14, 2013 at 2:06 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> Users of pci_reset_bus() and pci_reset_slot() need a way to probe
+> whether the bus or slot supports reset.  Add trivial helper functions
+> and export them as vfio-pci will make use of these.
+>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 
-Hi Bjorn Helgaas,
-
-There is no comment for last 2 weeks.
-Will you accept this patch?
-
-
-Best regards,
-Jingoo Han
+Merged to the PCI "next" branch for v3.12, thanks.
 
 > ---
-> Changes since v4:
-> - fixed section mismatch warnings
-> - fixed sparse warnings
-> 
->  .../devicetree/bindings/pci/designware-pcie.txt    |    3 +
->  arch/arm/boot/dts/exynos5440.dtsi                  |    2 +
->  drivers/pci/host/Makefile                          |    3 +-
->  drivers/pci/host/pci-exynos.c                      |  530 ++++++++++
->  drivers/pci/host/pcie-designware.c                 | 1011 ++++++--------------
->  drivers/pci/host/pcie-designware.h                 |   65 ++
->  6 files changed, 874 insertions(+), 740 deletions(-)
->  create mode 100644 drivers/pci/host/pci-exynos.c
->  create mode 100644 drivers/pci/host/pcie-designware.h
-
-
+>
+> This is logically patch 10/9 for v5 pci: bus and slot reset interfaces.
+> If there's a need to re-spin anything I'll roll this in.
+>
+>  drivers/pci/pci.c   |   24 ++++++++++++++++++++++++
+>  include/linux/pci.h |    2 ++
+>  2 files changed, 26 insertions(+)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index ba68451..888d847 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3610,6 +3610,18 @@ static int pci_slot_reset(struct pci_slot *slot, int probe)
+>  }
+>
+>  /**
+> + * pci_probe_reset_slot - probe whether a PCI slot can be reset
+> + * @slot: PCI slot to probe
+> + *
+> + * Return 0 if slot can be reset, negative if a slot reset is not supported.
+> + */
+> +int pci_probe_reset_slot(struct pci_slot *slot)
+> +{
+> +       return pci_slot_reset(slot, 1);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
+> +
+> +/**
+>   * pci_reset_slot - reset a PCI slot
+>   * @slot: PCI slot to reset
+>   *
+> @@ -3662,6 +3674,18 @@ static int pci_bus_reset(struct pci_bus *bus, int probe)
+>  }
+>
+>  /**
+> + * pci_probe_reset_bus - probe whether a PCI bus can be reset
+> + * @bus: PCI bus to probe
+> + *
+> + * Return 0 if bus can be reset, negative if a bus reset is not supported.
+> + */
+> +int pci_probe_reset_bus(struct pci_bus *bus)
+> +{
+> +       return pci_bus_reset(bus, 1);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
+> +
+> +/**
+>   * pci_reset_bus - reset a PCI bus
+>   * @bus: top level PCI bus to reset
+>   *
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1a8fd34..daf40cd 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -924,7 +924,9 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+>  int __pci_reset_function(struct pci_dev *dev);
+>  int __pci_reset_function_locked(struct pci_dev *dev);
+>  int pci_reset_function(struct pci_dev *dev);
+> +int pci_probe_reset_slot(struct pci_slot *slot);
+>  int pci_reset_slot(struct pci_slot *slot);
+> +int pci_probe_reset_bus(struct pci_bus *bus);
+>  int pci_reset_bus(struct pci_bus *bus);
+>  void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+>  void pci_update_resource(struct pci_dev *dev, int resno);
+>
