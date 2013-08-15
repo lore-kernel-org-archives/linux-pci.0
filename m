@@ -1,157 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:18419 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754963Ab3HEIzY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 04:55:24 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Rafael <rjw@sisk.pl>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH -v5 4/6] PCI: add pci_serial_number_changed() for device change identification
-Date: Mon, 5 Aug 2013 16:54:56 +0800
-Message-ID: <1375692898-27476-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1375692898-27476-1-git-send-email-wangyijing@huawei.com>
-References: <1375692898-27476-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 15 Aug 2013 18:11:53 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Mauro Carvalho Chehab <m.chehab@samsung.com>
+Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
+	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130815161153.GI27616@pd.tnic>
+References: <520A16BD.30201@linux.vnet.ibm.com>
+ <20130813124258.GC4077@pd.tnic>
+ <520A6D98.9060204@linux.vnet.ibm.com>
+ <20130813175809.GE4077@pd.tnic>
+ <520B6282.6030906@linux.vnet.ibm.com>
+ <20130814212211.544ee6a4@concha.lan>
+ <20130815093831.GA27616@pd.tnic>
+ <20130815102607.7168a930@samsung.com>
+ <20130815134454.GF27616@pd.tnic>
+ <20130815111407.4080a744@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130815111407.4080a744@samsung.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sometimes OS do not know the physical device swap,
-for instance, some device hotplug during system suspend.
-Interrupt can not deliver to OS in some platform.
-So we can use pci serial number capability to detect this
-issue if device supports serial number.
+On Thu, Aug 15, 2013 at 11:14:07AM -0300, Mauro Carvalho Chehab wrote:
+> I don't see why should we have those two alternatives, as, at worse
+> case (e. g. if ghes_edac can't enrich the APEI data with labels),
+> they'll basically provide the very same data to userspace, and the
+> EDAC extra overhead is small, on its error report logic.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/access.c |    9 ---------
- drivers/pci/pci.c    |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h    |    8 ++++++++
- include/linux/pci.h  |    2 ++
- 4 files changed, 58 insertions(+), 9 deletions(-)
+Well, a couple of reasons.
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 0069981..7f8df11 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -194,15 +194,6 @@ PCI_USER_WRITE_CONFIG(dword, u32)
- 
- /* VPD access through PCI 2.2+ VPD capability */
- 
--
--struct pci_vpd_pci22 {
--	struct pci_vpd base;
--	struct mutex lock;
--	u16	flag;
--	bool	busy;
--	u8	cap;
--};
--
- /*
-  * Wait for last operation to complete.
-  * This code has to spin since there is no other notification from the PCI
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index cfc0f7f..a6ac0c8 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2077,6 +2077,54 @@ void pci_dsn_init(struct pci_dev *dev)
- }
- 
- /**
-+ * pci_serial_number_changed - check the device SN is changed
-+ * @pdev: the PCI device
-+ *
-+ * check the device serial number is changed.
-+ * if device does not support device serial number,
-+ * return false.
-+ */
-+bool pci_serial_number_changed(struct pci_dev *pdev)
-+{
-+	struct pci_vpd *vpd;
-+	u64 old_dsn, new_dsn;
-+	int ret;
-+
-+	/* first check PCIe DSN */
-+	old_dsn = pdev->sn;
-+	new_dsn = pci_device_serial_number(pdev);
-+
-+	if (old_dsn != new_dsn)
-+		return true;
-+	else if (old_dsn)
-+		return false;
-+
-+	/* PCIe DSN does not support, check VPD SN */
-+	vpd = pci_vpd_serial_number_init(pdev, NULL);
-+	if (!pdev->vpd && !vpd) {
-+		/* VPD SN does not support */
-+		return false;
-+	} else if (pdev->vpd && pdev->vpd->sn && vpd) {
-+		ret = strcmp(pdev->vpd->sn, vpd->sn);
-+		kfree(vpd->sn);
-+		kfree(container_of(vpd, struct pci_vpd_pci22, base));
-+		if (!ret)
-+			return false;
-+		else
-+			return true;
-+	} else if ((pdev->vpd && pdev->vpd->sn) || (vpd && vpd->sn)) {
-+		if (vpd) {
-+			kfree(vpd->sn);
-+			kfree(container_of(vpd, struct pci_vpd_pci22, base));
-+		}
-+		return true;
-+	}
-+
-+	return false;
-+}
-+EXPORT_SYMBOL(pci_serial_number_changed);
-+
-+/**
-  * pci_configure_ari - enable or disable ARI forwarding
-  * @dev: the PCI device
-  *
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index eb77124..5d1f261 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -98,6 +98,14 @@ struct pci_vpd {
- 	struct bin_attribute *attr; /* descriptor for sysfs VPD entry */
- };
- 
-+struct pci_vpd_pci22 {
-+	struct pci_vpd base;
-+	struct mutex lock;
-+	u16	flag;
-+	bool	busy;
-+	u8	cap;
-+};
-+
- int pci_vpd_pci22_init(struct pci_dev *dev);
- static inline void pci_vpd_release(struct pci_dev *dev)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5c38b55..9580fa5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -996,6 +996,8 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
- int pci_vpd_truncate(struct pci_dev *dev, size_t size);
- 
-+bool pci_serial_number_changed(struct pci_dev *pdev);
-+
- /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
- resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
- void pci_bus_assign_resources(const struct pci_bus *bus);
+The first and foremost one is having another layer which needs
+registration, etc. because ghes_edac pulls the whole edac core stuff
+with it. The thinner we are, the less overhead we cause. And this is
+a must for RAS.
+
+Actually, this is a must for all kernel code - the faster we can get
+done and the thinner we are, the better. We absolutely definitely don't
+want to have a useless layer in the error reporting path just because it
+is easier.
+
+This short path will pay out later in error storms and other
+resources-constrained situations.
+
+Furthermore, dealing with another edac driver is not trivial for
+distros, like going around and telling people that all of a sudden
+they need to enable ghes_edac. This is tangential to the issue which
+Naveen raised that on some machines, you want not only ghes_edac but the
+platform-specific one. Which doesn't work currently and we don't have a
+clear solution on how to get it working yet.
+
+Finally, userspace doesn't care where it gets its TP data from as long
+as it is there.
+
+> The risk of doing the very same thing on two different places is that
+> the logic to encapsulate APEI data into trace_mc_event() would be on
+> two separate places. It risks that someone would change one of the
+> drivers and forget to apply the very same change on the other, causing
+> parse errors on userspace, depending on the source.
+
+We'll make sure that doesn't happen.
+
 -- 
-1.7.1
+Regards/Gruss,
+    Boris.
 
-
+Sent from a fat crate under my desk. Formatting is fine.
+--
