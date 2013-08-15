@@ -1,55 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:50162 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966835Ab3HILnO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 07:43:14 -0400
-Date: Fri, 9 Aug 2013 07:42:51 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCHv8 04/10] of: pci: add registry of MSI chips
-Message-ID: <20130809114251.GQ8204@titan.lakedaemon.net>
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1376000268-18397-5-git-send-email-thomas.petazzoni@free-electrons.com>
- <1376027346.32100.8.camel@pasglop>
+Received: from mail.skyhub.de ([78.46.96.112]:52564 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755750Ab3HOSlw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Aug 2013 14:41:52 -0400
+Date: Thu, 15 Aug 2013 20:41:49 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aristeu Rozanski Filho <arozansk@redhat.com>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
+ trace event
+Message-ID: <20130815184149.GJ27616@pd.tnic>
+References: <520A1B5E.8040105@linux.vnet.ibm.com>
+ <20130813094147.062317f8@concha.lan>
+ <520A6A30.1030406@linux.vnet.ibm.com>
+ <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
+ <520B603E.3040002@linux.vnet.ibm.com>
+ <20130814211504.393cf138@concha.lan>
+ <20130815100132.GC27616@pd.tnic>
+ <20130815103421.178a5224@samsung.com>
+ <20130815135106.GG27616@pd.tnic>
+ <3908561D78D1C84285E8C5FCA982C28F31CBCE72@ORSMSX106.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1376027346.32100.8.camel@pasglop>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F31CBCE72@ORSMSX106.amr.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thomas,
+On Thu, Aug 15, 2013 at 06:16:48PM +0000, Luck, Tony wrote:
+> > * We parse some APEI table and disable those MCA banks which the BIOS
+> > wants to handle first.
+>
+> We have no idea which errors the BIOS has chosen for itself. We just
+> know which bank numbers ...
 
-On Fri, Aug 09, 2013 at 03:49:06PM +1000, Benjamin Herrenschmidt wrote:
-> On Fri, 2013-08-09 at 00:17 +0200, Thomas Petazzoni wrote:
-> > 
-> > +#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
-> > +int of_pci_msi_chip_add(struct msi_chip *chip);
-> > +void of_pci_msi_chip_remove(struct msi_chip *chip);
-> > +struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node
-> > *of_node);
-> > +#else
-> > +static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return
-> > -EINVAL; }
-> > +static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
-> 
-> Missing a ; at the end of the above line... breaks the build of
-> CONFIG_PCI_MSI is not set.
+Well, those which BIOS hasn't chosen for itself get simply handled up
+through, HEST it is, I think. So it all goes out in APEI anyway...
 
-If this is the same error Randy reported yesterday from -next, I'll just
-fix it up when I pull it in.
+> and Intel processors change mappings of which errors are logged in
+> which banks in every new processor tock (and sometimes tick). Some
+> banks are documented in processor datasheet. most are not. Most common
+> case might well be memory ... but it could be cache, or I/O, or ...
+>
+> So this doesn't help Mauro figure out whether to allow loading of an
+> EDAC driver that will peek and poke at chipset specific registers in
+> possibly racy ways with BIOS code doing the same thing.
 
-thx,
+That doesn't matter - the only thing that matters is if an EDAC driver
+has anything additional to bring to the table. If it does, then it gets
+to see the errors before they're dumped to userspace. If not, then APEI
+should report them directly.
 
-Jason.
+Mind you, if we've disabled an MCA bank for the kernel then no EDAC
+driver gets to see errors from it either because APEI has taken
+responsibility. Unless said driver is poking around MCA registers -
+which it shouldn't.
+
+So I'd guess the decision to load an EDAC driver should be a platform
+one. A platform which gives *sufficient* information in APEI tables for
+an error doesn't need an EDAC driver. Older platforms or platforms which
+cannot supply sufficient information for, say, properly pinpointing the
+DIMM, should use the additional help of an EDAC driver for that, if
+possible.
+
+Which begs the most important question: do we even have a platform that
+can give us sufficient information without the need for an EDAC driver?
+
+Because if not, we should stop wasting energy pointlessly and simply
+drop this discussion: we basically load an EDAC driver and do not do the
+APEI tracepoint because it simply doesn't make any sense and there's no
+actual platform giving us that info.
+
+So, which is it?
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
