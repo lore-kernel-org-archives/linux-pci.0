@@ -1,163 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:42191 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344Ab3HCKdH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Aug 2013 06:33:07 -0400
-Received: by mail-ea0-f170.google.com with SMTP id h14so732861eak.15
-        for <linux-pci@vger.kernel.org>; Sat, 03 Aug 2013 03:33:05 -0700 (PDT)
-Received: from al.localnet (al.lekensteyn.nl. [2001:470:1f15:b83::c0d1:f1ed])
-        by mx.google.com with ESMTPSA id j2sm18474589eep.6.2013.08.03.03.33.03
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Sat, 03 Aug 2013 03:33:04 -0700 (PDT)
-From: Peter Wu <lekensteyn@gmail.com>
-To: linux-pci@vger.kernel.org
-Subject: Lockdep warning on rescan (pci_remove_rescan_mutex)
-Date: Sat, 03 Aug 2013 12:33:02 +0200
-Message-ID: <2381207.2TMynsda9i@al>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:48087 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750864Ab3HOUsw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Aug 2013 16:48:52 -0400
+Received: by mail-ie0-f181.google.com with SMTP id x14so2127976ief.12
+        for <linux-pci@vger.kernel.org>; Thu, 15 Aug 2013 13:48:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
+References: <20130808200444.2932.17381.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 15 Aug 2013 14:48:31 -0600
+Message-ID: <CAErSpo6v2sKuHnLweh_o1GtV+A-3ckoMG10rhOEwMXHLMTMsgg@mail.gmail.com>
+Subject: Re: [PATCH v5 0/9] pci: bus and slot reset interfaces
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thu, Aug 8, 2013 at 2:09 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> v5: Increase length of time we assert reset in the final common
+>     secondary bus reset function to 2ms and document that this is
+>     to ensure that reset on the bus is seen for at least a full
+>     1ms (per converstation with Alex Duyck)
+>
+> Thanks,
+> Alex
+>
+> This series adds PCI bus and slot reset interfaces to the already
+> existing function reset interface.  I need this for two reasons, the
+> first is that not all devices support function level reset.  Even
+> some of those that we detect as supporting a PM reset on D3hot->D0
+> transition actually don't do any reset.  Others have no reset
+> capability at all.  We currently implement a secondary bus reset
+> escalation from the function reset path, but only when there is a
+> single devfn on the bus.  Drivers like vfio can have ownership of
+> all of the devices on a bus and should therefore have a path to
+> initiate a secondary bus reset with multiple devices.  This is
+> particularly required for use of GPUs by userspace, where none of
+> the predominant GPUs implement a useful function level reset.
+>
+> The second reason is that even the current function reset escalating
+> to a secondary bus reset can cause problems with hotplug controllers.
+> If a root port supports PCIe HP with suprise removal, a bus reset
+> can trigger a presence detection change, which results in an attempt
+> to remove the struct device.  By having a slot reset interface, we
+> can involve the hotplug controllers to allow for a controlled bus
+> reset and avoid this spurious removal attempt.
+>
+> ---
+>
+> Alex Williamson (9):
+>       pci: Create pci_reset_bridge_secondary_bus()
+>       pci: Add hotplug_slot_ops.reset_slot()
+>       pci: Implement reset_slot for pciehp
+>       pci: Add slot reset option to pci_dev_reset
+>       pci: Split out pci_dev lock/unlock and save/restore
+>       pci: Add slot and bus reset interfaces
+>       pci: Wake-up devices before save for reset
+>       pci: Tune secondary bus reset timing
+>       pci: Remove aer_do_secondary_bus_reset()
+>
+>
+>  drivers/pci/hotplug/pciehp.h       |    1
+>  drivers/pci/hotplug/pciehp_core.c  |   12 +
+>  drivers/pci/hotplug/pciehp_hpc.c   |   31 +++
+>  drivers/pci/pci.c                  |  349 +++++++++++++++++++++++++++++++++---
+>  drivers/pci/pcie/aer/aerdrv.c      |    2
+>  drivers/pci/pcie/aer/aerdrv.h      |    1
+>  drivers/pci/pcie/aer/aerdrv_core.c |   35 ----
+>  include/linux/pci.h                |    3
+>  include/linux/pci_hotplug.h        |    4
+>  9 files changed, 376 insertions(+), 62 deletions(-)
 
-When trying to rescan for PCI devices (after removing a child), I get a
-lockdep warning in my logs. The commands were:
-
-    # tee /sys/bus/pci/devices/0000\:03\:00.0/remove <<<1
-    1
-    # tee /sys/bus/pci/devices/0000\:02\:00.0/rescan <<<1
-    1
-
-I did not experience actual issues, just letting you know about this. I can
-reproduce this on every reboot:
-1. Boot
-2. (pci-stub owns the device)
-4. remove from parent bus
-5. rescan
-6. Lockdep warning found.
-(7. pci-stub claims device again)
-
-Interestingly, I can only reproduce this after freshly rebooting.
-Repeating steps 4 and 5 do not trigger a new lockdep warning.
-
-Regards,
-Peter
-
-======================================================
-[ INFO: possible circular locking dependency detected ]
-3.11.0-rc2-cold-00096-gae2ad35-dirty #1 Tainted: G           O
--------------------------------------------------------
-tee/29902 is trying to acquire lock:
- (pci_remove_rescan_mutex){+.+.+.}, at: [<ffffffff8134be96>] dev_rescan_store+0x56/0x80
-
-but task is already holding lock:
- (s_active#296){++++.+}, at: [<ffffffff811fddad>] sysfs_write_file+0xcd/0x170
-
-which lock already depends on the new lock.
-
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (s_active#296){++++.+}:
-       [<ffffffff810aabaa>] check_prevs_add+0xda/0x140
-       [<ffffffff810ab1ba>] validate_chain.isra.35+0x5aa/0x7a0
-       [<ffffffff810ad02a>] __lock_acquire+0x3ca/0xab0
-       [<ffffffff810addc0>] lock_acquire+0x90/0x140
-       [<ffffffff811ff086>] sysfs_deactivate+0x116/0x160
-       [<ffffffff811ffb7b>] sysfs_addrm_finish+0x3b/0x70
-       [<ffffffff811fdb0b>] sysfs_hash_and_remove+0x5b/0xb0
-       [<ffffffff81201991>] remove_files.isra.1+0x41/0x80
-       [<ffffffff81201ec4>] sysfs_remove_group+0x54/0xf0
-       [<ffffffff8141415b>] device_remove_groups+0x3b/0x60
-       [<ffffffff814144a3>] device_remove_attrs+0x53/0x90
-       [<ffffffff81414e7b>] device_del+0x12b/0x1c0
-       [<ffffffff8134506c>] pci_stop_bus_device+0x9c/0xb0
-       [<ffffffff81345216>] pci_stop_and_remove_bus_device+0x16/0x30
-       [<ffffffff8134c10b>] remove_callback+0x2b/0x40
-       [<ffffffff811fde68>] sysfs_schedule_callback_work+0x18/0x80
-       [<ffffffff8106a621>] process_one_work+0x1d1/0x570
-       [<ffffffff8106b80b>] worker_thread+0x11b/0x370
-       [<ffffffff81072c2a>] kthread+0xea/0xf0
-       [<ffffffff8168239c>] ret_from_fork+0x7c/0xb0
-
--> #0 (pci_remove_rescan_mutex){+.+.+.}:
-       [<ffffffff810aaac8>] check_prev_add+0x778/0x780
-       [<ffffffff810aabaa>] check_prevs_add+0xda/0x140
-       [<ffffffff810ab1ba>] validate_chain.isra.35+0x5aa/0x7a0
-       [<ffffffff810ad02a>] __lock_acquire+0x3ca/0xab0
-       [<ffffffff810addc0>] lock_acquire+0x90/0x140
-       [<ffffffff816744a0>] mutex_lock_nested+0x70/0x380
-       [<ffffffff8134be96>] dev_rescan_store+0x56/0x80
-       [<ffffffff81413758>] dev_attr_store+0x18/0x30
-       [<ffffffff811fddc6>] sysfs_write_file+0xe6/0x170
-       [<ffffffff81187c5e>] vfs_write+0xce/0x200
-       [<ffffffff81188165>] SyS_write+0x55/0xa0
-       [<ffffffff81682442>] system_call_fastpath+0x16/0x1b
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(s_active#296);
-                               lock(pci_remove_rescan_mutex);
-                               lock(s_active#296);
-  lock(pci_remove_rescan_mutex);
-
- *** DEADLOCK ***
-
-3 locks held by tee/29902:
- #0:  (sb_writers#6){.+.+.+}, at: [<ffffffff81187d63>] vfs_write+0x1d3/0x200
- #1:  (&buffer->mutex){+.+.+.}, at: [<ffffffff811fdd24>] sysfs_write_file+0x44/0x170
- #2:  (s_active#296){++++.+}, at: [<ffffffff811fddad>] sysfs_write_file+0xcd/0x170
-
-stack backtrace:
-CPU: 2 PID: 29902 Comm: tee Tainted: G           O 3.11.0-rc2-cold-00096-gae2ad35-dirty #1
-Hardware name: Gigabyte Technology Co., Ltd. To be filled by O.E.M./Z68X-UD3H-B3, BIOS U1l 03/08/2013
- ffff880597c7c6c8 ffff880544e69b28 ffffffff8166cea7 0000000000000000
- 0000000000000000 ffff880544e69b78 ffffffff81662c09 ffffffff821ac670
- ffff880544e69ba0 ffff880544e69b78 ffff880597c7c6a0 ffff880597c7c6c8
-Call Trace:
- [<ffffffff8166cea7>] dump_stack+0x55/0x76
- [<ffffffff81662c09>] print_circular_bug+0xd3/0xe4
- [<ffffffff810aaac8>] check_prev_add+0x778/0x780
- [<ffffffff8112f60e>] ? get_page_from_freelist+0x23e/0x5f0
- [<ffffffff810aabaa>] check_prevs_add+0xda/0x140
- [<ffffffff810ab1ba>] validate_chain.isra.35+0x5aa/0x7a0
- [<ffffffff810ad02a>] __lock_acquire+0x3ca/0xab0
- [<ffffffff81130092>] ? __alloc_pages_nodemask+0x162/0x980
- [<ffffffff8134be96>] ? dev_rescan_store+0x56/0x80
- [<ffffffff810addc0>] lock_acquire+0x90/0x140
- [<ffffffff8134be96>] ? dev_rescan_store+0x56/0x80
- [<ffffffff816744a0>] mutex_lock_nested+0x70/0x380
- [<ffffffff8134be96>] ? dev_rescan_store+0x56/0x80
- [<ffffffff811fddad>] ? sysfs_write_file+0xcd/0x170
- [<ffffffff81329fac>] ? _kstrtoull+0x2c/0x90
- [<ffffffff8134be96>] dev_rescan_store+0x56/0x80
- [<ffffffff81413758>] dev_attr_store+0x18/0x30
- [<ffffffff811fddc6>] sysfs_write_file+0xe6/0x170
- [<ffffffff81187c5e>] vfs_write+0xce/0x200
- [<ffffffff81188165>] SyS_write+0x55/0xa0
- [<ffffffff81682442>] system_call_fastpath+0x16/0x1b
-pci_bus 0000:02: scanning bus
-pci 0000:02:00.0: scanning [bus 03-03] behind bridge, pass 0
-pci_bus 0000:03: scanning bus
-pci 0000:03:00.0: [10ec:8129] type 00 class 0x020000
-pci 0000:03:00.0: reg 0x10: [io  0xe000-0xe0ff]
-pci 0000:03:00.0: reg 0x14: [mem 0xf7b41000-0xf7b410ff]
-pci 0000:03:00.0: reg 0x30: [mem 0xf7b00000-0xf7b3ffff pref]
-pci 0000:03:00.0: PME# supported from D3cold
-pci 0000:03:00.0: PME# disabled
-pci_bus 0000:03: bus scan returning with max=03
-pci 0000:02:00.0: scanning [bus 03-03] behind bridge, pass 1
-pci_bus 0000:02: bus scan returning with max=03
-pci 0000:02:00.0: BAR 15: assigned [mem 0xdfb00000-0xdfbfffff pref]
-pci 0000:03:00.0: BAR 6: assigned [mem 0xdfb00000-0xdfb3ffff pref]
-pci 0000:03:00.0: BAR 0: assigned [io  0xe000-0xe0ff]
-pci 0000:03:00.0: BAR 0: set to [io  0xe000-0xe0ff] (PCI address [0xe000-0xe0ff])
-pci 0000:03:00.0: BAR 1: assigned [mem 0xf7b00000-0xf7b000ff]
-pci 0000:03:00.0: BAR 1: set to [mem 0xf7b00000-0xf7b000ff] (PCI address [0xf7b00000-0xf7b000ff])
-pci-stub 0000:03:00.0: claimed by stub
+Merged to the PCI "next" branch for v3.12, thanks!
