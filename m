@@ -1,121 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:33324 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757021Ab3HMVxP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 17:53:15 -0400
-From: James Bottomley <jbottomley@parallels.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Chris Metcalf <cmetcalf@tilera.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"adam radford" <aradford@gmail.com>
-Subject: Re: [PATCH v2] tile: support LSI MEGARAID SAS HBA hybrid dma_ops
-Date: Tue, 13 Aug 2013 21:53:11 +0000
-Message-ID: <1376430790.3467.85.camel@dabdike.int.hansenpartnership.com>
-References: <CAErSpo6SzUF44pk3HVyR5UUN0BJUHUz+Z5egWKCoGG70VuB6wg@mail.gmail.com>
-	 <520A5B01.2010207@tilera.com>
-	 <CAErSpo4sFPiuPLboJ_wsg2cketUaciP7EgmufJmuEEryJmDW7Q@mail.gmail.com>
-In-Reply-To: <CAErSpo4sFPiuPLboJ_wsg2cketUaciP7EgmufJmuEEryJmDW7Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-vb0-f50.google.com ([209.85.212.50]:39764 "EHLO
+	mail-vb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758419Ab3HOAlY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 20:41:24 -0400
+Received: by mail-vb0-f50.google.com with SMTP id x14so125282vbb.9
+        for <linux-pci@vger.kernel.org>; Wed, 14 Aug 2013 17:41:23 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20130814213249.3c568da8@concha.lan>
+References: <CALCETrUHJg5qskadGG11fGvCVgbm=Zn0zuWv+CAgrEm9-Qcfdg@mail.gmail.com>
+ <CAErSpo6Gp34O=L1ASPRLLBxwQShn6SN5EfXjDT+G7XAg3qbL-g@mail.gmail.com> <20130814213249.3c568da8@concha.lan>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Wed, 14 Aug 2013 17:41:03 -0700
+Message-ID: <CALCETrVYKuRcRgKEroCVbvkqfHjOtAA1Rwn6b4uas19BXogkpA@mail.gmail.com>
+Subject: Re: PCI devices w/ multiple drivers at once? (sb_edac vs i2c-imc)
+To: Mauro Carvalho Chehab <m.chehab@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-edac@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVHVlLCAyMDEzLTA4LTEzIGF0IDE0OjMwIC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
-PiBbK2NjIEphbWVzIGluIGNhc2UgaGUgaGFzIG9waW5pb25zIG9uIHRoZSBETUEgbWFzayBxdWVz
-dGlvbl0NCj4gDQo+IE9uIFR1ZSwgQXVnIDEzLCAyMDEzIGF0IDEwOjEyIEFNLCBDaHJpcyBNZXRj
-YWxmIDxjbWV0Y2FsZkB0aWxlcmEuY29tPiB3cm90ZToNCj4gPiAoVHJpbW1pbmcgdGhlIHF1b3Rl
-ZCBtYXRlcmlhbCBhIGxpdHRsZSB0byB0cnkgdG8ga2VlcCB0aGlzIGVtYWlsIHVuZGVyIGNvbnRy
-b2wuKQ0KPiA+DQo+ID4gT24gOC8xMi8yMDEzIDQ6NDIgUE0sIEJqb3JuIEhlbGdhYXMgd3JvdGU6
-DQo+ID4+IE9uIE1vbiwgQXVnIDEyLCAyMDEzIGF0IDE6NDIgUE0sIENocmlzIE1ldGNhbGYgPGNt
-ZXRjYWxmQHRpbGVyYS5jb20+IHdyb3RlOg0KPiA+Pj4gT24gOC85LzIwMTMgNjo0MiBQTSwgQmpv
-cm4gSGVsZ2FhcyB3cm90ZToNCj4gPj4+PiBPSywgc28gcGh5c2ljYWwgbWVtb3J5IGluIHRoZSBb
-M0dCLDRHQl0gcmFuZ2UgaXMgdW5yZWFjaGFibGUgdmlhIERNQQ0KPiA+Pj4+IGFzIHlvdSBkZXNj
-cmliZS4gIEFuZCBldmVuIGlmIERNQSAqY291bGQqIHJlYWNoIGl0LCB0aGUgQ1BVIGNvdWxkbid0
-DQo+ID4+Pj4gc2VlIGl0IGJlY2F1c2UgQ1BVIGFjY2Vzc2VzIHRvIHRoYXQgcmFuZ2Ugd291bGQg
-Z28gdG8gUENJIGZvciB0aGUNCj4gPj4+PiBtZW1vcnktbWFwcGVkIEJBUiBzcGFjZSwgbm90IHRv
-IG1lbW9yeS4NCj4gPj4+IFJpZ2h0LiAgVW5yZWFjaGFiaWxpdHkgaXMgb25seSBhIHByb2JsZW0g
-aWYgdGhlIERNQSB3aW5kb3cgb3ZlcmxhcHMgWzNHLCA0R10sIGFuZCBzaW5jZSB0aGUgNjQtYml0
-IERNQSB3aW5kb3cgaXMgWzFUQiwyVEJdLCB0aGUgd2hvbGUgUEEgc3BhY2UgY2FuIGJlIHJlYWNo
-ZWQgYnkgNjQtYml0IGNhcGFibGUgZGV2aWNlcy4NCj4gPj4gU28gdGhlIFswLTFUQl0gbWVtb3J5
-IHJhbmdlIChpbmNsdWRpbmcgWzNHQi00R0JdKSBpcyByZWFjaGFibGUgYnkNCj4gPj4gNjQtYml0
-IERNQSB0byBidXMgYWRkcmVzc2VzIFsxVEItMlRCXS4gIEJ1dCBpZiB0aGUgQ1BVIGNhbid0IHNl
-ZQ0KPiA+PiBwaHlzaWNhbCBtZW1vcnkgZnJvbSBbM0dCLTRHQl0sIGhvdyBpcyBpdCB1c2VmdWwg
-dG8gRE1BIHRoZXJlPw0KPiA+DQo+ID4gU29ycnksIGxvb2tpbmcgYmFjayBJIGNhbiBzZWUgdGhh
-dCB0aGUgdGhyZWFkIGlzIGEgbGl0dGxlIGNvbmZ1c2luZy4NCj4gPiBUaGUgQ1BVIGNhbiBzZWUg
-dGhlIHdob2xlIFBBIHNwYWNlLiBUaGUgY29uZnVzaW9uIGNvbWVzIGZyb20gdGhlIEJBUiBzcGFj
-ZQ0KPiA+IGluIFszR0IsIDRHQl0uDQo+ID4NCj4gPiBPbiBUaWxlLCB3ZSBkZWZpbmUgdGhlIENQ
-VSBtZW1vcnkgc3BhY2UgYXMgZm9sbG93czoNCj4gPg0KPiA+IFswLCAxVEJdOiBQQQ0KPiA+IFsx
-VEIgKyAzR0IsIDFUQiArIDRHQl06IEJBUiBzcGFjZSBmb3IgUkMgcG9ydCAwLCBpbiBbM0dCLCA0
-R0JdDQo+ID4gWzFUQiArIDNHQiArIE4qNEdCLCAxVEIgKyAoMSArIE4pKjRHQl06IEJBUiBzcGFj
-ZSBmb3IgUkMgcG9ydCBOLCBpbiBbM0dCLCA0R0JdDQo+ID4NCj4gPiBUaGUgbWFwcGluZyBmcm9t
-IFsxVEIgKyAzR0IgKyBOKjRHQiwgMVRCICsgKDEgKyBOKSo0R0JdIHRvIFszR0IsIDRHQl0gaXMg
-ZG9uZSBieSBhDQo+ID4gaGFyZHdhcmUgUElPIHJlZ2lvbiwgd2hpY2ggZ2VuZXJhdGVzIFBDSSBi
-dXMgYWRkcmVzc2VzIGluIFszR0IsIDRHQl0gZm9yIE1NSU9zIHRvDQo+ID4gdGhlIEJBUiBzcGFj
-ZS4NCj4gDQo+IE9LLCBJIHRoaW5rIEkgZ2V0IGl0IG5vdy4gIENQVSBhZGRyZXNzIHNwYWNlOg0K
-PiAgIFswLCAxVEJdOiBwaHlzaWNhbCBtZW1vcnkNCj4gICBbMVRCICsgM0dCLCAxVEIgKyA0R0Jd
-OiB0cmFuc2xhdGVkIHRvIGJ1cyBhZGRyZXNzIFszR0IsIDRHQl0gdW5kZXIgUkMgcG9ydCAwDQo+
-ICAgWzFUQiArIDNHQiArIE4qNEdCLCAxVEIgKyAoMSArIE4pKjRHQl06IHRyYW5zbGF0ZWQgdG8g
-YnVzIGFkZHJlc3MNCj4gWzNHQiwgNEdCXSB1bmRlciBSQyBwb3J0IE4NCj4gDQo+IEJ1cyBhZGRy
-ZXNzIHNwYWNlOg0KPiAgIFswLCAzR0JdOiAzMi1iaXQgRE1BIHJlYWNoZXMgcGh5c2ljYWwgbWVt
-b3J5IFswLCAzR0JdDQo+ICAgWzNHQiwgNEdCXTogMzItYml0IERNQSAocGVlci10by1wZWVyIERN
-QSB1bmRlciBsb2NhbCBSQyBwb3J0LCBJIGd1ZXNzPykNCj4gICBbMVRCLCAyVEJdOiA2NC1iaXQg
-RE1BIG1hcHBlZCB2aWEgSU9NTVUgdG8gcGh5c2ljYWwgbWVtb3J5IFswLCAxVEJdDQo+IA0KPiBJ
-IGd1ZXNzIHRoZSBwcm9ibGVtIGlzIHRoYXQgMzItYml0IERNQSBjYW4ndCByZWFjaCBwaHlzaWNh
-bCBtZW1vcnkNCj4gWzNHQiwgNEdCXSwgc28geW91J3JlIHVzaW5nIGJvdW5jZSBidWZmZXJzIHNv
-IHRoZSBidXMgYWRkcmVzcyBpcyBpbg0KPiBbMCwgM0dCXS4gIFRoYXQgbWFrZXMgc2Vuc2UsIGFu
-ZCBJIGRvbid0IHNlZSBhbm90aGVyIHBvc3NpYmlsaXR5IG90aGVyDQo+IHRoYW4ganVzdCB0aHJv
-d2luZyBhd2F5IHRoZSBbM0dCLCA0R0JdIHJhbmdlIGJ5IGxlYXZpbmcgaXQgb3V0IG9mIHRoZQ0K
-PiBrZXJuZWwgYWxsb2NhdG9yIGFsdG9nZXRoZXIsIG9yIHVzaW5nICBoYXJkd2FyZSAod2hpY2gg
-dGlsZWd4IHByb2JhYmx5DQo+IGRvZXNuJ3QgaGF2ZSkgdG8gcmVtYXAgaXQgc29tZXdoZXJlIGVs
-c2UuDQoNClRoaXMgaXMgcmVtYXJrYWJseSBmYW1pbGlhci4gIEkgdGhpbmsgYWxtb3N0IGV2ZXJ5
-IHN5c3RlbSBvbiBlYXJ0aCBoYXMgYQ0KY29uZmlndXJhdGlvbiBzaW1pbGFyIHRvIHRoaXMuICBP
-biBQQVJJU0MsIHRoZSB0b3AgMjU2TUIgb2YgbWVtb3J5IG9uIGENCjMyIGJpdCBzeXN0ZW0gaXMg
-cmVzZXJ2ZWQgZm9yIEkvTyBhY2Nlc3MgYW5kIGlzIGRlc2lnbmF0ZWQgYXMgIkYgU3BhY2UiLg0K
-DQpXaGF0IGlzIHVudXN1YWwgaXMgdGhhdCB5b3Ugc2VlbSB0byBoYXZlIHJlc3BvbmRpbmcgbWVt
-b3J5IGJlaGluZCB0aGUgRg0KU3BhY2Ugd2hpY2ggaXMgYWNjZXNzaWJsZSB0byBzb21lIGJ1cyBl
-bnRpdGllcy4gIE9uIFBBUklTQyAzMiBiaXQsIHRoZQ0KbWVtb3J5IGlzIGp1c3QgbG9zdCAoaW5h
-Y2Nlc3NpYmxlKSBvbiA2NCBiaXQsIGl0J3MgcmVtYXBwZWQgYWJvdmUgMzJHQg0KKGFuZCB0aGUg
-bG93IEYgU3BhY2Ugd2luZG93IGV4cGFuZGVkIHRvIDFHQikuDQoNCj4gU28gaXQgc2VlbXMgbGlr
-ZSBqdXN0IGEgcXVlc3Rpb24gb2YgaG93IHlvdSB3cmFwIHRoaXMgYWxsIHVwIGluDQo+IGRtYV9v
-cHMsIGFuZCAqdGhhdCogaXMgYWxsIGFyY2ggc3R1ZmYgdGhhdCBJIGRvbid0IGhhdmUgYW4gb3Bp
-bmlvbiBvbi4NCj4gDQo+ID4+PiBVbmZvcnR1bmF0ZWx5LCB0aGUgTWVnYXJhaWQgZHJpdmVyIGRv
-ZXNu4oCZdCBldmVuIGNhbGwgcGNpX3NldF9jb25zaXN0ZW50X2RtYV9tYXNrKGRldiwgRE1BX0JJ
-VF9NQVNLKDMyKSkuDQo+ID4+IElmIHRoZSBNZWdhcmFpZCBkcml2ZXIgbmVlZHMgdGhhdCBjYWxs
-LCBidXQgaXQncyBtaXNzaW5nLCB3aHkgd291bGRuJ3QNCj4gPj4gd2UganVzdCBhZGQgaXQ/DQo+
-ID4NCj4gPiBUaGUgTWVnYXJhaWQgZHJpdmVyIGRvZXNu4oCZdCBzdHJpY3RseSBuZWVkIHRoYXQg
-Y2FsbCBvbiBvdGhlciBwbGF0Zm9ybXMsIGJlY2F1c2UNCj4gPiBieSBkZWZhdWx0IHRoZSBkZXZp
-Y2UgY29oZXJlbnRfZG1hX21hc2sgaXMgRE1BX0JJVF9NQVNLKDMyKSBhbmQgdGhlIGNvbnNpc3Rl
-bnQNCj4gPiBtZW1vcnkgcG9vbCBkb2VzbuKAmXQgY29tZSBmcm9tIHRoZSBib3VuY2UgYnVmZmVy
-cyBvbiBtb3N0IG90aGVyIHBsYXRmb3Jtcy4NCj4gPg0KPiA+IE9mIGNvdXJzZSwgZm9yIHRoZSBz
-YWtlIG9mIGNvcnJlY3RuZXNzLCB0aGlzIGNhbGwgc2hvdWxkIGJlIGFkZGVkIGFjcm9zcyBhbGwg
-cGxhdGZvcm1zLg0KPiA+IC4uLg0KPiANCj4gPiBXaGF0IGlzIHVuaXF1ZSBhYm91dCBUaWxlIGlz
-IHRoYXQgdGhlIFBDSSBkcml2ZXJzIG11c3QgZXhwbGljaXRseSBkZWNsYXJlDQo+ID4gaXRzIERN
-QSBjYXBhYmlsaXR5IGJ5IGNhbGxpbmcgcGNpX3NldF9kbWFfbWFzaygpIGFuZCBwY2lfc2V0X2Nv
-bnNpc3RlbnRfZG1hX21hc2soKS4NCj4gDQo+IEl0IGxvb2tzIGxpa2UgdGhlIHJlYXNvbiB5b3Ug
-bmVlZCBkcml2ZXJzIHRvIGV4cGxpY2l0bHkgY2FsbA0KPiBwY2lfc2V0X2RtYV9tYXNrKCkgYW5k
-IHBjaV9zZXRfY29uc2lzdGVudF9kbWFfbWFzaygpIGlzIGJlY2F1c2UgeW91DQo+IGhhdmUgaG9v
-a3MgaW4gdGhvc2UgZnVuY3Rpb25zIHRvIHR3ZWFrIHRoZSBkbWFfb3BzLCBldmVuIHRob3VnaCB0
-aGUNCj4gbWFzayBpdHNlbGYgbWlnaHQgbm90IGJlIGNoYW5nZWQuDQo+IA0KPiBUaGF0IGRvZXNu
-J3Qgc291bmQgbGlrZSBhIHJvYnVzdCBzb2x1dGlvbjogd2UgaGF2ZSB3ZWxsLWtub3duIGRlZmF1
-bHRzDQo+IGZvciB0aGUgbWFzayBzaXplcywgYW5kIEkgZG9uJ3QgdGhpbmsgaXQncyByZWFzb25h
-YmxlIHRvIGV4cGVjdA0KPiBkcml2ZXJzIHRvIGV4cGxpY2l0bHkgc2V0IHRoZSBtYXNrIGV2ZW4g
-aWYgdGhleSBhcmUgaGFwcHkgd2l0aCB0aGUNCj4gZGVmYXVsdHMgKHRob3VnaCBEb2N1bWVudGF0
-aW9uL0RNQS1BUEktSE9XVE8udHh0IGRvZXMgc2F5IHRoYXQgYmVpbmcNCj4gZXhwbGljaXQgaXMg
-Z29vZCBzdHlsZSkuICBJJ20gYWZyYWlkIHlvdSdsbCBqdXN0IGtlZXAgdHJpcHBpbmcgb3Zlcg0K
-PiBkcml2ZXJzIHRoYXQgZG9uJ3Qgd29yayBvbiB0aWxlZ3ggYmVjYXVzZSB0aGV5IGRvbid0IHNl
-dCB0aGUgbWFzay4NCg0KUmlnaHQsIGl0J3Mgbm90IGEgcm9idXN0IHNvbHV0aW9uIGF0IGFsbC4g
-IEEgRE1BIG1hc2sgaXMganVzdCB0aGF0OiBhbg0KYWNjZXNzaWJpbGl0eSBtYXNrLiAgVGhlIGZv
-dW5kaW5nIGFzc3VtcHRpb24gaXMgdGhhdCBhbiBhZGRyZXNzIGxpbmUgaXMNCmVpdGhlciBjb25u
-ZWN0ZWQgb3Igbm90LCB3aGljaCBpcyB3aHkgdGhlIG1hc2sgd29ya3MuICBXaGF0IHlvdSBoYXZl
-IGlzDQp0d28gZGlmZmVyZW50IGNsYXNzZXMgb2YgbWVtb3J5OiAwLTNHQiB3aGljaCBpcyB1c2Fi
-bGUgZm9yIEkvTyBhbmQgMy00R0INCndoaWNoIGlzbid0LiAgU3VyZWx5IHdoYXQgeW91IG5lZWQg
-dG8gZG8gaXMgaW1wbGVtZW50IFpPTkVfRE1BMzI/IHdoaWNoDQpzdHJldGNoZXMgZnJvbSAwLTNH
-Qiwgd2hpY2ggbWVhbnMgYWxsIGttYWxsb2NzIGluIHRoZSBkcml2ZXIgd2lsbCBiZSBpbg0KdGhl
-IHJpZ2h0IHJhbmdlLiAgVGhlbiB5b3UgbmVlZCBhIGJvdW5jZSBwZm4gYXQgM0dCIHdoaWNoIG1l
-YW5zIHRoYXQNCnVzZXIgc3BhY2Ugd2hpY2ggZ2V0cyB0aGUgMy00R0IgaXMgYm91bmNlZC4gIFRo
-ZXJlJ3MgYSBtYWdpYyBwZm4gaW4NCkJMS19CT1VOQ0VfSElHSCB0aGF0IHdhcyBkZXNpZ25lZCBm
-b3IgdGhpcywgYnV0IEknbSBub3Qgc3VyZSB0aGUgZGVzaWduDQpjb250ZW1wbGF0ZWQgQkxLX0JP
-VU5DRV9ISUdIIGJlaW5nIGRpZmZlcmVudCBmb3IgNjQgYW5kIDMyIGJpdC4NCg0KSmFtZXMNCg0K
+On Wed, Aug 14, 2013 at 5:32 PM, Mauro Carvalho Chehab
+<m.chehab@samsung.com> wrote:
+>
+> Em Wed, 14 Aug 2013 16:04:06 -0600
+> Bjorn Helgaas <bhelgaas@google.com> escreveu:
+>
+> > On Wed, Aug 14, 2013 at 3:45 PM, Andy Lutomirski <luto@amacapital.net> wrote:
+> > > I'm working on a driver for the Sandy Bridge iMC SMBUS controller.  It
+> > > (mostly) lives on pci device 15, function 0.  So my driver registers
+> > > as an ordinary PCI driver for that device (8086.3ca8).
+> > >
+> > > The problem is that sb_edac also registers for 8086.3ca8.  This means
+> > > that the drivers conflict.  The sb_edac driver is actually driving
+> > > functionality that's split between eleven (!) different pci devices,
+> > > none of which overlaps the stuff I'm driving.
+> > >
+> > > What's the Right Way (tm) to handle this?  Should I just modify
+> > > sb_edac to pick a different one of the 11 devices to probe?  Is there
+> > > some standard way to handle this in the PCI code?
+>
+> The sb-edac driver needs to see lots of different devices in order to
+> work, as the memory controller registers are on different PCI IDs.
+>
+> So, there's not much that can be done there, I'm afraid.
+
+Would you be okay with changing the PCI ID that the sb_edac driver
+binds to?  That is, let it claim any of the other mess of devices it
+talks to.
+
+Alternatively, I could shove the whole thing into the edac-sbridge module.
+
+>
+>
+> Btw, we almost added a code there to also access the SMBUS, in order to
+> enumerate the memories. We ended by not adding, because we were afraid
+> or risking to race with BIOS. A race while access an I2C EEPROM memory
+> can be very bad, as a read operation might be understood as write, thus
+> destroying the DIMM configuration.
+
+The controller is, indeed, amazingly racy.  But I have access to
+(NDAed) reference code for this, and I need it for NVDIMM support,
+which is a real thing that AFAICT Intel's trying to support, so this
+stuff is really supposed to work.  (The reference code performs
+undocumented incantations that I can't (yet?) talk about.)
+
+Is there any way to get sb_edac to expose, for each DIMM, the physical
+address range that the DIMM maps to (or at least the range that
+contains all the interleaved bits of it).  That would give me a nice
+sanity check to validate that the firmware isn't lying about the
+NVDIMM aperture.
+
+(Don't use my old i2c_imc submission as a valid sample -- it blows up
+terribly when closed-loop thermal throttling is on.)
+
+--Andy
