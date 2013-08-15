@@ -1,60 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f174.google.com ([209.85.128.174]:43978 "EHLO
-	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751214Ab3HQBJ6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Aug 2013 21:09:58 -0400
-Received: by mail-ve0-f174.google.com with SMTP id d10so1770224vea.19
-        for <linux-pci@vger.kernel.org>; Fri, 16 Aug 2013 18:09:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130814213249.3c568da8@concha.lan>
-References: <CALCETrUHJg5qskadGG11fGvCVgbm=Zn0zuWv+CAgrEm9-Qcfdg@mail.gmail.com>
- <CAErSpo6Gp34O=L1ASPRLLBxwQShn6SN5EfXjDT+G7XAg3qbL-g@mail.gmail.com> <20130814213249.3c568da8@concha.lan>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Fri, 16 Aug 2013 18:09:37 -0700
-Message-ID: <CALCETrWzExS8ROirkcwagU0Wg6WmREtAzJ0un+hTVWdzaeC1Kg@mail.gmail.com>
-Subject: Re: PCI devices w/ multiple drivers at once? (sb_edac vs i2c-imc)
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-edac@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout1.w2.samsung.com ([211.189.100.11]:50398 "EHLO
+	usmailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014Ab3HOAWU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 20:22:20 -0400
+Date: Wed, 14 Aug 2013 21:22:11 -0300
+From: Mauro Carvalho Chehab <m.chehab@samsung.com>
+To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Cc: Borislav Petkov <bp@alien8.de>, tony.luck@intel.com,
+	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
+	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+Message-id: <20130814212211.544ee6a4@concha.lan>
+In-reply-to: <520B6282.6030906@linux.vnet.ibm.com>
+References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
+ <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812125343.GE18018@pd.tnic> <520A16BD.30201@linux.vnet.ibm.com>
+ <20130813124258.GC4077@pd.tnic> <520A6D98.9060204@linux.vnet.ibm.com>
+ <20130813175809.GE4077@pd.tnic> <520B6282.6030906@linux.vnet.ibm.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 14, 2013 at 5:32 PM, Mauro Carvalho Chehab
-<m.chehab@samsung.com> wrote:
-> Em Wed, 14 Aug 2013 16:04:06 -0600
-> Bjorn Helgaas <bhelgaas@google.com> escreveu:
->
->> On Wed, Aug 14, 2013 at 3:45 PM, Andy Lutomirski <luto@amacapital.net> wrote:
->> > I'm working on a driver for the Sandy Bridge iMC SMBUS controller.  It
->> > (mostly) lives on pci device 15, function 0.  So my driver registers
->> > as an ordinary PCI driver for that device (8086.3ca8).
->> >
->> > The problem is that sb_edac also registers for 8086.3ca8.  This means
->> > that the drivers conflict.  The sb_edac driver is actually driving
->> > functionality that's split between eleven (!) different pci devices,
->> > none of which overlaps the stuff I'm driving.
->> >
->> > What's the Right Way (tm) to handle this?  Should I just modify
->> > sb_edac to pick a different one of the 11 devices to probe?  Is there
->> > some standard way to handle this in the PCI code?
->
-> The sb-edac driver needs to see lots of different devices in order to
-> work, as the memory controller registers are on different PCI IDs.
->
-> So, there's not much that can be done there, I'm afraid.
->
-> Btw, we almost added a code there to also access the SMBUS, in order to
-> enumerate the memories. We ended by not adding, because we were afraid
-> or risking to race with BIOS. A race while access an I2C EEPROM memory
-> can be very bad, as a read operation might be understood as write, thus
-> destroying the DIMM configuration.
+Em Wed, 14 Aug 2013 16:27:06 +0530
+"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
 
-Do you have any more details about this issue?  As far as I can tell
-(by experiment, not by magic reference code), it's simply not possible
-to control the SMBUS in CLTT mode.  I can't find any evidence of BIOS,
-SMI code, or anything else using the SMBUS registers, so races against
-other software-ish things seem unlikely.
+> On 08/13/2013 11:28 PM, Borislav Petkov wrote:
+> > On Tue, Aug 13, 2013 at 11:02:08PM +0530, Naveen N. Rao wrote:
+> >> If I'm not mistaken, even for systems that have EDAC drivers, it looks
+> >> to me like EDAC can't really decode to the DIMM given what is provided
+> >> by the bios in the APEI report currently. If and when ghes_edac gains
+> >> this capability, users will have a choice between raw APEI reports vs.
+> >> edac processed ones.
+> >
+> > Which kinda makes that APEI tracepoint not really useful and we can call
+> > the one we have already - trace_mc_event - from APEI...
+> 
+> This looks like a nice option. Mauro, what do you think?
 
---Andy
+I considered calling trace_mc_event directly in APEI, before writing ghes_edac.
+
+I decided to implement it as a separate driver due to some reasons:
+
+	1) EDAC core needs to know that it should reject "hardware first"
+drivers. So, any solution would need to talk to EDAC core anyway (or we 
+would need to write some other kind of resource allocation somewhere);
+
+	2) EDAC userspace would need to detect the type of memory. Even
+being crappy, the current way the memory is reported as a single contiguous
+block at sysfs. So, EDAC userspace is aware that it can't decode the DIMM;
+
+	3) If BIOS vendors add later some solution to enumerate the DIMMS
+per memory controller, channel, socket with APEI, the addition to the
+existing driver would be trivial.
+
+So, while it would work to just call the tracing at APEI, on the current way,
+I believe that having this part on a separate code is better.
+
+Cheers,
+Mauro
