@@ -1,111 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:34659 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759963Ab3HOCTW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 22:19:22 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	<stable@vger.kernel.org.#.3.4+>
-Subject: [PATCH v5 2/2] PCI: update device mps when doing pci hotplug
-Date: Thu, 15 Aug 2013 10:18:55 +0800
-Message-ID: <1376533135-36708-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1376533135-36708-1-git-send-email-wangyijing@huawei.com>
-References: <1376533135-36708-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 15 Aug 2013 10:34:21 -0300
+From: Mauro Carvalho Chehab <m.chehab@samsung.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+	"Luck, Tony" <tony.luck@intel.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aristeu Rozanski Filho <arozansk@redhat.com>
+Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
+ event
+Message-id: <20130815103421.178a5224@samsung.com>
+In-reply-to: <20130815100132.GC27616@pd.tnic>
+References: <20130810180322.GC4155@pd.tnic>
+ <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com>
+ <20130812114404.3bd64fa0@samsung.com> <520A1B5E.8040105@linux.vnet.ibm.com>
+ <20130813094147.062317f8@concha.lan> <520A6A30.1030406@linux.vnet.ibm.com>
+ <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
+ <520B603E.3040002@linux.vnet.ibm.com> <20130814211504.393cf138@concha.lan>
+ <20130815100132.GC27616@pd.tnic>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we don't update device's mps value when doing
-pci device hot-add. The hot-added device's mps will be set
-to default value (128B). But the upstream port device's mps
-may be larger than 128B which was set by firmware during
-system bootup. In this case the new added device may not
-work normally. This patch try to update the hot added device
-mps equal to its parent mps, if device mpss < parent mps,
-print warning.
+Em Thu, 15 Aug 2013 12:01:32 +0200
+Borislav Petkov <bp@alien8.de> escreveu:
 
-References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
-Reported-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Cc: stable@vger.kernel.org # 3.4+
----
- drivers/pci/probe.c |   49 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 48 insertions(+), 1 deletions(-)
+> On Wed, Aug 14, 2013 at 09:15:04PM -0300, Mauro Carvalho Chehab wrote:
+> > > - Two, if ghes_edac is enabled, it prevents other edac drivers
+> > > from being loaded. It looks like the assumption here is that if
+> > > ghes/firmware first is enabled, then *all* memory errors are
+> > > reported through ghes which is not true. We could have (a subset
+> > > of) corrected errors reported through ghes, some through CMCI
+> > > and uncorrected errors through MCE. So, if I'm not mistaken, if
+> > > ghes_edac is enabled, we will only receive ghes error events through
+> > > mc_event and not the others. Mauro, is this accurate?
+> > 
+> > Yes, that's the current assumption. It prevents to have both BIOS and a
+> > direct-hardware-access-EDAC-driver to race, as this is known to have
+> > serious issues.
+> 
+> Ok, this is getting confusing so let's shed some more light.
+> 
+> * First of all, Naveen is asking whether other *edac* drivers can
+> be loaded. And no, they cannot once the ghes thing is loaded which
+> potentially is a problem.
+> 
+> For example, if the chipset-specific driver has additional functionality
+> from ghes_edac, then that functionality is gone when ghes_edac loads
+> first. This might be a problem in some cases, we probably need to think
+> about this more in depth.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 0699ec0..9419745 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1621,6 +1621,44 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
- 	return 0;
- }
- 
-+static int pcie_bus_update_set(struct pci_dev *dev, void *data)
-+{
-+	int mps, p_mps, mpss;
-+	struct pci_dev *parent;
-+
-+	if (!pci_is_pcie(dev) || !dev->bus->self)
-+		return 0;
-+
-+	parent = dev->bus->self;
-+	mps = pcie_get_mps(dev);
-+	p_mps = pcie_get_mps(dev->bus->self);
-+
-+	if (mps >= p_mps)
-+		return 0;
-+
-+	/* we only update the device mps, unless its parent device is root port,
-+	 * and it is the only slot directly connected to root port.
-+	 */
-+	mpss = 128 << dev->pcie_mpss;
-+	if (mpss >= p_mps) {
-+		pcie_write_mps(dev, p_mps);
-+	} else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT &&
-+			pci_only_one_slot(dev->bus)) {
-+		pcie_write_mps(parent, mpss);
-+		pcie_write_mps(dev, mpss);
-+	} else
-+		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
-+				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
-+				mps, 128 << dev->pcie_mpss, p_mps);
-+	return 0;
-+}
-+
-+static void pcie_bus_update_setting(struct pci_bus *bus)
-+{
-+	if (bus->self->is_hotplug_bridge)
-+		pci_walk_bus(bus, pcie_bus_update_set, NULL);
-+}
-+
- /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
-  * parents then children fashion.  If this changes, then this code will not
-  * work as designed.
-@@ -1632,8 +1670,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- 	if (!pci_is_pcie(bus->self))
- 		return;
- 
--	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
-+	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
-+		/* Sometimes we should update device mps here,
-+		 * eg. after hot add, device mps value will be
-+		 * set to default(128B), but the upstream port
-+		 * mps value may be larger than 128B, if we do
-+		 * not update the device mps, it maybe can not
-+		 * work normally.
-+		 */
-+		pcie_bus_update_setting(bus);
- 		return;
-+	}
- 
- 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
- 	 * to be aware to the MPS of the destination.  To work around this,
--- 
-1.7.1
+Yes, but the thing is that it is not safe to use the hardware driver if
+the BIOS is also reading the hardware error registers directly, as, on
+several hardware, a read cause the error data to be cleaned on such 
+register.
 
+So, either APEI should be extended to allow some fine-grained that would
+provide ways to check/control what resources would be reserved for BIOS 
+only, or the user needs to tell BIOS/Kernel if they want BIOS
+or OS to access the hardware.
 
+Regards,
+Mauro
