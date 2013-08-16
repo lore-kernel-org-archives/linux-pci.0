@@ -1,37 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out.neti.ee ([194.126.106.72]:59502 "EHLO smtp-out.neti.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755161Ab3HWUfi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Aug 2013 16:35:38 -0400
-Message-ID: <5217C794.1020902@kraav.com>
-Date: Fri, 23 Aug 2013 23:35:32 +0300
-From: Leho Kraav <leho@kraav.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:60821 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750903Ab3HPWM7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Aug 2013 18:12:59 -0400
+Received: by mail-ie0-f173.google.com with SMTP id k5so4350079iea.18
+        for <linux-pci@vger.kernel.org>; Fri, 16 Aug 2013 15:12:59 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [Bug 57961] ExpressCard hot-remove and hot-add not recognized
- by acpiphp
-References: <bug-57961-41252@https.bugzilla.kernel.org/> <bug-57961-41252-X2PJk78p44@https.bugzilla.kernel.org/> <CAErSpo4jFGdW-OXf2OrUQw-e8EdE5h6fPs-v9=QQh1xPjz-Nvg@mail.gmail.com> <5217BDF2.4020909@kraav.com> <CAErSpo5B6dvY6ri1-NajudgS1v1tyTCCicb9vMrOYP=8yv4pPg@mail.gmail.com>
-In-Reply-To: <CAErSpo5B6dvY6ri1-NajudgS1v1tyTCCicb9vMrOYP=8yv4pPg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAPWoNkLTC+1ba3vwY0xiJVmmebvuXZBTwiyH5HAFfE8mRReaRQ@mail.gmail.com>
+References: <CAPWoNkJ3NKM-_g93LdRpjvdNFtLt-Pjpg4d4oEKC9CvkpzZ-Wg@mail.gmail.com>
+ <CAPWoNkLQUbFG2vZ7wqoqqVNj4uxKz3Fa_vsSH=1_TDD=XC1f2A@mail.gmail.com>
+ <CAErSpo5ZZgdpkK+QdQUEnNCEXcG_T+QBWTVoQnMTghxkX7n2HA@mail.gmail.com>
+ <CAPWoNkJtnE3ASH0AdgfAD-3soa13DyH-zZAyzWMg9K2=nCX87Q@mail.gmail.com> <CAPWoNkLTC+1ba3vwY0xiJVmmebvuXZBTwiyH5HAFfE8mRReaRQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 16 Aug 2013 16:05:43 -0600
+Message-ID: <CAErSpo6zGZkL7hWmBOVzd2=MWvY18v5xLO1qg7jVfSgqa8wHzw@mail.gmail.com>
+Subject: Re: PCIE device errors after linux kernel upgrade
+To: Leon Ravich <lravich@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Aug 6, 2013 at 11:41 PM, Leon Ravich <lravich@gmail.com> wrote:
+> From comparison of pci printout from the two kernel ,
+> beside the EDAC errors I noticed other strange differences:
 >
-> I don't know anything about the LID notifications.
+> In 3.8.13 I got BAR 7 and BAR 8:
+> [   39.017749] pci 0000:00:00.0: BAR 8: assigned [mem 0xc0000000-0xdfffffff]
+> [   39.024530] pci 0000:00:00.0: BAR 7: can't assign io (size 0x10000)
 >
-> As far as the bus checks on \_SB_.PCI0, I think that message is new or
-> possibly we register for those notifications on more devices that we
-> previously did.  If your laptop suspended when closing the lid, it
-> doesn't surprise me that we get the Bus Check on resume, because that
-> might be the only way we could discover device additions or removals
-> that happened while suspended.  I'm not sure why we would get them on
-> suspend.
+> In 3.8.13 I am getting:
+> [   38.931873] pci_bus 0000:01: busn_res: can not insert [bus 01-ff]
+> under [bus 00-01] (conflicts with (null) [bus 00-01])
+>
+>
+> On 6 August 2013 09:32, Leon Ravich <lravich@gmail.com> wrote:
+>> Thanks Bjorn.
 
-I don't suspend on lid close, actually. I close the lid just to carry 
-the laptop around, and always suspend manually.
+Is this still a problem, or have you found a solution in the meantime?
 
-Thanks for taking a look. I guess the key takeaway here is that the 
-notify message is harmless and I should look at somewhere else to figure 
-out why I'm not getting a LID event.
+>> 1) If I understand it right this patch only removes the "pci
+>> 0000:00:00.0: ignoring class 0x0b2000 (doesn't
+>> match header type 01)" message , don't  care about it , had it before .
+
+It also affects how the PCI core handles the device.  But as you said,
+if you had the message before, it's probably not the cause of the
+current problem.
+
+>> 2) regarding the comparing of printouts:
+
+Can you post the complete logs somewhere, maybe in a bugzilla or similar?
+
+Where are the "PCIE ERR_CAP_STAT" and similar messages from?  My quick
+grep didn't find them.
+
+Bjorn
