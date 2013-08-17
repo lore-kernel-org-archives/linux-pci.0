@@ -1,148 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:39005 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756235Ab3HFUT2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Aug 2013 16:19:28 -0400
-Date: Tue, 6 Aug 2013 22:19:25 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	dougthompson@xmission.com, bhelgaas@google.com, jbeulich@suse.com,
-	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/3 V2] EDAC, AMD64_EDAC: Add relevant condition checks
- as F15h M30h does not support GART or L3.
-Message-ID: <20130806201925.GG14891@pd.tnic>
-References: <1375483384-2302-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <1375483384-2302-3-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Received: from mail-ve0-f174.google.com ([209.85.128.174]:43978 "EHLO
+	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214Ab3HQBJ6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Aug 2013 21:09:58 -0400
+Received: by mail-ve0-f174.google.com with SMTP id d10so1770224vea.19
+        for <linux-pci@vger.kernel.org>; Fri, 16 Aug 2013 18:09:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1375483384-2302-3-git-send-email-Aravind.Gopalakrishnan@amd.com>
+In-Reply-To: <20130814213249.3c568da8@concha.lan>
+References: <CALCETrUHJg5qskadGG11fGvCVgbm=Zn0zuWv+CAgrEm9-Qcfdg@mail.gmail.com>
+ <CAErSpo6Gp34O=L1ASPRLLBxwQShn6SN5EfXjDT+G7XAg3qbL-g@mail.gmail.com> <20130814213249.3c568da8@concha.lan>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 16 Aug 2013 18:09:37 -0700
+Message-ID: <CALCETrWzExS8ROirkcwagU0Wg6WmREtAzJ0un+hTVWdzaeC1Kg@mail.gmail.com>
+Subject: Re: PCI devices w/ multiple drivers at once? (sb_edac vs i2c-imc)
+To: Mauro Carvalho Chehab <m.chehab@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-edac@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 02, 2013 at 05:43:03PM -0500, Aravind Gopalakrishnan wrote:
-> Adding code to check for specific model (F15h, M30h) and if yes,
-> do not add flag AMD_NB_GART. Also check cpuid_edx(0x80000006) for
-> prescence of L3. If no L3, do not add any L3 flags.
-> 
-> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-> 
-> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-> index 3048ded..3ee7a4d 100644
-> --- a/arch/x86/kernel/amd_nb.c
-> +++ b/arch/x86/kernel/amd_nb.c
-> @@ -20,6 +20,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
->  	{}
->  };
-> @@ -27,6 +28,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
->  
->  static const struct pci_device_id amd_nb_link_ids[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
->  	{}
->  };
-> @@ -81,13 +83,21 @@ int amd_cache_northbridges(void)
->  			next_northbridge(misc, amd_nb_misc_ids);
->  		node_to_amd_nb(i)->link = link =
->  			next_northbridge(link, amd_nb_link_ids);
-> -        }
-> +	}
->  
-> +	/* GART present only on Fam15h upto model 0fh */
->  	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
-> -	    boot_cpu_data.x86 == 0x15)
-> +	    (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model < 0x10))
->  		amd_northbridges.flags |= AMD_NB_GART;
->  
->  	/*
-> +	 * Check CPUID Fn8000_0006_EDX: L3 Cache Identifiers.
-> +	 * If == 0, then no need to proceed as there is no L3.
+On Wed, Aug 14, 2013 at 5:32 PM, Mauro Carvalho Chehab
+<m.chehab@samsung.com> wrote:
+> Em Wed, 14 Aug 2013 16:04:06 -0600
+> Bjorn Helgaas <bhelgaas@google.com> escreveu:
+>
+>> On Wed, Aug 14, 2013 at 3:45 PM, Andy Lutomirski <luto@amacapital.net> wrote:
+>> > I'm working on a driver for the Sandy Bridge iMC SMBUS controller.  It
+>> > (mostly) lives on pci device 15, function 0.  So my driver registers
+>> > as an ordinary PCI driver for that device (8086.3ca8).
+>> >
+>> > The problem is that sb_edac also registers for 8086.3ca8.  This means
+>> > that the drivers conflict.  The sb_edac driver is actually driving
+>> > functionality that's split between eleven (!) different pci devices,
+>> > none of which overlaps the stuff I'm driving.
+>> >
+>> > What's the Right Way (tm) to handle this?  Should I just modify
+>> > sb_edac to pick a different one of the 11 devices to probe?  Is there
+>> > some standard way to handle this in the PCI code?
+>
+> The sb-edac driver needs to see lots of different devices in order to
+> work, as the memory controller registers are on different PCI IDs.
+>
+> So, there's not much that can be done there, I'm afraid.
+>
+> Btw, we almost added a code there to also access the SMBUS, in order to
+> enumerate the memories. We ended by not adding, because we were afraid
+> or risking to race with BIOS. A race while access an I2C EEPROM memory
+> can be very bad, as a read operation might be understood as write, thus
+> destroying the DIMM configuration.
 
-This comment explains the code. Just sit down and think about it: does
-it make any sense to have that in a comment?
+Do you have any more details about this issue?  As far as I can tell
+(by experiment, not by magic reference code), it's simply not possible
+to control the SMBUS in CLTT mode.  I can't find any evidence of BIOS,
+SMI code, or anything else using the SMBUS registers, so races against
+other software-ish things seem unlikely.
 
-> +	 */
-> +	if (cpuid_edx(0x80000006) == 0)
-> +		return 0;
-> +
-> +	/*
->  	 * Some CPU families support L3 Cache Index Disable. There are some
->  	 * limitations because of E382 and E388 on family 0x10.
->  	 */
-> --
-
-I fixed it up like this:
-
-commit a0cb1bab68823648def0fda19bf307ad08eb25d2
-Author: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Date:   Fri Aug 2 17:43:03 2013 -0500
-
-    x86, amd_nb: Clarify F15h, model 30h GART and L3 support
-    
-    F15h, models 0x30 and later don't have a GART. Note that. Also check
-    cpuid_edx(0x80000006) for prescence of L3 because there are models which
-    don't sport an L3.
-    
-    Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-    [ Boris: rewrite commit message, cleanup comments. ]
-    Signed-off-by: Borislav Petkov <bp@suse.de>
-
-diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-index 3048ded1b598..59554dca96ec 100644
---- a/arch/x86/kernel/amd_nb.c
-+++ b/arch/x86/kernel/amd_nb.c
-@@ -20,6 +20,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
- 	{}
- };
-@@ -27,6 +28,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
- 
- static const struct pci_device_id amd_nb_link_ids[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
- 	{}
- };
-@@ -81,13 +83,20 @@ int amd_cache_northbridges(void)
- 			next_northbridge(misc, amd_nb_misc_ids);
- 		node_to_amd_nb(i)->link = link =
- 			next_northbridge(link, amd_nb_link_ids);
--        }
-+	}
- 
-+	/* GART present only on Fam15h upto model 0fh */
- 	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
--	    boot_cpu_data.x86 == 0x15)
-+	    (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model < 0x10))
- 		amd_northbridges.flags |= AMD_NB_GART;
- 
- 	/*
-+	 * Check for L3 cache presence.
-+	 */
-+	if (!cpuid_edx(0x80000006))
-+		return 0;
-+
-+	/*
- 	 * Some CPU families support L3 Cache Index Disable. There are some
- 	 * limitations because of E382 and E388 on family 0x10.
- 	 */
-
-
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+--Andy
