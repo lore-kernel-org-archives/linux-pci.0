@@ -1,111 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:15233 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751727Ab3HUC01 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 22:26:27 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	<stable@vger.kernel.org.#.3.4+>
-Subject: [PATCH v6 2/2] PCI: update device mps when doing pci hotplug
-Date: Wed, 21 Aug 2013 10:25:37 +0800
-Message-ID: <1377051937-5712-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1377051937-5712-1-git-send-email-wangyijing@huawei.com>
-References: <1377051937-5712-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:41991 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751334Ab3HSMDH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 08:03:07 -0400
+Date: Mon, 19 Aug 2013 14:02:50 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: kernel-janitors@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
+ devm_ioremap_resource
+Message-ID: <20130819120249.GA5740@ulmo>
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/04w6evG8XlLl3ft"
+In-Reply-To: <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we don't update device's mps value when doing
-pci device hot-add. The hot-added device's mps will be set
-to default value (128B). But the upstream port device's mps
-may be larger than 128B which was set by firmware during
-system bootup. In this case the new added device may not
-work normally. This patch try to update the hot added device
-mps equal to its parent mps, if device mpss < parent mps,
-print warning.
 
-References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
-Reported-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Cc: stable@vger.kernel.org # 3.4+
----
- drivers/pci/probe.c |   49 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 48 insertions(+), 1 deletions(-)
+--/04w6evG8XlLl3ft
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 160ae38..a18fa3b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1600,6 +1600,44 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
- 	return 0;
- }
- 
-+static int pcie_bus_update_set(struct pci_dev *dev, void *data)
-+{
-+	int mps, p_mps, mpss;
-+	struct pci_dev *parent;
-+
-+	if (!pci_is_pcie(dev) || !dev->bus->self)
-+		return 0;
-+
-+	parent = dev->bus->self;
-+	mps = pcie_get_mps(dev);
-+	p_mps = pcie_get_mps(dev->bus->self);
-+
-+	if (mps >= p_mps)
-+		return 0;
-+
-+	/* we only update the device mps, unless its parent device is root port,
-+	 * and it is the only slot directly connected to root port.
-+	 */
-+	mpss = 128 << dev->pcie_mpss;
-+	if (mpss >= p_mps) {
-+		pcie_write_mps(dev, p_mps);
-+	} else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT &&
-+			pci_only_one_slot(dev->bus)) {
-+		pcie_write_mps(parent, mpss);
-+		pcie_write_mps(dev, mpss);
-+	} else
-+		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
-+				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
-+				mps, 128 << dev->pcie_mpss, p_mps);
-+	return 0;
-+}
-+
-+static void pcie_bus_update_setting(struct pci_bus *bus)
-+{
-+	if (bus->self->is_hotplug_bridge)
-+		pci_walk_bus(bus, pcie_bus_update_set, NULL);
-+}
-+
- /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
-  * parents then children fashion.  If this changes, then this code will not
-  * work as designed.
-@@ -1611,8 +1649,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- 	if (!pci_is_pcie(bus->self))
- 		return;
- 
--	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
-+	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
-+		/* Sometimes we should update device mps here,
-+		 * eg. after hot add, device mps value will be
-+		 * set to default(128B), but the upstream port
-+		 * mps value may be larger than 128B, if we do
-+		 * not update the device mps, it maybe can not
-+		 * work normally.
-+		 */
-+		pcie_bus_update_setting(bus);
- 		return;
-+	}
- 
- 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
- 	 * to be aware to the MPS of the destination.  To work around this,
--- 
-1.7.1
+On Mon, Aug 19, 2013 at 01:20:35PM +0200, Julia Lawall wrote:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
+>=20
+> Use devm_ioremap_resource instead of devm_request_and_ioremap.
+>=20
+> This was done using the semantic patch
+> scripts/coccinelle/api/devm_ioremap_resource.cocci
+>=20
+> Error-handling code was manually removed from the associated calls to
+> platform_get_resource.
+>=20
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+>=20
+> ---
+> The first block of modified code is followed by a call to
+> devm_request_mem_region for pcie->cs with no associated ioremap.  Should
+> ioremap be used in this case as well?
 
+No. The pcie->cs resource is 256 MiB so it's challenging to map it at
+once. Furthermore it requires a non-linear mapping so we do it on
+demand.
 
+>  drivers/pci/host/pci-tegra.c |   29 +++++++++--------------------
+>  1 file changed, 9 insertions(+), 20 deletions(-)
+
+Tested-by: Thierry Reding <treding@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+
+Bjorn, how do you want to handle patches to the Tegra PCIe driver in the
+future? Do you want me to prepare a branch and pull from that or would
+you rather just take simple patches?
+
+Thierry
+
+--/04w6evG8XlLl3ft
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSEglpAAoJEN0jrNd/PrOhOTcQAKuObLu6NluZG2adbr82G6Wi
+xzDJrTTVkyWS5CFDmhnRa7EutpxJODMBQhlZ6/gto1ii81rCMIHZLpzrpUV6e3BY
+YDMwwfIyjYaf/Nq1c5YA7sQSpIkw+FTRudoHSdwQub0gJr5hWXS6aI3MCsRT6gKp
+eiMA6cjYBsYs7czGXpdj6mwOTWv8qO4oey+gpdYhSMonzHg7v86W2JQ+jbnDqzXe
+1xmNFF89rnujJ2Uh/aAccRD25fO5B/d5H1d5VSKemO2Pmh4Gs1Ge1U5NN8slPE0w
+5Y8IYJg3lIT4KF1pxLtncvwJfb2y1/o7L19yCodrrfQShMh3BUm/+W4WENl7Y+TS
+NxP7CAgDM1+8Amrmqau3mbdCIPKMyhL+UOYOmTSlh4aQQSKn313rRlECYYX9cXdK
+1pzP1hRs2IQruFxVJwt98oqV//CTAvnzMfl0b/eKXY/8ojP789e3uVNu6m37iuNv
+y7SD9GCaL9QSkD9n7CHQKOcrc14nBszCk7jIEa8vurmqGvEZrEL8uuo3UbkyZ5rC
+BRS1B02i6RHBrZ7AVC4fErtS8nR0lqav4AG6n2azs0eWeRA6dvIi/p6vrS/zjkEN
+itII9CF3kUxuaKeT9Qi/eVCq2FyLM4ZfOhce6xSyCGQq4r3ade4bSKg2L8ktBEcl
+WxOPwJFYhAbderurSJDL
+=N18C
+-----END PGP SIGNATURE-----
+
+--/04w6evG8XlLl3ft--
