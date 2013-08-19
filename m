@@ -1,91 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:46449 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1031006Ab3HIU1h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 16:27:37 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
+Received: from mx1.redhat.com ([209.132.183.28]:39105 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751166Ab3HSSl2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Aug 2013 14:41:28 -0400
+Message-ID: <1376937682.2657.15.camel@ul30vt.home>
+Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv9 05/10] irqchip: armada-370-xp: properly request resources
-Date: Fri,  9 Aug 2013 22:27:10 +0200
-Message-Id: <1376080035-29344-6-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Date: Mon, 19 Aug 2013 12:41:22 -0600
+In-Reply-To: <1376521578.13642.65.camel@ul30vt.home>
+References: <20130814200845.21923.64284.stgit@bling.home>
+	 <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
+	 <1376521578.13642.65.camel@ul30vt.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of using of_iomap(), we now use of_address_to_resource(),
-request_mem_region() and ioremap(). This allows the corresponding I/O
-regions to be properly requested and visible in /proc/iomem.
+On Wed, 2013-08-14 at 17:06 -0600, Alex Williamson wrote:
+> On Wed, 2013-08-14 at 16:42 -0600, Bjorn Helgaas wrote:
+> > [+cc Al, linux-fsdevel for fdget/fdput usage]
+> > 
+> > On Wed, Aug 14, 2013 at 2:10 PM, Alex Williamson
+> > <alex.williamson@redhat.com> wrote:
+> > > The current VFIO_DEVICE_RESET interface only maps to PCI use cases
+> > > where we can isolate the reset to the individual PCI function.  This
+> > > means the device must support FLR (PCIe or AF), PM reset on D3hot->D0
+> > > transition, device specific reset, or be a singleton device on a bus
+> > > for a secondary bus reset.  FLR does not have widespread support,
+> > > PM reset is not very reliable, and bus topology is dictated by the
+> > > system and device design.  We need to provide a means for a user to
+> > > induce a bus reset in cases where the existing mechanisms are not
+> > > available or not reliable.
+> > >
+> > > This device specific extension to VFIO provides the user with this
+> > > ability.  Two new ioctls are introduced:
+> > >  - VFIO_DEVICE_PCI_GET_HOT_RESET_INFO
+> > >  - VFIO_DEVICE_PCI_HOT_RESET
+> > >
+> > > The first provides the user with information about the extent of
+> > > devices affected by a hot reset.  This is essentially a list of
+> > > devices and the IOMMU groups they belong to.  The user may then
+> > > initiate a hot reset by calling the second ioctl.  We must be
+> > > careful that the user has ownership of all the affected devices
+> > > found via the first ioctl, so the second ioctl takes a list of file
+> > > descriptors for the VFIO groups affected by the reset.  Each group
+> > > must have IOMMU protection established for the ioctl to succeed.
+> > >
+> > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > > ---
+> > >
+> > > This patch is dependent on v5 "pci: bus and slot reset interfaces" as
+> > > well as "pci: Add probe functions for bus and slot reset".
+> > >
+> > >  drivers/vfio/pci/vfio_pci.c |  272 +++++++++++++++++++++++++++++++++++++++++++
+> > >  include/uapi/linux/vfio.h   |   38 ++++++
+> > >  2 files changed, 309 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> > > index cef6002..eb69bf3 100644
+> > > --- a/drivers/vfio/pci/vfio_pci.c
+> > > +++ b/drivers/vfio/pci/vfio_pci.c
+> > > @@ -227,6 +227,97 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+> > >         return 0;
+> > >  }
+> > >
+> > > +static int vfio_pci_count_devs(struct pci_dev *pdev, void *data)
+> > > +{
+> > > +       (*(int *)data)++;
+> > > +       return 0;
+> > > +}
+> > > +
+> > > +struct vfio_pci_fill_info {
+> > > +       int max;
+> > > +       int cur;
+> > > +       struct vfio_pci_dependent_device *devices;
+> > > +};
+> > > +
+> > > +static int vfio_pci_fill_devs(struct pci_dev *pdev, void *data)
+> > > +{
+> > > +       struct vfio_pci_fill_info *info = data;
+> > > +       struct iommu_group *iommu_group;
+> > > +
+> > > +       if (info->cur == info->max)
+> > > +               return -EAGAIN; /* Something changed, try again */
+> > > +
+> > > +       iommu_group = iommu_group_get(&pdev->dev);
+> > > +       if (!iommu_group)
+> > > +               return -EPERM; /* Cannot reset non-isolated devices */
+> > > +
+> > > +       info->devices[info->cur].group_id = iommu_group_id(iommu_group);
+> > > +       info->devices[info->cur].segment = pci_domain_nr(pdev->bus);
+> > > +       info->devices[info->cur].bus = pdev->bus->number;
+> > > +       info->devices[info->cur].devfn = pdev->devfn;
+> > > +       info->cur++;
+> > > +       iommu_group_put(iommu_group);
+> > > +       return 0;
+> > > +}
+> > > +
+> > > +struct vfio_pci_group {
+> > > +       struct vfio_group *group;
+> > > +       int id;
+> > > +};
+> > > +
+> > > +struct vfio_pci_group_info {
+> > > +       int count;
+> > > +       struct vfio_pci_group *groups;
+> > > +};
+> > > +
+> > > +static int vfio_pci_validate_devs(struct pci_dev *pdev, void *data)
+> > > +{
+> > > +       struct vfio_pci_group_info *info = data;
+> > > +       struct iommu_group *group;
+> > > +       int id, i;
+> > > +
+> > > +       group = iommu_group_get(&pdev->dev);
+> > > +       if (!group)
+> > > +               return -EPERM;
+> > > +
+> > > +       id = iommu_group_id(group);
+> > > +
+> > > +       for (i = 0; i < info->count; i++)
+> > > +               if (info->groups[i].id == id)
+> > > +                       break;
+> > > +
+> > > +       iommu_group_put(group);
+> > > +
+> > > +       return (i == info->count) ? -EINVAL : 0;
+> > > +}
+> > > +
+> > > +static int vfio_pci_for_each_slot_or_bus(struct pci_dev *pdev,
+> > > +                                        int (*fn)(struct pci_dev *,
+> > > +                                                  void *data), void *data,
+> > > +                                        bool slot)
+> > > +{
+> > > +       struct pci_dev *tmp;
+> > > +       int ret = 0;
+> > > +
+> > > +       list_for_each_entry(tmp, &pdev->bus->devices, bus_list) {
+> > > +               if (slot && tmp->slot != pdev->slot)
+> > > +                       continue;
+> > > +
+> > > +               ret = fn(tmp, data);
+> > > +               if (ret)
+> > > +                       break;
+> > > +
+> > > +               if (tmp->subordinate) {
+> > > +                       ret = vfio_pci_for_each_slot_or_bus(tmp, fn,
+> > > +                                                           data, false);
+> > > +                       if (ret)
+> > > +                               break;
+> > > +               }
+> > > +       }
+> > > +
+> > > +       return ret;
+> > > +}
+> > 
+> > vfio_pci_for_each_slot_or_bus() isn't really vfio-specific, is it?
+> 
+> It's not, I originally has callbacks split out as PCI patches but I was
+> able to simplify some things in the code by customizing it to my usage,
+> so I left it here.
+> 
+> > I mean, traversing the PCI hierarchy doesn't require vfio knowledge.  I
+> > think this loop (walking the bus->devices list) skips devices on
+> > "virtual buses" that may be added for SR-IOV.  I'm not sure that
+> > pci_walk_bus() handles that correctly either, but at least if you used
+> > that, we could fix the problem in one place.
+> 
+> I didn't know about pci_walk_bus(), I'll look into switching to it.
 
-The main motivation for this change is that the introduction of the
-MSI support requires us to get the physical address of the main
-interrupt controller registers, so we will need the corresponding
-'struct resource' anyway.
+It looks like pci_walk_bus() is a poor replacement for when dealing with
+slots.  There might be multiple slots on a bus or a mix of slots and
+non-slots, so for each device pci_walk_bus() finds on a subordinate bus
+I'd need to walk up the tree to find the parent bridge on the original
+bus to figure out if it's in the same slot.  Should we have a
+pci_walk_slot() function?  Thanks,
 
-We also take this opportunity to change a panic() to BUG_ON(), in
-order to be consistent with the rest of the driver.
+Alex
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Tested-by: Daniel Price <daniel.price@gmail.com>
-Acked-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
----
- drivers/irqchip/irq-armada-370-xp.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
-index bb328a3..26adc74 100644
---- a/drivers/irqchip/irq-armada-370-xp.c
-+++ b/drivers/irqchip/irq-armada-370-xp.c
-@@ -248,12 +248,25 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
- static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 					     struct device_node *parent)
- {
-+	struct resource main_int_res, per_cpu_int_res;
- 	u32 control;
- 
--	main_int_base = of_iomap(node, 0);
--	per_cpu_int_base = of_iomap(node, 1);
-+	BUG_ON(of_address_to_resource(node, 0, &main_int_res));
-+	BUG_ON(of_address_to_resource(node, 1, &per_cpu_int_res));
- 
-+	BUG_ON(!request_mem_region(main_int_res.start,
-+				   resource_size(&main_int_res),
-+				   node->full_name));
-+	BUG_ON(!request_mem_region(per_cpu_int_res.start,
-+				   resource_size(&per_cpu_int_res),
-+				   node->full_name));
-+
-+	main_int_base = ioremap(main_int_res.start,
-+				resource_size(&main_int_res));
- 	BUG_ON(!main_int_base);
-+
-+	per_cpu_int_base = ioremap(per_cpu_int_res.start,
-+				   resource_size(&per_cpu_int_res));
- 	BUG_ON(!per_cpu_int_base);
- 
- 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
-@@ -262,8 +275,7 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 		irq_domain_add_linear(node, (control >> 2) & 0x3ff,
- 				&armada_370_xp_mpic_irq_ops, NULL);
- 
--	if (!armada_370_xp_mpic_domain)
--		panic("Unable to add Armada_370_Xp MPIC irq domain (DT)\n");
-+	BUG_ON(!armada_370_xp_mpic_domain);
- 
- 	irq_set_default_host(armada_370_xp_mpic_domain);
- 
--- 
-1.8.1.2
 
