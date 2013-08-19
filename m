@@ -1,143 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 23 Aug 2013 14:05:39 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Jingoo Han <jg1.han@samsung.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:59458 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751580Ab3HSXwS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Aug 2013 19:52:18 -0400
+Message-ID: <1376956328.25016.105.camel@pasglop>
+Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Williamson <alex.williamson@redhat.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	Arnd Bergmann <arnd@arndb.de>, 'Sean Cross' <xobs@kosagi.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH V2] PCI: exynos: add support for MSI
-Message-ID: <20130823083539.GB3937@pratyush-vbox>
-References: <003d01ce9fc6$9c0f1c20$d42d5460$%han@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <003d01ce9fc6$9c0f1c20$d42d5460$%han@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Date: Tue, 20 Aug 2013 09:52:08 +1000
+In-Reply-To: <1376953177.2657.33.camel@ul30vt.home>
+References: <20130814200845.21923.64284.stgit@bling.home>
+	 <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
+	 <1376521578.13642.65.camel@ul30vt.home>
+	 <1376937682.2657.15.camel@ul30vt.home>
+	 <CAErSpo50ve+ZMqcX=13hKvrB75LyWmUddC-qyX7Esfr=P5StcA@mail.gmail.com>
+	 <1376952167.25016.85.camel@pasglop> <1376953177.2657.33.camel@ul30vt.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 23, 2013 at 02:04:20PM +0800, Jingoo Han wrote:
-> This patch adds support for Message Signaled Interrupt in the
-> Exynos PCIe diver using Synopsys designware PCIe core IP.
+On Mon, 2013-08-19 at 16:59 -0600, Alex Williamson wrote:
+> On Tue, 2013-08-20 at 08:42 +1000, Benjamin Herrenschmidt wrote:
+> > On Mon, 2013-08-19 at 14:02 -0600, Bjorn Helgaas wrote:
+> > > I guess.  And supply the pci_slot rather than the pci_dev?  I'm a
+> > > little bit worried because the idea of a "slot" is not well-defined in
+> > > the spec, and we have sort of an ad hoc method of discovering and
+> > > managing them, e.g., acpiphp and pciehp might discover the same slot.
+> > > But I guess that's no reason to bury generic code in vfio.
+> > 
+> > And I don't have pci_slot's at all yet on powerpc "powernv" (the host
+> > platform for KVM) since at this stage we don't support physical hotplug
+> > on the target machines...
+> > 
+> > Alex, why specifically looking for "slots" here ? I don't quite
+> > understand. It makes sense to be able to reset individual devices
+> > whether they are on the otherboard, behind extension chassis or directly
+> > on slots...
 > 
-> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Signed-off-by: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> Cc: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> ---
-> Changes since v1:
-> - removed unnecessary exynos_pcie_clear_irq_level()
-> - updated the bindings documentation
-> - used new msi_chip infrastructure
-> - removed ARCH_SUPPORTS_MSI
-> - replaced #ifdef guards with IS_ENABLED(CONFIG_PCI_MSI)
+> a) resetting a slot may have a smaller footprint than resetting a bus,
+
+*May* ... at least on PCIe there is no difference. I suppose PCI pre-E
+slots might have individual reset controls.... though the way to get
+them is fairly platform specific.
+
+> b) hotplug controllers sometimes need to be involved in a bus reset.
+> For b) I have a specific example where my Lenovo S20 workstation has an
+> onboard tg3 NIC attached to a root port supporting pciehp (go figure
+> since the tg3 is soldered onto the motherboard) and doing a secondary
+> bus reset at the root port triggers a presence detection change and
+> therefore tries to do a surprise removal.  By doing a "slot" reset, I
+> have the hotplug controller code manage the bus reset by disabling
+> presence detection around the bus reset.  If you don't have slots and
+> you don't need anything special around a secondary bus reset, you're
+> fine.  It's just an opportunity to provide a hook for the hotplug
+> controller to participate.  Thanks,
+
+Yuck, junk HW again ... oh well, I suppose that's never going to end...
+
+As long as the code works without the slots I'm fine :-) As I mentioned,
+we might have to do a whole different infrastructure for EEH anyway
+(which sucks but we have little choice in the matter).
+
+Cheers,
+Ben.
+
+> Alex
 > 
->  .../devicetree/bindings/pci/designware-pcie.txt    |    2 +
->  arch/arm/boot/dts/exynos5440.dtsi                  |    2 +
->  drivers/pci/host/pci-exynos.c                      |   47 ++++
->  drivers/pci/host/pcie-designware.c                 |  225 ++++++++++++++++++++
->  drivers/pci/host/pcie-designware.h                 |    4 +
->  5 files changed, 280 insertions(+)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> index eabcb4b..00bb935 100644
+> --
+> To unsubscribe from this list: send the line "unsubscribe kvm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-[...]
 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 77b0c25..a4fed11 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -11,8 +11,10 @@
->   * published by the Free Software Foundation.
->   */
-> 
-> +#include <linux/irq.h>
->  #include <linux/kernel.h>
->  #include <linux/module.h>
-> +#include <linux/msi.h>
->  #include <linux/of_address.h>
->  #include <linux/pci.h>
->  #include <linux/pci_regs.h>
-> @@ -62,6 +64,12 @@
->  #define PCIE_ATU_FUNC(x)               (((x) & 0x7) << 16)
->  #define PCIE_ATU_UPPER_TARGET          0x91C
-> 
-> +#define MAX_MSI_IRQS                   32
-
-DW MSI controller can support upto 256. However, 32 seems a practical
-choice, as there might not be any system which may use more
-than 32. But a comment like as follows can be put here:
-
-/*
-* Maximum number of MSI IRQs can be 256 per controller. But keep
-* it 32 as of now. Probably we will never need more than 32. If needed,
-* then increment it in multiple of 32.
-*/
-
-> +#define MAX_MSI_CTRLS                  8
-
-Why to waste cpu cycles when MAX_MSI_IRQS is 32 only.
-#define MAX_MSI_CTRLS   (MAX_MSI_IRQS / 32)
-
-> +
-> +static unsigned int msi_data;
-> +static DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-
-What if one has more than one RC.
-There are SOCs which support 3 RCs.
-So something like this:
-
-#define MAX_PCIE_PORT_SUPPORTED 3
-static DECLARE_BITMAP(msi_irq_in_use[MAX_PCIE_PORT_SUPPORTED],
-                  NUM_MSI_IRQS);
-static unsigned int *msi_data[MAX_PCIE_PORT_SUPPORTED];
-
-Allocate msi_data using __get_free_pages(GFP_KERNEL, 0)) as Thierry
-suggested.
-
-> +
->  static struct hw_pci dw_pci;
-> 
->  unsigned long global_io_offset;
-> @@ -144,6 +152,205 @@ int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
->         return ret;
->  }
-> 
-
-[...]
-
->  int dw_pcie_link_up(struct pcie_port *pp)
->  {
->         if (pp->ops->link_up)
-> @@ -225,6 +432,13 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->                 return -EINVAL;
->         }
-> 
-> +       if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> +               if (of_property_read_u32(np, "msi-base", &pp->msi_irq_start)) {
-> +                       dev_err(pp->dev, "Failed to parse the number of lanes\n");
-> +                       return -EINVAL;
-> +               }
-> +       }
-> +
-
-What if an implementor want to use irq_domain method for msi_irq_start
-allocation? Is it fine to return error if msi-base is not passed from
-dt?
-
-Also, with the limited knowledge of dt I do not understand one thing, how
-would dt understand that you have used 32 msi irqs (MAX_MSI_IRQS)?
-
-Regards
-Pratyush
