@@ -1,124 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:27364 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751066Ab3HANHQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:07:16 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH -v4 2/6] PCI: introduce PCIe Device Serial Number Capability support
-Date: Thu, 1 Aug 2013 21:06:25 +0800
-Message-ID: <1375362389-26096-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
-References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:54315 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751395Ab3HSUt2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 16:49:28 -0400
+Received: by mail-ie0-f169.google.com with SMTP id 10so412238ied.28
+        for <linux-pci@vger.kernel.org>; Mon, 19 Aug 2013 13:49:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130819201224.GC5191@mithrandir>
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr> <20130819120249.GA5740@ulmo>
+ <CAErSpo5oOnfhi+aRi-Z3kCwS1VpYSO6FX5O_MOZmWNLcfhhA9w@mail.gmail.com> <20130819201224.GC5191@mithrandir>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 19 Aug 2013 14:49:07 -0600
+Message-ID: <CAErSpo6U9i16gdaYGpWqgLaFteXpy1erCUw55SqkHLcbypP=vA@mail.gmail.com>
+Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by devm_ioremap_resource
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce PCIe Ext Capability Device Serial Number support,
-so we can use the unique device serial number to identify
-the physical device. During system suspend, if the PCIe
-device was removed and reinserted a new same device, during
-system resume there is no good way to identify it, maybe
-Device Serial Number is a good choice if device support.
+On Mon, Aug 19, 2013 at 2:12 PM, Thierry Reding
+<thierry.reding@gmail.com> wrote:
+> On Mon, Aug 19, 2013 at 02:04:24PM -0600, Bjorn Helgaas wrote:
+>> On Mon, Aug 19, 2013 at 6:02 AM, Thierry Reding
+>> <thierry.reding@gmail.com> wrote:
+>>
+>> > Bjorn, how do you want to handle patches to the Tegra PCIe driver in the
+>> > future? Do you want me to prepare a branch and pull from that or would
+>> > you rather just take simple patches?
+>>
+>> I'm in the habit of applying patches from email, so that's easy for
+>> me.  But a branch would be OK, too.
+>
+> Patches work for me too. Is this cleanup patch something that you'd be
+> comfortable with applying after 3.12-rc1 or would you rather defer it to
+> 3.13?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/pci.c   |   29 +++++++++++++++++++++++++++++
- drivers/pci/pci.h   |    2 +-
- drivers/pci/probe.c |    2 ++
- include/linux/pci.h |    1 +
- 4 files changed, 33 insertions(+), 1 deletions(-)
+I'm not really sure how we should manage drivers/pci/host/*.  Those
+files are mostly arch code, and I'm not sure it's useful for me to be
+in the middle of managing them.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a8d5fd0..4de8468 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2048,6 +2048,35 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
- }
- 
- /**
-+ * pci_device_serial_number - get device serial number
-+ * @dev: the PCI device
-+ *
-+ * return the device serial number if device support,
-+ * otherwise return 0.
-+ */
-+static u64 pci_device_serial_number(struct pci_dev *dev)
-+{
-+	int pos;
-+	u32 lo, hi;
-+
-+	if (!pci_is_pcie(dev))
-+		return 0;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DSN);
-+	if (!pos)
-+		return 0;
-+
-+	pci_read_config_dword(dev, pos + 4, &lo);
-+	pci_read_config_dword(dev, pos + 8, &hi);
-+	return ((u64)hi << 32) | lo;
-+}
-+
-+void pci_dsn_init(struct pci_dev *dev)
-+{
-+	dev->sn = pci_device_serial_number(dev);
-+}
-+
-+/**
-  * pci_configure_ari - enable or disable ARI forwarding
-  * @dev: the PCI device
-  *
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d1182c4..5f398a5 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -207,7 +207,7 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
- void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
- 				      struct list_head *realloc_head,
- 				      struct list_head *fail_head);
--
-+void pci_dsn_init(struct pci_dev *dev);
- /**
-  * pci_ari_enabled - query ARI forwarding status
-  * @bus: the PCI bus
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 46ada5c..edb138c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1325,6 +1325,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Vital Product Data */
- 	pci_vpd_pci22_init(dev);
- 
-+	pci_dsn_init(dev);
-+
- 	/* Alternative Routing-ID Forwarding */
- 	pci_configure_ari(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..4354eaf 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -342,6 +342,7 @@ struct pci_dev {
- 	struct list_head msi_list;
- 	struct kset *msi_kset;
- #endif
-+	u64 sn;		/* device serial number, 0 if not support */
- 	struct pci_vpd *vpd;
- #ifdef CONFIG_PCI_ATS
- 	union {
--- 
-1.7.1
+I assume Stephen or somebody has a tree with the pci-tegra.c stuff
+that's in -next right now; it seems like it'd be simplest to just add
+this patch there and merge in during the v3.12 merge window.
 
-
+Bjorn
