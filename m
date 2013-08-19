@@ -1,62 +1,401 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:53265 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378Ab3HLVRZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 17:17:25 -0400
-Received: by mail-ie0-f180.google.com with SMTP id aq17so9111913iec.11
-        for <linux-pci@vger.kernel.org>; Mon, 12 Aug 2013 14:17:24 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:19395 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751024Ab3HSUJf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Aug 2013 16:09:35 -0400
+Subject: [PATCH v2] vfio-pci: PCI hot reset interface
+To: alex.williamson@redhat.com
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	benh@kernel.crashing.org
+Date: Mon, 19 Aug 2013 14:09:31 -0600
+Message-ID: <20130819200812.9513.97467.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
-References: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Aug 2013 15:17:04 -0600
-Message-ID: <CAErSpo7=oBG3tJBpwscnL-4D-9kLhHUrQSZFrRRC4sBsT2_U2Q@mail.gmail.com>
-Subject: Re: [PATCH V2 0/4] Enable bus master till the FLR completes for
- Chelsio T4
-To: Vipul Pandya <vipul@chelsio.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Casey Leedom <leedom@chelsio.com>, tomreu@chelsio.com,
-	divy@chelsio.com, dm@chelsio.com, nirranjan@chelsio.com,
-	eilong@broadcom.com, netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 4:18 AM, Vipul Pandya <vipul@chelsio.com> wrote:
-> This patch series adds device specific reset method for Chelsio T4 adapters.
->
-> The series also adds new routine, pci_wait_for_pending_transaction, to wait for
-> pending pci transaction. There are few places where waiting for pending pci
-> transaction code was duplicated. This patch series also replaces occurances of
-> duplicate code.
->
-> This patch series is built against Bjorn Helgaas pci tree next branch. We would
-> like to merge this series via the same.
->
-> I have Cced respective maintainers of the modified drivers. Kindly review and
-> let us know in case of any review comments.
->
-> Thanks,
-> Vipul Pandya
->
-> V2: Added pci_wait_for_pending_transaction routine and replaced it at respective
-> places. Made the patch series for the same.
-> V2: Used dev->msix_cap directly for capability offset
-> V2: Removed use of 'rc' variable.
->
-> Casey Leedom (4):
->   pci: Add pci_wait_for_pending_transaction to wait for pending pci
->     transaction
->   pci: Enable bus master till the FLR completes
->   bnx2x: Use pci_wait_for_pending_transaction instead of for loop
->   pci: Use pci_wait_for_pending_transaction instead of for loop
->
->  drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c | 18 +----
->  drivers/pci/pci.c                                | 38 ++++++----
->  drivers/pci/quirks.c                             | 97 ++++++++++++++++++++----
->  include/linux/pci.h                              |  1 +
->  4 files changed, 109 insertions(+), 45 deletions(-)
+The current VFIO_DEVICE_RESET interface only maps to PCI use cases
+where we can isolate the reset to the individual PCI function.  This
+means the device must support FLR (PCIe or AF), PM reset on D3hot->D0
+transition, device specific reset, or be a singleton device on a bus
+for a secondary bus reset.  FLR does not have widespread support,
+PM reset is not very reliable, and bus topology is dictated by the
+system and device design.  We need to provide a means for a user to
+induce a bus reset in cases where the existing mechanisms are not
+available or not reliable.
 
-Applied to my "next" branch for v3.12, thanks!
+This device specific extension to VFIO provides the user with this
+ability.  Two new ioctls are introduced:
+ - VFIO_DEVICE_PCI_GET_HOT_RESET_INFO
+ - VFIO_DEVICE_PCI_HOT_RESET
 
-Bjorn
+The first provides the user with information about the extent of
+devices affected by a hot reset.  This is essentially a list of
+devices and the IOMMU groups they belong to.  The user may then
+initiate a hot reset by calling the second ioctl.  We must be
+careful that the user has ownership of all the affected devices
+found via the first ioctl, so the second ioctl takes a list of file
+descriptors for the VFIO groups affected by the reset.  Each group
+must have IOMMU protection established for the ioctl to succeed.
+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+
+v2: Use PCI bus iterators.  Depends on pci_walk_slot() patch
+
+ drivers/vfio/pci/vfio_pci.c |  279 +++++++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/vfio.h   |   38 ++++++
+ 2 files changed, 316 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index cef6002..2c57482 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -227,6 +227,104 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+ 	return 0;
+ }
+ 
++struct vfio_pci_walk_info {
++	int ret;
++	void *data;
++};
++
++static int vfio_pci_count_devs(struct pci_dev *pdev, void *data)
++{
++	struct vfio_pci_walk_info *walk = data;
++	int *count = walk->data;
++
++	(*count)++;
++	return walk->ret;
++}
++
++struct vfio_pci_fill_info {
++	int max;
++	int cur;
++	struct vfio_pci_dependent_device *devices;
++};
++
++static int vfio_pci_fill_devs(struct pci_dev *pdev, void *data)
++{
++	struct vfio_pci_walk_info *walk = data;
++	struct vfio_pci_fill_info *fill = walk->data;
++	struct iommu_group *iommu_group;
++
++	if (fill->cur == fill->max) {
++		walk->ret = -EAGAIN; /* Something changed, try again */
++		return walk->ret;
++	}
++
++	iommu_group = iommu_group_get(&pdev->dev);
++	if (!iommu_group) {
++		walk->ret = -EPERM; /* Cannot reset non-isolated devices */
++		return walk->ret;
++	}
++
++	fill->devices[fill->cur].group_id = iommu_group_id(iommu_group);
++	fill->devices[fill->cur].segment = pci_domain_nr(pdev->bus);
++	fill->devices[fill->cur].bus = pdev->bus->number;
++	fill->devices[fill->cur].devfn = pdev->devfn;
++	fill->cur++;
++	iommu_group_put(iommu_group);
++	return walk->ret;
++}
++
++struct vfio_pci_group_entry {
++	struct vfio_group *group;
++	int id;
++};
++
++struct vfio_pci_group_info {
++	int count;
++	struct vfio_pci_group_entry *groups;
++};
++
++static int vfio_pci_validate_devs(struct pci_dev *pdev, void *data)
++{
++	struct vfio_pci_walk_info *walk = data;
++	struct vfio_pci_group_info *info = walk->data;
++	struct iommu_group *group;
++	int id, i;
++
++	group = iommu_group_get(&pdev->dev);
++	if (!group) {
++		walk->ret = -EPERM;
++		return walk->ret;
++	}
++
++	id = iommu_group_id(group);
++
++	for (i = 0; i < info->count; i++)
++		if (info->groups[i].id == id)
++			break;
++
++	iommu_group_put(group);
++
++	if (i == info->count)
++		walk->ret = -EINVAL;
++
++	return walk->ret;
++}
++
++static int vfio_pci_for_each_slot_or_bus(struct pci_dev *pdev,
++					 int (*fn)(struct pci_dev *,
++						   void *data), void *data,
++					 bool slot)
++{
++	struct vfio_pci_walk_info info = { .ret = 0, .data = data };
++
++	if (slot)
++		pci_walk_slot(pdev->slot, fn, &info);
++	else
++		pci_walk_bus(pdev->bus, fn, &info);
++
++	return info.ret;
++}
++
+ static long vfio_pci_ioctl(void *device_data,
+ 			   unsigned int cmd, unsigned long arg)
+ {
+@@ -407,10 +505,189 @@ static long vfio_pci_ioctl(void *device_data,
+ 
+ 		return ret;
+ 
+-	} else if (cmd == VFIO_DEVICE_RESET)
++	} else if (cmd == VFIO_DEVICE_RESET) {
+ 		return vdev->reset_works ?
+ 			pci_reset_function(vdev->pdev) : -EINVAL;
+ 
++	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
++		struct vfio_pci_hot_reset_info hdr;
++		struct vfio_pci_fill_info fill = { 0 };
++		struct vfio_pci_dependent_device *devices = NULL;
++		bool slot = false;
++		int ret = 0;
++
++		minsz = offsetofend(struct vfio_pci_hot_reset_info, count);
++
++		if (copy_from_user(&hdr, (void __user *)arg, minsz))
++			return -EFAULT;
++
++		if (hdr.argsz < minsz)
++			return -EINVAL;
++
++		hdr.flags = 0;
++
++		/* Can we do a slot or bus reset or neither? */
++		if (!pci_probe_reset_slot(vdev->pdev->slot))
++			slot = true;
++		else if (pci_probe_reset_bus(vdev->pdev->bus))
++			return -ENODEV;
++
++		/* How many devices are affected? */
++		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
++						    vfio_pci_count_devs,
++						    &fill.max, slot);
++		if (ret)
++			return ret;
++
++		WARN_ON(!fill.max); /* Should always be at least one */
++
++		/*
++		 * If there's enough space, fill it now, otherwise return
++		 * -ENOSPC and the number of devices affected.
++		 */
++		if (hdr.argsz < sizeof(hdr) + (fill.max * sizeof(*devices))) {
++			ret = -ENOSPC;
++			hdr.count = fill.max;
++			goto reset_info_exit;
++		}
++
++		devices = kcalloc(fill.max, sizeof(*devices), GFP_KERNEL);
++		if (!devices)
++			return -ENOMEM;
++
++		fill.devices = devices;
++
++		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
++						    vfio_pci_fill_devs,
++						    &fill, slot);
++
++		/*
++		 * If a device was removed between counting and filling,
++		 * we may come up short of fill.max.  If a device was
++		 * added, we'll have a return of -EAGAIN above.
++		 */
++		if (!ret)
++			hdr.count = fill.cur;
++
++reset_info_exit:
++		if (copy_to_user((void __user *)arg, &hdr, minsz))
++			ret = -EFAULT;
++
++		if (!ret) {
++			if (copy_to_user((void __user *)(arg + minsz), devices,
++					 hdr.count * sizeof(*devices)))
++				ret = -EFAULT;
++		}
++
++		kfree(devices);
++		return ret;
++
++	} else if (cmd == VFIO_DEVICE_PCI_HOT_RESET) {
++		struct vfio_pci_hot_reset hdr;
++		int32_t *group_fds;
++		struct vfio_pci_group_entry *groups;
++		struct vfio_pci_group_info info;
++		bool slot = false;
++		int i, count = 0, ret = 0;
++
++		minsz = offsetofend(struct vfio_pci_hot_reset, count);
++
++		if (copy_from_user(&hdr, (void __user *)arg, minsz))
++			return -EFAULT;
++
++		if (hdr.argsz < minsz || hdr.flags)
++			return -EINVAL;
++
++		/* Can we do a slot or bus reset or neither? */
++		if (!pci_probe_reset_slot(vdev->pdev->slot))
++			slot = true;
++		else if (pci_probe_reset_bus(vdev->pdev->bus))
++			return -ENODEV;
++
++		/*
++		 * We can't let userspace give us an arbitrarily large
++		 * buffer to copy, so verify how many we think there
++		 * could be.  Note groups can have multiple devices so
++		 * one group per device is the max.
++		 */
++		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
++						    vfio_pci_count_devs,
++						    &count, slot);
++		if (ret)
++			return ret;
++
++		/* Somewhere between 1 and count is OK */
++		if (!hdr.count || hdr.count > count)
++			return -EINVAL;
++
++		group_fds = kcalloc(hdr.count, sizeof(*group_fds), GFP_KERNEL);
++		groups = kcalloc(hdr.count, sizeof(*groups), GFP_KERNEL);
++		if (!group_fds || !groups) {
++			kfree(group_fds);
++			kfree(groups);
++			return -ENOMEM;
++		}
++
++		if (copy_from_user(group_fds, (void __user *)(arg + minsz),
++				   hdr.count * sizeof(*group_fds))) {
++			kfree(group_fds);
++			kfree(groups);
++			return -EFAULT;
++		}
++
++		/*
++		 * For each group_fd, get the group through the vfio external
++		 * user interface and store the group and iommu ID.  This
++		 * ensures the group is held across the reset.
++		 */
++		for (i = 0; i < hdr.count; i++) {
++			struct vfio_group *group;
++			struct fd f = fdget(group_fds[i]);
++			if (!f.file) {
++				ret = -EBADF;
++				break;
++			}
++
++			group = vfio_group_get_external_user(f.file);
++			fdput(f);
++			if (IS_ERR(group)) {
++				ret = PTR_ERR(group);
++				break;
++			}
++
++			groups[i].group = group;
++			groups[i].id = vfio_external_user_iommu_id(group);
++		}
++
++		kfree(group_fds);
++
++		/* release reference to groups on error */
++		if (ret)
++			goto hot_reset_release;
++
++		info.count = hdr.count;
++		info.groups = groups;
++
++		/*
++		 * Test whether all the affected devices are contained
++		 * by the set of groups provided by the user.
++		 */
++		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
++						    vfio_pci_validate_devs,
++						    &info, slot);
++		if (!ret)
++			/* User has access, do the reset */
++			ret = slot ? pci_reset_slot(vdev->pdev->slot) :
++				     pci_reset_bus(vdev->pdev->bus);
++
++hot_reset_release:
++		for (i--; i >= 0; i--)
++			vfio_group_put_external_user(groups[i].group);
++
++		kfree(groups);
++		return ret;
++	}
++
+ 	return -ENOTTY;
+ }
+ 
+diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+index 916e444..0fd47f5 100644
+--- a/include/uapi/linux/vfio.h
++++ b/include/uapi/linux/vfio.h
+@@ -324,6 +324,44 @@ enum {
+ 	VFIO_PCI_NUM_IRQS
+ };
+ 
++/**
++ * VFIO_DEVICE_GET_PCI_HOT_RESET_INFO - _IORW(VFIO_TYPE, VFIO_BASE + 12,
++ *					      struct vfio_pci_hot_reset_info)
++ *
++ * Return: 0 on success, -errno on failure:
++ *	-enospc = insufficient buffer, -enodev = unsupported for device.
++ */
++struct vfio_pci_dependent_device {
++	__u32	group_id;
++	__u16	segment;
++	__u8	bus;
++	__u8	devfn; /* Use PCI_SLOT/PCI_FUNC */
++};
++
++struct vfio_pci_hot_reset_info {
++	__u32	argsz;
++	__u32	flags;
++	__u32	count;
++	struct vfio_pci_dependent_device	devices[];
++};
++
++#define VFIO_DEVICE_GET_PCI_HOT_RESET_INFO	_IO(VFIO_TYPE, VFIO_BASE + 12)
++
++/**
++ * VFIO_DEVICE_PCI_HOT_RESET - _IOW(VFIO_TYPE, VFIO_BASE + 13,
++ *				    struct vfio_pci_hot_reset)
++ *
++ * Return: 0 on success, -errno on failure.
++ */
++struct vfio_pci_hot_reset {
++	__u32	argsz;
++	__u32	flags;
++	__u32	count;
++	__s32	group_fds[];
++};
++
++#define VFIO_DEVICE_PCI_HOT_RESET	_IO(VFIO_TYPE, VFIO_BASE + 13)
++
+ /* -------- API for Type1 VFIO IOMMU -------- */
+ 
+ /**
+
