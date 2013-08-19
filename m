@@ -1,76 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-o-1.desy.de ([131.169.56.154]:52276 "EHLO smtp-o-1.desy.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752345Ab3H1IJi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Aug 2013 04:09:38 -0400
-Received: from smtp-map-1.desy.de (smtp-map-1.desy.de [131.169.56.66])
-	by smtp-o-1.desy.de (DESY-O-1) with ESMTP id EFF90280835
-	for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 10:09:36 +0200 (CEST)
-Received: from ZITSWEEP1.win.desy.de (zitsweep1.win.desy.de [131.169.97.95])
-	by smtp-map-1.desy.de (DESY_MAP_1) with ESMTP id E01C513EA2
-	for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 10:09:34 +0200 (MEST)
-Message-ID: <521DB03E.9000706@desy.de>
-Date: Wed, 28 Aug 2013 10:09:34 +0200
-From: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5212868D.2050604@wwwdotorg.org>
+Date: Mon, 19 Aug 2013 14:56:45 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org
-Subject: Re: PCIe endpoint crosstalk
-References: <521C5AFF.90209@desy.de> <20130827162702.GB21180@google.com>
-In-Reply-To: <20130827162702.GB21180@google.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by devm_ioremap_resource
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr> <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr> <20130819120249.GA5740@ulmo> <alpine.DEB.2.02.1308191405450.2313@hadrien> <20130819121238.GB5740@ulmo> <alpine.DEB.2.02.1308191414360.2313@hadrien> <20130819193339.GB4961@mithrandir>
+In-Reply-To: <20130819193339.GB4961@mithrandir>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/27/2013 06:27 PM, Bjorn Helgaas wrote:
-> On Tue, Aug 27, 2013 at 09:53:35AM +0200, Ludwig Petrosyan wrote:
->> So: I use microTCA system with PCIe bus, there are two AMC cards (PCIe
->> endpoints), lets call card A and card B.
->> as well there are two device drivers for A and B. Card B has bug, after
->> PCIe memory write  operation (MWr) the card sends back Completion
->> packet without data (Cpl) (I now it is wrong, but card designed in this
->> way and has to be changed).
->> User process Ua reads data from Card A in loop, everything is OK , but
->> then I start second user process Ub which writes in loop data to card B
->> (bugged card) the Ua gets wrong data. After improving card B the problem
->> was solved, but could be it has to be checked on the PCIe driver level
->> as well.
-> PCIe transactions (MWr, MRd, Cpl, etc.) are not directly visible
-> to the OS or the driver.
->
-> The only thing I can think of that we could do is add a quirk to
-> blacklist the broken version of card B.  You can look at existing
-> quirks in drivers/pci/quirks.c.  Most of them workaround issues
-> that aren't quite as severe as this one, but we could probably
-> figure out a way to make the device completely unusable.
->
-> Or do you have something else in mind?
->
-> Bjorn
-We have fixed the bug in card B and now it is OK, but question is open,
-what will happen if we got some PCIe endpoint card with the same bug:
-read operations from other PCIe devices could be broken. Just I think
-this problem should be solved on the OS level (I am not sure)
+On 08/19/2013 01:33 PM, Thierry Reding wrote:
+> On Mon, Aug 19, 2013 at 02:15:39PM +0200, Julia Lawall wrote:
+>> 
+>> 
+>> On Mon, 19 Aug 2013, Thierry Reding wrote:
+>> 
+>>> On Mon, Aug 19, 2013 at 02:07:54PM +0200, Julia Lawall wrote:
+>>>> 
+>>>> 
+>>>> On Mon, 19 Aug 2013, Thierry Reding wrote:
+>>>> 
+>>>>> On Mon, Aug 19, 2013 at 01:20:35PM +0200, Julia Lawall
+>>>>> wrote:
+>>>>>> From: Julia Lawall <Julia.Lawall@lip6.fr>
+>>>>>> 
+>>>>>> Use devm_ioremap_resource instead of
+>>>>>> devm_request_and_ioremap.
+>>>>>> 
+>>>>>> This was done using the semantic patch 
+>>>>>> scripts/coccinelle/api/devm_ioremap_resource.cocci
+>>>>>> 
+>>>>>> Error-handling code was manually removed from the
+>>>>>> associated calls to platform_get_resource.
+>>>>>> 
+>>>>>> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+>>>>>> 
+>>>>>> --- The first block of modified code is followed by a
+>>>>>> call to devm_request_mem_region for pcie->cs with no
+>>>>>> associated ioremap.  Should ioremap be used in this case
+>>>>>> as well?
+>>>>> 
+>>>>> No. The pcie->cs resource is 256 MiB so it's challenging to
+>>>>> map it at once. Furthermore it requires a non-linear
+>>>>> mapping so we do it on demand.
+>>>> 
+>>>> OK, thanks for the explanation.  Is the comment, though, a
+>>>> little misleading, since the mapping is not done here?
+>>>> 
+>>>> /* request and remap configuration space */
+>>> 
+>>> Yes, that's misleading. Given that it doesn't really add
+>>> anything useful information either, perhaps I should just
+>>> remove it.
+>> 
+>> OK, or maybe something like
+>> 
+>> /* request configuration space, but remap later, on demand */
+>> 
+>> To make it clear that something different is intended than the 
+>> devm_ioremap_resources that come just before..
+> 
+> Yes, that works for me too. Can you respin the patch with the
+> comment updated and my Acked-by and Tested-by so Bjorn can pick it
+> up?
 
-I will try to explain how things are going on how I think:
+Just a note though: Since the Tegra PCIe driver is only being added in
+v3.12-rc1, and that add is happening in the Tegra/arm-soc tree, Bjorn
+won't be able to accept the patch until after v3.12-rc1. Perhaps the
+arm-soc tree could take the patch before then though...
 
-User process Ub sends Memory-Write request to card B, this is Posted
-request, so just  after sending the request Ub forgets about it,
-TLP of this packet contain Requester ID for RootComplex, at the same
-time user process Ua (the RootComplex is free now) sends non-Posted
-memory read request to card A and waits for Completion packet, but at
-the same time the card B (bugged card, it should not send Completion to
-Posted memory write request) send to RootComplex Completion Packet
-without data and some how Ua get this data as result of his Memory Read
-request. Seems the Completer ID (or Tag field) in Completion packet not
-checked and completion from one PCIe endpoint returned as completion of
-read request from other PCIe endpoint.
-
-I want to say this is only an assumption, just I wont to be sure the
-bugged PCIe device won't influence operation of other devices
-But could be this problem has to be solved on PCIe Switch or RootComplex
-side not in OS side...
-
-with best regards
-
-Ludwig
