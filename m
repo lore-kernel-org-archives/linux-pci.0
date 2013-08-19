@@ -1,46 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:51358 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756588Ab3HZIj7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Aug 2013 04:39:59 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
-Subject: [PATCH v9 1/2] PCI: Fix comment syntax
-Date: Mon, 26 Aug 2013 16:33:05 +0800
-Message-ID: <1377505986-7484-1-git-send-email-wangyijing@huawei.com>
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:4098 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751420Ab3HSMIP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 08:08:15 -0400
+Date: Mon, 19 Aug 2013 14:07:54 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Thierry Reding <thierry.reding@gmail.com>
+cc: kernel-janitors@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
+ devm_ioremap_resource
+In-Reply-To: <20130819120249.GA5740@ulmo>
+Message-ID: <alpine.DEB.2.02.1308191405450.2313@hadrien>
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr> <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr> <20130819120249.GA5740@ulmo>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jon Mason <jdmason@kudzu.us>
-
-Correct minor wording issue in MPS Peer-to-peer comment.
-
-Noticed by Don Dutile
-
-Signed-off-by: Jon Mason <jdmason@kudzu.us>
----
- drivers/pci/probe.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 0e8cff2..21ca9a1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1625,7 +1625,7 @@ void pcie_bus_configure_settings(struct pci_bus *bus)
- 		return;
- 
- 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
--	 * to be aware to the MPS of the destination.  To work around this,
-+	 * to be aware of the MPS of the destination.  To work around this,
- 	 * simply force the MPS of the entire system to the smallest possible.
- 	 */
- 	if (pcie_bus_config == PCIE_BUS_PEER2PEER)
--- 
-1.7.1
 
 
+On Mon, 19 Aug 2013, Thierry Reding wrote:
+
+> On Mon, Aug 19, 2013 at 01:20:35PM +0200, Julia Lawall wrote:
+> > From: Julia Lawall <Julia.Lawall@lip6.fr>
+> >
+> > Use devm_ioremap_resource instead of devm_request_and_ioremap.
+> >
+> > This was done using the semantic patch
+> > scripts/coccinelle/api/devm_ioremap_resource.cocci
+> >
+> > Error-handling code was manually removed from the associated calls to
+> > platform_get_resource.
+> >
+> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> >
+> > ---
+> > The first block of modified code is followed by a call to
+> > devm_request_mem_region for pcie->cs with no associated ioremap.  Should
+> > ioremap be used in this case as well?
+>
+> No. The pcie->cs resource is 256 MiB so it's challenging to map it at
+> once. Furthermore it requires a non-linear mapping so we do it on
+> demand.
+
+OK, thanks for the explanation.  Is the comment, though, a little
+misleading, since the mapping is not done here?
+
+/* request and remap configuration space */
+
+julia
