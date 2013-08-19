@@ -1,131 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:59051 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932266Ab3HGJdl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:33:41 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Received: from avon.wwwdotorg.org ([70.85.31.133]:36334 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900Ab3HSV7z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 17:59:55 -0400
+Message-ID: <52129552.8040608@wwwdotorg.org>
+Date: Mon, 19 Aug 2013 15:59:46 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv7 07/13] irqdomain: add function to find a MSI irq_domain
-Date: Wed,  7 Aug 2013 11:32:28 +0200
-Message-Id: <1375867954-2320-8-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Thierry Reding <treding@nvidia.com>
+Subject: Re: [RFC 3/3] PCI: tegra: Support driver unbinding
+References: <1376392346-14127-1-git-send-email-treding@nvidia.com> <1376392346-14127-4-git-send-email-treding@nvidia.com> <520BFA0C.5070001@wwwdotorg.org> <20130815103452.GA13740@ulmo> <520CF211.6060003@wwwdotorg.org> <20130819201623.GD5191@mithrandir> <52128650.7090009@wwwdotorg.org> <20130819215208.GC9885@mithrandir>
+In-Reply-To: <20130819215208.GC9885@mithrandir>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that an irq_domain can be associated to a msi_chip structure, a
-given PCIe driver will want to find this irq_domain, based on the
-Device Tree node of the interrupt controller, as pointed by the
-'msi-controller' DT property.
+On 08/19/2013 03:52 PM, Thierry Reding wrote:
+> On Mon, Aug 19, 2013 at 02:55:44PM -0600, Stephen Warren wrote:
+>> On 08/19/2013 02:16 PM, Thierry Reding wrote:
+>>> On Thu, Aug 15, 2013 at 09:21:53AM -0600, Stephen Warren
+>>> wrote:
+>>>> On 08/15/2013 04:34 AM, Thierry Reding wrote:
+>>>>> On Wed, Aug 14, 2013 at 03:43:40PM -0600, Stephen Warren 
+>>>>> wrote:
+>>>>>> On 08/13/2013 05:12 AM, Thierry Reding wrote:
+>>>>>>> Implement the platform driver's .remove() callback to
+>>>>>>> free all resources allocated during driver setup and
+>>>>>>> call pci_common_exit() to cleanup ARM specific
+>>>>>>> datastructures. Unmap the fixed PCI I/O mapping by
+>>>>>>> calling the new pci_iounmap_io() function in the new
+>>>>>>> .teardown() callback.
+>>>>>>> 
+>>>>>>> Finally, no longer set the .suppress_bind_attrs field
+>>>>>>> to true to allow the driver to unbind from a device.
+>>>>>> 
+>>>>>>> +static int tegra_pcie_remove(struct platform_device
+>>>>>>> *pdev) +{ +	struct tegra_pcie *pcie =
+>>>>>>> platform_get_drvdata(pdev); + struct tegra_pcie_bus
+>>>>>>> *bus, *tmp; +	int err; + + pci_common_exit(&pcie->sys);
+>>>>>>> + + list_for_each_entry_safe(bus, tmp, &pcie->busses,
+>>>>>>> list) { + vunmap(bus->area->addr); + kfree(bus); +	} +
+>>>>>>> +	if (IS_ENABLED(CONFIG_PCI_MSI)) { +		err = 
+>>>>>>> tegra_pcie_disable_msi(pcie); +		if (err < 0) +
+>>>>>>> return err; + }
+>>>>>> 
+>>>>>> Wouldn't it make sense to do that as early as possible
+>>>>>> in the function, to make sure that no MSI accidentally
+>>>>>> fires after some of the cleanup has already happened?
+>>>>> 
+>>>>> I don't think that's strictly necessary in this case.
+>>>>> After the call to pci_common_exit() there are no PCI
+>>>>> devices left, there's not even a bus left. All MSI users
+>>>>> should have cleaned up after themselves.
+>>>>> 
+>>>>> Given that I thought it more useful to mirror the setup
+>>>>> done in .probe() to make it clearer what's being undone
+>>>>> (and potentially what's missing).
+>>>> 
+>>>> That makes sense SW-wise, but what about mis-behaving HW
+>>>> that triggers an MSI even when it's been told not to? I
+>>>> assume that tegra_pcie_disable_msi() unrequests the IRQ,
+>>>> hence solves that problem, if done early enough.
+>>> 
+>>> To be honest, I'm not sure about the side-effects that this
+>>> will have. tegra_pcie_disable_msi() does quite a bit more than
+>>> just masking the interrupts. It also completely removes the IRQ
+>>> domain that provides the MSI interrupts. While I haven't tried
+>>> it yet I can imagine that it will cause crashes at a later
+>>> point when drivers want to disable MSI on a device and the IRQ
+>>> domain having vanished from underneath.
+>> 
+>> Surely by the time the PCIe controller device has been remove()d
+>> then all devices for PCIe "client" devices have also been
+>> removed.
+> 
+> The PCIe controller is the device being removed. Part of that
+> removal involves stopping and removing all PCI devices. That's done
+> as part of pci_common_exit().
+> 
+> But I was under the impression that you were arguing that the call
+> to tegra_pcie_disable_msi() should be the first call in .remove()
+> in order to prevent any spurious MSIs from occurring. That in turn
+> would mean calling tegra_pcie_disable_msi() before
+> pci_common_exit(), and that would lead to the problem that I
+> described.
 
-However, since on those platforms a single piece of hardware,
-represented by a single DT node can provide both a "normal" IRQ domain
-and a MSI-type IRQ domain, we need separate lookup functions to
-distinguish them.
+Earlier yes, but perhaps not first. Right now the order is:
 
-This patch makes irq_find_host() find only non-MSI-type IRQ domains,
-and introduces irq_find_msi_host() to find only MSI-type IRQ
-domains. It does so by factorizing the irq_find_host() logic into
-__irq_find_host().
+1) pci_common_exit
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Tested-by: Daniel Price <daniel.price@gmail.com>
----
- include/linux/irqdomain.h | 21 ++++++++++++++++++++-
- kernel/irq/irqdomain.c    | 13 ++++++++++---
- 2 files changed, 30 insertions(+), 4 deletions(-)
+2) unmap some memory, free some buses
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index b0504ff..fc669b4 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -129,7 +129,8 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
- 					 irq_hw_number_t first_hwirq,
- 					 const struct irq_domain_ops *ops,
- 					 void *host_data);
--extern struct irq_domain *irq_find_host(struct device_node *node);
-+struct irq_domain *__irq_find_host(struct device_node *node,
-+				   bool findmsi);
- extern void irq_set_default_host(struct irq_domain *host);
- 
- /**
-@@ -196,6 +197,24 @@ static inline struct irq_domain *irq_domain_add_msi(struct device_node *of_node,
- }
- 
- 
-+/**
-+ * irq_find_host() - Locates a domain for a given device node
-+ * @node: device-tree node of the interrupt controller
-+ */
-+static inline struct irq_domain *irq_find_host(struct device_node *node)
-+{
-+	return __irq_find_host(node, false);
-+}
-+
-+/**
-+ * irq_find_msi_host() - Locates a MSI domain for a given device node
-+ * @node: device-tree node of the interrupt controller
-+ */
-+static inline struct irq_domain *irq_find_msi_host(struct device_node *node)
-+{
-+	return __irq_find_host(node, true);
-+}
-+
- extern void irq_domain_remove(struct irq_domain *host);
- 
- extern int irq_domain_associate(struct irq_domain *domain, unsigned int irq,
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 8d02af7..6d066e2 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -197,10 +197,14 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
- EXPORT_SYMBOL_GPL(irq_domain_add_legacy);
- 
- /**
-- * irq_find_host() - Locates a domain for a given device node
-+ * __irq_find_host() - Locates a domain for a given device node,
-+ * taking into account whether the domain is of MSI-type or not.
-  * @node: device-tree node of the interrupt controller
-+ * @findmsi: true when the domain being search is of MSI-type, false
-+ * otherwise.
-  */
--struct irq_domain *irq_find_host(struct device_node *node)
-+struct irq_domain *__irq_find_host(struct device_node *node,
-+				   bool findmsi)
- {
- 	struct irq_domain *h, *found = NULL;
- 	int rc;
-@@ -212,6 +216,9 @@ struct irq_domain *irq_find_host(struct device_node *node)
- 	 */
- 	mutex_lock(&irq_domain_mutex);
- 	list_for_each_entry(h, &irq_domain_list, link) {
-+		if ((findmsi && !h->msi_chip) ||
-+		    (!findmsi && h->msi_chip))
-+			continue;
- 		if (h->ops->match)
- 			rc = h->ops->match(h, node);
- 		else
-@@ -225,7 +232,7 @@ struct irq_domain *irq_find_host(struct device_node *node)
- 	mutex_unlock(&irq_domain_mutex);
- 	return found;
- }
--EXPORT_SYMBOL_GPL(irq_find_host);
-+EXPORT_SYMBOL_GPL(__irq_find_host);
- 
- /**
-  * irq_set_default_host() - Set a "default" irq domain
--- 
-1.8.1.2
+3) tear down MSI infra-structure
 
+I suppose if the MSI IRQ handler is guaranteed to never touch the
+stuff torn down by (2) then the code is fine as-is, but it might be
+clearer to do the following instead:
+
+1) pci_common_exit
+
+2) tear down MSI infra-structure (and indeed unregister non-MSI IRQ too)
+
+3) unmap some memory, free some buses
+
+... since then no matter what, no IRQ can be handled before any
+resource is torn down.
+
+also, perhaps when initially responding I missed that
+pci_common_exit() is what forcibly removed all PCIe "client" device
+drivers; in other sub-systems, client devices take refcounts on their
+resources, so the resource can't be .remove()d until all the objects
+referencing them have been manually removed, but PCIe apparently works
+the other way around - removing the controller removes all the users?
