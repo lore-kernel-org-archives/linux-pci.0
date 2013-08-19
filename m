@@ -1,209 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24879 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754593Ab3HBRBJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 2 Aug 2013 13:01:09 -0400
-Message-ID: <1375462795.31262.327.camel@ul30vt.home>
-Subject: Re: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Andrew Cooks <acooks@gmail.com>,
-	Don Dutile <ddutile@redhat.com>,
-	David Woodhouse <dwmw2@infradead.org>
-Date: Fri, 02 Aug 2013 10:59:55 -0600
-In-Reply-To: <CAErSpo5+-r3qMca1_Kvt3jJ6OP6Q7--4VmTo3fWJ0y4CPewgEQ@mail.gmail.com>
-References: <20130711204439.1701.90503.stgit@bling.home>
-	 <20130711210326.1701.56478.stgit@bling.home>
-	 <20130723223533.GB19765@google.com> <1374621703.15429.98.camel@ul30vt.home>
-	 <CAErSpo6bcGCjqdxn-bz_vjo+HsAiOxDu=--mD7veEZ9f7k+gyA@mail.gmail.com>
-	 <1374689548.5208.62.camel@ul30vt.home> <20130724232427.GA9272@google.com>
-	 <1374775016.2642.116.camel@ul30vt.home> <20130726215435.GB20021@google.com>
-	 <1375113975.2642.208.camel@ul30vt.home>
-	 <CAErSpo7pfCtTm5Cq=VixPTKMpM4VQpDr+ZmS5qMw32z6ABu0xQ@mail.gmail.com>
-	 <1375137140.2642.349.camel@ul30vt.home>
-	 <CAErSpo5+-r3qMca1_Kvt3jJ6OP6Q7--4VmTo3fWJ0y4CPewgEQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:25732
+	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751267Ab3HSMQQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 08:16:16 -0400
+Date: Mon, 19 Aug 2013 14:15:39 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Thierry Reding <thierry.reding@gmail.com>
+cc: kernel-janitors@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
+ devm_ioremap_resource
+In-Reply-To: <20130819121238.GB5740@ulmo>
+Message-ID: <alpine.DEB.2.02.1308191414360.2313@hadrien>
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr> <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr> <20130819120249.GA5740@ulmo> <alpine.DEB.2.02.1308191405450.2313@hadrien> <20130819121238.GB5740@ulmo>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-08-01 at 16:08 -0600, Bjorn Helgaas wrote:
-> On Mon, Jul 29, 2013 at 4:32 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Mon, 2013-07-29 at 15:02 -0600, Bjorn Helgaas wrote:
-> >> On Mon, Jul 29, 2013 at 10:06 AM, Alex Williamson
-> >> <alex.williamson@redhat.com> wrote:
-> >> > On Fri, 2013-07-26 at 15:54 -0600, Bjorn Helgaas wrote:
-> >> >> On Thu, Jul 25, 2013 at 11:56:56AM -0600, Alex Williamson wrote:
-> >>
-> >> >> The "most closely associated device" idea seems confusing to
-> >> >> describe and think about.  I think you want to use it as part of
-> >> >> grouping devices into domains.  But I think we should attack that
-> >> >> problem separately.  For grouping or isolation questions, we have
-> >> >> to pay attention to things like ACS, which are not relevant for
-> >> >> mapping.
-> >> >
-> >> > We are only touch isolation insofar as providing an interface for a
-> >> > driver to determine the point in the PCI topology where the requester ID
-> >> > is rooted.  Yes, grouping can make use of that, but I object to the idea
-> >> > that we're approaching some slippery slope of rolling multiple concepts
-> >> > into this patch.  What I'm proposing here is strictly a requester ID
-> >> > interface.  I believe that providing a way for a caller to determine
-> >> > that two devices have a requester ID rooted at the same point in the PCI
-> >> > topology is directly relevant to that interface.
-> >> >
-> >> > pci_find_upstream_pcie_bridge() attempts to do this same thing.
-> >> > Unfortunately, the interface is convoluted, it doesn't handle quirks,
-> >> > and it requires a great deal of work by the caller to then walk the
-> >> > topology and create requester IDs at each step.  This also indicates
-> >> > that at each step, the requester ID is associated with some pci_dev.
-> >> > Providing a pci_dev is simply showing our work and providing context to
-> >> > the requester ID (ie. here's the requester ID and the step along the
-> >> > path from which it was derived.  Here's your top level requester ID and
-> >> > the point in the topology where it's based).
-> >>
-> >> What does the driver *do* with the pci_dev?  If it's not necessary,
-> >> then showing our work and providing context just complicates the
-> >> interface and creates opportunities for mistakes.  If we're creating
-> >> IOMMU mappings, only the requester ID is needed.
-> >
-> > It's true, I don't have a use for the pci_dev in
-> > pci_dev_for_each_requester_id() today.  But I think providing the
-> > context for a requester ID is valuable information.  Otherwise we have
-> > to make assumptions about the requester ID.  For example, if I have
-> > devices in different PCI segments with the same requester ID the
-> > callback function only knows that those are actually different requester
-> > IDs from information the caller provides itself in the opaque pointer.
-> > This is the case with intel-iommu, but why would we design an API that
-> > requires the caller to provide that kind of context?
-> 
-> The caller already has to provide context, e.g., the domain in which
-> to create a mapping, anyway via the opaque pointer.  So I would argue
-> that it's pointless to supply context twice in different ways.
-> 
-> We only have one caller of pci_dev_for_each_requester_id() anyway
-> (intel-iommu.c).  That seems really strange to me.  All I can assume
-> is that other IOMMU drivers *should* be doing something like this, but
-> aren't yet.  Anyway, since we only have one user, why not just provide
-> the minimum (only the requester ID), and add the pci_dev later if a
-> requirement for it turns up?
 
 
-Ok, I can do that.  I think we only have one user because intel-iommu is
-the only in-tree user of pci_find_upstream_pcie_bridge().  I know the
-powerpc folks have been using similar code though.  amd_iommu bypasses
-because they generate an alias table based on information for firmware.
-That replaces some of this manual grep'ing through the topology.
-Perhaps Joerg could comment about whether this is a useful interface for
-amd_iommu.
+On Mon, 19 Aug 2013, Thierry Reding wrote:
 
-> >  I also provide the
-> > pci_dev because I think both the pci_dev_for_each_requester_id() and
-> > pci_get_visible_pcie_requester() should provide similar APIs.  There's
-> > an association of a requester ID to a pci_dev.  Why hide that?
-> 
-> Information hiding is a basic idea of abstraction and encapsulation.
-> If we don't hide unnecessary information, we end up with unnecessary
-> dependencies.
-> 
-> >> I think you used get_domain_for_dev() and intel_iommu_add_device() as
-> >> examples, but as far as I can tell, they use the pci_dev as a way to
-> >> learn about isolation.  For that purpose, I don't think you want an
-> >> iterator -- you only want to know about the single pci_dev that's the
-> >> root of the isolation domain, and requester IDs really aren't
-> >> relevant.
+> On Mon, Aug 19, 2013 at 02:07:54PM +0200, Julia Lawall wrote:
 > >
-> > See get_domain_for_dev() in patch 2/2.  It uses the returned pci_dev to
-> > know whether the requester ID is rooted upstream or at the device
-> > itself.  If upstream, it then uses the requester ID to search for an
-> > existing domain.  The requester ID is relevant here.  If the returned
-> > pci_dev is the device itself, it proceeds to allocate a domain because
-> > the code path has already checked whether the device itself belongs to a
-> > domain.
-> 
-> I guess I got myself confused here.  get_domain_for_dev() uses
-> pci_get_visible_pcie_requester(), not pci_dev_for_each_requester_id().
-> 
-> >> > (1) pcie_for_each_requester
-> >> >     (or pci_dev_for_each_requester_id)
-> >> >
-> >> > (2) pci_get_visible_pcie_requester
-> >> >     (or pci_get_visible_pcie_requester_id)
-> >> >
-> >> > Note however that (2) does not impose anything about domains or
-> >> > isolation, it is strictly based on PCI topology.  It's left to the
-> >> > caller to determine how that translates to IOMMU domains, but the
-> >> > typical case is trivial.
-> >>
-> >> Can you expand on this a little bit?  What's involved in translating
-> >> the pci_get_visible_pcie_requester() result to an IOMMU domain?  Is
-> >> there something IOMMU-specific about this?
 > >
-> > I try not to make any assumptions about what's required to get from a
-> > pci_dev/requester ID to a domain.  The IOMMU may only be able to filter
-> > a subset of the requester ID, for instance what if it has no function
-> > level visibility, or perhaps only bus level visibility.  intel-iommu has
-> > full BDF granularity, so it's perhaps the simplest case.
+> > On Mon, 19 Aug 2013, Thierry Reding wrote:
 > >
-> >> I assume that for any given PCI device A, there's a subtree of devices
-> >> that the IOMMU can't distinguish from A, and that this subtree is not
-> >> IOMMU-specific so it's reasonable to to have a PCI interface to
-> >> compute it.  An IOMMU driver might want to expand the domain to
-> >> include more devices, of course, and *that* seems like something to
-> >> leave to the driver.
+> > > On Mon, Aug 19, 2013 at 01:20:35PM +0200, Julia Lawall wrote:
+> > > > From: Julia Lawall <Julia.Lawall@lip6.fr>
+> > > >
+> > > > Use devm_ioremap_resource instead of devm_request_and_ioremap.
+> > > >
+> > > > This was done using the semantic patch
+> > > > scripts/coccinelle/api/devm_ioremap_resource.cocci
+> > > >
+> > > > Error-handling code was manually removed from the associated calls to
+> > > > platform_get_resource.
+> > > >
+> > > > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> > > >
+> > > > ---
+> > > > The first block of modified code is followed by a call to
+> > > > devm_request_mem_region for pcie->cs with no associated ioremap.  Should
+> > > > ioremap be used in this case as well?
+> > >
+> > > No. The pcie->cs resource is 256 MiB so it's challenging to map it at
+> > > once. Furthermore it requires a non-linear mapping so we do it on
+> > > demand.
 > >
-> > Yes, I agree.  We're only trying to determine the PCI bus level
-> > visibility, anything else is left to the IOMMU driver.
+> > OK, thanks for the explanation.  Is the comment, though, a little
+> > misleading, since the mapping is not done here?
 > >
-> >> I'm also assuming that a pci_dev (the root of the subtree) is a good
-> >> way to identify this set of indistinguishable devices because it's
-> >> easy to test whether a device B is part of it.  But the requester ID
-> >> seems redundant in this case because you can just associate an IOMMU
-> >> domain with the pci_dev.
-> >
-> > I don't think we want to assume that an IOMMU driver bases a domain on a
-> > pci_dev or a BDF.  That's specific to the driver.  The requester ID is
-> > not redundant though since it depends on topology and quirks.  A given
-> > pci_dev may have it's own legitimate requester ID or a quirk, where the
-> > quirk may be specific to the device or architected, like a bridge using
-> > the (bridge->subordinate->number << 8 | 0) requester ID.
-> >
-> >> Where does ACS come into the picture?
-> >
-> > ACS determines whether a transaction must necessarily reach the IOMMU
-> > without being redirected.  Therefore once we figure out the point at
-> > which we have bus level granularity for a transaction, we look upstream
-> > to determine if a transaction must necessarily reach the IOMMU.  In the
-> > case of intel-iommu, IOMMU groups are only dependent on the visibility
-> > provided by the PCI topology and the isolation guaranteed through ACS,
-> > but it's up to the IOMMU driver to determine whether there are
-> > additional constraints.  Thanks,
-> 
-> What code will look for ACS support and enablement?  Do you envision
-> that being in the IOMMU code or somewhere in PCI?  I was hoping that
-> the isolation/domain identification stuff could be fairly generic, but
-> it sounds like that's not the case so I'm guessing the interesting
-> parts of it will be in IOMMU code.
+> > /* request and remap configuration space */
+>
+> Yes, that's misleading. Given that it doesn't really add anything useful
+> information either, perhaps I should just remove it.
 
-ACS support is currently in the IOMMUs and it's pretty much a mirror
-image in both intel-iommu and amd_iommu (and soon powerpc), so it's
-another good opportunity to create something to facilitate it.  The
-specific IOMMU drivers are definitely more involved in determining
-device visibility since that directly translates into their page table
-entries, but ACS determines isolation, which is generic and determined
-exclusively by device capabilities and quirks.
+OK, or maybe something like
 
-> So I think I'm willing to go along with
-> pci_get_visible_pcie_requester() returning both a pci_dev and a
-> requester ID.  Is a single one of each sufficient?  I guess it is -- I
-> don't see any loops around where you're calling it.
+/* request configuration space, but remap later, on demand */
 
-Great!  I'm still trying to figure out how to handle the quirk around
-Intel PCI-to-PCI bridge on the root complex as just another quirk.  I
-respin another version once I have that worked out.  Thanks,
+To make it clear that something different is intended than the
+devm_ioremap_resources that come just before..
 
-Alex
-
+julia
