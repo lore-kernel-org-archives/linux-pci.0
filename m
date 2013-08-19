@@ -1,63 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:38097 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750919Ab3HKV0P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 11 Aug 2013 17:26:15 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Stefan Seyfried <stefan.seyfried@googlemail.com>
-Cc: linux-pci@vger.kernel.org, Greg KH <gregkh@linux.com>,
-	Oliver Neukum <oneukum@suse.de>
-Subject: Re: acpiphp and pciehp not working together on Thinkpad X200s
-Date: Sun, 11 Aug 2013 23:36:38 +0200
-Message-ID: <11028683.ZZQRkho7yW@vostro.rjw.lan>
-In-Reply-To: <5207FFB8.3080202@message-id.googlemail.com>
-References: <520747B6.8010309@message-id.googlemail.com> <1880950.SYaKzZm9j7@vostro.rjw.lan> <5207FFB8.3080202@message-id.googlemail.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:53211 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751009Ab3HSUzs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 16:55:48 -0400
+Message-ID: <52128650.7090009@wwwdotorg.org>
+Date: Mon, 19 Aug 2013 14:55:44 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Thierry Reding <treding@nvidia.com>
+Subject: Re: [RFC 3/3] PCI: tegra: Support driver unbinding
+References: <1376392346-14127-1-git-send-email-treding@nvidia.com> <1376392346-14127-4-git-send-email-treding@nvidia.com> <520BFA0C.5070001@wwwdotorg.org> <20130815103452.GA13740@ulmo> <520CF211.6060003@wwwdotorg.org> <20130819201623.GD5191@mithrandir>
+In-Reply-To: <20130819201623.GD5191@mithrandir>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, August 11, 2013 11:18:48 PM Stefan Seyfried wrote:
-> Hi Rafael,
+On 08/19/2013 02:16 PM, Thierry Reding wrote:
+> On Thu, Aug 15, 2013 at 09:21:53AM -0600, Stephen Warren wrote:
+>> On 08/15/2013 04:34 AM, Thierry Reding wrote:
+>>> On Wed, Aug 14, 2013 at 03:43:40PM -0600, Stephen Warren
+>>> wrote:
+>>>> On 08/13/2013 05:12 AM, Thierry Reding wrote:
+>>>>> Implement the platform driver's .remove() callback to free
+>>>>> all resources allocated during driver setup and call 
+>>>>> pci_common_exit() to cleanup ARM specific datastructures.
+>>>>> Unmap the fixed PCI I/O mapping by calling the new
+>>>>> pci_iounmap_io() function in the new .teardown() callback.
+>>>>> 
+>>>>> Finally, no longer set the .suppress_bind_attrs field to
+>>>>> true to allow the driver to unbind from a device.
+>>>> 
+>>>>> +static int tegra_pcie_remove(struct platform_device *pdev)
+>>>>> +{ +	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
+>>>>> + struct tegra_pcie_bus *bus, *tmp; +	int err; + + 
+>>>>> pci_common_exit(&pcie->sys); + +
+>>>>> list_for_each_entry_safe(bus, tmp, &pcie->busses, list) { +
+>>>>> vunmap(bus->area->addr); + kfree(bus); +	} + +	if
+>>>>> (IS_ENABLED(CONFIG_PCI_MSI)) { +		err = 
+>>>>> tegra_pcie_disable_msi(pcie); +		if (err < 0) +			return
+>>>>> err; + }
+>>>> 
+>>>> Wouldn't it make sense to do that as early as possible in
+>>>> the function, to make sure that no MSI accidentally fires
+>>>> after some of the cleanup has already happened?
+>>> 
+>>> I don't think that's strictly necessary in this case. After
+>>> the call to pci_common_exit() there are no PCI devices left,
+>>> there's not even a bus left. All MSI users should have cleaned
+>>> up after themselves.
+>>> 
+>>> Given that I thought it more useful to mirror the setup done
+>>> in .probe() to make it clearer what's being undone (and
+>>> potentially what's missing).
+>> 
+>> That makes sense SW-wise, but what about mis-behaving HW that
+>> triggers an MSI even when it's been told not to? I assume that 
+>> tegra_pcie_disable_msi() unrequests the IRQ, hence solves that 
+>> problem, if done early enough.
 > 
-> Am 11.08.2013 23:25, schrieb Rafael J. Wysocki:
-> > On Sunday, August 11, 2013 10:13:42 AM Stefan Seyfried wrote:
-> 
-> >>  kernel: pci 0000:03:00.0: PME# supported from D0 D3hot D3cold
-> >>  kernel: pci 0000:00:1c.1: PCI bridge to [bus 03]
-> >>  kernel: pci 0000:00:1c.1:   bridge window [mem 0xf2500000-0xf25fffff]
-> >> -kernel: acpiphp: Slot [1] registered
-> >>  kernel: pci 0000:00:1c.3: PCI bridge to [bus 05-0c]
-> >>  kernel: pci 0000:00:1c.3:   bridge window [io  0x2000-0x2fff]
-> >>  kernel: pci 0000:00:1c.3:   bridge window [mem 0xf0000000-0xf1ffffff]
-> 
-> >>  kernel: pciehp 0000:00:1c.1:pcie04: HPC vendor_id 8086 device_id 2942 ss_vid 17aa ss_did 20f3
-> >>  kernel: pciehp 0000:00:1c.1:pcie04: service driver pciehp loaded
-> >>  kernel: pciehp 0000:00:1c.3:pcie04: HPC vendor_id 8086 device_id 2946 ss_vid 17aa ss_did 20f3
-> >> -kernel: pciehp 0000:00:1c.3:pcie04: pci_hp_register failed with error -16
-> >> -kernel: pciehp 0000:00:1c.3:pcie04: Slot already registered by another hotplug driver
-> >> +kernel: pciehp 0000:00:1c.3:pcie04: service driver pciehp loaded
-> 
-> >> Greg told me to report the issue here, so I'm doing that :-)
-> >>
-> >> If you need more information (would a complete dmesg of both cases
-> >> be useful?), just let me know.
-> > 
-> > Which kernel is that?
-> 
-> That's 3.11rc4, openSUSE Kernel:HEAD repository.
+> To be honest, I'm not sure about the side-effects that this will
+> have. tegra_pcie_disable_msi() does quite a bit more than just
+> masking the interrupts. It also completely removes the IRQ domain
+> that provides the MSI interrupts. While I haven't tried it yet I
+> can imagine that it will cause crashes at a later point when
+> drivers want to disable MSI on a device and the IRQ domain having
+> vanished from underneath.
 
-OK
+Surely by the time the PCIe controller device has been remove()d then
+all devices for PCIe "client" devices have also been removed.
 
-Please use the acpiphp.disable=1 workaround for how.  The problem is kind of
-known and we'll address it some time in the future, but it is hard to say
-when that's going to happen and this point.
-
-There's some ACPIPHP rework material queued up for 3.12 in linux-next, but
-I doubt it'll make a difference on your machine.  Anyway, if you want to
-try it, you can just pull the linux-next branch of my linux-pm.git tree
-(to avoid pulling all of the other linux-next material in addition to it).
-
-Thanks,
-Rafael
-
+But I guess the problem is if the controller is added back, yet the
+IRQ resources aren't re-parsed under the new IRQ domain? Still, that
+seems like an unrelated issue to exactly where the MSI IRQ domain gets
+cleaned up in the host controller's remove().
