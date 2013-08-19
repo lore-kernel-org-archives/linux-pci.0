@@ -1,38 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2668 "EHLO mms2.broadcom.com"
+Received: from gate.crashing.org ([63.228.1.57]:42570 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755043Ab3HFLNG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Aug 2013 07:13:06 -0400
-Message-ID: <1375787574.31311.1.camel@lb-tlvb-eilong.il.broadcom.com>
-Subject: Re: [PATCH V2 3/4] bnx2x: Use pci_wait_for_pending_transaction
- instead of for loop
-From: "Eilon Greenstein" <eilong@broadcom.com>
-Reply-to: eilong@broadcom.com
-To: "Vipul Pandya" <vipul@chelsio.com>
-cc: linux-pci@vger.kernel.org, bhelgaas@google.com, leedom@chelsio.com,
-	tomreu@chelsio.com, divy@chelsio.com, dm@chelsio.com,
-	nirranjan@chelsio.com, netdev@vger.kernel.org
-Date: Tue, 6 Aug 2013 14:12:54 +0300
-In-Reply-To: <1375784319-25760-4-git-send-email-vipul@chelsio.com>
-References: <1375784319-25760-1-git-send-email-vipul@chelsio.com>
- <1375784319-25760-4-git-send-email-vipul@chelsio.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+	id S1751470Ab3HSWos (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Aug 2013 18:44:48 -0400
+Message-ID: <1376952280.25016.87.camel@pasglop>
+Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Date: Tue, 20 Aug 2013 08:44:40 +1000
+In-Reply-To: <1376943632.2657.25.camel@ul30vt.home>
+References: <20130814200845.21923.64284.stgit@bling.home>
+	 <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
+	 <1376521578.13642.65.camel@ul30vt.home>
+	 <1376937682.2657.15.camel@ul30vt.home>
+	 <CAErSpo50ve+ZMqcX=13hKvrB75LyWmUddC-qyX7Esfr=P5StcA@mail.gmail.com>
+	 <1376943632.2657.25.camel@ul30vt.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-08-06 at 15:48 +0530, Vipul Pandya wrote:
-> From: Casey Leedom <leedom@chelsio.com>
-> 
-> New routine has been added to avoid duplication of waiting for pending pci
-> transaction code. This patch makes use of that routine.
-> 
-> Signed-off-by: Casey Leedom <leedom@chelsio.com>
-> Signed-off-by: Vipul Pandya <vipul@chelsio.com>
+On Mon, 2013-08-19 at 14:20 -0600, Alex Williamson wrote:
+> I try to handle the slot as opaque, only caring that the slot pointer
+> matches, so I think our implementation is ok... so long as we only get
+> one driver claiming to manage a slot, but that's not a vfio problem ;)
+> Thanks,
 
-Thanks Casey!
+By why bother with slots ? Why do you even think about slots in that
+context ? slots are a badly defined thing in our current PCI stack,
+pretty much intricated with hotplug. I don't see why the reset semantics
+would be tied to slots at all.
 
-Acked-by: Eilon Greenstein <eilong@broadcom.com>
+The only case where it *might* make some sense (and even then ...) is if
+you want to start exposing slot power control and PERST but that would
+imply a pile of platform specific gunk anyway.
+
+Ben.
 
 
