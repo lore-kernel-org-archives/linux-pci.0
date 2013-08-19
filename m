@@ -1,43 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db9lp0249.outbound.messaging.microsoft.com ([213.199.154.249]:28152
-	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751670Ab3HBWnN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 18:43:13 -0400
-From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-To: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<dougthompson@xmission.com>, <bp@alien8.de>, <bhelgaas@google.com>,
-	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
-	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Subject: [PATCH 1/3 V2] EDAC, AMD64_EDAC: Add PCI Device ID Functions 3 and 4 for newer F15h models.
-Date: Fri, 2 Aug 2013 17:43:02 -0500
-Message-ID: <1375483384-2302-2-git-send-email-Aravind.Gopalakrishnan@amd.com>
-In-Reply-To: <1375483384-2302-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
-References: <1375483384-2302-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:55225 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751116Ab3HSUUi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Aug 2013 16:20:38 -0400
+Message-ID: <1376943632.2657.25.camel@ul30vt.home>
+Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Date: Mon, 19 Aug 2013 14:20:32 -0600
+In-Reply-To: <CAErSpo50ve+ZMqcX=13hKvrB75LyWmUddC-qyX7Esfr=P5StcA@mail.gmail.com>
+References: <20130814200845.21923.64284.stgit@bling.home>
+	 <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
+	 <1376521578.13642.65.camel@ul30vt.home>
+	 <1376937682.2657.15.camel@ul30vt.home>
+	 <CAErSpo50ve+ZMqcX=13hKvrB75LyWmUddC-qyX7Esfr=P5StcA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding PCI_DEVICE_ID_AMD_15H_NB_M30H_F3 and PCI_DEVICE_ID_AMD_15H_NB_M30H_F4
-for F15h model 30h. This is required for the file amd_nb.c
+On Mon, 2013-08-19 at 14:02 -0600, Bjorn Helgaas wrote:
+> On Mon, Aug 19, 2013 at 12:41 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > On Wed, 2013-08-14 at 17:06 -0600, Alex Williamson wrote:
+> >> On Wed, 2013-08-14 at 16:42 -0600, Bjorn Helgaas wrote:
+> >> > On Wed, Aug 14, 2013 at 2:10 PM, Alex Williamson
+> >> > <alex.williamson@redhat.com> wrote:
+> 
+> >> > > +static int vfio_pci_for_each_slot_or_bus(struct pci_dev *pdev,
+> >> > > +                                        int (*fn)(struct pci_dev *,
+> >> > > +                                                  void *data), void *data,
+> >> > > +                                        bool slot)
+> >> > > +{
+> >> > > +       struct pci_dev *tmp;
+> >> > > +       int ret = 0;
+> >> > > +
+> >> > > +       list_for_each_entry(tmp, &pdev->bus->devices, bus_list) {
+> >> > > +               if (slot && tmp->slot != pdev->slot)
+> >> > > +                       continue;
+> >> > > +
+> >> > > +               ret = fn(tmp, data);
+> >> > > +               if (ret)
+> >> > > +                       break;
+> >> > > +
+> >> > > +               if (tmp->subordinate) {
+> >> > > +                       ret = vfio_pci_for_each_slot_or_bus(tmp, fn,
+> >> > > +                                                           data, false);
+> >> > > +                       if (ret)
+> >> > > +                               break;
+> >> > > +               }
+> >> > > +       }
+> >> > > +
+> >> > > +       return ret;
+> >> > > +}
+> >> >
+> >> > vfio_pci_for_each_slot_or_bus() isn't really vfio-specific, is it?
+> >>
+> >> It's not, I originally has callbacks split out as PCI patches but I was
+> >> able to simplify some things in the code by customizing it to my usage,
+> >> so I left it here.
+> >>
+> >> > I mean, traversing the PCI hierarchy doesn't require vfio knowledge.  I
+> >> > think this loop (walking the bus->devices list) skips devices on
+> >> > "virtual buses" that may be added for SR-IOV.  I'm not sure that
+> >> > pci_walk_bus() handles that correctly either, but at least if you used
+> >> > that, we could fix the problem in one place.
+> >>
+> >> I didn't know about pci_walk_bus(), I'll look into switching to it.
+> >
+> > It looks like pci_walk_bus() is a poor replacement for when dealing with
+> > slots.  There might be multiple slots on a bus or a mix of slots and
+> > non-slots, so for each device pci_walk_bus() finds on a subordinate bus
+> > I'd need to walk up the tree to find the parent bridge on the original
+> > bus to figure out if it's in the same slot.
+> 
+> Do you really care about that scenario?  PCIe only supports a single
+> slot per bus, as far as I know.
 
-Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+I believe that's true for pciehp, but I can easily imagine that it's not
+the case for other hotplug controllers.  I don't run into this scenario
+on any of my hardware, but I also don't want to embed any pciehp
+assumptions either.  So I care for the sake of completeness, but I'm not
+targeting specific hardware that needs this.
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 3bed2e8..d1fe5d0 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -518,6 +518,8 @@
- #define PCI_DEVICE_ID_AMD_11H_NB_MISC	0x1303
- #define PCI_DEVICE_ID_AMD_11H_NB_LINK	0x1304
- #define PCI_DEVICE_ID_AMD_15H_M10H_F3	0x1403
-+#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F3 0x141d
-+#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F4 0x141e
- #define PCI_DEVICE_ID_AMD_15H_NB_F0	0x1600
- #define PCI_DEVICE_ID_AMD_15H_NB_F1	0x1601
- #define PCI_DEVICE_ID_AMD_15H_NB_F2	0x1602
--- 
-1.7.10.4
+> > Should we have a pci_walk_slot() function?
+> 
+> I guess.  And supply the pci_slot rather than the pci_dev?  I'm a
+> little bit worried because the idea of a "slot" is not well-defined in
+> the spec, and we have sort of an ad hoc method of discovering and
+> managing them, e.g., acpiphp and pciehp might discover the same slot.
+> But I guess that's no reason to bury generic code in vfio.
 
+I try to handle the slot as opaque, only caring that the slot pointer
+matches, so I think our implementation is ok... so long as we only get
+one driver claiming to manage a slot, but that's not a vfio problem ;)
+Thanks,
+
+Alex
 
