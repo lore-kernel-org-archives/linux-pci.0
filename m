@@ -1,75 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:19019 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754780Ab3HEI4E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 04:56:04 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Rafael <rjw@sisk.pl>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH -v5 1/6] PCI,pciehp: avoid add a device already exist before suspend during resume
-Date: Mon, 5 Aug 2013 16:54:53 +0800
-Message-ID: <1375692898-27476-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1375692898-27476-1-git-send-email-wangyijing@huawei.com>
-References: <1375692898-27476-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:1124 "EHLO
+	mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751289Ab3HSLVA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 07:21:00 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: kernel-janitors@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by devm_ioremap_resource
+Date: Mon, 19 Aug 2013 13:20:35 +0200
+Message-Id: <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pciehp_resume() try to hot add device if the slot adapter
-status return true. But if there are already some devices exist,
-namely list_empty(bus->devices) return false. We should not add the device
-again, because the device add action will fail. Also print some uncomfortable
-messages like this:
-	pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
-	pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Tested-by: Paul Bolle <pebolle@tiscali.nl>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
+Use devm_ioremap_resource instead of devm_request_and_ioremap.
+
+This was done using the semantic patch
+scripts/coccinelle/api/devm_ioremap_resource.cocci
+
+Error-handling code was manually removed from the associated calls to
+platform_get_resource.
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
 ---
- drivers/pci/hotplug/pciehp_core.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+The first block of modified code is followed by a call to
+devm_request_mem_region for pcie->cs with no associated ioremap.  Should
+ioremap be used in this case as well?
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 7d72c5e..7fe9dbd 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -300,6 +300,7 @@ static int pciehp_resume (struct pcie_device *dev)
- {
- 	struct controller *ctrl;
- 	struct slot *slot;
-+	struct pci_bus *pbus = dev->port->subordinate;
- 	u8 status;
- 
- 	ctrl = get_service_data(dev);
-@@ -311,10 +312,13 @@ static int pciehp_resume (struct pcie_device *dev)
- 
- 	/* Check if slot is occupied */
- 	pciehp_get_adapter_status(slot, &status);
--	if (status)
--		pciehp_enable_slot(slot);
--	else
-+	if (status) {
-+		if (list_empty(&pbus->devices))
-+			pciehp_enable_slot(slot);
-+	} else if (!list_empty(&pbus->devices)) {
- 		pciehp_disable_slot(slot);
-+	}
-+
- 	return 0;
- }
- #endif /* PM */
--- 
-1.7.1
+ drivers/pci/host/pci-tegra.c |   29 +++++++++--------------------
+ 1 file changed, 9 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 7356741..db2ddc5 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1031,28 +1031,17 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 		return err;
+ 	}
+ 
+-	/* request and remap controller registers */
+ 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
+-	if (!pads) {
+-		err = -EADDRNOTAVAIL;
++	pcie->pads = devm_ioremap_resource(&pdev->dev, pads);
++	if (IS_ERR(pcie->pads)) {
++		err = PTR_ERR(pcie->pads);
+ 		goto poweroff;
+ 	}
+ 
+ 	afi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "afi");
+-	if (!afi) {
+-		err = -EADDRNOTAVAIL;
+-		goto poweroff;
+-	}
+-
+-	pcie->pads = devm_request_and_ioremap(&pdev->dev, pads);
+-	if (!pcie->pads) {
+-		err = -EADDRNOTAVAIL;
+-		goto poweroff;
+-	}
+-
+-	pcie->afi = devm_request_and_ioremap(&pdev->dev, afi);
+-	if (!pcie->afi) {
+-		err = -EADDRNOTAVAIL;
++	pcie->afi = devm_ioremap_resource(&pdev->dev, afi);
++	if (IS_ERR(pcie->afi)) {
++		err = PTR_ERR(pcie->afi);
+ 		goto poweroff;
+ 	}
+ 
+@@ -1492,9 +1481,9 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ 		rp->lanes = value;
+ 		rp->pcie = pcie;
+ 
+-		rp->base = devm_request_and_ioremap(pcie->dev, &rp->regs);
+-		if (!rp->base)
+-			return -EADDRNOTAVAIL;
++		rp->base = devm_ioremap_resource(pcie->dev, &rp->regs);
++		if (IS_ERR(rp->base))
++			return PTR_ERR(rp->base);
+ 
+ 		list_add_tail(&rp->list, &pcie->ports);
+ 	}
 
