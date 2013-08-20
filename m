@@ -1,144 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:41321 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758212Ab3HHWSE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 18:18:04 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCHv8 03/10] PCI: Introduce new MSI chip infrastructure
-Date: Fri,  9 Aug 2013 00:17:41 +0200
-Message-Id: <1376000268-18397-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mga14.intel.com ([143.182.124.37]:50696 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750937Ab3HTLDH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 20 Aug 2013 07:03:07 -0400
+Date: Tue, 20 Aug 2013 14:08:33 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>
+Subject: Re: [PATCH] ACPI / PM: Hold acpi_scan_lock over system PM transitions
+Message-ID: <20130820110833.GZ4898@intel.com>
+References: <2852781.TfChGuuEkJ@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2852781.TfChGuuEkJ@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+On Tue, Aug 20, 2013 at 01:47:57AM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Bad things happen if ACPI hotplug events are handled during system
+> PM transitions, especially if devices are removed as a result.
+> To prevent those bad things from happening, acquire acpi_scan_lock
+> when a transition is started and release it when that transition
+> is complete or has been aborted.
+> 
+> This fixes resume lockup on my test-bed Acer Aspire S5 that happens
+> when Thunderbolt devices are disconnected from the machine while
+> suspended.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-The new struct msi_chip is used to associated an MSI controller with a
-PCI bus. It is automatically handed down from the root to its children
-during bus enumeration.
+I tested this on Intel DZ77RE-75K and after the patch is applied the
+machine didn't hang anymore once resuming.
 
-This patch provides default (weak) implementations for the architecture-
-specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
-and arch_msi_check_device()) which check if a PCI device's bus has an
-attached MSI chip and forward the call appropriately.
-
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Daniel Price <daniel.price@gmail.com>
-Tested-by: Thierry Reding <thierry.reding@gmail.com>
----
- drivers/pci/msi.c   | 27 +++++++++++++++++++++++++--
- drivers/pci/probe.c |  1 +
- include/linux/msi.h | 11 +++++++++++
- include/linux/pci.h |  1 +
- 4 files changed, 38 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 823c386..2837285 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -32,16 +32,39 @@ static int pci_msi_enable = 1;
- 
- int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
--	return -EINVAL;
-+	struct msi_chip *chip = dev->bus->msi;
-+	int err;
-+
-+	if (!chip || !chip->setup_irq)
-+		return -EINVAL;
-+
-+	err = chip->setup_irq(chip, dev, desc);
-+	if (err < 0)
-+		return err;
-+
-+	irq_set_chip_data(desc->irq, chip);
-+
-+	return 0;
- }
- 
- void __weak arch_teardown_msi_irq(unsigned int irq)
- {
-+	struct msi_chip *chip = irq_get_chip_data(irq);
-+
-+	if (!chip || !chip->teardown_irq)
-+		return;
-+
-+	chip->teardown_irq(chip, irq);
- }
- 
- int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
- {
--	return 0;
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (!chip || !chip->check_device)
-+		return 0;
-+
-+	return chip->check_device(chip, dev, nvec, type);
- }
- 
- int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 46ada5c..b8eaa81 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -666,6 +666,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 
- 	child->parent = parent;
- 	child->ops = parent->ops;
-+	child->msi = parent->msi;
- 	child->sysdata = parent->sysdata;
- 	child->bus_flags = parent->bus_flags;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 271dfd1..090ddad 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -65,4 +65,15 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev, int irq);
- 
-+struct msi_chip {
-+	struct module *owner;
-+	struct device *dev;
-+
-+	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
-+			 struct msi_desc *desc);
-+	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-+	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-+			    int nvec, int type);
-+};
-+
- #endif /* LINUX_MSI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..4044e3c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -433,6 +433,7 @@ struct pci_bus {
- 	struct resource busn_res;	/* bus numbers routed to this bus */
- 
- 	struct pci_ops	*ops;		/* configuration access functions */
-+	struct msi_chip	*msi;		/* MSI controller */
- 	void		*sysdata;	/* hook for sys-specific extension */
- 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
- 
--- 
-1.8.1.2
-
+Feel free to add my tested-by.
