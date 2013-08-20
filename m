@@ -1,96 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:51118 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755113Ab3HFPeR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 11:34:17 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 7 Aug 2013 12:29:05 +1000
-Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5A35F2BB0052
-	for <linux-pci@vger.kernel.org>; Wed,  7 Aug 2013 01:34:13 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r76FY28c66126042
-	for <linux-pci@vger.kernel.org>; Wed, 7 Aug 2013 01:34:02 +1000
-Received: from d23av02.au.ibm.com (loopback [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r76FYCRH006644
-	for <linux-pci@vger.kernel.org>; Wed, 7 Aug 2013 01:34:13 +1000
-Date: Tue, 6 Aug 2013 23:34:10 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:52225 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912Ab3HTDS1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 23:18:27 -0400
+Date: Tue, 20 Aug 2013 04:18:21 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
+Cc: Alex Williamson <alex.williamson@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
- pbus_size_io()
-Message-ID: <20130806153410.GA10680@weiyang.vnet.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
- <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
- <20130805195149.GA19127@google.com>
- <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
- <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
- <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
- <20130805222135.GA29875@google.com>
- <20130806061534.GA10876@weiyang.vnet.ibm.com>
- <20130806133929.GB31970@google.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	Davide Libenzi <davidel@xmailserver.org>,
+	Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] vfio-pci: PCI hot reset interface
+Message-ID: <20130820031821.GF27005@ZenIV.linux.org.uk>
+References: <20130814200845.21923.64284.stgit@bling.home>
+ <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130806133929.GB31970@google.com>
+In-Reply-To: <CAErSpo4zfuaaBSDci4jOu_9RgUfLQNPvKhro1OEh=8AMvAFWYw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 06, 2013 at 07:39:29AM -0600, Bjorn Helgaas wrote:
->> Personal Conclusion
->> ============================================================================
->> I think Bjorn's patch works.
->> Will test on powernv platform and give the result.
->
->Great, let me know what happens.
+On Wed, Aug 14, 2013 at 04:42:14PM -0600, Bjorn Helgaas wrote:
+> [+cc Al, linux-fsdevel for fdget/fdput usage]
 
-In both case, with/with out your patch, the assignment result is the same.
-Below is the /proc/ioports file.
+fdget/fdput use looks sane, the only thing is that I would rather
+have an explicit include of linux/file.h instead of relying upon
+linux/eventfd.h pulling it.  Incidentally, there are only 5 files
+that include the latter without an explicit include of the former -
+drivers/vfio/pci/vfio_pci.c, drivers/vhost/scsi.c, kernel/cgroup.c,
+mm/memcontrol.c and mm/vmpressure.c.  And only kernel/cgroup.c (and,
+with this patch, vfio_pci.c) really wants anything from linux/file.h,
+so I'd rather kill that indirect include in eventfd.h and slapped
+an explicit include of file.h in these two files...
 
-00010000-0080ffff : /io-hub@3efe00000000/pciex@3efe00080000
-  00010000-00010fff : Legacy IO
-  00020000-0003ffff : PCI Bus 0000:01
-    00020000-0003ffff : PCI Bus 0000:02
-      00020000-0002ffff : PCI Bus 0000:40
-      00030000-0003ffff : PCI Bus 0000:a0
-00820000-0101ffff : /io-hub@3efe00000000/pciex@3efe00090000
-  00820000-00820fff : Legacy IO
-  00830000-0083ffff : PCI Bus 0001:01
-01030000-0182ffff : /io-hub@3efe00000000/pciex@3efe000a0000
-  01030000-01030fff : Legacy IO
-  01040000-0104ffff : PCI Bus 0002:01
-01840000-0203ffff : /io-hub@3efe00000000/pciex@3efe000b0000
-  01840000-01840fff : Legacy IO
-  01850000-0185ffff : PCI Bus 0003:01
-02050000-0284ffff : /io-hub@3efe00000000/pciex@3efe000c0000
-  02050000-02050fff : Legacy IO
-  02060000-0206ffff : PCI Bus 0004:01
-02860000-0305ffff : /io-hub@3efe00000000/pciex@3efe000d0000
-  02860000-02860fff : Legacy IO
-  02870000-0287ffff : PCI Bus 0005:01
+BTW, most of the eventfd_fget() users might as well be using fget()
+(or fdget(), for that matter).  They tend to be immediately followed
+by eventfd_ctx_fileget(), which repeats the "is that an eventfd file?"
+check anyway.
 
-The arch_align is 0x10000. When sizing for Bus 0000:01, its child has a I/O
-bridge window with size 0x20000/alignment 0x10000. And the result
-[0x20000,0x3ffff] looks like size 0x20000/alignment 0x20000 or size
-0x20000/alignment 0x10000. 
+Completely untested patch below does that to kernel/cgroup.c; Tejun,
+Davide - do you have any objections against the following?
 
-But I still think the alignment is 0x10000.
+Kill indirect include of file.h from eventfd.h, use fdget() in cgroup.c
 
->
->Bjorn
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+kernel/cgroup.c is the only place in the tree that relies on eventfd.h
+pulling file.h; move that include there.  Switch from eventfd_fget()/fput()
+to fdget()/fdput(), while we are at it - eventfd_ctx_fileget() will fail
+on non-eventfd descriptors just fine, no need to do that check twice...
 
--- 
-Richard Yang
-Help you, Help me
-
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+diff --git a/include/linux/eventfd.h b/include/linux/eventfd.h
+index cf5d2af..ff0b981 100644
+--- a/include/linux/eventfd.h
++++ b/include/linux/eventfd.h
+@@ -9,7 +9,6 @@
+ #define _LINUX_EVENTFD_H
+ 
+ #include <linux/fcntl.h>
+-#include <linux/file.h>
+ #include <linux/wait.h>
+ 
+ /*
+@@ -26,6 +25,8 @@
+ #define EFD_SHARED_FCNTL_FLAGS (O_CLOEXEC | O_NONBLOCK)
+ #define EFD_FLAGS_SET (EFD_SHARED_FCNTL_FLAGS | EFD_SEMAPHORE)
+ 
++struct file;
++
+ #ifdef CONFIG_EVENTFD
+ 
+ struct file *eventfd_file_create(unsigned int count, int flags);
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 781845a..f88ecaf 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -60,6 +60,7 @@
+ #include <linux/poll.h>
+ #include <linux/flex_array.h> /* used in cgroup_attach_task */
+ #include <linux/kthread.h>
++#include <linux/file.h>
+ 
+ #include <linux/atomic.h>
+ 
+@@ -3969,8 +3970,8 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
+ 	struct cgroup_event *event = NULL;
+ 	struct cgroup *cgrp_cfile;
+ 	unsigned int efd, cfd;
+-	struct file *efile = NULL;
+-	struct file *cfile = NULL;
++	struct fd efile;
++	struct fd cfile;
+ 	char *endp;
+ 	int ret;
+ 
+@@ -3993,31 +3994,31 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
+ 	init_waitqueue_func_entry(&event->wait, cgroup_event_wake);
+ 	INIT_WORK(&event->remove, cgroup_event_remove);
+ 
+-	efile = eventfd_fget(efd);
+-	if (IS_ERR(efile)) {
+-		ret = PTR_ERR(efile);
+-		goto fail;
++	efile = fdget(efd);
++	if (!efile.file) {
++		ret = -EBADF;
++		goto fail1;
+ 	}
+ 
+-	event->eventfd = eventfd_ctx_fileget(efile);
++	event->eventfd = eventfd_ctx_fileget(efile.file);
+ 	if (IS_ERR(event->eventfd)) {
+ 		ret = PTR_ERR(event->eventfd);
+-		goto fail;
++		goto fail2;
+ 	}
+ 
+-	cfile = fget(cfd);
+-	if (!cfile) {
++	cfile = fdget(cfd);
++	if (!cfile.file) {
+ 		ret = -EBADF;
+-		goto fail;
++		goto fail3;
+ 	}
+ 
+ 	/* the process need read permission on control file */
+ 	/* AV: shouldn't we check that it's been opened for read instead? */
+-	ret = inode_permission(file_inode(cfile), MAY_READ);
++	ret = inode_permission(file_inode(cfile.file), MAY_READ);
+ 	if (ret < 0)
+ 		goto fail;
+ 
+-	event->cft = __file_cft(cfile);
++	event->cft = __file_cft(cfile.file);
+ 	if (IS_ERR(event->cft)) {
+ 		ret = PTR_ERR(event->cft);
+ 		goto fail;
+@@ -4027,7 +4028,7 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
+ 	 * The file to be monitored must be in the same cgroup as
+ 	 * cgroup.event_control is.
+ 	 */
+-	cgrp_cfile = __d_cgrp(cfile->f_dentry->d_parent);
++	cgrp_cfile = __d_cgrp(cfile.file->f_dentry->d_parent);
+ 	if (cgrp_cfile != cgrp) {
+ 		ret = -EINVAL;
+ 		goto fail;
+@@ -4043,7 +4044,7 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
+ 	if (ret)
+ 		goto fail;
+ 
+-	efile->f_op->poll(efile, &event->pt);
++	efile.file->f_op->poll(efile.file, &event->pt);
+ 
+ 	/*
+ 	 * Events should be removed after rmdir of cgroup directory, but before
+@@ -4056,21 +4057,18 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
+ 	list_add(&event->list, &cgrp->event_list);
+ 	spin_unlock(&cgrp->event_list_lock);
+ 
+-	fput(cfile);
+-	fput(efile);
++	fdput(cfile);
++	fdput(efile);
+ 
+ 	return 0;
+ 
+ fail:
+-	if (cfile)
+-		fput(cfile);
+-
+-	if (event && event->eventfd && !IS_ERR(event->eventfd))
+-		eventfd_ctx_put(event->eventfd);
+-
+-	if (!IS_ERR_OR_NULL(efile))
+-		fput(efile);
+-
++	fdput(cfile);
++fail3:
++	eventfd_ctx_put(event->eventfd);
++fail2:
++	fdput(efile);
++fail1:
+ 	kfree(event);
+ 
+ 	return ret;
