@@ -1,71 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <520B603E.3040002@linux.vnet.ibm.com>
-Date: Wed, 14 Aug 2013 16:17:26 +0530
-From: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:52790 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256Ab3HTSxg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 14:53:36 -0400
+Message-ID: <5213BB2C.60908@wwwdotorg.org>
+Date: Tue, 20 Aug 2013 12:53:32 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-To: "Luck, Tony" <tony.luck@intel.com>
-CC: Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"lance.ortiz@hp.com" <lance.ortiz@hp.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Julia Lawall <julia.lawall@lip6.fr>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	kernel-janitors@vger.kernel.org,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aristeu Rozanski Filho <arozansk@redhat.com>
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
- event
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic> <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com> <20130812114404.3bd64fa0@samsung.com> <520A1B5E.8040105@linux.vnet.ibm.com> <20130813094147.062317f8@concha.lan> <520A6A30.1030406@linux.vnet.ibm.com> <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
-In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F31CB8DB5@ORSMSX106.amr.corp.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by devm_ioremap_resource
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr> <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr> <20130819120249.GA5740@ulmo> <alpine.DEB.2.02.1308191405450.2313@hadrien> <20130819121238.GB5740@ulmo> <alpine.DEB.2.02.1308191414360.2313@hadrien> <20130819193339.GB4961@mithrandir> <alpine.DEB.2.02.1308201112400.2269@hadrien> <CAErSpo4WLt7zbyfkKfvMbXMQGmp0MAS=7AFiomUjtUCfdprDUA@mail.gmail.com>
+In-Reply-To: <CAErSpo4WLt7zbyfkKfvMbXMQGmp0MAS=7AFiomUjtUCfdprDUA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/13/2013 11:09 PM, Luck, Tony wrote:
->> In the meantime, like Boris suggests, I think we can have a different
->> trace event for raw APEI reports - userspace can use it as it pleases.
+On 08/20/2013 10:26 AM, Bjorn Helgaas wrote:
+> On Tue, Aug 20, 2013 at 3:13 AM, Julia Lawall <julia.lawall@lip6.fr> wrote:
+>> From: Julia Lawall <Julia.Lawall@lip6.fr>
 >>
->> Once ghes_edac gets better, users can decide whether they want raw APEI
->> reports or the EDAC-processed version and choose one or the other trace
->> event.
->
-> It's cheap to add as many tracepoints as we like - but may be costly to maintain.
-> Especially if we have to tinker with them later to adjust which things are logged,
-> that puts a burden on user-space tools to be updated to adapt to the changing
-> API.
+>> Use devm_ioremap_resource instead of devm_request_and_ioremap.
+>>
+>> This was done using the semantic patch
+>> scripts/coccinelle/api/devm_ioremap_resource.cocci
+>>
+>> Error-handling code was manually removed from the associated calls to
+>> platform_get_resource.
+>>
+>> Adjust the comment at the third platform_get_resource_byname to make clear
+>> why ioremap is not done at this point.
+>>
+>> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+>> Acked-by: Thierry Reding <thierry.reding@gmail.com>
+>> Tested-by: Thierry Reding <thierry.reding@gmail.com>
+> 
+> I'm hoping this goes via arm-soc.  Let me know if you need me to do
+> something.  If you need it:
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Agree. And this is the reason I have been considering mc_event. But, the 
-below issues with ghes_edac made me unsure:
-- One, the logging format for APEI data is a bit verbose and hard to 
-parse. But, I suppose we could work with this if we make a few changes. 
-Is it ok to change how the APEI data is made available through 
-mc_event->driver_detail?
-- Two, if ghes_edac is enabled, it prevents other edac drivers from 
-being loaded. It looks like the assumption here is that if ghes/firmware 
-first is enabled, then *all* memory errors are reported through ghes 
-which is not true. We could have (a subset of) corrected errors reported 
-through ghes, some through CMCI and uncorrected errors through MCE. So, 
-if I'm not mistaken, if ghes_edac is enabled, we will only receive ghes 
-error events through mc_event and not the others. Mauro, is this accurate?
+In that case, Thierry, can you please bounce it to arm@kernel.org to be
+applied on top of wherever Tegra's for-3.12/soc branch was merged.
 
->
-> Mauro has written his user-space tool to process the ghes-edac events:
->    git://git.fedorahosted.org/rasdaemon.git
->
-> Who is writing the user space tools to process the new apei tracepoints
-> you want to add?
-
-Enabling rasdaemon itself for the new tracepoint is an option, as long 
-as Mauro doesn't object to it ;)
-
->
-> I'm not opposed to these patches - just wondering who is taking the next step
-> to make them useful.
-
-Sure.
-
-
-Regards,
-Naveen
-
+Acked-by: Stephen Warren <swarren@nvidia.com>
