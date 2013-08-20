@@ -1,427 +1,410 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:61499 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751552Ab3HZPqW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Aug 2013 11:46:22 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:19005 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751290Ab3HTS1s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 20 Aug 2013 14:27:48 -0400
+Subject: [PATCH v3] vfio-pci: PCI hot reset interface
+To: alex.williamson@redhat.com
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, viro@ZenIV.linux.org.uk,
+	benh@kernel.crashing.org, bhelgaas@google.com
+Date: Tue, 20 Aug 2013 12:27:43 -0600
+Message-ID: <20130820182536.7893.85481.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXMfTCSfK8no6gYmHYn6=OURg6444BPu-aiBR3BsAvziA@mail.gmail.com>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-	<1376189294-32022-29-git-send-email-yinghai@kernel.org>
-	<CANVTcTYhSfU+Su9s1B+mTTBfgsZgqvQxHiTsLck1zT_vg1Cs4g@mail.gmail.com>
-	<CANVTcTb2+qX6XMBqrzeLho9yFS55AnztVJ85JBMuxjoH11qzaQ@mail.gmail.com>
-	<CAOLK0pwQJVvcT5xA-+Ftb85FzbjHN-OZmXO=n7r4EWh4nFjSBA@mail.gmail.com>
-	<CAE9FiQWnGaa6omcLW0zxLj+UMspRGxjVoYXUsH3ndydGD51T9w@mail.gmail.com>
-	<CAE9FiQXFcM+FZnp00RP5Z8a2FhtjB7BuUUi4TuABF4-O9W+c8Q@mail.gmail.com>
-	<CAE9FiQXMfTCSfK8no6gYmHYn6=OURg6444BPu-aiBR3BsAvziA@mail.gmail.com>
-Date: Mon, 26 Aug 2013 23:46:21 +0800
-Message-ID: <CAOLK0pxxAFBiDTac_5yPYO7X96Y4Tnd4kjwZ-Wvk1mZ3bD-w2A@mail.gmail.com>
-Subject: Re: [PATCH v4 28/28] PCI, x86, ACPI: get ioapic address from acpi device
-From: Lan Tianyu <lantianyu1986@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	rui wang <ruiv.wang@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger kernel org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/8/24 Yinghai Lu <yinghai@kernel.org>:
-> On Fri, Aug 23, 2013 at 12:04 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, Aug 23, 2013 at 11:38 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Fri, Aug 23, 2013 at 8:34 AM, Lan Tianyu <lantianyu1986@gmail.com> wrote:
->>>>> I worked around the problem by replacing acpi_resource_to_address64()
->>>>> with resource_to_addr().  But resource_to_addr() is a static function
->>>>> in arch/x86/pci/acpi.c, not very convenient to use. Here's what I did:
->>>>>
->>>>
->>>> Hi Rui&Yinghai:
->>>>            How about using the following code to translate struct
->>>>  acpi_resource to struct resouce in this setup_res()?
->>>>
->>>>          if (acpi_dev_resource_address_space(...)
->>>>                 || acpi_dev_resource_memory(..))
->>>>               return AE_OK;
->>>
->>> Yest, that could be better, will update that.
->>>
->>> Also can you submit patch that will use that in res_to_addr of
->>> arch/x86/pci/acpi.c?
->>
->> looks acpi_dev_resource_address_space... does not handle
->> PREFTCH and translation offset.
->>
->> So now i have to use res_to_addr alike one.
->
-> Raphael,
->
-> Maybe we should move resource_to_addr to acpi generic.
->
-> Please check if you are ok with attached.
->
-> Thanks
->
-> Yinghai
+The current VFIO_DEVICE_RESET interface only maps to PCI use cases
+where we can isolate the reset to the individual PCI function.  This
+means the device must support FLR (PCIe or AF), PM reset on D3hot->D0
+transition, device specific reset, or be a singleton device on a bus
+for a secondary bus reset.  FLR does not have widespread support,
+PM reset is not very reliable, and bus topology is dictated by the
+system and device design.  We need to provide a means for a user to
+induce a bus reset in cases where the existing mechanisms are not
+available or not reliable.
 
-Hi Rafael & Yinghai:
-            I wrote 4 proposal patches to try to make acpi resource
-functions to replace
- resource_to_addr() in the arch/x86/pci/acpi.c. From my opinion,
-resource_to_addr()
-does most work which acpi resource functions have done. So please have
-a look. Thanks.
-The following patches just passed through compiling test.
+This device specific extension to VFIO provides the user with this
+ability.  Two new ioctls are introduced:
+ - VFIO_DEVICE_PCI_GET_HOT_RESET_INFO
+ - VFIO_DEVICE_PCI_HOT_RESET
 
-Patch 1
--------------------
-commit 1800bc9dda7318314607fbae7afda8be38e056dc
-Author: Lan Tianyu <tianyu.lan@intel.com>
-Date:   Mon Aug 26 14:40:39 2013 +0800
+The first provides the user with information about the extent of
+devices affected by a hot reset.  This is essentially a list of
+devices and the IOMMU groups they belong to.  The user may then
+initiate a hot reset by calling the second ioctl.  We must be
+careful that the user has ownership of all the affected devices
+found via the first ioctl, so the second ioctl takes a list of file
+descriptors for the VFIO groups affected by the reset.  Each group
+must have IOMMU protection established for the ioctl to succeed.
 
-    ACPI/Resource: Add setting PREFETCH flag support
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index b7201fc..23a560b 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -35,7 +35,7 @@
- #endif
+v2: Use PCI bus iterators.  Depends on pci_walk_slot() patch
+v3: #include <linux/file.h> per Al Viro
 
- static unsigned long acpi_dev_memresource_flags(u64 len, u8 write_protect,
--                        bool window)
-+                        bool window, bool prefetchable)
- {
-     unsigned long flags = IORESOURCE_MEM;
+ drivers/vfio/pci/vfio_pci.c |  280 +++++++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/vfio.h   |   38 ++++++
+ 2 files changed, 317 insertions(+), 1 deletion(-)
 
-@@ -48,6 +48,9 @@ static unsigned long acpi_dev_memresource_flags(u64
-len, u8 write_protect,
-     if (window)
-         flags |= IORESOURCE_WINDOW;
-
-+    if (prefetchable)
-+        flags |= IORESOURCE_PREFETCH;
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index cef6002..1dfec392 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -13,6 +13,7 @@
+ 
+ #include <linux/device.h>
+ #include <linux/eventfd.h>
++#include <linux/file.h>
+ #include <linux/interrupt.h>
+ #include <linux/iommu.h>
+ #include <linux/module.h>
+@@ -227,6 +228,104 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+ 	return 0;
+ }
+ 
++struct vfio_pci_walk_info {
++	int ret;
++	void *data;
++};
 +
-     return flags;
- }
-
-@@ -56,7 +59,8 @@ static void acpi_dev_get_memresource(struct resource
-*res, u64 start, u64 len,
- {
-     res->start = start;
-     res->end = start + len - 1;
--    res->flags = acpi_dev_memresource_flags(len, write_protect, false);
-+    res->flags = acpi_dev_memresource_flags(len, write_protect,
-+                        false, false);
- }
-
- /**
-@@ -175,7 +179,7 @@ bool acpi_dev_resource_address_space(struct
-acpi_resource *ares,
- {
-     acpi_status status;
-     struct acpi_resource_address64 addr;
--    bool window;
-+    bool window, prefetchable;
-     u64 len;
-     u8 io_decode;
-
-@@ -199,9 +203,11 @@ bool acpi_dev_resource_address_space(struct
-acpi_resource *ares,
-     switch(addr.resource_type) {
-     case ACPI_MEMORY_RANGE:
-         len = addr.maximum - addr.minimum + 1;
-+        prefetchable =
-+            addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY;
-         res->flags = acpi_dev_memresource_flags(len,
-                         addr.info.mem.write_protect,
--                        window);
-+                        window, prefetchable);
-         break;
-     case ACPI_IO_RANGE:
-         io_decode = addr.granularity == 0xfff ?
-@@ -252,7 +258,7 @@ bool acpi_dev_resource_ext_address_space(struct
-acpi_resource *ares,
-         len = ext_addr->maximum - ext_addr->minimum + 1;
-         res->flags = acpi_dev_memresource_flags(len,
-                     ext_addr->info.mem.write_protect,
--                    window);
-+                    window, false);
-         break;
-     case ACPI_IO_RANGE:
-         io_decode = ext_addr->granularity == 0xfff ?
-
-Patch 2
------------
-commit a3ff8345ffb51885b216ba0ae231252cd88d4e76
-Author: Lan Tianyu <tianyu.lan@intel.com>
-Date:   Mon Aug 26 15:57:14 2013 +0800
-
-    ACPI/Resource: Add address translation support
-
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 23a560b..439ee44 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -196,8 +196,8 @@ bool acpi_dev_resource_address_space(struct
-acpi_resource *ares,
-     if (ACPI_FAILURE(status))
-         return true;
-
--    res->start = addr.minimum;
--    res->end = addr.maximum;
-+    res->start = addr.minimum + addr.translation_offset;
-+    res->end = addr.maximum + addr.translation_offset;
-     window = addr.producer_consumer == ACPI_PRODUCER;
-
-     switch(addr.resource_type) {
-
-
-Patch 3
----------------
-commit 68bfefe619b49baa5d372e0664a6cb6d5138fad1
-Author: Lan Tianyu <tianyu.lan@intel.com>
-Date:   Mon Aug 26 21:45:32 2013 +0800
-
-    ACPI: Add new acpi_dev_resource_address_space_with_addr() function
-
-    Add new function which can return the converted struct
-acpi_resource_address64.
-This will be used to get transaction offset in the setup_resource().
-
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 439ee44..98a6c35 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -174,11 +174,11 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
-  * and if that's the case, use the information in it to populate the generic
-  * resource object pointed to by @res.
-  */
--bool acpi_dev_resource_address_space(struct acpi_resource *ares,
-+bool acpi_dev_resource_address_space_with_addr(struct acpi_resource *ares,
-+                     struct acpi_resource_address64 *addr,
-                      struct resource *res)
- {
-     acpi_status status;
--    struct acpi_resource_address64 addr;
-     bool window, prefetchable;
-     u64 len;
-     u8 io_decode;
-@@ -192,28 +192,28 @@ bool acpi_dev_resource_address_space(struct
-acpi_resource *ares,
-         return false;
-     }
-
--    status = acpi_resource_to_address64(ares, &addr);
-+    status = acpi_resource_to_address64(ares, addr);
-     if (ACPI_FAILURE(status))
-         return true;
-
--    res->start = addr.minimum + addr.translation_offset;
--    res->end = addr.maximum + addr.translation_offset;
--    window = addr.producer_consumer == ACPI_PRODUCER;
-+    res->start = addr->minimum + addr->translation_offset;
-+    res->end = addr->maximum + addr->translation_offset;
-+    window = addr->producer_consumer == ACPI_PRODUCER;
-
--    switch(addr.resource_type) {
-+    switch (addr->resource_type) {
-     case ACPI_MEMORY_RANGE:
--        len = addr.maximum - addr.minimum + 1;
-+        len = addr->maximum - addr->minimum + 1;
-         prefetchable =
--            addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY;
-+            addr->info.mem.caching == ACPI_PREFETCHABLE_MEMORY;
-         res->flags = acpi_dev_memresource_flags(len,
--                        addr.info.mem.write_protect,
-+                        addr->info.mem.write_protect,
-                         window, prefetchable);
-         break;
-     case ACPI_IO_RANGE:
--        io_decode = addr.granularity == 0xfff ?
-+        io_decode = addr->granularity == 0xfff ?
-                 ACPI_DECODE_10 : ACPI_DECODE_16;
--        res->flags = acpi_dev_ioresource_flags(addr.minimum,
--                               addr.maximum,
-+        res->flags = acpi_dev_ioresource_flags(addr->minimum,
-+                               addr->maximum,
-                                io_decode, window);
-         break;
-     case ACPI_BUS_NUMBER_RANGE:
-@@ -225,6 +225,16 @@ bool acpi_dev_resource_address_space(struct
-acpi_resource *ares,
-
-     return true;
- }
-+EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space_with_addr);
-+
-+bool acpi_dev_resource_address_space(struct acpi_resource *ares,
-+                     struct resource *res)
++static int vfio_pci_count_devs(struct pci_dev *pdev, void *data)
 +{
-+    struct acpi_resource_address64 addr;
++	struct vfio_pci_walk_info *walk = data;
++	int *count = walk->data;
 +
-+    return acpi_dev_resource_address_space_with_addr(ares, &addr,
-+                             res);
++	(*count)++;
++	return walk->ret;
 +}
- EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
-
- /**
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index a5db4ae..9f5c0d5 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -260,6 +260,9 @@ bool acpi_dev_resource_memory(struct acpi_resource
-*ares, struct resource *res);
- bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res);
- bool acpi_dev_resource_address_space(struct acpi_resource *ares,
-                      struct resource *res);
-+bool acpi_dev_resource_address_space_with_addr(struct acpi_resource *ares,
-+                struct acpi_resource_address64 *addr,
-+                struct resource *res);
- bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
-                      struct resource *res);
- unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
-
-Patch 4
---------------
-commit a8733a1da756a257d55e68994268174b84b33670
-Author: Lan Tianyu <tianyu.lan@intel.com>
-Date:   Mon Aug 26 22:53:38 2013 +0800
-
-    X86/PCI/ACPI: Rework setup_resource() via functions acpi resource functions
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index d641897..d4f85a1 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -219,62 +219,15 @@ static void teardown_mcfg_map(struct pci_root_info *info)
- #endif
-
- static acpi_status
--resource_to_addr(struct acpi_resource *resource,
--            struct acpi_resource_address64 *addr)
--{
--    acpi_status status;
--    struct acpi_resource_memory24 *memory24;
--    struct acpi_resource_memory32 *memory32;
--    struct acpi_resource_fixed_memory32 *fixed_memory32;
--
--    memset(addr, 0, sizeof(*addr));
--    switch (resource->type) {
--    case ACPI_RESOURCE_TYPE_MEMORY24:
--        memory24 = &resource->data.memory24;
--        addr->resource_type = ACPI_MEMORY_RANGE;
--        addr->minimum = memory24->minimum;
--        addr->address_length = memory24->address_length;
--        addr->maximum = addr->minimum + addr->address_length - 1;
--        return AE_OK;
--    case ACPI_RESOURCE_TYPE_MEMORY32:
--        memory32 = &resource->data.memory32;
--        addr->resource_type = ACPI_MEMORY_RANGE;
--        addr->minimum = memory32->minimum;
--        addr->address_length = memory32->address_length;
--        addr->maximum = addr->minimum + addr->address_length - 1;
--        return AE_OK;
--    case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
--        fixed_memory32 = &resource->data.fixed_memory32;
--        addr->resource_type = ACPI_MEMORY_RANGE;
--        addr->minimum = fixed_memory32->address;
--        addr->address_length = fixed_memory32->address_length;
--        addr->maximum = addr->minimum + addr->address_length - 1;
--        return AE_OK;
--    case ACPI_RESOURCE_TYPE_ADDRESS16:
--    case ACPI_RESOURCE_TYPE_ADDRESS32:
--    case ACPI_RESOURCE_TYPE_ADDRESS64:
--        status = acpi_resource_to_address64(resource, addr);
--        if (ACPI_SUCCESS(status) &&
--            (addr->resource_type == ACPI_MEMORY_RANGE ||
--            addr->resource_type == ACPI_IO_RANGE) &&
--            addr->address_length > 0) {
--            return AE_OK;
--        }
--        break;
--    }
--    return AE_ERROR;
--}
--
--static acpi_status
- count_resource(struct acpi_resource *acpi_res, void *data)
- {
-     struct pci_root_info *info = data;
--    struct acpi_resource_address64 addr;
--    acpi_status status;
-+    struct resource res;
-
--    status = resource_to_addr(acpi_res, &addr);
--    if (ACPI_SUCCESS(status))
-+    if (acpi_dev_resource_address_space(acpi_res, &res)
-+        || acpi_dev_resource_memory(acpi_res, &res))
-         info->res_num++;
 +
-     return AE_OK;
++struct vfio_pci_fill_info {
++	int max;
++	int cur;
++	struct vfio_pci_dependent_device *devices;
++};
++
++static int vfio_pci_fill_devs(struct pci_dev *pdev, void *data)
++{
++	struct vfio_pci_walk_info *walk = data;
++	struct vfio_pci_fill_info *fill = walk->data;
++	struct iommu_group *iommu_group;
++
++	if (fill->cur == fill->max) {
++		walk->ret = -EAGAIN; /* Something changed, try again */
++		return walk->ret;
++	}
++
++	iommu_group = iommu_group_get(&pdev->dev);
++	if (!iommu_group) {
++		walk->ret = -EPERM; /* Cannot reset non-isolated devices */
++		return walk->ret;
++	}
++
++	fill->devices[fill->cur].group_id = iommu_group_id(iommu_group);
++	fill->devices[fill->cur].segment = pci_domain_nr(pdev->bus);
++	fill->devices[fill->cur].bus = pdev->bus->number;
++	fill->devices[fill->cur].devfn = pdev->devfn;
++	fill->cur++;
++	iommu_group_put(iommu_group);
++	return walk->ret;
++}
++
++struct vfio_pci_group_entry {
++	struct vfio_group *group;
++	int id;
++};
++
++struct vfio_pci_group_info {
++	int count;
++	struct vfio_pci_group_entry *groups;
++};
++
++static int vfio_pci_validate_devs(struct pci_dev *pdev, void *data)
++{
++	struct vfio_pci_walk_info *walk = data;
++	struct vfio_pci_group_info *info = walk->data;
++	struct iommu_group *group;
++	int id, i;
++
++	group = iommu_group_get(&pdev->dev);
++	if (!group) {
++		walk->ret = -EPERM;
++		return walk->ret;
++	}
++
++	id = iommu_group_id(group);
++
++	for (i = 0; i < info->count; i++)
++		if (info->groups[i].id == id)
++			break;
++
++	iommu_group_put(group);
++
++	if (i == info->count)
++		walk->ret = -EINVAL;
++
++	return walk->ret;
++}
++
++static int vfio_pci_for_each_slot_or_bus(struct pci_dev *pdev,
++					 int (*fn)(struct pci_dev *,
++						   void *data), void *data,
++					 bool slot)
++{
++	struct vfio_pci_walk_info info = { .ret = 0, .data = data };
++
++	if (slot)
++		pci_walk_slot(pdev->slot, fn, &info);
++	else
++		pci_walk_bus(pdev->bus, fn, &info);
++
++	return info.ret;
++}
++
+ static long vfio_pci_ioctl(void *device_data,
+ 			   unsigned int cmd, unsigned long arg)
+ {
+@@ -407,10 +506,189 @@ static long vfio_pci_ioctl(void *device_data,
+ 
+ 		return ret;
+ 
+-	} else if (cmd == VFIO_DEVICE_RESET)
++	} else if (cmd == VFIO_DEVICE_RESET) {
+ 		return vdev->reset_works ?
+ 			pci_reset_function(vdev->pdev) : -EINVAL;
+ 
++	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
++		struct vfio_pci_hot_reset_info hdr;
++		struct vfio_pci_fill_info fill = { 0 };
++		struct vfio_pci_dependent_device *devices = NULL;
++		bool slot = false;
++		int ret = 0;
++
++		minsz = offsetofend(struct vfio_pci_hot_reset_info, count);
++
++		if (copy_from_user(&hdr, (void __user *)arg, minsz))
++			return -EFAULT;
++
++		if (hdr.argsz < minsz)
++			return -EINVAL;
++
++		hdr.flags = 0;
++
++		/* Can we do a slot or bus reset or neither? */
++		if (!pci_probe_reset_slot(vdev->pdev->slot))
++			slot = true;
++		else if (pci_probe_reset_bus(vdev->pdev->bus))
++			return -ENODEV;
++
++		/* How many devices are affected? */
++		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
++						    vfio_pci_count_devs,
++						    &fill.max, slot);
++		if (ret)
++			return ret;
++
++		WARN_ON(!fill.max); /* Should always be at least one */
++
++		/*
++		 * If there's enough space, fill it now, otherwise return
++		 * -ENOSPC and the number of devices affected.
++		 */
++		if (hdr.argsz < sizeof(hdr) + (fill.max * sizeof(*devices))) {
++			ret = -ENOSPC;
++			hdr.count = fill.max;
++			goto reset_info_exit;
++		}
++
++		devices = kcalloc(fill.max, sizeof(*devices), GFP_KERNEL);
++		if (!devices)
++			return -ENOMEM;
++
++		fill.devices = devices;
++
++		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
++						    vfio_pci_fill_devs,
++						    &fill, slot);
++
++		/*
++		 * If a device was removed between counting and filling,
++		 * we may come up short of fill.max.  If a device was
++		 * added, we'll have a return of -EAGAIN above.
++		 */
++		if (!ret)
++			hdr.count = fill.cur;
++
++reset_info_exit:
++		if (copy_to_user((void __user *)arg, &hdr, minsz))
++			ret = -EFAULT;
++
++		if (!ret) {
++			if (copy_to_user((void __user *)(arg + minsz), devices,
++					 hdr.count * sizeof(*devices)))
++				ret = -EFAULT;
++		}
++
++		kfree(devices);
++		return ret;
++
++	} else if (cmd == VFIO_DEVICE_PCI_HOT_RESET) {
++		struct vfio_pci_hot_reset hdr;
++		int32_t *group_fds;
++		struct vfio_pci_group_entry *groups;
++		struct vfio_pci_group_info info;
++		bool slot = false;
++		int i, count = 0, ret = 0;
++
++		minsz = offsetofend(struct vfio_pci_hot_reset, count);
++
++		if (copy_from_user(&hdr, (void __user *)arg, minsz))
++			return -EFAULT;
++
++		if (hdr.argsz < minsz || hdr.flags)
++			return -EINVAL;
++
++		/* Can we do a slot or bus reset or neither? */
++		if (!pci_probe_reset_slot(vdev->pdev->slot))
++			slot = true;
++		else if (pci_probe_reset_bus(vdev->pdev->bus))
++			return -ENODEV;
++
++		/*
++		 * We can't let userspace give us an arbitrarily large
++		 * buffer to copy, so verify how many we think there
++		 * could be.  Note groups can have multiple devices so
++		 * one group per device is the max.
++		 */
++		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
++						    vfio_pci_count_devs,
++						    &count, slot);
++		if (ret)
++			return ret;
++
++		/* Somewhere between 1 and count is OK */
++		if (!hdr.count || hdr.count > count)
++			return -EINVAL;
++
++		group_fds = kcalloc(hdr.count, sizeof(*group_fds), GFP_KERNEL);
++		groups = kcalloc(hdr.count, sizeof(*groups), GFP_KERNEL);
++		if (!group_fds || !groups) {
++			kfree(group_fds);
++			kfree(groups);
++			return -ENOMEM;
++		}
++
++		if (copy_from_user(group_fds, (void __user *)(arg + minsz),
++				   hdr.count * sizeof(*group_fds))) {
++			kfree(group_fds);
++			kfree(groups);
++			return -EFAULT;
++		}
++
++		/*
++		 * For each group_fd, get the group through the vfio external
++		 * user interface and store the group and iommu ID.  This
++		 * ensures the group is held across the reset.
++		 */
++		for (i = 0; i < hdr.count; i++) {
++			struct vfio_group *group;
++			struct fd f = fdget(group_fds[i]);
++			if (!f.file) {
++				ret = -EBADF;
++				break;
++			}
++
++			group = vfio_group_get_external_user(f.file);
++			fdput(f);
++			if (IS_ERR(group)) {
++				ret = PTR_ERR(group);
++				break;
++			}
++
++			groups[i].group = group;
++			groups[i].id = vfio_external_user_iommu_id(group);
++		}
++
++		kfree(group_fds);
++
++		/* release reference to groups on error */
++		if (ret)
++			goto hot_reset_release;
++
++		info.count = hdr.count;
++		info.groups = groups;
++
++		/*
++		 * Test whether all the affected devices are contained
++		 * by the set of groups provided by the user.
++		 */
++		ret = vfio_pci_for_each_slot_or_bus(vdev->pdev,
++						    vfio_pci_validate_devs,
++						    &info, slot);
++		if (!ret)
++			/* User has access, do the reset */
++			ret = slot ? pci_reset_slot(vdev->pdev->slot) :
++				     pci_reset_bus(vdev->pdev->bus);
++
++hot_reset_release:
++		for (i--; i >= 0; i--)
++			vfio_group_put_external_user(groups[i].group);
++
++		kfree(groups);
++		return ret;
++	}
++
+ 	return -ENOTTY;
  }
-
-@@ -282,27 +235,18 @@ static acpi_status
- setup_resource(struct acpi_resource *acpi_res, void *data)
- {
-     struct pci_root_info *info = data;
--    struct resource *res;
-+    struct resource *res = &info->res[info->res_num];
-     struct acpi_resource_address64 addr;
--    acpi_status status;
--    unsigned long flags;
-     u64 start, orig_end, end;
-
--    status = resource_to_addr(acpi_res, &addr);
--    if (!ACPI_SUCCESS(status))
--        return AE_OK;
-+    memset(&addr, 0x00, sizeof(addr));
-
--    if (addr.resource_type == ACPI_MEMORY_RANGE) {
--        flags = IORESOURCE_MEM;
--        if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
--            flags |= IORESOURCE_PREFETCH;
--    } else if (addr.resource_type == ACPI_IO_RANGE) {
--        flags = IORESOURCE_IO;
--    } else
-+    if (!(acpi_dev_resource_address_space_with_addr(acpi_res, &addr, res)
-+        || acpi_dev_resource_memory(acpi_res, res)))
-         return AE_OK;
-
--    start = addr.minimum + addr.translation_offset;
--    orig_end = end = addr.maximum + addr.translation_offset;
-+    start = res->start;
-+    orig_end = end = res->end;
-
-     /* Exclude non-addressable range or non-addressable portion of range */
-     end = min(end, (u64)iomem_resource.end);
-@@ -310,6 +254,7 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
-         dev_info(&info->bridge->dev,
-             "host bridge window [%#llx-%#llx] "
-             "(ignored, not CPU addressable)\n", start, orig_end);
-+        memset(&info->res[info->res_num], 0x00, sizeof(*res));
-         return AE_OK;
-     } else if (orig_end != end) {
-         dev_info(&info->bridge->dev,
-@@ -318,11 +263,9 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
-             start, orig_end, end + 1, orig_end);
-     }
-
--    res = &info->res[info->res_num];
-     res->name = info->name;
--    res->flags = flags;
--    res->start = start;
-     res->end = end;
+ 
+diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+index 916e444..0fd47f5 100644
+--- a/include/uapi/linux/vfio.h
++++ b/include/uapi/linux/vfio.h
+@@ -324,6 +324,44 @@ enum {
+ 	VFIO_PCI_NUM_IRQS
+ };
+ 
++/**
++ * VFIO_DEVICE_GET_PCI_HOT_RESET_INFO - _IORW(VFIO_TYPE, VFIO_BASE + 12,
++ *					      struct vfio_pci_hot_reset_info)
++ *
++ * Return: 0 on success, -errno on failure:
++ *	-enospc = insufficient buffer, -enodev = unsupported for device.
++ */
++struct vfio_pci_dependent_device {
++	__u32	group_id;
++	__u16	segment;
++	__u8	bus;
++	__u8	devfn; /* Use PCI_SLOT/PCI_FUNC */
++};
 +
-     info->res_offset[info->res_num] = addr.translation_offset;
-     info->res_num++;
++struct vfio_pci_hot_reset_info {
++	__u32	argsz;
++	__u32	flags;
++	__u32	count;
++	struct vfio_pci_dependent_device	devices[];
++};
++
++#define VFIO_DEVICE_GET_PCI_HOT_RESET_INFO	_IO(VFIO_TYPE, VFIO_BASE + 12)
++
++/**
++ * VFIO_DEVICE_PCI_HOT_RESET - _IOW(VFIO_TYPE, VFIO_BASE + 13,
++ *				    struct vfio_pci_hot_reset)
++ *
++ * Return: 0 on success, -errno on failure.
++ */
++struct vfio_pci_hot_reset {
++	__u32	argsz;
++	__u32	flags;
++	__u32	count;
++	__s32	group_fds[];
++};
++
++#define VFIO_DEVICE_PCI_HOT_RESET	_IO(VFIO_TYPE, VFIO_BASE + 13)
++
+ /* -------- API for Type1 VFIO IOMMU -------- */
+ 
+ /**
 
-
-
--- 
-Best regards
-Tianyu Lan
