@@ -1,60 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3142 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754618Ab3HYLV5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Aug 2013 07:21:57 -0400
-From: "Yuval Mintz" <yuvalmin@broadcom.com>
-To: "jacob.e.keller@intel.com" <jacob.e.keller@intel.com>
-cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: pcie_get_minimum_link returns 0 width
-Date: Sun, 25 Aug 2013 11:21:38 +0000
-Message-ID: <979A8436335E3744ADCD3A9F2A2B68A52AD136BE@SJEXCHMB10.corp.ad.broadcom.com>
-References: <20130825100157.GA16500@lb-tlvb-yuvalmin.il.broadcom.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:31089 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750967Ab3HTMXe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 08:23:34 -0400
+Message-ID: <52135FB3.3090700@huawei.com>
+Date: Tue, 20 Aug 2013 20:23:15 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH v5 1/2] PCI: fix the only slot identification in pcie_find_smpss()
+References: <1376533135-36708-1-git-send-email-wangyijing@huawei.com> <1376533135-36708-2-git-send-email-wangyijing@huawei.com> <20130816221716.GA25780@google.com> <521187A5.6030002@huawei.com> <CAPoiz9zpovgcnx=DG-g4v7VpA17H5P2EYv1spm7TGLOwO6zYCQ@mail.gmail.com> <CAErSpo7kxfJDrm1QwNrGd4onfKBzUW+jVV-8p14i1yJqkMFobg@mail.gmail.com> <CAErSpo7tf+9NUGT2U5WBcQUtZb9=ZT_4wAjxzhiiWh9n_KEbAA@mail.gmail.com> <CAPoiz9wMo+sr1EWp+fPdwKTBoJpQGjZg-dASRMHAtvPBE+G4Eg@mail.gmail.com> <5212DA84.6070409@huawei.com> <20130820044416.GA22188@google.com>
+In-Reply-To: <20130820044416.GA22188@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+>> 3.                              (hotplug bridge)
+>> root port ----Upstream port---->Downstream port A -------->[slot]
+>> 				 |
+>> 				 |Downstream port B -------->[slot]  ?
+>>
+>> This topo is common, but DP A is not directly connected to root
+>> port, so the original patch can not cover this case. 
+> 
+> This is a very good observation: only Root Ports and Downstream
+> Ports can have slots.  That means the following existing code:
+> 
+>     if (dev->is_hotplug_bridge &&
+>         ((dev->bus->self &&
+>           pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)))
+> 
+> doesn't make sense.  "dev->bus->self" is the bridge immediately
+> upstream from "dev".  If "dev" is a Port with a slot, it must be
+> either a Root Port or a Downstream Port.  A Root Port *has* no
+> upstream bridge, and the bridge immediately upstream from a
+> Downstream Port is always an Upstream Port.
+> 
+> So we should just write this instead:
+> 
+>     if (dev->is_hotplug_bridge &&
+>         pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM)))
+>             *smpss = 0;
+> 
+> That means we'll set MPS=128 for Downstream Ports leading to
+> slots, which is safe for anything we can plug in.
 
-I tried adding support for the newly added 'pcie_get_minimum_link' into the
-bnx2x driver, but found out the some of my devices started showing width x0.
+I agree, Jon, what do you think?
+And I test this code in my machine, result is ok.
 
-By adding debug prints, I've found out there were devices up the chain that
-Showed 0 when their PCI_EXP_LNKSTA was read by said function.
-However, when I tried looking via lspci the output claimed the width was x4.
 
-lspci -vt output:
-[0000:00]-+-00.0  Intel Corporation 5000P Chipset Memory Controller Hub
-	     +-02.0-[09-12]--+-00.0-[0a-11]--+-00.0-[0b-0d]--
-					     +-01.0-[0e-10]--+-00.0  Broadcom
-					Corporation NetXtreme II BCM57710
-					10-Gigabit PCIe [Everest]
+pcieport 0000:40:07.0: PCI-E Max Payload Size set to  256/ 256 (was  256), Max Read Rq  128
+pci 0000:46:00.0: PCI-E Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512
+pci 0000:46:00.1: PCI-E Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512
+pcieport 0000:40:07.0: PCI-E Max Payload Size set to  256/ 256 (was  256), Max Read Rq  128
+pci 0000:46:00.0: PCI-E Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512
+pci 0000:46:00.1: PCI-E Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512
 
-Where:
-00:02.0 PCI bridge: Intel Corporation 5000 Series Chipset PCI Express x4 Port
-2 (rev 93)
-09:00.0 PCI bridge: Intel Corporation 6311ESB/6321ESB PCI Express Upstream
-Port (rev 01)
-0a:01.0 PCI bridge: Intel Corporation 6311ESB/6321ESB PCI Express
-Downstream Port E2 (rev 01)
-0e:00.0 Ethernet controller: Broadcom Corporation NetXtreme II BCM57710
-10-Gigabit PCIe [Everest] (rev 01)
+> 
+> Apparently we don't enforce MPS=128 for Root Ports because we
+> assume either (a) there is no peer-to-peer traffic, or (b)
+> peer-to-peer traffic is not routed between Root Ports.  I don't
+> know if those are valid assumptions, but you're not changing
+> anything there, so I guess we can keep them.
+> 
+> I don't think we should look at the dev->bus->devices list at all
+> because that only applies to the current configuration and
+> doesn't account for any future hot-plugs.
 
-The output for "lspci -vvvv | grep LnkSta for all four is:
-LnkSta:	Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt-
-ABWMgmt-
+I think so.
 
-But added prints inside the function's loop show:
-LnkSta 1041 [000e:00.00]
-LnkSta 0000 [000a:01.00]
-LnkSta 0000 [0009:00.00]
-LnkSta 3041 [0000:02.00]
-(PCI_EXP_LNKSTA value, bus->number, PCI_SLOT, PCI_FUNC)
+If Jon agree too , I will update this patch.
 
-Thanks,
-Yuval
+>  
+>> If DP B is
+>> not exist. there is only one Downstream port A, like:
+> 
+>>
+>>                                (hotplug bridge)
+>> root port ----Upstream port--->Downstream port A -------->[slot]
+>>
+>> In this case, we can also configure mps after a pcie card
+>> inserted into slot, because although the system is running,
+>> because root port UP port DP port A and slot are not running.
+>> But this case is rare.
+> 
+>> So, Jon, does your original patch want to cover the case 1 or case 2 ?
+>> For case 1, we can remove the list_is_singular() check.
+>> For case 2, do you have some example hardware platform ?
+>> Or there are other pcie topos not exist here?
+>>
+>> Thanks!
+>> Yijing.
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
