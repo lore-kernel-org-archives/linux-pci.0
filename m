@@ -1,103 +1,30 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v5 9/9] pci: Remove aer_do_secondary_bus_reset()
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
-	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Thu, 08 Aug 2013 14:10:20 -0600
-Message-ID: <20130808201020.2932.24022.stgit@bling.home>
-In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
-References: <20130808200444.2932.17381.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:31931 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751133Ab3HTA2B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 20:28:01 -0400
+From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+To: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<dougthompson@xmission.com>, <bp@alien8.de>, <bhelgaas@google.com>,
+	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Subject: [PATCH 0/1] AMD64_EDAC: Fix incorrect wrap arounds due to left shift beyond 32 bits. 
+Date: Mon, 19 Aug 2013 19:27:51 -0500
+Message-ID: <1376958472-2150-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-One PCI bus reset function to rule them all.
+Aravind Gopalakrishnan (1):
+  AMD64_EDAC: Fix incorrect wrap arounds due to left shift beyond 32
+    bits.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pcie/aer/aerdrv.c      |    2 +-
- drivers/pci/pcie/aer/aerdrv.h      |    1 -
- drivers/pci/pcie/aer/aerdrv_core.c |   35 +----------------------------------
- 3 files changed, 2 insertions(+), 36 deletions(-)
+ drivers/edac/amd64_edac.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 76ef634..0bf82a2 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -352,7 +352,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
- 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
- 
--	aer_do_secondary_bus_reset(dev);
-+	pci_reset_bridge_secondary_bus(dev);
- 	dev_printk(KERN_DEBUG, &dev->dev, "Root Port link has been reset\n");
- 
- 	/* Clear Root Error Status */
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index 90ea3e8..84420b7 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -106,7 +106,6 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
- }
- 
- extern struct bus_type pcie_port_bus_type;
--void aer_do_secondary_bus_reset(struct pci_dev *dev);
- int aer_init(struct pcie_device *dev);
- void aer_isr(struct work_struct *work);
- void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 8b68ae5..85ca36f 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -367,39 +367,6 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- }
- 
- /**
-- * aer_do_secondary_bus_reset - perform secondary bus reset
-- * @dev: pointer to bridge's pci_dev data structure
-- *
-- * Invoked when performing link reset at Root Port or Downstream Port.
-- */
--void aer_do_secondary_bus_reset(struct pci_dev *dev)
--{
--	u16 p2p_ctrl;
--
--	/* Assert Secondary Bus Reset */
--	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &p2p_ctrl);
--	p2p_ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
--	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
--
--	/*
--	 * we should send hot reset message for 2ms to allow it time to
--	 * propagate to all downstream ports
--	 */
--	msleep(2);
--
--	/* De-assert Secondary Bus Reset */
--	p2p_ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
--	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
--
--	/*
--	 * System software must wait for at least 100ms from the end
--	 * of a reset of one or more device before it is permitted
--	 * to issue Configuration Requests to those devices.
--	 */
--	msleep(200);
--}
--
--/**
-  * default_reset_link - default reset function
-  * @dev: pointer to pci_dev data structure
-  *
-@@ -408,7 +375,7 @@ void aer_do_secondary_bus_reset(struct pci_dev *dev)
-  */
- static pci_ers_result_t default_reset_link(struct pci_dev *dev)
- {
--	aer_do_secondary_bus_reset(dev);
-+	pci_reset_bridge_secondary_bus(dev);
- 	dev_printk(KERN_DEBUG, &dev->dev, "downstream link has been reset\n");
- 	return PCI_ERS_RESULT_RECOVERED;
- }
+-- 
+1.7.10.4
+
 
