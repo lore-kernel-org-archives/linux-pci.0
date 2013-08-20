@@ -1,58 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:42799 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300Ab3H2HXM convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:5:2>);
-	Thu, 29 Aug 2013 03:23:12 -0400
-Message-Id: <521F12FC02000078000EF503@nat28.tlf.novell.com>
-Date: Thu, 29 Aug 2013 08:23:08 +0100
-From: "Jan Beulich" <JBeulich@suse.com>
-To: <zhenzhong.duan@oracle.com>
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>,
-	"xen-devel" <xen-devel@lists.xenproject.org>,
-	"Feng Jin" <joe.jin@oracle.com>,
-	"Sucheta Chakraborty" <sucheta.chakraborty@qlogic.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Xen-devel] [PATCH 2/3 v3] Refactor MSI restore call-chain
- to drop unnecessary argument
-References: <521EB76B.8090903@oracle.com>
-In-Reply-To: <521EB76B.8090903@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 20 Aug 2013 11:13:14 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Thierry Reding <thierry.reding@gmail.com>
+cc: Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
+ devm_ioremap_resource
+In-Reply-To: <20130819193339.GB4961@mithrandir>
+Message-ID: <alpine.DEB.2.02.1308201112400.2269@hadrien>
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr> <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr> <20130819120249.GA5740@ulmo> <alpine.DEB.2.02.1308191405450.2313@hadrien> <20130819121238.GB5740@ulmo> <alpine.DEB.2.02.1308191414360.2313@hadrien>
+ <20130819193339.GB4961@mithrandir>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 29.08.13 at 04:52, Zhenzhong Duan <zhenzhong.duan@oracle.com> wrote:
-> But in initial domain (aka priviliged guest), it's different.
-> Driver init call graph under initial domain:
-> driver_init->
->     msix_capability_init->
->         msix_program_entries->
->             msix_mask_irq->
->                 entry->masked = 1
->     request_irq->
->         __setup_irq->
->             irq_startup->
->                 __startup_pirq->
->                     EVTCHNOP_bind_pirq hypercall    (trap into Xen)
-> [Xen:]
-> pirq_guest_bind->
->     startup_msi_irq->
->         unmask_msi_irq->
->             msi_set_mask_bit->
->                 entry->msi_attrib.masked = 0
-> 
-> So entry->msi_attrib.masked in xen side always has newest value. entry->masked
-> in initial domain is untouched and is 1 after msix_capability_init.
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-And as said several times before - Linux shouldn't be touching
-the MSI-X table at all during initial setup or resume (it should in
-particular not rely on such accesses to not fault, as being a
-privilege violation); all it needs to do is update its software state.
+Use devm_ioremap_resource instead of devm_request_and_ioremap.
 
-Hence fiddling with default_restore_msi_irqs() seems the wrong
-approach towards solving the problem.
+This was done using the semantic patch
+scripts/coccinelle/api/devm_ioremap_resource.cocci
 
-Jan
+Error-handling code was manually removed from the associated calls to
+platform_get_resource.
 
+Adjust the comment at the third platform_get_resource_byname to make clear
+why ioremap is not done at this point.
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Acked-by: Thierry Reding <thierry.reding@gmail.com>
+Tested-by: Thierry Reding <thierry.reding@gmail.com>
+
+---
+v2: add the change to the comment
+
+ drivers/pci/host/pci-tegra.c |   31 ++++++++++---------------------
+ 1 file changed, 10 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 7356741..2e9888a 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1031,32 +1031,21 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 		return err;
+ 	}
+
+-	/* request and remap controller registers */
+ 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
+-	if (!pads) {
+-		err = -EADDRNOTAVAIL;
++	pcie->pads = devm_ioremap_resource(&pdev->dev, pads);
++	if (IS_ERR(pcie->pads)) {
++		err = PTR_ERR(pcie->pads);
+ 		goto poweroff;
+ 	}
+
+ 	afi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "afi");
+-	if (!afi) {
+-		err = -EADDRNOTAVAIL;
+-		goto poweroff;
+-	}
+-
+-	pcie->pads = devm_request_and_ioremap(&pdev->dev, pads);
+-	if (!pcie->pads) {
+-		err = -EADDRNOTAVAIL;
+-		goto poweroff;
+-	}
+-
+-	pcie->afi = devm_request_and_ioremap(&pdev->dev, afi);
+-	if (!pcie->afi) {
+-		err = -EADDRNOTAVAIL;
++	pcie->afi = devm_ioremap_resource(&pdev->dev, afi);
++	if (IS_ERR(pcie->afi)) {
++		err = PTR_ERR(pcie->afi);
+ 		goto poweroff;
+ 	}
+
+-	/* request and remap configuration space */
++	/* request configuration space, but remap later, on demand */
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cs");
+ 	if (!res) {
+ 		err = -EADDRNOTAVAIL;
+@@ -1492,9 +1481,9 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ 		rp->lanes = value;
+ 		rp->pcie = pcie;
+
+-		rp->base = devm_request_and_ioremap(pcie->dev, &rp->regs);
+-		if (!rp->base)
+-			return -EADDRNOTAVAIL;
++		rp->base = devm_ioremap_resource(pcie->dev, &rp->regs);
++		if (IS_ERR(rp->base))
++			return PTR_ERR(rp->base);
+
+ 		list_add_tail(&rp->list, &pcie->ports);
+ 	}
