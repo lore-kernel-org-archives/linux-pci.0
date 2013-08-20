@@ -1,40 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <520A16BD.30201@linux.vnet.ibm.com>
-Date: Tue, 13 Aug 2013 16:51:33 +0530
-From: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:46994 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266Ab3HTXhh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 19:37:37 -0400
+Received: by mail-oa0-f52.google.com with SMTP id n12so2197081oag.11
+        for <linux-pci@vger.kernel.org>; Tue, 20 Aug 2013 16:37:37 -0700 (PDT)
 MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: Mauro Carvalho Chehab <m.chehab@samsung.com>, tony.luck@intel.com,
-	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
-	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
- event
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com> <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic> <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com> <20130812125343.GE18018@pd.tnic>
-In-Reply-To: <20130812125343.GE18018@pd.tnic>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAErSpo4E9LNrfqTq1_WUoAx68_krw23BjSYbPpJPOr=zbq98xA@mail.gmail.com>
+References: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
+ <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
+ <CAErSpo5AiRw7HvGQMq-n596ZkHJs_KJNn346yf+jc7yti-xpUw@mail.gmail.com> <CAErSpo4E9LNrfqTq1_WUoAx68_krw23BjSYbPpJPOr=zbq98xA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 20 Aug 2013 17:37:17 -0600
+Message-ID: <CAErSpo6Ky1FQeRjjbhja2KC7EYGJ2nR1ZNuYjYi89DoqLse2cw@mail.gmail.com>
+Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
+ to PF Nacked" messages
+To: "Skidmore, Donald C" <donald.c.skidmore@intel.com>
+Cc: "e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/12/2013 06:23 PM, Borislav Petkov wrote:
-> On Mon, Aug 12, 2013 at 06:11:49PM +0530, Naveen N. Rao wrote:
->> So, I looked at ghes_edac and it basically seems to boil down to
->> trace_mc_event. But, this only seems to expose the APEI data as a
->> string and doesn't look to really make all the fields available to
->> user-space in a raw manner. Not sure how well this can be utilised
->> by a user-space tool.
->
-> Well, your tracepoint dumps the decoded memory error too. So all the
-> information we need is already there, without edac. Or am I missing some
-> bits?
->
-> Thus why I'm saying is that we don't need the additional edac layer.
->
+On Tue, Aug 20, 2013 at 5:08 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Aug 13, 2013 at 8:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-You're right - my trace point makes all the data provided by apei as-is 
-to userspace. However, ghes_edac seems to squash some of this data into 
-a string when reporting through mc_event.
+>> I played with this a little more and found this:
+>>
+>> 1) Magma card in z420, connected to chassis containing X540: fails
+>> (original report)
+>> 2) X540 in z420, Magma card in z420, connected to empty chassis: fails
+>> 3) X540 in z420, Magma card in z420 but no cable to chassis: works
 
-Regards,
-Naveen
+For what it's worth, I tried config 3 again with v3.11-rc6, and it
+failed the same way.  I haven't bothered with config 2.  It's not 100%
+reproducible, but at least it doesn't seem related to the expansion
+chassis.
 
+I attached the logs from config 3 to
+https://bugzilla.kernel.org/show_bug.cgi?id=60776
+
+Bjorn
