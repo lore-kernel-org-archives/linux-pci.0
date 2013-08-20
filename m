@@ -1,81 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:53722 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753672Ab3HBSm0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 14:42:26 -0400
-Message-ID: <1375468943.1460.4.camel@x61.thuisdomein>
-Subject: Re: [PATCH -v4 6/6] PCI,pciehp: identify device change during
- suspend
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Date: Fri, 02 Aug 2013 20:42:23 +0200
-In-Reply-To: <1375362389-26096-7-git-send-email-wangyijing@huawei.com>
-References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>
-	 <1375362389-26096-7-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1377036123.10300.475.camel@misato.fc.hp.com>
+Subject: Re: [PATCH] ACPI / PM: Hold acpi_scan_lock over system PM
+ transitions
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Date: Tue, 20 Aug 2013 16:02:03 -0600
+In-Reply-To: <2852781.TfChGuuEkJ@vostro.rjw.lan>
+References: <2852781.TfChGuuEkJ@vostro.rjw.lan>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yijing,
+On Tue, 2013-08-20 at 01:47 +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Bad things happen if ACPI hotplug events are handled during system
+> PM transitions, especially if devices are removed as a result.
+> To prevent those bad things from happening, acquire acpi_scan_lock
+> when a transition is started and release it when that transition
+> is complete or has been aborted.
+> 
+> This fixes resume lockup on my test-bed Acer Aspire S5 that happens
+> when Thunderbolt devices are disconnected from the machine while
+> suspended.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Thu, 2013-08-01 at 21:06 +0800, Yijing Wang wrote:
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 7fe9dbd..db5f597 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> [...]
-> @@ -315,10 +317,36 @@ static int pciehp_resume (struct pcie_device *dev)
->  	if (status) {
->  		if (list_empty(&pbus->devices))
->  			pciehp_enable_slot(slot);
-> -	} else if (!list_empty(&pbus->devices)) {
-> -		pciehp_disable_slot(slot);
-> +
-> +		pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
-> +		if (!pdev)
-> +			return 0;
-> +		ret = pci_serial_number_changed(pdev);
-> +		pci_dev_put(pdev);
-> +		if (ret) {
-> +			/*
-> +			 * first power off slot, avoid the old driver
-> +			 * .remove() method touch the new hardware
-> +			 */
-> +			if (POWER_CTRL(ctrl)) {
-> +				ret = pciehp_power_off_slot(slot);
-> +				if (ret) {
-> +					ctrl_err(ctrl,
-> +						"Issue of Slot Disable command failed\n");
-> +					return 0;
-> +				}
-> +				msleep(1000);
-> +				pciehp_unconfigure_device(slot);
-> +				/* call child devices driver->suspend() for symmetry */
-> +				list_for_each_entry(pdev, &pbus->devices, bus_list)
-> +					if (pdev->driver)
-> +						pdev->driver->driver.pm->suspend(&pdev->dev);
-> +				pciehp_enable_slot(slot);
-> +			}
-> +		} else if (!list_empty(&pbus->devices)) {
-> +			pciehp_disable_slot(slot);
-> +		}
->  	}
-> -	
+The change looks good to me.
 
-I ran into a problem with this change. This line, removing a line
-consisting of only a single tab, appears to conflict with a patch
-earlier in this series. I had to manually remove just the change that
-removed that line to get this patch to apply. Any idea what's going on?
+Acked-by: Toshi Kani <toshi.kani@hp.com>
 
->  	return 0;
->  }
->  #endif /* PM */
+Thanks,
+-Toshi
 
-
-Paul Bolle
 
