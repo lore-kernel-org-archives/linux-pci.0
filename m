@@ -1,110 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.bemta14.messagelabs.com ([193.109.254.105]:57953 "EHLO
-	mail1.bemta14.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754914Ab3H2PHc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 11:07:32 -0400
-Date: Thu, 29 Aug 2013 17:07:23 +0200
-From: Johannes Thumshirn <johannes.thumshirn@men.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Johannes Thumshirn <johannes.thumshirn@men.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: PCI reset problem
-Message-ID: <20130829150723.GA32730@jtlinux>
-References: <20130828133337.GA8544@jtlinux>
- <CAErSpo5sa2cJXOUhfe5VDzxwabf0Um42ZfBwOMhF1TbwCW9G=w@mail.gmail.com>
- <20130829082941.GA11203@jtlinux>
- <CAErSpo56RszdMQDOY8xCmz=1QP-osUGA71V56t9X9zY4rNAYew@mail.gmail.com>
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:43546 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752413Ab3HUXjK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 19:39:10 -0400
+Received: by mail-oa0-f53.google.com with SMTP id k18so2241498oag.12
+        for <linux-pci@vger.kernel.org>; Wed, 21 Aug 2013 16:39:09 -0700 (PDT)
+Subject: [PATCH v7 0/5] Update device MPS
+To: Yijing Wang <wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+	jiang.liu@huawei.com, Hanjun Guo <guohanjun@huawei.com>
+Date: Wed, 21 Aug 2013 17:39:07 -0600
+Message-ID: <20130821233722.2300.81773.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAErSpo56RszdMQDOY8xCmz=1QP-osUGA71V56t9X9zY4rNAYew@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 29, 2013 at 06:01:43AM -0600, Bjorn Helgaas wrote:
-> On Thu, Aug 29, 2013 at 2:29 AM, Johannes Thumshirn
-> <johannes.thumshirn@men.de> wrote:
-> > On Wed, Aug 28, 2013 at 10:50:58AM -0600, Bjorn Helgaas wrote:
-> >> [+cc Yinghai]
-> >>
-> >> On Wed, Aug 28, 2013 at 7:33 AM, Johannes Thumshirn
-> >> <johannes.thumshirn@men.de> wrote:
-> >> > Hi List,
-> >> >
-> >> > I have a rather odd problem with a PCIe swicht/bridge which does not get
-> >> > enumerated correctly. If I issue _two_ manual rescans of the PCI bus via sysfs,
-> >> > everything get setup correctly. To work around the problem I decided to make a
-> >> > platform specific PCI quirk (for the embedded system I'm on, to not break
-> >> > anything else) and issue the pci_rescan_bus() myself as a "final" fixup. However
-> >> > this does not have any effect at all.
-> >> >
-> >> > Does anyone have an idea what I could do wrong?
-> >>
-> >> A rescan doesn't really do anything differently from the initial
-> >> boot-time scan.  Maybe there's an issue with the switch taking a long
-> >> time to respond after reset?  But that doesn't seem likely, because if
-> >> you do manual rescans via sysfs, that should give plenty of time and
-> >> you wouldn't have to do it *twice*.
-> >>
-> >> Maybe there's some resource or bus number allocation issue such that
-> >> we don't even get down to the problem switch the first couple of
-> >> times?
-> >>
-> >> > Example:
-> >> > root@generic-powerpc:~# lspci -tv
-> >> > -[0000:00]---00.0-[01]--
-> >> > root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
-> >> > [...]
-> >> > root@generic-powerpc:~# lspci -tv
-> >> > -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]--
-> >> >                                            +-02.0-[04]--
-> >> >                                            \-03.0-[05]--
-> >> > root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
-> >> > [...]
-> >> > root@generic-powerpc:~# lspci -tv
-> >> > -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]----00.0  Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
-> >> >                                            +-02.0-[04]--
-> >> >                                            \-03.0-[05]--+-00.0  Pericom Semiconductor Device 400e
-> >> >                                                         +-00.1  Pericom Semiconductor Device 400e
-> >> >                                                         \-00.2  Pericom Semiconductor Device 400f
-> >>
-> >> I bet that's what's happening: the first lspci shows the 00:00.0
-> >> bridge leading only to bus 01.  The second lspci shows 00:00.0 leading
-> >> to [bus 01-05], so its bus number aperture has been reconfigured.
-> >>
-> >> On x86 the BIOS typically configures all the bridges so we can see all
-> >> the devices.  But it looks like your platform doesn't, and the Linux
-> >> paths that do similar configuration are not as well exercised.
-> >>
-> >
-> > I'll have a look into my U-Boot again as well, maybe I can resolve it there.
-> >
-> >> Can you collect a complete dmesg log including initial boot and your
-> >> manual sysfs rescansand attach it to a new bugzilla report at
-> >> https://bugzilla.kernel.org/enter_bug.cgi?component=PCI&product=Drivers
-> >> ?  There might be some generic way we can fix this.
-> >>
-> >
-> > I can do, though I have to say, it's a 3.8 Kernel from Freescale's SDK. I
-> > don't really know if mainline wants to care about it.
->
-> I don't think much has changed in this area since then, so I think
-> this issue is still relevant.
->
-> On x86 there's a boot command option "pci=assign-busses".  I don't
-> think the boot option is implemented for other arches, so you'll
-> probably have to change the source to accomplish the same thing.  Take
-> a look at pcibios_assign_all_busses() for your platform.  If it
-> doesn't already return "true", try changing it so it does.  It looks
-> like we should try to assign bus numbers when
-> pcibios_assign_all_busses() is true.
->
-> Bjorn
+v6->v7: Bjorn's rework and additions of other minor cleanups
+v5->v6: rework the patch 1/2, remove the unnecessary check, pointed out by Bjorn.
+        remove the patch 1/2 cc stable tag, because it's not a serious bug.
+v4->v5: Fix some spelling problems and move mpss = 128 << dev->pcie_mpss above to reuse
+        it, also remove the else braces for code style. thanks for Jon's review and comments.
+v3->v4: Call pcie_bus_update_set() only when pcie_bus_config == PCIE_BUS_TUNE_OFF
+        suggested by Jon Mason, try to change parent mps when parent device is
+        root port and only one slot connected to it when parent mps > child device
+        mpss. Other add a patch to fix a issue in pcie_find_smpss() during use
+        "pci=pcie_bus_safe".
+v2->v3: Update CC stable tag suggested by Li Zefan.
+v1->v2: Update patch log, remove Joe's reported-by, because his problem
+        was mainly caused by BIOS incorrect setting. But this patch mainly
+        to fix the bug caused by device hot add. Conservatively, this
+        version only update the mps problem when hot add. When the device
+        mps < parent mps found, this patch try to update device mps.
+        It seems unlikely device mps > parent mps after hot add device.
+        So we don't care that situation.
 
-Unfortunately this didn't change anything at all. As well as adding the
-PCI_REASSIGN_ALL_RSRC flag. But while testing I've found the
-ppc_md.pcibios_fixup_resources hook. I'll try to manually assign resources in
-there or clear them and call the pci core's ressource allocation code. I'll post
-an update once I make any progress.
+---
 
-Johannes
+Bjorn Helgaas (3):
+      PCI: Drop "PCI-E" prefix from Max Payload Size message
+      PCI: Simplify pcie_bus_configure_settings() interface
+      PCI: Simplify MPS test for Downstream Port
+
+Yijing Wang (2):
+      PCI: Remove unnecessary check for pcie_get_mps() failure
+      PCI: Don't restrict MPS for slots below Root Ports
+
+
+ arch/powerpc/kernel/pci-common.c |    8 ++-----
+ arch/tile/kernel/pci_gx.c        |    9 ++------
+ arch/x86/pci/acpi.c              |    9 ++------
+ drivers/pci/hotplug/pcihp_slot.c |    5 ++---
+ drivers/pci/pci.c                |    3 ---
+ drivers/pci/probe.c              |   42 ++++++++++++++++++++------------------
+ include/linux/pci.h              |    2 +-
+ 7 files changed, 31 insertions(+), 47 deletions(-)
