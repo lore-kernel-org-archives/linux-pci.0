@@ -1,125 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:45017 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754691Ab3HGSbB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Aug 2013 14:31:01 -0400
-Message-ID: <52029262.3060402@intel.com>
-Date: Wed, 07 Aug 2013 11:30:58 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:15233 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab3HUC01 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 22:26:27 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	<stable@vger.kernel.org.#.3.4+>
+Subject: [PATCH v6 2/2] PCI: update device mps when doing pci hotplug
+Date: Wed, 21 Aug 2013 10:25:37 +0800
+Message-ID: <1377051937-5712-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1377051937-5712-1-git-send-email-wangyijing@huawei.com>
+References: <1377051937-5712-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org, ddutile@redhat.com,
-	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 8/9] pci: Tune secondary bus reset timing
-References: <20130805193200.9260.38729.stgit@bling.home>  <20130805193753.9260.35206.stgit@bling.home> <52018664.1080103@intel.com> <1375844191.3509.15.camel@ul30vt.home>
-In-Reply-To: <1375844191.3509.15.camel@ul30vt.home>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2013 07:56 PM, Alex Williamson wrote:
-> On Tue, 2013-08-06 at 16:27 -0700, Alexander Duyck wrote:
->> On 08/05/2013 12:37 PM, Alex Williamson wrote:
->>> The PCI spec indicates that with stable power, reset needs to be
->>> asserted for a minimum of 1ms (Trst).  Seems like we should be able
->>> to assume power is stable for a runtime secondary bus reset.  The
->>> current code has always used 100ms with no explanation where that
->>> came from.  The aer_do_secondary_bus_reset() function uses 2ms, but
->>> that seems to be a misinterpretation of the PCIe spec, where hot
->>> reset is implemented by TS1 ordered sets containing the hot reset
->>> command.  After a 2ms delay the state machine enters the detect state,
->>> but to generate a link down, only two consecutive TS1 hot reset
->>> ordered sets are requred.  1ms should be plenty for that.
->> The reason for doing a 2ms sleep is because the are supposed to be
->> sending the Hot Reset TS1 Ordered-Sets continuously for 2ms per all of
->> the documents I have read.
-> Could you point to one of those references?  In the PCIe v3 spec I'm
-> seeing things like 4.2.6.11 Hot Reset:
->
->       * If two consecutive TS1 Ordered Sets are received on any Lane
->         with the Hot Reset bit asserted and configured Link and Lane
->         numbers, then:
->               * LinkUp = 0b (False)
->               * If no higher Layer is directing the Physical Layer to
->                 remain in Hot Reset, the next state is Detect
->               * Otherwise, all Lanes in the configured Link continue to
->                 transmit TS1 Ordered Sets with the Hot Reset bit
->                 asserted and the configured Link and Lane numbers.
->       * Otherwise, after a 2 ms timeout next state is Detect.
->
-> The next section has something similar for propagation of hot resets.
->
-> Nowhere there does it say TS1 Ordered Sets need to be sent continuously
-> for 2ms.  A hot reset is initiated only by two consecutive TS1 Ordered
-> Sets with the Hot Reset bit asserted.  The 2ms timeout seems to be the
-> delay before the link moves to the Detect state after we stop asserting
-> hot reset.  1ms seems like more than enough time for two TS1 Ordered
-> Sets to propagate down a multi-level hierarchy at 2.5GT/s. 
->
+Currently we don't update device's mps value when doing
+pci device hot-add. The hot-added device's mps will be set
+to default value (128B). But the upstream port device's mps
+may be larger than 128B which was set by firmware during
+system bootup. In this case the new added device may not
+work normally. This patch try to update the hot added device
+mps equal to its parent mps, if device mpss < parent mps,
+print warning.
 
-My original implementation is actually based on page 536 of the "PCI
-Express System Architecture".  However based on the PCIe spec itself I
-think the point is that the port is supposed to stay in Hot Reset for
-2ms after receiving the in-band message.  For a bridge port it means
-that is supposed to be sending the Hot Reset message for those 2ms on
-all downstream facing ports.  After the timer expires then it stops
-sending the Hot Reset TS1 Ordered Sets and then will transition to the
-Detect state.
+References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>
+Cc: stable@vger.kernel.org # 3.4+
+---
+ drivers/pci/probe.c |   49 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 48 insertions(+), 1 deletions(-)
 
-My main concern here is that the previous code was not triggering a Hot
-Reset on all ports previously.  What was happening was that some of the
-ports would only get as far as Recovery as the upstream port was only
-sending a couple of TS1 frames and not allowing the downstream ports
-time to switch to Recovery themselves and discover the Hot Reset.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 160ae38..a18fa3b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1600,6 +1600,44 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+ 	return 0;
+ }
+ 
++static int pcie_bus_update_set(struct pci_dev *dev, void *data)
++{
++	int mps, p_mps, mpss;
++	struct pci_dev *parent;
++
++	if (!pci_is_pcie(dev) || !dev->bus->self)
++		return 0;
++
++	parent = dev->bus->self;
++	mps = pcie_get_mps(dev);
++	p_mps = pcie_get_mps(dev->bus->self);
++
++	if (mps >= p_mps)
++		return 0;
++
++	/* we only update the device mps, unless its parent device is root port,
++	 * and it is the only slot directly connected to root port.
++	 */
++	mpss = 128 << dev->pcie_mpss;
++	if (mpss >= p_mps) {
++		pcie_write_mps(dev, p_mps);
++	} else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT &&
++			pci_only_one_slot(dev->bus)) {
++		pcie_write_mps(parent, mpss);
++		pcie_write_mps(dev, mpss);
++	} else
++		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
++				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
++				mps, 128 << dev->pcie_mpss, p_mps);
++	return 0;
++}
++
++static void pcie_bus_update_setting(struct pci_bus *bus)
++{
++	if (bus->self->is_hotplug_bridge)
++		pci_walk_bus(bus, pcie_bus_update_set, NULL);
++}
++
+ /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+  * parents then children fashion.  If this changes, then this code will not
+  * work as designed.
+@@ -1611,8 +1649,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ 	if (!pci_is_pcie(bus->self))
+ 		return;
+ 
+-	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
++	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
++		/* Sometimes we should update device mps here,
++		 * eg. after hot add, device mps value will be
++		 * set to default(128B), but the upstream port
++		 * mps value may be larger than 128B, if we do
++		 * not update the device mps, it maybe can not
++		 * work normally.
++		 */
++		pcie_bus_update_setting(bus);
+ 		return;
++	}
+ 
+ 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
+ 	 * to be aware to the MPS of the destination.  To work around this,
+-- 
+1.7.1
 
->> The 1ms number you quote is the minimum time
->> for a conventional PCI bus.  I'm not completely sure of that applies as
->> well to PCIe, nor does it represent the maximum recommended value.
-> Correct, 1ms comes from conventional PCI.  PCIe is designed to be
-> software compatible with conventional PCI so it makes sense that PCIe
-> would do something within the timing boundaries of conventional PCI.  I
-> didn't see any reference to a maximum recommended value for this
-> parameter.
-
-I don't want to implement things to minimum specification as there are
-too many marginal parts where the minimum doesn't work.  I would rather
-not have to add a ton of quirks for all of the parts out there that
-didn't quite meet up to the specification.  By using a value of 2ms we
-are matching what the PCIe bridge behavior is supposed to be by sending
-the Hot Reset TS1 ordered sets for 2ms.
-
->> If we stop early we risk not resetting the full device tree on the
->> secondary bus which is the bug I was resolving by adding the 2ms delay. 
->> Previously we saw that some devices were only getting their PCIe link
->> retrained without performing a hot reset when the bit was not held for
->> long enough.  I would prefer to keep this at 2 ms in order to account
->> for the fact that PCIe has to go though link recovery states before it
->> can perform the hot reset.
-> I'm not going to sweat over 1ms or 2ms but I do want to be able to
-> document why we're setting it to one or the other.  If it's warm
-> fuzzies, so be it, but I'd prefer if we could find actual spec or
-> hardware examples to back it up.  Thanks,
->
-> Alex
-
-I think our difference is that I based my value on the in-band message
-behavior and your value is based on the recommended minimum time for the
-Secondary Bus Reset.  The downstream ports of a bridge that receives the
-in-band Hot Reset notification are supposed to send a continuous stream
-of TS1 Ordered sets with the Hot Reset bit set for 2ms.  Based on all of
-the conditions in the spec the device should start a 2ms timer, and all
-downstream ports should begin transmitting the TS1 Ordered sets with the
-Hot Reset bit asserted, then after the 2ms timer expires it should
-switch to the detect state.  I verified with a PCIe analyzer that this
-was what the AER code was doing after I had changed it and added the sleep.
-
-What I found is that most parts will stop transmitting the TS1 ordered
-sets as soon as you clear the Secondary Bus Reset bit.  So if you set
-the bit and clear it 1 ms later you might only get to send a few ordered
-sets and that may not be enough depending on how fast the part can
-transition between L0/L0s/L1, Recovery, and Hot Reset.
-
-Thanks,
-
-Alex
 
