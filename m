@@ -1,165 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:54104 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751875Ab3HTEoU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 00:44:20 -0400
-Received: by mail-ie0-f176.google.com with SMTP id e13so1061884iej.21
-        for <linux-pci@vger.kernel.org>; Mon, 19 Aug 2013 21:44:20 -0700 (PDT)
-Date: Mon, 19 Aug 2013 22:44:16 -0600
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:58265 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369Ab3HUXbL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 19:31:11 -0400
+Received: by mail-oa0-f50.google.com with SMTP id i4so2245557oah.9
+        for <linux-pci@vger.kernel.org>; Wed, 21 Aug 2013 16:31:10 -0700 (PDT)
+Date: Wed, 21 Aug 2013 17:31:06 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
 To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH v5 1/2] PCI: fix the only slot identification in
- pcie_find_smpss()
-Message-ID: <20130820044416.GA22188@google.com>
-References: <1376533135-36708-1-git-send-email-wangyijing@huawei.com>
- <1376533135-36708-2-git-send-email-wangyijing@huawei.com>
- <20130816221716.GA25780@google.com>
- <521187A5.6030002@huawei.com>
- <CAPoiz9zpovgcnx=DG-g4v7VpA17H5P2EYv1spm7TGLOwO6zYCQ@mail.gmail.com>
- <CAErSpo7kxfJDrm1QwNrGd4onfKBzUW+jVV-8p14i1yJqkMFobg@mail.gmail.com>
- <CAErSpo7tf+9NUGT2U5WBcQUtZb9=ZT_4wAjxzhiiWh9n_KEbAA@mail.gmail.com>
- <CAPoiz9wMo+sr1EWp+fPdwKTBoJpQGjZg-dASRMHAtvPBE+G4Eg@mail.gmail.com>
- <5212DA84.6070409@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>, linux-pci@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
+	stable@vger.kernel.org.#.3.4+
+Subject: Re: [PATCH v6 2/2] PCI: update device mps when doing pci hotplug
+Message-ID: <20130821233106.GA31379@google.com>
+References: <1377051937-5712-1-git-send-email-wangyijing@huawei.com>
+ <1377051937-5712-3-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5212DA84.6070409@huawei.com>
+In-Reply-To: <1377051937-5712-3-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 20, 2013 at 10:55:00AM +0800, Yijing Wang wrote:
-> >> Actually, I don't think it matters whether the slot is currently
-> >> occupied or not.  If the bridge supports hot-plug, we have to handle
-> >> the current device (if any) as well as any other device that might be
-> >> added after removing the current device.
-> > 
-> > Yes, this is true.  So, we want to see if there is the ability to:
-> > 1. have a device hotplugged
-> > and
-> > 2a. there are other devices under the same root port
-> > or
-> > 2b. there are multiple hotplug slots under the same root port
-> > 
-> > The patch covers part 2b (unless I missunderstand and it only covers
-> > the devices present and not the slots available), but we need part 2a
-> > to be covered.  I believe your suggested code above covers 2a.  Am I
-> > off my rocker?
+On Wed, Aug 21, 2013 at 10:25:37AM +0800, Yijing Wang wrote:
+> Currently we don't update device's mps value when doing
+> pci device hot-add. The hot-added device's mps will be set
+> to default value (128B). But the upstream port device's mps
+> may be larger than 128B which was set by firmware during
+> system bootup. In this case the new added device may not
+> work normally. This patch try to update the hot added device
+> mps equal to its parent mps, if device mpss < parent mps,
+> print warning.
 > 
-> I'm a little confused, let us list the possible pcie topo here:
-
-I'm *very* confused; thanks for helping out with some pictures!
-
-> 1.
-> root port -------------->[slot]-(function device a)
-> 			       -(function device b)
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+> Reported-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Jon Mason <jdmason@kudzu.us>
+> Cc: stable@vger.kernel.org # 3.4+
+> ---
+>  drivers/pci/probe.c |   49 ++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 files changed, 48 insertions(+), 1 deletions(-)
 > 
-> Here there is only one slot directly connected to root port,
-> this slot is inserted a physical device which contain function
-> device a and b.  After we insert physical device into this
-> slot, hotplug driver will call
-> pci_configure_slot()---->pcie_bus_configure_settings() to set
-> device mps.
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 160ae38..a18fa3b 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1600,6 +1600,44 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>  	return 0;
+>  }
+>  
+> +static int pcie_bus_update_set(struct pci_dev *dev, void *data)
+> +{
+> +	int mps, p_mps, mpss;
+> +	struct pci_dev *parent;
+> +
+> +	if (!pci_is_pcie(dev) || !dev->bus->self)
+> +		return 0;
+> +
+> +	parent = dev->bus->self;
+> +	mps = pcie_get_mps(dev);
+> +	p_mps = pcie_get_mps(dev->bus->self);
+> +
+> +	if (mps >= p_mps)
+> +		return 0;
+> +
+> +	/* we only update the device mps, unless its parent device is root port,
+> +	 * and it is the only slot directly connected to root port.
+> +	 */
+> +	mpss = 128 << dev->pcie_mpss;
+> +	if (mpss >= p_mps) {
+> +		pcie_write_mps(dev, p_mps);
+> +	} else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT &&
+> +			pci_only_one_slot(dev->bus)) {
+
+Good grief.  You apparently didn't even compile this, because
+pci_only_one_slot() doesn't exist.
+
+I reworked a couple of your previous patches and added a cleanup or two
+of my own.  I'll post those as v7, and you can fix this one and post it
+as a v8.  That way you and Jon can fix errors in my comments and changelogs
+at the same time.
+
+> +		pcie_write_mps(parent, mpss);
+> +		pcie_write_mps(dev, mpss);
+> +	} else
+> +		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
+> +				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
+> +				mps, 128 << dev->pcie_mpss, p_mps);
+> +	return 0;
+> +}
+> +
+> +static void pcie_bus_update_setting(struct pci_bus *bus)
+> +{
+> +	if (bus->self->is_hotplug_bridge)
+> +		pci_walk_bus(bus, pcie_bus_update_set, NULL);
+> +}
+> +
+>  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+>   * parents then children fashion.  If this changes, then this code will not
+>   * work as designed.
+> @@ -1611,8 +1649,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+>  	if (!pci_is_pcie(bus->self))
+>  		return;
+>  
+> -	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+> +	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+> +		/* Sometimes we should update device mps here,
+> +		 * eg. after hot add, device mps value will be
+> +		 * set to default(128B), but the upstream port
+> +		 * mps value may be larger than 128B, if we do
+> +		 * not update the device mps, it maybe can not
+> +		 * work normally.
+> +		 */
+> +		pcie_bus_update_setting(bus);
+>  		return;
+> +	}
+>  
+>  	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
+>  	 * to be aware to the MPS of the destination.  To work around this,
+> -- 
+> 1.7.1
 > 
-> As Jon's original patch, in this case we should update root
-> port and slot device mps to the minmum mpss of root port and
-> slot device. But in pcie_find_smpss() list_is_singular() is
-> used to check whether there are other devices on the fabric.
-> list_is_singular() in this case return false. because more than
-> one devices found in devices list.  But we expect the result is
-> true.
 > 
-> And Bjorn think root port always connected to only one hot-plug
-> slot, so use list_is_singular() or pci_only_one_slot() to check
-> other devices on the fabric make no sense. I agree with him if
-> there is no broken hardware platform that a root port connected
-> to more than one slot.
-
-It makes no sense for a single PCIe link to connect directly to
-more than one slot.  A link has two ends, connecting two devices.
-There's no way it could connect three devices.
-
-> 2.		(is_hotplug_bridge)
-> root port --------------->Port A--------->[slot]
-> 		bus a	 |
-> 			 |Port or devices ?
-> 
-> If Jon's original patch is correct, I guess the topo is like
-> above.  In this case, Port A is hotplug bridge and connected
-> directly to root port.  So if there is no other port or devices
-> in bus a, we can configure mps to the minmum mpss of root port
-> and Port A and slot device.
-> 
-> But does this topo exist? root port has only one link, the pcie
-> link is point to point.
-
-The topology above does not exist.  Since Port A is connected
-directly to a Root Port, Port A must be an Upstream Port.  But in
-order for Port A to connect to a slot, it must also be a
-Downstream Port.  It can't be both.  
-
-There would have to be a switch between the Root Port and the
-slot, and the switch would contain both an Upstream Port and a
-Downstream Port.
-
-> 3.                              (hotplug bridge)
-> root port ----Upstream port---->Downstream port A -------->[slot]
-> 				 |
-> 				 |Downstream port B -------->[slot]  ?
-> 
-> This topo is common, but DP A is not directly connected to root
-> port, so the original patch can not cover this case. 
-
-This is a very good observation: only Root Ports and Downstream
-Ports can have slots.  That means the following existing code:
-
-    if (dev->is_hotplug_bridge &&
-        ((dev->bus->self &&
-          pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)))
-
-doesn't make sense.  "dev->bus->self" is the bridge immediately
-upstream from "dev".  If "dev" is a Port with a slot, it must be
-either a Root Port or a Downstream Port.  A Root Port *has* no
-upstream bridge, and the bridge immediately upstream from a
-Downstream Port is always an Upstream Port.
-
-So we should just write this instead:
-
-    if (dev->is_hotplug_bridge &&
-        pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM)))
-            *smpss = 0;
-
-That means we'll set MPS=128 for Downstream Ports leading to
-slots, which is safe for anything we can plug in.
-
-Apparently we don't enforce MPS=128 for Root Ports because we
-assume either (a) there is no peer-to-peer traffic, or (b)
-peer-to-peer traffic is not routed between Root Ports.  I don't
-know if those are valid assumptions, but you're not changing
-anything there, so I guess we can keep them.
-
-I don't think we should look at the dev->bus->devices list at all
-because that only applies to the current configuration and
-doesn't account for any future hot-plugs.
- 
-> If DP B is
-> not exist. there is only one Downstream port A, like:
-
-> 
->                                (hotplug bridge)
-> root port ----Upstream port--->Downstream port A -------->[slot]
-> 
-> In this case, we can also configure mps after a pcie card
-> inserted into slot, because although the system is running,
-> because root port UP port DP port A and slot are not running.
-> But this case is rare.
-
-> So, Jon, does your original patch want to cover the case 1 or case 2 ?
-> For case 1, we can remove the list_is_singular() check.
-> For case 2, do you have some example hardware platform ?
-> Or there are other pcie topos not exist here?
-> 
-> Thanks!
-> Yijing.
