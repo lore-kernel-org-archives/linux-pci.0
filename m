@@ -1,104 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:42741 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756190Ab3HLNSl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 09:18:41 -0400
-Date: Mon, 12 Aug 2013 09:18:33 -0400
-From: Jason Cooper <jason@lakedaemon.net>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:33498 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752079Ab3HUC0I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 22:26:08 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next list <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: linux-next: Tree for Aug 8 (not CONFIG_PCI_MSI conflict)
-Message-ID: <20130812131833.GI25111@titan.lakedaemon.net>
-References: <20130808170822.82bf33d3cf5100f5e2646815@canb.auug.org.au>
- <5203F978.2050504@infradead.org>
- <20130809145939.GE25111@titan.lakedaemon.net>
- <52051BC2.2060004@infradead.org>
- <20130809185036.GG25111@titan.lakedaemon.net>
- <CAErSpo6S9uYTEhoS-+4EZv41pc0bu6jvcMaGX7WR9hY4o+2dsA@mail.gmail.com>
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v6 0/2] update device mps
+Date: Wed, 21 Aug 2013 10:25:35 +0800
+Message-ID: <1377051937-5712-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo6S9uYTEhoS-+4EZv41pc0bu6jvcMaGX7WR9hY4o+2dsA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 10, 2013 at 08:01:49AM -0600, Bjorn Helgaas wrote:
-> On Fri, Aug 9, 2013 at 12:50 PM, Jason Cooper <jason@lakedaemon.net> wrote:
-> > Randy,
-> >
-> > On Fri, Aug 09, 2013 at 09:41:38AM -0700, Randy Dunlap wrote:
-> >> On 08/09/13 07:59, Jason Cooper wrote:
-> >> > Randy,
-> >> >
-> >> > On Thu, Aug 08, 2013 at 01:03:04PM -0700, Randy Dunlap wrote:
-> >> >> On 08/08/13 00:08, Stephen Rothwell wrote:
-> >> >>> Hi all,
-> >> >>>
-> >> >>> Changes since 20130807:
-> >> >>>
-> >> >>
-> >> >> on i386 and x86_64:
-> >> >> when CONFIG_PCI_MSI is not enabled:
-> >> >>
-> >> >> There are many of these errors:
-> >> >> include/linux/msi.h:65:6: error: expected identifier or '(' before 'void'
-> >> >> include/linux/msi.h:65:6: error: expected ')' before numeric constant
-> >> >>
-> >> >> because arch/x86/include/asm/pci.h defines:
-> >> >> #define default_teardown_msi_irqs  NULL
-> >> >
-> >> > Do you have an example config you used?
-> >>
-> >> Sure, attached. (or I have 14 of them)
-> >
-> > Thanks, I was able to reproduce the error.  I'm not real familiar with
-> > this area of the code, but the relief is it doesn't appear to be caused
-> > by the mvebu changes (well, relief for us ;-) ).
-> >
-> > At any rate, give this a spin and see if it works for you
-> >
-> > If it's acceptable, I'll do an official patch for Bjorn.
-> >
-> > thx,
-> >
-> > Jason.
-> >
-> > ---------->8----------
-> > diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> > index d9e9e6c..6169414 100644
-> > --- a/arch/x86/include/asm/pci.h
-> > +++ b/arch/x86/include/asm/pci.h
-> > @@ -138,8 +138,8 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
-> >  #else
-> >  #define native_setup_msi_irqs          NULL
-> >  #define native_teardown_msi_irq                NULL
-> > -#define default_teardown_msi_irqs      NULL
-> > -#define default_restore_msi_irqs       NULL
-> > +void __weak default_teardown_msi_irqs(struct pci_dev *dev) { }
-> > +void __weak default_restore_msi_irqs(struct pci_dev *dev, int irq) { }
-> 
-> I don't really like this solution of putting the empty implementation
-> in the header file, because then a weak body is generated in the
-> object of every source file that includes the header.
-> 
-> default_teardown_msi_irqs() and default_restore_msi_irqs() seem like
-> fairly internal MSI functions, so I wonder why we need them defined at
-> all when CONFIG_PCI_MSI=n.  It seems like any uses of them should be
-> in code that's only compiled when CONFIG_PCI_MSI=y.  But I haven't
-> reproduced the problem and investigated yet.
+v5->v6: rework the patch 1/2, remove the unnecessary check, pointed out by Bjorn.
+        remove the patch 1/2 cc stable tag, because it's not a serious bug.
+v4->v5: Fix some spelling problems and move mpss = 128 << dev->pcie_mpss above to reuse
+        it, also remove the else braces for code style. thanks for Jon's review and comments.
+v3->v4: Call pcie_bus_update_set() only when pcie_bus_config == PCIE_BUS_TUNE_OFF
+        suggested by Jon Mason, try to change parent mps when parent device is
+        root port and only one slot connected to it when parent mps > child device
+        mpss. Other add a patch to fix a issue in pcie_find_smpss() during use
+        "pci=pcie_bus_safe".
+v2->v3: Update CC stable tag suggested by Li Zefan.
+v1->v2: Update patch log, remove Joe's reported-by, because his problem
+        was mainly caused by BIOS incorrect setting. But this patch mainly
+        to fix the bug caused by device hot add. Conservatively, this 
+        version only update the mps problem when hot add. When the device
+        mps < parent mps found, this patch try to update device mps.
+        It seems unlikely device mps > parent mps after hot add device.
+        So we don't care that situation.
 
-I first tried commenting out the definitions after reproducing the
-problem.  It also failed miserably.
 
-Please take a look at Thomas' latest MSI patch series,
 
-  [PATCHv9 01/10] PCI: use weak functions for MSI arch-specific functions
+Yijing Wang (2):
+  PCI: remove the unnecessary check in pcie_find_smpss()
+  PCI: update device mps when doing pci hotplug
 
-I think his solution is much nicer than mine.
+ drivers/pci/probe.c |   60 ++++++++++++++++++++++++++++++++++++++++++++------
+ 1 files changed, 52 insertions(+), 8 deletions(-)
 
-thx,
 
-Jason.
