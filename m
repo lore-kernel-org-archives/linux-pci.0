@@ -1,92 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:64654 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758146Ab3HIO1t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:27:49 -0400
-Date: Fri, 9 Aug 2013 10:27:24 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv8 04/10] of: pci: add registry of MSI chips
-Message-ID: <20130809142724.GD25111@titan.lakedaemon.net>
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1376000268-18397-5-git-send-email-thomas.petazzoni@free-electrons.com>
- <1376027346.32100.8.camel@pasglop>
- <20130809134427.GC25111@titan.lakedaemon.net>
- <20130809141806.GA15973@ulmo>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:49961 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752040Ab3HUQXm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 12:23:42 -0400
+Received: by mail-ob0-f170.google.com with SMTP id eh20so1230199obb.1
+        for <linux-pci@vger.kernel.org>; Wed, 21 Aug 2013 09:23:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130809141806.GA15973@ulmo>
+In-Reply-To: <3503956.Yk8myngYqt@vostro.rjw.lan>
+References: <alpine.LFD.2.03.1308201637390.1566@linux.vnet.ibm.com>
+ <CAErSpo4qnDyQQt+sZi=1tj0PP+HUmLfMp4zQ2hdqjJ+mOcAzYA@mail.gmail.com> <3503956.Yk8myngYqt@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 21 Aug 2013 10:23:21 -0600
+Message-ID: <CAErSpo7OfDUcfM=2Tycx9H5LG8kpSq_B93SqT21-_413Re3KpA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: add hibernation hooks
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 09, 2013 at 04:18:07PM +0200, Thierry Reding wrote:
-> On Fri, Aug 09, 2013 at 09:44:27AM -0400, Jason Cooper wrote:
-> > On Fri, Aug 09, 2013 at 03:49:06PM +1000, Benjamin Herrenschmidt wrote:
-> > > On Fri, 2013-08-09 at 00:17 +0200, Thomas Petazzoni wrote:
-> > > > 
-> > > > +#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
-> > > > +int of_pci_msi_chip_add(struct msi_chip *chip);
-> > > > +void of_pci_msi_chip_remove(struct msi_chip *chip);
-> > > > +struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node
-> > > > *of_node);
-> > > > +#else
-> > > > +static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return
-> > > > -EINVAL; }
-> > > > +static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
-> > > 
-> > > Missing a ; at the end of the above line... breaks the build of
-> > > CONFIG_PCI_MSI is not set.
-> > > 
-> > > > +static inline struct msi_chip *
-> > > > +of_pci_find_msi_chip_by_node(struct device_node *of_node) { return
-> > > > NULL };
-> > > > +#endif
-> > > > +
-> > > >  #endif
-> > 
-> > Reproduced, fixed and builds clean !CONFIG_OF and !CONFIG_PCI_MSI with:
-> > 
-> > ---------------->8----------------
-> > diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> > index 29631eb..9f69507 100644
-> > --- a/include/linux/of_pci.h
-> > +++ b/include/linux/of_pci.h
-> > @@ -19,10 +19,11 @@ int of_pci_msi_chip_add(struct msi_chip *chip);
-> >  void of_pci_msi_chip_remove(struct msi_chip *chip);
-> >  struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node);
-> >  #else
-> > -static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; }
-> > -static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
-> > +static inline int
-> > +of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; };
-> > +static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { };
-> >  static inline struct msi_chip *
-> > -of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL };
-> > +of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL; };
-> >  #endif
-> >  
-> >  #endif
-> 
-> So why do we need a semi-colon after a closing brace? I can understand
-> how the missing semi-colon after NULL would cause the compiler to flag
-> an error, but all the other changes look unnecessary to me.
+On Tue, Aug 20, 2013 at 3:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Tuesday, August 20, 2013 11:08:56 AM Bjorn Helgaas wrote:
+>> On Tue, Aug 20, 2013 at 8:41 AM, Sebastian Ott
+>> <sebott@linux.vnet.ibm.com> wrote:
+>> > Hello Bjorn,
+>> >
+>> > I'm currently trying to implement hibernate support for pci on s390. To access
+>> > the config space of a pci function on s390 the function has to be enabled first.
+>> > So I need some kind of callback to achieve this before the pci core or the device
+>> > driver tries to access the function after a resume from hibernate.
+>> >
+>> > Would you be OK with the following patch?
+>>
+>> I think doing something like this is fine.
+>
+> Well, since we seem to be doing everything using __weak functions in the PCI
+> land like in this patch, shouldn't we drop pci_platform_pm and use __weak
+> functions for that stuff too?
 
-You're correct, I sent this a little too hastily.  I thought Ben knew
-something I didn't (see above), but the error was only where you
-indicated.  I'm revising my fix to just append the semi-colon after the
-NULL.
+Well, we could consider that, if somebody wanted to do the work, but I
+don't think we need to tie it to Sebastian's change.
 
-thx,
+It's hard to tell over email, but it sounds like you have some
+reluctance to using weak functions?  PCI has long used the pcibios_*()
+style for arch-dependent code.  Before we used weak functions, every
+arch had to implement every pcibios_*() interface, whether the arch
+needed it or not.  Using weak functions just means when an arch
+doesn't need anything special in pcibios_foo(), it can do nothing at
+all and automatically get the weak definition.
 
-Jason.
+For Sebastian's changes, the question is whether we want this:
+
+  struct dev_pm_ops __weak pcibios_pm_ops;
+
+  static int pci_pm_thaw(struct device *dev)
+  {
+    ...
+    if (pcibios_pm_ops.thaw) {
+      error = pcibios_pm_ops.thaw(pci_dev)
+      if (error)
+        return error;
+    }
+    ...
+  }
+or this:
+
+  int __weak pcibios_pm_thaw(struct pci_dev *pdev) { return 0; }
+
+  static int pci_pm_thaw(struct device *dev)
+  {
+    ...
+    error = pcibios_pm_thaw(pci_dev);
+    if (error)
+      return error;
+    ...
+  }
+
+I prefer the latter because there's no need to repeat the
+"pcibios_pm_ops.thaw" reference and it seems more straightforward to
+read.  But it does have the disadvantage of requiring a weak
+definition for every hook, instead of a single weak pcibios_pm_ops
+definition.
+
+There's also the x86 pcibios_enable_irq() style, where we declare
+"extern int (*pcibios_enable_irq)(struct pci_dev *dev)".  The call
+looks the same as using a weak function, but you can change the
+pointer at run-time.  Run-time control isn't needed here, so it seems
+overkill to me, but it is a possibility, e.g., make pcibios_pm_thaw()
+a pointer that defaults to an empty implementation, and arches could
+override by reassigning it.
+
+Bjorn
