@@ -1,62 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <4af292f2d636d7f526df2df50f3a5cd1c9d371c4.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 08/20] tile PCI RC: gentler warning for missing plug-in PCI
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:54080 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369Ab3HUXjc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 19:39:32 -0400
+Received: by mail-ob0-f169.google.com with SMTP id wc20so2242018obb.0
+        for <linux-pci@vger.kernel.org>; Wed, 21 Aug 2013 16:39:31 -0700 (PDT)
+Subject: [PATCH v7 3/5] PCI: Remove unnecessary check for pcie_get_mps()
+ failure
+To: Yijing Wang <wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+	jiang.liu@huawei.com, Hanjun Guo <guohanjun@huawei.com>
+Date: Wed, 21 Aug 2013 17:39:29 -0600
+Message-ID: <20130821233929.2300.74057.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130821233722.2300.81773.stgit@bhelgaas-glaptop>
+References: <20130821233722.2300.81773.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Besides using pr_info() to print the linkdown status for a plug-in
-slot, add extra indication that this is expected if the slot is empty.
+From: Yijing Wang <wangyijing@huawei.com>
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+After 59875ae489 ("PCI/core: Use PCI Express Capability accessors"),
+pcie_get_mps() never returns an error, so don't bother to check for it.
+
+No functional change.
+
+[bhelgaas: changelog, fix pcie_get_mps() doc]
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/tile/include/hv/drv_trio_intf.h |  5 +++--
- arch/tile/kernel/pci_gx.c            | 10 ++++++++--
- 2 files changed, 11 insertions(+), 4 deletions(-)
+ drivers/pci/pci.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/arch/tile/include/hv/drv_trio_intf.h b/arch/tile/include/hv/drv_trio_intf.h
-index ef9f3f5..ec643a0 100644
---- a/arch/tile/include/hv/drv_trio_intf.h
-+++ b/arch/tile/include/hv/drv_trio_intf.h
-@@ -64,8 +64,9 @@ struct pcie_port_property
-    *  will not consider it an error if the link comes up as a x8 link. */
-   uint8_t allow_x8: 1;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e37fea6..5bb97ee 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3525,8 +3525,6 @@ int pcie_set_readrq(struct pci_dev *dev, int rq)
+ 	if (pcie_bus_config == PCIE_BUS_PERFORMANCE) {
+ 		int mps = pcie_get_mps(dev);
  
--  /** Reserved. */
--  uint8_t reserved: 1;
-+  /** If true, this link is connected to a device which may or may not
-+   *  be present. */
-+  uint8_t removable: 1;
- 
- };
- 
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index e0d6664..bf8c69d 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -729,8 +729,14 @@ int __init pcibios_init(void)
- 			__gxio_mmio_read(trio_context->mmio_base_mac +
- 					 reg_offset);
- 		if (!port_status.dl_up) {
--			pr_err("PCI: link is down, MAC %d on TRIO %d\n",
--				mac, trio_index);
-+			if (pcie_ports[trio_index][mac].removable) {
-+				pr_info("PCI: link is down, MAC %d on TRIO %d\n",
-+					mac, trio_index);
-+				pr_info("This is expected if no PCIe card"
-+					" is connected to this link\n");
-+			} else
-+				pr_err("PCI: link is down, MAC %d on TRIO %d\n",
-+					mac, trio_index);
- 			continue;
- 		}
- 
--- 
-1.8.3.1
+-		if (mps < 0)
+-			return mps;
+ 		if (mps < rq)
+ 			rq = mps;
+ 	}
+@@ -3543,7 +3541,6 @@ EXPORT_SYMBOL(pcie_set_readrq);
+  * @dev: PCI device to query
+  *
+  * Returns maximum payload size in bytes
+- *    or appropriate error value.
+  */
+ int pcie_get_mps(struct pci_dev *dev)
+ {
 
