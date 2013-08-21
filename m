@@ -1,100 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:35122 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754438Ab3H2MCM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 08:02:12 -0400
-Received: by mail-ie0-f178.google.com with SMTP id f4so484064iea.37
-        for <linux-pci@vger.kernel.org>; Thu, 29 Aug 2013 05:02:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130829082941.GA11203@jtlinux>
-References: <20130828133337.GA8544@jtlinux> <CAErSpo5sa2cJXOUhfe5VDzxwabf0Um42ZfBwOMhF1TbwCW9G=w@mail.gmail.com>
- <20130829082941.GA11203@jtlinux>
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:48506 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752413Ab3HUXjr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 19:39:47 -0400
+Received: by mail-oa0-f52.google.com with SMTP id f4so1185017oah.25
+        for <linux-pci@vger.kernel.org>; Wed, 21 Aug 2013 16:39:46 -0700 (PDT)
+Subject: [PATCH v7 5/5] PCI: Don't restrict MPS for slots below Root Ports
+To: Yijing Wang <wangyijing@huawei.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 29 Aug 2013 06:01:43 -0600
-Message-ID: <CAErSpo56RszdMQDOY8xCmz=1QP-osUGA71V56t9X9zY4rNAYew@mail.gmail.com>
-Subject: Re: PCI reset problem
-To: Johannes Thumshirn <johannes.thumshirn@men.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+	jiang.liu@huawei.com, Hanjun Guo <guohanjun@huawei.com>
+Date: Wed, 21 Aug 2013 17:39:44 -0600
+Message-ID: <20130821233944.2300.19147.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130821233722.2300.81773.stgit@bhelgaas-glaptop>
+References: <20130821233722.2300.81773.stgit@bhelgaas-glaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 29, 2013 at 2:29 AM, Johannes Thumshirn
-<johannes.thumshirn@men.de> wrote:
-> On Wed, Aug 28, 2013 at 10:50:58AM -0600, Bjorn Helgaas wrote:
->> [+cc Yinghai]
->>
->> On Wed, Aug 28, 2013 at 7:33 AM, Johannes Thumshirn
->> <johannes.thumshirn@men.de> wrote:
->> > Hi List,
->> >
->> > I have a rather odd problem with a PCIe swicht/bridge which does not get
->> > enumerated correctly. If I issue _two_ manual rescans of the PCI bus via sysfs,
->> > everything get setup correctly. To work around the problem I decided to make a
->> > platform specific PCI quirk (for the embedded system I'm on, to not break
->> > anything else) and issue the pci_rescan_bus() myself as a "final" fixup. However
->> > this does not have any effect at all.
->> >
->> > Does anyone have an idea what I could do wrong?
->>
->> A rescan doesn't really do anything differently from the initial
->> boot-time scan.  Maybe there's an issue with the switch taking a long
->> time to respond after reset?  But that doesn't seem likely, because if
->> you do manual rescans via sysfs, that should give plenty of time and
->> you wouldn't have to do it *twice*.
->>
->> Maybe there's some resource or bus number allocation issue such that
->> we don't even get down to the problem switch the first couple of
->> times?
->>
->> > Example:
->> > root@generic-powerpc:~# lspci -tv
->> > -[0000:00]---00.0-[01]--
->> > root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
->> > [...]
->> > root@generic-powerpc:~# lspci -tv
->> > -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]--
->> >                                            +-02.0-[04]--
->> >                                            \-03.0-[05]--
->> > root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
->> > [...]
->> > root@generic-powerpc:~# lspci -tv
->> > -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]----00.0  Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
->> >                                            +-02.0-[04]--
->> >                                            \-03.0-[05]--+-00.0  Pericom Semiconductor Device 400e
->> >                                                         +-00.1  Pericom Semiconductor Device 400e
->> >                                                         \-00.2  Pericom Semiconductor Device 400f
->>
->> I bet that's what's happening: the first lspci shows the 00:00.0
->> bridge leading only to bus 01.  The second lspci shows 00:00.0 leading
->> to [bus 01-05], so its bus number aperture has been reconfigured.
->>
->> On x86 the BIOS typically configures all the bridges so we can see all
->> the devices.  But it looks like your platform doesn't, and the Linux
->> paths that do similar configuration are not as well exercised.
->>
->
-> I'll have a look into my U-Boot again as well, maybe I can resolve it there.
->
->> Can you collect a complete dmesg log including initial boot and your
->> manual sysfs rescansand attach it to a new bugzilla report at
->> https://bugzilla.kernel.org/enter_bug.cgi?component=PCI&product=Drivers
->> ?  There might be some generic way we can fix this.
->>
->
-> I can do, though I have to say, it's a 3.8 Kernel from Freescale's SDK. I
-> don't really know if mainline wants to care about it.
+From: Yijing Wang <wangyijing@huawei.com>
 
-I don't think much has changed in this area since then, so I think
-this issue is still relevant.
+When booting with "pci=pcie_bus_safe", we previously limited the
+fabric MPS to 128 when we found:
 
-On x86 there's a boot command option "pci=assign-busses".  I don't
-think the boot option is implemented for other arches, so you'll
-probably have to change the source to accomplish the same thing.  Take
-a look at pcibios_assign_all_busses() for your platform.  If it
-doesn't already return "true", try changing it so it does.  It looks
-like we should try to assign bus numbers when
-pcibios_assign_all_busses() is true.
+  (1) A hotplug-capable Downstream Port ("dev->is_hotplug_bridge &&
+      pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT"), or
 
-Bjorn
+  (2) A hotplug-capable Root Port with a slot that was either empty or
+      contained a multi-function device ("dev->is_hotplug_bridge &&
+      !list_is_singular(&dev->bus->devices)")
+
+Part (1) is valid, but part (2) is not.
+
+After a hot-add in the slot below a Root Port, we can reconfigure all
+MPS values in the fabric below the Root Port because the new device is
+the only thing below the Root Port and there are no active drivers.
+Therefore, there's no reason to limit the MPS for Root Ports, no
+matter what's in the slot.
+
+Test info:
+
+    -+-[0000:40]-+-07.0-[0000:46]--+-00.0  Intel 82576 NIC
+                                   \-00.1  Intel 82576 NIC
+
+    0000:40:07.0 Root Port bridge to [bus 46] (MPS supported=256)
+    0000:46:00.0 Endpoint                     (MPS supported=512)
+    0000:46:00.1 Endpoint                     (MPS supported=512)
+
+    # echo 0 > /sys/bus/pci/slots/7/power
+    # echo 1 > /sys/bus/pci/slots/7/power
+    # dmesg
+    ...
+    pcieport 0000:40:07.0: PCI-E Max Payload Size set to 256/ 256 (was 256)
+    pci 0000:46:00.0:      PCI-E Max Payload Size set to 256/ 512 (was 128)
+    pci 0000:46:00.1:      PCI-E Max Payload Size set to 256/ 512 (was 128)
+
+Before this change, we set MPS to 128 for the Root Port and both NICs
+because the slot contained a multi-function device and
+
+    dev->is_hotplug_bridge && !list_is_singular(&dev->bus->devices)
+
+was true.  After this change, we set it to 256.
+
+[bhelgaas: changelog, comments, split out upstream bridge check]
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jon Mason <jdmason@kudzu.us>
+---
+ drivers/pci/probe.c |   32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 0591b08..94b1d22 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1491,23 +1491,23 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
+ 	if (!pci_is_pcie(dev))
+ 		return 0;
+ 
+-	/* For PCIE hotplug enabled slots not connected directly to a
+-	 * PCI-E root port, there can be problems when hotplugging
+-	 * devices.  This is due to the possibility of hotplugging a
+-	 * device into the fabric with a smaller MPS that the devices
+-	 * currently running have configured.  Modifying the MPS on the
+-	 * running devices could cause a fatal bus error due to an
+-	 * incoming frame being larger than the newly configured MPS.
+-	 * To work around this, the MPS for the entire fabric must be
+-	 * set to the minimum size.  Any devices hotplugged into this
+-	 * fabric will have the minimum MPS set.  If the PCI hotplug
+-	 * slot is directly connected to the root port and there are not
+-	 * other devices on the fabric (which seems to be the most
+-	 * common case), then this is not an issue and MPS discovery
+-	 * will occur as normal.
++	/*
++	 * We don't have a way to change MPS settings on devices that have
++	 * drivers attached.  A hot-added device might support only the minimum
++	 * MPS setting (MPS=128).  Therefore, if the fabric contains a bridge
++	 * where devices may be hot-added, we limit the fabric MPS to 128 so
++	 * hot-added devices will work correctly.
++	 *
++	 * However, if we hot-add a device to a slot directly below a Root
++	 * Port, it's impossible for there to be other existing devices below
++	 * the port.  We don't limit the MPS in this case because we can
++	 * reconfigure MPS on both the Root Port and the hot-added device,
++	 * and there are no other devices involved.
++	 *
++	 * Note that this PCIE_BUS_SAFE path assumes no peer-to-peer DMA.
+ 	 */
+-	if (dev->is_hotplug_bridge && (!list_is_singular(&dev->bus->devices) ||
+-	    pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT))
++	if (dev->is_hotplug_bridge &&
++	    pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+ 		*smpss = 0;
+ 
+ 	if (*smpss > dev->pcie_mpss)
+
