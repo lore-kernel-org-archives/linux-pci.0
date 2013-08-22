@@ -1,117 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:42648 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758878Ab3HNCX5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 22:23:57 -0400
-Received: by mail-ie0-f169.google.com with SMTP id qd12so11813623ieb.14
-        for <linux-pci@vger.kernel.org>; Tue, 13 Aug 2013 19:23:56 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:64971 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752461Ab3HVDZV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 23:25:21 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	<stable@vger.kernel.org.#.3.4+>
+Subject: [PATCH v8 6/6] PCI: update device mps when doing pci hotplug
+Date: Thu, 22 Aug 2013 11:24:48 +0800
+Message-ID: <1377141888-7000-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
+References: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
-References: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
- <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 13 Aug 2013 20:23:36 -0600
-Message-ID: <CAErSpo5AiRw7HvGQMq-n596ZkHJs_KJNn346yf+jc7yti-xpUw@mail.gmail.com>
-Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
- to PF Nacked" messages
-To: "Skidmore, Donald C" <donald.c.skidmore@intel.com>
-Cc: "e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 13, 2013 at 3:54 PM, Skidmore, Donald C
-<donald.c.skidmore@intel.com> wrote:
+Currently we don't update device's mps value when doing
+pci device hot-add. The hot-added device's mps will be set
+to default value (128B). But the upstream port device's mps
+may be larger than 128B which was set by firmware during
+system bootup. In this case the new added device may not
+work normally. This patch try to update the hot added device
+mps equal to its parent mps, if device mpss < parent mps,
+print warning.
 
-> We were unable to recreate your failure here locally so I have some additional questions.  First off you mentioned it was failing as far back as v3.9, was it ever working for you?  If so bisecting would be really helpful as I mentioned we have been unable to cause the failure in house.
+References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>
+Cc: stable@vger.kernel.org # 3.4+
+---
+ drivers/pci/probe.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 47 insertions(+), 1 deletions(-)
 
-I'm not aware of any working version.  I'm exercising in the sysfs
-SR-IOV configuration, which I think appeared in v3.8 or so.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 4afd158..06e88c5 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1602,6 +1602,43 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+ 	return 0;
+ }
+ 
++static int pcie_bus_update_set(struct pci_dev *dev, void *data)
++{
++	int mps, p_mps, mpss;
++	struct pci_dev *parent;
++
++	if (!pci_is_pcie(dev) || !dev->bus->self)
++		return 0;
++
++	parent = dev->bus->self;
++	mps = pcie_get_mps(dev);
++	p_mps = pcie_get_mps(dev->bus->self);
++
++	if (mps >= p_mps)
++		return 0;
++
++	/* we only update the device mps, unless its parent device is root port,
++	 * and it is the only slot directly connected to root port.
++	 */
++	mpss = 128 << dev->pcie_mpss;
++	if (mpss >= p_mps) {
++		pcie_write_mps(dev, p_mps);
++	} else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT) {
++		pcie_write_mps(parent, mpss);
++		pcie_write_mps(dev, mpss);
++	} else
++		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
++				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
++				mps, 128 << dev->pcie_mpss, p_mps);
++	return 0;
++}
++
++static void pcie_bus_update_setting(struct pci_bus *bus)
++{
++	if (bus->self->is_hotplug_bridge)
++		pci_walk_bus(bus, pcie_bus_update_set, NULL);
++}
++
+ /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+  * parents then children fashion.  If this changes, then this code will not
+  * work as designed.
+@@ -1616,8 +1653,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus)
+ 	if (!pci_is_pcie(bus->self))
+ 		return;
+ 
+-	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
++	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
++		/* Sometimes we should update device mps here,
++		 * eg. after hot add, device mps value will be
++		 * set to default(128B), but the upstream port
++		 * mps value may be larger than 128B, if we do
++		 * not update the device mps, it maybe can not
++		 * work normally.
++		 */
++		pcie_bus_update_setting(bus);
+ 		return;
++	}
+ 
+ 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
+ 	 * to be aware to the MPS of the destination.  To work around this,
+-- 
+1.7.1
 
->  If not could you see if the problem still occurs without the external Magma PCIe expansion chassis, this is of course assuming that you can plug the X540 into your system without it.
 
-I played with this a little more and found this:
-
-1) Magma card in z420, connected to chassis containing X540: fails
-(original report)
-2) X540 in z420, Magma card in z420, connected to empty chassis: fails
-3) X540 in z420, Magma card in z420 but no cable to chassis: works
-
-The only difference I've noticed so far between configs 2 & 3 are
-different bus numbers and different IRQ assignments:
-
-Config 2 (failing):
-  pci 0000:0c:00.0: [8086:1528] type 00 class 0x020000
-  pci 0000:0c:00.0: reg 0x10: [mem 0xdac00000-0xdadfffff 64bit pref]
-  ixgbe 0000:0c:00.0: irq 82 for MSI/MSI-X
-  IRQ 79: 79
-  IRQ 80: eth0
-  IRQ 81: snd_hda_intel
-  IRQ: 82-93 eth1-TxRx-0 through eth1-TxRx-11
-  IRQ 94: eth1
-
-Config 3 (working):
-  pci 0000:04:00.0: [8086:1528] type 00 class 0x020000
-  pci 0000:04:00.0: reg 0x10: [mem 0xdac00000-0xdadfffff 64bit pref]
-  ixgbe 0000:04:00.0: irq 75 for MSI/MSI-X
-  IRQ 72: ahci
-  IRQ 73: eth0
-  IRQ 74: snd_hda_intel
-  IRQ 75-86: eth1-TxRx-0 through eth1-TxRx-11
-  IRQ 87: eth1
-
-I'll try to narrow this down a little more; I'm just giving you this
-preliminary info in case it rings any bells for you.
-
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Friday, August 09, 2013 10:19 AM
->> To: e1000-devel@lists.sourceforge.net
->> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
->> Subject: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00 to
->> PF Nacked" messages
->>
->> When I enable VFs via sysfs on an Intel X540-AT, I see an endless stream of
->>
->>     ixgbevf 0000:08:10.2: Last Request of type 03 to PF Nacked
->>
->> messages.  This on an HP z420 with the Intel X540-AT in external Magma PCIe
->> expansion chassis.  No cable is attached to the X540-AT.
->>
->> ixgbe is built as a module and is auto-loaded during boot, with no VFs
->> enabled.  The "Last request Nacked" messages start when I enable VFs
->> with:
->>
->>     # echo -n 8 > /sys/bus/pci/devices/0000:08:00.0/sriov_numvfs
->>     ixgbe 0000:08:00.0 eth1: SR-IOV enabled with 8 VFs
->>     pci 0000:08:10.0: [8086:1515] type 00 class 0x020000
->>     pci 0000:08:10.2: [8086:1515] type 00 class 0x020000
->>     ...
->>     ixgbevf: Intel(R) 10 Gigabit PCI Express Virtual Function Network Driver -
->> version 2.7.12-k
->>     ...
->>     ixgbevf 0000:08:10.2: Last Request of type 03 to PF Nacked
->>     ...
->>
->> This happens with v3.11-rc4, v3.10, and v3.9, which is as far back as I checked.
->> Complete console log and lspci output are here:
->>
->>     http://helgaas.com/linux/ixgbe/z420.log
->>     http://helgaas.com/linux/ixgbe/lspci
->>
->> ------------------------------------------------------------------------------
->> Get 100% visibility into Java/.NET code with AppDynamics Lite!
->> It's a free troubleshooting tool designed for production.
->> Get down to code-level detail for bottlenecks, with <2% overhead.
->> Download for free and get started troubleshooting in minutes.
->> http://pubads.g.doubleclick.net/gampad/clk?id=48897031&iu=/4140/ostg.clk
->> trk
->> _______________________________________________
->> E1000-devel mailing list
->> E1000-devel@lists.sourceforge.net
->> https://lists.sourceforge.net/lists/listinfo/e1000-devel
->> To learn more about Intel&#174; Ethernet, visit
->> http://communities.intel.com/community/wired
