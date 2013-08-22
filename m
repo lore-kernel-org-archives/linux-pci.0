@@ -1,55 +1,147 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Donald Dutile <ddutile@redhat.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	stable@vger.kernel.org
-Subject: [PATCH 10/28] iommu, irq: Allocate irq_desc for dmar_msi with local node
-Date: Sat, 10 Aug 2013 19:45:21 -0700
-Message-Id: <1376189139-31856-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
-References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:22229 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754436Ab3HVVt3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Aug 2013 17:49:29 -0400
+Message-ID: <1377208166.25163.31.camel@ul30vt.home>
+Subject: Re: [PATCH] pci: Add pci_walk_slot() interface
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Thu, 22 Aug 2013 15:49:26 -0600
+In-Reply-To: <CAErSpo5gUwm1nqME30DiUPOwhGfOttzjcvbtj-4aqSz4sLAcAg@mail.gmail.com>
+References: <20130819195917.9062.43580.stgit@bling.home>
+	 <CAErSpo5gUwm1nqME30DiUPOwhGfOttzjcvbtj-4aqSz4sLAcAg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-iommu irq's irq_desc should be on local node ram.
+On Thu, 2013-08-22 at 15:34 -0600, Bjorn Helgaas wrote:
+> On Mon, Aug 19, 2013 at 2:04 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > We have a pci_walk_bus() interface, but it's exceptionally cumbersome
+> > for the callback function to figure out if the device is relevant if
+> > the caller is trying to walk all the devices in or below a slot.  Add
+> > a variant to walk only slot devices.
+> 
+> Is it really exceptionally cumbersome?  You can supply the top-level
+> slot in the userdata.  Can you then use something like this in the
+> callback?
+> 
+>     bool dev_below_slot(struct pci_dev *dev, struct pci_slot *slot)
+>     {
+>         if (!dev)
+>             return false;
+>         if (dev->slot == slot)
+>             return true;
+>         return dev_below_slot(dev->bus->self, slot);
+>     }
 
-Fix the return value checking problem.
-  create_irq() will return -1 when fail to allocate.
-  create_irq_nr() will return 0 when fail to allocate.
-here only check !irq, so need to change it to use create_irq_nr instead.
+Maybe I should have said it's ugly and inefficient rather than
+cumbersome.  This feels like a backwards way to do it, but if you don't
+want a walk_slot interface, then it looks like this would work.  Thanks,
 
--v2: According to Sebastian, add cc to stable.
+Alex
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Donald Dutile <ddutile@redhat.com>
-Acked-by: Donald Dutile <ddutile@redhat.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: stable@vger.kernel.org
----
- drivers/iommu/dmar.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 785675a..db41e36 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1277,7 +1277,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
- 	if (iommu->irq)
- 		return 0;
- 
--	irq = create_irq();
-+	irq = create_irq_nr(0, iommu->node);
- 	if (!irq) {
- 		pr_err("IOMMU: no free vectors\n");
- 		return -EINVAL;
--- 
-1.8.1.4
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> >
+> > This allows me to use pci_walk_bus() and pci_walk_slot() instead of
+> > rolling my own for iterating devices for bus/slot reset.  Please
+> > consider for 3.12 to go with the rest of the bus/slot infrastructure.
+> >
+> >  drivers/pci/bus.c   |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  include/linux/pci.h |    2 ++
+> >  2 files changed, 58 insertions(+)
+> >
+> > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> > index b1ff02a..316579a 100644
+> > --- a/drivers/pci/bus.c
+> > +++ b/drivers/pci/bus.c
+> > @@ -283,6 +283,62 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_walk_bus);
+> >
+> > +/** pci_walk_slot - walk devices in/under slot, calling callback.
+> > + *  @slot     slot whose devices should be walked
+> > + *  @cb       callback to be called for each device found
+> > + *  @userdata arbitrary pointer to be passed to callback.
+> > + *
+> > + *  Walk the given slot, including any bridged devices
+> > + *  on buses under this slot.  Call the provided callback
+> > + *  on each device found.
+> > + *
+> > + *  We check the return of @cb each time. If it returns anything
+> > + *  other than 0, we break out.
+> > + *
+> > + */
+> > +void pci_walk_slot(struct pci_slot *slot, int (*cb)(struct pci_dev *, void *),
+> > +                  void *userdata)
+> > +{
+> > +       struct pci_dev *dev;
+> > +       struct pci_bus *bus;
+> > +       struct list_head *next;
+> > +       int retval;
+> > +
+> > +       bus = slot->bus;
+> > +       down_read(&pci_bus_sem);
+> > +       next = slot->bus->devices.next;
+> > +       for (;;) {
+> > +               if (next == &bus->devices) {
+> > +                       /* end of this bus, go up or finish */
+> > +                       if (bus == slot->bus)
+> > +                               break;
+> > +                       next = bus->self->bus_list.next;
+> > +                       bus = bus->self->bus;
+> > +                       continue;
+> > +               }
+> > +               dev = list_entry(next, struct pci_dev, bus_list);
+> > +
+> > +               /* skip anything on the top level bus not in our slot */
+> > +               if (dev->bus == slot->bus && dev->slot != slot) {
+> > +                       next = dev->bus_list.next;
+> > +                       continue;
+> > +               }
+> > +
+> > +               if (dev->subordinate) {
+> > +                       /* this is a pci-pci bridge, do its devices next */
+> > +                       next = dev->subordinate->devices.next;
+> > +                       bus = dev->subordinate;
+> > +               } else
+> > +                       next = dev->bus_list.next;
+> > +
+> > +               retval = cb(dev, userdata);
+> > +               if (retval)
+> > +                       break;
+> > +       }
+> > +       up_read(&pci_bus_sem);
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_walk_slot);
+> > +
+> >  struct pci_bus *pci_bus_get(struct pci_bus *bus)
+> >  {
+> >         if (bus)
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index daf40cd..cbb291b 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -1087,6 +1087,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+> >
+> >  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+> >                   void *userdata);
+> > +void pci_walk_slot(struct pci_slot *slot, int (*cb)(struct pci_dev *, void *),
+> > +                 void *userdata);
+> >  int pci_cfg_space_size_ext(struct pci_dev *dev);
+> >  int pci_cfg_space_size(struct pci_dev *dev);
+> >  unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 
