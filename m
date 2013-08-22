@@ -1,77 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:34543 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031121Ab3HIV1q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Aug 2013 17:27:46 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Myron Stowe <myron.stowe@gmail.com>
-Cc: thomas.petazzoni@free-electrons.com,
-	jgunthorpe@obsidianresearch.com, thierry.reding@avionic-design.de,
-	swarren@wwwdotorg.org, linux@arm.linux.org.uk,
-	rob.herring@calxeda.com, linux-arm-kernel@lists.infradead.org,
-	linux-pci <linux-pci@vger.kernel.org>,
-	iommu@lists.linux-foundation.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	mika.westerberg@linux.intel.com,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Don Dutile <ddutile@redhat.com>, liuj97@gmail.com,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: Re: Linux Plumbers ACPI/PM, PCI Microconference
-Date: Fri, 09 Aug 2013 23:37:56 +0200
-Message-ID: <19119445.uFrsn6yGJd@vostro.rjw.lan>
-In-Reply-To: <CAL-B5D1-CPNcOzjHx4ej5SenawvDqwC4Hef5oDkoxCb9Dz5dUw@mail.gmail.com>
-References: <CAL-B5D1-CPNcOzjHx4ej5SenawvDqwC4Hef5oDkoxCb9Dz5dUw@mail.gmail.com>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:60532 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754268Ab3HVUWM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Aug 2013 16:22:12 -0400
+Received: by mail-ob0-f173.google.com with SMTP id ta17so4531982obb.4
+        for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2013 13:22:12 -0700 (PDT)
+Date: Thu, 22 Aug 2013 14:22:06 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: add hibernation hooks
+Message-ID: <20130822202206.GA1200@google.com>
+References: <alpine.LFD.2.03.1308201637390.1566@linux.vnet.ibm.com>
+ <3503956.Yk8myngYqt@vostro.rjw.lan>
+ <CAErSpo7OfDUcfM=2Tycx9H5LG8kpSq_B93SqT21-_413Re3KpA@mail.gmail.com>
+ <3498248.Me8u1JmYkr@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3498248.Me8u1JmYkr@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, August 09, 2013 12:12:24 PM Myron Stowe wrote:
-> Time is passing quickly and there are still a few topic areas that we
-> would like discussed during the microconference but still do not have
-> any proposals/knowledgable speakers for.
-> 
-> For the following people I'm specifically picking on: Are you going to
-> plumbers, would you be willing to cover the following areas?  If you
-> are not going, do you know someone who is and could cover?
-> 
-> Yinghai: host bridge hot-plug - what has been accomplished to date and
-> what still remains to be done?
-> 
-> Mika: Thunderbolt activities?
+On Thu, Aug 22, 2013 at 12:06:43AM +0200, Rafael J. Wysocki wrote:
+> -> the prevailing convention for representing platform options like that
+> seems to be to use a pointer to an object containing callback pointers.  This
+> is what we do for pci_platform_pm and for suspend_ops, hibernation_ops etc.
+> I think it is just more flexible, because it allows the pointer to be left
+> unset if there is an initialization error of some sort or a command line
+> option disabling something is set etc.
 
-That falls under my hotplug topic (that's been submitted already).
+Good points.  I put merged the error checking into the original patch
+and put it in my pci/misc branch.  Here's the result; let me know if
+anything needs to be tweaked.
 
-> Jiang Liu, Gu Zheng: Would you be willing to cover your recent efforts
-> with PCI device (hot-plug) reference counting?
-> 
-> Russel, Rob, Stephen, Thomas, Jason, Thierry: ARM - especially any
-> PCI(e) ideosynchronicies along with ARM's IOMMU arch and how that
-> relates to PCI.
-> 
-> Alex Williamson: you want/need to cover any of the following - PCI
-> secondary bus resets; pci_is_pcie() - Not just for PCIe capabilities;
-> I/O port pci-sysfs resource files (fix or remove)?
-> 
-> Of course anyone else is free to propose something or sign up for
-> covering one of the proposed topics listed at
-> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
-> 
-> 
-> The instructions for submitting proposals should be at:
-> 
-> http://www.linuxplumbersconf.org/2013/submitting-topic/
-> 
-> The Microconference link is at:
-> 
-> http://wiki.linuxplumbersconf.org/2013:pci_subsystem
 
-Yes, everyone, if you are going to attend the LPC and have a topic for
-discussion during the ACPI/PM+PCI uconf, please submit a proposal.
+PCI: Add pcibios_pm_ops for optional arch-specific hibernate functionality
 
-We should be able to accommodate 7-8 30-minutes slots.
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
 
-Thanks,
-Rafael
+Platforms may want to provide architecture-specific functionality when
+a PCI device is doing a hibernate transition.  Add a weak symbol
+pcibios_pm_ops that architectures can override to do so.
 
+[bhelgaas: fold in return value checks from v2 patch]
+Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci-driver.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h      |    4 ++++
+ 2 files changed, 47 insertions(+)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index e6515e2..98f7b9b 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -763,6 +763,13 @@ static int pci_pm_resume(struct device *dev)
+ 
+ #ifdef CONFIG_HIBERNATE_CALLBACKS
+ 
++
++/*
++ * pcibios_pm_ops - provide arch-specific hooks when a PCI device is doing
++ * a hibernate transition
++ */
++struct dev_pm_ops __weak pcibios_pm_ops;
++
+ static int pci_pm_freeze(struct device *dev)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+@@ -786,6 +793,9 @@ static int pci_pm_freeze(struct device *dev)
+ 			return error;
+ 	}
+ 
++	if (pcibios_pm_ops.freeze)
++		return pcibios_pm_ops.freeze(dev);
++
+ 	return 0;
+ }
+ 
+@@ -811,6 +821,9 @@ static int pci_pm_freeze_noirq(struct device *dev)
+ 
+ 	pci_pm_set_unknown_state(pci_dev);
+ 
++	if (pcibios_pm_ops.freeze_noirq)
++		return pcibios_pm_ops.freeze_noirq(dev);
++
+ 	return 0;
+ }
+ 
+@@ -820,6 +833,12 @@ static int pci_pm_thaw_noirq(struct device *dev)
+ 	struct device_driver *drv = dev->driver;
+ 	int error = 0;
+ 
++	if (pcibios_pm_ops.thaw_noirq) {
++		error = pcibios_pm_ops.thaw_noirq(dev);
++		if (error)
++			return error;
++	}
++
+ 	if (pci_has_legacy_pm_support(pci_dev))
+ 		return pci_legacy_resume_early(dev);
+ 
+@@ -837,6 +856,12 @@ static int pci_pm_thaw(struct device *dev)
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 	int error = 0;
+ 
++	if (pcibios_pm_ops.thaw) {
++		error = pcibios_pm_ops.thaw(dev);
++		if (error)
++			return error;
++	}
++
+ 	if (pci_has_legacy_pm_support(pci_dev))
+ 		return pci_legacy_resume(dev);
+ 
+@@ -878,6 +903,9 @@ static int pci_pm_poweroff(struct device *dev)
+  Fixup:
+ 	pci_fixup_device(pci_fixup_suspend, pci_dev);
+ 
++	if (pcibios_pm_ops.poweroff)
++		return pcibios_pm_ops.poweroff(dev);
++
+ 	return 0;
+ }
+ 
+@@ -911,6 +939,9 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+ 	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+ 		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
+ 
++	if (pcibios_pm_ops.poweroff_noirq)
++		return pcibios_pm_ops.poweroff_noirq(dev);
++
+ 	return 0;
+ }
+ 
+@@ -920,6 +951,12 @@ static int pci_pm_restore_noirq(struct device *dev)
+ 	struct device_driver *drv = dev->driver;
+ 	int error = 0;
+ 
++	if (pcibios_pm_ops.restore_noirq) {
++		error = pcibios_pm_ops.restore_noirq(dev);
++		if (error)
++			return error;
++	}
++
+ 	pci_pm_default_resume_early(pci_dev);
+ 
+ 	if (pci_has_legacy_pm_support(pci_dev))
+@@ -937,6 +974,12 @@ static int pci_pm_restore(struct device *dev)
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 	int error = 0;
+ 
++	if (pcibios_pm_ops.restore) {
++		error = pcibios_pm_ops.restore(dev);
++		if (error)
++			return error;
++	}
++
+ 	/*
+ 	 * This is necessary for the hibernation error path in which restore is
+ 	 * called without restoring the standard config registers of the device.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..89ed123 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1648,6 +1648,10 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+ int pcibios_add_device(struct pci_dev *dev);
+ void pcibios_release_device(struct pci_dev *dev);
+ 
++#ifdef CONFIG_HIBERNATE_CALLBACKS
++extern struct dev_pm_ops pcibios_pm_ops;
++#endif
++
+ #ifdef CONFIG_PCI_MMCONFIG
+ void __init pci_mmcfg_early_init(void);
+ void __init pci_mmcfg_late_init(void);
