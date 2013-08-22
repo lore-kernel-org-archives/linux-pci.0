@@ -1,68 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:64988 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752298Ab3H0Aj3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Aug 2013 20:39:29 -0400
-Received: by mail-oa0-f50.google.com with SMTP id i4so4491468oah.37
-        for <linux-pci@vger.kernel.org>; Mon, 26 Aug 2013 17:39:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo70BYoJ4f9WD+vkYER6zZeJNO+Ar5cetRte6YYA24RYOw@mail.gmail.com>
-References: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
-	<1377141888-7000-7-git-send-email-wangyijing@huawei.com>
-	<20130822181823.GA25721@google.com>
-	<521ACE99.9000505@huawei.com>
-	<CAErSpo70BYoJ4f9WD+vkYER6zZeJNO+Ar5cetRte6YYA24RYOw@mail.gmail.com>
-Date: Mon, 26 Aug 2013 17:39:28 -0700
-Message-ID: <CAE9FiQWd7BWivERSFRrB+nhLrNcNNHq4D61j5dsGeBVVQ=vnHA@mail.gmail.com>
-Subject: Re: [PATCH v8 6/6] PCI: update device mps when doing pci hotplug
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:26032 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752226Ab3HVD0u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 23:26:50 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>, Jon Mason <jdmason@kudzu.us>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>, Jin Feng <joe.jin@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
+Subject: [PATCH v8 1/6] PCI: Drop "PCI-E" prefix from Max Payload Size message
+Date: Thu, 22 Aug 2013 11:24:43 +0800
+Message-ID: <1377141888-7000-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
+References: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 26, 2013 at 2:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> The current Linux default is PCIE_BUS_TUNE_OFF, and given that I don't
-> want to touch any MPS settings in that mode, I don't see a way to
-> safely fix https://bugzilla.kernel.org/show_bug.cgi?id=60671 (the
-> problem with hot-added devices not working because MPS is incorrect).
-> In the long term, I hope we can fix it by making the default
-> PCIE_BUS_SAFE, but that doesn't help right now.
->
-> That leaves us with only the workaround of booting the Huawei rh5885
-> box with "pci=pcie_bus_safe".
->
-> I'm willing to accept that because I think we can argue that this is
-> really a BIOS defect.  The BIOS *can* program MPS to values that will
-> be safe for hotplug even if the OS does nothing, i.e., it can set
-> MPS=128 in all paths that lead to a hotpluggable slot.  I think that's
-> probably what this BIOS *should* do, since it has no way of knowing
-> whether the OS will support hotplug or whether the OS will reprogram
-> any MPS values.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-BIOS should have several settings for MPS:
-1. 128
-2. auto or performance.
+The conventional spelling is "PCIe", but I think even that is superfluous,
+so remove the whole thing.
 
-When it set to Auto, Linux will have problem with hot-add.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Default one was 128 before, that is ok,
-as from sndbrige and ivbridge, chipset could support more than 128.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cf57fe7..1fa9e5e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1596,7 +1596,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+ 	pcie_write_mps(dev, mps);
+ 	pcie_write_mrrs(dev);
+ 
+-	dev_info(&dev->dev, "PCI-E Max Payload Size set to %4d/%4d (was %4d), "
++	dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d), "
+ 		 "Max Read Rq %4d\n", pcie_get_mps(dev), 128 << dev->pcie_mpss,
+ 		 orig_mps, pcie_get_readrq(dev));
+ 
+-- 
+1.7.1
 
-BIOS want to set it auto.
-BIOS guys is claiming that other OSes are ok with Auto, but only Linux
-has problem.
 
-So maybe it's time for us to change default to pcie_bus_perf iff
-1. we detect there are pcie bridge with hotplug support is around
-2. mpss for those bridge is not set 128. --- keep this optional ?
-
-at same time issue warning that we change to perf, is user have
-problem they could try
-to override from command line when they have problem.
-
-Yinghai
