@@ -1,91 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:50282 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752185Ab3HVB1k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 21:27:40 -0400
+Message-ID: <521568F1.7050302@huawei.com>
+Date: Thu, 22 Aug 2013 09:27:13 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20130809185036.GG25111@titan.lakedaemon.net>
-References: <20130808170822.82bf33d3cf5100f5e2646815@canb.auug.org.au>
- <5203F978.2050504@infradead.org> <20130809145939.GE25111@titan.lakedaemon.net>
- <52051BC2.2060004@infradead.org> <20130809185036.GG25111@titan.lakedaemon.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 10 Aug 2013 08:01:49 -0600
-Message-ID: <CAErSpo6S9uYTEhoS-+4EZv41pc0bu6jvcMaGX7WR9hY4o+2dsA@mail.gmail.com>
-Subject: Re: linux-next: Tree for Aug 8 (not CONFIG_PCI_MSI conflict)
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next list <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
+Subject: Re: [PATCH v6 2/2] PCI: update device mps when doing pci hotplug
+References: <1377051937-5712-1-git-send-email-wangyijing@huawei.com> <1377051937-5712-3-git-send-email-wangyijing@huawei.com> <20130821233106.GA31379@google.com>
+In-Reply-To: <20130821233106.GA31379@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 9, 2013 at 12:50 PM, Jason Cooper <jason@lakedaemon.net> wrote:
-> Randy,
->
-> On Fri, Aug 09, 2013 at 09:41:38AM -0700, Randy Dunlap wrote:
->> On 08/09/13 07:59, Jason Cooper wrote:
->> > Randy,
->> >
->> > On Thu, Aug 08, 2013 at 01:03:04PM -0700, Randy Dunlap wrote:
->> >> On 08/08/13 00:08, Stephen Rothwell wrote:
->> >>> Hi all,
->> >>>
->> >>> Changes since 20130807:
->> >>>
->> >>
->> >> on i386 and x86_64:
->> >> when CONFIG_PCI_MSI is not enabled:
->> >>
->> >> There are many of these errors:
->> >> include/linux/msi.h:65:6: error: expected identifier or '(' before 'void'
->> >> include/linux/msi.h:65:6: error: expected ')' before numeric constant
->> >>
->> >> because arch/x86/include/asm/pci.h defines:
->> >> #define default_teardown_msi_irqs  NULL
->> >
->> > Do you have an example config you used?
+>> +	mpss = 128 << dev->pcie_mpss;
+>> +	if (mpss >= p_mps) {
+>> +		pcie_write_mps(dev, p_mps);
+>> +	} else if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT &&
+>> +			pci_only_one_slot(dev->bus)) {
+> 
+> Good grief.  You apparently didn't even compile this, because
+> pci_only_one_slot() doesn't exist.
+
+I wanna shoot myself, :(, so sorry.
+
+> 
+> I reworked a couple of your previous patches and added a cleanup or two
+> of my own.  I'll post those as v7, and you can fix this one and post it
+> as a v8.  That way you and Jon can fix errors in my comments and changelogs
+> at the same time.
+
+OK, I will update this patch and try to test all this series in my machine.
+
+
+Thanks!
+Yijing.
+
+> 
+>> +		pcie_write_mps(parent, mpss);
+>> +		pcie_write_mps(dev, mpss);
+>> +	} else
+>> +		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
+>> +				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
+>> +				mps, 128 << dev->pcie_mpss, p_mps);
+>> +	return 0;
+>> +}
+>> +
+>> +static void pcie_bus_update_setting(struct pci_bus *bus)
+>> +{
+>> +	if (bus->self->is_hotplug_bridge)
+>> +		pci_walk_bus(bus, pcie_bus_update_set, NULL);
+>> +}
+>> +
+>>  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+>>   * parents then children fashion.  If this changes, then this code will not
+>>   * work as designed.
+>> @@ -1611,8 +1649,17 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+>>  	if (!pci_is_pcie(bus->self))
+>>  		return;
+>>  
+>> -	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+>> +	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>> +		/* Sometimes we should update device mps here,
+>> +		 * eg. after hot add, device mps value will be
+>> +		 * set to default(128B), but the upstream port
+>> +		 * mps value may be larger than 128B, if we do
+>> +		 * not update the device mps, it maybe can not
+>> +		 * work normally.
+>> +		 */
+>> +		pcie_bus_update_setting(bus);
+>>  		return;
+>> +	}
+>>  
+>>  	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
+>>  	 * to be aware to the MPS of the destination.  To work around this,
+>> -- 
+>> 1.7.1
 >>
->> Sure, attached. (or I have 14 of them)
->
-> Thanks, I was able to reproduce the error.  I'm not real familiar with
-> this area of the code, but the relief is it doesn't appear to be caused
-> by the mvebu changes (well, relief for us ;-) ).
->
-> At any rate, give this a spin and see if it works for you
->
-> If it's acceptable, I'll do an official patch for Bjorn.
->
-> thx,
->
-> Jason.
->
-> ---------->8----------
-> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> index d9e9e6c..6169414 100644
-> --- a/arch/x86/include/asm/pci.h
-> +++ b/arch/x86/include/asm/pci.h
-> @@ -138,8 +138,8 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
->  #else
->  #define native_setup_msi_irqs          NULL
->  #define native_teardown_msi_irq                NULL
-> -#define default_teardown_msi_irqs      NULL
-> -#define default_restore_msi_irqs       NULL
-> +void __weak default_teardown_msi_irqs(struct pci_dev *dev) { }
-> +void __weak default_restore_msi_irqs(struct pci_dev *dev, int irq) { }
+>>
+> 
+> .
+> 
 
-I don't really like this solution of putting the empty implementation
-in the header file, because then a weak body is generated in the
-object of every source file that includes the header.
 
-default_teardown_msi_irqs() and default_restore_msi_irqs() seem like
-fairly internal MSI functions, so I wonder why we need them defined at
-all when CONFIG_PCI_MSI=n.  It seems like any uses of them should be
-in code that's only compiled when CONFIG_PCI_MSI=y.  But I haven't
-reproduced the problem and investigated yet.
+-- 
+Thanks!
+Yijing
 
->  #endif
->
->  #define PCI_DMA_BUS_IS_PHYS (dma_ops->is_phys)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
