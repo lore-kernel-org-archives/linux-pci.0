@@ -1,125 +1,196 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e06smtp17.uk.ibm.com ([195.75.94.113]:56122 "EHLO
+	e06smtp17.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753813Ab3HVVWD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Aug 2013 17:22:03 -0400
+Received: from /spool/local
+	by e06smtp17.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
+	Thu, 22 Aug 2013 22:17:01 +0100
+Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
+	by d06dlp01.portsmouth.uk.ibm.com (Postfix) with ESMTP id 499A217D8057
+	for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2013 22:23:53 +0100 (BST)
+Received: from d06av05.portsmouth.uk.ibm.com (d06av05.portsmouth.uk.ibm.com [9.149.37.229])
+	by b06cxnps4074.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r7MLLjhS47906956
+	for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2013 21:21:45 GMT
+Received: from d06av05.portsmouth.uk.ibm.com (localhost [127.0.0.1])
+	by d06av05.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r7MLLu7s001728
+	for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2013 15:21:56 -0600
+Date: Thu, 22 Aug 2013 23:21:54 +0200 (CEST)
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: add hibernation hooks
+In-Reply-To: <20130822202206.GA1200@google.com>
+Message-ID: <alpine.LFD.2.03.1308222318520.1676@linux.vnet.ibm.com>
+References: <alpine.LFD.2.03.1308201637390.1566@linux.vnet.ibm.com> <3503956.Yk8myngYqt@vostro.rjw.lan> <CAErSpo7OfDUcfM=2Tycx9H5LG8kpSq_B93SqT21-_413Re3KpA@mail.gmail.com> <3498248.Me8u1JmYkr@vostro.rjw.lan> <20130822202206.GA1200@google.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
-References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
- <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 28 Aug 2013 10:33:18 -0600
-Message-ID: <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Adam Radford <aradford@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc another email addr for Adam from git logs]
+On Thu, 22 Aug 2013, Bjorn Helgaas wrote:
 
-On Wed, Aug 28, 2013 at 9:46 AM, Jiri Kosina <jkosina@suse.cz> wrote:
-> On Tue, 27 Aug 2013, Jiri Kosina wrote:
->
->> On Tue, 27 Aug 2013, Jiri Kosina wrote:
->>
->> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
->> > pci device") makes MSIs be forcibly disabled at boot time.
->> >
->> > It turns out that this breaks 3ware controller -- if MSIs are disabled
->> > during PCI discovery of this controller, the device doesn't work properly
->> > (it doesn't respond to any commands that are being sent to it after
->> > initialization).
->> >
->> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
->> > makes the device work properly again.
->> >
->> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
->> >
->> > ---
->> >
->> > I am adding Adam Radford as a recepient as well, to see whether he is able
->> > to provide some more explanation why this device would expose this
->> > behavior.
->
-> OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't
-> expect any feedback from him.
->
-> Bjorn, Jesse, any word on this please?
+> On Thu, Aug 22, 2013 at 12:06:43AM +0200, Rafael J. Wysocki wrote:
+> > -> the prevailing convention for representing platform options like that
+> > seems to be to use a pointer to an object containing callback pointers.  This
+> > is what we do for pci_platform_pm and for suspend_ops, hibernation_ops etc.
+> > I think it is just more flexible, because it allows the pointer to be left
+> > unset if there is an initialization error of some sort or a command line
+> > option disabling something is set etc.
+> 
+> Good points.  I put merged the error checking into the original patch
+> and put it in my pci/misc branch.  Here's the result; let me know if
+> anything needs to be tweaked.
 
-It's on my list to look at.  It's too late to put it in for v3.11, and
-it's doubtful that it will even make the v3.12 merge window (though
-possibly it could go in post-merge window).  d5dea7d95 is several
-years old, so hopefully this issue isn't super-urgent.  Let me know if
-otherwise.
+Great, thank you!
 
-Bjorn
+Sebastian
 
->> >  drivers/pci/msi.c    |    3 +++
->> >  drivers/pci/quirks.c |   10 ++++++++++
->> >  include/linux/pci.h  |    1 +
->> >  3 files changed, 14 insertions(+), 0 deletions(-)
->> >
->> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> > index aca7578..4f36b8b 100644
->> > --- a/drivers/pci/msi.c
->> > +++ b/drivers/pci/msi.c
->> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
->> >  {
->> >     INIT_LIST_HEAD(&dev->msi_list);
->> >
->> > +   if (dev->broken_msi_disable)
->> > +           return;
->> > +
->> >     /* Disable the msi hardware to avoid screaming interrupts
->> >      * during boot.  This is the power on reset default so
->> >      * usually this should be a noop.
->> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> > index e85d230..4ba3400 100644
->> > --- a/drivers/pci/quirks.c
->> > +++ b/drivers/pci/quirks.c
->> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
->> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
->> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
->> >
->> > +/*
->> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
->> > + * disabled on it during PCI device discovery
->> > + */
->> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
->> > +{
->> > +   dev->broken_msi_disable = 1;
->> > +}
->> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
->> > +
->> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
->> >                              void (*fn)(struct pci_dev *dev))
->> >  {
->> > diff --git a/include/linux/pci.h b/include/linux/pci.h
->> > index 0fd1f15..c327d74 100644
->> > --- a/include/linux/pci.h
->> > +++ b/include/linux/pci.h
->> > @@ -341,6 +341,7 @@ struct pci_dev {
->> >  #ifdef CONFIG_PCI_MSI
->> >     struct list_head msi_list;
->> >     struct kset *msi_kset;
->> > +   unsigned int    broken_msi_disable:1;
->> >  #endif
->> >     struct pci_vpd *vpd;
->> >  #ifdef CONFIG_PCI_ATS
->> >
->> > --
->> > Jiri Kosina
->> > SUSE Labs
->> >
->>
->> --
->> Jiri Kosina
->> SUSE Labs
->>
->
-> --
-> Jiri Kosina
-> SUSE Labs
+> 
+> 
+> PCI: Add pcibios_pm_ops for optional arch-specific hibernate functionality
+> 
+> From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+> 
+> Platforms may want to provide architecture-specific functionality when
+> a PCI device is doing a hibernate transition.  Add a weak symbol
+> pcibios_pm_ops that architectures can override to do so.
+> 
+> [bhelgaas: fold in return value checks from v2 patch]
+> Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pci-driver.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h      |    4 ++++
+>  2 files changed, 47 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index e6515e2..98f7b9b 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -763,6 +763,13 @@ static int pci_pm_resume(struct device *dev)
+> 
+>  #ifdef CONFIG_HIBERNATE_CALLBACKS
+> 
+> +
+> +/*
+> + * pcibios_pm_ops - provide arch-specific hooks when a PCI device is doing
+> + * a hibernate transition
+> + */
+> +struct dev_pm_ops __weak pcibios_pm_ops;
+> +
+>  static int pci_pm_freeze(struct device *dev)
+>  {
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> @@ -786,6 +793,9 @@ static int pci_pm_freeze(struct device *dev)
+>  			return error;
+>  	}
+> 
+> +	if (pcibios_pm_ops.freeze)
+> +		return pcibios_pm_ops.freeze(dev);
+> +
+>  	return 0;
+>  }
+> 
+> @@ -811,6 +821,9 @@ static int pci_pm_freeze_noirq(struct device *dev)
+> 
+>  	pci_pm_set_unknown_state(pci_dev);
+> 
+> +	if (pcibios_pm_ops.freeze_noirq)
+> +		return pcibios_pm_ops.freeze_noirq(dev);
+> +
+>  	return 0;
+>  }
+> 
+> @@ -820,6 +833,12 @@ static int pci_pm_thaw_noirq(struct device *dev)
+>  	struct device_driver *drv = dev->driver;
+>  	int error = 0;
+> 
+> +	if (pcibios_pm_ops.thaw_noirq) {
+> +		error = pcibios_pm_ops.thaw_noirq(dev);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+>  	if (pci_has_legacy_pm_support(pci_dev))
+>  		return pci_legacy_resume_early(dev);
+> 
+> @@ -837,6 +856,12 @@ static int pci_pm_thaw(struct device *dev)
+>  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+>  	int error = 0;
+> 
+> +	if (pcibios_pm_ops.thaw) {
+> +		error = pcibios_pm_ops.thaw(dev);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+>  	if (pci_has_legacy_pm_support(pci_dev))
+>  		return pci_legacy_resume(dev);
+> 
+> @@ -878,6 +903,9 @@ static int pci_pm_poweroff(struct device *dev)
+>   Fixup:
+>  	pci_fixup_device(pci_fixup_suspend, pci_dev);
+> 
+> +	if (pcibios_pm_ops.poweroff)
+> +		return pcibios_pm_ops.poweroff(dev);
+> +
+>  	return 0;
+>  }
+> 
+> @@ -911,6 +939,9 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+>  	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+>  		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
+> 
+> +	if (pcibios_pm_ops.poweroff_noirq)
+> +		return pcibios_pm_ops.poweroff_noirq(dev);
+> +
+>  	return 0;
+>  }
+> 
+> @@ -920,6 +951,12 @@ static int pci_pm_restore_noirq(struct device *dev)
+>  	struct device_driver *drv = dev->driver;
+>  	int error = 0;
+> 
+> +	if (pcibios_pm_ops.restore_noirq) {
+> +		error = pcibios_pm_ops.restore_noirq(dev);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+>  	pci_pm_default_resume_early(pci_dev);
+> 
+>  	if (pci_has_legacy_pm_support(pci_dev))
+> @@ -937,6 +974,12 @@ static int pci_pm_restore(struct device *dev)
+>  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+>  	int error = 0;
+> 
+> +	if (pcibios_pm_ops.restore) {
+> +		error = pcibios_pm_ops.restore(dev);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+>  	/*
+>  	 * This is necessary for the hibernation error path in which restore is
+>  	 * called without restoring the standard config registers of the device.
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 0fd1f15..89ed123 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1648,6 +1648,10 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>  int pcibios_add_device(struct pci_dev *dev);
+>  void pcibios_release_device(struct pci_dev *dev);
+> 
+> +#ifdef CONFIG_HIBERNATE_CALLBACKS
+> +extern struct dev_pm_ops pcibios_pm_ops;
+> +#endif
+> +
+>  #ifdef CONFIG_PCI_MMCONFIG
+>  void __init pci_mmcfg_early_init(void);
+>  void __init pci_mmcfg_late_init(void);
+> 
+> 
+
