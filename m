@@ -1,94 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:36160 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542Ab3HFNf4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 09:35:56 -0400
-Received: by mail-qc0-f169.google.com with SMTP id m15so195253qcq.0
-        for <linux-pci@vger.kernel.org>; Tue, 06 Aug 2013 06:35:55 -0700 (PDT)
-Date: Tue, 6 Aug 2013 07:35:48 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in
- pbus_size_io()
-Message-ID: <20130806133548.GA31970@google.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
- <CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
- <20130805195149.GA19127@google.com>
- <CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
- <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
- <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
- <20130805222135.GA29875@google.com>
- <52006bfc.6a5d3c0a.2753.ffffa6b7SMTPIN_ADDED_BROKEN@mx.google.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:44922 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752806Ab3HVDZp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 23:25:45 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
+Subject: [PATCH v8 2/6] PCI: Simplify pcie_bus_configure_settings() interface
+Date: Thu, 22 Aug 2013 11:24:44 +0800
+Message-ID: <1377141888-7000-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
+References: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52006bfc.6a5d3c0a.2753.ffffa6b7SMTPIN_ADDED_BROKEN@mx.google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 06, 2013 at 11:22:27AM +0800, Gavin Shan wrote:
-> On Mon, Aug 05, 2013 at 04:21:35PM -0600, Bjorn Helgaas wrote:
-> >On Mon, Aug 05, 2013 at 02:09:27PM -0700, Yinghai Lu wrote:
-> >> On Mon, Aug 5, 2013 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> >> then, we should drop that 4k capping.
-> >> >> I was thinking there could be strange or wild res with bigger than 4k.
-> >> >
-> >> > If there *were* an I/O BAR larger than 4KB, how should it be handled?
-> >> > I don't think capping the alignment to 4KB sounds like the best way.
-> >> > For example, a 16KB I/O BAR would still need to be aligned on 16KB.
-> >> >
-> >> > And I think capping to 4KB as you did above will break the powerpc
-> >> > pcibios_window_alignment() implementation.  For example, if
-> >> > pcibios_window_alignment() returned 16KB, and we later capped it to
-> >> > 4KB, we're going to allocate space for the bridge window with the
-> >> > wrong alignment.
-> >> 
-> >> Agree.
-> >
-> >OK.  Can you guys try this out and see whether it fixes the problem?
-> >I don't know what the actual problem *is*, so I can't tell whether
-> >this is a possible fix.
-> >
-> 
-> The code looks simpler, but it potentially breaks PowerNV platforms.
-> Lets have inline description if I understand everything here.
-> 
-> >diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> >index d4f1ad9..8333c92 100644
-> >--- a/drivers/pci/setup-bus.c
-> >+++ b/drivers/pci/setup-bus.c
-> >@@ -749,12 +749,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
-> > 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
-> > 	resource_size_t size = 0, size0 = 0, size1 = 0;
-> > 	resource_size_t children_add_size = 0;
-> >-	resource_size_t min_align, io_align, align;
-> >+	resource_size_t min_align, align;
-> >
-> > 	if (!b_res)
-> >  		return;
-> >
-> >-	io_align = min_align = window_alignment(bus, IORESOURCE_IO);
-> >+	min_align = window_alignment(bus, IORESOURCE_IO);
-> > 	list_for_each_entry(dev, &bus->devices, bus_list) {
-> > 		int i;
-> >
-> 
-> "min_align" here indicates the IO segment size on PowerNV platform.
-> On PowerNV platform, the IO range of specific PHB (PCI controller)
-> is divided evenly and each piece of that is called IO segment. For
-> example, the IO segment size ("min_align") is 64K initially. If one
-> of specific IO BAR has size of 96K (it's possible?), "min_align"
-> becomes 96K eventually, which isn't IO segment aligned.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-96K is not a valid size for any PCI BAR.  BARs are always a power-of-2
-size.  If PowerNV has an I/O segment size of 64K and we have an I/O BAR
-of 128K (illegal per spec, but assume we did for the sake of argument),
-we would allocate a 128K-aligned area, which does satisfy the PowerNV
-alignment restriction.
+Based on a patch by Jon Mason (see URL below).
 
-Bjorn
+All users of pcie_bus_configure_settings() pass arguments of the form
+"bus, bus->self->pcie_mpss".  The "mpss" argument is redundant since we
+can easily look it up internally.  In addition, all callers check
+"bus->self" for NULL, which we can also do internally.
+
+This patch simplifies the interface and the callers.  No functional change.
+
+Reference: http://lkml.kernel.org/r/1317048850-30728-2-git-send-email-mason@myri.com
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/powerpc/kernel/pci-common.c |    8 ++------
+ arch/tile/kernel/pci_gx.c        |    9 ++-------
+ arch/x86/pci/acpi.c              |    9 ++-------
+ drivers/pci/hotplug/pcihp_slot.c |    5 ++---
+ drivers/pci/probe.c              |    7 +++++--
+ include/linux/pci.h              |    2 +-
+ 6 files changed, 14 insertions(+), 26 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index f46914a..d35ec34 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1672,12 +1672,8 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 	/* Configure PCI Express settings */
+ 	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+ 		struct pci_bus *child;
+-		list_for_each_entry(child, &bus->children, node) {
+-			struct pci_dev *self = child->self;
+-			if (!self)
+-				continue;
+-			pcie_bus_configure_settings(child, self->pcie_mpss);
+-		}
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
+ 	}
+ }
+ 
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index 1142563..6640e7b 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -508,13 +508,8 @@ static void fixup_read_and_payload_sizes(struct pci_controller *controller)
+ 						rc_dev_cap.word);
+ 
+ 	/* Configure PCI Express MPS setting. */
+-	list_for_each_entry(child, &root_bus->children, node) {
+-		struct pci_dev *self = child->self;
+-		if (!self)
+-			continue;
+-
+-		pcie_bus_configure_settings(child, self->pcie_mpss);
+-	}
++	list_for_each_entry(child, &root_bus->children, node)
++		pcie_bus_configure_settings(child);
+ 
+ 	/*
+ 	 * Set the mac_config register in trio based on the MPS/MRS of the link.
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index d641897..b30e937 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -568,13 +568,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	 */
+ 	if (bus) {
+ 		struct pci_bus *child;
+-		list_for_each_entry(child, &bus->children, node) {
+-			struct pci_dev *self = child->self;
+-			if (!self)
+-				continue;
+-
+-			pcie_bus_configure_settings(child, self->pcie_mpss);
+-		}
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
+ 	}
+ 
+ 	if (bus && node != -1) {
+diff --git a/drivers/pci/hotplug/pcihp_slot.c b/drivers/pci/hotplug/pcihp_slot.c
+index fec2d5b..16f9203 100644
+--- a/drivers/pci/hotplug/pcihp_slot.c
++++ b/drivers/pci/hotplug/pcihp_slot.c
+@@ -160,9 +160,8 @@ void pci_configure_slot(struct pci_dev *dev)
+ 			(dev->class >> 8) == PCI_CLASS_BRIDGE_PCI)))
+ 		return;
+ 
+-	if (dev->bus && dev->bus->self)
+-		pcie_bus_configure_settings(dev->bus,
+-					    dev->bus->self->pcie_mpss);
++	if (dev->bus)
++		pcie_bus_configure_settings(dev->bus);
+ 
+ 	memset(&hpp, 0, sizeof(hpp));
+ 	ret = pci_get_hp_params(dev, &hpp);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 1fa9e5e..627cc88 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1607,10 +1607,13 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+  * parents then children fashion.  If this changes, then this code will not
+  * work as designed.
+  */
+-void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
++void pcie_bus_configure_settings(struct pci_bus *bus)
+ {
+ 	u8 smpss;
+ 
++	if (!bus->self)
++		return;
++
+ 	if (!pci_is_pcie(bus->self))
+ 		return;
+ 
+@@ -1625,7 +1628,7 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ 		smpss = 0;
+ 
+ 	if (pcie_bus_config == PCIE_BUS_SAFE) {
+-		smpss = mpss;
++		smpss = bus->self->pcie_mpss;
+ 
+ 		pcie_find_smpss(bus->self, &smpss);
+ 		pci_walk_bus(bus, pcie_find_smpss, &smpss);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 408f047..13ee987 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -675,7 +675,7 @@ struct pci_driver {
+ /* these external functions are only available when PCI support is enabled */
+ #ifdef CONFIG_PCI
+ 
+-void pcie_bus_configure_settings(struct pci_bus *bus, u8 smpss);
++void pcie_bus_configure_settings(struct pci_bus *bus);
+ 
+ enum pcie_bus_config_types {
+ 	PCIE_BUS_TUNE_OFF,
+-- 
+1.7.1
+
+
