@@ -1,50 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:9649 "EHLO mga14.intel.com"
+Received: from smtp02.citrix.com ([66.165.176.63]:5623 "EHLO SMTP02.CITRIX.COM"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751305Ab3HFX1i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Aug 2013 19:27:38 -0400
-Message-ID: <52018664.1080103@intel.com>
-Date: Tue, 06 Aug 2013 16:27:32 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+	id S1754526Ab3HVWT1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Aug 2013 18:19:27 -0400
+From: Zoltan Kiss <zoltan.kiss@citrix.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Zoltan Kiss <zoltan.kiss@citrix.com>
+Subject: [PATCH] pci: avoid unnecessary writing of the command register during probe
+Date: Thu, 22 Aug 2013 23:19:18 +0100
+Message-ID: <1377209958-26362-1-git-send-email-zoltan.kiss@citrix.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org, ddutile@redhat.com,
-	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 8/9] pci: Tune secondary bus reset timing
-References: <20130805193200.9260.38729.stgit@bling.home> <20130805193753.9260.35206.stgit@bling.home>
-In-Reply-To: <20130805193753.9260.35206.stgit@bling.home>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/05/2013 12:37 PM, Alex Williamson wrote:
-> The PCI spec indicates that with stable power, reset needs to be
-> asserted for a minimum of 1ms (Trst).  Seems like we should be able
-> to assume power is stable for a runtime secondary bus reset.  The
-> current code has always used 100ms with no explanation where that
-> came from.  The aer_do_secondary_bus_reset() function uses 2ms, but
-> that seems to be a misinterpretation of the PCIe spec, where hot
-> reset is implemented by TS1 ordered sets containing the hot reset
-> command.  After a 2ms delay the state machine enters the detect state,
-> but to generate a link down, only two consecutive TS1 hot reset
-> ordered sets are requred.  1ms should be plenty for that.
+While I tracked an another bug, I noticed that the PCI command register is
+quite often updated here unnecessarily.
 
-The reason for doing a 2ms sleep is because the are supposed to be
-sending the Hot Reset TS1 Ordered-Sets continuously for 2ms per all of
-the documents I have read.  The 1ms number you quote is the minimum time
-for a conventional PCI bus.  I'm not completely sure of that applies as
-well to PCIe, nor does it represent the maximum recommended value.
+Signed-off-by: Zoltan Kiss <zoltan.kiss@citrix.com>
+---
+ drivers/pci/probe.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-If we stop early we risk not resetting the full device tree on the
-secondary bus which is the bug I was resolving by adding the 2ms delay. 
-Previously we saw that some devices were only getting their PCIe link
-retrained without performing a hot reset when the bit was not held for
-long enough.  I would prefer to keep this at 2 ms in order to account
-for the fact that PCIe has to go though link recovery states before it
-can perform the hot reset.
-
-Thanks,
-
-Alex
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 46ada5c..54f6bec 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -178,8 +178,12 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	/* No printks while decoding is disabled! */
+ 	if (!dev->mmio_always_on) {
+ 		pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
+-		pci_write_config_word(dev, PCI_COMMAND,
+-			orig_cmd & ~(PCI_COMMAND_MEMORY | PCI_COMMAND_IO));
++		if (orig_cmd & (PCI_COMMAND_MEMORY | PCI_COMMAND_IO)) {
++			pci_write_config_word(dev,
++				PCI_COMMAND,
++				orig_cmd &
++				~(PCI_COMMAND_MEMORY | PCI_COMMAND_IO));
++		}
+ 	}
+ 
+ 	res->name = pci_name(dev);
+@@ -293,7 +297,8 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ fail:
+ 	res->flags = 0;
+ out:
+-	if (!dev->mmio_always_on)
++	if (!dev->mmio_always_on &&
++		(orig_cmd & (PCI_COMMAND_MEMORY | PCI_COMMAND_IO)))
+ 		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
+ 
+ 	if (bar_too_big)
+-- 
+1.7.9.5
 
