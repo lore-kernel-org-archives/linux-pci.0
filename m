@@ -1,64 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:41220 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933939Ab3HIOtz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:55 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v6 10/14] ARM: tegra: Enable PCIe controller on Beaver
-Date: Fri,  9 Aug 2013 16:49:28 +0200
-Message-Id: <1376059772-16669-11-git-send-email-treding@nvidia.com>
-In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
-References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:44913 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752806Ab3HVDZc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 23:25:32 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v8 5/6] PCI: Don't restrict MPS for slots below Root Ports
+Date: Thu, 22 Aug 2013 11:24:47 +0800
+Message-ID: <1377141888-7000-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
+References: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@gmail.com>
+When booting with "pci=pcie_bus_safe", we previously limited the
+fabric MPS to 128 when we found:
 
-PCIe lane 0 is connected to an onboard Gigabit Ethernet (RTL8168evl) and
-lane 4 is routed to the board's miniPCIe slot.
+  (1) A hotplug-capable Downstream Port ("dev->is_hotplug_bridge &&
+      pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT"), or
 
-Signed-off-by: Thierry Reding <thierry.reding@gmail.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+  (2) A hotplug-capable Root Port with a slot that was either empty or
+      contained a multi-function device ("dev->is_hotplug_bridge &&
+      !list_is_singular(&dev->bus->devices)")
+
+Part (1) is valid, but part (2) is not.
+
+After a hot-add in the slot below a Root Port, we can reconfigure all
+MPS values in the fabric below the Root Port because the new device is
+the only thing below the Root Port and there are no active drivers.
+Therefore, there's no reason to limit the MPS for Root Ports, no
+matter what's in the slot.
+
+Test info:
+
+    -+-[0000:40]-+-07.0-[0000:46]--+-00.0  Intel 82576 NIC
+                                   \-00.1  Intel 82576 NIC
+
+    0000:40:07.0 Root Port bridge to [bus 46] (MPS supported=256)
+    0000:46:00.0 Endpoint                     (MPS supported=512)
+    0000:46:00.1 Endpoint                     (MPS supported=512)
+
+    # echo 0 > /sys/bus/pci/slots/7/power
+    # echo 1 > /sys/bus/pci/slots/7/power
+    # dmesg
+    ...
+    pcieport 0000:40:07.0: PCI-E Max Payload Size set to 256/ 256 (was 256)
+    pci 0000:46:00.0:      PCI-E Max Payload Size set to 256/ 512 (was 128)
+    pci 0000:46:00.1:      PCI-E Max Payload Size set to 256/ 512 (was 128)
+
+Before this change, we set MPS to 128 for the Root Port and both NICs
+because the slot contained a multi-function device and
+
+    dev->is_hotplug_bridge && !list_is_singular(&dev->bus->devices)
+
+was true.  After this change, we set it to 256.
+
+[bhelgaas: changelog, comments, split out upstream bridge check]
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jon Mason <jdmason@kudzu.us>
 ---
- arch/arm/boot/dts/tegra30-beaver.dts | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/pci/probe.c |   32 ++++++++++++++++----------------
+ 1 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/arch/arm/boot/dts/tegra30-beaver.dts b/arch/arm/boot/dts/tegra30-beaver.dts
-index 87c5f7b..4d9fa31 100644
---- a/arch/arm/boot/dts/tegra30-beaver.dts
-+++ b/arch/arm/boot/dts/tegra30-beaver.dts
-@@ -10,6 +10,27 @@
- 		reg = <0x80000000 0x7ff00000>;
- 	};
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 87be31b..4afd158 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1491,23 +1491,23 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
+ 	if (!pci_is_pcie(dev))
+ 		return 0;
  
-+	pcie-controller {
-+		status = "okay";
-+		pex-clk-supply = <&sys_3v3_pexs_reg>;
-+		vdd-supply = <&ldo1_reg>;
-+		avdd-supply = <&ldo2_reg>;
-+
-+		pci@1,0 {
-+			status = "okay";
-+			nvidia,num-lanes = <4>;
-+		};
-+
-+		pci@2,0 {
-+			status = "okay";
-+			nvidia,num-lanes = <1>;
-+		};
-+
-+		pci@3,0 {
-+			nvidia,num-lanes = <1>;
-+		};
-+	};
-+
- 	pinmux {
- 		pinctrl-names = "default";
- 		pinctrl-0 = <&state_default>;
+-	/* For PCIE hotplug enabled slots not connected directly to a
+-	 * PCI-E root port, there can be problems when hotplugging
+-	 * devices.  This is due to the possibility of hotplugging a
+-	 * device into the fabric with a smaller MPS that the devices
+-	 * currently running have configured.  Modifying the MPS on the
+-	 * running devices could cause a fatal bus error due to an
+-	 * incoming frame being larger than the newly configured MPS.
+-	 * To work around this, the MPS for the entire fabric must be
+-	 * set to the minimum size.  Any devices hotplugged into this
+-	 * fabric will have the minimum MPS set.  If the PCI hotplug
+-	 * slot is directly connected to the root port and there are not
+-	 * other devices on the fabric (which seems to be the most
+-	 * common case), then this is not an issue and MPS discovery
+-	 * will occur as normal.
++	/*
++	 * We don't have a way to change MPS settings on devices that have
++	 * drivers attached.  A hot-added device might support only the minimum
++	 * MPS setting (MPS=128).  Therefore, if the fabric contains a bridge
++	 * where devices may be hot-added, we limit the fabric MPS to 128 so
++	 * hot-added devices will work correctly.
++	 *
++	 * However, if we hot-add a device to a slot directly below a Root
++	 * Port, it's impossible for there to be other existing devices below
++	 * the port.  We don't limit the MPS in this case because we can
++	 * reconfigure MPS on both the Root Port and the hot-added device,
++	 * and there are no other devices involved.
++	 *
++	 * Note that this PCIE_BUS_SAFE path assumes no peer-to-peer DMA.
+ 	 */
+-	if (dev->is_hotplug_bridge && (!list_is_singular(&dev->bus->devices) ||
+-	    pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT))
++	if (dev->is_hotplug_bridge &&
++	    pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+ 		*smpss = 0;
+ 
+ 	if (*smpss > dev->pcie_mpss)
 -- 
-1.8.3.4
+1.7.1
+
 
