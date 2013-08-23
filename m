@@ -1,103 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:47580 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756609Ab3H2VJ4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 17:09:56 -0400
-Received: by mail-ie0-f171.google.com with SMTP id 9so1752630iec.2
-        for <linux-pci@vger.kernel.org>; Thu, 29 Aug 2013 14:09:55 -0700 (PDT)
-MIME-Version: 1.0
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:65084 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754323Ab3HWQGP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 12:06:15 -0400
+Received: by mail-ie0-f176.google.com with SMTP id s9so1054267iec.7
+        for <linux-pci@vger.kernel.org>; Fri, 23 Aug 2013 09:06:15 -0700 (PDT)
+Date: Fri, 23 Aug 2013 10:06:12 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 29 Aug 2013 15:09:35 -0600
-Message-ID: <CAErSpo4cC7XKQn+2Pg9r+VDrcqKP4M4KQFRqQAvegTbnkUWf+A@mail.gmail.com>
-Subject: Re: [PATCH v8 6/6] PCI: update device mps when doing pci hotplug
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Yijing Wang <wangyijing@huawei.com>, Jon Mason <jdmason@kudzu.us>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Jin Feng <joe.jin@oracle.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Zoltan Kiss <zoltan.kiss@citrix.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: avoid unnecessary writing of the command register
+ during probe
+Message-ID: <20130823160612.GA13605@google.com>
+References: <1377209958-26362-1-git-send-email-zoltan.kiss@citrix.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1377209958-26362-1-git-send-email-zoltan.kiss@citrix.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-kernel, since more folks might be interested]
+On Thu, Aug 22, 2013 at 11:19:18PM +0100, Zoltan Kiss wrote:
+> While I tracked an another bug, I noticed that the PCI command register is
+> quite often updated here unnecessarily.
+> 
+> Signed-off-by: Zoltan Kiss <zoltan.kiss@citrix.com>
 
-On Mon, Aug 26, 2013 at 6:39 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Aug 26, 2013 at 2:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> The current Linux default is PCIE_BUS_TUNE_OFF, and given that I don't
->> want to touch any MPS settings in that mode, I don't see a way to
->> safely fix https://bugzilla.kernel.org/show_bug.cgi?id=60671 (the
->> problem with hot-added devices not working because MPS is incorrect).
->> In the long term, I hope we can fix it by making the default
->> PCIE_BUS_SAFE, but that doesn't help right now.
->>
->> That leaves us with only the workaround of booting the Huawei rh5885
->> box with "pci=pcie_bus_safe".
->>
->> I'm willing to accept that because I think we can argue that this is
->> really a BIOS defect.  The BIOS *can* program MPS to values that will
->> be safe for hotplug even if the OS does nothing, i.e., it can set
->> MPS=128 in all paths that lead to a hotpluggable slot.  I think that's
->> probably what this BIOS *should* do, since it has no way of knowing
->> whether the OS will support hotplug or whether the OS will reprogram
->> any MPS values.
->
-> BIOS should have several settings for MPS:
-> 1. 128
-> 2. auto or performance.
->
-> When it set to Auto, Linux will have problem with hot-add.
->
-> Default one was 128 before, that is ok,
-> as from sndbrige and ivbridge, chipset could support more than 128.
->
-> BIOS want to set it auto.
-> BIOS guys is claiming that other OSes are ok with Auto, but only Linux
-> has problem.
-
-I don't understand the argument the BIOS guys are making.
-
-1.  If the BIOS sets MPS=128 for all devices all the time, everything
-should always work.  Performance won't be optimal, but it should
-always work.
-
-This requires no OS support at all, so the current Linux default of
-doing nothing is fine.
-
-2.  If the BIOS sets MPS to something larger than 128 for hardwired
-devices only (where no hotplug is possible), the BIOS either knows
-that the root complex will split peer-to-peer packets as required (sec
-1.3.1), or it assumes there will be no peer-to-peer traffic between
-hierarchies.
-
-This should also work fine with no OS support, unless we do
-peer-to-peer traffic and the root complex doesn't split packets.
-
-3.  If the BIOS sets MPS to something larger than 128 in a path that
-leads to a hotplug slot, the BIOS assumes the OS actively manages MPS
-for hotplug.
-
-This requires OS support because if we hot-add a device that only
-supports MPS=128, the OS must reprogram the upstream path before using
-the device.
-
-I don't know what the BIOS "auto" setting means, but it must mean
-something in case 3, because that's the only case where OS support is
-required.  But if the OS is smart enough to manage MPS for hot-added
-devices, why can't the OS also program MPS for the whole system at
-boot-time?
-
-That's why I don't understand what BIOS wants to do.  It sounds like
-they want the performance benefit of larger MPS for devices present in
-hot-plug slots at boot-time, even if the OS doesn't actively manage
-MPS and things blow up if that device is replaced with one that
-supports a smaller MPS.  That choice doesn't make sense.
-
-In case 3, with a non-MPS-aware OS, you get better performance for a
-while, but blow up if a card is replaced.  And with an MPS-aware OS,
-there should be no advantage to case 3: the OS should be able to get
-good performance by programming MPS itself, even without help from the
-BIOS.
+I applied this to pci/misc with minor tweaks as follows.  Let me know
+if you see anything wrong.
 
 Bjorn
+
+
+PCI: Disable decoding for BAR sizing only when it was actually enabled
+
+From: Zoltan Kiss <zoltan.kiss@citrix.com>
+
+We disable BARs while sizing them so we don't cause conflicts with other
+devices (see 253d2e5498 and bbffe43524).  But if device decoding is already
+disabled before we size the BAR, we don't need to disable it again.
+
+[bhelgaas: changelog, add PCI_COMMAND_DECODING_ENABLE for readability]
+Signed-off-by: Zoltan Kiss <zoltan.kiss@citrix.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cf57fe7..2c6f328 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -165,6 +165,8 @@ static inline unsigned long decode_bar(struct pci_dev *dev, u32 bar)
+  *
+  * Returns 1 if the BAR is 64-bit, or 0 if 32-bit.
+  */
++#define PCI_COMMAND_DECODE_ENABLE	(PCI_COMMAND_MEMORY | PCI_COMMAND_IO)
++
+ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 			struct resource *res, unsigned int pos)
+ {
+@@ -178,8 +180,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	/* No printks while decoding is disabled! */
+ 	if (!dev->mmio_always_on) {
+ 		pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
+-		pci_write_config_word(dev, PCI_COMMAND,
+-			orig_cmd & ~(PCI_COMMAND_MEMORY | PCI_COMMAND_IO));
++		if (orig_cmd & PCI_COMMAND_DECODE_ENABLE) {
++			pci_write_config_word(dev, PCI_COMMAND,
++				orig_cmd & ~PCI_COMMAND_DECODE_ENABLE);
++		}
+ 	}
+ 
+ 	res->name = pci_name(dev);
+@@ -293,7 +297,8 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ fail:
+ 	res->flags = 0;
+ out:
+-	if (!dev->mmio_always_on)
++	if (!dev->mmio_always_on &&
++	    (orig_cmd & PCI_COMMAND_DECODE_ENABLE))
+ 		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
+ 
+ 	if (bar_too_big)
