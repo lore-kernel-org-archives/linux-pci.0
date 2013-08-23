@@ -1,74 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:37513 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756428Ab3HMA4i convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 20:56:38 -0400
-Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
-Mime-Version: 1.0 (Apple Message framework v1283)
-Content-Type: text/plain; charset=us-ascii
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
-Date: Mon, 12 Aug 2013 19:56:33 -0500
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Message-Id: <BA285A30-3E38-4F7A-BD5E-3271AD1A46BE@codeaurora.org>
-References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com> <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAOLK0pwQJVvcT5xA-+Ftb85FzbjHN-OZmXO=n7r4EWh4nFjSBA@mail.gmail.com>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+	<1376189294-32022-29-git-send-email-yinghai@kernel.org>
+	<CANVTcTYhSfU+Su9s1B+mTTBfgsZgqvQxHiTsLck1zT_vg1Cs4g@mail.gmail.com>
+	<CANVTcTb2+qX6XMBqrzeLho9yFS55AnztVJ85JBMuxjoH11qzaQ@mail.gmail.com>
+	<CAOLK0pwQJVvcT5xA-+Ftb85FzbjHN-OZmXO=n7r4EWh4nFjSBA@mail.gmail.com>
+Date: Fri, 23 Aug 2013 11:38:44 -0700
+Message-ID: <CAE9FiQWnGaa6omcLW0zxLj+UMspRGxjVoYXUsH3ndydGD51T9w@mail.gmail.com>
+Subject: Re: [PATCH v4 28/28] PCI, x86, ACPI: get ioapic address from acpi device
+From: Yinghai Lu <yinghai@kernel.org>
+To: Lan Tianyu <lantianyu1986@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: rui wang <ruiv.wang@gmail.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger kernel org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Aug 23, 2013 at 8:34 AM, Lan Tianyu <lantianyu1986@gmail.com> wrote:
+>> I worked around the problem by replacing acpi_resource_to_address64()
+>> with resource_to_addr().  But resource_to_addr() is a static function
+>> in arch/x86/pci/acpi.c, not very convenient to use. Here's what I did:
+>>
+>
+> Hi Rui&Yinghai:
+>            How about using the following code to translate struct
+>  acpi_resource to struct resouce in this setup_res()?
+>
+>          if (acpi_dev_resource_address_space(...)
+>                 || acpi_dev_resource_memory(..))
+>               return AE_OK;
 
-On Aug 12, 2013, at 1:46 PM, Sebastian Hesselbarth wrote:
+Yest, that could be better, will update that.
 
-> This patch adds a check for DT passed reset-gpios property and deasserts/
-> asserts reset pin on probe/remove with configurable delay. Corresponding
-> binding documentation is also updated.
-> 
-> Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-> ---
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Jason Cooper <jason@lakedaemon.net>
-> Cc: Andrew Lunn <andrew@lunn.ch>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: devicetree@vger.kernel.org
-> Cc: linux-doc@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-pci@vger.kernel.org
-> ---
-> .../devicetree/bindings/pci/mvebu-pci.txt          |    2 ++
-> drivers/pci/host/pci-mvebu.c                       |   33 +++++++++++++++++++-
-> 2 files changed, 34 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> index 638673a..f2fa261 100644
-> --- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> @@ -76,6 +76,8 @@ and the following optional properties:
-> - marvell,pcie-lane: the physical PCIe lane number, for ports having
->   multiple lanes. If this property is not found, we assume that the
->   value is 0.
-> +- reset-gpios: optional gpio to PERST#
-> +- reset-delay-ms: delay in ms to wait after reset de-assertion
+Also can you submit patch that will use that in res_to_addr of
+arch/x86/pci/acpi.c?
 
-Both of these should probably be marvell,reset...
+Thanks
 
-Does reset-delay-ms vary per board?  I can't remember where the discussion got to about configuration info.
-
-> 
-> Example:
-
-It's usually good to update example to show all optional properties.
-
-- k
---
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
+Yinghai
