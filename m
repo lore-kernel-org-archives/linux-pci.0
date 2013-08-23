@@ -1,111 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.bemta3.messagelabs.com ([195.245.230.176]:33145 "EHLO
-	mail1.bemta3.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753642Ab3H2Igh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 04:36:37 -0400
-Date: Thu, 29 Aug 2013 10:29:42 +0200
-From: Johannes Thumshirn <johannes.thumshirn@men.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Johannes Thumshirn <johannes.thumshirn@men.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: PCI reset problem
-Message-ID: <20130829082941.GA11203@jtlinux>
-References: <20130828133337.GA8544@jtlinux>
- <CAErSpo5sa2cJXOUhfe5VDzxwabf0Um42ZfBwOMhF1TbwCW9G=w@mail.gmail.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:57853 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755198Ab3HWUmm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Aug 2013 16:42:42 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Neil Horman <nhorman@tuxdriver.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] ACPI: Fix osc flag setup ordering to allow pcie hotplug use when available
+Date: Fri, 23 Aug 2013 22:53:20 +0200
+Message-ID: <3958698.Gm9Wz19SSi@vostro.rjw.lan>
+In-Reply-To: <20130823200511.GB632@hmsreliant.think-freely.org>
+References: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com> <2074111.WRY7FfU4Ni@vostro.rjw.lan> <20130823200511.GB632@hmsreliant.think-freely.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAErSpo5sa2cJXOUhfe5VDzxwabf0Um42ZfBwOMhF1TbwCW9G=w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 28, 2013 at 10:50:58AM -0600, Bjorn Helgaas wrote:
-> [+cc Yinghai]
->
-> On Wed, Aug 28, 2013 at 7:33 AM, Johannes Thumshirn
-> <johannes.thumshirn@men.de> wrote:
-> > Hi List,
-> >
-> > I have a rather odd problem with a PCIe swicht/bridge which does not get
-> > enumerated correctly. If I issue _two_ manual rescans of the PCI bus via sysfs,
-> > everything get setup correctly. To work around the problem I decided to make a
-> > platform specific PCI quirk (for the embedded system I'm on, to not break
-> > anything else) and issue the pci_rescan_bus() myself as a "final" fixup. However
-> > this does not have any effect at all.
-> >
-> > Does anyone have an idea what I could do wrong?
->
-> A rescan doesn't really do anything differently from the initial
-> boot-time scan.  Maybe there's an issue with the switch taking a long
-> time to respond after reset?  But that doesn't seem likely, because if
-> you do manual rescans via sysfs, that should give plenty of time and
-> you wouldn't have to do it *twice*.
->
-> Maybe there's some resource or bus number allocation issue such that
-> we don't even get down to the problem switch the first couple of
-> times?
->
-> > Example:
-> > root@generic-powerpc:~# lspci -tv
-> > -[0000:00]---00.0-[01]--
-> > root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
-> > [...]
-> > root@generic-powerpc:~# lspci -tv
-> > -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]--
-> >                                            +-02.0-[04]--
-> >                                            \-03.0-[05]--
-> > root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
-> > [...]
-> > root@generic-powerpc:~# lspci -tv
-> > -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]----00.0  Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
-> >                                            +-02.0-[04]--
-> >                                            \-03.0-[05]--+-00.0  Pericom Semiconductor Device 400e
-> >                                                         +-00.1  Pericom Semiconductor Device 400e
-> >                                                         \-00.2  Pericom Semiconductor Device 400f
->
-> I bet that's what's happening: the first lspci shows the 00:00.0
-> bridge leading only to bus 01.  The second lspci shows 00:00.0 leading
-> to [bus 01-05], so its bus number aperture has been reconfigured.
->
-> On x86 the BIOS typically configures all the bridges so we can see all
-> the devices.  But it looks like your platform doesn't, and the Linux
-> paths that do similar configuration are not as well exercised.
->
+On Friday, August 23, 2013 04:05:11 PM Neil Horman wrote:
+> On Fri, Aug 23, 2013 at 09:38:18PM +0200, Rafael J. Wysocki wrote:
+> > [CCs added]
+> > 
+> > Please always send PCI-related material to linux-pci in the first place.
+> > 
+> Sorry, I ran get_maintainers and it seemed to think linux-acpi was sufficient.
+> 
+> > The change that broke things for you was actually intentional:
+> > 
+> > commit b8178f130e25c1bdac1c33e0996f1ff6e20ec08e
+> > Author: Bjorn Helgaas <bhelgaas@google.com>
+> > Date:   Mon Apr 1 15:47:39 2013 -0600
+> > 
+> >     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
+> >     
+> >     This reverts commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6.
+> > 
+> > so I think we'll need to clean up the ASMP initialization after all.
+> > 
+> Crud.  Reading over the revert commit, it seems like the problem boils down to
+> the odering of checking aspm_disabled.  It seems to me that the simple fix is to
+> track the desire for acpi to disable aspm separately from the users desire to
+> disable aspm (aspm_disabled).  Then we just turn the points where we check the
+> aspm_disabled into the appropriate or of two variables, except for
+> pcie_asmp_sanity_check, which remains sensitive to just the user disable option.
+> 
+> Or is there more to this?
 
-I'll have a look into my U-Boot again as well, maybe I can resolve it there.
+No, I think you're right.
 
-> Can you collect a complete dmesg log including initial boot and your
-> manual sysfs rescansand attach it to a new bugzilla report at
-> https://bugzilla.kernel.org/enter_bug.cgi?component=PCI&product=Drivers
-> ?  There might be some generic way we can fix this.
->
+Bjorn, what do you think?
 
-I can do, though I have to say, it's a 3.8 Kernel from Freescale's SDK. I
-don't really know if mainline wants to care about it.
+Rafael
 
-> Bjorn
->
-> > "My" rescan quirk:
-> > #if CONFIG_PCI
-> > static DEFINE_MUTEX(rescan_mutex);
-> > static void xm51_fixup_bridge(struct pci_dev *dev)
-> > {
-> >         struct pci_bus *b = NULL;
-> >
-> >         mutex_lock(&rescan_mutex);
-> >         while((b = pci_find_next_bus(b)) != NULL)
-> >                 pci_rescan_bus(b);
-> >         mutex_unlock(&rescan_mutex);
-> > }
-> > DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, 0x0401, xm51_fixup_bridge);
-> > #endif
-> >
-> >
-> > Thanks in advance,
-> > Johannes
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Johannes
+> > On Friday, August 23, 2013 01:19:39 PM Neil Horman wrote:
+> > > Somewhere between 3.9 and 3.10 it seems the order in which pcie and acpi probed
+> > > slots for hotplug capabilites got reversed.  While this isn't a big deal, it did
+> > > uncover a bug in the ACPI bus setup path.  Specifically, acpi_pci_root_add calls
+> > > pci_acpi_scan_root before setting the osc flags for the device handle.
+> > > pci_acpi_scan_root, among other things uses device_is_managed_by_native_pciehp()
+> > > to determine if a given slot has pcie hotplug capabilties, whcih checks the
+> > > devices OSC_PCI_EXPRESS_NATIVE_HP_CONTROL flag.  Since that flag is not set
+> > > until after pci_acpi_scan_root_completes, the acpi code never sees that pcie
+> > > slots are hotplug capable and configures them all to use acpi instead.
+> > > 
+> > > Fix is pretty simple, just defer the scan until after the osc flags have been
+> > > set on the device.  Tested by myself and it seems to work well.
+> > > 
+> > > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> > > CC: Len Brown <lenb@kernel.org>
+> > > CC: "Rafael J. Wysocki" <rjw@sisk.pl>
+> > > CC: linux-acpi@vger.kernel.org
+> > > ---
+> > >  drivers/acpi/pci_root.c | 41 ++++++++++++++++++++---------------------
+> > >  1 file changed, 20 insertions(+), 21 deletions(-)
+> > > 
+> > > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> > > index 5917839..a2c2661 100644
+> > > --- a/drivers/acpi/pci_root.c
+> > > +++ b/drivers/acpi/pci_root.c
+> > > @@ -437,27 +437,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+> > >  	flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
+> > >  	acpi_pci_osc_support(root, flags);
+> > >  
+> > > -	/*
+> > > -	 * TBD: Need PCI interface for enumeration/configuration of roots.
+> > > -	 */
+> > > -
+> > > -	/*
+> > > -	 * Scan the Root Bridge
+> > > -	 * --------------------
+> > > -	 * Must do this prior to any attempt to bind the root device, as the
+> > > -	 * PCI namespace does not get created until this call is made (and
+> > > -	 * thus the root bridge's pci_dev does not exist).
+> > > -	 */
+> > > -	root->bus = pci_acpi_scan_root(root);
+> > > -	if (!root->bus) {
+> > > -		dev_err(&device->dev,
+> > > -			"Bus %04x:%02x not present in PCI namespace\n",
+> > > -			root->segment, (unsigned int)root->secondary.start);
+> > > -		result = -ENODEV;
+> > > -		goto end;
+> > > -	}
+> > > -
+> > > -	/* Indicate support for various _OSC capabilities. */
+> > >  	if (pci_ext_cfg_avail())
+> > >  		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
+> > >  	if (pcie_aspm_support_enabled()) {
+> > > @@ -520,6 +499,26 @@ static int acpi_pci_root_add(struct acpi_device *device,
+> > >  			 "(_OSC support mask: 0x%02x)\n", flags);
+> > >  	}
+> > >  
+> > > +	/*
+> > > +	 * TBD: Need PCI interface for enumeration/configuration of roots.
+> > > +	 */
+> > > +
+> > > +	/*
+> > > +	 * Scan the Root Bridge
+> > > +	 * --------------------
+> > > +	 * Must do this prior to any attempt to bind the root device, as the
+> > > +	 * PCI namespace does not get created until this call is made (and
+> > > +	 * thus the root bridge's pci_dev does not exist).
+> > > +	 */
+> > > +	root->bus = pci_acpi_scan_root(root);
+> > > +	if (!root->bus) {
+> > > +		dev_err(&device->dev,
+> > > +			"Bus %04x:%02x not present in PCI namespace\n",
+> > > +			root->segment, (unsigned int)root->secondary.start);
+> > > +		result = -ENODEV;
+> > > +		goto end;
+> > > +	}
+> > > +
+> > >  	pci_acpi_add_bus_pm_notifier(device, root->bus);
+> > >  	if (device->wakeup.flags.run_wake)
+> > >  		device_set_run_wake(root->bus->bridge, true);
+> > > 
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
