@@ -1,274 +1,143 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v5 6/9] pci: Add slot and bus reset interfaces
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
-	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Thu, 08 Aug 2013 14:09:55 -0600
-Message-ID: <20130808200955.2932.30491.stgit@bling.home>
-In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
-References: <20130808200444.2932.17381.stgit@bling.home>
+Date: Fri, 23 Aug 2013 14:05:39 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	Arnd Bergmann <arnd@arndb.de>, 'Sean Cross' <xobs@kosagi.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH V2] PCI: exynos: add support for MSI
+Message-ID: <20130823083539.GB3937@pratyush-vbox>
+References: <003d01ce9fc6$9c0f1c20$d42d5460$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <003d01ce9fc6$9c0f1c20$d42d5460$%han@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sometimes pci_reset_function is not sufficient.  We have cases where
-devices do not support any kind of reset, but there might be multiple
-functions on the bus preventing pci_reset_function from doing a
-secondary bus reset.  We also have cases where a device will advertise
-that it supports a PM reset, but really does nothing on D3hot->D0
-(graphics cards are notorious for this).  These devices often also
-have more than one function, so even blacklisting PM reset for them
-wouldn't allow a secondary bus reset through pci_reset_function.
+On Fri, Aug 23, 2013 at 02:04:20PM +0800, Jingoo Han wrote:
+> This patch adds support for Message Signaled Interrupt in the
+> Exynos PCIe diver using Synopsys designware PCIe core IP.
+> 
+> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Signed-off-by: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> Cc: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> ---
+> Changes since v1:
+> - removed unnecessary exynos_pcie_clear_irq_level()
+> - updated the bindings documentation
+> - used new msi_chip infrastructure
+> - removed ARCH_SUPPORTS_MSI
+> - replaced #ifdef guards with IS_ENABLED(CONFIG_PCI_MSI)
+> 
+>  .../devicetree/bindings/pci/designware-pcie.txt    |    2 +
+>  arch/arm/boot/dts/exynos5440.dtsi                  |    2 +
+>  drivers/pci/host/pci-exynos.c                      |   47 ++++
+>  drivers/pci/host/pcie-designware.c                 |  225 ++++++++++++++++++++
+>  drivers/pci/host/pcie-designware.h                 |    4 +
+>  5 files changed, 280 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index eabcb4b..00bb935 100644
 
-If a driver supports multiple devices it should have the ability to
-induce a bus reset when it needs to.  This patch provides that ability
-through pci_reset_slot and pci_reset_bus.  It's the caller's
-responsibility when using these interfaces to understand that all of
-the devices in or below the slot (or on or below the bus) will be
-reset and therefore should be under control of the caller.  PCI state
-of all the affected devices is saved and restored around these resets,
-but internal state of all of the affected devices is reset (which
-should be the intention).
+[...]
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c   |  209 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    2 
- 2 files changed, 211 insertions(+)
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 77b0c25..a4fed11 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -11,8 +11,10 @@
+>   * published by the Free Software Foundation.
+>   */
+> 
+> +#include <linux/irq.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+> +#include <linux/msi.h>
+>  #include <linux/of_address.h>
+>  #include <linux/pci.h>
+>  #include <linux/pci_regs.h>
+> @@ -62,6 +64,12 @@
+>  #define PCIE_ATU_FUNC(x)               (((x) & 0x7) << 16)
+>  #define PCIE_ATU_UPPER_TARGET          0x91C
+> 
+> +#define MAX_MSI_IRQS                   32
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4a0275c..1dba7dd 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3460,6 +3460,215 @@ int pci_reset_function(struct pci_dev *dev)
- }
- EXPORT_SYMBOL_GPL(pci_reset_function);
- 
-+/* Lock devices from the top of the tree down */
-+static void pci_bus_lock(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		pci_dev_lock(dev);
-+		if (dev->subordinate)
-+			pci_bus_lock(dev->subordinate);
-+	}
-+}
-+
-+/* Unlock devices from the bottom of the tree up */
-+static void pci_bus_unlock(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		if (dev->subordinate)
-+			pci_bus_unlock(dev->subordinate);
-+		pci_dev_unlock(dev);
-+	}
-+}
-+
-+/* Lock devices from the top of the tree down */
-+static void pci_slot_lock(struct pci_slot *slot)
-+{
-+	struct pci_dev *dev;
-+
-+	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-+		if (!dev->slot || dev->slot != slot)
-+			continue;
-+		pci_dev_lock(dev);
-+		if (dev->subordinate)
-+			pci_bus_lock(dev->subordinate);
-+	}
-+}
-+
-+/* Unlock devices from the bottom of the tree up */
-+static void pci_slot_unlock(struct pci_slot *slot)
-+{
-+	struct pci_dev *dev;
-+
-+	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-+		if (!dev->slot || dev->slot != slot)
-+			continue;
-+		if (dev->subordinate)
-+			pci_bus_unlock(dev->subordinate);
-+		pci_dev_unlock(dev);
-+	}
-+}
-+
-+/* Save and disable devices from the top of the tree down */
-+static void pci_bus_save_and_disable(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		pci_dev_save_and_disable(dev);
-+		if (dev->subordinate)
-+			pci_bus_save_and_disable(dev->subordinate);
-+	}
-+}
-+
-+/*
-+ * Restore devices from top of the tree down - parent bridges need to be
-+ * restored before we can get to subordinate devices.
-+ */
-+static void pci_bus_restore(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		pci_dev_restore(dev);
-+		if (dev->subordinate)
-+			pci_bus_restore(dev->subordinate);
-+	}
-+}
-+
-+/* Save and disable devices from the top of the tree down */
-+static void pci_slot_save_and_disable(struct pci_slot *slot)
-+{
-+	struct pci_dev *dev;
-+
-+	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-+		if (!dev->slot || dev->slot != slot)
-+			continue;
-+		pci_dev_save_and_disable(dev);
-+		if (dev->subordinate)
-+			pci_bus_save_and_disable(dev->subordinate);
-+	}
-+}
-+
-+/*
-+ * Restore devices from top of the tree down - parent bridges need to be
-+ * restored before we can get to subordinate devices.
-+ */
-+static void pci_slot_restore(struct pci_slot *slot)
-+{
-+	struct pci_dev *dev;
-+
-+	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-+		if (!dev->slot || dev->slot != slot)
-+			continue;
-+		pci_dev_restore(dev);
-+		if (dev->subordinate)
-+			pci_bus_restore(dev->subordinate);
-+	}
-+}
-+
-+static int pci_slot_reset(struct pci_slot *slot, int probe)
-+{
-+	int rc;
-+
-+	if (!slot)
-+		return -ENOTTY;
-+
-+	if (!probe)
-+		pci_slot_lock(slot);
-+
-+	might_sleep();
-+
-+	rc = pci_reset_hotplug_slot(slot->hotplug, probe);
-+
-+	if (!probe)
-+		pci_slot_unlock(slot);
-+
-+	return rc;
-+}
-+
-+/**
-+ * pci_reset_slot - reset a PCI slot
-+ * @slot: PCI slot to reset
-+ *
-+ * A PCI bus may host multiple slots, each slot may support a reset mechanism
-+ * independent of other slots.  For instance, some slots may support slot power
-+ * control.  In the case of a 1:1 bus to slot architecture, this function may
-+ * wrap the bus reset to avoid spurious slot related events such as hotplug.
-+ * Generally a slot reset should be attempted before a bus reset.  All of the
-+ * function of the slot and any subordinate buses behind the slot are reset
-+ * through this function.  PCI config space of all devices in the slot and
-+ * behind the slot is saved before and restored after reset.
-+ *
-+ * Return 0 on success, non-zero on error.
-+ */
-+int pci_reset_slot(struct pci_slot *slot)
-+{
-+	int rc;
-+
-+	rc = pci_slot_reset(slot, 1);
-+	if (rc)
-+		return rc;
-+
-+	pci_slot_save_and_disable(slot);
-+
-+	rc = pci_slot_reset(slot, 0);
-+
-+	pci_slot_restore(slot);
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(pci_reset_slot);
-+
-+static int pci_bus_reset(struct pci_bus *bus, int probe)
-+{
-+	if (!bus->self)
-+		return -ENOTTY;
-+
-+	if (probe)
-+		return 0;
-+
-+	pci_bus_lock(bus);
-+
-+	might_sleep();
-+
-+	pci_reset_bridge_secondary_bus(bus->self);
-+
-+	pci_bus_unlock(bus);
-+
-+	return 0;
-+}
-+
-+/**
-+ * pci_reset_bus - reset a PCI bus
-+ * @bus: top level PCI bus to reset
-+ *
-+ * Do a bus reset on the given bus and any subordinate buses, saving
-+ * and restoring state of all devices.
-+ *
-+ * Return 0 on success, non-zero on error.
-+ */
-+int pci_reset_bus(struct pci_bus *bus)
-+{
-+	int rc;
-+
-+	rc = pci_bus_reset(bus, 1);
-+	if (rc)
-+		return rc;
-+
-+	pci_bus_save_and_disable(bus);
-+
-+	rc = pci_bus_reset(bus, 0);
-+
-+	pci_bus_restore(bus);
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(pci_reset_bus);
-+
- /**
-  * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
-  * @dev: PCI device to query
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 35c1bc4..1a8fd34 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -924,6 +924,8 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
- int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
-+int pci_reset_slot(struct pci_slot *slot);
-+int pci_reset_bus(struct pci_bus *bus);
- void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+DW MSI controller can support upto 256. However, 32 seems a practical
+choice, as there might not be any system which may use more
+than 32. But a comment like as follows can be put here:
 
+/*
+* Maximum number of MSI IRQs can be 256 per controller. But keep
+* it 32 as of now. Probably we will never need more than 32. If needed,
+* then increment it in multiple of 32.
+*/
+
+> +#define MAX_MSI_CTRLS                  8
+
+Why to waste cpu cycles when MAX_MSI_IRQS is 32 only.
+#define MAX_MSI_CTRLS   (MAX_MSI_IRQS / 32)
+
+> +
+> +static unsigned int msi_data;
+> +static DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+
+What if one has more than one RC.
+There are SOCs which support 3 RCs.
+So something like this:
+
+#define MAX_PCIE_PORT_SUPPORTED 3
+static DECLARE_BITMAP(msi_irq_in_use[MAX_PCIE_PORT_SUPPORTED],
+                  NUM_MSI_IRQS);
+static unsigned int *msi_data[MAX_PCIE_PORT_SUPPORTED];
+
+Allocate msi_data using __get_free_pages(GFP_KERNEL, 0)) as Thierry
+suggested.
+
+> +
+>  static struct hw_pci dw_pci;
+> 
+>  unsigned long global_io_offset;
+> @@ -144,6 +152,205 @@ int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+>         return ret;
+>  }
+> 
+
+[...]
+
+>  int dw_pcie_link_up(struct pcie_port *pp)
+>  {
+>         if (pp->ops->link_up)
+> @@ -225,6 +432,13 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>                 return -EINVAL;
+>         }
+> 
+> +       if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +               if (of_property_read_u32(np, "msi-base", &pp->msi_irq_start)) {
+> +                       dev_err(pp->dev, "Failed to parse the number of lanes\n");
+> +                       return -EINVAL;
+> +               }
+> +       }
+> +
+
+What if an implementor want to use irq_domain method for msi_irq_start
+allocation? Is it fine to return error if msi-base is not passed from
+dt?
+
+Also, with the limited knowledge of dt I do not understand one thing, how
+would dt understand that you have used 32 msi irqs (MAX_MSI_IRQS)?
+
+Regards
+Pratyush
