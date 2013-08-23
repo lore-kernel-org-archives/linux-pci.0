@@ -1,142 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:37319 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755179Ab3HWUkb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 16:40:31 -0400
+Received: by mail-ie0-f170.google.com with SMTP id 17so1696329iea.29
+        for <linux-pci@vger.kernel.org>; Fri, 23 Aug 2013 13:40:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5217C794.1020902@kraav.com>
+References: <bug-57961-41252@https.bugzilla.kernel.org/> <bug-57961-41252-X2PJk78p44@https.bugzilla.kernel.org/>
+ <CAErSpo4jFGdW-OXf2OrUQw-e8EdE5h6fPs-v9=QQh1xPjz-Nvg@mail.gmail.com>
+ <5217BDF2.4020909@kraav.com> <CAErSpo5B6dvY6ri1-NajudgS1v1tyTCCicb9vMrOYP=8yv4pPg@mail.gmail.com>
+ <5217C794.1020902@kraav.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 23 Aug 2013 14:40:10 -0600
+Message-ID: <CAErSpo5j-_JWinFSDSJx6uGnw-opEHm668Md=9z-ZoxZmuX+VQ@mail.gmail.com>
+Subject: Re: [Bug 57961] ExpressCard hot-remove and hot-add not recognized by acpiphp
+To: Leho Kraav <leho@kraav.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
 	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v4 14/28] x86, irq: Move down arch_early_irq_init()
-Date: Sat, 10 Aug 2013 19:48:00 -0700
-Message-Id: <1376189294-32022-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change position only.
+[+cc Rafael]
 
-Prepare to update arch_early_irq_init() that needs to call some static
-functions.
+On Fri, Aug 23, 2013 at 2:35 PM, Leho Kraav <leho@kraav.com> wrote:
+>>
+>> I don't know anything about the LID notifications.
+>>
+>> As far as the bus checks on \_SB_.PCI0, I think that message is new or
+>> possibly we register for those notifications on more devices that we
+>> previously did.  If your laptop suspended when closing the lid, it
+>> doesn't surprise me that we get the Bus Check on resume, because that
+>> might be the only way we could discover device additions or removals
+>> that happened while suspended.  I'm not sure why we would get them on
+>> suspend.
+>
+>
+> I don't suspend on lid close, actually. I close the lid just to carry the
+> laptop around, and always suspend manually.
+>
+> Thanks for taking a look. I guess the key takeaway here is that the notify
+> message is harmless and I should look at somewhere else to figure out why
+> I'm not getting a LID event.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c | 89 +++++++++++++++++++++---------------------
- 1 file changed, 44 insertions(+), 45 deletions(-)
+Huh.  That's strange.  I don't know why you would get bus checks on
+lid open/close events when you're not suspending/resuming.  Maybe
+Rafael will have some ideas.
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index c883da9..18b123b 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -185,51 +185,6 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
- 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
- }
- 
--
--/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
--static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
--
--int __init arch_early_irq_init(void)
--{
--	struct irq_cfg *cfg;
--	int count, node, i;
--
--	if (!legacy_pic->nr_legacy_irqs)
--		io_apic_irqs = ~0UL;
--
--	for (i = 0; i < nr_ioapics; i++) {
--		ioapics[i].saved_registers =
--			kzalloc(sizeof(struct IO_APIC_route_entry) *
--				ioapics[i].nr_registers, GFP_KERNEL);
--		if (!ioapics[i].saved_registers)
--			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
--	}
--
--	cfg = irq_cfgx;
--	count = ARRAY_SIZE(irq_cfgx);
--	node = cpu_to_node(0);
--
--	/* Make sure the legacy interrupts are marked in the bitmap */
--	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
--
--	for (i = 0; i < count; i++) {
--		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
--		irq_set_chip_data(i, &cfg[i]);
--		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
--		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
--		/*
--		 * For legacy IRQ's, start with assigning irq0 to irq15 to
--		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
--		 */
--		if (i < legacy_pic->nr_legacy_irqs) {
--			cfg[i].vector = IRQ0_VECTOR + i;
--			cpumask_setall(cfg[i].domain);
--		}
--	}
--
--	return 0;
--}
--
- static struct irq_cfg *irq_cfg(unsigned int irq)
- {
- 	return irq_get_chip_data(irq);
-@@ -325,6 +280,50 @@ static struct irq_cfg *alloc_reserved_irq_and_cfg_at(unsigned int at, int node)
- 	return alloc_irq_and_cfg_at(at, node);
- }
- 
-+/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
-+static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
-+
-+int __init arch_early_irq_init(void)
-+{
-+	struct irq_cfg *cfg;
-+	int count, node, i;
-+
-+	if (!legacy_pic->nr_legacy_irqs)
-+		io_apic_irqs = ~0UL;
-+
-+	for (i = 0; i < nr_ioapics; i++) {
-+		ioapics[i].saved_registers =
-+			kzalloc(sizeof(struct IO_APIC_route_entry) *
-+				ioapics[i].nr_registers, GFP_KERNEL);
-+		if (!ioapics[i].saved_registers)
-+			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
-+	}
-+
-+	cfg = irq_cfgx;
-+	count = ARRAY_SIZE(irq_cfgx);
-+	node = cpu_to_node(0);
-+
-+	/* Make sure the legacy interrupts are marked in the bitmap */
-+	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
-+
-+	for (i = 0; i < count; i++) {
-+		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
-+		irq_set_chip_data(i, &cfg[i]);
-+		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
-+		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
-+		/*
-+		 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+		 */
-+		if (i < legacy_pic->nr_legacy_irqs) {
-+			cfg[i].vector = IRQ0_VECTOR + i;
-+			cpumask_setall(cfg[i].domain);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- struct io_apic {
- 	unsigned int index;
- 	unsigned int unused[3];
--- 
-1.8.1.4
+If you can collect an acpidump, that might have a clue, too.  At
+least, we ought to be able to see a method that is sending the Notify
+to the PCI host bridge.
 
+Bjorn
