@@ -1,66 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v5 8/9] pci: Tune secondary bus reset timing
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
-	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Thu, 08 Aug 2013 14:10:13 -0600
-Message-ID: <20130808201012.2932.39882.stgit@bling.home>
-In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
-References: <20130808200444.2932.17381.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:60779 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754760Ab3HWUbo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 16:31:44 -0400
+Received: by mail-ie0-f180.google.com with SMTP id x14so1631959ief.11
+        for <linux-pci@vger.kernel.org>; Fri, 23 Aug 2013 13:31:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <5217BDF2.4020909@kraav.com>
+References: <bug-57961-41252@https.bugzilla.kernel.org/> <bug-57961-41252-X2PJk78p44@https.bugzilla.kernel.org/>
+ <CAErSpo4jFGdW-OXf2OrUQw-e8EdE5h6fPs-v9=QQh1xPjz-Nvg@mail.gmail.com> <5217BDF2.4020909@kraav.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 23 Aug 2013 14:31:24 -0600
+Message-ID: <CAErSpo5B6dvY6ri1-NajudgS1v1tyTCCicb9vMrOYP=8yv4pPg@mail.gmail.com>
+Subject: Re: [Bug 57961] ExpressCard hot-remove and hot-add not recognized by acpiphp
+To: Leho Kraav <leho@kraav.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI spec indicates that with stable power, reset needs to be
-asserted for a minimum of 1ms (Trst).  We should be able to assume
-stable power for a Hot Reset, but we add another millisecond as
-a fudge factor to make sure the reset is seen on the bus for at least
-a full 1ms.
+On Fri, Aug 23, 2013 at 1:54 PM, Leho Kraav <leho@kraav.com> wrote:
+> On 23.08.2013 17:58, Bjorn Helgaas wrote:
+>>
+>> [+cc linux-pci, linux-acpi, switch to email for now]
+>>
+>> On Fri, Aug 23, 2013 at 7:34 AM,  <bugzilla-daemon@bugzilla.kernel.org>
+>> wrote:
+>>>
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=57961
+>>> ...
+>>> I'm arriving here from googling "_handle_hotplug_event_root Bus check
+>>> notify on
+>>> \_SB_.PCI0".
 
-After reset is de-asserted we must wait for devices to complete
-initialization.  The specs refer to this as "recovery time" (Trhfa).
-For PCI this is 2^25 clock cycles or 2^26 for PCI-X.  For minimum
-bus speeds, both of those come to 1s.  PCIe "softens" this
-requirement with the Configuration Request Retry Status (CRS)
-completion status.  Theoretically we could use CRS to shorten the
-wait time.  We don't make use of that here, using a fixed 1s delay
-to allow devices to re-initialize.
+>>> My Dell L421X is spitting this notification both when I close and open
+>>> the
+>>> laptop lid, one each. No ACPI LID event is emitted, which doesn't seem
+>>> right.
+>>
+>>
+>> Can you post a complete dmesg log including a lid close/event cycle?
+>
+>
+> E-mailed that to you personally.
+>
+>
+>>> Running on 3.10.6. Is this bug related in any way?
+>>
+>>
+>> Bug 57961 is for ExpressCard changes that we didn't handle correctly.
+>> It doesn't sound like you're adding or removing an ExpressCard, so
+>> you're likely seeing a different problem.
+>>
+>> Is the problem that (1) you see "_handle_hotplug_event_root Bus check
+>> notify on \_SB_.PCI0" messages that you don't expect, and (2) you do
+>> not see LID events, which you do expect?
+>>
+>> Is there anything that is not actually working correctly, or is it
+>> just messages that don't seem right?
+>
+>
+> Mailing list thread discussed some apparently significant ACPI changes in
+> 3.10. I've yet to have a laptop that didn't emit an ACPI LID event. Instead
+> the kernel does emit something that looks like something is not quite what
+> it should be. I'm wondering if I have missed something in kernel
+> configuration or am I somehow affected by the recent ACPI changes or a
+> machine specific bug somewhere. Dells are among the Linux-friendliest
+> machines throughout history, that makes me think it could be the kernel.
+>
+> You're right, I'm not on the acpiphp bus for sure, but sometimes things are
+> related at a level above so I took a shot at trying to find out what's
+> happening.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c |   16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+I don't know anything about the LID notifications.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b204206..ba68451 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3230,11 +3230,23 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
- 	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
- 	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
- 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
--	msleep(100);
-+	/*
-+	 * PCI spec v3.0 7.6.4.2 requires minimum Trst of 1ms.  Double
-+	 * this to 2ms to ensure that we meet the minium requirement.
-+	 */
-+	msleep(2);
- 
- 	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
- 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
--	msleep(100);
-+
-+	/*
-+	 * Trhfa for conventional PCI is 2^25 clock cycles.
-+	 * Assuming a minimum 33MHz clock this results in a 1s
-+	 * delay before we can consider subordinate devices to
-+	 * be re-initialized.  PCIe has some ways to shorten this,
-+	 * but we don't make use of them yet.
-+	 */
-+	ssleep(1);
- }
- EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
- 
+As far as the bus checks on \_SB_.PCI0, I think that message is new or
+possibly we register for those notifications on more devices that we
+previously did.  If your laptop suspended when closing the lid, it
+doesn't surprise me that we get the Bus Check on resume, because that
+might be the only way we could discover device additions or removals
+that happened while suspended.  I'm not sure why we would get them on
+suspend.
 
+Regardless, we can't change the fact that the BIOS sends us those
+notification events.  We could change or remove the message, but I
+suspect we might want to keep it for debugging purposes for a while,
+since we're actively working in that area.
+
+Bjorn
