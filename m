@@ -1,97 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51109 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754933Ab3HEHVo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 03:21:44 -0400
-Message-ID: <51FF527F.7080904@oracle.com>
-Date: Mon, 05 Aug 2013 15:21:35 +0800
-From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Reply-To: zhenzhong.duan@oracle.com
-MIME-Version: 1.0
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Neil Horman <nhorman@tuxdriver.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Feng Jin <joe.jin@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Subject: [PATCH 2/3 v2] Refactor msi/msix restore code Part2
-Content-Type: text/plain; charset=GB2312
-Sender: linux-pci-owner@vger.kernel.org
+	Len Brown <lenb@kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] ACPI: Fix osc flag setup ordering to allow pcie hotplug use when available
+Date: Fri, 23 Aug 2013 23:40:52 +0200
+Message-ID: <4634097.MXvnqpQKZr@vostro.rjw.lan>
+In-Reply-To: <CAErSpo5JhCQsYHgFdp+vK9=wLzHert1r5vTe7_ZCPh-4kM80zQ@mail.gmail.com>
+References: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com> <3958698.Gm9Wz19SSi@vostro.rjw.lan> <CAErSpo5JhCQsYHgFdp+vK9=wLzHert1r5vTe7_ZCPh-4kM80zQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
-in dom0. It's better to do the same in default_restore_msi_irqs for baremetal.
+On Friday, August 23, 2013 02:46:23 PM Bjorn Helgaas wrote:
+> On Fri, Aug 23, 2013 at 2:53 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Friday, August 23, 2013 04:05:11 PM Neil Horman wrote:
+> >> On Fri, Aug 23, 2013 at 09:38:18PM +0200, Rafael J. Wysocki wrote:
+> >> > [CCs added]
+> >> >
+> >> > Please always send PCI-related material to linux-pci in the first place.
+> >> >
+> >> Sorry, I ran get_maintainers and it seemed to think linux-acpi was sufficient.
+> >>
+> >> > The change that broke things for you was actually intentional:
+> >> >
+> >> > commit b8178f130e25c1bdac1c33e0996f1ff6e20ec08e
+> >> > Author: Bjorn Helgaas <bhelgaas@google.com>
+> >> > Date:   Mon Apr 1 15:47:39 2013 -0600
+> >> >
+> >> >     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
+> >> >
+> >> >     This reverts commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6.
+> >> >
+> >> > so I think we'll need to clean up the ASMP initialization after all.
+> >> >
+> >> Crud.  Reading over the revert commit, it seems like the problem boils down to
+> >> the odering of checking aspm_disabled.  It seems to me that the simple fix is to
+> >> track the desire for acpi to disable aspm separately from the users desire to
+> >> disable aspm (aspm_disabled).  Then we just turn the points where we check the
+> >> aspm_disabled into the appropriate or of two variables, except for
+> >> pcie_asmp_sanity_check, which remains sensitive to just the user disable option.
+> >>
+> >> Or is there more to this?
+> >
+> > No, I think you're right.
+> >
+> > Bjorn, what do you think?
+> 
+> My opinion is that the _OSC/ASPM state management is ridiculously
+> complicated already, and this would make it slightly more complicated.
+>  That's why my preference would be to attempt a more radical cleanup
+> and simplification instead of adding another wart.
 
-Move restore of mask in default_restore_msi_irqs, this could avoid mask
-restored twice in dom0, and the logic for baremetal keep same.
+Well, do you have anything specific in mind?
 
-First mask restore is in xen_initdom_restore_msi_irqs->PHYSDEVOP_restore_msi,
-Second restore is __pci_restore_msix_state->msix_mask_irq.
+> But if you want to merge a patch along the lines of what Neil
+> proposes, I won't object.
 
-Mask bits are under full control of xen, and the entry->masked in dom0 kernel
-is invalid. restore an invalid value to mask register could mask the msix
-interrupt.
+I'm not sure what to do really, so I'm asking. :-)
 
-Without fix, qlcnic driver calling pci_reset_function will lost interrupt
-in dom0.
+Rafael
 
-Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
----
- drivers/pci/msi.c |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 87223ae..922fb49 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
- #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
- void default_restore_msi_irqs(struct pci_dev *dev, int irq)
- {
-+	int pos;
-+	u16 control;
- 	struct msi_desc *entry;
- 
- 	entry = NULL;
-@@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
- 		entry = irq_get_msi_desc(irq);
- 	}
- 
--	if (entry)
-+	if (entry) {
- 		write_msi_msg(irq, &entry->msg);
-+		if (dev->msix_enabled) {
-+			msix_mask_irq(entry, entry->masked);
-+			readl(entry->mask_base);
-+		} else {
-+			pos = entry->msi_attrib.pos;
-+			pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
-+					     &control);
-+			msi_mask_irq(entry, msi_capable_mask(control),
-+				     entry->masked);
-+		}
-+	}
- }
- #endif
- 
-@@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 	arch_restore_msi_irqs(dev, dev->irq);
- 
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
--	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
- 	control &= ~PCI_MSI_FLAGS_QSIZE;
- 	control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
- 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-@@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
- 
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		arch_restore_msi_irqs(dev, entry->irq);
--		msix_mask_irq(entry, entry->masked);
- 	}
- 
- 	control &= ~PCI_MSIX_FLAGS_MASKALL;
+> >> > On Friday, August 23, 2013 01:19:39 PM Neil Horman wrote:
+> >> > > Somewhere between 3.9 and 3.10 it seems the order in which pcie and acpi probed
+> >> > > slots for hotplug capabilites got reversed.  While this isn't a big deal, it did
+> >> > > uncover a bug in the ACPI bus setup path.  Specifically, acpi_pci_root_add calls
+> >> > > pci_acpi_scan_root before setting the osc flags for the device handle.
+> >> > > pci_acpi_scan_root, among other things uses device_is_managed_by_native_pciehp()
+> >> > > to determine if a given slot has pcie hotplug capabilties, whcih checks the
+> >> > > devices OSC_PCI_EXPRESS_NATIVE_HP_CONTROL flag.  Since that flag is not set
+> >> > > until after pci_acpi_scan_root_completes, the acpi code never sees that pcie
+> >> > > slots are hotplug capable and configures them all to use acpi instead.
+> >> > >
+> >> > > Fix is pretty simple, just defer the scan until after the osc flags have been
+> >> > > set on the device.  Tested by myself and it seems to work well.
+> >> > >
+> >> > > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> >> > > CC: Len Brown <lenb@kernel.org>
+> >> > > CC: "Rafael J. Wysocki" <rjw@sisk.pl>
+> >> > > CC: linux-acpi@vger.kernel.org
+> >> > > ---
+> >> > >  drivers/acpi/pci_root.c | 41 ++++++++++++++++++++---------------------
+> >> > >  1 file changed, 20 insertions(+), 21 deletions(-)
+> >> > >
+> >> > > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> >> > > index 5917839..a2c2661 100644
+> >> > > --- a/drivers/acpi/pci_root.c
+> >> > > +++ b/drivers/acpi/pci_root.c
+> >> > > @@ -437,27 +437,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+> >> > >   flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
+> >> > >   acpi_pci_osc_support(root, flags);
+> >> > >
+> >> > > - /*
+> >> > > -  * TBD: Need PCI interface for enumeration/configuration of roots.
+> >> > > -  */
+> >> > > -
+> >> > > - /*
+> >> > > -  * Scan the Root Bridge
+> >> > > -  * --------------------
+> >> > > -  * Must do this prior to any attempt to bind the root device, as the
+> >> > > -  * PCI namespace does not get created until this call is made (and
+> >> > > -  * thus the root bridge's pci_dev does not exist).
+> >> > > -  */
+> >> > > - root->bus = pci_acpi_scan_root(root);
+> >> > > - if (!root->bus) {
+> >> > > -         dev_err(&device->dev,
+> >> > > -                 "Bus %04x:%02x not present in PCI namespace\n",
+> >> > > -                 root->segment, (unsigned int)root->secondary.start);
+> >> > > -         result = -ENODEV;
+> >> > > -         goto end;
+> >> > > - }
+> >> > > -
+> >> > > - /* Indicate support for various _OSC capabilities. */
+> >> > >   if (pci_ext_cfg_avail())
+> >> > >           flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
+> >> > >   if (pcie_aspm_support_enabled()) {
+> >> > > @@ -520,6 +499,26 @@ static int acpi_pci_root_add(struct acpi_device *device,
+> >> > >                    "(_OSC support mask: 0x%02x)\n", flags);
+> >> > >   }
+> >> > >
+> >> > > + /*
+> >> > > +  * TBD: Need PCI interface for enumeration/configuration of roots.
+> >> > > +  */
+> >> > > +
+> >> > > + /*
+> >> > > +  * Scan the Root Bridge
+> >> > > +  * --------------------
+> >> > > +  * Must do this prior to any attempt to bind the root device, as the
+> >> > > +  * PCI namespace does not get created until this call is made (and
+> >> > > +  * thus the root bridge's pci_dev does not exist).
+> >> > > +  */
+> >> > > + root->bus = pci_acpi_scan_root(root);
+> >> > > + if (!root->bus) {
+> >> > > +         dev_err(&device->dev,
+> >> > > +                 "Bus %04x:%02x not present in PCI namespace\n",
+> >> > > +                 root->segment, (unsigned int)root->secondary.start);
+> >> > > +         result = -ENODEV;
+> >> > > +         goto end;
+> >> > > + }
+> >> > > +
+> >> > >   pci_acpi_add_bus_pm_notifier(device, root->bus);
+> >> > >   if (device->wakeup.flags.run_wake)
+> >> > >           device_set_run_wake(root->bus->bridge, true);
+> >> > >
+> >>
+> > --
+> > I speak only for myself.
+> > Rafael J. Wysocki, Intel Open Source Technology Center.
 -- 
-1.7.3
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
