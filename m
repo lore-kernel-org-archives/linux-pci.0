@@ -1,311 +1,273 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:40527 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966964Ab3HIF5N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Aug 2013 01:57:13 -0400
-Message-ID: <1376027779.32100.9.camel@pasglop>
-Subject: Re: [PATCHv8 06/10] irqchip: armada-370-xp: implement MSI support
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <rob.herring@calxeda.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CANVTcTb2+qX6XMBqrzeLho9yFS55AnztVJ85JBMuxjoH11qzaQ@mail.gmail.com>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+	<1376189294-32022-29-git-send-email-yinghai@kernel.org>
+	<CANVTcTYhSfU+Su9s1B+mTTBfgsZgqvQxHiTsLck1zT_vg1Cs4g@mail.gmail.com>
+	<CANVTcTb2+qX6XMBqrzeLho9yFS55AnztVJ85JBMuxjoH11qzaQ@mail.gmail.com>
+Date: Fri, 23 Aug 2013 23:34:21 +0800
+Message-ID: <CAOLK0pwQJVvcT5xA-+Ftb85FzbjHN-OZmXO=n7r4EWh4nFjSBA@mail.gmail.com>
+Subject: Re: [PATCH v4 28/28] PCI, x86, ACPI: get ioapic address from acpi device
+From: Lan Tianyu <lantianyu1986@gmail.com>
+To: rui wang <ruiv.wang@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Date: Fri, 09 Aug 2013 15:56:19 +1000
-In-Reply-To: <1376000268-18397-7-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1376000268-18397-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	 <1376000268-18397-7-git-send-email-thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger kernel org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-08-09 at 00:17 +0200, Thomas Petazzoni wrote:
-> This commit introduces the support for the MSI interrupts in the
-> armada-370-xp interrupt controller driver. It registers an MSI chip to
-> the MSI chip registry, which will be used by the Marvell PCIe host
-> controller driver.
-> 
-> The MSI interrupts use the 16 high doorbells, and are therefore
-> notified using IRQ1 of the main interrupt controller.
+2013/8/23 rui wang <ruiv.wang@gmail.com>:
+> On 8/22/13, rui wang <ruiv.wang@gmail.com> wrote:
+>> On 8/11/13, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> Some ioapic controllers do not show up on pci config space,
+>>> or pci device is there but no bar is used and is set by firmware in
+>>> other non standard registers.
+>>>
+>>> We can get ioapic address from ACPI0009's _CRS.
+>>>
+>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>> ---
+>>>  drivers/pci/ioapic.c | 86
+>>> +++++++++++++++++++++++++++++++++++++++++++---------
+>>>  1 file changed, 71 insertions(+), 15 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+>>> index 60351b2..41f7c69 100644
+>>> --- a/drivers/pci/ioapic.c
+>>> +++ b/drivers/pci/ioapic.c
+>>> @@ -32,6 +32,36 @@ struct acpi_pci_ioapic {
+>>>  static LIST_HEAD(ioapic_list);
+>>>  static DEFINE_MUTEX(ioapic_list_lock);
+>>>
+>>> +static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
+>>> +{
+>>> +    struct resource *res;
+>>> +    struct acpi_resource_address64 addr;
+>>> +    acpi_status status;
+>>> +    unsigned long flags;
+>>> +    u64 start, end;
+>>> +
+>>> +    status = acpi_resource_to_address64(acpi_res, &addr);
+>
+> I worked around the problem by replacing acpi_resource_to_address64()
+> with resource_to_addr().  But resource_to_addr() is a static function
+> in arch/x86/pci/acpi.c, not very convenient to use. Here's what I did:
+>
 
-When you have a bit of time, have a look at
+Hi Rui&Yinghai:
+           How about using the following code to translate struct
+ acpi_resource to struct resouce in this setup_res()?
 
-arch/powerpc/sysdev/msi_bitmap.c
+         if (acpi_dev_resource_address_space(...)
+                || acpi_dev_resource_memory(..))
+              return AE_OK;
 
-This should be usable pretty-much as-is and thus could be moved to
-a generic place and replace your custom bitmap allocator.
 
-Cheers,
-Ben.
 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  .../devicetree/bindings/arm/armada-370-xp-mpic.txt |   3 +
->  drivers/irqchip/irq-armada-370-xp.c                | 182 ++++++++++++++++++++-
->  2 files changed, 184 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
-> index 61df564..d74091a 100644
-> --- a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
-> +++ b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
-> @@ -4,6 +4,8 @@ Marvell Armada 370 and Armada XP Interrupt Controller
->  Required properties:
->  - compatible: Should be "marvell,mpic"
->  - interrupt-controller: Identifies the node as an interrupt controller.
-> +- msi-controller: Identifies the node as an PCI Message Signaled
-> +  Interrupt controller.
->  - #interrupt-cells: The number of cells to define the interrupts. Should be 1.
->    The cell is the IRQ number
->  
-> @@ -24,6 +26,7 @@ Example:
->                #address-cells = <1>;
->                #size-cells = <1>;
->                interrupt-controller;
-> +              msi-controller;
->                reg = <0xd0020a00 0x1d0>,
->                      <0xd0021070 0x58>;
->          };
-> diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
-> index 26adc74..433cc85 100644
-> --- a/drivers/irqchip/irq-armada-370-xp.c
-> +++ b/drivers/irqchip/irq-armada-370-xp.c
-> @@ -21,7 +21,10 @@
->  #include <linux/io.h>
->  #include <linux/of_address.h>
->  #include <linux/of_irq.h>
-> +#include <linux/of_pci.h>
->  #include <linux/irqdomain.h>
-> +#include <linux/slab.h>
-> +#include <linux/msi.h>
->  #include <asm/mach/arch.h>
->  #include <asm/exception.h>
->  #include <asm/smp_plat.h>
-> @@ -51,12 +54,22 @@
->  #define IPI_DOORBELL_START                      (0)
->  #define IPI_DOORBELL_END                        (8)
->  #define IPI_DOORBELL_MASK                       0xFF
-> +#define PCI_MSI_DOORBELL_START                  (16)
-> +#define PCI_MSI_DOORBELL_NR                     (16)
-> +#define PCI_MSI_DOORBELL_END                    (32)
-> +#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
->  
->  static DEFINE_RAW_SPINLOCK(irq_controller_lock);
->  
->  static void __iomem *per_cpu_int_base;
->  static void __iomem *main_int_base;
->  static struct irq_domain *armada_370_xp_mpic_domain;
-> +#ifdef CONFIG_PCI_MSI
-> +static struct irq_domain *armada_370_xp_msi_domain;
-> +static DECLARE_BITMAP(msi_used, PCI_MSI_DOORBELL_NR);
-> +static DEFINE_MUTEX(msi_used_lock);
-> +static phys_addr_t msi_doorbell_addr;
-> +#endif
->  
->  /*
->   * In SMP mode:
-> @@ -87,6 +100,144 @@ static void armada_370_xp_irq_unmask(struct irq_data *d)
->  				ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
+
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index d641897..cb5940a 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -218,7 +218,7 @@ static void teardown_mcfg_map(struct pci_root_info *info)
 >  }
->  
-> +#ifdef CONFIG_PCI_MSI
-> +
-> +static int armada_370_xp_alloc_msi(void)
-> +{
-> +	int hwirq;
-> +
-> +	mutex_lock(&msi_used_lock);
-> +	hwirq = find_first_zero_bit(&msi_used, PCI_MSI_DOORBELL_NR);
-> +	if (hwirq >= PCI_MSI_DOORBELL_NR)
-> +		hwirq = -ENOSPC;
-> +	else
-> +		set_bit(hwirq, msi_used);
-> +	mutex_unlock(&msi_used_lock);
-> +
-> +	return hwirq;
-> +}
-> +
-> +static void armada_370_xp_free_msi(int hwirq)
-> +{
-> +	mutex_lock(&msi_used_lock);
-> +	if (!test_bit(hwirq, msi_used))
-> +		pr_err("trying to free unused MSI#%d\n", hwirq);
-> +	else
-> +		clear_bit(hwirq, msi_used);
-> +	mutex_unlock(&msi_used_lock);
-> +}
-> +
-> +static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
-> +				       struct pci_dev *pdev,
-> +				       struct msi_desc *desc)
-> +{
-> +	struct msi_msg msg;
-> +	irq_hw_number_t hwirq;
-> +	int virq;
-> +
-> +	hwirq = armada_370_xp_alloc_msi();
-> +	if (hwirq < 0)
-> +		return hwirq;
-> +
-> +	virq = irq_create_mapping(armada_370_xp_msi_domain, hwirq);
-> +	if (!virq) {
-> +		armada_370_xp_free_msi(hwirq);
-> +		return -EINVAL;
-> +	}
-> +
-> +	irq_set_msi_desc(virq, desc);
-> +
-> +	msg.address_lo = msi_doorbell_addr;
-> +	msg.address_hi = 0;
-> +	msg.data = 0xf00 | (hwirq + 16);
-> +
-> +	write_msi_msg(virq, &msg);
-> +	return 0;
-> +}
-> +
-> +static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
-> +					   unsigned int irq)
-> +{
-> +	struct irq_data *d = irq_get_irq_data(irq);
-> +	irq_dispose_mapping(irq);
-> +	armada_370_xp_free_msi(d->hwirq);
-> +}
-> +
-> +static struct irq_chip armada_370_xp_msi_irq_chip = {
-> +	.name = "armada_370_xp_msi_irq",
-> +	.irq_enable = unmask_msi_irq,
-> +	.irq_disable = mask_msi_irq,
-> +	.irq_mask = mask_msi_irq,
-> +	.irq_unmask = unmask_msi_irq,
-> +};
-> +
-> +static int armada_370_xp_msi_map(struct irq_domain *domain, unsigned int virq,
-> +				 irq_hw_number_t hw)
-> +{
-> +	irq_set_chip_and_handler(virq, &armada_370_xp_msi_irq_chip,
-> +				 handle_simple_irq);
-> +	set_irq_flags(virq, IRQF_VALID);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct irq_domain_ops armada_370_xp_msi_irq_ops = {
-> +	.map = armada_370_xp_msi_map,
-> +};
-> +
-> +static int armada_370_xp_msi_init(struct device_node *node,
-> +				  phys_addr_t main_int_phys_base)
-> +{
-> +	struct msi_chip *msi_chip;
-> +	u32 reg;
-> +	int ret;
-> +
-> +	msi_doorbell_addr = main_int_phys_base +
-> +		ARMADA_370_XP_SW_TRIG_INT_OFFS;
-> +
-> +	msi_chip = kzalloc(sizeof(*msi_chip), GFP_KERNEL);
-> +	if (!msi_chip)
-> +		return -ENOMEM;
-> +
-> +	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
-> +	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
-> +	msi_chip->of_node = node;
-> +
-> +	armada_370_xp_msi_domain =
-> +		irq_domain_add_linear(NULL, PCI_MSI_DOORBELL_NR,
-> +				      &armada_370_xp_msi_irq_ops,
-> +				      NULL);
-> +	if (!armada_370_xp_msi_domain) {
-> +		kfree(msi_chip);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	ret = of_pci_msi_chip_add(msi_chip);
-> +	if (ret < 0) {
-> +		irq_domain_remove(armada_370_xp_msi_domain);
-> +		kfree(msi_chip);
-> +		return ret;
-> +	}
-> +
-> +	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
-> +		| PCI_MSI_DOORBELL_MASK;
-> +
-> +	writel(reg, per_cpu_int_base +
-> +	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
-> +
-> +	/* Unmask IPI interrupt */
-> +	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
-> +
-> +	return 0;
-> +}
-> +#else
-> +static inline int armada_370_xp_msi_init(struct device_node *node,
-> +					 phys_addr_t main_int_phys_base)
-> +{
-> +	return 0;
-> +}
-> +#endif
-> +
->  #ifdef CONFIG_SMP
->  static int armada_xp_set_affinity(struct irq_data *d,
->  				  const struct cpumask *mask_val, bool force)
-> @@ -214,12 +365,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
->  		if (irqnr > 1022)
->  			break;
->  
-> -		if (irqnr > 0) {
-> +		if (irqnr > 1) {
->  			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
->  					irqnr);
->  			handle_IRQ(irqnr, regs);
->  			continue;
->  		}
-> +
-> +#ifdef CONFIG_PCI_MSI
-> +		/* MSI handling */
-> +		if (irqnr == 1) {
-> +			u32 msimask, msinr;
-> +
-> +			msimask = readl_relaxed(per_cpu_int_base +
-> +						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
-> +				& PCI_MSI_DOORBELL_MASK;
-> +
-> +			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
-> +			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
-> +
-> +			for (msinr = PCI_MSI_DOORBELL_START;
-> +			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
-> +				int irq;
-> +
-> +				if (!(msimask & BIT(msinr)))
-> +					continue;
-> +
-> +				irq = irq_find_mapping(armada_370_xp_msi_domain,
-> +						       msinr - 16);
-> +				handle_IRQ(irq, regs);
-> +			}
-> +		}
-> +#endif
-> +
->  #ifdef CONFIG_SMP
->  		/* IPI Handling */
->  		if (irqnr == 0) {
-> @@ -292,6 +470,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
->  
 >  #endif
->  
-> +	armada_370_xp_msi_init(node, main_int_res.start);
+>
+> -static acpi_status
+> +acpi_status
+>  resource_to_addr(struct acpi_resource *resource,
+>                         struct acpi_resource_address64 *addr)
+>  {
+> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+> index 41f7c69..68d7395 100644
+> --- a/drivers/pci/ioapic.c
+> +++ b/drivers/pci/ioapic.c
+> @@ -40,7 +40,7 @@ static acpi_status setup_res(struct acpi_resource
+> *acpi_res, void *data)
+>         unsigned long flags;
+>         u64 start, end;
+>
+> -       status = acpi_resource_to_address64(acpi_res, &addr);
+> +       status = resource_to_addr(acpi_res, &addr);
+>         if (!ACPI_SUCCESS(status))
+>                 return AE_OK;
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index 94383a7..ae7f759 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -354,6 +354,10 @@ extern int unregister_acpi_notifier(struct
+> notifier_block *);
+>
+>  extern int register_acpi_bus_notifier(struct notifier_block *nb);
+>  extern void unregister_acpi_bus_notifier(struct notifier_block *nb);
+> +extern acpi_status
+> +resource_to_addr(struct acpi_resource *resource,
+> +                        struct acpi_resource_address64 *addr);
 > +
->  	set_handle_irq(armada_370_xp_handle_irq);
->  
->  	return 0;
+>
+> Thanks
+> Rui
+>
+>
+>>
+>> The above function fails on my machine because it does not handle
+>> Memory32Fixed resources. Is the following _CRS declaration allowed for
+>> IOAPIC?
+>>
+>>             Device (APIC)
+>>             {
+>>                 Name (_HID, "ACPI0009")  // _HID: Hardware ID
+>>                 Name (_CRS, ResourceTemplate ()  // _CRS: Current
+>> Resource Settings
+>>                 {
+>>                     Memory32Fixed (ReadOnly,
+>>                         0xFEC01000,         // Address Base
+>>                         0x00001000,         // Address Length
+>>                         )
+>>                 })
+>>                 Method(_GSB) {
+>>                         return (0x18)
+>>                 }
+>>             }
+>>
+>>
+>> Thanks
+>> Rui
+>>
+>>> +    if (!ACPI_SUCCESS(status))
+>>> +            return AE_OK;
+>>> +
+>>> +    if (addr.resource_type == ACPI_MEMORY_RANGE) {
+>>> +            if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+>>> +                    return AE_OK;
+>>> +            flags = IORESOURCE_MEM;
+>>> +    } else
+>>> +            return AE_OK;
+>>> +
+>>> +    start = addr.minimum + addr.translation_offset;
+>>> +    end = addr.maximum + addr.translation_offset;
+>>> +
+>>> +    res = data;
+>>> +    res->flags = flags;
+>>> +    res->start = start;
+>>> +    res->end = end;
+>>> +
+>>> +    return AE_OK;
+>>> +}
+>>> +
+>>>  static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
+>>>                               u32 *pgsi_base)
+>>>  {
+>>> @@ -54,33 +84,56 @@ static void handle_ioapic_add(acpi_handle handle,
+>>> struct
+>>> pci_dev **pdev,
+>>>              return;
+>>>
+>>>      dev = acpi_get_pci_dev(handle);
+>>> -    if (!dev)
+>>> -            return;
+>>> +    if (!dev || !pci_resource_len(dev, 0)) {
+>>> +            struct acpi_device_info *info;
+>>> +            char *hid = NULL;
+>>> +
+>>> +            status = acpi_get_object_info(handle, &info);
+>>> +            if (ACPI_FAILURE(status))
+>>> +                    goto exit_put;
+>>> +            if (info->valid & ACPI_VALID_HID)
+>>> +                    hid = info->hardware_id.string;
+>>> +            if (!hid || strcmp(hid, "ACPI0009")) {
+>>> +                    kfree(info);
+>>> +                    goto exit_put;
+>>> +            }
+>>> +            kfree(info);
+>>> +            memset(res, 0, sizeof(*res));
+>>> +            acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
+>>> +            if (!res->flags)
+>>> +                    goto exit_put;
+>>> +    }
+>>>
+>>>      acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+>>>
+>>>      gsi_base = gsb;
+>>>      type = "IOxAPIC";
+>>> +    if (dev) {
+>>> +            ret = pci_enable_device(dev);
+>>> +            if (ret < 0)
+>>> +                    goto exit_put;
+>>>
+>>> -    ret = pci_enable_device(dev);
+>>> -    if (ret < 0)
+>>> -            goto exit_put;
+>>> -
+>>> -    pci_set_master(dev);
+>>> +            pci_set_master(dev);
+>>>
+>>> -    if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+>>> -            type = "IOAPIC";
+>>> +            if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+>>> +                    type = "IOAPIC";
+>>>
+>>> -    if (pci_request_region(dev, 0, type))
+>>> -            goto exit_disable;
+>>> +            if (pci_resource_len(dev, 0)) {
+>>> +                    if (pci_request_region(dev, 0, type))
+>>> +                            goto exit_disable;
+>>>
+>>> -    res = &dev->resource[0];
+>>> +                    res = &dev->resource[0];
+>>> +            }
+>>> +    }
+>>>
+>>> -    if (acpi_register_ioapic(handle, res->start, gsi_base))
+>>> -            goto exit_release;
+>>> +    if (acpi_register_ioapic(handle, res->start, gsi_base)) {
+>>> +            if (dev)
+>>> +                    goto exit_release;
+>>> +            return;
+>>> +    }
+>>>
+>>>      pr_info("%s %s %s at %pR, GSI %u\n",
+>>> -            dev_name(&dev->dev), objname, type,
+>>> +            dev ? dev_name(&dev->dev) : "", objname, type,
+>>>              res, gsi_base);
+>>>
+>>>      *pdev = dev;
+>>> @@ -100,6 +153,9 @@ static void handle_ioapic_remove(acpi_handle handle,
+>>> struct pci_dev *dev,
+>>>  {
+>>>      acpi_unregister_ioapic(handle, gsi_base);
+>>>
+>>> +    if (!dev)
+>>> +            return;
+>>> +
+>>>      pci_release_region(dev, 0);
+>>>      pci_disable_device(dev);
+>>>      pci_dev_put(dev);
+>>> --
+>>> 1.8.1.4
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-kernel"
+>>> in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> Please read the FAQ at  http://www.tux.org/lkml/
+>>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+
+-- 
+Best regards
+Tianyu Lan
