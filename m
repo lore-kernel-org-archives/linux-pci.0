@@ -1,67 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:56693 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284Ab3H2KrO convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:5:2>);
-	Thu, 29 Aug 2013 06:47:14 -0400
-Message-Id: <521F42CD02000078000EF5D0@nat28.tlf.novell.com>
-Date: Thu, 29 Aug 2013 11:47:09 +0100
-From: "Jan Beulich" <JBeulich@suse.com>
-To: <zhenzhong.duan@oracle.com>
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>,
-	"xen-devel" <xen-devel@lists.xenproject.org>,
-	"Feng Jin" <joe.jin@oracle.com>,
-	"Sucheta Chakraborty" <sucheta.chakraborty@qlogic.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Xen-devel] [PATCH 2/3 v3] Refactor MSI restore call-chain
- to drop unnecessary argument
-References: <521EB76B.8090903@oracle.com>
- <521F12FC02000078000EF503@nat28.tlf.novell.com>
- <521F196E.2010102@oracle.com>
-In-Reply-To: <521F196E.2010102@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp-out.neti.ee ([194.126.106.72]:59502 "EHLO smtp-out.neti.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755161Ab3HWUfi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Aug 2013 16:35:38 -0400
+Message-ID: <5217C794.1020902@kraav.com>
+Date: Fri, 23 Aug 2013 23:35:32 +0300
+From: Leho Kraav <leho@kraav.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [Bug 57961] ExpressCard hot-remove and hot-add not recognized
+ by acpiphp
+References: <bug-57961-41252@https.bugzilla.kernel.org/> <bug-57961-41252-X2PJk78p44@https.bugzilla.kernel.org/> <CAErSpo4jFGdW-OXf2OrUQw-e8EdE5h6fPs-v9=QQh1xPjz-Nvg@mail.gmail.com> <5217BDF2.4020909@kraav.com> <CAErSpo5B6dvY6ri1-NajudgS1v1tyTCCicb9vMrOYP=8yv4pPg@mail.gmail.com>
+In-Reply-To: <CAErSpo5B6dvY6ri1-NajudgS1v1tyTCCicb9vMrOYP=8yv4pPg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 29.08.13 at 11:50, Zhenzhong Duan <zhenzhong.duan@oracle.com> wrote:
+>
+> I don't know anything about the LID notifications.
+>
+> As far as the bus checks on \_SB_.PCI0, I think that message is new or
+> possibly we register for those notifications on more devices that we
+> previously did.  If your laptop suspended when closing the lid, it
+> doesn't surprise me that we get the Bus Check on resume, because that
+> might be the only way we could discover device additions or removals
+> that happened while suspended.  I'm not sure why we would get them on
+> suspend.
 
-> On 2013-08-29 15:23, Jan Beulich wrote:
->>>>> On 29.08.13 at 04:52, Zhenzhong Duan <zhenzhong.duan@oracle.com> wrote:
->>> But in initial domain (aka priviliged guest), it's different.
->>> Driver init call graph under initial domain:
->>> driver_init->
->>>      msix_capability_init->
->>>          msix_program_entries->
->>>              msix_mask_irq->
->>>                  entry->masked = 1
->>>      request_irq->
->>>          __setup_irq->
->>>              irq_startup->
->>>                  __startup_pirq->
->>>                      EVTCHNOP_bind_pirq hypercall    (trap into Xen)
->>> [Xen:]
->>> pirq_guest_bind->
->>>      startup_msi_irq->
->>>          unmask_msi_irq->
->>>              msi_set_mask_bit->
->>>                  entry->msi_attrib.masked = 0
->>>
->>> So entry->msi_attrib.masked in xen side always has newest value. entry->masked
->>> in initial domain is untouched and is 1 after msix_capability_init.
->> And as said several times before - Linux shouldn't be touching
->> the MSI-X table at all during initial setup or resume (it should in
->> particular not rely on such accesses to not fault, as being a
->> privilege violation); all it needs to do is update its software state.
-> My patch just remove access to msix mask register in dom0. Anything 
-> wrong with that?
+I don't suspend on lid close, actually. I close the lid just to carry 
+the laptop around, and always suspend manually.
 
-Oh, okay, I mis-read the change then - you're moving the mask
-bit changing from __pci_restore_msi{,x}_state() to
-default_restore_msi_irqs(). Which of course is fine if Xen (as you
-say) doesn't use the latter.
-
-Sorry for the noise then,
-Jan
-
+Thanks for taking a look. I guess the key takeaway here is that the 
+notify message is harmless and I should look at somewhere else to figure 
+out why I'm not getting a LID event.
