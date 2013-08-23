@@ -1,103 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37145 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758269Ab3HBJQN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Aug 2013 05:16:13 -0400
-Message-ID: <51FB78D1.6060802@oracle.com>
-Date: Fri, 02 Aug 2013 17:16:01 +0800
-From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Reply-To: zhenzhong.duan@oracle.com
-MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mga02.intel.com ([134.134.136.20]:30291 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755799Ab3HWVmS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 17:42:18 -0400
+From: "Skidmore, Donald C" <donald.c.skidmore@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>,
-	Feng Jin <joe.jin@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Subject: Re: [PATCH 2/3] Refactor msi/msix restore code Part2
-References: <51EF451A.8050003@oracle.com> <CAErSpo5phkLpdR35eaMnYthVXiAAAr-JLD44QkntOZi2-NppOg@mail.gmail.com> <20130801151616.GE21528@konrad-lan.dumpdata.com>
-In-Reply-To: <20130801151616.GE21528@konrad-lan.dumpdata.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Don Dutile <ddutile@redhat.com>
+Subject: RE: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type
+ 00 to PF Nacked" messages
+Date: Fri, 23 Aug 2013 21:41:53 +0000
+Message-ID: <F6FB0E698C9B3143BDF729DF222866466FD44279@ORSMSX110.amr.corp.intel.com>
+References: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
+ <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
+ <CAErSpo5AiRw7HvGQMq-n596ZkHJs_KJNn346yf+jc7yti-xpUw@mail.gmail.com>
+ <CAErSpo4E9LNrfqTq1_WUoAx68_krw23BjSYbPpJPOr=zbq98xA@mail.gmail.com>
+ <CAErSpo6Ky1FQeRjjbhja2KC7EYGJ2nR1ZNuYjYi89DoqLse2cw@mail.gmail.com>
+ <CAErSpo7m=YB=1cHSBTwufTHAiAd+k9Re2s-ro509BELOgK8j7Q@mail.gmail.com>
+ <F6FB0E698C9B3143BDF729DF222866466FD4418D@ORSMSX110.amr.corp.intel.com>
+ <20130823185240.GA1507@google.com>
+ <F6FB0E698C9B3143BDF729DF222866466FD4421F@ORSMSX110.amr.corp.intel.com>
+ <CAErSpo4VLBon21cSzaigVqy6dS7=qfVRuPTTGuWAz+GLJWmNog@mail.gmail.com>
+In-Reply-To: <CAErSpo4VLBon21cSzaigVqy6dS7=qfVRuPTTGuWAz+GLJWmNog@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Friday, August 23, 2013 1:43 PM
+> To: Skidmore, Donald C
+> Cc: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Don Dutile
+> Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
+> to PF Nacked" messages
+> 
+> On Fri, Aug 23, 2013 at 2:37 PM, Skidmore, Donald C
+> <donald.c.skidmore@intel.com> wrote:
+> >> -----Original Message-----
+> >> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> >> Sent: Friday, August 23, 2013 11:53 AM
+> >> To: Skidmore, Donald C
+> >> Cc: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org;
+> >> linux- kernel@vger.kernel.org; Don Dutile
+> >> Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of
+> >> type 00 to PF Nacked" messages
+> >>
+> >> On Fri, Aug 23, 2013 at 06:25:06PM +0000, Skidmore, Donald C wrote:
+> >> > > -----Original Message-----
+> >> > > From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> >> > > Sent: Friday, August 23, 2013 9:53 AM
+> >> > > To: Skidmore, Donald C
+> >> > > Cc: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org;
+> >> > > linux- kernel@vger.kernel.org; Don Dutile
+> >> > > Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last
+> >> > > Request of type 00 to PF Nacked" messages
+> >> > >
+> >> > > On Tue, Aug 20, 2013 at 5:37 PM, Bjorn Helgaas
+> >> > > <bhelgaas@google.com>
+> >> > > wrote:
+> >> > > > On Tue, Aug 20, 2013 at 5:08 PM, Bjorn Helgaas
+> >> > > > <bhelgaas@google.com>
+> >> > > wrote:
+> >> > > >> On Tue, Aug 13, 2013 at 8:23 PM, Bjorn Helgaas
+> >> > > >> <bhelgaas@google.com>
+> >> > > wrote:
+> >> > > >
+> >> > > >>> I played with this a little more and found this:
+> >> > > >>>
+> >> > > >>> 1) Magma card in z420, connected to chassis containing X540:
+> >> > > >>> fails (original report)
+> >> > > >>> 2) X540 in z420, Magma card in z420, connected to empty chassis:
+> >> > > >>> fails
+> >> > > >>> 3) X540 in z420, Magma card in z420 but no cable to chassis:
+> >> > > >>> works
+> >> > > >
+> >> > > > For what it's worth, I tried config 3 again with v3.11-rc6, and
+> >> > > > it failed the same way.  I haven't bothered with config 2.
+> >> > > > It's not 100% reproducible, but at least it doesn't seem
+> >> > > > related to the expansion chassis.
+> >> > > >
+> >> > > > I attached the logs from config 3 to
+> >> > > > https://bugzilla.kernel.org/show_bug.cgi?id=60776
+> >> > >
+> >> > > Is there anything I can do to help debug this?  Add
+> >> > > instrumentation, etc.?  It seems like I'm doing the simplest
+> >> > > possible thing -- just writing to the sysfs sriov_num_vfs file to enable
+> VFs.
+> >> > >
+> >> > > I almost think it must be related to my config somehow if nobody
+> >> > > else is seeing this, but at the same time, my config also seems
+> >> > > the simplest possible, so I don't know what I could be doing that's
+> unusual.
+> >> > >
+> >> > > Bjorn
+> >> >
+> >> > Hey Bjorn,
+> >> >
+> >> > I'm may be little confused so bear with me.
+> >> >
+> >> > Option 1 = (your normal set up), Magma card plugged to chasis, X540
+> >> > in
+> >> chasis.
+> >> > Option 2 = Magma card plugged to chasis, X540 in z420 system.
+> >> > Option 3 = Magma card UNplugged from chasis, x540 in z420 system.
+> >> >
+> >> > Options 1 & 2 - always fail
+> >> > Option 3 - sometimes fails (unsure at what rate failure occurs)
+> >> >
+> >> > Please correct me if I messed any of that up. :)
+> >>
+> >> Generally correct.  I've seen failures in all three configs, so I'm
+> >> only concerned with the simplest for now (config 3, no expansion chassis).
+> >>
+> >> > Another question I have relates to the lspci output you supplied in
+> >> > the
+> >> bugzilla.  I'm not seeing the VF devices (i.e. 08:10.0) did you run
+> >> lspci before you created the VF's?  If so could we see one while the failure
+> was occurring?
+> >>
+> >> That's correct, I collected the lspci output before reproducing the
+> >> problem.  I can't easily collect lspci afterwards because the machine
+> >> isn't responsive after the problem starts.
+> >>
+> >> > Also could you download the latest ixgbevf from source forge?
+> >> >
+> >> > https://sourceforge.net/projects/e1000/files/ixgbevf%20stable/
+> >> >
+> >> > If we add debugging messages it will be easier to patch this driver
+> >> > and it
+> >> contains our latest validated code base.
+> >>
+> >> I can do that if it turns out to be necessary.  But John Haller gave
+> >> me a good clue off-list:
+> >>
+> >> John wrote:
+> >> > I assume you want the VFs to be instantiated in a VM.  To do this,
+> >> > you need to blacklist the ixgbevf driver in the host (or not
+> >> > compile it into the host), or it will try to associate the driver
+> >> > in the host, rather than in the VM where you want it.  Then, the VM
+> >> > needs the ixgbevf driver, which will hopefully do a better job of
+> >> > talking to the mailbox in the host.  There is some work to assign
+> >> > the VF(s) to the VM, but I don't remember that offhand.
+> >>
+> >> I don't have any VMs (I started this whole thing because I was
+> >> looking at a PCI hotplug issue related to SR-IOV, so I don't really care
+> about VMs).
+> >>
+> >> So the ixgbevf driver on the *host* is claiming the new VFs, and it
+> >> sounds like maybe it can't handle that?
+> >>
+> >> Bjorn
+> >
+> > Not to speak for John, but I believe he was saying if you want to use your
+> VF's in a VM you need to make sure you don't run the ixgbevf driver on the
+> host as it will "claim" the VF's.  If you are NOT running any VM's then it is
+> perfectly fine to have both ixgbe and ixgbevf loaded.
+> 
+> OK.  It certainly *seemed* surprising to have the ixgbevf driver blow up,
+> even if it was an error on my part to load it in the host.  Just let me know if
+> there's any more testing I can do.
+> 
+> Bjorn
 
-On 2013-08-01 23:16, Konrad Rzeszutek Wilk wrote:
-> On Wed, Jul 31, 2013 at 04:41:32PM -0600, Bjorn Helgaas wrote:
->> On Tue, Jul 23, 2013 at 9:08 PM, Zhenzhong Duan
->> <zhenzhong.duan@oracle.com> wrote:
->>> xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
->>> in dom0. It's better to do the same for default_restore_msi_irqs in baremetal.
->>>
->>> Move restore of mask in default_restore_msi_irqs, this could avoid mask
->>> restored twice in dom0, once in hypercall, the other in kernel.
->>>
->>> Without that, qlcnic driver calling pci_reset_function will lost interrupt
->>> in dom0.
->>>
->>> Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
->>> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
->>> ---
->>>   drivers/pci/msi.c |   17 ++++++++++++++---
->>>   1 files changed, 14 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->>> index 87223ae..922fb49 100644
->>> --- a/drivers/pci/msi.c
->>> +++ b/drivers/pci/msi.c
->>> @@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
->>>   #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
->>>   void default_restore_msi_irqs(struct pci_dev *dev, int irq)
->>>   {
->>> +       int pos;
->>> +       u16 control;
->>>          struct msi_desc *entry;
->>>
->>>          entry = NULL;
->>> @@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
->>>                  entry = irq_get_msi_desc(irq);
->>>          }
->>>
->>> -       if (entry)
->>> +       if (entry) {
->>>                  write_msi_msg(irq, &entry->msg);
->>> +               if (dev->msix_enabled) {
->>> +                       msix_mask_irq(entry, entry->masked);
->>> +                       readl(entry->mask_base);
->>> +               } else {
->>> +                       pos = entry->msi_attrib.pos;
->>> +                       pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
->>> +                                            &control);
->>> +                       msi_mask_irq(entry, msi_capable_mask(control),
->>> +                                    entry->masked);
->>> +               }
->>> +       }
->>>   }
->>>   #endif
->>>
->>> @@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
->>>          arch_restore_msi_irqs(dev, dev->irq);
->>>
->>>          pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
->>> -       msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
->>>          control &= ~PCI_MSI_FLAGS_QSIZE;
->>>          control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
->>>          pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
->>> @@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
->>>
->>>          list_for_each_entry(entry, &dev->msi_list, list) {
->>>                  arch_restore_msi_irqs(dev, entry->irq);
->>> -               msix_mask_irq(entry, entry->masked);
->>>          }
->>>
->>>          control &= ~PCI_MSIX_FLAGS_MASKALL;
->> Konrad, are you OK with this patch now?
-> Yes, I wanted to make sure that the existing behavior under baremetal
-> was not altered.
->
-> And Duan had confirmed it was not  - thought to be on a safe side it
-> would be good to confirm this via testing just in case.
-I had ever let our customer test on baremetal and it passed.
+Something is leading to the mbx messages being messed up as event by the " Last Request of type 03 to PF Nacked" messages.   Have you tried reseting the ixgbevf port (ethtool -r <your port>)?  Is it even possible to do this as you mentioned that in the failure state the machine isn't very responsive?
 
-zduan
+If it might be worthwhile to add logging into the ixgbevf and ixgbe drivers around the mbx messages, with the hope being that it would help show what is going between the two.  There have been some changes in that area of the ixgbevf code as of late, so working off the latest source forge driver would the easiest for me to send you patch on.  Sadly we haven't been able to recreate the failure here so it makes it rather hard to debug.
+
+Thanks,
+-Don Skidmore <donald.c.skidmore@intel.com>
