@@ -1,125 +1,240 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [GIT PULL] ACPI and power management fixes for v3.11-rc5
-Date: Fri, 09 Aug 2013 17:06:04 +0200
-Message-ID: <4211268.BVlRV6dqfO@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:39458 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754081Ab3HWAC7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Aug 2013 20:02:59 -0400
+Received: by mail-oa0-f47.google.com with SMTP id g12so4858520oah.20
+        for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2013 17:02:58 -0700 (PDT)
+Date: Thu, 22 Aug 2013 18:02:52 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Radim =?utf-8?B?S3LEjW3DocWZ?= <rkrcmar@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Isaku Yamahata <yamahata@valinux.co.jp>
+Subject: Re: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
+Message-ID: <20130823000252.GA29441@google.com>
+References: <1375970227-14794-1-git-send-email-rkrcmar@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1375970227-14794-1-git-send-email-rkrcmar@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Thu, Aug 08, 2013 at 03:57:07PM +0200, Radim Krčmář wrote:
+> PCIe switch can be connected directly to the PCIe root complex in QEMU;
+> ASPM does not expect this topology and dereferences NULL pointer when
+> initializing.
+> 
+> Downstream port can be also connected to the root complex without
+> upstream one, so code checks for both, otherwise they dereference NULL
+> on line drivers/pci/pcie/aspm.c:530 (alloc_pcie_link_state+13):
+>   		parent = pdev->bus->parent->self->link_state;
+> "pdev->bus->parent->self == NULL" if upstream port is connected directly
+> to the root bus and "pdev->bus->parent == NULL" in the second case.
+> 
+> v1 -> v2: (https://lkml.org/lkml/2013/6/19/753)
+>  - Initialization is aborted in pcie_aspm_init_link_state, where other
+>    special cases are being handled
+>  - pci_is_root_bus is used
+>  - Warning is printed
+> 
+> Reproducer for "downstream -- root" and "downstream -- upstream -- root"
+> (used qemu-kvm 1.5, q35 machine type might be missing on older ones)
+> 
+>   for parent in pcie.0 upstream; do
+>    qemu-kvm -m 128 -M q35 -nographic -no-reboot \
+>      -device x3130-upstream,bus=pcie.0,id=upstream \
+>      -device xio3130-downstream,bus=$parent,id=downstream,chassis=1 \
+>      -device virtio-blk-pci,bus=downstream,id=virtio-zero,drive=zero \
+>      -drive  file=/dev/zero,id=zero,format=raw \
+>      -kernel bzImage -append "console=ttyS0 panic=3" # pcie_aspm=off
+>   done
+> 
+> ASPM in QEMU works if we connect upstream through root port
+>   -device ioh3420,bus=pcie.0,id=root.0 \
+>   -device x3130-upstream,bus=root.0,id=upstream
+> 
+> Signed-off-by: Radim Krčmář <rkrcmar@redhat.com>
+> ---
+>  drivers/pci/pcie/aspm.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 403a443..209cd7f 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -570,6 +570,15 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+>  	    pdev->bus->self)
+>  		return;
+>  
+> +	/* We require at least two ports between downstream and root bus */
+> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM &&
+> +	    (pci_is_root_bus(pdev->bus) ||
+> +	     pci_is_root_bus(pdev->bus->parent))) {
+> +		dev_warn(&pdev->dev, "ASPM disabled"
+> +		                     " (connected directly to root bus)\n");
+> +		return;
+> +	}
 
-Please pull from the git repository at
+I don't really want to detect invalid topologies piecemeal -- we will
+likely find other areas (MPS, AER, link speed management, etc.) that
+have similar dependencies.  I'd rather do it generically, maybe with
+something like the following patch.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm+acpi-3.11-rc5
+I tried this with the following qemu invocation:
 
-to receive ACPI and power management fixes for v3.11-rc5 with
-top-most commit 69fdadfd2200e0bf3d10a7a7925db8e9fc5a46fd
+    $ /usr/local/bin/qemu-system-x86_64 -M q35 -enable-kvm -m 512   -device x3130-upstream,bus=pcie.0,id=upstream   -device xio3130-downstream,bus=upstream,id=downstream,chassis=1   -drive file=ubuntu.img,if=none,id=mydisk   -device ide-drive,drive=mydisk,bus=ide.0   -drive file=scratch.img,id=disk1 -device virtio-blk-pci,bus=downstream,id=virtio-disk1,drive=disk1 -nographic -kernel ~/linux/arch/x86/boot/bzImage   -append "console=ttyS0,115200n8 root=/dev/sda1 ignore_loglevel"
 
-  Merge branch 'pm-fixes'
+With unmodified v3.11-rc2, I see the NULL pointer dereference, but with
+the patch below applied, we just ignore the 00:03.0 device and the kernel
+boots fine.
 
-on top of commit c095ba7224d8edc71dcef0d655911399a8bd4a3f
+Bjorn
 
-  Linux 3.11-rc4
+---
+ arch/powerpc/kernel/pci_of_scan.c |    7 ++++++-
+ arch/sparc/kernel/pci.c           |    7 ++++++-
+ drivers/pci/probe.c               |   37 +++++++++++++++++++++++++++++++++----
+ include/linux/pci.h               |    2 +-
+ 4 files changed, 46 insertions(+), 7 deletions(-)
 
-These fix a couple of recent regressions introduced during this cycle,
-a few regressions introduced in 3.9 and 3.10 and one locking bug
-that's always been there.
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 6b0ba58..f6ef4dd 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -143,7 +143,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 	dev->devfn = devfn;
+ 	dev->multifunction = 0;		/* maybe a lie? */
+ 	dev->needs_freset = 0;		/* pcie fundamental reset required */
+-	set_pcie_port_type(dev);
  
-Specifics:
-
-- ACPI-based memory hotplug stopped working after a recent change,
-  because it's not possible to associate sufficiently many "physical"
-  devices with one ACPI device object due to an artificial limit.
-  Fix from yours truly removes that limit and makes memory hotplug
-  work again.
-
-- A change made in 3.9 uncovered a bug in the ACPI processor driver
-  preventing NUMA nodes from being put offline due to an ordering
-  issue.  Fix from Yasuaki Ishimatsu changes the ordering to make
-  things work again.
-
-- One of the recent ACPI video commits (that hasn't been reverted
-  so far) uncovered a bug in the code handling quirky BIOSes that
-  caused some Asus machines to boot with backlight completely off
-  which made it quite difficult to use them afterward.  Fix from
-  Felipe Contreras improves the quirk to cover this particular
-  case correctly.
-
-- A cpufreq user space interface change made in 3.10 inadvertently
-  renamed ignore_nice_load to ignore_nice which resulted in some
-  confusion.  Fix from Viresh Kumar changes the name back to
-  ignore_nice_load.
-
-- An initialization ordering change made in 3.9 broke cpufreq on
-  loongson2 boards.  Fix from Aaro Koskinen restores the correct
-  initialization ordering there.
-
-- Another chapter from "ACPI Horror Stories".  Some BIOS writers
-  apparently expect us to always be able to handle the unbelievable
-  garbage they put into their ACPI tables.  Well, we do our best,
-  but sometimes we break one of these cases when we try to address
-  another one.
-
-  In this particular case the breakage resulted from a mistake made
-  in 3.9 and caused the detection of some graphics adapters (that were
-  detected successfully before) to fail.  It turned out that there
-  were two objects representing the same PCIe port in the ACPI tables
-  of the affected systems.  Both appeared as "enabled" and we were
-  expected to guess which one to use.  We used to choose the right one
-  before by pure luck, but when we tried to address another similar
-  corner case, the luck went away.  This time we try to make our
-  guessing a bit more educated which is reported to work on those
-  systems.
-
-- The /proc/acpi/wakeup interface code is missing some locking
-  which may lead to breakage if that file is written or read during
-  hotplug of wakeup devices.  That should be rare but still possible,
-  so it's better to start using the appropriate locking there.
-
-Thanks!
-
-
----------------
-
-Aaro Koskinen (1):
-      cpufreq: loongson2: fix regression related to clock management
-
-Felipe Contreras (1):
-      ACPI / video: improve quirk check in acpi_video_bqc_quirk()
-
-Rafael J. Wysocki (3):
-      ACPI / PM: Walk physical_node_list under physical_node_lock
-      ACPI: Drop physical_node_id_bitmap from struct acpi_device
-      ACPI: Try harder to resolve _ADR collisions for bridges
-
-Viresh Kumar (1):
-      cpufreq: rename ignore_nice as ignore_nice_load
-
-Yasuaki Ishimatsu (1):
-      ACPI / processor: move try_offline_node() after acpi_unmap_lsapic()
-
----------------
-
- drivers/acpi/acpi_processor.c          |    3 +-
- drivers/acpi/glue.c                    |  133 ++++++++++++++++++++++++--------
- drivers/acpi/proc.c                    |    8 ++
- drivers/acpi/video.c                   |    2 +-
- drivers/cpufreq/cpufreq_conservative.c |   20 ++---
- drivers/cpufreq/cpufreq_governor.c     |    8 +-
- drivers/cpufreq/cpufreq_governor.h     |    4 +-
- drivers/cpufreq/cpufreq_ondemand.c     |   20 ++---
- drivers/cpufreq/loongson2_cpufreq.c    |   11 +--
- drivers/pci/pci-acpi.c                 |   15 +++-
- include/acpi/acpi_bus.h                |   14 ++--
- 11 files changed, 162 insertions(+), 76 deletions(-)
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+ 	list_for_each_entry(slot, &dev->bus->slots, list)
+ 		if (PCI_SLOT(dev->devfn) == slot->number)
+@@ -164,6 +163,12 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 	pr_debug("    class: 0x%x\n", dev->class);
+ 	pr_debug("    revision: 0x%x\n", dev->revision);
+ 
++	if (set_pcie_port_type(dev)) {
++		pci_bus_put(dev->bus);
++		kfree(dev);
++		return NULL;
++	}
++
+ 	dev->current_state = PCI_UNKNOWN;	/* unknown power state */
+ 	dev->error_state = pci_channel_io_normal;
+ 	dev->dma_mask = 0xffffffff;
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index bc4d3f5..5600849 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -287,7 +287,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+ 	dev->dev.of_node = of_node_get(node);
+ 	dev->devfn = devfn;
+ 	dev->multifunction = 0;		/* maybe a lie? */
+-	set_pcie_port_type(dev);
+ 
+ 	list_for_each_entry(slot, &dev->bus->slots, list)
+ 		if (PCI_SLOT(dev->devfn) == slot->number)
+@@ -319,6 +318,12 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+ 		printk("    class: 0x%x device name: %s\n",
+ 		       dev->class, pci_name(dev));
+ 
++	if (set_pcie_port_type(dev)) {
++		pci_bus_put(dev->bus);
++		kfree(dev);
++		return NULL;
++	}
++
+ 	/* I have seen IDE devices which will not respond to
+ 	 * the bmdma simplex check reads if bus mastering is
+ 	 * disabled.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cf57fe7..a8cc929 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -970,20 +970,47 @@ static void pci_read_irq(struct pci_dev *dev)
+ 	dev->irq = irq;
+ }
+ 
+-void set_pcie_port_type(struct pci_dev *pdev)
++int set_pcie_port_type(struct pci_dev *pdev)
+ {
+-	int pos;
++	int pos, type;
+ 	u16 reg16;
++	struct pci_dev *parent;
+ 
+ 	pos = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+ 	if (!pos)
+-		return;
++		return 0;
++
+ 	pdev->is_pcie = 1;
+ 	pdev->pcie_cap = pos;
+ 	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+ 	pdev->pcie_flags_reg = reg16;
+ 	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+ 	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
++
++	type = pci_pcie_type(pdev);
++	parent = pdev->bus->self;
++
++	/* An Upstream Port must be below a Root Port or a Downstream Port */
++	if (type == PCI_EXP_TYPE_UPSTREAM) {
++		if (!parent ||
++		    (pci_pcie_type(parent) != PCI_EXP_TYPE_ROOT_PORT &&
++		     pci_pcie_type(parent) != PCI_EXP_TYPE_DOWNSTREAM)) {
++			dev_warn(&pdev->dev,
++				 "ignoring improperly connected PCIe switch\n");
++			return -EINVAL;
++		}
++	}
++
++	/* A Downstream Port must be directly below an Upstream Port */
++	if (type == PCI_EXP_TYPE_DOWNSTREAM) {
++		if (!parent ||
++		    pci_pcie_type(parent) != PCI_EXP_TYPE_UPSTREAM) {
++			dev_warn(&pdev->dev, "ignoring malformed PCIe switch (no Upstream Port)\n");
++			return -EINVAL;
++		}
++	}
++
++	return 0;
+ }
+ 
+ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+@@ -1025,7 +1052,6 @@ int pci_setup_device(struct pci_dev *dev)
+ 	dev->hdr_type = hdr_type & 0x7f;
+ 	dev->multifunction = !!(hdr_type & 0x80);
+ 	dev->error_state = pci_channel_io_normal;
+-	set_pcie_port_type(dev);
+ 
+ 	list_for_each_entry(slot, &dev->bus->slots, list)
+ 		if (PCI_SLOT(dev->devfn) == slot->number)
+@@ -1046,6 +1072,9 @@ int pci_setup_device(struct pci_dev *dev)
+ 	dev_printk(KERN_DEBUG, &dev->dev, "[%04x:%04x] type %02x class %#08x\n",
+ 		   dev->vendor, dev->device, dev->hdr_type, dev->class);
+ 
++	if (set_pcie_port_type(dev))
++		return -EINVAL;
++
+ 	/* need to have dev->class ready */
+ 	dev->cfg_size = pci_cfg_space_size(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 89ed123..a61134b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -982,7 +982,7 @@ void pci_disable_ltr(struct pci_dev *dev);
+ int pci_set_ltr(struct pci_dev *dev, int snoop_lat_ns, int nosnoop_lat_ns);
+ 
+ /* For use by arch with custom probe code */
+-void set_pcie_port_type(struct pci_dev *pdev);
++int set_pcie_port_type(struct pci_dev *pdev);
+ void set_pcie_hotplug_bridge(struct pci_dev *pdev);
+ 
+ /* Functions for PCI Hotplug drivers to use */
