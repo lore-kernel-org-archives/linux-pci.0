@@ -1,98 +1,460 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:48753 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752911Ab3HLSrE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 14:47:04 -0400
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Olof Johansson <olof@lixom.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 0/9] ARM: dove: DT PCIe support
-Date: Mon, 12 Aug 2013 20:46:46 +0200
-Message-Id: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:11048 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754423Ab3HWGEX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 02:04:23 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	Arnd Bergmann <arnd@arndb.de>, 'Sean Cross' <xobs@kosagi.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH V2] PCI: exynos: add support for MSI
+Date: Fri, 23 Aug 2013 15:04:20 +0900
+Message-id: <003d01ce9fc6$9c0f1c20$d42d5460$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set adds support for the PCIe controllers found on Marvell
-Dove SoCs. It depends on mvebu-pci patches sent by Thomas Petazzoni.
-Also, it adds support for the Globalscale D3Plug - a Dove based board
-comprising a USB3.0 dual port controller and a mini-PCIe port. The
-mini-PCIe port has not been tested, but USB controller and attached
-USB stick has been detected.
+This patch adds support for Message Signaled Interrupt in the
+Exynos PCIe diver using Synopsys designware PCIe core IP.
 
-The patch set can be separated into two main parts and should be
-taken by the respective maintainers. First five patches belong to
-PCI driver for MVEBU SoCs, while last four patches are Marvell Dove
-related. It is based on (unstable) mvebu/for-next branch with MSI
-patches applied and will be rebased on request.
-
-Devicetree and Doc MLs are not Cc'ed for the driver-only patches,
-PCI ML and maintainer are not Cc'ed for the Dove-only patches.
-
-Patches 1 and 2 fix some minor issues with pci-mvebu by moving
-clk_prepare_enable before accessing any controller registers and
-counting sucessfully registered ports only.
-
-Patch 3 converts pci-mvebu from subsys_initcall registration to
-normal platform driver registration to allow it to fail with
-EPROBE_DEFER later.
-
-Patch 4 adds DT parsing for reset (PERST#) GPIO pins and delay to
-wait for PCIe devices after reset de-assertion.
-
-Patch 5 finally adds a compatible to pci-mvebu for Dove SoCs.
-
-Patch 6 updates dove_defconfig with some useful options for the
-Si5351 i2c clock generator found on SolidRun CuBox, PCIe driver,
-and USB3.0 xHCI driver.
-
-Patches 7 and 8 add PCIe controller nodes to Dove SoC DT and
-add support for the Globalscale D3Plug where this patches have
-been tested on.
-
-Patch 8 finally removes legacy PCIe driver init and clock
-gate workarounds from DT based Dove init.
-
-Sebastian Hesselbarth (9):
-  PCI: mvebu: move clock enable before register access
-  PCI: mvebu: increment nports only for registered ports
-  PCI: mvebu: remove subsys_initcall
-  PCI: mvebu: add support for reset on GPIO
-  PCI: mvebu: add support for Marvell Dove SoCs
-  ARM: dove: update dove_defconfig with SI5351, PCI, and xHCI
-  ARM: dove: add PCIe controllers to SoC DT
-  ARM: dove: add initial DT file for Globalscale D3Plug
-  ARM: dove: remove legacy pcie and clock init
-
- .../devicetree/bindings/pci/mvebu-pci.txt          |    3 +
- arch/arm/boot/dts/Makefile                         |    1 +
- arch/arm/boot/dts/dove-d3plug.dts                  |  103 ++++++++++++++++++
- arch/arm/boot/dts/dove.dtsi                        |   54 ++++++++++
- arch/arm/configs/dove_defconfig                    |    4 +
- arch/arm/mach-dove/board-dt.c                      |   29 -----
- drivers/pci/host/Kconfig                           |    2 +-
- drivers/pci/host/pci-mvebu.c                       |  113 +++++++++++++-------
- 8 files changed, 241 insertions(+), 68 deletions(-)
- create mode 100644 arch/arm/boot/dts/dove-d3plug.dts
+Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
+Signed-off-by: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
 ---
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Andrew Lunn <andrew@lunn.ch>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Olof Johansson <olof@lixom.net>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: devicetree@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org
+Changes since v1:
+- removed unnecessary exynos_pcie_clear_irq_level()
+- updated the bindings documentation
+- used new msi_chip infrastructure
+- removed ARCH_SUPPORTS_MSI
+- replaced #ifdef guards with IS_ENABLED(CONFIG_PCI_MSI)
+
+ .../devicetree/bindings/pci/designware-pcie.txt    |    2 +
+ arch/arm/boot/dts/exynos5440.dtsi                  |    2 +
+ drivers/pci/host/pci-exynos.c                      |   47 ++++
+ drivers/pci/host/pcie-designware.c                 |  225 ++++++++++++++++++++
+ drivers/pci/host/pcie-designware.h                 |    4 +
+ 5 files changed, 280 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index eabcb4b..00bb935 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -43,6 +43,7 @@ SoC specific DT Entry:
+ 		interrupt-map-mask = <0 0 0 0>;
+ 		interrupt-map = <0x0 0 &gic 53>;
+ 		num-lanes = <4>;
++		msi-base = <200>;
+ 	};
+ 
+ 	pcie@2a0000 {
+@@ -63,6 +64,7 @@ SoC specific DT Entry:
+ 		interrupt-map-mask = <0 0 0 0>;
+ 		interrupt-map = <0x0 0 &gic 56>;
+ 		num-lanes = <4>;
++		msi-base = <232>;
+ 	};
+ 
+ Board specific DT Entry:
+diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+index 5d6cf49..17549b9 100644
+--- a/arch/arm/boot/dts/exynos5440.dtsi
++++ b/arch/arm/boot/dts/exynos5440.dtsi
+@@ -276,6 +276,7 @@
+ 		interrupt-map-mask = <0 0 0 0>;
+ 		interrupt-map = <0x0 0 &gic 53>;
+ 		num-lanes = <4>;
++		msi-base = <200>;
+ 	};
+ 
+ 	pcie@2a0000 {
+@@ -296,5 +297,6 @@
+ 		interrupt-map-mask = <0 0 0 0>;
+ 		interrupt-map = <0x0 0 &gic 56>;
+ 		num-lanes = <4>;
++		msi-base = <232>;
+ 	};
+ };
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 012ca8a..aaead2c 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -48,6 +48,7 @@ struct exynos_pcie {
+ #define PCIE_IRQ_SPECIAL		0x008
+ #define PCIE_IRQ_EN_PULSE		0x00c
+ #define PCIE_IRQ_EN_LEVEL		0x010
++#define IRQ_MSI_ENABLE			(0x1 << 2)
+ #define PCIE_IRQ_EN_SPECIAL		0x014
+ #define PCIE_PWR_RESET			0x018
+ #define PCIE_CORE_RESET			0x01c
+@@ -320,9 +321,38 @@ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
++static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
++{
++	struct pcie_port *pp = arg;
++
++	/* handle msi irq */
++	dw_handle_msi_irq(pp);
++
++	return IRQ_HANDLED;
++}
++
++static void exynos_pcie_msi_init(struct pcie_port *pp)
++{
++	u32 val;
++	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
++	void __iomem *elbi_base = exynos_pcie->elbi_base;
++
++	dw_pcie_msi_init(pp);
++
++	/* enable MSI interrupt */
++	val = readl(elbi_base + PCIE_IRQ_EN_LEVEL);
++	val |= IRQ_MSI_ENABLE;
++	writel(val, elbi_base + PCIE_IRQ_EN_LEVEL);
++	return;
++}
++
+ static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
+ {
+ 	exynos_pcie_enable_irq_pulse(pp);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		exynos_pcie_msi_init(pp);
++
+ 	return;
+ }
+ 
+@@ -408,6 +438,23 @@ static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		pp->msi_irq = platform_get_irq(pdev, 0);
++
++		if (!pp->msi_irq) {
++			dev_err(&pdev->dev, "failed to get msi irq\n");
++			return -ENODEV;
++		}
++
++		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
++					exynos_pcie_msi_irq_handler,
++					IRQF_SHARED, "exynos-pcie", pp);
++		if (ret) {
++			dev_err(&pdev->dev, "failed to request msi irq\n");
++			return ret;
++		}
++	}
++
+ 	pp->root_bus_nr = -1;
+ 	pp->ops = &exynos_pcie_host_ops;
+ 
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 77b0c25..a4fed11 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -11,8 +11,10 @@
+  * published by the Free Software Foundation.
+  */
+ 
++#include <linux/irq.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/pci.h>
+ #include <linux/pci_regs.h>
+@@ -62,6 +64,12 @@
+ #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+ #define PCIE_ATU_UPPER_TARGET		0x91C
+ 
++#define MAX_MSI_IRQS			32
++#define MAX_MSI_CTRLS			8
++
++static unsigned int msi_data;
++static DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
++
+ static struct hw_pci dw_pci;
+ 
+ unsigned long global_io_offset;
+@@ -144,6 +152,205 @@ int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ 	return ret;
+ }
+ 
++static struct irq_chip dw_msi_irq_chip = {
++	.name = "PCI-MSI",
++	.irq_enable = unmask_msi_irq,
++	.irq_disable = mask_msi_irq,
++	.irq_mask = mask_msi_irq,
++	.irq_unmask = unmask_msi_irq,
++};
++
++/* MSI int handler */
++void dw_handle_msi_irq(struct pcie_port *pp)
++{
++	unsigned long val;
++	int i, pos;
++
++	for (i = 0; i < MAX_MSI_CTRLS; i++) {
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
++				(u32 *)&val);
++		if (val) {
++			pos = 0;
++			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
++				generic_handle_irq(pp->msi_irq_start
++					+ (i * 32) + pos);
++				pos++;
++			}
++		}
++		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4, val);
++	}
++}
++
++void dw_pcie_msi_init(struct pcie_port *pp)
++{
++	/* program the msi_data */
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
++			__virt_to_phys((u32)(&msi_data)));
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
++}
++
++static int find_valid_pos0(int msgvec, int pos, int *pos0)
++{
++	int flag = 1;
++
++	do {
++		pos = find_next_zero_bit(msi_irq_in_use,
++				MAX_MSI_IRQS, pos);
++		/*if you have reached to the end then get out from here.*/
++		if (pos == MAX_MSI_IRQS)
++			return -ENOSPC;
++		/*
++		 * Check if this position is at correct offset.nvec is always a
++		 * power of two. pos0 must be nvec bit alligned.
++		 */
++		if (pos % msgvec)
++			pos += msgvec - (pos % msgvec);
++		else
++			flag = 0;
++	} while (flag);
++
++	*pos0 = pos;
++	return 0;
++}
++
++static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
++{
++	int res, bit, irq, pos0, pos1, i;
++	u32 val;
++	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
++
++	if (!pp) {
++		BUG();
++		return -EINVAL;
++	}
++
++	pos0 = find_first_zero_bit(msi_irq_in_use,
++			MAX_MSI_IRQS);
++	if (pos0 % no_irqs) {
++		if (find_valid_pos0(no_irqs, pos0, &pos0))
++			goto no_valid_irq;
++	}
++	if (no_irqs > 1) {
++		pos1 = find_next_bit(msi_irq_in_use,
++				MAX_MSI_IRQS, pos0);
++		/* there must be nvec number of consecutive free bits */
++		while ((pos1 - pos0) < no_irqs) {
++			if (find_valid_pos0(no_irqs, pos1, &pos0))
++				goto no_valid_irq;
++			pos1 = find_next_bit(msi_irq_in_use,
++					MAX_MSI_IRQS, pos0);
++		}
++	}
++
++	irq = (pp->msi_irq_start + pos0);
++
++	if ((irq + no_irqs) > (pp->msi_irq_start + MAX_MSI_IRQS-1))
++		goto no_valid_irq;
++
++	i = 0;
++	while (i < no_irqs) {
++		set_bit(pos0 + i, msi_irq_in_use);
++		irq_alloc_descs((irq + i), (irq + i), 1, 0);
++		irq_set_msi_desc(irq + i, desc);
++		irq_set_chip_and_handler(irq + i, &dw_msi_irq_chip,
++					handle_simple_irq);
++		set_irq_flags(irq + i, IRQF_VALID);
++		/*Enable corresponding interrupt in MSI interrupt controller */
++		res = ((pos0 + i) / 32) * 12;
++		bit = (pos0 + i) % 32;
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
++		val |= 1 << bit;
++		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
++		i++;
++	}
++
++	*pos = pos0;
++	return irq;
++
++no_valid_irq:
++	*pos = pos0;
++	return -ENOSPC;
++}
++
++static void clear_irq(unsigned int irq)
++{
++	int res, bit, val, pos;
++	struct irq_desc *desc;
++	struct msi_desc *msi;
++	struct pcie_port *pp;
++
++	/* get the port structure */
++	desc = irq_to_desc(irq);
++	msi = irq_desc_get_msi_desc(desc);
++	pp = sys_to_pcie(msi->dev->bus->sysdata);
++	if (!pp) {
++		BUG();
++		return;
++	}
++
++	pos = irq - pp->msi_irq_start;
++
++	irq_free_desc(irq);
++
++	clear_bit(pos, msi_irq_in_use);
++
++	/* Disable corresponding interrupt on MSI interrupt controller */
++	res = (pos / 32) * 12;
++	bit = pos % 32;
++	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
++	val &= ~(1 << bit);
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
++}
++
++static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
++			struct msi_desc *desc)
++{
++	int irq, pos, msgvec;
++	u16 msg_ctr;
++	struct msi_msg msg;
++	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
++
++	if (!pp) {
++		BUG();
++		return -EINVAL;
++	}
++
++	pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
++				&msg_ctr);
++	msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
++	if (msgvec == 0)
++		msgvec = (msg_ctr & PCI_MSI_FLAGS_QMASK) >> 1;
++	if (msgvec > 5)
++		msgvec = 0;
++
++	irq = assign_irq((1 << msgvec), desc, &pos);
++	if (irq < 0)
++		return irq;
++
++	msg_ctr &= ~PCI_MSI_FLAGS_QSIZE;
++	msg_ctr |= msgvec << 4;
++	pci_write_config_word(pdev, desc->msi_attrib.pos + PCI_MSI_FLAGS,
++				msg_ctr);
++	desc->msi_attrib.multiple = msgvec;
++
++	msg.address_hi = 0x0;
++	msg.address_lo = __virt_to_phys((u32)(&msi_data));
++	msg.data = pos;
++	write_msi_msg(irq, &msg);
++
++	return 0;
++}
++
++static void dw_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
++{
++	clear_irq(irq);
++}
++
++static struct msi_chip dw_pcie_msi_chip = {
++	.setup_irq = dw_msi_setup_irq,
++	.teardown_irq = dw_msi_teardown_irq,
++};
++
+ int dw_pcie_link_up(struct pcie_port *pp)
+ {
+ 	if (pp->ops->link_up)
+@@ -225,6 +432,13 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 		return -EINVAL;
+ 	}
+ 
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		if (of_property_read_u32(np, "msi-base", &pp->msi_irq_start)) {
++			dev_err(pp->dev, "Failed to parse the number of lanes\n");
++			return -EINVAL;
++		}
++	}
++
+ 	if (pp->ops->host_init)
+ 		pp->ops->host_init(pp);
+ 
+@@ -509,10 +723,21 @@ int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return pp->irq;
+ }
+ 
++static void dw_pcie_add_bus(struct pci_bus *bus)
++{
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		struct pcie_port *pp = sys_to_pcie(bus->sysdata);
++
++		dw_pcie_msi_chip.dev = pp->dev;
++		bus->msi = &dw_pcie_msi_chip;
++	}
++}
++
+ static struct hw_pci dw_pci = {
+ 	.setup		= dw_pcie_setup,
+ 	.scan		= dw_pcie_scan_bus,
+ 	.map_irq	= dw_pcie_map_irq,
++	.add_bus	= dw_pcie_add_bus,
+ };
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 133820f..3c01935 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -38,6 +38,8 @@ struct pcie_port {
+ 	int			irq;
+ 	u32			lanes;
+ 	struct pcie_host_ops	*ops;
++	int			msi_irq;
++	int			msi_irq_start;
+ };
+ 
+ struct pcie_host_ops {
+@@ -57,6 +59,8 @@ int cfg_read(void __iomem *addr, int where, int size, u32 *val);
+ int cfg_write(void __iomem *addr, int where, int size, u32 val);
+ int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size, u32 val);
+ int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size, u32 *val);
++void dw_handle_msi_irq(struct pcie_port *pp);
++void dw_pcie_msi_init(struct pcie_port *pp);
+ int dw_pcie_link_up(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
 -- 
 1.7.10.4
+
 
