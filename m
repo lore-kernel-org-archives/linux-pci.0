@@ -1,86 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:15254 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966Ab3HUC2D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 22:28:03 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v6 1/2] PCI: remove the unnecessary check in pcie_find_smpss()
-Date: Wed, 21 Aug 2013 10:25:36 +0800
-Message-ID: <1377051937-5712-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1377051937-5712-1-git-send-email-wangyijing@huawei.com>
-References: <1377051937-5712-1-git-send-email-wangyijing@huawei.com>
+Received: from [213.199.154.189] ([213.199.154.189]:35111 "EHLO
+	db8outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754662Ab3HXPtP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 24 Aug 2013 11:49:15 -0400
+From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+To: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<dougthompson@xmission.com>, <bp@alien8.de>, <bhelgaas@google.com>,
+	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Subject: [PATCH 1/1 V2] AMD64_EDAC: Fix incorrect wrap arounds due to left shift beyond 32 bits.
+Date: Sat, 24 Aug 2013 10:47:48 -0500
+Message-ID: <1377359268-3435-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In "pci=pcie_bus_safe" mode, if find a hotplug slot, we will set
-all devices which in the path mps value to the minimum mps
-support(128B). Unless the slot is directly connected to root port,
-and there are not other devices on the fabric. In the latter case,
-we will set root port and device mps to the minmum mpss support
-for performace. Currently we use list_is_singular() to identify
-whether slot is the only one connected to root port, it's not
-necessary, because root port always connected to only one slot.
+Link to the bug report:
+http://marc.info/?l=linux-edac&m=137692201732220&w=2
 
-Following is test info:
--+-[0000:40]-+-00.0-[0000:41]--
-	................
- |           +-05.0-[0000:45]--
- |           +-07.0-[0000:46]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
+dct_base and dct_limit obtain 32 bit register values when they read
+their respective pci config space registers. A left shift beyond 32 bits will
+cause them to wrap around. Similar case for chan_addr as can be seen from
+the bug report. In the patch, we rectify this by casting chan_addr to
+u64 and by comparing dct_base and dct_limit against (sys_addr >> 27)
 
-root port (40:07.0 mps=256 mpss=256)
-EndPoing deivce (46:00.0/1 mps=256 mpss=512)
+Change from V1:
+	- Fix chan_offset to use left-shifted version of dct_base.
 
-linux-ha2:/sys/bus/pci/slots/7 # echo 0 > power
-linux-ha2:/sys/bus/pci/slots/7 # echo 1 > power
-linux-ha2:/sys/bus/pci/slots/7 # dmesg
-...........................
-pcieport 0000:40:07.0: PCI-E Max Payload Size set to  256/ 256 (was  256), Max Read Rq  128
-pci 0000:46:00.0: PCI-E Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512
-pci 0000:46:00.1: PCI-E Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512
-pcieport 0000:40:07.0: PCI-E Max Payload Size set to  256/ 256 (was  256), Max Read Rq  128
-pci 0000:46:00.0: PCI-E Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512
-pci 0000:46:00.1: PCI-E Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512
-...........................
+Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
 
-result is good, root port and device mps were wrote to 256, original code wrote to 128
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>
----
- drivers/pci/probe.c |   11 ++++-------
- 1 files changed, 4 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cf57fe7..160ae38 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1501,14 +1501,11 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
- 	 * To work around this, the MPS for the entire fabric must be
- 	 * set to the minimum size.  Any devices hotplugged into this
- 	 * fabric will have the minimum MPS set.  If the PCI hotplug
--	 * slot is directly connected to the root port and there are not
--	 * other devices on the fabric (which seems to be the most
--	 * common case), then this is not an issue and MPS discovery
--	 * will occur as normal.
-+	 * slot is directly connected to the root port, then this is
-+	 * not an issue and MPS discovery will occur as normal.
- 	 */
--	if (dev->is_hotplug_bridge && (!list_is_singular(&dev->bus->devices) ||
--	     (dev->bus->self &&
--	      pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)))
-+	if (dev->is_hotplug_bridge &&
-+	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM)
- 		*smpss = 0;
+diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
+index b86228c..64cfcaf 100644
+--- a/drivers/edac/amd64_edac.c
++++ b/drivers/edac/amd64_edac.c
+@@ -1558,11 +1558,12 @@ static int f15_m30h_match_to_this_node(struct amd64_pvt *pvt, unsigned range,
+ 	}
  
- 	if (*smpss > dev->pcie_mpss)
+ 	/* Verify sys_addr is within DCT Range. */
+-	dct_base = (dct_sel_baseaddr(pvt) << 27);
+-	dct_limit = (((dct_cont_limit_reg >> 11) & 0x1FFF) << 27) | 0x7FFFFFF;
++	dct_base = (u64) dct_sel_baseaddr(pvt);
++	dct_limit = (dct_cont_limit_reg >> 11) & 0x1FFF;
+ 
+ 	if (!(dct_cont_base_reg & BIT(0)) &&
+-	    !(dct_base <= sys_addr && dct_limit >= sys_addr))
++	    !(dct_base <= (sys_addr >> 27) &&
++	      dct_limit >= (sys_addr >> 27)))
+ 		return -EINVAL;
+ 
+ 	/* Verify number of dct's that participate in channel interleaving. */
+@@ -1584,7 +1585,7 @@ static int f15_m30h_match_to_this_node(struct amd64_pvt *pvt, unsigned range,
+ 	if (leg_mmio_hole && (sys_addr >= BIT_64(32)))
+ 		chan_offset = dhar_offset;
+ 	else
+-		chan_offset = dct_base;
++		chan_offset = dct_base << 27;
+ 
+ 	chan_addr = sys_addr - chan_offset;
+ 
+@@ -1614,7 +1615,7 @@ static int f15_m30h_match_to_this_node(struct amd64_pvt *pvt, unsigned range,
+ 		amd64_read_pci_cfg(pvt->F1,
+ 				   DRAM_CONT_HIGH_OFF + (int) channel * 4,
+ 				   &tmp);
+-		chan_addr +=  ((tmp >> 11) & 0xfff) << 27;
++		chan_addr +=  (u64) ((tmp >> 11) & 0xfff) << 27;
+ 	}
+ 
+ 	f15h_select_dct(pvt, channel);
 -- 
-1.7.1
+1.7.10.4
 
 
