@@ -1,61 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:34220 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756204Ab3HWVSx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 17:18:53 -0400
-To: Shaohua Li <shli@kernel.org>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: VIA chipset with Root Port under a bridge
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 23 Aug 2013 21:57:08 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] ACPI: Fix osc flag setup ordering to allow pcie hotplug
+ use when available
+Message-ID: <20130824015707.GA9684@neilslaptop.think-freely.org>
+References: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com>
+ <3958698.Gm9Wz19SSi@vostro.rjw.lan>
+ <CAErSpo5JhCQsYHgFdp+vK9=wLzHert1r5vTe7_ZCPh-4kM80zQ@mail.gmail.com>
+ <4634097.MXvnqpQKZr@vostro.rjw.lan>
+ <CAErSpo7pZaA4x2f7LUDCOnox1zPCk2qh0nNT=iN4frrWGqn6=g@mail.gmail.com>
 MIME-Version: 1.0
-Content-type: text/plain; charset=UTF-8
-In-reply-to: <20130823010652.GA1539@kernel.org>
-References: <CAErSpo53GpzdinvmQNX=DfJSsTUOzKng6LT1jrDSM8aU1ZUJiA@mail.gmail.com> <CAErSpo49W9iYWUfVRCALr9Nkvuzs38MwzNUAXLgr91BRiRFtFQ@mail.gmail.com> <20130823010652.GA1539@kernel.org>
-Date: Fri, 23 Aug 2013 23:18:47 +0200
-Message-Id: <20130823211847.590EF380AE5@gemini.denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7pZaA4x2f7LUDCOnox1zPCk2qh0nNT=iN4frrWGqn6=g@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Shaohua Li,
-
-In message <20130823010652.GA1539@kernel.org> you wrote:
-> On Thu, Aug 22, 2013 at 03:49:24PM -0600, Bjorn Helgaas wrote:
-> > [replace Shaohua's dead Intel address with @kernel.org address; please
-> > reply to this, not the original]
-> > 
-> > On Thu, Aug 22, 2013 at 3:47 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > > Shaohua, your commit 8e822df700 references a VIA chipset with a Root
-> > > Port under a bridge, and that commit adds a special case to disable
-> > > ASPM for that situation.
-> > >
-> > > I know this is pretty old (the commit is from 2009), but do you have
-> > > any more details about that system?  A pointer to the original problem
-> > > report, lspci output, dmesg output, etc.?
-> > >
-> > > I'm concerned because other parts of PCI make assumptions about Root
-> > > Port topology, e.g., in MPS configuration, and we might need to make
-> > > similar changes elsewhere.
+On Fri, Aug 23, 2013 at 04:04:59PM -0600, Bjorn Helgaas wrote:
+> On Fri, Aug 23, 2013 at 3:40 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Friday, August 23, 2013 02:46:23 PM Bjorn Helgaas wrote:
+> >> On Fri, Aug 23, 2013 at 2:53 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> > On Friday, August 23, 2013 04:05:11 PM Neil Horman wrote:
+> >> >> On Fri, Aug 23, 2013 at 09:38:18PM +0200, Rafael J. Wysocki wrote:
+> >> >> > [CCs added]
+> >> >> >
+> >> >> > Please always send PCI-related material to linux-pci in the first place.
+> >> >> >
+> >> >> Sorry, I ran get_maintainers and it seemed to think linux-acpi was sufficient.
+> >> >>
+> >> >> > The change that broke things for you was actually intentional:
+> >> >> >
+> >> >> > commit b8178f130e25c1bdac1c33e0996f1ff6e20ec08e
+> >> >> > Author: Bjorn Helgaas <bhelgaas@google.com>
+> >> >> > Date:   Mon Apr 1 15:47:39 2013 -0600
+> >> >> >
+> >> >> >     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
+> >> >> >
+> >> >> >     This reverts commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6.
+> >> >> >
+> >> >> > so I think we'll need to clean up the ASMP initialization after all.
+> >> >> >
+> >> >> Crud.  Reading over the revert commit, it seems like the problem boils down to
+> >> >> the odering of checking aspm_disabled.  It seems to me that the simple fix is to
+> >> >> track the desire for acpi to disable aspm separately from the users desire to
+> >> >> disable aspm (aspm_disabled).  Then we just turn the points where we check the
+> >> >> aspm_disabled into the appropriate or of two variables, except for
+> >> >> pcie_asmp_sanity_check, which remains sensitive to just the user disable option.
+> >> >>
+> >> >> Or is there more to this?
+> >> >
+> >> > No, I think you're right.
+> >> >
+> >> > Bjorn, what do you think?
+> >>
+> >> My opinion is that the _OSC/ASPM state management is ridiculously
+> >> complicated already, and this would make it slightly more complicated.
+> >>  That's why my preference would be to attempt a more radical cleanup
+> >> and simplification instead of adding another wart.
+> >
+> > Well, do you have anything specific in mind?
 > 
-> I tried to search this in my mail archive, but no success, sorry. Suppose
-> Wolfgang reported it, but I can't remember any more details. Maybe check VIA
-> datasheet?
+> If I had a specific fix in mind, I would just post it, but I've never
+> had time to work through it all.  What I mean by complicated is that
+> every time I have to look at ASPM, I have to start by trying to figure
+> out the relationships between these variables:
+> 
+>     aspm_policy                 # default 0 (POLICY_DEFAULT)
+>                                   or POLICY_PERFORMANCE
+>                                   or POLICY_POWERSAVE depending on config
+>     aspm_disabled               # default 0
+>     aspm_force                  # default 0
+>     aspm_support_enabled        # default true
+> 
+> plus the _OSC-related code in acpi_pci_root_add(), which honestly is a
+> rat's nest.
+> 
+I agree, I've only looked at it for an hour, and it looks pretty hairy.
 
-Yes, I reported this.  I think I will find all the details in my mail
-archives, but I'm currently on vacation with limited access only.
-I'll dig this out when I'm back in September.  Please feel free to
-send me a reminder if I should not report back within the next two
-weeks.
+> It sounds like Neil's fix (while probably correct) would tangle that
+> nest a little more.  But I guess it would make sense to see the actual
+No argument, it would add complexity to something thats already very complex.
+That said, I think this needs to be fixed.  Currently there are several systems
+that are reporting conflicts between ACPI and PCIE hotplug.  While that means
+theres lots of griping, theres several people willing to test, so I think we
+have an opportunity to fix this.
 
-Sorry for the delay.
+> patch and the justification (a regression fix, I suppose, but the
+> details weren't clear to me) before deciding.
+> 
+Agreed.  A larger cleanup would be preferable at this point, but I'm not
+sufficiently versed in the code to do that right now, so I'll try write an
+appropriate for this particular bug, and see what you think on monday.
 
-Best regards,
 
-Wolfgang Denk
+Regards
+Neil
 
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-An optimist believes we live in the best world possible; a  pessimist
-fears this is true.
