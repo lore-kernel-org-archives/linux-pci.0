@@ -1,215 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8614 "EHLO mga02.intel.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3142 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965129Ab3HHK7R convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 06:59:17 -0400
-From: "Wang, Rui Y" <rui.y.wang@intel.com>
-To: "liuj97@gmail.com" <liuj97@gmail.com>
-CC: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>,
-	"Koul, Vinod" <vinod.koul@intel.com>,
-	"chenkeping@huawei.com" <chenkeping@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	id S1754618Ab3HYLV5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Aug 2013 07:21:57 -0400
+From: "Yuval Mintz" <yuvalmin@broadcom.com>
+To: "jacob.e.keller@intel.com" <jacob.e.keller@intel.com>
+cc: "bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Luck, Tony" <tony.luck@intel.com>,
-	"Guo, Chaohong" <chaohong.guo@intel.com>
-Subject: RE: [RFC PATCH v2 3/7] dmaengine: enhance dmaengine to support DMA
- device hotplug
-Date: Thu, 8 Aug 2013 10:59:03 +0000
-Message-ID: <FC9702EC51E4CA40A875703BEBD6CEF80183DA88@SHSMSX101.ccr.corp.intel.com>
-References: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
-	<1337003229-9158-4-git-send-email-jiang.liu@huawei.com>
- <CANVTcTan9N=Bvf=-vDwOQhS13y+JtWfqApF75yuksQuFBBVDZw@mail.gmail.com>
-In-Reply-To: <CANVTcTan9N=Bvf=-vDwOQhS13y+JtWfqApF75yuksQuFBBVDZw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: pcie_get_minimum_link returns 0 width
+Date: Sun, 25 Aug 2013 11:21:38 +0000
+Message-ID: <979A8436335E3744ADCD3A9F2A2B68A52AD136BE@SJEXCHMB10.corp.ad.broadcom.com>
+References: <20130825100157.GA16500@lb-tlvb-yuvalmin.il.broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(resend adding cc list)
+Hi,
 
-Hi Jiang,
-See my comments inline.
+I tried adding support for the newly added 'pcie_get_minimum_link' into the
+bnx2x driver, but found out the some of my devices started showing width x0.
 
-> -----Original Message-----
-> From: Jiang Liu <liuj97@gmail.com>
-> Date: Mon, 14 May 2012 21:47:05 +0800
-> Subject: [RFC PATCH v2 3/7] dmaengine: enhance dmaengine to support DMA
-> device hotplug
-> To: Dan Williams <dan.j.williams@intel.com>, Maciej Sosnowski
-> <maciej.sosnowski@intel.com>, Vinod Koul <vinod.koul@intel.com>
-> Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
-> linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-> 
-> From: Jiang Liu <liuj97@gmail.com>
-> 
-> From: Jiang Liu <liuj97@gmail.com>
-> 
-> To support DMA device hotplug, dmaengine must correctly manage reference
-> count for DMA channels. On the other hand, DMA hot path is performance
-> critical, reference count management code should avoid polluting global shared
-> cachelines, otherwise it may cause heavy performance penalty.
-> 
-> This patch introduces a lightweight DMA channel reference count management
-> mechanism by using percpu counter. When DMA device hotplug is disabled,
-> there's no performance penalty. When hotplug is enabled, a
-> dma_find_channel()/dma_put_channel() pair adds two local memory accesses
-> to the hot path.
-> 
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> ---
->  drivers/dma/dmaengine.c   |  112
-> +++++++++++++++++++++++++++++++++++++++++----
->  include/linux/dmaengine.h |   29 +++++++++++-
->  2 files changed, 129 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c index
-> d3b1c48..eca45c0 100644
-> --- a/drivers/dma/dmaengine.c
-> +++ b/drivers/dma/dmaengine.c
-> @@ -61,12 +61,20 @@
->  #include <linux/rculist.h>
->  #include <linux/idr.h>
->  #include <linux/slab.h>
-> +#include <linux/sched.h>
-> 
->  static DEFINE_MUTEX(dma_list_mutex);
->  static DEFINE_IDR(dma_idr);
->  static LIST_HEAD(dma_device_list);
->  static long dmaengine_client_count;
-> 
-> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-> +static atomic_t dmaengine_dirty;
-> +static struct static_key dmaengine_quiesce = STATIC_KEY_INIT_FALSE;
-> +static DECLARE_WAIT_QUEUE_HEAD(dmaengine_wait_queue);
-> +DEFINE_PER_CPU(long, dmaengine_chan_ref_count);
-> +#endif	/* CONFIG_DMA_ENGINE_HOTPLUG */
-> +
->  /* --- sysfs implementation --- */
-> 
->  /**
-> @@ -305,10 +313,40 @@ arch_initcall(dma_channel_table_init);
->   */
->  struct dma_chan *dma_find_channel(enum dma_transaction_type tx_type)
-> {
-> -	return this_cpu_read(channel_table[tx_type]->chan);
-> +	struct dma_chan *chan = this_cpu_read(channel_table[tx_type]->chan);
-> +
-> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-> +	this_cpu_inc(dmaengine_chan_ref_count);
-> +	if (static_key_false(&dmaengine_quiesce))
-> +		chan = NULL;
-> +#endif
-> +
-> +	return chan;
->  }
->  EXPORT_SYMBOL(dma_find_channel);
-> 
-> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-> +struct dma_chan *dma_get_channel(struct dma_chan *chan) {
-> +	if (static_key_false(&dmaengine_quiesce))
-> +		atomic_inc(&dmaengine_dirty);
-> +	this_cpu_inc(dmaengine_chan_ref_count);
-> +
-> +	return chan;
-> +}
-> +EXPORT_SYMBOL(dma_get_channel);
-> +#endif
-> +
-> +/**
-> + * dma_has_capability - check whether any channel supports tx_type
-> + * @tx_type: transaction type
-> + */
-> +bool dma_has_capability(enum dma_transaction_type tx_type) {
-> +	return !!this_cpu_read(channel_table[tx_type]->chan);
-> +}
-> +EXPORT_SYMBOL(dma_has_capability);
-> +
->  /*
->   * net_dma_find_channel - find a channel for net_dma
->   * net_dma has alignment requirements
-> @@ -316,10 +354,15 @@ EXPORT_SYMBOL(dma_find_channel);  struct
-> dma_chan *net_dma_find_channel(void)  {
->  	struct dma_chan *chan = dma_find_channel(DMA_MEMCPY);
-> -	if (chan && !is_dma_copy_aligned(chan->device, 1, 1, 1))
-> -		return NULL;
-> 
-> -	return chan;
-> +	if (chan && is_dma_copy_aligned(chan->device, 1, 1, 1))
-> +		return chan;
-> +
-> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-> +	this_cpu_dec(dmaengine_chan_ref_count);
-> +#endif
-> +
-> +	return NULL;
->  }
->  EXPORT_SYMBOL(net_dma_find_channel);
-> 
-> @@ -393,6 +436,37 @@ static struct dma_chan *nth_chan(enum
-> dma_transaction_type cap, int n)
->  	return ret;
->  }
-> 
-> +static void dma_channel_quiesce(void)
-> +{
-> +#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-> +	int cpu;
-> +	long ref_count;
-> +	int quiesce_count = 0;
-> +
-> +	static_key_slow_inc(&dmaengine_quiesce);
-> +
-> +	do {
-> +		atomic_set(&dmaengine_dirty, 0);
-> +		schedule_timeout(1);
-> +
-> +		if (atomic_read(&dmaengine_dirty)) {
-> +			quiesce_count = 0;
-> +			continue;
-> +		}
-> +
-> +		ref_count = 0;
-> +		for_each_possible_cpu(cpu)
-> +			ref_count += per_cpu(dmaengine_chan_ref_count, cpu);
-> +		if (ref_count == 0)
-> +			quiesce_count++;
-> +		else
-> +			quiesce_count = 0;
-> +	} while (quiesce_count < 10);
-> +
-> +	static_key_slow_dec(&dmaengine_quiesce);
-> +#endif
-> +}
-> +
+By adding debug prints, I've found out there were devices up the chain that
+Showed 0 when their PCI_EXP_LNKSTA was read by said function.
+However, when I tried looking via lspci the output claimed the width was x4.
 
-The purpose of dma_channel_quiesce() is unclear to me. It waits until dmaengine_chan_ref_count is 0, but how do you prevent someone from using dma after it returns?
+lspci -vt output:
+[0000:00]-+-00.0  Intel Corporation 5000P Chipset Memory Controller Hub
+	     +-02.0-[09-12]--+-00.0-[0a-11]--+-00.0-[0b-0d]--
+					     +-01.0-[0e-10]--+-00.0  Broadcom
+					Corporation NetXtreme II BCM57710
+					10-Gigabit PCIe [Everest]
 
-<snip>
+Where:
+00:02.0 PCI bridge: Intel Corporation 5000 Series Chipset PCI Express x4 Port
+2 (rev 93)
+09:00.0 PCI bridge: Intel Corporation 6311ESB/6321ESB PCI Express Upstream
+Port (rev 01)
+0a:01.0 PCI bridge: Intel Corporation 6311ESB/6321ESB PCI Express
+Downstream Port E2 (rev 01)
+0e:00.0 Ethernet controller: Broadcom Corporation NetXtreme II BCM57710
+10-Gigabit PCIe [Everest] (rev 01)
 
-> @@ -767,14 +848,22 @@ void dma_async_device_unregister(struct
-> dma_device *device)
-> 
->  	mutex_lock(&dma_list_mutex);
->  	list_del_rcu(&device->global_node);
-> -	dma_channel_rebalance();
-> +	dma_channel_rebalance(true);
->  	mutex_unlock(&dma_list_mutex);
-> 
->  	/* Check whether it's called from module exit function. */
->  	if (try_module_get(device->dev->driver->owner)) {
-> +#ifndef	CONFIG_DMA_ENGINE_HOTPLUG
->  		dev_warn(device->dev,
->  			"%s isn't called from module exit function.\n",
->  			__func__);
-> +#else
-> +		list_for_each_entry(chan, &device->channels, device_node) {
-> +			/* TODO: notify clients to release channels*/
-> +			wait_event(dmaengine_wait_queue,
-> +				   chan->client_count == 0);
-> +		}
+The output for "lspci -vvvv | grep LnkSta for all four is:
+LnkSta:	Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt-
+ABWMgmt-
 
-How do you notify clients to release the channels? Is there an updated version which handles this? There're resources (e.g. timers) that must be free'd, which can only happen when someone calls dma_chan_put() until client_count reaches 0 and device_free_chan_resources() gets called. 
+But added prints inside the function's loop show:
+LnkSta 1041 [000e:00.00]
+LnkSta 0000 [000a:01.00]
+LnkSta 0000 [0009:00.00]
+LnkSta 3041 [0000:02.00]
+(PCI_EXP_LNKSTA value, bus->number, PCI_SLOT, PCI_FUNC)
 
-Rui Wang
-
+Thanks,
+Yuval
 
