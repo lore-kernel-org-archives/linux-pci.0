@@ -1,66 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:44130 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752220Ab3H2IIh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 04:08:37 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSA00JLO99EK300@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 29 Aug 2013 17:08:36 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Seungwon Jeon' <tgih.jun@samsung.com>, linux-pci@vger.kernel.org
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <001d01cea3e5$3a07c8b0$ae175a10$%jun@samsung.com>
-In-reply-to: <001d01cea3e5$3a07c8b0$ae175a10$%jun@samsung.com>
-Subject: Re: [PATCH 2/3] PCI: exynos: add wrapped I/O access functions
-Date: Thu, 29 Aug 2013 17:08:35 +0900
-Message-id: <000f01cea48e$f5fc3160$e1f49420$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:52499 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751634Ab3HZWFj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Aug 2013 18:05:39 -0400
+Received: by mail-ie0-f172.google.com with SMTP id c10so268224ieb.31
+        for <linux-pci@vger.kernel.org>; Mon, 26 Aug 2013 15:05:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <979A8436335E3744ADCD3A9F2A2B68A52AD136BE@SJEXCHMB10.corp.ad.broadcom.com>
+References: <20130825100157.GA16500@lb-tlvb-yuvalmin.il.broadcom.com> <979A8436335E3744ADCD3A9F2A2B68A52AD136BE@SJEXCHMB10.corp.ad.broadcom.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 26 Aug 2013 16:05:18 -0600
+Message-ID: <CAErSpo4NmL0RWcBompuweHNYmhNmLXU_21_gvaqfDEzi+HBp5g@mail.gmail.com>
+Subject: Re: pcie_get_minimum_link returns 0 width
+To: Yuval Mintz <yuvalmin@broadcom.com>
+Cc: "jacob.e.keller@intel.com" <jacob.e.keller@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, August 28, 2013 8:54 PM, Seungwon Jeon wrote:
-> 
-> read/write operation for I/O mem is wrapped with hiding
-> base address inside in order to simplify the usage.
-> [elbi_base, phy_base, block_base]
-> 
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+On Sun, Aug 25, 2013 at 5:21 AM, Yuval Mintz <yuvalmin@broadcom.com> wrote:
+> Hi,
+>
+> I tried adding support for the newly added 'pcie_get_minimum_link' into the
+> bnx2x driver, but found out the some of my devices started showing width x0.
+>
+> By adding debug prints, I've found out there were devices up the chain that
+> Showed 0 when their PCI_EXP_LNKSTA was read by said function.
+> However, when I tried looking via lspci the output claimed the width was x4.
 
-Thank you for sending the patch.
-It looks good except one minor thing below mentioned.
-Also, I tested this patch on Exynos5440.
+I don't see a 'pcie_get_minimum_link()' function in my current tree
+(git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git "next"
+branch).  Maybe seeing your patch (with the debug prints) would give
+me a hook for somewhere to start looking.
 
-Acked-by: Jingoo Han <jg1.han@samsung.com>
+Can you figure out why lspci shows the correct value and this kernel
+interface does not?  The current lspci source is in
+git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git and the
+relevant code is probably in cap_express_link() here:
+http://git.kernel.org/cgit/utils/pciutils/pciutils.git/tree/ls-caps.c#n750
 
-Best regards,
-Jingoo Han
-
-> ---
->  drivers/pci/host/pci-exynos.c |  161 +++++++++++++++++++++++------------------
->  1 files changed, 91 insertions(+), 70 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index 012ca8a..da6ad6f 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -61,7 +61,6 @@ struct exynos_pcie {
->  #define PCIE_ELBI_SLV_AWMISC		0x11c
->  #define PCIE_ELBI_SLV_ARMISC		0x120
->  #define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
-> -
-
-But, this removing one line is not necessary.
-
->  /* PCIe Purple registers */
->  #define PCIE_PHY_GLOBAL_RESET		0x000
->  #define PCIE_PHY_COMMON_RESET		0x004
-> @@ -91,19 +90,49 @@ struct exynos_pcie {
->  #define PCIE_PHY_TRSV3_RXCDR		0x2ec
->  #define PCIE_PHY_TRSV3_LVCC		0x31c
-
-
+> lspci -vt output:
+> [0000:00]-+-00.0  Intel Corporation 5000P Chipset Memory Controller Hub
+>              +-02.0-[09-12]--+-00.0-[0a-11]--+-00.0-[0b-0d]--
+>                                              +-01.0-[0e-10]--+-00.0  Broadcom
+>                                         Corporation NetXtreme II BCM57710
+>                                         10-Gigabit PCIe [Everest]
+>
+> Where:
+> 00:02.0 PCI bridge: Intel Corporation 5000 Series Chipset PCI Express x4 Port
+> 2 (rev 93)
+> 09:00.0 PCI bridge: Intel Corporation 6311ESB/6321ESB PCI Express Upstream
+> Port (rev 01)
+> 0a:01.0 PCI bridge: Intel Corporation 6311ESB/6321ESB PCI Express
+> Downstream Port E2 (rev 01)
+> 0e:00.0 Ethernet controller: Broadcom Corporation NetXtreme II BCM57710
+> 10-Gigabit PCIe [Everest] (rev 01)
+>
+> The output for "lspci -vvvv | grep LnkSta for all four is:
+> LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt-
+> ABWMgmt-
+>
+> But added prints inside the function's loop show:
+> LnkSta 1041 [000e:00.00]
+> LnkSta 0000 [000a:01.00]
+> LnkSta 0000 [0009:00.00]
+> LnkSta 3041 [0000:02.00]
+> (PCI_EXP_LNKSTA value, bus->number, PCI_SLOT, PCI_FUNC)
+>
+> Thanks,
+> Yuval
+>
