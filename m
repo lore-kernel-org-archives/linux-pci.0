@@ -1,114 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v4 22/28] x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
-Date: Sat, 10 Aug 2013 19:48:08 -0700
-Message-Id: <1376189294-32022-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:51358 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756588Ab3HZIj7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Aug 2013 04:39:59 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
+Subject: [PATCH v9 1/2] PCI: Fix comment syntax
+Date: Mon, 26 Aug 2013 16:33:05 +0800
+Message-ID: <1377505986-7484-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It will free ioapic related irq_desc and also clear allocated_irqs bits.
+From: Jon Mason <jdmason@kudzu.us>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Correct minor wording issue in MPS Peer-to-peer comment.
+
+Noticed by Don Dutile
+
+Signed-off-by: Jon Mason <jdmason@kudzu.us>
 ---
- arch/x86/include/asm/mpspec.h  |  1 +
- arch/x86/kernel/apic/io_apic.c | 44 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 45 insertions(+)
+ drivers/pci/probe.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
-index 13cf60c..49f6ecc 100644
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -97,6 +97,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
- void generic_processor_info(int apicid, int version);
- #ifdef CONFIG_ACPI
- int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
-+int mp_unregister_ioapic(u32 gsi_base);
- extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- 				   u32 gsi);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 1616a35..a75e9d8 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -334,6 +334,20 @@ static void __init reserve_ioapic_gsi_irq_extra(void)
- 	}
- }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 0e8cff2..21ca9a1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1625,7 +1625,7 @@ void pcie_bus_configure_settings(struct pci_bus *bus)
+ 		return;
  
-+static void free_ioapic_gsi_irq_base(int idx)
-+{
-+	int i;
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
-+	int irq_base = gsi_cfg->irq_base;
-+	int irq_cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
-+
-+	if (irq_base < 0)
-+		return;
-+
-+	for (i = irq_base; i < irq_base + irq_cnt; i++)
-+		free_irq_at(i, irq_get_chip_data(i));
-+}
-+
- static void alloc_ioapic_saved_registers(int idx)
- {
- 	if (ioapics[idx].saved_registers)
-@@ -347,6 +361,11 @@ static void alloc_ioapic_saved_registers(int idx)
- 		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
- }
- 
-+static void free_ioapic_saved_registers(int idx)
-+{
-+	kfree(ioapics[idx].saved_registers);
-+}
-+
- int __init arch_early_irq_init(void)
- {
- 	int node = cpu_to_node(0);
-@@ -3991,6 +4010,31 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	__mp_register_ioapic(id, address, gsi_base, false);
- }
- 
-+int mp_unregister_ioapic(u32 gsi_base)
-+{
-+	int idx;
-+
-+	lock_ioapics();
-+
-+	idx = __mp_find_ioapic(gsi_base);
-+	if (idx < 0) {
-+		unlock_ioapics();
-+		return -EINVAL;
-+	}
-+
-+	free_ioapic_saved_registers(idx);
-+
-+	free_ioapic_gsi_irq_base(idx);
-+
-+	clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+	memset(&ioapics[idx], 0, sizeof(struct ioapic));
-+	clear_bit(idx, ioapics_mask);
-+
-+	unlock_ioapics();
-+
-+	return 0;
-+}
-+
- /* Enable IOAPIC early just for system timer */
- void __init pre_init_apic_IRQ0(void)
- {
+ 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
+-	 * to be aware to the MPS of the destination.  To work around this,
++	 * to be aware of the MPS of the destination.  To work around this,
+ 	 * simply force the MPS of the entire system to the smallest possible.
+ 	 */
+ 	if (pcie_bus_config == PCIE_BUS_PEER2PEER)
 -- 
-1.8.1.4
+1.7.1
+
 
