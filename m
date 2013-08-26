@@ -1,112 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:57608 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750833Ab3HSTdo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 15:33:44 -0400
-Date: Mon, 19 Aug 2013 21:33:40 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
- devm_ioremap_resource
-Message-ID: <20130819193339.GB4961@mithrandir>
-References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
- <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr>
- <20130819120249.GA5740@ulmo>
- <alpine.DEB.2.02.1308191405450.2313@hadrien>
- <20130819121238.GB5740@ulmo>
- <alpine.DEB.2.02.1308191414360.2313@hadrien>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:23109 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754710Ab3HZDne (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Aug 2013 23:43:34 -0400
+Message-ID: <521ACE99.9000505@huawei.com>
+Date: Mon, 26 Aug 2013 11:42:17 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="b5gNqxB1S1yM7hjW"
-In-Reply-To: <alpine.DEB.2.02.1308191414360.2313@hadrien>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	<joe.jin@oracle.com>
+Subject: Re: [PATCH v8 6/6] PCI: update device mps when doing pci hotplug
+References: <1377141888-7000-1-git-send-email-wangyijing@huawei.com> <1377141888-7000-7-git-send-email-wangyijing@huawei.com> <20130822181823.GA25721@google.com>
+In-Reply-To: <20130822181823.GA25721@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+> I think the strategy of updating the device MPS when possible makes
+> sense, but I don't think we should do it in PCIE_BUS_TUNE_OFF mode.
+> That mode is documented as "Disable PCIe MPS tuning and use the
+> BIOS-configured MPS defaults."  This patch changes that to something
+> like "Disable PCIe MPS tuning, except for hot-added devices" and there
+> is no longer a way to tell Linux to never touch MPS.
 
---b5gNqxB1S1yM7hjW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Bjorn,
+   Thanks for your review and comments!
 
-On Mon, Aug 19, 2013 at 02:15:39PM +0200, Julia Lawall wrote:
->=20
->=20
-> On Mon, 19 Aug 2013, Thierry Reding wrote:
->=20
-> > On Mon, Aug 19, 2013 at 02:07:54PM +0200, Julia Lawall wrote:
-> > >
-> > >
-> > > On Mon, 19 Aug 2013, Thierry Reding wrote:
-> > >
-> > > > On Mon, Aug 19, 2013 at 01:20:35PM +0200, Julia Lawall wrote:
-> > > > > From: Julia Lawall <Julia.Lawall@lip6.fr>
-> > > > >
-> > > > > Use devm_ioremap_resource instead of devm_request_and_ioremap.
-> > > > >
-> > > > > This was done using the semantic patch
-> > > > > scripts/coccinelle/api/devm_ioremap_resource.cocci
-> > > > >
-> > > > > Error-handling code was manually removed from the associated call=
-s to
-> > > > > platform_get_resource.
-> > > > >
-> > > > > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> > > > >
-> > > > > ---
-> > > > > The first block of modified code is followed by a call to
-> > > > > devm_request_mem_region for pcie->cs with no associated ioremap. =
- Should
-> > > > > ioremap be used in this case as well?
-> > > >
-> > > > No. The pcie->cs resource is 256 MiB so it's challenging to map it =
-at
-> > > > once. Furthermore it requires a non-linear mapping so we do it on
-> > > > demand.
-> > >
-> > > OK, thanks for the explanation.  Is the comment, though, a little
-> > > misleading, since the mapping is not done here?
-> > >
-> > > /* request and remap configuration space */
-> >
-> > Yes, that's misleading. Given that it doesn't really add anything useful
-> > information either, perhaps I should just remove it.
->=20
-> OK, or maybe something like
->=20
-> /* request configuration space, but remap later, on demand */
->=20
-> To make it clear that something different is intended than the
-> devm_ioremap_resources that come just before..
+As you mentioned, PCIE_BUS_TUNE_OFF means "Disable PCIe MPS tuning and use the
+BIOS-configured MPS defaults.", But hotplug action make the BIOS default mps setting
+changed(power off, all registers reset). So If we only touch the newly inserted device mps,
+I think maybe it's reasonable.
 
-Yes, that works for me too. Can you respin the patch with the comment
-updated and my Acked-by and Tested-by so Bjorn can pick it up?
+> 
+> Eventually, I think the default mode should change to PCIE_BUS_SAFE,
+> where Linux changes MPS settings at boot-time and at hotplug-time to
+> make sure every device works.  (This mode assumes no peer-to-peer
+> DMA.)  I know this was tried in the past, and we tripped over all
+> sorts of issues, but it's not clear how many were problems with the
+> Linux code and how many were unsolvable BIOS or platform issues.
 
-Thierry
+Agree.
 
---b5gNqxB1S1yM7hjW
-Content-Type: application/pgp-signature
+> 
+> Then we'd have these choices:
+> 
+>   PCIE_BUS_TUNE_OFF	Never touch MPS
+>   PCIE_BUS_PEER2PEER	Set all MPS to 128, so peer-to-peer DMA works
+>   PCIE_BUS_SAFE		Configure each device with largest safe MPS
+> 			(assumes no peer-to-peer DMA)
+>   PCIE_BUS_PERFORMANCE	Use MRRS in addition to MPS
+> 			(assumes no peer-to-peer DMA)
+> 
+> The hot-add issue [1] could be regarded as a BIOS bug -- the BIOS
+> programmed a hotplug bridge with MPS=256.  A hot-added device powers
+> up with MPS=128, so it's only safe for BIOS to set MPS=256 if the OS
+> is smart enough to change the bridge MPS, the device MPS, or both, at
+> hot-add time.  That doesn't seem like a good assumption for a BIOS to
+> make.
+> 
+> I think we should always *warn* about potential MPS issues, even in
+> PCIE_BUS_TUNE_OFF mode.  That would help diagnose the hot-add issue as
+> well as issues like the ones Joe Jin reported [2] and [3].
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
+OK, I will add a new patch to provide "warn" info if necessary like Joe Jin reported.
+But because hotplug issue [1] and Joe reported [2] and [3] only encountered in
+PCIE_BUS_TUNE_OFF mode.
 
-iQIcBAEBAgAGBQJSEnMTAAoJEN0jrNd/PrOhXm0P/Aq1cDNbUVylWq4kk1+i8YD5
-W6NdJOrjZyYk5YH7PI4w0hIrtTbWWmun+SrWjXZvLOZF83DOxhXwrCeksQrINY8A
-C5GSRxzTq/7utJDZNZGDZa8meBVTFPlyP40fvBan5BYLDr1qkIht0IMZDojK1HLR
-bH5iRTAe6d5/Dowqj1kQKCqa7NG4W0Oo9X4uDirHo4f24vQIx1g21ZOb9XTFOdDE
-J3nRNGcCglbqUi4DTiaAikU27QvUSoX4Dx04lZOaBsKHHh4hNBjOMKfi+PPeLJl+
-OS3thlgCyznonXGCMV+6gMCZhdZTyOhecFacENfJLJF08dneqMaKzy/qNsUXgDHQ
-IXCtryAd8mwhcP0HcX78eaBWlVs6NAy6hVMyGK9QXkbw0JQ5+JHAltuKn6IsCytH
-K2XXnrqA4L+1t/yB7IfjJfwHC2ry7q1zCpQNFSP8M0cA4NaCMnL7M77TtTk+1Mm1
-ycAM1DH8lk5PJSFBxT2pXMmBgBLGWHcL8B2ghZwMtVxDv6qyX2HOEcehEJyiKzNy
-kojKCELRy9AeeqGVlygRT6ui1CRCu41JJTikxIPmMF7AuDcuFUjpmWtZEcjY67CU
-I4l0i3C75coEnXKB3qofU6M9pNFyenlr+Yyl+v8IV7Rowy9M75q+BaEklohRvxEN
-SBXOzFok/8xXdwiF/z91
-=Wcy4
------END PGP SIGNATURE-----
+> 
+> I think what we should do is *always* call pcie_bus_configure_set(),
+> no matter what mode we're in, but make pcie_bus_configure_set() smart
+> enough to do different things (print warnings, adjust settings, do the
+> stuff you added in pcie_bus_update_set(), etc.) depending on what mode
+> we're in.
 
---b5gNqxB1S1yM7hjW--
+
+OK, I will try to rework this patch.
+
+
+Thanks!
+Yijing.
+
+
+>> +	}
+>>  
+>>  	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
+>>  	 * to be aware to the MPS of the destination.  To work around this,
+>> -- 
+>> 1.7.1
+>>
+>>
+> 
+> [1] https://bugzilla.kernel.org/show_bug.cgi?id=60671
+> [2] http://lkml.kernel.org/r/4FFA9B96.6040901@oracle.com
+> [3] http://lkml.kernel.org/r/509B5038.8090304@oracle.com
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
