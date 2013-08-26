@@ -1,59 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:49619 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750952Ab3HLRpC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2013 13:45:02 -0400
-Date: Mon, 12 Aug 2013 13:44:39 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv9 00/10] MSI support for Marvell EBU PCIe driver
-Message-ID: <20130812174439.GO25111@titan.lakedaemon.net>
-References: <1376080035-29344-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130812163723.GK25111@titan.lakedaemon.net>
- <520916E0.5030404@wwwdotorg.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25599 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755052Ab3HZCAX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Aug 2013 22:00:23 -0400
+Message-ID: <521AB6B3.7050609@oracle.com>
+Date: Mon, 26 Aug 2013 10:00:19 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <520916E0.5030404@wwwdotorg.org>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>,
+	Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Subject: Re: [PATCH 2/3 v2] Refactor msi/msix restore code Part2
+References: <51FF527F.7080904@oracle.com> <CAErSpo5JCpJ0=vcTAwjz4VjZ4imBJxM8TP9RWrmiee3VQnjY=w@mail.gmail.com> <20130823171538.GB14096@phenom.dumpdata.com>
+In-Reply-To: <20130823171538.GB14096@phenom.dumpdata.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 12, 2013 at 11:09:52AM -0600, Stephen Warren wrote:
-> On 08/12/2013 10:37 AM, Jason Cooper wrote:
-> > Thomas,
-> > 
-> > Whole series applied as follows:
-> > 
-> > +---+ mvebu/msi_pci (1-4,7)
-> >     |
-> >     +---+---+ mvebu/msi_irq (5,6)
-> >             |
-> >             +---+---+ mvebu/msi_mvebu (8-10)
-> > 
-> > mvebu/msi_pci built successfully with Randy's config for x86_64.
-> > 
-> > Thierry, I've tagged mvebu/msi_pci.  Unless it all falls apart in -next,
-> > those commit-id's won't change from what will be in arm-soc.
-> 
-> So, the branch still isn't stable, hence I shouldn't use it as a
-> baseline to apply Thierry's PCIe patches?
 
-It's as stable as I can make it.  I've tested it for all known build
-regressions (discovered in -next), and I see no reason to change it.
-Anything needing fixed after today, I'll append the fix to it's HEAD if
-appropriate.
-
-thx,
-
-Jason.
+On 2013-08-24 01:15, Konrad Rzeszutek Wilk wrote:
+> On Thu, Aug 22, 2013 at 03:14:34PM -0600, Bjorn Helgaas wrote:
+>> On Mon, Aug 5, 2013 at 1:21 AM, Zhenzhong Duan
+>> <zhenzhong.duan@oracle.com>  wrote:
+>>> xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
+>>> in dom0. It's better to do the same in default_restore_msi_irqs for baremetal.
+>>>
+>>> Move restore of mask in default_restore_msi_irqs, this could avoid mask
+>>> restored twice in dom0, and the logic for baremetal keep same.
+>>>
+>>> First mask restore is in xen_initdom_restore_msi_irqs->PHYSDEVOP_restore_msi,
+>>> Second restore is __pci_restore_msix_state->msix_mask_irq.
+>>>
+>>> Mask bits are under full control of xen, and the entry->masked in dom0 kernel
+>>> is invalid. restore an invalid value to mask register could mask the msix
+>>> interrupt.
+>>>
+>>> Without fix, qlcnic driver calling pci_reset_function will lost interrupt
+>>> in dom0.
+>> Konrad, this changelog still doesn't make any sense to me, but if you
+>> ack this, I guess I can apply it.
+> Hey Bjorn,
+>
+> Zhenzhong is patiently working to rewrite up the commit message based on
+> my naive questions and emails back and forth. Once it is good shape he
+> will post it. The code will look the same but the commit message will
+> be a bit more verbose and clear.
+>
+> Is there an ETA when you would like these? I recall the merge window
+> is just around the corner - so when is your comfortable cut-off-day
+> so that you can make a go/no-go decision?
+>
+>> I guess there are also:
+>>
+>>    Jul 24  [PATCH 1/3] Refactor msi/msix restore code Part1
+>>    Jul 30  [PATCH 3/3 v2] Update x86_msi.restore_msi_irqs API param
+>>
+>> and all three should be applied as a series?
+> <scratches his head>.
+>
+> I think the
+>     Jul 30  [PATCH 3/3 v2] Update x86_msi.restore_msi_irqs API param
+>
+> can go in anytime. That is mostly a cosmetic fixup in the API.
+> Zhenzhong - right?
+Yes, 3rd patch doesn't depend on the first two.
+One effect is making code looks consistent. But my main purpose is 
+optimizing
+msix restore code in initial domain.
+Before patch, dom0 calls PHYSDEVOP_restore_msi hypercall for every entry in
+dev->msi_list, now it calls PHYSDEVOP_restore_msi hypercall once.
