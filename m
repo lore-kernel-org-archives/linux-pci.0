@@ -1,112 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:42982 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753054Ab3HVVOy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Aug 2013 17:14:54 -0400
-Received: by mail-oa0-f53.google.com with SMTP id k18so4671021oag.12
-        for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2013 14:14:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51FF527F.7080904@oracle.com>
-References: <51FF527F.7080904@oracle.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 22 Aug 2013 15:14:34 -0600
-Message-ID: <CAErSpo5JCpJ0=vcTAwjz4VjZ4imBJxM8TP9RWrmiee3VQnjY=w@mail.gmail.com>
-Subject: Re: [PATCH 2/3 v2] Refactor msi/msix restore code Part2
-To: zhenzhong.duan@oracle.com
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:9995 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752079Ab3HZSlf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Aug 2013 14:41:35 -0400
+From: "Sumner, William" <bill.sumner@hp.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"ddutile@redhat.com" <ddutile@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Feng Jin <joe.jin@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>
+Subject: "crashdump accepting active iommu" prototype successful
+Date: Mon, 26 Aug 2013 18:41:07 +0000
+Message-ID: <875D89B79D1D86448A583A7302C022A055A3BA47@G4W3299.americas.hpqcorp.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 5, 2013 at 1:21 AM, Zhenzhong Duan
-<zhenzhong.duan@oracle.com> wrote:
-> xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
-> in dom0. It's better to do the same in default_restore_msi_irqs for baremetal.
->
-> Move restore of mask in default_restore_msi_irqs, this could avoid mask
-> restored twice in dom0, and the logic for baremetal keep same.
->
-> First mask restore is in xen_initdom_restore_msi_irqs->PHYSDEVOP_restore_msi,
-> Second restore is __pci_restore_msix_state->msix_mask_irq.
->
-> Mask bits are under full control of xen, and the entry->masked in dom0 kernel
-> is invalid. restore an invalid value to mask register could mask the msix
-> interrupt.
->
-> Without fix, qlcnic driver calling pci_reset_function will lost interrupt
-> in dom0.
+A while ago we discussed the concept of the crashdump kernel dealing with the legacy DMA from the (old) panic'd kernel by allowing the (new) crashdump kernel: to accept the iommu hardware in an active state, to leave the current translations in-place so that legacy DMA will continue using its current buffers until the device drivers in the crashdump kernel initialize, and to use different portions of the iova address ranges for the device drivers in the crashdump kernel.   
 
-Konrad, this changelog still doesn't make any sense to me, but if you
-ack this, I guess I can apply it.
+As time permitted I have created prototype code to explore this concept.
 
-I guess there are also:
+The "crashdump accepting active iommu" prototype/proof-of-concept code has successfully completed its first crashdump and rebooted the machine.  The latest version of the 'crash' utility reads the vmcore dump file that was created.
 
-  Jul 24  [PATCH 1/3] Refactor msi/msix restore code Part1
-  Jul 30  [PATCH 3/3 v2] Update x86_msi.restore_msi_irqs API param
 
-and all three should be applied as a series?
+At a high-level, here are the changes I made:
+The code is entirely within intel-iommu.c 
+A key concept is that the active translation tables are mapped into kernel virtual addresses in the new kernel. This allows most of the existing iommu code to operate without change.
 
-> Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-> ---
->  drivers/pci/msi.c |   17 ++++++++++++++---
->  1 files changed, 14 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 87223ae..922fb49 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
->  #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
->  void default_restore_msi_irqs(struct pci_dev *dev, int irq)
->  {
-> +       int pos;
-> +       u16 control;
->         struct msi_desc *entry;
->
->         entry = NULL;
-> @@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
->                 entry = irq_get_msi_desc(irq);
->         }
->
-> -       if (entry)
-> +       if (entry) {
->                 write_msi_msg(irq, &entry->msg);
-> +               if (dev->msix_enabled) {
-> +                       msix_mask_irq(entry, entry->masked);
-> +                       readl(entry->mask_base);
-> +               } else {
-> +                       pos = entry->msi_attrib.pos;
-> +                       pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
-> +                                            &control);
-> +                       msi_mask_irq(entry, msi_capable_mask(control),
-> +                                    entry->masked);
-> +               }
-> +       }
->  }
->  #endif
->
-> @@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
->         arch_restore_msi_irqs(dev, dev->irq);
->
->         pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-> -       msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
->         control &= ~PCI_MSI_FLAGS_QSIZE;
->         control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
->         pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-> @@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
->
->         list_for_each_entry(entry, &dev->msi_list, list) {
->                 arch_restore_msi_irqs(dev, entry->irq);
-> -               msix_mask_irq(entry, entry->masked);
->         }
->
->         control &= ~PCI_MSIX_FLAGS_MASKALL;
-> --
-> 1.7.3
->
+Hardware initialization:
+------------------------
+In intel_iommu_init(void)
+* If (This is the crash kernel)
+  .  Set flag: crashdump_accepting_active_iommu (all changes below check this)
+  .  Skip disabling the iommu hardware translations
+
+In init_dmars()
+* Copy the intel iommu translation tables from the old kernel into the new kernel
+  . The root-entry table, all context-entry tables, and all page-translation-entry tables
+  . The copied tables contain updated physical addresses to link them together.
+  . The copied tables are also mapped into kernel virtual addresses in the new kernel 
+    which allows most of the existing iommu code to operate without change.
+  . Do some minimal sanity-checks during the copy
+  . Place the address of the new root-entry structure into "struct intel_iommu"
+
+* Skip setting-up new domains for 'si', 'rmrr', 'isa' 
+  . Translations for 'rmrr' and 'isa' ranges have been copied from the old kernel
+  . This prototype does not yet handle pass-through
+
+* Existing (unchanged) code near the end of dmar_init:
+  . Loads the address of the (now new) root-entry structure from "struct intel_iommu"
+    into the iommu hardware and does the proper iommu hardware flushes. This changes the 
+    active translation tables from the ones in the old kernel to the copies in the new kernel.
+  . This is legal because the translations in the two sets of tables are currently identical:
+    - Intel(r) Virtualization Technology for Directed I/O. Architecture Specification,
+      February 2011, Rev. 1.3  (section 11.2, paragraph 2) 
+
+In iommu_init_domains()
+* Mark as in-use all domain-id's from the old kernel
+  . In case the new kernel contains a device that was not in the old kernel
+    and a new, unused domain-id is actually needed, the bitmap will give us one.
+
+
+When a new domain is created for a device:
+------------------------------------------
+* If (this device has a context in the old kernel)
+  . Get domain-id, address-width, and IOVA ranges from the old kernel context;
+  . Get adr(page-entry-tables) from the copy in the new kernel;
+  . And apply all of the above values to the new domain structure.
+* Else
+  . Create a new domain as normal
+
+Most of the code to implement the new functionality was added at the end of intel-iommu.c
+Bill
+
+
