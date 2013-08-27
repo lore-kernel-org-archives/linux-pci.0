@@ -1,143 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:57725 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757029Ab3HHBt0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 21:49:26 -0400
-Received: by mail-oa0-f43.google.com with SMTP id i10so4529761oag.2
-        for <linux-pci@vger.kernel.org>; Wed, 07 Aug 2013 18:49:26 -0700 (PDT)
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:64192 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753680Ab3H0Vk6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 17:40:58 -0400
+Received: by mail-pd0-f177.google.com with SMTP id y10so5390750pdj.22
+        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 14:40:56 -0700 (PDT)
+Date: Tue, 27 Aug 2013 15:40:52 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Subject: Changes for v3.12 merge window
+Message-ID: <20130827214052.GA17359@google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVXhg299RKsoa8eCqoN7b9c0HaeTGHCnxQY=9vkSYaJJg@mail.gmail.com>
-References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
-	<20130807040112.GA14662@google.com>
-	<CAE9FiQVXhg299RKsoa8eCqoN7b9c0HaeTGHCnxQY=9vkSYaJJg@mail.gmail.com>
-Date: Wed, 7 Aug 2013 18:49:25 -0700
-Message-ID: <CAE9FiQWftukxyNiyM2znVPh7x82de3nhRMQwGHigZtOvU6xQ6g@mail.gmail.com>
-Subject: Re: [PATCH v2 2/3] PCI: Separate stop and remove devices in pciehp
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Content-Type: multipart/mixed; boundary=001a11c2e74c35998804e365de70
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a11c2e74c35998804e365de70
-Content-Type: text/plain; charset=ISO-8859-1
+Here are the contents of my "next" branch, planned for release in v3.12.
+Let me know if I'm missing something important.
 
-On Tue, Aug 6, 2013 at 11:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Aug 6, 2013 at 9:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> Huh.  I wish we didn't have virtfn_remove() at all.  I wish the
->> normal device removal path, i.e., pci_stop_and_remove_bus_device(),
->> could deal with VFs directly.  I don't know all the history there,
->> so maybe there's some reason that's not feasible.
->
-> I had one draft version, but looks more confusing.
+In addition to what's already in "next", I hope to merge these for v3.12:
 
-please check attached that make pci_stop_and_remove_bus_device()
-could be used with VF.
+  - A fix for the pcie_cap_has_lnkctl()/pcie_get_minimum_link() problem
+    reported by Yuval Mintz
+  - The PCIe capability cleanups I posted today
+  - Neil Horman's _OSC fix, which I think may fix a pciehp regression
 
-It could replace
-https://patchwork.kernel.org/patch/2834638/
-https://patchwork.kernel.org/patch/2834639/
+I don't think the following will make it in this cycle:
 
-Please choose one of the solutions.
+  - Yijing Wang's Device Serial Number stuff.  I'm not happy with the
+    VPD serial number support yet, and the whole series is a bit large
+    for this late in the cycle.
+  - Zhenzhong Duan's MSI/MSI-X rework.  Still waiting on some changelog
+    updates.
 
-but we still need
-https://patchwork.kernel.org/patch/2834640/
-as VFs that does not use ARI could be on other virtual bus.
-so they will not be removed directly.
 
-Thanks
+Alex Williamson (13):
+      PCI: Check all ACS features for multifunction downstream ports
+      PCI: Differentiate ACS controllable from enabled
+      PCI: Claim ACS support for AMD southbridge devices
+      PCI: Add pci_reset_bridge_secondary_bus()
+      PCI: Add hotplug_slot_ops.reset_slot()
+      PCI: pciehp: Add reset_slot() method
+      PCI: Add slot reset option to pci_dev_reset()
+      PCI: Split out pci_dev lock/unlock and save/restore
+      PCI: Add pci_reset_slot() and pci_reset_bus()
+      PCI: Wake-up devices before saving config space for reset
+      PCI: Tune secondary bus reset timing
+      PCI: Remove aer_do_secondary_bus_reset()
+      PCI: Add pci_probe_reset_slot() and pci_probe_reset_bus()
 
-Yinghai
+Bjorn Helgaas (13):
+      frv/PCI: Mark pcibios_fixup_bus() as non-init
+      Merge branch 'pci/aw-acs-fixes-v2' into next
+      Merge branch 'pci/misc' into next
+      PCI: Align bridge I/O windows as required by downstream devices & bridges
+      Merge branch 'pci/wei-resource-cleanups' into next
+      Merge branch 'pci/misc' into next
+      Merge branch 'pci/vipul-chelsio-reset-v2' into next
+      Merge branch 'pci/aw-reset-v5' into next
+      PCI: Drop "PCI-E" prefix from Max Payload Size message
+      PCI: Simplify pcie_bus_configure_settings() interface
+      PCI: Simplify MPS test for Downstream Port
+      Merge branch 'pci/yinghai-assign-unassigned-v6' into next
+      Merge branch 'pci/yijing-mps-v8' into next
 
---001a11c2e74c35998804e365de70
-Content-Type: application/octet-stream; name="virtfn_release.patch"
-Content-Disposition: attachment; filename="virtfn_release.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hk3aycp30
+Casey Leedom (4):
+      PCI: Add pci_wait_for_pending_transaction()
+      PCI: Chelsio quirk: Enable Bus Master during Function-Level Reset
+      bnx2x: Use pci_wait_for_pending_transaction() instead of for loop
+      PCI: Use pci_wait_for_pending_transaction() instead of for loop
 
-U3ViamVjdDogW1BBVENIXSBQQ0k6IFJlbGVhc2UgUEYgcmVmIGR1cmluZyByZW1vdmluZyBWRgpG
-cm9tOiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+Cgpjb21taXQgZGMwODdmMmY2YTI5
-MjVlODE4MzFmMzAxNmI5Y2JiNmU0NzBlNzQyMwooUENJOiBTaW1wbGlmeSBJT1YgaW1wbGVtZW50
-YXRpb24gYW5kIGZpeCByZWZlcmVuY2UgY291bnQgcmFjZXMpCmJyb2tlIHRoZSBwY2llIG5hdGl2
-ZSBob3RwbHVnIHdpdGggU1JJT1YgZW5hYmxlZDogUEYgaXMgbm90IGZyZWVkCmR1cmluZyBob3Qt
-cmVtb3ZlLCBhbmQgbGF0ZXIgaG90LWFkZCBkbyBub3Qgd29yayBhcyBvbGQgcGNpX2RldgppcyBz
-dGlsbCBhcm91bmQsIGFuZCBjYW4gbm90IGNyZWF0ZSBuZXcgcGNpX2Rldi4KClRoYXQgY29tbWl0
-IG5lZWQgVkZzIHRvIGJlIHJlbW92ZWQgdmlhIHBjaV9kaXNhYmxlX3NyaW92L3ZpcnRmbl9yZW1v
-dmUKdG8gbWFrZSBzdXJlIHJlZiB0byBQRiBpcyBwdXQgYmFjay4KClNvIHdlIGNhbiBub3QgY2Fs
-bCBzdG9wX2FuZF9yZW1vdmUgZm9yIFZGIGJlZm9yZSBQRiwgdGhhdCB3aWxsCm1ha2UgVkYgZ2V0
-IHJlbW92ZWQgZGlyZWN0bHkgYmVmb3JlIFBGJ3MgZHJpdmVyIHRyeSB0byB1c2UKcGNpX2Rpc2Fi
-bGVfc3Jpb3YvdmlydGZuX3JlbW92ZSB0byBkbyBpdC4KClNvbHV0aW9uIHdvdWxkIGJlCjEuIHNl
-cGFyYXRpbmcgc3RvcCBhbmQgcmVtb3ZlIGluIHR3byBpdGVyYXRpb25zLgoyLiBvciBtYWtlIHBj
-aV9zdG9wX2FuZF9yZW1vdmVfYnVzX2RldmljZSBjb3VsZCBiZSB1c2VkIG9uIFZGLgoKVGhpcyBw
-YXRjaCBpcyBzZWNvbmQgc29sdXRpb246ClNlcGFyYXRlIFBGIHJlZiByZWxlYXNpbmcgZnJvbSB2
-aXJ0Zm5fcmVtb3ZlLCBhbGwgdGhhdCBkdXJpbmcKcGNpX2Rlc3Ryb3lfZGV2IGZvciBWRnMuCgpT
-aWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZl
-cnMvcGNpL2lvdi5jICAgIHwgICAzNCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0t
-CiBkcml2ZXJzL3BjaS9wY2kuaCAgICB8ICAgIDQgKysrKwogZHJpdmVycy9wY2kvcmVtb3ZlLmMg
-fCAgIDE3ICsrKysrKysrKysrKysrKysrCiAzIGZpbGVzIGNoYW5nZWQsIDUwIGluc2VydGlvbnMo
-KyksIDUgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL2lvdi5jCj09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL2lvdi5jCisrKyBsaW51eC0y
-LjYvZHJpdmVycy9wY2kvaW92LmMKQEAgLTEzMiw5ICsxMzIsMzcgQEAgZmFpbGVkOgogCXJldHVy
-biByYzsKIH0KIAotc3RhdGljIHZvaWQgdmlydGZuX3JlbW92ZShzdHJ1Y3QgcGNpX2RldiAqZGV2
-LCBpbnQgaWQsIGludCByZXNldCkKK3ZvaWQgdmlydGZuX3JlbGVhc2Uoc3RydWN0IHBjaV9kZXYg
-KnZpcnRmbikKIHsKKwlpbnQgaTsKKwlzdHJ1Y3QgcGNpX2RldiAqZGV2OwogCWNoYXIgYnVmW1ZJ
-UlRGTl9JRF9MRU5dOworCisJaWYgKCF2aXJ0Zm4tPmlzX3ZpcnRmbikKKwkJcmV0dXJuOworCisJ
-ZGV2ID0gdmlydGZuLT5waHlzZm47CisKKwkvKgorCSAqIFJlbW92ZSBsaW5rIHRvIHZpcnRmbiBm
-b3IgUEYuCisJICogcGNpX2Rpc2FibGVfc3Jpb3YoKSBjb3VsZCBiZSBjYWxsZWQgYWZ0ZXIgcGNp
-X3N0b3BfZGV2KCkgaXMKKwkgKiBjYWxsZWQgZm9yIFBGLiBTbyBjaGVjayBzZCB0byBhdm9pZCBz
-cHVyaW91cyBzZnNmcyB3YXJuaW5nLgorCSAqLworCWlmIChkZXYtPmRldi5rb2JqLnNkKQorCQlm
-b3IgKGkgPSAwOyBpIDwgZGV2LT5zcmlvdi0+bnVtX1ZGczsgaSsrKQorCQkJaWYgKCh2aXJ0Zm5f
-YnVzKGRldiwgaSkgPT0gdmlydGZuLT5idXMtPm51bWJlcikgJiYKKwkJCSAgICAodmlydGZuX2Rl
-dmZuKGRldiwgaSkgPT0gdmlydGZuLT5kZXZmbikpIHsKKwkJCQlzcHJpbnRmKGJ1ZiwgInZpcnRm
-biV1IiwgaSk7CisJCQkJc3lzZnNfcmVtb3ZlX2xpbmsoJmRldi0+ZGV2LmtvYmosIGJ1Zik7CisJ
-CQkJYnJlYWs7CisJCQl9CisKKwl2aXJ0Zm5fcmVtb3ZlX2J1cyhkZXYtPmJ1cywgdmlydGZuLT5i
-dXMpOworCXBjaV9kZXZfcHV0KGRldik7Cit9CisKK3N0YXRpYyB2b2lkIHZpcnRmbl9yZW1vdmUo
-c3RydWN0IHBjaV9kZXYgKmRldiwgaW50IGlkLCBpbnQgcmVzZXQpCit7CiAJc3RydWN0IHBjaV9k
-ZXYgKnZpcnRmbjsKIAlzdHJ1Y3QgcGNpX3NyaW92ICppb3YgPSBkZXYtPnNyaW92OwogCkBAIC0x
-NDksOCArMTc3LDYgQEAgc3RhdGljIHZvaWQgdmlydGZuX3JlbW92ZShzdHJ1Y3QgcGNpX2Rldgog
-CQlfX3BjaV9yZXNldF9mdW5jdGlvbih2aXJ0Zm4pOwogCX0KIAotCXNwcmludGYoYnVmLCAidmly
-dGZuJXUiLCBpZCk7Ci0Jc3lzZnNfcmVtb3ZlX2xpbmsoJmRldi0+ZGV2LmtvYmosIGJ1Zik7CiAJ
-LyoKIAkgKiBwY2lfc3RvcF9kZXYoKSBjb3VsZCBoYXZlIGJlZW4gY2FsbGVkIGZvciB0aGlzIHZp
-cnRmbiBhbHJlYWR5LAogCSAqIHNvIHRoZSBkaXJlY3RvcnkgZm9yIHRoZSB2aXJ0Zm4gbWF5IGhh
-dmUgYmVlbiByZW1vdmVkIGJlZm9yZS4KQEAgLTE2MSwxMiArMTg3LDEwIEBAIHN0YXRpYyB2b2lk
-IHZpcnRmbl9yZW1vdmUoc3RydWN0IHBjaV9kZXYKIAogCW11dGV4X2xvY2soJmlvdi0+ZGV2LT5z
-cmlvdi0+bG9jayk7CiAJcGNpX3N0b3BfYW5kX3JlbW92ZV9idXNfZGV2aWNlKHZpcnRmbik7Ci0J
-dmlydGZuX3JlbW92ZV9idXMoZGV2LT5idXMsIHZpcnRmbi0+YnVzKTsKIAltdXRleF91bmxvY2so
-Jmlvdi0+ZGV2LT5zcmlvdi0+bG9jayk7CiAKIAkvKiBiYWxhbmNlIHBjaV9nZXRfZG9tYWluX2J1
-c19hbmRfc2xvdCgpICovCiAJcGNpX2Rldl9wdXQodmlydGZuKTsKLQlwY2lfZGV2X3B1dChkZXYp
-OwogfQogCiBzdGF0aWMgaW50IHNyaW92X21pZ3JhdGlvbihzdHJ1Y3QgcGNpX2RldiAqZGV2KQpJ
-bmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3BjaS5oCj09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIu
-Ni5vcmlnL2RyaXZlcnMvcGNpL3BjaS5oCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpLmgK
-QEAgLTI2Miw2ICsyNjIsNyBAQCBpbnQgcGNpX2lvdl9yZXNvdXJjZV9iYXIoc3RydWN0IHBjaV9k
-ZXYKIHJlc291cmNlX3NpemVfdCBwY2lfc3Jpb3ZfcmVzb3VyY2VfYWxpZ25tZW50KHN0cnVjdCBw
-Y2lfZGV2ICpkZXYsIGludCByZXNubyk7CiB2b2lkIHBjaV9yZXN0b3JlX2lvdl9zdGF0ZShzdHJ1
-Y3QgcGNpX2RldiAqZGV2KTsKIGludCBwY2lfaW92X2J1c19yYW5nZShzdHJ1Y3QgcGNpX2J1cyAq
-YnVzKTsKK3ZvaWQgdmlydGZuX3JlbGVhc2Uoc3RydWN0IHBjaV9kZXYgKmRldik7CiAKICNlbHNl
-CiBzdGF0aWMgaW5saW5lIGludCBwY2lfaW92X2luaXQoc3RydWN0IHBjaV9kZXYgKmRldikKQEAg
-LTI4NCw2ICsyODUsOSBAQCBzdGF0aWMgaW5saW5lIGludCBwY2lfaW92X2J1c19yYW5nZShzdHJ1
-CiB7CiAJcmV0dXJuIDA7CiB9Cit2b2lkIHZpcnRmbl9yZWxlYXNlKHN0cnVjdCBwY2lfZGV2ICpk
-ZXYpCit7Cit9CiAKICNlbmRpZiAvKiBDT05GSUdfUENJX0lPViAqLwogCkluZGV4OiBsaW51eC0y
-LjYvZHJpdmVycy9wY2kvcmVtb3ZlLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJp
-dmVycy9wY2kvcmVtb3ZlLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9yZW1vdmUuYwpAQCAt
-MzgsNiArMzgsOCBAQCBzdGF0aWMgdm9pZCBwY2lfZGVzdHJveV9kZXYoc3RydWN0IHBjaV9kCiAJ
-bGlzdF9kZWwoJmRldi0+YnVzX2xpc3QpOwogCXVwX3dyaXRlKCZwY2lfYnVzX3NlbSk7CiAKKwl2
-aXJ0Zm5fcmVsZWFzZShkZXYpOworCiAJcGNpX2ZyZWVfcmVzb3VyY2VzKGRldik7CiAJcHV0X2Rl
-dmljZSgmZGV2LT5kZXYpOwogfQpAQCAtMTA3LDggKzEwOSwyMyBAQCBzdGF0aWMgdm9pZCBwY2lf
-cmVtb3ZlX2J1c19kZXZpY2Uoc3RydWN0CiAgKi8KIHZvaWQgcGNpX3N0b3BfYW5kX3JlbW92ZV9i
-dXNfZGV2aWNlKHN0cnVjdCBwY2lfZGV2ICpkZXYpCiB7CisjaWZkZWYgQ09ORklHX1BDSV9BVFMK
-KwlzdHJ1Y3QgcGNpX3NyaW92ICppb3YgPSBOVUxMOworCWludCBsb2NrZWQgPSAwOworCisJaWYg
-KGRldi0+aXNfdmlydGZuKSB7CisJCWlvdiA9IGRldi0+cGh5c2ZuLT5zcmlvdjsKKwkJbG9ja2Vk
-ID0gbXV0ZXhfdHJ5bG9jaygmaW92LT5kZXYtPnNyaW92LT5sb2NrKTsKKwl9CisjZW5kaWYKKwog
-CXBjaV9zdG9wX2J1c19kZXZpY2UoZGV2KTsKIAlwY2lfcmVtb3ZlX2J1c19kZXZpY2UoZGV2KTsK
-KworI2lmZGVmIENPTkZJR19QQ0lfQVRTCisJaWYgKGxvY2tlZCkKKwkJbXV0ZXhfdW5sb2NrKCZp
-b3YtPmRldi0+c3Jpb3YtPmxvY2spOworI2VuZGlmCiB9CiBFWFBPUlRfU1lNQk9MKHBjaV9zdG9w
-X2FuZF9yZW1vdmVfYnVzX2RldmljZSk7CiAK
---001a11c2e74c35998804e365de70--
+Ezequiel Garcia (1):
+      PCI: Rename "PCI Express support" kconfig title
+
+Greg Kroah-Hartman (1):
+      PCI: Convert class code to use dev_groups
+
+Jingoo Han (1):
+      PCI: exynos: Split into Synopsys part and Exynos part
+
+Jon Mason (1):
+      PCI: Fix MPS peer-to-peer DMA comment syntax
+
+Jonghwan Choi (1):
+      PCI: Fix comment typo in iov.c
+
+Stefan Assmann (1):
+      PCI: Return -ENOSYS for SR-IOV operations on non-SR-IOV devices
+
+Thomas Petazzoni (1):
+      PCI: mvebu: Make Marvell PCIe driver depend on OF
+
+Tushar Behera (1):
+      PCI: mvebu: Convert to use devm_ioremap_resource
+
+Valentina Manea (1):
+      x86/pci/mrst: Cleanup checkpatch.pl warnings
+
+Wei Yang (3):
+      PCI: Enumerate subordinate buses, not devices, in pci_bus_get_depth()
+      PCI: Add comments for pbus_size_mem() parameters
+      PCI: Fix types in pbus_size_io()
+
+Yijing Wang (5):
+      PCI: Update NumVFs register when disabling SR-IOV
+      PCI: Fix comment typo for pci_add_cap_save_buffer()
+      PCI: Remove unnecessary check for pcie_get_mps() failure
+      PCI: Don't restrict MPS for slots below Root Ports
+      PCI: Warn if unsafe MPS settings detected
+
+Yinghai Lu (8):
+      PCI: Drop temporary variable in pci_assign_unassigned_resources()
+      PCI: Look for unassigned resources on per-bus basis
+      PCI: Turn on reallocation for unassigned resources with host bridge offset
+      PCI: Enable unassigned resource reallocation on per-bus basis
+      PCI: Assign resources on a per-bus basis
+      PCI: Delay enabling bridges until they're needed
+      PCI: Move resource reallocation code to non-__init
+      PCI: Assign resources for hot-added host bridge more aggressively
+
+ethan.zhao (1):
+      x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero
+
+ .../devicetree/bindings/pci/designware-pcie.txt    |    3 +
+ arch/arm/boot/dts/exynos5440.dtsi                  |    2 +
+ arch/arm/kernel/bios32.c                           |    5 -
+ arch/frv/mb93090-mb00/pci-vdk.c                    |    2 +-
+ arch/m68k/platform/coldfire/pci.c                  |    1 -
+ arch/mips/pci/pci.c                                |    1 -
+ arch/powerpc/kernel/pci-common.c                   |    8 +-
+ arch/sh/drivers/pci/pci.c                          |    1 -
+ arch/tile/kernel/pci_gx.c                          |    9 +-
+ arch/x86/pci/acpi.c                                |    9 +-
+ arch/x86/pci/mmconfig-shared.c                     |    7 +-
+ arch/x86/pci/mrst.c                                |   41 +-
+ drivers/acpi/pci_root.c                            |    5 +-
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c   |   18 +-
+ drivers/parisc/lba_pci.c                           |    1 -
+ drivers/pci/bus.c                                  |   19 -
+ drivers/pci/host/Kconfig                           |    1 +
+ drivers/pci/host/Makefile                          |    3 +-
+ drivers/pci/host/pci-exynos.c                      |  530 ++++++++++
+ drivers/pci/host/pci-mvebu.c                       |    7 +-
+ drivers/pci/host/pcie-designware.c                 | 1011 ++++++--------------
+ drivers/pci/host/pcie-designware.h                 |   65 ++
+ drivers/pci/hotplug/acpiphp_glue.c                 |    1 -
+ drivers/pci/hotplug/pciehp.h                       |    1 +
+ drivers/pci/hotplug/pciehp_core.c                  |   12 +
+ drivers/pci/hotplug/pciehp_hpc.c                   |   31 +
+ drivers/pci/hotplug/pcihp_slot.c                   |    5 +-
+ drivers/pci/iov.c                                  |   23 +-
+ drivers/pci/pci-sysfs.c                            |   32 +-
+ drivers/pci/pci.c                                  |  529 ++++++++--
+ drivers/pci/pci.h                                  |    2 +-
+ drivers/pci/pcie/Kconfig                           |    2 +-
+ drivers/pci/pcie/aer/aerdrv.c                      |    2 +-
+ drivers/pci/pcie/aer/aerdrv.h                      |    1 -
+ drivers/pci/pcie/aer/aerdrv_core.c                 |   35 +-
+ drivers/pci/probe.c                                |   69 +-
+ drivers/pci/quirks.c                               |  147 ++-
+ drivers/pci/setup-bus.c                            |  176 ++--
+ drivers/pcmcia/cardbus.c                           |    1 -
+ include/linux/pci.h                                |   10 +-
+ include/linux/pci_hotplug.h                        |    4 +
+ 41 files changed, 1744 insertions(+), 1088 deletions(-)
+ create mode 100644 drivers/pci/host/pci-exynos.c
+ create mode 100644 drivers/pci/host/pcie-designware.h
