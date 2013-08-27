@@ -1,105 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:54968 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933040Ab3HGNhY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 09:37:24 -0400
-Received: by mail-bk0-f54.google.com with SMTP id mz12so252138bkb.41
-        for <linux-pci@vger.kernel.org>; Wed, 07 Aug 2013 06:37:22 -0700 (PDT)
-Date: Wed, 7 Aug 2013 15:37:20 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: [PATCHv5 08/11] ARM: pci: add ->add_bus() and ->remove_bus()
- hooks to hw_pci
-Message-ID: <20130807133719.GA26302@manwe>
-References: <1373889167-27878-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1373889167-27878-9-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130725165302.GA27802@dhcp-172-17-186-34.nvidia.com>
- <20130807111354.5e29a74c@skate>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GvXjxJ+pjyke8COw"
-In-Reply-To: <20130807111354.5e29a74c@skate>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQVM+q=PjZ+Q_wR2-BGrbs+gBcGyKFhOqGZdZWyxjMjB0g@mail.gmail.com>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+	<1376189294-32022-27-git-send-email-yinghai@kernel.org>
+	<CANVTcTYhdiptB_sOUyveBfieg0VkTGdor16kCHKkJDemHzcWXw@mail.gmail.com>
+	<CAE9FiQVSRMdinMKQdJUB_q8pAK-ei-Q-if+8K5yyz=HRTHbCTA@mail.gmail.com>
+	<CANVTcTZT-0bg=GBdo06=1--NgyMEM6-pFX8DjMxh=7JYtaTLpw@mail.gmail.com>
+	<CAE9FiQVM+q=PjZ+Q_wR2-BGrbs+gBcGyKFhOqGZdZWyxjMjB0g@mail.gmail.com>
+Date: Tue, 27 Aug 2013 18:08:27 +0800
+Message-ID: <CANVTcTbGrh-LccBiC5CHRc9dh9jUOwup-MVa-iHK65n+TTXE2A@mail.gmail.com>
+Subject: Re: [PATCH v4 26/28] PCI, x86, ACPI: Link acpi ioapic register to ioapic
+From: rui wang <ruiv.wang@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 8/27/13, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Aug 26, 2013 at 11:44 PM, rui wang <ruiv.wang@gmail.com> wrote:
+>> On 8/27/13, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On Fri, Aug 23, 2013 at 5:51 PM, rui wang <ruiv.wang@gmail.com> wrote:
+>>>> On 8/11/13, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>>> During ioapic hotplug, acpi_register_ioapic will be called.
+>>>>> Now for x86, that function is blank.
+>>>>> Fill that will update __mp_register_ioapic to use those ioapic.
+>>>>>
+>>>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>>>> ---
+>>>>>  arch/x86/kernel/acpi/boot.c | 10 ++++++----
+>>>>>  1 file changed, 6 insertions(+), 4 deletions(-)
+>>>>>
+>>>>> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+>>>>> index 5be15d1..4a5336d 100644
+>>>>> --- a/arch/x86/kernel/acpi/boot.c
+>>>>> +++ b/arch/x86/kernel/acpi/boot.c
+>>>>> @@ -707,16 +707,18 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
+>>>>>
+>>>>>  int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32
+>>>>> gsi_base)
+>>>>>  {
+>>>>> -     /* TBD */
+>>>>> -     return -EINVAL;
+>>>>> +     unsigned long long id = 0;
+>>>>> +
+>>>>> +     acpi_evaluate_integer(handle, "_UID", NULL, &id);
+>>>>
+>>>> We cannot assume that "_UID" is an integer. "_UID" can be either an
+>>>> integer or a string. Need to consider the case when it is a string.
+>>>
+>>> Yes.
+>>>
+>>> But do you have test case for ioapic that _UID is not integer?
+>>>
+>>
+>> Yes I have an IOAPIC with an _UID of:
+>>
+>>         Name (_UID, "IOAPIC01")  // _UID: Unique ID
+>>
+>> It's a bit challenge how you'll conjure unique identifiers from both
+>> integers and strings. If you have a new patch I can help try it out.
+>
+> Then do you have _MAT with that ioapic device or else?
+>
+> need to find the _MAT entry with GSM matching to find out ioapic id.
+>
 
---GvXjxJ+pjyke8COw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+There's no _MAT for the IOAPICs. I only find _MAT for the LAPICs. But
+there's a static MADT in APIC.dsl which contains IOAPIC entries with
+ioapic ids.
 
-On Wed, Aug 07, 2013 at 11:13:54AM +0200, Thomas Petazzoni wrote:
-> Dear Thierry Reding,
->=20
-> On Thu, 25 Jul 2013 09:53:03 -0700, Thierry Reding wrote:
->=20
-> > I just noticed two minor issues, see below.
-> >=20
-> > > diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/m=
-ach/pci.h
-> > [...]
-> > > @@ -36,6 +36,8 @@ struct hw_pci {
-> > >  					  resource_size_t start,
-> > >  					  resource_size_t size,
-> > >  					  resource_size_t align);
-> > > +	void            (*add_bus)(struct pci_bus *bus);
-> > > +	void            (*remove_bus)(struct pci_bus *bus);
-> >=20
-> > This hunk...
-> >=20
-> > > @@ -63,6 +65,8 @@ struct pci_sys_data {
-> > >  					  resource_size_t start,
-> > >  					  resource_size_t size,
-> > >  					  resource_size_t align);
-> > > +	void            (*add_bus)(struct pci_bus *bus);
-> > > +	void            (*remove_bus)(struct pci_bus *bus);
-> > >  	void		*private_data;	/* platform controller private data	*/
-> > >  };
-> >=20
-> > and this one use inconsistent indentation (spaces instead of tabs).
->=20
-> Hum, I must be missing something here. Looking at the patch you're
-> quoting, and my code, I see one tab before 'void' in both cases, and
-> spaces between 'void' and the (*function) in both cases.
->=20
-> Am I missing something here?
+Thanks
+Rui
 
-Perhaps I should've said "alignment" instead of "indentation" to make it
-more explicit. All other members use tabs to separate the data type and
-the field name, while the lines that you add use spaces.
-
-Thierry
-
---GvXjxJ+pjyke8COw
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSAk2PAAoJEN0jrNd/PrOh15oQAK0ELdpyw9tL7Xdf3kMIwwW+
-Xss5cbeJYhRreul3pQ8uoFVMTYP23hYN3ieaBxq4gv6iu3B/pufJ+uZkOGB+Zq4g
-hw1x9n+9+xK81O5Od4aTHUujeFk7z9VdhEo7AwvcQ9UbswK4zCw4qp89Zy4WdksF
-enaLG8bDXLoJdHlvgcv3KIvGF5QHkYyp8bIXFic5u6owWR9iqtxjGR0g1myauMd8
-8FfhBArdJyPwOdBNJYhgYSoeiH176asQprWL2kgpjpy+G79jjWutzfvHZJGpn2r5
-4mpagFGj2kjYAsW1NlYXGxhe/2/nzpsBRkYd5/VVtr71AgYR1cPQEXf+0FW+1FpO
-tdPJSzNcBFfeNdA628LI7H4nB99E6VBhp20AtJU4EtE6aHXLMbrlw7pxQ9/VSNpJ
-gsyd2l5loaWXHTyQQaFSQs7Pk1yWelS/irvZwCpG2uMsFZJxCfT8W35T8GuH/i8k
-0mFUmaeA/l01HSfDAQAerk+bJqh0IEc0xiVXOyLXPdSHevYITIG8QXKObX7fatl/
-Ae4QI52ALbBSdVYL83JYyHx77ZHm+BE70b09NwMPhfhHX7CSnzLlQ5CH4p66i0u+
-ob8IVpvxqmJegD74LgBC/rzbjdtXmjvjkG4Y3W5OjYtuXZTln32a1kjZoOMnL0Zk
-tf7E9MgBH7jPBaiZMcl6
-=BDCT
------END PGP SIGNATURE-----
-
---GvXjxJ+pjyke8COw--
+>
+> Thanks
+>
+> Yinghai
+>
