@@ -1,135 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:36633 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754105Ab3HVVea (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Aug 2013 17:34:30 -0400
-Received: by mail-oa0-f52.google.com with SMTP id f4so3611922oah.39
-        for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2013 14:34:30 -0700 (PDT)
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:39569 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751715Ab3H0RHl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 13:07:41 -0400
+Received: by mail-ob0-f171.google.com with SMTP id tb18so5095474obb.2
+        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 10:07:41 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130819195917.9062.43580.stgit@bling.home>
-References: <20130819195917.9062.43580.stgit@bling.home>
+In-Reply-To: <1377621883-6707-1-git-send-email-liuj97@gmail.com>
+References: <CAErSpo6pCzw6Gjn+SCFhu7PnBpHkUz0oqO+tGmmOH8NxoMiH6g@mail.gmail.com>
+ <1377621883-6707-1-git-send-email-liuj97@gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 22 Aug 2013 15:34:09 -0600
-Message-ID: <CAErSpo5gUwm1nqME30DiUPOwhGfOttzjcvbtj-4aqSz4sLAcAg@mail.gmail.com>
-Subject: Re: [PATCH] pci: Add pci_walk_slot() interface
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Tue, 27 Aug 2013 11:07:20 -0600
+Message-ID: <CAErSpo4B8XTfgq+eQsPZwrEkJ0cG81CskPrtFZWTwuoRBkp8ww@mail.gmail.com>
+Subject: Re: [PATCH] PCI: correctly check availability of PCIe Link
+ Cap/Status/Control registers
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yuval Mintz <yuvalmin@broadcom.com>,
+	"jacob . e . keller @ intel . com" <jacob.e.keller@intel.com>,
+	Yu Zhao <yu.zhao@intel.com>, Jiang Liu <jiang.liu@huawei.com>,
+	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 19, 2013 at 2:04 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> We have a pci_walk_bus() interface, but it's exceptionally cumbersome
-> for the callback function to figure out if the device is relevant if
-> the caller is trying to walk all the devices in or below a slot.  Add
-> a variant to walk only slot devices.
+On Tue, Aug 27, 2013 at 10:44 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Jiang Liu <jiang.liu@huawei.com>
+>
+> PCIe Base Spec 1.0 Section 5.8 states that "The PCI Express Capabilities,
+> Device Capabilities, Device Status/Control, Link Capabilities and
+> Link Status/Control registers are required for all PCI Express devices."
 
-Is it really exceptionally cumbersome?  You can supply the top-level
-slot in the userdata.  Can you then use something like this in the
-callback?
+And spec 1.1 amended that (in sec 7.8, not 5.8) to say that the link
+registers are not required for Root Complex Integrated Endpoints.
+Integrated endpoints and event collectors don't have links, so even if
+some RC-integrated devices do implement link registers per spec 1.0, I
+don't think there's any point in allowing access to them.
 
-    bool dev_below_slot(struct pci_dev *dev, struct pci_slot *slot)
-    {
-        if (!dev)
-            return false;
-        if (dev->slot == slot)
-            return true;
-        return dev_below_slot(dev->bus->self, slot);
-    }
-
-Bjorn
-
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> And PCIe Base Spec 3.0 Section 7.8 states that "The Link Capabilities,
+> Link Status, and Link Control registers are required for all Root Ports,
+> Switch Ports, Bridges, and Endpoints that are not Root Complex Integrated
+> Endpoints."
+>
+> Changeset 1b6b8ce2ac372e "PCI: only save/restore existent registers in the
+> PCIe capability" introduces pcie_cap_has_lnkctl(), which assumes:
+> 1) PCIe root port, endpoint and legacy endpoint with 1.0 PCIe Capability
+>    implement Link Cap/Status/Control registers.
+> 2) All PCIe devices with 2.0 PCIe Capability implemnet Link Cap/Status/
+>    Control registers.
+>
+> The above assumptions don't conform to PCIe base specifications, so change
+> pcie_cap_has_lnkctl() to follow PCIe specifications.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 > ---
+> Hi Bjorn,
+>         Yuval has a PCIe 1.0 swither, so triggers the bug.  I'm not sure
+> why Yu Zhao has implemented pcie_cap_has_linctl() in that way, any special
+> consideration here?
 >
-> This allows me to use pci_walk_bus() and pci_walk_slot() instead of
-> rolling my own for iterating devices for bus/slot reset.  Please
-> consider for 3.12 to go with the rest of the bus/slot infrastructure.
+> Hi Yuval,
+>         Could you please help to test this patch? Due to hardware resource
+> constraints, I have just compiled the patch on my laptop without testing.
 >
->  drivers/pci/bus.c   |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |    2 ++
->  2 files changed, 58 insertions(+)
+> Thanks!
 >
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index b1ff02a..316579a 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -283,6 +283,62 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
->  }
->  EXPORT_SYMBOL_GPL(pci_walk_bus);
+> ---
+>  drivers/pci/access.c | 12 ++++++++----
+>  1 file changed, 8 insertions(+), 4 deletions(-)
 >
-> +/** pci_walk_slot - walk devices in/under slot, calling callback.
-> + *  @slot     slot whose devices should be walked
-> + *  @cb       callback to be called for each device found
-> + *  @userdata arbitrary pointer to be passed to callback.
-> + *
-> + *  Walk the given slot, including any bridged devices
-> + *  on buses under this slot.  Call the provided callback
-> + *  on each device found.
-> + *
-> + *  We check the return of @cb each time. If it returns anything
-> + *  other than 0, we break out.
-> + *
-> + */
-> +void pci_walk_slot(struct pci_slot *slot, int (*cb)(struct pci_dev *, void *),
-> +                  void *userdata)
-> +{
-> +       struct pci_dev *dev;
-> +       struct pci_bus *bus;
-> +       struct list_head *next;
-> +       int retval;
-> +
-> +       bus = slot->bus;
-> +       down_read(&pci_bus_sem);
-> +       next = slot->bus->devices.next;
-> +       for (;;) {
-> +               if (next == &bus->devices) {
-> +                       /* end of this bus, go up or finish */
-> +                       if (bus == slot->bus)
-> +                               break;
-> +                       next = bus->self->bus_list.next;
-> +                       bus = bus->self->bus;
-> +                       continue;
-> +               }
-> +               dev = list_entry(next, struct pci_dev, bus_list);
-> +
-> +               /* skip anything on the top level bus not in our slot */
-> +               if (dev->bus == slot->bus && dev->slot != slot) {
-> +                       next = dev->bus_list.next;
-> +                       continue;
-> +               }
-> +
-> +               if (dev->subordinate) {
-> +                       /* this is a pci-pci bridge, do its devices next */
-> +                       next = dev->subordinate->devices.next;
-> +                       bus = dev->subordinate;
-> +               } else
-> +                       next = dev->bus_list.next;
-> +
-> +               retval = cb(dev, userdata);
-> +               if (retval)
-> +                       break;
-> +       }
-> +       up_read(&pci_bus_sem);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_walk_slot);
-> +
->  struct pci_bus *pci_bus_get(struct pci_bus *bus)
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 1cc2366..23ff366 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -484,10 +484,14 @@ static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
 >  {
->         if (bus)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index daf40cd..cbb291b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1087,6 +1087,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+>         int type = pci_pcie_type(dev);
 >
->  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
->                   void *userdata);
-> +void pci_walk_slot(struct pci_slot *slot, int (*cb)(struct pci_dev *, void *),
-> +                 void *userdata);
->  int pci_cfg_space_size_ext(struct pci_dev *dev);
->  int pci_cfg_space_size(struct pci_dev *dev);
->  unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+> -       return pcie_cap_version(dev) > 1 ||
+> -              type == PCI_EXP_TYPE_ROOT_PORT ||
+> -              type == PCI_EXP_TYPE_ENDPOINT ||
+> -              type == PCI_EXP_TYPE_LEG_END;
+> +       return  pcie_cap_version(dev) == 1 ||
+> +               type == PCI_EXP_TYPE_ENDPOINT ||
+> +               type == PCI_EXP_TYPE_LEG_END ||
+> +               type == PCI_EXP_TYPE_ROOT_PORT ||
+> +               type == PCI_EXP_TYPE_UPSTREAM ||
+> +               type == PCI_EXP_TYPE_DOWNSTREAM ||
+> +               type == PCI_EXP_TYPE_PCI_BRIDGE ||
+> +               type == PCI_EXP_TYPE_PCIE_BRIDGE;
+>  }
+>
+>  static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
+> --
+> 1.8.1.2
 >
