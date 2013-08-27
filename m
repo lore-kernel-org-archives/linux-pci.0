@@ -1,68 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:32334
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965436Ab3HHRRH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2013 13:17:07 -0400
-Message-ID: <5203D287.1010608@amd.com>
-Date: Thu, 8 Aug 2013 12:16:55 -0500
-From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:47350 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753266Ab3H0TA7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 15:00:59 -0400
+Received: by mail-pb0-f45.google.com with SMTP id mc17so5201879pbc.18
+        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 12:00:58 -0700 (PDT)
+Subject: [PATCH 5/5] PCI: Add offsets of PCIe capability registers
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lee Jones <lee.jones@linaro.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Date: Tue, 27 Aug 2013 13:00:56 -0600
+Message-ID: <20130827190056.16595.97322.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130827185731.16595.52864.stgit@bhelgaas-glaptop>
+References: <20130827185731.16595.52864.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<dougthompson@xmission.com>, <bhelgaas@google.com>,
-	<jbeulich@suse.com>, <linux-kernel@vger.kernel.org>,
-	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 3/3 V2] EDAC, AMD64_EDAC: Add ECC decoding support for
- newer F15h models.
-References: <1375483384-2302-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <1375483384-2302-4-git-send-email-Aravind.Gopalakrishnan@amd.com> <20130806202323.GH14891@pd.tnic> <520162C1.2080603@amd.com>
-In-Reply-To: <520162C1.2080603@amd.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+These offsets are not used, and in some cases are completely reserved
+even in the spec, but I'm adding them for completeness just to match
+the diagrams in the spec, e.g., PCIe spec r3.0, sec 7.8.
 
->
->>>           addr -= 0x100;
->>>       }
->>>   @@ -205,8 +213,9 @@ static int amd64_set_scrub_rate(struct 
->>> mem_ctl_info *mci, u32 bw)
->>>       if (boot_cpu_data.x86 == 0xf)
->>>           min_scrubrate = 0x0;
->>>   -    /* F15h Erratum #505 */
->>> -    if (boot_cpu_data.x86 == 0x15)
->>> +    /* F15h Models 0x00 - 0x0f Erratum #505 */
->> Hmm, are you sure this erratum is fixed in SR? Talk to Eric about it
->> first, please. RG says "No fix planned".
->>
->>> +    if (boot_cpu_data.x86 == 0x15 &&
->>> +        boot_cpu_data.x86_model != 0x30)
->>>           f15h_select_dct(pvt, 0);
->>>         return __amd64_set_scrub_rate(pvt->F3, bw, min_scrubrate);
->>> @@ -218,8 +227,9 @@ static int amd64_get_scrub_rate(struct 
->>> mem_ctl_info *mci)
->>>       u32 scrubval = 0;
->>>       int i, retval = -EINVAL;
->>>   -    /* F15h Erratum #505 */
->>> -    if (boot_cpu_data.x86 == 0x15)
->>> +    /* F15h Models 0x00 - 0x0f Erratum #505 */
->> ditto.
->
-> I have pinged some people about it, will let you know..
->
- From email conversations internally, here are the current status of the 
-errata:
-* Erratum 505: Should not be carried over to newer Fam15h models.
-* Erratum 637: Not fixed.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/uapi/linux/pci_regs.h |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-I have taken this into account and changed the code to workaround only E637.
-
-> will send out changes in V3;
->
-> Thanks,
-> Aravind.
-Corrected the indentations; Removed unnecessary comments;
-Sending out changes in  [PATCH 3/3 V3].
-Thanks,
--Aravind.
-
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 28c83ec..baa7852 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -565,15 +565,18 @@
+ #define  PCI_EXP_DEVCTL2_OBFF_MSGA_EN	0x2000	/* Enable OBFF Message type A */
+ #define  PCI_EXP_DEVCTL2_OBFF_MSGB_EN	0x4000	/* Enable OBFF Message type B */
+ #define  PCI_EXP_DEVCTL2_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
++#define PCI_EXP_DEVSTA2		42	/* Device Status 2 */
+ #define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
+-#define PCI_EXP_LNKCAP2		44	/* Link Capability 2 */
++#define PCI_EXP_LNKCAP2		44	/* Link Capabilities 2 */
+ #define  PCI_EXP_LNKCAP2_SLS_2_5GB	0x00000002 /* Supported Speed 2.5GT/s */
+ #define  PCI_EXP_LNKCAP2_SLS_5_0GB	0x00000004 /* Supported Speed 5.0GT/s */
+ #define  PCI_EXP_LNKCAP2_SLS_8_0GB	0x00000008 /* Supported Speed 8.0GT/s */
+ #define  PCI_EXP_LNKCAP2_CROSSLINK	0x00000100 /* Crosslink supported */
+ #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
+ #define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
++#define PCI_EXP_SLTCAP2		52	/* Slot Capabilities 2 */
+ #define PCI_EXP_SLTCTL2		56	/* Slot Control 2 */
++#define PCI_EXP_SLTSTA2		58	/* Slot Status 2 */
+ 
+ /* Extended Capabilities (PCI-X 2.0 and Express) */
+ #define PCI_EXT_CAP_ID(header)		(header & 0x0000ffff)
 
