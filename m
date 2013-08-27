@@ -1,59 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:56960 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754342Ab3HEDMT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Aug 2013 23:12:19 -0400
-Message-ID: <51FF1803.5090202@huawei.com>
-Date: Mon, 5 Aug 2013 11:12:03 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from cantor2.suse.de ([195.135.220.15]:60671 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753437Ab3H0JoX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Aug 2013 05:44:23 -0400
+Date: Tue, 27 Aug 2013 11:44:19 +0200 (CEST)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Adam Radford <linuxraid@lsi.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] PCI: add quirk for 3ware 9650SE controller
+Message-ID: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
 MIME-Version: 1.0
-To: Paul Bolle <pebolle@tiscali.nl>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH -v4 1/6] PCI,pciehp: avoid add a device already exist
- before suspend during resume
-References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com>  <1375362389-26096-2-git-send-email-wangyijing@huawei.com> <1375469567.1460.15.camel@x61.thuisdomein>
-In-Reply-To: <1375469567.1460.15.camel@x61.thuisdomein>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> 
-> 0) There's no 0/6 in my mailbox, so I reply to this message.
->
+Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a 
+pci device") makes MSIs be forcibly disabled at boot time.
 
-Sorry, I forgot adding your cc into patch 0.
+It turns out that this breaks 3ware controller -- if MSIs are disabled 
+during PCI discovery of this controller, the device doesn't work properly 
+(it doesn't respond to any commands that are being sent to it after 
+initialization).
 
-> 1) This series applies cleanly on top of v3.10.5-rc1 (except for some
-> odd problem in 6/6, which I mentioned in my reply to 6/6).
-> 
-> 2) However, this series doesn't appear to work on v3.10.5-rc1. After the
-> first resume the wireless connection appears to be gone (in Gnome 3).
-> iwl4965 is still loaded, but I can't reconnect. That should happen
-> automagically.
+Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
+makes the device work properly again.
 
-I found some mistakes in my patch 6/6, I'm very sorry about that.
-Will be more careful next time, I will refresh this patch, can your help
-to test it again? I will update this patch and resend it soon.
+Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+---
 
-> 
-> 3) And the second resume apparently hangs the system. Not sure how it
-> hangs exactly, but I have to manually shutdown the laptop by pressing
-> the power button for a few seconds.
-> 
-> 4) I guess I'll have to respin v3.10.5-rc1 without this series to
-> determine if v3.10.5-rc1 or this series causes these issues. But feel
-> free to prod me for further tests.
+I am adding Adam Radford as a recepient as well, to see whether he is able 
+to provide some more explanation why this device would expose this 
+behavior.
+Thanks.
 
-Thanks!
-Yijing.
+ drivers/pci/msi.c    |    3 +++
+ drivers/pci/quirks.c |   10 ++++++++++
+ include/linux/pci.h  |    1 +
+ 3 files changed, 14 insertions(+), 0 deletions(-)
 
-
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index aca7578..4f36b8b 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+ {
+ 	INIT_LIST_HEAD(&dev->msi_list);
+ 
++	if (dev->broken_msi_disable)
++		return;
++
+ 	/* Disable the msi hardware to avoid screaming interrupts
+ 	 * during boot.  This is the power on reset default so
+ 	 * usually this should be a noop.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e85d230..4ba3400 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+ 
++/*
++ * 3ware 9650SE controller doesn't properly initialize if MSI are
++ * disabled on it during PCI device discovery
++ */
++static void quirk_broken_msi_disable(struct pci_dev *dev)
++{
++	dev->broken_msi_disable = 1;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
++
+ static ktime_t fixup_debug_start(struct pci_dev *dev,
+ 				 void (*fn)(struct pci_dev *dev))
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0fd1f15..c327d74 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -341,6 +341,7 @@ struct pci_dev {
+ #ifdef CONFIG_PCI_MSI
+ 	struct list_head msi_list;
+ 	struct kset *msi_kset;
++	unsigned int	broken_msi_disable:1;
+ #endif
+ 	struct pci_vpd *vpd;
+ #ifdef CONFIG_PCI_ATS
 
 -- 
-Thanks!
-Yijing
-
+Jiri Kosina
+SUSE Labs
