@@ -1,107 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43519 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756003Ab3HAPQ3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 11:16:29 -0400
-Date: Thu, 1 Aug 2013 11:16:19 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: zhenzhong.duan@oracle.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>,
-	Feng Jin <joe.jin@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Subject: Re: [PATCH 2/3] Refactor msi/msix restore code Part2
-Message-ID: <20130801151616.GE21528@konrad-lan.dumpdata.com>
-References: <51EF451A.8050003@oracle.com>
- <CAErSpo5phkLpdR35eaMnYthVXiAAAr-JLD44QkntOZi2-NppOg@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 27 Aug 2013 11:45:27 +0200 (CEST)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Adam Radford <linuxraid@lsi.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
+In-Reply-To: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
+Message-ID: <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz>
+References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5phkLpdR35eaMnYthVXiAAAr-JLD44QkntOZi2-NppOg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 31, 2013 at 04:41:32PM -0600, Bjorn Helgaas wrote:
-> On Tue, Jul 23, 2013 at 9:08 PM, Zhenzhong Duan
-> <zhenzhong.duan@oracle.com> wrote:
-> > xen_initdom_restore_msi_irqs trigger a hypercall to restore addr/data/mask
-> > in dom0. It's better to do the same for default_restore_msi_irqs in baremetal.
-> >
-> > Move restore of mask in default_restore_msi_irqs, this could avoid mask
-> > restored twice in dom0, once in hypercall, the other in kernel.
-> >
-> > Without that, qlcnic driver calling pci_reset_function will lost interrupt
-> > in dom0.
-> >
-> > Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-> > Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-> > ---
-> >  drivers/pci/msi.c |   17 ++++++++++++++---
-> >  1 files changed, 14 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > index 87223ae..922fb49 100644
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
-> >  #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
-> >  void default_restore_msi_irqs(struct pci_dev *dev, int irq)
-> >  {
-> > +       int pos;
-> > +       u16 control;
-> >         struct msi_desc *entry;
-> >
-> >         entry = NULL;
-> > @@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
-> >                 entry = irq_get_msi_desc(irq);
-> >         }
-> >
-> > -       if (entry)
-> > +       if (entry) {
-> >                 write_msi_msg(irq, &entry->msg);
-> > +               if (dev->msix_enabled) {
-> > +                       msix_mask_irq(entry, entry->masked);
-> > +                       readl(entry->mask_base);
-> > +               } else {
-> > +                       pos = entry->msi_attrib.pos;
-> > +                       pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
-> > +                                            &control);
-> > +                       msi_mask_irq(entry, msi_capable_mask(control),
-> > +                                    entry->masked);
-> > +               }
-> > +       }
-> >  }
-> >  #endif
-> >
-> > @@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
-> >         arch_restore_msi_irqs(dev, dev->irq);
-> >
-> >         pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-> > -       msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
-> >         control &= ~PCI_MSI_FLAGS_QSIZE;
-> >         control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
-> >         pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-> > @@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
-> >
-> >         list_for_each_entry(entry, &dev->msi_list, list) {
-> >                 arch_restore_msi_irqs(dev, entry->irq);
-> > -               msix_mask_irq(entry, entry->masked);
-> >         }
-> >
-> >         control &= ~PCI_MSIX_FLAGS_MASKALL;
-> 
-> Konrad, are you OK with this patch now?
 
-Yes, I wanted to make sure that the existing behavior under baremetal
-was not altered.
+[ adding Bjorn and Eric to CC, sorry for omitting you originally ]
 
-And Duan had confirmed it was not  - thought to be on a safe side it
-would be good to confirm this via testing just in case.
+On Tue, 27 Aug 2013, Jiri Kosina wrote:
 
+> Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a 
+> pci device") makes MSIs be forcibly disabled at boot time.
 > 
-> If so, can you (Zhenzhong) update the changelog with some of the info
-> from the conversation with Konrad?  It seems like a few more details
-> are needed to make it clear why we need this change.
+> It turns out that this breaks 3ware controller -- if MSIs are disabled 
+> during PCI discovery of this controller, the device doesn't work properly 
+> (it doesn't respond to any commands that are being sent to it after 
+> initialization).
 > 
-> Bjorn
+> Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
+> makes the device work properly again.
+> 
+> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+> ---
+> 
+> I am adding Adam Radford as a recepient as well, to see whether he is able 
+> to provide some more explanation why this device would expose this 
+> behavior.
+> Thanks.
+> 
+>  drivers/pci/msi.c    |    3 +++
+>  drivers/pci/quirks.c |   10 ++++++++++
+>  include/linux/pci.h  |    1 +
+>  3 files changed, 14 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index aca7578..4f36b8b 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+>  {
+>  	INIT_LIST_HEAD(&dev->msi_list);
+>  
+> +	if (dev->broken_msi_disable)
+> +		return;
+> +
+>  	/* Disable the msi hardware to avoid screaming interrupts
+>  	 * during boot.  This is the power on reset default so
+>  	 * usually this should be a noop.
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index e85d230..4ba3400 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+>  
+> +/*
+> + * 3ware 9650SE controller doesn't properly initialize if MSI are
+> + * disabled on it during PCI device discovery
+> + */
+> +static void quirk_broken_msi_disable(struct pci_dev *dev)
+> +{
+> +	dev->broken_msi_disable = 1;
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
+> +
+>  static ktime_t fixup_debug_start(struct pci_dev *dev,
+>  				 void (*fn)(struct pci_dev *dev))
+>  {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 0fd1f15..c327d74 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -341,6 +341,7 @@ struct pci_dev {
+>  #ifdef CONFIG_PCI_MSI
+>  	struct list_head msi_list;
+>  	struct kset *msi_kset;
+> +	unsigned int	broken_msi_disable:1;
+>  #endif
+>  	struct pci_vpd *vpd;
+>  #ifdef CONFIG_PCI_ATS
+> 
+> -- 
+> Jiri Kosina
+> SUSE Labs
+> 
+
+-- 
+Jiri Kosina
+SUSE Labs
