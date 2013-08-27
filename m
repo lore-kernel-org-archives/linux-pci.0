@@ -1,72 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <8fa873d7a80eb81943487802b8c8b7f48f56bce2.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 16/20] tile PCI RC: add dma_get_required_mask()
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CANVTcTZT-0bg=GBdo06=1--NgyMEM6-pFX8DjMxh=7JYtaTLpw@mail.gmail.com>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+	<1376189294-32022-27-git-send-email-yinghai@kernel.org>
+	<CANVTcTYhdiptB_sOUyveBfieg0VkTGdor16kCHKkJDemHzcWXw@mail.gmail.com>
+	<CAE9FiQVSRMdinMKQdJUB_q8pAK-ei-Q-if+8K5yyz=HRTHbCTA@mail.gmail.com>
+	<CANVTcTZT-0bg=GBdo06=1--NgyMEM6-pFX8DjMxh=7JYtaTLpw@mail.gmail.com>
+Date: Mon, 26 Aug 2013 23:53:36 -0700
+Message-ID: <CAE9FiQVM+q=PjZ+Q_wR2-BGrbs+gBcGyKFhOqGZdZWyxjMjB0g@mail.gmail.com>
+Subject: Re: [PATCH v4 26/28] PCI, x86, ACPI: Link acpi ioapic register to ioapic
+From: Yinghai Lu <yinghai@kernel.org>
+To: rui wang <ruiv.wang@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The standard kernel function dma_get_required_mask() uses the
-highest DRAM address to determine if 32-bit or 64-bit DMA addressing
-is needed.  This only works on architectures that have direct mapping
-between the PA and the PCI address space, i.e. those that don't have
-I/O TLBs or have I/O TLB but choose to use direct mapping.  Neither
-of these are true for tilegx.  Whether to use 64-bit DMA should depend
-on the PCI device's capability only, not on the amount of DRAM
-installeds, so we now advertise a 64-bit DMA mask unconditionally.
+On Mon, Aug 26, 2013 at 11:44 PM, rui wang <ruiv.wang@gmail.com> wrote:
+> On 8/27/13, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Fri, Aug 23, 2013 at 5:51 PM, rui wang <ruiv.wang@gmail.com> wrote:
+>>> On 8/11/13, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> During ioapic hotplug, acpi_register_ioapic will be called.
+>>>> Now for x86, that function is blank.
+>>>> Fill that will update __mp_register_ioapic to use those ioapic.
+>>>>
+>>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>>> ---
+>>>>  arch/x86/kernel/acpi/boot.c | 10 ++++++----
+>>>>  1 file changed, 6 insertions(+), 4 deletions(-)
+>>>>
+>>>> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+>>>> index 5be15d1..4a5336d 100644
+>>>> --- a/arch/x86/kernel/acpi/boot.c
+>>>> +++ b/arch/x86/kernel/acpi/boot.c
+>>>> @@ -707,16 +707,18 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
+>>>>
+>>>>  int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32
+>>>> gsi_base)
+>>>>  {
+>>>> -     /* TBD */
+>>>> -     return -EINVAL;
+>>>> +     unsigned long long id = 0;
+>>>> +
+>>>> +     acpi_evaluate_integer(handle, "_UID", NULL, &id);
+>>>
+>>> We cannot assume that "_UID" is an integer. "_UID" can be either an
+>>> integer or a string. Need to consider the case when it is a string.
+>>
+>> Yes.
+>>
+>> But do you have test case for ioapic that _UID is not integer?
+>>
+>
+> Yes I have an IOAPIC with an _UID of:
+>
+>         Name (_UID, "IOAPIC01")  // _UID: Unique ID
+>
+> It's a bit challenge how you'll conjure unique identifiers from both
+> integers and strings. If you have a new patch I can help try it out.
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/tile/include/asm/dma-mapping.h |  4 ++++
- arch/tile/kernel/pci-dma.c          | 18 ++++++++++++++++++
- 2 files changed, 22 insertions(+)
+Then do you have _MAT with that ioapic device or else?
 
-diff --git a/arch/tile/include/asm/dma-mapping.h b/arch/tile/include/asm/dma-mapping.h
-index 6da0540..bd8387d 100644
---- a/arch/tile/include/asm/dma-mapping.h
-+++ b/arch/tile/include/asm/dma-mapping.h
-@@ -20,6 +20,10 @@
- #include <linux/cache.h>
- #include <linux/io.h>
- 
-+#ifdef __tilegx__
-+#define ARCH_HAS_DMA_GET_REQUIRED_MASK
-+#endif
-+
- extern struct dma_map_ops *tile_dma_map_ops;
- extern struct dma_map_ops *gx_pci_dma_map_ops;
- extern struct dma_map_ops *gx_legacy_pci_dma_map_ops;
-diff --git a/arch/tile/kernel/pci-dma.c b/arch/tile/kernel/pci-dma.c
-index d16cfc1..3570ff7 100644
---- a/arch/tile/kernel/pci-dma.c
-+++ b/arch/tile/kernel/pci-dma.c
-@@ -590,3 +590,21 @@ int dma_set_coherent_mask(struct device *dev, u64 mask)
- }
- EXPORT_SYMBOL(dma_set_coherent_mask);
- #endif
-+
-+#ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
-+/*
-+ * The generic dma_get_required_mask() uses the highest physical address
-+ * (max_pfn) to provide the hint to the PCI drivers regarding 32-bit or
-+ * 64-bit DMA configuration. Since TILEGx has I/O TLB/MMU, allowing the
-+ * DMAs to use the full 64-bit PCI address space and not limited by
-+ * the physical memory space, we always let the PCI devices use
-+ * 64-bit DMA if they have that capability, by returning the 64-bit
-+ * DMA mask here. The device driver has the option to use 32-bit DMA if
-+ * the device is not capable of 64-bit DMA.
-+ */
-+u64 dma_get_required_mask(struct device *dev)
-+{
-+	return DMA_BIT_MASK(64);
-+}
-+EXPORT_SYMBOL_GPL(dma_get_required_mask);
-+#endif
--- 
-1.8.3.1
+need to find the _MAT entry with GSM matching to find out ioapic id.
 
+
+Thanks
+
+Yinghai
