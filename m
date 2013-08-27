@@ -1,144 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:59111 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932340Ab3HGJeS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Aug 2013 05:34:18 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv7 12/13] PCI: mvebu: add support for MSI
-Date: Wed,  7 Aug 2013 11:32:33 +0200
-Message-Id: <1375867954-2320-13-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375867954-2320-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:36053 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998Ab3H0Q1H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 12:27:07 -0400
+Received: by mail-pd0-f178.google.com with SMTP id w10so5093530pde.37
+        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 09:27:06 -0700 (PDT)
+Date: Tue, 27 Aug 2013 10:27:02 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: PCIe endpoint crosstalk
+Message-ID: <20130827162702.GB21180@google.com>
+References: <521C5AFF.90209@desy.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <521C5AFF.90209@desy.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds support for Message Signaled Interrupts in the
-Marvell PCIe host controller. The work is very simple: it simply gets
-a reference to the msi_chip associated to the PCIe controller thanks
-to the msi-parent DT property, and stores this reference in the
-pci_bus structure. This is enough to let the Linux PCI core use the
-functions of msi_chip to setup and teardown MSIs.
+On Tue, Aug 27, 2013 at 09:53:35AM +0200, Ludwig Petrosyan wrote:
+> So: I use microTCA system with PCIe bus, there are two AMC cards (PCIe
+> endpoints), lets call card A and card B.
+> as well there are two device drivers for A and B. Card B has bug, after
+> PCIe memory write  operation (MWr) the card sends back Completion
+> packet without data (Cpl) (I now it is wrong, but card designed in this
+> way and has to be changed).
+> User process Ua reads data from Card A in loop, everything is OK , but
+> then I start second user process Ub which writes in loop data to card B
+> (bugged card) the Ua gets wrong data. After improving card B the problem
+> was solved, but could be it has to be checked on the PCIe driver level
+> as well.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Daniel Price <daniel.price@gmail.com>
----
- .../devicetree/bindings/pci/mvebu-pci.txt          |  3 +++
- drivers/pci/host/pci-mvebu.c                       | 31 ++++++++++++++++++++++
- 2 files changed, 34 insertions(+)
+PCIe transactions (MWr, MRd, Cpl, etc.) are not directly visible
+to the OS or the driver.
 
-diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-index f8d4058..77e0ffe 100644
---- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-@@ -12,6 +12,8 @@ Mandatory properties:
- - device_type, set to "pci"
- - ranges: ranges for the PCI memory and I/O regions, as well as the
-   MMIO registers to control the PCIe interfaces.
-+- msi-parent: Link to the hardware entity that serves as the Message
-+  Signaled Interrupt controller for this PCI controller.
- 
- In addition, the Device Tree node must have sub-nodes describing each
- PCIe interface, having the following mandatory properties:
-@@ -46,6 +48,7 @@ pcie-controller {
- 	#size-cells = <2>;
- 
- 	bus-range = <0x00 0xff>;
-+	msi-parent = <&mpic>;
- 
- 	ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
- 		  0x82000000 0 0xd0042000 0xd0042000 0 0x00002000   /* Port 2.0 registers */
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 13a633b..884cf82 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -11,6 +11,7 @@
- #include <linux/clk.h>
- #include <linux/module.h>
- #include <linux/mbus.h>
-+#include <linux/msi.h>
- #include <linux/slab.h>
- #include <linux/platform_device.h>
- #include <linux/of_address.h>
-@@ -107,6 +108,7 @@ struct mvebu_pcie_port;
- struct mvebu_pcie {
- 	struct platform_device *pdev;
- 	struct mvebu_pcie_port *ports;
-+	struct msi_chip *msi;
- 	struct resource io;
- 	struct resource realio;
- 	struct resource mem;
-@@ -695,6 +697,12 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	return bus;
- }
- 
-+void mvebu_pcie_add_bus(struct pci_bus *bus)
-+{
-+	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	bus->msi = pcie->msi;
-+}
-+
- resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 					  const struct resource *res,
- 					  resource_size_t start,
-@@ -731,6 +739,7 @@ static void __init mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.map_irq        = mvebu_pcie_map_irq;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
-+	hw.add_bus        = mvebu_pcie_add_bus;
- 
- 	pci_common_init(&hw);
- }
-@@ -755,6 +764,26 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
- 	return devm_request_and_ioremap(&pdev->dev, &regs);
- }
- 
-+static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
-+{
-+	struct device_node *msi_node;
-+	struct irq_domain *msi_domain;
-+
-+	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
-+				    "msi-parent", 0);
-+	if (!msi_node)
-+		return;
-+
-+	msi_domain = irq_find_msi_host(msi_node);
-+	if (!msi_domain)
-+		return;
-+
-+	pcie->msi = msi_domain->msi_chip;
-+
-+	if (pcie->msi)
-+		pcie->msi->dev = &pcie->pdev->dev;
-+}
-+
- static int __init mvebu_pcie_probe(struct platform_device *pdev)
- {
- 	struct mvebu_pcie *pcie;
-@@ -879,6 +908,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 		i++;
- 	}
- 
-+	mvebu_pcie_msi_enable(pcie);
-+
- 	mvebu_pcie_enable(pcie);
- 
- 	return 0;
--- 
-1.8.1.2
+The only thing I can think of that we could do is add a quirk to
+blacklist the broken version of card B.  You can look at existing
+quirks in drivers/pci/quirks.c.  Most of them workaround issues
+that aren't quite as severe as this one, but we could probably
+figure out a way to make the device completely unusable.
 
+Or do you have something else in mind?
+
+Bjorn
