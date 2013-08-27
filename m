@@ -1,51 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10379 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:2069 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756814Ab3HAQzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 Aug 2013 12:55:55 -0400
-Subject: [PATCH v3 7/9] pci: Wake-up devices before save for reset
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Thu, 01 Aug 2013 10:55:51 -0600
-Message-ID: <20130801165551.16145.34134.stgit@bling.home>
-In-Reply-To: <20130801164652.16145.79918.stgit@bling.home>
-References: <20130801164652.16145.79918.stgit@bling.home>
-MIME-Version: 1.0
+	id S1752809Ab3H0SD2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Aug 2013 14:03:28 -0400
+From: "Keller, Jacob E" <jacob.e.keller@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <liuj97@gmail.com>, Yuval Mintz <yuvalmin@broadcom.com>,
+	"Zhao, Yu" <yu.zhao@intel.com>, Jiang Liu <jiang.liu@huawei.com>,
+	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: correctly check availability of PCIe Link
+ Cap/Status/Control registers
+Date: Tue, 27 Aug 2013 18:02:43 +0000
+Message-ID: <1377626563.5825.8.camel@jekeller-desk1.amr.corp.intel.com>
+References: <CAErSpo6pCzw6Gjn+SCFhu7PnBpHkUz0oqO+tGmmOH8NxoMiH6g@mail.gmail.com>
+	 <1377621883-6707-1-git-send-email-liuj97@gmail.com>
+	 <CAErSpo4B8XTfgq+eQsPZwrEkJ0cG81CskPrtFZWTwuoRBkp8ww@mail.gmail.com>
+In-Reply-To: <CAErSpo4B8XTfgq+eQsPZwrEkJ0cG81CskPrtFZWTwuoRBkp8ww@mail.gmail.com>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Devices come out of reset in D0.  Restoring a device to a different
-post-reset state takes more smarts than our simple config space
-restore, which can leave devices in an inconsistent state.  For
-example, if a device is reset in D3, but the restore doesn't
-successfully return the device to D3, then the actual state of the
-device and dev->current_state are contradictory.  Put everything
-in D0 going into the reset, then we don't need to do anything
-special on the way out.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 91f7bc4..3e71887 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3393,6 +3393,13 @@ static void pci_dev_unlock(struct pci_dev *dev)
- 
- static void pci_dev_save_and_disable(struct pci_dev *dev)
- {
-+	/*
-+	 * Wake-up device prior to save.  PM registers default to D0 after
-+	 * reset and a simple register restore doesn't reliably return
-+	 * to a non-D0 state anyway.
-+	 */
-+	pci_set_power_state(dev, PCI_D0);
-+
- 	pci_save_state(dev);
- 	/*
- 	 * both INTx and MSI are disabled after the Interrupt Disable bit
-
+T24gVHVlLCAyMDEzLTA4LTI3IGF0IDExOjA3IC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
+PiBPbiBUdWUsIEF1ZyAyNywgMjAxMyBhdCAxMDo0NCBBTSwgSmlhbmcgTGl1IDxsaXVqOTdAZ21h
+aWwuY29tPiB3cm90ZToNCj4gPiBGcm9tOiBKaWFuZyBMaXUgPGppYW5nLmxpdUBodWF3ZWkuY29t
+Pg0KPiA+DQo+ID4gUENJZSBCYXNlIFNwZWMgMS4wIFNlY3Rpb24gNS44IHN0YXRlcyB0aGF0ICJU
+aGUgUENJIEV4cHJlc3MgQ2FwYWJpbGl0aWVzLA0KPiA+IERldmljZSBDYXBhYmlsaXRpZXMsIERl
+dmljZSBTdGF0dXMvQ29udHJvbCwgTGluayBDYXBhYmlsaXRpZXMgYW5kDQo+ID4gTGluayBTdGF0
+dXMvQ29udHJvbCByZWdpc3RlcnMgYXJlIHJlcXVpcmVkIGZvciBhbGwgUENJIEV4cHJlc3MgZGV2
+aWNlcy4iDQo+IA0KPiBBbmQgc3BlYyAxLjEgYW1lbmRlZCB0aGF0IChpbiBzZWMgNy44LCBub3Qg
+NS44KSB0byBzYXkgdGhhdCB0aGUgbGluaw0KPiByZWdpc3RlcnMgYXJlIG5vdCByZXF1aXJlZCBm
+b3IgUm9vdCBDb21wbGV4IEludGVncmF0ZWQgRW5kcG9pbnRzLg0KPiBJbnRlZ3JhdGVkIGVuZHBv
+aW50cyBhbmQgZXZlbnQgY29sbGVjdG9ycyBkb24ndCBoYXZlIGxpbmtzLCBzbyBldmVuIGlmDQo+
+IHNvbWUgUkMtaW50ZWdyYXRlZCBkZXZpY2VzIGRvIGltcGxlbWVudCBsaW5rIHJlZ2lzdGVycyBw
+ZXIgc3BlYyAxLjAsIEkNCj4gZG9uJ3QgdGhpbmsgdGhlcmUncyBhbnkgcG9pbnQgaW4gYWxsb3dp
+bmcgYWNjZXNzIHRvIHRoZW0uDQo+IA0KDQpEb2VzIHRoaXMgbWVhbiB0aGF0IHBjaWVfZ2V0X21p
+bmltdW1fbGluayBzaG91bGQgYmUgbW9kaWZpZWQgdG8gY2hlY2sgdG8NCm1ha2Ugc3VyZSB0aGUg
+ZGV2aWNlIGhhcyBhIGxpbmtzdGF0dXMsIGFuZCBvbmx5IGtlZXAgdHJhY2sgb2YgdmFsdWVzIGZv
+cg0Kd2hpY2ggdGhlcmUgaXMgYSBtaW5pbXVtPw0KDQpUaGFua3MsDQpKYWtlDQoNCj4gPiBBbmQg
+UENJZSBCYXNlIFNwZWMgMy4wIFNlY3Rpb24gNy44IHN0YXRlcyB0aGF0ICJUaGUgTGluayBDYXBh
+YmlsaXRpZXMsDQo+ID4gTGluayBTdGF0dXMsIGFuZCBMaW5rIENvbnRyb2wgcmVnaXN0ZXJzIGFy
+ZSByZXF1aXJlZCBmb3IgYWxsIFJvb3QgUG9ydHMsDQo+ID4gU3dpdGNoIFBvcnRzLCBCcmlkZ2Vz
+LCBhbmQgRW5kcG9pbnRzIHRoYXQgYXJlIG5vdCBSb290IENvbXBsZXggSW50ZWdyYXRlZA0KPiA+
+IEVuZHBvaW50cy4iDQo+ID4NCj4gPiBDaGFuZ2VzZXQgMWI2YjhjZTJhYzM3MmUgIlBDSTogb25s
+eSBzYXZlL3Jlc3RvcmUgZXhpc3RlbnQgcmVnaXN0ZXJzIGluIHRoZQ0KPiA+IFBDSWUgY2FwYWJp
+bGl0eSIgaW50cm9kdWNlcyBwY2llX2NhcF9oYXNfbG5rY3RsKCksIHdoaWNoIGFzc3VtZXM6DQo+
+ID4gMSkgUENJZSByb290IHBvcnQsIGVuZHBvaW50IGFuZCBsZWdhY3kgZW5kcG9pbnQgd2l0aCAx
+LjAgUENJZSBDYXBhYmlsaXR5DQo+ID4gICAgaW1wbGVtZW50IExpbmsgQ2FwL1N0YXR1cy9Db250
+cm9sIHJlZ2lzdGVycy4NCj4gPiAyKSBBbGwgUENJZSBkZXZpY2VzIHdpdGggMi4wIFBDSWUgQ2Fw
+YWJpbGl0eSBpbXBsZW1uZXQgTGluayBDYXAvU3RhdHVzLw0KPiA+ICAgIENvbnRyb2wgcmVnaXN0
+ZXJzLg0KPiA+DQo+ID4gVGhlIGFib3ZlIGFzc3VtcHRpb25zIGRvbid0IGNvbmZvcm0gdG8gUENJ
+ZSBiYXNlIHNwZWNpZmljYXRpb25zLCBzbyBjaGFuZ2UNCj4gPiBwY2llX2NhcF9oYXNfbG5rY3Rs
+KCkgdG8gZm9sbG93IFBDSWUgc3BlY2lmaWNhdGlvbnMuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5
+OiBKaWFuZyBMaXUgPGppYW5nLmxpdUBodWF3ZWkuY29tPg0KPiA+IC0tLQ0KPiA+IEhpIEJqb3Ju
+LA0KPiA+ICAgICAgICAgWXV2YWwgaGFzIGEgUENJZSAxLjAgc3dpdGhlciwgc28gdHJpZ2dlcnMg
+dGhlIGJ1Zy4gIEknbSBub3Qgc3VyZQ0KPiA+IHdoeSBZdSBaaGFvIGhhcyBpbXBsZW1lbnRlZCBw
+Y2llX2NhcF9oYXNfbGluY3RsKCkgaW4gdGhhdCB3YXksIGFueSBzcGVjaWFsDQo+ID4gY29uc2lk
+ZXJhdGlvbiBoZXJlPw0KPiA+DQo+ID4gSGkgWXV2YWwsDQo+ID4gICAgICAgICBDb3VsZCB5b3Ug
+cGxlYXNlIGhlbHAgdG8gdGVzdCB0aGlzIHBhdGNoPyBEdWUgdG8gaGFyZHdhcmUgcmVzb3VyY2UN
+Cj4gPiBjb25zdHJhaW50cywgSSBoYXZlIGp1c3QgY29tcGlsZWQgdGhlIHBhdGNoIG9uIG15IGxh
+cHRvcCB3aXRob3V0IHRlc3RpbmcuDQo+ID4NCj4gPiBUaGFua3MhDQo+ID4NCj4gPiAtLS0NCj4g
+PiAgZHJpdmVycy9wY2kvYWNjZXNzLmMgfCAxMiArKysrKysrKy0tLS0NCj4gPiAgMSBmaWxlIGNo
+YW5nZWQsIDggaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1n
+aXQgYS9kcml2ZXJzL3BjaS9hY2Nlc3MuYyBiL2RyaXZlcnMvcGNpL2FjY2Vzcy5jDQo+ID4gaW5k
+ZXggMWNjMjM2Ni4uMjNmZjM2NiAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9hY2Nlc3Mu
+Yw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2FjY2Vzcy5jDQo+ID4gQEAgLTQ4NCwxMCArNDg0LDE0
+IEBAIHN0YXRpYyBpbmxpbmUgYm9vbCBwY2llX2NhcF9oYXNfbG5rY3RsKGNvbnN0IHN0cnVjdCBw
+Y2lfZGV2ICpkZXYpDQo+ID4gIHsNCj4gPiAgICAgICAgIGludCB0eXBlID0gcGNpX3BjaWVfdHlw
+ZShkZXYpOw0KPiA+DQo+ID4gLSAgICAgICByZXR1cm4gcGNpZV9jYXBfdmVyc2lvbihkZXYpID4g
+MSB8fA0KPiA+IC0gICAgICAgICAgICAgIHR5cGUgPT0gUENJX0VYUF9UWVBFX1JPT1RfUE9SVCB8
+fA0KPiA+IC0gICAgICAgICAgICAgIHR5cGUgPT0gUENJX0VYUF9UWVBFX0VORFBPSU5UIHx8DQo+
+ID4gLSAgICAgICAgICAgICAgdHlwZSA9PSBQQ0lfRVhQX1RZUEVfTEVHX0VORDsNCj4gPiArICAg
+ICAgIHJldHVybiAgcGNpZV9jYXBfdmVyc2lvbihkZXYpID09IDEgfHwNCj4gPiArICAgICAgICAg
+ICAgICAgdHlwZSA9PSBQQ0lfRVhQX1RZUEVfRU5EUE9JTlQgfHwNCj4gPiArICAgICAgICAgICAg
+ICAgdHlwZSA9PSBQQ0lfRVhQX1RZUEVfTEVHX0VORCB8fA0KPiA+ICsgICAgICAgICAgICAgICB0
+eXBlID09IFBDSV9FWFBfVFlQRV9ST09UX1BPUlQgfHwNCj4gPiArICAgICAgICAgICAgICAgdHlw
+ZSA9PSBQQ0lfRVhQX1RZUEVfVVBTVFJFQU0gfHwNCj4gPiArICAgICAgICAgICAgICAgdHlwZSA9
+PSBQQ0lfRVhQX1RZUEVfRE9XTlNUUkVBTSB8fA0KPiA+ICsgICAgICAgICAgICAgICB0eXBlID09
+IFBDSV9FWFBfVFlQRV9QQ0lfQlJJREdFIHx8DQo+ID4gKyAgICAgICAgICAgICAgIHR5cGUgPT0g
+UENJX0VYUF9UWVBFX1BDSUVfQlJJREdFOw0KPiA+ICB9DQo+ID4NCj4gPiAgc3RhdGljIGlubGlu
+ZSBib29sIHBjaWVfY2FwX2hhc19zbHRjdGwoY29uc3Qgc3RydWN0IHBjaV9kZXYgKmRldikNCj4g
+PiAtLQ0KPiA+IDEuOC4xLjINCj4gPg0KDQoNCg==
