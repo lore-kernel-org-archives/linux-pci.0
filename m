@@ -1,56 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:46940 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756235Ab3HFUIW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2013 16:08:22 -0400
-Message-ID: <520157B2.8080205@wwwdotorg.org>
-Date: Tue, 06 Aug 2013 14:08:18 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from smtp-o-3.desy.de ([131.169.56.156]:48248 "EHLO smtp-o-3.desy.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752305Ab3H0IDN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Aug 2013 04:03:13 -0400
+Received: from smtp-map-3.desy.de (smtp-map-3.desy.de [131.169.56.68])
+	by smtp-o-3.desy.de (DESY-O-3) with ESMTP id 855BD2802C5
+	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 09:53:38 +0200 (CEST)
+Received: from ZITSWEEP2.win.desy.de (zitsweep2.win.desy.de [131.169.97.96])
+	by smtp-map-3.desy.de (DESY_MAP_3) with ESMTP id 6F13B10BD
+	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 09:53:36 +0200 (MEST)
+Received: from smtp-intra-3.desy.de (lb-40-26.desy.de) by ZITSWEEP2.win.desy.de
+ (Clearswift SMTPRS 5.4.1) with ESMTP id <Tadcb9a19c283a961601bdc@ZITSWEEP2.win.desy.de> for <linux-pci@vger.kernel.org>;
+ Tue, 27 Aug 2013 09:53:36 +0200
+Received: from [131.169.146.36] (mcspetros.desy.de [131.169.146.36])
+	by smtp-intra-3.desy.de (DESY-INTRA-3) with ESMTP id CAE3310BD
+	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 09:53:35 +0200 (MEST)
+Message-ID: <521C5AFF.90209@desy.de>
+Date: Tue, 27 Aug 2013 09:53:35 +0200
+From: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
 MIME-Version: 1.0
-To: Jason Cooper <jason@lakedaemon.net>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv6 00/13] MSI support for Marvell EBU PCIe driver
-References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130806200256.GB19280@titan.lakedaemon.net>
-In-Reply-To: <20130806200256.GB19280@titan.lakedaemon.net>
+To: linux-pci@vger.kernel.org
+Subject: PCIe endpoint crosstalk
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2013 02:02 PM, Jason Cooper wrote:
-> Thomas,
-> 
-> In order to get some testing in -next, I've *tentatively* applied this
-> series in the following way:
-> 
-> +---+ mvebu/msi_common (1,2,3,10)
->     |
->     +---+---+ mvebu/msi_irq (4-9)
->             |
->             +---+---+ mvebu/msi_mvebu (11-13)
-> 
-> I had to make one change to patch #9, I protected the last two blocks
-> with #ifdef CONFIG_PCI_MSI to prevent a build failure at that point.
-> 
-> mvebu/msi_common should be appropriate for Thierry to base off, however,
-> I make no guarantees about the stability of the branch until I send a
-> PR for it.  Code-wise, it should be fine, but the commit-ids may change
-> due to adding Tested-by's, etc.
+Hi ALL
 
-When do you intend to send the pull-request? I need a stable branch
-before I can even apply Thierry's changes, and I'd prefer to get those
-changes applied and in linux-next well before I send my pull requests to
-arm-soc. At the very latest, I need enough time to apply Thierry's
-patches on top of your final version of that branch, get it briefly
-tested, and then send a pull-request to arm-soc before -rc6 is out, so
-if your pull request goes in just before -rc6, that's going to be a problem.
+my name is Ludwig Petrosyan, I am developing PCIe endpoint drivers under
+Ubuntu.
+
+I have got the problem and think it is on pciport driver level.
+I will try to describe the problem and maybe some body could help me.
+
+So: I use microTCA system with PCIe bus, there are two AMC cards (PCIe
+endpoints), lets call card A and card B.
+as well there are two device drivers for A and B. Card B has bug, after
+PCIe memory write  operation (MWr) the card sends back Completion
+packet without data (Cpl) (I now it is wrong, but card designed in this
+way and has to be changed).
+User process Ua reads data from Card A in loop, everything is OK , but
+then I start second user process Ub which writes in loop data to card B
+(bugged card) the Ua gets wrong data. After improving card B the problem
+was solved, but could be it has to be checked on the PCIe driver level
+as well.
+
+with best regards
+
+Ludwig Petrosyan
+
+
