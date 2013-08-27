@@ -1,65 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.w2.samsung.com ([211.189.100.11]:50398 "EHLO
-	usmailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014Ab3HOAWU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 20:22:20 -0400
-Date: Wed, 14 Aug 2013 21:22:11 -0300
-From: Mauro Carvalho Chehab <m.chehab@samsung.com>
-To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
-Cc: Borislav Petkov <bp@alien8.de>, tony.luck@intel.com,
-	bhelgaas@google.com, rostedt@goodmis.org, rjw@sisk.pl,
-	lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error trace
- event
-Message-id: <20130814212211.544ee6a4@concha.lan>
-In-reply-to: <520B6282.6030906@linux.vnet.ibm.com>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <20130808163822.67e0828a@samsung.com> <20130810180322.GC4155@pd.tnic>
- <20130812083355.47c1bae8@samsung.com> <5208D80D.5030206@linux.vnet.ibm.com>
- <20130812125343.GE18018@pd.tnic> <520A16BD.30201@linux.vnet.ibm.com>
- <20130813124258.GC4077@pd.tnic> <520A6D98.9060204@linux.vnet.ibm.com>
- <20130813175809.GE4077@pd.tnic> <520B6282.6030906@linux.vnet.ibm.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:42522 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753138Ab3H0IPU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 04:15:20 -0400
+Date: Tue, 27 Aug 2013 10:14:46 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
+ devm_ioremap_resource
+Message-ID: <20130827081443.GI8686@ulmo>
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr>
+ <20130819120249.GA5740@ulmo>
+ <CAErSpo5oOnfhi+aRi-Z3kCwS1VpYSO6FX5O_MOZmWNLcfhhA9w@mail.gmail.com>
+ <20130819201224.GC5191@mithrandir>
+ <CAErSpo6U9i16gdaYGpWqgLaFteXpy1erCUw55SqkHLcbypP=vA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="MFZs98Tklfu0WsCO"
+In-Reply-To: <CAErSpo6U9i16gdaYGpWqgLaFteXpy1erCUw55SqkHLcbypP=vA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Wed, 14 Aug 2013 16:27:06 +0530
-"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> escreveu:
 
-> On 08/13/2013 11:28 PM, Borislav Petkov wrote:
-> > On Tue, Aug 13, 2013 at 11:02:08PM +0530, Naveen N. Rao wrote:
-> >> If I'm not mistaken, even for systems that have EDAC drivers, it looks
-> >> to me like EDAC can't really decode to the DIMM given what is provided
-> >> by the bios in the APEI report currently. If and when ghes_edac gains
-> >> this capability, users will have a choice between raw APEI reports vs.
-> >> edac processed ones.
+--MFZs98Tklfu0WsCO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, Aug 19, 2013 at 02:49:07PM -0600, Bjorn Helgaas wrote:
+> On Mon, Aug 19, 2013 at 2:12 PM, Thierry Reding
+> <thierry.reding@gmail.com> wrote:
+> > On Mon, Aug 19, 2013 at 02:04:24PM -0600, Bjorn Helgaas wrote:
+> >> On Mon, Aug 19, 2013 at 6:02 AM, Thierry Reding
+> >> <thierry.reding@gmail.com> wrote:
+> >>
+> >> > Bjorn, how do you want to handle patches to the Tegra PCIe driver in=
+ the
+> >> > future? Do you want me to prepare a branch and pull from that or wou=
+ld
+> >> > you rather just take simple patches?
+> >>
+> >> I'm in the habit of applying patches from email, so that's easy for
+> >> me.  But a branch would be OK, too.
 > >
-> > Which kinda makes that APEI tracepoint not really useful and we can call
-> > the one we have already - trace_mc_event - from APEI...
-> 
-> This looks like a nice option. Mauro, what do you think?
+> > Patches work for me too. Is this cleanup patch something that you'd be
+> > comfortable with applying after 3.12-rc1 or would you rather defer it to
+> > 3.13?
+>=20
+> I'm not really sure how we should manage drivers/pci/host/*.  Those
+> files are mostly arch code, and I'm not sure it's useful for me to be
+> in the middle of managing them.
+>=20
+> I assume Stephen or somebody has a tree with the pci-tegra.c stuff
+> that's in -next right now; it seems like it'd be simplest to just add
+> this patch there and merge in during the v3.12 merge window.
 
-I considered calling trace_mc_event directly in APEI, before writing ghes_edac.
+If Stephen's fine with it I suppose we could take pci-tegra.c driver
+changes through the Tegra tree. But I think it'd be good if we could
+still Cc you on patches so you're aware of what we're doing (that is
+the same for all drivers drivers/pci/host/*). And we're going to need
+your Acked-by on the patches as well.
 
-I decided to implement it as a separate driver due to some reasons:
+Thierry
 
-	1) EDAC core needs to know that it should reject "hardware first"
-drivers. So, any solution would need to talk to EDAC core anyway (or we 
-would need to write some other kind of resource allocation somewhere);
+--MFZs98Tklfu0WsCO
+Content-Type: application/pgp-signature
 
-	2) EDAC userspace would need to detect the type of memory. Even
-being crappy, the current way the memory is reported as a single contiguous
-block at sysfs. So, EDAC userspace is aware that it can't decode the DIMM;
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.21 (GNU/Linux)
 
-	3) If BIOS vendors add later some solution to enumerate the DIMMS
-per memory controller, channel, socket with APEI, the addition to the
-existing driver would be trivial.
+iQIcBAEBAgAGBQJSHF/zAAoJEN0jrNd/PrOh4LcQAJvIRnYZFA6phiVFvyQON8YI
+EinzYiHmV02pb5MDFKUivA2yDKSiy86MJRcVxNpRW/JxvXwFTdbpiN8B/7qtrCsC
+2uwrtFlKo0WGktGYJsIVM57aarPEBl66GMcAliAmDTBD1x6z00QCOjwdbociDmWO
+aZRUjn2IK+ZFvKAijiM8OZWForsiCriWNUUILGUZXggR8FNK8Tu3BtO0/1BNBJgA
+LGbcqzSLd8KHJlXXSkXKvzESpvx9q4nhe1Q+D/r92CW3jlJDgu9FQ4IjVC0Z2dav
+e+52ueTWOexlIT8lyf//hSn7W9EWvsuBxiWihwHg/nMUcHII8aUl3k9DzJz43yc0
+m+it531Sbtcu+/PsMOti3+GWBwwqt6pb5JYlSyNLhUAtKVUw35bp/uR6mr072c3d
+D2s4exsHRwHipB+GYNAEOMWVS76wE4ngNmCRViKNcIrHkNH7fDuJ1gJFyjNrCxtD
+erx2i6GHs9cQahd69EBMoZhTxGhQJ5xT8VQyJ6VxuSwJFtVVZuTShN/n+b9jQJll
+uDoCn2w6CYY2OSDvKLe9vBFBCtqIVjQePcKoJSoEiKzCtuOkeujMI44/kRY0qAUL
+63vaPUu7RAnDscd61Ay5uS2aRyjy62Dre6Atohkzb4BtNxtrZW3v2XG27keaKe40
+jcM6e+Iuq23A2UnHzW0O
+=g8NQ
+-----END PGP SIGNATURE-----
 
-So, while it would work to just call the tracing at APEI, on the current way,
-I believe that having this part on a separate code is better.
-
-Cheers,
-Mauro
+--MFZs98Tklfu0WsCO--
