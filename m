@@ -1,77 +1,184 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:46894 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474Ab3HTXJE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Aug 2013 19:09:04 -0400
-Received: by mail-ob0-f178.google.com with SMTP id ef5so1814754obb.37
-        for <linux-pci@vger.kernel.org>; Tue, 20 Aug 2013 16:09:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5AiRw7HvGQMq-n596ZkHJs_KJNn346yf+jc7yti-xpUw@mail.gmail.com>
-References: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
- <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com> <CAErSpo5AiRw7HvGQMq-n596ZkHJs_KJNn346yf+jc7yti-xpUw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 20 Aug 2013 17:08:43 -0600
-Message-ID: <CAErSpo4E9LNrfqTq1_WUoAx68_krw23BjSYbPpJPOr=zbq98xA@mail.gmail.com>
-Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
- to PF Nacked" messages
-To: "Skidmore, Donald C" <donald.c.skidmore@intel.com>
-Cc: "e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
+Received: from mms3.broadcom.com ([216.31.210.19]:1192 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752349Ab3H0Hk3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 03:40:29 -0400
+From: "Yuval Mintz" <yuvalmin@broadcom.com>
+To: "Bjorn Helgaas" <bhelgaas@google.com>
+cc: "jacob.e.keller@intel.com" <jacob.e.keller@intel.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset=US-ASCII
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: RE: pcie_get_minimum_link returns 0 width
+Date: Tue, 27 Aug 2013 07:40:17 +0000
+Message-ID: <979A8436335E3744ADCD3A9F2A2B68A52AD13FB9@SJEXCHMB10.corp.ad.broadcom.com>
+References: <20130825100157.GA16500@lb-tlvb-yuvalmin.il.broadcom.com>
+ <979A8436335E3744ADCD3A9F2A2B68A52AD136BE@SJEXCHMB10.corp.ad.broadcom.com>
+ <CAErSpo4NmL0RWcBompuweHNYmhNmLXU_21_gvaqfDEzi+HBp5g@mail.gmail.com>
+ <979A8436335E3744ADCD3A9F2A2B68A52AD13D0C@SJEXCHMB10.corp.ad.broadcom.com>
+ <CAErSpo68LaevaBG8rJD0aj+oy-cp_f2ZsQVEhXL=oUyyRiYwZw@mail.gmail.com>
+In-Reply-To: <CAErSpo68LaevaBG8rJD0aj+oy-cp_f2ZsQVEhXL=oUyyRiYwZw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Don Dutile]
+> On Mon, Aug 26, 2013 at 5:36 PM, Yuval Mintz <yuvalmin@broadcom.com>
+> wrote:
+> >> > Hi,
+> >> >
+> >> > I tried adding support for the newly added 'pcie_get_minimum_link' into
+> >> the
+> >> > bnx2x driver, but found out the some of my devices started showing
+> width
+> >> x0.
+> >> >
+> >> > By adding debug prints, I've found out there were devices up the chain
+> that
+> >> > Showed 0 when their PCI_EXP_LNKSTA was read by said function.
+> >> > However, when I tried looking via lspci the output claimed the width was
+> >> x4.
+> Looking at its implementation, one obvious difference is that
+> pcie_get_minimum_link() traverses up the hierarchy and keeps track of
+> the minimum values it finds.  lspci, on the other hand, just reads
+> PCI_EXP_LNKSTA from a single device and decodes it.
+> 
+> You said lspci reports x4 for every device from the Root Port all the
+> way down to your NIC, so I would think the minimum from
+> pcie_get_minimum_link() would be x4.  But apparently it's not.  Maybe
+> there's a bug in it.  Can you post the complete "lspci -vv" output
+> along with your debug patch and output?
+> 
+> Bjorn
 
-On Tue, Aug 13, 2013 at 8:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Aug 13, 2013 at 3:54 PM, Skidmore, Donald C
-> <donald.c.skidmore@intel.com> wrote:
->
->> We were unable to recreate your failure here locally so I have some additional questions.  First off you mentioned it was failing as far back as v3.9, was it ever working for you?  If so bisecting would be really helpful as I mentioned we have been unable to cause the failure in house.
->
-> I'm not aware of any working version.  I'm exercising in the sysfs
-> SR-IOV configuration, which I think appeared in v3.8 or so.
->
->>  If not could you see if the problem still occurs without the external Magma PCIe expansion chassis, this is of course assuming that you can plug the X540 into your system without it.
->
-> I played with this a little more and found this:
->
-> 1) Magma card in z420, connected to chassis containing X540: fails
-> (original report)
-> 2) X540 in z420, Magma card in z420, connected to empty chassis: fails
-> 3) X540 in z420, Magma card in z420 but no cable to chassis: works
->
-> The only difference I've noticed so far between configs 2 & 3 are
-> different bus numbers and different IRQ assignments:
->
-> Config 2 (failing):
->   pci 0000:0c:00.0: [8086:1528] type 00 class 0x020000
->   pci 0000:0c:00.0: reg 0x10: [mem 0xdac00000-0xdadfffff 64bit pref]
->   ixgbe 0000:0c:00.0: irq 82 for MSI/MSI-X
->   IRQ 79: 79
->   IRQ 80: eth0
->   IRQ 81: snd_hda_intel
->   IRQ: 82-93 eth1-TxRx-0 through eth1-TxRx-11
->   IRQ 94: eth1
->
-> Config 3 (working):
->   pci 0000:04:00.0: [8086:1528] type 00 class 0x020000
->   pci 0000:04:00.0: reg 0x10: [mem 0xdac00000-0xdadfffff 64bit pref]
->   ixgbe 0000:04:00.0: irq 75 for MSI/MSI-X
->   IRQ 72: ahci
->   IRQ 73: eth0
->   IRQ 74: snd_hda_intel
->   IRQ 75-86: eth1-TxRx-0 through eth1-TxRx-11
->   IRQ 87: eth1
->
-> I'll try to narrow this down a little more; I'm just giving you this
-> preliminary info in case it rings any bells for you.
+Here's the patch:
+---
+ drivers/pci/pci.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-Sorry, I haven't gotten anywhere with this yet.  I opened
-https://bugzilla.kernel.org/show_bug.cgi?id=60776 and attached logs
-and lspci info from v3.11-rc6.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c71e78c..72cb87b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3601,13 +3601,19 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 		enum pcie_link_width next_width;
+ 
+ 		ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
+-		if (ret)
++		if (ret) {
++			printk(KERN_ERR "Failed to Read LNKSTA\n");
+ 			return ret;
++		}
+ 
+ 		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
+ 		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
+ 			PCI_EXP_LNKSTA_NLW_SHIFT;
+ 
++		printk(KERN_ERR "LnkSta %04x [%04x:%02x.%02x]\n",
++		       lnksta, dev->bus->number, PCI_SLOT(dev->devfn),
++		       PCI_FUNC(dev->devfn));
++
+ 		if (next_speed < *speed)
+ 			*speed = next_speed;
+ 
+-- 
+1.7.1
 
-Bjorn
+And here are the lscpi results for 09:00.0 and 0a:01.0
+(The two devices for which the loop returns 0 width):
+
+Sysfs do read [Pos 0, len 64]
+09:00.0 Class 0604: Device 8086:3500 (rev 01)
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Bus: primary=09, secondary=0a, subordinate=11, sec-latency=0
+	Memory behind bridge: fb800000-fd7fffff
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity+ SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: Sysfs do read [Pos 68, len 4]
+[44] Express (v1) Upstream Port, MSI 00
+Sysfs do read [Pos 72, len 16]
+		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-SlotPowerLimit 0.000W
+		DevCtl:	Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 256 bytes, MaxReadReq 4096 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr+ UnsuppReq+ AuxPwr- TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x8, ASPM L0s, Latency L0 unlimited, L1 unlimited
+			ClockPM- Surprise- LLActRep- BwNot-
+		LnkCtl:	ASPM Disabled; Disabled- Retrain- CommClk-
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+	Capabilities: Sysfs do read [Pos 112, len 4]
+[70] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+Sysfs do read [Pos 116, len 4]
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: Sysfs do read [Pos 128, len 4]
+[80] Sysfs do read [Pos 132, len 4]
+Subsystem: Device 0000:0000
+Sysfs do read [Pos 256, len 4]
+	Capabilities: [100 v1] Advanced Error Reporting
+Sysfs do read [Pos 260, len 24]
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+		UESvrt:	DLP+ SDES- TLP+ FCP+ CmpltTO+ CmpltAbrt+ UnxCmplt+ RxOF+ MalfTLP+ ECRC- UnsupReq+ ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr+ BadTLP+ BadDLLP+ Rollover+ Timeout+ NonFatalErr-
+		AERCap:	First Error Pointer: 14, GenCap- CGenEn- ChkCap- ChkEn-
+	Kernel driver in use: pcieport
+	Kernel modules: shpchp
+
+Sysfs do read [Pos 0, len 64]
+0a:01.0 Class 0604: Device 8086:3514 (rev 01)
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Bus: primary=0a, secondary=0e, subordinate=10, sec-latency=0
+	Memory behind bridge: fb800000-fd7fffff
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity+ SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: Sysfs do read [Pos 68, len 4]
+[44] Express (v1) Downstream Port (Slot-), MSI 00
+Sysfs do read [Pos 72, len 16]
+		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+			ExtTag- RBE- FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 256 bytes, MaxReadReq 4096 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+		LnkCap:	Port #2, Speed 2.5GT/s, Width x4, ASPM L0s, Latency L0 unlimited, L1 unlimited
+			ClockPM- Surprise- LLActRep- BwNot-
+		LnkCtl:	ASPM Disabled; Disabled- Retrain- CommClk-
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+	Capabilities: Sysfs do read [Pos 96, len 4]
+[60] MSI: Enable- Count=1/1 Maskable- 64bit+
+Sysfs do read [Pos 100, len 10]
+		Address: 0000000000000000  Data: 0000
+	Capabilities: Sysfs do read [Pos 112, len 4]
+[70] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+Sysfs do read [Pos 116, len 4]
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: Sysfs do read [Pos 128, len 4]
+[80] Sysfs do read [Pos 132, len 4]
+Subsystem: Device 0000:0000
+Sysfs do read [Pos 256, len 4]
+	Capabilities: [100 v1] Advanced Error Reporting
+Sysfs do read [Pos 260, len 24]
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+		UESvrt:	DLP+ SDES- TLP+ FCP+ CmpltTO+ CmpltAbrt+ UnxCmplt+ RxOF+ MalfTLP+ ECRC- UnsupReq+ ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr+ BadTLP+ BadDLLP+ Rollover+ Timeout+ NonFatalErr-
+		AERCap:	First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+	Kernel driver in use: pcieport
+	Kernel modules: shpchp
+
+Thanks,
+Yuval
+
