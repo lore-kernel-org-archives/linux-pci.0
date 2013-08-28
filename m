@@ -1,79 +1,120 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5209FA05.6090702@gmail.com>
-Date: Tue, 13 Aug 2013 11:19:01 +0200
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:59724 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721Ab3H1NcD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 09:32:03 -0400
+Date: Wed, 28 Aug 2013 15:31:28 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Julia Lawall <Julia.Lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
+ devm_ioremap_resource
+Message-ID: <20130828133127.GE604@ulmo>
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr>
+ <20130819120249.GA5740@ulmo>
+ <CAErSpo5oOnfhi+aRi-Z3kCwS1VpYSO6FX5O_MOZmWNLcfhhA9w@mail.gmail.com>
+ <20130819201224.GC5191@mithrandir>
+ <CAErSpo6U9i16gdaYGpWqgLaFteXpy1erCUw55SqkHLcbypP=vA@mail.gmail.com>
+ <20130827081443.GI8686@ulmo>
+ <521CCF9B.9000004@wwwdotorg.org>
+ <CAErSpo461H=3qD5Xb7rKkMcQ1_ipyAQ5Tv2VhZD4j578A+Bd9w@mail.gmail.com>
 MIME-Version: 1.0
-To: Kumar Gala <galak@codeaurora.org>
-CC: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ian.campbell@citrix.com>
-Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
-References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com> <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com> <BA285A30-3E38-4F7A-BD5E-3271AD1A46BE@codeaurora.org>
-In-Reply-To: <BA285A30-3E38-4F7A-BD5E-3271AD1A46BE@codeaurora.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="AsxXAMtlQ5JHofzM"
+In-Reply-To: <CAErSpo461H=3qD5Xb7rKkMcQ1_ipyAQ5Tv2VhZD4j578A+Bd9w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Added DT maintainers directly for a question below]
 
-On 08/13/13 02:56, Kumar Gala wrote:
-> On Aug 12, 2013, at 1:46 PM, Sebastian Hesselbarth wrote:
->
->> This patch adds a check for DT passed reset-gpios property and deasserts/
->> asserts reset pin on probe/remove with configurable delay. Corresponding
->> binding documentation is also updated.
->>
->> Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-[...]
->> diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
->> index 638673a..f2fa261 100644
->> --- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
->> +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
->> @@ -76,6 +76,8 @@ and the following optional properties:
->> - marvell,pcie-lane: the physical PCIe lane number, for ports having
->>    multiple lanes. If this property is not found, we assume that the
->>    value is 0.
->> +- reset-gpios: optional gpio to PERST#
->> +- reset-delay-ms: delay in ms to wait after reset de-assertion
->
-> Both of these should probably be marvell,reset...
+--AsxXAMtlQ5JHofzM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Kumar,
+On Tue, Aug 27, 2013 at 12:03:01PM -0600, Bjorn Helgaas wrote:
+> On Tue, Aug 27, 2013 at 10:11 AM, Stephen Warren <swarren@wwwdotorg.org> =
+wrote:
+> > On 08/27/2013 02:14 AM, Thierry Reding wrote:
+> >> On Mon, Aug 19, 2013 at 02:49:07PM -0600, Bjorn Helgaas wrote:
+> >>> On Mon, Aug 19, 2013 at 2:12 PM, Thierry Reding
+> >>> <thierry.reding@gmail.com> wrote:
+> >>>> On Mon, Aug 19, 2013 at 02:04:24PM -0600, Bjorn Helgaas wrote:
+> >>>>> On Mon, Aug 19, 2013 at 6:02 AM, Thierry Reding
+> >>>>> <thierry.reding@gmail.com> wrote:
+> >>>>>
+> >>>>>> Bjorn, how do you want to handle patches to the Tegra PCIe
+> >>>>>> driver in the future? Do you want me to prepare a branch
+> >>>>>> and pull from that or would you rather just take simple
+> >>>>>> patches?
+> >>>>>
+> >>>>> I'm in the habit of applying patches from email, so that's
+> >>>>> easy for me.  But a branch would be OK, too.
+> >>>>
+> >>>> Patches work for me too. Is this cleanup patch something that
+> >>>> you'd be comfortable with applying after 3.12-rc1 or would you
+> >>>> rather defer it to 3.13?
+> >>>
+> >>> I'm not really sure how we should manage drivers/pci/host/*.
+> >>> Those files are mostly arch code, and I'm not sure it's useful
+> >>> for me to be in the middle of managing them.
+> >>>
+> >>> I assume Stephen or somebody has a tree with the pci-tegra.c
+> >>> stuff that's in -next right now; it seems like it'd be simplest
+> >>> to just add this patch there and merge in during the v3.12 merge
+> >>> window.
+> >>
+> >> If Stephen's fine with it I suppose we could take pci-tegra.c
+> >> driver changes through the Tegra tree. But I think it'd be good if
+> >> we could still Cc you on patches so you're aware of what we're
+> >> doing (that is the same for all drivers drivers/pci/host/*). And
+> >> we're going to need your Acked-by on the patches as well.
+>=20
+> I think you have my Acked-by for this case already (from Aug 20).  And
+> feel free to copy me on anything you like; my delete key works well :)
+>=20
+> > I can push Tegra PCIe patches through the arm-soc tree before
+> > 3.12-rc1, but after that point, I think it's best if they go through
+> > the PCIe tree, unless there's some cross-subsystem dependency for a
+> > specific patch, and with the new PCIe driver, that's less likely.
+>=20
+> I'm OK with merging things through my tree.  It just seemed like there
+> was a lot of recent Tegra activity that included a few Tegra PCI
+> changes, and no benefit to trying to split the PCI stuff from the
+> non-PCI stuff.  Hopefully it will calm down, because I don't have time
+> to be in the middle of major Tegra stuff.
 
-as Thomas already mentioned, non-prefixed "foo-gpios" are quite common.
-As reset gpios are likely to be common among SoC pci controller setups,
-I though I'd stick with the non-prefixed property. But I have no strong
-opinion about it - but let's see how DT jurisdiction will vote :)
+Yes, I think it will calm down. The difficulty this time around was that
+there were various dependencies across multiple trees that needed to be
+coordinated. As Stephen already mentioned, part of the reason to move
+the driver out of arch/arm/mach-tegra was to make it stand on its own.
 
-> Does reset-delay-ms vary per board? I can't remember where the
-discussion got to about configuration info.
+Thierry
 
-Hmm, for Dove SoC, I only have one board to test - but the driver
-currently is for 4 different SoCs. I just did some quick evaluation
-of the reset delay required to bring up the device on the D3Plug.
-Using 10ms was too short, 20ms worked.
+--AsxXAMtlQ5JHofzM
+Content-Type: application/pgp-signature
 
-I guess there will be other SoC/boards requiring different delays
-but I am fine with hardcoded 20ms and re-introduce reset-delay property
-only if it is really required. The driver's default is 20ms anyway.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.21 (GNU/Linux)
 
->>
->> Example:
->
-> It's usually good to update example to show all optional properties.
+iQIcBAEBAgAGBQJSHfuvAAoJEN0jrNd/PrOhj20QAKmPJGBaZfgQ1W/fv4VB6cMc
+rXAsqY4hUXmWJOHVNMxWocOo0tQE3P7nR5oWXduIxRrcGGYdbiXnylfR1NTcesQr
+YRIrUDi3uO1fVgte6WanomavCgTzxpWb1GPwFB0Apk2oR+JkpFQo0vgV6pJIEnJa
+K3zCPWeHqFBJaKQSHyzCwQ8VVlXe1q2PbQGX4yKMiFNT8tcTKuP9ZUKwejhclgUh
+p9ZLZl/wDJLuVYQSAb2GJNV3PYS7vdKJpZpNayAr1hz/GjDnBxfbVRFH4YuoZcjG
+UyJ3X2Dqz91qFYoE46C/QjJGhlv897GzOSQIvm/wcSI7XEbhoDzIQURd19DTMD/2
+5JTmeJ5uM7Qwn4ztRywJFVhGHHtTPKmk2wbL7XevShh7r7DvVivARVJrBh+o0P66
+9K+DhxL1gnp8UVLOhQbEAGh6ZjAiVEOYuqn2jV4DZKGGlKpu3uunGdKlZm9qMKpX
+SWKaW40ZYo5pi38mWPbGGQf2tIoqZQY5Qu29qCnDjUxz9vN+bJbBXtKy6hOUC3VL
+gsBKLShilouLxX5NhuaJRoNMAZG5KWYyqTGbD3r5L6cszUS9/tF7Z40Pzhv1TFkh
+QZ4Nrh/GMcDs3mmanUddqJ8Dnexj1t3lFyQnUGIm0S0klnUi/35qLaTeieH9Du51
+vGSEHjkn+4rMHAENx2be
+=+qsl
+-----END PGP SIGNATURE-----
 
-Ok, will add the properties to one of the example ports.
-
-Thanks,
-
-Sebastian
-
+--AsxXAMtlQ5JHofzM--
