@@ -1,108 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:33829 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752245Ab3HAUQy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 16:16:54 -0400
-Received: by mail-oa0-f51.google.com with SMTP id h1so2337634oag.24
-        for <linux-pci@vger.kernel.org>; Thu, 01 Aug 2013 13:16:53 -0700 (PDT)
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:61260 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751634Ab3H1NFI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 09:05:08 -0400
+Received: by mail-ie0-f174.google.com with SMTP id k14so8552338iea.19
+        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 06:05:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <51F6D161.1040106@redhat.com>
-References: <1374937868-24437-1-git-send-email-yinghai@kernel.org>
- <1374937868-24437-2-git-send-email-yinghai@kernel.org> <CAErSpo7xk-NGp+4ZFo-jnVnQSEomY=7=CXDSbZPzrhdjZ4zVSA@mail.gmail.com>
- <51F6D161.1040106@redhat.com>
+In-Reply-To: <20130827234345.GA11187@neilslaptop.think-freely.org>
+References: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com>
+ <1377531553-17716-1-git-send-email-nhorman@tuxdriver.com> <CAErSpo7tne+NvO-idW8Dt-9FZaGOHjTEDcQ8mC6K1PG6M=ftvg@mail.gmail.com>
+ <20130827234345.GA11187@neilslaptop.think-freely.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 1 Aug 2013 14:16:33 -0600
-Message-ID: <CAErSpo5d2+mCkwED-RYV4=3LCvpj7HNxT_6yHxqNA-kcHSHF2g@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] PCI: Stop sriov after stop PF if PF's driver skip that
-To: Don Dutile <ddutile@redhat.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
+Date: Wed, 28 Aug 2013 07:04:47 -0600
+Message-ID: <CAErSpo4jq-GTGsgfDkfuRQz_8Vi6RmMC1fGCUcu_3tExUw=EFQ@mail.gmail.com>
+Subject: Re: [PATCH v3] ACPI: Fix osc flag setup ordering to allow pcie
+ hotplug use when available
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>
+	Stefan Seyfried <stefan.seyfried@googlemail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 29, 2013 at 2:32 PM, Don Dutile <ddutile@redhat.com> wrote:
-> On 07/29/2013 03:58 PM, Bjorn Helgaas wrote:
+On Tue, Aug 27, 2013 at 5:43 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> On Tue, Aug 27, 2013 at 03:34:11PM -0600, Bjorn Helgaas wrote:
+>> [+cc Stefan]
 >>
->> On Sat, Jul 27, 2013 at 9:11 AM, Yinghai Lu<yinghai@kernel.org>  wrote:
->>>
->>> After commit dc087f2f6a2925e81831f3016b9cbb6e470e7423
->>> (PCI: Simplify IOV implementation and fix reference count races)
->>> VF need to be removed via virtfn_remove to make sure ref to PF
->>> is put back.
-
-OK, I'm lost here.  I think this is the scenario where Yinghai saw a
-regression (please correct me if not):
-
-  00:03.0 Root port to [bus 02]
-  02:00.0 SR-IOV NIC (PF in slot 2)
-  02:00.1 VF (for example)
-
-  # echo -n 0 > /sys/bus/pci/slots/2/power
-  02:00.0 PF is powered off
-  02:00.0 PF pci_dev is released, but VF 02:00.1 pci_dev still exists
-and holds a reference to the PF pci_dev, so the 02:00.0 pci_dev is not
-actually deallocated
-
-  # echo -n 1 > /sys/bus/pci/slots/2/power
-  pciehp 0000:00:03.0:pcie04: Device 0000:02:00.0 already exists at
-0000:02:00, cannot hot-add
-
-Prior to dc087f2f6 ("Simplify IOV implementation and fix reference
-count races"), this scenario (powering the slot off then back on)
-apparently worked, and hot-adding 02:00.0 worked fine.
-
-But what about the VF pci_devs?  Prior to dc087f2f6, I assume they
-still existed even after we removed power from the PF.  But obviously
-the hardware VFs are disabled when we power the slot back up.  It
-doesn't make sense to me to have pci_devs for these VFs that are no
-longer enabled, so maybe I'm missing something here.
-
->>> Some driver (like ixgbe) does not call pci_disable_sriov() if
->>> sriov is enabled via /sys/.../sriov_numvfs setting.
->>> ixgbe does allow driver for PF get detached, but still have VFs
->>> around.
+>> On Mon, Aug 26, 2013 at 9:39 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
+>> > Somewhere between 3.9 and 3.10 it seems the order in which pcie and acpi probed
+>> > slots for hotplug capabilites got reversed.  While this isn't a big deal, it did
+>> > uncover a bug in the ACPI bus setup path.  Specifically, acpi_pci_root_add calls
+>> > pci_acpi_scan_root before setting the osc flags for the device handle.
+>> > pci_acpi_scan_root, among other things uses device_is_managed_by_native_pciehp()
+>> > to determine if a given slot has pcie hotplug capabilties, whcih checks the
+>> > devices OSC_PCI_EXPRESS_NATIVE_HP_CONTROL flag.  Since that flag is not set
+>> > until after pci_acpi_scan_root_completes, the acpi code never sees that pcie
+>> > slots are hotplug capable and configures them all to use acpi instead.
 >>
->> Is this something ixgbe should be doing differently?
+>> I'd like to make it more explicit what we're fixing.  Apparently this
+>> is a regression between v3.9 and v3.10.
 >>
->> I'm not 100% sold on the idea of the VFs staying active after the
->> driver releases the PF.  It seems asymmetric because I think the
->> driver has to claim the PF to *enable* the VFs, but we don't disable
->> them when releasing the PF.
+>> Is this a fix for problems like
+>> https://bugzilla.kernel.org/show_bug.cgi?id=60736 ?  That bug is that
+>> an ExpressCard slot doesn't work unless we boot with
+>> "acpiphp.disable=1".  I think what happens there is that acpiphp
+>> claims the slot before we run _OSC, so pciehp doesn't claim it, even
+>> though _OSC did grant us control over native PCIe hotplug.
 >>
->> What's the use case for detaching the PF driver while the VFs are active?
->>
-> VF's assigned to (KVM) guest (via device-assignment).
-> Virtually, it's as if the enet cable is unplugged to the VF in the guest --
-> the device is still there (the PF wasn't unplugged, just the driver
-> de-configured).
+> Yes, that bug is precisely what I am trying to fix (although your wording above is
+> inverted from the problem in the bug).  What happens is that acpiphp claims the
+> pcie ports, because acpiphp init runs first, and we haven't yet parsed _OSC,
+> which would have told acpiphp to yield control to pciehp.  The initial fix I
+> proposed fixed this by parsing _OSC prior to running the acpiphp bus scan, but
+> that reintroduced the problem of not handling pcie 1.1 aspm properly.  That has
+> been fixed in v2/v3 by deferring the setting of aspm_disable until after the bus
+> scan.
+>
+> Shall I submit a v4 with an updated changelog?
 
-OK, but why is it necessary to detach and reattach the PF driver at
-all?  Are you trying to update the PF driver or something?  Change the
-number of VFs?
-
-> Pre-sysfs-based configuration, the std way to configure the VFs into
-> a system was to unload the PF driver, and reload it with a vf-enabling
-> parameter
-> (like max_vfs=<n> in the case of ixgbe, igb).
-
-Yes.  But I assume the first time the PF was loaded, there were no VFs
-enabled.  So disabling VFs at unload wouldn't cause any problem there.
- Then you reload the driver with "max_vfs=<n>".  The driver enables
-VFs.  Is there any reason to unload the PF driver again?
-
-> Now, if someone unloaded the PF driver in the host, the unplanned removal
-> of the PF enabled the VF to crash the host (maybe AlexD can provide the
-> details how that occurred).
-> So, the solution was to 'pause' the VF operation and let packets drop
-> in the guest, and re-enable the VF operation if the PF driver was
-> re-configured.
-
-I don't get this.  Why should we tolerate "unplanned removal of the
-PF"?  If you yank the card, I would *expect* anything using it to
-crash.
+No need, I'll update the changelog and include the bugzilla reference
+and post it for your approval.  Thanks!
 
 Bjorn
