@@ -1,52 +1,68 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 12 Aug 2013 19:56:31 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
-Cc: tony.luck@intel.com, bhelgaas@google.com, rostedt@goodmis.org,
-	rjw@sisk.pl, lance.ortiz@hp.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] mce: acpi/apei: trace: Enable ghes memory error
- trace event
-Message-ID: <20130812175631.GI18018@pd.tnic>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <1375986471-27113-4-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
- <20130808163822.67e0828a@samsung.com>
- <20130810180322.GC4155@pd.tnic>
- <20130812083355.47c1bae8@samsung.com>
- <20130812123813.GD18018@pd.tnic>
- <20130812114932.52bb0314@samsung.com>
- <20130812150424.GH18018@pd.tnic>
- <20130812142557.2a43f155@samsung.com>
+Date: Wed, 28 Aug 2013 09:23:33 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Stefan Seyfried <stefan.seyfried@googlemail.com>
+Subject: Re: [PATCH v3] ACPI: Fix osc flag setup ordering to allow pcie
+ hotplug use when available
+Message-ID: <20130828132333.GA3146@neilslaptop.think-freely.org>
+References: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com>
+ <1377531553-17716-1-git-send-email-nhorman@tuxdriver.com>
+ <CAErSpo7tne+NvO-idW8Dt-9FZaGOHjTEDcQ8mC6K1PG6M=ftvg@mail.gmail.com>
+ <20130827234345.GA11187@neilslaptop.think-freely.org>
+ <CAErSpo4jq-GTGsgfDkfuRQz_8Vi6RmMC1fGCUcu_3tExUw=EFQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130812142557.2a43f155@samsung.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4jq-GTGsgfDkfuRQz_8Vi6RmMC1fGCUcu_3tExUw=EFQ@mail.gmail.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 12, 2013 at 02:25:57PM -0300, Mauro Carvalho Chehab wrote:
-> Userspace still needs the EDAC sysfs, in order to identify how the
-> memory is organized, and do the proper memory labels association.
->
-> What edac_ghes does is to fill those sysfs nodes, and to call the
-> existing tracing to report errors.
+On Wed, Aug 28, 2013 at 07:04:47AM -0600, Bjorn Helgaas wrote:
+> On Tue, Aug 27, 2013 at 5:43 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> > On Tue, Aug 27, 2013 at 03:34:11PM -0600, Bjorn Helgaas wrote:
+> >> [+cc Stefan]
+> >>
+> >> On Mon, Aug 26, 2013 at 9:39 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> >> > Somewhere between 3.9 and 3.10 it seems the order in which pcie and acpi probed
+> >> > slots for hotplug capabilites got reversed.  While this isn't a big deal, it did
+> >> > uncover a bug in the ACPI bus setup path.  Specifically, acpi_pci_root_add calls
+> >> > pci_acpi_scan_root before setting the osc flags for the device handle.
+> >> > pci_acpi_scan_root, among other things uses device_is_managed_by_native_pciehp()
+> >> > to determine if a given slot has pcie hotplug capabilties, whcih checks the
+> >> > devices OSC_PCI_EXPRESS_NATIVE_HP_CONTROL flag.  Since that flag is not set
+> >> > until after pci_acpi_scan_root_completes, the acpi code never sees that pcie
+> >> > slots are hotplug capable and configures them all to use acpi instead.
+> >>
+> >> I'd like to make it more explicit what we're fixing.  Apparently this
+> >> is a regression between v3.9 and v3.10.
+> >>
+> >> Is this a fix for problems like
+> >> https://bugzilla.kernel.org/show_bug.cgi?id=60736 ?  That bug is that
+> >> an ExpressCard slot doesn't work unless we boot with
+> >> "acpiphp.disable=1".  I think what happens there is that acpiphp
+> >> claims the slot before we run _OSC, so pciehp doesn't claim it, even
+> >> though _OSC did grant us control over native PCIe hotplug.
+> >>
+> > Yes, that bug is precisely what I am trying to fix (although your wording above is
+> > inverted from the problem in the bug).  What happens is that acpiphp claims the
+> > pcie ports, because acpiphp init runs first, and we haven't yet parsed _OSC,
+> > which would have told acpiphp to yield control to pciehp.  The initial fix I
+> > proposed fixed this by parsing _OSC prior to running the acpiphp bus scan, but
+> > that reintroduced the problem of not handling pcie 1.1 aspm properly.  That has
+> > been fixed in v2/v3 by deferring the setting of aspm_disable until after the bus
+> > scan.
+> >
+> > Shall I submit a v4 with an updated changelog?
+> 
+> No need, I'll update the changelog and include the bugzilla reference
+> and post it for your approval.  Thanks!
+> 
+> Bjorn
+> 
+Great, thanks!
+Neil
 
-This is the only reason which justifies EDAC's existence. Naveen, can
-your BIOS directly report the silkscreen label of the DIMM in error?
-Generally, can any BIOS do that?
-
-More specifically, what are those gdata_fru_id and gdata_fru_text
-things?
-
-Because if it can, then having the memory error tracepoint come direct
-from APEI should be enough. The ghes_edac functionality could be then
-fallback for BIOSes which cannot report the silkscreen label and in such
-case I can imagine keeping both tracepoints, but disabling one of the
-two...
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
