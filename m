@@ -1,93 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60671 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753437Ab3H0JoX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Aug 2013 05:44:23 -0400
-Date: Tue, 27 Aug 2013 11:44:19 +0200 (CEST)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Adam Radford <linuxraid@lsi.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH] PCI: add quirk for 3ware 9650SE controller
-Message-ID: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from top.free-electrons.com ([176.31.233.9]:42210 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753130Ab3H1MOU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 08:14:20 -0400
+Date: Wed, 28 Aug 2013 14:14:17 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Seungwon Jeon <tgih.jun@samsung.com>
+Cc: linux-pci@vger.kernel.org, 'Jason Cooper' <jason@lakedaemon.net>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Subject: Re: [PATCH 3/3] PCI: mvebu: add wrapped I/O access functions
+Message-ID: <20130828141417.139ad2b0@skate>
+In-Reply-To: <001e01cea3e5$410cf6d0$c326e470$%jun@samsung.com>
+References: <001e01cea3e5$410cf6d0$c326e470$%jun@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a 
-pci device") makes MSIs be forcibly disabled at boot time.
+Dear Seungwon Jeon,
 
-It turns out that this breaks 3ware controller -- if MSIs are disabled 
-during PCI discovery of this controller, the device doesn't work properly 
-(it doesn't respond to any commands that are being sent to it after 
-initialization).
+On Wed, 28 Aug 2013 20:53:47 +0900, Seungwon Jeon wrote:
+> read/write operation for I/O mem is wrapped with hiding
+> base address inside in order to simplify the usage.
+> 
+> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 
-Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
-makes the device work properly again.
+I'm fine with the principle, but I have a few comments below.
 
-Signed-off-by: Jiri Kosina <jkosina@suse.cz>
----
+> ---
+>  drivers/pci/host/pci-mvebu.c |  105 +++++++++++++++++++++++++++---------------
+>  1 files changed, 68 insertions(+), 37 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index d66530e..db8b00b 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -141,29 +141,59 @@ struct mvebu_pcie_port {
+>  	size_t iowin_size;
+>  };
+>  
+> +static inline void mvebu_writeb(struct mvebu_pcie_port *port, u8 val, u32 reg)
+> +{
+> +	writeb(val, port->base + reg);
+> +}
+> +
+> +static inline u8 mvebu_readb(struct mvebu_pcie_port *port, u32 reg)
+> +{
+> +	return readb(port->base + reg);
+> +}
 
-I am adding Adam Radford as a recepient as well, to see whether he is able 
-to provide some more explanation why this device would expose this 
-behavior.
-Thanks.
+Those ones are not needed, all registers of this IP block are 32 bits
+registers.
 
- drivers/pci/msi.c    |    3 +++
- drivers/pci/quirks.c |   10 ++++++++++
- include/linux/pci.h  |    1 +
- 3 files changed, 14 insertions(+), 0 deletions(-)
+> +
+> +static inline void mvebu_writew(struct mvebu_pcie_port *port, u16 val, u32 reg)
+> +{
+> +	writew(val, port->base + reg);
+> +}
+> +
+> +static inline u16 mvebu_readw(struct mvebu_pcie_port *port, u32 reg)
+> +{
+> +	return readw(port->base + reg);
+> +}
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index aca7578..4f36b8b 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
- {
- 	INIT_LIST_HEAD(&dev->msi_list);
- 
-+	if (dev->broken_msi_disable)
-+		return;
-+
- 	/* Disable the msi hardware to avoid screaming interrupts
- 	 * during boot.  This is the power on reset default so
- 	 * usually this should be a noop.
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e85d230..4ba3400 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
- 
-+/*
-+ * 3ware 9650SE controller doesn't properly initialize if MSI are
-+ * disabled on it during PCI device discovery
-+ */
-+static void quirk_broken_msi_disable(struct pci_dev *dev)
-+{
-+	dev->broken_msi_disable = 1;
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
-+
- static ktime_t fixup_debug_start(struct pci_dev *dev,
- 				 void (*fn)(struct pci_dev *dev))
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..c327d74 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -341,6 +341,7 @@ struct pci_dev {
- #ifdef CONFIG_PCI_MSI
- 	struct list_head msi_list;
- 	struct kset *msi_kset;
-+	unsigned int	broken_msi_disable:1;
- #endif
- 	struct pci_vpd *vpd;
- #ifdef CONFIG_PCI_ATS
+Provided a small change is done below, those will also not be needed.
 
+> +static inline void mvebu_writel(struct mvebu_pcie_port *port, u32 val, u32 reg)
+> +{
+> +	writel(val, port->base + reg);
+> +}
+> +
+> +static inline u32 mvebu_readl(struct mvebu_pcie_port *port, u32 reg)
+> +{
+> +	return readl(port->base + reg);
+> +}
+
+Ok, but they should be called mvebu_pcie_readl() and
+mvebu_pcie_writel(), because they are specific to the PCIe IP block.
+Once you've done that, you'll realize that it's in fact longer to write:
+
+	mvebu_pcie_readl(port, PCIE_FOO);
+
+than
+
+	readl(port->base + PCIE_FOO);
+
+but ok, I do not oppose to the change.
+
+>  	/* Master + slave enable. */
+> -	cmd = readw(port->base + PCIE_CMD_OFF);
+> +	cmd = mvebu_readw(port, PCIE_CMD_OFF);
+>  	cmd |= PCI_COMMAND_IO;
+>  	cmd |= PCI_COMMAND_MEMORY;
+>  	cmd |= PCI_COMMAND_MASTER;
+> -	writew(cmd, port->base + PCIE_CMD_OFF);
+> +	mvebu_writew(port, cmd, PCIE_CMD_OFF);
+
+I believe this can be turned into a 32 bits read/modify/write, because
+the register is really a 32 bits registers, on both Armada 370/XP and
+Kirkwood (I guess Dove is the same).
+
+With this change, you can keep only the 32 bits variants of the
+accessors functions at the top of the file.
+
+Thanks,
+
+Thomas
 -- 
-Jiri Kosina
-SUSE Labs
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
