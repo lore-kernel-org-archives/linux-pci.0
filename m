@@ -1,44 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:49985 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754247Ab3HEVJ1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 17:09:27 -0400
-Received: by mail-oa0-f53.google.com with SMTP id k18so7532250oag.12
-        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 14:09:27 -0700 (PDT)
+Received: from mail-yh0-f54.google.com ([209.85.213.54]:51323 "EHLO
+	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753092Ab3H1T1M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 15:27:12 -0400
+Received: by mail-yh0-f54.google.com with SMTP id b20so801701yha.27
+        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 12:27:11 -0700 (PDT)
+Subject: [PATCH 2/4] PCI: Remove PCIe Capability version checks
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yuval Mintz <yuvalmin@broadcom.com>,
+	Jacob Keller <jacob.e.keller@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>
+Date: Wed, 28 Aug 2013 13:27:08 -0600
+Message-ID: <20130828192708.5895.51049.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130828192627.5895.26558.stgit@bhelgaas-glaptop>
+References: <20130828192627.5895.26558.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
-References: <1375435866-16332-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	<1375435866-16332-5-git-send-email-weiyang@linux.vnet.ibm.com>
-	<CAErSpo5Lv7-Op3hg_ZRgSjzMNYZpZGphQFJyxxP6B8xLpwrSkw@mail.gmail.com>
-	<CAE9FiQU3DSZGFSENxy84bQ_URurWUAh2secoq5KN7c3BVXb9OQ@mail.gmail.com>
-	<20130805195149.GA19127@google.com>
-	<CAE9FiQXjL+=9XqUiFCmJNkU8vedbjs82cvxjGGBZnzaWN0HgTg@mail.gmail.com>
-	<CAErSpo4ANAE3ggEcaJhFvGEpP48y37CxnXedn6cFt1gscPR-gw@mail.gmail.com>
-Date: Mon, 5 Aug 2013 14:09:27 -0700
-Message-ID: <CAE9FiQVJZWFBvOJPna_CFo=Pt2hGXmx39Q278f+0BOwV_38oRQ@mail.gmail.com>
-Subject: Re: [PATCH 4/4] PCI: fix the io resource alignment calculation in pbus_size_io()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 5, 2013 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> then, we should drop that 4k capping.
->> I was thinking there could be strange or wild res with bigger than 4k.
->
-> If there *were* an I/O BAR larger than 4KB, how should it be handled?
-> I don't think capping the alignment to 4KB sounds like the best way.
-> For example, a 16KB I/O BAR would still need to be aligned on 16KB.
->
-> And I think capping to 4KB as you did above will break the powerpc
-> pcibios_window_alignment() implementation.  For example, if
-> pcibios_window_alignment() returned 16KB, and we later capped it to
-> 4KB, we're going to allocate space for the bridge window with the
-> wrong alignment.
+Previously we relied on the PCIe r3.0, sec 7.8, spec language that says
+"For Functions that do not implement the [Link, Slot, Root] registers,
+these spaces must be hardwired to 0b," which means that for v2 PCIe
+capabilities, we don't need to check the device type at all.
 
-Agree.
+But it's simpler if we don't need to check the capability version at all,
+and I think the spec is explicit enough about which registers are required
+for which types that we can remove the version checks.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/access.c |    9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index e26c3bd..9a46fa9 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -484,8 +484,7 @@ static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
+ 
+-	return pcie_cap_version(dev) > 1 ||
+-	       type == PCI_EXP_TYPE_ENDPOINT ||
++	return type == PCI_EXP_TYPE_ENDPOINT ||
+ 	       type == PCI_EXP_TYPE_LEG_END ||
+ 	       type == PCI_EXP_TYPE_ROOT_PORT ||
+ 	       type == PCI_EXP_TYPE_UPSTREAM ||
+@@ -498,8 +497,7 @@ static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
+ 
+-	return pcie_cap_version(dev) > 1 ||
+-	       type == PCI_EXP_TYPE_ROOT_PORT ||
++	return type == PCI_EXP_TYPE_ROOT_PORT ||
+ 	       (type == PCI_EXP_TYPE_DOWNSTREAM &&
+ 		pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT);
+ }
+@@ -508,8 +506,7 @@ static inline bool pcie_cap_has_rtctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
+ 
+-	return pcie_cap_version(dev) > 1 ||
+-	       type == PCI_EXP_TYPE_ROOT_PORT ||
++	return type == PCI_EXP_TYPE_ROOT_PORT ||
+ 	       type == PCI_EXP_TYPE_RC_EC;
+ }
+ 
+
