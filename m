@@ -1,101 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:36033 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933191Ab3HNVWi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2013 17:22:38 -0400
-Received: by mail-ie0-f174.google.com with SMTP id w15so2957185iea.19
-        for <linux-pci@vger.kernel.org>; Wed, 14 Aug 2013 14:22:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130808200943.2932.42781.stgit@bling.home>
-References: <20130808200444.2932.17381.stgit@bling.home> <20130808200943.2932.42781.stgit@bling.home>
+Received: from mail-yh0-f51.google.com ([209.85.213.51]:37081 "EHLO
+	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753092Ab3H1T11 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 15:27:27 -0400
+Received: by mail-yh0-f51.google.com with SMTP id c41so1755166yho.38
+        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 12:27:26 -0700 (PDT)
+Subject: [PATCH 4/4] PCI: Remove pcie_cap_has_devctl()
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 14 Aug 2013 15:22:17 -0600
-Message-ID: <CAErSpo4rvankxEA-wQ-yGg2MRVtS49dKctEGdn08GVFt8PdjeQ@mail.gmail.com>
-Subject: Re: [PATCH v5 4/9] pci: Add slot reset option to pci_dev_reset
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Yuval Mintz <yuvalmin@broadcom.com>,
+	Jacob Keller <jacob.e.keller@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>
+Date: Wed, 28 Aug 2013 13:27:23 -0600
+Message-ID: <20130828192723.5895.68711.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130828192627.5895.26558.stgit@bhelgaas-glaptop>
+References: <20130828192627.5895.26558.stgit@bhelgaas-glaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 8, 2013 at 2:09 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> If the hotplug controller provides a way to reset a slot, use that
-> before a direct parent bus reset.  Like the bus reset option, this is
-> only available when a single pci_dev occupies the slot.
->
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/pci/pci.c |   34 ++++++++++++++++++++++++++++++++++
->  1 file changed, 34 insertions(+)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d468608..9407aab 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -22,6 +22,7 @@
->  #include <linux/interrupt.h>
->  #include <linux/device.h>
->  #include <linux/pm_runtime.h>
-> +#include <linux/pci_hotplug.h>
->  #include <asm-generic/pci-bridge.h>
->  #include <asm/setup.h>
->  #include "pci.h"
-> @@ -3256,6 +3257,35 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
->         return 0;
->  }
->
-> +static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
-> +{
-> +       int rc = -ENOTTY;
-> +
-> +       if (!hotplug || !try_module_get(hotplug->ops->owner))
-> +               return rc;
-> +
-> +       if (hotplug->ops->reset_slot)
-> +               rc = hotplug->ops->reset_slot(hotplug, probe);
-> +
-> +       module_put(hotplug->ops->owner);
-> +
-> +       return rc;
-> +}
-> +
-> +static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
-> +{
-> +       struct pci_dev *pdev;
-> +
-> +       if (dev->subordinate || !dev->slot)
-> +               return -ENOTTY;
-> +
-> +       list_for_each_entry(pdev, &dev->bus->devices, bus_list)
-> +               if (pdev != dev && pdev->slot == dev->slot)
-> +                       return -ENOTTY;
-> +
-> +       return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
+pcie_cap_has_devctl() does nothing, so remove it.  Simplicity over
+consistency in this case.  No functional change.
 
-I don't think this is hotplug-safe.  It looks like pci_bus_sem might
-be the right semaphore to hold while verifying that we won't reset any
-unintended devices.  But I think most users of the bus->devices list
-are unprotected, so there's no point in trying to fix just this one.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/access.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-> +}
-> +
->  static int __pci_dev_reset(struct pci_dev *dev, int probe)
->  {
->         int rc;
-> @@ -3278,6 +3308,10 @@ static int __pci_dev_reset(struct pci_dev *dev, int probe)
->         if (rc != -ENOTTY)
->                 goto done;
->
-> +       rc = pci_dev_reset_slot_function(dev, probe);
-> +       if (rc != -ENOTTY)
-> +               goto done;
-> +
->         rc = pci_parent_bus_reset(dev, probe);
->  done:
->         return rc;
->
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 061da8c..0857ca9 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -475,11 +475,6 @@ static inline int pcie_cap_version(const struct pci_dev *dev)
+ 	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
+ }
+ 
+-static inline bool pcie_cap_has_devctl(const struct pci_dev *dev)
+-{
+-	return true;
+-}
+-
+ static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
+@@ -521,7 +516,7 @@ static bool pcie_capability_reg_implemented(struct pci_dev *dev, int pos)
+ 	case PCI_EXP_DEVCAP:
+ 	case PCI_EXP_DEVCTL:
+ 	case PCI_EXP_DEVSTA:
+-		return pcie_cap_has_devctl(dev);
++		return true;
+ 	case PCI_EXP_LNKCAP:
+ 	case PCI_EXP_LNKCTL:
+ 	case PCI_EXP_LNKSTA:
+
