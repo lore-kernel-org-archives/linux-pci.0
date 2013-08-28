@@ -1,143 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from up.free-electrons.com ([94.23.35.102]:53558 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750834Ab3HANZf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:25:35 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCHv6 12/13] PCI: mvebu: add support for MSI
-Date: Thu,  1 Aug 2013 15:25:15 +0200
-Message-Id: <1375363516-2620-13-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:55816 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753091Ab3H1N2G (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 09:28:06 -0400
+Date: Wed, 28 Aug 2013 15:27:32 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Julia Lawall <Julia.Lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/7] PCI: tegra: replace devm_request_and_ioremap by
+ devm_ioremap_resource
+Message-ID: <20130828132731.GD604@ulmo>
+References: <1376911241-27720-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1376911241-27720-2-git-send-email-Julia.Lawall@lip6.fr>
+ <20130819120249.GA5740@ulmo>
+ <CAErSpo5oOnfhi+aRi-Z3kCwS1VpYSO6FX5O_MOZmWNLcfhhA9w@mail.gmail.com>
+ <20130819201224.GC5191@mithrandir>
+ <CAErSpo6U9i16gdaYGpWqgLaFteXpy1erCUw55SqkHLcbypP=vA@mail.gmail.com>
+ <20130827081443.GI8686@ulmo>
+ <521CCF9B.9000004@wwwdotorg.org>
+ <CAErSpo461H=3qD5Xb7rKkMcQ1_ipyAQ5Tv2VhZD4j578A+Bd9w@mail.gmail.com>
+ <CAErSpo5LOig3KPGfyWJ1BWA61Ox3cyrguSo_XdVqw6SqxttXeA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="RhUH2Ysw6aD5utA4"
+In-Reply-To: <CAErSpo5LOig3KPGfyWJ1BWA61Ox3cyrguSo_XdVqw6SqxttXeA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds support for Message Signaled Interrupts in the
-Marvell PCIe host controller. The work is very simple: it simply gets
-a reference to the msi_chip associated to the PCIe controller thanks
-to the msi-parent DT property, and stores this reference in the
-pci_bus structure. This is enough to let the Linux PCI core use the
-functions of msi_chip to setup and teardown MSIs.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- .../devicetree/bindings/pci/mvebu-pci.txt          |  3 +++
- drivers/pci/host/pci-mvebu.c                       | 31 ++++++++++++++++++++++
- 2 files changed, 34 insertions(+)
+--RhUH2Ysw6aD5utA4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-index f8d4058..77e0ffe 100644
---- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-@@ -12,6 +12,8 @@ Mandatory properties:
- - device_type, set to "pci"
- - ranges: ranges for the PCI memory and I/O regions, as well as the
-   MMIO registers to control the PCIe interfaces.
-+- msi-parent: Link to the hardware entity that serves as the Message
-+  Signaled Interrupt controller for this PCI controller.
- 
- In addition, the Device Tree node must have sub-nodes describing each
- PCIe interface, having the following mandatory properties:
-@@ -46,6 +48,7 @@ pcie-controller {
- 	#size-cells = <2>;
- 
- 	bus-range = <0x00 0xff>;
-+	msi-parent = <&mpic>;
- 
- 	ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
- 		  0x82000000 0 0xd0042000 0xd0042000 0 0x00002000   /* Port 2.0 registers */
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 13a633b..884cf82 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -11,6 +11,7 @@
- #include <linux/clk.h>
- #include <linux/module.h>
- #include <linux/mbus.h>
-+#include <linux/msi.h>
- #include <linux/slab.h>
- #include <linux/platform_device.h>
- #include <linux/of_address.h>
-@@ -107,6 +108,7 @@ struct mvebu_pcie_port;
- struct mvebu_pcie {
- 	struct platform_device *pdev;
- 	struct mvebu_pcie_port *ports;
-+	struct msi_chip *msi;
- 	struct resource io;
- 	struct resource realio;
- 	struct resource mem;
-@@ -695,6 +697,12 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	return bus;
- }
- 
-+void mvebu_pcie_add_bus(struct pci_bus *bus)
-+{
-+	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	bus->msi = pcie->msi;
-+}
-+
- resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 					  const struct resource *res,
- 					  resource_size_t start,
-@@ -731,6 +739,7 @@ static void __init mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.map_irq        = mvebu_pcie_map_irq;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
-+	hw.add_bus        = mvebu_pcie_add_bus;
- 
- 	pci_common_init(&hw);
- }
-@@ -755,6 +764,26 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
- 	return devm_request_and_ioremap(&pdev->dev, &regs);
- }
- 
-+static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
-+{
-+	struct device_node *msi_node;
-+	struct irq_domain *msi_domain;
-+
-+	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
-+				    "msi-parent", 0);
-+	if (!msi_node)
-+		return;
-+
-+	msi_domain = irq_find_msi_host(msi_node);
-+	if (!msi_domain)
-+		return;
-+
-+	pcie->msi = msi_domain->msi_chip;
-+
-+	if (pcie->msi)
-+		pcie->msi->dev = &pcie->pdev->dev;
-+}
-+
- static int __init mvebu_pcie_probe(struct platform_device *pdev)
- {
- 	struct mvebu_pcie *pcie;
-@@ -879,6 +908,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 		i++;
- 	}
- 
-+	mvebu_pcie_msi_enable(pcie);
-+
- 	mvebu_pcie_enable(pcie);
- 
- 	return 0;
--- 
-1.8.1.2
+On Wed, Aug 28, 2013 at 07:02:16AM -0600, Bjorn Helgaas wrote:
+> On Tue, Aug 27, 2013 at 12:03 PM, Bjorn Helgaas <bhelgaas@google.com> wro=
+te:
+> >> On 08/27/2013 02:14 AM, Thierry Reding wrote:
+>=20
+> >>> If Stephen's fine with it I suppose we could take pci-tegra.c
+> >>> driver changes through the Tegra tree. But I think it'd be good if
+> >>> we could still Cc you on patches so you're aware of what we're
+> >>> doing (that is the same for all drivers drivers/pci/host/*). And
+> >>> we're going to need your Acked-by on the patches as well.
+> >
+> > I think you have my Acked-by for this case already (from Aug 20).  And
+> > feel free to copy me on anything you like; my delete key works well :)
+>=20
+> I didn't mean for this to sound like "I'll just delete any email you
+> send me"; I intended more like "feel free to copy me and if it's
+> something I'm interested or knowledgeable about, I'll try to help and
+> if not, it's easy for me to ignore it."
 
+That's exactly the way I understood it. =3D)
+
+Thierry
+
+--RhUH2Ysw6aD5utA4
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.21 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSHfrDAAoJEN0jrNd/PrOh9LoP/jzTsBN750UFOQAVpcrNvC09
+At58ZhEP8KBnnJtuO4oQIt07HiK32D4myerdIX70Avvjw8fgtCm+mlwdOsrpvTOw
+vzF91V1bCufiok8B9T/MPj6loD0e+XcRhqKYRkpYu0YLkPP2VNll4JOZJ0oAjydf
+6mcbApw1dkX7loYpmsuE6ZF8pEp6mWia36YGwWZ81YMSaHGMK6ZgMa75hPpuN+3D
+Y1b5A0sjIkQakV/JXUWLudoqqeb3gmQ+KnfifJAsV+tgtgqOON8vV2XA7pwLGvAG
+HswrETQz4rIpVRYyxR39gsGm6kVTcin2rdS70MRKa0u6WaMZNMFDRx2KG69FHZ2s
+jC0Ti8L79CtNFo5S9Y8lcvcdBvL4gq0UpMpEbkQeOQQCJbEbn73TEvyCgGMJwuVB
+kG++aAYNJZdrolJa+YY0aGqK6/IBxECY0VpeH5XO/oux4tZkhwGHlBHYpXhyEYJu
+oIP34C8n2qiTD8EN+tLjOq5Mjl2I1z869b8pP/t/KER0yQLakQ2z4emvE6uP+bZX
+QDcrvOTr/jI/TOdFjzswcFsffn8JA1GHfxY8qAbM5X8QDoeYt/ILCSGWAsoRybml
+D+CEQr3tp6UGL6CzkluEqkKCBHXoq3pd0pV6nr1gOl0ypcUpwcIPYdQbz9XMQwiM
+hnMV3SP4Bg+sS9TVoCVX
+=DkuK
+-----END PGP SIGNATURE-----
+
+--RhUH2Ysw6aD5utA4--
