@@ -1,122 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:39672 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755656Ab3HWSwn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Aug 2013 14:52:43 -0400
-Received: by mail-ie0-f181.google.com with SMTP id a14so1465021iee.12
-        for <linux-pci@vger.kernel.org>; Fri, 23 Aug 2013 11:52:43 -0700 (PDT)
-Date: Fri, 23 Aug 2013 12:52:40 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Skidmore, Donald C" <donald.c.skidmore@intel.com>
-Cc: "e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>
-Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
- to PF Nacked" messages
-Message-ID: <20130823185240.GA1507@google.com>
-References: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
- <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
- <CAErSpo5AiRw7HvGQMq-n596ZkHJs_KJNn346yf+jc7yti-xpUw@mail.gmail.com>
- <CAErSpo4E9LNrfqTq1_WUoAx68_krw23BjSYbPpJPOr=zbq98xA@mail.gmail.com>
- <CAErSpo6Ky1FQeRjjbhja2KC7EYGJ2nR1ZNuYjYi89DoqLse2cw@mail.gmail.com>
- <CAErSpo7m=YB=1cHSBTwufTHAiAd+k9Re2s-ro509BELOgK8j7Q@mail.gmail.com>
- <F6FB0E698C9B3143BDF729DF222866466FD4418D@ORSMSX110.amr.corp.intel.com>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:60017 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753270Ab3H1QvT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 12:51:19 -0400
+Received: by mail-ie0-f179.google.com with SMTP id m16so6326795ieq.10
+        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 09:51:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <F6FB0E698C9B3143BDF729DF222866466FD4418D@ORSMSX110.amr.corp.intel.com>
+In-Reply-To: <20130828133337.GA8544@jtlinux>
+References: <20130828133337.GA8544@jtlinux>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 28 Aug 2013 10:50:58 -0600
+Message-ID: <CAErSpo5sa2cJXOUhfe5VDzxwabf0Um42ZfBwOMhF1TbwCW9G=w@mail.gmail.com>
+Subject: Re: PCI reset problem
+To: Johannes Thumshirn <johannes.thumshirn@men.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 23, 2013 at 06:25:06PM +0000, Skidmore, Donald C wrote:
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> > Sent: Friday, August 23, 2013 9:53 AM
-> > To: Skidmore, Donald C
-> > Cc: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org; linux-
-> > kernel@vger.kernel.org; Don Dutile
-> > Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
-> > to PF Nacked" messages
-> > 
-> > On Tue, Aug 20, 2013 at 5:37 PM, Bjorn Helgaas <bhelgaas@google.com>
-> > wrote:
-> > > On Tue, Aug 20, 2013 at 5:08 PM, Bjorn Helgaas <bhelgaas@google.com>
-> > wrote:
-> > >> On Tue, Aug 13, 2013 at 8:23 PM, Bjorn Helgaas <bhelgaas@google.com>
-> > wrote:
-> > >
-> > >>> I played with this a little more and found this:
-> > >>>
-> > >>> 1) Magma card in z420, connected to chassis containing X540: fails
-> > >>> (original report)
-> > >>> 2) X540 in z420, Magma card in z420, connected to empty chassis:
-> > >>> fails
-> > >>> 3) X540 in z420, Magma card in z420 but no cable to chassis: works
-> > >
-> > > For what it's worth, I tried config 3 again with v3.11-rc6, and it
-> > > failed the same way.  I haven't bothered with config 2.  It's not 100%
-> > > reproducible, but at least it doesn't seem related to the expansion
-> > > chassis.
-> > >
-> > > I attached the logs from config 3 to
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=60776
-> > 
-> > Is there anything I can do to help debug this?  Add instrumentation, etc.?  It
-> > seems like I'm doing the simplest possible thing -- just writing to the sysfs
-> > sriov_num_vfs file to enable VFs.
-> > 
-> > I almost think it must be related to my config somehow if nobody else is
-> > seeing this, but at the same time, my config also seems the simplest possible,
-> > so I don't know what I could be doing that's unusual.
-> > 
-> > Bjorn
-> 
-> Hey Bjorn,
-> 
-> I'm may be little confused so bear with me.
-> 
-> Option 1 = (your normal set up), Magma card plugged to chasis, X540 in chasis.
-> Option 2 = Magma card plugged to chasis, X540 in z420 system.
-> Option 3 = Magma card UNplugged from chasis, x540 in z420 system.
-> 
-> Options 1 & 2 - always fail
-> Option 3 - sometimes fails (unsure at what rate failure occurs)
-> 
-> Please correct me if I messed any of that up. :)
+[+cc Yinghai]
 
-Generally correct.  I've seen failures in all three configs, so I'm only
-concerned with the simplest for now (config 3, no expansion chassis).
+On Wed, Aug 28, 2013 at 7:33 AM, Johannes Thumshirn
+<johannes.thumshirn@men.de> wrote:
+> Hi List,
+>
+> I have a rather odd problem with a PCIe swicht/bridge which does not get
+> enumerated correctly. If I issue _two_ manual rescans of the PCI bus via sysfs,
+> everything get setup correctly. To work around the problem I decided to make a
+> platform specific PCI quirk (for the embedded system I'm on, to not break
+> anything else) and issue the pci_rescan_bus() myself as a "final" fixup. However
+> this does not have any effect at all.
+>
+> Does anyone have an idea what I could do wrong?
 
-> Another question I have relates to the lspci output you supplied in the bugzilla.  I'm not seeing the VF devices (i.e. 08:10.0) did you run lspci before you created the VF's?  If so could we see one while the failure was occurring?
+A rescan doesn't really do anything differently from the initial
+boot-time scan.  Maybe there's an issue with the switch taking a long
+time to respond after reset?  But that doesn't seem likely, because if
+you do manual rescans via sysfs, that should give plenty of time and
+you wouldn't have to do it *twice*.
 
-That's correct, I collected the lspci output before reproducing the
-problem.  I can't easily collect lspci afterwards because the machine isn't
-responsive after the problem starts.
+Maybe there's some resource or bus number allocation issue such that
+we don't even get down to the problem switch the first couple of
+times?
 
-> Also could you download the latest ixgbevf from source forge?
-> 
-> https://sourceforge.net/projects/e1000/files/ixgbevf%20stable/
-> 
-> If we add debugging messages it will be easier to patch this driver and it contains our latest validated code base.
+> Example:
+> root@generic-powerpc:~# lspci -tv
+> -[0000:00]---00.0-[01]--
+> root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
+> [...]
+> root@generic-powerpc:~# lspci -tv
+> -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]--
+>                                            +-02.0-[04]--
+>                                            \-03.0-[05]--
+> root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
+> [...]
+> root@generic-powerpc:~# lspci -tv
+> -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]----00.0  Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
+>                                            +-02.0-[04]--
+>                                            \-03.0-[05]--+-00.0  Pericom Semiconductor Device 400e
+>                                                         +-00.1  Pericom Semiconductor Device 400e
+>                                                         \-00.2  Pericom Semiconductor Device 400f
 
-I can do that if it turns out to be necessary.  But John Haller gave me a
-good clue off-list: 
+I bet that's what's happening: the first lspci shows the 00:00.0
+bridge leading only to bus 01.  The second lspci shows 00:00.0 leading
+to [bus 01-05], so its bus number aperture has been reconfigured.
 
-John wrote:
-> I assume you want the VFs to be instantiated in a VM.  To do this,
-> you need to blacklist the ixgbevf driver in the host (or not
-> compile it into the host), or it will try to associate the driver
-> in the host, rather than in the VM where you want it.  Then, the
-> VM needs the ixgbevf driver, which will hopefully do a better job
-> of talking to the mailbox in the host.  There is some work to
-> assign the VF(s) to the VM, but I don't remember that offhand.
+On x86 the BIOS typically configures all the bridges so we can see all
+the devices.  But it looks like your platform doesn't, and the Linux
+paths that do similar configuration are not as well exercised.
 
-I don't have any VMs (I started this whole thing because I was
-looking at a PCI hotplug issue related to SR-IOV, so I don't really
-care about VMs).
-
-So the ixgbevf driver on the *host* is claiming the new VFs, and it
-sounds like maybe it can't handle that?
+Can you collect a complete dmesg log including initial boot and your
+manual sysfs rescansand attach it to a new bugzilla report at
+https://bugzilla.kernel.org/enter_bug.cgi?component=PCI&product=Drivers
+?  There might be some generic way we can fix this.
 
 Bjorn
+
+> "My" rescan quirk:
+> #if CONFIG_PCI
+> static DEFINE_MUTEX(rescan_mutex);
+> static void xm51_fixup_bridge(struct pci_dev *dev)
+> {
+>         struct pci_bus *b = NULL;
+>
+>         mutex_lock(&rescan_mutex);
+>         while((b = pci_find_next_bus(b)) != NULL)
+>                 pci_rescan_bus(b);
+>         mutex_unlock(&rescan_mutex);
+> }
+> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, 0x0401, xm51_fixup_bridge);
+> #endif
+>
+>
+> Thanks in advance,
+> Johannes
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
