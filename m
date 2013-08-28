@@ -1,70 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:58065 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754684Ab3HMHUL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 03:20:11 -0400
-Date: Tue, 13 Aug 2013 09:19:59 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/9] PCI: mvebu: remove subsys_initcall
-Message-ID: <20130813091959.784b44f0@skate>
-In-Reply-To: <1376333215-12885-4-git-send-email-sebastian.hesselbarth@gmail.com>
-References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
-	<1376333215-12885-4-git-send-email-sebastian.hesselbarth@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mailout2.samsung.com ([203.254.224.25]:17182 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753132Ab3H1IR1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 04:17:27 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Pratyush Anand' <pratyush.anand@st.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <003d01ce9fc6$9c0f1c20$d42d5460$%han@samsung.com>
+ <20130823083539.GB3937@pratyush-vbox>
+In-reply-to: <20130823083539.GB3937@pratyush-vbox>
+Subject: Re: [PATCH V2] PCI: exynos: add support for MSI
+Date: Wed, 28 Aug 2013 17:17:24 +0900
+Message-id: <001801cea3c7$06bca9d0$1435fd70$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Sebastian Hesselbarth,
+On Friday, August 23, 2013 5:36 PM, Pratyush Anand wrote:
+> On Fri, Aug 23, 2013 at 02:04:20PM +0800, Jingoo Han wrote:
 
-On Mon, 12 Aug 2013 20:46:49 +0200, Sebastian Hesselbarth wrote:
-> This removes the subsys_initcall from the driver and converts it to
-> a normal platform_driver. Also, drvdata is set and a remove functions
-> is added to disable the clock and free resources.
+[.....]
+
+> > +#define MAX_MSI_IRQS                   32
 > 
-> Signed-off-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+> DW MSI controller can support upto 256. However, 32 seems a practical
+> choice, as there might not be any system which may use more
+> than 32. But a comment like as follows can be put here:
+> 
+> /*
+> * Maximum number of MSI IRQs can be 256 per controller. But keep
+> * it 32 as of now. Probably we will never need more than 32. If needed,
+> * then increment it in multiple of 32.
+> */
 
-I'm OK with this, just a comment below.
+OK.
+I will add this comment.
 
-> +static int mvebu_pcie_remove(struct platform_device *pdev)
-> +{
-> +	struct mvebu_pcie *pcie = platform_get_drvdata(pdev);
-> +	struct mvebu_pcie_port *port = &pcie->ports[0];
-> +	int i;
-> +
-> +	for (i = 0; i < pcie->nports; i++, port++) {
-> +		clk_disable_unprepare(port->clk);
-> +		kfree(port->name);
-> +	}
-> +
-> +	return 0;
-> +}
+> 
+> > +#define MAX_MSI_CTRLS                  8
+> 
+> Why to waste cpu cycles when MAX_MSI_IRQS is 32 only.
+> #define MAX_MSI_CTRLS   (MAX_MSI_IRQS / 32)
 
-I believe the ->remove() part is quite useless. The driver is a 'bool'
-in Kconfig, so it cannot be compiled as a module, and I'm not sure
-there a way to remove the platform device that corresponds to the PCIe
-controller.
+OK.
+I will fix it as you guide.
 
-And even if there was, then it would still not work because as far as I
-know, the ARM PCI core doesn't provide functions to 'unregister' PCI
-controllers, so it would keep pointers to functions located in the
-driver, which would cause nasty things when unloading the module.
+> 
+> > +
+> > +static unsigned int msi_data;
+> > +static DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+> 
+> What if one has more than one RC.
+> There are SOCs which support 3 RCs.
+> So something like this:
+> 
+> #define MAX_PCIE_PORT_SUPPORTED 3
+> static DECLARE_BITMAP(msi_irq_in_use[MAX_PCIE_PORT_SUPPORTED],
+>                   NUM_MSI_IRQS);
+> static unsigned int *msi_data[MAX_PCIE_PORT_SUPPORTED];
 
-So the reason why I didn't include a ->remove() hook is simply because
-there was, as of today, no use for it.
+No, there is no need to do it.
+Without this, we can use 3 RCs by adding a node of 3rd RC to dt file.
+
+> 
+> Allocate msi_data using __get_free_pages(GFP_KERNEL, 0)) as Thierry
+> suggested.
+
+OK.
+I will use '__get_free_pages(GFP_KERNEL, 0))' as Thierry guide.
+
+> >  int dw_pcie_link_up(struct pcie_port *pp)
+> >  {
+> >         if (pp->ops->link_up)
+> > @@ -225,6 +432,13 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >                 return -EINVAL;
+> >         }
+> >
+> > +       if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> > +               if (of_property_read_u32(np, "msi-base", &pp->msi_irq_start)) {
+> > +                       dev_err(pp->dev, "Failed to parse the number of lanes\n");
+> > +                       return -EINVAL;
+> > +               }
+> > +       }
+> > +
+> 
+> What if an implementor want to use irq_domain method for msi_irq_start
+> allocation? Is it fine to return error if msi-base is not passed from
+> dt?
+
+Sure, I will consider using irq_domain method.
+
+>
+> Also, with the limited knowledge of dt I do not understand one thing, how
+> would dt understand that you have used 32 msi irqs (MAX_MSI_IRQS)?
+
+Sorry, I cannot understand exactly. :-(
+I will look into it.
+
+I really appreciate your comments. :-)
 
 Best regards,
+Jingoo Han
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
