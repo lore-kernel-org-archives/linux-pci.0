@@ -1,92 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <34842e3c6a29c79b3702b18112f11feab1437682.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 18/20] tile PCI RC: support PCIe TRIO 0 MAC 0 on Gx72 system
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ye0-f180.google.com ([209.85.213.180]:58370 "EHLO
+	mail-ye0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753092Ab3H1T1T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 15:27:19 -0400
+Received: by mail-ye0-f180.google.com with SMTP id r9so1625794yen.25
+        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 12:27:18 -0700 (PDT)
+Subject: [PATCH 3/4] PCI: Support PCIe Capability Slot registers only for
+ ports with slots
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yuval Mintz <yuvalmin@broadcom.com>,
+	Jacob Keller <jacob.e.keller@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>
+Date: Wed, 28 Aug 2013 13:27:15 -0600
+Message-ID: <20130828192715.5895.37408.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130828192627.5895.26558.stgit@bhelgaas-glaptop>
+References: <20130828192627.5895.26558.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tilera Gx72 systems, the logic for figuring out whether
-a given port is root complex is slightly different.
+Previously we allowed callers to access Slot Capabilities, Status, and
+Control for Root Ports even if the Root Port did not implement a slot.
+This seems dubious because the spec only requires these registers if a
+slot is implemented.
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+It's true that even Root Ports without slots must have *space* for these
+slot registers, because the Root Capabilities, Status, and Control
+registers are after the slot registers in the capability.  However,
+for a v1 PCIe Capability, the *semantics* of the slot registers are
+undefined unless a slot is implemented.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/tile/include/hv/drv_trio_intf.h |  3 +++
- arch/tile/kernel/pci_gx.c            | 33 ++++++++++++++++++++++++++++++---
- 2 files changed, 33 insertions(+), 3 deletions(-)
+ drivers/pci/access.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/tile/include/hv/drv_trio_intf.h b/arch/tile/include/hv/drv_trio_intf.h
-index ec643a0..237e04d 100644
---- a/arch/tile/include/hv/drv_trio_intf.h
-+++ b/arch/tile/include/hv/drv_trio_intf.h
-@@ -168,6 +168,9 @@ pcie_stream_intr_config_sel_t;
- struct pcie_trio_ports_property
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 9a46fa9..061da8c 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -497,9 +497,9 @@ static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
  {
-   struct pcie_port_property ports[TILEGX_TRIO_PCIES];
-+
-+  /** Set if this TRIO belongs to a Gx72 device. */
-+  uint8_t is_gx72;
- };
+ 	int type = pci_pcie_type(dev);
  
- /* Flags indicating traffic class. */
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index de5008b..f2bf200 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -436,9 +436,26 @@ int __init tile_pci_init(void)
+-	return type == PCI_EXP_TYPE_ROOT_PORT ||
+-	       (type == PCI_EXP_TYPE_DOWNSTREAM &&
+-		pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT);
++	return (type == PCI_EXP_TYPE_ROOT_PORT ||
++		type == PCI_EXP_TYPE_DOWNSTREAM) &&
++	       pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT;
+ }
  
- 	/*
- 	 * Now determine which PCIe ports are configured to operate in RC
--	 * mode.  To use a port, it must be allowed to be in RC mode by the
-+	 * mode. There is a differece in the port configuration capability
-+	 * between the Gx36 and Gx72 devices.
-+	 *
-+	 * The Gx36 has configuration capability for each of the 3 PCIe
-+	 * interfaces (disable, auto endpoint, auto RC, etc.).
-+	 * On the Gx72, you can only select one of the 3 PCIe interfaces per
-+	 * TRIO to train automatically. Further, the allowable training modes
-+	 * are reduced to four options (auto endpoint, auto RC, stream x1,
-+	 * stream x4).
-+	 *
-+	 * For Gx36 ports, it must be allowed to be in RC mode by the
- 	 * Board Information Block, and the hardware strapping pins must be
- 	 * set to RC mode.
-+	 *
-+	 * For Gx72 ports, the port will operate in RC mode if either of the
-+	 * following is true:
-+	 * 1. It is allowed to be in RC mode by the Board Information Block,
-+	 *    and the BIB doesn't allow the EP mode.
-+	 * 2. It is allowed to be in either the RC or the EP mode by the BIB,
-+	 *    and the hardware strapping pin is set to RC mode.
- 	 */
- 	for (i = 0; i < TILEGX_NUM_TRIO; i++) {
- 		gxio_trio_context_t *context = &trio_contexts[i];
-@@ -447,8 +464,18 @@ int __init tile_pci_init(void)
- 			continue;
- 
- 		for (j = 0; j < TILEGX_TRIO_PCIES; j++) {
--			if (pcie_ports[i].ports[j].allow_rc &&
--			    strapped_for_rc(context, j)) {
-+			int is_rc = 0;
-+
-+			if (pcie_ports[i].is_gx72 &&
-+			    pcie_ports[i].ports[j].allow_rc) {
-+				if (!pcie_ports[i].ports[j].allow_ep ||
-+				    strapped_for_rc(context, j))
-+					is_rc = 1;
-+			} else if (pcie_ports[i].ports[j].allow_rc &&
-+				   strapped_for_rc(context, j)) {
-+				is_rc = 1;
-+			}
-+			if (is_rc) {
- 				pcie_rc[i][j] = 1;
- 				num_rc_controllers++;
- 			}
--- 
-1.8.3.1
+ static inline bool pcie_cap_has_rtctl(const struct pci_dev *dev)
 
