@@ -1,148 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34499 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804Ab3HKCqK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Aug 2013 22:46:10 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH 01/28] genirq: Split __irq_reserve_irqs from irq_alloc_descs
-Date: Sat, 10 Aug 2013 19:45:11 -0700
-Message-Id: <1376189139-31856-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
-References: <1376189139-31856-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
+References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
+ <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 28 Aug 2013 10:33:18 -0600
+Message-ID: <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Adam Radford <aradford@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-irq_alloc_descs and irq_reserve_irqs are almost the same.
-Separate code out to __irq_reserved_irqs, and other two reuse
-__irq_reserve_irqs.
+[+cc another email addr for Adam from git logs]
 
-We will use __irq_reserve_irqs for coming ioapic hotplug support.
+On Wed, Aug 28, 2013 at 9:46 AM, Jiri Kosina <jkosina@suse.cz> wrote:
+> On Tue, 27 Aug 2013, Jiri Kosina wrote:
+>
+>> On Tue, 27 Aug 2013, Jiri Kosina wrote:
+>>
+>> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
+>> > pci device") makes MSIs be forcibly disabled at boot time.
+>> >
+>> > It turns out that this breaks 3ware controller -- if MSIs are disabled
+>> > during PCI discovery of this controller, the device doesn't work properly
+>> > (it doesn't respond to any commands that are being sent to it after
+>> > initialization).
+>> >
+>> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
+>> > makes the device work properly again.
+>> >
+>> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+>> >
+>> > ---
+>> >
+>> > I am adding Adam Radford as a recepient as well, to see whether he is able
+>> > to provide some more explanation why this device would expose this
+>> > behavior.
+>
+> OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't
+> expect any feedback from him.
+>
+> Bjorn, Jesse, any word on this please?
 
--v2: fix func docbook related comments, pointed out by tglx.
+It's on my list to look at.  It's too late to put it in for v3.11, and
+it's doubtful that it will even make the v3.12 merge window (though
+possibly it could go in post-merge window).  d5dea7d95 is several
+years old, so hopefully this issue isn't super-urgent.  Let me know if
+otherwise.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>
-Reviewed-by: Alexander Gordeev <agordeev@redhat.com>
----
- include/linux/irq.h  |  1 +
- kernel/irq/irqdesc.c | 54 ++++++++++++++++++++++++++++++----------------------
- 2 files changed, 32 insertions(+), 23 deletions(-)
+Bjorn
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index f04d3ba..8c46cb2 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -611,6 +611,7 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
- 
- void irq_free_descs(unsigned int irq, unsigned int cnt);
- int irq_reserve_irqs(unsigned int from, unsigned int cnt);
-+int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
- 
- static inline void irq_free_desc(unsigned int irq)
- {
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 192a302..a151db6 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -340,18 +340,15 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
- EXPORT_SYMBOL_GPL(irq_free_descs);
- 
- /**
-- * irq_alloc_descs - allocate and initialize a range of irq descriptors
-- * @irq:	Allocate for specific irq number if irq >= 0
-+ * __irq_reserve_irqs - reserve a range of irqs
-+ * @irq:	Reserve for specific irq number if irq >= 0
-  * @from:	Start the search from this irq number
-- * @cnt:	Number of consecutive irqs to allocate.
-- * @node:	Preferred node on which the irq descriptor should be allocated
-- * @owner:	Owning module (can be NULL)
-+ * @cnt:	Number of consecutive irqs to reserve.
-  *
-  * Returns the first irq number or error code
-  */
- int __ref
--__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
--		  struct module *owner)
-+__irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt)
- {
- 	int start, ret;
- 
-@@ -369,7 +366,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
- 	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
- 					   from, cnt, 0);
- 	ret = -EEXIST;
--	if (irq >=0 && start != irq)
-+	if (irq >= 0 && start != irq)
- 		goto err;
- 
- 	if (start + cnt > nr_irqs) {
-@@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
- 
- 	bitmap_set(allocated_irqs, start, cnt);
- 	mutex_unlock(&sparse_irq_lock);
--	return alloc_descs(start, cnt, node, owner);
-+	return start;
- 
- err:
- 	mutex_unlock(&sparse_irq_lock);
- 	return ret;
- }
-+
-+/**
-+ * __irq_alloc_descs - allocate and initialize a range of irq descriptors
-+ * @irq:	Allocate for specific irq number if irq >= 0
-+ * @from:	Start the search from this irq number
-+ * @cnt:	Number of consecutive irqs to allocate.
-+ * @node:	Preferred node on which the irq descriptor should be allocated
-+ * @owner:	Owning module (can be NULL)
-+ *
-+ * Returns the first irq number or error code
-+ */
-+int __ref
-+__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-+		  struct module *owner)
-+{
-+	int start;
-+
-+	start = __irq_reserve_irqs(irq, from, cnt);
-+
-+	if (start < 0)
-+		return start;
-+
-+	return alloc_descs(start, cnt, node, owner);
-+}
- EXPORT_SYMBOL_GPL(__irq_alloc_descs);
- 
- /**
-@@ -397,20 +418,7 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
-  */
- int irq_reserve_irqs(unsigned int from, unsigned int cnt)
- {
--	unsigned int start;
--	int ret = 0;
--
--	if (!cnt || (from + cnt) > nr_irqs)
--		return -EINVAL;
--
--	mutex_lock(&sparse_irq_lock);
--	start = bitmap_find_next_zero_area(allocated_irqs, nr_irqs, from, cnt, 0);
--	if (start == from)
--		bitmap_set(allocated_irqs, start, cnt);
--	else
--		ret = -EEXIST;
--	mutex_unlock(&sparse_irq_lock);
--	return ret;
-+	return __irq_reserve_irqs(from, from, cnt);
- }
- 
- /**
--- 
-1.8.1.4
-
+>> >  drivers/pci/msi.c    |    3 +++
+>> >  drivers/pci/quirks.c |   10 ++++++++++
+>> >  include/linux/pci.h  |    1 +
+>> >  3 files changed, 14 insertions(+), 0 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> > index aca7578..4f36b8b 100644
+>> > --- a/drivers/pci/msi.c
+>> > +++ b/drivers/pci/msi.c
+>> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+>> >  {
+>> >     INIT_LIST_HEAD(&dev->msi_list);
+>> >
+>> > +   if (dev->broken_msi_disable)
+>> > +           return;
+>> > +
+>> >     /* Disable the msi hardware to avoid screaming interrupts
+>> >      * during boot.  This is the power on reset default so
+>> >      * usually this should be a noop.
+>> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> > index e85d230..4ba3400 100644
+>> > --- a/drivers/pci/quirks.c
+>> > +++ b/drivers/pci/quirks.c
+>> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+>> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+>> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+>> >
+>> > +/*
+>> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
+>> > + * disabled on it during PCI device discovery
+>> > + */
+>> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
+>> > +{
+>> > +   dev->broken_msi_disable = 1;
+>> > +}
+>> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
+>> > +
+>> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
+>> >                              void (*fn)(struct pci_dev *dev))
+>> >  {
+>> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> > index 0fd1f15..c327d74 100644
+>> > --- a/include/linux/pci.h
+>> > +++ b/include/linux/pci.h
+>> > @@ -341,6 +341,7 @@ struct pci_dev {
+>> >  #ifdef CONFIG_PCI_MSI
+>> >     struct list_head msi_list;
+>> >     struct kset *msi_kset;
+>> > +   unsigned int    broken_msi_disable:1;
+>> >  #endif
+>> >     struct pci_vpd *vpd;
+>> >  #ifdef CONFIG_PCI_ATS
+>> >
+>> > --
+>> > Jiri Kosina
+>> > SUSE Labs
+>> >
+>>
+>> --
+>> Jiri Kosina
+>> SUSE Labs
+>>
+>
+> --
+> Jiri Kosina
+> SUSE Labs
