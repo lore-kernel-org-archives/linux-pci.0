@@ -1,107 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:64974 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3HSUQ2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Aug 2013 16:16:28 -0400
-Date: Mon, 19 Aug 2013 22:16:24 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Thierry Reding <treding@nvidia.com>
-Subject: Re: [RFC 3/3] PCI: tegra: Support driver unbinding
-Message-ID: <20130819201623.GD5191@mithrandir>
-References: <1376392346-14127-1-git-send-email-treding@nvidia.com>
- <1376392346-14127-4-git-send-email-treding@nvidia.com>
- <520BFA0C.5070001@wwwdotorg.org>
- <20130815103452.GA13740@ulmo>
- <520CF211.6060003@wwwdotorg.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sXc4Kmr5FA7axrvy"
-In-Reply-To: <520CF211.6060003@wwwdotorg.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CANVTcTbGrh-LccBiC5CHRc9dh9jUOwup-MVa-iHK65n+TTXE2A@mail.gmail.com>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+	<1376189294-32022-27-git-send-email-yinghai@kernel.org>
+	<CANVTcTYhdiptB_sOUyveBfieg0VkTGdor16kCHKkJDemHzcWXw@mail.gmail.com>
+	<CAE9FiQVSRMdinMKQdJUB_q8pAK-ei-Q-if+8K5yyz=HRTHbCTA@mail.gmail.com>
+	<CANVTcTZT-0bg=GBdo06=1--NgyMEM6-pFX8DjMxh=7JYtaTLpw@mail.gmail.com>
+	<CAE9FiQVM+q=PjZ+Q_wR2-BGrbs+gBcGyKFhOqGZdZWyxjMjB0g@mail.gmail.com>
+	<CANVTcTbGrh-LccBiC5CHRc9dh9jUOwup-MVa-iHK65n+TTXE2A@mail.gmail.com>
+Date: Tue, 27 Aug 2013 23:17:15 -0700
+Message-ID: <CAE9FiQUYY5rXie8gEGpBcdjpzs8AD++HKAFw9Xg-gLH6vhR_8w@mail.gmail.com>
+Subject: Re: [PATCH v4 26/28] PCI, x86, ACPI: Link acpi ioapic register to ioapic
+From: Yinghai Lu <yinghai@kernel.org>
+To: rui wang <ruiv.wang@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Aug 27, 2013 at 3:08 AM, rui wang <ruiv.wang@gmail.com> wrote:
+> On 8/27/13, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> It's a bit challenge how you'll conjure unique identifiers from both
+>>> integers and strings. If you have a new patch I can help try it out.
+>>
+>> Then do you have _MAT with that ioapic device or else?
+>>
+>> need to find the _MAT entry with GSM matching to find out ioapic id.
+>>
+>
+> There's no _MAT for the IOAPICs. I only find _MAT for the LAPICs. But
+> there's a static MADT in APIC.dsl which contains IOAPIC entries with
+> ioapic ids.
 
---sXc4Kmr5FA7axrvy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+ok, will change to check _MAT at first and fall back to MADT.
 
-On Thu, Aug 15, 2013 at 09:21:53AM -0600, Stephen Warren wrote:
-> On 08/15/2013 04:34 AM, Thierry Reding wrote:
-> > On Wed, Aug 14, 2013 at 03:43:40PM -0600, Stephen Warren wrote:
-> >> On 08/13/2013 05:12 AM, Thierry Reding wrote:
-> >>> Implement the platform driver's .remove() callback to free all
-> >>> resources allocated during driver setup and call
-> >>> pci_common_exit() to cleanup ARM specific datastructures. Unmap
-> >>> the fixed PCI I/O mapping by calling the new pci_iounmap_io()
-> >>> function in the new .teardown() callback.
-> >>>=20
-> >>> Finally, no longer set the .suppress_bind_attrs field to true
-> >>> to allow the driver to unbind from a device.
-> >>=20
-> >>> +static int tegra_pcie_remove(struct platform_device *pdev) +{=20
-> >>> +	struct tegra_pcie *pcie =3D platform_get_drvdata(pdev); +
-> >>> struct tegra_pcie_bus *bus, *tmp; +	int err; + +
-> >>> pci_common_exit(&pcie->sys); + +	list_for_each_entry_safe(bus,
-> >>> tmp, &pcie->busses, list) { +		vunmap(bus->area->addr); +
-> >>> kfree(bus); +	} + +	if (IS_ENABLED(CONFIG_PCI_MSI)) { +		err =3D
-> >>> tegra_pcie_disable_msi(pcie); +		if (err < 0) +			return err; +
-> >>> }
-> >>=20
-> >> Wouldn't it make sense to do that as early as possible in the
-> >> function, to make sure that no MSI accidentally fires after some
-> >> of the cleanup has already happened?
-> >=20
-> > I don't think that's strictly necessary in this case. After the
-> > call to pci_common_exit() there are no PCI devices left, there's
-> > not even a bus left. All MSI users should have cleaned up after
-> > themselves.
-> >=20
-> > Given that I thought it more useful to mirror the setup done in
-> > .probe() to make it clearer what's being undone (and potentially
-> > what's missing).
->=20
-> That makes sense SW-wise, but what about mis-behaving HW that triggers
-> an MSI even when it's been told not to? I assume that
-> tegra_pcie_disable_msi() unrequests the IRQ, hence solves that
-> problem, if done early enough.
-
-To be honest, I'm not sure about the side-effects that this will have.
-tegra_pcie_disable_msi() does quite a bit more than just masking the
-interrupts. It also completely removes the IRQ domain that provides the
-MSI interrupts. While I haven't tried it yet I can imagine that it will
-cause crashes at a later point when drivers want to disable MSI on a
-device and the IRQ domain having vanished from underneath.
-
-Thierry
-
---sXc4Kmr5FA7axrvy
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSEn0XAAoJEN0jrNd/PrOhEaMQAINyaMv3aopPIBEAx3AOT3ej
-uzzRA0Rd0XdNazWYbeMNsAc+4EAVyLxn2urcwBHeAnWFMvrM5AUzZyWa/Tps16eV
-FCKq0zqMxdzJrSS3L+110wC3Rpo18zIWmOINJuJi0lg5WOPXZ6rNp0oQCZAM+vOh
-MKG5RrWXRy+UDhYQExa+ng3V/mzliRxBag1QWoYTH6z9SCXLu8mUix4j+ZszyAJL
-R35fhg3Pb/KDb+YOOM1dVpclqlInBoK25P7Z4g0B13SUM2pAT0qYVwxaupnm03o4
-moaFafOET7ZiJZkeLwKWmlzrc22uEuxDY89DyPJrktLbv2OGAepuU1PumIMXFnY/
-25BHAEHbI0v3vCFtPlpAQD2EM6wKJyk+htnGGrmvgEeE+3C6RMAWdxiu3bndC0sW
-NsYA4vpF4cHzYKvXnNT5+JVX70XP8S67geOdDjrD3wGW15q+n5GRpHVeqGJi3xF5
-TGjGXs672+h17SCpstXwAtm8Arn39ESTObIbSJo78aX4lo+UDaVOIkd9J8F8YS4Q
-KCIbQfAakor0vrhXCtZnFnaBGmEYLZ5lMj6CwB1ihSrFWMouTu5/Mkj/T7FiDPJ0
-oW01l8jhQI0srjc2ZgyM6xQTqrrlvWDI+V1AY9KdIUq5O5q4vn+Rh1PpgNBSv7QS
-Y6qL9MjeKQ+5GUcFZkwh
-=Wbys
------END PGP SIGNATURE-----
-
---sXc4Kmr5FA7axrvy--
+Yinghai
