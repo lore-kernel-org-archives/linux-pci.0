@@ -1,120 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v5 3/9] pci: Implement reset_slot for pciehp
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: alexander.h.duyck@intel.com, ddutile@redhat.com,
-	indou.takao@jp.fujitsu.com, linux-kernel@vger.kernel.org
-Date: Thu, 08 Aug 2013 14:09:37 -0600
-Message-ID: <20130808200937.2932.176.stgit@bling.home>
-In-Reply-To: <20130808200444.2932.17381.stgit@bling.home>
-References: <20130808200444.2932.17381.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:49484 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753176Ab3H1Pql (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 Aug 2013 11:46:41 -0400
+Date: Wed, 28 Aug 2013 17:46:31 +0200 (CEST)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Adam Radford <linuxraid@lsi.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
+In-Reply-To: <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz>
+Message-ID: <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
+References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz> <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe hotplug has a bus per slot, so we can just use a normal
-secondary bus reset.  However, if a slot supports surprise removal
-then a bus reset can be seen as a presence detection change triggering
-a hot-remove followed by a hot-add.  Disable presence detection from
-triggering an interrupt or being polled around the bus reset.
+On Tue, 27 Aug 2013, Jiri Kosina wrote:
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/hotplug/pciehp.h      |    1 +
- drivers/pci/hotplug/pciehp_core.c |   12 ++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  |   31 +++++++++++++++++++++++++++++++
- 3 files changed, 44 insertions(+)
+> On Tue, 27 Aug 2013, Jiri Kosina wrote:
+> 
+> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a 
+> > pci device") makes MSIs be forcibly disabled at boot time.
+> > 
+> > It turns out that this breaks 3ware controller -- if MSIs are disabled 
+> > during PCI discovery of this controller, the device doesn't work properly 
+> > (it doesn't respond to any commands that are being sent to it after 
+> > initialization).
+> > 
+> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
+> > makes the device work properly again.
+> > 
+> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+> >
+> > ---
+> > 
+> > I am adding Adam Radford as a recepient as well, to see whether he is able 
+> > to provide some more explanation why this device would expose this 
+> > behavior.
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 7fb3269..541bbe6 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -155,6 +155,7 @@ void pciehp_green_led_off(struct slot *slot);
- void pciehp_green_led_blink(struct slot *slot);
- int pciehp_check_link_status(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
-+int pciehp_reset_slot(struct slot *slot, int probe);
- 
- static inline const char *slot_name(struct slot *slot)
- {
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 7d72c5e..f4a18f5 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -69,6 +69,7 @@ static int get_power_status	(struct hotplug_slot *slot, u8 *value);
- static int get_attention_status	(struct hotplug_slot *slot, u8 *value);
- static int get_latch_status	(struct hotplug_slot *slot, u8 *value);
- static int get_adapter_status	(struct hotplug_slot *slot, u8 *value);
-+static int reset_slot		(struct hotplug_slot *slot, int probe);
- 
- /**
-  * release_slot - free up the memory used by a slot
-@@ -111,6 +112,7 @@ static int init_slot(struct controller *ctrl)
- 	ops->disable_slot = disable_slot;
- 	ops->get_power_status = get_power_status;
- 	ops->get_adapter_status = get_adapter_status;
-+	ops->reset_slot = reset_slot;
- 	if (MRL_SENS(ctrl))
- 		ops->get_latch_status = get_latch_status;
- 	if (ATTN_LED(ctrl)) {
-@@ -223,6 +225,16 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- 	return pciehp_get_adapter_status(slot, value);
- }
- 
-+static int reset_slot(struct hotplug_slot *hotplug_slot, int probe)
-+{
-+	struct slot *slot = hotplug_slot->private;
-+
-+	ctrl_dbg(slot->ctrl, "%s: physical_slot = %s\n",
-+		 __func__, slot_name(slot));
-+
-+	return pciehp_reset_slot(slot, probe);
-+}
-+
- static int pciehp_probe(struct pcie_device *dev)
- {
- 	int rc;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index b225573..51f56ef 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -749,6 +749,37 @@ static void pcie_disable_notification(struct controller *ctrl)
- 		ctrl_warn(ctrl, "Cannot disable software notification\n");
- }
- 
-+/*
-+ * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
-+ * bus reset of the bridge, but if the slot supports surprise removal we need
-+ * to disable presence detection around the bus reset and clear any spurious
-+ * events after.
-+ */
-+int pciehp_reset_slot(struct slot *slot, int probe)
-+{
-+	struct controller *ctrl = slot->ctrl;
-+
-+	if (probe)
-+		return 0;
-+
-+	if (HP_SUPR_RM(ctrl)) {
-+		pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_PDCE);
-+		if (pciehp_poll_mode)
-+			del_timer_sync(&ctrl->poll_timer);
-+	}
-+
-+	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
-+
-+	if (HP_SUPR_RM(ctrl)) {
-+		pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_PDC);
-+		pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PDCE, PCI_EXP_SLTCTL_PDCE);
-+		if (pciehp_poll_mode)
-+			int_poll_timeout(ctrl->poll_timer.data);
-+	}
-+
-+	return 0;
-+}
-+
- int pcie_init_notification(struct controller *ctrl)
- {
- 	if (pciehp_request_irq(ctrl))
+OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't 
+expect any feedback from him.
 
+Bjorn, Jesse, any word on this please?
+
+> > Thanks.
+> > 
+> >  drivers/pci/msi.c    |    3 +++
+> >  drivers/pci/quirks.c |   10 ++++++++++
+> >  include/linux/pci.h  |    1 +
+> >  3 files changed, 14 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > index aca7578..4f36b8b 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+> >  {
+> >  	INIT_LIST_HEAD(&dev->msi_list);
+> >  
+> > +	if (dev->broken_msi_disable)
+> > +		return;
+> > +
+> >  	/* Disable the msi hardware to avoid screaming interrupts
+> >  	 * during boot.  This is the power on reset default so
+> >  	 * usually this should be a noop.
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index e85d230..4ba3400 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+> >  
+> > +/*
+> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
+> > + * disabled on it during PCI device discovery
+> > + */
+> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
+> > +{
+> > +	dev->broken_msi_disable = 1;
+> > +}
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
+> > +
+> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
+> >  				 void (*fn)(struct pci_dev *dev))
+> >  {
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 0fd1f15..c327d74 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -341,6 +341,7 @@ struct pci_dev {
+> >  #ifdef CONFIG_PCI_MSI
+> >  	struct list_head msi_list;
+> >  	struct kset *msi_kset;
+> > +	unsigned int	broken_msi_disable:1;
+> >  #endif
+> >  	struct pci_vpd *vpd;
+> >  #ifdef CONFIG_PCI_ATS
+> > 
+> > -- 
+> > Jiri Kosina
+> > SUSE Labs
+> > 
+> 
+> -- 
+> Jiri Kosina
+> SUSE Labs
+> 
+
+-- 
+Jiri Kosina
+SUSE Labs
