@@ -1,81 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v4 07/28] x86, irq: Show MSI-X in /proc/interrupt
-Date: Sat, 10 Aug 2013 19:47:53 -0700
-Message-Id: <1376189294-32022-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:65078 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752360Ab3H1MoR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 08:44:17 -0400
+Received: by mail-ie0-f178.google.com with SMTP id f4so8926987iea.9
+        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 05:44:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <521DB03E.9000706@desy.de>
+References: <521C5AFF.90209@desy.de> <20130827162702.GB21180@google.com> <521DB03E.9000706@desy.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 28 Aug 2013 06:43:56 -0600
+Message-ID: <CAErSpo4HQpi8HfWP=w=QYZTyKdDU7qxBxBhhGvEsvY9qLJs=xg@mail.gmail.com>
+Subject: Re: PCIe endpoint crosstalk
+To: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI-X is shown as MSI in /proc/interrupt.
+On Wed, Aug 28, 2013 at 2:09 AM, Ludwig Petrosyan
+<ludwig.petrosyan@desy.de> wrote:
+> On 08/27/2013 06:27 PM, Bjorn Helgaas wrote:
+>> On Tue, Aug 27, 2013 at 09:53:35AM +0200, Ludwig Petrosyan wrote:
+>>> So: I use microTCA system with PCIe bus, there are two AMC cards (PCIe
+>>> endpoints), lets call card A and card B.
+>>> as well there are two device drivers for A and B. Card B has bug, after
+>>> PCIe memory write  operation (MWr) the card sends back Completion
+>>> packet without data (Cpl) (I now it is wrong, but card designed in this
+>>> way and has to be changed).
+>>> User process Ua reads data from Card A in loop, everything is OK , but
+>>> then I start second user process Ub which writes in loop data to card B
+>>> (bugged card) the Ua gets wrong data. After improving card B the problem
+>>> was solved, but could be it has to be checked on the PCIe driver level
+>>> as well.
+>> PCIe transactions (MWr, MRd, Cpl, etc.) are not directly visible
+>> to the OS or the driver.
+>>
+>> The only thing I can think of that we could do is add a quirk to
+>> blacklist the broken version of card B.  You can look at existing
+>> quirks in drivers/pci/quirks.c.  Most of them workaround issues
+>> that aren't quite as severe as this one, but we could probably
+>> figure out a way to make the device completely unusable.
+>>
+>> Or do you have something else in mind?
+>>
+>> Bjorn
+> We have fixed the bug in card B and now it is OK, but question is open,
+> what will happen if we got some PCIe endpoint card with the same bug:
+> read operations from other PCIe devices could be broken. Just I think
+> this problem should be solved on the OS level (I am not sure)
+>
+> I will try to explain how things are going on how I think:
+>
+> User process Ub sends Memory-Write request to card B, this is Posted
+> request, so just  after sending the request Ub forgets about it,
+> TLP of this packet contain Requester ID for RootComplex, at the same
+> time user process Ua (the RootComplex is free now) sends non-Posted
+> memory read request to card A and waits for Completion packet, but at
+> the same time the card B (bugged card, it should not send Completion to
+> Posted memory write request) send to RootComplex Completion Packet
+> without data and some how Ua get this data as result of his Memory Read
+> request. Seems the Completer ID (or Tag field) in Completion packet not
+> checked and completion from one PCIe endpoint returned as completion of
+> read request from other PCIe endpoint.
+>
+> I want to say this is only an assumption, just I wont to be sure the
+> bugged PCIe device won't influence operation of other devices
+> But could be this problem has to be solved on PCIe Switch or RootComplex
+> side not in OS side...
 
-We could use new added irq_print_chip() interface to append -X for MSI-X.
+Yes.  I can't conceive of a way for the OS to deal with this problem.
+The only thing I can think of is to disable card B altogether.
 
-After this patch, we will have PCI-MSI-X-edge IR-PCI-MSI-X-edge for MSI-X
-instead of PCI-MSI-edge IR-PCI-MSI-edge in the /proc/interrupt.
-
--v2: do not need to check if msi_desc is null in msi_irq_print_chip().
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c | 7 +++++++
- drivers/iommu/irq_remapping.c  | 5 ++++-
- 2 files changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 119fdf8..cf320fb 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3087,6 +3087,12 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
- 	return IRQ_SET_MASK_OK_NOCOPY;
- }
- 
-+static void msi_irq_print_chip(struct irq_data *data, struct seq_file *p)
-+{
-+	seq_printf(p, " %s%s", data->chip->name,
-+			data->msi_desc->msi_attrib.is_msix ? "-X" : "");
-+}
-+
- /*
-  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
-  * which implement the MSI or MSI-X Capability Structure.
-@@ -3098,6 +3104,7 @@ struct irq_chip msi_chip = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= msi_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.irq_print_chip		= msi_irq_print_chip,
- };
- 
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 8e4e3af..6893d75 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -372,7 +372,10 @@ static void ir_ack_apic_level(struct irq_data *data)
- 
- static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
- {
--	seq_printf(p, " IR-%s", data->chip->name);
-+	seq_printf(p, " IR-%s%s", data->chip->name,
-+			data->msi_desc ?
-+			 (data->msi_desc->msi_attrib.is_msix ? "-X" : "")
-+			 : "");
- }
- 
- static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
--- 
-1.8.1.4
-
+Bjorn
