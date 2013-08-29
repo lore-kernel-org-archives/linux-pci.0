@@ -1,183 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:39406 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753266Ab3H0TAv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 15:00:51 -0400
-Received: by mail-pb0-f53.google.com with SMTP id up15so5192129pbc.40
-        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 12:00:51 -0700 (PDT)
-Subject: [PATCH 4/5] PCI: Tidy bitmasks and spacing of PCIe capability
- definitions
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lee Jones <lee.jones@linaro.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Date: Tue, 27 Aug 2013 13:00:48 -0600
-Message-ID: <20130827190048.16595.76232.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130827185731.16595.52864.stgit@bhelgaas-glaptop>
-References: <20130827185731.16595.52864.stgit@bhelgaas-glaptop>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:35928 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752520Ab3H2WqL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 18:46:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo4qEPQq==rmzy+8a2FHgaKmWbG7BvopKqbBZC551kgdcg@mail.gmail.com>
+References: <CAErSpo4cC7XKQn+2Pg9r+VDrcqKP4M4KQFRqQAvegTbnkUWf+A@mail.gmail.com>
+	<CAE9FiQX9gU-S9X_eeB=JwqS8130CONKgrv+mGj1cEgShmxgS-Q@mail.gmail.com>
+	<CAErSpo4qEPQq==rmzy+8a2FHgaKmWbG7BvopKqbBZC551kgdcg@mail.gmail.com>
+Date: Thu, 29 Aug 2013 15:46:10 -0700
+Message-ID: <CAE9FiQVXri56BzLviVjSPnqQvo25Q36AA26V_28kfy_=9EunjA@mail.gmail.com>
+Subject: Re: [PATCH v8 6/6] PCI: update device mps when doing pci hotplug
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>, Jon Mason <jdmason@kudzu.us>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Jin Feng <joe.jin@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The convention of showing bits in a mask of the full register width, e.g.,
-"0x00000007" instead of "0x07" for a field in a 32-bit register, is common
-but not universal in this file.  This patch makes it consistently used at
-least for the PCIe capability.
+On Thu, Aug 29, 2013 at 3:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> Note that I think Linux *should* eventually actively manage MPS, and
+> when it does, case 3 should "just work".  I just don't understand what
+> the point of the BIOS using case 3 is.
+>
+> I suppose other OSes must get better performance in this "auto" mode?
 
-Whitespace and zero-extension changes only; no functional change.
+Yes.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/uapi/linux/pci_regs.h |   90 +++++++++++++++++++++--------------------
- 1 file changed, 45 insertions(+), 45 deletions(-)
+> (What exactly is that mode, anyway?)  That means the other OS must be
+> smart enough to deal with hotplug device replacement, but not smart
+> enough to configure MPS all by itself starting from scratch.  I don't
+> know what rules would tell us "this MPS must be configured by the BIOS
+> and the OS should leave it alone" and "the OS must configure MPS on
+> this device for hotplug."  How can we make sense out of that?
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 591bb3b..28c83ec 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -428,17 +428,17 @@
- #define PCI_EXP_FLAGS_SLOT	0x0100	/* Slot implemented */
- #define PCI_EXP_FLAGS_IRQ	0x3e00	/* Interrupt message number */
- #define PCI_EXP_DEVCAP		4	/* Device capabilities */
--#define  PCI_EXP_DEVCAP_PAYLOAD	0x07	/* Max_Payload_Size */
--#define  PCI_EXP_DEVCAP_PHANTOM	0x18	/* Phantom functions */
--#define  PCI_EXP_DEVCAP_EXT_TAG	0x20	/* Extended tags */
--#define  PCI_EXP_DEVCAP_L0S	0x1c0	/* L0s Acceptable Latency */
--#define  PCI_EXP_DEVCAP_L1	0xe00	/* L1 Acceptable Latency */
--#define  PCI_EXP_DEVCAP_ATN_BUT	0x1000	/* Attention Button Present */
--#define  PCI_EXP_DEVCAP_ATN_IND	0x2000	/* Attention Indicator Present */
--#define  PCI_EXP_DEVCAP_PWR_IND	0x4000	/* Power Indicator Present */
--#define  PCI_EXP_DEVCAP_RBER	0x8000	/* Role-Based Error Reporting */
--#define  PCI_EXP_DEVCAP_PWR_VAL	0x3fc0000 /* Slot Power Limit Value */
--#define  PCI_EXP_DEVCAP_PWR_SCL	0xc000000 /* Slot Power Limit Scale */
-+#define  PCI_EXP_DEVCAP_PAYLOAD	0x00000007 /* Max_Payload_Size */
-+#define  PCI_EXP_DEVCAP_PHANTOM	0x00000018 /* Phantom functions */
-+#define  PCI_EXP_DEVCAP_EXT_TAG	0x00000020 /* Extended tags */
-+#define  PCI_EXP_DEVCAP_L0S	0x000001c0 /* L0s Acceptable Latency */
-+#define  PCI_EXP_DEVCAP_L1	0x00000e00 /* L1 Acceptable Latency */
-+#define  PCI_EXP_DEVCAP_ATN_BUT	0x00001000 /* Attention Button Present */
-+#define  PCI_EXP_DEVCAP_ATN_IND	0x00002000 /* Attention Indicator Present */
-+#define  PCI_EXP_DEVCAP_PWR_IND	0x00004000 /* Power Indicator Present */
-+#define  PCI_EXP_DEVCAP_RBER	0x00008000 /* Role-Based Error Reporting */
-+#define  PCI_EXP_DEVCAP_PWR_VAL	0x03fc0000 /* Slot Power Limit Value */
-+#define  PCI_EXP_DEVCAP_PWR_SCL	0x0c000000 /* Slot Power Limit Scale */
- #define  PCI_EXP_DEVCAP_FLR     0x10000000 /* Function Level Reset */
- #define PCI_EXP_DEVCTL		8	/* Device Control */
- #define  PCI_EXP_DEVCTL_CERE	0x0001	/* Correctable Error Reporting En. */
-@@ -454,16 +454,16 @@
- #define  PCI_EXP_DEVCTL_READRQ	0x7000	/* Max_Read_Request_Size */
- #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
- #define PCI_EXP_DEVSTA		10	/* Device Status */
--#define  PCI_EXP_DEVSTA_CED	0x01	/* Correctable Error Detected */
--#define  PCI_EXP_DEVSTA_NFED	0x02	/* Non-Fatal Error Detected */
--#define  PCI_EXP_DEVSTA_FED	0x04	/* Fatal Error Detected */
--#define  PCI_EXP_DEVSTA_URD	0x08	/* Unsupported Request Detected */
--#define  PCI_EXP_DEVSTA_AUXPD	0x10	/* AUX Power Detected */
--#define  PCI_EXP_DEVSTA_TRPND	0x20	/* Transactions Pending */
-+#define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
-+#define  PCI_EXP_DEVSTA_NFED	0x0002	/* Non-Fatal Error Detected */
-+#define  PCI_EXP_DEVSTA_FED	0x0004	/* Fatal Error Detected */
-+#define  PCI_EXP_DEVSTA_URD	0x0008	/* Unsupported Request Detected */
-+#define  PCI_EXP_DEVSTA_AUXPD	0x0010	/* AUX Power Detected */
-+#define  PCI_EXP_DEVSTA_TRPND	0x0020	/* Transactions Pending */
- #define PCI_EXP_LNKCAP		12	/* Link Capabilities */
- #define  PCI_EXP_LNKCAP_SLS	0x0000000f /* Supported Link Speeds */
--#define  PCI_EXP_LNKCAP_SLS_2_5GB 0x1	/* LNKCAP2 SLS Vector bit 0 (2.5GT/s) */
--#define  PCI_EXP_LNKCAP_SLS_5_0GB 0x2	/* LNKCAP2 SLS Vector bit 1 (5.0GT/s) */
-+#define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
-+#define  PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
- #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
- #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
- #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
-@@ -475,21 +475,21 @@
- #define  PCI_EXP_LNKCAP_PN	0xff000000 /* Port Number */
- #define PCI_EXP_LNKCTL		16	/* Link Control */
- #define  PCI_EXP_LNKCTL_ASPMC	0x0003	/* ASPM Control */
--#define  PCI_EXP_LNKCTL_ASPM_L0S  0x01	/* L0s Enable */
--#define  PCI_EXP_LNKCTL_ASPM_L1   0x02	/* L1 Enable */
-+#define  PCI_EXP_LNKCTL_ASPM_L0S 0x0001	/* L0s Enable */
-+#define  PCI_EXP_LNKCTL_ASPM_L1  0x0002	/* L1 Enable */
- #define  PCI_EXP_LNKCTL_RCB	0x0008	/* Read Completion Boundary */
- #define  PCI_EXP_LNKCTL_LD	0x0010	/* Link Disable */
- #define  PCI_EXP_LNKCTL_RL	0x0020	/* Retrain Link */
- #define  PCI_EXP_LNKCTL_CCC	0x0040	/* Common Clock Configuration */
- #define  PCI_EXP_LNKCTL_ES	0x0080	/* Extended Synch */
--#define  PCI_EXP_LNKCTL_CLKREQ_EN 0x100	/* Enable clkreq */
-+#define  PCI_EXP_LNKCTL_CLKREQ_EN 0x0100 /* Enable clkreq */
- #define  PCI_EXP_LNKCTL_HAWD	0x0200	/* Hardware Autonomous Width Disable */
- #define  PCI_EXP_LNKCTL_LBMIE	0x0400	/* Link Bandwidth Management Interrupt Enable */
- #define  PCI_EXP_LNKCTL_LABIE	0x0800	/* Lnk Autonomous Bandwidth Interrupt Enable */
- #define PCI_EXP_LNKSTA		18	/* Link Status */
- #define  PCI_EXP_LNKSTA_CLS	0x000f	/* Current Link Speed */
--#define  PCI_EXP_LNKSTA_CLS_2_5GB 0x01	/* Current Link Speed 2.5GT/s */
--#define  PCI_EXP_LNKSTA_CLS_5_0GB 0x02	/* Current Link Speed 5.0GT/s */
-+#define  PCI_EXP_LNKSTA_CLS_2_5GB 0x0001 /* Current Link Speed 2.5GT/s */
-+#define  PCI_EXP_LNKSTA_CLS_5_0GB 0x0002 /* Current Link Speed 5.0GT/s */
- #define  PCI_EXP_LNKSTA_NLW	0x03f0	/* Nogotiated Link Width */
- #define  PCI_EXP_LNKSTA_NLW_SHIFT 4	/* start of NLW mask in link status */
- #define  PCI_EXP_LNKSTA_LT	0x0800	/* Link Training */
-@@ -534,15 +534,15 @@
- #define  PCI_EXP_SLTSTA_EIS	0x0080	/* Electromechanical Interlock Status */
- #define  PCI_EXP_SLTSTA_DLLSC	0x0100	/* Data Link Layer State Changed */
- #define PCI_EXP_RTCTL		28	/* Root Control */
--#define  PCI_EXP_RTCTL_SECEE	0x01	/* System Error on Correctable Error */
--#define  PCI_EXP_RTCTL_SENFEE	0x02	/* System Error on Non-Fatal Error */
--#define  PCI_EXP_RTCTL_SEFEE	0x04	/* System Error on Fatal Error */
--#define  PCI_EXP_RTCTL_PMEIE	0x08	/* PME Interrupt Enable */
--#define  PCI_EXP_RTCTL_CRSSVE	0x10	/* CRS Software Visibility Enable */
-+#define  PCI_EXP_RTCTL_SECEE	0x0001	/* System Error on Correctable Error */
-+#define  PCI_EXP_RTCTL_SENFEE	0x0002	/* System Error on Non-Fatal Error */
-+#define  PCI_EXP_RTCTL_SEFEE	0x0004	/* System Error on Fatal Error */
-+#define  PCI_EXP_RTCTL_PMEIE	0x0008	/* PME Interrupt Enable */
-+#define  PCI_EXP_RTCTL_CRSSVE	0x0010	/* CRS Software Visibility Enable */
- #define PCI_EXP_RTCAP		30	/* Root Capabilities */
- #define PCI_EXP_RTSTA		32	/* Root Status */
--#define PCI_EXP_RTSTA_PME	0x10000 /* PME status */
--#define PCI_EXP_RTSTA_PENDING	0x20000 /* PME pending */
-+#define PCI_EXP_RTSTA_PME	0x00010000 /* PME status */
-+#define PCI_EXP_RTSTA_PENDING	0x00020000 /* PME pending */
- /*
-  * The Device Capabilities 2, Device Status 2, Device Control 2,
-  * Link Capabilities 2, Link Status 2, Link Control 2,
-@@ -552,25 +552,25 @@
-  * safely.
-  */
- #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
--#define  PCI_EXP_DEVCAP2_ARI		0x20	/* Alternative Routing-ID */
--#define  PCI_EXP_DEVCAP2_LTR		0x800	/* Latency tolerance reporting */
--#define  PCI_EXP_DEVCAP2_OBFF_MASK	0xc0000 /* OBFF support mechanism */
--#define  PCI_EXP_DEVCAP2_OBFF_MSG	0x40000 /* New message signaling */
--#define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x80000 /* Re-use WAKE# for OBFF */
-+#define  PCI_EXP_DEVCAP2_ARI		0x00000020 /* Alternative Routing-ID */
-+#define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
-+#define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
-+#define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
-+#define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
- #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
- #define  PCI_EXP_DEVCTL2_ARI		0x20	/* Alternative Routing-ID */
--#define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x100	/* ID-based ordering request enable */
--#define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x200	/* ID-based ordering completion enable */
--#define  PCI_EXP_DEVCTL2_LTR_EN		0x400	/* Latency tolerance reporting */
--#define  PCI_EXP_DEVCTL2_OBFF_MSGA_EN	0x2000	/* OBFF enable with Message type A */
--#define  PCI_EXP_DEVCTL2_OBFF_MSGB_EN	0x4000	/* OBFF enable with Message type B */
-+#define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
-+#define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
-+#define  PCI_EXP_DEVCTL2_LTR_EN		0x0400	/* Enable LTR mechanism */
-+#define  PCI_EXP_DEVCTL2_OBFF_MSGA_EN	0x2000	/* Enable OBFF Message type A */
-+#define  PCI_EXP_DEVCTL2_OBFF_MSGB_EN	0x4000	/* Enable OBFF Message type B */
- #define  PCI_EXP_DEVCTL2_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
- #define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
- #define PCI_EXP_LNKCAP2		44	/* Link Capability 2 */
--#define  PCI_EXP_LNKCAP2_SLS_2_5GB 0x02	/* Supported Link Speed 2.5GT/s */
--#define  PCI_EXP_LNKCAP2_SLS_5_0GB 0x04	/* Supported Link Speed 5.0GT/s */
--#define  PCI_EXP_LNKCAP2_SLS_8_0GB 0x08	/* Supported Link Speed 8.0GT/s */
--#define  PCI_EXP_LNKCAP2_CROSSLINK 0x100 /* Crosslink supported */
-+#define  PCI_EXP_LNKCAP2_SLS_2_5GB	0x00000002 /* Supported Speed 2.5GT/s */
-+#define  PCI_EXP_LNKCAP2_SLS_5_0GB	0x00000004 /* Supported Speed 5.0GT/s */
-+#define  PCI_EXP_LNKCAP2_SLS_8_0GB	0x00000008 /* Supported Speed 8.0GT/s */
-+#define  PCI_EXP_LNKCAP2_CROSSLINK	0x00000100 /* Crosslink supported */
- #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
- #define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
- #define PCI_EXP_SLTCTL2		56	/* Slot Control 2 */
+So my suggestion:
+We scan mps of in the bridges to find out if any is set to other than 128.
+if there is any bridge that mps is not 128 and it is hotplug slot.
+We change to PCI_BUS_TUNE_PERF for that system.
 
+Yinghai
