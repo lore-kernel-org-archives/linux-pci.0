@@ -1,89 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:50972 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755195Ab3HEUmn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 16:42:43 -0400
-Message-ID: <b84ca0e291d737d028a68e761aec83b85c7b3ed2.1375733180.git.cmetcalf@tilera.com>
-In-Reply-To: <cover.1375733180.git.cmetcalf@tilera.com>
-References: <cover.1375733180.git.cmetcalf@tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Mon, 5 Aug 2013 16:06:20 -0400
-Subject: [PATCH 05/20] tile PCI RC: handle case that PCI link is already up
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:64303 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028Ab3H2DQR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 23:16:17 -0400
+Received: by mail-ie0-f169.google.com with SMTP id 10so10679822ied.0
+        for <linux-pci@vger.kernel.org>; Wed, 28 Aug 2013 20:16:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130827185731.16595.52864.stgit@bhelgaas-glaptop>
+References: <20130827185731.16595.52864.stgit@bhelgaas-glaptop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 28 Aug 2013 21:15:57 -0600
+Message-ID: <CAErSpo7rxhWU0AobB3Pw8dHr0FT=vnMU1VCYLjoSnM7WvwvqrQ@mail.gmail.com>
+Subject: Re: [PATCH 0/5] PCIe capability #define tidyup
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: Lee Jones <lee.jones@linaro.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we are rebooting (e.g. via kexec) then the PCI RC link may
-already be up.  In that case, we don't want to do the software
-fixup to force the link up, since that can degrade it to Gen1.
+On Tue, Aug 27, 2013 at 1:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> These clean up some PCIe capability #defines and comments.
+>
+> The first renames a few #defines that are used in drivers/mfd/rts5227.c.
+>
+> The rest are whitespace and comment changes that should have no effect on
+> any users.
+>
+> I propose to put these in v3.12 unless there are issues.
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/tile/kernel/pci_gx.c | 41 ++++++++++++++++++++++++++++-------------
- 1 file changed, 28 insertions(+), 13 deletions(-)
+I applied these to pci/misc and merged them to "next" for v3.12.
 
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index e99809e..2cc3e64 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -674,10 +674,33 @@ int __init pcibios_init(void)
- 			continue;
- 		}
- 
--		ret = gxio_trio_force_rc_link_up(trio_context, mac);
--		if (ret < 0)
--			pr_err("PCI: PCIE_FORCE_LINK_UP failure, "
--				"MAC %d on TRIO %d\n", mac, trio_index);
-+		/*
-+		 * Check for PCIe link-up status to decide if we need
-+		 * to force the link to come up.
-+		 */
-+		reg_offset =
-+			(TRIO_PCIE_INTFC_PORT_STATUS <<
-+				TRIO_CFG_REGION_ADDR__REG_SHIFT) |
-+			(TRIO_CFG_REGION_ADDR__INTFC_VAL_MAC_INTERFACE <<
-+				TRIO_CFG_REGION_ADDR__INTFC_SHIFT) |
-+			(mac << TRIO_CFG_REGION_ADDR__MAC_SEL_SHIFT);
-+
-+		port_status.word =
-+			__gxio_mmio_read(trio_context->mmio_base_mac +
-+					 reg_offset);
-+		if (!port_status.dl_up) {
-+			if (rc_delay[trio_index][mac]) {
-+				pr_info("Delaying PCIe RC TRIO init %d sec"
-+					" on MAC %d on TRIO %d\n",
-+					rc_delay[trio_index][mac], mac,
-+					trio_index);
-+				msleep(rc_delay[trio_index][mac] * 1000);
-+			}
-+			ret = gxio_trio_force_rc_link_up(trio_context, mac);
-+			if (ret < 0)
-+				pr_err("PCI: PCIE_FORCE_LINK_UP failure, "
-+					"MAC %d on TRIO %d\n", mac, trio_index);
-+		}
- 
- 		pr_info("PCI: Found PCI controller #%d on TRIO %d MAC %d\n", i,
- 			trio_index, controller->mac);
-@@ -700,16 +723,8 @@ int __init pcibios_init(void)
- 		}
- 
- 		/*
--		 * Check for PCIe link-up status.
-+		 * Check for PCIe link-up status again.
- 		 */
--
--		reg_offset =
--			(TRIO_PCIE_INTFC_PORT_STATUS <<
--				TRIO_CFG_REGION_ADDR__REG_SHIFT) |
--			(TRIO_CFG_REGION_ADDR__INTFC_VAL_MAC_INTERFACE <<
--				TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
--			(mac << TRIO_CFG_REGION_ADDR__MAC_SEL_SHIFT);
--
- 		port_status.word =
- 			__gxio_mmio_read(trio_context->mmio_base_mac +
- 					 reg_offset);
--- 
-1.8.3.1
-
+> ---
+>
+> Bjorn Helgaas (5):
+>       PCI: Rename PCIe capability definitions to follow convention
+>       PCI: Clarify PCI_EXP_TYPE_PCI_BRIDGE comment
+>       PCI: Remove obsolete comment reference to pci_pcie_cap2()
+>       PCI: Tidy bitmasks and spacing of PCIe capability definitions
+>       PCI: Add offsets of PCIe capability registers
+>
+>
+>  drivers/mfd/rts5227.c         |    2 -
+>  drivers/pci/pci.c             |   31 ++++++-----
+>  include/uapi/linux/pci_regs.h |  113 +++++++++++++++++++++--------------------
+>  3 files changed, 77 insertions(+), 69 deletions(-)
