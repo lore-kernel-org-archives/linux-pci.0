@@ -1,88 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:64957 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461Ab3HVDZS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2013 23:25:18 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v8 0/6] Update device MPS
-Date: Thu, 22 Aug 2013 11:24:42 +0800
-Message-ID: <1377141888-7000-1-git-send-email-wangyijing@huawei.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23585 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755530Ab3H2Juo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 05:50:44 -0400
+Message-ID: <521F196E.2010102@oracle.com>
+Date: Thu, 29 Aug 2013 17:50:38 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jan Beulich <JBeulich@suse.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	xen-devel <xen-devel@lists.xenproject.org>,
+	Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH 2/3 v3] Refactor MSI restore call-chain to
+ drop unnecessary argument
+References: <521EB76B.8090903@oracle.com> <521F12FC02000078000EF503@nat28.tlf.novell.com>
+In-Reply-To: <521F12FC02000078000EF503@nat28.tlf.novell.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v7->v8: Yijing update the patch 6/6, and tested this series in hotplug machine.
-v6->v7: Bjorn's rework and additions of other minor cleanups
-v5->v6: rework the patch 1/2, remove the unnecessary check, pointed out by Bjorn.
-        remove the patch 1/2 cc stable tag, because it's not a serious bug.
-v4->v5: Fix some spelling problems and move mpss = 128 << dev->pcie_mpss above to reuse
-        it, also remove the else braces for code style. thanks for Jon's review and comments.
-v3->v4: Call pcie_bus_update_set() only when pcie_bus_config == PCIE_BUS_TUNE_OFF
-        suggested by Jon Mason, try to change parent mps when parent device is
-        root port and only one slot connected to it when parent mps > child device
-        mpss. Other add a patch to fix a issue in pcie_find_smpss() during use
-        "pci=pcie_bus_safe".
-v2->v3: Update CC stable tag suggested by Li Zefan.
-v1->v2: Update patch log, remove Joe's reported-by, because his problem
-        was mainly caused by BIOS incorrect setting. But this patch mainly
-        to fix the bug caused by device hot add. Conservatively, this
-        version only update the mps problem when hot add. When the device
-        mps < parent mps found, this patch try to update device mps.
-        It seems unlikely device mps > parent mps after hot add device.
-        So we don't care that situation.
 
-1. test with append "pci=pcie_bus_safe" during system bootup
--+-[0000:40]-+-00.0-[0000:41]--
- |           +-05.0-[0000:45]--
- |           +-07.0-[0000:46]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
+On 2013-08-29 15:23, Jan Beulich wrote:
+>>>> On 29.08.13 at 04:52, Zhenzhong Duan <zhenzhong.duan@oracle.com> wrote:
+>> But in initial domain (aka priviliged guest), it's different.
+>> Driver init call graph under initial domain:
+>> driver_init->
+>>      msix_capability_init->
+>>          msix_program_entries->
+>>              msix_mask_irq->
+>>                  entry->masked = 1
+>>      request_irq->
+>>          __setup_irq->
+>>              irq_startup->
+>>                  __startup_pirq->
+>>                      EVTCHNOP_bind_pirq hypercall    (trap into Xen)
+>> [Xen:]
+>> pirq_guest_bind->
+>>      startup_msi_irq->
+>>          unmask_msi_irq->
+>>              msi_set_mask_bit->
+>>                  entry->msi_attrib.masked = 0
+>>
+>> So entry->msi_attrib.masked in xen side always has newest value. entry->masked
+>> in initial domain is untouched and is 1 after msix_capability_init.
+> And as said several times before - Linux shouldn't be touching
+> the MSI-X table at all during initial setup or resume (it should in
+> particular not rely on such accesses to not fault, as being a
+> privilege violation); all it needs to do is update its software state.
+My patch just remove access to msix mask register in dom0. Anything 
+wrong with that?
+>
+> Hence fiddling with default_restore_msi_irqs() seems the wrong
+> approach towards solving the problem.
+dom0 uses xen_initdom_restore_msi_irqs, default_restore_msi_irqs is for 
+baremetal.
 
-root port(40:07.0 mps=256, mpss=256), NIC devices(46:00.0/1, mps=256, mpss=512)
-
-linux-ha2:/sys/bus/pci/slots/7 # echo 0 > power 
-linux-ha2:/sys/bus/pci/slots/7 # echo 1 > power 
-linux-ha2:/sys/bus/pci/slots/7 # dmesg
-....................................
-pcieport 0000:40:07.0: Max Payload Size set to  256/ 256 (was  256), Max Read Rq  128 
-pci 0000:46:00.0: Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512 
-pci 0000:46:00.1: Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512 
-pcieport 0000:40:07.0: Max Payload Size set to  256/ 256 (was  256), Max Read Rq  128 
-pci 0000:46:00.0: Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512 
-pci 0000:46:00.1: Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512 
-...................................
-
-
-2. test without append "pci=pcie_bus_xxx", default PCIE_BUS_TUNE_OFF
-root port(40:07.0 mps=256, mpss=256), NIC devices(46:00.0/1, mps=256, mpss=512)
-linux-ha2:/sys/bus/pci/slots/7 # echo 0 > power
-root port, mps =256, NIC devices, mps = 128
-linux-ha2:/sys/bus/pci/slots/7 # echo 1 > power 
-root port, mps =256, NIC devices, mps = 256
-
-all test results ok.
-
-Bjorn Helgaas (3):
-  PCI: Drop "PCI-E" prefix from Max Payload Size message
-  PCI: Simplify pcie_bus_configure_settings() interface
-  PCI: Simplify MPS test for Downstream Port
-
-Yijing Wang (3):
-  PCI: Remove unnecessary check for pcie_get_mps() failure
-  PCI: Don't restrict MPS for slots below Root Ports
-  PCI: update device mps when doing pci hotplug
-
- arch/powerpc/kernel/pci-common.c |    8 +---
- arch/tile/kernel/pci_gx.c        |    9 +---
- arch/x86/pci/acpi.c              |    9 +---
- drivers/pci/hotplug/pcihp_slot.c |    5 +-
- drivers/pci/pci.c                |    3 -
- drivers/pci/probe.c              |   90 +++++++++++++++++++++++++++++---------
- include/linux/pci.h              |    2 +-
- 7 files changed, 78 insertions(+), 48 deletions(-)
-
-
+zduan
