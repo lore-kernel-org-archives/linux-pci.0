@@ -1,52 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xensource.com
-Subject: [PATCH v4 16/28] xen, irq: Call irq_alloc_reserved_desc_at() at first
-Date: Sat, 10 Aug 2013 19:48:02 -0700
-Message-Id: <1376189294-32022-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:36744 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756857Ab3H2WWn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 18:22:43 -0400
+Received: by mail-ie0-f169.google.com with SMTP id 10so1960736ied.28
+        for <linux-pci@vger.kernel.org>; Thu, 29 Aug 2013 15:22:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQX9gU-S9X_eeB=JwqS8130CONKgrv+mGj1cEgShmxgS-Q@mail.gmail.com>
+References: <CAErSpo4cC7XKQn+2Pg9r+VDrcqKP4M4KQFRqQAvegTbnkUWf+A@mail.gmail.com>
+ <CAE9FiQX9gU-S9X_eeB=JwqS8130CONKgrv+mGj1cEgShmxgS-Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 29 Aug 2013 16:22:22 -0600
+Message-ID: <CAErSpo4qEPQq==rmzy+8a2FHgaKmWbG7BvopKqbBZC551kgdcg@mail.gmail.com>
+Subject: Re: [PATCH v8 6/6] PCI: update device mps when doing pci hotplug
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Yijing Wang <wangyijing@huawei.com>, Jon Mason <jdmason@kudzu.us>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Jin Feng <joe.jin@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To make x86 irq allocation to be same with booting path and ioapic
-hot add path, We will pre-reserve irq for all gsi at first.
-We have to use alloc_reserved here, otherwise irq_alloc_desc_at will fail
-because bit is already get marked for pre-reserved in irq bitmaps.
+On Thu, Aug 29, 2013 at 3:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Aug 29, 2013 at 2:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc linux-kernel, since more folks might be interested]
+>
+>> I don't know what the BIOS "auto" setting means, but it must mean
+>> something in case 3, because that's the only case where OS support is
+>> required.  But if the OS is smart enough to manage MPS for hot-added
+>> devices, why can't the OS also program MPS for the whole system at
+>> boot-time?
+>>
+>> That's why I don't understand what BIOS wants to do.  It sounds like
+>> they want the performance benefit of larger MPS for devices present in
+>> hot-plug slots at boot-time, even if the OS doesn't actively manage
+>> MPS and things blow up if that device is replaced with one that
+>> supports a smaller MPS.  That choice doesn't make sense.
+>>
+>> In case 3, with a non-MPS-aware OS, you get better performance for a
+>> while, but blow up if a card is replaced.  And with an MPS-aware OS,
+>> there should be no advantage to case 3: the OS should be able to get
+>> good performance by programming MPS itself, even without help from the
+>> BIOS.
+>
+> With OS default setting on case 3, other two OS are ok with hotplug,
+> but Linux does not.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: xen-devel@lists.xensource.com
----
- drivers/xen/events.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+I'm not disputing that.  I said plainly that in case 3, things blow up
+if the OS doesn't actively manage MPS.  By default Linux doesn't touch
+MPS, so it blows up if a card is replaced.
 
-diff --git a/drivers/xen/events.c b/drivers/xen/events.c
-index a58ac43..1a3647c 100644
---- a/drivers/xen/events.c
-+++ b/drivers/xen/events.c
-@@ -507,8 +507,12 @@ static int __must_check xen_allocate_irq_gsi(unsigned gsi)
- 	/* Legacy IRQ descriptors are already allocated by the arch. */
- 	if (gsi < NR_IRQS_LEGACY)
- 		irq = gsi;
--	else
--		irq = irq_alloc_desc_at(gsi, -1);
-+	else {
-+		/* for x86, irq already get reserved for gsi */
-+		irq = irq_alloc_reserved_desc_at(gsi, -1);
-+		if (irq < 0)
-+			irq = irq_alloc_desc_at(gsi, -1);
-+	}
- 
- 	xen_irq_init(irq);
- 
--- 
-1.8.1.4
+I am suggesting that it doesn't make any sense for a BIOS to use case
+3.  Please make an argument for why it *does* make sense to use case
+3.
 
+Note that I think Linux *should* eventually actively manage MPS, and
+when it does, case 3 should "just work".  I just don't understand what
+the point of the BIOS using case 3 is.
+
+I suppose other OSes must get better performance in this "auto" mode?
+(What exactly is that mode, anyway?)  That means the other OS must be
+smart enough to deal with hotplug device replacement, but not smart
+enough to configure MPS all by itself starting from scratch.  I don't
+know what rules would tell us "this MPS must be configured by the BIOS
+and the OS should leave it alone" and "the OS must configure MPS on
+this device for hotplug."  How can we make sense out of that?
+
+Bjorn
