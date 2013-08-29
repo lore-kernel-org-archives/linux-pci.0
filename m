@@ -1,89 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:50787 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753106Ab3HEPjF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Aug 2013 11:39:05 -0400
-Received: by mail-ob0-f176.google.com with SMTP id uz19so5722119obc.7
-        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2013 08:39:05 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:19034 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753148Ab3H2NcH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 09:32:07 -0400
+In-Reply-To: <521EB76B.8090903@oracle.com>
+References: <521EB76B.8090903@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPWoNkLQUbFG2vZ7wqoqqVNj4uxKz3Fa_vsSH=1_TDD=XC1f2A@mail.gmail.com>
-References: <CAPWoNkJ3NKM-_g93LdRpjvdNFtLt-Pjpg4d4oEKC9CvkpzZ-Wg@mail.gmail.com>
- <CAPWoNkLQUbFG2vZ7wqoqqVNj4uxKz3Fa_vsSH=1_TDD=XC1f2A@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 5 Aug 2013 09:38:45 -0600
-Message-ID: <CAErSpo5ZZgdpkK+QdQUEnNCEXcG_T+QBWTVoQnMTghxkX7n2HA@mail.gmail.com>
-Subject: Re: PCIE device errors after linux kernel upgrade
-To: Leon Ravich <lravich@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: [PATCH 2/3 v3] Refactor MSI restore call-chain to drop unnecessary argument
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Date: Thu, 29 Aug 2013 09:31:55 -0400
+To: zhenzhong.duan@oracle.com,
+	Zhenzhong Duan <zhenzhong.duan@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Message-ID: <e316cb7e-6f73-4aff-8533-c73539f4ae91@email.android.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linuxppc-dev]
-
-On Mon, Aug 5, 2013 at 5:17 AM, Leon Ravich <lravich@gmail.com> wrote:
-> Hi all ,
-> I am trying to upgrade ours embedded device (freescale powerPC P2020 cpu)
-> linux kernel  , till now we used 2.6.32 I am trying to upgrade to 3.8.13 .
-> I took the source from freescale git:
-> git://git.freescale.com/ppc/sdk/linux.git
+Zhenzhong Duan <zhenzhong.duan@oracle.com> wrote:
+>Driver init call graph under baremetal:
+>driver_init->
+>    msix_capability_init->
+>        msix_program_entries->
+>            msix_mask_irq->
+>                entry->masked = 1
+>    request_irq->
+>        __setup_irq->
+>            irq_startup->
+>                unmask_msi_irq->
+>                    msix_mask_irq->
+>                        entry->masked = 0
 >
-> on our embedded device we have an FPGA connected through PCIE .
+>So entry->masked is always updated with newest value and its value
+>could be used
+>to restore to mask register in device.
 >
-> on each boot we loading the rbf design to the FPGA and the rescan pci bus to let
-> kernel detect it .
+>But in initial domain (aka priviliged guest), it's different.
+>Driver init call graph under initial domain:
+>driver_init->
+>    msix_capability_init->
+>        msix_program_entries->
+>            msix_mask_irq->
+>                entry->masked = 1
+>    request_irq->
+>        __setup_irq->
+>            irq_startup->
+>                __startup_pirq->
+>                    EVTCHNOP_bind_pirq hypercall    (trap into Xen)
+>[Xen:]
+>pirq_guest_bind->
+>    startup_msi_irq->
+>        unmask_msi_irq->
+>            msi_set_mask_bit->
+>                entry->msi_attrib.masked = 0
 >
-> during the rescan I getting error messages:
->  genirq: Setting trigger mode 0 for irq 27 failed
-> (mpc8xxx_irq_set_type+0x0/0xec)
-> [   22.060898] genirq: Setting trigger mode 0 for irq 28 failed
-> (mpc8xxx_irq_set_type+0x0/0xec)
-> [   22.069461] genirq: Setting trigger mode 0 for irq 31 failed
-> (mpc8xxx_irq_set_type+0x0/0xec)
-> [   22.078010] genirq: Setting trigger mode 0 for irq 32 failed
-> (mpc8xxx_irq_set_type+0x0/0xec)
-> [   22.086576] genirq: Setting trigger mode 0 for irq 33 failed
-> (mpc8xxx_irq_set_type+0x0/0xec)
-> [   22.095143] genirq: Setting trigger mode 0 for irq 37 failed
-> (mpc8xxx_irq_set_type+0x0/0xec)
-> [   22.103715] genirq: Setting trigger mode 0 for irq 38 failed
-> (mpc8xxx_irq_set_type+0x0/0xec)
-> [   22.112282] genirq: Setting trigger mode 0 for irq 39 failed
-> (mpc8xxx_irq_set_type+0x0/0xec)
-
-Hmm, I don't know much about IRQ issues.
-
-> [   37.945785] pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't
-> match header type 01)
-
-There's a recent patch related to this:
-http://lkml.kernel.org/r/1374823418-1550-1-git-send-email-Chunhe.Lan@freescale.com
-
-> [   37.953640] PCIE error(s) detected
-> [   37.953858] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
-> [   37.953988] pci 0000:00:00.0: BAR 8: assigned [mem 0xc0000000-0xdfffffff]
-> [   37.953994] pci 0000:00:00.0: BAR 7: can't assign io (size 0x10000)
-> [   37.954000] pci 0000:01:00.0: BAR 0: assigned [mem 0xc0000000-0xc00fffff]
-> [   37.954013] pci 0000:01:00.0: BAR 1: assigned [mem 0xc0100000-0xc017ffff]
-> [   37.954025] pci 0000:01:00.0: BAR 2: assigned [mem 0xc0180000-0xc01fffff]
-> [   37.954036] pci 0000:00:00.0: PCI bridge to [bus 01]
-> [   37.954041] pci 0000:00:00.0:   bridge window [mem 0xc0000000-0xdfffffff]
-> [   38.007354] PCIE ERR_DR register: 0x80020000
-> [   38.011613] PCIE ERR_CAP_STAT register: 0x00000041
-> [   38.016392] PCIE ERR_CAP_R0 register: 0x00000800
-> [   38.020997] PCIE ERR_CAP_R1 register: 0x00000000
-> [   38.025602] PCIE ERR_CAP_R2 register: 0x00000000
-> [   38.030207] PCIE ERR_CAP_R3 register: 0x00000000
+>So entry->msi_attrib.masked in xen side always has newest value.
+>entry->masked
+>in initial domain is untouched and is 1 after msix_capability_init.
 >
+>Based on above, it's Xen's duty to restore entry->msi_attrib.masked to
+>device,
+>but with current code, entry->masked is used and MSI-x interrupt is
+>masked.
 >
-> and after a few minutes I linux reboot it self,
+>Before patch, restore call graph under initial domain:
+>pci_reset_function->
+>    pci_restore_state->
+>        __pci_restore_msix_state->
+>            arch_restore_msi_irqs->
+>                xen_initdom_restore_msi_irqs->
+>                   PHYSDEVOP_restore_msi hypercall (first mask restore)
+>          msix_mask_irq(entry, entry->masked)     (second mask restore)
 >
+>So msix_mask_irq call in initial domain call graph needs to be removed.
 >
-> where can I start debugging it??
+>Based on this we can move the restore of the mask in
+>default_restore_msi_irqs
+>which would avoid restoring the invalid mask under Xen. Furthermore
+>this
+>simplifies the API by making everything related to restoring an MSI be
+>in the
+>platform specific APIs instead of just parts of it.
+>
+>After patch, restore call graph under initial domain:
+>pci_reset_function->
+>    pci_restore_state->
+>        __pci_restore_msix_state->
+>            arch_restore_msi_irqs->
+>                xen_initdom_restore_msi_irqs->
+>                   PHYSDEVOP_restore_msi hypercall (first mask restore)
+>
+>Logic for baremetal is not changed.
+>Before patch, restore call graph under baremetal:
+>pci_reset_function->
+>    pci_restore_state->
+>        __pci_restore_msix_state->
+>            arch_restore_msi_irqs->
+>                default_restore_msi_irqs->
+>           msix_mask_irq(entry, entry->masked)     (first mask restore)
+>
+>After patch, restore call graph under baremetal:
+>pci_reset_function->
+>    pci_restore_state->
+>        __pci_restore_msix_state->
+>            arch_restore_msi_irqs->
+>                default_restore_msi_irqs->
+>               msix_mask_irq(entry, entry->masked) (first mask restore)
+>
+>The process for MSI code is similiar.
+>
+>-v3: Update patch description per Konrad suggestion, thanks.
+>
+>Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+>Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
 
-I'd start by applying the header quirk patch above, then comparing the
-complete console log (boot with "ignore_loglevel") from 2.6.32 and
-3.8.13.
+Bjorn, 
+If this is not too late to add to your queue please add it with my Acked-By. 
 
-Bjorn
+Thanks. 
+
+>---
+> drivers/pci/msi.c |   17 ++++++++++++++---
+> 1 files changed, 14 insertions(+), 3 deletions(-)
+>
+>diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>index 87223ae..922fb49 100644
+>--- a/drivers/pci/msi.c
+>+++ b/drivers/pci/msi.c
+>@@ -216,6 +216,8 @@ void unmask_msi_irq(struct irq_data *data)
+> #ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
+> void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+> {
+>+	int pos;
+>+	u16 control;
+> 	struct msi_desc *entry;
+> 
+> 	entry = NULL;
+>@@ -228,8 +230,19 @@ void default_restore_msi_irqs(struct pci_dev *dev,
+>int irq)
+> 		entry = irq_get_msi_desc(irq);
+> 	}
+> 
+>-	if (entry)
+>+	if (entry) {
+> 		write_msi_msg(irq, &entry->msg);
+>+		if (dev->msix_enabled) {
+>+			msix_mask_irq(entry, entry->masked);
+>+			readl(entry->mask_base);
+>+		} else {
+>+			pos = entry->msi_attrib.pos;
+>+			pci_read_config_word(dev, pos + PCI_MSI_FLAGS,
+>+					     &control);
+>+			msi_mask_irq(entry, msi_capable_mask(control),
+>+				     entry->masked);
+>+		}
+>+	}
+> }
+> #endif
+> 
+>@@ -406,7 +419,6 @@ static void __pci_restore_msi_state(struct pci_dev
+>*dev)
+> 	arch_restore_msi_irqs(dev, dev->irq);
+> 
+> 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+>-	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
+> 	control &= ~PCI_MSI_FLAGS_QSIZE;
+> 	control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
+> 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+>@@ -430,7 +442,6 @@ static void __pci_restore_msix_state(struct pci_dev
+>*dev)
+> 
+> 	list_for_each_entry(entry, &dev->msi_list, list) {
+> 		arch_restore_msi_irqs(dev, entry->irq);
+>-		msix_mask_irq(entry, entry->masked);
+> 	}
+> 
+> 	control &= ~PCI_MSIX_FLAGS_MASKALL;
+
+
