@@ -1,194 +1,163 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:38781 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148Ab3H0N5k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2013 09:57:40 -0400
-Received: by mail-ie0-f177.google.com with SMTP id e14so7309669iej.22
-        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2013 06:57:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <979A8436335E3744ADCD3A9F2A2B68A52AD13FB9@SJEXCHMB10.corp.ad.broadcom.com>
-References: <20130825100157.GA16500@lb-tlvb-yuvalmin.il.broadcom.com>
- <979A8436335E3744ADCD3A9F2A2B68A52AD136BE@SJEXCHMB10.corp.ad.broadcom.com>
- <CAErSpo4NmL0RWcBompuweHNYmhNmLXU_21_gvaqfDEzi+HBp5g@mail.gmail.com>
- <979A8436335E3744ADCD3A9F2A2B68A52AD13D0C@SJEXCHMB10.corp.ad.broadcom.com>
- <CAErSpo68LaevaBG8rJD0aj+oy-cp_f2ZsQVEhXL=oUyyRiYwZw@mail.gmail.com> <979A8436335E3744ADCD3A9F2A2B68A52AD13FB9@SJEXCHMB10.corp.ad.broadcom.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 27 Aug 2013 07:57:20 -0600
-Message-ID: <CAErSpo6pCzw6Gjn+SCFhu7PnBpHkUz0oqO+tGmmOH8NxoMiH6g@mail.gmail.com>
-Subject: Re: pcie_get_minimum_link returns 0 width
-To: Yuval Mintz <yuvalmin@broadcom.com>
-Cc: "jacob.e.keller@intel.com" <jacob.e.keller@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Neil Horman <nhorman@tuxdriver.com>
+To: linux-kernel@vger.kernel.org
+Cc: Neil Horman <nhorman@tuxdriver.com>, Len Brown <lenb@kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v4] ACPI: Fix osc flag setup ordering to allow pcie hotplug use when available
+Date: Thu, 29 Aug 2013 16:17:05 -0400
+Message-Id: <1377807425-27423-1-git-send-email-nhorman@tuxdriver.com>
+In-Reply-To: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com>
+References: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jiang]
+This is a fix for:
+https://bugzilla.kernel.org/show_bug.cgi?id=60736
 
-On Tue, Aug 27, 2013 at 1:40 AM, Yuval Mintz <yuvalmin@broadcom.com> wrote:
->> On Mon, Aug 26, 2013 at 5:36 PM, Yuval Mintz <yuvalmin@broadcom.com>
->> wrote:
->> >> > Hi,
->> >> >
->> >> > I tried adding support for the newly added 'pcie_get_minimum_link' into
->> >> the
->> >> > bnx2x driver, but found out the some of my devices started showing
->> width
->> >> x0.
->> >> >
->> >> > By adding debug prints, I've found out there were devices up the chain
->> that
->> >> > Showed 0 when their PCI_EXP_LNKSTA was read by said function.
->> >> > However, when I tried looking via lspci the output claimed the width was
->> >> x4.
->> Looking at its implementation, one obvious difference is that
->> pcie_get_minimum_link() traverses up the hierarchy and keeps track of
->> the minimum values it finds.  lspci, on the other hand, just reads
->> PCI_EXP_LNKSTA from a single device and decodes it.
->>
->> You said lspci reports x4 for every device from the Root Port all the
->> way down to your NIC, so I would think the minimum from
->> pcie_get_minimum_link() would be x4.  But apparently it's not.  Maybe
->> there's a bug in it.  Can you post the complete "lspci -vv" output
->> along with your debug patch and output?
->>
->> Bjorn
->
-> Here's the patch:
-> ---
->  drivers/pci/pci.c |    8 +++++++-
->  1 files changed, 7 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index c71e78c..72cb87b 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3601,13 +3601,19 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->                 enum pcie_link_width next_width;
->
->                 ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-> -               if (ret)
-> +               if (ret) {
-> +                       printk(KERN_ERR "Failed to Read LNKSTA\n");
->                         return ret;
-> +               }
->
->                 next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
->                 next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
->                         PCI_EXP_LNKSTA_NLW_SHIFT;
->
-> +               printk(KERN_ERR "LnkSta %04x [%04x:%02x.%02x]\n",
-> +                      lnksta, dev->bus->number, PCI_SLOT(dev->devfn),
-> +                      PCI_FUNC(dev->devfn));
+During the 3.8 devel cycle:
 
-I think pcie_cap_has_lnkctl() is incorrect: it currently thinks only
-Root Ports, Endpoints, and Legacy Endpoints have link registers.  But
-I think switch ports (Upstream Ports and Downstream Ports) also have
-link registers (PCIe spec r3.0, sec 7.8).  Jiang?
+commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6
+Author: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Date:   Tue Oct 30 15:27:13 2012 +0900
 
->                 if (next_speed < *speed)
->                         *speed = next_speed;
->
-> --
-> 1.7.1
->
-> And here are the lscpi results for 09:00.0 and 0a:01.0
-> (The two devices for which the loop returns 0 width):
->
-> Sysfs do read [Pos 0, len 64]
-> 09:00.0 Class 0604: Device 8086:3500 (rev 01)
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Bus: primary=09, secondary=0a, subordinate=11, sec-latency=0
->         Memory behind bridge: fb800000-fd7fffff
->         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
->         BridgeCtl: Parity+ SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
->                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->         Capabilities: Sysfs do read [Pos 68, len 4]
-> [44] Express (v1) Upstream Port, MSI 00
-> Sysfs do read [Pos 72, len 16]
->                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
->                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-SlotPowerLimit 0.000W
->                 DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported-
->                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
->                         MaxPayload 256 bytes, MaxReadReq 4096 bytes
->                 DevSta: CorrErr- UncorrErr- FatalErr+ UnsuppReq+ AuxPwr- TransPend-
->                 LnkCap: Port #0, Speed 2.5GT/s, Width x8, ASPM L0s, Latency L0 unlimited, L1 unlimited
->                         ClockPM- Surprise- LLActRep- BwNot-
->                 LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
->                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->                 LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->         Capabilities: Sysfs do read [Pos 112, len 4]
-> [70] Power Management version 2
->                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-> Sysfs do read [Pos 116, len 4]
->                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: Sysfs do read [Pos 128, len 4]
-> [80] Sysfs do read [Pos 132, len 4]
-> Subsystem: Device 0000:0000
-> Sysfs do read [Pos 256, len 4]
->         Capabilities: [100 v1] Advanced Error Reporting
-> Sysfs do read [Pos 260, len 24]
->                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
->                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
->                 UESvrt: DLP+ SDES- TLP+ FCP+ CmpltTO+ CmpltAbrt+ UnxCmplt+ RxOF+ MalfTLP+ ECRC- UnsupReq+ ACSViol-
->                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
->                 CEMsk:  RxErr+ BadTLP+ BadDLLP+ Rollover+ Timeout+ NonFatalErr-
->                 AERCap: First Error Pointer: 14, GenCap- CGenEn- ChkCap- ChkEn-
->         Kernel driver in use: pcieport
->         Kernel modules: shpchp
->
-> Sysfs do read [Pos 0, len 64]
-> 0a:01.0 Class 0604: Device 8086:3514 (rev 01)
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Bus: primary=0a, secondary=0e, subordinate=10, sec-latency=0
->         Memory behind bridge: fb800000-fd7fffff
->         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
->         BridgeCtl: Parity+ SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
->                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->         Capabilities: Sysfs do read [Pos 68, len 4]
-> [44] Express (v1) Downstream Port (Slot-), MSI 00
-> Sysfs do read [Pos 72, len 16]
->                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
->                         ExtTag- RBE- FLReset-
->                 DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported-
->                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
->                         MaxPayload 256 bytes, MaxReadReq 4096 bytes
->                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
->                 LnkCap: Port #2, Speed 2.5GT/s, Width x4, ASPM L0s, Latency L0 unlimited, L1 unlimited
->                         ClockPM- Surprise- LLActRep- BwNot-
->                 LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
->                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->                 LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->         Capabilities: Sysfs do read [Pos 96, len 4]
-> [60] MSI: Enable- Count=1/1 Maskable- 64bit+
-> Sysfs do read [Pos 100, len 10]
->                 Address: 0000000000000000  Data: 0000
->         Capabilities: Sysfs do read [Pos 112, len 4]
-> [70] Power Management version 2
->                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-> Sysfs do read [Pos 116, len 4]
->                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: Sysfs do read [Pos 128, len 4]
-> [80] Sysfs do read [Pos 132, len 4]
-> Subsystem: Device 0000:0000
-> Sysfs do read [Pos 256, len 4]
->         Capabilities: [100 v1] Advanced Error Reporting
-> Sysfs do read [Pos 260, len 24]
->                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
->                 UESvrt: DLP+ SDES- TLP+ FCP+ CmpltTO+ CmpltAbrt+ UnxCmplt+ RxOF+ MalfTLP+ ECRC- UnsupReq+ ACSViol-
->                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
->                 CEMsk:  RxErr+ BadTLP+ BadDLLP+ Rollover+ Timeout+ NonFatalErr-
->                 AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
->         Kernel driver in use: pcieport
->         Kernel modules: shpchp
->
-> Thanks,
-> Yuval
->
+    PCI/ACPI: Request _OSC control before scanning PCI root bus
+
+went in to allow us to query the pcie hotplug flags during the acpi bus scan.
+It however caused problems with the disabling of pcie aspm, and so:
+commit b8178f130e25c1bdac1c33e0996f1ff6e20ec08e
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Mon Apr 1 15:47:39 2013 -0600
+
+    Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
+
+Backed it out.  This of course brought back the problem in which acpi took over
+hotplug ports that were meant to be controlled by pcie.
+
+This patch gives us both items.  It lets us request _OSC control before scanning
+the pci root bus, but defers any disabling of aspm until after the scan is
+complete, allowing us to properly handle old pcie 1.1 devices aspm settings
+properly, as b8178f130e documents.
+
+Tested successfully by myself.
+
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+CC: Len Brown <lenb@kernel.org>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: linux-acpi@vger.kernel.org
+CC: linux-pci@vger.kernel.org
+---
+ drivers/acpi/pci_root.c | 62 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 38 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 5917839..6110fd2 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -378,6 +378,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	struct acpi_pci_root *root;
+ 	u32 flags, base_flags;
+ 	acpi_handle handle = device->handle;
++	bool no_aspm = false, clear_aspm = false;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+ 	if (!root)
+@@ -437,27 +438,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
+ 	acpi_pci_osc_support(root, flags);
+ 
+-	/*
+-	 * TBD: Need PCI interface for enumeration/configuration of roots.
+-	 */
+-
+-	/*
+-	 * Scan the Root Bridge
+-	 * --------------------
+-	 * Must do this prior to any attempt to bind the root device, as the
+-	 * PCI namespace does not get created until this call is made (and
+-	 * thus the root bridge's pci_dev does not exist).
+-	 */
+-	root->bus = pci_acpi_scan_root(root);
+-	if (!root->bus) {
+-		dev_err(&device->dev,
+-			"Bus %04x:%02x not present in PCI namespace\n",
+-			root->segment, (unsigned int)root->secondary.start);
+-		result = -ENODEV;
+-		goto end;
+-	}
+-
+-	/* Indicate support for various _OSC capabilities. */
+ 	if (pci_ext_cfg_avail())
+ 		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
+ 	if (pcie_aspm_support_enabled()) {
+@@ -471,7 +451,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		if (ACPI_FAILURE(status)) {
+ 			dev_info(&device->dev, "ACPI _OSC support "
+ 				"notification failed, disabling PCIe ASPM\n");
+-			pcie_no_aspm();
++			no_aspm = true;
+ 			flags = base_flags;
+ 		}
+ 	}
+@@ -503,7 +483,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 				 * We have ASPM control, but the FADT indicates
+ 				 * that it's unsupported. Clear it.
+ 				 */
+-				pcie_clear_aspm(root->bus);
++				clear_aspm = true;
+ 			}
+ 		} else {
+ 			dev_info(&device->dev,
+@@ -512,7 +492,14 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 				acpi_format_exception(status), flags);
+ 			dev_info(&device->dev,
+ 				 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
+-			pcie_no_aspm();
++			/*
++			 * We want to disable aspm here, but aspm_disabled 
++			 * needs to remain in its state from boot so that we
++			 * properly handle pcie 1.1 devices.  So we set this
++			 * flag here, to defer the action until after the acpi
++			 * root scan
++			 */
++			no_aspm = true;
+ 		}
+ 	} else {
+ 		dev_info(&device->dev,
+@@ -520,6 +507,33 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 			 "(_OSC support mask: 0x%02x)\n", flags);
+ 	}
+ 
++	/*
++	 * TBD: Need PCI interface for enumeration/configuration of roots.
++	 */
++
++	/*
++	 * Scan the Root Bridge
++	 * --------------------
++	 * Must do this prior to any attempt to bind the root device, as the
++	 * PCI namespace does not get created until this call is made (and
++	 * thus the root bridge's pci_dev does not exist).
++	 */
++	root->bus = pci_acpi_scan_root(root);
++	if (!root->bus) {
++		dev_err(&device->dev,
++			"Bus %04x:%02x not present in PCI namespace\n",
++			root->segment, (unsigned int)root->secondary.start);
++		result = -ENODEV;
++		goto end;
++	}
++
++	if (clear_aspm) {
++		dev_info(&device->dev, "Disabling ASPM (FADT indicates it is unsupported)\n");
++		pcie_clear_aspm(root->bus);
++	}
++	if (no_aspm)
++		pcie_no_aspm();
++
+ 	pci_acpi_add_bus_pm_notifier(device, root->bus);
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(root->bus->bridge, true);
+-- 
+1.8.1.4
+
