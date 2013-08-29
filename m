@@ -1,109 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:20030 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875Ab3HANMK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Aug 2013 09:12:10 -0400
-Message-ID: <51FA5EA0.6030805@huawei.com>
-Date: Thu, 1 Aug 2013 21:12:00 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH -v4 6/6] PCI,pciehp: identify device change during suspend
-References: <1375362389-26096-1-git-send-email-wangyijing@huawei.com> <1375362389-26096-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1375362389-26096-7-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mailout2.samsung.com ([203.254.224.25]:40649 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755547Ab3H2EnD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Aug 2013 00:43:03 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Pratyush Anand' <pratyush.anand@st.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <003d01ce9fc6$9c0f1c20$d42d5460$%han@samsung.com>
+ <20130823083539.GB3937@pratyush-vbox>
+ <001801cea3c7$06bca9d0$1435fd70$%han@samsung.com>
+ <20130829034508.GA3025@pratyush-vbox>
+In-reply-to: <20130829034508.GA3025@pratyush-vbox>
+Subject: Re: [PATCH V2] PCI: exynos: add support for MSI
+Date: Thu, 29 Aug 2013 13:43:00 +0900
+Message-id: <003001cea472$3d6ffee0$b84ffca0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-   I still leave this code in pciehp modeule, because I do not find
-a better place to move. Only in pciehp module, we can know the device whether support
-hotplug, if we can not power off device, although we find the device change, but we
-can not remove the device for safety. What do you think?
-
-Thanks!
-Yijing.
-
-On 2013/8/1 21:06, Yijing Wang wrote:
-> If device was removed from slot and reinsert a new device during
-> suspend, pciehp can not identify the physical device change now.
-> So the old driver .resume() method will be called for the new device,
-> this is bad. If device support device serial number capability,
-> we can identify this by DSN. So the reasonable way is first remove
-> the old device, then enable the new device.
+On Thursday, August 29, 2013 12:45 PM, Pratyush Anand wrote:
+> On Wed, Aug 28, 2013 at 04:17:24PM +0800, Jingoo Han wrote:
+> > On Friday, August 23, 2013 5:36 PM, Pratyush Anand wrote:
+> > > On Fri, Aug 23, 2013 at 02:04:20PM +0800, Jingoo Han wrote:
+> >
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Paul Bolle <pebolle@tiscali.nl>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: Oliver Neukum <oneukum@suse.de>
-> Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/hotplug/pciehp_core.c |   34 +++++++++++++++++++++++++++++++---
->  1 files changed, 31 insertions(+), 3 deletions(-)
+> [...]
 > 
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 7fe9dbd..db5f597 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -301,6 +301,8 @@ static int pciehp_resume (struct pcie_device *dev)
->  	struct controller *ctrl;
->  	struct slot *slot;
->  	struct pci_bus *pbus = dev->port->subordinate;
-> +	struct pci_dev *pdev;
-> +	int ret = 0;
->  	u8 status;
->  
->  	ctrl = get_service_data(dev);
-> @@ -315,10 +317,36 @@ static int pciehp_resume (struct pcie_device *dev)
->  	if (status) {
->  		if (list_empty(&pbus->devices))
->  			pciehp_enable_slot(slot);
-> -	} else if (!list_empty(&pbus->devices)) {
-> -		pciehp_disable_slot(slot);
-> +
-> +		pdev = pci_get_slot(pbus, PCI_DEVFN(0, 0));
-> +		if (!pdev)
-> +			return 0;
-> +		ret = pci_serial_number_changed(pdev);
-> +		pci_dev_put(pdev);
-> +		if (ret) {
-> +			/*
-> +			 * first power off slot, avoid the old driver
-> +			 * .remove() method touch the new hardware
-> +			 */
-> +			if (POWER_CTRL(ctrl)) {
-> +				ret = pciehp_power_off_slot(slot);
-> +				if (ret) {
-> +					ctrl_err(ctrl,
-> +						"Issue of Slot Disable command failed\n");
-> +					return 0;
-> +				}
-> +				msleep(1000);
-> +				pciehp_unconfigure_device(slot);
-> +				/* call child devices driver->suspend() for symmetry */
-> +				list_for_each_entry(pdev, &pbus->devices, bus_list)
-> +					if (pdev->driver)
-> +						pdev->driver->driver.pm->suspend(&pdev->dev);
-> +				pciehp_enable_slot(slot);
-> +			}
-> +		} else if (!list_empty(&pbus->devices)) {
-> +			pciehp_disable_slot(slot);
-> +		}
->  	}
-> -	
->  	return 0;
->  }
->  #endif /* PM */
+> > > #define MAX_PCIE_PORT_SUPPORTED 3
+> > > static DECLARE_BITMAP(msi_irq_in_use[MAX_PCIE_PORT_SUPPORTED],
+> > >                   NUM_MSI_IRQS);
+> > > static unsigned int *msi_data[MAX_PCIE_PORT_SUPPORTED];
+> >
+> > No, there is no need to do it.
+> > Without this, we can use 3 RCs by adding a node of 3rd RC to dt file.
+> >
 > 
+> Yes, you can use RCs by adding nodes to dt file. But you will need one
+> msi_irq_in_use and one msi_data per RC (ie per port in this driver), isn't it?
 
+Aha, you're right.
 
--- 
-Thanks!
-Yijing
+A few minutes ago, I found the same value of msi_data is
+used for 2 different RCs. It is my fault.
+
+As you mentioned, one msi_data per RC should be used.
+I will modify it in order to use one msi_data per RC.
+
+Thank you for your kind description. :-)
+
+Best regards,
+Jingoo Han
+
 
