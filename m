@@ -1,113 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:42210 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753130Ab3H1MOU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2013 08:14:20 -0400
-Date: Wed, 28 Aug 2013 14:14:17 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: linux-pci@vger.kernel.org, 'Jason Cooper' <jason@lakedaemon.net>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Subject: Re: [PATCH 3/3] PCI: mvebu: add wrapped I/O access functions
-Message-ID: <20130828141417.139ad2b0@skate>
-In-Reply-To: <001e01cea3e5$410cf6d0$c326e470$%jun@samsung.com>
-References: <001e01cea3e5$410cf6d0$c326e470$%jun@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:52043 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756309Ab3H3PlV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Aug 2013 11:41:21 -0400
+Received: by mail-ie0-f181.google.com with SMTP id a14so3311322iee.26
+        for <linux-pci@vger.kernel.org>; Fri, 30 Aug 2013 08:41:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQVXri56BzLviVjSPnqQvo25Q36AA26V_28kfy_=9EunjA@mail.gmail.com>
+References: <CAErSpo4cC7XKQn+2Pg9r+VDrcqKP4M4KQFRqQAvegTbnkUWf+A@mail.gmail.com>
+ <CAE9FiQX9gU-S9X_eeB=JwqS8130CONKgrv+mGj1cEgShmxgS-Q@mail.gmail.com>
+ <CAErSpo4qEPQq==rmzy+8a2FHgaKmWbG7BvopKqbBZC551kgdcg@mail.gmail.com> <CAE9FiQVXri56BzLviVjSPnqQvo25Q36AA26V_28kfy_=9EunjA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 30 Aug 2013 09:41:00 -0600
+Message-ID: <CAErSpo69TBOz6FJv8gPoAA9GFdJLuxyZWPy6gPHRbBAZKN047Q@mail.gmail.com>
+Subject: Re: [PATCH v8 6/6] PCI: update device mps when doing pci hotplug
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Yijing Wang <wangyijing@huawei.com>, Jon Mason <jdmason@kudzu.us>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Jin Feng <joe.jin@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Seungwon Jeon,
+On Thu, Aug 29, 2013 at 4:46 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Aug 29, 2013 at 3:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> Note that I think Linux *should* eventually actively manage MPS, and
+>> when it does, case 3 should "just work".  I just don't understand what
+>> the point of the BIOS using case 3 is.
+>>
+>> I suppose other OSes must get better performance in this "auto" mode?
+>
+> Yes.
 
-On Wed, 28 Aug 2013 20:53:47 +0900, Seungwon Jeon wrote:
-> read/write operation for I/O mem is wrapped with hiding
-> base address inside in order to simplify the usage.
-> 
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+My take on this is that "auto" mode really means "Windows" mode,
+because it's a BIOS workaround for shortcomings in Windows.  It's
+tailored to do system-wide MPS configuration that Windows doesn't do,
+while relying on Windows to do minimal reconfiguration after a
+hot-plug.  I don't feel any particular urgency to make Linux work with
+that.
 
-I'm fine with the principle, but I have a few comments below.
+In my opinion, a BIOS should configure the machine in the safest
+possible way.  Then everything works, and if we boot an OS that is
+smart enough to reconfigure it in a more optimal way, that's great,
+but it's not required.  For MPS, I think that means configuring the
+machine as I outlined in case 1 (MPS=128 always) or case 2 (larger MPS
+allowed on non-hotplug paths if the BIOS knows the root complex splits
+packets).
 
-> ---
->  drivers/pci/host/pci-mvebu.c |  105 +++++++++++++++++++++++++++---------------
->  1 files changed, 68 insertions(+), 37 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index d66530e..db8b00b 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -141,29 +141,59 @@ struct mvebu_pcie_port {
->  	size_t iowin_size;
->  };
->  
-> +static inline void mvebu_writeb(struct mvebu_pcie_port *port, u8 val, u32 reg)
-> +{
-> +	writeb(val, port->base + reg);
-> +}
-> +
-> +static inline u8 mvebu_readb(struct mvebu_pcie_port *port, u32 reg)
-> +{
-> +	return readb(port->base + reg);
-> +}
+>> (What exactly is that mode, anyway?)  That means the other OS must be
+>> smart enough to deal with hotplug device replacement, but not smart
+>> enough to configure MPS all by itself starting from scratch.  I don't
+>> know what rules would tell us "this MPS must be configured by the BIOS
+>> and the OS should leave it alone" and "the OS must configure MPS on
+>> this device for hotplug."  How can we make sense out of that?
+>
+> So my suggestion:
+> We scan mps of in the bridges to find out if any is set to other than 128.
+> if there is any bridge that mps is not 128 and it is hotplug slot.
+> We change to PCI_BUS_TUNE_PERF for that system.
 
-Those ones are not needed, all registers of this IP block are 32 bits
-registers.
+That seems too arbitrary and magic to me.  I don't really want to set
+modes based on what we discover in the machine.  If we're going to do
+MPS config, we should just do it right and do it everywhere.
 
-> +
-> +static inline void mvebu_writew(struct mvebu_pcie_port *port, u16 val, u32 reg)
-> +{
-> +	writew(val, port->base + reg);
-> +}
-> +
-> +static inline u16 mvebu_readw(struct mvebu_pcie_port *port, u32 reg)
-> +{
-> +	return readw(port->base + reg);
-> +}
+This discussion is not really going anywhere because we don't have any
+concrete changes on the table, so I'm going to try to resist
+continuing this thread :)
 
-Provided a small change is done below, those will also not be needed.
-
-> +static inline void mvebu_writel(struct mvebu_pcie_port *port, u32 val, u32 reg)
-> +{
-> +	writel(val, port->base + reg);
-> +}
-> +
-> +static inline u32 mvebu_readl(struct mvebu_pcie_port *port, u32 reg)
-> +{
-> +	return readl(port->base + reg);
-> +}
-
-Ok, but they should be called mvebu_pcie_readl() and
-mvebu_pcie_writel(), because they are specific to the PCIe IP block.
-Once you've done that, you'll realize that it's in fact longer to write:
-
-	mvebu_pcie_readl(port, PCIE_FOO);
-
-than
-
-	readl(port->base + PCIE_FOO);
-
-but ok, I do not oppose to the change.
-
->  	/* Master + slave enable. */
-> -	cmd = readw(port->base + PCIE_CMD_OFF);
-> +	cmd = mvebu_readw(port, PCIE_CMD_OFF);
->  	cmd |= PCI_COMMAND_IO;
->  	cmd |= PCI_COMMAND_MEMORY;
->  	cmd |= PCI_COMMAND_MASTER;
-> -	writew(cmd, port->base + PCIE_CMD_OFF);
-> +	mvebu_writew(port, cmd, PCIE_CMD_OFF);
-
-I believe this can be turned into a 32 bits read/modify/write, because
-the register is really a 32 bits registers, on both Armada 370/XP and
-Kirkwood (I guess Dove is the same).
-
-With this change, you can keep only the 32 bits variants of the
-accessors functions at the top of the file.
-
-Thanks,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Bjorn
