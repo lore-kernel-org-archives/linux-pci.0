@@ -1,61 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:34886 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751476Ab3HMJ74 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2013 05:59:56 -0400
-Date: Tue, 13 Aug 2013 11:59:41 +0200
-From: Sascha Hauer <s.hauer@pengutronix.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH 4/9] PCI: mvebu: add support for reset on GPIO
-Message-ID: <20130813095941.GB30913@pengutronix.de>
-References: <1376333215-12885-1-git-send-email-sebastian.hesselbarth@gmail.com>
- <1376333215-12885-5-git-send-email-sebastian.hesselbarth@gmail.com>
- <20130813080956.GE9316@ulmo>
- <20130813103030.1e4156a1@skate>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:40981 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754454Ab3H3Nkj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Aug 2013 09:40:39 -0400
+Received: by mail-ie0-f178.google.com with SMTP id f4so3247649iea.37
+        for <linux-pci@vger.kernel.org>; Fri, 30 Aug 2013 06:40:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130813103030.1e4156a1@skate>
+In-Reply-To: <20130830080138.GA24908@jtlinux>
+References: <20130828133337.GA8544@jtlinux> <CAErSpo5sa2cJXOUhfe5VDzxwabf0Um42ZfBwOMhF1TbwCW9G=w@mail.gmail.com>
+ <20130829082941.GA11203@jtlinux> <CAErSpo56RszdMQDOY8xCmz=1QP-osUGA71V56t9X9zY4rNAYew@mail.gmail.com>
+ <20130829150723.GA32730@jtlinux> <CAErSpo5nTy7bkU2_ZMR_sROz-FJF28a==eUdE3e-wZoZfzQZBw@mail.gmail.com>
+ <20130830080138.GA24908@jtlinux>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 30 Aug 2013 07:40:18 -0600
+Message-ID: <CAErSpo4OXQr_SW2+8q3+OLqs63EHpGwgj_AHpUo_5hTy8iQm=A@mail.gmail.com>
+Subject: Re: PCI reset problem
+To: Johannes Thumshirn <johannes.thumshirn@men.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 13, 2013 at 10:30:30AM +0200, Thomas Petazzoni wrote:
-> Dear Thierry Reding,
-> 
-> On Tue, 13 Aug 2013 10:09:56 +0200, Thierry Reding wrote:
-> 
-> > > +- reset-gpios: optional gpio to PERST#
-> > > +- reset-delay-ms: delay in ms to wait after reset de-assertion
-> > 
-> > I remember some recent discussion about this, and we now have this reset
-> > framework, so perhaps it makes more sense to use the reset binding for
-> > this? Cc'ing Stephen (as part of the device tree bindings maintainers
-> > team) who was involved in that recent reset bindings discussion.
-> 
-> I also thought about this, but the reset framework seems to be designed
-> for "reset controller" IPs, i.e special IPs that are controlling reset
-> signals. Looking at Documentation/devicetree/bindings/reset/reset.txt,
-> I'm not sure to see how this would apply to GPIO-controlled reset
-> signals.
+On Fri, Aug 30, 2013 at 2:01 AM, Johannes Thumshirn
+<johannes.thumshirn@men.de> wrote:
+> On Thu, Aug 29, 2013 at 09:52:30AM -0600, Bjorn Helgaas wrote:
+>> On Thu, Aug 29, 2013 at 9:07 AM, Johannes Thumshirn
+>> <johannes.thumshirn@men.de> wrote:
+>> > On Thu, Aug 29, 2013 at 06:01:43AM -0600, Bjorn Helgaas wrote:
+>> >> On Thu, Aug 29, 2013 at 2:29 AM, Johannes Thumshirn
+>> >> <johannes.thumshirn@men.de> wrote:
+>> >> > On Wed, Aug 28, 2013 at 10:50:58AM -0600, Bjorn Helgaas wrote:
+>> >> >> [+cc Yinghai]
+>> >> >>
+>> >> >> On Wed, Aug 28, 2013 at 7:33 AM, Johannes Thumshirn
+>> >> >> <johannes.thumshirn@men.de> wrote:
+>> >> >> > Hi List,
+>> >> >> >
+>> >> >> > I have a rather odd problem with a PCIe swicht/bridge which does not get
+>> >> >> > enumerated correctly. If I issue _two_ manual rescans of the PCI bus via sysfs,
+>> >> >> > everything get setup correctly. To work around the problem I decided to make a
+>> >> >> > platform specific PCI quirk (for the embedded system I'm on, to not break
+>> >> >> > anything else) and issue the pci_rescan_bus() myself as a "final" fixup. However
+>> >> >> > this does not have any effect at all.
+>> >> >> >
+>> >> >> > Does anyone have an idea what I could do wrong?
+>> >> >>
+>> >> >> A rescan doesn't really do anything differently from the initial
+>> >> >> boot-time scan.  Maybe there's an issue with the switch taking a long
+>> >> >> time to respond after reset?  But that doesn't seem likely, because if
+>> >> >> you do manual rescans via sysfs, that should give plenty of time and
+>> >> >> you wouldn't have to do it *twice*.
+>> >> >>
+>> >> >> Maybe there's some resource or bus number allocation issue such that
+>> >> >> we don't even get down to the problem switch the first couple of
+>> >> >> times?
+>> >> >>
+>> >> >> > Example:
+>> >> >> > root@generic-powerpc:~# lspci -tv
+>> >> >> > -[0000:00]---00.0-[01]--
+>> >> >> > root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
+>> >> >> > [...]
+>> >> >> > root@generic-powerpc:~# lspci -tv
+>> >> >> > -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]--
+>> >> >> >                                            +-02.0-[04]--
+>> >> >> >                                            \-03.0-[05]--
+>> >> >> > root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
+>> >> >> > [...]
+>> >> >> > root@generic-powerpc:~# lspci -tv
+>> >> >> > -[0000:00]---00.0-[01-05]----00.0-[02-05]--+-01.0-[03]----00.0  Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
+>> >> >> >                                            +-02.0-[04]--
+>> >> >> >                                            \-03.0-[05]--+-00.0  Pericom Semiconductor Device 400e
+>> >> >> >                                                         +-00.1  Pericom Semiconductor Device 400e
+>> >> >> >                                                         \-00.2  Pericom Semiconductor Device 400f
+>> >> >>
+>> >> >> I bet that's what's happening: the first lspci shows the 00:00.0
+>> >> >> bridge leading only to bus 01.  The second lspci shows 00:00.0 leading
+>> >> >> to [bus 01-05], so its bus number aperture has been reconfigured.
+>> >> >>
+>> >> >> On x86 the BIOS typically configures all the bridges so we can see all
+>> >> >> the devices.  But it looks like your platform doesn't, and the Linux
+>> >> >> paths that do similar configuration are not as well exercised.
+>> >> >>
+>> >> >
+>> >> > I'll have a look into my U-Boot again as well, maybe I can resolve it there.
+>> >> >
+>> >> >> Can you collect a complete dmesg log including initial boot and your
+>> >> >> manual sysfs rescansand attach it to a new bugzilla report at
+>> >> >> https://bugzilla.kernel.org/enter_bug.cgi?component=PCI&product=Drivers
+>> >> >> ?  There might be some generic way we can fix this.
+>> >> >>
+>> >> >
+>> >> > I can do, though I have to say, it's a 3.8 Kernel from Freescale's SDK. I
+>> >> > don't really know if mainline wants to care about it.
+>> >>
+>> >> I don't think much has changed in this area since then, so I think
+>> >> this issue is still relevant.
+>> >>
+>> >> On x86 there's a boot command option "pci=assign-busses".  I don't
+>> >> think the boot option is implemented for other arches, so you'll
+>> >> probably have to change the source to accomplish the same thing.  Take
+>> >> a look at pcibios_assign_all_busses() for your platform.  If it
+>> >> doesn't already return "true", try changing it so it does.  It looks
+>> >> like we should try to assign bus numbers when
+>> >> pcibios_assign_all_busses() is true.
+>> >
+>> > Unfortunately this didn't change anything at all. As well as adding the
+>> > PCI_REASSIGN_ALL_RSRC flag. But while testing I've found the
+>> > ppc_md.pcibios_fixup_resources hook. I'll try to manually assign resources in
+>> > there or clear them and call the pci core's ressource allocation code. I'll post
+>> > an update once I make any progress.
+>>
+>> It's a generic problem -- there's nothing arch-specific about
+>> assigning bus numbers -- so it would be a shame to fix this in an
+>> arch-specific hook.
+>>
+>> Make sure you set CONFIG_PCI_DEBUG=y to get the extra debug messages
+>> from the probing path.
+>>
+>> Bjorn
+>
+> @ Bjorn:
+>
+> OK, I'll change my focus to drivers/pci then.
+>
+> CONFIG_PCI_DEBUG is on.
+>
+> --snip--
+> Found FSL PCI host bridge at 0x00000000fe200000. Firmware bus number: 0->5
+> PCI host bridge /pcie@fe200000 (primary) ranges:
+>  MEM 0x0000000080000000..0x000000009fffffff -> 0x0000000080000000
+>   IO 0x00000000f8000000..0x00000000f800ffff -> 0x0000000000000000
+> /pcie@fe200000: PCICSRBAR @ 0xff000000
+> PCI: Probing PCI hardware
+> fsl-pci fe200000.pcie: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> pci_bus 0000:00: root bus resource [mem 0x80000000-0x9fffffff]
+> pci_bus 0000:00: root bus resource [bus 00-ff]
+> pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+> pci 0000:00:00.0: PCI bridge to [bus 01]
+> pci 0000:00:00.0:   bridge window [io  0x0000-0xffff]
+> pci 0000:00:00.0:   bridge window [mem 0x80000000-0x9fffffff]
+> --snip--
 
-Search for:
+It saves time if you include the complete dmesg rather than snipping
+parts out of it (unless you need to strip out secret proprietary info,
+of course).
 
-[PATCH v10] reset: Add driver for gpio-controlled reset pins
+> To me this looks like the bridge is set up correctly. But it fails to enumerate
+> subsequent bridges (please correct me if I'm wrong here).
 
-Which aims to be a solution for what you need here.
+The "pci 0000:00:00.0: PCI bridge to [bus 01]" means the bridge is
+configured for only a single bus (bus 01) behind it.  You have a lot
+more stuff there, so the bridge has to be reconfigured before we can
+see it all.  Apparently this does happen when you do the rescans, so
+it would be useful to see the dmesg log that includes those.
+Eventually you'll see a similar line that says "pci 0000:00:00.0: PCI
+bridge to [bus 01-05]".
 
-Sascha
-
--- 
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+Bjorn
