@@ -1,84 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:35978 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933876Ab3HIOtu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2013 10:49:50 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v6 07/14] PCI: tegra: set up PADS_REFCLK_CFG1
-Date: Fri,  9 Aug 2013 16:49:25 +0200
-Message-Id: <1376059772-16669-8-git-send-email-treding@nvidia.com>
-In-Reply-To: <1376059772-16669-1-git-send-email-treding@nvidia.com>
-References: <1376059772-16669-1-git-send-email-treding@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 30 Aug 2013 07:20:13 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4] ACPI: Fix osc flag setup ordering to allow pcie
+ hotplug use when available
+Message-ID: <20130830112013.GA1142@hmsreliant.think-freely.org>
+References: <1377278379-9054-1-git-send-email-nhorman@tuxdriver.com>
+ <1377807425-27423-1-git-send-email-nhorman@tuxdriver.com>
+ <20130829234052.GA22252@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130829234052.GA22252@google.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Warren <swarren@nvidia.com>
-
-The registers PADS_REFCLK_CFG are an array of 16-bit data, one entry per
-PCIe root port. For Tegra30, we therefore need to write a 3rd entry in
-this array. Doing so mays the mini-PCIe slot on Beaver operate correctly.
-
-While we're at it, add some #defines to partially document the fields
-within these 16-bit values.
-
-Signed-off-by: Stephen Warren <swarren@nvidia.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-tegra.c | 29 ++++++++++++++++++++++++-----
- 1 file changed, 24 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 75607c7..ad95c40 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -195,6 +195,25 @@
- #define PADS_REFCLK_CFG0			0x000000C8
- #define PADS_REFCLK_CFG1			0x000000CC
- 
-+/*
-+ * Fields in PADS_REFCLK_CFG*. Those registers form an array of 16-bit
-+ * entries, one entry per PCIe port. These field definitions and desired
-+ * values aren't in the TRM, but do come from NVIDIA.
-+ */
-+#define PADS_REFCLK_CFG_TERM_SHIFT		2  /* 6:2 */
-+#define PADS_REFCLK_CFG_E_TERM_SHIFT		7
-+#define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
-+#define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
-+
-+/* Default value provided by HW engineering is 0xfa5c */
-+#define PADS_REFCLK_CFG_VALUE \
-+	( \
-+		(0x17 << PADS_REFCLK_CFG_TERM_SHIFT)   | \
-+		(0    << PADS_REFCLK_CFG_E_TERM_SHIFT) | \
-+		(0xa  << PADS_REFCLK_CFG_PREDI_SHIFT)  | \
-+		(0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
-+	)
-+
- struct tegra_msi {
- 	struct msi_chip chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-@@ -808,11 +827,11 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 	value |= PADS_PLL_CTL_RST_B4SM;
- 	pads_writel(pcie, value, soc->pads_pll_ctl);
- 
--	/*
--	 * Hack, set the clock voltage to the DEFAULT provided by hw folks.
--	 * This doesn't exist in the documentation.
--	 */
--	pads_writel(pcie, 0xfa5cfa5c, PADS_REFCLK_CFG0);
-+	/* Configure the reference clock driver */
-+	value = PADS_REFCLK_CFG_VALUE | (PADS_REFCLK_CFG_VALUE << 16);
-+	pads_writel(pcie, value, PADS_REFCLK_CFG0);
-+	if (soc->num_ports > 2)
-+		pads_writel(pcie, PADS_REFCLK_CFG_VALUE, PADS_REFCLK_CFG1);
- 
- 	/* wait for the PLL to lock */
- 	timeout = 300;
--- 
-1.8.3.4
+On Thu, Aug 29, 2013 at 05:40:52PM -0600, Bjorn Helgaas wrote:
+> On Thu, Aug 29, 2013 at 04:17:05PM -0400, Neil Horman wrote:
+> > This is a fix for:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=60736
+> > 
+> > During the 3.8 devel cycle:
+> > 
+> > commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6
+> > Author: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> > Date:   Tue Oct 30 15:27:13 2012 +0900
+> > 
+> >     PCI/ACPI: Request _OSC control before scanning PCI root bus
+> > 
+> > went in to allow us to query the pcie hotplug flags during the acpi bus scan.
+> > It however caused problems with the disabling of pcie aspm, and so:
+> > commit b8178f130e25c1bdac1c33e0996f1ff6e20ec08e
+> > Author: Bjorn Helgaas <bhelgaas@google.com>
+> > Date:   Mon Apr 1 15:47:39 2013 -0600
+> > 
+> >     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
+> > 
+> > Backed it out.  This of course brought back the problem in which acpi took over
+> > hotplug ports that were meant to be controlled by pcie.
+> > 
+> > This patch gives us both items.  It lets us request _OSC control before scanning
+> > the pci root bus, but defers any disabling of aspm until after the scan is
+> > complete, allowing us to properly handle old pcie 1.1 devices aspm settings
+> > properly, as b8178f130e documents.
+> > 
+> > Tested successfully by myself.
+> > 
+> > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> > CC: Len Brown <lenb@kernel.org>
+> > CC: "Rafael J. Wysocki" <rjw@sisk.pl>
+> > CC: linux-acpi@vger.kernel.org
+> > CC: linux-pci@vger.kernel.org
+> 
+> I added Yinghai's ack and a stable tag and put this in pci/misc
+> for v3.12.  Thanks!
+> 
+> I reworked the changelog because I think the actual cause of the
+> regression was 3b63aaa70e, not the _OSC commits you mentioned:
+> 
+> 8c33f51df4 ("PCI/ACPI: Request _OSC control before scanning PCI root bus")
+> appeared in v3.8 and broke ASPM but not acpiphp.
+> 
+> b8178f130e ('Revert "PCI/ACPI: Request _OSC control before scanning PCI
+> root bus"') appeared in v3.9 and fixed ASPM, leaving acpiphp working.
+> 
+> 3b63aaa70e ("PCI: acpiphp: Do not use ACPI PCI subdriver mechanism")
+> appeared in v3.10, and I believe this is what actually broke acpiphp
+> because it moved the acpiphp initialization earlier, into the bus scan.
+> 
+> in v3.8:
+>     acpi_pci_root_add
+>       acpi_pci_osc_control_set          # request OS control
+>       pci_acpi_scan_root                # scan bus
+>     acpi_pci_root_start
+>       add_bridge                        # acpi_pci_driver .add method
+>         ...
+>           device_is_managed_by_native_pciehp	# OK
+> 
+> in v3.9:
+>     acpi_pci_root_add
+>       pci_acpi_scan_root                # scan bus
+>       acpi_pci_osc_control_set          # request OS control
+>       add_bridge                        # acpi_pci_driver .add method
+>         ...
+>           device_is_managed_by_native_pciehp	# OK
+> 
+> in v3.10:
+>     acpi_pci_root_add
+>       pci_acpi_scan_root                # scan bus
+>         ...
+>           acpiphp_enumerate_slots
+>             ...
+>               device_is_managed_by_native_pciehp	# PROBLEM
+>       acpi_pci_osc_control_set          # request OS control
+> 
+> So I added a stable tag for v3.10+ only.  I'll ask Linus to merge it
+> directly during the merge window for v3.12, and hopefully it will be
+> backported to the v3.10 and v3.11 stable trees soon after that.
+> 
+> Bjorn
+> 
+Copy that, thanks!
+Neil
 
