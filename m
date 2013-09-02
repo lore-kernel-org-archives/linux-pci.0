@@ -1,89 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:13920 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753262Ab3I3HDF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Sep 2013 03:03:05 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
-	"Hanjun Guo" <guohanjun@huawei.com>
-Subject: [PATCH] PCI: Introudce pci_dev_show_local_cpu() to simplify code
-Date: Mon, 30 Sep 2013 15:02:38 +0800
-Message-ID: <1380524558-25188-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 2 Sep 2013 11:00:28 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 3/4] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
+References: <cover.1378111919.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1378111919.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Local_cpus_show() and local_cpulist_show() are almost the same,
-introudce a new helper function pci_dev_show_local_cpu() to simplify
-code.
+Make use of the new pci_enable_msi_block_part() interface
+and conserve on othewise wasted interrupt resources for 10
+of 16 unused MSI vectors on Intel chipsets.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/pci/pci-sysfs.c |   32 +++++++++++++++-----------------
- 1 files changed, 15 insertions(+), 17 deletions(-)
+ drivers/ata/ahci.c |   48 +++++++++++++++++++++++++++++-------------------
+ 1 files changed, 29 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 7128cfd..3b41405 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -74,9 +74,11 @@ static ssize_t broken_parity_status_store(struct device *dev,
- 	return count;
- }
- 
--static ssize_t local_cpus_show(struct device *dev,
--			struct device_attribute *attr, char *buf)
--{		
-+static ssize_t pci_dev_show_local_cpu(struct device *dev,
-+		int type,
-+		struct device_attribute *attr,
-+		char *buf)
-+{
- 	const struct cpumask *mask;
- 	int len;
- 
-@@ -86,29 +88,25 @@ static ssize_t local_cpus_show(struct device *dev,
- #else
- 	mask = cpumask_of_pcibus(to_pci_dev(dev)->bus);
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index db4380d..b0c1648 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1091,26 +1091,36 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
  #endif
--	len = cpumask_scnprintf(buf, PAGE_SIZE-2, mask);
-+	len = type ?
-+		cpumask_scnprintf(buf, PAGE_SIZE-2, mask) :
-+		cpulist_scnprintf(buf, PAGE_SIZE-2, mask);
-+
- 	buf[len++] = '\n';
- 	buf[len] = '\0';
- 	return len;
- }
  
-+static ssize_t local_cpus_show(struct device *dev,
-+			struct device_attribute *attr, char *buf)
-+{
-+	return pci_dev_show_local_cpu(dev, 1, attr, buf);
-+}
- 
- static ssize_t local_cpulist_show(struct device *dev,
- 			struct device_attribute *attr, char *buf)
+-int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
++int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
++			 struct ahci_host_priv *hpriv)
  {
--	const struct cpumask *mask;
--	int len;
--
--#ifdef CONFIG_NUMA
--	mask = (dev_to_node(dev) == -1) ? cpu_online_mask :
--					  cpumask_of_node(dev_to_node(dev));
--#else
--	mask = cpumask_of_pcibus(to_pci_dev(dev)->bus);
--#endif
--	len = cpulist_scnprintf(buf, PAGE_SIZE-2, mask);
--	buf[len++] = '\n';
--	buf[len] = '\0';
--	return len;
-+	return pci_dev_show_local_cpu(dev, 0, attr, buf);
- }
+ 	int rc;
+ 	unsigned int maxvec;
  
- /*
+-	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
+-		rc = pci_enable_msi_block_auto(pdev, &maxvec);
+-		if (rc > 0) {
+-			if ((rc == maxvec) || (rc == 1))
+-				return rc;
+-			/*
+-			 * Assume that advantage of multipe MSIs is negated,
+-			 * so fallback to single MSI mode to save resources
+-			 */
+-			pci_disable_msi(pdev);
+-			if (!pci_enable_msi(pdev))
+-				return 1;
+-		}
+-	}
++	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
++		goto intx;
++
++	rc = pci_enable_msi_block_part(pdev, n_ports, AHCI_MAX_PORTS);
++	if (!rc)
++		return AHCI_MAX_PORTS;
++	if (rc < 0)
++		goto intx;
++
++	maxvec = rc;
++	rc = pci_enable_msi_block_part(pdev, n_ports, maxvec);
++	if (!rc)
++		return maxvec;
++	if (rc < 0)
++		goto intx;
++
++	/*
++	 * Assume that advantage of multipe MSIs is negated,
++	 * so fallback to single MSI mode to save resources
++	 */
++	if (!pci_enable_msi(pdev))
++		return 1;
+ 
++intx:
+ 	pci_intx(pdev, 1);
+ 	return 0;
+ }
+@@ -1277,10 +1287,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
+ 
+-	n_msis = ahci_init_interrupts(pdev, hpriv);
+-	if (n_msis > 1)
+-		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+-
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
+@@ -1327,6 +1333,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
+ 
++	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
++	if (n_msis > 1)
++		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
++
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
 -- 
-1.7.1
+1.7.7.6
 
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
