@@ -1,119 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:41868 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753393Ab3ILHBe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 03:01:34 -0400
-Date: Thu, 12 Sep 2013 09:01:31 +0200
-From: Sascha Hauer <s.hauer@pengutronix.de>
-To: Sean Cross <xobs@kosagi.com>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [PATCH v3 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-Message-ID: <20130912070131.GO30088@pengutronix.de>
-References: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
- <1378958611-4274-4-git-send-email-xobs@kosagi.com>
- <20130912062859.GM30088@pengutronix.de>
- <6FF3113C3FCC43A4A0D711C8656A4C03@kosagi.com>
+Received: from mx1.redhat.com ([209.132.183.28]:15118 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754876Ab3IBI6E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 Sep 2013 04:58:04 -0400
+Date: Mon, 2 Sep 2013 11:00:01 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 2/4] MSI/x86: Support pci_enable_msi_block_part() interface
+Message-ID: <9a0ae6ff3d116109d9f61230936a5c6a057637e0.1378111919.git.agordeev@redhat.com>
+References: <cover.1378111919.git.agordeev@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6FF3113C3FCC43A4A0D711C8656A4C03@kosagi.com>
+In-Reply-To: <cover.1378111919.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 12, 2013 at 02:44:01PM +0800, Sean Cross wrote:
-> > Sean,
-> > 
-> > Several more comments.
-> > 
-> > Shawn,
-> > 
-> > A question about a clk_set_parent inside.
-> > 
-> > On Thu, Sep 12, 2013 at 04:03:31AM +0000, Sean Cross wrote:
-> > > +
-> > > +#define IMX6_ENTER_RESET 0
-> > > +#define IMX6_EXIT_RESET 1
-> > 
-> > 
-> > 
-> > These are unused
-> > 
-> > > +
-> > > +#define IMX6_POWER_OFF 0
-> > > +#define IMX6_POWER_ON 1
-> > 
-> > 
-> > 
-> > unused aswell
-> > 
-> Thanks.  These leaked out from an earlier revision of the code.  I'll remove them. 
-> > 
-> > > +static int pcie_phy_poll_ack(void __iomem *dbi_base, int max_iterations,
-> > > + int exp_val)
-> > > +{
-> > > + u32 val;
-> > > + u32 wait_counter = 0;
-> > > +
-> > > + do {
-> > > + val = readl(dbi_base + PCIE_PHY_STAT);
-> > > + val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
-> > > + wait_counter++;
-> > > + } while ((wait_counter < max_iterations) && (val != exp_val));
-> > 
-> > 
-> > 
-> > may_iterations is never something else than 100 so you should drop the
-> > argument.
-> > Also I would prefer a real timeout here rather than a counter.
-> 
-> Is there a construct to have a real timer?  Would a completion work here instead?
+This update is a prerequisite for the forthcoming update
+of the AHCI device driver to conserve 10/16 MSIs on Intel
+chipsets. The update makes use of 'nvec_mme' parameter
+for pci_enable_msi_block_part() interface.
 
-A completion is overkill. Polling is fine, but it should be a well
-defined amount of time which is independent of current cpu speed. Adding
-a udelay(1) to the loop should be enough.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/iommu/irq_remapping.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-> > 
-> > 
-> > I'm unsure this should be done here. Shawn, should we do this in SoC
-> > code?
-> 
-> A different board could easily use lvds2 to drive the PCIe clock.  I think that I should change the variable names to simply "lvds_sel".
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 1a220a0..f443e23 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -49,9 +49,9 @@ static void irq_remapping_disable_io_apic(void)
+ 		disconnect_bsp_APIC(0);
+ }
+ 
+-static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
++static int do_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme)
+ {
+-	int node, ret, sub_handle, nvec_pow2, index = 0;
++	int node, ret, sub_handle, index = 0;
+ 	unsigned int irq;
+ 	struct msi_desc *msidesc;
+ 
+@@ -60,18 +60,18 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ 	WARN_ON(msidesc->irq);
+ 	WARN_ON(msidesc->msi_attrib.multiple);
+ 	WARN_ON(msidesc->nvec_used);
++	BUG_ON(nvec_mme != __roundup_pow_of_two(nvec_mme));
+ 
+ 	node = dev_to_node(&dev->dev);
+ 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
+ 	if (irq == 0)
+ 		return -ENOSPC;
+ 
+-	nvec_pow2 = __roundup_pow_of_two(nvec);
+ 	msidesc->nvec_used = nvec;
+-	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
++	msidesc->msi_attrib.multiple = ilog2(nvec_mme);
+ 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+ 		if (!sub_handle) {
+-			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
++			index = msi_alloc_remapped_irq(dev, irq, nvec_mme);
+ 			if (index < 0) {
+ 				ret = index;
+ 				goto error;
+@@ -145,7 +145,7 @@ static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
+ 					int nvec, int nvec_mme, int type)
+ {
+ 	if (type == PCI_CAP_ID_MSI)
+-		return do_setup_msi_irqs(dev, nvec);
++		return do_setup_msi_irqs(dev, nvec, nvec_mme);
+ 	else
+ 		return do_setup_msix_irqs(dev, nvec);
+ }
+-- 
+1.7.7.6
 
-Why should it use a different clock? It's fine to make this
-configurable, but only if we actually know the reasons why it should be
-configurable.
-
-Even if it should be configurable I'm still unsure whether this should
-be done at pci driver level.
-
-> > 
-> > 
-> > devm_gpio_request_one can still fail.
-> It can fail, but it's only critical for the power switch.  However, arguably it's a critical error even if these GPIOs can't be allocated, so I'll go ahead and add the same consistency check and error return code to the other three switches.
-
-If you want to make the gpios optional that's fine, but when
-of_get_named_gpio succeeds, then devm_gpio_request_one should succeed
-aswell, otherwise there's something wrong.
-
-> > > + struct imx6_pcie *imx6_pcie = platform_get_drvdata(pdev);
-> > > +
-> > > + clk_disable_unprepare(imx6_pcie->pcie_axi);
-> > > + clk_disable_unprepare(imx6_pcie->lvds1_gate);
-> > > + clk_disable_unprepare(imx6_pcie->pcie_ref_125m);
-> > 
-> > 
-> > 
-> > Still no unregister for the pcie controller?
-> The Designware core doesn't support unregistering (or even module unloading).  I'm not sure how to handle that case.  For that matter, when is remove() even called on a module that can't be unloaded?
-
-Then don't implement the remove callback. That's better than providing a
-bogus remove function.
-
-Sascha
 
 -- 
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
