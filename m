@@ -1,72 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:57846 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185Ab3I0QBR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 12:01:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <1380270519.27811.10.camel@pasglop>
-References: <1380270519.27811.10.camel@pasglop>
-Date: Fri, 27 Sep 2013 09:01:16 -0700
-Message-ID: <CAE9FiQVkW7d7vFx_kPJG-FEvO71SZjZmpR+dnwVm61wkYK=0YA@mail.gmail.com>
-Subject: Re: Please revert 928bea964827d7824b548c1f8e06eccbbc4d0d7d
-From: Yinghai Lu <yinghai@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+Received: from mail1.bemta5.messagelabs.com ([195.245.231.146]:40444 "EHLO
+	mail1.bemta5.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752789Ab3IBIAt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Sep 2013 04:00:49 -0400
+Date: Mon, 2 Sep 2013 10:00:57 +0200
+From: Johannes Thumshirn <johannes.thumshirn@men.de>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Johannes Thumshirn <johannes.thumshirn@men.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: PCI reset problem
+Message-ID: <20130902080057.GA14515@jtlinux>
+References: <20130828133337.GA8544@jtlinux>
+ <CAErSpo5sa2cJXOUhfe5VDzxwabf0Um42ZfBwOMhF1TbwCW9G=w@mail.gmail.com>
+ <20130829082941.GA11203@jtlinux>
+ <CAErSpo56RszdMQDOY8xCmz=1QP-osUGA71V56t9X9zY4rNAYew@mail.gmail.com>
+ <20130829150723.GA32730@jtlinux>
+ <CAErSpo5nTy7bkU2_ZMR_sROz-FJF28a==eUdE3e-wZoZfzQZBw@mail.gmail.com>
+ <20130830080138.GA24908@jtlinux>
+ <CAE9FiQWsyY2xnbOcd9L9=G0z50fZo-7OfaZovKVO3XzVuZODjA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAE9FiQWsyY2xnbOcd9L9=G0z50fZo-7OfaZovKVO3XzVuZODjA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 27, 2013 at 1:28 AM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> Hi Linus, Yinghai !
+On Fri, Aug 30, 2013 at 12:46:27PM -0700, Yinghai Lu wrote:
+> On Fri, Aug 30, 2013 at 1:01 AM, Johannes Thumshirn
+> <johannes.thumshirn@men.de> wrote:
+> >
+> > I'll test on mainline and then check pci-busn-alloc, but I have this strange
+> > feeling that it could be an interaction with Freescale's DPAA Ethernet, which is
+> > not yet merged into mainline.
 >
-> Please consider reverting:
+> please try for-pci-busn-alloc at
+>      git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-busn-alloc-3.11
 >
-> 928bea964827d7824b548c1f8e06eccbbc4d0d7d
-> PCI: Delay enabling bridges until they're needed
+> it is based on linus's tree + pci/next
 >
-> (I'd suggest to revert now and maybe merge a better patch later)
->
-> This breaks PCI on the PowerPC "powernv" platform (which is booted via
-> kexec) and probably x86 as well under similar circumstances. It will
-> basically break PCIe if the bus master bit of the bridge isn't set at
-> boot (by the firmware for example, or because kexec'ing cleared it).
->
-> The reason is that the PCIe port driver will call pci_enable_device() on
-> the bridge (on everything under the sun actually), which will marked the
-> device enabled (but will not do a set_master).
->
-> Because of that, pci_enable_bridge() later on (called as a result of the
-> child device driver doing pci_enable_device) will see the bridge as
-> already enabled and will not call pci_set_master() on it.
->
-> Now, this could probably be fixed by simply doing pci_set_master() in
-> the PCIe port driver, but I find the whole logic very fragile (anything
-> that "enables" the bridge without setting master or for some reason
-> clears master will forever fail to re-enable it).
->
-> Maybe a better option is to unconditionally do pci_set_mater() in
-> pci_enable_bridge(), ie, move the call to before the enabled test.
->
-> However I am not too happy with that either. My experience with bridges
-> is that if bus master isn't set, they will also fail to report AER
-> errors and other similar upstream transactions. We might want to get
-> these reported properly even if no downstream device got successfully
-> enabled.
->
-> So I think the premises of the patches are flawed, at least on PCI
-> express, and we should stick to always enabling bridges (at least the
-> bus master bit on them).
+> Yinghai
 
-there is pci_set_master everywhere in pci drivers.
+Hi Yinghai,
 
-So i would like to use the first way that you suggest : call pci_set_master
-PCIe port driver.
+I've tested the board with your for-pci-busn-alloc-3.11 branch. Initial
+enumeration is just as it was before. With the difference that a "sysfs-rescan"
+now results in:
 
-Thanks
+root@generic-powerpc:~# lspci
+00:00.0 PCI bridge: Freescale Semiconductor Inc P4080 (rev 20)
+root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
+pci_bus 0000:00: scanning bus
+pcieport 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 0
+pcieport 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
+pcieport 0000:00:00.0: rescan scaned bridge as broken one again ?
+pci_bus 0000:00: bus scan returning with max=00
+root@generic-powerpc:~# lspci
+00:00.0 PCI bridge: Freescale Semiconductor Inc P4080 (rev 20)
 
-Yinghai
+The good news for me is, I can work on your tree to try to resolve the issue.
+
+Johannes
