@@ -1,56 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:44194 "EHLO mail1.g1.pair.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53710 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755774Ab3IMJ5W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Sep 2013 05:57:22 -0400
-From: Sean Cross <xobs@kosagi.com>
-To: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Sascha Hauer <s.hauer@pengutronix.de>,
-	Zhu Richard-R65037 <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>, Sean Cross <xobs@kosagi.com>
-Subject: [PATCH v4 2/3] ARM: imx6q: Add PCIe bits to GPR syscon definition
-Date: Fri, 13 Sep 2013 09:40:21 +0000
-Message-Id: <1379065222-7275-3-git-send-email-xobs@kosagi.com>
-In-Reply-To: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
-References: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
+	id S1755275Ab3IBI65 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 Sep 2013 04:58:57 -0400
+Date: Mon, 2 Sep 2013 11:00:54 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 4/4] PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
+Message-ID: <22d32807482ab4a2131116c50fe217c111849ec0.1378111919.git.agordeev@redhat.com>
+References: <cover.1378111919.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1378111919.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe requires additional bits be defined for GPR8 and GPR12.
+There are no consumers of pci_enable_msi_block_auto()
+interface have left. Eliminate it for now.
 
-Signed-off-by: Sean Cross <xobs@kosagi.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ Documentation/PCI/MSI-HOWTO.txt |   12 ++++++------
+ drivers/pci/msi.c               |   25 -------------------------
+ include/linux/pci.h             |    7 -------
+ 3 files changed, 6 insertions(+), 38 deletions(-)
 
-diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-index b6bdcd6..1bf1fe9 100644
---- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-@@ -241,6 +241,12 @@
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 32d7d15..a8019e3 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -197,12 +197,12 @@ supported, it can set the pointer count to NULL.
  
- #define IMX6Q_GPR5_L2_CLK_STOP			BIT(8)
+ void pci_disable_msi(struct pci_dev *dev)
  
-+#define IMX6Q_GPR8_TX_DEEMPH_GEN1		(0x3F << 0)
-+#define IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB		(0x3F << 6)
-+#define IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB		(0x3F << 12)
-+#define IMX6Q_GPR8_TX_SWING_FULL		(0x7F << 18)
-+#define IMX6Q_GPR8_TX_SWING_LOW			(0x7F << 25)
-+
- #define IMX6Q_GPR9_TZASC2_BYP			BIT(1)
- #define IMX6Q_GPR9_TZASC1_BYP			BIT(0)
+-This function should be used to undo the effect of pci_enable_msi_block(),
+-pci_enable_msi(), pci_enable_msi_block_auto() or pci_enable_msi_block_part().
+-Calling it restores dev->irq to the pin-based interrupt number and frees the
+-previously allocated message signaled interrupt(s). The interrupt may
+-subsequently be assigned to another device, so drivers should not cache the
+-value of dev->irq.
++This function should be used to undo the effect of pci_enable_msi() or
++pci_enable_msi_block() or pci_enable_msi_block_part().  Calling it restores
++dev->irq to the pin-based interrupt number and frees the previously
++allocated message signaled interrupt(s).  The interrupt may subsequently be
++assigned to another device, so drivers should not cache the value of
++dev->irq.
  
-@@ -273,7 +279,9 @@
- #define IMX6Q_GPR12_ARMP_AHB_CLK_EN		BIT(26)
- #define IMX6Q_GPR12_ARMP_ATB_CLK_EN		BIT(25)
- #define IMX6Q_GPR12_ARMP_APB_CLK_EN		BIT(24)
-+#define IMX6Q_GPR12_DEVICE_TYPE			(0xF << 12)
- #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
-+#define IMX6Q_GPR12_LOS_LEVEL			(0x1F << 4)
+ Before calling this function, a device driver must always call free_irq()
+ on any interrupt for which it previously called request_irq().
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a5c958f..d99f022 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -866,31 +866,6 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ }
+ EXPORT_SYMBOL(pci_enable_msi_block);
  
- #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
- #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+-{
+-	int ret, nvec;
+-	u16 msgctl;
+-
+-	if (!dev->msi_cap)
+-		return -EINVAL;
+-
+-	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+-	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
+-
+-	if (maxvec)
+-		*maxvec = ret;
+-
+-	do {
+-		nvec = ret;
+-		ret = pci_enable_msi_block(dev, nvec);
+-	} while (ret > 0);
+-
+-	if (ret < 0)
+-		return ret;
+-	return nvec;
+-}
+-EXPORT_SYMBOL(pci_enable_msi_block_auto);
+-
+ void pci_msi_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *desc;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6552cee..89935b4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1133,12 +1133,6 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ 	return -1;
+ }
+ 
+-static inline int
+-pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+-{
+-	return -1;
+-}
+-
+ static inline void pci_msi_shutdown(struct pci_dev *dev)
+ { }
+ static inline void pci_disable_msi(struct pci_dev *dev)
+@@ -1172,7 +1166,6 @@ static inline int pci_msi_enabled(void)
+ int pci_enable_msi_block_part(struct pci_dev *dev,
+ 			      unsigned int nvec, int nvec_mme);
+ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_table_size(struct pci_dev *dev);
 -- 
-1.7.9.5
+1.7.7.6
 
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
