@@ -1,75 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49344 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750805Ab3IZHov (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 Sep 2013 03:44:51 -0400
-Date: Thu, 26 Sep 2013 09:46:46 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
-References: <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20130918142231.GA21650@mtj.dyndns.org>
- <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
- <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
- <20130920122736.GD7630@mtj.dyndns.org>
- <20130925180220.GB26273@google.com>
- <20130925205804.GA21737@dhcp-26-207.brq.redhat.com>
- <20130925210016.GA8926@htj.dyndns.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	"David S. Miller" <davem@davemloft.net>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Andrew Vasquez <andrew.vasquez@qlogic.com>,
+	<linux-driver@qlogic.com>, <linux-scsi@vger.kernel.org>
+Subject: [PATCH 7/7] scsi/qla2xxx: use pcie_is_pcie() to simplify code
+Date: Tue, 3 Sep 2013 15:35:15 +0800
+Message-ID: <1378193715-25328-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
+References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130925210016.GA8926@htj.dyndns.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 25, 2013 at 05:00:16PM -0400, Tejun Heo wrote:
-> Hello,
-> 
-> On Wed, Sep 25, 2013 at 10:58:05PM +0200, Alexander Gordeev wrote:
-> > Unfortunately, pSeries is a shows-topper here :( It seems we have to
-> > introduce pci_get_msi{,x}_limit() interfaces to honour the quota
-> > thing.  I just hope the hardware set for pSeries is limited and we
-> > won't need to use it for all drivers.
-> 
-> Can you please go into a bit of detail on that?  Why does it matter?
+Use pci_is_pcie() instead of pci_find_capability
+to simplify code.
 
-Because otherwise we will re-introduce a problem described by Michael:
-"We have a small number of MSIs available, limited by hardware &
-firmware, if we don't impose a quota then the first device that probes
-will get most/all of the MSIs and other devices miss out."
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-driver@qlogic.com
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/qla2xxx/qla_mr.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-> Is it because you're worried you might cause performance regression by
-> forcing prevoius partial multiple allocations to single interrupt
-> operation?
-
-Well, not really. I think it won't be possible to force people not to use
-partial allocations anyway. Some controllers just do not care how many MSIs
-they are configured with. Some drivers derive the number of MSIs desired
-from the number of CPUs online - in such cases allocating more MSIs (i.e.
-a number the controller advertised) could cause a performance degradation
-even.
-
-So when driver authors will know/measure/believe their hardware performs
-better with partial allocations they will stand for it. What we can do is
-to prevent those try-and-decrease fallbacks.
-
-> Thanks.
-> 
-> -- 
-> tejun
-
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index d799379..5f74271 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -507,7 +507,7 @@ qlafx00_pci_config(scsi_qla_host_t *vha)
+ 	pci_write_config_word(ha->pdev, PCI_COMMAND, w);
+ 
+ 	/* PCIe -- adjust Maximum Read Request Size (2048). */
+-	if (pci_find_capability(ha->pdev, PCI_CAP_ID_EXP))
++	if (pci_is_pcie(ha->pdev))
+ 		pcie_set_readrq(ha->pdev, 2048);
+ 
+ 	ha->chip_revision = ha->pdev->revision;
+@@ -660,10 +660,8 @@ char *
+ qlafx00_pci_info_str(struct scsi_qla_host *vha, char *str)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+-	int pcie_reg;
+ 
+-	pcie_reg = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
+-	if (pcie_reg) {
++	if (pci_is_pcie(ha->pdev)) {
+ 		strcpy(str, "PCIe iSA");
+ 		return str;
+ 	}
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.1
+
+
