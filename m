@@ -1,69 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 9 Sep 2013 17:22:52 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tejun Heo <tj@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>
-Subject: [PATCH 2/9] PCI/MSI/PPC: Make return values only 0/-errno when MSIs
- allocated
-Message-ID: <20130909152252.GC24962@dhcp-26-207.brq.redhat.com>
-References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
- <20130905150442.GA24148@htj.dyndns.org>
- <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
- <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:46176 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932481Ab3ICHgH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 03:36:07 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	"David S. Miller" <davem@davemloft.net>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	<e1000-devel@lists.sourceforge.net>, <netdev@vger.kernel.org>
+Subject: [PATCH 5/7] ixgbe: use pcie_capability_read_word() to simplify code
+Date: Tue, 3 Sep 2013 15:35:13 +0800
+Message-ID: <1378193715-25328-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
+References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- arch/powerpc/kernel/msi.c            |    2 +-
- arch/powerpc/platforms/pseries/msi.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+use pcie_capability_read_word() to simplify code.
 
-diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
-index 8bbc12d..36d70b9 100644
---- a/arch/powerpc/kernel/msi.c
-+++ b/arch/powerpc/kernel/msi.c
-@@ -22,7 +22,7 @@ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: e1000-devel@lists.sourceforge.net
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+index bad8f14..bfa0b06 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+@@ -152,7 +152,6 @@ MODULE_VERSION(DRV_VERSION);
+ static int ixgbe_read_pci_cfg_word_parent(struct ixgbe_adapter *adapter,
+ 					  u32 reg, u16 *value)
+ {
+-	int pos = 0;
+ 	struct pci_dev *parent_dev;
+ 	struct pci_bus *parent_bus;
  
- 	/* PowerPC doesn't support multiple MSI yet */
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
--		return 1;
-+		return -EINVAL;
+@@ -164,11 +163,10 @@ static int ixgbe_read_pci_cfg_word_parent(struct ixgbe_adapter *adapter,
+ 	if (!parent_dev)
+ 		return -1;
  
- 	if (ppc_md.msi_check_device) {
- 		pr_debug("msi: Using platform check routine.\n");
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 009ec73..89648c1 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -348,7 +348,7 @@ static int rtas_msi_check_device(struct pci_dev *pdev, int nvec, int type)
- 	quota = msi_quota_for_device(pdev, nvec);
+-	pos = pci_find_capability(parent_dev, PCI_CAP_ID_EXP);
+-	if (!pos)
++	if (!pci_is_pcie(parent_dev))
+ 		return -1;
  
- 	if (quota && quota < nvec)
--		return quota;
-+		return -ENOSPC;
- 
+-	pci_read_config_word(parent_dev, pos + reg, value);
++	pcie_capability_read_word(parent_dev, reg, value);
  	return 0;
  }
+ 
 -- 
-1.7.7.6
+1.7.1
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+
