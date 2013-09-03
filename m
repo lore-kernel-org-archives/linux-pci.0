@@ -1,37 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:33592 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753008Ab3IQRmZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Sep 2013 13:42:25 -0400
-Date: Tue, 17 Sep 2013 19:42:20 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	'Jason Cooper' <jason@lakedaemon.net>
-Subject: Re: [PATCH V2 3/3] PCI: mvebu: add missing __iomem annotation
-Message-ID: <20130917194220.47406b49@skate>
-In-Reply-To: <001c01ceb366$9bad8740$d30895c0$%han@samsung.com>
-References: <001a01ceb366$5e9481b0$1bbd8510$%han@samsung.com>
-	<001c01ceb366$9bad8740$d30895c0$%han@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from szxga02-in.huawei.com ([119.145.14.65]:18811 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932300Ab3ICHgD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 03:36:03 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	"David S. Miller" <davem@davemloft.net>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH 4/7] x86/pci: use pcie_cap to simplify code
+Date: Tue, 3 Sep 2013 15:35:12 +0800
+Message-ID: <1378193715-25328-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
+References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jingoo Han,
+PCI core saves PCIe Cap offset in pcie_cap,
+use pcie_cap to simplify code.
 
-On Tue, 17 Sep 2013 14:27:31 +0900, Jingoo Han wrote:
-> Added missing __iomem annotation in order to fix the following
-> sparse warning:
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/x86/pci/fixup.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I believe your commit title and log is now wrong: this commit is not
-adding an iomem annotation anywhere.
-
-Thanks!
-
-Thomas
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index f5809fa..ee8330d 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -288,7 +288,7 @@ static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
+ 		 */
+ 		list_for_each_entry(dev, &pbus->devices, bus_list) {
+ 			/* There are 0 to 8 devices attached to this bus */
+-			cap_base = pci_find_capability(dev, PCI_CAP_ID_EXP);
++			cap_base = dev->pcie_cap;
+ 			quirk_aspm_offset[GET_INDEX(pdev->device, dev->devfn)] = cap_base + 0x10;
+ 		}
+ 		pbus->ops = &quirk_pcie_aspm_ops;
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.1
+
+
