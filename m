@@ -1,55 +1,31 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:7465 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755120Ab3IBGfS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Sep 2013 02:35:18 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rob Landley <rob@landley.net>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH] PCI: clean up pci_find_slot() in pci.txt
-Date: Mon, 2 Sep 2013 14:34:40 +0800
-Message-ID: <1378103680-42500-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ve0-f181.google.com ([209.85.128.181]:35853 "EHLO
+	mail-ve0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753542Ab3ICOTO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 10:19:14 -0400
+Date: Tue, 3 Sep 2013 10:19:09 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/4] PCI/MSI: Introduce pci_enable_msi_block_part()
+ interface
+Message-ID: <20130903141909.GE10522@htj.dyndns.org>
+References: <cover.1378111919.git.agordeev@redhat.com>
+ <35d9a944d441e23fbbcb5dc3fb710cada0fa272c.1378111919.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <35d9a944d441e23fbbcb5dc3fb710cada0fa272c.1378111919.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_find_slot() has been removed from the kernel,
-clean up its description in pci.txt
+On Mon, Sep 02, 2013 at 10:59:33AM +0200, Alexander Gordeev wrote:
+> +	if (__roundup_pow_of_two(nvec_mme) != nvec_mme)
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- Documentation/PCI/pci.txt |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+Why the __ prefixed version?
 
-diff --git a/Documentation/PCI/pci.txt b/Documentation/PCI/pci.txt
-index bccf602..ac39338 100644
---- a/Documentation/PCI/pci.txt
-+++ b/Documentation/PCI/pci.txt
-@@ -525,8 +525,10 @@ corresponding register block for you.
- 6. Other interesting functions
- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
--pci_find_slot()			Find pci_dev corresponding to given bus and
--				slot numbers.
-+pci_get_domain_bus_and_slot()	Find pci_dev corresponding to given domain,
-+                        bus and slot and number. If the device is
-+                        found, its reference count is increased and
-+                        return the pci_dev pointer.
- pci_set_power_state()		Set PCI Power Management state (0=D0 ... 3=D3)
- pci_find_capability()		Find specified capability in device's capability
- 				list.
-@@ -582,7 +584,6 @@ having sane locking.
- 
- pci_find_device()	Superseded by pci_get_device()
- pci_find_subsys()	Superseded by pci_get_subsys()
--pci_find_slot()		Superseded by pci_get_slot()
- 
- 
- The alternative is the traditional PCI device driver that walks PCI
 -- 
-1.7.1
-
-
+tejun
