@@ -1,98 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:47173 "EHLO mail1.g1.pair.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752751Ab3IJEDU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Sep 2013 00:03:20 -0400
-From: Sean Cross <xobs@kosagi.com>
-To: devicetree-discuss@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Sean Cross <xobs@kosagi.com>
-Subject: [PATCH v2 1/3] ARM: imx: Add LVDS general-purpose clocks to i.MX6Q
-Date: Tue, 10 Sep 2013 03:37:50 +0000
-Message-Id: <1378784272-6333-2-git-send-email-xobs@kosagi.com>
-In-Reply-To: <1378784272-6333-1-git-send-email-xobs@kosagi.com>
-References: <1378784272-6333-1-git-send-email-xobs@kosagi.com>
+Received: from mail-ve0-f171.google.com ([209.85.128.171]:40616 "EHLO
+	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760085Ab3ICOJ7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 10:09:59 -0400
+Date: Tue, 3 Sep 2013 10:09:54 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 0/4] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <20130903140954.GC10522@htj.dyndns.org>
+References: <cover.1378111919.git.agordeev@redhat.com>
+ <20130903135541.GB10522@htj.dyndns.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130903135541.GB10522@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The i.MX6 has two general-purpose LVDS clocks that can be driven
-from a variety of sources.  This patch adds a mux and a gate for
-both of these clocks.
+On Tue, Sep 03, 2013 at 09:55:41AM -0400, Tejun Heo wrote:
+> Hmmm.... I've been looking at the code and and a curiosity.  Why does
+> multiple MSI support implicitly enabled threaded IRQ handling?  Why
+> are those two linked?  Also, do you have any numbers to show that this
+> actually is better?  Handling the processing off to a thread isn't a
+> light operation.
 
-Signed-off-by: Sean Cross <xobs@kosagi.com>
----
- .../devicetree/bindings/clock/imx6q-clock.txt      |    4 ++++
- arch/arm/mach-imx/clk-imx6q.c                      |   21 +++++++++++++++++++-
- 2 files changed, 24 insertions(+), 1 deletion(-)
+Also, it probably is a good idea to skip dummy ports when requesting
+irqs from ahci_host_activate(), which BTW should probably be renamed
+to ahci_host_activate_mmsi().
 
-diff --git a/Documentation/devicetree/bindings/clock/imx6q-clock.txt b/Documentation/devicetree/bindings/clock/imx6q-clock.txt
-index 5a90a72..35e82c7 100644
---- a/Documentation/devicetree/bindings/clock/imx6q-clock.txt
-+++ b/Documentation/devicetree/bindings/clock/imx6q-clock.txt
-@@ -215,6 +215,10 @@ clocks and IDs.
- 	cko2      		200
- 	cko      		201
- 	vdoa      		202
-+	lvds1_sel		203
-+	lvds2_sel		204
-+	lvds1_gate		205
-+	lvds2_gate		206
- 
- Examples:
- 
-diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
-index 9181a24..679d49a 100644
---- a/arch/arm/mach-imx/clk-imx6q.c
-+++ b/arch/arm/mach-imx/clk-imx6q.c
-@@ -217,6 +217,16 @@ static const char *cko2_sels[] = {
- 	"uart_serial", "spdif", "asrc", "hsi_tx",
- };
- static const char *cko_sels[] = { "cko1", "cko2", };
-+static const char *lvds1_sels[] = {
-+	"dummy", "dummy", "dummy", "dummy", "dummy", "dummy",
-+	"pll4_audio", "pll5_video", "pll8_mlb", "enet_ref",
-+	"pcie_ref", "sata_ref",
-+};
-+static const char *lvds2_sels[] = {
-+	"dummy", "dummy", "dummy", "dummy", "dummy", "dummy",
-+	"pll4_audio", "pll5_video", "pll8_mlb", "enet_ref",
-+	"pcie_ref", "sata_ref",
-+};
- 
- enum mx6q_clks {
- 	dummy, ckil, ckih, osc, pll2_pfd0_352m, pll2_pfd1_594m, pll2_pfd2_396m,
-@@ -251,7 +261,8 @@ enum mx6q_clks {
- 	ssi2_ipg, ssi3_ipg, rom, usbphy1, usbphy2, ldb_di0_div_3_5, ldb_di1_div_3_5,
- 	sata_ref, sata_ref_100m, pcie_ref, pcie_ref_125m, enet_ref, usbphy1_gate,
- 	usbphy2_gate, pll4_post_div, pll5_post_div, pll5_video_div, eim_slow,
--	spdif, cko2_sel, cko2_podf, cko2, cko, vdoa, clk_max
-+	spdif, cko2_sel, cko2_podf, cko2, cko, vdoa,
-+	lvds1_sel, lvds2_sel, lvds1_gate, lvds2_gate, clk_max
- };
- 
- static struct clk *clk[clk_max];
-@@ -342,6 +353,12 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
- 			base + 0xe0, 0, 2, 0, clk_enet_ref_table,
- 			&imx_ccm_lock);
- 
-+	clk[lvds1_sel] = imx_clk_mux("lvds1_sel", base + 0x160, 0, 5, lvds1_sels,         ARRAY_SIZE(lvds1_sels));
-+	clk[lvds2_sel] = imx_clk_mux("lvds2_sel", base + 0x160, 5, 5, lvds2_sels,         ARRAY_SIZE(lvds2_sels));
-+
-+	clk[lvds1_gate] = imx_clk_gate("lvds1_gate", "dummy", base + 0x160, 10);
-+	clk[lvds2_gate] = imx_clk_gate("lvds2_gate", "dummy", base + 0x160, 11);
-+
- 	/*                                name              parent_name        reg       idx */
- 	clk[pll2_pfd0_352m] = imx_clk_pfd("pll2_pfd0_352m", "pll2_bus",     base + 0x100, 0);
- 	clk[pll2_pfd1_594m] = imx_clk_pfd("pll2_pfd1_594m", "pll2_bus",     base + 0x100, 1);
-@@ -569,6 +586,8 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
- 	clk_register_clkdev(clk[cko1_sel], "cko1_sel", NULL);
- 	clk_register_clkdev(clk[ahb], "ahb", NULL);
- 	clk_register_clkdev(clk[cko1], "cko1", NULL);
-+	clk_register_clkdev(clk[lvds1_gate], "lvds1_gate", NULL);
-+	clk_register_clkdev(clk[lvds2_gate], "lvds2_gate", NULL);
- 	clk_register_clkdev(clk[arm], NULL, "cpu0");
- 	clk_register_clkdev(clk[pll4_post_div], "pll4_post_div", NULL);
- 	clk_register_clkdev(clk[pll4_audio], "pll4_audio", NULL);
+Thanks.
+
 -- 
-1.7.9.5
-
+tejun
