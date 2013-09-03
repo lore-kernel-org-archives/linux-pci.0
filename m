@@ -1,48 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:56845 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760572Ab3IDVKT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Sep 2013 17:10:19 -0400
-Subject: Re: [PATCH 3/7] powerpc/pci: use pci_is_pcie() to simplify code
-Mime-Version: 1.0 (Apple Message framework v1283)
-Content-Type: text/plain; charset=us-ascii
-From: Kumar Gala <galak@kernel.crashing.org>
-In-Reply-To: <1378193715-25328-3-git-send-email-wangyijing@huawei.com>
-Date: Wed, 4 Sep 2013 16:07:15 -0500
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Paul Mackerras <paulus@samba.org>,
-	<linuxppc-dev@lists.ozlabs.org>
-Message-Id: <F405FCAB-60A8-4341-AEA5-A9E20CDCB85C@kernel.crashing.org>
-References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com> <1378193715-25328-3-git-send-email-wangyijing@huawei.com>
-To: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:54115 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761165Ab3ICWiT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 18:38:19 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rq2so6636546pbb.33
+        for <linux-pci@vger.kernel.org>; Tue, 03 Sep 2013 15:38:18 -0700 (PDT)
+Date: Tue, 3 Sep 2013 15:38:15 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Greg KH <gregkh@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [RFC] pci: crash on pci_unregister_driver after pci_register_driver
+ fails
+Message-ID: <20130903153815.13638272@nehalam.linuxnetplumber.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+While debugging another problem with a PCI driver, I noticed that if
+device probe routine returns an error, the kernel will crash when module
+is unloaded. It looks like pci_register_driver() sets drv->bus to be PCI
+then in the module unload.
 
-On Sep 3, 2013, at 2:35 AM, Yijing Wang wrote:
+module_unload
+   my_device_exit_module
+      pci_unregister_driver
+         bus_remove_driver
+           OOPS
 
-> Use pci_is_pcie() to simplify code.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
-> arch/powerpc/kernel/eeh.c     |    3 +--
-> arch/powerpc/sysdev/fsl_pci.c |    2 +-
-> 2 files changed, 2 insertions(+), 3 deletions(-)
+One way to fix this would be to have pci_register_driver clear the bus
+flag (it has no reference) if an error was detected.
 
-Acked-by: Kumar Gala <galak@kernel.crashing.org>
-
-(for the fsl_pci.c) change
-
-- k
+--- a/drivers/pci/pci-driver.c	2013-07-08 10:54:52.968241742 -0700
++++ b/drivers/pci/pci-driver.c	2013-09-03 15:34:10.112477893 -0700
+@@ -1120,6 +1120,8 @@ const struct dev_pm_ops pci_dev_pm_ops =
+ int __pci_register_driver(struct pci_driver *drv, struct module *owner,
+ 			  const char *mod_name)
+ {
++	int err;
++
+ 	/* initialize common driver fields */
+ 	drv->driver.name = drv->name;
+ 	drv->driver.bus = &pci_bus_type;
+@@ -1130,7 +1132,11 @@ int __pci_register_driver(struct pci_dri
+ 	INIT_LIST_HEAD(&drv->dynids.list);
  
+ 	/* register with core */
+-	return driver_register(&drv->driver);
++	err = driver_register(&drv->driver);
++	if (err)
++		drv->driver.bus = NULL;
++
++	return err;
+ }
+ 
+ /**
