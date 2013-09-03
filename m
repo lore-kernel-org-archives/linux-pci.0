@@ -1,86 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:27994 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763506Ab3IEH5W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 03:57:22 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>
-CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH v2 4/6] x86/pci: use pcie_cap to simplify code
-Date: Thu, 5 Sep 2013 15:55:28 +0800
-Message-ID: <1378367730-25996-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
-References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-qe0-f53.google.com ([209.85.128.53]:34743 "EHLO
+	mail-qe0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755272Ab3ICQYS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 12:24:18 -0400
+Date: Tue, 3 Sep 2013 12:24:11 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 0/4] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <20130903162411.GA25040@mtj.dyndns.org>
+References: <cover.1378111919.git.agordeev@redhat.com>
+ <20130903135541.GB10522@htj.dyndns.org>
+ <20130903145719.GB14221@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130903145719.GB14221@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v1->v2: use pci_bus_set_ops to replace pci_ops
-        and add a dev_info() to notify user that
-        the pci_ops was replaced suggested by Bjorn.
+Hello,
 
-PCI core saves PCIe Cap offset in pcie_cap,
-use pcie_cap to simplify code. Also we should
-use pci_bus_set_ops() to replace pci_ops for
-safety and add a dev_info to notify user that
-the pci_ops was replaced.
+On Tue, Sep 03, 2013 at 04:57:19PM +0200, Alexander Gordeev wrote:
+> Multiple MSI support enables threaded IRQ handling, because at the time of
+> posting I did not want to intrude into the existing single-MSI codebase while
+> multiple MSI/multipe CPU approach gained good numbers (below).
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/x86/pci/fixup.c |   17 ++++++++++-------
- 1 files changed, 10 insertions(+), 7 deletions(-)
+Please separate out threaded IRQ support from multiple MSI.
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index f5809fa..edd7879 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -252,7 +252,7 @@ static struct pci_ops quirk_pcie_aspm_ops = {
-  */
- static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
- {
--	int cap_base, i;
-+	int i;
- 	struct pci_bus  *pbus;
- 	struct pci_dev *dev;
- 
-@@ -278,7 +278,7 @@ static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
- 		for (i = GET_INDEX(pdev->device, 0); i <= GET_INDEX(pdev->device, 7); ++i)
- 			quirk_aspm_offset[i] = 0;
- 
--		pbus->ops = pbus->parent->ops;
-+		pci_bus_set_ops(pbus, pbus->parent->ops);
- 	} else {
- 		/*
- 		 * If devices are attached to the root port at power-up or
-@@ -286,13 +286,16 @@ static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
- 		 * each root port to save the register offsets and replace the
- 		 * bus ops.
- 		 */
--		list_for_each_entry(dev, &pbus->devices, bus_list) {
-+		list_for_each_entry(dev, &pbus->devices, bus_list)
- 			/* There are 0 to 8 devices attached to this bus */
--			cap_base = pci_find_capability(dev, PCI_CAP_ID_EXP);
--			quirk_aspm_offset[GET_INDEX(pdev->device, dev->devfn)] = cap_base + 0x10;
--		}
--		pbus->ops = &quirk_pcie_aspm_ops;
-+			quirk_aspm_offset[GET_INDEX(pdev->device, dev->devfn)] =
-+				dev->pcie_cap + PCI_EXP_LNKCTL;
-+
-+		pci_bus_set_ops(pbus, &quirk_pcie_aspm_ops);
-+		dev_info(&pbus->dev, "pci_ops is replaced by quirk_pcie_aspm_ops, "
-+				"any writes to ASPM control bits will be ignored.\n");
- 	}
-+
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PA,	pcie_rootport_aspm_quirk);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PA1,	pcie_rootport_aspm_quirk);
+> Besides, the ports interrupt handling moved from the interrupt-disabled
+> hardware context to the interrupt-enabled threaded context and also ports
+> got per-port locks instead of the single host lock. AFAIR I did not post
+> the numbers, but it was something close to no-contention.
+
+Which is a completely separate issue, right?  Let's please not mix the
+two.
+
+Thanks.
+
 -- 
-1.7.1
-
-
+tejun
