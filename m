@@ -1,46 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Veaceslav Falico <vfalico@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to populate_msi_sysfs()
-Date: Tue, 17 Sep 2013 03:47:42 +0200
-Message-Id: <1379382464-7920-2-git-send-email-vfalico@redhat.com>
-In-Reply-To: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
-References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yh0-f51.google.com ([209.85.213.51]:41477 "EHLO
+	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932792Ab3ICN4R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 09:56:17 -0400
+Date: Tue, 3 Sep 2013 09:55:41 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 0/4] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <20130903135541.GB10522@htj.dyndns.org>
+References: <cover.1378111919.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1378111919.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before trying to kobject_init_and_add(), we add a reference to pdev via
-pci_dev_get(pdev). However, if it fails to init and/or add the kobject, we
-don't return it back - even on out_unroll.
+Hello,
 
-Fix this by adding pci_dev_put(pdev) before going to unrolling section.
+On Mon, Sep 02, 2013 at 10:59:07AM +0200, Alexander Gordeev wrote:
+> This series is aimed to conserve on othewise wasted interrupt
+> resources for 10 of 16 unused MSI vectors for AHCI devices on
+> Intel chipsets.
 
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
----
- drivers/pci/msi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Hmmm.... I've been looking at the code and and a curiosity.  Why does
+multiple MSI support implicitly enabled threaded IRQ handling?  Why
+are those two linked?  Also, do you have any numbers to show that this
+actually is better?  Handling the processing off to a thread isn't a
+light operation.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d5f90d6..14bf578 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -534,8 +534,10 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 		pci_dev_get(pdev);
- 		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
- 				     "%u", entry->irq);
--		if (ret)
-+		if (ret) {
-+			pci_dev_put(pdev);
- 			goto out_unroll;
-+		}
- 
- 		count++;
- 	}
+Thanks.
+
 -- 
-1.8.4
-
+tejun
