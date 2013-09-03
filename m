@@ -1,53 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:60640 "EHLO gate.crashing.org"
+Received: from mx1.redhat.com ([209.132.183.28]:16816 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754557Ab3I1DGS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Sep 2013 23:06:18 -0400
-Message-ID: <1380337550.27811.71.camel@pasglop>
-Subject: Re: Please revert 928bea964827d7824b548c1f8e06eccbbc4d0d7d
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Date: Sat, 28 Sep 2013 13:05:50 +1000
-In-Reply-To: <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
-References: <1380270519.27811.10.camel@pasglop>
-	 <CAE9FiQVkW7d7vFx_kPJG-FEvO71SZjZmpR+dnwVm61wkYK=0YA@mail.gmail.com>
-	 <CA+55aFyDfMdAeaniQwkoeW6F-xd3JxrzGYwtFb6N9+NA6aRCMg@mail.gmail.com>
-	 <1380318405.27811.37.camel@pasglop>
-	 <CAE9FiQXXvkfTak6oEpUog_RYs_Gwpdji7N5UJ=R11Q61==N97A@mail.gmail.com>
-	 <1380321480.27811.53.camel@pasglop>
-	 <CAE9FiQWm7ALPO5k_2nV+fuZw4oNNiw+_PEx8EWkb52ymN+EYUg@mail.gmail.com>
-	 <1380323960.27811.67.camel@pasglop>
-	 <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754053Ab3ICQRO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Sep 2013 12:17:14 -0400
+Date: Tue, 3 Sep 2013 18:19:06 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
+References: <cover.1378111919.git.agordeev@redhat.com>
+ <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
+ <20130903141824.GD10522@htj.dyndns.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130903141824.GD10522@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-09-27 at 16:44 -0700, Yinghai Lu wrote:
+On Tue, Sep 03, 2013 at 10:18:24AM -0400, Tejun Heo wrote:
+> On Mon, Sep 02, 2013 at 11:00:28AM +0200, Alexander Gordeev wrote:
+> > +	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+> > +		goto intx;
+> > +
+> > +	rc = pci_enable_msi_block_part(pdev, n_ports, AHCI_MAX_PORTS);
 
-> > Thus the port driver bails out before calling pci_set_master(). The fix
-> > is to call pci_set_master() unconditionally. However that lead me to
-> > find to a few interesting oddities in that port driver code:
+We start with maximum possible number of ports AHCI_MAX_PORTS
+
+> > +	if (!rc)
+> > +		return AHCI_MAX_PORTS;
+
+If we succeeded the device is indeed supports all AHCI_MAX_PORTS
+and we report it.
+
+> > +	if (rc < 0)
+> > +		goto intx;
+
+If pci_enable_msi_block_part() failed we should not make further
+attempts and fallback to simple IRQ.
+
+> > +	maxvec = rc;
+
+The device supports a lesser of AHCI_MAX_PORTS, because the previous
+pci_enable_msi_block_part() has not succeeded nor failed. Thus, rc
+contains number of supported MSIs. In case of ICH this will be 16
+rather than 32.
+
+Actually, while I was writing this I realized this could be a number
+of MSIs that could have been enabled this device, not the maximum
+number of supported MSIs - these two may differ. I think MRSM should
+be checked. But I will continue as if it always the same.
+
+> > +	rc = pci_enable_msi_block_part(pdev, n_ports, maxvec);
+
+Try pci_enable_msi_block_part() with the maximum number of supported MSIs.
+
+> > +	if (!rc)
+> > +		return maxvec;
+
+If we succeeded report the number of enabled MSIs.
+
+> > +	if (rc < 0)
+> > +		goto intx;
+
+If pci_enable_msi_block_part() failed we should not make further
+attempts and fallback to simple IRQ.
+
+> Why is the above fallback necessary?  The only other number which
+> makes sense is roundup_pow_of_two(n_ports), right?  What does the
+> above fallback logic buy us?
+
+We must enable maximum possible number of MSIs - the one reported in
+Multiple Message Capable register. Otherwise ICH device will fallback
+to MRSM. IOW, if the result of roundup_pow_of_two(n_ports) is not what
+in Multiple Message Capable register (i.e. as roundup_pow_of_two(6) vs 16)
+ICH will enforce MRSM mode.
+
+> Thanks.
 > 
-> can we revert that partially change ? aka we should check get_port....
-> at first...
-> 
-> like attached.
+> -- 
+> tejun
 
-In the meantime, can you properly submit the other one with the warning
-to Linus ? It will make things more robust overall...
-
-Also, please read my other comments. I think we are treading on very
-fragile ground with that whole business of potentially disabling bridges
-in the pcieport driver ...
-
-Cheers,
-Ben.
-
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
