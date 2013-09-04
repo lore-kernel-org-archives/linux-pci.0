@@ -1,101 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49836 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762995Ab3IDQMs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Sep 2013 12:12:48 -0400
+Date: Wed, 4 Sep 2013 18:14:43 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <20130904161442.GE8726@dhcp-26-207.brq.redhat.com>
+References: <cover.1378111919.git.agordeev@redhat.com>
+ <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
+ <20130903141824.GD10522@htj.dyndns.org>
+ <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
+ <20130903182731.GA27092@mtj.dyndns.org>
+ <20130904072256.GA8726@dhcp-26-207.brq.redhat.com>
+ <20130904145559.GB25788@mtj.dyndns.org>
 MIME-Version: 1.0
-In-Reply-To: <20130925232300.GA7368@neilslaptop.think-freely.org>
-References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
- <1379382464-7920-2-git-send-email-vfalico@redhat.com> <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
- <20130925232300.GA7368@neilslaptop.think-freely.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Sep 2013 17:35:54 -0600
-Message-ID: <CAErSpo6coKuf4f3j3zMwMNp7Uj3btN9UQyHpLPdq84aU-s=5UA@mail.gmail.com>
-Subject: Re: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to populate_msi_sysfs()
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130904145559.GB25788@mtj.dyndns.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 25, 2013 at 5:23 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> On Wed, Sep 25, 2013 at 03:08:05PM -0600, Bjorn Helgaas wrote:
->> [+cc Neil (he added this code in da8d1c8ba4), Greg]
->>
->> On Mon, Sep 16, 2013 at 7:47 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
->> > Before trying to kobject_init_and_add(), we add a reference to pdev via
->> > pci_dev_get(pdev). However, if it fails to init and/or add the kobject, we
->> > don't return it back - even on out_unroll.
->> >
->> > Fix this by adding pci_dev_put(pdev) before going to unrolling section.
->> >
->> > CC: Bjorn Helgaas <bhelgaas@google.com>
->> > CC: linux-pci@vger.kernel.org
->> > CC: linux-kernel@vger.kernel.org
->> > Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
->> > ---
->> >  drivers/pci/msi.c | 4 +++-
->> >  1 file changed, 3 insertions(+), 1 deletion(-)
->> >
->> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> > index d5f90d6..14bf578 100644
->> > --- a/drivers/pci/msi.c
->> > +++ b/drivers/pci/msi.c
->> > @@ -534,8 +534,10 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->> >                 pci_dev_get(pdev);
->> >                 ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
->> >                                      "%u", entry->irq);
->> > -               if (ret)
->> > +               if (ret) {
->> > +                       pci_dev_put(pdev);
->> >                         goto out_unroll;
->> > +               }
->> >
->> >                 count++;
->> >         }
->>
->> I don't understand why this code does the pci_dev_get() in the first
->> place.  The pdev->msi_list of msi_desc structs is private to the
->> pci_dev, and even without bumping the refcount, there should be no way
->> for the pci_dev to be freed before the msi_desc.
->>
-> Its been a few years now, but IIRC I did the pci_dev_get/put here to ensure that
-> people didn't try to remove the device prior to freeing all their interrupts
-> (i.e I didn't want a broken driver to go through its remove routine without
-> freeing all its irqs).  That might have been the wrong thing to do, but thats
-> what bubbles to the front of my head when looking at this.
+On Wed, Sep 04, 2013 at 10:55:59AM -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Wed, Sep 04, 2013 at 09:22:57AM +0200, Alexander Gordeev wrote:
+> > I think a general approach that will cover it all (including ICH and undesired
+> > sharing of interrupt vectors) - start MME from roundup_pow_of_two(n_ports) and
+> > ensure MRSM bit is unset. If not - double MME and retry. If still not and the
+> > limit is reached - fall back to single MSI.
+> > 
+> > Makes sense?
+> 
+> Ugh... I really don't want this sort of retry loop.  I'm still a bit
+> lost on why this is necessary.  Can you please elaborate?
 
-That sounds plausible, but I think I'd rather deal with that by having
-the PCI core remove logic free all the interrupts.  I *think* that's
-already in place, i.e., pci_free_resources() calls
-msi_remove_pci_irq_vectors().  So I propose that we remove the
-pci_dev_get()/put() unless we come up with a more compelling reason
-for it.
+Sure.
 
->> I also don't understand this nearby code (the same pattern appears in
->> free_msi_irqs()):
->>
->>     out_unroll:
->>         list_for_each_entry(entry, &pdev->msi_list, list) {
->>                 if (!count)
->>                         break;
->>                 kobject_del(&entry->kobj);
->>                 kobject_put(&entry->kobj);
->>                 count--;
->>         }
->>
->> Why do we call kobject_del() here?  The kobject_put() will call
->> kobject_del() anyway, so it looks redundant.
->> Documentation/kobject.txt says kobject_del() must be called explicitly
->> to break a circular reference, but I don't think we have that here.
->>
->  I think thats exactly why I did it, because of the documentation.  I agree
-> however, it does look redundant.  Harmless, but redundant.
+1. We do not support sharing MSI messages since there is no appropriate
+interrupt handling for it. I am not sure if any hardware supports it at
+all. This assumption is just for clarity here.
 
-OK, thanks.  I think we should remove it on the grounds that it's not
-needed and removing it will make this code look more similar to other
-callers of kobject_init_and_add(), which means bugs will have fewer
-places to hide.
+2. We can not just read out MMC value and try to write it to MME, because
+we are not sure the hardware honours the specification.  I.e. in case of 6
+ports and MMC value of 16 the value of 8 in MME could enable multiple MSIs
+while the value of 16 could enforce MRSM. Contradicts to the AHCI
+specification, but look how weird ICH is [4].
 
-Thanks, Neil!
+3. Enabling more MSIs than needed (MME == MMC instead of MME < MMC) could
+lead to unnecessary allocation of internal device resources. Bit lame, but
+still true.
 
-Bjorn
+4. We can not derive the value of MME needed from the number of ports, at
+least in case of ICH. I.e. with 6 ports and MMC value of 16 the value of 8
+in MME is what would be expected according to the AHCI specification. But
+the ICH reserves it and MRSMs in case 8 is written to MME.
+
+So to cover all the above assumptions we need to scan from lowest possible
+and watch the MRSM bit is unset.
+
+> Thanks.
+> 
+> -- 
+> tejun
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
