@@ -1,57 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52525 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59379 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754051Ab3ITIXJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 Sep 2013 04:23:09 -0400
-Date: Fri, 20 Sep 2013 10:24:59 +0200
+	id S1757161Ab3IDMap (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Sep 2013 08:30:45 -0400
+Date: Wed, 4 Sep 2013 14:32:39 +0200
 From: Alexander Gordeev <agordeev@redhat.com>
-To: Michael Ellerman <michael@ellerman.id.au>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
 	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
 	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org, Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
-References: <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20130918142231.GA21650@mtj.dyndns.org>
- <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 0/4] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <20130904123238.GC8726@dhcp-26-207.brq.redhat.com>
+References: <cover.1378111919.git.agordeev@redhat.com>
+ <20130903135541.GB10522@htj.dyndns.org>
+ <20130903140954.GC10522@htj.dyndns.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20130903140954.GC10522@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Michael et al.
+On Tue, Sep 03, 2013 at 10:09:54AM -0400, Tejun Heo wrote:
+> On Tue, Sep 03, 2013 at 09:55:41AM -0400, Tejun Heo wrote:
+> > Hmmm.... I've been looking at the code and and a curiosity.  Why does
+> > multiple MSI support implicitly enabled threaded IRQ handling?  Why
+> > are those two linked?  Also, do you have any numbers to show that this
+> > actually is better?  Handling the processing off to a thread isn't a
+> > light operation.
+> 
+> Also, it probably is a good idea to skip dummy ports when requesting
+> irqs from ahci_host_activate(), which BTW should probably be renamed
+> to ahci_host_activate_mmsi().
 
-The identifiable options sounded so far were:
+Hmm.. that is actually a great idea. What I am not sure about whether is
+a dummy port still can send (spurious?) interrupts? The hardware interrupt
+handler would have to be reworked then. Seems as a yet another topic to me ;)
 
-* Do not change anything
-
-* Make pci_enable_msix() return 0/-errno
-
-* Make pci_enable_msix() return 0/-errno and introduce arch_get_msix_limit()/
-  arch_get_msi_limit()
-
-* Make pci_enable_msix() return 0/-errno and introduce pci_get_msix_limit()/
-  pci_get_msi_limit() and arch_get_msix_limit()/arch_get_msi_limit() so that:
-	pci_get_msix_limit() = min(arch_get_msix_limit(), pci_msix_table_size())
-	pci_get_msi_limit()  = min(arch_get_msi_limit(),  pci_get_msi_cap())
-
-Can we have a conclusion here?
-
-Thanks!
+> -- 
+> tejun
 
 -- 
 Regards,
