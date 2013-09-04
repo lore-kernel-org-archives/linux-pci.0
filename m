@@ -1,147 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1378353962.3246.192.camel@ul30vt.home>
-Subject: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on
- enabled slots
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Date: Wed, 04 Sep 2013 22:06:02 -0600
-In-Reply-To: <1378352279.3246.183.camel@ul30vt.home>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
-	 <2449715.ReJj2CQeDS@vostro.rjw.lan> <1378336334.3246.158.camel@ul30vt.home>
-	 <16239518.dJxs4RVK1M@vostro.rjw.lan>
-	 <1378352279.3246.183.camel@ul30vt.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:45114 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759643Ab3IDSGQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Sep 2013 14:06:16 -0400
+Date: Wed, 4 Sep 2013 14:06:07 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <20130904180607.GD26609@mtj.dyndns.org>
+References: <cover.1378111919.git.agordeev@redhat.com>
+ <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
+ <20130903141824.GD10522@htj.dyndns.org>
+ <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
+ <20130903182731.GA27092@mtj.dyndns.org>
+ <20130904072256.GA8726@dhcp-26-207.brq.redhat.com>
+ <20130904145559.GB25788@mtj.dyndns.org>
+ <20130904161442.GE8726@dhcp-26-207.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130904161442.GE8726@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-09-04 at 21:37 -0600, Alex Williamson wrote:
-> On Thu, 2013-09-05 at 01:35 +0200, Rafael J. Wysocki wrote:
-> > On Wednesday, September 04, 2013 05:12:14 PM Alex Williamson wrote:
-> > > On Thu, 2013-09-05 at 00:54 +0200, Rafael J. Wysocki wrote:
-> > > > On Wednesday, September 04, 2013 02:36:34 PM Alex Williamson wrote:
-> > > > > On Thu, 2013-07-18 at 01:32 +0200, Rafael J. Wysocki wrote:
-> > > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > > > 
-> > > > > > The current implementation of acpiphp_check_bridge() is pretty dumb:
-> > > > > >  - It enables a slot if it's not enabled and the slot status is
-> > > > > >    ACPI_STA_ALL.
-> > > > > >  - It disables a slot if it's enabled and the slot status is not
-> > > > > >    ACPI_STA_ALL.
-> > > > > > 
-> > > > > > This behavior is not sufficient to handle the Thunderbolt daisy
-> > > > > > chaining case properly, however, because in that case the bus
-> > > > > > behind the already enabled slot needs to be rescanned for new
-> > > > > > devices.
-> > > > > > 
-> > > > > > For this reason, modify acpiphp_check_bridge() so that slots are
-> > > > > > disabled and stopped if they are not in the ACPI_STA_ALL state.
-> > > > > > 
-> > > > > > For slots in the ACPI_STA_ALL state, devices behind them that don't
-> > > > > > respond are trimmed using a new function, trim_stale_devices(),
-> > > > > > introduced specifically for this purpose.  That function walks
-> > > > > > the given bus and checks each device on it.  If the device doesn't
-> > > > > > respond, it is assumed to be gone and is removed.
-> > > > > > 
-> > > > > > Once all of the stale devices directy behind the slot have been
-> > > > > > removed, acpiphp_check_bridge() will start looking for new devices
-> > > > > > that might have appeared on the given bus.  It will do that even if
-> > > > > > the slot is already enabled (SLOT_ENABLED is set for it).
-> > > > > > 
-> > > > > > In addition to that, make the bus check notification ignore
-> > > > > > SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
-> > > > > > so that devices behind the slot are re-enumerated in that case too.
-> > > > > > 
-> > > > > > This change is based on earlier patches from Kirill A Shutemov
-> > > > > > and Mika Westerberg.
-> > > > > > 
-> > > > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > > > Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > > > > ---
-> > > > > 
-> > > > > FYI, git bisect landed on this patch as the cause of my serial console
-> > > > > dying on current upstream.  Further debugging to come...  Thanks,
-> > > > 
-> > > > Well, sorry about that.
-> > > > 
-> > > > What exactly do you mean by "dying"?
-> > > 
-> > > Sorry, I was hoping to have more details quickly, but it's been a pain
-> > > to debug.  By dying I mean serial console output suddenly stops during
-> > > kernel boot and nothing more comes out of it until after the system is
-> > > rebooted.  The problem happens when acpiphp_check_bridge() calls
-> > > enable_slot().  The serial console dies somewhere down in
-> > > acpiphp_bus_trim().  I think this is happening on the 00:1f ISA bridge,
-> > > so there's a good chance the serial ports are described as somewhere
-> > > under there.
-> > 
-> > Can you please check if that is the acpiphp_bus_trim() called by
-> > acpiphp_bus_add() or the other one called from trim_stale_devices()?
-> > 
-> > Just add a dump_stack() or WARN_ON(1) to trim_stale_devices() next to
-> > the acpiphp_bus_trim() call and see if that triggers.  I *think* it's the one
-> > in acpiphp_bus_add(), but it won't hurt to verify that.
-> 
-> Here's the call path:
-> 
-> [   16.120824]  [<ffffffff81627e6c>] dump_stack+0x55/0x76
-> [   16.125979]  [<ffffffff8162132e>] enable_slot+0x4ee/0x5e0
-> [   16.131396]  [<ffffffff813418fb>] ? trim_stale_devices+0x5b/0xf0
-> [   16.137420]  [<ffffffff81341b35>] acpiphp_check_bridge+0xd5/0x110
-> [   16.143531]  [<ffffffff81342acb>] hotplug_event+0x16b/0x260
-> [   16.149115]  [<ffffffff81072cd9>] ? process_one_work+0x189/0x540
-> [   16.155136]  [<ffffffff81342bf0>] hotplug_event_work+0x30/0x70
-> [   16.160978]  [<ffffffff81072d3b>] process_one_work+0x1eb/0x540
-> [   16.166819]  [<ffffffff81072cd9>] ? process_one_work+0x189/0x540
-> [   16.172836]  [<ffffffff8107353c>] worker_thread+0x11c/0x370
-> [   16.178426]  [<ffffffff81073420>] ? rescuer_thread+0x350/0x350
-> [   16.184276]  [<ffffffff8107b0ea>] kthread+0xea/0xf0
-> [   16.189165]  [<ffffffff8107b000>] ? kthread_create_on_node+0x160/0x160
-> [   16.195700]  [<ffffffff816395dc>] ret_from_fork+0x7c/0xb0
-> [   16.201109]  [<ffffffff8107b000>] ? kthread_create_on_node+0x160/0x160
-> 
-> The actual death of the serial console occurs in acpi_device_set_power()
-> called from:
-> 
-> enable_slot()
->  acpiphp_bus_add()
->   acpiphp_bus_trim()
->    acpi_bus_trim()
->     acpi_walk_namespace()
->      acpi_bus_remove()
->       acpi_device_unregister()
->        acpi_device_set_power()
-> 
-> I can't seem to get a path from the acpi devices in question there, so I
-> have no idea what's getting trimmed here.  It worries me quite a bit by
-> introducing this trimming that apparently wasn't happening before
-> though.  Thanks,
+Hello,
 
-As suspected, the pnp.bus_id/id of the last device before the serial
-console dies is COM1/PNP0501.  I also see all of these being trimmed
-out:
+On Wed, Sep 04, 2013 at 06:14:43PM +0200, Alexander Gordeev wrote:
+> 1. We do not support sharing MSI messages since there is no appropriate
+> interrupt handling for it. I am not sure if any hardware supports it at
+> all. This assumption is just for clarity here.
 
- MBRD/PNP0C02
- DMAC/PNP0200
- MATH/PNP0C04
- PIC/PNP0000
- HPET/PNP0103
- RTC/PNP0B00
- SPKR/PNP0800
- TIME/PNP0100
- LNK{A-H}/PNP0C0F
+I don't think it even matters.  If we can configure all MSIs, good.
+If not, using single interrupt is good enough.  Being able to allocate
+only some of the interrupts is highly unlikely to begin with and
+there's no reason to meddle with extra complexity.
 
-This seems like a bad idea.  I forgot to mention, the original
-hotplug_event is called with a device check on \_SB_.PCI0.PEX2.  The box
-where I'm seeing this is a pretty generic X58 based Nehalem workstation
-(Lenovo S20).  Thanks,
+> 2. We can not just read out MMC value and try to write it to MME, because
+> we are not sure the hardware honours the specification.  I.e. in case of 6
+> ports and MMC value of 16 the value of 8 in MME could enable multiple MSIs
+> while the value of 16 could enforce MRSM. Contradicts to the AHCI
+> specification, but look how weird ICH is [4].
+> 
+> 3. Enabling more MSIs than needed (MME == MMC instead of MME < MMC) could
+> lead to unnecessary allocation of internal device resources. Bit lame, but
+> still true.
+> 
+> 4. We can not derive the value of MME needed from the number of ports, at
+> least in case of ICH. I.e. with 6 ports and MMC value of 16 the value of 8
+> in MME is what would be expected according to the AHCI specification. But
+> the ICH reserves it and MRSMs in case 8 is written to MME.
+> 
+> So to cover all the above assumptions we need to scan from lowest possible
+> and watch the MRSM bit is unset.
 
-Alex
+I don't think it's necessary / a good idea to try to support
+everything.  Just following the spec would be fine.  If that doesn't
+work for too many devices, maybe just do one fallback?
 
+Thanks.
+
+-- 
+tejun
