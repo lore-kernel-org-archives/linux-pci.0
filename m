@@ -1,65 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:48906 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755756Ab3IJBIc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 21:08:32 -0400
-Message-ID: <522E7035.6060404@huawei.com>
-Date: Tue, 10 Sep 2013 09:04:53 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	infinipath <infinipath@intel.com>,
-	Roland Dreier <roland@kernel.org>,
-	Roland Dreier <roland@purestorage.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mark Einon <mark.einon@gmail.com>,
-	"Hefty, Sean" <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH 4/6] IB/qib: Use pcie_set_mps() and pcie_get_mps() to
- simplify code
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com> <1378732388-4508-5-git-send-email-wangyijing@huawei.com> <32E1700B9017364D9B60AED9960492BC2119F081@FMSMSX107.amr.corp.intel.com>
-In-Reply-To: <32E1700B9017364D9B60AED9960492BC2119F081@FMSMSX107.amr.corp.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:40667 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757752Ab3IDNqN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Sep 2013 09:46:13 -0400
+Received: by mail-wg0-f41.google.com with SMTP id a12so2592480wgh.4
+        for <linux-pci@vger.kernel.org>; Wed, 04 Sep 2013 06:46:11 -0700 (PDT)
+From: Tom Gundersen <teg@jklm.no>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Tom Gundersen <teg@jklm.no>,
+	Martin Mares <mj@ucw.cz>
+Subject: [PATCH RESEND][pciutils] libpci: pci_id_lookup - add udev/hwdb support
+Date: Wed,  4 Sep 2013 15:47:08 +0200
+Message-Id: <1378302428-19758-1-git-send-email-teg@jklm.no>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/9/9 22:55, Marciniszyn, Mike wrote:
->> Subject: [PATCH 4/6] IB/qib: Use pcie_set_mps() and pcie_get_mps() to simplify
->> code
->>
->> Refactor qib_tune_pcie_caps() function, use pcie_set_mps() and
->> pcie_get_mps() to simply code. Because pci core caches the "PCI-E Max
->> Payload Size Supported" in pci_dev->pcie_mpss, so use that instead of
->> pcie_capability_read_word(). Remove the unused val2fld() and fld2val().
->>
-> 
-> I tested this patch as is and saw no issues.
-> 
-> The only thing I would suggest is that the new use of pcie_get_readrq/pcie_set_readrq() be reflected in the comments with an appropriate adjustment in the subject.
+This lets you select hwdb support at compile time.
 
-Hi Mike,
-   Thanks for your tests very much! Ok, I will update the comments.
+hwdb is an efficient hardware database shipped with recent versions of udev. It contains
+among other sources pci.ids so querying hwdb rather than reading pci.ids directly should give
+the same result.
 
-Thanks!
-Yijing.
+Ideally Linux distros using udev could stop shipping pci.ids, but use hwdb as the only source
+of this information, which this patch allows.
 
-> 
-> Mike
-> 
->  
-> 
-> .
-> 
+Cc: Martin Mares <mj@ucw.cz>
+---
+ lib/configure    | 17 ++++++++++++++++
+ lib/names-hash.c | 59 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 74 insertions(+), 2 deletions(-)
 
-
+diff --git a/lib/configure b/lib/configure
+index 27388bc..bb9a983 100755
+--- a/lib/configure
++++ b/lib/configure
+@@ -141,6 +141,23 @@ esac
+ echo >>$c '#define PCI_HAVE_PM_DUMP'
+ echo " dump"
+ 
++echo_n "Checking for udev hwdb support... "
++if [ "$HWDB" = yes -o "$HWDB" = no ] ; then
++	echo "$HWDB (set manually)"
++else
++	if [ -f /usr/include/libudev.h -o -f /usr/local/include/libudev.h ] ; then
++		HWDB=yes
++	else
++		HWDB=no
++	fi
++	echo "$HWDB (auto-detected)"
++fi
++if [ "$HWDB" = yes ] ; then
++	echo >>$c '#define PCI_HAVE_HWDB'
++	echo >>$m 'LIBUDEV=-ludev'
++	echo >>$m 'WITH_LIBS+=$(LIBUDEV)'
++fi
++
+ echo_n "Checking for zlib support... "
+ if [ "$ZLIB" = yes -o "$ZLIB" = no ] ; then
+ 	echo "$ZLIB (set manually)"
+diff --git a/lib/names-hash.c b/lib/names-hash.c
+index 33f3c11..9661d03 100644
+--- a/lib/names-hash.c
++++ b/lib/names-hash.c
+@@ -11,6 +11,11 @@
+ #include "internal.h"
+ #include "names.h"
+ 
++#ifdef PCI_HAVE_HWDB
++#include <libudev.h>
++#include <stdio.h>
++#endif
++
+ struct id_bucket {
+   struct id_bucket *next;
+   unsigned int full;
+@@ -86,8 +91,58 @@ char
+ *pci_id_lookup(struct pci_access *a, int flags, int cat, int id1, int id2, int id3, int id4)
+ {
+   struct id_entry *n, *best;
+-  u32 id12 = id_pair(id1, id2);
+-  u32 id34 = id_pair(id3, id4);
++  u32 id12, id34;
++
++#ifdef PCI_HAVE_HWDB
++  if (!(flags & PCI_LOOKUP_SKIP_LOCAL))
++    {
++      char modalias[64];
++      const char *key = NULL;
++      struct udev *udev = udev_new();
++      struct udev_hwdb *hwdb = udev_hwdb_new(udev);
++      struct udev_list_entry *entry;
++
++      switch(cat)
++        {
++        case ID_VENDOR:
++          sprintf(modalias, "pci:v%08X*", id1);
++          key = "ID_VENDOR_FROM_DATABASE";
++          break;
++        case ID_DEVICE:
++          sprintf(modalias, "pci:v%08Xd%08X*", id1, id2);
++          key = "ID_MODEL_FROM_DATABASE";
++          break;
++        case ID_SUBSYSTEM:
++          sprintf(modalias, "pci:v%08Xd%08Xsv%08Xsd%08X*", id1, id2, id3, id4);
++          key = "ID_MODEL_FROM_DATABASE";
++          break;
++        case ID_GEN_SUBSYSTEM:
++          sprintf(modalias, "pci:v*d*sv%08Xsd%08X*", id1, id2);
++          key = "ID_MODEL_FROM_DATABASE";
++          break;
++        case ID_CLASS:
++          sprintf(modalias, "pci:v*d*sv*sd*bc%02X*", id1);
++          key = "ID_PCI_CLASS_FROM_DATABASE";
++          break;
++        case ID_SUBCLASS:
++          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02X*", id1, id2);
++          key = "ID_PCI_SUBCLASS_FROM_DATABASE";
++          break;
++        case ID_PROGIF:
++          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02Xi%02X*", id1, id2, id3);
++          key = "ID_PCI_INTERFACE_FROM_DATABASE";
++          break;
++        }
++
++      if (key)
++          udev_list_entry_foreach(entry, udev_hwdb_get_properties_list_entry(hwdb, modalias, 0))
++              if (strcmp(udev_list_entry_get_name(entry), key) == 0)
++                return udev_list_entry_get_value(entry);
++    }
++#endif
++
++  id12 = id_pair(id1, id2);
++  id34 = id_pair(id3, id4);
+ 
+   if (a->id_hash)
+     {
 -- 
-Thanks!
-Yijing
+1.8.4
 
