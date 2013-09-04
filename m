@@ -1,136 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:53307 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755242Ab3I2A24 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Sep 2013 20:28:56 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Subject: Re: Please revert 928bea964827d7824b548c1f8e06eccbbc4d0d7d
-Date: Sun, 29 Sep 2013 02:40:21 +0200
-Message-ID: <3570038.ZGVWFnHvMQ@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
-References: <1380270519.27811.10.camel@pasglop> <1380323960.27811.67.camel@pasglop> <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots
+Date: Thu, 05 Sep 2013 01:35:05 +0200
+Message-ID: <16239518.dJxs4RVK1M@vostro.rjw.lan>
+In-Reply-To: <1378336334.3246.158.camel@ul30vt.home>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <2449715.ReJj2CQeDS@vostro.rjw.lan> <1378336334.3246.158.camel@ul30vt.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, September 27, 2013 04:44:20 PM Yinghai Lu wrote:
-> [+ Rafael]
+On Wednesday, September 04, 2013 05:12:14 PM Alex Williamson wrote:
+> On Thu, 2013-09-05 at 00:54 +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, September 04, 2013 02:36:34 PM Alex Williamson wrote:
+> > > On Thu, 2013-07-18 at 01:32 +0200, Rafael J. Wysocki wrote:
+> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > 
+> > > > The current implementation of acpiphp_check_bridge() is pretty dumb:
+> > > >  - It enables a slot if it's not enabled and the slot status is
+> > > >    ACPI_STA_ALL.
+> > > >  - It disables a slot if it's enabled and the slot status is not
+> > > >    ACPI_STA_ALL.
+> > > > 
+> > > > This behavior is not sufficient to handle the Thunderbolt daisy
+> > > > chaining case properly, however, because in that case the bus
+> > > > behind the already enabled slot needs to be rescanned for new
+> > > > devices.
+> > > > 
+> > > > For this reason, modify acpiphp_check_bridge() so that slots are
+> > > > disabled and stopped if they are not in the ACPI_STA_ALL state.
+> > > > 
+> > > > For slots in the ACPI_STA_ALL state, devices behind them that don't
+> > > > respond are trimmed using a new function, trim_stale_devices(),
+> > > > introduced specifically for this purpose.  That function walks
+> > > > the given bus and checks each device on it.  If the device doesn't
+> > > > respond, it is assumed to be gone and is removed.
+> > > > 
+> > > > Once all of the stale devices directy behind the slot have been
+> > > > removed, acpiphp_check_bridge() will start looking for new devices
+> > > > that might have appeared on the given bus.  It will do that even if
+> > > > the slot is already enabled (SLOT_ENABLED is set for it).
+> > > > 
+> > > > In addition to that, make the bus check notification ignore
+> > > > SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
+> > > > so that devices behind the slot are re-enumerated in that case too.
+> > > > 
+> > > > This change is based on earlier patches from Kirill A Shutemov
+> > > > and Mika Westerberg.
+> > > > 
+> > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > > ---
+> > > 
+> > > FYI, git bisect landed on this patch as the cause of my serial console
+> > > dying on current upstream.  Further debugging to come...  Thanks,
+> > 
+> > Well, sorry about that.
+> > 
+> > What exactly do you mean by "dying"?
 > 
-> On Fri, Sep 27, 2013 at 4:19 PM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
-> > On Fri, 2013-09-27 at 15:56 -0700, Yinghai Lu wrote:
-> >
-> >> ok, please if you are ok attached one instead. It will print some warning about
-> >> driver skipping pci_set_master, so we can catch more problem with drivers.
-> >
-> > Except that the message is pretty cryptic :-) Especially since the
-> > driver causing the message to be printed is not the one that did
-> > the mistake in the first place, it's the next one coming up that
-> > trips the warning.
-> >
-> > In any case, the root cause is indeed the PCIe port driver:
-> >
-> > We don't have ACPI, so pcie_port_platform_notify() isn't implemented,
-> > and pcie_ports_auto is true, so we end up with capabilities set to 0.
-> 
-> in
-> | commit fe31e69740eddc7316071ed5165fed6703c8cd12
-> | Author: Rafael J. Wysocki <rjw@sisk.pl>
-> | Date:   Sun Dec 19 15:57:16 2010 +0100
-> |
-> |    PCI/PCIe: Clear Root PME Status bits early during system resume
-> |
-> |    I noticed that PCI Express PMEs don't work on my Toshiba Portege R500
-> |    after the system has been woken up from a sleep state by a PME
-> |    (through Wake-on-LAN).  After some investigation it turned out that
-> |    the BIOS didn't clear the Root PME Status bit in the root port that
-> |    received the wakeup PME and since the Requester ID was also set in
-> |    the port's Root Status register, any subsequent PMEs didn't trigger
-> |    interrupts.
-> |
-> |    This problem can be avoided by clearing the Root PME Status bits in
-> |    all PCI Express root ports during early resume.  For this purpose,
-> |    add an early resume routine to the PCIe port driver and make this
-> |    driver be always registered, even if pci_ports_disable is set (in
-> |    which case the driver's only function is to provide the early
-> |    resume callback).
-> |
-> |
-> |@@ -349,15 +349,18 @@ int pcie_port_device_register(struct pci_dev *dev)
-> |        int status, capabilities, i, nr_service;
-> |        int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
-> |
-> |-       /* Get and check PCI Express port services */
-> |-       capabilities = get_port_device_capability(dev);
-> |-       if (!capabilities)
-> |-               return -ENODEV;
-> |-
-> |        /* Enable PCI Express port device */
-> |        status = pci_enable_device(dev);
-> |        if (status)
-> |                return status;
-> |+
-> |+       /* Get and check PCI Express port services */
-> |+       capabilities = get_port_device_capability(dev);
-> |+       if (!capabilities) {
-> |+               pcie_no_aspm();
-> |+               return 0;
-> |+       }
-> |+
-> |        pci_set_master(dev);
-> |        /*
-> |         * Initialize service irqs. Don't use service devices that
-> 
-> >
-> > Thus the port driver bails out before calling pci_set_master(). The fix
-> > is to call pci_set_master() unconditionally. However that lead me to
-> > find to a few interesting oddities in that port driver code:
-> 
-> can we revert that partially change ? aka we should check get_port....
-> at first...
-> 
-> like attached.
+> Sorry, I was hoping to have more details quickly, but it's been a pain
+> to debug.  By dying I mean serial console output suddenly stops during
+> kernel boot and nothing more comes out of it until after the system is
+> rebooted.  The problem happens when acpiphp_check_bridge() calls
+> enable_slot().  The serial console dies somewhere down in
+> acpiphp_bus_trim().  I think this is happening on the 00:1f ISA bridge,
+> so there's a good chance the serial ports are described as somewhere
+> under there.
 
-It looks like we can do something like this (just pasting your patch):
+Can you please check if that is the acpiphp_bus_trim() called by
+acpiphp_bus_add() or the other one called from trim_stale_devices()?
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 31063ac..1ee6f16 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -362,16 +362,16 @@ int pcie_port_device_register(struct pci_dev *dev)
- 	int status, capabilities, i, nr_service;
- 	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
- 
--	/* Enable PCI Express port device */
--	status = pci_enable_device(dev);
--	if (status)
--		return status;
--
- 	/* Get and check PCI Express port services */
- 	capabilities = get_port_device_capability(dev);
- 	if (!capabilities)
- 		return 0;
- 
-+	/* Enable PCI Express port device */
-+	status = pci_enable_device(dev);
-+	if (status)
-+		return status;
-+
- 	pci_set_master(dev);
- 	/*
- 	 * Initialize service irqs. Don't use service devices that
-
-but I don't have that box with me to test whether or not it still works
-correctly after this change.  I'll be back home on the next Saturday if
-all goes well.
+Just add a dump_stack() or WARN_ON(1) to trim_stale_devices() next to
+the acpiphp_bus_trim() call and see if that triggers.  I *think* it's the one
+in acpiphp_bus_add(), but it won't hurt to verify that.
 
 Thanks,
 Rafael
