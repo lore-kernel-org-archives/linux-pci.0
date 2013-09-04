@@ -1,59 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39949 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753853Ab3IIP0Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Sep 2013 11:26:25 -0400
-Date: Mon, 9 Sep 2013 17:28:21 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tejun Heo <tj@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>
-Subject: [PATCH 7/9] PCI/MSI/s390: Make return values only 0/-errno when MSIs
- allocated
-Message-ID: <20130909152820.GI24962@dhcp-26-207.brq.redhat.com>
-References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
- <20130905150442.GA24148@htj.dyndns.org>
- <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
- <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 4 Sep 2013 10:20:22 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>,
+	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jacob Keller <jacob.e.keller@intel.com>
+Subject: Re: [PATCH 5/7] ixgbe: use pcie_capability_read_word() to simplify
+ code
+Message-ID: <20130904162022.GE24733@google.com>
+References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
+ <1378193715-25328-5-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1378193715-25328-5-git-send-email-wangyijing@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- arch/s390/pci/pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+[+cc Jacob, Jeff]
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 61a3c2c..45a1875 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -426,7 +426,7 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- 
- 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
--		return 1;
-+		return -EINVAL;
- 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
- 	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
- 
--- 
-1.7.7.6
+On Tue, Sep 03, 2013 at 03:35:13PM +0800, Yijing Wang wrote:
+> use pcie_capability_read_word() to simplify code.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: e1000-devel@lists.sourceforge.net
+> Cc: netdev@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+> index bad8f14..bfa0b06 100644
+> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+> @@ -152,7 +152,6 @@ MODULE_VERSION(DRV_VERSION);
+>  static int ixgbe_read_pci_cfg_word_parent(struct ixgbe_adapter *adapter,
+>  					  u32 reg, u16 *value)
+>  {
+> -	int pos = 0;
+>  	struct pci_dev *parent_dev;
+>  	struct pci_bus *parent_bus;
+>  
+> @@ -164,11 +163,10 @@ static int ixgbe_read_pci_cfg_word_parent(struct ixgbe_adapter *adapter,
+>  	if (!parent_dev)
+>  		return -1;
+>  
+> -	pos = pci_find_capability(parent_dev, PCI_CAP_ID_EXP);
+> -	if (!pos)
+> +	if (!pci_is_pcie(parent_dev))
+>  		return -1;
+>  
+> -	pci_read_config_word(parent_dev, pos + reg, value);
+> +	pcie_capability_read_word(parent_dev, reg, value);
+>  	return 0;
+>  }
+>  
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Here's the caller of ixgbe_read_pci_cfg_word_parent():
+
+    /* Get the negotiated link width and speed from PCI config space of the
+     * parent, as this device is behind a switch
+     */
+    err = ixgbe_read_pci_cfg_word_parent(adapter, 18, &link_status);
+
+This should be using PCI_EXP_LNKSTA instead of "18".
+
+But it would be even better if we could drop ixgbe_get_parent_bus_info()
+completely.  It seems redundant after merging Jacob's new
+pcie_get_minimum_link() stuff [1].
+
+ixgbe_disable_pcie_master() looks like it should be using
+pcie_capability_read_word() with PCI_EXP_DEVSTA instead of using
+IXGBE_PCI_DEVICE_STATUS.  If fact, it looks like it could use the
+new pci_wait_for_pending_transaction() interface [2].
+
+It looks like all the #defines in the "PCI Bus Info" block
+(IXGBE_PCI_DEVICE_STATUS, IXGBE_PCI_DEVICE_STATUS_TRANSACTION_PENDING,
+IXGBE_PCI_LINK_STATUS, etc.) [3] are really for PCIe-generic things.  If
+so, the IXGBE-specific ones should be dropped in favor of the generic
+ones.
+
+[1] http://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/commit/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c?id=e027d1aec4bb49030646d2c186a721f94372d7f2
+[2] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/pci/pci.c?id=3775a209d38aa3a0c7ed89a7d0f529e0230f280e
+[3] http://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/tree/drivers/net/ethernet/intel/ixgbe/ixgbe_type.h#n1833
