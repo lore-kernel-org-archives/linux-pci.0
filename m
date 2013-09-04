@@ -1,108 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:33047 "EHLO comal.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:15692 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751594Ab3ILKHi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Sep 2013 06:07:38 -0400
-Message-ID: <5231925B.3030104@ti.com>
-Date: Thu, 12 Sep 2013 15:37:23 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+	id S1754006Ab3IDOPR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Sep 2013 10:15:17 -0400
+Date: Wed, 4 Sep 2013 16:17:11 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2 3/4] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <20130904141710.GD8726@dhcp-26-207.brq.redhat.com>
+References: <cover.1378111919.git.agordeev@redhat.com>
+ <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
+ <20130903141824.GD10522@htj.dyndns.org>
+ <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
+ <20130903182731.GA27092@mtj.dyndns.org>
+ <20130904072256.GA8726@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-To: Pratyush Anand <pratyush.anand@st.com>
-CC: Jingoo Han <jg1.han@samsung.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
- part and Exynos part
-References: <002801ce8376$a807dbf0$f81793d0$@samsung.com> <51ED49D6.9050209@ti.com> <000701ce8741$fe47deb0$fad79c10$@samsung.com> <51EE22DF.6090902@ti.com> <001301ce8772$522dfc50$f689f4f0$@samsung.com> <5231607C.10702@ti.com> <003501ceaf87$cda45db0$68ed1910$%han@samsung.com> <20130912093018.GA2124@pratyush-vbox> <52318CCC.4040604@ti.com> <20130912095213.GA5995@pratyush-vbox>
-In-Reply-To: <20130912095213.GA5995@pratyush-vbox>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130904072256.GA8726@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Make use of the new pci_enable_msi_block_part() interface
+and conserve on othewise wasted interrupt resources for 10
+of 16 unused MSI vectors on Intel chipsets.
+    
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-On Thursday 12 September 2013 03:22 PM, Pratyush Anand wrote:
-> Hi Kishon,
-> 
-> On Thu, Sep 12, 2013 at 05:43:40PM +0800, Kishon Vijay Abraham I wrote:
->> Hi,
->>
->> On Thursday 12 September 2013 03:00 PM, Pratyush Anand wrote:
->>> Hi Jingoo,
->>>
->>>
->>> On Thu, Sep 12, 2013 at 03:15:04PM +0800, Jingoo Han wrote:
->>>> On Tuesday 23 July 2013 12:30 PM, Kishon Vijay Abraham I wrote:
->>>>>>> .
->>>>>>> .
->>>>>>>>>> +			of_pci_range_to_resource(&range, np, &pp->cfg);
->>>>>>>>>> +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
->>>>>>>>>> +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
->>>>>>>>>> +		}
->>>>>>>>>> +	}
->>>>>>>>>> +
->>>>>>>>>> +	pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
->>>>>>>>>> +				resource_size(&pp->cfg));
->>>>>>>>>
->>>>>>>>> Why is configuraion space divided into two?
->>>>>>>>
->>>>>>>> Sorry, I don't know the exact reason. :(
->>>>>>>> Pratyush Anand may know about this.
->>>>>>>> Pratyush Anand, could you answer the question?
->>>>>>>>
->>>>>>>> Also, if you find some problems, please let me know.
->>>>>
->>>>> One more query..
->>>>>
->>>>> Where is inbound translation configuration done in your driver? how should it
->>>>> be done?
->>>>
->>>
->>> Yes, Kishon is right. Inbound translation configuration is missing in
->>> your code and I think it should be implemented.
->>>
->>>> Hi Kishon,
->>>>
->>>> Sorry, I cannot understand your question exactly.
->>>> However, the following thread would be helpful.
->>>>
->>>> http://www.spinics.net/lists/arm-kernel/msg252078.html
->>>> https://lkml.org/lkml/2013/6/17/890
->>>
->>> From this conversation, It seems that you
->>> have tested this driver and it works fine without inbound translation
->>> function. I am sure that you would have tested a PCIe card with DMA
->>> capability such as PCIe2USB or PCIe2Ethernet. Since it worked, it
->>> means that by default your controller is supporting one to one mapping
->>> in case of inbound transaction even when address translation is enabled.
->>
->> btw, I'm testing Ethernet controller: Realtek Semiconductor Co., Ltd.
->> RTL8111/8168B PCI Express Gigabit Ethernet controller.
->>
->> when I do ifconfig eth0 up, I get *r8169 0000:01:00.0 eth0: link up.*
->> But I dont receive any packets and ping also fails and the tx and rx packet
->> count is also 0. Could it be related to inbound translation?
-> 
-> A PCIe analyser log would tell a definite cause. Most likely either
-> inbound translation is not working or INTx/MSI is not working.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index db4380d..41f9c08 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1091,26 +1091,39 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
+ 
+-int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
++static int ahci_get_mrsm(struct ahci_host_priv *hpriv)
++{
++	void __iomem *mmio = hpriv->mmio;
++	u32 ctl = readl(mmio + HOST_CTL);
++
++	return (ctl & HOST_MRSM);
++}
++
++int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
++			 struct ahci_host_priv *hpriv)
+ {
+ 	int rc;
+-	unsigned int maxvec;
++	unsigned int n_msis;
+ 
+-	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
+-		rc = pci_enable_msi_block_auto(pdev, &maxvec);
+-		if (rc > 0) {
+-			if ((rc == maxvec) || (rc == 1))
+-				return rc;
+-			/*
+-			 * Assume that advantage of multipe MSIs is negated,
+-			 * so fallback to single MSI mode to save resources
+-			 */
+-			pci_disable_msi(pdev);
+-			if (!pci_enable_msi(pdev))
+-				return 1;
+-		}
++	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
++		goto intx;
++
++	for (n_msis = roundup_pow_of_two(n_ports);
++	     n_msis <= AHCI_MAX_PORTS; n_msis *= 2) {
++		rc = pci_enable_msi_block_part(pdev, n_ports, n_msis);
++		if (rc < 0)
++			goto intx;
++		if (rc)
++			break;
++		if (!ahci_get_mrsm(hpriv))
++			return n_msis;
++		pci_disable_msi(pdev);
+ 	}
+ 
++	if (!pci_enable_msi(pdev))
++		return 1;
++
++intx:
+ 	pci_intx(pdev, 1);
+ 	return 0;
+ }
+@@ -1277,10 +1290,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
+ 
+-	n_msis = ahci_init_interrupts(pdev, hpriv);
+-	if (n_msis > 1)
+-		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+-
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
+@@ -1327,6 +1336,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
+ 
++	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
++	if (n_msis > 1)
++		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
++
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 1145637..19bc846 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -91,6 +91,7 @@ enum {
+ 	/* HOST_CTL bits */
+ 	HOST_RESET		= (1 << 0),  /* reset controller; self-clear */
+ 	HOST_IRQ_EN		= (1 << 1),  /* global IRQ enable */
++	HOST_MRSM		= (1 << 2),  /* MSI Revert to Single Message */
+ 	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
+ 
+ 	/* HOST_CAP bits */
 
-I have enabled only legacy interrupts. Whenever I connect or disconnect
-ethernet cable I get link up/link down message and also the interrupt count for
-eth0 increases. So I'm not doubting INTx interrupts as such.
-
-btw configuring inbound translation once in dw_pcie_host_init enough is it? I
-mean we use the same registers for configuring outbound translation also no? So
-doesn't the inbound configuration gets lost?
-
-Thanks
-Kishon
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
