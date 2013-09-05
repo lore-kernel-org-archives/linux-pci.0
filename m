@@ -1,479 +1,298 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60197 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759571Ab3IEMuc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Sep 2013 08:50:32 -0400
-Date: Thu, 5 Sep 2013 14:52:08 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 1/6] PCI/MSI: Introduce pci_enable_msi_block_part()
- interface
-Message-ID: <15ae99e10915eafcef9749de593ac6b0aa0bee53.1378383792.git.agordeev@redhat.com>
-References: <cover.1378383792.git.agordeev@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Excess dmesg output from ACPIPHP on boot (was: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots)
+Date: Thu, 05 Sep 2013 21:44:26 +0200
+Message-ID: <1535359.s5bUZnSMNz@vostro.rjw.lan>
+In-Reply-To: <1378390901.3246.233.camel@ul30vt.home>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <1378387184.3246.227.camel@ul30vt.home> <1378390901.3246.233.camel@ul30vt.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1378383792.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are PCI devices that require a particular value written
-to the Multiple Message Enable (MME) register while aligned on
-power of 2 boundary value of actually used MSI vectors 'nvec'
-is a lesser of that MME value:
+On Thursday, September 05, 2013 08:21:41 AM Alex Williamson wrote:
+> On Thu, 2013-09-05 at 07:19 -0600, Alex Williamson wrote:
+> > On Thu, 2013-09-05 at 13:54 +0200, Rafael J. Wysocki wrote:
+> > > On Wednesday, September 04, 2013 10:06:02 PM Alex Williamson wrote:
+> > > > On Wed, 2013-09-04 at 21:37 -0600, Alex Williamson wrote:
+> > > > > On Thu, 2013-09-05 at 01:35 +0200, Rafael J. Wysocki wrote:
+> > > > > > On Wednesday, September 04, 2013 05:12:14 PM Alex Williamson wrote:
+> > > > > > > On Thu, 2013-09-05 at 00:54 +0200, Rafael J. Wysocki wrote:
+> > > > > > > > On Wednesday, September 04, 2013 02:36:34 PM Alex Williamson wrote:
+> > > > > > > > > On Thu, 2013-07-18 at 01:32 +0200, Rafael J. Wysocki wrote:
+> > > > > > > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > > > > > > 
+> > > > > > > > > > The current implementation of acpiphp_check_bridge() is pretty dumb:
+> > > > > > > > > >  - It enables a slot if it's not enabled and the slot status is
+> > > > > > > > > >    ACPI_STA_ALL.
+> > > > > > > > > >  - It disables a slot if it's enabled and the slot status is not
+> > > > > > > > > >    ACPI_STA_ALL.
+> > > > > > > > > > 
+> > > > > > > > > > This behavior is not sufficient to handle the Thunderbolt daisy
+> > > > > > > > > > chaining case properly, however, because in that case the bus
+> > > > > > > > > > behind the already enabled slot needs to be rescanned for new
+> > > > > > > > > > devices.
+> > > > > > > > > > 
+> > > > > > > > > > For this reason, modify acpiphp_check_bridge() so that slots are
+> > > > > > > > > > disabled and stopped if they are not in the ACPI_STA_ALL state.
+> > > > > > > > > > 
+> > > > > > > > > > For slots in the ACPI_STA_ALL state, devices behind them that don't
+> > > > > > > > > > respond are trimmed using a new function, trim_stale_devices(),
+> > > > > > > > > > introduced specifically for this purpose.  That function walks
+> > > > > > > > > > the given bus and checks each device on it.  If the device doesn't
+> > > > > > > > > > respond, it is assumed to be gone and is removed.
+> > > > > > > > > > 
+> > > > > > > > > > Once all of the stale devices directy behind the slot have been
+> > > > > > > > > > removed, acpiphp_check_bridge() will start looking for new devices
+> > > > > > > > > > that might have appeared on the given bus.  It will do that even if
+> > > > > > > > > > the slot is already enabled (SLOT_ENABLED is set for it).
+> > > > > > > > > > 
+> > > > > > > > > > In addition to that, make the bus check notification ignore
+> > > > > > > > > > SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
+> > > > > > > > > > so that devices behind the slot are re-enumerated in that case too.
+> > > > > > > > > > 
+> > > > > > > > > > This change is based on earlier patches from Kirill A Shutemov
+> > > > > > > > > > and Mika Westerberg.
+> > > > > > > > > > 
+> > > > > > > > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > > > > > > Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > > > > > > > > ---
+> > > > > > > > > 
+> > > > > > > > > FYI, git bisect landed on this patch as the cause of my serial console
+> > > > > > > > > dying on current upstream.  Further debugging to come...  Thanks,
+> > > > > > > > 
+> > > > > > > > Well, sorry about that.
+> > > > > > > > 
+> > > > > > > > What exactly do you mean by "dying"?
+> > > > > > > 
+> > > > > > > Sorry, I was hoping to have more details quickly, but it's been a pain
+> > > > > > > to debug.  By dying I mean serial console output suddenly stops during
+> > > > > > > kernel boot and nothing more comes out of it until after the system is
+> > > > > > > rebooted.  The problem happens when acpiphp_check_bridge() calls
+> > > > > > > enable_slot().  The serial console dies somewhere down in
+> > > > > > > acpiphp_bus_trim().  I think this is happening on the 00:1f ISA bridge,
+> > > > > > > so there's a good chance the serial ports are described as somewhere
+> > > > > > > under there.
+> > > > > > 
+> > > > > > Can you please check if that is the acpiphp_bus_trim() called by
+> > > > > > acpiphp_bus_add() or the other one called from trim_stale_devices()?
+> > > > > > 
+> > > > > > Just add a dump_stack() or WARN_ON(1) to trim_stale_devices() next to
+> > > > > > the acpiphp_bus_trim() call and see if that triggers.  I *think* it's the one
+> > > > > > in acpiphp_bus_add(), but it won't hurt to verify that.
+> > > > > 
+> > > > > Here's the call path:
+> > > > > 
+> > > > > [   16.120824]  [<ffffffff81627e6c>] dump_stack+0x55/0x76
+> > > > > [   16.125979]  [<ffffffff8162132e>] enable_slot+0x4ee/0x5e0
+> > > > > [   16.131396]  [<ffffffff813418fb>] ? trim_stale_devices+0x5b/0xf0
+> > > > > [   16.137420]  [<ffffffff81341b35>] acpiphp_check_bridge+0xd5/0x110
+> > > > > [   16.143531]  [<ffffffff81342acb>] hotplug_event+0x16b/0x260
+> > > > > [   16.149115]  [<ffffffff81072cd9>] ? process_one_work+0x189/0x540
+> > > > > [   16.155136]  [<ffffffff81342bf0>] hotplug_event_work+0x30/0x70
+> > > > > [   16.160978]  [<ffffffff81072d3b>] process_one_work+0x1eb/0x540
+> > > > > [   16.166819]  [<ffffffff81072cd9>] ? process_one_work+0x189/0x540
+> > > > > [   16.172836]  [<ffffffff8107353c>] worker_thread+0x11c/0x370
+> > > > > [   16.178426]  [<ffffffff81073420>] ? rescuer_thread+0x350/0x350
+> > > > > [   16.184276]  [<ffffffff8107b0ea>] kthread+0xea/0xf0
+> > > > > [   16.189165]  [<ffffffff8107b000>] ? kthread_create_on_node+0x160/0x160
+> > > > > [   16.195700]  [<ffffffff816395dc>] ret_from_fork+0x7c/0xb0
+> > > > > [   16.201109]  [<ffffffff8107b000>] ? kthread_create_on_node+0x160/0x160
+> > > > > 
+> > > > > The actual death of the serial console occurs in acpi_device_set_power()
+> > > > > called from:
+> > > > > 
+> > > > > enable_slot()
+> > > > >  acpiphp_bus_add()
+> > > > >   acpiphp_bus_trim()
+> > > > >    acpi_bus_trim()
+> > > > >     acpi_walk_namespace()
+> > > > >      acpi_bus_remove()
+> > > > >       acpi_device_unregister()
+> > > > >        acpi_device_set_power()
+> > > > > 
+> > > > > I can't seem to get a path from the acpi devices in question there, so I
+> > > > > have no idea what's getting trimmed here.  It worries me quite a bit by
+> > > > > introducing this trimming that apparently wasn't happening before
+> > > > > though.  Thanks,
+> > > > 
+> > > > As suspected, the pnp.bus_id/id of the last device before the serial
+> > > > console dies is COM1/PNP0501.  I also see all of these being trimmed
+> > > > out:
+> > > > 
+> > > >  MBRD/PNP0C02
+> > > >  DMAC/PNP0200
+> > > >  MATH/PNP0C04
+> > > >  PIC/PNP0000
+> > > >  HPET/PNP0103
+> > > >  RTC/PNP0B00
+> > > >  SPKR/PNP0800
+> > > >  TIME/PNP0100
+> > > >  LNK{A-H}/PNP0C0F
+> > > > 
+> > > > This seems like a bad idea.  I forgot to mention, the original
+> > > > hotplug_event is called with a device check on \_SB_.PCI0.PEX2.  The box
+> > > > where I'm seeing this is a pretty generic X58 based Nehalem workstation
+> > > > (Lenovo S20).
+> > > 
+> > > Thanks for the info!
+> > > 
+> > > The acpiphp_bus_trim() in acpiphp_bus_add() is a leftover and a bad one.
+> > > I don't think it's actually necessary, at least Thunderbolt works without
+> > > it just fine on my Aspire S5.
+> > > 
+> > > The patch below should help, can you please test it?
+> > > 
+> > > Rafael
+> > > 
+> > > ---
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > Subject: ACPI / hotplug / PCI: Don't trim devices before scanning the namespace
+> > > 
+> > > In acpiphp_bus_add() we first remove device objects corresponding to
+> > > the given handle and the ACPI namespace branch below it which are
+> > > then re-created by acpi_bus_scan().  This used to be done to clean
+> > > up after surprise removals, but now we do the cleanup through
+> > > trim_stale_devices() which checks if the devices in question are
+> > > actually gone before removing them, so the device hierarchy trimming
+> > > in acpiphp_bus_add() is not necessary any more and, moreover, it may
+> > > lead to problems if it removes device objects corresponding to
+> > > devices that are actually present.
+> > > 
+> > > Reported-by: Alex Williamson <alex.williamson@redhat.com>
+> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > ---
+> > >  drivers/pci/hotplug/acpiphp_glue.c |    1 -
+> > >  1 file changed, 1 deletion(-)
+> > > 
+> > > Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> > > ===================================================================
+> > > --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
+> > > +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> > > @@ -487,7 +487,6 @@ static void acpiphp_bus_add(acpi_handle
+> > >  {
+> > >  	struct acpi_device *adev = NULL;
+> > >  
+> > > -	acpiphp_bus_trim(handle);
+> > >  	acpi_bus_scan(handle);
+> > >  	acpi_bus_get_device(handle, &adev);
+> > >  	if (adev)
+> > > 
+> > > 
+> > 
+> > It boots again and the console works,
 
-	roundup_pow_of_two(nvec) < 'Multiple Message Enable'
+OK, so I'll queue up the patch above as a 3.12 fix and let's regard the
+dying serial console problem as fixed.
 
-However the existing pci_enable_msi_block() interface is not
-able to configure such devices, since the value written to the
-MME register is calculated from the number of requested MSIs
-'nvec':
+Now ->
 
-	'Multiple Message Enable' = roundup_pow_of_two(nvec)
+> > but I see screens and screens of messages like this:
 
-In this case the result written to the MME register may not
-satisfy the aforementioned PCI devices requirement and therefore
-the PCI functions will not operate in a desired mode.
+-> this is a separate issue that we need to take care of (so I've changed the
+subject to reflect that).
 
-This update introduces pci_enable_msi_block_part() extension to
-pci_enable_msi_block() interface that accepts extra 'nvec_mme'
-argument which is then written to the MME register while the
-value of 'nvec' is still used to setup as many interrupts as
-requested.
+> > 
+> > [   18.288122] pci 0000:00:00.0: no hotplug settings from platform
+> > [   18.288127] pcieport 0000:00:01.0: no hotplug settings from platform
+> > [   18.288142] pci 0000:01:00.0: no hotplug settings from platform
+> > [   18.288157] pci 0000:01:00.1: no hotplug settings from platform
+> > [   18.288162] pcieport 0000:00:03.0: no hotplug settings from platform
+> > [   18.288176] pci 0000:02:00.0: no hotplug settings from platform
+> > [   18.288190] pci 0000:02:00.1: no hotplug settings from platform
+> > [   18.288195] pcieport 0000:00:07.0: no hotplug settings from platform
+> > [   18.288209] pci 0000:03:00.0: no hotplug settings from platform
+> > [   18.288224] pci 0000:03:00.1: no hotplug settings from platform
+> > [   18.288228] pci 0000:00:14.0: no hotplug settings from platform
+> > [   18.288233] pci 0000:00:14.1: no hotplug settings from platform
+> > [   18.288237] pci 0000:00:14.2: no hotplug settings from platform
+> > [   18.288242] pci 0000:00:16.0: no hotplug settings from platform
+> > [   18.288247] pci 0000:00:16.1: no hotplug settings from platform
+> > [   18.288251] pci 0000:00:16.2: no hotplug settings from platform
+> > [   18.288256] pci 0000:00:16.3: no hotplug settings from platform
+> > [   18.288260] pci 0000:00:16.4: no hotplug settings from platform
+> > [   18.288265] pci 0000:00:16.5: no hotplug settings from platform
+> > [   18.288269] pci 0000:00:16.6: no hotplug settings from platform
+> > [   18.288274] pci 0000:00:16.7: no hotplug settings from platform
+> > [   18.288278] pci 0000:00:1a.0: no hotplug settings from platform
+> > [   18.288279] pci 0000:00:1a.0: using default PCI settings
+> > [   18.288292] pci 0000:00:1a.1: no hotplug settings from platform
+> > [   18.288293] pci 0000:00:1a.1: using default PCI settings
+> > [   18.288307] ehci-pci 0000:00:1a.7: no hotplug settings from platform
+> > [   18.288308] ehci-pci 0000:00:1a.7: using default PCI settings
+> > [   18.288322] pci 0000:00:1b.0: no hotplug settings from platform
+> > [   18.288327] pcieport 0000:00:1c.0: no hotplug settings from platform
+> > [   18.288332] pcieport 0000:00:1c.4: no hotplug settings from platform
+> > [   18.288344] pci 0000:05:00.0: no hotplug settings from platform
+> > [   18.288349] pci 0000:00:1d.0: no hotplug settings from platform
+> > [   18.288350] pci 0000:00:1d.0: using default PCI settings
+> > [   18.288360] pci 0000:00:1d.1: no hotplug settings from platform
+> > [   18.288361] pci 0000:00:1d.1: using default PCI settings
+> > [   18.288374] pci 0000:00:1d.2: no hotplug settings from platform
+> > [   18.288374] pci 0000:00:1d.2: using default PCI settings
+> > [   18.288387] pci 0000:00:1d.3: no hotplug settings from platform
+> > [   18.288387] pci 0000:00:1d.3: using default PCI settings
+> > 
+> > The boot is noticeably slower.  What's going to happen on systems that
+> > actually have a significant I/O topology vs my little workstation?
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- Documentation/PCI/MSI-HOWTO.txt |   56 ++++++++++++++++++++++++----
- arch/mips/pci/msi-octeon.c      |    2 +-
- arch/powerpc/kernel/msi.c       |    4 +-
- arch/s390/pci/pci.c             |    2 +-
- arch/x86/include/asm/pci.h      |    8 +++--
- arch/x86/include/asm/x86_init.h |    3 +-
- arch/x86/kernel/apic/io_apic.c  |    3 +-
- drivers/iommu/irq_remapping.c   |    2 +-
- drivers/pci/msi.c               |   77 ++++++++++++++++++++++++++-------------
- include/linux/msi.h             |    5 ++-
- include/linux/pci.h             |    8 ++++
- 11 files changed, 125 insertions(+), 45 deletions(-)
+That depends on how many bus check/device check events they generate on boot.
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index a091780..32d7d15 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -127,7 +127,47 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
- returns as soon as it finds any constraint that doesn't allow the
- call to succeed.
- 
--4.2.3 pci_enable_msi_block_auto
-+4.2.3 pci_enable_msi_block_part
-+
-+int pci_enable_msi_block_part(struct pci_dev *dev, int count, int alloc)
-+
-+This variation on the above call allows a device driver to request 'alloc'
-+number of multiple MSIs while setup 'count' number of MSIs, which could be
-+a lesser of 'alloc'.  The MSI specification only allows interrupts to be
-+allocated in powers of two, up to a maximum of 2^5 (32).
-+
-+In case the driver wants to allocate a maximum possible number of MSIs
-+for the device it may pass a negative number as 'alloc' parameter.
-+
-+If this function returns 0, it has succeeded in allocating 'alloc'
-+interrupts and setting up 'count' interrupts. In this case, the function
-+enables MSI on this device and updates dev->irq to be the lowest of the
-+new interrupts assigned to it.  The other interrupts assigned to the
-+device are in the range dev->irq to dev->irq + count - 1.
-+
-+If this function returns -ERANGE, it indicates 'count' is greater than
-+'alloc' and the driver should adjust either or both parameters.
-+
-+If this function returns other negative number, it indicates an error
-+and the driver should not attempt to request any more MSI interrupts
-+for this device.  If this function returns a positive number, it is
-+less than 'alloc' and indicates the number of interrupts that could have
-+been allocated.  In neither case is the irq value updated or the device
-+switched into MSI mode.
-+
-+The device driver must decide what action to take if
-+pci_enable_msi_block_part() returns a value less than 'alloc'.  For
-+instance, the driver could still make use of fewer interrupts; in this
-+case the driver should possibly adjust 'count' parameter and call
-+pci_enable_msi_block_part() again or even call pci_enable_msi_block()
-+instead.  Note that it is not guaranteed to succeed, even when the
-+'alloc' has been reduced to the value returned from a previous call to
-+pci_enable_msi_block_part().  This is because there are multiple
-+constraints on the number of vectors that can be allocated;
-+pci_enable_msi_block_part() returns as soon as it finds any constraint
-+that doesn't allow the call to succeed.
-+
-+4.2.4 pci_enable_msi_block_auto
- 
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
- 
-@@ -153,16 +193,16 @@ succeeds, but returns a value less than the number of interrupts supported.
- If the device driver does not need to know the number of interrupts
- supported, it can set the pointer count to NULL.
- 
--4.2.4 pci_disable_msi
-+4.2.5 pci_disable_msi
- 
- void pci_disable_msi(struct pci_dev *dev)
- 
--This function should be used to undo the effect of pci_enable_msi() or
--pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
--dev->irq to the pin-based interrupt number and frees the previously
--allocated message signaled interrupt(s).  The interrupt may subsequently be
--assigned to another device, so drivers should not cache the value of
--dev->irq.
-+This function should be used to undo the effect of pci_enable_msi_block(),
-+pci_enable_msi(), pci_enable_msi_block_auto() or pci_enable_msi_block_part().
-+Calling it restores dev->irq to the pin-based interrupt number and frees the
-+previously allocated message signaled interrupt(s). The interrupt may
-+subsequently be assigned to another device, so drivers should not cache the
-+value of dev->irq.
- 
- Before calling this function, a device driver must always call free_irq()
- on any interrupt for which it previously called request_irq().
-diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
-index d37be36..c9aaf8d 100644
---- a/arch/mips/pci/msi-octeon.c
-+++ b/arch/mips/pci/msi-octeon.c
-@@ -177,7 +177,7 @@ msi_irq_allocated:
- 	return 0;
- }
- 
--int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type)
- {
- 	struct msi_desc *entry;
- 	int ret;
-diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
-index 8bbc12d..fc70513 100644
---- a/arch/powerpc/kernel/msi.c
-+++ b/arch/powerpc/kernel/msi.c
-@@ -13,7 +13,7 @@
- 
- #include <asm/machdep.h>
- 
--int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
-+int arch_msi_check_device(struct pci_dev* dev, int nvec, int nvec_mme, int type)
- {
- 	if (!ppc_md.setup_msi_irqs || !ppc_md.teardown_msi_irqs) {
- 		pr_debug("msi: Platform doesn't provide MSI callbacks.\n");
-@@ -32,7 +32,7 @@ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
-         return 0;
- }
- 
--int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type)
- {
- 	return ppc_md.setup_msi_irqs(dev, nvec, type);
- }
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index e2956ad..688a5db 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -538,7 +538,7 @@ static void zpci_teardown_msi(struct pci_dev *pdev)
- 		aisb_max--;
- }
- 
--int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
-+int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int nvec_mme, int type)
- {
- 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
- 	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index d9e9e6c..620642f 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -101,9 +101,10 @@ extern void pci_iommu_alloc(void);
- 
- #ifdef CONFIG_PCI_MSI
- /* MSI arch specific hooks */
--static inline int x86_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+static inline int x86_setup_msi_irqs(struct pci_dev *dev,
-+				     int nvec, int nvec_mme, int type)
- {
--	return x86_msi.setup_msi_irqs(dev, nvec, type);
-+	return x86_msi.setup_msi_irqs(dev, nvec, nvec_mme, type);
- }
- 
- static inline void x86_teardown_msi_irqs(struct pci_dev *dev)
-@@ -125,7 +126,8 @@ static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
- #define arch_restore_msi_irqs x86_restore_msi_irqs
- /* implemented in arch/x86/kernel/apic/io_apic. */
- struct msi_desc;
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-+int native_setup_msi_irqs(struct pci_dev *dev,
-+			  int nvec, int nvec_mme, int type);
- void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev, int irq);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 828a156..04a8767 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -174,7 +174,8 @@ struct pci_dev;
- struct msi_msg;
- 
- struct x86_msi_ops {
--	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
-+	int (*setup_msi_irqs)(struct pci_dev *dev,
-+			      int nvec, int nvec_mme, int type);
- 	void (*compose_msi_msg)(struct pci_dev *dev, unsigned int irq,
- 				unsigned int dest, struct msi_msg *msg,
- 			       u8 hpet_id);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 9ed796c..21f6a44 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3132,7 +3132,8 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 	return 0;
- }
- 
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int native_setup_msi_irqs(struct pci_dev *dev,
-+			  int nvec, int nvec_mme, int type)
- {
- 	unsigned int irq, irq_want;
- 	struct msi_desc *msidesc;
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 39f81ae..1a220a0 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -142,7 +142,7 @@ error:
- }
- 
- static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
--					int nvec, int type)
-+					int nvec, int nvec_mme, int type)
- {
- 	if (type == PCI_CAP_ID_MSI)
- 		return do_setup_msi_irqs(dev, nvec);
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index aca7578..647e9b1 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -31,7 +31,8 @@ static int pci_msi_enable = 1;
- /* Arch hooks */
- 
- #ifndef arch_msi_check_device
--int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+int arch_msi_check_device(struct pci_dev *dev,
-+			  int nvec, int nvec_mme, int type)
- {
- 	return 0;
- }
-@@ -43,7 +44,8 @@ int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
- #endif
- 
- #ifdef HAVE_DEFAULT_MSI_SETUP_IRQS
--int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int default_setup_msi_irqs(struct pci_dev *dev,
-+			   int nvec, int nvec_mme, int type)
- {
- 	struct msi_desc *entry;
- 	int ret;
-@@ -540,6 +542,7 @@ out_unroll:
-  * msi_capability_init - configure device's MSI capability structure
-  * @dev: pointer to the pci_dev data structure of MSI device function
-  * @nvec: number of interrupts to allocate
-+ * @nvec_mme: number of interrupts to write to Multiple Message Enable register
-  *
-  * Setup the MSI capability structure of the device with the requested
-  * number of interrupts.  A return value of zero indicates the successful
-@@ -547,7 +550,7 @@ out_unroll:
-  * an error, and a positive return value indicates the number of interrupts
-  * which could have been allocated.
-  */
--static int msi_capability_init(struct pci_dev *dev, int nvec)
-+static int msi_capability_init(struct pci_dev *dev, int nvec, int nvec_mme)
- {
- 	struct msi_desc *entry;
- 	int ret;
-@@ -582,7 +585,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	list_add_tail(&entry->list, &dev->msi_list);
- 
- 	/* Configure MSI capability structure */
--	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
-+	ret = arch_setup_msi_irqs(dev, nvec, nvec_mme, PCI_CAP_ID_MSI);
- 	if (ret) {
- 		msi_mask_irq(entry, mask, ~mask);
- 		free_msi_irqs(dev);
-@@ -700,7 +703,8 @@ static int msix_capability_init(struct pci_dev *dev,
- 	if (ret)
- 		return ret;
- 
--	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
-+	/* nvec_mme parameter does not make sense in case of MSI-X */
-+	ret = arch_setup_msi_irqs(dev, nvec, -1, PCI_CAP_ID_MSIX);
- 	if (ret)
- 		goto error;
- 
-@@ -755,13 +759,15 @@ error:
-  * pci_msi_check_device - check whether MSI may be enabled on a device
-  * @dev: pointer to the pci_dev data structure of MSI device function
-  * @nvec: how many MSIs have been requested ?
-+ * @nvec_mme: how many MSIs write to Multiple Message Enable register ?
-  * @type: are we checking for MSI or MSI-X ?
-  *
-  * Look at global flags, the device itself, and its parent busses
-  * to determine if MSI/-X are supported for the device. If MSI/-X is
-  * supported return 0, else return an error code.
-  **/
--static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+static int pci_msi_check_device(struct pci_dev *dev,
-+				int nvec, int nvec_mme, int type)
- {
- 	struct pci_bus *bus;
- 	int ret;
-@@ -789,27 +795,15 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- 		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
- 			return -EINVAL;
- 
--	ret = arch_msi_check_device(dev, nvec, type);
-+	ret = arch_msi_check_device(dev, nvec, nvec_mme, type);
- 	if (ret)
- 		return ret;
- 
- 	return 0;
- }
- 
--/**
-- * pci_enable_msi_block - configure device's MSI capability structure
-- * @dev: device to configure
-- * @nvec: number of interrupts to configure
-- *
-- * Allocate IRQs for a device with the MSI capability.
-- * This function returns a negative errno if an error occurs.  If it
-- * is unable to allocate the number of interrupts requested, it returns
-- * the number of interrupts it might be able to allocate.  If it successfully
-- * allocates at least the number of interrupts requested, it returns 0 and
-- * updates the @dev's irq member to the lowest new interrupt number; the
-- * other interrupt numbers allocated to this device are consecutive.
-- */
--int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
-+int pci_enable_msi_block_part(struct pci_dev *dev,
-+			      unsigned int nvec, int nvec_mme)
- {
- 	int status, maxvec;
- 	u16 msgctl;
-@@ -819,10 +813,17 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- 
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
- 	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
--	if (nvec > maxvec)
-+
-+	if (nvec_mme < 0)
-+		nvec_mme = maxvec;
-+	if (nvec_mme > maxvec)
- 		return maxvec;
-+	if (!is_power_of_2(nvec_mme))
-+		return -EINVAL;
-+	if (nvec > nvec_mme)
-+		return -ERANGE;
- 
--	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
-+	status = pci_msi_check_device(dev, nvec, nvec_mme, PCI_CAP_ID_MSI);
- 	if (status)
- 		return status;
- 
-@@ -835,9 +836,34 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- 		return -EINVAL;
- 	}
- 
--	status = msi_capability_init(dev, nvec);
-+	status = msi_capability_init(dev, nvec, nvec_mme);
- 	return status;
- }
-+EXPORT_SYMBOL(pci_enable_msi_block_part);
-+
-+/**
-+ * pci_enable_msi_block - configure device's MSI capability structure
-+ * @dev: device to configure
-+ * @nvec: number of interrupts to configure
-+ *
-+ * Allocate IRQs for a device with the MSI capability.
-+ * This function returns a negative errno if an error occurs.  If it
-+ * is unable to allocate the number of interrupts requested, it returns
-+ * the number of interrupts it might be able to allocate.  If it successfully
-+ * allocates at least the number of interrupts requested, it returns 0 and
-+ * updates the @dev's irq member to the lowest new interrupt number; the
-+ * other interrupt numbers allocated to this device are consecutive.
-+ */
-+int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
-+{
-+	/*
-+	 * Archtectures which do not support nvec_mme should ignore it.
-+	 * However, it would be surprising if an architecture write to
-+	 * the Multiple Message Enable register something else than nvec
-+	 * rounded up to the power of two.
-+	 */
-+	return pci_enable_msi_block_part(dev, nvec, roundup_pow_of_two(nvec));
-+}
- EXPORT_SYMBOL(pci_enable_msi_block);
- 
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
-@@ -941,7 +967,8 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 	if (!entries || !dev->msix_cap)
- 		return -EINVAL;
- 
--	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
-+	/* nvec_mme parameter does not make sense in case of MSI-X */
-+	status = pci_msi_check_device(dev, nvec, -1, PCI_CAP_ID_MSIX);
- 	if (status)
- 		return status;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ee66f3a..e27ad31 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -55,8 +55,9 @@ struct msi_desc {
-  */
- int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
- void arch_teardown_msi_irq(unsigned int irq);
--int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-+int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type);
- void arch_teardown_msi_irqs(struct pci_dev *dev);
--int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
-+int arch_msi_check_device(struct pci_dev* dev,
-+			  int nvec, int nvec_mme, int type);
- 
- #endif /* LINUX_MSI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..6552cee 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1122,6 +1122,12 @@ struct msix_entry {
- 
- 
- #ifndef CONFIG_PCI_MSI
-+static inline int
-+pci_enable_msi_block_part(struct pci_dev *dev, unsigned int nvec, int nvec_mme)
-+{
-+	return -1;
-+}
-+
- static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
- 	return -1;
-@@ -1163,6 +1169,8 @@ static inline int pci_msi_enabled(void)
- 	return 0;
- }
- #else
-+int pci_enable_msi_block_part(struct pci_dev *dev,
-+			      unsigned int nvec, int nvec_mme);
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
- void pci_msi_shutdown(struct pci_dev *dev);
--- 
-1.7.7.6
+My test machines don't generate them during boot at all (even the one with
+a Thunderbolt connector), so I don't see the messages in question during boot
+on any of them.  Mika doesn't see them either I suppose, or he would have told
+me about that before.
 
+And let's just make it clear that it is not usual or even OK to generate bus
+checks or device checks during boot like this.  And since the changes in
+question have been in linux-next since right after the 3.11 merge window, I
+think that someone would have complained already had that been a common issue.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Of course, we need to deal with that somehow nevertheless. :-)
+
+> Just to give you an idea:
+> 
+> CONFIG_HOTPLUG_PCI_ACPI=y
+> 
+> $ dmesg | wc
+>   5697  49935 384368
+> 
+> $ dmesg | tail --lines=1
+> [   53.137123] Ebtables v2.0 registered
+> 
+> -- vs --
+> 
+> # CONFIG_HOTPLUG_PCI_ACPI is not set
+> 
+> $ dmesg | wc
+>  1053  9176 71652
+> 
+> $dmesg | tail --lines=1
+> [   28.917220] Ebtables v2.0 registered
+> 
+> So it spews out 5x more output with acpiphp enabled and takes and extra
+> 24s to boot (nearly 2x).  Not good.
+
+The "no hotplug settings from platform" message is from pci_configure_slot().
+I think the messages you're seeing are from the call to it in
+acpiphp_set_hpp_values() which is called by enable_slot().
+
+There, I think, we can simply check the return value of pci_scan_slot() and
+if that is 0 (no new devices), we can just skip everything under the call to
+__pci_bus_assign_resources().
+
+However, we can't skip the scanning of bridges, if any, because there may be
+new devices below them and I guess that's what takes so much time on your
+machine.
+
+Thanks,
+Rafael
+
