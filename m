@@ -1,86 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:57200 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752451Ab3IENJF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 09:09:05 -0400
+Date: Thu, 5 Sep 2013 09:09:02 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20130905130902.GA26314@htj.dyndns.org>
+References: <cover.1378383792.git.agordeev@redhat.com>
+ <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1379382464-7920-2-git-send-email-vfalico@redhat.com>
-References: <1379382464-7920-1-git-send-email-vfalico@redhat.com> <1379382464-7920-2-git-send-email-vfalico@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Sep 2013 15:08:05 -0600
-Message-ID: <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
-Subject: Re: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to populate_msi_sysfs()
-To: Veaceslav Falico <vfalico@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Neil (he added this code in da8d1c8ba4), Greg]
+Hello, Alexander.
 
-On Mon, Sep 16, 2013 at 7:47 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
-> Before trying to kobject_init_and_add(), we add a reference to pdev via
-> pci_dev_get(pdev). However, if it fails to init and/or add the kobject, we
-> don't return it back - even on out_unroll.
->
-> Fix this by adding pci_dev_put(pdev) before going to unrolling section.
->
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: linux-pci@vger.kernel.org
-> CC: linux-kernel@vger.kernel.org
-> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
-> ---
->  drivers/pci/msi.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d5f90d6..14bf578 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -534,8 +534,10 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->                 pci_dev_get(pdev);
->                 ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
->                                      "%u", entry->irq);
-> -               if (ret)
-> +               if (ret) {
-> +                       pci_dev_put(pdev);
->                         goto out_unroll;
-> +               }
->
->                 count++;
->         }
+On Thu, Sep 05, 2013 at 02:52:47PM +0200, Alexander Gordeev wrote:
+> -int pci_enable_msi_block_part(struct pci_dev *dev,
+> -			      unsigned int nvec, int nvec_mme)
+> +int pci_get_msi_cap(struct pci_dev *dev)
+>  {
+> -	int status, maxvec;
+> +	int ret;
+>  	u16 msgctl;
+>  
+>  	if (!dev->msi_cap)
+>  		return -EINVAL;
+>  
+>  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+> -	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
+> +	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(pci_get_msi_cap);
 
-I don't understand why this code does the pci_dev_get() in the first
-place.  The pdev->msi_list of msi_desc structs is private to the
-pci_dev, and even without bumping the refcount, there should be no way
-for the pci_dev to be freed before the msi_desc.
+One curiosity - with the above factored out, is
+pci_enable_msi_block_part() returning positive number still necessary?
+I followed most of code paths in x86 and nothing seems to need it and
+positive return seems to be just causing confusion - ie. returning 1
+on multiple msi config failure from some functions, which is silly.
 
-I also don't understand this nearby code (the same pattern appears in
-free_msi_irqs()):
+Thanks.
 
-    out_unroll:
-        list_for_each_entry(entry, &pdev->msi_list, list) {
-                if (!count)
-                        break;
-                kobject_del(&entry->kobj);
-                kobject_put(&entry->kobj);
-                count--;
-        }
-
-Why do we call kobject_del() here?  The kobject_put() will call
-kobject_del() anyway, so it looks redundant.
-Documentation/kobject.txt says kobject_del() must be called explicitly
-to break a circular reference, but I don't think we have that here.
-
-Also, I think it is incorrect that free_msi_irqs() does this:
-
-                if (entry->kobj.parent) {
-                        kobject_del(&entry->kobj);
-                        kobject_put(&entry->kobj);
-                }
-
-                list_del(&entry->list);
-                kfree(entry);
-
-I think the "kfree(entry)" should be in msi_kobj_release() instead.
-
-Bjorn
+-- 
+tejun
