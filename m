@@ -1,79 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:64521 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757036Ab3IEGev (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 02:34:51 -0400
-Message-ID: <522825E3.9050806@huawei.com>
-Date: Thu, 5 Sep 2013 14:34:11 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 5 Sep 2013 14:53:47 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2 4/6] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <cb77da9322a63c609dc5aa49aa57c9706bf37a24.1378383792.git.agordeev@redhat.com>
+References: <cover.1378383792.git.agordeev@redhat.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH 4/7] x86/pci: use pcie_cap to simplify code
-References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com> <1378193715-25328-4-git-send-email-wangyijing@huawei.com> <20130904025940.GD24733@google.com>
-In-Reply-To: <20130904025940.GD24733@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1378383792.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/9/4 10:59, Bjorn Helgaas wrote:
-> On Tue, Sep 03, 2013 at 03:35:12PM +0800, Yijing Wang wrote:
->> PCI core saves PCIe Cap offset in pcie_cap,
->> use pcie_cap to simplify code.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  arch/x86/pci/fixup.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
->> index f5809fa..ee8330d 100644
->> --- a/arch/x86/pci/fixup.c
->> +++ b/arch/x86/pci/fixup.c
->> @@ -288,7 +288,7 @@ static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
->>  		 */
->>  		list_for_each_entry(dev, &pbus->devices, bus_list) {
->>  			/* There are 0 to 8 devices attached to this bus */
->> -			cap_base = pci_find_capability(dev, PCI_CAP_ID_EXP);
->> +			cap_base = dev->pcie_cap;
->>  			quirk_aspm_offset[GET_INDEX(pdev->device, dev->devfn)] = cap_base + 0x10;
-> 
-> This should use PCI_EXP_LNKCTL instead of "0x10".
-> 
->>  		}
->>  		pbus->ops = &quirk_pcie_aspm_ops;
+Make use of the new pci_enable_msi_block_part() interface
+and conserve on othewise wasted interrupt resources for 10
+of 16 unused MSI vectors on Intel chipsets.
 
-Hi Bjorn,
-   Thanks for your review and comments!
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/ata/ahci.c |   46 +++++++++++++++++++++++++++-------------------
+ 1 files changed, 27 insertions(+), 19 deletions(-)
 
-> 
-> This quirk replaces the config accessors with ones that silently ignore
-> writes to ASPM control bits.  That really warrants at least a dev_info()
-> note here, and we should be using pci_bus_set_ops().
-
-Good idea, I will update it, thanks!
-
-> 
-> Even that is a little bit dubious because I don't think this is really
-> safe -- what happens if this quirk replaces the ops, then somebody
-> else replaces the ops again?  aer_inject.c at least keeps track of
-> the old ops and seems to fall back to them, but it seems fragile to
-> depend on every caller of pci_bus_set_ops() to do the right thing
-> there.
-> 
-> But this is beyond the scope of your patch, so if you just
-> add a dev_info() note and use pci_bus_set_ops(), that should be
-> enough for now.
-> 
-> 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index db4380d..a6bb618 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1091,26 +1091,34 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
+ 
+-int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
++int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
++			 struct ahci_host_priv *hpriv)
+ {
+ 	int rc;
+ 	unsigned int maxvec;
+ 
+-	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
+-		rc = pci_enable_msi_block_auto(pdev, &maxvec);
+-		if (rc > 0) {
+-			if ((rc == maxvec) || (rc == 1))
+-				return rc;
+-			/*
+-			 * Assume that advantage of multipe MSIs is negated,
+-			 * so fallback to single MSI mode to save resources
+-			 */
+-			pci_disable_msi(pdev);
+-			if (!pci_enable_msi(pdev))
+-				return 1;
+-		}
+-	}
++	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
++		goto intx;
++
++	maxvec = pci_get_msi_cap(pdev);
++	if (maxvec < 0)
++		goto intx;
++	if (maxvec < n_ports)
++		goto single_msi;
++
++	rc = pci_enable_msi_block_part(pdev, n_ports, maxvec);
++	if (rc < 0)
++		goto intx;
++	if (rc)
++		goto single_msi;
++
++	return maxvec;
+ 
++single_msi:
++	if (!pci_enable_msi(pdev))
++		return 1;
++
++intx:
+ 	pci_intx(pdev, 1);
+ 	return 0;
+ }
+@@ -1277,10 +1285,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
+ 
+-	n_msis = ahci_init_interrupts(pdev, hpriv);
+-	if (n_msis > 1)
+-		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+-
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
+@@ -1327,6 +1331,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
+ 
++	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
++	if (n_msis > 1)
++		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
++
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
+-- 
+1.7.7.6
 
 
 -- 
-Thanks!
-Yijing
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
