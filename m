@@ -1,121 +1,240 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:54154 "EHLO arroyo.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:13571 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752273Ab3IUO4c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 21 Sep 2013 10:56:32 -0400
-Message-ID: <523DB38B.4070307@ti.com>
-Date: Sat, 21 Sep 2013 20:26:11 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
-To: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
- part and Exynos part
-References: <000701ce8741$fe47deb0$fad79c10$@samsung.com> <51EE22DF.6090902@ti.com> <001301ce8772$522dfc50$f689f4f0$@samsung.com> <5231607C.10702@ti.com> <003501ceaf87$cda45db0$68ed1910$%han@samsung.com> <20130912093018.GA2124@pratyush-vbox> <52318CCC.4040604@ti.com> <20130912095213.GA5995@pratyush-vbox> <5231925B.3030104@ti.com> <20130912101803.GB5995@pratyush-vbox> <20130912104602.GC5995@pratyush-vbox>
-In-Reply-To: <20130912104602.GC5995@pratyush-vbox>
-Content-Type: text/plain; charset="ISO-8859-1"
+	id S1752733Ab3IEXcH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Sep 2013 19:32:07 -0400
+Message-ID: <1378423918.3246.286.camel@ul30vt.home>
+Subject: Re: Excess dmesg output from ACPIPHP on boot (was: Re: [PATCH
+ 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Date: Thu, 05 Sep 2013 17:31:58 -0600
+In-Reply-To: <1599165.8kjc3DtEzc@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+	 <1411346.QqVbC9hS9U@vostro.rjw.lan> <1378422483.3246.277.camel@ul30vt.home>
+	 <1599165.8kjc3DtEzc@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Thursday 12 September 2013 04:16 PM, Pratyush Anand wrote:
-> On Thu, Sep 12, 2013 at 03:48:03PM +0530, Pratyush Anand wrote:
->> On Thu, Sep 12, 2013 at 06:07:23PM +0800, Kishon Vijay Abraham I wrote:
->>> Hi,
->>>
->>> On Thursday 12 September 2013 03:22 PM, Pratyush Anand wrote:
->>>> Hi Kishon,
->>>>
->>>> On Thu, Sep 12, 2013 at 05:43:40PM +0800, Kishon Vijay Abraham I wrote:
->>>>> Hi,
->>>>>
->>>>> On Thursday 12 September 2013 03:00 PM, Pratyush Anand wrote:
->>>>>> Hi Jingoo,
->>>>>>
->>>>>>
->>>>>> On Thu, Sep 12, 2013 at 03:15:04PM +0800, Jingoo Han wrote:
->>>>>>> On Tuesday 23 July 2013 12:30 PM, Kishon Vijay Abraham I wrote:
->>>>>>>>>> .
->>>>>>>>>> .
->>
->> [...]
->>
->>>>> when I do ifconfig eth0 up, I get *r8169 0000:01:00.0 eth0: link up.*
->>>>> But I dont receive any packets and ping also fails and the tx and rx packet
->>>>> count is also 0. Could it be related to inbound translation?
->>>>
->>>> A PCIe analyser log would tell a definite cause. Most likely either
->>>> inbound translation is not working or INTx/MSI is not working.
->>>
->>> I have enabled only legacy interrupts. Whenever I connect or disconnect
->>> ethernet cable I get link up/link down message and also the interrupt count for
->>> eth0 increases. So I'm not doubting INTx interrupts as such.
+On Fri, 2013-09-06 at 01:36 +0200, Rafael J. Wysocki wrote:
+> On Thursday, September 05, 2013 05:08:03 PM Alex Williamson wrote:
+> > On Fri, 2013-09-06 at 00:40 +0200, Rafael J. Wysocki wrote:
+> > > On Thursday, September 05, 2013 04:17:25 PM Alex Williamson wrote:
+> > > > On Thu, 2013-09-05 at 23:39 +0200, Rafael J. Wysocki wrote:
+> > > > > On Thursday, September 05, 2013 09:44:26 PM Rafael J. Wysocki wrote:
+> > > > > > On Thursday, September 05, 2013 08:21:41 AM Alex Williamson wrote:
+> > > > > 
+> > > > > [...]
+> > > > > 
+> > > > > > > > 
+> > > > > > > > [   18.288122] pci 0000:00:00.0: no hotplug settings from platform
+> > > > > > > > [   18.288127] pcieport 0000:00:01.0: no hotplug settings from platform
+> > > > > > > > [   18.288142] pci 0000:01:00.0: no hotplug settings from platform
+> > > > > > > > [   18.288157] pci 0000:01:00.1: no hotplug settings from platform
+> > > > > > > > [   18.288162] pcieport 0000:00:03.0: no hotplug settings from platform
+> > > > > > > > [   18.288176] pci 0000:02:00.0: no hotplug settings from platform
+> > > > > > > > [   18.288190] pci 0000:02:00.1: no hotplug settings from platform
+> > > > > > > > [   18.288195] pcieport 0000:00:07.0: no hotplug settings from platform
+> > > > > > > > [   18.288209] pci 0000:03:00.0: no hotplug settings from platform
+> > > > > > > > [   18.288224] pci 0000:03:00.1: no hotplug settings from platform
+> > > > > > > > [   18.288228] pci 0000:00:14.0: no hotplug settings from platform
+> > > > > > > > [   18.288233] pci 0000:00:14.1: no hotplug settings from platform
+> > > > > > > > [   18.288237] pci 0000:00:14.2: no hotplug settings from platform
+> > > > > > > > [   18.288242] pci 0000:00:16.0: no hotplug settings from platform
+> > > > > > > > [   18.288247] pci 0000:00:16.1: no hotplug settings from platform
+> > > > > > > > [   18.288251] pci 0000:00:16.2: no hotplug settings from platform
+> > > > > > > > [   18.288256] pci 0000:00:16.3: no hotplug settings from platform
+> > > > > > > > [   18.288260] pci 0000:00:16.4: no hotplug settings from platform
+> > > > > > > > [   18.288265] pci 0000:00:16.5: no hotplug settings from platform
+> > > > > > > > [   18.288269] pci 0000:00:16.6: no hotplug settings from platform
+> > > > > > > > [   18.288274] pci 0000:00:16.7: no hotplug settings from platform
+> > > > > > > > [   18.288278] pci 0000:00:1a.0: no hotplug settings from platform
+> > > > > > > > [   18.288279] pci 0000:00:1a.0: using default PCI settings
+> > > > > > > > [   18.288292] pci 0000:00:1a.1: no hotplug settings from platform
+> > > > > > > > [   18.288293] pci 0000:00:1a.1: using default PCI settings
+> > > > > > > > [   18.288307] ehci-pci 0000:00:1a.7: no hotplug settings from platform
+> > > > > > > > [   18.288308] ehci-pci 0000:00:1a.7: using default PCI settings
+> > > > > > > > [   18.288322] pci 0000:00:1b.0: no hotplug settings from platform
+> > > > > > > > [   18.288327] pcieport 0000:00:1c.0: no hotplug settings from platform
+> > > > > > > > [   18.288332] pcieport 0000:00:1c.4: no hotplug settings from platform
+> > > > > > > > [   18.288344] pci 0000:05:00.0: no hotplug settings from platform
+> > > > > > > > [   18.288349] pci 0000:00:1d.0: no hotplug settings from platform
+> > > > > > > > [   18.288350] pci 0000:00:1d.0: using default PCI settings
+> > > > > > > > [   18.288360] pci 0000:00:1d.1: no hotplug settings from platform
+> > > > > > > > [   18.288361] pci 0000:00:1d.1: using default PCI settings
+> > > > > > > > [   18.288374] pci 0000:00:1d.2: no hotplug settings from platform
+> > > > > > > > [   18.288374] pci 0000:00:1d.2: using default PCI settings
+> > > > > > > > [   18.288387] pci 0000:00:1d.3: no hotplug settings from platform
+> > > > > > > > [   18.288387] pci 0000:00:1d.3: using default PCI settings
+> > > > > > > > 
+> > > > > > > > The boot is noticeably slower.  What's going to happen on systems that
+> > > > > > > > actually have a significant I/O topology vs my little workstation?
+> > > > > > 
+> > > > > > That depends on how many bus check/device check events they generate on boot.
+> > > > > > 
+> > > > > > My test machines don't generate them during boot at all (even the one with
+> > > > > > a Thunderbolt connector), so I don't see the messages in question during boot
+> > > > > > on any of them.  Mika doesn't see them either I suppose, or he would have told
+> > > > > > me about that before.
+> > > > > > 
+> > > > > > And let's just make it clear that it is not usual or even OK to generate bus
+> > > > > > checks or device checks during boot like this.  And since the changes in
+> > > > > > question have been in linux-next since right after the 3.11 merge window, I
+> > > > > > think that someone would have complained already had that been a common issue.
+> > > > > > 
+> > > > > > Of course, we need to deal with that somehow nevertheless. :-)
+> > > > > > 
+> > > > > > > Just to give you an idea:
+> > > > > > > 
+> > > > > > > CONFIG_HOTPLUG_PCI_ACPI=y
+> > > > > > > 
+> > > > > > > $ dmesg | wc
+> > > > > > >   5697  49935 384368
+> > > > > > > 
+> > > > > > > $ dmesg | tail --lines=1
+> > > > > > > [   53.137123] Ebtables v2.0 registered
+> > > > > > > 
+> > > > > > > -- vs --
+> > > > > > > 
+> > > > > > > # CONFIG_HOTPLUG_PCI_ACPI is not set
+> > > > > > > 
+> > > > > > > $ dmesg | wc
+> > > > > > >  1053  9176 71652
+> > > > > > > 
+> > > > > > > $dmesg | tail --lines=1
+> > > > > > > [   28.917220] Ebtables v2.0 registered
+> > > > > > > 
+> > > > > > > So it spews out 5x more output with acpiphp enabled and takes and extra
+> > > > > > > 24s to boot (nearly 2x).  Not good.
+> > > > > > 
+> > > > > > The "no hotplug settings from platform" message is from pci_configure_slot().
+> > > > > > I think the messages you're seeing are from the call to it in
+> > > > > > acpiphp_set_hpp_values() which is called by enable_slot().
+> > > > > > 
+> > > > > > There, I think, we can simply check the return value of pci_scan_slot() and
+> > > > > > if that is 0 (no new devices), we can just skip everything under the call to
+> > > > > > __pci_bus_assign_resources().
+> > > > > > 
+> > > > > > However, we can't skip the scanning of bridges, if any, because there may be
+> > > > > > new devices below them and I guess that's what takes so much time on your
+> > > > > > machine.
+> > > > > 
+> > > > > OK, one piece is missing.  We may need to evaluate _OSC after handling each
+> > > > > event to let the platform know the status.
+> > > > > 
+> > > > > Can you please check if the appended patch makes any difference (with the
+> > > > > previous fix applied, of course)?
+> > > > > 
+> > > > > If fact, it is two patches combined.  One of them optimizes enable_slot()
+> > > > > slightly and the other adds the missing _OSC evaluation.
+> > > > 
+> > > > Better, still double the output:
+> > > > 
+> > > > $ dmesg | wc
+> > > >    2169   19047  152710
+> > > 
+> > > I see.
+> > > 
+> > > What about the timing?
+> > 
+> > ~40s below vs ~29s for acpiphp config'd out above.
 > 
-> Just a question, what is the MRRS of your RC? if it is 128, can you
-> try with passing pci=pcie_bus_peer2peer  in your bootargs.
+> Well, that's better than before.
 > 
-> Again, analyser will help a lot in diagnosing such issues.
+> I'll prepare "official" patches with the last changes then too.
 > 
-> Regards
-> Pratyush
->>>
->>> btw configuring inbound translation once in dw_pcie_host_init enough is it? I
->>> mean we use the same registers for configuring outbound translation also no? So
->>> doesn't the inbound configuration gets lost?
->>
->> No, you write at the same register, but you program direction as
->> inbound. There are different resources for each viewport in inbound
->> and outbound direction.
+> > > > $ dmesg | tail --lines=1
+> > > > [   39.980918] Ebtables v2.0 registered
+> > > > 
+> > > > Here's another interesting stat:
+> > > > 
+> > > > $ dmesg | colrm 1 15 | sort | uniq -c | sort -nr | head --lines=25
+> > > >      73 pci 0000:00:1f.0: BAR 13: [io  0x1000-0x107f] has bogus alignment
+> > > >      73 pci 0000:00:1e.0: PCI bridge to [bus 06]
+> > > >      64 pci 0000:00:1e.0:   bridge window [mem 0x81100000-0x812fffff 64bit pref]
+> > > >      64 pci 0000:00:1e.0:   bridge window [mem 0x80f00000-0x810fffff]
+> > > >      64 pci 0000:00:1e.0:   bridge window [io  0x7000-0x7fff]
+> > > >      38 pci 0000:00:1c.4: PCI bridge to [bus 05]
+> > > >      38 pci 0000:00:1c.4:   bridge window [mem 0xf4f00000-0xf4ffffff]
+> > > >      38 pci 0000:00:1c.0: PCI bridge to [bus 04]
+> > > >      38 pci 0000:00:07.0: PCI bridge to [bus 03]
+> > > >      38 pci 0000:00:07.0:   bridge window [mem 0xf2000000-0xf40fffff]
+> > > >      38 pci 0000:00:07.0:   bridge window [mem 0xe0000000-0xf1ffffff 64bit pref]
+> > > >      38 pci 0000:00:07.0:   bridge window [io  0x4000-0x4fff]
+> > > >      38 pci 0000:00:03.0: PCI bridge to [bus 02]
+> > > >      38 pci 0000:00:03.0:   bridge window [mem 0xf4e00000-0xf4efffff]
+> > > >      38 pci 0000:00:03.0:   bridge window [mem 0xd0000000-0xdfffffff 64bit pref]
+> > > >      38 pci 0000:00:03.0:   bridge window [io  0x3000-0x3fff]
+> > > >      38 pci 0000:00:01.0: PCI bridge to [bus 01]
+> > > >      38 pci 0000:00:01.0:   bridge window [mem 0xf4100000-0xf4bfffff]
+> > > >      38 pci 0000:00:01.0:   bridge window [io  0x2000-0x2fff]
+> > > >      37 pci 0000:00:1c.4:   bridge window [mem 0x80c00000-0x80dfffff 64bit pref]
+> > > >      37 pci 0000:00:1c.4:   bridge window [io  0x6000-0x6fff]
+> > > >      37 pci 0000:00:1c.0:   bridge window [mem 0x80a00000-0x80bfffff 64bit pref]
+> > > >      37 pci 0000:00:1c.0:   bridge window [mem 0x80800000-0x809fffff]
+> > > >      37 pci 0000:00:1c.0:   bridge window [io  0x5000-0x5fff]
+> > > >      36 pci 0000:00:01.0:   bridge window [mem 0x80000000-0x807fffff 64bit pref]
+> > > > 
+> > > > This is nearly the entire difference, just 25 lines repeated over and
+> > > > over.
+> 
+> Can you check how many times the lines above are repeated?
 
-I did inbound translation programming like
-static void dw_pcie_prog_viewport_mem_inbound(struct pcie_port *pp)
-{
-	u32 val;
-	void __iomem *val1;
-	void __iomem *dbi_base = pp->dbi_base;
+The line count is pre-pended to each line.  73 times for the first two
+line, etc.
 
-	/* Program viewport 0 : INBOUND : MEMORY*/
-	val = PCIE_ATU_REGION_INBOUND | (0 & 0xF);
-	dw_pcie_writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
-	val1 = ioremap(0x80000000, 0x5fffffff);
-	dw_pcie_writel_rc(pp, 0x80000000, dbi_base + PCIE_ATU_LOWER_BASE);
-	dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
-	/* in_mem_size must be in power of 2 */
-	dw_pcie_writel_rc(pp, 0x5FFFFFFF, dbi_base + PCIE_ATU_LIMIT);
-	dw_pcie_writel_rc(pp, 0x80000000, dbi_base + PCIE_ATU_LOWER_TARGET);
-	dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, dbi_base + PCIE_ATU_CR1);
-	val = PCIE_ATU_ENABLE;
-	dw_pcie_writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
-}
+> > > 
+> > > Well, this is the bridge sizing I talked about previously.  We still get
+> > > apparently spurious bus check/device check events and they trigger bridge
+> > > scans.
+> > > 
+> > > I'm not sure what to do about that and I wonder whether or not this is
+> > > reproducible on any other machines you can test.
+> > 
+> > I can try it on a couple other systems, but probably not until tomorrow.
+> 
+> Tomorrow (or even later) works just fine for me. :-)
+> 
+> > > Can you please change dbg() to pr_info() under ACPI_NOTIFY_BUS_CHECK and
+> > > ACPI_NOTIFY_DEVICE_CHECK in hotplug_event() (acpiphp_glue.c), grep the boot
+> > > dmesg log for "check notify" and send the result?  I'm wondering what's
+> > > going on there.
+> > 
+> > $ dmesg | grep "check notify"
+> > [    1.633228] hotplug_event: Device check notify on \_SB_.PCI0.PEX2
+> > [    2.472004] hotplug_event: Device check notify on \_SB_.PCI0.PEX3
+> > [    2.477288] hotplug_event: Device check notify on \_SB_.PCI0.PEX4
+> > [    2.482571] hotplug_event: Device check notify on \_SB_.PCI0.PEX5
+> > [    2.482579] hotplug_event: Device check notify on \_SB_.PCI0.PEX6
+> > [    8.204953] hotplug_event: Device check notify on \_SB_.PCI0.PEX2
+> > [    8.209632] hotplug_event: Device check notify on \_SB_.PCI0.PEX3
+> > [    8.214272] hotplug_event: Device check notify on \_SB_.PCI0.PEX4
+> > [    8.218894] hotplug_event: Device check notify on \_SB_.PCI0.PEX5
+> > [    8.218901] hotplug_event: Device check notify on \_SB_.PCI0.PEX6
+> 
+> So I guess the PEXn things are PCIe ports and we get two notifications
+> for each of them, so everything below them gets rescanned.
+> 
+> I've just talked to Bjorn about that and we don't seem to have a good idea
+> how to handle this.  The notifies shouldn't be there, but we kind of have
+> to handle them.
+> 
+> I guess we could suppress the output from repeated bridge scans.  Alternatively,
+> we could just blacklist this particular system somehow if the problem is
+> specific to it.
 
-I'm using Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express
-Gigabit Ethernet controller (TP-LINK TG-3468) (it uses r8169 driver).
+Can't we determine that nothing has changed and avoid re-printing?  I
+have a hard time believing this system is all that unique.  Thanks,
 
-whenever I do a ifconfig ethp up, I get a non fatal error interrupt (after
-Transmitter/Receiver Enable in r8169 driver).
+Alex
 
-I somehow starting to doubt the DMA address programmed in the ethernet card
-which is in my RAM address range (0x80000000 to 0xBFFFFFFF). Should this
-address be programmed in the BAR of the ethernet card? How should it be done?
 
-My pcie dt data looks like this.
-ranges = <0x00000800 0 0x20000000 0x20000000 0 0x00001000 /* configuration space */
-	  0x81000000 0 0	 0x20001000 0 0x00010000 /* io */
-	  0x82000000 0 0x20011000 0x20011000 0 0x0ffef000>; /* memory */
-
-Thanks
-Kishon
