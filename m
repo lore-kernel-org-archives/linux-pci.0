@@ -1,84 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:46142 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753269Ab3I0XTh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Sep 2013 19:19:37 -0400
-Message-ID: <1380323960.27811.67.camel@pasglop>
-Subject: Re: Please revert 928bea964827d7824b548c1f8e06eccbbc4d0d7d
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1378353962.3246.192.camel@ul30vt.home>
+Subject: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on
+ enabled slots
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Date: Sat, 28 Sep 2013 09:19:20 +1000
-In-Reply-To: <CAE9FiQWm7ALPO5k_2nV+fuZw4oNNiw+_PEx8EWkb52ymN+EYUg@mail.gmail.com>
-References: <1380270519.27811.10.camel@pasglop>
-	 <CAE9FiQVkW7d7vFx_kPJG-FEvO71SZjZmpR+dnwVm61wkYK=0YA@mail.gmail.com>
-	 <CA+55aFyDfMdAeaniQwkoeW6F-xd3JxrzGYwtFb6N9+NA6aRCMg@mail.gmail.com>
-	 <1380318405.27811.37.camel@pasglop>
-	 <CAE9FiQXXvkfTak6oEpUog_RYs_Gwpdji7N5UJ=R11Q61==N97A@mail.gmail.com>
-	 <1380321480.27811.53.camel@pasglop>
-	 <CAE9FiQWm7ALPO5k_2nV+fuZw4oNNiw+_PEx8EWkb52ymN+EYUg@mail.gmail.com>
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Date: Wed, 04 Sep 2013 22:06:02 -0600
+In-Reply-To: <1378352279.3246.183.camel@ul30vt.home>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+	 <2449715.ReJj2CQeDS@vostro.rjw.lan> <1378336334.3246.158.camel@ul30vt.home>
+	 <16239518.dJxs4RVK1M@vostro.rjw.lan>
+	 <1378352279.3246.183.camel@ul30vt.home>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-09-27 at 15:56 -0700, Yinghai Lu wrote:
+On Wed, 2013-09-04 at 21:37 -0600, Alex Williamson wrote:
+> On Thu, 2013-09-05 at 01:35 +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, September 04, 2013 05:12:14 PM Alex Williamson wrote:
+> > > On Thu, 2013-09-05 at 00:54 +0200, Rafael J. Wysocki wrote:
+> > > > On Wednesday, September 04, 2013 02:36:34 PM Alex Williamson wrote:
+> > > > > On Thu, 2013-07-18 at 01:32 +0200, Rafael J. Wysocki wrote:
+> > > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > > 
+> > > > > > The current implementation of acpiphp_check_bridge() is pretty dumb:
+> > > > > >  - It enables a slot if it's not enabled and the slot status is
+> > > > > >    ACPI_STA_ALL.
+> > > > > >  - It disables a slot if it's enabled and the slot status is not
+> > > > > >    ACPI_STA_ALL.
+> > > > > > 
+> > > > > > This behavior is not sufficient to handle the Thunderbolt daisy
+> > > > > > chaining case properly, however, because in that case the bus
+> > > > > > behind the already enabled slot needs to be rescanned for new
+> > > > > > devices.
+> > > > > > 
+> > > > > > For this reason, modify acpiphp_check_bridge() so that slots are
+> > > > > > disabled and stopped if they are not in the ACPI_STA_ALL state.
+> > > > > > 
+> > > > > > For slots in the ACPI_STA_ALL state, devices behind them that don't
+> > > > > > respond are trimmed using a new function, trim_stale_devices(),
+> > > > > > introduced specifically for this purpose.  That function walks
+> > > > > > the given bus and checks each device on it.  If the device doesn't
+> > > > > > respond, it is assumed to be gone and is removed.
+> > > > > > 
+> > > > > > Once all of the stale devices directy behind the slot have been
+> > > > > > removed, acpiphp_check_bridge() will start looking for new devices
+> > > > > > that might have appeared on the given bus.  It will do that even if
+> > > > > > the slot is already enabled (SLOT_ENABLED is set for it).
+> > > > > > 
+> > > > > > In addition to that, make the bus check notification ignore
+> > > > > > SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
+> > > > > > so that devices behind the slot are re-enumerated in that case too.
+> > > > > > 
+> > > > > > This change is based on earlier patches from Kirill A Shutemov
+> > > > > > and Mika Westerberg.
+> > > > > > 
+> > > > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > > Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > > > > ---
+> > > > > 
+> > > > > FYI, git bisect landed on this patch as the cause of my serial console
+> > > > > dying on current upstream.  Further debugging to come...  Thanks,
+> > > > 
+> > > > Well, sorry about that.
+> > > > 
+> > > > What exactly do you mean by "dying"?
+> > > 
+> > > Sorry, I was hoping to have more details quickly, but it's been a pain
+> > > to debug.  By dying I mean serial console output suddenly stops during
+> > > kernel boot and nothing more comes out of it until after the system is
+> > > rebooted.  The problem happens when acpiphp_check_bridge() calls
+> > > enable_slot().  The serial console dies somewhere down in
+> > > acpiphp_bus_trim().  I think this is happening on the 00:1f ISA bridge,
+> > > so there's a good chance the serial ports are described as somewhere
+> > > under there.
+> > 
+> > Can you please check if that is the acpiphp_bus_trim() called by
+> > acpiphp_bus_add() or the other one called from trim_stale_devices()?
+> > 
+> > Just add a dump_stack() or WARN_ON(1) to trim_stale_devices() next to
+> > the acpiphp_bus_trim() call and see if that triggers.  I *think* it's the one
+> > in acpiphp_bus_add(), but it won't hurt to verify that.
+> 
+> Here's the call path:
+> 
+> [   16.120824]  [<ffffffff81627e6c>] dump_stack+0x55/0x76
+> [   16.125979]  [<ffffffff8162132e>] enable_slot+0x4ee/0x5e0
+> [   16.131396]  [<ffffffff813418fb>] ? trim_stale_devices+0x5b/0xf0
+> [   16.137420]  [<ffffffff81341b35>] acpiphp_check_bridge+0xd5/0x110
+> [   16.143531]  [<ffffffff81342acb>] hotplug_event+0x16b/0x260
+> [   16.149115]  [<ffffffff81072cd9>] ? process_one_work+0x189/0x540
+> [   16.155136]  [<ffffffff81342bf0>] hotplug_event_work+0x30/0x70
+> [   16.160978]  [<ffffffff81072d3b>] process_one_work+0x1eb/0x540
+> [   16.166819]  [<ffffffff81072cd9>] ? process_one_work+0x189/0x540
+> [   16.172836]  [<ffffffff8107353c>] worker_thread+0x11c/0x370
+> [   16.178426]  [<ffffffff81073420>] ? rescuer_thread+0x350/0x350
+> [   16.184276]  [<ffffffff8107b0ea>] kthread+0xea/0xf0
+> [   16.189165]  [<ffffffff8107b000>] ? kthread_create_on_node+0x160/0x160
+> [   16.195700]  [<ffffffff816395dc>] ret_from_fork+0x7c/0xb0
+> [   16.201109]  [<ffffffff8107b000>] ? kthread_create_on_node+0x160/0x160
+> 
+> The actual death of the serial console occurs in acpi_device_set_power()
+> called from:
+> 
+> enable_slot()
+>  acpiphp_bus_add()
+>   acpiphp_bus_trim()
+>    acpi_bus_trim()
+>     acpi_walk_namespace()
+>      acpi_bus_remove()
+>       acpi_device_unregister()
+>        acpi_device_set_power()
+> 
+> I can't seem to get a path from the acpi devices in question there, so I
+> have no idea what's getting trimmed here.  It worries me quite a bit by
+> introducing this trimming that apparently wasn't happening before
+> though.  Thanks,
 
-> ok, please if you are ok attached one instead. It will print some warning about
-> driver skipping pci_set_master, so we can catch more problem with drivers.
+As suspected, the pnp.bus_id/id of the last device before the serial
+console dies is COM1/PNP0501.  I also see all of these being trimmed
+out:
 
-Except that the message is pretty cryptic :-) Especially since the
-driver causing the message to be printed is not the one that did
-the mistake in the first place, it's the next one coming up that
-trips the warning.
+ MBRD/PNP0C02
+ DMAC/PNP0200
+ MATH/PNP0C04
+ PIC/PNP0000
+ HPET/PNP0103
+ RTC/PNP0B00
+ SPKR/PNP0800
+ TIME/PNP0100
+ LNK{A-H}/PNP0C0F
 
-In any case, the root cause is indeed the PCIe port driver:
+This seems like a bad idea.  I forgot to mention, the original
+hotplug_event is called with a device check on \_SB_.PCI0.PEX2.  The box
+where I'm seeing this is a pretty generic X58 based Nehalem workstation
+(Lenovo S20).  Thanks,
 
-We don't have ACPI, so pcie_port_platform_notify() isn't implemented,
-and pcie_ports_auto is true, so we end up with capabilities set to 0.
-
-Thus the port driver bails out before calling pci_set_master(). The fix
-is to call pci_set_master() unconditionally. However that lead me to
-find to a few interesting oddities in that port driver code:
-
- - If capabilities is 0, it returns after enabling the device and
-doesn't disable it. But if it fails for any other reason later on (such
-as failing to enable interrupts), it *will* disable the device. This is
-inconsistent. In fact, if it had disabled the device as a result of the
-0 capabilities, the problem would also not have happened (the subsequent
-enable_bridge done by the e1000e driver would have done the right
-thing). I've tested "fixing" that instead of moving the set_master call
-and it fixes my problem as well.
-
- - In get_port_device_capability(), all capabilities are gated by a
-combination of the bit in cap_mask and a corresponding HW check of
-the presence of the relevant PCIe capability or similar... except
-for the VC one, which is solely read from the HW capability. That means
-that the platform pcie_port_platform_notify() has no ability to prevent
-the VC capability (so if I have a broken bridge that advertises it but
-my platform wants to block it, it can't).
-
- - I am quite nervous with the PCIe port driver disabling bridges. I
-understand the intent but what if that bridge has some system device
-behind it ? Something you don't even know about (used by ACPI, behind an
-ISA bridge for example ?).
-
-I think disabling bridges is a VERY risky proposition at all times
-(including during PM) and I don't think the port driver should do it.
-
-Maybe a more robust approach would be to detect one way or another that
-the bridge was already enabled and only disable it if it wasn't or
-something along those lines (ie ,restore it in the state it was)...
-
-This is not my problem right now of course (in my case the bridge was
-disabled to begin with) but I have a long experience with system stuff
-hiding behind bridges and the code as it is written makes me a bit
-nervous.
-
-Cheers,
-Ben.
+Alex
 
