@@ -1,90 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:55201 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763476Ab3IEH5Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 03:57:16 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>
-CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jesper Juhl <jj@chaosbits.net>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH v2 2/6] scsi/csiostor: use pcie_capability_xxx to simplify code
-Date: Thu, 5 Sep 2013 15:55:26 +0800
-Message-ID: <1378367730-25996-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
-References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 5 Sep 2013 14:53:19 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2 3/6] MSI/x86: Support pci_enable_msi_block_part() interface
+Message-ID: <1519938bbcfd083c0e091e5ac69b573c39664e40.1378383792.git.agordeev@redhat.com>
+References: <cover.1378383792.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1378383792.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v1->v2: add #define for Completion Timeout Value, and use
-        pcie_capability_clear_and_set_word() instead suggested by Bjorn.
+This change is a prerequisite for the forthcoming update
+of the AHCI device driver to conserve 10/16 MSIs on Intel
+chipsets. The update makes use of 'nvec_mme' parameter
+for pci_enable_msi_block_part() interface.
 
-Pcie_capability_xxx() interfaces were introduced to
-simplify code to access PCIe Cap config space. And
-because PCI core saves the PCIe Cap offset in
-set_pcie_port_type() when device is enumerated.
-So we can use pci_is_pcie() instead.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jesper Juhl <jj@chaosbits.net>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/scsi/csiostor/csio_hw.c |   14 +++-----------
- include/uapi/linux/pci_regs.h   |    1 +
- 2 files changed, 4 insertions(+), 11 deletions(-)
+ drivers/iommu/irq_remapping.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index 0eb35b9..07f493a 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -855,17 +855,9 @@ csio_hw_get_flash_params(struct csio_hw *hw)
- static void
- csio_set_pcie_completion_timeout(struct csio_hw *hw, u8 range)
- {
--	uint16_t val;
--	int pcie_cap;
--
--	if (!csio_pci_capability(hw->pdev, PCI_CAP_ID_EXP, &pcie_cap)) {
--		pci_read_config_word(hw->pdev,
--				     pcie_cap + PCI_EXP_DEVCTL2, &val);
--		val &= 0xfff0;
--		val |= range ;
--		pci_write_config_word(hw->pdev,
--				      pcie_cap + PCI_EXP_DEVCTL2, val);
--	}
-+	if (pci_is_pcie(hw->pdev))
-+		pcie_capability_clear_and_set_word(hw->pdev, PCI_EXP_DEVCTL2,
-+				PCI_EXP_DEVCTL2_COMP_TIME, range);
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 1a220a0..7671da3 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -49,9 +49,9 @@ static void irq_remapping_disable_io_apic(void)
+ 		disconnect_bsp_APIC(0);
  }
  
- /*****************************************************************************/
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index baa7852..cd74182 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -558,6 +558,7 @@
- #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
- #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
- #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
-+#define  PCI_EXP_DEVCTL2_COMP_TIME	0x0f	/* Completion Timeout Value */
- #define  PCI_EXP_DEVCTL2_ARI		0x20	/* Alternative Routing-ID */
- #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
- #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
+-static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
++static int do_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme)
+ {
+-	int node, ret, sub_handle, nvec_pow2, index = 0;
++	int node, ret, sub_handle, index = 0;
+ 	unsigned int irq;
+ 	struct msi_desc *msidesc;
+ 
+@@ -60,18 +60,18 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ 	WARN_ON(msidesc->irq);
+ 	WARN_ON(msidesc->msi_attrib.multiple);
+ 	WARN_ON(msidesc->nvec_used);
++	BUG_ON(!is_power_of_2(nvec_mme));
+ 
+ 	node = dev_to_node(&dev->dev);
+ 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
+ 	if (irq == 0)
+ 		return -ENOSPC;
+ 
+-	nvec_pow2 = __roundup_pow_of_two(nvec);
+ 	msidesc->nvec_used = nvec;
+-	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
++	msidesc->msi_attrib.multiple = ilog2(nvec_mme);
+ 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+ 		if (!sub_handle) {
+-			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
++			index = msi_alloc_remapped_irq(dev, irq, nvec_mme);
+ 			if (index < 0) {
+ 				ret = index;
+ 				goto error;
+@@ -145,7 +145,7 @@ static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
+ 					int nvec, int nvec_mme, int type)
+ {
+ 	if (type == PCI_CAP_ID_MSI)
+-		return do_setup_msi_irqs(dev, nvec);
++		return do_setup_msi_irqs(dev, nvec, nvec_mme);
+ 	else
+ 		return do_setup_msix_irqs(dev, nvec);
+ }
 -- 
-1.7.1
+1.7.7.6
 
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
