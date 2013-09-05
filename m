@@ -1,42 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Bhushan <r65777@freescale.com>
-To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<benh@kernel.crashing.org>, <galak@kernel.crashing.org>,
-	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
-	<scottwood@freescale.com>, <iommu@lists.linux-foundation.org>
-CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
-	Bharat Bhushan <bharat.bhushan@freescale.com>
-Subject: [PATCH 5/7] iommu: supress loff_t compilation error on powerpc
-Date: Thu, 19 Sep 2013 12:59:21 +0530
-Message-ID: <1379575763-2091-6-git-send-email-Bharat.Bhushan@freescale.com>
-In-Reply-To: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:55200 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763477Ab3IEH5Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 03:57:16 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>
+CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Paul Mackerras <paulus@samba.org>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: [PATCH v2 3/6] powerpc/pci: use pci_is_pcie() to simplify code
+Date: Thu, 5 Sep 2013 15:55:27 +0800
+Message-ID: <1378367730-25996-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
----
- drivers/vfio/pci/vfio_pci_rdwr.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Use pci_is_pcie() to simplify code.
 
-diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
-index 210db24..8a8156a 100644
---- a/drivers/vfio/pci/vfio_pci_rdwr.c
-+++ b/drivers/vfio/pci/vfio_pci_rdwr.c
-@@ -181,7 +181,8 @@ ssize_t vfio_pci_vga_rw(struct vfio_pci_device *vdev, char __user *buf,
- 			       size_t count, loff_t *ppos, bool iswrite)
- {
- 	int ret;
--	loff_t off, pos = *ppos & VFIO_PCI_OFFSET_MASK;
-+	loff_t off;
-+	u64 pos = (u64 )(*ppos & VFIO_PCI_OFFSET_MASK);
- 	void __iomem *iomem = NULL;
- 	unsigned int rsrc;
- 	bool is_ioport;
+Acked-by: Kumar Gala <galak@kernel.crashing.org>
+Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-kernel@vger.kernel.org
+---
+ arch/powerpc/kernel/eeh.c     |    3 +--
+ arch/powerpc/sysdev/fsl_pci.c |    2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+index 55593ee..6ebbe54 100644
+--- a/arch/powerpc/kernel/eeh.c
++++ b/arch/powerpc/kernel/eeh.c
+@@ -189,8 +189,7 @@ static size_t eeh_gather_pci_data(struct eeh_dev *edev, char * buf, size_t len)
+ 	}
+ 
+ 	/* If PCI-E capable, dump PCI-E cap 10, and the AER */
+-	cap = pci_find_capability(dev, PCI_CAP_ID_EXP);
+-	if (cap) {
++	if (pci_is_pcie(dev)) {
+ 		n += scnprintf(buf+n, len-n, "pci-e cap10:\n");
+ 		printk(KERN_WARNING
+ 		       "EEH: PCI-E capabilities and status follow:\n");
+diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+index 46ac1dd..5402a1d 100644
+--- a/arch/powerpc/sysdev/fsl_pci.c
++++ b/arch/powerpc/sysdev/fsl_pci.c
+@@ -41,7 +41,7 @@ static void quirk_fsl_pcie_header(struct pci_dev *dev)
+ 	u8 hdr_type;
+ 
+ 	/* if we aren't a PCIe don't bother */
+-	if (!pci_find_capability(dev, PCI_CAP_ID_EXP))
++	if (!pci_is_pcie(dev))
+ 		return;
+ 
+ 	/* if we aren't in host mode don't bother */
 -- 
-1.7.0.4
+1.7.1
 
 
