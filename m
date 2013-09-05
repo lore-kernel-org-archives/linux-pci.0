@@ -1,132 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f48.google.com ([209.85.128.48]:55295 "EHLO
-	mail-qe0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753476Ab3I0UkK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 16:40:10 -0400
-Received: by mail-qe0-f48.google.com with SMTP id nd7so2235438qeb.35
-        for <linux-pci@vger.kernel.org>; Fri, 27 Sep 2013 13:40:09 -0700 (PDT)
-From: Paulo Zanoni <przanoni@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, jbarnes@virtuousgeek.org,
-	Paulo Zanoni <paulo.r.zanoni@intel.com>
-Subject: [bug report] pci/msi: only free msi_desc if the kobj refcount is zero
-Date: Fri, 27 Sep 2013 17:39:45 -0300
-Message-Id: <1380314385-1552-1-git-send-email-przanoni@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:5480 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753088Ab3IEDiJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Sep 2013 23:38:09 -0400
+Message-ID: <1378352279.3246.183.camel@ul30vt.home>
+Subject: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on
+ enabled slots
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Date: Wed, 04 Sep 2013 21:37:59 -0600
+In-Reply-To: <16239518.dJxs4RVK1M@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+	 <2449715.ReJj2CQeDS@vostro.rjw.lan> <1378336334.3246.158.camel@ul30vt.home>
+	 <16239518.dJxs4RVK1M@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Paulo Zanoni <paulo.r.zanoni@intel.com>
+On Thu, 2013-09-05 at 01:35 +0200, Rafael J. Wysocki wrote:
+> On Wednesday, September 04, 2013 05:12:14 PM Alex Williamson wrote:
+> > On Thu, 2013-09-05 at 00:54 +0200, Rafael J. Wysocki wrote:
+> > > On Wednesday, September 04, 2013 02:36:34 PM Alex Williamson wrote:
+> > > > On Thu, 2013-07-18 at 01:32 +0200, Rafael J. Wysocki wrote:
+> > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > 
+> > > > > The current implementation of acpiphp_check_bridge() is pretty dumb:
+> > > > >  - It enables a slot if it's not enabled and the slot status is
+> > > > >    ACPI_STA_ALL.
+> > > > >  - It disables a slot if it's enabled and the slot status is not
+> > > > >    ACPI_STA_ALL.
+> > > > > 
+> > > > > This behavior is not sufficient to handle the Thunderbolt daisy
+> > > > > chaining case properly, however, because in that case the bus
+> > > > > behind the already enabled slot needs to be rescanned for new
+> > > > > devices.
+> > > > > 
+> > > > > For this reason, modify acpiphp_check_bridge() so that slots are
+> > > > > disabled and stopped if they are not in the ACPI_STA_ALL state.
+> > > > > 
+> > > > > For slots in the ACPI_STA_ALL state, devices behind them that don't
+> > > > > respond are trimmed using a new function, trim_stale_devices(),
+> > > > > introduced specifically for this purpose.  That function walks
+> > > > > the given bus and checks each device on it.  If the device doesn't
+> > > > > respond, it is assumed to be gone and is removed.
+> > > > > 
+> > > > > Once all of the stale devices directy behind the slot have been
+> > > > > removed, acpiphp_check_bridge() will start looking for new devices
+> > > > > that might have appeared on the given bus.  It will do that even if
+> > > > > the slot is already enabled (SLOT_ENABLED is set for it).
+> > > > > 
+> > > > > In addition to that, make the bus check notification ignore
+> > > > > SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
+> > > > > so that devices behind the slot are re-enumerated in that case too.
+> > > > > 
+> > > > > This change is based on earlier patches from Kirill A Shutemov
+> > > > > and Mika Westerberg.
+> > > > > 
+> > > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > > > ---
+> > > > 
+> > > > FYI, git bisect landed on this patch as the cause of my serial console
+> > > > dying on current upstream.  Further debugging to come...  Thanks,
+> > > 
+> > > Well, sorry about that.
+> > > 
+> > > What exactly do you mean by "dying"?
+> > 
+> > Sorry, I was hoping to have more details quickly, but it's been a pain
+> > to debug.  By dying I mean serial console output suddenly stops during
+> > kernel boot and nothing more comes out of it until after the system is
+> > rebooted.  The problem happens when acpiphp_check_bridge() calls
+> > enable_slot().  The serial console dies somewhere down in
+> > acpiphp_bus_trim().  I think this is happening on the 00:1f ISA bridge,
+> > so there's a good chance the serial ports are described as somewhere
+> > under there.
+> 
+> Can you please check if that is the acpiphp_bus_trim() called by
+> acpiphp_bus_add() or the other one called from trim_stale_devices()?
+> 
+> Just add a dump_stack() or WARN_ON(1) to trim_stale_devices() next to
+> the acpiphp_bus_trim() call and see if that triggers.  I *think* it's the one
+> in acpiphp_bus_add(), but it won't hurt to verify that.
 
-The msi_desc structure embeds a kobject. One of the nice features
-about kobjects is that they're reference counted, so we can never
-predict when we can kfree() them. Because of this, according to
-Documentation/kobject.txt, we should only release the kobject
-containers at the release() function: because only at that point we
-know the refcount is zero.
+Here's the call path:
 
-But this is not what currently happens: we kfree() the msi_desc
-structure unconditionally at free_msi_irqs(). The code seems to assume
-that no one gets the kobject, so at free_msi_irqs() we just call
-kobject_put() and then kfree(). But if we use the shiny new
-CONFIG_DEBUG_KOBJECT_RELEASE option, all kobject put() operations will
-be added to a delayed work queue, and the current free_msi_irqs()
-function will kfree(entry) before entry->kobj refcount is really 0.
+[   16.120824]  [<ffffffff81627e6c>] dump_stack+0x55/0x76
+[   16.125979]  [<ffffffff8162132e>] enable_slot+0x4ee/0x5e0
+[   16.131396]  [<ffffffff813418fb>] ? trim_stale_devices+0x5b/0xf0
+[   16.137420]  [<ffffffff81341b35>] acpiphp_check_bridge+0xd5/0x110
+[   16.143531]  [<ffffffff81342acb>] hotplug_event+0x16b/0x260
+[   16.149115]  [<ffffffff81072cd9>] ? process_one_work+0x189/0x540
+[   16.155136]  [<ffffffff81342bf0>] hotplug_event_work+0x30/0x70
+[   16.160978]  [<ffffffff81072d3b>] process_one_work+0x1eb/0x540
+[   16.166819]  [<ffffffff81072cd9>] ? process_one_work+0x189/0x540
+[   16.172836]  [<ffffffff8107353c>] worker_thread+0x11c/0x370
+[   16.178426]  [<ffffffff81073420>] ? rescuer_thread+0x350/0x350
+[   16.184276]  [<ffffffff8107b0ea>] kthread+0xea/0xf0
+[   16.189165]  [<ffffffff8107b000>] ? kthread_create_on_node+0x160/0x160
+[   16.195700]  [<ffffffff816395dc>] ret_from_fork+0x7c/0xb0
+[   16.201109]  [<ffffffff8107b000>] ? kthread_create_on_node+0x160/0x160
 
-To complicate everything a little bit more, it seems that we keep
-using struct msi_desc for a while even when the kobject creation
-fails, so unconditionally freeing the struct at msi_kobj_release
-doesn't seem possible with the current code.
+The actual death of the serial console occurs in acpi_device_set_power()
+called from:
 
-So what this patch does is to create entry->kobj_valid and then free
-the msi_desc struct at msi_kobj_release() if kobj_valid, or free it at
-free_msi_irqs() if it's not valid. While this patch seems to solve the
-problem for me, my fear is that on the cases where the kobject is
-really valid, there will be a period of time after free_msi_irqs() and
-before msi_kobj_release() where the msi_desc struct is partially
-uninitialized. So if code holding the kobject reference tries to
-access any of the fields that were cleared at free_msi_irqs() we'll
-have bugs that are even harder to catch. So perhaps my patch is just
-completely wrong and needs to be replaced with proper code. If this is
-the case, I would suggest to fully move the msi_desc deinitialization
-code to msi_kobj_release. So feel free to discard this patch and write
-your own fixes for the bug :)
+enable_slot()
+ acpiphp_bus_add()
+  acpiphp_bus_trim()
+   acpi_bus_trim()
+    acpi_walk_namespace()
+     acpi_bus_remove()
+      acpi_device_unregister()
+       acpi_device_set_power()
 
-The backtraces from CONFIG_DEBUG_KOBJECT_RELEASE can be reproduced by
-unloading i915.ko. I am also seeing some messages from e1000e.ko
-related to MSI IRQs, but this patch doesn't seem to solve them: which
-suggests my fix is not the best thing to do.
+I can't seem to get a path from the acpi devices in question there, so I
+have no idea what's getting trimmed here.  It worries me quite a bit by
+introducing this trimming that apparently wasn't happening before
+though.  Thanks,
 
-This patch was written against the Intel Graphics 3.12.0-rc2 tree.
-
-Signed-off-by: Paulo Zanoni <paulo.r.zanoni@intel.com>
----
- drivers/pci/msi.c   | 15 +++++++++++----
- include/linux/msi.h |  2 ++
- 2 files changed, 13 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d5f90d6..103bfc0 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -380,13 +380,13 @@ static void free_msi_irqs(struct pci_dev *dev)
- 		 * were not registered with sysfs.  In that case don't
- 		 * unregister them.
- 		 */
--		if (entry->kobj.parent) {
-+		if (entry->kobj_valid) {
- 			kobject_del(&entry->kobj);
- 			kobject_put(&entry->kobj);
-+		} else {
-+			list_del(&entry->list);
-+			kfree(entry);
- 		}
--
--		list_del(&entry->list);
--		kfree(entry);
- 	}
- }
- 
-@@ -509,6 +509,11 @@ static void msi_kobj_release(struct kobject *kobj)
- 	struct msi_desc *entry = to_msi_desc(kobj);
- 
- 	pci_dev_put(entry->dev);
-+
-+	if (entry->kobj_valid) {
-+		list_del(&entry->list);
-+		kfree(entry);
-+	}
- }
- 
- static struct kobj_type msi_irq_ktype = {
-@@ -534,6 +539,7 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 		pci_dev_get(pdev);
- 		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
- 				     "%u", entry->irq);
-+		entry->kobj_valid = true;
- 		if (ret)
- 			goto out_unroll;
- 
-@@ -546,6 +552,7 @@ out_unroll:
- 	list_for_each_entry(entry, &pdev->msi_list, list) {
- 		if (!count)
- 			break;
-+		entry->kobj_valid = false;
- 		kobject_del(&entry->kobj);
- 		kobject_put(&entry->kobj);
- 		count--;
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index b17ead8..2aa19de 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -48,6 +48,8 @@ struct msi_desc {
- 	struct msi_msg msg;
- 
- 	struct kobject kobj;
-+	/* Prevents msi_desc from being freed if kobj is not valid. */
-+	bool kobj_valid;
- };
- 
- /*
--- 
-1.8.3.1
+Alex
 
