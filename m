@@ -1,70 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57233 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755738Ab3IYWK7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Sep 2013 18:10:59 -0400
-Date: Thu, 26 Sep 2013 00:09:00 +0200
-From: Veaceslav Falico <vfalico@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to
- populate_msi_sysfs()
-Message-ID: <20130925220900.GA26965@redhat.com>
-References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
- <1379382464-7920-2-git-send-email-vfalico@redhat.com>
- <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
- <CAErSpo6jXzbgZUDbbo74vW-aSUD8MgtK5iNieFGUk=fxho102A@mail.gmail.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:27994 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763506Ab3IEH5W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 03:57:22 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>
+CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH v2 4/6] x86/pci: use pcie_cap to simplify code
+Date: Thu, 5 Sep 2013 15:55:28 +0800
+Message-ID: <1378367730-25996-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <CAErSpo6jXzbgZUDbbo74vW-aSUD8MgtK5iNieFGUk=fxho102A@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 25, 2013 at 03:30:14PM -0600, Bjorn Helgaas wrote:
->On Wed, Sep 25, 2013 at 3:08 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> Also, I think it is incorrect that free_msi_irqs() does this:
->>
->>                 if (entry->kobj.parent) {
->>                         kobject_del(&entry->kobj);
->>                         kobject_put(&entry->kobj);
->>                 }
->>
->>                 list_del(&entry->list);
->>                 kfree(entry);
->>
->> I think the "kfree(entry)" should be in msi_kobj_release() instead.
->
->Oh, I see you fixed this in patch 3/3.  I hadn't read that far yet :)
->
->Did you find these problems by inspection, or is there some easy way
->to trigger bad behavior?  Just wondering if this is some way I can
->reproduce the problem.
+v1->v2: use pci_bus_set_ops to replace pci_ops
+        and add a dev_info() to notify user that
+        the pci_ops was replaced suggested by Bjorn.
 
-Hi,
+PCI core saves PCIe Cap offset in pcie_cap,
+use pcie_cap to simplify code. Also we should
+use pci_bus_set_ops() to replace pci_ops for
+safety and add a dev_info to notify user that
+the pci_ops was replaced.
 
-I've first found it by building with CONFIG_DEBUG_KOBJECT_RELEASE and
-CONFIG_DEBUG_OBJECTS - it shows that it's freeing an object in an active
-state (I'm just running insmod/rmmod tg3 concurently, but I guess it's
-reproducible with any driver that uses msi/x).
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/x86/pci/fixup.c |   17 ++++++++++-------
+ 1 files changed, 10 insertions(+), 7 deletions(-)
 
-Without CONFIG_DEBUG_OBJECTS it's also reproducible, and without
-CONFIG_DEBUG_KOBJECT_RELEASE it's really hard to reproduce, but still
-reproducible (I've hit it with tg3 as a slave of bonding and concurently
-running rmmod bonding/ifup bond0 - though it's really hard). It just panics
-in kobject_put(), iirc.
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index f5809fa..edd7879 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -252,7 +252,7 @@ static struct pci_ops quirk_pcie_aspm_ops = {
+  */
+ static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
+ {
+-	int cap_base, i;
++	int i;
+ 	struct pci_bus  *pbus;
+ 	struct pci_dev *dev;
+ 
+@@ -278,7 +278,7 @@ static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
+ 		for (i = GET_INDEX(pdev->device, 0); i <= GET_INDEX(pdev->device, 7); ++i)
+ 			quirk_aspm_offset[i] = 0;
+ 
+-		pbus->ops = pbus->parent->ops;
++		pci_bus_set_ops(pbus, pbus->parent->ops);
+ 	} else {
+ 		/*
+ 		 * If devices are attached to the root port at power-up or
+@@ -286,13 +286,16 @@ static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
+ 		 * each root port to save the register offsets and replace the
+ 		 * bus ops.
+ 		 */
+-		list_for_each_entry(dev, &pbus->devices, bus_list) {
++		list_for_each_entry(dev, &pbus->devices, bus_list)
+ 			/* There are 0 to 8 devices attached to this bus */
+-			cap_base = pci_find_capability(dev, PCI_CAP_ID_EXP);
+-			quirk_aspm_offset[GET_INDEX(pdev->device, dev->devfn)] = cap_base + 0x10;
+-		}
+-		pbus->ops = &quirk_pcie_aspm_ops;
++			quirk_aspm_offset[GET_INDEX(pdev->device, dev->devfn)] =
++				dev->pcie_cap + PCI_EXP_LNKCTL;
++
++		pci_bus_set_ops(pbus, &quirk_pcie_aspm_ops);
++		dev_info(&pbus->dev, "pci_ops is replaced by quirk_pcie_aspm_ops, "
++				"any writes to ASPM control bits will be ignored.\n");
+ 	}
++
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PA,	pcie_rootport_aspm_quirk);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PA1,	pcie_rootport_aspm_quirk);
+-- 
+1.7.1
 
-So, with those CONFIG_DEBUG_* it's easily triggerable, without - quite
-hard.
 
-Hope that helps.
-
-p.s. I'll adress your other comments tomorrow already, it's quite late here
-and I don't want to do something stupid now :).
-
-Thanks a lot!
-
->
->Bjorn
