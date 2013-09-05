@@ -1,35 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:58709 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754489Ab3IYQFu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Sep 2013 12:05:50 -0400
+Received: from hydra.sisk.pl ([212.160.235.94]:33983 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751616Ab3IEVcv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Sep 2013 17:32:51 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Lan Tianyu <lantianyu1986@gmail.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots
+Date: Thu, 05 Sep 2013 23:43:45 +0200
+Message-ID: <2124824.h5mdeQjI6H@vostro.rjw.lan>
+In-Reply-To: <CAOLK0pyRY0iXt2JN42onPLn7LG8O7R7i3FaKVL7xS63uCg+7kw@mail.gmail.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <81108254.GSTBHzP5cb@vostro.rjw.lan> <CAOLK0pyRY0iXt2JN42onPLn7LG8O7R7i3FaKVL7xS63uCg+7kw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1379319655-20210-4-git-send-email-xobs@kosagi.com>
-References: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
-	<1379319655-20210-4-git-send-email-xobs@kosagi.com>
-Date: Wed, 25 Sep 2013 11:05:49 -0500
-Message-ID: <CAHrpEqQXUUtfB3BCmZsq1+YUk4kgzAyVuFHwQT2S0GL01PJjHg@mail.gmail.com>
-Subject: Re: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-From: Frank Li <lznuaa@gmail.com>
-To: Sean Cross <xobs@kosagi.com>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Zhu Richard-R65037 <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>, bhelgaas@google.com,
-	Shawn Guo <shawn.guo@linaro.org>, tharvey@gateworks.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 16, 2013 at 3:20 AM, Sean Cross <xobs@kosagi.com> wrote:
-> Add support for the PCIe port present on the i.MX6 family of controllers.
-> These use the Synopsis Designware core tied to their own PHY.
->
-> Signed-off-by: Sean Cross <xobs@kosagi.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+On Thursday, September 05, 2013 09:11:51 AM Lan Tianyu wrote:
+> 2013/9/5 Rafael J. Wysocki <rjw@sisk.pl>:
+> > On Thursday, September 05, 2013 02:17:06 PM Lan Tianyu wrote:
+> >> 2013/9/5 Alex Williamson <alex.williamson@redhat.com>:
+> >> > On Thu, 2013-09-05 at 01:35 +0200, Rafael J. Wysocki wrote:
+> >> >> On Wednesday, September 04, 2013 05:12:14 PM Alex Williamson wrote:
+> >> >> > On Thu, 2013-09-05 at 00:54 +0200, Rafael J. Wysocki wrote:
+> >> >> > > On Wednesday, September 04, 2013 02:36:34 PM Alex Williamson wrote:
+> >> >> > > > On Thu, 2013-07-18 at 01:32 +0200, Rafael J. Wysocki wrote:
+> >> >> > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> >> > > > >
+> >> >> > > > > The current implementation of acpiphp_check_bridge() is pretty dumb:
+> >> >> > > > >  - It enables a slot if it's not enabled and the slot status is
+> >> >> > > > >    ACPI_STA_ALL.
+> >> >> > > > >  - It disables a slot if it's enabled and the slot status is not
+> >> >> > > > >    ACPI_STA_ALL.
+> >> >> > > > >
+> >> >> > > > > This behavior is not sufficient to handle the Thunderbolt daisy
+> >> >> > > > > chaining case properly, however, because in that case the bus
+> >> >> > > > > behind the already enabled slot needs to be rescanned for new
+> >> >> > > > > devices.
+> >> >> > > > >
+> >> >> > > > > For this reason, modify acpiphp_check_bridge() so that slots are
+> >> >> > > > > disabled and stopped if they are not in the ACPI_STA_ALL state.
+> >> >> > > > >
+> >> >> > > > > For slots in the ACPI_STA_ALL state, devices behind them that don't
+> >> >> > > > > respond are trimmed using a new function, trim_stale_devices(),
+> >> >> > > > > introduced specifically for this purpose.  That function walks
+> >> >> > > > > the given bus and checks each device on it.  If the device doesn't
+> >> >> > > > > respond, it is assumed to be gone and is removed.
+> >> >> > > > >
+> >> >> > > > > Once all of the stale devices directy behind the slot have been
+> >> >> > > > > removed, acpiphp_check_bridge() will start looking for new devices
+> >> >> > > > > that might have appeared on the given bus.  It will do that even if
+> >> >> > > > > the slot is already enabled (SLOT_ENABLED is set for it).
+> >> >> > > > >
+> >> >> > > > > In addition to that, make the bus check notification ignore
+> >> >> > > > > SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
+> >> >> > > > > so that devices behind the slot are re-enumerated in that case too.
+> >> >> > > > >
+> >> >> > > > > This change is based on earlier patches from Kirill A Shutemov
+> >> >> > > > > and Mika Westerberg.
+> >> >> > > > >
+> >> >> > > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> >> > > > > Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> >> >> > > > > ---
+> >> >> > > >
+> >> >> > > > FYI, git bisect landed on this patch as the cause of my serial console
+> >> >> > > > dying on current upstream.  Further debugging to come...  Thanks,
+> >> >> > >
+> >> >> > > Well, sorry about that.
+> >> >> > >
+> >> >> > > What exactly do you mean by "dying"?
+> >> >> >
+> >> >> > Sorry, I was hoping to have more details quickly, but it's been a pain
+> >> >> > to debug.  By dying I mean serial console output suddenly stops during
+> >> >> > kernel boot and nothing more comes out of it until after the system is
+> >> >> > rebooted.  The problem happens when acpiphp_check_bridge() calls
+> >> >> > enable_slot().  The serial console dies somewhere down in
+> >> >> > acpiphp_bus_trim().  I think this is happening on the 00:1f ISA bridge,
+> >> >> > so there's a good chance the serial ports are described as somewhere
+> >> >> > under there.
+> >> >>
+> >> >> Can you please check if that is the acpiphp_bus_trim() called by
+> >> >> acpiphp_bus_add() or the other one called from trim_stale_devices()?
+> >> >>
+> >> >> Just add a dump_stack() or WARN_ON(1) to trim_stale_devices() next to
+> >> >> the acpiphp_bus_trim() call and see if that triggers.  I *think* it's the one
+> >> >> in acpiphp_bus_add(), but it won't hurt to verify that.
+> >> >
+> >> > Here's the call path:
+> >> >
+> >> > [   16.120824]  [<ffffffff81627e6c>] dump_stack+0x55/0x76
+> >> > [   16.125979]  [<ffffffff8162132e>] enable_slot+0x4ee/0x5e0
+> >> > [   16.131396]  [<ffffffff813418fb>] ? trim_stale_devices+0x5b/0xf0
+> >> > [   16.137420]  [<ffffffff81341b35>] acpiphp_check_bridge+0xd5/0x110
+> >> > [   16.143531]  [<ffffffff81342acb>] hotplug_event+0x16b/0x260
+> >> > [   16.149115]  [<ffffffff81072cd9>] ? process_one_work+0x189/0x540
+> >> > [   16.155136]  [<ffffffff81342bf0>] hotplug_event_work+0x30/0x70
+> >> > [   16.160978]  [<ffffffff81072d3b>] process_one_work+0x1eb/0x540
+> >> > [   16.166819]  [<ffffffff81072cd9>] ? process_one_work+0x189/0x540
+> >> > [   16.172836]  [<ffffffff8107353c>] worker_thread+0x11c/0x370
+> >> > [   16.178426]  [<ffffffff81073420>] ? rescuer_thread+0x350/0x350
+> >> > [   16.184276]  [<ffffffff8107b0ea>] kthread+0xea/0xf0
+> >> > [   16.189165]  [<ffffffff8107b000>] ? kthread_create_on_node+0x160/0x160
+> >> > [   16.195700]  [<ffffffff816395dc>] ret_from_fork+0x7c/0xb0
+> >> > [   16.201109]  [<ffffffff8107b000>] ? kthread_create_on_node+0x160/0x160
+> >> >
+> >> > The actual death of the serial console occurs in acpi_device_set_power()
+> >> > called from:
+> >> >
+> >> > enable_slot()
+> >> >  acpiphp_bus_add()
+> >> >   acpiphp_bus_trim()
+> >> >    acpi_bus_trim()
+> >> >     acpi_walk_namespace()
+> >> >      acpi_bus_remove()
+> >> >       acpi_device_unregister()
+> >> >        acpi_device_set_power()
+> >> >
+> >> > I can't seem to get a path from the acpi devices in question there, so I
+> >> > have no idea what's getting trimmed here.  It worries me quite a bit by
+> >> > introducing this trimming that apparently wasn't happening before
+> >> > though.  Thanks,
+> >>
+> >> Hi Alex:
+> >>            Could you apply the following patch and bootup with kernel param
+> >> "acpiphp.acpiphp_debug=1"?
+> >>            I guess the patch can make serial port alive. It will not
+> >> be put into D3cold
+> >> during trimming. But I don't know why it doesn't work after being put
+> >> back to D0.
+> >
+> > Do we actually put it into D0 in acpi_bus_scan()?  I don't think so.
+> >
+> 
+> Hi Rafael:
+>          I mean the code in the acpiphp_bus_add(). After trimming and acpi
+> bus scan handle, the device will be put back to D0 if acpi_bus_get_device()
+> return acpi device. So I thought the serial port is put back to D0.
 
-What is the status of this patch, is it queued in next or need future change ?
+*The* device corresponding to handle will be put into D0.  Any devices below it
+whose ACPI device objects may also be added by acpi_bus_scan() - not necessarily.
 
-Best regards
-Frank Li
+Thanks,
+Rafael
+
