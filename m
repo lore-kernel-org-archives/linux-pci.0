@@ -1,80 +1,212 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:51706 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311Ab3IICLF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Sep 2013 22:11:05 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 9 Sep 2013 07:32:49 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 4E2373940057
-	for <linux-pci@vger.kernel.org>; Mon,  9 Sep 2013 07:40:48 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r892CxeM39845970
-	for <linux-pci@vger.kernel.org>; Mon, 9 Sep 2013 07:42:59 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r892B0cf021774
-	for <linux-pci@vger.kernel.org>; Mon, 9 Sep 2013 07:41:00 +0530
-Date: Mon, 9 Sep 2013 10:10:59 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/3] PCI: Use spec name for the comment of PCIe
- capability field
-Message-ID: <20130909021059.GB6953@weiyang.vnet.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1378431958-7874-2-git-send-email-weiyang@linux.vnet.ibm.com>
- <20130906231243.GD12956@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130906231243.GD12956@google.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37193 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758006Ab3IEXIL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Sep 2013 19:08:11 -0400
+Message-ID: <1378422483.3246.277.camel@ul30vt.home>
+Subject: Re: Excess dmesg output from ACPIPHP on boot (was: Re: [PATCH
+ 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Date: Thu, 05 Sep 2013 17:08:03 -0600
+In-Reply-To: <1411346.QqVbC9hS9U@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+	 <3686522.NVYmP5Gevu@vostro.rjw.lan> <1378419445.3246.268.camel@ul30vt.home>
+	 <1411346.QqVbC9hS9U@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 06, 2013 at 05:12:43PM -0600, Bjorn Helgaas wrote:
->On Fri, Sep 06, 2013 at 09:45:57AM +0800, Wei Yang wrote:
->> According to the PCIe specification, bit 7:4 of PCI Express Capabilities
->> Register in a PCI Express Capability Structure is used to identify the
->> Device/Port type. If this field equals to 0x7, this PCIe device is a PCI
->> Express to PCI/PCI-X Bridge. While the comment of this value in the code
->> does not comply with the specification.
->> 
->> This patch changes the comment to "PCIE to PCI/PCI-X Bridge" instead of
->> "PCI/PCI-X Bridge", which comply with the specification.
->> 
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> ---
->>  include/uapi/linux/pci_regs.h |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->> 
->> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
->> index c3cc01d..b82b2ff 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -421,7 +421,7 @@
->>  #define  PCI_EXP_TYPE_ROOT_PORT 0x4	/* Root Port */
->>  #define  PCI_EXP_TYPE_UPSTREAM	0x5	/* Upstream Port */
->>  #define  PCI_EXP_TYPE_DOWNSTREAM 0x6	/* Downstream Port */
->> -#define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCI/PCI-X Bridge */
->> +#define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCIE to PCI/PCI-X Bridge */
->>  #define  PCI_EXP_TYPE_PCIE_BRIDGE 0x8	/* PCI/PCI-X to PCIE Bridge */
->>  #define  PCI_EXP_TYPE_RC_END	0x9	/* Root Complex Integrated Endpoint */
->>  #define  PCI_EXP_TYPE_RC_EC	0xa	/* Root Complex Event Collector */
->> -- 
->> 1.7.1
->> 
->
->A similar change is already in Linus' tree:
->
->http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/include/uapi/linux/pci_regs.h?id=fbf501c347b2eea8451a615bd823b6b91a1a8eed
->
->I guess several of us found that comment confusing :)
+On Fri, 2013-09-06 at 00:40 +0200, Rafael J. Wysocki wrote:
+> On Thursday, September 05, 2013 04:17:25 PM Alex Williamson wrote:
+> > On Thu, 2013-09-05 at 23:39 +0200, Rafael J. Wysocki wrote:
+> > > On Thursday, September 05, 2013 09:44:26 PM Rafael J. Wysocki wrote:
+> > > > On Thursday, September 05, 2013 08:21:41 AM Alex Williamson wrote:
+> > > 
+> > > [...]
+> > > 
+> > > > > > 
+> > > > > > [   18.288122] pci 0000:00:00.0: no hotplug settings from platform
+> > > > > > [   18.288127] pcieport 0000:00:01.0: no hotplug settings from platform
+> > > > > > [   18.288142] pci 0000:01:00.0: no hotplug settings from platform
+> > > > > > [   18.288157] pci 0000:01:00.1: no hotplug settings from platform
+> > > > > > [   18.288162] pcieport 0000:00:03.0: no hotplug settings from platform
+> > > > > > [   18.288176] pci 0000:02:00.0: no hotplug settings from platform
+> > > > > > [   18.288190] pci 0000:02:00.1: no hotplug settings from platform
+> > > > > > [   18.288195] pcieport 0000:00:07.0: no hotplug settings from platform
+> > > > > > [   18.288209] pci 0000:03:00.0: no hotplug settings from platform
+> > > > > > [   18.288224] pci 0000:03:00.1: no hotplug settings from platform
+> > > > > > [   18.288228] pci 0000:00:14.0: no hotplug settings from platform
+> > > > > > [   18.288233] pci 0000:00:14.1: no hotplug settings from platform
+> > > > > > [   18.288237] pci 0000:00:14.2: no hotplug settings from platform
+> > > > > > [   18.288242] pci 0000:00:16.0: no hotplug settings from platform
+> > > > > > [   18.288247] pci 0000:00:16.1: no hotplug settings from platform
+> > > > > > [   18.288251] pci 0000:00:16.2: no hotplug settings from platform
+> > > > > > [   18.288256] pci 0000:00:16.3: no hotplug settings from platform
+> > > > > > [   18.288260] pci 0000:00:16.4: no hotplug settings from platform
+> > > > > > [   18.288265] pci 0000:00:16.5: no hotplug settings from platform
+> > > > > > [   18.288269] pci 0000:00:16.6: no hotplug settings from platform
+> > > > > > [   18.288274] pci 0000:00:16.7: no hotplug settings from platform
+> > > > > > [   18.288278] pci 0000:00:1a.0: no hotplug settings from platform
+> > > > > > [   18.288279] pci 0000:00:1a.0: using default PCI settings
+> > > > > > [   18.288292] pci 0000:00:1a.1: no hotplug settings from platform
+> > > > > > [   18.288293] pci 0000:00:1a.1: using default PCI settings
+> > > > > > [   18.288307] ehci-pci 0000:00:1a.7: no hotplug settings from platform
+> > > > > > [   18.288308] ehci-pci 0000:00:1a.7: using default PCI settings
+> > > > > > [   18.288322] pci 0000:00:1b.0: no hotplug settings from platform
+> > > > > > [   18.288327] pcieport 0000:00:1c.0: no hotplug settings from platform
+> > > > > > [   18.288332] pcieport 0000:00:1c.4: no hotplug settings from platform
+> > > > > > [   18.288344] pci 0000:05:00.0: no hotplug settings from platform
+> > > > > > [   18.288349] pci 0000:00:1d.0: no hotplug settings from platform
+> > > > > > [   18.288350] pci 0000:00:1d.0: using default PCI settings
+> > > > > > [   18.288360] pci 0000:00:1d.1: no hotplug settings from platform
+> > > > > > [   18.288361] pci 0000:00:1d.1: using default PCI settings
+> > > > > > [   18.288374] pci 0000:00:1d.2: no hotplug settings from platform
+> > > > > > [   18.288374] pci 0000:00:1d.2: using default PCI settings
+> > > > > > [   18.288387] pci 0000:00:1d.3: no hotplug settings from platform
+> > > > > > [   18.288387] pci 0000:00:1d.3: using default PCI settings
+> > > > > > 
+> > > > > > The boot is noticeably slower.  What's going to happen on systems that
+> > > > > > actually have a significant I/O topology vs my little workstation?
+> > > > 
+> > > > That depends on how many bus check/device check events they generate on boot.
+> > > > 
+> > > > My test machines don't generate them during boot at all (even the one with
+> > > > a Thunderbolt connector), so I don't see the messages in question during boot
+> > > > on any of them.  Mika doesn't see them either I suppose, or he would have told
+> > > > me about that before.
+> > > > 
+> > > > And let's just make it clear that it is not usual or even OK to generate bus
+> > > > checks or device checks during boot like this.  And since the changes in
+> > > > question have been in linux-next since right after the 3.11 merge window, I
+> > > > think that someone would have complained already had that been a common issue.
+> > > > 
+> > > > Of course, we need to deal with that somehow nevertheless. :-)
+> > > > 
+> > > > > Just to give you an idea:
+> > > > > 
+> > > > > CONFIG_HOTPLUG_PCI_ACPI=y
+> > > > > 
+> > > > > $ dmesg | wc
+> > > > >   5697  49935 384368
+> > > > > 
+> > > > > $ dmesg | tail --lines=1
+> > > > > [   53.137123] Ebtables v2.0 registered
+> > > > > 
+> > > > > -- vs --
+> > > > > 
+> > > > > # CONFIG_HOTPLUG_PCI_ACPI is not set
+> > > > > 
+> > > > > $ dmesg | wc
+> > > > >  1053  9176 71652
+> > > > > 
+> > > > > $dmesg | tail --lines=1
+> > > > > [   28.917220] Ebtables v2.0 registered
+> > > > > 
+> > > > > So it spews out 5x more output with acpiphp enabled and takes and extra
+> > > > > 24s to boot (nearly 2x).  Not good.
+> > > > 
+> > > > The "no hotplug settings from platform" message is from pci_configure_slot().
+> > > > I think the messages you're seeing are from the call to it in
+> > > > acpiphp_set_hpp_values() which is called by enable_slot().
+> > > > 
+> > > > There, I think, we can simply check the return value of pci_scan_slot() and
+> > > > if that is 0 (no new devices), we can just skip everything under the call to
+> > > > __pci_bus_assign_resources().
+> > > > 
+> > > > However, we can't skip the scanning of bridges, if any, because there may be
+> > > > new devices below them and I guess that's what takes so much time on your
+> > > > machine.
+> > > 
+> > > OK, one piece is missing.  We may need to evaluate _OSC after handling each
+> > > event to let the platform know the status.
+> > > 
+> > > Can you please check if the appended patch makes any difference (with the
+> > > previous fix applied, of course)?
+> > > 
+> > > If fact, it is two patches combined.  One of them optimizes enable_slot()
+> > > slightly and the other adds the missing _OSC evaluation.
+> > 
+> > Better, still double the output:
+> > 
+> > $ dmesg | wc
+> >    2169   19047  152710
+> 
+> I see.
+> 
+> What about the timing?
 
-Thanks, I didn't notice this :-)
+~40s below vs ~29s for acpiphp config'd out above.
 
--- 
-Richard Yang
-Help you, Help me
+> > $ dmesg | tail --lines=1
+> > [   39.980918] Ebtables v2.0 registered
+> > 
+> > Here's another interesting stat:
+> > 
+> > $ dmesg | colrm 1 15 | sort | uniq -c | sort -nr | head --lines=25
+> >      73 pci 0000:00:1f.0: BAR 13: [io  0x1000-0x107f] has bogus alignment
+> >      73 pci 0000:00:1e.0: PCI bridge to [bus 06]
+> >      64 pci 0000:00:1e.0:   bridge window [mem 0x81100000-0x812fffff 64bit pref]
+> >      64 pci 0000:00:1e.0:   bridge window [mem 0x80f00000-0x810fffff]
+> >      64 pci 0000:00:1e.0:   bridge window [io  0x7000-0x7fff]
+> >      38 pci 0000:00:1c.4: PCI bridge to [bus 05]
+> >      38 pci 0000:00:1c.4:   bridge window [mem 0xf4f00000-0xf4ffffff]
+> >      38 pci 0000:00:1c.0: PCI bridge to [bus 04]
+> >      38 pci 0000:00:07.0: PCI bridge to [bus 03]
+> >      38 pci 0000:00:07.0:   bridge window [mem 0xf2000000-0xf40fffff]
+> >      38 pci 0000:00:07.0:   bridge window [mem 0xe0000000-0xf1ffffff 64bit pref]
+> >      38 pci 0000:00:07.0:   bridge window [io  0x4000-0x4fff]
+> >      38 pci 0000:00:03.0: PCI bridge to [bus 02]
+> >      38 pci 0000:00:03.0:   bridge window [mem 0xf4e00000-0xf4efffff]
+> >      38 pci 0000:00:03.0:   bridge window [mem 0xd0000000-0xdfffffff 64bit pref]
+> >      38 pci 0000:00:03.0:   bridge window [io  0x3000-0x3fff]
+> >      38 pci 0000:00:01.0: PCI bridge to [bus 01]
+> >      38 pci 0000:00:01.0:   bridge window [mem 0xf4100000-0xf4bfffff]
+> >      38 pci 0000:00:01.0:   bridge window [io  0x2000-0x2fff]
+> >      37 pci 0000:00:1c.4:   bridge window [mem 0x80c00000-0x80dfffff 64bit pref]
+> >      37 pci 0000:00:1c.4:   bridge window [io  0x6000-0x6fff]
+> >      37 pci 0000:00:1c.0:   bridge window [mem 0x80a00000-0x80bfffff 64bit pref]
+> >      37 pci 0000:00:1c.0:   bridge window [mem 0x80800000-0x809fffff]
+> >      37 pci 0000:00:1c.0:   bridge window [io  0x5000-0x5fff]
+> >      36 pci 0000:00:01.0:   bridge window [mem 0x80000000-0x807fffff 64bit pref]
+> > 
+> > This is nearly the entire difference, just 25 lines repeated over and
+> > over.
+> 
+> Well, this is the bridge sizing I talked about previously.  We still get
+> apparently spurious bus check/device check events and they trigger bridge
+> scans.
+> 
+> I'm not sure what to do about that and I wonder whether or not this is
+> reproducible on any other machines you can test.
+
+I can try it on a couple other systems, but probably not until tomorrow.
+
+> Can you please change dbg() to pr_info() under ACPI_NOTIFY_BUS_CHECK and
+> ACPI_NOTIFY_DEVICE_CHECK in hotplug_event() (acpiphp_glue.c), grep the boot
+> dmesg log for "check notify" and send the result?  I'm wondering what's
+> going on there.
+
+$ dmesg | grep "check notify"
+[    1.633228] hotplug_event: Device check notify on \_SB_.PCI0.PEX2
+[    2.472004] hotplug_event: Device check notify on \_SB_.PCI0.PEX3
+[    2.477288] hotplug_event: Device check notify on \_SB_.PCI0.PEX4
+[    2.482571] hotplug_event: Device check notify on \_SB_.PCI0.PEX5
+[    2.482579] hotplug_event: Device check notify on \_SB_.PCI0.PEX6
+[    8.204953] hotplug_event: Device check notify on \_SB_.PCI0.PEX2
+[    8.209632] hotplug_event: Device check notify on \_SB_.PCI0.PEX3
+[    8.214272] hotplug_event: Device check notify on \_SB_.PCI0.PEX4
+[    8.218894] hotplug_event: Device check notify on \_SB_.PCI0.PEX5
+[    8.218901] hotplug_event: Device check notify on \_SB_.PCI0.PEX6
+
+Thanks,
+Alex
 
