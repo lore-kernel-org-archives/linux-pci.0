@@ -1,55 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:56817 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751452Ab3IZEno (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 00:43:44 -0400
-Received: by mail-ie0-f177.google.com with SMTP id qd12so722901ieb.36
-        for <linux-pci@vger.kernel.org>; Wed, 25 Sep 2013 21:43:43 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:36448 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753521Ab3IESwq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Sep 2013 14:52:46 -0400
+Date: Thu, 5 Sep 2013 20:54:40 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+References: <cover.1378383792.git.agordeev@redhat.com>
+ <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
+ <20130905130902.GA26314@htj.dyndns.org>
+ <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+ <20130905150442.GA24148@htj.dyndns.org>
+ <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+ <20130905154436.GC24148@htj.dyndns.org>
 MIME-Version: 1.0
-In-Reply-To: <001b01ceba71$62ca02c0$285e0840$%han@samsung.com>
-References: <001a01ceaace$013ec980$03bc5c80$%han@samsung.com> <001b01ceba71$62ca02c0$285e0840$%han@samsung.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Sep 2013 22:43:23 -0600
-Message-ID: <CAErSpo4ECRheinv_BAG6MMKeftDS-TBD2kTfkTnTo6P_EfOH4g@mail.gmail.com>
-Subject: Re: [PATCH V3] PCI: exynos: add support for MSI
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-samsung-soc@vger.kernel.org,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	SRIKANTH TUMKUR SHIVANAND <ts.srikanth@samsung.com>,
-	Arnd Bergmann <arnd@arndb.de>, Sean Cross <xobs@kosagi.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	devicetree@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130905154436.GC24148@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 25, 2013 at 10:32 PM, Jingoo Han <jg1.han@samsung.com> wrote:
-> On Friday, September 06, 2013 3:55 PM, Jingoo Han wrote:
->>
->> This patch adds support for Message Signaled Interrupt in the
->> Exynos PCIe diver using Synopsys designware PCIe core IP.
->>
->> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
->> Signed-off-by: Srikanth T Shivanand <ts.srikanth@samsung.com>
->> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
->> Cc: Pratyush Anand <pratyush.anand@st.com>
->> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
->
-> Hi Bjorn Helgaas,
->
-> There is no comment for last 3 weeks.
-> Would you merge this patch to your tree?
+On Thu, Sep 05, 2013 at 11:44:36AM -0400, Tejun Heo wrote:
+> Given that multiple MSI is something which isn't too popular / already
+> superseded and that the condition is highly unlikely, do we really
+> care about possible partial success?  This sort of interface is
+> unnecessarily complex and actively harmful.  It forces all users to
+> wonder what could possibly happen and implement all sorts of nutty
+> fallback logic which is highly likely to be error-prone on both the
+> software and hardware side.  Seriously, how much testing would such
+> code path would get both on the driver and firmware sides?
+> 
+> It's an operation which isn't too likely to fail with a firm
+> known-to-work fallback.  It's pointless and error-prone to try to
+> extract the last point zero zero one percent.
 
-I worked on merging your patches today, which is what prompted my
-message about how to manage the exynos, mvebu, tegra, etc., host
-drivers.  Assuming we come to a consensus about that, they should
-appear in -next by the end of this week.
+I assume reasons for having this type of interface at the moment of
+taking design decision about pci_enable_msi_block() still hold true.
+I do not know what those reasons were, but I think the fact multiple
+MSIs are rarely used and MSI-X exists does not invalidate them now.
 
-Bjorn
+I did consider the other argument - since pci_enable_msi_block_part()
+is explicitly provided with a value of MME the caller will not be
+satisfied with any other value and hence a repeated call with a lesser
+MME does not make sense for the caller. Therefore we could just fail
+in case the architecture returned a positive value. Same result, but
+different reasoning.
+
+At the moment I still prefer pci_enable_msi_block_part() to be similar
+to pci_enable_msi_block(). I do agree the fallback logic is error-prone,
+but I would not dare to scrap it all right away.
+
+Bjorn?
+
+> 
+> Thanks.
+> 
+> -- 
+> tejun
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
