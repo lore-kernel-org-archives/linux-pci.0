@@ -1,68 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:45378 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751346Ab3ILHPG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 03:15:06 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kishon Vijay Abraham I' <kishon@ti.com>
-Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <002801ce8376$a807dbf0$f81793d0$@samsung.com>
- <51ED49D6.9050209@ti.com> <000701ce8741$fe47deb0$fad79c10$@samsung.com>
- <51EE22DF.6090902@ti.com> <001301ce8772$522dfc50$f689f4f0$@samsung.com>
- <5231607C.10702@ti.com>
-In-reply-to: <5231607C.10702@ti.com>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys part
- and Exynos part
-Date: Thu, 12 Sep 2013 16:15:04 +0900
-Message-id: <003501ceaf87$cda45db0$68ed1910$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>
+CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH v2 5/6] PCI: use pci_is_pcie() to simplify code
+Date: Thu, 5 Sep 2013 15:55:29 +0800
+Message-ID: <1378367730-25996-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 23 July 2013 12:30 PM, Kishon Vijay Abraham I wrote:
-> >> .
-> >> .
-> >>>>> +			of_pci_range_to_resource(&range, np, &pp->cfg);
-> >>>>> +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
-> >>>>> +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
-> >>>>> +		}
-> >>>>> +	}
-> >>>>> +
-> >>>>> +	pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
-> >>>>> +				resource_size(&pp->cfg));
-> >>>>
-> >>>> Why is configuraion space divided into two?
-> >>>
-> >>> Sorry, I don't know the exact reason. :(
-> >>> Pratyush Anand may know about this.
-> >>> Pratyush Anand, could you answer the question?
-> >>>
-> >>> Also, if you find some problems, please let me know.
-> 
-> One more query..
-> 
-> Where is inbound translation configuration done in your driver? how should it
-> be done?
+Use pci_is_pcie() instead of pci_find_capability
+to simplify code.
 
-Hi Kishon,
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Sorry, I cannot understand your question exactly.
-However, the following thread would be helpful.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index eeb50bd..0fa9075 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -641,8 +641,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+ 		return;
+ 	}
+ 
+-	pos = pci_find_capability(bridge, PCI_CAP_ID_EXP);
+-	if (pos) {
++	if (pci_is_pcie(bridge)) {
+ 		u32 linkcap;
+ 		u16 linksta;
+ 
+-- 
+1.7.1
 
-http://www.spinics.net/lists/arm-kernel/msg252078.html
-https://lkml.org/lkml/2013/6/17/890
-
-Best regards.
-Jingoo Han
 
