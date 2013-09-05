@@ -1,71 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:55200 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763477Ab3IEH5Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 03:57:16 -0400
+Received: from szxga03-in.huawei.com ([119.145.14.66]:64521 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757036Ab3IEGev (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 02:34:51 -0400
+Message-ID: <522825E3.9050806@huawei.com>
+Date: Thu, 5 Sep 2013 14:34:11 +0800
 From: Yijing Wang <wangyijing@huawei.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>
-CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Paul Mackerras <paulus@samba.org>,
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: [PATCH v2 3/6] powerpc/pci: use pci_is_pcie() to simplify code
-Date: Thu, 5 Sep 2013 15:55:27 +0800
-Message-ID: <1378367730-25996-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
-References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH 4/7] x86/pci: use pcie_cap to simplify code
+References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com> <1378193715-25328-4-git-send-email-wangyijing@huawei.com> <20130904025940.GD24733@google.com>
+In-Reply-To: <20130904025940.GD24733@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_is_pcie() to simplify code.
+On 2013/9/4 10:59, Bjorn Helgaas wrote:
+> On Tue, Sep 03, 2013 at 03:35:12PM +0800, Yijing Wang wrote:
+>> PCI core saves PCIe Cap offset in pcie_cap,
+>> use pcie_cap to simplify code.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  arch/x86/pci/fixup.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+>> index f5809fa..ee8330d 100644
+>> --- a/arch/x86/pci/fixup.c
+>> +++ b/arch/x86/pci/fixup.c
+>> @@ -288,7 +288,7 @@ static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
+>>  		 */
+>>  		list_for_each_entry(dev, &pbus->devices, bus_list) {
+>>  			/* There are 0 to 8 devices attached to this bus */
+>> -			cap_base = pci_find_capability(dev, PCI_CAP_ID_EXP);
+>> +			cap_base = dev->pcie_cap;
+>>  			quirk_aspm_offset[GET_INDEX(pdev->device, dev->devfn)] = cap_base + 0x10;
+> 
+> This should use PCI_EXP_LNKCTL instead of "0x10".
+> 
+>>  		}
+>>  		pbus->ops = &quirk_pcie_aspm_ops;
 
-Acked-by: Kumar Gala <galak@kernel.crashing.org>
-Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-kernel@vger.kernel.org
----
- arch/powerpc/kernel/eeh.c     |    3 +--
- arch/powerpc/sysdev/fsl_pci.c |    2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+Hi Bjorn,
+   Thanks for your review and comments!
 
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index 55593ee..6ebbe54 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -189,8 +189,7 @@ static size_t eeh_gather_pci_data(struct eeh_dev *edev, char * buf, size_t len)
- 	}
- 
- 	/* If PCI-E capable, dump PCI-E cap 10, and the AER */
--	cap = pci_find_capability(dev, PCI_CAP_ID_EXP);
--	if (cap) {
-+	if (pci_is_pcie(dev)) {
- 		n += scnprintf(buf+n, len-n, "pci-e cap10:\n");
- 		printk(KERN_WARNING
- 		       "EEH: PCI-E capabilities and status follow:\n");
-diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-index 46ac1dd..5402a1d 100644
---- a/arch/powerpc/sysdev/fsl_pci.c
-+++ b/arch/powerpc/sysdev/fsl_pci.c
-@@ -41,7 +41,7 @@ static void quirk_fsl_pcie_header(struct pci_dev *dev)
- 	u8 hdr_type;
- 
- 	/* if we aren't a PCIe don't bother */
--	if (!pci_find_capability(dev, PCI_CAP_ID_EXP))
-+	if (!pci_is_pcie(dev))
- 		return;
- 
- 	/* if we aren't in host mode don't bother */
+> 
+> This quirk replaces the config accessors with ones that silently ignore
+> writes to ASPM control bits.  That really warrants at least a dev_info()
+> note here, and we should be using pci_bus_set_ops().
+
+Good idea, I will update it, thanks!
+
+> 
+> Even that is a little bit dubious because I don't think this is really
+> safe -- what happens if this quirk replaces the ops, then somebody
+> else replaces the ops again?  aer_inject.c at least keeps track of
+> the old ops and seems to fall back to them, but it seems fragile to
+> depend on every caller of pci_bus_set_ops() to do the right thing
+> there.
+> 
+> But this is beyond the scope of your patch, so if you just
+> add a dev_info() note and use pci_bus_set_ops(), that should be
+> enough for now.
+> 
+> 
+
+
 -- 
-1.7.1
-
+Thanks!
+Yijing
 
