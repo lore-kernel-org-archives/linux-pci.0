@@ -1,36 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:39990 "EHLO imap.thunk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751232Ab3I2WlV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 29 Sep 2013 18:41:21 -0400
-Date: Sun, 29 Sep 2013 18:41:06 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+Received: from szxga02-in.huawei.com ([119.145.14.65]:55201 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763476Ab3IEH5Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 03:57:16 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Workaround missing pci_set_master in pci drivers
-Message-ID: <20130929224106.GA19331@thunk.org>
-References: <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
- <1380399187-4962-1-git-send-email-yinghai@kernel.org>
+	"James E.J. Bottomley" <JBottomley@parallels.com>
+CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Naresh Kumar Inna <naresh@chelsio.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jesper Juhl <jj@chaosbits.net>, <linux-scsi@vger.kernel.org>
+Subject: [PATCH v2 2/6] scsi/csiostor: use pcie_capability_xxx to simplify code
+Date: Thu, 5 Sep 2013 15:55:26 +0800
+Message-ID: <1378367730-25996-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380399187-4962-1-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 28, 2013 at 01:13:07PM -0700, Yinghai Lu wrote:
-> Fixed by add checking in pci_enable_bridge, and call pci_set_master
-> if driver skip that.
-> That will make the code more robot and wade off problem for missing
-> pci_set_master in drivers.
+v1->v2: add #define for Completion Timeout Value, and use
+        pcie_capability_clear_and_set_word() instead suggested by Bjorn.
 
-Petty spelling nit; feel free to ignore unless you need to respin the
-patch anyway....
+Pcie_capability_xxx() interfaces were introduced to
+simplify code to access PCIe Cap config space. And
+because PCI core saves the PCIe Cap offset in
+set_pcie_port_type() when device is enumerated.
+So we can use pci_is_pcie() instead.
 
-s/robot/robost/
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jesper Juhl <jj@chaosbits.net>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/csiostor/csio_hw.c |   14 +++-----------
+ include/uapi/linux/pci_regs.h   |    1 +
+ 2 files changed, 4 insertions(+), 11 deletions(-)
 
-Cheers,
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index 0eb35b9..07f493a 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -855,17 +855,9 @@ csio_hw_get_flash_params(struct csio_hw *hw)
+ static void
+ csio_set_pcie_completion_timeout(struct csio_hw *hw, u8 range)
+ {
+-	uint16_t val;
+-	int pcie_cap;
+-
+-	if (!csio_pci_capability(hw->pdev, PCI_CAP_ID_EXP, &pcie_cap)) {
+-		pci_read_config_word(hw->pdev,
+-				     pcie_cap + PCI_EXP_DEVCTL2, &val);
+-		val &= 0xfff0;
+-		val |= range ;
+-		pci_write_config_word(hw->pdev,
+-				      pcie_cap + PCI_EXP_DEVCTL2, val);
+-	}
++	if (pci_is_pcie(hw->pdev))
++		pcie_capability_clear_and_set_word(hw->pdev, PCI_EXP_DEVCTL2,
++				PCI_EXP_DEVCTL2_COMP_TIME, range);
+ }
+ 
+ /*****************************************************************************/
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index baa7852..cd74182 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -558,6 +558,7 @@
+ #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
+ #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
+ #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
++#define  PCI_EXP_DEVCTL2_COMP_TIME	0x0f	/* Completion Timeout Value */
+ #define  PCI_EXP_DEVCTL2_ARI		0x20	/* Alternative Routing-ID */
+ #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
+ #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
+-- 
+1.7.1
 
-						- Ted
+
