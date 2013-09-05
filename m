@@ -1,72 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:18768 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932300Ab3ICHf7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 03:35:59 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"David S. Miller" <davem@davemloft.net>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	Jesper Juhl <jj@chaosbits.net>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 2/7] scsi/csiostor: use pcie_capability_xxx to simplify code
-Date: Tue, 3 Sep 2013 15:35:10 +0800
-Message-ID: <1378193715-25328-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
-References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35103 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753919Ab3IEPV4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Sep 2013 11:21:56 -0400
+Date: Thu, 5 Sep 2013 17:23:53 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 4/6] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Message-ID: <20130905152352.GB30984@dhcp-26-207.brq.redhat.com>
+References: <cover.1378383792.git.agordeev@redhat.com>
+ <cb77da9322a63c609dc5aa49aa57c9706bf37a24.1378383792.git.agordeev@redhat.com>
+ <20130905131050.GB26314@htj.dyndns.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130905131050.GB26314@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pcie_capability_xxx() interfaces were introudced to
-simplify code to access PCIe Cap config space. And
-because PCI core saves the PCIe Cap offset in
-set_pcie_port_type() when device is enumerated.
-So we can use pci_is_pcie() instead.
+On Thu, Sep 05, 2013 at 09:10:50AM -0400, Tejun Heo wrote:
+> One more question tho.  How much does saving some interrupt vectors
+> matter?  Are int vectors contrained resource on some configurations?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jesper Juhl <jj@chaosbits.net>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/scsi/csiostor/csio_hw.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+Honestly, I am not aware of any configuration struggling with interrupt
+vectors. However, conserving on x86 interrupt vector space is always a
+good idea IMO. Also, PPC pSeries has a concept of MSI quota, so..
 
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index 0eb35b9..be9a6ef 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -856,15 +856,12 @@ static void
- csio_set_pcie_completion_timeout(struct csio_hw *hw, u8 range)
- {
- 	uint16_t val;
--	int pcie_cap;
- 
--	if (!csio_pci_capability(hw->pdev, PCI_CAP_ID_EXP, &pcie_cap)) {
--		pci_read_config_word(hw->pdev,
--				     pcie_cap + PCI_EXP_DEVCTL2, &val);
-+	if (pci_is_pcie(hw->pdev)) {
-+		pcie_capability_read_word(hw->pdev, PCI_EXP_DEVCTL2, &val);
- 		val &= 0xfff0;
- 		val |= range ;
--		pci_write_config_word(hw->pdev,
--				      pcie_cap + PCI_EXP_DEVCTL2, val);
-+		pcie_capability_write_word(hw->pdev, PCI_EXP_DEVCTL2, val);
- 	}
- }
- 
+> Thanks.
+> 
+> -- 
+> tejun
+
 -- 
-1.7.1
-
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
