@@ -1,70 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:33132 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751136Ab3IJXKg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Sep 2013 19:10:36 -0400
-Date: Tue, 10 Sep 2013 16:10:43 -0700
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, arjan@linux.intel.com
-Subject: [PATCH] Intel pci device quirk remove D3 delay
-Message-ID: <20130910231043.GA31857@linux.intel.com>
-Reply-To: todd.e.brandt@linux.intel.com
+Received: from szxga01-in.huawei.com ([119.145.14.64]:27877 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757461Ab3IEH5N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 03:57:13 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>
+CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Anil Gurumurthy <agurumur@brocade.com>,
+	Vijaya Mohan Guvva <vmohan@brocade.com>,
+	<linux-scsi@vger.kernel.org>
+Subject: [PATCH v2 1/6] scsi/bfa: use pcie_set/get_readrq to simplify code
+Date: Thu, 5 Sep 2013 15:55:25 +0800
+Message-ID: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The latest Ivy Bridge Intel chipsets have a hardware optimization which
-allows on-chip PCI devices to ignore the 10ms delay before entering
-or exitting D3 suspend.
+v1->v2: use pcie_get/set_readrq to simplify code
+a lot suggestd by Bjorn.
 
-This patch implements the optimization as a pci quirk, since we want
-tight control over which devices use it. This way we can test each device
-individually to be sure there are no issues before we enable the quirk.
-The first set of devices are from the Haswell platform, which includes
-every PCI device that is on the northbridge and southbridge.
+Use pcie_get_readrq()/pcie_set_readrq() to simplify
+code.
 
-After testing this patch reduces the haswell suspend time from 93 ms to
-47 ms and resume time from 160 ms to 64 ms. 
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/bfa/bfad.c |   48 +++++-----------------------------------------
+ 1 files changed, 6 insertions(+), 42 deletions(-)
 
-Signed-off-by: Todd Brandt <todd.e.brandt@linux.intel.com>
-
- drivers/pci/quirks.c | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e85d230..98ea960 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2955,6 +2955,29 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index f8ca7be..0a458db 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -766,50 +766,14 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+ 	bfad->pcidev = pdev;
  
- /*
-+ * PCI devices which are on Intel chips can skip the 10ms delay
-+ * before entering D3 mode.
-+ */
-+static void quirk_remove_d3_delay(struct pci_dev *dev)
-+{
-+	dev->d3_delay = 0;
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c00, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0412, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c0c, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c31, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3a, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3d, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c2d, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c20, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c18, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c1c, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c26, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c4e, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c02, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c22, quirk_remove_d3_delay);
-+
-+/*
-  * Some devices may pass our check in pci_intx_mask_supported if
-  * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
-  * support this feature.
+ 	/* Adjust PCIe Maximum Read Request Size */
+-	if (pcie_max_read_reqsz > 0) {
+-		int pcie_cap_reg;
+-		u16 pcie_dev_ctl;
+-		u16 mask = 0xffff;
+-
+-		switch (pcie_max_read_reqsz) {
+-		case 128:
+-			mask = 0x0;
+-			break;
+-		case 256:
+-			mask = 0x1000;
+-			break;
+-		case 512:
+-			mask = 0x2000;
+-			break;
+-		case 1024:
+-			mask = 0x3000;
+-			break;
+-		case 2048:
+-			mask = 0x4000;
+-			break;
+-		case 4096:
+-			mask = 0x5000;
+-			break;
+-		default:
+-			break;
+-		}
+-
+-		pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+-		if (mask != 0xffff && pcie_cap_reg) {
+-			pcie_cap_reg += 0x08;
+-			pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
+-			if ((pcie_dev_ctl & 0x7000) != mask) {
+-				printk(KERN_WARNING "BFA[%s]: "
++	if (pcie_max_read_reqsz > 0 && pci_is_pcie(pdev)) {
++		int max_rq = pcie_get_readrq(pdev);
++		if (max_rq > 128 && max_rq < 4096 && is_power_of_2(max_rq))
++			printk(KERN_WARNING "BFA[%s]: "
+ 				"pcie_max_read_request_size is %d, "
+-				"reset to %d\n", bfad->pci_name,
+-				(1 << ((pcie_dev_ctl & 0x7000) >> 12)) << 7,
++				"reset to %d\n", bfad->pci_name, max_rq,
+ 				pcie_max_read_reqsz);
+-
+-				pcie_dev_ctl &= ~0x7000;
+-				pci_write_config_word(pdev, pcie_cap_reg,
+-						pcie_dev_ctl | mask);
+-			}
+-		}
++		pcie_set_readrq(pdev, pcie_max_read_reqsz);
+ 	}
+ 
+ 	pci_save_state(pdev);
+-- 
+1.7.1
+
 
