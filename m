@@ -1,90 +1,143 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 3 Sep 2013 17:34:38 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/7] scsi/bfa: use pcie_capability_xxx to simplify code
-Message-ID: <20130903233438.GB24733@google.com>
-References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
+Date: Thu, 5 Sep 2013 14:52:47 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
+References: <cover.1378383792.git.agordeev@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <cover.1378383792.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 03, 2013 at 03:35:09PM +0800, Yijing Wang wrote:
-> Pcie_capability_xxx() interfaces were introudced to
-> simplify code to access PCIe Cap config space. And
-> because PCI core saves the PCIe Cap offset in
-> set_pcie_port_type() when device is enumerated.
-> So we can use pci_is_pcie() instead.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Anil Gurumurthy <agurumur@brocade.com>
-> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/scsi/bfa/bfad.c |    9 +++------
->  1 files changed, 3 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-> index 9611195..d726b81 100644
-> --- a/drivers/scsi/bfa/bfad.c
-> +++ b/drivers/scsi/bfa/bfad.c
-> @@ -767,7 +767,6 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
->  
->  	/* Adjust PCIe Maximum Read Request Size */
->  	if (pcie_max_read_reqsz > 0) {
-> -		int pcie_cap_reg;
->  		u16 pcie_dev_ctl;
->  		u16 mask = 0xffff;
->  
-> @@ -794,10 +793,8 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
->  			break;
->  		}
->  
-> -		pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
-> -		if (mask != 0xffff && pcie_cap_reg) {
-> -			pcie_cap_reg += 0x08;
-> -			pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
-> +		if (mask != 0xffff && pci_is_pcie(pdev)) {
+Factor out the operation of retrieving the number of MSI
+vectors the device requested, that is a value encoded in
+the Multiple Message Capable register.
 
-Please move the pci_is_pcie() test up to the
-"if (pcie_mas_read_reqsz ..." statement.  There's no point in doing
-the switch statement if this isn't a PCIe device.
+This change is a prerequisite for the forthcoming update
+of the AHCI device driver.
 
-> +			pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &pcie_dev_ctl);
->  			if ((pcie_dev_ctl & 0x7000) != mask) {
->  				printk(KERN_WARNING "BFA[%s]: "
->  				"pcie_max_read_request_size is %d, "
-> @@ -806,7 +803,7 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
->  				pcie_max_read_reqsz);
->  
->  				pcie_dev_ctl &= ~0x7000;
-> -				pci_write_config_word(pdev, pcie_cap_reg,
-> +				pcie_capability_write_word(pdev, PCI_EXP_DEVCTL,
->  						pcie_dev_ctl | mask);
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ Documentation/PCI/MSI-HOWTO.txt |   12 ++++++++++++
+ drivers/pci/msi.c               |   30 ++++++++++++++++++++----------
+ include/linux/pci.h             |    6 ++++++
+ 3 files changed, 38 insertions(+), 10 deletions(-)
 
-Please rework this to use pcie_set_readrq() instead of writing
-the capability directly.  If we write the capability directly, we
-risk writing a value that is incompatible with the MPS
-configuration done by the PCI core.
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 32d7d15..205eb5d 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -209,6 +209,18 @@ on any interrupt for which it previously called request_irq().
+ Failure to do so results in a BUG_ON(), leaving the device with
+ MSI enabled and thus leaking its vector.
+ 
++4.2.6 pci_get_msi_cap
++
++int pci_get_msi_cap(struct pci_dev *dev)
++
++This function could be used to retrieve the number of MSI vectors the
++device requested (via the Multiple Message Capable register). The MSI
++specification only allows the returned value to be a power of two,
++up to a maximum of 2^5 (32).
++
++If this function returns a negative number, it indicates the device is
++not capable of sending MSIs.
++
+ 4.3 Using MSI-X
+ 
+ The MSI-X capability is much more flexible than the MSI capability.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 647e9b1..c50d518 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -802,17 +802,30 @@ static int pci_msi_check_device(struct pci_dev *dev,
+ 	return 0;
+ }
+ 
+-int pci_enable_msi_block_part(struct pci_dev *dev,
+-			      unsigned int nvec, int nvec_mme)
++int pci_get_msi_cap(struct pci_dev *dev)
+ {
+-	int status, maxvec;
++	int ret;
+ 	u16 msgctl;
+ 
+ 	if (!dev->msi_cap)
+ 		return -EINVAL;
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+-	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
++	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
++
++	return ret;
++}
++EXPORT_SYMBOL(pci_get_msi_cap);
++
++int pci_enable_msi_block_part(struct pci_dev *dev,
++			      unsigned int nvec, int nvec_mme)
++{
++	int status, maxvec;
++	u16 msgctl;
++
++	maxvec = pci_get_msi_cap(dev);
++	if (maxvec < 0)
++		return maxvec;
+ 
+ 	if (nvec_mme < 0)
+ 		nvec_mme = maxvec;
+@@ -869,13 +882,10 @@ EXPORT_SYMBOL(pci_enable_msi_block);
+ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+ {
+ 	int ret, nvec;
+-	u16 msgctl;
+-
+-	if (!dev->msi_cap)
+-		return -EINVAL;
+ 
+-	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+-	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
++	ret = pci_get_msi_cap(dev);
++	if (ret < 0)
++		return ret;
+ 
+ 	if (maxvec)
+ 		*maxvec = ret;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6552cee..b866048 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1122,6 +1122,11 @@ struct msix_entry {
+ 
+ 
+ #ifndef CONFIG_PCI_MSI
++static inline int pci_get_msi_cap(struct pci_dev *dev)
++{
++	return -1;
++}
++
+ static inline int
+ pci_enable_msi_block_part(struct pci_dev *dev, unsigned int nvec, int nvec_mme)
+ {
+@@ -1169,6 +1174,7 @@ static inline int pci_msi_enabled(void)
+ 	return 0;
+ }
+ #else
++int pci_get_msi_cap(struct pci_dev *dev);
+ int pci_enable_msi_block_part(struct pci_dev *dev,
+ 			      unsigned int nvec, int nvec_mme);
+ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
+-- 
+1.7.7.6
 
->  			}
->  		}
-> -- 
-> 1.7.1
-> 
-> 
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
