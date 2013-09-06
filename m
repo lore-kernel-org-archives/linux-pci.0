@@ -1,92 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16816 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754053Ab3ICQRO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 Sep 2013 12:17:14 -0400
-Date: Tue, 3 Sep 2013 18:19:06 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
- pci_enable_msi_block_part() interface
-Message-ID: <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
-References: <cover.1378111919.git.agordeev@redhat.com>
- <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
- <20130903141824.GD10522@htj.dyndns.org>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:62206 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751072Ab3IFWsL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 18:48:11 -0400
+Received: by mail-ie0-f182.google.com with SMTP id aq17so8400766iec.27
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 15:48:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130903141824.GD10522@htj.dyndns.org>
+In-Reply-To: <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz>
+References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
+ <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
+ <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com> <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 6 Sep 2013 16:47:49 -0600
+Message-ID: <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Adam Radford <aradford@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 03, 2013 at 10:18:24AM -0400, Tejun Heo wrote:
-> On Mon, Sep 02, 2013 at 11:00:28AM +0200, Alexander Gordeev wrote:
-> > +	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
-> > +		goto intx;
-> > +
-> > +	rc = pci_enable_msi_block_part(pdev, n_ports, AHCI_MAX_PORTS);
+On Fri, Sep 6, 2013 at 3:51 AM, Jiri Kosina <jkosina@suse.cz> wrote:
+> On Wed, 28 Aug 2013, Bjorn Helgaas wrote:
+>
+>> [+cc another email addr for Adam from git logs]
+>
+> Thanks. Adam, would you happen to have any possible explanation /
+> background?
+>
+>> >> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
+>> >> > pci device") makes MSIs be forcibly disabled at boot time.
+>> >> >
+>> >> > It turns out that this breaks 3ware controller -- if MSIs are disabled
+>> >> > during PCI discovery of this controller, the device doesn't work properly
+>> >> > (it doesn't respond to any commands that are being sent to it after
+>> >> > initialization).
 
-We start with maximum possible number of ports AHCI_MAX_PORTS
+Is there a bug report for this issue?  It's nice to have a pointer to,
+e.g., a bugzilla.kernel.org bug report with info such as dmesg logs,
+lspci output, etc., for future reference.  Maybe somebody will figure
+out a more generic change that could make this quirk unnecessary, and
+details will help in figuring that out.
 
-> > +	if (!rc)
-> > +		return AHCI_MAX_PORTS;
+I assume the actual PCI discovery done in the PCI core works fine;
+it's just that the driver doesn't work if MSIs are disabled on the
+device.  If that's the case, can this be fixed by some driver change?
+Maybe the driver needs to enable MSI before it sends commands to the
+device?
 
-If we succeeded the device is indeed supports all AHCI_MAX_PORTS
-and we report it.
+Any description of what this failure looks like to a user?  How can a
+user or a distro connect a symptom (driver timeout, console message,
+or whatever) to this patch?
 
-> > +	if (rc < 0)
-> > +		goto intx;
-
-If pci_enable_msi_block_part() failed we should not make further
-attempts and fallback to simple IRQ.
-
-> > +	maxvec = rc;
-
-The device supports a lesser of AHCI_MAX_PORTS, because the previous
-pci_enable_msi_block_part() has not succeeded nor failed. Thus, rc
-contains number of supported MSIs. In case of ICH this will be 16
-rather than 32.
-
-Actually, while I was writing this I realized this could be a number
-of MSIs that could have been enabled this device, not the maximum
-number of supported MSIs - these two may differ. I think MRSM should
-be checked. But I will continue as if it always the same.
-
-> > +	rc = pci_enable_msi_block_part(pdev, n_ports, maxvec);
-
-Try pci_enable_msi_block_part() with the maximum number of supported MSIs.
-
-> > +	if (!rc)
-> > +		return maxvec;
-
-If we succeeded report the number of enabled MSIs.
-
-> > +	if (rc < 0)
-> > +		goto intx;
-
-If pci_enable_msi_block_part() failed we should not make further
-attempts and fallback to simple IRQ.
-
-> Why is the above fallback necessary?  The only other number which
-> makes sense is roundup_pow_of_two(n_ports), right?  What does the
-> above fallback logic buy us?
-
-We must enable maximum possible number of MSIs - the one reported in
-Multiple Message Capable register. Otherwise ICH device will fallback
-to MRSM. IOW, if the result of roundup_pow_of_two(n_ports) is not what
-in Multiple Message Capable register (i.e. as roundup_pow_of_two(6) vs 16)
-ICH will enforce MRSM mode.
-
+>> >> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
+>> >> > makes the device work properly again.
+>> >> >
+>> >> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+>> >> >
+>> >> > ---
+>> >> >
+>> >> > I am adding Adam Radford as a recepient as well, to see whether he is able
+>> >> > to provide some more explanation why this device would expose this
+>> >> > behavior.
+>> >
+>> > OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't
+>> > expect any feedback from him.
+>> >
+>> > Bjorn, Jesse, any word on this please?
+>>
+>> It's on my list to look at.  It's too late to put it in for v3.11, and
+>> it's doubtful that it will even make the v3.12 merge window (though
+>> possibly it could go in post-merge window).  d5dea7d95 is several
+>> years old, so hopefully this issue isn't super-urgent.  Let me know if
+>> otherwise.
+>
+> I agree that this should be applicable to 3.12-rcX as well, as it's very
+> device-specific.
+>
 > Thanks.
-> 
-> -- 
-> tejun
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+>
+>>
+>> Bjorn
+>>
+>> >> >  drivers/pci/msi.c    |    3 +++
+>> >> >  drivers/pci/quirks.c |   10 ++++++++++
+>> >> >  include/linux/pci.h  |    1 +
+>> >> >  3 files changed, 14 insertions(+), 0 deletions(-)
+>> >> >
+>> >> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> >> > index aca7578..4f36b8b 100644
+>> >> > --- a/drivers/pci/msi.c
+>> >> > +++ b/drivers/pci/msi.c
+>> >> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+>> >> >  {
+>> >> >     INIT_LIST_HEAD(&dev->msi_list);
+>> >> >
+>> >> > +   if (dev->broken_msi_disable)
+>> >> > +           return;
+>> >> > +
+>> >> >     /* Disable the msi hardware to avoid screaming interrupts
+>> >> >      * during boot.  This is the power on reset default so
+>> >> >      * usually this should be a noop.
+>> >> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> >> > index e85d230..4ba3400 100644
+>> >> > --- a/drivers/pci/quirks.c
+>> >> > +++ b/drivers/pci/quirks.c
+>> >> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+>> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+>> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+>> >> >
+>> >> > +/*
+>> >> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
+>> >> > + * disabled on it during PCI device discovery
+>> >> > + */
+>> >> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
+>> >> > +{
+>> >> > +   dev->broken_msi_disable = 1;
+>> >> > +}
+>> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
+>> >> > +
+>> >> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
+>> >> >                              void (*fn)(struct pci_dev *dev))
+>> >> >  {
+>> >> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> >> > index 0fd1f15..c327d74 100644
+>> >> > --- a/include/linux/pci.h
+>> >> > +++ b/include/linux/pci.h
+>> >> > @@ -341,6 +341,7 @@ struct pci_dev {
+>> >> >  #ifdef CONFIG_PCI_MSI
+>> >> >     struct list_head msi_list;
+>> >> >     struct kset *msi_kset;
+>> >> > +   unsigned int    broken_msi_disable:1;
+>> >> >  #endif
+>> >> >     struct pci_vpd *vpd;
+>> >> >  #ifdef CONFIG_PCI_ATS
+>> >> >
+>> >> > --
+>> >> > Jiri Kosina
+>> >> > SUSE Labs
+>> >> >
+>> >>
+>> >> --
+>> >> Jiri Kosina
+>> >> SUSE Labs
+>> >>
+>> >
+>> > --
+>> > Jiri Kosina
+>> > SUSE Labs
+>>
+>
+> --
+> Jiri Kosina
+> SUSE Labs
