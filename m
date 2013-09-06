@@ -1,109 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:52180 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494Ab3IROWl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Sep 2013 10:22:41 -0400
-Date: Wed, 18 Sep 2013 09:22:31 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20130918142231.GA21650@mtj.dyndns.org>
-References: <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+Received: from mail-ye0-f178.google.com ([209.85.213.178]:33625 "EHLO
+	mail-ye0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753696Ab3IFRPR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 13:15:17 -0400
+Received: by mail-ye0-f178.google.com with SMTP id m5so1106114yen.9
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 10:15:16 -0700 (PDT)
+Subject: [PATCH 14/14] PCI/ACPI: Decode _OSC bitmasks symbolically
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
+	Len Brown <lenb@kernel.org>
+Date: Fri, 06 Sep 2013 11:15:14 -0600
+Message-ID: <20130906171514.11482.29960.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+This updates _OSC-related messages to be more human-readable.  We now always
+show the features we declare support for (this was previously invisible) as
+well as the features we are granted control of.
 
-On Wed, Sep 18, 2013 at 11:48:00AM +0200, Alexander Gordeev wrote:
-> On Wed, Sep 18, 2013 at 12:30:23AM +1000, Michael Ellerman wrote:
-> > How about no?
-> > 
-> > We have a small number of MSIs available, limited by hardware &
-> > firmware, if we don't impose a quota then the first device that probes
-> > will get most/all of the MSIs and other devices miss out.
-> 
-> Out of curiosity - how pSeries has had done it without quotas before
-> 448e2ca ("powerpc/pseries: Implement a quota system for MSIs")?
+Typical changes:
 
-Hmmm... do we need to treat this any differently?  If the platform
-can't allocate full range of requested MSIs, just failing should be
-enough regardless of why such allocation can't be met, no?
+  -acpi PNP0A08:00: Requesting ACPI _OSC control (0x1d)
+  -acpi PNP0A08:00: ACPI _OSC control (0x1d) granted
+  +acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+  +acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug PME AER PCIeCapability]
 
-> > Anyway I don't see what problem you're trying to solve? I agree the
-> > -ve/0/+ve return value pattern is ugly, but it's hardly the end of the
-> > world.
-> 
-> Well, the interface recently has been re-classified from "ugly" to
-> "unnecessarily complex and actively harmful" in Tejun's words ;)
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/acpi/pci_root.c |   84 +++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 67 insertions(+), 17 deletions(-)
 
-LOL. :)
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 65aefcf..cba966e 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -127,6 +127,55 @@ static acpi_status try_get_root_bridge_busnr(acpi_handle handle,
+ 	return AE_OK;
+ }
+ 
++struct pci_osc_bit_struct {
++	u32 bit;
++	char *desc;
++};
++
++static struct pci_osc_bit_struct pci_osc_support_bit[] = {
++	{ OSC_PCI_EXT_CONFIG_SUPPORT, "ExtendedConfig" },
++	{ OSC_PCI_ASPM_SUPPORT, "ASPM" },
++	{ OSC_PCI_CLOCK_PM_SUPPORT, "ClockPM" },
++	{ OSC_PCI_SEGMENT_GROUPS_SUPPORT, "Segments" },
++	{ OSC_PCI_MSI_SUPPORT, "MSI" },
++};
++
++static struct pci_osc_bit_struct pci_osc_control_bit[] = {
++	{ OSC_PCI_EXPRESS_NATIVE_HP_CONTROL, "PCIeHotplug" },
++	{ OSC_PCI_SHPC_NATIVE_HP_CONTROL, "SHPCHotplug" },
++	{ OSC_PCI_EXPRESS_PME_CONTROL, "PME" },
++	{ OSC_PCI_EXPRESS_AER_CONTROL, "AER" },
++	{ OSC_PCI_EXPRESS_CAPABILITY_CONTROL, "PCIeCapability" },
++};
++
++static void decode_osc_bits(struct acpi_pci_root *root, char *msg, u32 word,
++			    struct pci_osc_bit_struct *table, int size)
++{
++	char buf[80];
++	int i, len = 0;
++	struct pci_osc_bit_struct *entry;
++
++	buf[0] = '\0';
++	for (i = 0, entry = table; i < size; i++, entry++)
++		if (word & entry->bit)
++			len += snprintf(buf + len, sizeof(buf) - len, "%s%s",
++				        len ? " " : "", entry->desc);
++
++	dev_info(&root->device->dev, "_OSC: %s [%s]\n", msg, buf);
++}
++
++static void decode_osc_support(struct acpi_pci_root *root, char *msg, u32 word)
++{
++	decode_osc_bits(root, msg, word, pci_osc_support_bit,
++			ARRAY_SIZE(pci_osc_support_bit));
++}
++
++static void decode_osc_control(struct acpi_pci_root *root, char *msg, u32 word)
++{
++	decode_osc_bits(root, msg, word, pci_osc_control_bit,
++			ARRAY_SIZE(pci_osc_control_bit));
++}
++
+ static u8 pci_osc_uuid_str[] = "33DB4D5B-1FF7-401C-9657-7441C03DD766";
+ 
+ static acpi_status acpi_pci_run_osc(acpi_handle handle,
+@@ -340,10 +389,14 @@ acpi_status acpi_pci_osc_control_set(acpi_handle handle, u32 *mask, u32 req)
+ 			goto out;
+ 		if (ctrl == *mask)
+ 			break;
++		decode_osc_control(root, "platform does not support",
++				   ctrl & ~(*mask));
+ 		ctrl = *mask;
+ 	}
+ 
+ 	if ((ctrl & req) != req) {
++		decode_osc_control(root, "not requesting control; platform does not support",
++				   req & ~(ctrl));
+ 		status = AE_SUPPORT;
+ 		goto out;
+ 	}
+@@ -363,7 +416,7 @@ EXPORT_SYMBOL(acpi_pci_osc_control_set);
+ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 				 int *clear_aspm)
+ {
+-	u32 support, control;
++	u32 support, control, requested;
+ 	acpi_status status;
+ 	struct acpi_device *device = root->device;
+ 	acpi_handle handle = device->handle;
+@@ -379,6 +432,8 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 		support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+ 	if (pci_msi_enabled())
+ 		support |= OSC_PCI_MSI_SUPPORT;
++
++	decode_osc_support(root, "OS supports", support);
+ 	status = acpi_pci_osc_support(root, support);
+ 	if (ACPI_FAILURE(status)) {
+ 		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
+@@ -393,8 +448,8 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 	}
+ 
+ 	if ((support & ACPI_PCIE_REQ_SUPPORT) != ACPI_PCIE_REQ_SUPPORT) {
+-		dev_info(&device->dev, "Not requesting _OSC control (we support %#02x but %#02x are required)\n",
+-			 support, ACPI_PCIE_REQ_SUPPORT);
++		decode_osc_support(root, "not requesting OS control; OS requires",
++				   ACPI_PCIE_REQ_SUPPORT);
+ 		return;
+ 	}
+ 
+@@ -404,21 +459,17 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 
+ 	if (pci_aer_available()) {
+ 		if (aer_acpi_firmware_first())
+-			dev_dbg(&device->dev,
+-				"PCIe errors handled by BIOS.\n");
++			dev_info(&device->dev,
++				 "PCIe AER handled by firmware\n");
+ 		else
+ 			control |= OSC_PCI_EXPRESS_AER_CONTROL;
+ 	}
+ 
+-	dev_info(&device->dev,
+-		 "Requesting ACPI _OSC control (0x%02x)\n", control);
+-
++	requested = control;
+ 	status = acpi_pci_osc_control_set(handle, &control,
+ 					  OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
+ 	if (ACPI_SUCCESS(status)) {
+-		dev_info(&device->dev,
+-			 "ACPI _OSC control (0x%02x) granted\n",
+-			 control);
++		decode_osc_control(root, "OS now controls", control);
+ 		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+ 			/*
+ 			 * We have ASPM control, but the FADT indicates
+@@ -427,12 +478,11 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 			*clear_aspm = 1;
+ 		}
+ 	} else {
+-		dev_info(&device->dev,
+-			"ACPI _OSC request failed (%s), "
+-			"returned control mask: 0x%02x\n",
+-			acpi_format_exception(status), control);
+-		dev_info(&device->dev,
+-			 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
++		decode_osc_control(root, "OS requested", requested);
++		decode_osc_control(root, "platform willing to grant", control);
++		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
++			acpi_format_exception(status));
++
+ 		/*
+ 		 * We want to disable ASPM here, but aspm_disabled
+ 		 * needs to remain in its state from boot so that we
 
-> Indeed, I checked most of the drivers and it is incredible how people
-> are creative in misusing the interface: from innocent pci_disable_msix()
-> calls when if pci_enable_msix() failed to assuming MSI-Xs were enabled
-> if pci_enable_msix() returned a positive value (apparently untested).
-> 
-> Roughly third of the drivers just do not care and bail out once
-> pci_enable_msix() has not succeeded. Not sure how many of these are
-> mandated by the hardware.
-
-Yeah, I mean, this type of interface is a trap.  People have to
-actively resist to avoid doing silly stuff which is a lot to ask.
-
-> 	/*
-> 	 * Retrieving 'nvec' by means other than pci_msix_table_size()
-> 	 */
-> 
-> 	rc = pci_get_msix_limit(pdev);
-> 	if (rc < 0)
-> 		return rc;
-> 
-> 	/*
-> 	 * nvec = min(rc, nvec);
-> 	 */
-> 
-> 	for (i = 0; i < nvec; i++)
-> 		msix_entry[i].entry = i;
-> 
-> 	rc = pci_enable_msix(pdev, msix_entry, nvec);
-> 	if (rc)
-> 		return rc;
-
-I really think what we should do is
-
-* Determine the number of MSIs the controller wants.  Don't worry
-  about quotas or limits or anything.  Just determine the number
-  necessary to enable enhanced interrupt handling.
-	
-* Try allocating that number of MSIs.  If it fails, then just revert
-  to single interrupt mode.  It's not the end of the world and mostly
-  guaranteed to work.  Let's please not even try to do partial
-  multiple interrupts.  I really don't think it's worth the risk or
-  complexity.
-
-Thanks.
-
--- 
-tejun
