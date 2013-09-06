@@ -1,71 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f52.google.com ([209.85.213.52]:57658 "EHLO
-	mail-yh0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754138Ab3IFROr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 13:14:47 -0400
-Received: by mail-yh0-f52.google.com with SMTP id v1so1294455yhn.39
-        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 10:14:46 -0700 (PDT)
-Subject: [PATCH 10/14] PCI/ACPI: Run _OSC only once for OSPM feature support
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>
-Date: Fri, 06 Sep 2013 11:14:44 -0600
-Message-ID: <20130906171444.11482.59374.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
-References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:65224 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750762Ab3IFR3n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 13:29:43 -0400
+Received: by mail-ie0-f176.google.com with SMTP id s9so7611801iec.35
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 10:29:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo6-BFtr=HH_5zLUrVK6goiVsNTq5pwmn+_wj4_z9kY-3A@mail.gmail.com>
+References: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org>
+ <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org> <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
+ <CAErSpo6-BFtr=HH_5zLUrVK6goiVsNTq5pwmn+_wj4_z9kY-3A@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 6 Sep 2013 11:29:22 -0600
+Message-ID: <CAErSpo56eEdm2fn3CSjMvhcA+p+ZbhqGA67Vibyb7rTtOjRf9w@mail.gmail.com>
+Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
+ register field names
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>,
+	Saurav Kashyap <saurav.kashyap@qlogic.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Dept-Eng Linux Driver <Linux-Driver@qlogic.com>,
+	Andrew Vasquez <andrew.vasquez@qlogic.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, we ran _OSC once to tell the platform that we support
-PCI Segment Groups, then we ran it again if we supported any additional
-features (ASPM, MSI, or extended config space).  I don't think it's
-necessary to run it twice, since we can easily build the complete
-mask of features we support before running _OSC the first time.
+Sorry, I said I was going to push this through my PCI tree, but I
+forgot all about it.  I put it (finally) in my pci/misc branch, and
+will merge it during the v3.13 merge window.
 
-We run _OSC again later when requesting control of PCIe features;
-that's unaffected by this change.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c |   19 +++++++------------
- 1 file changed, 7 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 3e06d4e..0e20041 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -373,23 +373,18 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
- 	 * PCI domains, so we indicate this in _OSC support capabilities.
- 	 */
- 	support = base_support = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
--	acpi_pci_osc_support(root, support);
--
- 	if (pci_ext_cfg_avail())
- 		support |= OSC_PCI_EXT_CONFIG_SUPPORT;
--	if (pcie_aspm_support_enabled()) {
-+	if (pcie_aspm_support_enabled())
- 		support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
--	}
- 	if (pci_msi_enabled())
- 		support |= OSC_PCI_MSI_SUPPORT;
--	if (support != base_support) {
--		status = acpi_pci_osc_support(root, support);
--		if (ACPI_FAILURE(status)) {
--			dev_info(&device->dev, "ACPI _OSC support "
--				"notification failed, disabling PCIe ASPM\n");
--			*no_aspm = 1;
--			support = base_support;
--		}
-+	status = acpi_pci_osc_support(root, support);
-+	if (ACPI_FAILURE(status)) {
-+		dev_info(&device->dev, "ACPI _OSC support "
-+			"notification failed, disabling PCIe ASPM\n");
-+		*no_aspm = 1;
-+		support = base_support;
- 	}
- 
- 	if (!pcie_ports_disabled
-
+On Fri, Jan 4, 2013 at 12:31 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> I haven't heard anything, so I'm going to push this through the PCI
+> tree.  Let me know if anybody objects or would like to handle it
+> differently.
+>
+> On Mon, Dec 17, 2012 at 12:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Ping.  I didn't push this through my tree because I didn't want to
+>> create conflicts with other changes to this file.  But I think this
+>> can be merged any time.
+>>
+>> On Fri, Dec 7, 2012 at 3:29 PM, Giridhar Malavali
+>> <giridhar.malavali@qlogic.com> wrote:
+>>> Acked-by: Giridhar Malavali
+>>>
+>>> On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
+>>>
+>>>>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>>>>
+>>>>Thanks,
+>>>>~Saurav
+>>>>
+>>>>
+>>>>
+>>>>>Use the standard #defines for PCIe Link Capability register fields
+>>>>>rather than bare numbers.  This also uses the new PCI Express Capability
+>>>>>accessor rather than reading the capability directly.
+>>>>>
+>>>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
+>>>>>CC: linux-driver@qlogic.com
+>>>>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+>>>>>CC: linux-scsi@vger.kernel.org
+>>>>>---
+>>>>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
+>>>>> 1 files changed, 5 insertions(+), 9 deletions(-)
+>>>>>
+>>>>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
+>>>>>b/drivers/scsi/qla2xxx/qla_os.c
+>>>>>index d501bf5..b5d070f 100644
+>>>>>--- a/drivers/scsi/qla2xxx/qla_os.c
+>>>>>+++ b/drivers/scsi/qla2xxx/qla_os.c
+>>>>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
+>>>>>char *str)
+>>>>>      static char *pci_bus_modes[] = { "33", "66", "100", "133", };
+>>>>>      struct qla_hw_data *ha = vha->hw;
+>>>>>      uint32_t pci_bus;
+>>>>>-     int pcie_reg;
+>>>>>
+>>>>>-     pcie_reg = pci_pcie_cap(ha->pdev);
+>>>>>-     if (pcie_reg) {
+>>>>>+     if (pci_is_pcie(ha->pdev)) {
+>>>>>              char lwstr[6];
+>>>>>-             uint16_t pcie_lstat, lspeed, lwidth;
+>>>>>+             uint32_t lstat, lspeed, lwidth;
+>>>>>
+>>>>>-             pcie_reg += PCI_EXP_LNKCAP;
+>>>>>-             pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
+>>>>>-             lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
+>>>>>-             lwidth = (pcie_lstat &
+>>>>>-                 (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
+>>>>>+             pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
+>>>>>+             lspeed = lstat & PCI_EXP_LNKCAP_SLS;
+>>>>>+             lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
+>>>>>
+>>>>>              strcpy(str, "PCIe (");
+>>>>>              if (lspeed == 1)
+>>>>>
+>>>>>--
+>>>>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>>>>the body of a message to majordomo@vger.kernel.org
+>>>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>
+>>>>
+>>>
+>>>
