@@ -1,54 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ye0-f177.google.com ([209.85.213.177]:34185 "EHLO
-	mail-ye0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755756Ab3IIXOb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 19:14:31 -0400
-Received: by mail-ye0-f177.google.com with SMTP id q9so1713609yen.8
-        for <linux-pci@vger.kernel.org>; Mon, 09 Sep 2013 16:14:31 -0700 (PDT)
-Subject: [PATCH 7/7] lspci: Decode PCIe LnkSta "Link Training" only for
- relevant functions
-To: Martin Mares <mj@ucw.cz>
+Received: from mail-ye0-f174.google.com ([209.85.213.174]:45983 "EHLO
+	mail-ye0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727Ab3IFXMr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 19:12:47 -0400
+Received: by mail-ye0-f174.google.com with SMTP id q4so1234329yen.5
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 16:12:47 -0700 (PDT)
+Date: Fri, 6 Sep 2013 17:12:43 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
 Cc: linux-pci@vger.kernel.org
-Date: Mon, 09 Sep 2013 17:14:28 -0600
-Message-ID: <20130909231428.30095.22433.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
-References: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
+Subject: Re: [PATCH 2/3] PCI: Use spec name for the comment of PCIe
+ capability field
+Message-ID: <20130906231243.GD12956@google.com>
+References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1378431958-7874-2-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1378431958-7874-2-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe Link Status "Link Training" bit is only valid for functions
-at the upstream end of a link, i.e., Root Ports, Downstream Ports, and
-PCI-to-PCIe Bridges.
+On Fri, Sep 06, 2013 at 09:45:57AM +0800, Wei Yang wrote:
+> According to the PCIe specification, bit 7:4 of PCI Express Capabilities
+> Register in a PCI Express Capability Structure is used to identify the
+> Device/Port type. If this field equals to 0x7, this PCIe device is a PCI
+> Express to PCI/PCI-X Bridge. While the comment of this value in the code
+> does not comply with the specification.
+> 
+> This patch changes the comment to "PCIE to PCI/PCI-X Bridge" instead of
+> "PCI/PCI-X Bridge", which comply with the specification.
+> 
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> ---
+>  include/uapi/linux/pci_regs.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index c3cc01d..b82b2ff 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -421,7 +421,7 @@
+>  #define  PCI_EXP_TYPE_ROOT_PORT 0x4	/* Root Port */
+>  #define  PCI_EXP_TYPE_UPSTREAM	0x5	/* Upstream Port */
+>  #define  PCI_EXP_TYPE_DOWNSTREAM 0x6	/* Downstream Port */
+> -#define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCI/PCI-X Bridge */
+> +#define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCIE to PCI/PCI-X Bridge */
+>  #define  PCI_EXP_TYPE_PCIE_BRIDGE 0x8	/* PCI/PCI-X to PCIE Bridge */
+>  #define  PCI_EXP_TYPE_RC_END	0x9	/* Root Complex Integrated Endpoint */
+>  #define  PCI_EXP_TYPE_RC_EC	0xa	/* Root Complex Event Collector */
+> -- 
+> 1.7.1
+> 
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- ls-caps.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+A similar change is already in Linus' tree:
 
-diff --git a/ls-caps.c b/ls-caps.c
-index f192510..87b1a0d 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -786,11 +786,15 @@ static void cap_express_link(struct device *d, int where, int type)
- 	FLAG(w, PCI_EXP_LNKCTL_AUTBWIE));
- 
-   w = get_conf_word(d, where + PCI_EXP_LNKSTA);
--  printf("\t\tLnkSta:\tSpeed %s, Width x%d, TrErr%c Train%c SlotClk%c DLActive%c BWMgmt%c ABWMgmt%c\n",
-+  printf("\t\tLnkSta:\tSpeed %s, Width x%d, TrErr%c",
- 	link_speed(w & PCI_EXP_LNKSTA_SPEED),
- 	(w & PCI_EXP_LNKSTA_WIDTH) >> 4,
--	FLAG(w, PCI_EXP_LNKSTA_TR_ERR),
--	FLAG(w, PCI_EXP_LNKSTA_TRAIN),
-+	FLAG(w, PCI_EXP_LNKSTA_TR_ERR));
-+  if ((type == PCI_EXP_TYPE_ROOT_PORT) || (type == PCI_EXP_TYPE_DOWNSTREAM) ||
-+      (type == PCI_EXP_TYPE_PCIE_BRIDGE))
-+    printf(" Train%c",
-+	FLAG(w, PCI_EXP_LNKSTA_TRAIN));
-+  printf(" SlotClk%c DLActive%c BWMgmt%c ABWMgmt%c\n",
- 	FLAG(w, PCI_EXP_LNKSTA_SL_CLK),
- 	FLAG(w, PCI_EXP_LNKSTA_DL_ACT),
- 	FLAG(w, PCI_EXP_LNKSTA_BWMGMT),
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/include/uapi/linux/pci_regs.h?id=fbf501c347b2eea8451a615bd823b6b91a1a8eed
 
+I guess several of us found that comment confusing :)
