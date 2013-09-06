@@ -1,60 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 3 Sep 2013 20:59:40 -0600
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH 13/14] PCI/ACPI: Separate out _OSC "we don't support enough
+ services" path
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH 4/7] x86/pci: use pcie_cap to simplify code
-Message-ID: <20130904025940.GD24733@google.com>
-References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
- <1378193715-25328-4-git-send-email-wangyijing@huawei.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
+	Len Brown <lenb@kernel.org>
+Date: Fri, 06 Sep 2013 11:15:06 -0600
+Message-ID: <20130906171506.11482.80881.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1378193715-25328-4-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 03, 2013 at 03:35:12PM +0800, Yijing Wang wrote:
-> PCI core saves PCIe Cap offset in pcie_cap,
-> use pcie_cap to simplify code.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  arch/x86/pci/fixup.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index f5809fa..ee8330d 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -288,7 +288,7 @@ static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
->  		 */
->  		list_for_each_entry(dev, &pbus->devices, bus_list) {
->  			/* There are 0 to 8 devices attached to this bus */
-> -			cap_base = pci_find_capability(dev, PCI_CAP_ID_EXP);
-> +			cap_base = dev->pcie_cap;
->  			quirk_aspm_offset[GET_INDEX(pdev->device, dev->devfn)] = cap_base + 0x10;
+Test the services we support (extended config space, ASPM, MSI) separately
+so we can give a better message.  Previously we said "Unable to request
+_OSC control..."; now we'll say "we support %#02x but %#02x are required".
 
-This should use PCI_EXP_LNKCTL instead of "0x10".
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/acpi/pci_root.c |   84 ++++++++++++++++++++++++-----------------------
+ 1 file changed, 42 insertions(+), 42 deletions(-)
 
->  		}
->  		pbus->ops = &quirk_pcie_aspm_ops;
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 68e5a18..65aefcf 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -392,55 +392,55 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 		return;
+ 	}
+ 
+-	if ((support & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
+-		control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
+-			| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+-			| OSC_PCI_EXPRESS_PME_CONTROL;
+-
+-		if (pci_aer_available()) {
+-			if (aer_acpi_firmware_first())
+-				dev_dbg(&device->dev,
+-					"PCIe errors handled by BIOS.\n");
+-			else
+-				control |= OSC_PCI_EXPRESS_AER_CONTROL;
+-		}
++	if ((support & ACPI_PCIE_REQ_SUPPORT) != ACPI_PCIE_REQ_SUPPORT) {
++		dev_info(&device->dev, "Not requesting _OSC control (we support %#02x but %#02x are required)\n",
++			 support, ACPI_PCIE_REQ_SUPPORT);
++		return;
++	}
++
++	control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
++		| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
++		| OSC_PCI_EXPRESS_PME_CONTROL;
++
++	if (pci_aer_available()) {
++		if (aer_acpi_firmware_first())
++			dev_dbg(&device->dev,
++				"PCIe errors handled by BIOS.\n");
++		else
++			control |= OSC_PCI_EXPRESS_AER_CONTROL;
++	}
+ 
++	dev_info(&device->dev,
++		 "Requesting ACPI _OSC control (0x%02x)\n", control);
++
++	status = acpi_pci_osc_control_set(handle, &control,
++					  OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
++	if (ACPI_SUCCESS(status)) {
+ 		dev_info(&device->dev,
+-			"Requesting ACPI _OSC control (0x%02x)\n", control);
+-
+-		status = acpi_pci_osc_control_set(handle, &control,
+-				       OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
+-		if (ACPI_SUCCESS(status)) {
+-			dev_info(&device->dev,
+-				"ACPI _OSC control (0x%02x) granted\n",
+-				control);
+-			if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+-				/*
+-				 * We have ASPM control, but the FADT indicates
+-				 * that it's unsupported. Clear it.
+-				 */
+-				*clear_aspm = 1;
+-			}
+-		} else {
+-			dev_info(&device->dev,
+-				"ACPI _OSC request failed (%s), "
+-				"returned control mask: 0x%02x\n",
+-				acpi_format_exception(status), control);
+-			dev_info(&device->dev,
+-				 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
++			 "ACPI _OSC control (0x%02x) granted\n",
++			 control);
++		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+ 			/*
+-			 * We want to disable ASPM here, but aspm_disabled
+-			 * needs to remain in its state from boot so that we
+-			 * properly handle PCIe 1.1 devices.  So we set this
+-			 * flag here, to defer the action until after the ACPI
+-			 * root scan.
++			 * We have ASPM control, but the FADT indicates
++			 * that it's unsupported. Clear it.
+ 			 */
+-			*no_aspm = 1;
++			*clear_aspm = 1;
+ 		}
+ 	} else {
+ 		dev_info(&device->dev,
+-			 "Unable to request _OSC control "
+-			 "(_OSC support mask: 0x%02x)\n", support);
++			"ACPI _OSC request failed (%s), "
++			"returned control mask: 0x%02x\n",
++			acpi_format_exception(status), control);
++		dev_info(&device->dev,
++			 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
++		/*
++		 * We want to disable ASPM here, but aspm_disabled
++		 * needs to remain in its state from boot so that we
++		 * properly handle PCIe 1.1 devices.  So we set this
++		 * flag here, to defer the action until after the ACPI
++		 * root scan.
++		 */
++		*no_aspm = 1;
+ 	}
+ }
+ 
 
-This quirk replaces the config accessors with ones that silently ignore
-writes to ASPM control bits.  That really warrants at least a dev_info()
-note here, and we should be using pci_bus_set_ops().
-
-Even that is a little bit dubious because I don't think this is really
-safe -- what happens if this quirk replaces the ops, then somebody
-else replaces the ops again?  aer_inject.c at least keeps track of
-the old ops and seems to fall back to them, but it seems fragile to
-depend on every caller of pci_bus_set_ops() to do the right thing
-there.
-
-But this is beyond the scope of your patch, so if you just
-add a dev_info() note and use pci_bus_set_ops(), that should be
-enough for now.
