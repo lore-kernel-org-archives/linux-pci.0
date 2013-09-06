@@ -1,38 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:17855 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751961Ab3IYWRK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Sep 2013 18:17:10 -0400
-Message-ID: <524360E5.5060708@linux.intel.com>
-Date: Wed, 25 Sep 2013 15:17:09 -0700
-From: Arjan van de Ven <arjan@linux.intel.com>
+Received: from mail-yh0-f44.google.com ([209.85.213.44]:53641 "EHLO
+	mail-yh0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751281Ab3IFW7F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 18:59:05 -0400
+Received: by mail-yh0-f44.google.com with SMTP id f64so398906yha.31
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 15:59:03 -0700 (PDT)
+Date: Fri, 6 Sep 2013 16:59:00 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH] PCI: remove obsolete "is_pcie" from pci_dev structure
+Message-ID: <20130906225900.GB12956@google.com>
+References: <1378173729-20700-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Todd E Brandt <todd.e.brandt@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] Intel pci device quirk remove D3 delay
-References: <20130910231043.GA31857@linux.intel.com> <20130924231953.GC9302@google.com> <CAErSpo4C52O0iUxU8s8L2Ei=eedanLxn0u_aFtCnnvLu0yjAtA@mail.gmail.com>
-In-Reply-To: <CAErSpo4C52O0iUxU8s8L2Ei=eedanLxn0u_aFtCnnvLu0yjAtA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1378173729-20700-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/25/2013 2:48 PM, Bjorn Helgaas wrote:
-> On Tue, Sep 24, 2013 at 5:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Sep 10, 2013 at 04:10:43PM -0700, Todd E Brandt wrote:
->>> The latest Ivy Bridge Intel chipsets have a hardware optimization which
->>
->> You said "Ivy Bridge" above but use "Haswell" below.  Let me know if
->> anything needs to be corrected here.
->
-> Reading this again, the text really doesn't make sense as-is.  So
-> please confirm what this should say.
->
-> It sure looks like it should say "The latest *Haswell* Intel chipsets ..."
->
-> If you really mean "Ivy Bridge," then you should say something about
-> how Haswell is related to Ivy Bridge.  No doubt this is all obvious to
-> Intel folks, but it's not to me :)
+On Tue, Sep 03, 2013 at 10:02:09AM +0800, Yijing Wang wrote:
+> No one uses "is_pcie" now, remove this obsolete member.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-it should read "Haswell".
+Applied to my pci/misc branch for v3.13.  Thanks!
 
+> ---
+>  drivers/pci/probe.c |    1 -
+>  include/linux/pci.h |    2 --
+>  2 files changed, 0 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index eeb50bd..70f6e75 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -983,7 +983,6 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  	pos = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+>  	if (!pos)
+>  		return;
+> -	pdev->is_pcie = 1;
+>  	pdev->pcie_cap = pos;
+>  	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+>  	pdev->pcie_flags_reg = reg16;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 186540d..be06125 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -317,8 +317,6 @@ struct pci_dev {
+>  	unsigned int	msix_enabled:1;
+>  	unsigned int	ari_enabled:1;	/* ARI forwarding */
+>  	unsigned int	is_managed:1;
+> -	unsigned int	is_pcie:1;	/* Obsolete. Will be removed.
+> -					   Use pci_is_pcie() instead */
+>  	unsigned int    needs_freset:1; /* Dev requires fundamental reset */
+>  	unsigned int	state_saved:1;
+>  	unsigned int	is_physfn:1;
+> -- 
+> 1.7.1
+> 
+> 
