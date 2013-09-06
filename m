@@ -1,80 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51643 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753421Ab3I0ToA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 15:44:00 -0400
-Date: Fri, 27 Sep 2013 15:41:44 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: [PATCH] iommu: Remove stack trace from broken irq remapping
- warning
-Message-ID: <20130927194144.GA2375@hmsreliant.think-freely.org>
-References: <1380300815-1864-1-git-send-email-nhorman@tuxdriver.com>
- <CALCETrVB-rUds-u1sdXeUwgJtnTV0pFpaeZiDMKv96-uZ8uqSg@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALCETrVB-rUds-u1sdXeUwgJtnTV0pFpaeZiDMKv96-uZ8uqSg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1831138.AvDtjG8RWn@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan>
+	<1599165.8kjc3DtEzc@vostro.rjw.lan>
+	<2228690.GcUDD3xFfP@vostro.rjw.lan>
+	<1831138.AvDtjG8RWn@vostro.rjw.lan>
+Date: Fri, 6 Sep 2013 08:46:28 -0700
+Message-ID: <CAE9FiQXacWEXngMCQeB1CPVxuvL-jNW_MyMcDV-e8tK6DvY3Kw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ACPI / hotplug / PCI: Avoid doing too much for
+ spurious notifies
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 27, 2013 at 12:24:10PM -0700, Andy Lutomirski wrote:
-> On Fri, Sep 27, 2013 at 9:53 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> > The warning for the irq remapping broken check in intel_irq_remapping.c is
-> > pretty pointless.  We need the warning, but we know where its comming from, the
-> > stack trace will always be the same, and it needlessly triggers things like
-> > Abrt.  This changes the warning to just print a text warning about BIOS being
-> > broken, without the stack trace, then sets the appropriate taint bit.  Since we
-> > automatically disable irq remapping, theres no need to contiue making Abrt jump
-> > at this problem
-> >
-> > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> > CC: Joerg Roedel <joro@8bytes.org>
-> > CC: Bjorn Helgaas <bhelgaas@google.com>
-> > CC: Andy Lutomirski <luto@amacapital.net>
-> > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > CC: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-> > ---
-> >  drivers/iommu/intel_irq_remapping.c | 13 +++++++------
-> >  1 file changed, 7 insertions(+), 6 deletions(-)
-> >
-> > diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-> > index f71673d..b97d70b 100644
-> > --- a/drivers/iommu/intel_irq_remapping.c
-> > +++ b/drivers/iommu/intel_irq_remapping.c
-> > @@ -525,12 +525,13 @@ static int __init intel_irq_remapping_supported(void)
-> >         if (disable_irq_remap)
-> >                 return 0;
-> >         if (irq_remap_broken) {
-> > -               WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
-> > -                          "This system BIOS has enabled interrupt remapping\n"
-> > -                          "on a chipset that contains an erratum making that\n"
-> > -                          "feature unstable.  To maintain system stability\n"
-> > -                          "interrupt remapping is being disabled.  Please\n"
-> > -                          "contact your BIOS vendor for an update\n");
-> > +               printk(KERN_WARNING
-> > +                       "This system BIOS has enabled interrupt remapping\n"
-> > +                       "on a chipset that contains an erratum making that\n"
-> > +                       "feature unstable.  To maintain system stability\n"
-> > +                       "interrupt remapping is being disabled.  Please\n"
-> > +                       "contact your BIOS vendor for an update\n");
-> > +               add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
-> 
-> Is the taint bit actually useful?  It seems like functionality will be
-> missing if this workaround happens, but everything should be stable.
-> 
-I think its useful yes.  The system will be stable, an in fact should run
-exactly as it did before, but since the errata indicates this should be fixed in
-BIOS, its a reminder to the admin that you should investigate an update, or take
-action in manually disabling iommu on the command line
+On Fri, Sep 6, 2013 at 6:43 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Sometimes we may get a spurious device check or bus check notify for
+> a hotplug device and in those cases we should avoid doing all of the
+> configuration work needed when something actually changes.  To that
+> end, check the return value of pci_scan_slot() in enable_slot() and
+> bail out early if it is 0.
+>
+> This turns out to help reduce the amount of diagnostic output from
+> the ACPIPHP subsystem and speed up boot on at least one system that
+> generates multiple device check notifies for PCIe ports during
+> boot.
+>
+> Reported-by: Alex Williamson <alex.williamson@redhat.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |   35 +++++++++++++++++++++++++++--------
+>  1 file changed, 27 insertions(+), 8 deletions(-)
+>
+> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
+> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -542,12 +542,12 @@ static void __ref enable_slot(struct acp
+>         struct acpiphp_func *func;
+>         int max, pass;
+>         LIST_HEAD(add_list);
+> +       int nr_found;
+>
+>         list_for_each_entry(func, &slot->funcs, sibling)
+>                 acpiphp_bus_add(func_to_handle(func));
+>
+> -       pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+> -
+> +       nr_found = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+>         max = acpiphp_max_busnr(bus);
+>         for (pass = 0; pass < 2; pass++) {
+>                 list_for_each_entry(dev, &bus->devices, bus_list) {
+> @@ -566,8 +566,11 @@ static void __ref enable_slot(struct acp
+>                         }
+>                 }
+>         }
+> -
+>         __pci_bus_assign_resources(bus, &add_list, NULL);
+> +       /* Nothing more to do here if there are no new devices on this bus. */
+> +       if (!nr_found && (slot->flags & SLOT_ENABLED))
+> +               return;
+> +
+>         acpiphp_sanitize_bus(bus);
+>         acpiphp_set_hpp_values(bus);
+>         acpiphp_set_acpi_region(slot);
+>
 
-Its also in keeping with the way this was structured previously.
-Neil
+why not just returning early before size bridges and assign unassign resources?
 
-> --Andy
-> 
+Yinghai
