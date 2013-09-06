@@ -1,37 +1,85 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 12 Aug 2013 09:13:37 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>
-Cc: tony.luck@intel.com, bp@alien8.de, bhelgaas@google.com,
-	rjw@sisk.pl, lance.ortiz@hp.com, m.chehab@samsung.com,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] mce: acpi/apei: trace: Include PCIe AER trace event
- conditionally
-Message-ID: <20130812091337.6f8c057d@gandalf.local.home>
-In-Reply-To: <5208C8DD.3050204@linux.vnet.ibm.com>
-References: <1375986471-27113-1-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
-	<1375986471-27113-2-git-send-email-naveen.n.rao@linux.vnet.ibm.com>
-	<20130808152329.1f98b5e0@gandalf.local.home>
-	<5208C8DD.3050204@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [PATCH 1/2] ACPI / hotplug / PCI: Avoid doing too much for spurious notifies
+Date: Sat, 07 Sep 2013 01:45:31 +0200
+Message-ID: <2376366.5EHPecn9M5@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQXacWEXngMCQeB1CPVxuvL-jNW_MyMcDV-e8tK6DvY3Kw@mail.gmail.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <1831138.AvDtjG8RWn@vostro.rjw.lan> <CAE9FiQXacWEXngMCQeB1CPVxuvL-jNW_MyMcDV-e8tK6DvY3Kw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 12 Aug 2013 17:07:01 +0530
-"Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com> wrote:
-
-> > TRACE_EVENT_PCIE_AER for the users as well. That is, the places that
-> > include ras.h and use the trace_aer_*() tracepoints.
+On Friday, September 06, 2013 08:46:28 AM Yinghai Lu wrote:
+> On Fri, Sep 6, 2013 at 6:43 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > Sometimes we may get a spurious device check or bus check notify for
+> > a hotplug device and in those cases we should avoid doing all of the
+> > configuration work needed when something actually changes.  To that
+> > end, check the return value of pci_scan_slot() in enable_slot() and
+> > bail out early if it is 0.
+> >
+> > This turns out to help reduce the amount of diagnostic output from
+> > the ACPIPHP subsystem and speed up boot on at least one system that
+> > generates multiple device check notifies for PCIe ports during
+> > boot.
+> >
+> > Reported-by: Alex Williamson <alex.williamson@redhat.com>
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/pci/hotplug/acpiphp_glue.c |   35 +++++++++++++++++++++++++++--------
+> >  1 file changed, 27 insertions(+), 8 deletions(-)
+> >
+> > Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
+> > +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> > @@ -542,12 +542,12 @@ static void __ref enable_slot(struct acp
+> >         struct acpiphp_func *func;
+> >         int max, pass;
+> >         LIST_HEAD(add_list);
+> > +       int nr_found;
+> >
+> >         list_for_each_entry(func, &slot->funcs, sibling)
+> >                 acpiphp_bus_add(func_to_handle(func));
+> >
+> > -       pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+> > -
+> > +       nr_found = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+> >         max = acpiphp_max_busnr(bus);
+> >         for (pass = 0; pass < 2; pass++) {
+> >                 list_for_each_entry(dev, &bus->devices, bus_list) {
+> > @@ -566,8 +566,11 @@ static void __ref enable_slot(struct acp
+> >                         }
+> >                 }
+> >         }
+> > -
+> >         __pci_bus_assign_resources(bus, &add_list, NULL);
+> > +       /* Nothing more to do here if there are no new devices on this bus. */
+> > +       if (!nr_found && (slot->flags & SLOT_ENABLED))
+> > +               return;
+> > +
+> >         acpiphp_sanitize_bus(bus);
+> >         acpiphp_set_hpp_values(bus);
+> >         acpiphp_set_acpi_region(slot);
+> >
 > 
-> Do you mean the change I've done to aerdrv-errprint.c below? This trace 
-> point is currently only used there, so I guess we are ok?
-> 
+> why not just returning early before size bridges and assign unassign resources?
 
+Because we still need to do that even if pci_scan_slot() returns 0.
 
-Yeah, if it's only used on one place, then it's fine. But if it gets
-used in other files, than those other files with have to define the
-macro as well.
+There may be new devices down in the hierarchy and we need to look for them.
 
--- Steve
+Thanks,
+Rafael
+
