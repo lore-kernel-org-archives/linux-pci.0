@@ -1,54 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55466 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753399Ab3I0QD1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Sep 2013 12:03:27 -0400
-Date: Fri, 27 Sep 2013 18:01:25 +0200
-From: Veaceslav Falico <vfalico@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Zdenek Kabelac <zkabelac@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux.nics@intel.com,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: kobject_add_internal failed for msi_irqs with -EEXIST
-Message-ID: <20130927160125.GB14139@redhat.com>
-References: <5245896A.70705@redhat.com>
- <CAErSpo6L-Ud08=JPM7d=RYuPO=UFvq_9hZGbne0iQnCHiFbuHQ@mail.gmail.com>
+Received: from mail-yh0-f52.google.com ([209.85.213.52]:64504 "EHLO
+	mail-yh0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855Ab3IFROj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 13:14:39 -0400
+Received: by mail-yh0-f52.google.com with SMTP id v1so1341505yhn.11
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 10:14:39 -0700 (PDT)
+Subject: [PATCH 09/14] PCI/ACPI: Split _OSC "support" and "control" flags
+ into separate variables
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
+	Len Brown <lenb@kernel.org>
+Date: Fri, 06 Sep 2013 11:14:36 -0600
+Message-ID: <20130906171436.11482.21353.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <CAErSpo6L-Ud08=JPM7d=RYuPO=UFvq_9hZGbne0iQnCHiFbuHQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 27, 2013 at 09:58:28AM -0600, Bjorn Helgaas wrote:
->[+cc Veaceslav, linux-pci]
->
->On Fri, Sep 27, 2013 at 7:34 AM, Zdenek Kabelac <zkabelac@redhat.com> wrote:
->> Hi
->>
->> With recent build of 3.12-rc2 I'm getting this warning report from kernel:
->> (hw Lenovo T61, C2D, 4GB Ram)
->> (repost since linux-kernel@ rejected my gmail email....)
->
->This looks related to the MSI/kobject issues Veaceslav is working on.
->See http://lkml.kernel.org/r/1379382464-7920-2-git-send-email-vfalico@redhat.com
->and related messages.
->
->We don't have a resolution yet.  If you have
->CONFIG_DEBUG_KOBJECT_RELEASE=y, you could try turning that off.  I
->don't know if it would help, and it would only be a temporary
->workaround anyway.
+Previously we used "flags" for both:
 
-I've looked at the original post -
-http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg510798.html
-hope that's it - and it seems that it's disabling DEBUG_KOBJECT_RELEASE
-won't help - the warning is about the re-registering, not about freeing it.
+  - the bitmask of features we support (segments, ASPM, MSI, etc.), and
+  - the bitmask of features we want to control (native hotplug, AER, etc.)
 
-As a workaround I'd suggest adding some kind of delay between removing and
-adding the msi - as in - rmmod e1000e; sleep 1; modprobe e1000e; - or
-something like that, so that there is enough time for the /msqi_irqs/ to go
-away.
+To reduce confusion, this patch splits this into two variables:
+"support" is the bitmask of features we support, and "control" is the
+bitmask of features we want to control.  No functional change.
 
->
->Bjorn
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/acpi/pci_root.c |   35 ++++++++++++++++++-----------------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 3e57f10..3e06d4e 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -363,7 +363,7 @@ EXPORT_SYMBOL(acpi_pci_osc_control_set);
+ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 				 int *clear_aspm)
+ {
+-	u32 flags, base_flags;
++	u32 support, base_support, control;
+ 	acpi_status status;
+ 	struct acpi_device *device = root->device;
+ 	acpi_handle handle = device->handle;
+@@ -372,29 +372,29 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 	 * All supported architectures that use ACPI have support for
+ 	 * PCI domains, so we indicate this in _OSC support capabilities.
+ 	 */
+-	flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
+-	acpi_pci_osc_support(root, flags);
++	support = base_support = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
++	acpi_pci_osc_support(root, support);
+ 
+ 	if (pci_ext_cfg_avail())
+-		flags |= OSC_PCI_EXT_CONFIG_SUPPORT;
++		support |= OSC_PCI_EXT_CONFIG_SUPPORT;
+ 	if (pcie_aspm_support_enabled()) {
+-		flags |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
++		support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+ 	}
+ 	if (pci_msi_enabled())
+-		flags |= OSC_PCI_MSI_SUPPORT;
+-	if (flags != base_flags) {
+-		status = acpi_pci_osc_support(root, flags);
++		support |= OSC_PCI_MSI_SUPPORT;
++	if (support != base_support) {
++		status = acpi_pci_osc_support(root, support);
+ 		if (ACPI_FAILURE(status)) {
+ 			dev_info(&device->dev, "ACPI _OSC support "
+ 				"notification failed, disabling PCIe ASPM\n");
+ 			*no_aspm = 1;
+-			flags = base_flags;
++			support = base_support;
+ 		}
+ 	}
+ 
+ 	if (!pcie_ports_disabled
+-	    && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
+-		flags = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
++	    && (support & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
++		control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
+ 			| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+ 			| OSC_PCI_EXPRESS_PME_CONTROL;
+ 
+@@ -403,17 +403,18 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 				dev_dbg(&device->dev,
+ 					"PCIe errors handled by BIOS.\n");
+ 			else
+-				flags |= OSC_PCI_EXPRESS_AER_CONTROL;
++				control |= OSC_PCI_EXPRESS_AER_CONTROL;
+ 		}
+ 
+ 		dev_info(&device->dev,
+-			"Requesting ACPI _OSC control (0x%02x)\n", flags);
++			"Requesting ACPI _OSC control (0x%02x)\n", control);
+ 
+-		status = acpi_pci_osc_control_set(handle, &flags,
++		status = acpi_pci_osc_control_set(handle, &control,
+ 				       OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
+ 		if (ACPI_SUCCESS(status)) {
+ 			dev_info(&device->dev,
+-				"ACPI _OSC control (0x%02x) granted\n", flags);
++				"ACPI _OSC control (0x%02x) granted\n",
++				control);
+ 			if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+ 				/*
+ 				 * We have ASPM control, but the FADT indicates
+@@ -425,7 +426,7 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 			dev_info(&device->dev,
+ 				"ACPI _OSC request failed (%s), "
+ 				"returned control mask: 0x%02x\n",
+-				acpi_format_exception(status), flags);
++				acpi_format_exception(status), control);
+ 			dev_info(&device->dev,
+ 				 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
+ 			/*
+@@ -440,7 +441,7 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 	} else {
+ 		dev_info(&device->dev,
+ 			 "Unable to request _OSC control "
+-			 "(_OSC support mask: 0x%02x)\n", flags);
++			 "(_OSC support mask: 0x%02x)\n", support);
+ 	}
+ }
+ 
+
