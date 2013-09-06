@@ -1,137 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Avoid parent bus rescans on spurious device checks
-Date: Mon, 09 Sep 2013 22:02:24 +0200
-Message-ID: <2468067.2gxWP8bzg4@vostro.rjw.lan>
-In-Reply-To: <1378744377.2631.82.camel@ul30vt.home>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <2762291.l6lVgcWD3r@vostro.rjw.lan> <1378744377.2631.82.camel@ul30vt.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yh0-f42.google.com ([209.85.213.42]:60841 "EHLO
+	mail-yh0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753050Ab3IFRNv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 13:13:51 -0400
+Received: by mail-yh0-f42.google.com with SMTP id z12so1318464yhz.15
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 10:13:50 -0700 (PDT)
+Subject: [PATCH 03/14] ACPI: Tidy acpi_run_osc() declarations
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
+	Len Brown <lenb@kernel.org>
+Date: Fri, 06 Sep 2013 11:13:47 -0600
+Message-ID: <20130906171347.11482.54142.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, September 09, 2013 10:32:57 AM Alex Williamson wrote:
-> On Sun, 2013-09-08 at 00:16 +0200, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > In the current ACPIPHP notify handler we always go directly for a
-> > rescan of the parent bus if we get a device check notification for
-> > a device that is not a bridge.  However, this obviously is
-> > overzealous if nothing really changes, because this way we may rescan
-> > the whole PCI hierarchy pretty much in vain.
-> > 
-> > That happens on Alex Williamson's machine whose ACPI tables contain
-> > device objects that are supposed to coresspond to PCIe root ports,
-> > but those ports aren't physically present (or at least they aren't
-> > visible in the PCI config space to us).  The BIOS generates multiple
-> > device check notifies for those objects during boot and for each of
-> > them we go straight for the parent bus rescan, but the parent bus is
-> > the root bus in this particular case.  In consequence, we rescan the
-> > whole PCI bus from the top several times in a row, which is
-> > completely unnecessary, increases boot time by 50% (after previous
-> > fixes) and generates excess dmesg output from the PCI subsystem.
-> > 
-> > Fix the problem by checking if we can find anything new in the
-> > slot corresponding to the device we've got a device check notify
-> > for and doing nothig if that's not the case.
-> > 
-> > The spec (ACPI 5.0, Section 5.6.6) appears to mandate this behavior,
-> > as it says:
-> > 
-> >   Device Check. Used to notify OSPM that the device either appeared
-> >   or disappeared. If the device has appeared, OSPM will re-enumerate
-> >   from the parent. If the device has disappeared, OSPM will
-> >   invalidate the state of the device. OSPM may optimize out
-> >   re-enumeration.
-> > 
-> > Therefore, according to the spec, we are free to do nothing if
-> > nothing changes.
-> > 
-> > References: https://bugzilla.kernel.org/show_bug.cgi?id=60865
-> > Reported-by: Alex Williamson <alex.williamson@redhat.com>
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> 
-> Works for me.  Thanks!
-> 
-> Tested-by: Alex Williamson <alex.williamson@redhat.com>
+Move the acpi_run_osc() prototype next to the related structure and
+update comments.  No functional change.
 
-Great, thanks for testing.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/linux/acpi.h |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 3ba9fe3..902cccf 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -294,12 +294,14 @@ void __init acpi_nvs_nosave_s3(void);
+ #endif /* CONFIG_PM_SLEEP */
+ 
+ struct acpi_osc_context {
+-	char *uuid_str; /* uuid string */
++	char *uuid_str;			/* UUID string */
+ 	int rev;
+-	struct acpi_buffer cap; /* arg2/arg3 */
+-	struct acpi_buffer ret; /* free by caller if success */
++	struct acpi_buffer cap;		/* list of DWORD capabilities */
++	struct acpi_buffer ret;		/* free by caller if success */
+ };
+ 
++acpi_status acpi_run_osc(acpi_handle handle, struct acpi_osc_context *context);
++
+ /* Indexes into _OSC Capabilities Buffer (DWORDs 2 & 3 are device-specific) */
+ #define OSC_QUERY_DWORD				0	/* DWORD 1 */
+ #define OSC_SUPPORT_DWORD 			1	/* DWORD 2 */
+@@ -312,8 +314,6 @@ struct acpi_osc_context {
+ #define OSC_INVALID_REVISION_ERROR		0x00000008  /* return */
+ #define OSC_CAPABILITIES_MASK_ERROR		0x00000010  /* return */
+ 
+-acpi_status acpi_run_osc(acpi_handle handle, struct acpi_osc_context *context);
+-
+ /* Platform-Wide Capabilities _OSC: Capabilities DWORD 2: Support Field */
+ #define OSC_SB_PAD_SUPPORT			0x00000001
+ #define OSC_SB_PPC_OST_SUPPORT			0x00000002
 
-> > ---
-> >  drivers/pci/hotplug/acpiphp_glue.c |   32 +++++++++++++++++++++++++-------
-> >  1 file changed, 25 insertions(+), 7 deletions(-)
-> > 
-> > Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-> > +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> > @@ -528,6 +528,16 @@ static void check_hotplug_bridge(struct
-> >  	}
-> >  }
-> >  
-> > +static int acpiphp_rescan_slot(struct acpiphp_slot *slot)
-> > +{
-> > +	struct acpiphp_func *func;
-> > +
-> > +	list_for_each_entry(func, &slot->funcs, sibling)
-> > +		acpiphp_bus_add(func_to_handle(func));
-> > +
-> > +	return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
-> > +}
-> > +
-> >  /**
-> >   * enable_slot - enable, configure a slot
-> >   * @slot: slot to be enabled
-> > @@ -544,10 +554,7 @@ static void __ref enable_slot(struct acp
-> >  	LIST_HEAD(add_list);
-> >  	int nr_found;
-> >  
-> > -	list_for_each_entry(func, &slot->funcs, sibling)
-> > -		acpiphp_bus_add(func_to_handle(func));
-> > -
-> > -	nr_found = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
-> > +	nr_found = acpiphp_rescan_slot(slot);
-> >  	max = acpiphp_max_busnr(bus);
-> >  	for (pass = 0; pass < 2; pass++) {
-> >  		list_for_each_entry(dev, &bus->devices, bus_list) {
-> > @@ -840,11 +847,22 @@ static void hotplug_event(acpi_handle ha
-> >  	case ACPI_NOTIFY_DEVICE_CHECK:
-> >  		/* device check */
-> >  		dbg("%s: Device check notify on %s\n", __func__, objname);
-> > -		if (bridge)
-> > +		if (bridge) {
-> >  			acpiphp_check_bridge(bridge);
-> > -		else
-> > -			acpiphp_check_bridge(func->parent);
-> > +		} else {
-> > +			struct acpiphp_slot *slot = func->slot;
-> > +			int ret;
-> >  
-> > +			/*
-> > +			 * Check if anything has changed in the slot and rescan
-> > +			 * from the parent if that's the case.
-> > +			 */
-> > +			mutex_lock(&slot->crit_sect);
-> > +			ret = acpiphp_rescan_slot(slot);
-> > +			mutex_unlock(&slot->crit_sect);
-> > +			if (ret)
-> > +				acpiphp_check_bridge(func->parent);
-> > +		}
-> >  		break;
-> >  
-> >  	case ACPI_NOTIFY_EJECT_REQUEST:
-> 
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
