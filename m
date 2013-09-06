@@ -1,45 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:55342 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754095Ab3ICUbH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 Sep 2013 16:31:07 -0400
-Message-ID: <1378240265.7347.24.camel@joe-AO722>
-Subject: [PATCH] pci.h: Fix typo, remove unnecessary !!
-From: Joe Perches <joe@perches.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Tue, 03 Sep 2013 13:31:05 -0700
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-yh0-f45.google.com ([209.85.213.45]:42976 "EHLO
+	mail-yh0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980Ab3IFWOa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 18:14:30 -0400
+Received: by mail-yh0-f45.google.com with SMTP id i72so40577yha.4
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 15:14:29 -0700 (PDT)
+Date: Fri, 6 Sep 2013 16:14:25 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Anil Gurumurthy <agurumur@brocade.com>,
+	Vijaya Mohan Guvva <vmohan@brocade.com>,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2 1/6] scsi/bfa: use pcie_set/get_readrq to simplify code
+Message-ID: <20130906221425.GA10152@google.com>
+References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use normal kernel-doc "Returns:" instead of retruns
-Assignment to bool is always 1 or 0 so the !! isn't necessary.
+On Thu, Sep 05, 2013 at 03:55:25PM +0800, Yijing Wang wrote:
+> v1->v2: use pcie_get/set_readrq to simplify code
+> a lot suggestd by Bjorn.
+> 
+> Use pcie_get_readrq()/pcie_set_readrq() to simplify
+> code.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Anil Gurumurthy <agurumur@brocade.com>
+> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/scsi/bfa/bfad.c |   48 +++++-----------------------------------------
+>  1 files changed, 6 insertions(+), 42 deletions(-)
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- include/linux/pci.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I applied all these with some tweaks to my pci/yijing-pci_is_pcie-v2
+branch [1].  This will be rebased after v3.12-rc1, and may be amended
+if any patches are picked up by others.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index da172f9..ee0f3b6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1749,11 +1749,11 @@ static inline int pci_pcie_cap(struct pci_dev *dev)
-  * pci_is_pcie - check if the PCI device is PCI Express capable
-  * @dev: PCI device
-  *
-- * Retrun true if the PCI device is PCI Express capable, false otherwise.
-+ * Returns: true if the PCI device is PCI Express capable, false otherwise.
-  */
- static inline bool pci_is_pcie(struct pci_dev *dev)
- {
--	return !!pci_pcie_cap(dev);
-+	return pci_pcie_cap(dev);
- }
- 
- /**
+Hints (not just for you; I hope other people pay attention, too,
+because I'm obsessive and I pay attention to these details):
 
+  - Include a "[PATCH v2 0/6]" email.  That's a good place for you to
+    put an overall description of the series, and a good place for
+    responses like this one that apply to the whole series.
 
+  - Pay attention to the order of your patches.  Yours seemed random,
+    and I reordered them so the core PCI ones are first and the arch
+    and driver ones are later.  That way I can easily drop the later
+    ones if they are picked up by other maintainers.
+
+  - Don't put "v1->v2" comments in your changelogs.  Those are fine
+    in the "[0/6]" email, but they're useless in the git changelog, and
+    I strip them out when I see them.  Or you can put them after the
+    "---" line, in which case they get stripped out automatically.
+
+  - Run "git log --oneline" on the files you touch.  You should follow
+    the existing convention, including spacing, brackets, capitalization,
+    etc.  I changed most of your subject lines for this reason.
+
+  - Write titles that are sentences, starting with a verb, as suggested
+    by Ingo [2].  You did this already; I just made changes for
+    consistency of capitalization and the like.
+
+  - Use real function names, not things like "pcie_capability_xxx".
+    That makes it easier to search logs.
+
+  - Be consistent about writing function names.  Some of your logs
+    included, e.g., both "pci_bus_set_ops" and "dev_info()".  I prefer
+    to always include the parentheses when writing a function name,
+    but at least be consistent.
+
+  - Don't put "Cc: <mailing-list>" in your changelog.  That tag is
+    useful to show that a *person* has had the opportunity to comment
+    on a patch but declined to do so.  I don't think it's meaningful
+    for mailing lists.  If it were, every single commit would have
+    that tag, since every single commit should appear on the relevant
+    list.  I suspect you probably do this so that something like
+    "git send-email --signed-off-by-cc" will automatically send mail
+    to the right lists.  But that's a one-time convenience at the
+    cost of useless info in the changelog that's there forever.
+
+  - Put Signed-off-by, Acked-by, etc., tags in this order as suggested
+    by Ingo [2]:
+
+      Reported-by:
+      Tested-by:
+      Signed-off-by:
+      Acked-by:
+      Reviewed-by:
+      Cc: stable@vger.kernel.org  # v3.11+
+      Cc: others
+
+[1] http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/yijing-pci_is_pcie-v2
+
+[2] http://lkml.kernel.org/r/20120711080446.GA17713@gmail.com
+
+> diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+> index f8ca7be..0a458db 100644
+> --- a/drivers/scsi/bfa/bfad.c
+> +++ b/drivers/scsi/bfa/bfad.c
+> @@ -766,50 +766,14 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+>  	bfad->pcidev = pdev;
+>  
+>  	/* Adjust PCIe Maximum Read Request Size */
+> -	if (pcie_max_read_reqsz > 0) {
+> -		int pcie_cap_reg;
+> -		u16 pcie_dev_ctl;
+> -		u16 mask = 0xffff;
+> -
+> -		switch (pcie_max_read_reqsz) {
+> -		case 128:
+> -			mask = 0x0;
+> -			break;
+> -		case 256:
+> -			mask = 0x1000;
+> -			break;
+> -		case 512:
+> -			mask = 0x2000;
+> -			break;
+> -		case 1024:
+> -			mask = 0x3000;
+> -			break;
+> -		case 2048:
+> -			mask = 0x4000;
+> -			break;
+> -		case 4096:
+> -			mask = 0x5000;
+> -			break;
+> -		default:
+> -			break;
+> -		}
+> -
+> -		pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+> -		if (mask != 0xffff && pcie_cap_reg) {
+> -			pcie_cap_reg += 0x08;
+> -			pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
+> -			if ((pcie_dev_ctl & 0x7000) != mask) {
+> -				printk(KERN_WARNING "BFA[%s]: "
+> +	if (pcie_max_read_reqsz > 0 && pci_is_pcie(pdev)) {
+> +		int max_rq = pcie_get_readrq(pdev);
+> +		if (max_rq > 128 && max_rq < 4096 && is_power_of_2(max_rq))
+
+I think you meant to validate pcie_max_read_reqsz (the module parameter),
+not max_rq.  I made this change on my branch.
+
+> +			printk(KERN_WARNING "BFA[%s]: "
+>  				"pcie_max_read_request_size is %d, "
+> -				"reset to %d\n", bfad->pci_name,
+> -				(1 << ((pcie_dev_ctl & 0x7000) >> 12)) << 7,
+> +				"reset to %d\n", bfad->pci_name, max_rq,
+>  				pcie_max_read_reqsz);
+> -
+> -				pcie_dev_ctl &= ~0x7000;
+> -				pci_write_config_word(pdev, pcie_cap_reg,
+> -						pcie_dev_ctl | mask);
+> -			}
+> -		}
+> +		pcie_set_readrq(pdev, pcie_max_read_reqsz);
+>  	}
+>  
+>  	pci_save_state(pdev);
+> -- 
+> 1.7.1
+> 
+> 
