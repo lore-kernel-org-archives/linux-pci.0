@@ -1,105 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39804 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:48087 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751388Ab3IRJqL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Sep 2013 05:46:11 -0400
-Date: Wed, 18 Sep 2013 11:48:00 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Michael Ellerman <michael@ellerman.id.au>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
+	id S1750777Ab3IFJv1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 Sep 2013 05:51:27 -0400
+Date: Fri, 6 Sep 2013 11:51:19 +0200 (CEST)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
-References: <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
- <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Adam Radford <aradford@gmail.com>
+Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
+In-Reply-To: <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz>
+References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz> <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz> <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130917143022.GA7707@concordia>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 18, 2013 at 12:30:23AM +1000, Michael Ellerman wrote:
-> How about no?
+On Wed, 28 Aug 2013, Bjorn Helgaas wrote:
+
+> [+cc another email addr for Adam from git logs]
+
+Thanks. Adam, would you happen to have any possible explanation / 
+background?
+
+> >> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
+> >> > pci device") makes MSIs be forcibly disabled at boot time.
+> >> >
+> >> > It turns out that this breaks 3ware controller -- if MSIs are disabled
+> >> > during PCI discovery of this controller, the device doesn't work properly
+> >> > (it doesn't respond to any commands that are being sent to it after
+> >> > initialization).
+> >> >
+> >> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
+> >> > makes the device work properly again.
+> >> >
+> >> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+> >> >
+> >> > ---
+> >> >
+> >> > I am adding Adam Radford as a recepient as well, to see whether he is able
+> >> > to provide some more explanation why this device would expose this
+> >> > behavior.
+> >
+> > OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't
+> > expect any feedback from him.
+> >
+> > Bjorn, Jesse, any word on this please?
 > 
-> We have a small number of MSIs available, limited by hardware &
-> firmware, if we don't impose a quota then the first device that probes
-> will get most/all of the MSIs and other devices miss out.
+> It's on my list to look at.  It's too late to put it in for v3.11, and
+> it's doubtful that it will even make the v3.12 merge window (though
+> possibly it could go in post-merge window).  d5dea7d95 is several
+> years old, so hopefully this issue isn't super-urgent.  Let me know if
+> otherwise.
 
-Out of curiosity - how pSeries has had done it without quotas before
-448e2ca ("powerpc/pseries: Implement a quota system for MSIs")?
+I agree that this should be applicable to 3.12-rcX as well, as it's very 
+device-specific.
 
-> Anyway I don't see what problem you're trying to solve? I agree the
-> -ve/0/+ve return value pattern is ugly, but it's hardly the end of the
-> world.
+Thanks.
 
-Well, the interface recently has been re-classified from "ugly" to
-"unnecessarily complex and actively harmful" in Tejun's words ;)
-
-Indeed, I checked most of the drivers and it is incredible how people
-are creative in misusing the interface: from innocent pci_disable_msix()
-calls when if pci_enable_msix() failed to assuming MSI-Xs were enabled
-if pci_enable_msix() returned a positive value (apparently untested).
-
-Roughly third of the drivers just do not care and bail out once
-pci_enable_msix() has not succeeded. Not sure how many of these are
-mandated by the hardware.
-
-Another quite common pattern is a call to pci_enable_msix() to figure out
-the number of MSI-Xs available and a repeated call of pci_enable_msix()
-to enable those MSI-Xs, this time.
-
-The last pattern makes most of sense to me and could be updated with a more
-clear sequence - a call to (bit modified) pci_msix_table_size() followed
-by a call to pci_enable_msix(). I think this pattern can effectively
-supersede the currently recommended "loop" practice.
-
-But as pSeries quota is still required I propose to introduce a new interface
-pci_get_msix_limit() that combines pci_msix_table_size() and (also new)
-arch_get_msix_limit(). The latter would check the quota thing in case of
-pSeries and none in case of all other architectures.
-
-The recommended practice would be:
-
-	/*
-	 * Retrieving 'nvec' by means other than pci_msix_table_size()
-	 */
-
-	rc = pci_get_msix_limit(pdev);
-	if (rc < 0)
-		return rc;
-
-	/*
-	 * nvec = min(rc, nvec);
-	 */
-
-	for (i = 0; i < nvec; i++)
-		msix_entry[i].entry = i;
-
-	rc = pci_enable_msix(pdev, msix_entry, nvec);
-	if (rc)
-		return rc;
-
-Thoughts?
-
-> cheers
+> 
+> Bjorn
+> 
+> >> >  drivers/pci/msi.c    |    3 +++
+> >> >  drivers/pci/quirks.c |   10 ++++++++++
+> >> >  include/linux/pci.h  |    1 +
+> >> >  3 files changed, 14 insertions(+), 0 deletions(-)
+> >> >
+> >> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> >> > index aca7578..4f36b8b 100644
+> >> > --- a/drivers/pci/msi.c
+> >> > +++ b/drivers/pci/msi.c
+> >> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+> >> >  {
+> >> >     INIT_LIST_HEAD(&dev->msi_list);
+> >> >
+> >> > +   if (dev->broken_msi_disable)
+> >> > +           return;
+> >> > +
+> >> >     /* Disable the msi hardware to avoid screaming interrupts
+> >> >      * during boot.  This is the power on reset default so
+> >> >      * usually this should be a noop.
+> >> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> >> > index e85d230..4ba3400 100644
+> >> > --- a/drivers/pci/quirks.c
+> >> > +++ b/drivers/pci/quirks.c
+> >> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+> >> >
+> >> > +/*
+> >> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
+> >> > + * disabled on it during PCI device discovery
+> >> > + */
+> >> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
+> >> > +{
+> >> > +   dev->broken_msi_disable = 1;
+> >> > +}
+> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
+> >> > +
+> >> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
+> >> >                              void (*fn)(struct pci_dev *dev))
+> >> >  {
+> >> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> > index 0fd1f15..c327d74 100644
+> >> > --- a/include/linux/pci.h
+> >> > +++ b/include/linux/pci.h
+> >> > @@ -341,6 +341,7 @@ struct pci_dev {
+> >> >  #ifdef CONFIG_PCI_MSI
+> >> >     struct list_head msi_list;
+> >> >     struct kset *msi_kset;
+> >> > +   unsigned int    broken_msi_disable:1;
+> >> >  #endif
+> >> >     struct pci_vpd *vpd;
+> >> >  #ifdef CONFIG_PCI_ATS
+> >> >
+> >> > --
+> >> > Jiri Kosina
+> >> > SUSE Labs
+> >> >
+> >>
+> >> --
+> >> Jiri Kosina
+> >> SUSE Labs
+> >>
+> >
+> > --
+> > Jiri Kosina
+> > SUSE Labs
+> 
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Jiri Kosina
+SUSE Labs
