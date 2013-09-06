@@ -1,47 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:34531 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545Ab3ILL3Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 07:29:25 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene@kernel.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] MAINTAINERS: add maintainer entry for Samsung Exynos PCIe
- driver
-Date: Thu, 12 Sep 2013 20:29:24 +0900
-Message-id: <000001ceafab$5529e340$ff7da9c0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-yh0-f41.google.com ([209.85.213.41]:54407 "EHLO
+	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754006Ab3IFROy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 13:14:54 -0400
+Received: by mail-yh0-f41.google.com with SMTP id f73so1317900yha.14
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 10:14:54 -0700 (PDT)
+Subject: [PATCH 11/14] PCI/ACPI: Skip _OSC control tests if _OSC support
+ call failed
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
+	Len Brown <lenb@kernel.org>
+Date: Fri, 06 Sep 2013 11:14:51 -0600
+Message-ID: <20130906171451.11482.47944.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add myself as maintainer for Samsung Exynos PCIe driver.
+If the _OSC support notification fails, we will never request control
+(because "support == OSC_PCI_SEGMENT_GROUPS_SUPPORT", which doesn't include
+all the features in ACPI_PCIE_REQ_SUPPORT), so we can return early to
+simplify the code.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- MAINTAINERS |    6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/acpi/pci_root.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6d0dabe..f00c469 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6346,6 +6346,12 @@ S:	Supported
- F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
- F:	drivers/pci/host/pci-tegra.c
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 0e20041..67cc43a 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -363,7 +363,7 @@ EXPORT_SYMBOL(acpi_pci_osc_control_set);
+ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 				 int *clear_aspm)
+ {
+-	u32 support, base_support, control;
++	u32 support, control;
+ 	acpi_status status;
+ 	struct acpi_device *device = root->device;
+ 	acpi_handle handle = device->handle;
+@@ -372,7 +372,7 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 	 * All supported architectures that use ACPI have support for
+ 	 * PCI domains, so we indicate this in _OSC support capabilities.
+ 	 */
+-	support = base_support = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
++	support = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
+ 	if (pci_ext_cfg_avail())
+ 		support |= OSC_PCI_EXT_CONFIG_SUPPORT;
+ 	if (pcie_aspm_support_enabled())
+@@ -381,10 +381,10 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 		support |= OSC_PCI_MSI_SUPPORT;
+ 	status = acpi_pci_osc_support(root, support);
+ 	if (ACPI_FAILURE(status)) {
+-		dev_info(&device->dev, "ACPI _OSC support "
+-			"notification failed, disabling PCIe ASPM\n");
++		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
++			 acpi_format_exception(status));
+ 		*no_aspm = 1;
+-		support = base_support;
++		return;
+ 	}
  
-+PCI DRIVER FOR SAMSUNG EXYNOS
-+M:	Jingoo Han <jg1.han@samsung.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	drivers/pci/host/pci-exynos.c
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
--- 
-1.7.10.4
-
+ 	if (!pcie_ports_disabled
 
