@@ -1,84 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:44588 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761407Ab3ICXnd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 19:43:33 -0400
-Received: by mail-pb0-f41.google.com with SMTP id rp2so6692082pbb.0
-        for <linux-pci@vger.kernel.org>; Tue, 03 Sep 2013 16:43:33 -0700 (PDT)
-Date: Tue, 3 Sep 2013 17:43:28 -0600
+Received: from mail-yh0-f52.google.com ([209.85.213.52]:57658 "EHLO
+	mail-yh0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754138Ab3IFROr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 13:14:47 -0400
+Received: by mail-yh0-f52.google.com with SMTP id v1so1294455yhn.39
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 10:14:46 -0700 (PDT)
+Subject: [PATCH 10/14] PCI/ACPI: Run _OSC only once for OSPM feature support
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	Jesper Juhl <jj@chaosbits.net>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 2/7] scsi/csiostor: use pcie_capability_xxx to simplify
- code
-Message-ID: <20130903234328.GC24733@google.com>
-References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
- <1378193715-25328-2-git-send-email-wangyijing@huawei.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
+	Len Brown <lenb@kernel.org>
+Date: Fri, 06 Sep 2013 11:14:44 -0600
+Message-ID: <20130906171444.11482.59374.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1378193715-25328-2-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 03, 2013 at 03:35:10PM +0800, Yijing Wang wrote:
-> Pcie_capability_xxx() interfaces were introudced to
+Previously, we ran _OSC once to tell the platform that we support
+PCI Segment Groups, then we ran it again if we supported any additional
+features (ASPM, MSI, or extended config space).  I don't think it's
+necessary to run it twice, since we can easily build the complete
+mask of features we support before running _OSC the first time.
 
-s/introudced/introduced/
+We run _OSC again later when requesting control of PCIe features;
+that's unaffected by this change.
 
-> simplify code to access PCIe Cap config space. And
-> because PCI core saves the PCIe Cap offset in
-> set_pcie_port_type() when device is enumerated.
-> So we can use pci_is_pcie() instead.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Jiang Liu <jiang.liu@huawei.com>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: Naresh Kumar Inna <naresh@chelsio.com>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Jesper Juhl <jj@chaosbits.net>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/scsi/csiostor/csio_hw.c |    9 +++------
->  1 files changed, 3 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-> index 0eb35b9..be9a6ef 100644
-> --- a/drivers/scsi/csiostor/csio_hw.c
-> +++ b/drivers/scsi/csiostor/csio_hw.c
-> @@ -856,15 +856,12 @@ static void
->  csio_set_pcie_completion_timeout(struct csio_hw *hw, u8 range)
->  {
->  	uint16_t val;
-> -	int pcie_cap;
->  
-> -	if (!csio_pci_capability(hw->pdev, PCI_CAP_ID_EXP, &pcie_cap)) {
-> -		pci_read_config_word(hw->pdev,
-> -				     pcie_cap + PCI_EXP_DEVCTL2, &val);
-> +	if (pci_is_pcie(hw->pdev)) {
-> +		pcie_capability_read_word(hw->pdev, PCI_EXP_DEVCTL2, &val);
->  		val &= 0xfff0;
->  		val |= range ;
-> -		pci_write_config_word(hw->pdev,
-> -				      pcie_cap + PCI_EXP_DEVCTL2, val);
-> +		pcie_capability_write_word(hw->pdev, PCI_EXP_DEVCTL2, val);
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/acpi/pci_root.c |   19 +++++++------------
+ 1 file changed, 7 insertions(+), 12 deletions(-)
 
-Please add a #define for the Completion Timeout Value field and use
-pcie_capability_clear_and_set_word() instead of writing it out the
-long way here.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 3e06d4e..0e20041 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -373,23 +373,18 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 	 * PCI domains, so we indicate this in _OSC support capabilities.
+ 	 */
+ 	support = base_support = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
+-	acpi_pci_osc_support(root, support);
+-
+ 	if (pci_ext_cfg_avail())
+ 		support |= OSC_PCI_EXT_CONFIG_SUPPORT;
+-	if (pcie_aspm_support_enabled()) {
++	if (pcie_aspm_support_enabled())
+ 		support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+-	}
+ 	if (pci_msi_enabled())
+ 		support |= OSC_PCI_MSI_SUPPORT;
+-	if (support != base_support) {
+-		status = acpi_pci_osc_support(root, support);
+-		if (ACPI_FAILURE(status)) {
+-			dev_info(&device->dev, "ACPI _OSC support "
+-				"notification failed, disabling PCIe ASPM\n");
+-			*no_aspm = 1;
+-			support = base_support;
+-		}
++	status = acpi_pci_osc_support(root, support);
++	if (ACPI_FAILURE(status)) {
++		dev_info(&device->dev, "ACPI _OSC support "
++			"notification failed, disabling PCIe ASPM\n");
++		*no_aspm = 1;
++		support = base_support;
+ 	}
+ 
+ 	if (!pcie_ports_disabled
 
->  	}
->  }
->  
-> -- 
-> 1.7.1
-> 
-> 
