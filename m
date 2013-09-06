@@ -1,58 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:57997 "EHLO mail1.g1.pair.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35055 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750821Ab3I0Dyq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 Sep 2013 23:54:46 -0400
-Message-ID: <52450180.2070807@kosagi.com>
-Date: Fri, 27 Sep 2013 11:54:40 +0800
-From: Sean Cross <xobs@kosagi.com>
+	id S1750704Ab3IFNPp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 Sep 2013 09:15:45 -0400
+Date: Fri, 6 Sep 2013 15:17:40 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20130906131739.GA27922@dhcp-26-207.brq.redhat.com>
+References: <cover.1378383792.git.agordeev@redhat.com>
+ <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
+ <20130905130902.GA26314@htj.dyndns.org>
+ <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+ <20130905150442.GA24148@htj.dyndns.org>
+ <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: 'Shawn Guo' <shawn.guo@linaro.org>,
-	'Zhu Richard-R65037' <r65037@freescale.com>,
-	'Tim Harvey' <tharvey@gateworks.com>,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	'Sascha Hauer' <s.hauer@pengutronix.de>, bhelgaas@google.com
-Subject: Re: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-References: <1379319655-20210-1-git-send-email-xobs@kosagi.com> <1379319655-20210-4-git-send-email-xobs@kosagi.com> <CAJ+vNU32oMZq=jrSCpk_ZjYc08kRBAqhOS8uYfor28gY8WGhnw@mail.gmail.com> <0E83723C55F66F43A6041464FE31119D3F7E6A@039-SN2MPN1-012.039d.mgd.msft.net> <20130927021925.GF25146@S2101-09.ap.freescale.net> <017e01cebb33$44fa65b0$ceef3110$%han@samsung.com>
-In-Reply-To: <017e01cebb33$44fa65b0$ceef3110$%han@samsung.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/9/13 11:40 AM, Jingoo Han wrote:
-> On Friday, September 27, 2013 11:19 AM, Shawn Guo wrote:
->> On Fri, Sep 27, 2013 at 01:38:39AM +0000, Zhu Richard-R65037 wrote:
->>> Hi Tim:
->>> Thanks for your tests.
->>> Yes, it is. There are some problems when the PCIe switch is used
->>> on the 3.1x kernel at my side too,
->> although the PCIe switch
->>> is ok on FSL imx_3.0.35 kernels.
->>> I'm debugging this issue now, and would summit the patches asap.
->>>
->>  From what I read, it seems Sean's series does not support PCIe switch.
->> At least, he hasn't got any device to test it.  And there is some
->> problem with PCIe switch running the latest kernel, which might not be
->> related to the controller driver.
->>
->> I suggest we ask Bjorn to merge the v7 I sent yesterday, so that people
->> can have a same base to work on, and add PCIe switch support with
->> incremental patches.   Does that sound good to you, Tim?
->>
-> Hi Shawn Guo,
->
-> I agree with your suggestion. :-)
-> The PCIe switch support patches can be added later, after the v7 patch for
-> i.MX6 PCIe controller driver is merged.
->
-> Also, if the PCIe switch support patches modify the synopsys designware PCIe
-> driver (pcie-designware.c), it should be confirmed by other related people.
->
-Correct.  My series doesn't support PCIe switches mostly because I don't 
-have one to test with.  It would be interesting to see if PCIe switches 
-work with other Designware drivers.
+On Thu, Sep 05, 2013 at 05:40:41PM +0200, Alexander Gordeev wrote:
+> On Thu, Sep 05, 2013 at 11:04:42AM -0400, Tejun Heo wrote:
+> > The thing is, do we even have cases where arch code returns positive
+> > return to indicate possible partial allocation?  If not, the whole
+> > interface is convoluted for no good reason and we can just make
+> > everything return 0 or -errno, which is a lot simpler.  No?
+> 
+> As I mentioned in my other note, at least PPC has a concept of MSI quota,
+> so exceeding it would be the very case, I believe.
 
----
-Sean
+An update here. No other arch supports multiple MSIs besides Intel (+IOMMU).
+Yet, ironically, the concept of possible partial allocation was adopted from
+MSI-X. I briefly checked all archs and it seems none of them throws out a
+possible other number of MSIs > 1 (including PPC I mistakenly read).
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
