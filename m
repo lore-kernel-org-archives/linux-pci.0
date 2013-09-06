@@ -1,217 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:34271 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753913Ab3ILG3C (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 02:29:02 -0400
-Date: Thu, 12 Sep 2013 08:28:59 +0200
-From: Sascha Hauer <s.hauer@pengutronix.de>
-To: Sean Cross <xobs@kosagi.com>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [PATCH v3 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-Message-ID: <20130912062859.GM30088@pengutronix.de>
-References: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
- <1378958611-4274-4-git-send-email-xobs@kosagi.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 2/2] ACPI / hotplug / PCI: Use _OST to notify firmware about notify status
+Date: Fri, 06 Sep 2013 15:46:07 +0200
+Message-ID: <2116332.8hDG0uhn9a@vostro.rjw.lan>
+In-Reply-To: <2228690.GcUDD3xFfP@vostro.rjw.lan>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <1599165.8kjc3DtEzc@vostro.rjw.lan> <2228690.GcUDD3xFfP@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1378958611-4274-4-git-send-email-xobs@kosagi.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sean,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Several more comments.
+The spec suggests that we should use _OST to inform the platform
+of the status of notifications it sends us, for example so that
+it doesn't repeate a notification that has been handled already.
 
-Shawn,
+For this reason, add _OST evaluation to the ACPIPHP subsystem.
 
-A question about a clk_set_parent inside.
+This turns out to help reduce the amount of diagnostic output from
+the ACPIPHP subsystem and speed up boot on at least one system that
+generates multiple device check notifies for PCIe ports during
+boot.
 
-On Thu, Sep 12, 2013 at 04:03:31AM +0000, Sean Cross wrote:
-> +
-> +#define IMX6_ENTER_RESET 0
-> +#define IMX6_EXIT_RESET 1
+Reported-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
 
-These are unused
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -870,6 +870,8 @@ static void hotplug_event_work(struct wo
+ 	hotplug_event(hp_work->handle, hp_work->type, context);
+ 
+ 	acpi_scan_lock_release();
++	acpi_evaluate_hotplug_ost(hp_work->handle, hp_work->type,
++				  ACPI_OST_SC_SUCCESS, NULL);
+ 	kfree(hp_work); /* allocated in handle_hotplug_event() */
+ 	put_bridge(context->func.parent);
+ }
+@@ -885,11 +887,15 @@ static void hotplug_event_work(struct wo
+ static void handle_hotplug_event(acpi_handle handle, u32 type, void *data)
+ {
+ 	struct acpiphp_context *context;
++	u32 ost_code = ACPI_OST_SC_SUCCESS;
+ 
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 	case ACPI_NOTIFY_DEVICE_CHECK:
++		break;
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
++		ost_code = ACPI_OST_SC_EJECT_IN_PROGRESS;
++		acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+ 		break;
+ 
+ 	case ACPI_NOTIFY_DEVICE_WAKE:
+@@ -898,20 +904,21 @@ static void handle_hotplug_event(acpi_ha
+ 	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
+ 		acpi_handle_err(handle, "Device cannot be configured due "
+ 				"to a frequency mismatch\n");
+-		return;
++		goto out;
+ 
+ 	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
+ 		acpi_handle_err(handle, "Device cannot be configured due "
+ 				"to a bus mode mismatch\n");
+-		return;
++		goto out;
+ 
+ 	case ACPI_NOTIFY_POWER_FAULT:
+ 		acpi_handle_err(handle, "Device has suffered a power fault\n");
+-		return;
++		goto out;
+ 
+ 	default:
+ 		acpi_handle_warn(handle, "Unsupported event type 0x%x\n", type);
+-		return;
++		ost_code = ACPI_OST_SC_UNRECOGNIZED_NOTIFY;
++		goto out;
+ 	}
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+@@ -920,8 +927,14 @@ static void handle_hotplug_event(acpi_ha
+ 		get_bridge(context->func.parent);
+ 		acpiphp_put_context(context);
+ 		alloc_acpi_hp_work(handle, type, context, hotplug_event_work);
++		mutex_unlock(&acpiphp_context_lock);
++		return;
+ 	}
+ 	mutex_unlock(&acpiphp_context_lock);
++	ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
++
++ out:
++	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+ }
+ 
+ /*
 
-> +
-> +#define IMX6_POWER_OFF 0
-> +#define IMX6_POWER_ON 1
-
-unused aswell
-
-> +static int pcie_phy_poll_ack(void __iomem *dbi_base, int max_iterations,
-> +			     int exp_val)
-> +{
-> +	u32 val;
-> +	u32 wait_counter = 0;
-> +
-> +	do {
-> +		val = readl(dbi_base + PCIE_PHY_STAT);
-> +		val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
-> +		wait_counter++;
-> +	} while ((wait_counter < max_iterations) && (val != exp_val));
-
-may_iterations is never something else than 100 so you should drop the
-argument.
-Also I would prefer a real timeout here rather than a counter.
-
-> +
-> +	if (val != exp_val)
-> +		return -1;
-
-By saying "A negative error value" I actually meant one of
-include/uapi/asm-generic/errno*
-
-> +static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
-> +{
-> +	u32 var;
-> +
-> +	/* write addr */
-> +	/* cap addr */
-> +	if (pcie_phy_wait_ack(dbi_base, addr))
-> +		return -1;
-> +
-> +	var = data << PCIE_PHY_CTRL_DATA_LOC;
-> +	writel(var, dbi_base + PCIE_PHY_CTRL);
-> +
-> +	/* capture data */
-> +	var |= (0x1 << PCIE_PHY_CTRL_CAP_DAT_LOC);
-> +	writel(var, dbi_base + PCIE_PHY_CTRL);
-> +
-> +	/* wait for ack */
-
-Drop this comment.
-
-> +	if (pcie_phy_poll_ack(dbi_base, 100, 1))
-> +		return -1;
-> +
-
-...
-
-> +static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
-> +{
-> +	int ret;
-> +	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> +
-> +	if (imx6_pcie->power_on_gpio >= 0)
-> +		gpio_set_value(imx6_pcie->power_on_gpio, IMX6_POWER_ON);
-
-in probe you used gpio_is_valid(). Why not here?
-
-> +
-> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> +			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> +			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-> +
-> +	ret = clk_set_parent(imx6_pcie->lvds1_sel, imx6_pcie->sata_ref);
-> +	if (ret) {
-> +		dev_err(pp->dev, "unable to set lvds1_gate parent\n");
-> +		goto err_set_parent;
-> +	}
-
-I'm unsure this should be done here. Shawn, should we do this in SoC
-code?
-
-> +
-> +	ret = clk_prepare_enable(imx6_pcie->pcie_ref_125m);
-> +	if (ret) {
-> +		dev_err(pp->dev, "unable to enable pcie_ref_125m\n");
-> +		goto err_pcie_ref;
-> +	}
-> +
-> +	ret = clk_prepare_enable(imx6_pcie->lvds1_gate);
-> +	if (ret) {
-> +		dev_err(pp->dev, "unable to enable lvds1_gate\n");
-> +		goto err_lvds1_gate;
-> +	}
-> +
-> +	ret = clk_prepare_enable(imx6_pcie->pcie_axi);
-> +	if (ret) {
-> +		dev_err(pp->dev, "unable to enable pcie_axi\n");
-> +		goto err_pcie_axi;
-> +	}
-> +
-> +	/* allow the clocks to stabilize */
-> +	usleep_range(100, 200);
-> +
-> +	return 0;
-> +
-> +err_pcie_axi:
-> +	clk_disable(imx6_pcie->lvds1_gate);
-
-The counterpart of clk_prepare_enable is clk_disable_unprepare.
-
-> +			return;
-> +		}
-> +	}
-> +
-> +	return;
-
-unnecessary return
-
-> +
-> +	imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
-> +	if (gpio_is_valid(imx6_pcie->power_on_gpio))
-> +		devm_gpio_request_one(&pdev->dev, imx6_pcie->power_on_gpio,
-> +				    GPIOF_OUT_INIT_LOW,
-> +				    "PCIe power enable");
-
-devm_gpio_request_one can still fail.
-
-> +
-> +	imx6_pcie->wake_up_gpio = of_get_named_gpio(np, "wake-up-gpio", 0);
-> +	if (gpio_is_valid(imx6_pcie->wake_up_gpio))
-> +		devm_gpio_request_one(&pdev->dev, imx6_pcie->wake_up_gpio,
-> +				    GPIOF_IN,
-> +				    "PCIe wake up");
-> +
-> +	imx6_pcie->disable_gpio = of_get_named_gpio(np, "disable-gpio", 0);
-> +	if (gpio_is_valid(imx6_pcie->disable_gpio))
-> +		devm_gpio_request_one(&pdev->dev, imx6_pcie->disable_gpio,
-> +				    GPIOF_OUT_INIT_HIGH,
-> +				    "PCIe disable endpoint");
-> +
-> +	/* Fetch clocks */
-> +	imx6_pcie->lvds1_sel = clk_get(&pdev->dev, "lvds1_sel");
-> +	if (IS_ERR(imx6_pcie->lvds1_sel)) {
-> +		dev_err(&pdev->dev,
-> +			"lvds1_sel clock missing or invalid\n");
-> +		ret = PTR_ERR(imx6_pcie->lvds1_sel);
-> +		goto err;
-> +	}
-> +
-> +	imx6_pcie->lvds1_gate = clk_get(&pdev->dev, "lvds1_gate");
-> +	if (IS_ERR(imx6_pcie->lvds1_gate)) {
-> +		dev_err(&pdev->dev,
-> +			"lvds1_gate clock select missing or invalid\n");
-> +		ret = PTR_ERR(imx6_pcie->lvds1_gate);
-> +		goto err;
-> +	}
-
-devm_clk_get(). Otherwise you need to release the clock un
-unregister/probe failure.
-
-> +static int __exit imx6_pcie_remove(struct platform_device *pdev)
-> +{
-> +	struct imx6_pcie *imx6_pcie = platform_get_drvdata(pdev);
-> +
-> +	clk_disable_unprepare(imx6_pcie->pcie_axi);
-> +	clk_disable_unprepare(imx6_pcie->lvds1_gate);
-> +	clk_disable_unprepare(imx6_pcie->pcie_ref_125m);
-
-Still no unregister for the pcie controller?
-
-> +
-> +	return 0;
-> +}
-> +
-
-Sascha
-
--- 
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
