@@ -1,63 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.bemta5.messagelabs.com ([195.245.231.146]:40444 "EHLO
-	mail1.bemta5.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752789Ab3IBIAt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Sep 2013 04:00:49 -0400
-Date: Mon, 2 Sep 2013 10:00:57 +0200
-From: Johannes Thumshirn <johannes.thumshirn@men.de>
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Johannes Thumshirn <johannes.thumshirn@men.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PCI reset problem
-Message-ID: <20130902080057.GA14515@jtlinux>
-References: <20130828133337.GA8544@jtlinux>
- <CAErSpo5sa2cJXOUhfe5VDzxwabf0Um42ZfBwOMhF1TbwCW9G=w@mail.gmail.com>
- <20130829082941.GA11203@jtlinux>
- <CAErSpo56RszdMQDOY8xCmz=1QP-osUGA71V56t9X9zY4rNAYew@mail.gmail.com>
- <20130829150723.GA32730@jtlinux>
- <CAErSpo5nTy7bkU2_ZMR_sROz-FJF28a==eUdE3e-wZoZfzQZBw@mail.gmail.com>
- <20130830080138.GA24908@jtlinux>
- <CAE9FiQWsyY2xnbOcd9L9=G0z50fZo-7OfaZovKVO3XzVuZODjA@mail.gmail.com>
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:48980 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751768Ab3IFSRY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 14:17:24 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hm2so1255636wib.10
+        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 11:17:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAE9FiQWsyY2xnbOcd9L9=G0z50fZo-7OfaZovKVO3XzVuZODjA@mail.gmail.com>
+In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+Date: Fri, 6 Sep 2013 11:17:22 -0700
+Message-ID: <CAPoiz9wqyb2xfLZ8yH9TLOivQqoOr-KG=HPM+qNK4+aZsD68vg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/6] scsi/bfa: use pcie_set/get_readrq to simplify code
+From: Jon Mason <jdmason@kudzu.us>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Anil Gurumurthy <agurumur@brocade.com>,
+	Vijaya Mohan Guvva <vmohan@brocade.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 30, 2013 at 12:46:27PM -0700, Yinghai Lu wrote:
-> On Fri, Aug 30, 2013 at 1:01 AM, Johannes Thumshirn
-> <johannes.thumshirn@men.de> wrote:
-> >
-> > I'll test on mainline and then check pci-busn-alloc, but I have this strange
-> > feeling that it could be an interaction with Freescale's DPAA Ethernet, which is
-> > not yet merged into mainline.
+On Thu, Sep 5, 2013 at 12:55 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> v1->v2: use pcie_get/set_readrq to simplify code
+> a lot suggestd by Bjorn.
 >
-> please try for-pci-busn-alloc at
->      git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> for-pci-busn-alloc-3.11
+> Use pcie_get_readrq()/pcie_set_readrq() to simplify
+> code.
+
+Very similar to a patch I sent out in 2011
+http://www.spinics.net/lists/linux-scsi/msg52990.html
+
+Hopefully this one gets pulled in.
+
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Anil Gurumurthy <agurumur@brocade.com>
+> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/scsi/bfa/bfad.c |   48 +++++-----------------------------------------
+>  1 files changed, 6 insertions(+), 42 deletions(-)
 >
-> it is based on linus's tree + pci/next
+> diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+> index f8ca7be..0a458db 100644
+> --- a/drivers/scsi/bfa/bfad.c
+> +++ b/drivers/scsi/bfa/bfad.c
+> @@ -766,50 +766,14 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+>         bfad->pcidev = pdev;
 >
-> Yinghai
-
-Hi Yinghai,
-
-I've tested the board with your for-pci-busn-alloc-3.11 branch. Initial
-enumeration is just as it was before. With the difference that a "sysfs-rescan"
-now results in:
-
-root@generic-powerpc:~# lspci
-00:00.0 PCI bridge: Freescale Semiconductor Inc P4080 (rev 20)
-root@generic-powerpc:~# echo 1 > /sys/bus/pci/rescan
-pci_bus 0000:00: scanning bus
-pcieport 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 0
-pcieport 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
-pcieport 0000:00:00.0: rescan scaned bridge as broken one again ?
-pci_bus 0000:00: bus scan returning with max=00
-root@generic-powerpc:~# lspci
-00:00.0 PCI bridge: Freescale Semiconductor Inc P4080 (rev 20)
-
-The good news for me is, I can work on your tree to try to resolve the issue.
-
-Johannes
+>         /* Adjust PCIe Maximum Read Request Size */
+> -       if (pcie_max_read_reqsz > 0) {
+> -               int pcie_cap_reg;
+> -               u16 pcie_dev_ctl;
+> -               u16 mask = 0xffff;
+> -
+> -               switch (pcie_max_read_reqsz) {
+> -               case 128:
+> -                       mask = 0x0;
+> -                       break;
+> -               case 256:
+> -                       mask = 0x1000;
+> -                       break;
+> -               case 512:
+> -                       mask = 0x2000;
+> -                       break;
+> -               case 1024:
+> -                       mask = 0x3000;
+> -                       break;
+> -               case 2048:
+> -                       mask = 0x4000;
+> -                       break;
+> -               case 4096:
+> -                       mask = 0x5000;
+> -                       break;
+> -               default:
+> -                       break;
+> -               }
+> -
+> -               pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+> -               if (mask != 0xffff && pcie_cap_reg) {
+> -                       pcie_cap_reg += 0x08;
+> -                       pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
+> -                       if ((pcie_dev_ctl & 0x7000) != mask) {
+> -                               printk(KERN_WARNING "BFA[%s]: "
+> +       if (pcie_max_read_reqsz > 0 && pci_is_pcie(pdev)) {
+> +               int max_rq = pcie_get_readrq(pdev);
+> +               if (max_rq > 128 && max_rq < 4096 && is_power_of_2(max_rq))
+> +                       printk(KERN_WARNING "BFA[%s]: "
+>                                 "pcie_max_read_request_size is %d, "
+> -                               "reset to %d\n", bfad->pci_name,
+> -                               (1 << ((pcie_dev_ctl & 0x7000) >> 12)) << 7,
+> +                               "reset to %d\n", bfad->pci_name, max_rq,
+>                                 pcie_max_read_reqsz);
+> -
+> -                               pcie_dev_ctl &= ~0x7000;
+> -                               pci_write_config_word(pdev, pcie_cap_reg,
+> -                                               pcie_dev_ctl | mask);
+> -                       }
+> -               }
+> +               pcie_set_readrq(pdev, pcie_max_read_reqsz);
+>         }
+>
+>         pci_save_state(pdev);
+> --
+> 1.7.1
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
