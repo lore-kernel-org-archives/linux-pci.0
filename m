@@ -1,160 +1,281 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:62206 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751072Ab3IFWsL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 18:48:11 -0400
-Received: by mail-ie0-f182.google.com with SMTP id aq17so8400766iec.27
-        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 15:48:11 -0700 (PDT)
+Received: from hydra.sisk.pl ([212.160.235.94]:36575 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751272Ab3IFMaB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 Sep 2013 08:30:01 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: Excess dmesg output from ACPIPHP on boot (was: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots)
+Date: Fri, 06 Sep 2013 14:40:56 +0200
+Message-ID: <10292442.UZEN28MnjJ@vostro.rjw.lan>
+In-Reply-To: <CAErSpo4WAh8A7nAeDhrLUOAKrLNyEoKfyxT7VN6cyH3vuSA+zg@mail.gmail.com>
+References: <26431283.HJCKsss0rt@vostro.rjw.lan> <1599165.8kjc3DtEzc@vostro.rjw.lan> <CAErSpo4WAh8A7nAeDhrLUOAKrLNyEoKfyxT7VN6cyH3vuSA+zg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz>
-References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
- <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
- <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com> <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 6 Sep 2013 16:47:49 -0600
-Message-ID: <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Adam Radford <aradford@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 6, 2013 at 3:51 AM, Jiri Kosina <jkosina@suse.cz> wrote:
-> On Wed, 28 Aug 2013, Bjorn Helgaas wrote:
->
->> [+cc another email addr for Adam from git logs]
->
-> Thanks. Adam, would you happen to have any possible explanation /
-> background?
->
->> >> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
->> >> > pci device") makes MSIs be forcibly disabled at boot time.
->> >> >
->> >> > It turns out that this breaks 3ware controller -- if MSIs are disabled
->> >> > during PCI discovery of this controller, the device doesn't work properly
->> >> > (it doesn't respond to any commands that are being sent to it after
->> >> > initialization).
+On Friday, September 06, 2013 06:19:11 AM Bjorn Helgaas wrote:
+> On Thu, Sep 5, 2013 at 5:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Thursday, September 05, 2013 05:08:03 PM Alex Williamson wrote:
+> >> On Fri, 2013-09-06 at 00:40 +0200, Rafael J. Wysocki wrote:
+> >> > On Thursday, September 05, 2013 04:17:25 PM Alex Williamson wrote:
+> >> > > On Thu, 2013-09-05 at 23:39 +0200, Rafael J. Wysocki wrote:
+> >> > > > On Thursday, September 05, 2013 09:44:26 PM Rafael J. Wysocki wrote:
+> >> > > > > On Thursday, September 05, 2013 08:21:41 AM Alex Williamson wrote:
+> >> > > >
+> >> > > > [...]
+> >> > > >
+> >> > > > > > >
+> >> > > > > > > [   18.288122] pci 0000:00:00.0: no hotplug settings from platform
+> >> > > > > > > [   18.288127] pcieport 0000:00:01.0: no hotplug settings from platform
+> >> > > > > > > [   18.288142] pci 0000:01:00.0: no hotplug settings from platform
+> >> > > > > > > [   18.288157] pci 0000:01:00.1: no hotplug settings from platform
+> >> > > > > > > [   18.288162] pcieport 0000:00:03.0: no hotplug settings from platform
+> >> > > > > > > [   18.288176] pci 0000:02:00.0: no hotplug settings from platform
+> >> > > > > > > [   18.288190] pci 0000:02:00.1: no hotplug settings from platform
+> >> > > > > > > [   18.288195] pcieport 0000:00:07.0: no hotplug settings from platform
+> >> > > > > > > [   18.288209] pci 0000:03:00.0: no hotplug settings from platform
+> >> > > > > > > [   18.288224] pci 0000:03:00.1: no hotplug settings from platform
+> >> > > > > > > [   18.288228] pci 0000:00:14.0: no hotplug settings from platform
+> >> > > > > > > [   18.288233] pci 0000:00:14.1: no hotplug settings from platform
+> >> > > > > > > [   18.288237] pci 0000:00:14.2: no hotplug settings from platform
+> >> > > > > > > [   18.288242] pci 0000:00:16.0: no hotplug settings from platform
+> >> > > > > > > [   18.288247] pci 0000:00:16.1: no hotplug settings from platform
+> >> > > > > > > [   18.288251] pci 0000:00:16.2: no hotplug settings from platform
+> >> > > > > > > [   18.288256] pci 0000:00:16.3: no hotplug settings from platform
+> >> > > > > > > [   18.288260] pci 0000:00:16.4: no hotplug settings from platform
+> >> > > > > > > [   18.288265] pci 0000:00:16.5: no hotplug settings from platform
+> >> > > > > > > [   18.288269] pci 0000:00:16.6: no hotplug settings from platform
+> >> > > > > > > [   18.288274] pci 0000:00:16.7: no hotplug settings from platform
+> >> > > > > > > [   18.288278] pci 0000:00:1a.0: no hotplug settings from platform
+> >> > > > > > > [   18.288279] pci 0000:00:1a.0: using default PCI settings
+> >> > > > > > > [   18.288292] pci 0000:00:1a.1: no hotplug settings from platform
+> >> > > > > > > [   18.288293] pci 0000:00:1a.1: using default PCI settings
+> >> > > > > > > [   18.288307] ehci-pci 0000:00:1a.7: no hotplug settings from platform
+> >> > > > > > > [   18.288308] ehci-pci 0000:00:1a.7: using default PCI settings
+> >> > > > > > > [   18.288322] pci 0000:00:1b.0: no hotplug settings from platform
+> >> > > > > > > [   18.288327] pcieport 0000:00:1c.0: no hotplug settings from platform
+> >> > > > > > > [   18.288332] pcieport 0000:00:1c.4: no hotplug settings from platform
+> >> > > > > > > [   18.288344] pci 0000:05:00.0: no hotplug settings from platform
+> >> > > > > > > [   18.288349] pci 0000:00:1d.0: no hotplug settings from platform
+> >> > > > > > > [   18.288350] pci 0000:00:1d.0: using default PCI settings
+> >> > > > > > > [   18.288360] pci 0000:00:1d.1: no hotplug settings from platform
+> >> > > > > > > [   18.288361] pci 0000:00:1d.1: using default PCI settings
+> >> > > > > > > [   18.288374] pci 0000:00:1d.2: no hotplug settings from platform
+> >> > > > > > > [   18.288374] pci 0000:00:1d.2: using default PCI settings
+> >> > > > > > > [   18.288387] pci 0000:00:1d.3: no hotplug settings from platform
+> >> > > > > > > [   18.288387] pci 0000:00:1d.3: using default PCI settings
+> >> > > > > > >
+> >> > > > > > > The boot is noticeably slower.  What's going to happen on systems that
+> >> > > > > > > actually have a significant I/O topology vs my little workstation?
+> >> > > > >
+> >> > > > > That depends on how many bus check/device check events they generate on boot.
+> >> > > > >
+> >> > > > > My test machines don't generate them during boot at all (even the one with
+> >> > > > > a Thunderbolt connector), so I don't see the messages in question during boot
+> >> > > > > on any of them.  Mika doesn't see them either I suppose, or he would have told
+> >> > > > > me about that before.
+> >> > > > >
+> >> > > > > And let's just make it clear that it is not usual or even OK to generate bus
+> >> > > > > checks or device checks during boot like this.  And since the changes in
+> >> > > > > question have been in linux-next since right after the 3.11 merge window, I
+> >> > > > > think that someone would have complained already had that been a common issue.
+> >> > > > >
+> >> > > > > Of course, we need to deal with that somehow nevertheless. :-)
+> >> > > > >
+> >> > > > > > Just to give you an idea:
+> >> > > > > >
+> >> > > > > > CONFIG_HOTPLUG_PCI_ACPI=y
+> >> > > > > >
+> >> > > > > > $ dmesg | wc
+> >> > > > > >   5697  49935 384368
+> >> > > > > >
+> >> > > > > > $ dmesg | tail --lines=1
+> >> > > > > > [   53.137123] Ebtables v2.0 registered
+> >> > > > > >
+> >> > > > > > -- vs --
+> >> > > > > >
+> >> > > > > > # CONFIG_HOTPLUG_PCI_ACPI is not set
+> >> > > > > >
+> >> > > > > > $ dmesg | wc
+> >> > > > > >  1053  9176 71652
+> >> > > > > >
+> >> > > > > > $dmesg | tail --lines=1
+> >> > > > > > [   28.917220] Ebtables v2.0 registered
+> >> > > > > >
+> >> > > > > > So it spews out 5x more output with acpiphp enabled and takes and extra
+> >> > > > > > 24s to boot (nearly 2x).  Not good.
+> >> > > > >
+> >> > > > > The "no hotplug settings from platform" message is from pci_configure_slot().
+> >> > > > > I think the messages you're seeing are from the call to it in
+> >> > > > > acpiphp_set_hpp_values() which is called by enable_slot().
+> >> > > > >
+> >> > > > > There, I think, we can simply check the return value of pci_scan_slot() and
+> >> > > > > if that is 0 (no new devices), we can just skip everything under the call to
+> >> > > > > __pci_bus_assign_resources().
+> >> > > > >
+> >> > > > > However, we can't skip the scanning of bridges, if any, because there may be
+> >> > > > > new devices below them and I guess that's what takes so much time on your
+> >> > > > > machine.
+> >> > > >
+> >> > > > OK, one piece is missing.  We may need to evaluate _OSC after handling each
+> >> > > > event to let the platform know the status.
+> >> > > >
+> >> > > > Can you please check if the appended patch makes any difference (with the
+> >> > > > previous fix applied, of course)?
+> >> > > >
+> >> > > > If fact, it is two patches combined.  One of them optimizes enable_slot()
+> >> > > > slightly and the other adds the missing _OSC evaluation.
+> >> > >
+> >> > > Better, still double the output:
+> >> > >
+> >> > > $ dmesg | wc
+> >> > >    2169   19047  152710
+> >> >
+> >> > I see.
+> >> >
+> >> > What about the timing?
+> >>
+> >> ~40s below vs ~29s for acpiphp config'd out above.
+> >
+> > Well, that's better than before.
+> >
+> > I'll prepare "official" patches with the last changes then too.
+> >
+> >> > > $ dmesg | tail --lines=1
+> >> > > [   39.980918] Ebtables v2.0 registered
+> >> > >
+> >> > > Here's another interesting stat:
+> >> > >
+> >> > > $ dmesg | colrm 1 15 | sort | uniq -c | sort -nr | head --lines=25
+> >> > >      73 pci 0000:00:1f.0: BAR 13: [io  0x1000-0x107f] has bogus alignment
+> >> > >      73 pci 0000:00:1e.0: PCI bridge to [bus 06]
+> >> > >      64 pci 0000:00:1e.0:   bridge window [mem 0x81100000-0x812fffff 64bit pref]
+> >> > >      64 pci 0000:00:1e.0:   bridge window [mem 0x80f00000-0x810fffff]
+> >> > >      64 pci 0000:00:1e.0:   bridge window [io  0x7000-0x7fff]
+> >> > >      38 pci 0000:00:1c.4: PCI bridge to [bus 05]
+> >> > >      38 pci 0000:00:1c.4:   bridge window [mem 0xf4f00000-0xf4ffffff]
+> >> > >      38 pci 0000:00:1c.0: PCI bridge to [bus 04]
+> >> > >      38 pci 0000:00:07.0: PCI bridge to [bus 03]
+> >> > >      38 pci 0000:00:07.0:   bridge window [mem 0xf2000000-0xf40fffff]
+> >> > >      38 pci 0000:00:07.0:   bridge window [mem 0xe0000000-0xf1ffffff 64bit pref]
+> >> > >      38 pci 0000:00:07.0:   bridge window [io  0x4000-0x4fff]
+> >> > >      38 pci 0000:00:03.0: PCI bridge to [bus 02]
+> >> > >      38 pci 0000:00:03.0:   bridge window [mem 0xf4e00000-0xf4efffff]
+> >> > >      38 pci 0000:00:03.0:   bridge window [mem 0xd0000000-0xdfffffff 64bit pref]
+> >> > >      38 pci 0000:00:03.0:   bridge window [io  0x3000-0x3fff]
+> >> > >      38 pci 0000:00:01.0: PCI bridge to [bus 01]
+> >> > >      38 pci 0000:00:01.0:   bridge window [mem 0xf4100000-0xf4bfffff]
+> >> > >      38 pci 0000:00:01.0:   bridge window [io  0x2000-0x2fff]
+> >> > >      37 pci 0000:00:1c.4:   bridge window [mem 0x80c00000-0x80dfffff 64bit pref]
+> >> > >      37 pci 0000:00:1c.4:   bridge window [io  0x6000-0x6fff]
+> >> > >      37 pci 0000:00:1c.0:   bridge window [mem 0x80a00000-0x80bfffff 64bit pref]
+> >> > >      37 pci 0000:00:1c.0:   bridge window [mem 0x80800000-0x809fffff]
+> >> > >      37 pci 0000:00:1c.0:   bridge window [io  0x5000-0x5fff]
+> >> > >      36 pci 0000:00:01.0:   bridge window [mem 0x80000000-0x807fffff 64bit pref]
+> >> > >
+> >> > > This is nearly the entire difference, just 25 lines repeated over and
+> >> > > over.
+> >
+> > Can you check how many times the lines above are repeated?
+> >
+> >> >
+> >> > Well, this is the bridge sizing I talked about previously.  We still get
+> >> > apparently spurious bus check/device check events and they trigger bridge
+> >> > scans.
+> >> >
+> >> > I'm not sure what to do about that and I wonder whether or not this is
+> >> > reproducible on any other machines you can test.
+> >>
+> >> I can try it on a couple other systems, but probably not until tomorrow.
+> >
+> > Tomorrow (or even later) works just fine for me. :-)
+> >
+> >> > Can you please change dbg() to pr_info() under ACPI_NOTIFY_BUS_CHECK and
+> >> > ACPI_NOTIFY_DEVICE_CHECK in hotplug_event() (acpiphp_glue.c), grep the boot
+> >> > dmesg log for "check notify" and send the result?  I'm wondering what's
+> >> > going on there.
+> >>
+> >> $ dmesg | grep "check notify"
+> >> [    1.633228] hotplug_event: Device check notify on \_SB_.PCI0.PEX2
+> >> [    2.472004] hotplug_event: Device check notify on \_SB_.PCI0.PEX3
+> >> [    2.477288] hotplug_event: Device check notify on \_SB_.PCI0.PEX4
+> >> [    2.482571] hotplug_event: Device check notify on \_SB_.PCI0.PEX5
+> >> [    2.482579] hotplug_event: Device check notify on \_SB_.PCI0.PEX6
+> >> [    8.204953] hotplug_event: Device check notify on \_SB_.PCI0.PEX2
+> >> [    8.209632] hotplug_event: Device check notify on \_SB_.PCI0.PEX3
+> >> [    8.214272] hotplug_event: Device check notify on \_SB_.PCI0.PEX4
+> >> [    8.218894] hotplug_event: Device check notify on \_SB_.PCI0.PEX5
+> >> [    8.218901] hotplug_event: Device check notify on \_SB_.PCI0.PEX6
+> >
+> > So I guess the PEXn things are PCIe ports and we get two notifications
+> > for each of them, so everything below them gets rescanned.
+> >
+> > I've just talked to Bjorn about that and we don't seem to have a good idea
+> > how to handle this.  The notifies shouldn't be there, but we kind of have
+> > to handle them.
+> 
+> What I said was "We aren't going to be able to get rid of the
+> notifications, but we can probably figure out how to clean up some of
+> the output."  I don't think there's anything *wrong* with the
+> notifications themselves, and as far as I know, there's nothing in the
+> spec that limits how many notifications the platform can send.
 
-Is there a bug report for this issue?  It's nice to have a pointer to,
-e.g., a bugzilla.kernel.org bug report with info such as dmesg logs,
-lspci output, etc., for future reference.  Maybe somebody will figure
-out a more generic change that could make this quirk unnecessary, and
-details will help in figuring that out.
+One would think that it wouldn't send notifications if nothing changed,
+however.
 
-I assume the actual PCI discovery done in the PCI core works fine;
-it's just that the driver doesn't work if MSIs are disabled on the
-device.  If that's the case, can this be fixed by some driver change?
-Maybe the driver needs to enable MSI before it sends commands to the
-device?
+> > I guess we could suppress the output from repeated bridge scans.  Alternatively,
+> > we could just blacklist this particular system somehow if the problem is
+> > specific to it.
+> 
+> I'm opposed to blacklisting in principle because this doesn't sound
+> like a platform defect.
 
-Any description of what this failure looks like to a user?  How can a
-user or a distro connect a symptom (driver timeout, console message,
-or whatever) to this patch?
+I'm not sure about that.  Sending notifications without a reason is not a good
+practice at least, even if the spec does't forbid it directly.
 
->> >> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
->> >> > makes the device work properly again.
->> >> >
->> >> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
->> >> >
->> >> > ---
->> >> >
->> >> > I am adding Adam Radford as a recepient as well, to see whether he is able
->> >> > to provide some more explanation why this device would expose this
->> >> > behavior.
->> >
->> > OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't
->> > expect any feedback from him.
->> >
->> > Bjorn, Jesse, any word on this please?
->>
->> It's on my list to look at.  It's too late to put it in for v3.11, and
->> it's doubtful that it will even make the v3.12 merge window (though
->> possibly it could go in post-merge window).  d5dea7d95 is several
->> years old, so hopefully this issue isn't super-urgent.  Let me know if
->> otherwise.
+There are many things for which there are no "don't do that" statements in the
+spec which nevertheless may be regarded as incorrect behavior.  Therefore I'm
+opposed to the "the spec doesn't forbid that openly, so it has to be OK to do it"
+way of thinking.  Sorry.
+
+> And I think we pretty much have to
+> re-enumerate for each Device Check, because that's what the spec tells
+> us to do.
+
+Yes, it is.
+
+> My goal is for PCI to print stuff only for significant events, when we
+> discover something new, or when we change something (BAR, bridge
+> window, etc.)  A hot-plug event, e.g., a Device Check, is arguably
+> significant all by itself, but that's in ACPI, and it sounds like we
+> only have a dbg() there now.  The repeated PCI bridge info seems like
+> it's useless.  I've looked at cleaning up some of that in the past,
+> but it wasn't trivial and it wasn't urgent enough at the time.  But it
+> sure sounds urgent now.
 >
-> I agree that this should be applicable to 3.12-rcX as well, as it's very
-> device-specific.
->
-> Thanks.
->
->>
->> Bjorn
->>
->> >> >  drivers/pci/msi.c    |    3 +++
->> >> >  drivers/pci/quirks.c |   10 ++++++++++
->> >> >  include/linux/pci.h  |    1 +
->> >> >  3 files changed, 14 insertions(+), 0 deletions(-)
->> >> >
->> >> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> >> > index aca7578..4f36b8b 100644
->> >> > --- a/drivers/pci/msi.c
->> >> > +++ b/drivers/pci/msi.c
->> >> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
->> >> >  {
->> >> >     INIT_LIST_HEAD(&dev->msi_list);
->> >> >
->> >> > +   if (dev->broken_msi_disable)
->> >> > +           return;
->> >> > +
->> >> >     /* Disable the msi hardware to avoid screaming interrupts
->> >> >      * during boot.  This is the power on reset default so
->> >> >      * usually this should be a noop.
->> >> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> >> > index e85d230..4ba3400 100644
->> >> > --- a/drivers/pci/quirks.c
->> >> > +++ b/drivers/pci/quirks.c
->> >> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
->> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
->> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
->> >> >
->> >> > +/*
->> >> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
->> >> > + * disabled on it during PCI device discovery
->> >> > + */
->> >> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
->> >> > +{
->> >> > +   dev->broken_msi_disable = 1;
->> >> > +}
->> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
->> >> > +
->> >> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
->> >> >                              void (*fn)(struct pci_dev *dev))
->> >> >  {
->> >> > diff --git a/include/linux/pci.h b/include/linux/pci.h
->> >> > index 0fd1f15..c327d74 100644
->> >> > --- a/include/linux/pci.h
->> >> > +++ b/include/linux/pci.h
->> >> > @@ -341,6 +341,7 @@ struct pci_dev {
->> >> >  #ifdef CONFIG_PCI_MSI
->> >> >     struct list_head msi_list;
->> >> >     struct kset *msi_kset;
->> >> > +   unsigned int    broken_msi_disable:1;
->> >> >  #endif
->> >> >     struct pci_vpd *vpd;
->> >> >  #ifdef CONFIG_PCI_ATS
->> >> >
->> >> > --
->> >> > Jiri Kosina
->> >> > SUSE Labs
->> >> >
->> >>
->> >> --
->> >> Jiri Kosina
->> >> SUSE Labs
->> >>
->> >
->> > --
->> > Jiri Kosina
->> > SUSE Labs
->>
->
-> --
-> Jiri Kosina
-> SUSE Labs
+> Alex, would you mind collecting the full dmesg or console log (with
+> "debug ignore_loglevel") and "lspci -vv" output and attaching them to
+> a bugzilla?  Keep the hotplug_event() pr_info() change so we have more
+> clues about what triggers things.  This seems like an interesting
+> situation, and there might be other things we can learn from it.  It
+> looks like the "hotplug settings" output is probably more than is
+> necessary also.
+
+That can be changed to dev_dbg() I think and no one will really miss it. :-)
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
