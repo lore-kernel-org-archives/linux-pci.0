@@ -1,38 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35913 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750977Ab3IIPgN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Sep 2013 11:36:13 -0400
-Date: Mon, 9 Sep 2013 17:38:08 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tejun Heo <tj@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>
-Subject: scrap this one
-Message-ID: <20130909153807.GA25274@dhcp-26-207.brq.redhat.com>
-References: <20130905150442.GA24148@htj.dyndns.org>
- <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
- <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130909152548.GF24962@dhcp-26-207.brq.redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130909152548.GF24962@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <16818914.Hl8YjzUdJi@vostro.rjw.lan>
+References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop> <16818914.Hl8YjzUdJi@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 7 Sep 2013 07:59:39 -0600
+Message-ID: <CAErSpo4YRS3-EC5NcFVyi-yBbEX2Fmr0G=Vt2pk_SO7+5Ad91A@mail.gmail.com>
+Subject: Re: [PATCH 00/14] _OSC simplification
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Sep 6, 2013 at 6:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Friday, September 06, 2013 11:13:24 AM Bjorn Helgaas wrote:
+>> This is a long series of mostly minor changes with the goal of
+>> simplifying the _OSC-related code and making the negotiation between
+>> Linux and the platform more understandable.
+>>
+>> My intent is that this doesn't change any behavior except for the text
+>> in dmesg.
+>>
+>> However, this restructuring does raise some questions in my mind, such
+>> as the fact that we do not call pcie_no_aspm() to disable ASPM in two
+>> cases where it seems like we might want to:
+>>
+>>   1) When pcie_ports_disabled, e.g., when booting with
+>>      "pcie_ports=compat".
+>>
+>>   2) When Linux doesn't support all the required services, e.g., if
+>>      compiled with ASPM support but not MSI support.
+>
+> We tried that (i.e. 2)), but then it caused energy usage to increase on some
+> systems with power-hungry graphics adapters and Phoronix made some fuss about
+> that. :-)
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+The _OSC section of the spec is pretty obtuse, but my reading of Table
+4-6 (PCI Firmware r3.0) is that the OS is prohibited from writing to
+the PCIe Capability (for ASPM, VC, AER, or other control) unless it
+has been granted "PCI Express Capability Structure control".  That's
+why I'm dubious about the fact that we use ASPM in those two cases
+where we don't even *ask* for that control.
+
+For the Phoronix case, I assume they made the argument that Windows
+does use ASPM without having PCIe Capability control?  Do you have any
+pointers to that discussion?
+
+I don't propose changing this now, but it does raise my eyebrows.
+Maybe some sort of dmesg note would be appropriate.
+
+Thanks for looking at all this stuff; I know from experience that it's
+pretty hard to wade through :)
+
+Bjorn
