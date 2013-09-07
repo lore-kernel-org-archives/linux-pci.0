@@ -1,86 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f50.google.com ([209.85.213.50]:46247 "EHLO
-	mail-yh0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753920Ab3IXXT5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Sep 2013 19:19:57 -0400
-Received: by mail-yh0-f50.google.com with SMTP id a41so2290127yho.23
-        for <linux-pci@vger.kernel.org>; Tue, 24 Sep 2013 16:19:56 -0700 (PDT)
-Date: Tue, 24 Sep 2013 17:19:53 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, arjan@linux.intel.com
-Subject: Re: [PATCH] Intel pci device quirk remove D3 delay
-Message-ID: <20130924231953.GC9302@google.com>
-References: <20130910231043.GA31857@linux.intel.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:38168 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751889Ab3IGVyR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 7 Sep 2013 17:54:17 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH 00/14] _OSC simplification
+Date: Sun, 08 Sep 2013 00:05:14 +0200
+Message-ID: <1578973.mLOcbOuP8y@vostro.rjw.lan>
+In-Reply-To: <CAErSpo4YRS3-EC5NcFVyi-yBbEX2Fmr0G=Vt2pk_SO7+5Ad91A@mail.gmail.com>
+References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop> <16818914.Hl8YjzUdJi@vostro.rjw.lan> <CAErSpo4YRS3-EC5NcFVyi-yBbEX2Fmr0G=Vt2pk_SO7+5Ad91A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130910231043.GA31857@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 10, 2013 at 04:10:43PM -0700, Todd E Brandt wrote:
-> The latest Ivy Bridge Intel chipsets have a hardware optimization which
-
-You said "Ivy Bridge" above but use "Haswell" below.  Let me know if
-anything needs to be corrected here.
-
-> allows on-chip PCI devices to ignore the 10ms delay before entering
-> or exitting D3 suspend.
+On Saturday, September 07, 2013 07:59:39 AM Bjorn Helgaas wrote:
+> On Fri, Sep 6, 2013 at 6:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Friday, September 06, 2013 11:13:24 AM Bjorn Helgaas wrote:
+> >> This is a long series of mostly minor changes with the goal of
+> >> simplifying the _OSC-related code and making the negotiation between
+> >> Linux and the platform more understandable.
+> >>
+> >> My intent is that this doesn't change any behavior except for the text
+> >> in dmesg.
+> >>
+> >> However, this restructuring does raise some questions in my mind, such
+> >> as the fact that we do not call pcie_no_aspm() to disable ASPM in two
+> >> cases where it seems like we might want to:
+> >>
+> >>   1) When pcie_ports_disabled, e.g., when booting with
+> >>      "pcie_ports=compat".
+> >>
+> >>   2) When Linux doesn't support all the required services, e.g., if
+> >>      compiled with ASPM support but not MSI support.
+> >
+> > We tried that (i.e. 2)), but then it caused energy usage to increase on some
+> > systems with power-hungry graphics adapters and Phoronix made some fuss about
+> > that. :-)
 > 
-> This patch implements the optimization as a pci quirk, since we want
-> tight control over which devices use it. This way we can test each device
-> individually to be sure there are no issues before we enable the quirk.
-> The first set of devices are from the Haswell platform, which includes
-> every PCI device that is on the northbridge and southbridge.
+> The _OSC section of the spec is pretty obtuse, but my reading of Table
+> 4-6 (PCI Firmware r3.0) is that the OS is prohibited from writing to
+> the PCIe Capability (for ASPM, VC, AER, or other control) unless it
+> has been granted "PCI Express Capability Structure control".  That's
+> why I'm dubious about the fact that we use ASPM in those two cases
+> where we don't even *ask* for that control.
 > 
-> After testing this patch reduces the haswell suspend time from 93 ms to
-> 47 ms and resume time from 160 ms to 64 ms. 
-> 
-> Signed-off-by: Todd Brandt <todd.e.brandt@linux.intel.com>
-> 
->  drivers/pci/quirks.c | 23 +++++++++++++++++++++++
->  1 file changed, 23 insertions(+)
+> For the Phoronix case, I assume they made the argument that Windows
+> does use ASPM without having PCIe Capability control?
 
-I added Rafael's ack and applied this for v3.13 (but I can still make
-corrections if required).
+No, this was regarded as a kernel regression that needed to be addressed.
 
-Let me know if you want this in v3.12 instead.
+> Do you have any pointers to that discussion?
 
-Bjorn
+This is the Phoronix link:
 
+http://www.phoronix.com/scan.php?page=article&item=linux_aspm_solution&num=1
+
+and I think you can get to some more info from there.
+
+> I don't propose changing this now, but it does raise my eyebrows.
+> Maybe some sort of dmesg note would be appropriate.
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index e85d230..98ea960 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2955,6 +2955,29 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
->  
->  /*
-> + * PCI devices which are on Intel chips can skip the 10ms delay
-> + * before entering D3 mode.
-> + */
-> +static void quirk_remove_d3_delay(struct pci_dev *dev)
-> +{
-> +	dev->d3_delay = 0;
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c00, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0412, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c0c, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c31, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3a, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3d, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c2d, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c20, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c18, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c1c, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c26, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c4e, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c02, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c22, quirk_remove_d3_delay);
-> +
-> +/*
->   * Some devices may pass our check in pci_intx_mask_supported if
->   * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
->   * support this feature.
-> 
+> Thanks for looking at all this stuff; I know from experience that it's
+> pretty hard to wade through :)
+
+No problem. :-)
+
+Thanks,
+Rafael
+
