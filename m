@@ -1,49 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:52438 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59924 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753081Ab3IIO4H convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 10:56:07 -0400
-From: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	infinipath <infinipath@intel.com>,
-	Roland Dreier <roland@kernel.org>,
-	Roland Dreier <roland@purestorage.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mark Einon <mark.einon@gmail.com>,
-	"Hefty, Sean" <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	id S1752831Ab3IIPZr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Sep 2013 11:25:47 -0400
+Date: Mon, 9 Sep 2013 17:27:39 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tejun Heo <tj@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: RE: [PATCH 4/6] IB/qib: Use pcie_set_mps() and pcie_get_mps() to
- simplify code
-Date: Mon, 9 Sep 2013 14:55:46 +0000
-Message-ID: <32E1700B9017364D9B60AED9960492BC2119F081@FMSMSX107.amr.corp.intel.com>
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
- <1378732388-4508-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1378732388-4508-5-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>
+Subject: [PATCH 6/9] PCI/MSI/s390: Remove superfluous check of MSI type
+Message-ID: <20130909152738.GH24962@dhcp-26-207.brq.redhat.com>
+References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+ <20130905150442.GA24148@htj.dyndns.org>
+ <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+ <20130905154436.GC24148@htj.dyndns.org>
+ <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: [PATCH 4/6] IB/qib: Use pcie_set_mps() and pcie_get_mps() to simplify
-> code
-> 
-> Refactor qib_tune_pcie_caps() function, use pcie_set_mps() and
-> pcie_get_mps() to simply code. Because pci core caches the "PCI-E Max
-> Payload Size Supported" in pci_dev->pcie_mpss, so use that instead of
-> pcie_capability_read_word(). Remove the unused val2fld() and fld2val().
-> 
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ arch/s390/pci/pci.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-I tested this patch as is and saw no issues.
-
-The only thing I would suggest is that the new use of pcie_get_readrq/pcie_set_readrq() be reflected in the comments with an appropriate adjustment in the subject.
-
-Mike
-
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index c79c6e4..61a3c2c 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -425,8 +425,6 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ 	int rc;
  
+ 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
+-	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
+-		return -EINVAL;
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
+ 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
+-- 
+1.7.7.6
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
