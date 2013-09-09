@@ -1,152 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Sep 2013 14:39:10 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Chris Metcalf <cmetcalf@tilera.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	Mike Marciniszyn <infinipath@intel.com>,
-	Roland Dreier <roland@kernel.org>,
-	Roland Dreier <roland@purestorage.com>,
-	linux-kernel@vger.kernel.org, Mark Einon <mark.einon@gmail.com>,
-	Sean Hefty <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH 4/6] IB/qib: Use pcie_set_mps() and pcie_get_mps() to
- simplify code
-Message-ID: <20130924203910.GB9302@google.com>
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
- <1378732388-4508-5-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:40477 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751285Ab3IICOe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Sep 2013 22:14:34 -0400
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 9 Sep 2013 07:34:53 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id DE934E0054
+	for <linux-pci@vger.kernel.org>; Mon,  9 Sep 2013 07:45:16 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r892GM4K38928392
+	for <linux-pci@vger.kernel.org>; Mon, 9 Sep 2013 07:46:22 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r892ERbW016069
+	for <linux-pci@vger.kernel.org>; Mon, 9 Sep 2013 07:44:28 +0530
+Date: Mon, 9 Sep 2013 10:14:26 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Chiang <achiang@canonical.com>
+Subject: Re: [PATCH 1/3] PCI: use pci_is_root_bus() to check whether it is a
+ root bus
+Message-ID: <20130909021426.GC6953@weiyang.vnet.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20130906230941.GC12956@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1378732388-4508-5-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130906230941.GC12956@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 09, 2013 at 09:13:06PM +0800, Yijing Wang wrote:
-> Refactor qib_tune_pcie_caps() function, use pcie_set_mps()
-> and pcie_get_mps() to simply code. Because pci core caches
-> the "PCI-E Max Payload Size Supported" in pci_dev->pcie_mpss,
-> so use that instead of pcie_capability_read_word(). Remove
-> the unused val2fld() and fld2val().
+On Fri, Sep 06, 2013 at 05:09:41PM -0600, Bjorn Helgaas wrote:
+>[+cc Kenji, Alex]
+>
+>On Fri, Sep 06, 2013 at 09:45:56AM +0800, Wei Yang wrote:
+>> In __pci_bus_size_bridges() we check whether a pci bus is a root
+>> bus by testing bus->self. As indicated by commit 79af72d7
+>> ("PCI: pci_is_root_bus helper"), bus->self == NULL is not a proper
+>> way to check the pci root bus.
+>> 
+>> This patch changes it to pci_is_root_bus() to check whether it is
+>> a root bus.
+>
+>I think this is a good change, even if only on the grounds of
+>consistency.
+>
+>Did you trip over a case where a root bus has bus->self != NULL?
+>I'd like to know more details about the case where:
+>
+>  (bus->parent == NULL) && (bus->self != NULL)
 
-I propose the following patch on top of this one:
+Currently no. I believe the two platforms I have met, x86 and powerpc, don't
+have this status.
 
+>
+>I'm sure that situation exists, or Kenji and Alex would not have
+>made the change in 79af72d7, but I don't know the details.
 
-IB/qib: Drop qib_tune_pcie_caps() and qib_tune_pcie_coalesce() return values
+Agree, willing to hear about some backgroups about the original patch.
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+>
+>I'd like to know the details so I can recognize similar problems
+>elsewhere.
+>
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> ---
+>>  drivers/pci/setup-bus.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>> 
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index 520210f..989de3c 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -1134,7 +1134,7 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+>>  	}
+>>  
+>>  	/* The root bus? */
+>> -	if (!bus->self)
+>> +	if (pci_is_root_bus(bus))
+>>  		return;
+>>  
+>>  	switch (bus->self->class >> 8) {
+>> -- 
+>> 1.7.1
+>> 
 
-The callers of qib_tune_pcie_caps() and qib_tune_pcie_coalesce() don't
-check the return values, so this patch drops the return values altogether.
+-- 
+Richard Yang
+Help you, Help me
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/infiniband/hw/qib/qib_pcie.c |   28 ++++++++++++----------------
- 1 file changed, 12 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/infiniband/hw/qib/qib_pcie.c b/drivers/infiniband/hw/qib/qib_pcie.c
-index 24973c8..c8d9c4a 100644
---- a/drivers/infiniband/hw/qib/qib_pcie.c
-+++ b/drivers/infiniband/hw/qib/qib_pcie.c
-@@ -51,8 +51,8 @@
-  * file calls, even though this violates some
-  * expectations of harmlessness.
-  */
--static int qib_tune_pcie_caps(struct qib_devdata *);
--static int qib_tune_pcie_coalesce(struct qib_devdata *);
-+static void qib_tune_pcie_caps(struct qib_devdata *);
-+static void qib_tune_pcie_coalesce(struct qib_devdata *);
- 
- /*
-  * Do all the common PCIe setup and initialization.
-@@ -487,7 +487,7 @@ MODULE_PARM_DESC(pcie_coalesce, "tune PCIe colescing on some Intel chipsets");
-  * of these chipsets, with some BIOS settings, and enabling it on those
-  * systems may result in the system crashing, and/or data corruption.
-  */
--static int qib_tune_pcie_coalesce(struct qib_devdata *dd)
-+static void qib_tune_pcie_coalesce(struct qib_devdata *dd)
- {
- 	int r;
- 	struct pci_dev *parent;
-@@ -495,18 +495,18 @@ static int qib_tune_pcie_coalesce(struct qib_devdata *dd)
- 	u32 mask, bits, val;
- 
- 	if (!qib_pcie_coalesce)
--		return 0;
-+		return;
- 
- 	/* Find out supported and configured values for parent (root) */
- 	parent = dd->pcidev->bus->self;
- 	if (parent->bus->parent) {
- 		qib_devinfo(dd->pcidev, "Parent not root\n");
--		return 1;
-+		return;
- 	}
- 	if (!pci_is_pcie(parent))
--		return 1;
-+		return;
- 	if (parent->vendor != 0x8086)
--		return 1;
-+		return;
- 
- 	/*
- 	 *  - bit 12: Max_rdcmp_Imt_EN: need to set to 1
-@@ -539,13 +539,12 @@ static int qib_tune_pcie_coalesce(struct qib_devdata *dd)
- 		mask = (3U << 24) | (7U << 10);
- 	} else {
- 		/* not one of the chipsets that we know about */
--		return 1;
-+		return;
- 	}
- 	pci_read_config_dword(parent, 0x48, &val);
- 	val &= ~mask;
- 	val |= bits;
- 	r = pci_write_config_dword(parent, 0x48, val);
--	return 0;
- }
- 
- /*
-@@ -556,9 +555,8 @@ static int qib_pcie_caps;
- module_param_named(pcie_caps, qib_pcie_caps, int, S_IRUGO);
- MODULE_PARM_DESC(pcie_caps, "Max PCIe tuning: Payload (0..3), ReadReq (4..7)");
- 
--static int qib_tune_pcie_caps(struct qib_devdata *dd)
-+static void qib_tune_pcie_caps(struct qib_devdata *dd)
- {
--	int ret = 1; /* Assume the worst */
- 	struct pci_dev *parent;
- 	u16 rc_mpss, rc_mps, ep_mpss, ep_mps;
- 	u16 rc_mrrs, ep_mrrs, max_mrrs;
-@@ -567,18 +565,18 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
- 	parent = dd->pcidev->bus->self;
- 	if (!pci_is_root_bus(parent->bus)) {
- 		qib_devinfo(dd->pcidev, "Parent not root\n");
--		goto bail;
-+		return;
- 	}
- 
- 	if (!pci_is_pcie(parent) || !pci_is_pcie(dd->pcidev))
--		goto bail;
-+		return;
-+
- 	rc_mpss = parent->pcie_mpss;
- 	rc_mps = ffs(pcie_get_mps(parent)) - 8;
- 	/* Find out supported and configured values for endpoint (us) */
- 	ep_mpss = dd->pcidev->pcie_mpss;
- 	ep_mps = ffs(pcie_get_mps(dd->pcidev)) - 8;
- 
--	ret = 0;
- 	/* Find max payload supported by root, endpoint */
- 	if (rc_mpss > ep_mpss)
- 		rc_mpss = ep_mpss;
-@@ -618,8 +616,6 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
- 		ep_mrrs = max_mrrs;
- 		pcie_set_readrq(dd->pcidev, ep_mrrs);
- 	}
--bail:
--	return ret;
- }
- /* End of PCIe capability tuning */
- 
