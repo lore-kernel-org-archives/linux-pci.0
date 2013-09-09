@@ -1,67 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:45399 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754851Ab3IZKMo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 Sep 2013 06:12:44 -0400
-Message-ID: <5244088B.20807@ti.com>
-Date: Thu, 26 Sep 2013 15:42:27 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:44899 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816Ab3IINRF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 09:17:05 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Airlie <airlied@linux.ie>,
+	Mike Marciniszyn <infinipath@intel.com>,
+	Roland Dreier <roland@kernel.org>,
+	Roland Dreier <roland@purestorage.com>
+CC: <linux-kernel@vger.kernel.org>, Mark Einon <mark.einon@gmail.com>,
+	Sean Hefty <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	<linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH 5/6] staging/et131x: Use cached pci_dev->pcie_mpss and pcie_set_readrq() to simplif code
+Date: Mon, 9 Sep 2013 21:13:07 +0800
+Message-ID: <1378732388-4508-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
+References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
- part and Exynos part
-References: <000701ce8741$fe47deb0$fad79c10$@samsung.com> <201309242323.55323.arnd@arndb.de> <5243C0E5.7020508@ti.com> <201309261151.42034.arnd@arndb.de>
-In-Reply-To: <201309261151.42034.arnd@arndb.de>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+The PCI core caches the "PCI-E Max Payload Size Supported" in
+pci_dev->pcie_mpss, so use that instead of pcie_capability_read_dword().
+Also use pcie_set_readrq() instead of pcie_capability_clear_and_set_word()
+to simplify code.
 
-On Thursday 26 September 2013 03:21 PM, Arnd Bergmann wrote:
-> On Thursday 26 September 2013, Kishon Vijay Abraham I wrote:
->> On Wednesday 25 September 2013 02:53 AM, Arnd Bergmann wrote:
->>> On Monday 23 September 2013, Kishon Vijay Abraham I wrote:
->>>> Btw if we hadn't programmed inbound translation table, the address will go
->>>> untranslated (according to the data book). I guess that's how it was working
->>>> for Jingoo Han.
->>>>
->>>> **
->>>> 3.10.4
->>>> Inbound iATU Operation
->>>>
->>>> When there is no match, then the address is untranslated
->>>> **
->>>>
->>>
->>> Well, that should work just as well, since you have a 1:1 translation anyway.
->>> Do you get the same error without the translation?
->>
->> Yes. I get the same non-fatal error interrupt in RC.
-> 
-> Ok, then I guess the translation is actually not at fault here but something
-> else. I would recommend looking at the IOMMU as the potential culprit. Maybe
-> having it disabled means that no DMA is going through, rather than all DMA
-> going through untranslated. Another possibility is that the IOMMU is set up
-> so that when disabled, it maps DMA address 0 to the start of RAM, rather
-> than identity mapping DMA address 0x80000000 there. If that's the case,
-> you either have to use the IOMMU, or set up the mapping in the root
-> complex to revert it.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/staging/et131x/et131x.c |   14 +++-----------
+ 1 files changed, 3 insertions(+), 11 deletions(-)
 
-Thanks for your inputs. I'll check if that's the problem.
+diff --git a/drivers/staging/et131x/et131x.c b/drivers/staging/et131x/et131x.c
+index f73e58f..876881d 100644
+--- a/drivers/staging/et131x/et131x.c
++++ b/drivers/staging/et131x/et131x.c
+@@ -3605,17 +3605,10 @@ static int et131x_pci_init(struct et131x_adapter *adapter,
+ 		goto err_out;
+ 	}
+ 
+-	/* Let's set up the PORT LOGIC Register.  First we need to know what
+-	 * the max_payload_size is
+-	 */
+-	if (pcie_capability_read_word(pdev, PCI_EXP_DEVCAP, &max_payload)) {
+-		dev_err(&pdev->dev,
+-		    "Could not read PCI config space for Max Payload Size\n");
+-		goto err_out;
+-	}
++	/* Let's set up the PORT LOGIC Register. */
+ 
+ 	/* Program the Ack/Nak latency and replay timers */
+-	max_payload &= 0x07;
++	max_payload = pdev->pcie_mpss;
+ 
+ 	if (max_payload < 2) {
+ 		static const u16 acknak[2] = { 0x76, 0xD0 };
+@@ -3645,8 +3638,7 @@ static int et131x_pci_init(struct et131x_adapter *adapter,
+ 	}
+ 
+ 	/* Change the max read size to 2k */
+-	if (pcie_capability_clear_and_set_word(pdev, PCI_EXP_DEVCTL,
+-				PCI_EXP_DEVCTL_READRQ, 0x4 << 12)) {
++	if (pcie_set_readrq(pdev, 2048)) {
+ 		dev_err(&pdev->dev,
+ 			"Couldn't change PCI config space for Max read size\n");
+ 		goto err_out;
+-- 
+1.7.1
 
-Thanks
-Kishon
+
