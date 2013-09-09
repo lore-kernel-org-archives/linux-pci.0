@@ -1,68 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:60442 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754653Ab3I0VEI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 17:04:08 -0400
-Received: by mail-ie0-f175.google.com with SMTP id e14so5056865iej.6
-        for <linux-pci@vger.kernel.org>; Fri, 27 Sep 2013 14:04:06 -0700 (PDT)
+Received: from mga01.intel.com ([192.55.52.88]:42001 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755085Ab3IITsn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Sep 2013 15:48:43 -0400
+Date: Mon, 9 Sep 2013 12:48:21 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Xenia Ragiadakou <burzalodowa@gmail.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Dong Nguyen <Dong.Nguyen@amd.com>, linux-usb@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: setup msi-x vectors in xhci-hcd
+Message-ID: <20130909194821.GA5727@xanatos>
+References: <522495E5.80000@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1378974012-13364-1-git-send-email-wangyijing@huawei.com>
-References: <1378974012-13364-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 27 Sep 2013 15:03:46 -0600
-Message-ID: <CAErSpo5XWa3qTfE_p5vDqJOkrrdkcM9_Nr-u_qFYSdAob1sEig@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Warn if power_state != PCI_D0 when write MSI message
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Ben Hutchings <ben@decadent.org.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <522495E5.80000@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Ben]
+On Mon, Sep 02, 2013 at 04:43:01PM +0300, Xenia Ragiadakou wrote:
+> Hi Sarah and Alan,
+> 
+> I am writing a patch for allocating as many msi-x vectors as the
+> number of event rings because now the msi-x vectors allocated are
+> more than are actually used, since currently xhci-hcd implements
+> only one event ring.
+> 
+> xhci_setup_msix() limits the number of supported msi-x vectors based
+> on the number of cpus in the host system, and that confuses me:
+> 
+> xhci->msix_count = min(num_online_cpus() + 1,
+> HCS_MAX_INTRS(xhci->hcs_params1));
+> 
+> Can you explain me why it does so?
 
-On Thu, Sep 12, 2013 at 2:20 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> When we setup MSI, if device power state is not equal to PCI_D0,
-> system will silently ignore writing MSI message, but pci_enable_msi()
-> still return 0 which seems setup successfully. So we should warn here
-> to help diagnose this issue.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/msi.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index aca7578..25ed59d 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -291,6 +291,8 @@ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->  {
->         if (entry->dev->current_state != PCI_D0) {
->                 /* Don't touch the hardware now */
-> +               dev_warn(&entry->dev->dev,
-> +                       "current_state != PCI_D0, ignore writing MSI message!\n");
+I'm not the original author of that patch, so I'm not sure why they did
+that.  I asked them to explain why in a comment above the code:
 
-Is there a real problem here?  If there is a real problem, a printk
-doesn't help fix it.  If there's no problem, I don't see the point of
-this printk.
+http://marc.info/?l=linux-usb&m=127351043723713&w=2
 
-I would expect that if the device is not in D0, we should remember the
-hardware updates that need to be made, and if the device returns to
-D0, we should apply the updates then.  If that's the case this is not
-an error and we shouldn't warn about it.
+The comment that they placed above the line didn't explain *why* they
+needed they wanted to allocate an MSI-X vector per CPU, just what they
+were doing:
 
-Bjorn
+http://marc.info/?l=linux-usb&m=127365906500373&w=2
 
->         } else if (entry->msi_attrib.is_msix) {
->                 void __iomem *base;
->                 base = entry->mask_base +
-> --
-> 1.7.1
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(And now you understand why kernel developers ask for a lot of
+documentation and comments.  People disappear after submitting their
+code all the time.)
+
+I suspect the original author assumed that only one MSI-X vector could
+be tied to a CPU?  If that's the case, I don't know why they allocated
+an extra vector.  If you're going to allocate more MSI-X vectors than
+you have CPUs available, it probably makes sense to allocate as many
+vectors as you have event rings.
+
+> Also, another thing that bothers me is that, in case
+> pci_enable_msix() returns a positive number which
+> indicates the number of msi-x vectors supported based on the MSI-X
+> Capability structure of the PCI Configuration Address Space (this
+> value is returned when the requested number of msi-x vectors are
+> greater than the supported number), shall i free the msix_entries
+> and reallocate them for the new number
+> or reimplement this check before pci_enable_msix() is called and
+> take it into account when allocate msix_entries for first time?
+
+I think you should re-implement the check, so that you allocate the
+minimum of:
+ - the number of MSI-X vectors the PCI device will support,
+ - the number of interrupters the xHCI host will support, and
+ - the number of event rings as the driver has allocated.
+
+Sarah Sharp
