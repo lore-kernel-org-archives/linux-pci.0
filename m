@@ -1,55 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:57200 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752451Ab3IENJF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 09:09:05 -0400
-Date: Thu, 5 Sep 2013 09:09:02 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20130905130902.GA26314@htj.dyndns.org>
-References: <cover.1378383792.git.agordeev@redhat.com>
- <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:49862 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990Ab3IIQP1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 12:15:27 -0400
+Received: by mail-ie0-f178.google.com with SMTP id to1so2823315ieb.23
+        for <linux-pci@vger.kernel.org>; Mon, 09 Sep 2013 09:15:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
+In-Reply-To: <20130909070017.GB3726@weiyang.vnet.ibm.com>
+References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20130906230941.GC12956@google.com> <20130909070017.GB3726@weiyang.vnet.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Sep 2013 10:15:07 -0600
+Message-ID: <CAErSpo5BTV_b1NpeifuAPwHvfsrAERpdmwgnUFMS6gQ3Asik-Q@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: use pci_is_root_bus() to check whether it is a
+ root bus
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Chiang <achiang@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello, Alexander.
+On Mon, Sep 9, 2013 at 1:00 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+> On Fri, Sep 06, 2013 at 05:09:41PM -0600, Bjorn Helgaas wrote:
+>>[+cc Kenji, Alex]
+>>
+>>On Fri, Sep 06, 2013 at 09:45:56AM +0800, Wei Yang wrote:
+>>> In __pci_bus_size_bridges() we check whether a pci bus is a root
+>>> bus by testing bus->self. As indicated by commit 79af72d7
+>>> ("PCI: pci_is_root_bus helper"), bus->self == NULL is not a proper
+>>> way to check the pci root bus.
+>>>
+>>> This patch changes it to pci_is_root_bus() to check whether it is
+>>> a root bus.
+>>
+>>I think this is a good change, even if only on the grounds of
+>>consistency.
+>>
+>>Did you trip over a case where a root bus has bus->self != NULL?
+>>I'd like to know more details about the case where:
+>>
+>>  (bus->parent == NULL) && (bus->self != NULL)
+>
+> I found one case that (bus->self == NULL) and this bus is not root bus.
+>
+> Not sure, this case will meet your requirement?
 
-On Thu, Sep 05, 2013 at 02:52:47PM +0200, Alexander Gordeev wrote:
-> -int pci_enable_msi_block_part(struct pci_dev *dev,
-> -			      unsigned int nvec, int nvec_mme)
-> +int pci_get_msi_cap(struct pci_dev *dev)
->  {
-> -	int status, maxvec;
-> +	int ret;
->  	u16 msgctl;
->  
->  	if (!dev->msi_cap)
->  		return -EINVAL;
->  
->  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-> -	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-> +	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(pci_get_msi_cap);
+I'm definitely interested in that case as well.  Can you include a
+complete "lspci -vv" output for the case where this happens?
 
-One curiosity - with the above factored out, is
-pci_enable_msi_block_part() returning positive number still necessary?
-I followed most of code paths in x86 and nothing seems to need it and
-positive return seems to be just causing confusion - ie. returning 1
-on multiple msi config failure from some functions, which is silly.
+I suspect this happens with SR-IOV when we create "virtual" buses,
+i.e., in virtfn_add_bus().  I think maybe I'll update the comment at
+pci_is_root_bus() with a note about why we want to use it instead of
+testing for "bus->self == NULL".
 
-Thanks.
+I think we still have other tree traversal issues related to those
+virtual buses, e.g., the ones I mentioned here [1].  But those are a
+separate problem.
 
--- 
-tejun
+Bjorn
+
+[1] http://lkml.kernel.org/r/CAErSpo5sFfr=O-Pp=PyaxGauaEajaTr2aK-EQ_rTVUk1zyz8cA@mail.gmail.com
