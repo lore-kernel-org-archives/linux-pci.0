@@ -1,61 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:58663 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933Ab3IZJvz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 05:51:55 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys part and Exynos part
-Date: Thu, 26 Sep 2013 11:51:41 +0200
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+Received: from mga14.intel.com ([143.182.124.37]:52438 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753081Ab3IIO4H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 10:56:07 -0400
+From: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Airlie <airlied@linux.ie>,
+	infinipath <infinipath@intel.com>,
+	Roland Dreier <roland@kernel.org>,
+	Roland Dreier <roland@purestorage.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mark Einon <mark.einon@gmail.com>,
+	"Hefty, Sean" <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <000701ce8741$fe47deb0$fad79c10$@samsung.com> <201309242323.55323.arnd@arndb.de> <5243C0E5.7020508@ti.com>
-In-Reply-To: <5243C0E5.7020508@ti.com>
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: RE: [PATCH 4/6] IB/qib: Use pcie_set_mps() and pcie_get_mps() to
+ simplify code
+Date: Mon, 9 Sep 2013 14:55:46 +0000
+Message-ID: <32E1700B9017364D9B60AED9960492BC2119F081@FMSMSX107.amr.corp.intel.com>
+References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
+ <1378732388-4508-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1378732388-4508-5-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201309261151.42034.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 26 September 2013, Kishon Vijay Abraham I wrote:
-> On Wednesday 25 September 2013 02:53 AM, Arnd Bergmann wrote:
-> > On Monday 23 September 2013, Kishon Vijay Abraham I wrote:
-> >> Btw if we hadn't programmed inbound translation table, the address will go
-> >> untranslated (according to the data book). I guess that's how it was working
-> >> for Jingoo Han.
-> >>
-> >> **
-> >> 3.10.4
-> >> Inbound iATU Operation
-> >>
-> >> When there is no match, then the address is untranslated
-> >> **
-> >>
-> > 
-> > Well, that should work just as well, since you have a 1:1 translation anyway.
-> > Do you get the same error without the translation?
+> Subject: [PATCH 4/6] IB/qib: Use pcie_set_mps() and pcie_get_mps() to simplify
+> code
 > 
-> Yes. I get the same non-fatal error interrupt in RC.
+> Refactor qib_tune_pcie_caps() function, use pcie_set_mps() and
+> pcie_get_mps() to simply code. Because pci core caches the "PCI-E Max
+> Payload Size Supported" in pci_dev->pcie_mpss, so use that instead of
+> pcie_capability_read_word(). Remove the unused val2fld() and fld2val().
+> 
 
-Ok, then I guess the translation is actually not at fault here but something
-else. I would recommend looking at the IOMMU as the potential culprit. Maybe
-having it disabled means that no DMA is going through, rather than all DMA
-going through untranslated. Another possibility is that the IOMMU is set up
-so that when disabled, it maps DMA address 0 to the start of RAM, rather
-than identity mapping DMA address 0x80000000 there. If that's the case,
-you either have to use the IOMMU, or set up the mapping in the root
-complex to revert it.
+I tested this patch as is and saw no issues.
 
-	Arnd
+The only thing I would suggest is that the new use of pcie_get_readrq/pcie_set_readrq() be reflected in the comments with an appropriate adjustment in the subject.
+
+Mike
+
+ 
