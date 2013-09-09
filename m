@@ -1,69 +1,39 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots
-Date: Thu, 05 Sep 2013 00:54:58 +0200
-Message-ID: <2449715.ReJj2CQeDS@vostro.rjw.lan>
-In-Reply-To: <1378326994.3246.152.camel@ul30vt.home>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <1818424.8fNkf5pBy3@vostro.rjw.lan> <1378326994.3246.152.camel@ul30vt.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:57540 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199Ab3IIPQT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 11:16:19 -0400
+Date: Mon, 9 Sep 2013 08:19:24 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	David Airlie <airlied@linux.ie>,
+	Mike Marciniszyn <infinipath@intel.com>,
+	Roland Dreier <roland@kernel.org>,
+	Roland Dreier <roland@purestorage.com>,
+	linux-kernel@vger.kernel.org, Mark Einon <mark.einon@gmail.com>,
+	Sean Hefty <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH 5/6] staging/et131x: Use cached pci_dev->pcie_mpss and
+ pcie_set_readrq() to simplif code
+Message-ID: <20130909151924.GA26295@kroah.com>
+References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
+ <1378732388-4508-6-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1378732388-4508-6-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 04, 2013 02:36:34 PM Alex Williamson wrote:
-> On Thu, 2013-07-18 at 01:32 +0200, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > The current implementation of acpiphp_check_bridge() is pretty dumb:
-> >  - It enables a slot if it's not enabled and the slot status is
-> >    ACPI_STA_ALL.
-> >  - It disables a slot if it's enabled and the slot status is not
-> >    ACPI_STA_ALL.
-> > 
-> > This behavior is not sufficient to handle the Thunderbolt daisy
-> > chaining case properly, however, because in that case the bus
-> > behind the already enabled slot needs to be rescanned for new
-> > devices.
-> > 
-> > For this reason, modify acpiphp_check_bridge() so that slots are
-> > disabled and stopped if they are not in the ACPI_STA_ALL state.
-> > 
-> > For slots in the ACPI_STA_ALL state, devices behind them that don't
-> > respond are trimmed using a new function, trim_stale_devices(),
-> > introduced specifically for this purpose.  That function walks
-> > the given bus and checks each device on it.  If the device doesn't
-> > respond, it is assumed to be gone and is removed.
-> > 
-> > Once all of the stale devices directy behind the slot have been
-> > removed, acpiphp_check_bridge() will start looking for new devices
-> > that might have appeared on the given bus.  It will do that even if
-> > the slot is already enabled (SLOT_ENABLED is set for it).
-> > 
-> > In addition to that, make the bus check notification ignore
-> > SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
-> > so that devices behind the slot are re-enumerated in that case too.
-> > 
-> > This change is based on earlier patches from Kirill A Shutemov
-> > and Mika Westerberg.
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > ---
+On Mon, Sep 09, 2013 at 09:13:07PM +0800, Yijing Wang wrote:
+> The PCI core caches the "PCI-E Max Payload Size Supported" in
+> pci_dev->pcie_mpss, so use that instead of pcie_capability_read_dword().
+> Also use pcie_set_readrq() instead of pcie_capability_clear_and_set_word()
+> to simplify code.
 > 
-> FYI, git bisect landed on this patch as the cause of my serial console
-> dying on current upstream.  Further debugging to come...  Thanks,
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-Well, sorry about that.
-
-What exactly do you mean by "dying"?
-
-Rafael
-
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
