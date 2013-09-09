@@ -1,215 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0151.outbound.protection.outlook.com ([207.46.163.151]:46731
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754062Ab3IYDfy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Sep 2013 23:35:54 -0400
-From: Peter Guo <peter.guo@bayhubtech.com>
-To: Chris Ball <cjb@laptop.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Adrian Hunter" <adrian.hunter@intel.com>,
-	reg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	"Guennadi Liakhovetski" <g.liakhovetski@gmx.de>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 9 Sep 2013 17:22:52 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tejun Heo <tj@kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Samuel Guan <samuel.guan@bayhubtech.com>
-Subject: [PATCH 1/2] mmc:sdhci-pci:Add O2Micor/BayHubTect PCI SD Host
-Date: Wed, 25 Sep 2013 03:20:07 +0000
-Message-ID: <9ac149a4448d4d99a280a37b104da1e3@BN1PR04MB091.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>
+Subject: [PATCH 2/9] PCI/MSI/PPC: Make return values only 0/-errno when MSIs
+ allocated
+Message-ID: <20130909152252.GC24962@dhcp-26-207.brq.redhat.com>
+References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+ <20130905150442.GA24148@htj.dyndns.org>
+ <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+ <20130905154436.GC24148@htj.dyndns.org>
+ <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "peter.guo" <peter.guo@bayhubtech.com>
-
-Add O2Micor/BayHubTect SD Host Controller PCI Devices IDs in pci_ids.h.
-Apply SDHCI_QUIRK_MULTIBLOCK_READ_ACMD12 for some SD Host Controller.
-Apply SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC for some SD Host Controller.
-Add O2Micro/BayHubTech SD Host Controller specified Init.
-
-Signed-off-by: peter.guo <peter.guo@bayhubtech.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/mmc/host/sdhci-pci.c |  122 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h      |    5 ++
- 2 files changed, 127 insertions(+)
+ arch/powerpc/kernel/msi.c            |    2 +-
+ arch/powerpc/platforms/pseries/msi.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/mmc/host/sdhci-pci.c b/drivers/mmc/host/sdhci-pci.c
-index d7d6bc8..2387b3e 100644
---- a/drivers/mmc/host/sdhci-pci.c
-+++ b/drivers/mmc/host/sdhci-pci.c
-@@ -364,11 +364,42 @@ static const struct sdhci_pci_fixes sdhci_intel_byt_sd = {
- #define O2_SD_ADMA1		0xE2
- #define O2_SD_ADMA2		0xE7
- #define O2_SD_INF_MOD		0xF1
-+#define	O2_SD_PLL_SETTING	0x304
-+#define	O2_SD_CLK_SETTING	0x328
-+#define	O2_SD_UHS1_CAP_SETTING	0x33C
-+#define	O2_SD_VENDOR_SETTING 0x110
-+
-+static int o2_probe_slot(struct sdhci_pci_slot *slot)
-+{
-+	struct sdhci_pci_chip	*chip;
-+	struct sdhci_host	*host;
-+	u32			reg;
-+
-+	chip = slot->chip;
-+	host = slot->host;
-+	switch (chip->pdev->device) {
-+	case PCI_DEVICE_ID_O2_8420:
-+	case PCI_DEVICE_ID_O2_8421:
-+	case PCI_DEVICE_ID_O2_8520:
-+	case PCI_DEVICE_ID_O2_8620:
-+	case PCI_DEVICE_ID_O2_8621:
-+		reg = sdhci_readl(host, O2_SD_VENDOR_SETTING);
-+		if (reg & 0x1)
-+			host->quirks |= SDHCI_QUIRK_MULTIBLOCK_READ_ACMD12;
-+
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return 0;
-+}
+diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
+index 8bbc12d..36d70b9 100644
+--- a/arch/powerpc/kernel/msi.c
++++ b/arch/powerpc/kernel/msi.c
+@@ -22,7 +22,7 @@ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
  
- static int o2_probe(struct sdhci_pci_chip *chip)
- {
- 	int ret;
- 	u8 scratch;
-+	u32 scratch_32;
+ 	/* PowerPC doesn't support multiple MSI yet */
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+-		return 1;
++		return -EINVAL;
  
- 	switch (chip->pdev->device) {
- 	case PCI_DEVICE_ID_O2_8220:
-@@ -419,6 +450,59 @@ static int o2_probe(struct sdhci_pci_chip *chip)
- 			return ret;
- 		scratch |= 0x80;
- 		pci_write_config_byte(chip->pdev, O2_SD_LOCK_WP, scratch);
-+		break;
-+
-+	case PCI_DEVICE_ID_O2_8420:
-+	case PCI_DEVICE_ID_O2_8421:
-+	case PCI_DEVICE_ID_O2_8520:
-+	case PCI_DEVICE_ID_O2_8620:
-+	case PCI_DEVICE_ID_O2_8621:
-+	    /* UnLock WP */
-+		ret = pci_read_config_byte(chip->pdev, O2_SD_LOCK_WP, &scratch);
-+		if (ret)
-+			return ret;
-+		scratch &= 0x7f;
-+		pci_write_config_byte(chip->pdev, O2_SD_LOCK_WP, scratch);
-+
-+		ret = pci_read_config_dword(chip->pdev,
-+				O2_SD_PLL_SETTING, &scratch_32);
-+		if (ret)
-+			return ret;
-+		/* Set timeout CLK */
-+		ret = pci_read_config_dword(chip->pdev,
-+				O2_SD_CLK_SETTING, &scratch_32);
-+		if (ret)
-+			return ret;
-+		scratch_32 |= 0x07E00000;
-+		pci_write_config_dword(chip->pdev,
-+				O2_SD_CLK_SETTING, scratch_32);
-+
-+		ret = pci_read_config_dword(chip->pdev,
-+				O2_SD_CLKREQ, &scratch_32);
-+		if (ret)
-+			return ret;
-+		scratch_32 |= 0x3;
-+		pci_write_config_dword(chip->pdev, O2_SD_CLKREQ, scratch_32);
-+		if (chip->pdev->device == PCI_DEVICE_ID_O2_8520) {
-+
-+			ret = pci_read_config_dword(chip->pdev,
-+				O2_SD_UHS1_CAP_SETTING, &scratch_32);
-+			if (ret)
-+				return ret;
-+			scratch_32 |= (1 << 21);
-+			pci_write_config_dword(chip->pdev,
-+				O2_SD_UHS1_CAP_SETTING, scratch_32);
-+		}
-+
-+		/* Lock WP */
-+		ret = pci_read_config_byte(chip->pdev,
-+				O2_SD_LOCK_WP, &scratch);
-+		if (ret)
-+			return ret;
-+		scratch |= 0x80;
-+		pci_write_config_byte(chip->pdev, O2_SD_LOCK_WP, scratch);
-+
-+		break;
- 	}
+ 	if (ppc_md.msi_check_device) {
+ 		pr_debug("msi: Using platform check routine.\n");
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index 009ec73..89648c1 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -348,7 +348,7 @@ static int rtas_msi_check_device(struct pci_dev *pdev, int nvec, int type)
+ 	quota = msi_quota_for_device(pdev, nvec);
+ 
+ 	if (quota && quota < nvec)
+-		return quota;
++		return -ENOSPC;
  
  	return 0;
-@@ -615,6 +699,8 @@ static int jmicron_resume(struct sdhci_pci_chip *chip)
- 
- static const struct sdhci_pci_fixes sdhci_o2 = {
- 	.probe		= o2_probe,
-+	.quirks		= SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC,
-+	.probe_slot = o2_probe_slot,
- };
- 
- static const struct sdhci_pci_fixes sdhci_jmicron = {
-@@ -979,6 +1065,42 @@ static const struct pci_device_id pci_ids[] = {
- 		.driver_data	= (kernel_ulong_t)&sdhci_o2,
- 	},
- 
-+	{
-+		.vendor		= PCI_VENDOR_ID_O2,
-+		.device		= PCI_DEVICE_ID_O2_8520,
-+		.subvendor	= PCI_ANY_ID,
-+		.subdevice	= PCI_ANY_ID,
-+		.driver_data	= (kernel_ulong_t)&sdhci_o2,
-+	},
-+	{
-+		.vendor		= PCI_VENDOR_ID_O2,
-+		.device		= PCI_DEVICE_ID_O2_8420,
-+		.subvendor	= PCI_ANY_ID,
-+		.subdevice	= PCI_ANY_ID,
-+		.driver_data	= (kernel_ulong_t)&sdhci_o2,
-+	},
-+	{
-+		.vendor		= PCI_VENDOR_ID_O2,
-+		.device		= PCI_DEVICE_ID_O2_8421,
-+		.subvendor	= PCI_ANY_ID,
-+		.subdevice	= PCI_ANY_ID,
-+		.driver_data	= (kernel_ulong_t)&sdhci_o2,
-+	},
-+	{
-+		.vendor		= PCI_VENDOR_ID_O2,
-+		.device		= PCI_DEVICE_ID_O2_8620,
-+		.subvendor	= PCI_ANY_ID,
-+		.subdevice	= PCI_ANY_ID,
-+		.driver_data	= (kernel_ulong_t)&sdhci_o2,
-+	},
-+	{
-+		.vendor		= PCI_VENDOR_ID_O2,
-+		.device		= PCI_DEVICE_ID_O2_8621,
-+		.subvendor	= PCI_ANY_ID,
-+		.subdevice	= PCI_ANY_ID,
-+		.driver_data	= (kernel_ulong_t)&sdhci_o2,
-+	},
-+
- 	{	/* Generic SD host controller */
- 		PCI_DEVICE_CLASS((PCI_CLASS_SYSTEM_SDHCI << 8), 0xFFFF00)
- 	},
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 97fbecd..254818d 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1700,6 +1700,11 @@
- #define PCI_DEVICE_ID_O2_8221		0x8221
- #define PCI_DEVICE_ID_O2_8320		0x8320
- #define PCI_DEVICE_ID_O2_8321		0x8321
-+#define PCI_DEVICE_ID_O2_8520		0x8520
-+#define	PCI_DEVICE_ID_O2_8420		0x8420
-+#define	PCI_DEVICE_ID_O2_8421		0x8421
-+#define	PCI_DEVICE_ID_O2_8620		0x8620
-+#define	PCI_DEVICE_ID_O2_8621		0x8621
- 
- #define PCI_VENDOR_ID_3DFX		0x121a
- #define PCI_DEVICE_ID_3DFX_VOODOO	0x0001
+ }
 -- 
-1.7.9.5
+1.7.7.6
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
