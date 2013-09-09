@@ -1,45 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <522F13A9.9020704@cogentembedded.com>
-Date: Tue, 10 Sep 2013 16:42:17 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ye0-f171.google.com ([209.85.213.171]:63969 "EHLO
+	mail-ye0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755612Ab3IIXOR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 19:14:17 -0400
+Received: by mail-ye0-f171.google.com with SMTP id q3so2204204yen.2
+        for <linux-pci@vger.kernel.org>; Mon, 09 Sep 2013 16:14:16 -0700 (PDT)
+Subject: [PATCH 5/7] lspci: Decode PCIe LnkCtl "Read Completion Boundary"
+ for PCIe-to-PCI bridges
+To: Martin Mares <mj@ucw.cz>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Mon, 09 Sep 2013 17:14:14 -0600
+Message-ID: <20130909231414.30095.72172.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
+References: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>
-Subject: Re: [PATCH 5/9] PCI/MSI/s390: Make return values only 0/-errno when
- MSIs allocated
-References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com> <20130905150442.GA24148@htj.dyndns.org> <20130905154041.GD30984@dhcp-26-207.brq.redhat.com> <20130905154436.GC24148@htj.dyndns.org> <20130905185440.GA13175@dhcp-26-207.brq.redhat.com> <20130905200608.GA3846@htj.dyndns.org> <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com> <20130906160621.GF22763@mtj.dyndns.org> <20130906233205.GF12956@google.com> <20130909152044.GA24962@dhcp-26-207.brq.redhat.com> <20130909152658.GG24962@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20130909152658.GG24962@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+The PCIe spec (r3.0, Table 7-16) says the Read Completion Boundary is valid
+for Root Ports, Endpoints, and Bridges.  I only added decoding for PCIe-to-
+PCI/PCI-X bridges because the RCB of a Bridge indicates the RCB of the
+upstream Root Port, so I don't think it makes sense for PCI-to-PCIe
+bridges.
 
-On 09-09-2013 19:26, Alexander Gordeev wrote:
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ ls-caps.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->   arch/s390/pci/pci.c |    2 ++
->   1 files changed, 2 insertions(+), 0 deletions(-)
-
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> index f17a834..c79c6e4 100644
-> --- a/arch/s390/pci/pci.c
-> +++ b/arch/s390/pci/pci.c
-> @@ -427,6 +427,8 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
->   	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
->   	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
->   		return -EINVAL;
-> +	if (type == PCI_CAP_ID_MSI && nvec > 1)
-> +		return 1;
-
-    This contradicts to the patch subject.
-
-WBR, Sergei
+diff --git a/ls-caps.c b/ls-caps.c
+index de0d79e..3b554fe 100644
+--- a/ls-caps.c
++++ b/ls-caps.c
+@@ -774,7 +774,7 @@ static void cap_express_link(struct device *d, int where, int type)
+   w = get_conf_word(d, where + PCI_EXP_LNKCTL);
+   printf("\t\tLnkCtl:\tASPM %s;", aspm_enabled(w & PCI_EXP_LNKCTL_ASPM));
+   if ((type == PCI_EXP_TYPE_ROOT_PORT) || (type == PCI_EXP_TYPE_ENDPOINT) ||
+-      (type == PCI_EXP_TYPE_LEG_END))
++      (type == PCI_EXP_TYPE_LEG_END) || (type == PCI_EXP_TYPE_PCI_BRIDGE))
+     printf(" RCB %d bytes", w & PCI_EXP_LNKCTL_RCB ? 128 : 64);
+   printf(" Disabled%c Retrain%c CommClk%c\n\t\t\tExtSynch%c ClockPM%c AutWidDis%c BWInt%c AutBWInt%c\n",
+ 	FLAG(w, PCI_EXP_LNKCTL_DISABLE),
 
