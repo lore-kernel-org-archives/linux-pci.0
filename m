@@ -1,210 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1156 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756934Ab3IDUhJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Sep 2013 16:37:09 -0400
-Message-ID: <1378326994.3246.152.camel@ul30vt.home>
-Subject: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on
- enabled slots
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Date: Wed, 04 Sep 2013 14:36:34 -0600
-In-Reply-To: <1818424.8fNkf5pBy3@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
-	 <3718119.FLASu5DBx8@vostro.rjw.lan> <2366394.4EoP1MXmG2@vostro.rjw.lan>
-	 <1818424.8fNkf5pBy3@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ye0-f177.google.com ([209.85.213.177]:34185 "EHLO
+	mail-ye0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755756Ab3IIXOb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 19:14:31 -0400
+Received: by mail-ye0-f177.google.com with SMTP id q9so1713609yen.8
+        for <linux-pci@vger.kernel.org>; Mon, 09 Sep 2013 16:14:31 -0700 (PDT)
+Subject: [PATCH 7/7] lspci: Decode PCIe LnkSta "Link Training" only for
+ relevant functions
+To: Martin Mares <mj@ucw.cz>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Mon, 09 Sep 2013 17:14:28 -0600
+Message-ID: <20130909231428.30095.22433.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
+References: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-07-18 at 01:32 +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The current implementation of acpiphp_check_bridge() is pretty dumb:
->  - It enables a slot if it's not enabled and the slot status is
->    ACPI_STA_ALL.
->  - It disables a slot if it's enabled and the slot status is not
->    ACPI_STA_ALL.
-> 
-> This behavior is not sufficient to handle the Thunderbolt daisy
-> chaining case properly, however, because in that case the bus
-> behind the already enabled slot needs to be rescanned for new
-> devices.
-> 
-> For this reason, modify acpiphp_check_bridge() so that slots are
-> disabled and stopped if they are not in the ACPI_STA_ALL state.
-> 
-> For slots in the ACPI_STA_ALL state, devices behind them that don't
-> respond are trimmed using a new function, trim_stale_devices(),
-> introduced specifically for this purpose.  That function walks
-> the given bus and checks each device on it.  If the device doesn't
-> respond, it is assumed to be gone and is removed.
-> 
-> Once all of the stale devices directy behind the slot have been
-> removed, acpiphp_check_bridge() will start looking for new devices
-> that might have appeared on the given bus.  It will do that even if
-> the slot is already enabled (SLOT_ENABLED is set for it).
-> 
-> In addition to that, make the bus check notification ignore
-> SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
-> so that devices behind the slot are re-enumerated in that case too.
-> 
-> This change is based on earlier patches from Kirill A Shutemov
-> and Mika Westerberg.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
+The PCIe Link Status "Link Training" bit is only valid for functions
+at the upstream end of a link, i.e., Root Ports, Downstream Ports, and
+PCI-to-PCIe Bridges.
 
-FYI, git bisect landed on this patch as the cause of my serial console
-dying on current upstream.  Further debugging to come...  Thanks,
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ ls-caps.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-Alex
-
-
->  drivers/pci/hotplug/acpiphp_glue.c |   87 +++++++++++++++++++++++++------------
->  1 file changed, 60 insertions(+), 27 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -46,6 +46,7 @@
->  #include <linux/pci.h>
->  #include <linux/pci_hotplug.h>
->  #include <linux/pci-acpi.h>
-> +#include <linux/pm_runtime.h>
->  #include <linux/mutex.h>
->  #include <linux/slab.h>
->  #include <linux/acpi.h>
-> @@ -687,47 +688,75 @@ static unsigned int get_slot_status(stru
->  }
->  
->  /**
-> + * trim_stale_devices - remove PCI devices that are not responding.
-> + * @dev: PCI device to start walking the hierarchy from.
-> + */
-> +static void trim_stale_devices(struct pci_dev *dev)
-> +{
-> +	acpi_handle handle = ACPI_HANDLE(&dev->dev);
-> +	struct pci_bus *bus = dev->subordinate;
-> +	bool alive = false;
-> +
-> +	if (handle) {
-> +		acpi_status status;
-> +		unsigned long long sta;
-> +
-> +		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
-> +		alive = ACPI_SUCCESS(status) && sta == ACPI_STA_ALL;
-> +	}
-> +	if (!alive) {
-> +		u32 v;
-> +
-> +		/* Check if the device responds. */
-> +		alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &v, 0);
-> +	}
-> +	if (!alive) {
-> +		pci_stop_and_remove_bus_device(dev);
-> +		if (handle)
-> +			acpiphp_bus_trim(handle);
-> +	} else if (bus) {
-> +		struct pci_dev *child, *tmp;
-> +
-> +		/* The device is a bridge. so check the bus below it. */
-> +		pm_runtime_get_sync(&dev->dev);
-> +		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
-> +			trim_stale_devices(child);
-> +
-> +		pm_runtime_put(&dev->dev);
-> +	}
-> +}
-> +
-> +/**
->   * acpiphp_check_bridge - re-enumerate devices
->   * @bridge: where to begin re-enumeration
->   *
->   * Iterate over all slots under this bridge and make sure that if a
->   * card is present they are enabled, and if not they are disabled.
->   */
-> -static int acpiphp_check_bridge(struct acpiphp_bridge *bridge)
-> +static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
->  {
->  	struct acpiphp_slot *slot;
-> -	int retval = 0;
-> -	int enabled, disabled;
-> -
-> -	enabled = disabled = 0;
->  
->  	list_for_each_entry(slot, &bridge->slots, node) {
-> -		unsigned int status = get_slot_status(slot);
-> -		if (slot->flags & SLOT_ENABLED) {
-> -			if (status == ACPI_STA_ALL)
-> -				continue;
-> +		struct pci_bus *bus = slot->bus;
-> +		struct pci_dev *dev, *tmp;
->  
-> -			retval = acpiphp_disable_and_eject_slot(slot);
-> -			if (retval)
-> -				goto err_exit;
-> +		mutex_lock(&slot->crit_sect);
-> +		/* wake up all functions */
-> +		if (get_slot_status(slot) == ACPI_STA_ALL) {
-> +			/* remove stale devices if any */
-> +			list_for_each_entry_safe(dev, tmp, &bus->devices,
-> +						 bus_list)
-> +				if (PCI_SLOT(dev->devfn) == slot->device)
-> +					trim_stale_devices(dev);
->  
-> -			disabled++;
-> +			/* configure all functions */
-> +			enable_device(slot);
->  		} else {
-> -			if (status != ACPI_STA_ALL)
-> -				continue;
-> -			retval = acpiphp_enable_slot(slot);
-> -			if (retval) {
-> -				err("Error occurred in enabling\n");
-> -				goto err_exit;
-> -			}
-> -			enabled++;
-> +			disable_device(slot);
->  		}
-> +		mutex_unlock(&slot->crit_sect);
->  	}
-> -
-> -	dbg("%s: %d enabled, %d disabled\n", __func__, enabled, disabled);
-> -
-> - err_exit:
-> -	return retval;
->  }
->  
->  static void acpiphp_set_hpp_values(struct pci_bus *bus)
-> @@ -828,7 +857,11 @@ static void hotplug_event(acpi_handle ha
->  					    ACPI_UINT32_MAX, check_sub_bridges,
->  					    NULL, NULL, NULL);
->  		} else {
-> -			acpiphp_enable_slot(func->slot);
-> +			struct acpiphp_slot *slot = func->slot;
-> +
-> +			mutex_lock(&slot->crit_sect);
-> +			enable_device(slot);
-> +			mutex_unlock(&slot->crit_sect);
->  		}
->  		break;
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/ls-caps.c b/ls-caps.c
+index f192510..87b1a0d 100644
+--- a/ls-caps.c
++++ b/ls-caps.c
+@@ -786,11 +786,15 @@ static void cap_express_link(struct device *d, int where, int type)
+ 	FLAG(w, PCI_EXP_LNKCTL_AUTBWIE));
+ 
+   w = get_conf_word(d, where + PCI_EXP_LNKSTA);
+-  printf("\t\tLnkSta:\tSpeed %s, Width x%d, TrErr%c Train%c SlotClk%c DLActive%c BWMgmt%c ABWMgmt%c\n",
++  printf("\t\tLnkSta:\tSpeed %s, Width x%d, TrErr%c",
+ 	link_speed(w & PCI_EXP_LNKSTA_SPEED),
+ 	(w & PCI_EXP_LNKSTA_WIDTH) >> 4,
+-	FLAG(w, PCI_EXP_LNKSTA_TR_ERR),
+-	FLAG(w, PCI_EXP_LNKSTA_TRAIN),
++	FLAG(w, PCI_EXP_LNKSTA_TR_ERR));
++  if ((type == PCI_EXP_TYPE_ROOT_PORT) || (type == PCI_EXP_TYPE_DOWNSTREAM) ||
++      (type == PCI_EXP_TYPE_PCIE_BRIDGE))
++    printf(" Train%c",
++	FLAG(w, PCI_EXP_LNKSTA_TRAIN));
++  printf(" SlotClk%c DLActive%c BWMgmt%c ABWMgmt%c\n",
+ 	FLAG(w, PCI_EXP_LNKSTA_SL_CLK),
+ 	FLAG(w, PCI_EXP_LNKSTA_DL_ACT),
+ 	FLAG(w, PCI_EXP_LNKSTA_BWMGMT),
 
