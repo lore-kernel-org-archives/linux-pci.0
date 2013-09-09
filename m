@@ -1,70 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	Mike Marciniszyn <infinipath@intel.com>,
-	Roland Dreier <roland@kernel.org>,
-	Roland Dreier <roland@purestorage.com>
-CC: <linux-kernel@vger.kernel.org>, Mark Einon <mark.einon@gmail.com>,
-	Sean Hefty <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	<linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH 6/6] radeon: Use pcie_get_readrq() and pcie_set_readrq() to simplify code
-Date: Mon, 9 Sep 2013 21:13:08 +0800
-Message-ID: <1378732388-4508-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39949 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753853Ab3IIP0Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Sep 2013 11:26:25 -0400
+Date: Mon, 9 Sep 2013 17:28:21 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tejun Heo <tj@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>
+Subject: [PATCH 7/9] PCI/MSI/s390: Make return values only 0/-errno when MSIs
+ allocated
+Message-ID: <20130909152820.GI24962@dhcp-26-207.brq.redhat.com>
+References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+ <20130905150442.GA24148@htj.dyndns.org>
+ <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+ <20130905154436.GC24148@htj.dyndns.org>
+ <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pcie_get_readrq() and pcie_set_readrq() functions to simplify code.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/gpu/drm/radeon/evergreen.c |   19 ++++++-------------
- 1 files changed, 6 insertions(+), 13 deletions(-)
+ arch/s390/pci/pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/gpu/drm/radeon/evergreen.c b/drivers/gpu/drm/radeon/evergreen.c
-index d5b49e3..b191f92 100644
---- a/drivers/gpu/drm/radeon/evergreen.c
-+++ b/drivers/gpu/drm/radeon/evergreen.c
-@@ -1169,23 +1169,16 @@ int evergreen_set_uvd_clocks(struct radeon_device *rdev, u32 vclk, u32 dclk)
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 61a3c2c..45a1875 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -426,7 +426,7 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
  
- void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
- {
--	u16 ctl, v;
--	int err;
--
--	err = pcie_capability_read_word(rdev->pdev, PCI_EXP_DEVCTL, &ctl);
--	if (err)
--		return;
--
--	v = (ctl & PCI_EXP_DEVCTL_READRQ) >> 12;
-+	int readrq;
-+	u16 v;
+ 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+-		return 1;
++		return -EINVAL;
+ 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
+ 	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
  
-+	readrq = pcie_get_readrq(rdev->pdev);
-+	v = ffs(readrq) - 8;
- 	/* if bios or OS sets MAX_READ_REQUEST_SIZE to an invalid value, fix it
- 	 * to avoid hangs or perfomance issues
- 	 */
--	if ((v == 0) || (v == 6) || (v == 7)) {
--		ctl &= ~PCI_EXP_DEVCTL_READRQ;
--		ctl |= (2 << 12);
--		pcie_capability_write_word(rdev->pdev, PCI_EXP_DEVCTL, ctl);
--	}
-+	if ((v == 0) || (v == 6) || (v == 7))
-+		pcie_set_readrq(rdev->pdev, 512);
- }
- 
- static bool dce4_is_in_vblank(struct radeon_device *rdev, int crtc)
 -- 
-1.7.1
+1.7.7.6
 
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
