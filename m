@@ -1,212 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37193 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758006Ab3IEXIL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Sep 2013 19:08:11 -0400
-Message-ID: <1378422483.3246.277.camel@ul30vt.home>
-Subject: Re: Excess dmesg output from ACPIPHP on boot (was: Re: [PATCH
- 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Date: Thu, 05 Sep 2013 17:08:03 -0600
-In-Reply-To: <1411346.QqVbC9hS9U@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
-	 <3686522.NVYmP5Gevu@vostro.rjw.lan> <1378419445.3246.268.camel@ul30vt.home>
-	 <1411346.QqVbC9hS9U@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from szxga02-in.huawei.com ([119.145.14.65]:28232 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665Ab3IIClv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Sep 2013 22:41:51 -0400
+Message-ID: <522D353F.8090209@huawei.com>
+Date: Mon, 9 Sep 2013 10:41:03 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Anil Gurumurthy <agurumur@brocade.com>,
+	Vijaya Mohan Guvva <vmohan@brocade.com>,
+	<linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH v2 1/6] scsi/bfa: use pcie_set/get_readrq to simplify
+ code
+References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com> <20130906221425.GA10152@google.com>
+In-Reply-To: <20130906221425.GA10152@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-09-06 at 00:40 +0200, Rafael J. Wysocki wrote:
-> On Thursday, September 05, 2013 04:17:25 PM Alex Williamson wrote:
-> > On Thu, 2013-09-05 at 23:39 +0200, Rafael J. Wysocki wrote:
-> > > On Thursday, September 05, 2013 09:44:26 PM Rafael J. Wysocki wrote:
-> > > > On Thursday, September 05, 2013 08:21:41 AM Alex Williamson wrote:
-> > > 
-> > > [...]
-> > > 
-> > > > > > 
-> > > > > > [   18.288122] pci 0000:00:00.0: no hotplug settings from platform
-> > > > > > [   18.288127] pcieport 0000:00:01.0: no hotplug settings from platform
-> > > > > > [   18.288142] pci 0000:01:00.0: no hotplug settings from platform
-> > > > > > [   18.288157] pci 0000:01:00.1: no hotplug settings from platform
-> > > > > > [   18.288162] pcieport 0000:00:03.0: no hotplug settings from platform
-> > > > > > [   18.288176] pci 0000:02:00.0: no hotplug settings from platform
-> > > > > > [   18.288190] pci 0000:02:00.1: no hotplug settings from platform
-> > > > > > [   18.288195] pcieport 0000:00:07.0: no hotplug settings from platform
-> > > > > > [   18.288209] pci 0000:03:00.0: no hotplug settings from platform
-> > > > > > [   18.288224] pci 0000:03:00.1: no hotplug settings from platform
-> > > > > > [   18.288228] pci 0000:00:14.0: no hotplug settings from platform
-> > > > > > [   18.288233] pci 0000:00:14.1: no hotplug settings from platform
-> > > > > > [   18.288237] pci 0000:00:14.2: no hotplug settings from platform
-> > > > > > [   18.288242] pci 0000:00:16.0: no hotplug settings from platform
-> > > > > > [   18.288247] pci 0000:00:16.1: no hotplug settings from platform
-> > > > > > [   18.288251] pci 0000:00:16.2: no hotplug settings from platform
-> > > > > > [   18.288256] pci 0000:00:16.3: no hotplug settings from platform
-> > > > > > [   18.288260] pci 0000:00:16.4: no hotplug settings from platform
-> > > > > > [   18.288265] pci 0000:00:16.5: no hotplug settings from platform
-> > > > > > [   18.288269] pci 0000:00:16.6: no hotplug settings from platform
-> > > > > > [   18.288274] pci 0000:00:16.7: no hotplug settings from platform
-> > > > > > [   18.288278] pci 0000:00:1a.0: no hotplug settings from platform
-> > > > > > [   18.288279] pci 0000:00:1a.0: using default PCI settings
-> > > > > > [   18.288292] pci 0000:00:1a.1: no hotplug settings from platform
-> > > > > > [   18.288293] pci 0000:00:1a.1: using default PCI settings
-> > > > > > [   18.288307] ehci-pci 0000:00:1a.7: no hotplug settings from platform
-> > > > > > [   18.288308] ehci-pci 0000:00:1a.7: using default PCI settings
-> > > > > > [   18.288322] pci 0000:00:1b.0: no hotplug settings from platform
-> > > > > > [   18.288327] pcieport 0000:00:1c.0: no hotplug settings from platform
-> > > > > > [   18.288332] pcieport 0000:00:1c.4: no hotplug settings from platform
-> > > > > > [   18.288344] pci 0000:05:00.0: no hotplug settings from platform
-> > > > > > [   18.288349] pci 0000:00:1d.0: no hotplug settings from platform
-> > > > > > [   18.288350] pci 0000:00:1d.0: using default PCI settings
-> > > > > > [   18.288360] pci 0000:00:1d.1: no hotplug settings from platform
-> > > > > > [   18.288361] pci 0000:00:1d.1: using default PCI settings
-> > > > > > [   18.288374] pci 0000:00:1d.2: no hotplug settings from platform
-> > > > > > [   18.288374] pci 0000:00:1d.2: using default PCI settings
-> > > > > > [   18.288387] pci 0000:00:1d.3: no hotplug settings from platform
-> > > > > > [   18.288387] pci 0000:00:1d.3: using default PCI settings
-> > > > > > 
-> > > > > > The boot is noticeably slower.  What's going to happen on systems that
-> > > > > > actually have a significant I/O topology vs my little workstation?
-> > > > 
-> > > > That depends on how many bus check/device check events they generate on boot.
-> > > > 
-> > > > My test machines don't generate them during boot at all (even the one with
-> > > > a Thunderbolt connector), so I don't see the messages in question during boot
-> > > > on any of them.  Mika doesn't see them either I suppose, or he would have told
-> > > > me about that before.
-> > > > 
-> > > > And let's just make it clear that it is not usual or even OK to generate bus
-> > > > checks or device checks during boot like this.  And since the changes in
-> > > > question have been in linux-next since right after the 3.11 merge window, I
-> > > > think that someone would have complained already had that been a common issue.
-> > > > 
-> > > > Of course, we need to deal with that somehow nevertheless. :-)
-> > > > 
-> > > > > Just to give you an idea:
-> > > > > 
-> > > > > CONFIG_HOTPLUG_PCI_ACPI=y
-> > > > > 
-> > > > > $ dmesg | wc
-> > > > >   5697  49935 384368
-> > > > > 
-> > > > > $ dmesg | tail --lines=1
-> > > > > [   53.137123] Ebtables v2.0 registered
-> > > > > 
-> > > > > -- vs --
-> > > > > 
-> > > > > # CONFIG_HOTPLUG_PCI_ACPI is not set
-> > > > > 
-> > > > > $ dmesg | wc
-> > > > >  1053  9176 71652
-> > > > > 
-> > > > > $dmesg | tail --lines=1
-> > > > > [   28.917220] Ebtables v2.0 registered
-> > > > > 
-> > > > > So it spews out 5x more output with acpiphp enabled and takes and extra
-> > > > > 24s to boot (nearly 2x).  Not good.
-> > > > 
-> > > > The "no hotplug settings from platform" message is from pci_configure_slot().
-> > > > I think the messages you're seeing are from the call to it in
-> > > > acpiphp_set_hpp_values() which is called by enable_slot().
-> > > > 
-> > > > There, I think, we can simply check the return value of pci_scan_slot() and
-> > > > if that is 0 (no new devices), we can just skip everything under the call to
-> > > > __pci_bus_assign_resources().
-> > > > 
-> > > > However, we can't skip the scanning of bridges, if any, because there may be
-> > > > new devices below them and I guess that's what takes so much time on your
-> > > > machine.
-> > > 
-> > > OK, one piece is missing.  We may need to evaluate _OSC after handling each
-> > > event to let the platform know the status.
-> > > 
-> > > Can you please check if the appended patch makes any difference (with the
-> > > previous fix applied, of course)?
-> > > 
-> > > If fact, it is two patches combined.  One of them optimizes enable_slot()
-> > > slightly and the other adds the missing _OSC evaluation.
-> > 
-> > Better, still double the output:
-> > 
-> > $ dmesg | wc
-> >    2169   19047  152710
+On 2013/9/7 6:14, Bjorn Helgaas wrote:
+> On Thu, Sep 05, 2013 at 03:55:25PM +0800, Yijing Wang wrote:
+>> v1->v2: use pcie_get/set_readrq to simplify code
+>> a lot suggestd by Bjorn.
+>>
+>> Use pcie_get_readrq()/pcie_set_readrq() to simplify
+>> code.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Cc: Jiang Liu <jiang.liu@huawei.com>
+>> Cc: Anil Gurumurthy <agurumur@brocade.com>
+>> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+>> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+>> Cc: linux-scsi@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> ---
+>>  drivers/scsi/bfa/bfad.c |   48 +++++-----------------------------------------
+>>  1 files changed, 6 insertions(+), 42 deletions(-)
+
+Hi Bjorn,
+   Thanks for your patience guidance! Now I know more about how to write
+a patch or patchset. I will check my patch follow the advices below before
+I send out every time. Make it easier for you and other maintainers to
+review and apply.
+
 > 
-> I see.
+> I applied all these with some tweaks to my pci/yijing-pci_is_pcie-v2
+> branch [1].  This will be rebased after v3.12-rc1, and may be amended
+> if any patches are picked up by others.
 > 
-> What about the timing?
-
-~40s below vs ~29s for acpiphp config'd out above.
-
-> > $ dmesg | tail --lines=1
-> > [   39.980918] Ebtables v2.0 registered
-> > 
-> > Here's another interesting stat:
-> > 
-> > $ dmesg | colrm 1 15 | sort | uniq -c | sort -nr | head --lines=25
-> >      73 pci 0000:00:1f.0: BAR 13: [io  0x1000-0x107f] has bogus alignment
-> >      73 pci 0000:00:1e.0: PCI bridge to [bus 06]
-> >      64 pci 0000:00:1e.0:   bridge window [mem 0x81100000-0x812fffff 64bit pref]
-> >      64 pci 0000:00:1e.0:   bridge window [mem 0x80f00000-0x810fffff]
-> >      64 pci 0000:00:1e.0:   bridge window [io  0x7000-0x7fff]
-> >      38 pci 0000:00:1c.4: PCI bridge to [bus 05]
-> >      38 pci 0000:00:1c.4:   bridge window [mem 0xf4f00000-0xf4ffffff]
-> >      38 pci 0000:00:1c.0: PCI bridge to [bus 04]
-> >      38 pci 0000:00:07.0: PCI bridge to [bus 03]
-> >      38 pci 0000:00:07.0:   bridge window [mem 0xf2000000-0xf40fffff]
-> >      38 pci 0000:00:07.0:   bridge window [mem 0xe0000000-0xf1ffffff 64bit pref]
-> >      38 pci 0000:00:07.0:   bridge window [io  0x4000-0x4fff]
-> >      38 pci 0000:00:03.0: PCI bridge to [bus 02]
-> >      38 pci 0000:00:03.0:   bridge window [mem 0xf4e00000-0xf4efffff]
-> >      38 pci 0000:00:03.0:   bridge window [mem 0xd0000000-0xdfffffff 64bit pref]
-> >      38 pci 0000:00:03.0:   bridge window [io  0x3000-0x3fff]
-> >      38 pci 0000:00:01.0: PCI bridge to [bus 01]
-> >      38 pci 0000:00:01.0:   bridge window [mem 0xf4100000-0xf4bfffff]
-> >      38 pci 0000:00:01.0:   bridge window [io  0x2000-0x2fff]
-> >      37 pci 0000:00:1c.4:   bridge window [mem 0x80c00000-0x80dfffff 64bit pref]
-> >      37 pci 0000:00:1c.4:   bridge window [io  0x6000-0x6fff]
-> >      37 pci 0000:00:1c.0:   bridge window [mem 0x80a00000-0x80bfffff 64bit pref]
-> >      37 pci 0000:00:1c.0:   bridge window [mem 0x80800000-0x809fffff]
-> >      37 pci 0000:00:1c.0:   bridge window [io  0x5000-0x5fff]
-> >      36 pci 0000:00:01.0:   bridge window [mem 0x80000000-0x807fffff 64bit pref]
-> > 
-> > This is nearly the entire difference, just 25 lines repeated over and
-> > over.
+> Hints (not just for you; I hope other people pay attention, too,
+> because I'm obsessive and I pay attention to these details):
 > 
-> Well, this is the bridge sizing I talked about previously.  We still get
-> apparently spurious bus check/device check events and they trigger bridge
-> scans.
+>   - Include a "[PATCH v2 0/6]" email.  That's a good place for you to
+>     put an overall description of the series, and a good place for
+>     responses like this one that apply to the whole series.
 > 
-> I'm not sure what to do about that and I wonder whether or not this is
-> reproducible on any other machines you can test.
+>> -
+>> -		pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+>> -		if (mask != 0xffff && pcie_cap_reg) {
+>> -			pcie_cap_reg += 0x08;
+>> -			pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
+>> -			if ((pcie_dev_ctl & 0x7000) != mask) {
+>> -				printk(KERN_WARNING "BFA[%s]: "
+>> +	if (pcie_max_read_reqsz > 0 && pci_is_pcie(pdev)) {
+>> +		int max_rq = pcie_get_readrq(pdev);
+>> +		if (max_rq > 128 && max_rq < 4096 && is_power_of_2(max_rq))
+> 
+> I think you meant to validate pcie_max_read_reqsz (the module parameter),
+> not max_rq.  I made this change on my branch.
 
-I can try it on a couple other systems, but probably not until tomorrow.
+Yes, thanks for your fix.
 
-> Can you please change dbg() to pr_info() under ACPI_NOTIFY_BUS_CHECK and
-> ACPI_NOTIFY_DEVICE_CHECK in hotplug_event() (acpiphp_glue.c), grep the boot
-> dmesg log for "check notify" and send the result?  I'm wondering what's
-> going on there.
+Thanks!
+Yijing.
 
-$ dmesg | grep "check notify"
-[    1.633228] hotplug_event: Device check notify on \_SB_.PCI0.PEX2
-[    2.472004] hotplug_event: Device check notify on \_SB_.PCI0.PEX3
-[    2.477288] hotplug_event: Device check notify on \_SB_.PCI0.PEX4
-[    2.482571] hotplug_event: Device check notify on \_SB_.PCI0.PEX5
-[    2.482579] hotplug_event: Device check notify on \_SB_.PCI0.PEX6
-[    8.204953] hotplug_event: Device check notify on \_SB_.PCI0.PEX2
-[    8.209632] hotplug_event: Device check notify on \_SB_.PCI0.PEX3
-[    8.214272] hotplug_event: Device check notify on \_SB_.PCI0.PEX4
-[    8.218894] hotplug_event: Device check notify on \_SB_.PCI0.PEX5
-[    8.218901] hotplug_event: Device check notify on \_SB_.PCI0.PEX6
+> 
+>> +			printk(KERN_WARNING "BFA[%s]: "
+>>  				"pcie_max_read_request_size is %d, "
+>> -				"reset to %d\n", bfad->pci_name,
+>> -				(1 << ((pcie_dev_ctl & 0x7000) >> 12)) << 7,
+>> +				"reset to %d\n", bfad->pci_name, max_rq,
+>>  				pcie_max_read_reqsz);
+>> -
+>> -				pcie_dev_ctl &= ~0x7000;
+>> -				pci_write_config_word(pdev, pcie_cap_reg,
+>> -						pcie_dev_ctl | mask);
+>> -			}
+>> -		}
+>> +		pcie_set_readrq(pdev, pcie_max_read_reqsz);
+>>  	}
+>>  
+>>  	pci_save_state(pdev);
+>> -- 
+>> 1.7.1
+>>
+>>
+> 
+> .
+> 
 
-Thanks,
-Alex
+
+-- 
+Thanks!
+Yijing
 
