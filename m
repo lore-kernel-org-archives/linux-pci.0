@@ -1,53 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:32827 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486Ab3IZOmM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 10:42:12 -0400
-Date: Thu, 26 Sep 2013 10:42:08 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Veaceslav Falico <vfalico@redhat.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] msi: free msi_desc entry only after we've released
- the kobject
-Message-ID: <20130926144208.GC12301@hmsreliant.think-freely.org>
-References: <1380189591-1368-1-git-send-email-vfalico@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:10014 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752510Ab3IIPSw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Sep 2013 11:18:52 -0400
+Date: Mon, 9 Sep 2013 17:20:44 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tejun Heo <tj@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+References: <20130905130902.GA26314@htj.dyndns.org>
+ <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+ <20130905150442.GA24148@htj.dyndns.org>
+ <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+ <20130905154436.GC24148@htj.dyndns.org>
+ <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380189591-1368-1-git-send-email-vfalico@redhat.com>
+In-Reply-To: <20130906233205.GF12956@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 26, 2013 at 11:59:51AM +0200, Veaceslav Falico wrote:
-> Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
-> however kobject_put() doesn't guarantee us that it was the last reference
-> and that the kobj isn't used currently by someone else, so after we
-> kfree(entry) with the struct kobject - other users will begin using the
-> freed memory, instead of the actual kobject.
-> 
-> Fix this by using the kobject->release callback, which is called last when
-> the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
-> which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
-> kobj itself after ->release() was called, so we're safe).
-> 
-> In case we've failed to create the sysfs directories - just kfree()
-> it - cause we don't have the kobjects attached.
-> 
-> Also, remove the same functionality from populate_msi_sysfs(), cause on
-> failure we anyway call free_msi_irqs(), which will take care of all the
-> kobjects properly.
-> 
-> And add the forgotten pci_dev_put(pdev) in case of failure to register the
-> kobject in populate_msi_sysfs().
-> 
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Neil Horman <nhorman@tuxdriver.com>
-> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> CC: linux-pci@vger.kernel.org
-> CC: linux-kernel@vger.kernel.org
-> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
-> ---
-> 
-Acked-by: Neil Horman <nhorman@tuxdriver.com>
+On Fri, Sep 06, 2013 at 05:32:05PM -0600, Bjorn Helgaas wrote:
+> I propose that you rework it that way, and at least find out what
+> (if anything) would break if we do that.  Or maybe we just give up
+> some optimization; it would be nice to quantify that, too.
 
+Hi Bjorn,
+
+The series is what it seems a direction to take.
+
+Looks like we need PPC folks to agree on the quota check update
+for pSeries (yes, they do bail out with a positive return value
+from arch_msi_check_device()):
+
+	quota = msi_quota_for_device(pdev, nvec);
+
+	if (quota && quota < nvec)
+		return quota;
+
+	return 0;
+
+> Bjorn
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
