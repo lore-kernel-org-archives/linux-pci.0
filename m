@@ -1,86 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:11784 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752540Ab3IZPCi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 11:02:38 -0400
-Date: Thu, 26 Sep 2013 11:02:28 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Kevin Hilman <khilman@linaro.org>,
-	Stephen Warren <swarren@nvidia.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: PCI host merge strategy and maintainers
-Message-ID: <20130926150228.GL11119@titan.lakedaemon.net>
-References: <CAErSpo7UX6dt0CPZp3kEQrXXbMeArpu1iFfp=-FX46LVgq0iMw@mail.gmail.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:19209 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752957Ab3IINRp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 09:17:45 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Airlie <airlied@linux.ie>,
+	Mike Marciniszyn <infinipath@intel.com>,
+	Roland Dreier <roland@kernel.org>,
+	Roland Dreier <roland@purestorage.com>
+CC: <linux-kernel@vger.kernel.org>, Mark Einon <mark.einon@gmail.com>,
+	Sean Hefty <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	<linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH 0/6] Simplify some mps and mrrs setting related code
+Date: Mon, 9 Sep 2013 21:13:02 +0800
+Message-ID: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7UX6dt0CPZp3kEQrXXbMeArpu1iFfp=-FX46LVgq0iMw@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 25, 2013 at 05:28:28PM -0600, Bjorn Helgaas wrote:
-> There are patches for exynos, imx6, mvebu, and tegra on the PCI list,
-> and I want to sort out how people expect them to be merged.
-> 
-> My current assumption is the following:
-...
->   drivers/pci/host/pci-mvebu.c  ?? unclear; Jason Cooper has merged
-> some, I've merged some
+This series simplify mps and mrrs setting related code in drivers.
+Export the pcie_set/get_mps() like pcie_set/get_readrq(). So drivers
+can use these interfaces to simplify code that set mps and mrrs.
+Patch 2 use pci_is_root_bus() instead of if (bus->parent) statement
+for better readability.
 
-hmm, my current branch I'm about to send a pull for, mvebu/msi_mvebu has
-the following diffstat:
+Yijing Wang (6):
+  PCI: Export pcie_set_mps() and pcie_get_mps()
+  title/pci: use cached pci_dev->pcie_mpss to simplify code
+  IB/qib: Use pci_is_root_bus() to check whether it is a root bus
+  IB/qib: Use pcie_set_mps() and pcie_get_mps() to simplify code
+  staging/et131x: Use cached pci_dev->pcie_mpss and pcie_set_readrq()
+    to simplif code
+  radeon: Use pcie_get_readrq() and pcie_set_readrq() to simplify code
 
- .../devicetree/bindings/arm/armada-370-xp-mpic.txt |   3 +
- .../devicetree/bindings/pci/mvebu-pci.txt          |   3 +
- arch/arm/boot/dts/armada-370-xp.dtsi               |   1 +
- arch/arm/boot/dts/armada-370.dtsi                  |   1 +
- arch/arm/boot/dts/armada-xp-mv78230.dtsi           |   1 +
- arch/arm/boot/dts/armada-xp-mv78260.dtsi           |   1 +
- arch/arm/boot/dts/armada-xp-mv78460.dtsi           |   1 +
- drivers/irqchip/irq-armada-370-xp.c                | 202 ++++++++++++++++++++-
- drivers/pci/host/pci-mvebu.c                       |  26 +++
- 9 files changed, 234 insertions(+), 5 deletions(-)
+ arch/tile/kernel/pci.c               |    7 +--
+ drivers/gpu/drm/radeon/evergreen.c   |   19 ++-----
+ drivers/infiniband/hw/qib/qib_pcie.c |   98 +++++++++++-----------------------
+ drivers/pci/pci.c                    |    2 +
+ drivers/staging/et131x/et131x.c      |   14 +----
+ 5 files changed, 44 insertions(+), 96 deletions(-)
 
-The problematic piece is the build dep on the irqchip changes.  It was
-ok for me to take them through my tree last time, I assume that's the
-case this time.
 
-One thing you didn't mention are the dove changes which (of course)
-depend on Thomas' mvebu changes above.  They are currently in
-mvebu/dove_pcie-mbus-dt and has the following diffstat:
-
- .../devicetree/bindings/pci/mvebu-pci.txt          |    7 +
- arch/arm/boot/dts/Makefile                         |    1 +
- arch/arm/boot/dts/dove-cm-a510.dts                 |    2 +-
- arch/arm/boot/dts/dove-cubox.dts                   |    2 +-
- arch/arm/boot/dts/dove-d2plug.dts                  |    2 +-
- arch/arm/boot/dts/dove-d3plug.dts                  |  103 ++
- arch/arm/boot/dts/dove-dove-db.dts                 |    2 +-
- arch/arm/boot/dts/dove.dtsi                        | 1009 +++++++++++---------
- arch/arm/mach-dove/board-dt.c                      |   39 +-
- drivers/pci/host/Kconfig                           |    2 +-
- drivers/pci/host/pci-mvebu.c                       |   99 +-
- 11 files changed, 719 insertions(+), 549 deletions(-)
-
-Both series were intended for the last merge window, but didn't make it.
-So they've had plenty of time in -next.  I've not seen any merge
-conflicts either, but I haven't followed how early everyone else starts
-posting to -next.
-
-> Please correct anything that's wrong above, and please give me some
-> guidance on mvebu.  I'm happy to go either way; I just need to know
-> whether to pay attention to them :)
-
-Well, there's nothing new here, so if you're ok with me taking them,
-I'll continue on that path for these two series.
-
-thx,
-
-Jason.
