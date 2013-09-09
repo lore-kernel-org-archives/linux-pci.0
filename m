@@ -1,50 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:37731 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070Ab3IYVtL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Sep 2013 17:49:11 -0400
-Received: by mail-ie0-f172.google.com with SMTP id x13so344968ief.17
-        for <linux-pci@vger.kernel.org>; Wed, 25 Sep 2013 14:49:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130924231953.GC9302@google.com>
-References: <20130910231043.GA31857@linux.intel.com> <20130924231953.GC9302@google.com>
+Received: from mail-ye0-f180.google.com ([209.85.213.180]:35238 "EHLO
+	mail-ye0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755712Ab3IIXOY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 19:14:24 -0400
+Received: by mail-ye0-f180.google.com with SMTP id m15so2207933yen.39
+        for <linux-pci@vger.kernel.org>; Mon, 09 Sep 2013 16:14:23 -0700 (PDT)
+Subject: [PATCH 6/7] lspci: Drop PCIe LnkCtl "Retrain Link" decoding
+To: Martin Mares <mj@ucw.cz>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Sep 2013 15:48:50 -0600
-Message-ID: <CAErSpo4C52O0iUxU8s8L2Ei=eedanLxn0u_aFtCnnvLu0yjAtA@mail.gmail.com>
-Subject: Re: [PATCH] Intel pci device quirk remove D3 delay
-To: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	arjan@linux.intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-pci@vger.kernel.org
+Date: Mon, 09 Sep 2013 17:14:21 -0600
+Message-ID: <20130909231421.30095.57889.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
+References: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 24, 2013 at 5:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Sep 10, 2013 at 04:10:43PM -0700, Todd E Brandt wrote:
->> The latest Ivy Bridge Intel chipsets have a hardware optimization which
->
-> You said "Ivy Bridge" above but use "Haswell" below.  Let me know if
-> anything needs to be corrected here.
+Per PCIe spec r3.0, Table 7-16, the Retrain Link bit is writable but
+always returns 0 when read, so decoding it gives no useful information.
 
-Reading this again, the text really doesn't make sense as-is.  So
-please confirm what this should say.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ ls-caps.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-It sure looks like it should say "The latest *Haswell* Intel chipsets ..."
+diff --git a/ls-caps.c b/ls-caps.c
+index 3b554fe..f192510 100644
+--- a/ls-caps.c
++++ b/ls-caps.c
+@@ -776,9 +776,8 @@ static void cap_express_link(struct device *d, int where, int type)
+   if ((type == PCI_EXP_TYPE_ROOT_PORT) || (type == PCI_EXP_TYPE_ENDPOINT) ||
+       (type == PCI_EXP_TYPE_LEG_END) || (type == PCI_EXP_TYPE_PCI_BRIDGE))
+     printf(" RCB %d bytes", w & PCI_EXP_LNKCTL_RCB ? 128 : 64);
+-  printf(" Disabled%c Retrain%c CommClk%c\n\t\t\tExtSynch%c ClockPM%c AutWidDis%c BWInt%c AutBWInt%c\n",
++  printf(" Disabled%c CommClk%c\n\t\t\tExtSynch%c ClockPM%c AutWidDis%c BWInt%c AutBWInt%c\n",
+ 	FLAG(w, PCI_EXP_LNKCTL_DISABLE),
+-	FLAG(w, PCI_EXP_LNKCTL_RETRAIN),
+ 	FLAG(w, PCI_EXP_LNKCTL_CLOCK),
+ 	FLAG(w, PCI_EXP_LNKCTL_XSYNCH),
+ 	FLAG(w, PCI_EXP_LNKCTL_CLOCKPM),
 
-If you really mean "Ivy Bridge," then you should say something about
-how Haswell is related to Ivy Bridge.  No doubt this is all obvious to
-Intel folks, but it's not to me :)
-
-Bjorn
-
->> allows on-chip PCI devices to ignore the 10ms delay before entering
->> or exitting D3 suspend.
->>
->> This patch implements the optimization as a pci quirk, since we want
->> tight control over which devices use it. This way we can test each device
->> individually to be sure there are no issues before we enable the quirk.
->> The first set of devices are from the Haswell platform, which includes
->> every PCI device that is on the northbridge and southbridge.
->>
->> After testing this patch reduces the haswell suspend time from 93 ms to
->> 47 ms and resume time from 160 ms to 64 ms.
