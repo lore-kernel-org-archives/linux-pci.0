@@ -1,129 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 9 Sep 2013 17:45:22 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: [PATCH] ACPI / hotplug / PCI: Avoid parent bus rescans on spurious device checks
-Date: Sun, 08 Sep 2013 00:16:38 +0200
-Message-ID: <2762291.l6lVgcWD3r@vostro.rjw.lan>
-In-Reply-To: <1378481674.3246.288.camel@ul30vt.home>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <CAErSpo4WAh8A7nAeDhrLUOAKrLNyEoKfyxT7VN6cyH3vuSA+zg@mail.gmail.com> <1378481674.3246.288.camel@ul30vt.home>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20130909154522.GA13855@dhcp-26-207.brq.redhat.com>
+References: <20130905150442.GA24148@htj.dyndns.org>
+ <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+ <20130905154436.GC24148@htj.dyndns.org>
+ <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130909153754.GG25434@htj.dyndns.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130909153754.GG25434@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, Sep 09, 2013 at 11:37:54AM -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Mon, Sep 09, 2013 at 05:20:44PM +0200, Alexander Gordeev wrote:
+> > The series is what it seems a direction to take.
+> 
+> It can definitely use better descriptions explaining why this is
+> happening but the general direction seems good to me.
 
-In the current ACPIPHP notify handler we always go directly for a
-rescan of the parent bus if we get a device check notification for
-a device that is not a bridge.  However, this obviously is
-overzealous if nothing really changes, because this way we may rescan
-the whole PCI hierarchy pretty much in vain.
+Oh, those are not even tested. Did not want turn to drivers before
+the interface/direction generally agreed.
 
-That happens on Alex Williamson's machine whose ACPI tables contain
-device objects that are supposed to coresspond to PCIe root ports,
-but those ports aren't physically present (or at least they aren't
-visible in the PCI config space to us).  The BIOS generates multiple
-device check notifies for those objects during boot and for each of
-them we go straight for the parent bus rescan, but the parent bus is
-the root bus in this particular case.  In consequence, we rescan the
-whole PCI bus from the top several times in a row, which is
-completely unnecessary, increases boot time by 50% (after previous
-fixes) and generates excess dmesg output from the PCI subsystem.
+> > Looks like we need PPC folks to agree on the quota check update
+> > for pSeries (yes, they do bail out with a positive return value
+> > from arch_msi_check_device()):
+> > 
+> > 	quota = msi_quota_for_device(pdev, nvec);
+> > 
+> > 	if (quota && quota < nvec)
+> > 		return quota;
+> 
+> I think it should return -ENOSPC.
 
-Fix the problem by checking if we can find anything new in the
-slot corresponding to the device we've got a device check notify
-for and doing nothig if that's not the case.
+Absolutely, in patch #2 :)
 
-The spec (ACPI 5.0, Section 5.6.6) appears to mandate this behavior,
-as it says:
+> Thanks.
+> 
+> -- 
+> tejun
 
-  Device Check. Used to notify OSPM that the device either appeared
-  or disappeared. If the device has appeared, OSPM will re-enumerate
-  from the parent. If the device has disappeared, OSPM will
-  invalidate the state of the device. OSPM may optimize out
-  re-enumeration.
-
-Therefore, according to the spec, we are free to do nothing if
-nothing changes.
-
-References: https://bugzilla.kernel.org/show_bug.cgi?id=60865
-Reported-by: Alex Williamson <alex.williamson@redhat.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-
-On top of linux-pm.git/linux-next.
-
-Thanks,
-Rafael
-
----
- drivers/pci/hotplug/acpiphp_glue.c |   32 +++++++++++++++++++++++++-------
- 1 file changed, 25 insertions(+), 7 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -528,6 +528,16 @@ static void check_hotplug_bridge(struct
- 	}
- }
- 
-+static int acpiphp_rescan_slot(struct acpiphp_slot *slot)
-+{
-+	struct acpiphp_func *func;
-+
-+	list_for_each_entry(func, &slot->funcs, sibling)
-+		acpiphp_bus_add(func_to_handle(func));
-+
-+	return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
-+}
-+
- /**
-  * enable_slot - enable, configure a slot
-  * @slot: slot to be enabled
-@@ -544,10 +554,7 @@ static void __ref enable_slot(struct acp
- 	LIST_HEAD(add_list);
- 	int nr_found;
- 
--	list_for_each_entry(func, &slot->funcs, sibling)
--		acpiphp_bus_add(func_to_handle(func));
--
--	nr_found = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
-+	nr_found = acpiphp_rescan_slot(slot);
- 	max = acpiphp_max_busnr(bus);
- 	for (pass = 0; pass < 2; pass++) {
- 		list_for_each_entry(dev, &bus->devices, bus_list) {
-@@ -840,11 +847,22 @@ static void hotplug_event(acpi_handle ha
- 	case ACPI_NOTIFY_DEVICE_CHECK:
- 		/* device check */
- 		dbg("%s: Device check notify on %s\n", __func__, objname);
--		if (bridge)
-+		if (bridge) {
- 			acpiphp_check_bridge(bridge);
--		else
--			acpiphp_check_bridge(func->parent);
-+		} else {
-+			struct acpiphp_slot *slot = func->slot;
-+			int ret;
- 
-+			/*
-+			 * Check if anything has changed in the slot and rescan
-+			 * from the parent if that's the case.
-+			 */
-+			mutex_lock(&slot->crit_sect);
-+			ret = acpiphp_rescan_slot(slot);
-+			mutex_unlock(&slot->crit_sect);
-+			if (ret)
-+				acpiphp_check_bridge(func->parent);
-+		}
- 		break;
- 
- 	case ACPI_NOTIFY_EJECT_REQUEST:
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
