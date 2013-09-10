@@ -1,46 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35055 "EHLO mx1.redhat.com"
+Received: from gate.crashing.org ([63.228.1.57]:34825 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750704Ab3IFNPp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Sep 2013 09:15:45 -0400
-Date: Fri, 6 Sep 2013 15:17:40 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20130906131739.GA27922@dhcp-26-207.brq.redhat.com>
-References: <cover.1378383792.git.agordeev@redhat.com>
- <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
- <20130905130902.GA26314@htj.dyndns.org>
- <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
- <20130905150442.GA24148@htj.dyndns.org>
- <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+	id S1750758Ab3IJKZW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 10 Sep 2013 06:25:22 -0400
+Message-ID: <1378808696.4121.9.camel@pasglop>
+Subject: Re: [PATCH 1/3] PCI: use pci_is_root_bus() to check whether it is a
+ root bus
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Chiang <achiang@canonical.com>
+Date: Tue, 10 Sep 2013 20:24:56 +1000
+In-Reply-To: <20130910074611.GA11724@weiyang.vnet.ibm.com>
+References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <20130906230941.GC12956@google.com>
+	 <20130909070017.GB3726@weiyang.vnet.ibm.com>
+	 <CAErSpo5BTV_b1NpeifuAPwHvfsrAERpdmwgnUFMS6gQ3Asik-Q@mail.gmail.com>
+	 <20130910074611.GA11724@weiyang.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 05, 2013 at 05:40:41PM +0200, Alexander Gordeev wrote:
-> On Thu, Sep 05, 2013 at 11:04:42AM -0400, Tejun Heo wrote:
-> > The thing is, do we even have cases where arch code returns positive
-> > return to indicate possible partial allocation?  If not, the whole
-> > interface is convoluted for no good reason and we can just make
-> > everything return 0 or -errno, which is a lot simpler.  No?
+On Tue, 2013-09-10 at 15:46 +0800, Wei Yang wrote:
+> On some platforms, like powernv, each pci-dev has a dev-tree node to represent
+> it. The dev-tree node is set by pci_set_of_node() during pci_scan_device().
 > 
-> As I mentioned in my other note, at least PPC has a concept of MSI quota,
-> so exceeding it would be the very case, I believe.
+> In pci_set_of_node(), it searchs for the node with the same devfn in its
+> parent. Here comes the question, who should be the VF's parent. Would be a
+> conflict for the devfn between PF and VF?
 
-An update here. No other arch supports multiple MSIs besides Intel (+IOMMU).
-Yet, ironically, the concept of possible partial allocation was adopted from
-MSI-X. I briefly checked all archs and it seems none of them throws out a
-possible other number of MSIs > 1 (including PPC I mistakenly read).
+I think it makes no sense to create OFW nodes for VFs under powernv anyway ...
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+(which is another reason why we need urgently to disconnect the EEH data
+from the device node ...)
+
+Cheers,
+Ben.
+
+
