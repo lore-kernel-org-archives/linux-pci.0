@@ -1,67 +1,45 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1378286800.2048.1.camel@jtkirshe-mobl>
-Subject: Re: [E1000-devel] [PATCH 5/7] ixgbe: use
- pcie_capability_read_word() to simplify code
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 04 Sep 2013 02:26:40 -0700
-In-Reply-To: <1378193715-25328-5-git-send-email-wangyijing@huawei.com>
-References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
-	 <1378193715-25328-5-git-send-email-wangyijing@huawei.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-FzsLmdWGu8vfr7ZgN+tn"
-Mime-Version: 1.0
+Message-ID: <522F13A9.9020704@cogentembedded.com>
+Date: Tue, 10 Sep 2013 16:42:17 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>
+Subject: Re: [PATCH 5/9] PCI/MSI/s390: Make return values only 0/-errno when
+ MSIs allocated
+References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com> <20130905150442.GA24148@htj.dyndns.org> <20130905154041.GD30984@dhcp-26-207.brq.redhat.com> <20130905154436.GC24148@htj.dyndns.org> <20130905185440.GA13175@dhcp-26-207.brq.redhat.com> <20130905200608.GA3846@htj.dyndns.org> <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com> <20130906160621.GF22763@mtj.dyndns.org> <20130906233205.GF12956@google.com> <20130909152044.GA24962@dhcp-26-207.brq.redhat.com> <20130909152658.GG24962@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20130909152658.GG24962@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hello.
 
---=-FzsLmdWGu8vfr7ZgN+tn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On 09-09-2013 19:26, Alexander Gordeev wrote:
 
-On Tue, 2013-09-03 at 15:35 +0800, Yijing Wang wrote:
-> use pcie_capability_read_word() to simplify code.
->=20
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: e1000-devel@lists.sourceforge.net
-> Cc: netdev@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > ---
->  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |    6 ++----
->  1 files changed, 2 insertions(+), 4 deletions(-)
+>   arch/s390/pci/pci.c |    2 ++
+>   1 files changed, 2 insertions(+), 0 deletions(-)
 
-Thanks Yijing, I will add it to my queue.
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index f17a834..c79c6e4 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -427,6 +427,8 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>   	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
+>   	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
+>   		return -EINVAL;
+> +	if (type == PCI_CAP_ID_MSI && nvec > 1)
+> +		return 1;
 
---=-FzsLmdWGu8vfr7ZgN+tn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+    This contradicts to the patch subject.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIcBAABCgAGBQJSJvzQAAoJEOVv75VaS+3OG8IP/iHrGRDmPGoofrbCkgAIj+uL
-eCCvun9ymY0BSfGB9Uu9VNB+ryJAIk2H5apldYWeURyoVQxdJVlBJnPTqI3jN1Kw
-/DzP+FRUyiRVD9NCW2cRB9ZVzKSlkqOZ/UKtpOwbAh0+rWT/k8T/cvfK1/EMibyh
-71w05n1IlXJoDZqKi01M+w3JQJhK3yLwq/pcW4npwxXI864Mg21ExjQqxgd0ABVl
-2UJ3LNQ297vfTco4bOXXLtS6Wdtl316iYFG3Ix3YdBK+q5ly4qtHX6UEp1YtaZlv
-UMtlEIZu0TDiDzO1srxyroHFcEmB76OmZZnY30huVwx07zbOFP0JuzT4yyWGRIuk
-+LBQWMhkJ2c5l74PmejzDfD/Ur4+1dFwi7qs++z2NZJE1IH6L1HZbdPHMm6yq5B8
-ZNzV9nsaS0JO6XVJYdtzB/r0jfHhbTuYqYN83eFtW2n6qGYqyj/K+mm1LVJ+WjmS
-HTsJxbElwVPbJbt8s7OUNt8EFNogezIiPGzqUAx6+CVHAidN5cxxsu7ueF6LLLNF
-MgjlZrWL9a/1mi7pco5JMSLUaQm4Ej3vAm0u2W+hiSfWuNKG9K/9eHHkFqiL7747
-A8xDvnxfpfZPKyK97miOeJAL+GXbndeVcjqdNAAc8AW0Q8OuBQcqYmsqyeqIHFWd
-+s2B/j2TWlba8UnxQdRE
-=YYqR
------END PGP SIGNATURE-----
-
---=-FzsLmdWGu8vfr7ZgN+tn--
+WBR, Sergei
 
