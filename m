@@ -1,64 +1,35 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Veaceslav Falico <vfalico@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 2/3] msi: always unregister ->msi_kset within free_msi_irqs()
-Date: Tue, 17 Sep 2013 03:47:43 +0200
-Message-Id: <1379382464-7920-3-git-send-email-vfalico@redhat.com>
-In-Reply-To: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
-References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
+Date: Tue, 10 Sep 2013 13:53:48 +0100
+From: Mark Einon <mark.einon@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Airlie <airlied@linux.ie>,
+	Mike Marciniszyn <infinipath@intel.com>,
+	Roland Dreier <roland@kernel.org>,
+	Roland Dreier <roland@purestorage.com>,
+	linux-kernel@vger.kernel.org, Sean Hefty <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH 5/6] staging/et131x: Use cached pci_dev->pcie_mpss and
+ pcie_set_readrq() to simplif code
+Message-ID: <20130910125348.GA22961@laugharne.auvation.com>
+References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
+ <1378732388-4508-6-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1378732388-4508-6-git-send-email-wangyijing@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we create and populate ->msi_kset while allocating irqs in
-populate_msi_sysfs(), however if it fails and/or we want to free the
-entries - we don't always remove it, and we might have problems if we've
-failed to allocate irqs and try it again.
+On Mon, Sep 09, 2013 at 09:13:07PM +0800, Yijing Wang wrote:
+> The PCI core caches the "PCI-E Max Payload Size Supported" in
+> pci_dev->pcie_mpss, so use that instead of pcie_capability_read_dword().
+> Also use pcie_set_readrq() instead of pcie_capability_clear_and_set_word()
+> to simplify code.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-To fix that, move the unregister part to free_msi_irqs() and remove already
-existing ones.
-
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
----
- drivers/pci/msi.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 14bf578..68da921 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -388,6 +388,9 @@ static void free_msi_irqs(struct pci_dev *dev)
- 		list_del(&entry->list);
- 		kfree(entry);
- 	}
-+
-+	kset_unregister(dev->msi_kset);
-+	dev->msi_kset = NULL;
- }
- 
- static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
-@@ -917,8 +920,6 @@ void pci_disable_msi(struct pci_dev *dev)
- 
- 	pci_msi_shutdown(dev);
- 	free_msi_irqs(dev);
--	kset_unregister(dev->msi_kset);
--	dev->msi_kset = NULL;
- }
- EXPORT_SYMBOL(pci_disable_msi);
- 
-@@ -1015,8 +1016,6 @@ void pci_disable_msix(struct pci_dev *dev)
- 
- 	pci_msix_shutdown(dev);
- 	free_msi_irqs(dev);
--	kset_unregister(dev->msi_kset);
--	dev->msi_kset = NULL;
- }
- EXPORT_SYMBOL(pci_disable_msix);
- 
--- 
-1.8.4
-
+Acked-by: Mark Einon <mark.einon@gmail.com>
