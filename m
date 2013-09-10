@@ -1,58 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe005.messaging.microsoft.com ([207.46.163.28]:34748
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751251Ab3IZDXi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Sep 2013 23:23:38 -0400
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Sean Cross <xobs@kosagi.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Zhu Richard-R65037 <r65037@freescale.com>,
-	<tharvey@gateworks.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Frank Li <lznuaa@gmail.com>
-Subject: [PATCH v7 0/2] Add PCIe support for i.MX6q
-Date: Thu, 26 Sep 2013 11:24:45 +0800
-Message-ID: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail1.g1.pair.com ([66.39.3.162]:47173 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752751Ab3IJEDU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 10 Sep 2013 00:03:20 -0400
+From: Sean Cross <xobs@kosagi.com>
+To: devicetree-discuss@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Sean Cross <xobs@kosagi.com>
+Subject: [PATCH v2 1/3] ARM: imx: Add LVDS general-purpose clocks to i.MX6Q
+Date: Tue, 10 Sep 2013 03:37:50 +0000
+Message-Id: <1378784272-6333-2-git-send-email-xobs@kosagi.com>
+In-Reply-To: <1378784272-6333-1-git-send-email-xobs@kosagi.com>
+References: <1378784272-6333-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+The i.MX6 has two general-purpose LVDS clocks that can be driven
+from a variety of sources.  This patch adds a mux and a gate for
+both of these clocks.
 
-This is basically a resend of imx6 pcie driver patch for inclusion into
-PCI tree.  Since we expect you apply the patch with your SoB, I dropped 
-your ACK tag there.
+Signed-off-by: Sean Cross <xobs@kosagi.com>
+---
+ .../devicetree/bindings/clock/imx6q-clock.txt      |    4 ++++
+ arch/arm/mach-imx/clk-imx6q.c                      |   21 +++++++++++++++++++-
+ 2 files changed, 24 insertions(+), 1 deletion(-)
 
-I have to ask you to carry the first patch which adds some macros to be
-used by pcie driver patch.  Since imx6q-iomuxc-gpr.h gets rare updates
-recently, it should be less likely we will run into merge conflict on it.
-
-Changes since v6:
-
-* Drop arch bits from driver patch, and will handle arch bits through
-  arm-soc separately.
-* Use devm_clk_get() instead of clk_get().
-* Drop unnecessary (val != exp_val) check in pcie_phy_poll_ack() loop.
-* Rename function imx6_init() to imx6_pcie_init().
-
-Shawn
-
-Sean Cross (2):
-  ARM: imx6q: Add PCIe bits to GPR syscon definition
-  PCI: imx6: Add support for i.MX6 PCIe controller
-
- .../devicetree/bindings/pci/designware-pcie.txt    |    7 +-
- drivers/pci/host/Kconfig                           |    6 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-imx6.c                        |  576 ++++++++++++++++++++
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h        |    8 +
- 5 files changed, 597 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/host/pci-imx6.c
-
+diff --git a/Documentation/devicetree/bindings/clock/imx6q-clock.txt b/Documentation/devicetree/bindings/clock/imx6q-clock.txt
+index 5a90a72..35e82c7 100644
+--- a/Documentation/devicetree/bindings/clock/imx6q-clock.txt
++++ b/Documentation/devicetree/bindings/clock/imx6q-clock.txt
+@@ -215,6 +215,10 @@ clocks and IDs.
+ 	cko2      		200
+ 	cko      		201
+ 	vdoa      		202
++	lvds1_sel		203
++	lvds2_sel		204
++	lvds1_gate		205
++	lvds2_gate		206
+ 
+ Examples:
+ 
+diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
+index 9181a24..679d49a 100644
+--- a/arch/arm/mach-imx/clk-imx6q.c
++++ b/arch/arm/mach-imx/clk-imx6q.c
+@@ -217,6 +217,16 @@ static const char *cko2_sels[] = {
+ 	"uart_serial", "spdif", "asrc", "hsi_tx",
+ };
+ static const char *cko_sels[] = { "cko1", "cko2", };
++static const char *lvds1_sels[] = {
++	"dummy", "dummy", "dummy", "dummy", "dummy", "dummy",
++	"pll4_audio", "pll5_video", "pll8_mlb", "enet_ref",
++	"pcie_ref", "sata_ref",
++};
++static const char *lvds2_sels[] = {
++	"dummy", "dummy", "dummy", "dummy", "dummy", "dummy",
++	"pll4_audio", "pll5_video", "pll8_mlb", "enet_ref",
++	"pcie_ref", "sata_ref",
++};
+ 
+ enum mx6q_clks {
+ 	dummy, ckil, ckih, osc, pll2_pfd0_352m, pll2_pfd1_594m, pll2_pfd2_396m,
+@@ -251,7 +261,8 @@ enum mx6q_clks {
+ 	ssi2_ipg, ssi3_ipg, rom, usbphy1, usbphy2, ldb_di0_div_3_5, ldb_di1_div_3_5,
+ 	sata_ref, sata_ref_100m, pcie_ref, pcie_ref_125m, enet_ref, usbphy1_gate,
+ 	usbphy2_gate, pll4_post_div, pll5_post_div, pll5_video_div, eim_slow,
+-	spdif, cko2_sel, cko2_podf, cko2, cko, vdoa, clk_max
++	spdif, cko2_sel, cko2_podf, cko2, cko, vdoa,
++	lvds1_sel, lvds2_sel, lvds1_gate, lvds2_gate, clk_max
+ };
+ 
+ static struct clk *clk[clk_max];
+@@ -342,6 +353,12 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
+ 			base + 0xe0, 0, 2, 0, clk_enet_ref_table,
+ 			&imx_ccm_lock);
+ 
++	clk[lvds1_sel] = imx_clk_mux("lvds1_sel", base + 0x160, 0, 5, lvds1_sels,         ARRAY_SIZE(lvds1_sels));
++	clk[lvds2_sel] = imx_clk_mux("lvds2_sel", base + 0x160, 5, 5, lvds2_sels,         ARRAY_SIZE(lvds2_sels));
++
++	clk[lvds1_gate] = imx_clk_gate("lvds1_gate", "dummy", base + 0x160, 10);
++	clk[lvds2_gate] = imx_clk_gate("lvds2_gate", "dummy", base + 0x160, 11);
++
+ 	/*                                name              parent_name        reg       idx */
+ 	clk[pll2_pfd0_352m] = imx_clk_pfd("pll2_pfd0_352m", "pll2_bus",     base + 0x100, 0);
+ 	clk[pll2_pfd1_594m] = imx_clk_pfd("pll2_pfd1_594m", "pll2_bus",     base + 0x100, 1);
+@@ -569,6 +586,8 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
+ 	clk_register_clkdev(clk[cko1_sel], "cko1_sel", NULL);
+ 	clk_register_clkdev(clk[ahb], "ahb", NULL);
+ 	clk_register_clkdev(clk[cko1], "cko1", NULL);
++	clk_register_clkdev(clk[lvds1_gate], "lvds1_gate", NULL);
++	clk_register_clkdev(clk[lvds2_gate], "lvds2_gate", NULL);
+ 	clk_register_clkdev(clk[arm], NULL, "cpu0");
+ 	clk_register_clkdev(clk[pll4_post_div], "pll4_post_div", NULL);
+ 	clk_register_clkdev(clk[pll4_audio], "pll4_audio", NULL);
 -- 
 1.7.9.5
-
 
