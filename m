@@ -1,58 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog125.obsmtp.com ([207.126.144.159]:55463 "EHLO
+	eu1sys200aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751137Ab3ILJvn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 05:51:43 -0400
+Date: Thu, 12 Sep 2013 15:00:18 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
+ part and Exynos part
+Message-ID: <20130912093018.GA2124@pratyush-vbox>
+References: <002801ce8376$a807dbf0$f81793d0$@samsung.com>
+ <51ED49D6.9050209@ti.com>
+ <000701ce8741$fe47deb0$fad79c10$@samsung.com>
+ <51EE22DF.6090902@ti.com>
+ <001301ce8772$522dfc50$f689f4f0$@samsung.com>
+ <5231607C.10702@ti.com>
+ <003501ceaf87$cda45db0$68ed1910$%han@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <16818914.Hl8YjzUdJi@vostro.rjw.lan>
-References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop> <16818914.Hl8YjzUdJi@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 7 Sep 2013 07:59:39 -0600
-Message-ID: <CAErSpo4YRS3-EC5NcFVyi-yBbEX2Fmr0G=Vt2pk_SO7+5Ad91A@mail.gmail.com>
-Subject: Re: [PATCH 00/14] _OSC simplification
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <003501ceaf87$cda45db0$68ed1910$%han@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 6, 2013 at 6:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Friday, September 06, 2013 11:13:24 AM Bjorn Helgaas wrote:
->> This is a long series of mostly minor changes with the goal of
->> simplifying the _OSC-related code and making the negotiation between
->> Linux and the platform more understandable.
->>
->> My intent is that this doesn't change any behavior except for the text
->> in dmesg.
->>
->> However, this restructuring does raise some questions in my mind, such
->> as the fact that we do not call pcie_no_aspm() to disable ASPM in two
->> cases where it seems like we might want to:
->>
->>   1) When pcie_ports_disabled, e.g., when booting with
->>      "pcie_ports=compat".
->>
->>   2) When Linux doesn't support all the required services, e.g., if
->>      compiled with ASPM support but not MSI support.
->
-> We tried that (i.e. 2)), but then it caused energy usage to increase on some
-> systems with power-hungry graphics adapters and Phoronix made some fuss about
-> that. :-)
+Hi Jingoo,
 
-The _OSC section of the spec is pretty obtuse, but my reading of Table
-4-6 (PCI Firmware r3.0) is that the OS is prohibited from writing to
-the PCIe Capability (for ASPM, VC, AER, or other control) unless it
-has been granted "PCI Express Capability Structure control".  That's
-why I'm dubious about the fact that we use ASPM in those two cases
-where we don't even *ask* for that control.
 
-For the Phoronix case, I assume they made the argument that Windows
-does use ASPM without having PCIe Capability control?  Do you have any
-pointers to that discussion?
+On Thu, Sep 12, 2013 at 03:15:04PM +0800, Jingoo Han wrote:
+> On Tuesday 23 July 2013 12:30 PM, Kishon Vijay Abraham I wrote:
+> > >> .
+> > >> .
+> > >>>>> +			of_pci_range_to_resource(&range, np, &pp->cfg);
+> > >>>>> +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
+> > >>>>> +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
+> > >>>>> +		}
+> > >>>>> +	}
+> > >>>>> +
+> > >>>>> +	pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
+> > >>>>> +				resource_size(&pp->cfg));
+> > >>>>
+> > >>>> Why is configuraion space divided into two?
+> > >>>
+> > >>> Sorry, I don't know the exact reason. :(
+> > >>> Pratyush Anand may know about this.
+> > >>> Pratyush Anand, could you answer the question?
+> > >>>
+> > >>> Also, if you find some problems, please let me know.
+> > 
+> > One more query..
+> > 
+> > Where is inbound translation configuration done in your driver? how should it
+> > be done?
+> 
 
-I don't propose changing this now, but it does raise my eyebrows.
-Maybe some sort of dmesg note would be appropriate.
+Yes, Kishon is right. Inbound translation configuration is missing in
+your code and I think it should be implemented.
 
-Thanks for looking at all this stuff; I know from experience that it's
-pretty hard to wade through :)
+> Hi Kishon,
+> 
+> Sorry, I cannot understand your question exactly.
+> However, the following thread would be helpful.
+> 
+> http://www.spinics.net/lists/arm-kernel/msg252078.html
+> https://lkml.org/lkml/2013/6/17/890
 
-Bjorn
+>From this conversation, It seems that you
+have tested this driver and it works fine without inbound translation
+function. I am sure that you would have tested a PCIe card with DMA
+capability such as PCIe2USB or PCIe2Ethernet. Since it worked, it
+means that by default your controller is supporting one to one mapping
+in case of inbound transaction even when address translation is enabled.
+
+In my opinion you should call a function like as follows from
+dw_pcie_host_init in pcie-designware.c.  It will insure one to one
+mapping for any inbound request in memory range 0 to (in_mem_size -
+1) for all dw implementation.
+
+static void dw_pcie_prog_viewport_mem_inbound(struct pcie_port *pp)
+{        
+	u32 val;
+	void __iomem *dbi_base = pp->dbi_base;
+
+	/* Program viewport 0 : INBOUND : MEMORY*/
+	val = PCIE_ATU_REGION_INBOUND | (0 & 0xF);
+	dw_pcie_writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT));
+	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, dbi_base + PCIE_ATU_CR1));
+	val = PCIE_ATU_ENABLE | PCIE_ATU_BAR_MODE_ENABLE;
+	dw_pcie_writel_rc(pp, val, dbi_base + PCIE_ATU_CR2));
+	dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_LOWER_BASE));
+	dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE));
+	/* in_mem_size must be in power of 2 */
+	dw_pcie_writel_rc(pp, pp->config.in_mem_size - 1, dbi_base + PCIE_ATU_LIMIT));
+	dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_LOWER_TARGET));
+	dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET));
+}
+
+Regards
+Pratyush
+
+> 
+> Best regards.
+> Jingoo Han
