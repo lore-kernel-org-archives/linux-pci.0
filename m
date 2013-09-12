@@ -1,47 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:49039 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753419Ab3I0WiV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Sep 2013 18:38:21 -0400
-Message-ID: <1380321480.27811.53.camel@pasglop>
-Subject: Re: Please revert 928bea964827d7824b548c1f8e06eccbbc4d0d7d
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from eu1sys200aog121.obsmtp.com ([207.126.144.151]:37825 "EHLO
+	eu1sys200aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751182Ab3ILKSW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 06:18:22 -0400
+Date: Thu, 12 Sep 2013 15:48:03 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Date: Sat, 28 Sep 2013 08:38:00 +1000
-In-Reply-To: <CAE9FiQXXvkfTak6oEpUog_RYs_Gwpdji7N5UJ=R11Q61==N97A@mail.gmail.com>
-References: <1380270519.27811.10.camel@pasglop>
-	 <CAE9FiQVkW7d7vFx_kPJG-FEvO71SZjZmpR+dnwVm61wkYK=0YA@mail.gmail.com>
-	 <CA+55aFyDfMdAeaniQwkoeW6F-xd3JxrzGYwtFb6N9+NA6aRCMg@mail.gmail.com>
-	 <1380318405.27811.37.camel@pasglop>
-	 <CAE9FiQXXvkfTak6oEpUog_RYs_Gwpdji7N5UJ=R11Q61==N97A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
+ part and Exynos part
+Message-ID: <20130912101803.GB5995@pratyush-vbox>
+References: <51ED49D6.9050209@ti.com>
+ <000701ce8741$fe47deb0$fad79c10$@samsung.com>
+ <51EE22DF.6090902@ti.com>
+ <001301ce8772$522dfc50$f689f4f0$@samsung.com>
+ <5231607C.10702@ti.com>
+ <003501ceaf87$cda45db0$68ed1910$%han@samsung.com>
+ <20130912093018.GA2124@pratyush-vbox>
+ <52318CCC.4040604@ti.com>
+ <20130912095213.GA5995@pratyush-vbox>
+ <5231925B.3030104@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <5231925B.3030104@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-09-27 at 14:54 -0700, Yinghai Lu wrote:
-> On Fri, Sep 27, 2013 at 2:46 PM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
+On Thu, Sep 12, 2013 at 06:07:23PM +0800, Kishon Vijay Abraham I wrote:
+> Hi,
 > 
-> > Wouldn't it be better to simply have pci_enable_device() always set bus
-> > master on a bridge? I don't see any case where it makes sense to have
-> > an enabled bridge without the master bit set on it...
+> On Thursday 12 September 2013 03:22 PM, Pratyush Anand wrote:
+> > Hi Kishon,
+> > 
+> > On Thu, Sep 12, 2013 at 05:43:40PM +0800, Kishon Vijay Abraham I wrote:
+> >> Hi,
+> >>
+> >> On Thursday 12 September 2013 03:00 PM, Pratyush Anand wrote:
+> >>> Hi Jingoo,
+> >>>
+> >>>
+> >>> On Thu, Sep 12, 2013 at 03:15:04PM +0800, Jingoo Han wrote:
+> >>>> On Tuesday 23 July 2013 12:30 PM, Kishon Vijay Abraham I wrote:
+> >>>>>>> .
+> >>>>>>> .
+
+[...]
+
+> >> when I do ifconfig eth0 up, I get *r8169 0000:01:00.0 eth0: link up.*
+> >> But I dont receive any packets and ping also fails and the tx and rx packet
+> >> count is also 0. Could it be related to inbound translation?
+> > 
+> > A PCIe analyser log would tell a definite cause. Most likely either
+> > inbound translation is not working or INTx/MSI is not working.
 > 
-> Do you mean attached?
+> I have enabled only legacy interrupts. Whenever I connect or disconnect
+> ethernet cable I get link up/link down message and also the interrupt count for
+> eth0 increases. So I'm not doubting INTx interrupts as such.
+> 
+> btw configuring inbound translation once in dw_pcie_host_init enough is it? I
+> mean we use the same registers for configuring outbound translation also no? So
+> doesn't the inbound configuration gets lost?
 
-So this patch works and fixes the problem. I think it makes the whole
-thing more robust and should be applied.
+No, you write at the same register, but you program direction as
+inbound. There are different resources for each viewport in inbound
+and outbound direction.
 
-I still don't know why the bridge doesn't get enabled properly without
-it yes, tracking it down (the machine in question takes a LONG time to
-reboot :-)
+Regards
+Pratyush
 
-Cheers,
-Ben.
-
-
+> 
+> Thanks
+> Kishon
