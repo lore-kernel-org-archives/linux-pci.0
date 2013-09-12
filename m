@@ -1,240 +1,217 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: Excess dmesg output from ACPIPHP on boot (was: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots)
-Date: Thu, 05 Sep 2013 23:39:07 +0200
-Message-ID: <3686522.NVYmP5Gevu@vostro.rjw.lan>
-In-Reply-To: <1535359.s5bUZnSMNz@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <1378390901.3246.233.camel@ul30vt.home> <1535359.s5bUZnSMNz@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:34271 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753913Ab3ILG3C (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 02:29:02 -0400
+Date: Thu, 12 Sep 2013 08:28:59 +0200
+From: Sascha Hauer <s.hauer@pengutronix.de>
+To: Sean Cross <xobs@kosagi.com>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Shawn Guo <shawn.guo@linaro.org>
+Subject: Re: [PATCH v3 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+Message-ID: <20130912062859.GM30088@pengutronix.de>
+References: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
+ <1378958611-4274-4-git-send-email-xobs@kosagi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1378958611-4274-4-git-send-email-xobs@kosagi.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 05, 2013 09:44:26 PM Rafael J. Wysocki wrote:
-> On Thursday, September 05, 2013 08:21:41 AM Alex Williamson wrote:
+Sean,
 
-[...]
+Several more comments.
 
-> > > 
-> > > [   18.288122] pci 0000:00:00.0: no hotplug settings from platform
-> > > [   18.288127] pcieport 0000:00:01.0: no hotplug settings from platform
-> > > [   18.288142] pci 0000:01:00.0: no hotplug settings from platform
-> > > [   18.288157] pci 0000:01:00.1: no hotplug settings from platform
-> > > [   18.288162] pcieport 0000:00:03.0: no hotplug settings from platform
-> > > [   18.288176] pci 0000:02:00.0: no hotplug settings from platform
-> > > [   18.288190] pci 0000:02:00.1: no hotplug settings from platform
-> > > [   18.288195] pcieport 0000:00:07.0: no hotplug settings from platform
-> > > [   18.288209] pci 0000:03:00.0: no hotplug settings from platform
-> > > [   18.288224] pci 0000:03:00.1: no hotplug settings from platform
-> > > [   18.288228] pci 0000:00:14.0: no hotplug settings from platform
-> > > [   18.288233] pci 0000:00:14.1: no hotplug settings from platform
-> > > [   18.288237] pci 0000:00:14.2: no hotplug settings from platform
-> > > [   18.288242] pci 0000:00:16.0: no hotplug settings from platform
-> > > [   18.288247] pci 0000:00:16.1: no hotplug settings from platform
-> > > [   18.288251] pci 0000:00:16.2: no hotplug settings from platform
-> > > [   18.288256] pci 0000:00:16.3: no hotplug settings from platform
-> > > [   18.288260] pci 0000:00:16.4: no hotplug settings from platform
-> > > [   18.288265] pci 0000:00:16.5: no hotplug settings from platform
-> > > [   18.288269] pci 0000:00:16.6: no hotplug settings from platform
-> > > [   18.288274] pci 0000:00:16.7: no hotplug settings from platform
-> > > [   18.288278] pci 0000:00:1a.0: no hotplug settings from platform
-> > > [   18.288279] pci 0000:00:1a.0: using default PCI settings
-> > > [   18.288292] pci 0000:00:1a.1: no hotplug settings from platform
-> > > [   18.288293] pci 0000:00:1a.1: using default PCI settings
-> > > [   18.288307] ehci-pci 0000:00:1a.7: no hotplug settings from platform
-> > > [   18.288308] ehci-pci 0000:00:1a.7: using default PCI settings
-> > > [   18.288322] pci 0000:00:1b.0: no hotplug settings from platform
-> > > [   18.288327] pcieport 0000:00:1c.0: no hotplug settings from platform
-> > > [   18.288332] pcieport 0000:00:1c.4: no hotplug settings from platform
-> > > [   18.288344] pci 0000:05:00.0: no hotplug settings from platform
-> > > [   18.288349] pci 0000:00:1d.0: no hotplug settings from platform
-> > > [   18.288350] pci 0000:00:1d.0: using default PCI settings
-> > > [   18.288360] pci 0000:00:1d.1: no hotplug settings from platform
-> > > [   18.288361] pci 0000:00:1d.1: using default PCI settings
-> > > [   18.288374] pci 0000:00:1d.2: no hotplug settings from platform
-> > > [   18.288374] pci 0000:00:1d.2: using default PCI settings
-> > > [   18.288387] pci 0000:00:1d.3: no hotplug settings from platform
-> > > [   18.288387] pci 0000:00:1d.3: using default PCI settings
-> > > 
-> > > The boot is noticeably slower.  What's going to happen on systems that
-> > > actually have a significant I/O topology vs my little workstation?
-> 
-> That depends on how many bus check/device check events they generate on boot.
-> 
-> My test machines don't generate them during boot at all (even the one with
-> a Thunderbolt connector), so I don't see the messages in question during boot
-> on any of them.  Mika doesn't see them either I suppose, or he would have told
-> me about that before.
-> 
-> And let's just make it clear that it is not usual or even OK to generate bus
-> checks or device checks during boot like this.  And since the changes in
-> question have been in linux-next since right after the 3.11 merge window, I
-> think that someone would have complained already had that been a common issue.
-> 
-> Of course, we need to deal with that somehow nevertheless. :-)
-> 
-> > Just to give you an idea:
-> > 
-> > CONFIG_HOTPLUG_PCI_ACPI=y
-> > 
-> > $ dmesg | wc
-> >   5697  49935 384368
-> > 
-> > $ dmesg | tail --lines=1
-> > [   53.137123] Ebtables v2.0 registered
-> > 
-> > -- vs --
-> > 
-> > # CONFIG_HOTPLUG_PCI_ACPI is not set
-> > 
-> > $ dmesg | wc
-> >  1053  9176 71652
-> > 
-> > $dmesg | tail --lines=1
-> > [   28.917220] Ebtables v2.0 registered
-> > 
-> > So it spews out 5x more output with acpiphp enabled and takes and extra
-> > 24s to boot (nearly 2x).  Not good.
-> 
-> The "no hotplug settings from platform" message is from pci_configure_slot().
-> I think the messages you're seeing are from the call to it in
-> acpiphp_set_hpp_values() which is called by enable_slot().
-> 
-> There, I think, we can simply check the return value of pci_scan_slot() and
-> if that is 0 (no new devices), we can just skip everything under the call to
-> __pci_bus_assign_resources().
-> 
-> However, we can't skip the scanning of bridges, if any, because there may be
-> new devices below them and I guess that's what takes so much time on your
-> machine.
+Shawn,
 
-OK, one piece is missing.  We may need to evaluate _OSC after handling each
-event to let the platform know the status.
+A question about a clk_set_parent inside.
 
-Can you please check if the appended patch makes any difference (with the
-previous fix applied, of course)?
+On Thu, Sep 12, 2013 at 04:03:31AM +0000, Sean Cross wrote:
+> +
+> +#define IMX6_ENTER_RESET 0
+> +#define IMX6_EXIT_RESET 1
 
-If fact, it is two patches combined.  One of them optimizes enable_slot()
-slightly and the other adds the missing _OSC evaluation.
+These are unused
 
-Thanks,
-Rafael
+> +
+> +#define IMX6_POWER_OFF 0
+> +#define IMX6_POWER_ON 1
 
+unused aswell
 
----
- drivers/pci/hotplug/acpiphp_glue.c |   35 +++++++++++++++++++++++++++--------
- 1 file changed, 27 insertions(+), 8 deletions(-)
+> +static int pcie_phy_poll_ack(void __iomem *dbi_base, int max_iterations,
+> +			     int exp_val)
+> +{
+> +	u32 val;
+> +	u32 wait_counter = 0;
+> +
+> +	do {
+> +		val = readl(dbi_base + PCIE_PHY_STAT);
+> +		val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
+> +		wait_counter++;
+> +	} while ((wait_counter < max_iterations) && (val != exp_val));
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -542,12 +542,12 @@ static void __ref enable_slot(struct acp
- 	struct acpiphp_func *func;
- 	int max, pass;
- 	LIST_HEAD(add_list);
-+	int nr_found;
- 
- 	list_for_each_entry(func, &slot->funcs, sibling)
- 		acpiphp_bus_add(func_to_handle(func));
- 
--	pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
--
-+	nr_found = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
- 	max = acpiphp_max_busnr(bus);
- 	for (pass = 0; pass < 2; pass++) {
- 		list_for_each_entry(dev, &bus->devices, bus_list) {
-@@ -566,8 +566,11 @@ static void __ref enable_slot(struct acp
- 			}
- 		}
- 	}
--
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
-+	/* Nothing more to do here if there are no new devices on this bus. */
-+	if (!nr_found && (slot->flags & SLOT_ENABLED))
-+		return;
-+
- 	acpiphp_sanitize_bus(bus);
- 	acpiphp_set_hpp_values(bus);
- 	acpiphp_set_acpi_region(slot);
-@@ -867,6 +870,8 @@ static void hotplug_event_work(struct wo
- 	hotplug_event(hp_work->handle, hp_work->type, context);
- 
- 	acpi_scan_lock_release();
-+	acpi_evaluate_hotplug_ost(hp_work->handle, hp_work->type,
-+				  ACPI_OST_SC_SUCCESS, NULL);
- 	kfree(hp_work); /* allocated in handle_hotplug_event() */
- 	put_bridge(context->func.parent);
- }
-@@ -882,12 +887,16 @@ static void hotplug_event_work(struct wo
- static void handle_hotplug_event(acpi_handle handle, u32 type, void *data)
- {
- 	struct acpiphp_context *context;
-+	u32 ost_code;
- 
- 	switch (type) {
- 	case ACPI_NOTIFY_BUS_CHECK:
- 	case ACPI_NOTIFY_DEVICE_CHECK:
-+		ost_code = ACPI_OST_SC_INSERT_IN_PROGRESS;
-+		goto work;
- 	case ACPI_NOTIFY_EJECT_REQUEST:
--		break;
-+		ost_code = ACPI_OST_SC_EJECT_IN_PROGRESS;
-+		goto work;
- 
- 	case ACPI_NOTIFY_DEVICE_WAKE:
- 		return;
-@@ -895,30 +904,40 @@ static void handle_hotplug_event(acpi_ha
- 	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
- 		acpi_handle_err(handle, "Device cannot be configured due "
- 				"to a frequency mismatch\n");
--		return;
-+		break;
- 
- 	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
- 		acpi_handle_err(handle, "Device cannot be configured due "
- 				"to a bus mode mismatch\n");
--		return;
-+		break;
- 
- 	case ACPI_NOTIFY_POWER_FAULT:
- 		acpi_handle_err(handle, "Device has suffered a power fault\n");
--		return;
-+		break;
- 
- 	default:
- 		acpi_handle_warn(handle, "Unsupported event type 0x%x\n", type);
--		return;
-+		break;
- 	}
- 
-+ err:
-+	ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
-+	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
-+	return;
-+
-+ work:
- 	mutex_lock(&acpiphp_context_lock);
- 	context = acpiphp_get_context(handle);
- 	if (context) {
- 		get_bridge(context->func.parent);
- 		acpiphp_put_context(context);
-+		acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- 		alloc_acpi_hp_work(handle, type, context, hotplug_event_work);
-+		mutex_unlock(&acpiphp_context_lock);
-+		return;
- 	}
- 	mutex_unlock(&acpiphp_context_lock);
-+	goto err;
- }
- 
- /*
+may_iterations is never something else than 100 so you should drop the
+argument.
+Also I would prefer a real timeout here rather than a counter.
 
+> +
+> +	if (val != exp_val)
+> +		return -1;
+
+By saying "A negative error value" I actually meant one of
+include/uapi/asm-generic/errno*
+
+> +static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
+> +{
+> +	u32 var;
+> +
+> +	/* write addr */
+> +	/* cap addr */
+> +	if (pcie_phy_wait_ack(dbi_base, addr))
+> +		return -1;
+> +
+> +	var = data << PCIE_PHY_CTRL_DATA_LOC;
+> +	writel(var, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	/* capture data */
+> +	var |= (0x1 << PCIE_PHY_CTRL_CAP_DAT_LOC);
+> +	writel(var, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	/* wait for ack */
+
+Drop this comment.
+
+> +	if (pcie_phy_poll_ack(dbi_base, 100, 1))
+> +		return -1;
+> +
+
+...
+
+> +static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+> +{
+> +	int ret;
+> +	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> +
+> +	if (imx6_pcie->power_on_gpio >= 0)
+> +		gpio_set_value(imx6_pcie->power_on_gpio, IMX6_POWER_ON);
+
+in probe you used gpio_is_valid(). Why not here?
+
+> +
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+> +
+> +	ret = clk_set_parent(imx6_pcie->lvds1_sel, imx6_pcie->sata_ref);
+> +	if (ret) {
+> +		dev_err(pp->dev, "unable to set lvds1_gate parent\n");
+> +		goto err_set_parent;
+> +	}
+
+I'm unsure this should be done here. Shawn, should we do this in SoC
+code?
+
+> +
+> +	ret = clk_prepare_enable(imx6_pcie->pcie_ref_125m);
+> +	if (ret) {
+> +		dev_err(pp->dev, "unable to enable pcie_ref_125m\n");
+> +		goto err_pcie_ref;
+> +	}
+> +
+> +	ret = clk_prepare_enable(imx6_pcie->lvds1_gate);
+> +	if (ret) {
+> +		dev_err(pp->dev, "unable to enable lvds1_gate\n");
+> +		goto err_lvds1_gate;
+> +	}
+> +
+> +	ret = clk_prepare_enable(imx6_pcie->pcie_axi);
+> +	if (ret) {
+> +		dev_err(pp->dev, "unable to enable pcie_axi\n");
+> +		goto err_pcie_axi;
+> +	}
+> +
+> +	/* allow the clocks to stabilize */
+> +	usleep_range(100, 200);
+> +
+> +	return 0;
+> +
+> +err_pcie_axi:
+> +	clk_disable(imx6_pcie->lvds1_gate);
+
+The counterpart of clk_prepare_enable is clk_disable_unprepare.
+
+> +			return;
+> +		}
+> +	}
+> +
+> +	return;
+
+unnecessary return
+
+> +
+> +	imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
+> +	if (gpio_is_valid(imx6_pcie->power_on_gpio))
+> +		devm_gpio_request_one(&pdev->dev, imx6_pcie->power_on_gpio,
+> +				    GPIOF_OUT_INIT_LOW,
+> +				    "PCIe power enable");
+
+devm_gpio_request_one can still fail.
+
+> +
+> +	imx6_pcie->wake_up_gpio = of_get_named_gpio(np, "wake-up-gpio", 0);
+> +	if (gpio_is_valid(imx6_pcie->wake_up_gpio))
+> +		devm_gpio_request_one(&pdev->dev, imx6_pcie->wake_up_gpio,
+> +				    GPIOF_IN,
+> +				    "PCIe wake up");
+> +
+> +	imx6_pcie->disable_gpio = of_get_named_gpio(np, "disable-gpio", 0);
+> +	if (gpio_is_valid(imx6_pcie->disable_gpio))
+> +		devm_gpio_request_one(&pdev->dev, imx6_pcie->disable_gpio,
+> +				    GPIOF_OUT_INIT_HIGH,
+> +				    "PCIe disable endpoint");
+> +
+> +	/* Fetch clocks */
+> +	imx6_pcie->lvds1_sel = clk_get(&pdev->dev, "lvds1_sel");
+> +	if (IS_ERR(imx6_pcie->lvds1_sel)) {
+> +		dev_err(&pdev->dev,
+> +			"lvds1_sel clock missing or invalid\n");
+> +		ret = PTR_ERR(imx6_pcie->lvds1_sel);
+> +		goto err;
+> +	}
+> +
+> +	imx6_pcie->lvds1_gate = clk_get(&pdev->dev, "lvds1_gate");
+> +	if (IS_ERR(imx6_pcie->lvds1_gate)) {
+> +		dev_err(&pdev->dev,
+> +			"lvds1_gate clock select missing or invalid\n");
+> +		ret = PTR_ERR(imx6_pcie->lvds1_gate);
+> +		goto err;
+> +	}
+
+devm_clk_get(). Otherwise you need to release the clock un
+unregister/probe failure.
+
+> +static int __exit imx6_pcie_remove(struct platform_device *pdev)
+> +{
+> +	struct imx6_pcie *imx6_pcie = platform_get_drvdata(pdev);
+> +
+> +	clk_disable_unprepare(imx6_pcie->pcie_axi);
+> +	clk_disable_unprepare(imx6_pcie->lvds1_gate);
+> +	clk_disable_unprepare(imx6_pcie->pcie_ref_125m);
+
+Still no unregister for the pcie controller?
+
+> +
+> +	return 0;
+> +}
+> +
+
+Sascha
+
+-- 
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
