@@ -1,72 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:24608 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751835Ab3IWEfD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 00:35:03 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MTK007B39ZU1UG0@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Mon, 23 Sep 2013 13:35:01 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Jason Cooper' <jason@lakedaemon.net>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <000c01ceb816$19f0dd10$4dd29730$%han@samsung.com>
-In-reply-to: <000c01ceb816$19f0dd10$4dd29730$%han@samsung.com>
-Subject: [PATCH V3 2/3] PCI: mvebu: make local functions static
-Date: Mon, 23 Sep 2013 13:35:01 +0900
-Message-id: <000f01ceb816$4419dce0$cc4d96a0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:41868 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753393Ab3ILHBe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 03:01:34 -0400
+Date: Thu, 12 Sep 2013 09:01:31 +0200
+From: Sascha Hauer <s.hauer@pengutronix.de>
+To: Sean Cross <xobs@kosagi.com>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Shawn Guo <shawn.guo@linaro.org>
+Subject: Re: [PATCH v3 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+Message-ID: <20130912070131.GO30088@pengutronix.de>
+References: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
+ <1378958611-4274-4-git-send-email-xobs@kosagi.com>
+ <20130912062859.GM30088@pengutronix.de>
+ <6FF3113C3FCC43A4A0D711C8656A4C03@kosagi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6FF3113C3FCC43A4A0D711C8656A4C03@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mvebu_pcie_add_bus(), mvebu_pcie_align_resource()  are used only
-in this file. Thus, these local functions should be staticized
-in order to fix the following sparse warnings:
+On Thu, Sep 12, 2013 at 02:44:01PM +0800, Sean Cross wrote:
+> > Sean,
+> > 
+> > Several more comments.
+> > 
+> > Shawn,
+> > 
+> > A question about a clk_set_parent inside.
+> > 
+> > On Thu, Sep 12, 2013 at 04:03:31AM +0000, Sean Cross wrote:
+> > > +
+> > > +#define IMX6_ENTER_RESET 0
+> > > +#define IMX6_EXIT_RESET 1
+> > 
+> > 
+> > 
+> > These are unused
+> > 
+> > > +
+> > > +#define IMX6_POWER_OFF 0
+> > > +#define IMX6_POWER_ON 1
+> > 
+> > 
+> > 
+> > unused aswell
+> > 
+> Thanks.  These leaked out from an earlier revision of the code.  I'll remove them. 
+> > 
+> > > +static int pcie_phy_poll_ack(void __iomem *dbi_base, int max_iterations,
+> > > + int exp_val)
+> > > +{
+> > > + u32 val;
+> > > + u32 wait_counter = 0;
+> > > +
+> > > + do {
+> > > + val = readl(dbi_base + PCIE_PHY_STAT);
+> > > + val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
+> > > + wait_counter++;
+> > > + } while ((wait_counter < max_iterations) && (val != exp_val));
+> > 
+> > 
+> > 
+> > may_iterations is never something else than 100 so you should drop the
+> > argument.
+> > Also I would prefer a real timeout here rather than a counter.
+> 
+> Is there a construct to have a real timer?  Would a completion work here instead?
 
-drivers/pci/host/pci-mvebu.c:684:6: warning: symbol 'mvebu_pcie_add_bus' was not declared. Should it be static?
-drivers/pci/host/pci-mvebu.c:690:17: warning: symbol 'mvebu_pcie_align_resource' was not declared. Should it be static?
+A completion is overkill. Polling is fine, but it should be a well
+defined amount of time which is independent of current cpu speed. Adding
+a udelay(1) to the loop should be enough.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+> > 
+> > 
+> > I'm unsure this should be done here. Shawn, should we do this in SoC
+> > code?
+> 
+> A different board could easily use lvds2 to drive the PCIe clock.  I think that I should change the variable names to simply "lvds_sel".
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 77f8a7c..0bd3ba8 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -681,17 +681,17 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	return bus;
- }
- 
--void mvebu_pcie_add_bus(struct pci_bus *bus)
-+static void mvebu_pcie_add_bus(struct pci_bus *bus)
- {
- 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
- 	bus->msi = pcie->msi;
- }
- 
--resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
--					  const struct resource *res,
--					  resource_size_t start,
--					  resource_size_t size,
--					  resource_size_t align)
-+static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
-+						const struct resource *res,
-+						resource_size_t start,
-+						resource_size_t size,
-+						resource_size_t align)
- {
- 	if (dev->bus->number != 0)
- 		return start;
+Why should it use a different clock? It's fine to make this
+configurable, but only if we actually know the reasons why it should be
+configurable.
+
+Even if it should be configurable I'm still unsure whether this should
+be done at pci driver level.
+
+> > 
+> > 
+> > devm_gpio_request_one can still fail.
+> It can fail, but it's only critical for the power switch.  However, arguably it's a critical error even if these GPIOs can't be allocated, so I'll go ahead and add the same consistency check and error return code to the other three switches.
+
+If you want to make the gpios optional that's fine, but when
+of_get_named_gpio succeeds, then devm_gpio_request_one should succeed
+aswell, otherwise there's something wrong.
+
+> > > + struct imx6_pcie *imx6_pcie = platform_get_drvdata(pdev);
+> > > +
+> > > + clk_disable_unprepare(imx6_pcie->pcie_axi);
+> > > + clk_disable_unprepare(imx6_pcie->lvds1_gate);
+> > > + clk_disable_unprepare(imx6_pcie->pcie_ref_125m);
+> > 
+> > 
+> > 
+> > Still no unregister for the pcie controller?
+> The Designware core doesn't support unregistering (or even module unloading).  I'm not sure how to handle that case.  For that matter, when is remove() even called on a module that can't be unloaded?
+
+Then don't implement the remove callback. That's better than providing a
+bogus remove function.
+
+Sascha
+
 -- 
-1.7.10.4
-
-
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
