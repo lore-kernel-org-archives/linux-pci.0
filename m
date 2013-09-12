@@ -1,108 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f44.google.com ([209.85.213.44]:44223 "EHLO
-	mail-yh0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752498Ab3IFRN2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 13:13:28 -0400
-Received: by mail-yh0-f44.google.com with SMTP id f64so245618yha.31
-        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 10:13:27 -0700 (PDT)
-Subject: [PATCH 00/14] _OSC simplification
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>
-Date: Fri, 06 Sep 2013 11:13:24 -0600
-Message-ID: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+Received: from mail1.g1.pair.com ([66.39.3.162]:22301 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751475Ab3ILHLu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Sep 2013 03:11:50 -0400
+Date: Thu, 12 Sep 2013 15:11:45 +0800
+From: Sean Cross <xobs@kosagi.com>
+To: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Shawn Guo <shawn.guo@linaro.org>
+Message-ID: <65E0D2C79B2B43D28CC77454F44ECCFA@kosagi.com>
+In-Reply-To: <20130912070131.GO30088@pengutronix.de>
+References: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
+ <1378958611-4274-4-git-send-email-xobs@kosagi.com>
+ <20130912062859.GM30088@pengutronix.de>
+ <6FF3113C3FCC43A4A0D711C8656A4C03@kosagi.com>
+ <20130912070131.GO30088@pengutronix.de>
+Subject: Re: [PATCH v3 3/3] PCI: imx6: Add support for i.MX6 PCIe
+ controller
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a long series of mostly minor changes with the goal of
-simplifying the _OSC-related code and making the negotiation between
-Linux and the platform more understandable.
+On Thursday, 12 September, 2013 at 3:01 PM, Sascha Hauer wrote:
+> On Thu, Sep 12, 2013 at 02:44:01PM +0800, Sean Cross wrote:
+> > > Sean,
+> > > 
+> > > Several more comments.
+> > > 
+> > > > +static int pcie_phy_poll_ack(void __iomem *dbi_base, int max_iterations,
+> > > > + int exp_val)
+> > > > +{
+> > > > + u32 val;
+> > > > + u32 wait_counter = 0;
+> > > > +
+> > > > + do {
+> > > > + val = readl(dbi_base + PCIE_PHY_STAT);
+> > > > + val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
+> > > > + wait_counter++;
+> > > > + } while ((wait_counter < max_iterations) && (val != exp_val));
+> > > 
+> > > 
+> > > 
+> > > 
+> > > 
+> > > may_iterations is never something else than 100 so you should drop the
+> > > argument.
+> > > Also I would prefer a real timeout here rather than a counter.
+> > 
+> > 
+> > 
+> > Is there a construct to have a real timer? Would a completion work here instead?
+> 
+> A completion is overkill. Polling is fine, but it should be a well
+> defined amount of time which is independent of current cpu speed. Adding
+> a udelay(1) to the loop should be enough.
 
-My intent is that this doesn't change any behavior except for the text
-in dmesg.
+In that case, it makes sense to drop the max_iterations value by a factor of 10 or so. 
+> > > 
+> > > 
+> > > I'm unsure this should be done here. Shawn, should we do this in SoC
+> > > code?
+> > 
+> > 
+> > 
+> > A different board could easily use lvds2 to drive the PCIe clock. I think that I should change the variable names to simply "lvds_sel".
+> 
+> Why should it use a different clock? It's fine to make this
+> configurable, but only if we actually know the reasons why it should be
+> configurable.
+> 
+> Even if it should be configurable I'm still unsure whether this should
+> be done at pci driver level.
 
-However, this restructuring does raise some questions in my mind, such
-as the fact that we do not call pcie_no_aspm() to disable ASPM in two
-cases where it seems like we might want to:
+I'm a bit wary of including clock setup like this in the SoC code, as different boards might be different.  If a board designer wants to run LVDS2 to the PCIe slot, that's entirely acceptable.  It might not actually ever get done, but it seems like the sort of board-specific thing that device tree was designed to handle.
+> > > devm_gpio_request_one can still fail.
+> > 
+> > It can fail, but it's only critical for the power switch. However, arguably it's a critical error even if these GPIOs can't be allocated, so I'll go ahead and add the same consistency check and error return code to the other three switches.
+> 
+> 
+> 
+> If you want to make the gpios optional that's fine, but when
+> of_get_named_gpio succeeds, then devm_gpio_request_one should succeed
+> aswell, otherwise there's something wrong.
 
-  1) When pcie_ports_disabled, e.g., when booting with
-     "pcie_ports=compat".
+Ah, alright.  I'll add the errors, then. 
+> > > > + struct imx6_pcie *imx6_pcie = platform_get_drvdata(pdev);
+> > > > +
+> > > > + clk_disable_unprepare(imx6_pcie->pcie_axi);
+> > > > + clk_disable_unprepare(imx6_pcie->lvds1_gate);
+> > > > + clk_disable_unprepare(imx6_pcie->pcie_ref_125m);
+> > > 
+> > > 
+> > > 
+> > > 
+> > > 
+> > > Still no unregister for the pcie controller?
+> > The Designware core doesn't support unregistering (or even module unloading). I'm not sure how to handle that case. For that matter, when is remove() even called on a module that can't be unloaded?
+> 
+> 
+> 
+> Then don't implement the remove callback. That's better than providing a
+> bogus remove function.
 
-  2) When Linux doesn't support all the required services, e.g., if
-     compiled with ASPM support but not MSI support.
-
-I haven't looked deeply, so maybe there are other constraints that
-keep us from using ASPM in these cases.  In any case, this series
-doesn't change any behavior in this regard.
-
-Below are samples of the dmesg changes from this series.  Typical case
-where we successfully get control of PCIe services:
-
-  -acpi PNP0A08:00: Requesting ACPI _OSC control (0x1d)
-  -acpi PNP0A08:00: ACPI _OSC control (0x1d) granted
-  +acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
-  +acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug PME AER PCIeCapability]
-
-Failure case where the system has no _OSC method:
-
-  -acpi PNP0A03:00: ACPI _OSC support notification failed, disabling PCIe ASPM
-  -acpi PNP0A03:00: Unable to request _OSC control (_OSC support mask: 0x08)
-  +acpi PNP0A03:00: _OSC: OS supports [ASPM ClockPM Segments MSI]
-  +acpi PNP0A03:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
-
-Linux only requests _OSC control of features as a group; if Linux
-doesn't support *all* of those features, we don't request control of
-any of them (per 415e12b237).  Here's an example booted with
-"pci=nomsi":
-
-  -acpi PNP0A08:00: Unable to request _OSC control (_OSC support mask: 0x0f)
-  +acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments]
-  +acpi PNP0A08:00: _OSC: not requesting OS control; OS requires [ExtendedConfig ASPM ClockPM MSI]
-
-Here's a system that doesn't grant OS control of the PCIe Capability.
-This is another case where we don't want control of anything unless we
-have control of the PCIe Capability:
-
-  -acpi PNP0A08:00: Requesting ACPI _OSC control (0x1d)
-  -acpi PNP0A08:00: ACPI _OSC request failed (AE_SUPPORT), returned control mask: 0x0d
-  -acpi PNP0A08:00: ACPI _OSC control for PCIe not granted, disabling ASPM
-  +acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
-  +acpi PNP0A08:00: _OSC: platform does not support [PCIeCapability]
-  +acpi PNP0A08:00: _OSC: not requesting control; platform does not support [PCIeCapability]
-  +acpi PNP0A08:00: _OSC: OS requested [PCIeHotplug PME AER PCIeCapability]
-  +acpi PNP0A08:00: _OSC: platform willing to grant [PCIeHotplug PME AER]
-  +acpi PNP0A08:00: _OSC failed (AE_SUPPORT); disabling ASPM
+I'll cut out the remove() function. 
 
 
-This is based on a923874198 ("Merge tag 'pci-v3.12-changes' of
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci").
-
----
-
-Bjorn Helgaas (14):
-      ACPI: Write _OSC bit field definitions in hex
-      ACPI: Rename OSC_QUERY_TYPE to OSC_QUERY_DWORD
-      ACPI: Tidy acpi_run_osc() declarations
-      ACPI: Remove unused OSC_PCI_NATIVE_HOTPLUG
-      ACPI: Write OSC_PCI_CONTROL_MASKS like OSC_PCI_SUPPORT_MASKS
-      PCI/ACPI: Name _OSC #defines more consistently
-      PCI/ACPI: Drop unnecessary _OSC existence tests
-      PCI/ACPI: Move _OSC stuff from acpi_pci_root_add() to negotiate_os_control()
-      PCI/ACPI: Split _OSC "support" and "control" flags into separate variables
-      PCI/ACPI: Run _OSC only once for OSPM feature support
-      PCI/ACPI: Skip _OSC control tests if _OSC support call failed
-      PCI/ACPI: Separate out _OSC "PCIe port services disabled" path
-      PCI/ACPI: Separate out _OSC "we don't support enough services" path
-      PCI/ACPI: Decode _OSC bitmasks symbolically
-
-
- drivers/acpi/apei/apei-base.c    |    6 -
- drivers/acpi/bus.c               |   18 +--
- drivers/acpi/pci_root.c          |  246 +++++++++++++++++++++++---------------
- drivers/pci/hotplug/acpi_pcihp.c |    2 
- drivers/pci/hotplug/shpchp.h     |    2 
- include/linux/acpi.h             |   81 ++++++-------
- 6 files changed, 199 insertions(+), 156 deletions(-)
