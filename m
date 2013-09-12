@@ -1,49 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ye0-f172.google.com ([209.85.213.172]:33466 "EHLO
-	mail-ye0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752739Ab3IFROG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 13:14:06 -0400
-Received: by mail-ye0-f172.google.com with SMTP id m12so1013808yen.17
-        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 10:14:05 -0700 (PDT)
-Subject: [PATCH 05/14] ACPI: Write OSC_PCI_CONTROL_MASKS like
- OSC_PCI_SUPPORT_MASKS
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>
-Date: Fri, 06 Sep 2013 11:14:02 -0600
-Message-ID: <20130906171402.11482.40109.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
-References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail1.g1.pair.com ([66.39.3.162]:54111 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753485Ab3ILEUb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Sep 2013 00:20:31 -0400
+From: Sean Cross <xobs@kosagi.com>
+To: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Sascha Hauer <s.hauer@pengutronix.de>, Sean Cross <xobs@kosagi.com>
+Subject: [PATCH v3 2/3] ARM: imx6q: Add PCIe bits to GPR syscon definition
+Date: Thu, 12 Sep 2013 04:03:30 +0000
+Message-Id: <1378958611-4274-3-git-send-email-xobs@kosagi.com>
+In-Reply-To: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
+References: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We write OSC_PCI_SUPPORT_MASKS as a simple 0x1f, so do the same
-for OSC_PCI_CONTROL_MASKS.  No functional change.
+PCIe requires additional bits be defined for GPR8 and GPR12.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sean Cross <xobs@kosagi.com>
 ---
- include/linux/acpi.h |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 94e5bca..7bda6a2 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -338,12 +338,7 @@ extern bool osc_sb_apei_support_acked;
- #define OSC_PCI_EXPRESS_PME_CONTROL		0x00000004
- #define OSC_PCI_EXPRESS_AER_CONTROL		0x00000008
- #define OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL	0x00000010
--
--#define OSC_PCI_CONTROL_MASKS 	(OSC_PCI_EXPRESS_NATIVE_HP_CONTROL | 	\
--				OSC_SHPC_NATIVE_HP_CONTROL | 		\
--				OSC_PCI_EXPRESS_PME_CONTROL |		\
--				OSC_PCI_EXPRESS_AER_CONTROL |		\
--				OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL)
-+#define OSC_PCI_CONTROL_MASKS			0x0000001f
+diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+index b6bdcd6..1bf1fe9 100644
+--- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+@@ -241,6 +241,12 @@
  
- extern acpi_status acpi_pci_osc_control_set(acpi_handle handle,
- 					     u32 *mask, u32 req);
+ #define IMX6Q_GPR5_L2_CLK_STOP			BIT(8)
+ 
++#define IMX6Q_GPR8_TX_DEEMPH_GEN1		(0x3F << 0)
++#define IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB		(0x3F << 6)
++#define IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB		(0x3F << 12)
++#define IMX6Q_GPR8_TX_SWING_FULL		(0x7F << 18)
++#define IMX6Q_GPR8_TX_SWING_LOW			(0x7F << 25)
++
+ #define IMX6Q_GPR9_TZASC2_BYP			BIT(1)
+ #define IMX6Q_GPR9_TZASC1_BYP			BIT(0)
+ 
+@@ -273,7 +279,9 @@
+ #define IMX6Q_GPR12_ARMP_AHB_CLK_EN		BIT(26)
+ #define IMX6Q_GPR12_ARMP_ATB_CLK_EN		BIT(25)
+ #define IMX6Q_GPR12_ARMP_APB_CLK_EN		BIT(24)
++#define IMX6Q_GPR12_DEVICE_TYPE			(0xF << 12)
+ #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
++#define IMX6Q_GPR12_LOS_LEVEL			(0x1F << 4)
+ 
+ #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
+ #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
+-- 
+1.7.9.5
 
