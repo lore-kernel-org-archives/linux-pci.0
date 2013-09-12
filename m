@@ -1,56 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:42647 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754065Ab3IFBqK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 21:46:10 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 6 Sep 2013 11:32:04 +1000
-Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 04C942BB0055
-	for <linux-pci@vger.kernel.org>; Fri,  6 Sep 2013 11:46:02 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r861joeX59703430
-	for <linux-pci@vger.kernel.org>; Fri, 6 Sep 2013 11:45:50 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r861k08M013935
-	for <linux-pci@vger.kernel.org>; Fri, 6 Sep 2013 11:46:00 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH 1/3] PCI: use pci_is_root_bus() to check whether it is a root bus
-Date: Fri,  6 Sep 2013 09:45:56 +0800
-Message-Id: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:43329 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753477Ab3ILLOR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 07:14:17 -0400
+Message-ID: <5231A1FA.5040705@ti.com>
+Date: Thu, 12 Sep 2013 16:44:02 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: Pratyush Anand <pratyush.anand@st.com>
+CC: Jingoo Han <jg1.han@samsung.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Thierry Reding'" <thierry.reding@gmail.com>,
+	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
+ part and Exynos part
+References: <000701ce8741$fe47deb0$fad79c10$@samsung.com> <51EE22DF.6090902@ti.com> <001301ce8772$522dfc50$f689f4f0$@samsung.com> <5231607C.10702@ti.com> <003501ceaf87$cda45db0$68ed1910$%han@samsung.com> <20130912093018.GA2124@pratyush-vbox> <52318CCC.4040604@ti.com> <20130912095213.GA5995@pratyush-vbox> <5231925B.3030104@ti.com> <20130912101803.GB5995@pratyush-vbox> <20130912104602.GC5995@pratyush-vbox>
+In-Reply-To: <20130912104602.GC5995@pratyush-vbox>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In __pci_bus_size_bridges() we check whether a pci bus is a root
-bus by testing bus->self. As indicated by commit 79af72d7
-("PCI: pci_is_root_bus helper"), bus->self == NULL is not a proper
-way to check the pci root bus.
+On Thursday 12 September 2013 04:16 PM, Pratyush Anand wrote:
+> On Thu, Sep 12, 2013 at 03:48:03PM +0530, Pratyush Anand wrote:
+>> On Thu, Sep 12, 2013 at 06:07:23PM +0800, Kishon Vijay Abraham I wrote:
+>>> Hi,
+>>>
+>>> On Thursday 12 September 2013 03:22 PM, Pratyush Anand wrote:
+>>>> Hi Kishon,
+>>>>
+>>>> On Thu, Sep 12, 2013 at 05:43:40PM +0800, Kishon Vijay Abraham I wrote:
+>>>>> Hi,
+>>>>>
+>>>>> On Thursday 12 September 2013 03:00 PM, Pratyush Anand wrote:
+>>>>>> Hi Jingoo,
+>>>>>>
+>>>>>>
+>>>>>> On Thu, Sep 12, 2013 at 03:15:04PM +0800, Jingoo Han wrote:
+>>>>>>> On Tuesday 23 July 2013 12:30 PM, Kishon Vijay Abraham I wrote:
+>>>>>>>>>> .
+>>>>>>>>>> .
+>>
+>> [...]
+>>
+>>>>> when I do ifconfig eth0 up, I get *r8169 0000:01:00.0 eth0: link up.*
+>>>>> But I dont receive any packets and ping also fails and the tx and rx packet
+>>>>> count is also 0. Could it be related to inbound translation?
+>>>>
+>>>> A PCIe analyser log would tell a definite cause. Most likely either
+>>>> inbound translation is not working or INTx/MSI is not working.
+>>>
+>>> I have enabled only legacy interrupts. Whenever I connect or disconnect
+>>> ethernet cable I get link up/link down message and also the interrupt count for
+>>> eth0 increases. So I'm not doubting INTx interrupts as such.
+> 
+> Just a question, what is the MRRS of your RC? if it is 128, can you
 
-This patch changes it to pci_is_root_bus() to check whether it is
-a root bus.
+it's 512.
+> try with passing pci=pcie_bus_peer2peer  in your bootargs.
+> 
+> Again, analyser will help a lot in diagnosing such issues.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/setup-bus.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+dont have a analyser here :-(
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 520210f..989de3c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1134,7 +1134,7 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
- 	}
- 
- 	/* The root bus? */
--	if (!bus->self)
-+	if (pci_is_root_bus(bus))
- 		return;
- 
- 	switch (bus->self->class >> 8) {
--- 
-1.7.1
-
+Thanks
+Kishon
