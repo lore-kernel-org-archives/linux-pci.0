@@ -1,82 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1831138.AvDtjG8RWn@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
-	<1599165.8kjc3DtEzc@vostro.rjw.lan>
-	<2228690.GcUDD3xFfP@vostro.rjw.lan>
-	<1831138.AvDtjG8RWn@vostro.rjw.lan>
-Date: Fri, 6 Sep 2013 08:46:28 -0700
-Message-ID: <CAE9FiQXacWEXngMCQeB1CPVxuvL-jNW_MyMcDV-e8tK6DvY3Kw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] ACPI / hotplug / PCI: Avoid doing too much for
- spurious notifies
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:34531 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751545Ab3ILL3Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 07:29:25 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene@kernel.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH] MAINTAINERS: add maintainer entry for Samsung Exynos PCIe
+ driver
+Date: Thu, 12 Sep 2013 20:29:24 +0900
+Message-id: <000001ceafab$5529e340$ff7da9c0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 6, 2013 at 6:43 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Sometimes we may get a spurious device check or bus check notify for
-> a hotplug device and in those cases we should avoid doing all of the
-> configuration work needed when something actually changes.  To that
-> end, check the return value of pci_scan_slot() in enable_slot() and
-> bail out early if it is 0.
->
-> This turns out to help reduce the amount of diagnostic output from
-> the ACPIPHP subsystem and speed up boot on at least one system that
-> generates multiple device check notifies for PCIe ports during
-> boot.
->
-> Reported-by: Alex Williamson <alex.williamson@redhat.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c |   35 +++++++++++++++++++++++++++--------
->  1 file changed, 27 insertions(+), 8 deletions(-)
->
-> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -542,12 +542,12 @@ static void __ref enable_slot(struct acp
->         struct acpiphp_func *func;
->         int max, pass;
->         LIST_HEAD(add_list);
-> +       int nr_found;
->
->         list_for_each_entry(func, &slot->funcs, sibling)
->                 acpiphp_bus_add(func_to_handle(func));
->
-> -       pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
-> -
-> +       nr_found = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
->         max = acpiphp_max_busnr(bus);
->         for (pass = 0; pass < 2; pass++) {
->                 list_for_each_entry(dev, &bus->devices, bus_list) {
-> @@ -566,8 +566,11 @@ static void __ref enable_slot(struct acp
->                         }
->                 }
->         }
-> -
->         __pci_bus_assign_resources(bus, &add_list, NULL);
-> +       /* Nothing more to do here if there are no new devices on this bus. */
-> +       if (!nr_found && (slot->flags & SLOT_ENABLED))
-> +               return;
-> +
->         acpiphp_sanitize_bus(bus);
->         acpiphp_set_hpp_values(bus);
->         acpiphp_set_acpi_region(slot);
->
+Add myself as maintainer for Samsung Exynos PCIe driver.
 
-why not just returning early before size bridges and assign unassign resources?
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ MAINTAINERS |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Yinghai
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 6d0dabe..f00c469 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6346,6 +6346,12 @@ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+ F:	drivers/pci/host/pci-tegra.c
+ 
++PCI DRIVER FOR SAMSUNG EXYNOS
++M:	Jingoo Han <jg1.han@samsung.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	drivers/pci/host/pci-exynos.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
+-- 
+1.7.10.4
+
+
