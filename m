@@ -1,45 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>
-CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH v2 5/6] PCI: use pci_is_pcie() to simplify code
-Date: Thu, 5 Sep 2013 15:55:29 +0800
-Message-ID: <1378367730-25996-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
-References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:38305 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914Ab3ILJgd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 05:36:33 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MT000MU7AM8HFC0@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 12 Sep 2013 18:36:32 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <000201ceaf9b$098780b0$1c968210$%han@samsung.com>
+In-reply-to: <000201ceaf9b$098780b0$1c968210$%han@samsung.com>
+Subject: [PATCH 2/3] PCI: mvebu: make local functions static
+Date: Thu, 12 Sep 2013 18:36:33 +0900
+Message-id: <000401ceaf9b$9132cba0$b39862e0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_is_pcie() instead of pci_find_capability
-to simplify code.
+mvebu_pcie_add_bus(), mvebu_pcie_align_resource()  are used only
+in this file. Thus, these local functions should be staticized
+in order to fix the following sparse warnings:
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+drivers/pci/host/pci-mvebu.c:684:6: warning: symbol 'mvebu_pcie_add_bus' was not declared. Should it be static?
+drivers/pci/host/pci-mvebu.c:690:17: warning: symbol 'mvebu_pcie_align_resource' was not declared. Should it be static?
+
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/pci/probe.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/pci/host/pci-mvebu.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index eeb50bd..0fa9075 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -641,8 +641,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
- 		return;
- 	}
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index d66530e..b54ceb1 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -681,17 +681,17 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	return bus;
+ }
  
--	pos = pci_find_capability(bridge, PCI_CAP_ID_EXP);
--	if (pos) {
-+	if (pci_is_pcie(bridge)) {
- 		u32 linkcap;
- 		u16 linksta;
+-void mvebu_pcie_add_bus(struct pci_bus *bus)
++static void mvebu_pcie_add_bus(struct pci_bus *bus)
+ {
+ 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
+ 	bus->msi = pcie->msi;
+ }
  
+-resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+-					  const struct resource *res,
+-					  resource_size_t start,
+-					  resource_size_t size,
+-					  resource_size_t align)
++static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
++						const struct resource *res,
++						resource_size_t start,
++						resource_size_t size,
++						resource_size_t align)
+ {
+ 	if (dev->bus->number != 0)
+ 		return start;
 -- 
-1.7.1
+1.7.10.4
 
 
