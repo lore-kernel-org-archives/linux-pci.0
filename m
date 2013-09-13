@@ -1,48 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59379 "EHLO mx1.redhat.com"
+Received: from mail1.g1.pair.com ([66.39.3.162]:44194 "EHLO mail1.g1.pair.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757161Ab3IDMap (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Sep 2013 08:30:45 -0400
-Date: Wed, 4 Sep 2013 14:32:39 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 0/4] AHCI: Conserve interrupts with
- pci_enable_msi_block_part() interface
-Message-ID: <20130904123238.GC8726@dhcp-26-207.brq.redhat.com>
-References: <cover.1378111919.git.agordeev@redhat.com>
- <20130903135541.GB10522@htj.dyndns.org>
- <20130903140954.GC10522@htj.dyndns.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130903140954.GC10522@htj.dyndns.org>
+	id S1755774Ab3IMJ5W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 13 Sep 2013 05:57:22 -0400
+From: Sean Cross <xobs@kosagi.com>
+To: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Sascha Hauer <s.hauer@pengutronix.de>,
+	Zhu Richard-R65037 <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>, Sean Cross <xobs@kosagi.com>
+Subject: [PATCH v4 2/3] ARM: imx6q: Add PCIe bits to GPR syscon definition
+Date: Fri, 13 Sep 2013 09:40:21 +0000
+Message-Id: <1379065222-7275-3-git-send-email-xobs@kosagi.com>
+In-Reply-To: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
+References: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 03, 2013 at 10:09:54AM -0400, Tejun Heo wrote:
-> On Tue, Sep 03, 2013 at 09:55:41AM -0400, Tejun Heo wrote:
-> > Hmmm.... I've been looking at the code and and a curiosity.  Why does
-> > multiple MSI support implicitly enabled threaded IRQ handling?  Why
-> > are those two linked?  Also, do you have any numbers to show that this
-> > actually is better?  Handling the processing off to a thread isn't a
-> > light operation.
-> 
-> Also, it probably is a good idea to skip dummy ports when requesting
-> irqs from ahci_host_activate(), which BTW should probably be renamed
-> to ahci_host_activate_mmsi().
+PCIe requires additional bits be defined for GPR8 and GPR12.
 
-Hmm.. that is actually a great idea. What I am not sure about whether is
-a dummy port still can send (spurious?) interrupts? The hardware interrupt
-handler would have to be reworked then. Seems as a yet another topic to me ;)
+Signed-off-by: Sean Cross <xobs@kosagi.com>
+---
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-> -- 
-> tejun
-
+diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+index b6bdcd6..1bf1fe9 100644
+--- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+@@ -241,6 +241,12 @@
+ 
+ #define IMX6Q_GPR5_L2_CLK_STOP			BIT(8)
+ 
++#define IMX6Q_GPR8_TX_DEEMPH_GEN1		(0x3F << 0)
++#define IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB		(0x3F << 6)
++#define IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB		(0x3F << 12)
++#define IMX6Q_GPR8_TX_SWING_FULL		(0x7F << 18)
++#define IMX6Q_GPR8_TX_SWING_LOW			(0x7F << 25)
++
+ #define IMX6Q_GPR9_TZASC2_BYP			BIT(1)
+ #define IMX6Q_GPR9_TZASC1_BYP			BIT(0)
+ 
+@@ -273,7 +279,9 @@
+ #define IMX6Q_GPR12_ARMP_AHB_CLK_EN		BIT(26)
+ #define IMX6Q_GPR12_ARMP_ATB_CLK_EN		BIT(25)
+ #define IMX6Q_GPR12_ARMP_APB_CLK_EN		BIT(24)
++#define IMX6Q_GPR12_DEVICE_TYPE			(0xF << 12)
+ #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
++#define IMX6Q_GPR12_LOS_LEVEL			(0x1F << 4)
+ 
+ #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
+ #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.9.5
+
