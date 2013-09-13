@@ -1,240 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13571 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:1987 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752733Ab3IEXcH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Sep 2013 19:32:07 -0400
-Message-ID: <1378423918.3246.286.camel@ul30vt.home>
-Subject: Re: Excess dmesg output from ACPIPHP on boot (was: Re: [PATCH
- 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Date: Thu, 05 Sep 2013 17:31:58 -0600
-In-Reply-To: <1599165.8kjc3DtEzc@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
-	 <1411346.QqVbC9hS9U@vostro.rjw.lan> <1378422483.3246.277.camel@ul30vt.home>
-	 <1599165.8kjc3DtEzc@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754495Ab3IMASV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 20:18:21 -0400
+From: "Skidmore, Donald C" <donald.c.skidmore@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>
+Subject: RE: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type
+ 00 to PF Nacked" messages
+Date: Fri, 13 Sep 2013 00:18:19 +0000
+Message-ID: <F6FB0E698C9B3143BDF729DF222866466FD547F0@ORSMSX110.amr.corp.intel.com>
+References: <CAErSpo53L3-feEw0qZvBTmRrY+SXpGrGU6oxZg3wVjH1M8JDXg@mail.gmail.com>
+ <F6FB0E698C9B3143BDF729DF222866466FD41225@ORSMSX110.amr.corp.intel.com>
+ <CAErSpo5AiRw7HvGQMq-n596ZkHJs_KJNn346yf+jc7yti-xpUw@mail.gmail.com>
+ <CAErSpo4E9LNrfqTq1_WUoAx68_krw23BjSYbPpJPOr=zbq98xA@mail.gmail.com>
+ <CAErSpo6Ky1FQeRjjbhja2KC7EYGJ2nR1ZNuYjYi89DoqLse2cw@mail.gmail.com>
+ <CAErSpo7m=YB=1cHSBTwufTHAiAd+k9Re2s-ro509BELOgK8j7Q@mail.gmail.com>
+ <F6FB0E698C9B3143BDF729DF222866466FD4418D@ORSMSX110.amr.corp.intel.com>
+ <20130823185240.GA1507@google.com>
+ <F6FB0E698C9B3143BDF729DF222866466FD4421F@ORSMSX110.amr.corp.intel.com>
+ <CAErSpo4VLBon21cSzaigVqy6dS7=qfVRuPTTGuWAz+GLJWmNog@mail.gmail.com>
+ <F6FB0E698C9B3143BDF729DF222866466FD44279@ORSMSX110.amr.corp.intel.com>
+ <CAErSpo6pLsDTOPRgV0Qb3W9OSGZXkNOeBk+i47RyoFjK-xPEJw@mail.gmail.com>
+ <CAErSpo4LKRHyq=o5PC70heoiDiHOTvqzcML9F_OVwg+EtvUw6A@mail.gmail.com>
+In-Reply-To: <CAErSpo4LKRHyq=o5PC70heoiDiHOTvqzcML9F_OVwg+EtvUw6A@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-09-06 at 01:36 +0200, Rafael J. Wysocki wrote:
-> On Thursday, September 05, 2013 05:08:03 PM Alex Williamson wrote:
-> > On Fri, 2013-09-06 at 00:40 +0200, Rafael J. Wysocki wrote:
-> > > On Thursday, September 05, 2013 04:17:25 PM Alex Williamson wrote:
-> > > > On Thu, 2013-09-05 at 23:39 +0200, Rafael J. Wysocki wrote:
-> > > > > On Thursday, September 05, 2013 09:44:26 PM Rafael J. Wysocki wrote:
-> > > > > > On Thursday, September 05, 2013 08:21:41 AM Alex Williamson wrote:
-> > > > > 
-> > > > > [...]
-> > > > > 
-> > > > > > > > 
-> > > > > > > > [   18.288122] pci 0000:00:00.0: no hotplug settings from platform
-> > > > > > > > [   18.288127] pcieport 0000:00:01.0: no hotplug settings from platform
-> > > > > > > > [   18.288142] pci 0000:01:00.0: no hotplug settings from platform
-> > > > > > > > [   18.288157] pci 0000:01:00.1: no hotplug settings from platform
-> > > > > > > > [   18.288162] pcieport 0000:00:03.0: no hotplug settings from platform
-> > > > > > > > [   18.288176] pci 0000:02:00.0: no hotplug settings from platform
-> > > > > > > > [   18.288190] pci 0000:02:00.1: no hotplug settings from platform
-> > > > > > > > [   18.288195] pcieport 0000:00:07.0: no hotplug settings from platform
-> > > > > > > > [   18.288209] pci 0000:03:00.0: no hotplug settings from platform
-> > > > > > > > [   18.288224] pci 0000:03:00.1: no hotplug settings from platform
-> > > > > > > > [   18.288228] pci 0000:00:14.0: no hotplug settings from platform
-> > > > > > > > [   18.288233] pci 0000:00:14.1: no hotplug settings from platform
-> > > > > > > > [   18.288237] pci 0000:00:14.2: no hotplug settings from platform
-> > > > > > > > [   18.288242] pci 0000:00:16.0: no hotplug settings from platform
-> > > > > > > > [   18.288247] pci 0000:00:16.1: no hotplug settings from platform
-> > > > > > > > [   18.288251] pci 0000:00:16.2: no hotplug settings from platform
-> > > > > > > > [   18.288256] pci 0000:00:16.3: no hotplug settings from platform
-> > > > > > > > [   18.288260] pci 0000:00:16.4: no hotplug settings from platform
-> > > > > > > > [   18.288265] pci 0000:00:16.5: no hotplug settings from platform
-> > > > > > > > [   18.288269] pci 0000:00:16.6: no hotplug settings from platform
-> > > > > > > > [   18.288274] pci 0000:00:16.7: no hotplug settings from platform
-> > > > > > > > [   18.288278] pci 0000:00:1a.0: no hotplug settings from platform
-> > > > > > > > [   18.288279] pci 0000:00:1a.0: using default PCI settings
-> > > > > > > > [   18.288292] pci 0000:00:1a.1: no hotplug settings from platform
-> > > > > > > > [   18.288293] pci 0000:00:1a.1: using default PCI settings
-> > > > > > > > [   18.288307] ehci-pci 0000:00:1a.7: no hotplug settings from platform
-> > > > > > > > [   18.288308] ehci-pci 0000:00:1a.7: using default PCI settings
-> > > > > > > > [   18.288322] pci 0000:00:1b.0: no hotplug settings from platform
-> > > > > > > > [   18.288327] pcieport 0000:00:1c.0: no hotplug settings from platform
-> > > > > > > > [   18.288332] pcieport 0000:00:1c.4: no hotplug settings from platform
-> > > > > > > > [   18.288344] pci 0000:05:00.0: no hotplug settings from platform
-> > > > > > > > [   18.288349] pci 0000:00:1d.0: no hotplug settings from platform
-> > > > > > > > [   18.288350] pci 0000:00:1d.0: using default PCI settings
-> > > > > > > > [   18.288360] pci 0000:00:1d.1: no hotplug settings from platform
-> > > > > > > > [   18.288361] pci 0000:00:1d.1: using default PCI settings
-> > > > > > > > [   18.288374] pci 0000:00:1d.2: no hotplug settings from platform
-> > > > > > > > [   18.288374] pci 0000:00:1d.2: using default PCI settings
-> > > > > > > > [   18.288387] pci 0000:00:1d.3: no hotplug settings from platform
-> > > > > > > > [   18.288387] pci 0000:00:1d.3: using default PCI settings
-> > > > > > > > 
-> > > > > > > > The boot is noticeably slower.  What's going to happen on systems that
-> > > > > > > > actually have a significant I/O topology vs my little workstation?
-> > > > > > 
-> > > > > > That depends on how many bus check/device check events they generate on boot.
-> > > > > > 
-> > > > > > My test machines don't generate them during boot at all (even the one with
-> > > > > > a Thunderbolt connector), so I don't see the messages in question during boot
-> > > > > > on any of them.  Mika doesn't see them either I suppose, or he would have told
-> > > > > > me about that before.
-> > > > > > 
-> > > > > > And let's just make it clear that it is not usual or even OK to generate bus
-> > > > > > checks or device checks during boot like this.  And since the changes in
-> > > > > > question have been in linux-next since right after the 3.11 merge window, I
-> > > > > > think that someone would have complained already had that been a common issue.
-> > > > > > 
-> > > > > > Of course, we need to deal with that somehow nevertheless. :-)
-> > > > > > 
-> > > > > > > Just to give you an idea:
-> > > > > > > 
-> > > > > > > CONFIG_HOTPLUG_PCI_ACPI=y
-> > > > > > > 
-> > > > > > > $ dmesg | wc
-> > > > > > >   5697  49935 384368
-> > > > > > > 
-> > > > > > > $ dmesg | tail --lines=1
-> > > > > > > [   53.137123] Ebtables v2.0 registered
-> > > > > > > 
-> > > > > > > -- vs --
-> > > > > > > 
-> > > > > > > # CONFIG_HOTPLUG_PCI_ACPI is not set
-> > > > > > > 
-> > > > > > > $ dmesg | wc
-> > > > > > >  1053  9176 71652
-> > > > > > > 
-> > > > > > > $dmesg | tail --lines=1
-> > > > > > > [   28.917220] Ebtables v2.0 registered
-> > > > > > > 
-> > > > > > > So it spews out 5x more output with acpiphp enabled and takes and extra
-> > > > > > > 24s to boot (nearly 2x).  Not good.
-> > > > > > 
-> > > > > > The "no hotplug settings from platform" message is from pci_configure_slot().
-> > > > > > I think the messages you're seeing are from the call to it in
-> > > > > > acpiphp_set_hpp_values() which is called by enable_slot().
-> > > > > > 
-> > > > > > There, I think, we can simply check the return value of pci_scan_slot() and
-> > > > > > if that is 0 (no new devices), we can just skip everything under the call to
-> > > > > > __pci_bus_assign_resources().
-> > > > > > 
-> > > > > > However, we can't skip the scanning of bridges, if any, because there may be
-> > > > > > new devices below them and I guess that's what takes so much time on your
-> > > > > > machine.
-> > > > > 
-> > > > > OK, one piece is missing.  We may need to evaluate _OSC after handling each
-> > > > > event to let the platform know the status.
-> > > > > 
-> > > > > Can you please check if the appended patch makes any difference (with the
-> > > > > previous fix applied, of course)?
-> > > > > 
-> > > > > If fact, it is two patches combined.  One of them optimizes enable_slot()
-> > > > > slightly and the other adds the missing _OSC evaluation.
-> > > > 
-> > > > Better, still double the output:
-> > > > 
-> > > > $ dmesg | wc
-> > > >    2169   19047  152710
-> > > 
-> > > I see.
-> > > 
-> > > What about the timing?
-> > 
-> > ~40s below vs ~29s for acpiphp config'd out above.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Thursday, September 12, 2013 3:27 PM
+> To: Skidmore, Donald C
+> Cc: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Don Dutile
+> Subject: Re: [E1000-devel] 3.11-rc4 ixgbevf: endless "Last Request of type 00
+> to PF Nacked" messages
 > 
-> Well, that's better than before.
+> On Tue, Aug 27, 2013 at 5:01 PM, Bjorn Helgaas <bhelgaas@google.com>
+> wrote:
 > 
-> I'll prepare "official" patches with the last changes then too.
+> > I haven't been able to reproduce the problem with the 2.10.3 ixgbevf
+> > driver from
+> > http://sourceforge.net/projects/e1000/files/ixgbevf%20stable/
+> > ...
+> > Sorry for wasting so much time on something that appears to be already
+> fixed.
 > 
-> > > > $ dmesg | tail --lines=1
-> > > > [   39.980918] Ebtables v2.0 registered
-> > > > 
-> > > > Here's another interesting stat:
-> > > > 
-> > > > $ dmesg | colrm 1 15 | sort | uniq -c | sort -nr | head --lines=25
-> > > >      73 pci 0000:00:1f.0: BAR 13: [io  0x1000-0x107f] has bogus alignment
-> > > >      73 pci 0000:00:1e.0: PCI bridge to [bus 06]
-> > > >      64 pci 0000:00:1e.0:   bridge window [mem 0x81100000-0x812fffff 64bit pref]
-> > > >      64 pci 0000:00:1e.0:   bridge window [mem 0x80f00000-0x810fffff]
-> > > >      64 pci 0000:00:1e.0:   bridge window [io  0x7000-0x7fff]
-> > > >      38 pci 0000:00:1c.4: PCI bridge to [bus 05]
-> > > >      38 pci 0000:00:1c.4:   bridge window [mem 0xf4f00000-0xf4ffffff]
-> > > >      38 pci 0000:00:1c.0: PCI bridge to [bus 04]
-> > > >      38 pci 0000:00:07.0: PCI bridge to [bus 03]
-> > > >      38 pci 0000:00:07.0:   bridge window [mem 0xf2000000-0xf40fffff]
-> > > >      38 pci 0000:00:07.0:   bridge window [mem 0xe0000000-0xf1ffffff 64bit pref]
-> > > >      38 pci 0000:00:07.0:   bridge window [io  0x4000-0x4fff]
-> > > >      38 pci 0000:00:03.0: PCI bridge to [bus 02]
-> > > >      38 pci 0000:00:03.0:   bridge window [mem 0xf4e00000-0xf4efffff]
-> > > >      38 pci 0000:00:03.0:   bridge window [mem 0xd0000000-0xdfffffff 64bit pref]
-> > > >      38 pci 0000:00:03.0:   bridge window [io  0x3000-0x3fff]
-> > > >      38 pci 0000:00:01.0: PCI bridge to [bus 01]
-> > > >      38 pci 0000:00:01.0:   bridge window [mem 0xf4100000-0xf4bfffff]
-> > > >      38 pci 0000:00:01.0:   bridge window [io  0x2000-0x2fff]
-> > > >      37 pci 0000:00:1c.4:   bridge window [mem 0x80c00000-0x80dfffff 64bit pref]
-> > > >      37 pci 0000:00:1c.4:   bridge window [io  0x6000-0x6fff]
-> > > >      37 pci 0000:00:1c.0:   bridge window [mem 0x80a00000-0x80bfffff 64bit pref]
-> > > >      37 pci 0000:00:1c.0:   bridge window [mem 0x80800000-0x809fffff]
-> > > >      37 pci 0000:00:1c.0:   bridge window [io  0x5000-0x5fff]
-> > > >      36 pci 0000:00:01.0:   bridge window [mem 0x80000000-0x807fffff 64bit pref]
-> > > > 
-> > > > This is nearly the entire difference, just 25 lines repeated over and
-> > > > over.
+> I just tried the brand-new v3.11, and the usual, trivial:
 > 
-> Can you check how many times the lines above are repeated?
+>   # echo -n 8 > /sys/bus/pci/devices/0000:04:00.0/sriov_numvfs
+> 
+> was enough to blow up my box the same old boring way (infinite string of
+> "ixgbevf 0000:04:11.0: Last Request of type 03 to PF Nacked"
+> messages.
+> 
+> I guess this is because v3.11 still includes the 2.7.12-k ixgbevf driver, not the
+> apparently-fixed 2.10.3 version from your sourceforge page.
+> 
+> According to sourceforge, 2.7.12 was released almost a YEAR ago, on 2012-10-
+> 18, and 2.10.3 was released 2013-07-26.  Why isn't 2.10.3 in v3.11?
+> 
+> Don't you guys care that it is so easy to blow up your driver with the mainline
+> kernel?  I'm quite frustrated by how much time I've wasted on this issue.
+> 
+> I do not think that defending yourself with "please try the latest driver from
+> sourceforge" is a reasonable or friendly way to work in the Linux community.
+> 
+> Bjorn
 
-The line count is pre-pended to each line.  73 times for the first two
-line, etc.
+Your right I haven't been keeping the version strings up-to-date with our latest upstream pushes.  I was hoping to reach a sync point were both drivers (upstream and out of tree) were closer before I bumped the upstream version.  The relationship between the version number in the ixgbevf version number in the upstream kernel and our out of tree driver are not quite that straight forward as the version strings would suggest.  We have pushed quite a few patches since the last version bump a year ago and in fact attempt to push patches upstream in parallel with any changes we make in the out of tree driver.   But depending on quite a list of events (testing, release schedule, when net-next is open) one driver can receive patches earlier and or later than another.  Also ixgbevf is currently going through a fair amount of refactoring to bring in more up to date with ixgbe so there are a fair amount of patches currently in play. The reason I suggested you try the out of tree driver (source forge) as I knew it was currently a bit more up to date. 
 
-> > > 
-> > > Well, this is the bridge sizing I talked about previously.  We still get
-> > > apparently spurious bus check/device check events and they trigger bridge
-> > > scans.
-> > > 
-> > > I'm not sure what to do about that and I wonder whether or not this is
-> > > reproducible on any other machines you can test.
-> > 
-> > I can try it on a couple other systems, but probably not until tomorrow.
-> 
-> Tomorrow (or even later) works just fine for me. :-)
-> 
-> > > Can you please change dbg() to pr_info() under ACPI_NOTIFY_BUS_CHECK and
-> > > ACPI_NOTIFY_DEVICE_CHECK in hotplug_event() (acpiphp_glue.c), grep the boot
-> > > dmesg log for "check notify" and send the result?  I'm wondering what's
-> > > going on there.
-> > 
-> > $ dmesg | grep "check notify"
-> > [    1.633228] hotplug_event: Device check notify on \_SB_.PCI0.PEX2
-> > [    2.472004] hotplug_event: Device check notify on \_SB_.PCI0.PEX3
-> > [    2.477288] hotplug_event: Device check notify on \_SB_.PCI0.PEX4
-> > [    2.482571] hotplug_event: Device check notify on \_SB_.PCI0.PEX5
-> > [    2.482579] hotplug_event: Device check notify on \_SB_.PCI0.PEX6
-> > [    8.204953] hotplug_event: Device check notify on \_SB_.PCI0.PEX2
-> > [    8.209632] hotplug_event: Device check notify on \_SB_.PCI0.PEX3
-> > [    8.214272] hotplug_event: Device check notify on \_SB_.PCI0.PEX4
-> > [    8.218894] hotplug_event: Device check notify on \_SB_.PCI0.PEX5
-> > [    8.218901] hotplug_event: Device check notify on \_SB_.PCI0.PEX6
-> 
-> So I guess the PEXn things are PCIe ports and we get two notifications
-> for each of them, so everything below them gets rescanned.
-> 
-> I've just talked to Bjorn about that and we don't seem to have a good idea
-> how to handle this.  The notifies shouldn't be there, but we kind of have
-> to handle them.
-> 
-> I guess we could suppress the output from repeated bridge scans.  Alternatively,
-> we could just blacklist this particular system somehow if the problem is
-> specific to it.
+The good news is if the latest out of tree driver is correcting your problem the fix most likely is reroute to upstream.  Likewise I can send you some of the upstream patches that are in the out of tree driver but are waiting to be sent upstream, if you would like to try them.  Some of them touch code around the mbx messages, which like I mentioned in an early email the error message your seeing seems to imply something has gone wrong there.  But since we can't seem to recreate your failure local I can't know for sure.
 
-Can't we determine that nothing has changed and avoid re-printing?  I
-have a hard time believing this system is all that unique.  Thanks,
-
-Alex
+Thanks,
+-Don Skidmore <donald.c.skidmore@intel.com>
 
 
