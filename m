@@ -1,128 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH 13/14] PCI/ACPI: Separate out _OSC "we don't support enough
- services" path
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>
-Date: Fri, 06 Sep 2013 11:15:06 -0600
-Message-ID: <20130906171506.11482.80881.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
-References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:55227
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751904Ab3IMMpT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Sep 2013 08:45:19 -0400
+Date: Fri, 13 Sep 2013 20:45:51 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Sean Cross <xobs@kosagi.com>
+CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Zhu Richard-R65037 <r65037@freescale.com>
+Subject: Re: [PATCH v4 2/3] ARM: imx6q: Add PCIe bits to GPR syscon definition
+Message-ID: <20130913124549.GD31147@S2101-09.ap.freescale.net>
+References: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
+ <1379065222-7275-3-git-send-email-xobs@kosagi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1379065222-7275-3-git-send-email-xobs@kosagi.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Test the services we support (extended config space, ASPM, MSI) separately
-so we can give a better message.  Previously we said "Unable to request
-_OSC control..."; now we'll say "we support %#02x but %#02x are required".
+On Fri, Sep 13, 2013 at 09:40:21AM +0000, Sean Cross wrote:
+> PCIe requires additional bits be defined for GPR8 and GPR12.
+> 
+> Signed-off-by: Sean Cross <xobs@kosagi.com>
+> ---
+>  include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+> index b6bdcd6..1bf1fe9 100644
+> --- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+> +++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+> @@ -241,6 +241,12 @@
+>  
+>  #define IMX6Q_GPR5_L2_CLK_STOP			BIT(8)
+>  
+> +#define IMX6Q_GPR8_TX_DEEMPH_GEN1		(0x3F << 0)
+> +#define IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB		(0x3F << 6)
+> +#define IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB		(0x3F << 12)
+> +#define IMX6Q_GPR8_TX_SWING_FULL		(0x7F << 18)
+> +#define IMX6Q_GPR8_TX_SWING_LOW			(0x7F << 25)
+> +
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c |   84 ++++++++++++++++++++++++-----------------------
- 1 file changed, 42 insertions(+), 42 deletions(-)
+Can you please follow the existing pattern to define the bits from the
+MSB to LSB, and use lowercase for hex values?
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 68e5a18..65aefcf 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -392,55 +392,55 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
- 		return;
- 	}
- 
--	if ((support & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
--		control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
--			| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
--			| OSC_PCI_EXPRESS_PME_CONTROL;
--
--		if (pci_aer_available()) {
--			if (aer_acpi_firmware_first())
--				dev_dbg(&device->dev,
--					"PCIe errors handled by BIOS.\n");
--			else
--				control |= OSC_PCI_EXPRESS_AER_CONTROL;
--		}
-+	if ((support & ACPI_PCIE_REQ_SUPPORT) != ACPI_PCIE_REQ_SUPPORT) {
-+		dev_info(&device->dev, "Not requesting _OSC control (we support %#02x but %#02x are required)\n",
-+			 support, ACPI_PCIE_REQ_SUPPORT);
-+		return;
-+	}
-+
-+	control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
-+		| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
-+		| OSC_PCI_EXPRESS_PME_CONTROL;
-+
-+	if (pci_aer_available()) {
-+		if (aer_acpi_firmware_first())
-+			dev_dbg(&device->dev,
-+				"PCIe errors handled by BIOS.\n");
-+		else
-+			control |= OSC_PCI_EXPRESS_AER_CONTROL;
-+	}
- 
-+	dev_info(&device->dev,
-+		 "Requesting ACPI _OSC control (0x%02x)\n", control);
-+
-+	status = acpi_pci_osc_control_set(handle, &control,
-+					  OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
-+	if (ACPI_SUCCESS(status)) {
- 		dev_info(&device->dev,
--			"Requesting ACPI _OSC control (0x%02x)\n", control);
--
--		status = acpi_pci_osc_control_set(handle, &control,
--				       OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
--		if (ACPI_SUCCESS(status)) {
--			dev_info(&device->dev,
--				"ACPI _OSC control (0x%02x) granted\n",
--				control);
--			if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
--				/*
--				 * We have ASPM control, but the FADT indicates
--				 * that it's unsupported. Clear it.
--				 */
--				*clear_aspm = 1;
--			}
--		} else {
--			dev_info(&device->dev,
--				"ACPI _OSC request failed (%s), "
--				"returned control mask: 0x%02x\n",
--				acpi_format_exception(status), control);
--			dev_info(&device->dev,
--				 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
-+			 "ACPI _OSC control (0x%02x) granted\n",
-+			 control);
-+		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
- 			/*
--			 * We want to disable ASPM here, but aspm_disabled
--			 * needs to remain in its state from boot so that we
--			 * properly handle PCIe 1.1 devices.  So we set this
--			 * flag here, to defer the action until after the ACPI
--			 * root scan.
-+			 * We have ASPM control, but the FADT indicates
-+			 * that it's unsupported. Clear it.
- 			 */
--			*no_aspm = 1;
-+			*clear_aspm = 1;
- 		}
- 	} else {
- 		dev_info(&device->dev,
--			 "Unable to request _OSC control "
--			 "(_OSC support mask: 0x%02x)\n", support);
-+			"ACPI _OSC request failed (%s), "
-+			"returned control mask: 0x%02x\n",
-+			acpi_format_exception(status), control);
-+		dev_info(&device->dev,
-+			 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
-+		/*
-+		 * We want to disable ASPM here, but aspm_disabled
-+		 * needs to remain in its state from boot so that we
-+		 * properly handle PCIe 1.1 devices.  So we set this
-+		 * flag here, to defer the action until after the ACPI
-+		 * root scan.
-+		 */
-+		*no_aspm = 1;
- 	}
- }
- 
+Shawn
+
+>  #define IMX6Q_GPR9_TZASC2_BYP			BIT(1)
+>  #define IMX6Q_GPR9_TZASC1_BYP			BIT(0)
+>  
+> @@ -273,7 +279,9 @@
+>  #define IMX6Q_GPR12_ARMP_AHB_CLK_EN		BIT(26)
+>  #define IMX6Q_GPR12_ARMP_ATB_CLK_EN		BIT(25)
+>  #define IMX6Q_GPR12_ARMP_APB_CLK_EN		BIT(24)
+> +#define IMX6Q_GPR12_DEVICE_TYPE			(0xF << 12)
+>  #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
+> +#define IMX6Q_GPR12_LOS_LEVEL			(0x1F << 4)
+>  
+>  #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
+>  #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
+> -- 
+> 1.7.9.5
+> 
 
