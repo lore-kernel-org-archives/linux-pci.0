@@ -1,91 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:47470 "EHLO bear.ext.ti.com"
+Received: from mail1.g1.pair.com ([66.39.3.162]:44171 "EHLO mail1.g1.pair.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752478Ab3ILJoA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Sep 2013 05:44:00 -0400
-Message-ID: <52318CCC.4040604@ti.com>
-Date: Thu, 12 Sep 2013 15:13:40 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
-To: Pratyush Anand <pratyush.anand@st.com>
-CC: Jingoo Han <jg1.han@samsung.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
- part and Exynos part
-References: <002801ce8376$a807dbf0$f81793d0$@samsung.com> <51ED49D6.9050209@ti.com> <000701ce8741$fe47deb0$fad79c10$@samsung.com> <51EE22DF.6090902@ti.com> <001301ce8772$522dfc50$f689f4f0$@samsung.com> <5231607C.10702@ti.com> <003501ceaf87$cda45db0$68ed1910$%han@samsung.com> <20130912093018.GA2124@pratyush-vbox>
-In-Reply-To: <20130912093018.GA2124@pratyush-vbox>
-Content-Type: text/plain; charset="ISO-8859-1"
+	id S1754706Ab3IMJ5S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 13 Sep 2013 05:57:18 -0400
+From: Sean Cross <xobs@kosagi.com>
+To: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Sascha Hauer <s.hauer@pengutronix.de>,
+	Zhu Richard-R65037 <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>, Sean Cross <xobs@kosagi.com>
+Subject: [PATCH v4 1/3] ARM: imx: Add LVDS general-purpose clocks to i.MX6Q
+Date: Fri, 13 Sep 2013 09:40:20 +0000
+Message-Id: <1379065222-7275-2-git-send-email-xobs@kosagi.com>
+In-Reply-To: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
+References: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+The i.MX6 has two general-purpose LVDS clocks that can be driven
+from a variety of sources.  This patch adds a mux and a gate for
+both of these clocks.
 
-On Thursday 12 September 2013 03:00 PM, Pratyush Anand wrote:
-> Hi Jingoo,
-> 
-> 
-> On Thu, Sep 12, 2013 at 03:15:04PM +0800, Jingoo Han wrote:
->> On Tuesday 23 July 2013 12:30 PM, Kishon Vijay Abraham I wrote:
->>>>> .
->>>>> .
->>>>>>>> +			of_pci_range_to_resource(&range, np, &pp->cfg);
->>>>>>>> +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
->>>>>>>> +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
->>>>>>>> +		}
->>>>>>>> +	}
->>>>>>>> +
->>>>>>>> +	pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
->>>>>>>> +				resource_size(&pp->cfg));
->>>>>>>
->>>>>>> Why is configuraion space divided into two?
->>>>>>
->>>>>> Sorry, I don't know the exact reason. :(
->>>>>> Pratyush Anand may know about this.
->>>>>> Pratyush Anand, could you answer the question?
->>>>>>
->>>>>> Also, if you find some problems, please let me know.
->>>
->>> One more query..
->>>
->>> Where is inbound translation configuration done in your driver? how should it
->>> be done?
->>
-> 
-> Yes, Kishon is right. Inbound translation configuration is missing in
-> your code and I think it should be implemented.
-> 
->> Hi Kishon,
->>
->> Sorry, I cannot understand your question exactly.
->> However, the following thread would be helpful.
->>
->> http://www.spinics.net/lists/arm-kernel/msg252078.html
->> https://lkml.org/lkml/2013/6/17/890
-> 
-> From this conversation, It seems that you
-> have tested this driver and it works fine without inbound translation
-> function. I am sure that you would have tested a PCIe card with DMA
-> capability such as PCIe2USB or PCIe2Ethernet. Since it worked, it
-> means that by default your controller is supporting one to one mapping
-> in case of inbound transaction even when address translation is enabled.
+Signed-off-by: Sean Cross <xobs@kosagi.com>
+---
+ .../devicetree/bindings/clock/imx6q-clock.txt      |    4 ++++
+ arch/arm/mach-imx/clk-imx6q.c                      |   21 +++++++++++++++++++-
+ 2 files changed, 24 insertions(+), 1 deletion(-)
 
-btw, I'm testing Ethernet controller: Realtek Semiconductor Co., Ltd.
-RTL8111/8168B PCI Express Gigabit Ethernet controller.
+diff --git a/Documentation/devicetree/bindings/clock/imx6q-clock.txt b/Documentation/devicetree/bindings/clock/imx6q-clock.txt
+index 5a90a72..35e82c7 100644
+--- a/Documentation/devicetree/bindings/clock/imx6q-clock.txt
++++ b/Documentation/devicetree/bindings/clock/imx6q-clock.txt
+@@ -215,6 +215,10 @@ clocks and IDs.
+ 	cko2      		200
+ 	cko      		201
+ 	vdoa      		202
++	lvds1_sel		203
++	lvds2_sel		204
++	lvds1_gate		205
++	lvds2_gate		206
+ 
+ Examples:
+ 
+diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
+index 9181a24..679d49a 100644
+--- a/arch/arm/mach-imx/clk-imx6q.c
++++ b/arch/arm/mach-imx/clk-imx6q.c
+@@ -217,6 +217,16 @@ static const char *cko2_sels[] = {
+ 	"uart_serial", "spdif", "asrc", "hsi_tx",
+ };
+ static const char *cko_sels[] = { "cko1", "cko2", };
++static const char *lvds1_sels[] = {
++	"dummy", "dummy", "dummy", "dummy", "dummy", "dummy",
++	"pll4_audio", "pll5_video", "pll8_mlb", "enet_ref",
++	"pcie_ref", "sata_ref",
++};
++static const char *lvds2_sels[] = {
++	"dummy", "dummy", "dummy", "dummy", "dummy", "dummy",
++	"pll4_audio", "pll5_video", "pll8_mlb", "enet_ref",
++	"pcie_ref", "sata_ref",
++};
+ 
+ enum mx6q_clks {
+ 	dummy, ckil, ckih, osc, pll2_pfd0_352m, pll2_pfd1_594m, pll2_pfd2_396m,
+@@ -251,7 +261,8 @@ enum mx6q_clks {
+ 	ssi2_ipg, ssi3_ipg, rom, usbphy1, usbphy2, ldb_di0_div_3_5, ldb_di1_div_3_5,
+ 	sata_ref, sata_ref_100m, pcie_ref, pcie_ref_125m, enet_ref, usbphy1_gate,
+ 	usbphy2_gate, pll4_post_div, pll5_post_div, pll5_video_div, eim_slow,
+-	spdif, cko2_sel, cko2_podf, cko2, cko, vdoa, clk_max
++	spdif, cko2_sel, cko2_podf, cko2, cko, vdoa,
++	lvds1_sel, lvds2_sel, lvds1_gate, lvds2_gate, clk_max
+ };
+ 
+ static struct clk *clk[clk_max];
+@@ -342,6 +353,12 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
+ 			base + 0xe0, 0, 2, 0, clk_enet_ref_table,
+ 			&imx_ccm_lock);
+ 
++	clk[lvds1_sel] = imx_clk_mux("lvds1_sel", base + 0x160, 0, 5, lvds1_sels,         ARRAY_SIZE(lvds1_sels));
++	clk[lvds2_sel] = imx_clk_mux("lvds2_sel", base + 0x160, 5, 5, lvds2_sels,         ARRAY_SIZE(lvds2_sels));
++
++	clk[lvds1_gate] = imx_clk_gate("lvds1_gate", "dummy", base + 0x160, 10);
++	clk[lvds2_gate] = imx_clk_gate("lvds2_gate", "dummy", base + 0x160, 11);
++
+ 	/*                                name              parent_name        reg       idx */
+ 	clk[pll2_pfd0_352m] = imx_clk_pfd("pll2_pfd0_352m", "pll2_bus",     base + 0x100, 0);
+ 	clk[pll2_pfd1_594m] = imx_clk_pfd("pll2_pfd1_594m", "pll2_bus",     base + 0x100, 1);
+@@ -569,6 +586,8 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
+ 	clk_register_clkdev(clk[cko1_sel], "cko1_sel", NULL);
+ 	clk_register_clkdev(clk[ahb], "ahb", NULL);
+ 	clk_register_clkdev(clk[cko1], "cko1", NULL);
++	clk_register_clkdev(clk[lvds1_gate], "lvds1_gate", NULL);
++	clk_register_clkdev(clk[lvds2_gate], "lvds2_gate", NULL);
+ 	clk_register_clkdev(clk[arm], NULL, "cpu0");
+ 	clk_register_clkdev(clk[pll4_post_div], "pll4_post_div", NULL);
+ 	clk_register_clkdev(clk[pll4_audio], "pll4_audio", NULL);
+-- 
+1.7.9.5
 
-when I do ifconfig eth0 up, I get *r8169 0000:01:00.0 eth0: link up.*
-But I dont receive any packets and ping also fails and the tx and rx packet
-count is also 0. Could it be related to inbound translation?
-
-Thanks
-Kishon
