@@ -1,34 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:64929 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754552Ab3I0Spj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 14:45:39 -0400
-Received: by mail-ie0-f173.google.com with SMTP id ar20so4824536iec.18
-        for <linux-pci@vger.kernel.org>; Fri, 27 Sep 2013 11:45:38 -0700 (PDT)
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:54753 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751513Ab3IMLIc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Sep 2013 07:08:32 -0400
+Received: by mail-bk0-f45.google.com with SMTP id mx11so407334bkb.32
+        for <linux-pci@vger.kernel.org>; Fri, 13 Sep 2013 04:08:30 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130925174215.GA26273@google.com>
-References: <20130925174215.GA26273@google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 27 Sep 2013 12:45:18 -0600
-Message-ID: <CAErSpo4dkL9wqjCuoURTca8CgPbLYkTxWEhLt7WeRa14d2_3OA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix whitespace, capitalization, and spelling errors
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAG-2HqWcnZ-z7EbDd0aAj6y_Ho6szfRZUiK0psEnmoz17Kw-xA@mail.gmail.com>
+References: <1378302428-19758-1-git-send-email-teg@jklm.no>
+ <mj+md-20130904.134928.12262.nikam@ucw.cz> <CAG-2HqWcnZ-z7EbDd0aAj6y_Ho6szfRZUiK0psEnmoz17Kw-xA@mail.gmail.com>
+From: Tom Gundersen <teg@jklm.no>
+Date: Fri, 13 Sep 2013 13:08:09 +0200
+Message-ID: <CAG-2HqVex23K1Omck6rhBsW9dUZTvsORcZF9xFO9jpfhdPO0CQ@mail.gmail.com>
+Subject: Re: [PATCH RESEND][pciutils] libpci: pci_id_lookup - add udev/hwdb support
+To: Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 25, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I'd like to merge the following patch.  It makes no functional changes at
-> all; it's only spelling and whitespace fixes, e.g., space-before-tab,
-> whitespace-at-end-of-line, etc.
+On Wed, Sep 4, 2013 at 4:59 PM, Tom Gundersen <teg@jklm.no> wrote:
+> On Wed, Sep 4, 2013 at 3:57 PM, Martin Mares <mj@ucw.cz> wrote:
+>> Hello!
+>>
+>> First of all: Sorry for not replying to the first mail. I do not follow
+>> linux-pci too much these days (or, I do that in big batches).
 >
-> To avoid needless conflicts, I wonder if it's best to ask Linus to pull
-> this before v3.12-rc3.  Otherwise, I can feed it through my tree in the
-> merge window, or drop parts that are problematic, e.g., acpiphp.
+> No problem, I guessed as much.
+>
+>>> This lets you select hwdb support at compile time.
+>>>
+>>> hwdb is an efficient hardware database shipped with recent versions of udev.
+>>> It contains among other sources pci.ids so querying hwdb rather than reading
+>>> pci.ids directly should give the same result.
+>>>
+>>> Ideally Linux distros using udev could stop shipping pci.ids, but use hwdb
+>>> as the only source of this information, which this patch allows.
+>>
+>> Generally, I will be glad to include hwdb support in libpci.
+>
+> Great.
+>
+>>> +     if [ -f /usr/include/libudev.h -o -f /usr/local/include/libudev.h ] ; then
+>>> +             HWDB=yes
+>>> +     else
+>>> +             HWDB=no
+>>> +     fi
+>>
+>> Does this make sense? Does every version of libudev support hwdb?
+>
+> Good point. I'll replace it with a pkg-config call, is that acceptable?
+>
+>>> @@ -86,8 +91,58 @@ char
+>>>  *pci_id_lookup(struct pci_access *a, int flags, int cat, int id1, int id2, int id3, int id4)
+>>>  {
+>>>    struct id_entry *n, *best;
+>>> -  u32 id12 = id_pair(id1, id2);
+>>> -  u32 id34 = id_pair(id3, id4);
+>>> +  u32 id12, id34;
+>>> +
+>>> +#ifdef PCI_HAVE_HWDB
+>>> +  if (!(flags & PCI_LOOKUP_SKIP_LOCAL))
+>>> +    {
+>>
+>> As you wrote it, hwdb has always priority over pci.ids (unless local lookup is
+>> disabled). As a user, I would expect that pci.ids (being a part of the pciutils)
+>> is the primary source of data and other sources (network lookups, hwdb) are
+>> used only if pci.ids do not match or if explicitly requested.
+>
+> Hm, this was actually intentional. The reason being that I'd like to
+> avoid reading in the pci.ids db in the common case, as using the hwdb
+> should be much more efficient (it is most likely already in memory and
+> lookup is constant time), and also we (at the distro level) want to
+> move away from the {usb,pci}.ids and rather default to hwdb
+> everywhere.
+>
+> My original intention was to make hwdb a replacement for pci.ids, but
+> I ended up going the less invasive route, would making it a
+> replacement be more acceptable?
+>
+> If not, I'll just swap around the priority, not a problem.
 
-I plan to merge this during the v3.13 merge window, after the main PCI
-and ACPI updates have been merged.
+Hi Martin,
 
-Bjorn
+Any comments on the above before I resubmit?
+
+Cheers,
+
+Tom
