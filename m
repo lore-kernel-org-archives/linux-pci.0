@@ -1,71 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:34731 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755658Ab3IMX4C (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Sep 2013 19:56:02 -0400
-Received: by mail-ie0-f175.google.com with SMTP id e14so3799982iej.6
-        for <linux-pci@vger.kernel.org>; Fri, 13 Sep 2013 16:56:01 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux PCI <linux-pci@vger.kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Huang Ying <ying.huang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"David E. Box" <david.e.box@intel.com>
+Subject: [PATCH] PCI / ACPI / PM: Clear pme_poll for devices in D3cold on wakeup
+Date: Sat, 14 Sep 2013 03:38:20 +0200
+Message-ID: <4974289.QhzOmFXm0s@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <2086253.mJBe8Nv4qL@vostro.rjw.lan>
-References: <1375965314-24232-1-git-send-email-heikki.krogerus@linux.intel.com>
- <52330A82.7050607@redhat.com> <2086253.mJBe8Nv4qL@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 13 Sep 2013 17:55:40 -0600
-Message-ID: <CAErSpo4r=oQ+J0=cM9gp3-i5-+5JYpYZQfzi3HFa6spxOO9OJg@mail.gmail.com>
-Subject: Re: [PATCH 0/2] ACPI: return error in acpi_pci_irq_enable when there
- is no irq
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Prarit Bhargava <prarit@redhat.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Fri, Sep 13, 2013 at 5:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Friday, September 13, 2013 08:52:18 AM Prarit Bhargava wrote:
->>
->> On 08/08/2013 08:35 AM, Heikki Krogerus wrote:
->> > Hi,
->> >
->> > This is the fix for the Dell PowerEdge 840 issue where nothing
->> > allocated an irq for it's PCH if I understood correctly. The issue was
->> > reported by Prarit Bhargava.
->> >
->> > The second patch is just a minor cleanup.
->> >
->> > Thanks,
->> >
->> >
->> > Heikki Krogerus (2):
->> >   ACPI / PCI: don't allow PCI devices without irq to be enabled
->> >   ACPI / PCI: remove an extra check from acpi_pci_irq_enable()
->> >
->>
->> Rafael, is this in your queue?
->
-> No, it is not, because Bjorn wanted to debug this issue deeper as far as I
-> could understand.
->
-> Bjorn?
+Commit 448bd85 (PCI/PM: add PCIe runtime D3cold support) added a
+piece of code to pci_acpi_wake_dev() causing that function to behave
+in a special way for devices in D3cold (so that their configuration
+registeres are not accessed before those devices are resumed).
+However, it didn't take the clearing of the pme_poll flag into
+account.  That has to be done for all devices, even if they are in
+D3cold, or pci_pme_list_scan() will not know that wakeup has been
+signaled for the device and will poll its PME Status bit
+unnecessarily.
 
-Yes.  Yinghai pointed out a possible issue ("some USB3 host controller
-does not have intx configured, but still work with MSI?").  I can't
-explain to you right now what that means, but I did look at it enough
-to think that there indeed might be a problem there.
+Fix the problem by moving the clearing of the pme_poll flag in
+pci_acpi_wake_dev() before the code introduced by commit 448bd85.
 
-So I asked [1] for a bugzilla with more info (dmesg, acpidump) so
-somebody could look at it.  Actually, I was hoping Heikki or Prarit
-would look into it and address Yinghai's concern.  Maybe there's no
-problem there, but we should at least look and explain *why* it's not
-a problem.  And I would really like a kernel.org bugzilla with the
-info, in case this change turns out to have unintended consequences
-and we have to debug it again later.
+Reported-and-tested-by: David E. Box <david.e.box@intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: 3.6+ <stable@vger.kernel.org> # 3.6+
+---
+ drivers/pci/pci-acpi.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Bjorn
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -47,6 +47,9 @@ static void pci_acpi_wake_dev(acpi_handl
+ 	if (event != ACPI_NOTIFY_DEVICE_WAKE || !pci_dev)
+ 		return;
+ 
++	if (pci_dev->pme_poll)
++		pci_dev->pme_poll = false;
++
+ 	if (pci_dev->current_state == PCI_D3cold) {
+ 		pci_wakeup_event(pci_dev);
+ 		pm_runtime_resume(&pci_dev->dev);
+@@ -57,9 +60,6 @@ static void pci_acpi_wake_dev(acpi_handl
+ 	if (pci_dev->pme_support)
+ 		pci_check_pme_status(pci_dev);
+ 
+-	if (pci_dev->pme_poll)
+-		pci_dev->pme_poll = false;
+-
+ 	pci_wakeup_event(pci_dev);
+ 	pm_runtime_resume(&pci_dev->dev);
+ 
 
-[1] http://lkml.kernel.org/r/CAErSpo7KDY87QPLNwbufeUAFGBtvyGteDmk6AxqFXBOX0RaObw@mail.gmail.com
