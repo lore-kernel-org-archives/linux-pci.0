@@ -1,68 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:59095 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751846Ab3IQErD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Sep 2013 00:47:03 -0400
-Date: Tue, 17 Sep 2013 06:47:00 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	'Jason Cooper' <jason@lakedaemon.net>
-Subject: Re: [PATCH 3/3] PCI: mvebu: add missing __iomem annotation
-Message-ID: <20130917064700.57964d15@skate>
-In-Reply-To: <000201ceb340$21d48de0$657da9a0$%han@samsung.com>
-References: <000201ceaf9b$098780b0$1c968210$%han@samsung.com>
-	<000501ceaf9b$acaec690$060c53b0$%han@samsung.com>
-	<20130916175706.3b43b3c4@skate>
-	<000201ceb340$21d48de0$657da9a0$%han@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-db9lp0251.outbound.messaging.microsoft.com ([213.199.154.251]:31104
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755470Ab3IPJBj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2013 05:01:39 -0400
+Date: Mon, 16 Sep 2013 17:01:48 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Sean Cross <xobs@kosagi.com>
+CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Zhu Richard-R65037 <r65037@freescale.com>
+Subject: Re: [PATCH v4 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+Message-ID: <20130916090146.GL31147@S2101-09.ap.freescale.net>
+References: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
+ <1379065222-7275-4-git-send-email-xobs@kosagi.com>
+ <20130916060631.GF31147@S2101-09.ap.freescale.net>
+ <5236AB28.5060708@kosagi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <5236AB28.5060708@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jingoo Han,
+On Mon, Sep 16, 2013 at 02:54:32PM +0800, Sean Cross wrote:
+> >>@@ -116,6 +116,22 @@
+> >>  			arm,data-latency = <4 2 3>;
+> >>  		};
+> >>+		pcie: pcie@0x01000000 {
+> >>+			compatible = "fsl,imx6-pcie", "snps,dw-pcie";
+> >We generally use particular SoC name to specify the compatible string.
+> >So "fsl,imx6q-pcie" will be more appropriate.
+> Any reason to specify imx6q in particular?  It's also present on the
+> imx6d, imx6dl, and imx6s (basically, everything but the imx6sl).
 
-On Tue, 17 Sep 2013 09:52:06 +0900, Jingoo Han wrote:
+The compatible naming is not about coverage but versioning.  We
+generally encode the name of the SoC that firstly integrates the block
+to specify the version.
 
-> 'Just returning NULL when of_address_to_resource() fails
-> instead of trying to propagate the error' looks better.
-> 
-> Then, how about the following?
-> 
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -728,7 +728,7 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
-> 
-> 	ret = of_address_to_resource(np, 0, &regs);
-> 	if (ret)
-> -		return ERR_PTR(ret);
-> +		return NULL;
-> 
-> 	return devm_ioremap_resource(&pdev->dev, &regs);
->  }
-> @@ -874,7 +874,7 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
-> 		}
-> 
-> 		port->base = mvebu_pcie_map_registers(pdev, child, port);
-> -		if (IS_ERR(port->base)) {
-> +		if (!port->base) {
-> 			dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
->   				port->port, port->lane);
-> 			port->base = NULL;
+Shawn
 
-Yes, I believe it makes more sense since we were anyway to using the
-error code returned by of_address_to_ressource().
-
-However, you can get rid of the port->base = NULL assignment in the if
-() { ... } code now.
-
-With that fixed, you can add my:
-
-Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
