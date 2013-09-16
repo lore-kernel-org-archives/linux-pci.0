@@ -1,357 +1,690 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:44596
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751109Ab3I0Bio convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 Sep 2013 21:38:44 -0400
-From: Zhu Richard-R65037 <r65037@freescale.com>
-To: Tim Harvey <tharvey@gateworks.com>, Sean Cross <xobs@kosagi.com>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:4210 "EHLO
+	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753134Ab3IPGFs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2013 02:05:48 -0400
+Date: Mon, 16 Sep 2013 14:06:33 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Sean Cross <xobs@kosagi.com>
+CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
 	Sascha Hauer <s.hauer@pengutronix.de>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: RE: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-Date: Fri, 27 Sep 2013 01:38:39 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D3F7E6A@039-SN2MPN1-012.039d.mgd.msft.net>
-References: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
-	<1379319655-20210-4-git-send-email-xobs@kosagi.com>
- <CAJ+vNU32oMZq=jrSCpk_ZjYc08kRBAqhOS8uYfor28gY8WGhnw@mail.gmail.com>
-In-Reply-To: <CAJ+vNU32oMZq=jrSCpk_ZjYc08kRBAqhOS8uYfor28gY8WGhnw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Zhu Richard-R65037 <r65037@freescale.com>
+Subject: Re: [PATCH v4 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+Message-ID: <20130916060631.GF31147@S2101-09.ap.freescale.net>
+References: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
+ <1379065222-7275-4-git-send-email-xobs@kosagi.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1379065222-7275-4-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tim:
-Thanks for your tests.
-Yes, it is. There are some problems when the PCIe switch is used on the 3.1x kernel at my side too, although the PCIe switch
-is ok on FSL imx_3.0.35 kernels.
-I'm debugging this issue now, and would summit the patches asap.
+On Fri, Sep 13, 2013 at 09:40:22AM +0000, Sean Cross wrote:
+> Add support for the PCIe port present on the i.MX6 family of controllers.
+> These use the Synopsis Designware core tied to their own PHY.
+> 
+> Signed-off-by: Sean Cross <xobs@kosagi.com>
+> ---
+>  .../devicetree/bindings/pci/designware-pcie.txt    |    5 +
+>  arch/arm/boot/dts/imx6qdl.dtsi                     |   16 +
+>  arch/arm/mach-imx/Kconfig                          |    2 +
+>  arch/arm/mach-imx/clk-imx6q.c                      |   11 +
+>  drivers/pci/host/Kconfig                           |    6 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-imx6.c                        |  482 ++++++++++++++++++++
+>  7 files changed, 523 insertions(+)
+>  create mode 100644 drivers/pci/host/pci-imx6.c
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index eabcb4b..41d8419 100644
+> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -21,6 +21,11 @@ Required properties:
+>  - num-lanes: number of lanes to use
+>  - reset-gpio: gpio pin number of power good signal
+>  
+> +Optional properties for fsl,imx6-pcie
+> +- power-on-gpio: gpio pin number of power-enable signal
+> +- wake-up-gpio: gpio pin number of incoming wakeup signal
+> +- disable-gpio: gpio pin number of outgoing rfkill/endpoint disable signal
+> +
+>  Example:
+>  
+>  SoC specific DT Entry:
+> diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
+> index ccd55c2..ec72271 100644
+> --- a/arch/arm/boot/dts/imx6qdl.dtsi
+> +++ b/arch/arm/boot/dts/imx6qdl.dtsi
+> @@ -116,6 +116,22 @@
+>  			arm,data-latency = <4 2 3>;
+>  		};
+>  
+> +		pcie: pcie@0x01000000 {
+> +			compatible = "fsl,imx6-pcie", "snps,dw-pcie";
 
-Best Regards
-Richard Zhu
+We generally use particular SoC name to specify the compatible string.
+So "fsl,imx6q-pcie" will be more appropriate.
 
+> +			reg = <0x01ffc000 0x4000>; /* DBI */
+> +
 
------Original Message-----
-From: Tim Harvey [mailto:tharvey@gateworks.com] 
-Sent: Thursday, September 26, 2013 1:54 PM
-To: Sean Cross
-Cc: devicetree@vger.kernel.org; linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; Sascha Hauer; Zhu Richard-R65037; Shawn Guo; bhelgaas@google.com
-Subject: Re: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+Nit: please drop this blank line.
 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig index 
-> 3d95048..efa24d9 100644
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			ranges = <0x00000800 0 0x01f00000 0x01f00000 0 0x00080000 /* configuration space */
+> +				  0x81000000 0 0          0x01f80000 0 0x00010000 /* downstream I/O */
+> +				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
+> +
+
+Ditto
+
+> +			num-lanes = <1>;
+> +			interrupts = <0 123 0x04>;
+> +			status = "disabled";
+> +		};
+> +
+>  		pmu {
+>  			compatible = "arm,cortex-a9-pmu";
+>  			interrupts = <0 94 0x04>;
+> diff --git a/arch/arm/mach-imx/Kconfig b/arch/arm/mach-imx/Kconfig
+> index 29a8af6..e6ac281 100644
+> --- a/arch/arm/mach-imx/Kconfig
+> +++ b/arch/arm/mach-imx/Kconfig
+> @@ -801,6 +801,8 @@ config SOC_IMX6Q
+>  	select HAVE_IMX_SRC
+>  	select HAVE_SMP
+>  	select MFD_SYSCON
+> +	select MIGHT_HAVE_PCI
+> +	select PCI_DOMAINS if PCI
+>  	select PINCTRL
+>  	select PINCTRL_IMX6Q
+>  	select PL310_ERRATA_588369 if CACHE_PL310
+> diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
+> index 679d49a..0a2093c 100644
+> --- a/arch/arm/mach-imx/clk-imx6q.c
+> +++ b/arch/arm/mach-imx/clk-imx6q.c
+> @@ -622,6 +622,17 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
+>  	if (ret)
+>  		pr_warn("failed to set up CLKO: %d\n", ret);
+>  
+> +	/*
+> +	 * All existing boards with PCIe run them off LVDS1
+> +	 */
+> +	if (IS_ENABLED(CONFIG_PCI_IMX6)) {
+> +		clk_set_parent(clk[lvds1_sel], clk[sata_ref]);
+> +		clk_prepare_enable(clk[lvds1_gate]);
+> +		clk_prepare_enable(clk[pcie_ref_125m]);
+> +		clk_prepare_enable(clk[pcie_axi]);
+> +        }
+
+Use tab instead of spaces, please.
+
+> +
+> +
+
+Drop one blank line.
+
+>  	/* Set initial power mode */
+>  	imx6q_set_lpm(WAIT_CLOCKED);
+>  
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 3d95048..efa24d9 100644
 > --- a/drivers/pci/host/Kconfig
 > +++ b/drivers/pci/host/Kconfig
 > @@ -15,6 +15,12 @@ config PCI_EXYNOS
->         select PCIEPORTBUS
->         select PCIE_DW
->
+>  	select PCIEPORTBUS
+>  	select PCIE_DW
+>  
 > +config PCI_IMX6
-> +       bool "Freescale i.MX6 PCIe controller"
-> +       depends on SOC_IMX6Q
-> +       select PCIEPORTBUS
+> +	bool "Freescale i.MX6 PCIe controller"
+> +	depends on SOC_IMX6Q
+> +	select PCIEPORTBUS
+> +	select PCIE_DW
+> +
+>  config PCI_TEGRA
+>  	bool "NVIDIA Tegra PCIe controller"
+>  	depends on ARCH_TEGRA
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index c9a997b..287d6a0 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -1,4 +1,5 @@
+>  obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+>  obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+> +obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+>  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+>  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> new file mode 100644
+> index 0000000..a3f9053
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -0,0 +1,482 @@
+> +/*
+> + * PCIe host controller driver for Freescale i.MX6 SoCs
+> + *
+> + * Copyright (C) 2013 Kosagi
+> + *		http://www.kosagi.com
+> + *
+> + * Author: Sean Cross <xobs@kosagi.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
+> +
+> +#include <linux/delay.h>
+> +#include <linux/gpio.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/of_gpio.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/resource.h>
+> +#include <linux/signal.h>
+> +#include <linux/types.h>
+> +#include <linux/regmap.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
+> +
+> +#include "pcie-designware.h"
+> +
+> +#define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
+> +
+> +struct imx6_pcie {
+> +	int			reset_gpio;
+> +	int			power_on_gpio;
+> +	int			wake_up_gpio;
+> +	int			disable_gpio;
+> +	struct pcie_port	pp;
+> +	struct regmap		*iomuxc_gpr;
+> +	void __iomem		*mem_base;
+> +};
+> +
+> +/* PCIe Port Logic registers (memory-mapped) */
+> +#define PL_OFFSET 0x700
+> +#define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+> +#define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+> +
+> +#define PCIE_PHY_CTRL (PL_OFFSET + 0x114)
+> +#define PCIE_PHY_CTRL_DATA_LOC 0
+> +#define PCIE_PHY_CTRL_CAP_ADR_LOC 16
+> +#define PCIE_PHY_CTRL_CAP_DAT_LOC 17
+> +#define PCIE_PHY_CTRL_WR_LOC 18
+> +#define PCIE_PHY_CTRL_RD_LOC 19
+> +
+> +#define PCIE_PHY_STAT (PL_OFFSET + 0x110)
+> +#define PCIE_PHY_STAT_DATA_LOC 0
+> +#define PCIE_PHY_STAT_ACK_LOC 16
+> +
+> +/* PHY registers (not memory-mapped) */
+> +#define PCIE_PHY_RX_ASIC_OUT 0x100D
+> +
+> +#define PHY_RX_OVRD_IN_LO 0x1005
+> +#define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1<<5)
 
-What is PCIEPORTBUS really for?  When I enable this with a PCIe switch off the root complex I get invalid IRQ messages during enumeration of ports on the switch:
+(1 << 5), please.
 
-[    6.572410] PCI: Device 0000:00:00.0 not available because of
-resource collisi
-[    6.572433] pcieport: probe of 0000:00:00.0 failed with error -22
-[    6.572489] pcieport 0000:01:00.0: device [10b5:8609] has invalid
-IRQ; check vendor BIOS             [    6.572536] pcieport: probe of
-0000:01:00.0 failed with error -22
-[    6.572593] pcieport 0000:02:01.0: device [10b5:8609] has invalid
-IRQ; check vendor BIOS
-[    6.572621] PCI: enabling device 0000:02:01.0 (0140 -> 0143)
-[    6.572672] pcieport 0000:02:01.0: enabling bus mastering
-[    6.573045] pcieport 0000:02:04.0: device [10b5:8609] has invalid
-IRQ; check vendor BIOS
-if I remove PCIEPORTBUS these go away however cards behind the switch don't operate correctly (I believe the interrupts do not get mapped properly).  Is there some logic perhaps missing in the driver required for PCIe switches?
+> +#define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1<<3)
+
+Ditto
 
 > +
-> +/*  Added for PCI abort handling */
-> +static int imx6q_pcie_abort_handler(unsigned long addr,
-> +               unsigned int fsr, struct pt_regs *regs) {
-> +       /*
-> +        * If it was an imprecise abort, then we need to correct the
-> +        * return address to be _after_ the instruction.
-> +        */
-> +       if (fsr & (1 << 10))
-> +               regs->ARM_pc += 4;
-> +       return 0;
+> +static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
+> +{
+> +	u32 val;
+> +	u32 max_iterations = 10;
+> +	u32 wait_counter = 0;
+> +
+> +	do {
+> +		val = readl(dbi_base + PCIE_PHY_STAT);
+> +		val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
+> +		wait_counter++;
+> +		udelay(1);
+> +	} while ((wait_counter < max_iterations) && (val != exp_val));
+> +
+> +	if (val != exp_val)
+> +		return -ETIMEDOUT;
+> +
+> +	return 0;
 > +}
 > +
+> +static int pcie_phy_wait_ack(void __iomem *dbi_base, int addr)
+> +{
+> +	u32 val;
+> +	int ret;
+> +
+> +	val = addr << PCIE_PHY_CTRL_DATA_LOC;
+> +	writel(val, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	val |= (0x1 << PCIE_PHY_CTRL_CAP_ADR_LOC);
+> +	writel(val, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	ret = pcie_phy_poll_ack(dbi_base, 1);
+> +	if (ret)
+> +		return ret;
+> +
+> +	val = addr << PCIE_PHY_CTRL_DATA_LOC;
+> +	writel(val, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	ret = pcie_phy_poll_ack(dbi_base, 0);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return 0;
+> +}
+> +
+> +/* Read from the 16-bit PCIe PHY control registers (not memory-mapped) */
+> +static int pcie_phy_read(void __iomem *dbi_base, int addr , int *data)
+> +{
+> +	u32 val, phy_ctl;
+> +	int ret;
+> +
+> +	ret = pcie_phy_wait_ack(dbi_base, addr);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/* assert Read signal */
+> +	phy_ctl = 0x1 << PCIE_PHY_CTRL_RD_LOC;
+> +	writel(phy_ctl, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	ret = pcie_phy_poll_ack(dbi_base, 1);
+> +	if (ret)
+> +		return ret;
+> +
+> +	val = readl(dbi_base + PCIE_PHY_STAT);
+> +	*data = (val & (0xffff << PCIE_PHY_STAT_DATA_LOC));
 
-you added this per my request but after more testing I'm not sure now it should be needed.  On the i.MX6, imprecise aborts will occur when an un-populated device behind a bridge is accessed.  However somewhere a few kernels back (3.9 I believe) this behavior changed such that the aborts were not enabled/checked until the kernel completed init.
-Therefore with the current kernel any un-populated device will cause a single imprecise abort to be caught at the end of init and as such it should be ignored 'without touching the PC'.  I'm not clear if this should happen - whatever enables the catching of the abort should perhaps clear any pending flags I would think.  I'm also not clear if an abort handler should really be required as the current kernel has a default handler that results in:
-...
-Freeing unused kernel memory: 6600K (80817000 - 80e89000) Unhandled fault: imprecise external abort (0x1406) at 0xca8c0d71 ...
+One unnecessary parentheses.
 
-Do we hook a handler that does nothing but 'return 0' just to eliminate the Unhandled fault message?
+> +
+> +	/* deassert Read signal */
+> +	writel(0x00, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	ret = pcie_phy_poll_ack(dbi_base, 0);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return 0;
+> +}
+> +
+> +static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
+> +{
+> +	u32 var;
+> +	int ret;
+> +
+> +	/* write addr */
+> +	/* cap addr */
+> +	ret = pcie_phy_wait_ack(dbi_base, addr);
+> +	if (ret)
+> +		return ret;
+> +
+> +	var = data << PCIE_PHY_CTRL_DATA_LOC;
+> +	writel(var, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	/* capture data */
+> +	var |= (0x1 << PCIE_PHY_CTRL_CAP_DAT_LOC);
+> +	writel(var, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	ret = pcie_phy_poll_ack(dbi_base, 1);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/* deassert cap data */
+> +	var = data << PCIE_PHY_CTRL_DATA_LOC;
+> +	writel(var, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	/* wait for ack de-assetion */
+> +	ret = pcie_phy_poll_ack(dbi_base, 0);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/* assert wr signal */
+> +	var = 0x1 << PCIE_PHY_CTRL_WR_LOC;
+> +	writel(var, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	/* wait for ack */
+> +	ret = pcie_phy_poll_ack(dbi_base, 1);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/* deassert wr signal */
+> +	var = data << PCIE_PHY_CTRL_DATA_LOC;
+> +	writel(var, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	/* wait for ack de-assetion */
+> +	ret = pcie_phy_poll_ack(dbi_base, 0);
+> +	if (ret)
+> +		return ret;
+> +
+> +	writel(0x0, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	return 0;
+> +}
+> +
+> +static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+> +{
+> +	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
 
-> +static void imx6_pcie_host_init(struct pcie_port *pp) {
-> +       int count = 0;
-> +       struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> +
-> +       imx6_pcie_assert_core_reset(pp);
-> +
-> +       imx6_pcie_init_phy(pp);
-> +
-> +       imx6_pcie_deassert_core_reset(pp);
-> +
-> +       dw_pcie_setup_rc(pp);
-> +
-> +       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +                       IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
-> +
-> +       while (!dw_pcie_link_up(pp)) {
-> +               usleep_range(100, 1000);
+Nit: have a blank line here.
 
-I've found that I needed to increase this delay in order for a link detect with a PLX PEX8609 switch off the root complex.  A usleep_range(2000, 3000) worked in my testing.
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+> +
+> +	gpio_set_value(imx6_pcie->reset_gpio, 0);
+> +	msleep(100);
+> +	gpio_set_value(imx6_pcie->reset_gpio, 1);
+> +
+> +	return 0;
+> +}
+> +
+> +static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+> +{
+> +	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> +
+> +	if (gpio_is_valid(imx6_pcie->power_on_gpio))
+> +		gpio_set_value(imx6_pcie->power_on_gpio, 1);
+> +
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+> +
+> +	/* allow the clocks to stabilize */
+> +	usleep_range(100, 200);
+> +
+> +	return 0;
+> +}
+> +
+> +static void imx6_pcie_init_phy(struct pcie_port *pp)
+> +{
+> +	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> +
+> +	/* FIXME the field name should be aligned to RM */
 
-> +static int imx6_pcie_link_up(struct pcie_port *pp) {
-> +       u32 rc, ltssm, rx_valid, temp;
-> +
-> +       /* link is debug bit 36, debug register 1 starts at bit 32 */
-> +       rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) & (0x1 << (36 - 32));
-> +       if (rc)
-> +               return -EAGAIN;
+Why cannot this be fixed right now?
 
-I'm still having trouble accessing devices behind a PCIe switch in 3.12-rc2.  Device enumeration goes fine however after kernel init it seems that any access to a switch port fails the check for link in dw_pcie_valid_config which calls imx6_pcie_link_up here.  I'm wondering if this is some ASPM issue (I've tried both with that enabled and disabled).  When I backport this driver to 3.11 I do not see this behavior and can access config space of all devices behind the bridge within userspace.  Any ideas here?
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+> +
+> +	/* configure constant input signal to the pcie ctrl and phy */
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
+> +
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> +			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> +			IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB, 0 << 6);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> +			IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB, 20 << 12);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> +			IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> +			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
+> +}
+> +
+> +static void imx6_pcie_host_init(struct pcie_port *pp)
+> +{
+> +	int count = 0;
+> +	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> +
+> +	imx6_pcie_assert_core_reset(pp);
+> +
+> +	imx6_pcie_init_phy(pp);
+> +
+> +	imx6_pcie_deassert_core_reset(pp);
+> +
+> +	dw_pcie_setup_rc(pp);
+> +
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
+> +
+> +	while (!dw_pcie_link_up(pp)) {
+> +		usleep_range(100, 1000);
+> +		count++;
+> +		if (count >= 10) {
+> +			dev_err(pp->dev, "phy link never came up\n");
+> +			dev_dbg(pp->dev,"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+> +				readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+> +				readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
+> +			break;
+> +		}
+> +	}
+> +
+> +	return;
+> +}
+> +
+> +static int imx6_pcie_link_up(struct pcie_port *pp)
+> +{
+> +	u32 rc, ltssm, rx_valid, temp;
+> +
+> +	/* link is debug bit 36, debug register 1 starts at bit 32 */
+> +	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) & (0x1 << (36 - 32));
+> +	if (rc)
+> +		return -EAGAIN;
+> +
+> +	/* From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
+> +	 * Wait 2ms (LTSSM timeout is 24ms, PHY lock is ~5us in gen2).
+> +	 * If (MAC/LTSSM.state == Recovery.RcvrLock)
+> +	 * && (PHY/rx_valid==0) then pulse PHY/rx_reset. Transition
+> +	 * to gen2 is stuck
+> +	 */
 
-Tim
+	/*
+	 * Multiple lines comment
+	 * ...
+	 */
 
->
+> +	pcie_phy_read(pp->dbi_base, PCIE_PHY_RX_ASIC_OUT, &rx_valid);
+> +	ltssm = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0) & 0x3F;
 > +
-> +       /*
-> +        * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
-> +        * Wait 2ms (LTSSM timeout is 24ms, PHY lock is ~5us in gen2).
-> +        * If (MAC/LTSSM.state == Recovery.RcvrLock)
-> +        * && (PHY/rx_valid==0) then pulse PHY/rx_reset. Transition
-> +        * to gen2 is stuck
-> +        */
-> +       pcie_phy_read(pp->dbi_base, PCIE_PHY_RX_ASIC_OUT, &rx_valid);
-> +       ltssm = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0) & 0x3F;
+> +	if (rx_valid & 0x01)
+> +		return 0;
 > +
-> +       if (rx_valid & 0x01)
-> +               return 0;
+> +	if (ltssm != 0x0d)
+> +		return 0;
 > +
-> +       if (ltssm != 0x0d)
-> +               return 0;
+> +	dev_err(pp->dev,
+> +		"transition to gen2 is stuck, reset PHY!\n");
 > +
-> +       dev_err(pp->dev,
-> +               "transition to gen2 is stuck, reset PHY!\n");
+> +	pcie_phy_read(pp->dbi_base,
+> +		PHY_RX_OVRD_IN_LO, &temp);
+> +	temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN
+> +		| PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+> +	pcie_phy_write(pp->dbi_base,
+> +		PHY_RX_OVRD_IN_LO, temp);
 > +
-> +       pcie_phy_read(pp->dbi_base,
-> +               PHY_RX_OVRD_IN_LO, &temp);
-> +       temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN
-> +               | PHY_RX_OVRD_IN_LO_RX_PLL_EN);
-> +       pcie_phy_write(pp->dbi_base,
-> +               PHY_RX_OVRD_IN_LO, temp);
+> +	usleep_range(2000, 3000);
 > +
-> +       usleep_range(2000, 3000);
+> +	pcie_phy_read(pp->dbi_base,
+> +		PHY_RX_OVRD_IN_LO, &temp);
+> +	temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN
+> +		| PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+> +	pcie_phy_write(pp->dbi_base,
+> +		PHY_RX_OVRD_IN_LO, temp);
 > +
-> +       pcie_phy_read(pp->dbi_base,
-> +               PHY_RX_OVRD_IN_LO, &temp);
-> +       temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN
-> +               | PHY_RX_OVRD_IN_LO_RX_PLL_EN);
-> +       pcie_phy_write(pp->dbi_base,
-> +               PHY_RX_OVRD_IN_LO, temp);
-> +
-> +       return 0;
+> +	return 0;
 > +}
 > +
 > +static struct pcie_host_ops imx6_pcie_host_ops = {
-> +       .link_up = imx6_pcie_link_up,
-> +       .host_init = imx6_pcie_host_init, };
+> +	.link_up = imx6_pcie_link_up,
+> +	.host_init = imx6_pcie_host_init,
+> +};
 > +
-> +static int imx6_add_pcie_port(struct pcie_port *pp,
-> +                       struct platform_device *pdev) {
-> +       int ret;
+> +static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+
+imx6_pcie_add_port to have the proper namespace?
+
+> +{
+> +	int ret;
 > +
-> +       pp->irq = platform_get_irq(pdev, 0);
-> +       if (!pp->irq) {
-> +               dev_err(&pdev->dev, "failed to get irq\n");
-> +               return -ENODEV;
-> +       }
+> +	pp->irq = platform_get_irq(pdev, 0);
+> +	if (!pp->irq) {
+> +		dev_err(&pdev->dev, "failed to get irq\n");
+> +		return -ENODEV;
+> +	}
 > +
-> +       pp->root_bus_nr = -1;
-> +       pp->ops = &imx6_pcie_host_ops;
+> +	pp->root_bus_nr = -1;
+> +	pp->ops = &imx6_pcie_host_ops;
 > +
-> +       spin_lock_init(&pp->conf_lock);
-> +       ret = dw_pcie_host_init(pp);
-> +       if (ret) {
-> +               dev_err(&pdev->dev, "failed to initialize host\n");
-> +               return ret;
-> +       }
+> +	spin_lock_init(&pp->conf_lock);
+> +	ret = dw_pcie_host_init(pp);
+> +	if (ret) {
+> +		dev_err(&pdev->dev, "failed to initialize host\n");
+> +		return ret;
+> +	}
 > +
-> +       return 0;
+> +	return 0;
 > +}
 > +
-> +static int __init imx6_pcie_probe(struct platform_device *pdev) {
-> +       struct imx6_pcie *imx6_pcie;
-> +       struct pcie_port *pp;
-> +       struct device_node *np = pdev->dev.of_node;
-> +       struct resource *dbi_base;
-> +       int ret;
+> +static int __init imx6_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct imx6_pcie *imx6_pcie;
+> +	struct pcie_port *pp;
+> +	struct device_node *np = pdev->dev.of_node;
+> +	struct resource *dbi_base;
+> +	int ret;
 > +
-> +       imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
-> +       if (!imx6_pcie)
-> +               return -ENOMEM;
+> +	imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie),
+> +				GFP_KERNEL);
+> +	if (!imx6_pcie)
+> +		return -ENOMEM;
 > +
-> +       pp = &imx6_pcie->pp;
-> +       pp->dev = &pdev->dev;
+> +	pp = &imx6_pcie->pp;
+> +	pp->dev = &pdev->dev;
 > +
-> +       /* Added for PCI abort handling */
-> +       hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
-> +               "imprecise external abort");
+> +	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	if (!dbi_base) {
+> +		dev_err(&pdev->dev, "dbi_base memory resource not found\n");
+> +		return -ENODEV;
+> +	}
 > +
-> +       dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +       if (!dbi_base) {
-> +               dev_err(&pdev->dev, "dbi_base memory resource not found\n");
-> +               return -ENODEV;
-> +       }
+> +	pp->dbi_base = devm_request_and_ioremap(&pdev->dev, dbi_base);
+> +	if (IS_ERR(pp->dbi_base)) {
+> +		dev_err(&pdev->dev, "unable to remap dbi_base\n");
+> +		ret = PTR_ERR(pp->dbi_base);
+> +		goto err;
+> +	}
+
+See kerneldoc of devm_request_and_ioremap().  I believe that the help
+already takes care of printing error messages.
+
 > +
-> +       pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
-> +       if (IS_ERR(pp->dbi_base)) {
-> +               dev_err(&pdev->dev, "unable to remap dbi_base\n");
-> +               ret = PTR_ERR(pp->dbi_base);
-> +               goto err;
-> +       }
+> +	/* Fetch GPIOs */
+> +	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> +		ret = devm_gpio_request_one(&pdev->dev,
+> +					imx6_pcie->reset_gpio,
+> +					GPIOF_OUT_INIT_LOW,
+> +					"PCIe reset");
+> +		if (ret) {
+> +			dev_err(&pdev->dev, "unable to get reset gpio\n");
+> +			goto err;
+> +		}
+> +	}
+
+The reset-gpio is not optional but required.  So if we do not have a
+valid reset-gpio, the probe should fail.  And that's why we can access
+reset_gpio in imx6_pcie_assert_core_reset() without checking if it's
+valid.
+
 > +
-> +       /* Fetch GPIOs */
-> +       imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-> +       if (!gpio_is_valid(imx6_pcie->reset_gpio)) {
-> +               dev_err(&pdev->dev, "no reset-gpio defined\n");
-> +               ret = -ENODEV;
-> +       }
-> +       ret = devm_gpio_request_one(&pdev->dev,
-> +                               imx6_pcie->reset_gpio,
-> +                               GPIOF_OUT_INIT_LOW,
-> +                               "PCIe reset");
-> +       if (ret) {
-> +               dev_err(&pdev->dev, "unable to get reset gpio\n");
-> +               goto err;
-> +       }
+> +	imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
+> +	if (gpio_is_valid(imx6_pcie->power_on_gpio)) {
+> +		ret = devm_gpio_request_one(&pdev->dev,
+> +					imx6_pcie->power_on_gpio,
+> +					GPIOF_OUT_INIT_LOW,
+> +					"PCIe power enable");
+> +		if (ret) {
+> +			dev_err(&pdev->dev, "unable to get power-on gpio\n");
+> +			goto err;
+> +		}
+> +	}
 > +
-> +       imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
-> +       if (gpio_is_valid(imx6_pcie->power_on_gpio)) {
-> +               ret = devm_gpio_request_one(&pdev->dev,
-> +                                       imx6_pcie->power_on_gpio,
-> +                                       GPIOF_OUT_INIT_LOW,
-> +                                       "PCIe power enable");
-> +               if (ret) {
-> +                       dev_err(&pdev->dev, "unable to get power-on gpio\n");
-> +                       goto err;
-> +               }
-> +       }
+> +	imx6_pcie->wake_up_gpio = of_get_named_gpio(np, "wake-up-gpio", 0);
+> +	if (gpio_is_valid(imx6_pcie->wake_up_gpio)) {
+> +		ret = devm_gpio_request_one(&pdev->dev,
+> +					imx6_pcie->wake_up_gpio,
+> +					GPIOF_IN,
+> +					"PCIe wake up");
+> +		if (ret) {
+> +			dev_err(&pdev->dev, "unable to get wake-up gpio\n");
+> +			goto err;
+> +		}
+> +	}
 > +
-> +       imx6_pcie->wake_up_gpio = of_get_named_gpio(np, "wake-up-gpio", 0);
-> +       if (gpio_is_valid(imx6_pcie->wake_up_gpio)) {
-> +               ret = devm_gpio_request_one(&pdev->dev,
-> +                                       imx6_pcie->wake_up_gpio,
-> +                                       GPIOF_IN,
-> +                                       "PCIe wake up");
-> +               if (ret) {
-> +                       dev_err(&pdev->dev, "unable to get wake-up gpio\n");
-> +                       goto err;
-> +               }
-> +       }
+> +	imx6_pcie->disable_gpio = of_get_named_gpio(np, "disable-gpio", 0);
+> +	if (gpio_is_valid(imx6_pcie->disable_gpio)) {
+> +		ret = devm_gpio_request_one(&pdev->dev,
+> +					imx6_pcie->disable_gpio,
+> +					GPIOF_OUT_INIT_HIGH,
+> +					"PCIe disable endpoint");
+> +		if (ret) {
+> +			dev_err(&pdev->dev, "unable to get disable-ep gpio\n");
+> +			goto err;
+> +		}
+> +	}
 > +
-> +       imx6_pcie->disable_gpio = of_get_named_gpio(np, "disable-gpio", 0);
-> +       if (gpio_is_valid(imx6_pcie->disable_gpio)) {
-> +               ret = devm_gpio_request_one(&pdev->dev,
-> +                                       imx6_pcie->disable_gpio,
-> +                                       GPIOF_OUT_INIT_HIGH,
-> +                                       "PCIe disable endpoint");
-> +               if (ret) {
-> +                       dev_err(&pdev->dev, "unable to get disable-ep gpio\n");
-> +                       goto err;
-> +               }
-> +       }
+> +	/* Grab GPR config register range */
+> +	imx6_pcie->iomuxc_gpr =
+> +		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+> +	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
+> +		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
+> +		ret = PTR_ERR(imx6_pcie->iomuxc_gpr);
+> +		goto err;
+> +	}
 > +
-> +       /* Fetch clocks */
-> +       imx6_pcie->lvds_gate = clk_get(&pdev->dev, "lvds_gate");
-> +       if (IS_ERR(imx6_pcie->lvds_gate)) {
-> +               dev_err(&pdev->dev,
-> +                       "lvds_gate clock select missing or invalid\n");
-> +               ret = PTR_ERR(imx6_pcie->lvds_gate);
-> +               goto err;
-> +       }
+> +	ret = add_pcie_port(pp, pdev);
+> +	if (ret < 0)
+> +		goto err;
 > +
-> +       imx6_pcie->sata_ref_100m = clk_get(&pdev->dev, "sata_ref_100m");
-> +       if (IS_ERR(imx6_pcie->sata_ref_100m)) {
-> +               dev_err(&pdev->dev,
-> +                       "sata_ref_100m clock source missing or invalid\n");
-> +               ret = PTR_ERR(imx6_pcie->sata_ref_100m);
-> +               goto err;
-> +       }
-> +
-> +       imx6_pcie->pcie_ref_125m = clk_get(&pdev->dev, "pcie_ref_125m");
-> +       if (IS_ERR(imx6_pcie->pcie_ref_125m)) {
-> +               dev_err(&pdev->dev,
-> +                       "pcie_ref_125m clock source missing or invalid\n");
-> +               ret = PTR_ERR(imx6_pcie->pcie_ref_125m);
-> +               goto err;
-> +       }
-> +
-> +       imx6_pcie->pcie_axi = clk_get(&pdev->dev, "pcie_axi");
-> +       if (IS_ERR(imx6_pcie->pcie_axi)) {
-> +               dev_err(&pdev->dev,
-> +                       "pcie_axi clock source missing or invalid\n");
-> +               ret = PTR_ERR(imx6_pcie->pcie_axi);
-> +               goto err;
-> +       }
-> +
-> +       /* Grab GPR config register range */
-> +       imx6_pcie->iomuxc_gpr =
-> +                syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
-> +       if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
-> +               dev_err(&pdev->dev, "unable to find iomuxc registers\n");
-> +               ret = PTR_ERR(imx6_pcie->iomuxc_gpr);
-> +               goto err;
-> +       }
-> +
-> +       ret = imx6_add_pcie_port(pp, pdev);
-> +       if (ret < 0)
-> +               goto err;
-> +
-> +       platform_set_drvdata(pdev, imx6_pcie);
-> +       return 0;
+> +	platform_set_drvdata(pdev, imx6_pcie);
+> +	return 0;
 > +
 > +err:
-> +       return ret;
+> +	return ret;
 > +}
 > +
 > +static const struct of_device_id imx6_pcie_of_match[] = {
-> +       { .compatible = "fsl,imx6q-pcie", },
-> +       {},
+> +	{ .compatible = "fsl,imx6-pcie", },
+> +	{},
 > +};
 > +MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
 > +
 > +static struct platform_driver imx6_pcie_driver = {
-> +       .driver = {
-> +               .name   = "imx6q-pcie",
-> +               .owner  = THIS_MODULE,
-> +               .of_match_table = of_match_ptr(imx6_pcie_of_match),
-> +       },
+> +	.driver = {
+> +		.name	= "imx6-pcie",
+> +		.owner	= THIS_MODULE,
+> +		.of_match_table = of_match_ptr(imx6_pcie_of_match),
+> +	},
 > +};
 > +
 > +/* Freescale PCIe driver does not allow module unload */
 > +
-> +static int __init imx6_init(void)
+> +static int __init pcie_init(void)
 > +{
-> +       return platform_driver_probe(&imx6_pcie_driver, 
-> +imx6_pcie_probe); } module_init(imx6_init);
-> +
-> +MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>"); 
-> +MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver"); 
-> +MODULE_LICENSE("GPL v2");
-> --
-> 1.7.9.5
->
+> +	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
+> +}
+> +subsys_initcall(pcie_init);
 
+Any reason why it cannot be module_init()?
+
+Shawn
+
+> +
+> +MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");
+> +MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
+> +MODULE_LICENSE("GPL v2");
+> -- 
+> 1.7.9.5
+> 
 
