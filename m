@@ -1,82 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1378336334.3246.158.camel@ul30vt.home>
-Subject: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on
- enabled slots
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:63002 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755309Ab3IPLUQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Sep 2013 07:20:16 -0400
+Date: Mon, 16 Sep 2013 12:22:11 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Tejun Heo <tj@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Date: Wed, 04 Sep 2013 17:12:14 -0600
-In-Reply-To: <2449715.ReJj2CQeDS@vostro.rjw.lan>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan>
-	 <1818424.8fNkf5pBy3@vostro.rjw.lan> <1378326994.3246.152.camel@ul30vt.home>
-	 <2449715.ReJj2CQeDS@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+ <20130905150442.GA24148@htj.dyndns.org>
+ <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+ <20130905154436.GC24148@htj.dyndns.org>
+ <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-09-05 at 00:54 +0200, Rafael J. Wysocki wrote:
-> On Wednesday, September 04, 2013 02:36:34 PM Alex Williamson wrote:
-> > On Thu, 2013-07-18 at 01:32 +0200, Rafael J. Wysocki wrote:
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > 
-> > > The current implementation of acpiphp_check_bridge() is pretty dumb:
-> > >  - It enables a slot if it's not enabled and the slot status is
-> > >    ACPI_STA_ALL.
-> > >  - It disables a slot if it's enabled and the slot status is not
-> > >    ACPI_STA_ALL.
-> > > 
-> > > This behavior is not sufficient to handle the Thunderbolt daisy
-> > > chaining case properly, however, because in that case the bus
-> > > behind the already enabled slot needs to be rescanned for new
-> > > devices.
-> > > 
-> > > For this reason, modify acpiphp_check_bridge() so that slots are
-> > > disabled and stopped if they are not in the ACPI_STA_ALL state.
-> > > 
-> > > For slots in the ACPI_STA_ALL state, devices behind them that don't
-> > > respond are trimmed using a new function, trim_stale_devices(),
-> > > introduced specifically for this purpose.  That function walks
-> > > the given bus and checks each device on it.  If the device doesn't
-> > > respond, it is assumed to be gone and is removed.
-> > > 
-> > > Once all of the stale devices directy behind the slot have been
-> > > removed, acpiphp_check_bridge() will start looking for new devices
-> > > that might have appeared on the given bus.  It will do that even if
-> > > the slot is already enabled (SLOT_ENABLED is set for it).
-> > > 
-> > > In addition to that, make the bus check notification ignore
-> > > SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
-> > > so that devices behind the slot are re-enumerated in that case too.
-> > > 
-> > > This change is based on earlier patches from Kirill A Shutemov
-> > > and Mika Westerberg.
-> > > 
-> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > ---
-> > 
-> > FYI, git bisect landed on this patch as the cause of my serial console
-> > dying on current upstream.  Further debugging to come...  Thanks,
+On Mon, Sep 09, 2013 at 05:20:44PM +0200, Alexander Gordeev wrote:
+> On Fri, Sep 06, 2013 at 05:32:05PM -0600, Bjorn Helgaas wrote:
+> > I propose that you rework it that way, and at least find out what
+> > (if anything) would break if we do that.  Or maybe we just give up
+> > some optimization; it would be nice to quantify that, too.
 > 
-> Well, sorry about that.
+> Hi Bjorn,
 > 
-> What exactly do you mean by "dying"?
+> The series is what it seems a direction to take.
+> 
+> Looks like we need PPC folks to agree on the quota check update
+> for pSeries (yes, they do bail out with a positive return value
+> from arch_msi_check_device()):
 
-Sorry, I was hoping to have more details quickly, but it's been a pain
-to debug.  By dying I mean serial console output suddenly stops during
-kernel boot and nothing more comes out of it until after the system is
-rebooted.  The problem happens when acpiphp_check_bridge() calls
-enable_slot().  The serial console dies somewhere down in
-acpiphp_bus_trim().  I think this is happening on the 00:1f ISA bridge,
-so there's a good chance the serial ports are described as somewhere
-under there.  Thanks,
+Hi Ben,
 
-Alex
+An initiative to simplify MSI/MSI-X allocation interface is brewing.
+It seems pSeries quota thing is an obstacle. If it could be given up
+(patch 2/9).
 
+Thanks!
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
