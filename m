@@ -1,60 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:38294 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751062Ab3IPHkE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Sep 2013 03:40:04 -0400
-Date: Mon, 16 Sep 2013 10:40:00 +0300
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Prarit Bhargava <prarit@redhat.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 0/2] ACPI: return error in acpi_pci_irq_enable when there
- is no irq
-Message-ID: <20130916074000.GA24222@xps8300>
-References: <1375965314-24232-1-git-send-email-heikki.krogerus@linux.intel.com>
- <52330A82.7050607@redhat.com>
- <2086253.mJBe8Nv4qL@vostro.rjw.lan>
- <CAErSpo4r=oQ+J0=cM9gp3-i5-+5JYpYZQfzi3HFa6spxOO9OJg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4r=oQ+J0=cM9gp3-i5-+5JYpYZQfzi3HFa6spxOO9OJg@mail.gmail.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:57368 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752947Ab3IPGWj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2013 02:22:39 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Sean Cross' <xobs@kosagi.com>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Zhu Richard-R65037' <r65037@freescale.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
+ <1379065222-7275-4-git-send-email-xobs@kosagi.com>
+In-reply-to: <1379065222-7275-4-git-send-email-xobs@kosagi.com>
+Subject: Re: [PATCH v4 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+Date: Mon, 16 Sep 2013 15:22:37 +0900
+Message-id: <000501ceb2a5$2373c260$6a5b4720$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 13, 2013 at 05:55:40PM -0600, Bjorn Helgaas wrote:
-> On Fri, Sep 13, 2013 at 5:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Friday, September 13, 2013 08:52:18 AM Prarit Bhargava wrote:
-> >>
-> >> Rafael, is this in your queue?
-> >
-> > No, it is not, because Bjorn wanted to debug this issue deeper as far as I
-> > could understand.
-> >
-> > Bjorn?
+On Friday, September 13, 2013 6:40 PM, Sean Cross wrote:
 > 
-> Yes.  Yinghai pointed out a possible issue ("some USB3 host controller
-> does not have intx configured, but still work with MSI?").  I can't
-> explain to you right now what that means, but I did look at it enough
-> to think that there indeed might be a problem there.
+> Add support for the PCIe port present on the i.MX6 family of controllers.
+> These use the Synopsis Designware core tied to their own PHY.
 > 
-> So I asked [1] for a bugzilla with more info (dmesg, acpidump) so
-> somebody could look at it.  Actually, I was hoping Heikki or Prarit
-> would look into it and address Yinghai's concern.  Maybe there's no
-> problem there, but we should at least look and explain *why* it's not
-> a problem.  And I would really like a kernel.org bugzilla with the
-> info, in case this change turns out to have unintended consequences
-> and we have to debug it again later.
+> Signed-off-by: Sean Cross <xobs@kosagi.com>
 
-I'll ask Sarah (xHCI maintaner) for help in case she knows something
-and create a bug for this if needed.
+It looks good. :-)
+But, I added some minor comments.
 
-I don't understand much about PCI, I need to study it a bit. Why would
-it be a problem to get the xHCI working with only MSI?
+> ---
+>  .../devicetree/bindings/pci/designware-pcie.txt    |    5 +
+>  arch/arm/boot/dts/imx6qdl.dtsi                     |   16 +
+>  arch/arm/mach-imx/Kconfig                          |    2 +
+>  arch/arm/mach-imx/clk-imx6q.c                      |   11 +
+>  drivers/pci/host/Kconfig                           |    6 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-imx6.c                        |  482 ++++++++++++++++++++
+>  7 files changed, 523 insertions(+)
+>  create mode 100644 drivers/pci/host/pci-imx6.c
 
-Thanks,
+[.....]
 
--- 
-heikki
+> diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
+> index 679d49a..0a2093c 100644
+> --- a/arch/arm/mach-imx/clk-imx6q.c
+> +++ b/arch/arm/mach-imx/clk-imx6q.c
+> @@ -622,6 +622,17 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
+>  	if (ret)
+>  		pr_warn("failed to set up CLKO: %d\n", ret);
+> 
+> +	/*
+> +	 * All existing boards with PCIe run them off LVDS1
+> +	 */
+> +	if (IS_ENABLED(CONFIG_PCI_IMX6)) {
+> +		clk_set_parent(clk[lvds1_sel], clk[sata_ref]);
+> +		clk_prepare_enable(clk[lvds1_gate]);
+> +		clk_prepare_enable(clk[pcie_ref_125m]);
+> +		clk_prepare_enable(clk[pcie_axi]);
+> +        }
+
+Please use tab instead of spaces.
+
+> +
+> +
+
+Please remove a duplicated line.
+
+[.....]
+
+> +#include <linux/delay.h>
+> +#include <linux/gpio.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/of_gpio.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/resource.h>
+> +#include <linux/signal.h>
+> +#include <linux/types.h>
+> +#include <linux/regmap.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
+
+If possible, please re-order in alphabetical order.
+
+[.....]
+
+> +static void imx6_pcie_host_init(struct pcie_port *pp)
+> +{
+> +	int count = 0;
+> +	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> +
+> +	imx6_pcie_assert_core_reset(pp);
+> +
+> +	imx6_pcie_init_phy(pp);
+> +
+> +	imx6_pcie_deassert_core_reset(pp);
+> +
+> +	dw_pcie_setup_rc(pp);
+> +
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
+> +
+> +	while (!dw_pcie_link_up(pp)) {
+> +		usleep_range(100, 1000);
+> +		count++;
+> +		if (count >= 10) {
+> +			dev_err(pp->dev, "phy link never came up\n");
+> +			dev_dbg(pp->dev,"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+
+Please insert space between pp->dev, and "DEBUG_R0 in order to fix the following
+checkpatch error.
+
+ERROR: space required after that ',' (ctx:VxV)
+#407: FILE: drivers/pci/host/pci-imx6.c:276:
++                       dev_dbg(pp->dev,"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+
+Best regards,
+Jingoo Han
+
