@@ -1,38 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Sep 2013 18:19:02 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: tianyu.lan@intel.com
-Cc: lenb@kernel.org, rjw@sisk.pl, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI/ACPI: Convert ACPI PCI Hot Plug core debug
- fuction to dynamic debug function
-Message-ID: <20130925001902.GF9302@google.com>
-References: <1378783035-15681-1-git-send-email-tianyu.lan@intel.com>
- <1378783035-15681-2-git-send-email-tianyu.lan@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:10616
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751942Ab3IPJKR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2013 05:10:17 -0400
+Date: Mon, 16 Sep 2013 17:11:01 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Sean Cross <xobs@kosagi.com>
+CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Zhu Richard-R65037 <r65037@freescale.com>,
+	<tharvey@gateworks.com>, <bhelgaas@google.com>
+Subject: Re: [PATCH v6 0/3] Add PCIe support for i.MX6q
+Message-ID: <20130916091059.GM31147@S2101-09.ap.freescale.net>
+References: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1378783035-15681-2-git-send-email-tianyu.lan@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 09, 2013 at 11:17:15PM -0400, tianyu.lan@intel.com wrote:
-> From: Lan Tianyu <tianyu.lan@intel.com>
+On Mon, Sep 16, 2013 at 08:20:51AM +0000, Sean Cross wrote:
+> Sean Cross (3):
+>   ARM: imx: Add LVDS general-purpose clocks to i.MX6Q
+>   ARM: imx6q: Add PCIe bits to GPR syscon definition
+>   PCI: imx6: Add support for i.MX6 PCIe controller
+
+The series looks good to me except that the devm_clk_get() should be
+used in driver .probe function rather than clk_get().  I will wait for
+another couple of days.  If there is no comments coming up, I can fix
+it up and apply the series.
+
+Shawn
+
 > 
-> This patch is to use pr_debug/info/warn/err to replace acpiphp debug
-> functions and remove module's debug param.
-> ...
+>  .../devicetree/bindings/clock/imx6q-clock.txt      |    4 +
+>  .../devicetree/bindings/pci/designware-pcie.txt    |    7 +-
+>  arch/arm/boot/dts/imx6qdl.dtsi                     |   16 +
+>  arch/arm/mach-imx/Kconfig                          |    2 +
+>  arch/arm/mach-imx/clk-imx6q.c                      |   24 +-
+>  drivers/pci/host/Kconfig                           |    6 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-imx6.c                        |  576 ++++++++++++++++++++
+>  include/linux/mfd/syscon/imx6q-iomuxc-gpr.h        |    8 +
+>  9 files changed, 642 insertions(+), 2 deletions(-)
+>  create mode 100644 drivers/pci/host/pci-imx6.c
+> 
+> -- 
+> 1.7.9.5
+> 
 
->  /* local variables */
-> @@ -61,9 +60,7 @@ static struct acpiphp_attention_info *attention_info;
->  MODULE_AUTHOR(DRIVER_AUTHOR);
->  MODULE_DESCRIPTION(DRIVER_DESC);
->  MODULE_LICENSE("GPL");
-> -MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
->  MODULE_PARM_DESC(disable, "disable acpiphp driver");
-> -module_param_named(debug, acpiphp_debug, bool, 0644);
-
-I have notes about booting with the "acpiphp.debug" parameter to turn
-on debugging.  Can you tell me the way to do the equivalent with
-dynamic debug?  I'll add that to the changelog before merging this.
-
-Bjorn
