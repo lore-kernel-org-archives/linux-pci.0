@@ -1,42 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:17371
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751251Ab3IZDX0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Sep 2013 23:23:26 -0400
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Sean Cross <xobs@kosagi.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
+Received: from mail1.g1.pair.com ([66.39.3.162]:44740 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751864Ab3IPIh7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Sep 2013 04:37:59 -0400
+From: Sean Cross <xobs@kosagi.com>
+To: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Sascha Hauer <s.hauer@pengutronix.de>,
 	Zhu Richard-R65037 <r65037@freescale.com>,
-	<tharvey@gateworks.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Frank Li <lznuaa@gmail.com>
-Subject: [PATCH v7 2/2] PCI: imx6: Add support for i.MX6 PCIe controller
-Date: Thu, 26 Sep 2013 11:24:47 +0800
-Message-ID: <1380165887-13506-3-git-send-email-shawn.guo@linaro.org>
-In-Reply-To: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org>
-References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Shawn Guo <shawn.guo@linaro.org>, tharvey@gateworks.com,
+	bhelgaas@google.com, Sean Cross <xobs@kosagi.com>
+Subject: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+Date: Mon, 16 Sep 2013 08:20:54 +0000
+Message-Id: <1379319655-20210-4-git-send-email-xobs@kosagi.com>
+In-Reply-To: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
+References: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Sean Cross <xobs@kosagi.com>
-
-Add support for the PCIe port present on the i.MX6 family of
-controllers.
+Add support for the PCIe port present on the i.MX6 family of controllers.
 These use the Synopsis Designware core tied to their own PHY.
 
 Signed-off-by: Sean Cross <xobs@kosagi.com>
-Acked-by: Sascha Hauer <s.hauer@pengutronix.de>
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
  .../devicetree/bindings/pci/designware-pcie.txt    |    7 +-
+ arch/arm/boot/dts/imx6qdl.dtsi                     |   16 +
+ arch/arm/mach-imx/Kconfig                          |    2 +
+ arch/arm/mach-imx/clk-imx6q.c                      |    4 +
  drivers/pci/host/Kconfig                           |    6 +
  drivers/pci/host/Makefile                          |    1 +
  drivers/pci/host/pci-imx6.c                        |  576 ++++++++++++++++++++
- 4 files changed, 589 insertions(+), 1 deletion(-)
+ 7 files changed, 611 insertions(+), 1 deletion(-)
  create mode 100644 drivers/pci/host/pci-imx6.c
 
 diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
@@ -64,6 +59,61 @@ index eabcb4b..dd8d920 100644
  Example:
  
  SoC specific DT Entry:
+diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
+index ccd55c2..125202e 100644
+--- a/arch/arm/boot/dts/imx6qdl.dtsi
++++ b/arch/arm/boot/dts/imx6qdl.dtsi
+@@ -116,6 +116,22 @@
+ 			arm,data-latency = <4 2 3>;
+ 		};
+ 
++		pcie: pcie@0x01000000 {
++			compatible = "fsl,imx6q-pcie", "snps,dw-pcie";
++			reg = <0x01ffc000 0x4000>; /* DBI */
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			ranges = <0x00000800 0 0x01f00000 0x01f00000 0 0x00080000 /* configuration space */
++				  0x81000000 0 0          0x01f80000 0 0x00010000 /* downstream I/O */
++				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
++			num-lanes = <1>;
++			interrupts = <0 123 0x04>;
++			clocks = <&clks 189>, <&clks 187>, <&clks 205>, <&clks 144>;
++			clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_gate", "pcie_axi";
++			status = "disabled";
++		};
++
+ 		pmu {
+ 			compatible = "arm,cortex-a9-pmu";
+ 			interrupts = <0 94 0x04>;
+diff --git a/arch/arm/mach-imx/Kconfig b/arch/arm/mach-imx/Kconfig
+index 29a8af6..e6ac281 100644
+--- a/arch/arm/mach-imx/Kconfig
++++ b/arch/arm/mach-imx/Kconfig
+@@ -801,6 +801,8 @@ config SOC_IMX6Q
+ 	select HAVE_IMX_SRC
+ 	select HAVE_SMP
+ 	select MFD_SYSCON
++	select MIGHT_HAVE_PCI
++	select PCI_DOMAINS if PCI
+ 	select PINCTRL
+ 	select PINCTRL_IMX6Q
+ 	select PL310_ERRATA_588369 if CACHE_PL310
+diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
+index d94be84..6956995 100644
+--- a/arch/arm/mach-imx/clk-imx6q.c
++++ b/arch/arm/mach-imx/clk-imx6q.c
+@@ -621,6 +621,10 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
+ 	if (ret)
+ 		pr_warn("failed to set up CLKO: %d\n", ret);
+ 
++	/* All existing boards with PCIe use LVDS1 */
++	if (IS_ENABLED(CONFIG_PCI_IMX6))
++		clk_set_parent(clk[lvds1_sel], clk[sata_ref]);
++
+ 	/* Set initial power mode */
+ 	imx6q_set_lpm(WAIT_CLOCKED);
+ 
 diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
 index 3d95048..efa24d9 100644
 --- a/drivers/pci/host/Kconfig
@@ -93,7 +143,7 @@ index c9a997b..287d6a0 100644
  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
 diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
 new file mode 100644
-index 0000000..d3639aa
+index 0000000..f68cc2e
 --- /dev/null
 +++ b/drivers/pci/host/pci-imx6.c
 @@ -0,0 +1,576 @@
@@ -180,7 +230,7 @@ index 0000000..d3639aa
 +			return 0;
 +
 +		udelay(1);
-+	} while (wait_counter < max_iterations);
++	} while ((wait_counter < max_iterations) && (val != exp_val));
 +
 +	return -ETIMEDOUT;
 +}
@@ -596,7 +646,7 @@ index 0000000..d3639aa
 +	}
 +
 +	/* Fetch clocks */
-+	imx6_pcie->lvds_gate = devm_clk_get(&pdev->dev, "lvds_gate");
++	imx6_pcie->lvds_gate = clk_get(&pdev->dev, "lvds_gate");
 +	if (IS_ERR(imx6_pcie->lvds_gate)) {
 +		dev_err(&pdev->dev,
 +			"lvds_gate clock select missing or invalid\n");
@@ -604,7 +654,7 @@ index 0000000..d3639aa
 +		goto err;
 +	}
 +
-+	imx6_pcie->sata_ref_100m = devm_clk_get(&pdev->dev, "sata_ref_100m");
++	imx6_pcie->sata_ref_100m = clk_get(&pdev->dev, "sata_ref_100m");
 +	if (IS_ERR(imx6_pcie->sata_ref_100m)) {
 +		dev_err(&pdev->dev,
 +			"sata_ref_100m clock source missing or invalid\n");
@@ -612,7 +662,7 @@ index 0000000..d3639aa
 +		goto err;
 +	}
 +
-+	imx6_pcie->pcie_ref_125m = devm_clk_get(&pdev->dev, "pcie_ref_125m");
++	imx6_pcie->pcie_ref_125m = clk_get(&pdev->dev, "pcie_ref_125m");
 +	if (IS_ERR(imx6_pcie->pcie_ref_125m)) {
 +		dev_err(&pdev->dev,
 +			"pcie_ref_125m clock source missing or invalid\n");
@@ -620,7 +670,7 @@ index 0000000..d3639aa
 +		goto err;
 +	}
 +
-+	imx6_pcie->pcie_axi = devm_clk_get(&pdev->dev, "pcie_axi");
++	imx6_pcie->pcie_axi = clk_get(&pdev->dev, "pcie_axi");
 +	if (IS_ERR(imx6_pcie->pcie_axi)) {
 +		dev_err(&pdev->dev,
 +			"pcie_axi clock source missing or invalid\n");
@@ -664,16 +714,15 @@ index 0000000..d3639aa
 +
 +/* Freescale PCIe driver does not allow module unload */
 +
-+static int __init imx6_pcie_init(void)
++static int __init imx6_init(void)
 +{
 +	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
 +}
-+module_init(imx6_pcie_init);
++module_init(imx6_init);
 +
 +MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");
 +MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
 +MODULE_LICENSE("GPL v2");
 -- 
 1.7.9.5
-
 
