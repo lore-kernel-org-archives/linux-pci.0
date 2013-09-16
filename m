@@ -1,54 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:62102 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933154Ab3ICXK4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 19:10:56 -0400
-Received: by mail-pd0-f177.google.com with SMTP id y10so6613286pdj.22
-        for <linux-pci@vger.kernel.org>; Tue, 03 Sep 2013 16:10:54 -0700 (PDT)
-Date: Tue, 3 Sep 2013 17:10:50 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci.h: Fix typo, remove unnecessary !!
-Message-ID: <20130903231050.GA24733@google.com>
-References: <1378240265.7347.24.camel@joe-AO722>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1378240265.7347.24.camel@joe-AO722>
+Received: from top.free-electrons.com ([176.31.233.9]:56635 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751225Ab3IPP5K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2013 11:57:10 -0400
+Date: Mon, 16 Sep 2013 17:57:06 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Jason Cooper' <jason@lakedaemon.net>
+Subject: Re: [PATCH 3/3] PCI: mvebu: add missing __iomem annotation
+Message-ID: <20130916175706.3b43b3c4@skate>
+In-Reply-To: <000501ceaf9b$acaec690$060c53b0$%han@samsung.com>
+References: <000201ceaf9b$098780b0$1c968210$%han@samsung.com>
+	<000501ceaf9b$acaec690$060c53b0$%han@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 03, 2013 at 01:31:05PM -0700, Joe Perches wrote:
-> Use normal kernel-doc "Returns:" instead of retruns
-> Assignment to bool is always 1 or 0 so the !! isn't necessary.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
+Dear Jingoo Han,
 
-Applied to pci/misc, thanks.  This branch will be rebased and will
-not appear in -next until after v3.12-rc1.
+On Thu, 12 Sep 2013 18:37:18 +0900, Jingoo Han wrote:
 
-> ---
->  include/linux/pci.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index da172f9..ee0f3b6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1749,11 +1749,11 @@ static inline int pci_pcie_cap(struct pci_dev *dev)
->   * pci_is_pcie - check if the PCI device is PCI Express capable
->   * @dev: PCI device
->   *
-> - * Retrun true if the PCI device is PCI Express capable, false otherwise.
-> + * Returns: true if the PCI device is PCI Express capable, false otherwise.
->   */
->  static inline bool pci_is_pcie(struct pci_dev *dev)
->  {
-> -	return !!pci_pcie_cap(dev);
-> +	return pci_pcie_cap(dev);
->  }
->  
->  /**
-> 
-> 
+>  	ret = of_address_to_resource(np, 0, &regs);
+>  	if (ret)
+> -		return ERR_PTR(ret);
+> +		return (void __iomem *)ERR_PTR(ret);
+
+This doesn't look very pretty to tell the truth, but I don't quite see
+any other option. Just return NULL when of_address_to_resource() fails
+instead of trying to propagate the error? Make this entire function
+return an 'int' and have the iomem address returned through a pointer
+passed by address as argument to the function? Any other suggestion?
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
