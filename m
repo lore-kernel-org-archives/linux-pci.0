@@ -1,199 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH 08/14] PCI/ACPI: Move _OSC stuff from acpi_pci_root_add() to
- negotiate_os_control()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>
-Date: Fri, 06 Sep 2013 11:14:26 -0600
-Message-ID: <20130906171426.11482.93212.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
-References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:42218 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237Ab3IPWxU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2013 18:53:20 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Shawn Guo' <shawn.guo@linaro.org>
+Cc: 'Sean Cross' <xobs@kosagi.com>, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Zhu Richard-R65037' <r65037@freescale.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
+ <1379065222-7275-4-git-send-email-xobs@kosagi.com>
+ <20130916060631.GF31147@S2101-09.ap.freescale.net>
+ <5236AB28.5060708@kosagi.com>
+ <20130916090146.GL31147@S2101-09.ap.freescale.net>
+In-reply-to: <20130916090146.GL31147@S2101-09.ap.freescale.net>
+Subject: Re: [PATCH v4 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+Date: Tue, 17 Sep 2013 07:53:19 +0900
+Message-id: <003901ceb32f$89941060$9cbc3120$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This doesn't change any of the _OSC code; it just moves it out into
-a new function so it doesn't clutter acpi_pci_root_add() so much.  This
-also enables future simplifications.
+On Monday, September 16, 2013 6:02 PM, Shawn Guo wrote:
+> On Mon, Sep 16, 2013 at 02:54:32PM +0800, Sean Cross wrote:
+> > >>@@ -116,6 +116,22 @@
+> > >>  			arm,data-latency = <4 2 3>;
+> > >>  		};
+> > >>+		pcie: pcie@0x01000000 {
+> > >>+			compatible = "fsl,imx6-pcie", "snps,dw-pcie";
+> > >We generally use particular SoC name to specify the compatible string.
+> > >So "fsl,imx6q-pcie" will be more appropriate.
+> > Any reason to specify imx6q in particular?  It's also present on the
+> > imx6d, imx6dl, and imx6s (basically, everything but the imx6sl).
+> 
+> The compatible naming is not about coverage but versioning.  We
+> generally encode the name of the SoC that firstly integrates the block
+> to specify the version.
+> 
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c |  132 +++++++++++++++++++++++++----------------------
- 1 file changed, 71 insertions(+), 61 deletions(-)
+Yes, you're right. :-)
+The name of the first SoC would be used.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index cc87cc4..3e57f10 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -360,67 +360,13 @@ out:
- }
- EXPORT_SYMBOL(acpi_pci_osc_control_set);
- 
--static int acpi_pci_root_add(struct acpi_device *device,
--			     const struct acpi_device_id *not_used)
-+static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
-+				 int *clear_aspm)
- {
--	unsigned long long segment, bus;
--	acpi_status status;
--	int result;
--	struct acpi_pci_root *root;
- 	u32 flags, base_flags;
-+	acpi_status status;
-+	struct acpi_device *device = root->device;
- 	acpi_handle handle = device->handle;
--	bool no_aspm = false, clear_aspm = false;
--
--	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
--	if (!root)
--		return -ENOMEM;
--
--	segment = 0;
--	status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
--				       &segment);
--	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
--		dev_err(&device->dev,  "can't evaluate _SEG\n");
--		result = -ENODEV;
--		goto end;
--	}
--
--	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
--	root->secondary.flags = IORESOURCE_BUS;
--	status = try_get_root_bridge_busnr(handle, &root->secondary);
--	if (ACPI_FAILURE(status)) {
--		/*
--		 * We need both the start and end of the downstream bus range
--		 * to interpret _CBA (MMCONFIG base address), so it really is
--		 * supposed to be in _CRS.  If we don't find it there, all we
--		 * can do is assume [_BBN-0xFF] or [0-0xFF].
--		 */
--		root->secondary.end = 0xFF;
--		dev_warn(&device->dev,
--			 FW_BUG "no secondary bus range in _CRS\n");
--		status = acpi_evaluate_integer(handle, METHOD_NAME__BBN,
--					       NULL, &bus);
--		if (ACPI_SUCCESS(status))
--			root->secondary.start = bus;
--		else if (status == AE_NOT_FOUND)
--			root->secondary.start = 0;
--		else {
--			dev_err(&device->dev, "can't evaluate _BBN\n");
--			result = -ENODEV;
--			goto end;
--		}
--	}
--
--	root->device = device;
--	root->segment = segment & 0xFFFF;
--	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
--	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
--	device->driver_data = root;
--
--	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
--	       acpi_device_name(device), acpi_device_bid(device),
--	       root->segment, &root->secondary);
--
--	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
- 
- 	/*
- 	 * All supported architectures that use ACPI have support for
-@@ -441,7 +387,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		if (ACPI_FAILURE(status)) {
- 			dev_info(&device->dev, "ACPI _OSC support "
- 				"notification failed, disabling PCIe ASPM\n");
--			no_aspm = true;
-+			*no_aspm = 1;
- 			flags = base_flags;
- 		}
- 	}
-@@ -473,7 +419,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 				 * We have ASPM control, but the FADT indicates
- 				 * that it's unsupported. Clear it.
- 				 */
--				clear_aspm = true;
-+				*clear_aspm = 1;
- 			}
- 		} else {
- 			dev_info(&device->dev,
-@@ -489,13 +435,77 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 			 * flag here, to defer the action until after the ACPI
- 			 * root scan.
- 			 */
--			no_aspm = true;
-+			*no_aspm = 1;
- 		}
- 	} else {
- 		dev_info(&device->dev,
- 			 "Unable to request _OSC control "
- 			 "(_OSC support mask: 0x%02x)\n", flags);
- 	}
-+}
-+
-+static int acpi_pci_root_add(struct acpi_device *device,
-+			     const struct acpi_device_id *not_used)
-+{
-+	unsigned long long segment, bus;
-+	acpi_status status;
-+	int result;
-+	struct acpi_pci_root *root;
-+	acpi_handle handle = device->handle;
-+	int no_aspm = 0, clear_aspm = 0;
-+
-+	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
-+	if (!root)
-+		return -ENOMEM;
-+
-+	segment = 0;
-+	status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
-+				       &segment);
-+	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-+		dev_err(&device->dev,  "can't evaluate _SEG\n");
-+		result = -ENODEV;
-+		goto end;
-+	}
-+
-+	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
-+	root->secondary.flags = IORESOURCE_BUS;
-+	status = try_get_root_bridge_busnr(handle, &root->secondary);
-+	if (ACPI_FAILURE(status)) {
-+		/*
-+		 * We need both the start and end of the downstream bus range
-+		 * to interpret _CBA (MMCONFIG base address), so it really is
-+		 * supposed to be in _CRS.  If we don't find it there, all we
-+		 * can do is assume [_BBN-0xFF] or [0-0xFF].
-+		 */
-+		root->secondary.end = 0xFF;
-+		dev_warn(&device->dev,
-+			 FW_BUG "no secondary bus range in _CRS\n");
-+		status = acpi_evaluate_integer(handle, METHOD_NAME__BBN,
-+					       NULL, &bus);
-+		if (ACPI_SUCCESS(status))
-+			root->secondary.start = bus;
-+		else if (status == AE_NOT_FOUND)
-+			root->secondary.start = 0;
-+		else {
-+			dev_err(&device->dev, "can't evaluate _BBN\n");
-+			result = -ENODEV;
-+			goto end;
-+		}
-+	}
-+
-+	root->device = device;
-+	root->segment = segment & 0xFFFF;
-+	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
-+	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
-+	device->driver_data = root;
-+
-+	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
-+	       acpi_device_name(device), acpi_device_bid(device),
-+	       root->segment, &root->secondary);
-+
-+	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
-+
-+	negotiate_os_control(root, &no_aspm, &clear_aspm);
- 
- 	/*
- 	 * TBD: Need PCI interface for enumeration/configuration of roots.
+Best regards,
+Jingoo Han
 
