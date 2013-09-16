@@ -1,54 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:47630 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495Ab3ILKl3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 06:41:29 -0400
-Date: Thu, 12 Sep 2013 12:41:26 +0200
-From: Sascha Hauer <s.hauer@pengutronix.de>
-To: Sean Cross <xobs@kosagi.com>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [PATCH v3 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-Message-ID: <20130912104126.GS30088@pengutronix.de>
-References: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
- <1378958611-4274-4-git-send-email-xobs@kosagi.com>
- <20130912062859.GM30088@pengutronix.de>
- <6FF3113C3FCC43A4A0D711C8656A4C03@kosagi.com>
- <20130912070131.GO30088@pengutronix.de>
- <65E0D2C79B2B43D28CC77454F44ECCFA@kosagi.com>
+Received: from mail1.g1.pair.com ([66.39.3.162]:45042 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753332Ab3IPF5h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Sep 2013 01:57:37 -0400
+Message-ID: <52369DCB.80101@kosagi.com>
+Date: Mon, 16 Sep 2013 13:57:31 +0800
+From: Sean Cross <xobs@kosagi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <65E0D2C79B2B43D28CC77454F44ECCFA@kosagi.com>
+To: Tim Harvey <tharvey@gateworks.com>
+CC: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Zhu Richard-R65037 <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Shawn Guo <shawn.guo@linaro.org>
+Subject: Re: [PATCH v4 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+References: <1379065222-7275-1-git-send-email-xobs@kosagi.com> <1379065222-7275-4-git-send-email-xobs@kosagi.com> <CAJ+vNU2GGfW0SQV1NnROMBtN5V_ANrjLJw2_+tWCRDsYG8BEeQ@mail.gmail.com>
+In-Reply-To: <CAJ+vNU2GGfW0SQV1NnROMBtN5V_ANrjLJw2_+tWCRDsYG8BEeQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 12, 2013 at 03:11:45PM +0800, Sean Cross wrote:
-> > Even if it should be configurable I'm still unsure whether this should
-> > be done at pci driver level.
-> 
-> I'm a bit wary of including clock setup like this in the SoC code, as
-> different boards might be different.  If a board designer wants to run
-> LVDS2 to the PCIe slot, that's entirely acceptable.  It might not
-> actually ever get done, but it seems like the sort of board-specific
-> thing that device tree was designed to handle.
+On 14/9/13 7:50 AM, Tim Harvey wrote:
+> Sean,
+>
+> Thanks for your work - I'm glad to see an i.MX6 PCIe host controller 
+> driver finally getting some upstream attention!
+>
+> I've tested this under several scenarios and am running into some issues.
+>
+> I found that on an IMX6DL I had to enable the sata_ref_100m clock 
+> additionally or a readl to the host address registers would hang (like 
+> the core had no clock).  I've run into this before with the IMX6DL and 
+> don't quite understand why the core would be clocked off the sata clock.
+>
+> When going through a switch (Gateworks GW5400-B has a PLX PEX8609 
+> 8-port PCIe switch) I found that the CPU would randomly hang sometime 
+> after bootup.  I found that installing an abort handler (from the 
+> Freescale BSP) seemed to resolve this.  Additionally when going 
+> through a switch, I could not read config space of the switch dev or 
+> anything beyond it so it doesn't look like the driver supports 
+> switches/bridges.
+As Richard Zhu mentioned, all devices should have sata_ref_100m 
+enabled.  I'll make this change in v5.
 
-The devicetree was designed to handle hardware descriptions, not
-configuration options.
+I don't have a PCIe switch handy, so I can't test your handler, but the 
+reasoning does make sense.  I'll add the abort handler code into the 
+driver.  I'd be curious to know if this is a Designware limitation, or 
+if it's the sort of thing that this hardware is capable of supporting.
 
-Chosing the clock parent is probably in the grey area between hardware
-description and configuration, so I assume when we find a good reason to
-add this option to the devicetree then it's acceptable to add it there.
+Freescale recommends using the SATA clock to drive the external bus.  I 
+don't quite understand the reasoning, but it seems to have to do with a 
+number of dividers and multipliers it goes through, some of which are 
+fixed, and they all expect a 100 MHz clock.  They are starting to change 
+the names of the clocks in the documentation from "SATA" and "PCIE" to 
+"100Mhz" and "125Mhz" because of the ambiguity.
 
-But we shouldn't add this option for something that, as you say, 'might
-not actually ever get done'. Just hardcode the clock selection in SoC
-code for now. If someone ever finds the good reason to make this configurable
-then he will speak up and we can discuss this again.
-
-Sascha
-
--- 
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+--
+Sean Cross
