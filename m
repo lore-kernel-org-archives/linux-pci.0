@@ -1,50 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:39951 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934791Ab3IDPCl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Sep 2013 11:02:41 -0400
-Date: Wed, 4 Sep 2013 11:02:33 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 0/4] AHCI: Conserve interrupts with
- pci_enable_msi_block_part() interface
-Message-ID: <20130904150233.GD25788@mtj.dyndns.org>
-References: <cover.1378111919.git.agordeev@redhat.com>
- <20130903135541.GB10522@htj.dyndns.org>
- <20130903145719.GB14221@dhcp-26-207.brq.redhat.com>
- <20130903162411.GA25040@mtj.dyndns.org>
- <20130904080623.GB8726@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130904080623.GB8726@dhcp-26-207.brq.redhat.com>
+Received: from mail1.g1.pair.com ([66.39.3.162]:52859 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751967Ab3IPGFL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Sep 2013 02:05:11 -0400
+From: Sean Cross <xobs@kosagi.com>
+To: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Sascha Hauer <s.hauer@pengutronix.de>,
+	Zhu Richard-R65037 <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>, tharvey@gateworks.com,
+	bhelgaas@google.com, Sean Cross <xobs@kosagi.com>
+Subject: [PATCH v5 0/3] Add PCIe support for i.MX6q
+Date: Mon, 16 Sep 2013 05:48:14 +0000
+Message-Id: <1379310497-12362-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+This patchset adds support for the PCI Express port present on
+the i.MX6 SoC.  The port is based on Synopsis Designware IP with
+a custom PHY.
 
-On Wed, Sep 04, 2013 at 10:06:23AM +0200, Alexander Gordeev wrote:
-> > Please separate out threaded IRQ support from multiple MSI.
-> 
-> This series does not really bring any structural change to the AHCI code -
-> just tweaks the MSI initialization.
-> 
-> As threaded IRQ support vs multiple MSI is a separate issue what about
-> addressing it in a separate effort? I would have to think on how to do it
-> eigher :)
+Changes since v4:
+ - Add an abort exception handler
+ - Fix register ordering in imx6q-iomuxc-gpr.h
+ - Enable sata_ref_100m during clock initialization
+ - Minor changes to lvds[12]_gate definitions
 
-Oh, I'm not saying that these all should be done together but it looks
-like you're interested in pushing things further in this respect and I
-wanna have an idea about the overall direction / future before acking
-further changes.  IOW, I'm happy that you're working on it but also
-wanna make sure you're gonna see things through and know where things
-are headed.
+Changes since v3:
+ - Moved clock initialization to board clock file
+ - Reworked memory range layout
+ - Reduced the duration of several sleep calls
 
-Thanks!
+Changes since v2:
+ - Reworked source file with Sascha Hauer's suggestions
+
+Changes since v1:
+ - Use the Designware controller code for BAR initialization
+
+Sean Cross (3):
+  ARM: imx: Add LVDS general-purpose clocks to i.MX6Q
+  ARM: imx6q: Add PCIe bits to GPR syscon definition
+  PCI: imx6: Add support for i.MX6 PCIe controller
+
+ .../devicetree/bindings/clock/imx6q-clock.txt      |    4 +
+ .../devicetree/bindings/pci/designware-pcie.txt    |    5 +
+ arch/arm/boot/dts/imx6qdl.dtsi                     |   16 +
+ arch/arm/mach-imx/Kconfig                          |    2 +
+ arch/arm/mach-imx/clk-imx6q.c                      |   34 +-
+ drivers/pci/host/Kconfig                           |    6 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pci-imx6.c                        |  499 ++++++++++++++++++++
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h        |    8 +
+ 9 files changed, 574 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/pci/host/pci-imx6.c
 
 -- 
-tejun
+1.7.9.5
+
