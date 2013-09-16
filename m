@@ -1,42 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:53534 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754180Ab3I0V6T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 17:58:19 -0400
-Received: by mail-ie0-f169.google.com with SMTP id tp5so5423594ieb.28
-        for <linux-pci@vger.kernel.org>; Fri, 27 Sep 2013 14:58:18 -0700 (PDT)
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:52922 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300Ab3IPHks (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2013 03:40:48 -0400
+Date: Mon, 16 Sep 2013 09:40:45 +0200
+From: Sascha Hauer <s.hauer@pengutronix.de>
+To: Sean Cross <xobs@kosagi.com>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Zhu Richard-R65037 <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>, tharvey@gateworks.com,
+	bhelgaas@google.com
+Subject: Re: [PATCH v5 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+Message-ID: <20130916074045.GT30088@pengutronix.de>
+References: <1379310497-12362-1-git-send-email-xobs@kosagi.com>
+ <1379310497-12362-4-git-send-email-xobs@kosagi.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6dOq8-vDP1G=pMV8fNrf81GyBtWrR5pkvynSkr834JTA@mail.gmail.com>
-References: <CAOJFanW+QFjeUX40JhGHuaPRW7-7jh21OCijneWgPo=Nnf5Oaw@mail.gmail.com>
-	<CAOJFanV9WewKjCyx6X-+nq4=EKoCwJTM6zg2PJ2BBBC_0aWNWw@mail.gmail.com>
-	<CAErSpo6dOq8-vDP1G=pMV8fNrf81GyBtWrR5pkvynSkr834JTA@mail.gmail.com>
-Date: Fri, 27 Sep 2013 14:58:18 -0700
-Message-ID: <CAE9FiQXOK7BH84Dg_5-zXxKLxeLqNUh8OfFu=D4Edb7+S3oG0Q@mail.gmail.com>
-Subject: Re: PCI: PCIe rescan resource allocation/re-size failure
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sasikanth babu <sasikanth.v19@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1379310497-12362-4-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 27, 2013 at 1:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> pci 0000:0a:00.0: reg 10: [mem 0x00000000-0x00003fff 64bit pref]
->> pci 0000:0a:00.0: reg 18: [mem 0x00000000-0x03ffffff 64bit pref]
->> pcieport 0000:02:08.0: BAR 9: can't assign mem pref (size 0x6000000)
->> pci 0000:0a:00.0: BAR 2: can't assign mem pref (size 0x4000000)
->> pci 0000:0a:00.0: BAR 0: can't assign mem pref (size 0x4000)
->>
->> Linux kernel : 2.6.34.10 (It is very old. Have no option so can't use
->> latest version)
+On Mon, Sep 16, 2013 at 05:48:17AM +0000, Sean Cross wrote:
+> Add support for the PCIe port present on the i.MX6 family of controllers.
+> These use the Synopsis Designware core tied to their own PHY.
+> 
+> diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
+> index 971356b..d30ff63 100644
+> --- a/arch/arm/mach-imx/clk-imx6q.c
+> +++ b/arch/arm/mach-imx/clk-imx6q.c
+> @@ -623,6 +623,18 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
+>  	if (ret)
+>  		pr_warn("failed to set up CLKO: %d\n", ret);
+>  
+> +	/*
+> +	 * All existing boards with PCIe use LVDS1
+> +	 */
+> +	if (IS_ENABLED(CONFIG_PCI_IMX6)) {
+> +		clk_set_parent(clk[lvds1_sel], clk[sata_ref]);
 
-> But in general, it's just too hard to work on old kernels unless you
-> can also demonstrate the problem on a current kernel, fix it there,
-> and backport the fix.  Or, if the current kernel has already been
-> fixed, you can figure out what fixed it and backport it.
+This is fine,
 
-yes, that kernel is too old.  4 years old?
+> +		clk_prepare_enable(clk[lvds1_gate]);
+> +		clk_prepare_enable(clk[pcie_ref_125m]);
+> +		clk_prepare_enable(clk[sata_ref_100m]);
+> +		clk_prepare_enable(clk[pcie_axi]);
 
-Yinghai
+but the clocks should be really enabled in the driver that needs them.
+
+> +static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
+> +{
+> +	u32 val;
+> +	u32 max_iterations = 10;
+> +	u32 wait_counter = 0;
+> +
+> +	do {
+> +		val = readl(dbi_base + PCIE_PHY_STAT);
+> +		val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
+> +		wait_counter++;
+
+		if (val == exp_val)
+			return 0;
+
+> +		udelay(1);
+
+Avoids the udelay when the value is correct during the first iteration.
+
+> +	} while ((wait_counter < max_iterations) && (val != exp_val));
+> +
+> +	if (val != exp_val)
+> +		return -ETIMEDOUT;
+> +
+> +	return 0;
+> +}
+> +
+
+...
+
+> +/* Read from the 16-bit PCIe PHY control registers (not memory-mapped) */
+> +static int pcie_phy_read(void __iomem *dbi_base, int addr , int *data)
+> +{
+> +	u32 val, phy_ctl;
+> +	int ret;
+> +
+> +	ret = pcie_phy_wait_ack(dbi_base, addr);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/* assert Read signal */
+> +	phy_ctl = 0x1 << PCIE_PHY_CTRL_RD_LOC;
+> +	writel(phy_ctl, dbi_base + PCIE_PHY_CTRL);
+> +
+> +	ret = pcie_phy_poll_ack(dbi_base, 1);
+> +	if (ret)
+> +		return ret;
+> +
+> +	val = readl(dbi_base + PCIE_PHY_STAT);
+> +	*data = (val & (0xffff << PCIE_PHY_STAT_DATA_LOC));
+
+This works because PCIE_PHY_STAT_DATA_LOC is 0. Otherwise you would have
+to do:
+
+	*data = (val >> PCIE_PHY_STAT_DATA_LOC) & 0xfff;
+
+I suggest to simply drop the bogus zero bit shift.
+
+Sascha
+
+-- 
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
