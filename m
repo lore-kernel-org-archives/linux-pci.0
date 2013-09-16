@@ -1,159 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:34383 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753005Ab3IXUub (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Sep 2013 16:50:31 -0400
-Received: by mail-ie0-f173.google.com with SMTP id ar20so9808241iec.32
-        for <linux-pci@vger.kernel.org>; Tue, 24 Sep 2013 13:50:31 -0700 (PDT)
+Received: from mga14.intel.com ([143.182.124.37]:50352 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753108Ab3IPK2X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Sep 2013 06:28:23 -0400
+Date: Mon, 16 Sep 2013 13:28:08 +0300
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Prarit Bhargava <prarit@redhat.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 0/2] ACPI: return error in acpi_pci_irq_enable when there
+ is no irq
+Message-ID: <20130916102807.GA4778@xps8300>
+References: <1375965314-24232-1-git-send-email-heikki.krogerus@linux.intel.com>
+ <52330A82.7050607@redhat.com>
+ <2086253.mJBe8Nv4qL@vostro.rjw.lan>
+ <CAErSpo4r=oQ+J0=cM9gp3-i5-+5JYpYZQfzi3HFa6spxOO9OJg@mail.gmail.com>
+ <20130916074000.GA24222@xps8300>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
-References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
- <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
- <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
- <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz> <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 24 Sep 2013 14:50:10 -0600
-Message-ID: <CAErSpo6ULW459LBE=Wj4GEyCY63TbirSDLDivK7hrs92WzitLw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Adam Radford <aradford@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130916074000.GA24222@xps8300>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 6, 2013 at 4:47 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Sep 6, 2013 at 3:51 AM, Jiri Kosina <jkosina@suse.cz> wrote:
+Hi,
 
->>> >> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
->>> >> > pci device") makes MSIs be forcibly disabled at boot time.
->>> >> >
->>> >> > It turns out that this breaks 3ware controller -- if MSIs are disabled
->>> >> > during PCI discovery of this controller, the device doesn't work properly
->>> >> > (it doesn't respond to any commands that are being sent to it after
->>> >> > initialization).
->
-> Is there a bug report for this issue?  It's nice to have a pointer to,
-> e.g., a bugzilla.kernel.org bug report with info such as dmesg logs,
-> lspci output, etc., for future reference.  Maybe somebody will figure
-> out a more generic change that could make this quirk unnecessary, and
-> details will help in figuring that out.
->
-> I assume the actual PCI discovery done in the PCI core works fine;
-> it's just that the driver doesn't work if MSIs are disabled on the
-> device.  If that's the case, can this be fixed by some driver change?
-> Maybe the driver needs to enable MSI before it sends commands to the
-> device?
+On Mon, Sep 16, 2013 at 10:40:00AM +0300, Heikki Krogerus wrote:
+> On Fri, Sep 13, 2013 at 05:55:40PM -0600, Bjorn Helgaas wrote:
+> > On Fri, Sep 13, 2013 at 5:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > On Friday, September 13, 2013 08:52:18 AM Prarit Bhargava wrote:
+> > >>
+> > >> Rafael, is this in your queue?
+> > >
+> > > No, it is not, because Bjorn wanted to debug this issue deeper as far as I
+> > > could understand.
+> > >
+> > > Bjorn?
+> > 
+> > Yes.  Yinghai pointed out a possible issue ("some USB3 host controller
+> > does not have intx configured, but still work with MSI?").  I can't
+> > explain to you right now what that means, but I did look at it enough
+> > to think that there indeed might be a problem there.
+> > 
+> > So I asked [1] for a bugzilla with more info (dmesg, acpidump) so
+> > somebody could look at it.  Actually, I was hoping Heikki or Prarit
+> > would look into it and address Yinghai's concern.  Maybe there's no
+> > problem there, but we should at least look and explain *why* it's not
+> > a problem.  And I would really like a kernel.org bugzilla with the
+> > info, in case this change turns out to have unintended consequences
+> > and we have to debug it again later.
+> 
+> I'll ask Sarah (xHCI maintaner) for help in case she knows something
+> and create a bug for this if needed.
+> 
+> I don't understand much about PCI, I need to study it a bit. Why would
+> it be a problem to get the xHCI working with only MSI?
 
-Ping?  Since the complaint is that the device doesn't work unless MSIs
-are enabled, can this be fixed in the driver instead of in a quirk?
+Sorry but I'll take it back. I don't understand the problem, so I
+can't really file a bug.
 
-> Any description of what this failure looks like to a user?  How can a
-> user or a distro connect a symptom (driver timeout, console message,
-> or whatever) to this patch?
->
->>> >> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
->>> >> > makes the device work properly again.
->>> >> >
->>> >> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
->>> >> >
->>> >> > ---
->>> >> >
->>> >> > I am adding Adam Radford as a recepient as well, to see whether he is able
->>> >> > to provide some more explanation why this device would expose this
->>> >> > behavior.
->>> >
->>> > OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't
->>> > expect any feedback from him.
->>> >
->>> > Bjorn, Jesse, any word on this please?
->>>
->>> It's on my list to look at.  It's too late to put it in for v3.11, and
->>> it's doubtful that it will even make the v3.12 merge window (though
->>> possibly it could go in post-merge window).  d5dea7d95 is several
->>> years old, so hopefully this issue isn't super-urgent.  Let me know if
->>> otherwise.
->>
->> I agree that this should be applicable to 3.12-rcX as well, as it's very
->> device-specific.
->>
->> Thanks.
->>
->>>
->>> Bjorn
->>>
->>> >> >  drivers/pci/msi.c    |    3 +++
->>> >> >  drivers/pci/quirks.c |   10 ++++++++++
->>> >> >  include/linux/pci.h  |    1 +
->>> >> >  3 files changed, 14 insertions(+), 0 deletions(-)
->>> >> >
->>> >> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->>> >> > index aca7578..4f36b8b 100644
->>> >> > --- a/drivers/pci/msi.c
->>> >> > +++ b/drivers/pci/msi.c
->>> >> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
->>> >> >  {
->>> >> >     INIT_LIST_HEAD(&dev->msi_list);
->>> >> >
->>> >> > +   if (dev->broken_msi_disable)
->>> >> > +           return;
->>> >> > +
->>> >> >     /* Disable the msi hardware to avoid screaming interrupts
->>> >> >      * during boot.  This is the power on reset default so
->>> >> >      * usually this should be a noop.
->>> >> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> >> > index e85d230..4ba3400 100644
->>> >> > --- a/drivers/pci/quirks.c
->>> >> > +++ b/drivers/pci/quirks.c
->>> >> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
->>> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
->>> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
->>> >> >
->>> >> > +/*
->>> >> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
->>> >> > + * disabled on it during PCI device discovery
->>> >> > + */
->>> >> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
->>> >> > +{
->>> >> > +   dev->broken_msi_disable = 1;
->>> >> > +}
->>> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
->>> >> > +
->>> >> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
->>> >> >                              void (*fn)(struct pci_dev *dev))
->>> >> >  {
->>> >> > diff --git a/include/linux/pci.h b/include/linux/pci.h
->>> >> > index 0fd1f15..c327d74 100644
->>> >> > --- a/include/linux/pci.h
->>> >> > +++ b/include/linux/pci.h
->>> >> > @@ -341,6 +341,7 @@ struct pci_dev {
->>> >> >  #ifdef CONFIG_PCI_MSI
->>> >> >     struct list_head msi_list;
->>> >> >     struct kset *msi_kset;
->>> >> > +   unsigned int    broken_msi_disable:1;
->>> >> >  #endif
->>> >> >     struct pci_vpd *vpd;
->>> >> >  #ifdef CONFIG_PCI_ATS
->>> >> >
->>> >> > --
->>> >> > Jiri Kosina
->>> >> > SUSE Labs
->>> >> >
->>> >>
->>> >> --
->>> >> Jiri Kosina
->>> >> SUSE Labs
->>> >>
->>> >
->>> > --
->>> > Jiri Kosina
->>> > SUSE Labs
->>>
->>
->> --
->> Jiri Kosina
->> SUSE Labs
+Just in case there is a misunderstanding, I'll explain the situation
+again. Right now there is no issue with xHCI controller driver. Prarit
+has Dell machine that apparently has buggy BIOS. He suggested a WA [1]
+for his issue, but that WA broke the xHCI on my Haswell machine. This
+patch fixed his issue and left my xHCI controller working.
+
+Maybe it would make sense to create a bug for the original issue with
+the buggy BIOS on Prarit's Dell. Prarit, you need to file that one!
+
+[1] http://permalink.gmane.org/gmane.linux.kernel.pci/23962
+
+-- 
+heikki
