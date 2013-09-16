@@ -1,87 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:24665 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753064Ab3ISHhK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Sep 2013 03:37:10 -0400
-From: Bharat Bhushan <r65777@freescale.com>
-To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<benh@kernel.crashing.org>, <galak@kernel.crashing.org>,
-	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
-	<scottwood@freescale.com>, <iommu@lists.linux-foundation.org>
-CC: Bharat Bhushan <bharat.bhushan@freescale.com>
-Subject: [PATCH 3/7] fsl iommu: add get_dev_iommu_domain
-Date: Thu, 19 Sep 2013 12:59:19 +0530
-Message-ID: <1379575763-2091-4-git-send-email-Bharat.Bhushan@freescale.com>
-In-Reply-To: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail1.g1.pair.com ([66.39.3.162]:44648 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751237Ab3IPIhr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Sep 2013 04:37:47 -0400
+From: Sean Cross <xobs@kosagi.com>
+To: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Sascha Hauer <s.hauer@pengutronix.de>,
+	Zhu Richard-R65037 <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>, tharvey@gateworks.com,
+	bhelgaas@google.com, Sean Cross <xobs@kosagi.com>
+Subject: [PATCH v6 0/3] Add PCIe support for i.MX6q
+Date: Mon, 16 Sep 2013 08:20:51 +0000
+Message-Id: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bharat Bhushan <bharat.bhushan@freescale.com>
+This patchset adds support for the PCI Express port present on
+the i.MX6 SoC.  The port is based on Synopsis Designware IP with
+a custom PHY.
 
-returns the iommu_domain of the requested device for fsl pamu.
+Changes since v5:
+ - Changed "compatible" to "fsl,imx6q-pcie"
+ - Moved clock_prepare_enable calls back into driver
+ - Removed clk lookups for lvds[12]_gate
 
-Use PCI controller dev struct for pci devices as current LIODN schema
-assign LIODN to PCI controller not PCI device. This will be corrected
-with proper LIODN schema.
+Changes since v4:
+ - Add an abort exception handler
+ - Fix register ordering in imx6q-iomuxc-gpr.h
+ - Enable sata_ref_100m during clock initialization
+ - Minor changes to lvds[12]_gate definitions
 
-Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
----
- drivers/iommu/fsl_pamu_domain.c |   30 ++++++++++++++++++++++++++++++
- 1 files changed, 30 insertions(+), 0 deletions(-)
+Changes since v3:
+ - Moved clock initialization to board clock file
+ - Reworked memory range layout
+ - Reduced the duration of several sleep calls
 
-diff --git a/drivers/iommu/fsl_pamu_domain.c b/drivers/iommu/fsl_pamu_domain.c
-index 14d803a..1d0dfe3 100644
---- a/drivers/iommu/fsl_pamu_domain.c
-+++ b/drivers/iommu/fsl_pamu_domain.c
-@@ -1140,6 +1140,35 @@ static u32 fsl_pamu_get_windows(struct iommu_domain *domain)
- 	return dma_domain->win_cnt;
- }
- 
-+static struct iommu_domain *fsl_get_dev_domain(struct device *dev)
-+{
-+	struct pci_controller *pci_ctl;
-+	struct device_domain_info *info;
-+	struct pci_dev *pdev;
-+
-+	/*
-+	 * Use PCI controller dev struct for pci devices as current
-+	 * LIODN schema assign LIODN to PCI controller not PCI device
-+	 * This should get corrected with proper LIODN schema.
-+	 */
-+	if (dev->bus == &pci_bus_type) {
-+		pdev = to_pci_dev(dev);
-+		pci_ctl = pci_bus_to_host(pdev->bus);
-+		/*
-+		 * make dev point to pci controller device
-+		 * so we can get the LIODN programmed by
-+		 * u-boot.
-+		 */
-+		dev = pci_ctl->parent;
-+	}
-+
-+	info = dev->archdata.iommu_domain;
-+	if (info && info->domain)
-+		return info->domain->iommu_domain;
-+
-+	return NULL;
-+}
-+
- static struct iommu_ops fsl_pamu_ops = {
- 	.domain_init	= fsl_pamu_domain_init,
- 	.domain_destroy = fsl_pamu_domain_destroy,
-@@ -1155,6 +1184,7 @@ static struct iommu_ops fsl_pamu_ops = {
- 	.domain_get_attr = fsl_pamu_get_domain_attr,
- 	.add_device	= fsl_pamu_add_device,
- 	.remove_device	= fsl_pamu_remove_device,
-+	.get_dev_iommu_domain = fsl_get_dev_domain,
- };
- 
- int pamu_domain_init()
+Changes since v2:
+ - Reworked source file with Sascha Hauer's suggestions
+
+Changes since v1:
+ - Use the Designware controller code for BAR initialization
+
+Sean Cross (3):
+  ARM: imx: Add LVDS general-purpose clocks to i.MX6Q
+  ARM: imx6q: Add PCIe bits to GPR syscon definition
+  PCI: imx6: Add support for i.MX6 PCIe controller
+
+ .../devicetree/bindings/clock/imx6q-clock.txt      |    4 +
+ .../devicetree/bindings/pci/designware-pcie.txt    |    7 +-
+ arch/arm/boot/dts/imx6qdl.dtsi                     |   16 +
+ arch/arm/mach-imx/Kconfig                          |    2 +
+ arch/arm/mach-imx/clk-imx6q.c                      |   24 +-
+ drivers/pci/host/Kconfig                           |    6 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pci-imx6.c                        |  576 ++++++++++++++++++++
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h        |    8 +
+ 9 files changed, 642 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/pci/host/pci-imx6.c
+
 -- 
-1.7.0.4
-
+1.7.9.5
 
