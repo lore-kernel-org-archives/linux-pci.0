@@ -1,158 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:49218 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008Ab3JAFxu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Oct 2013 01:53:50 -0400
-Received: by mail-pa0-f49.google.com with SMTP id ld10so6918911pab.22
-        for <linux-pci@vger.kernel.org>; Mon, 30 Sep 2013 22:53:50 -0700 (PDT)
-Date: Mon, 30 Sep 2013 22:53:46 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Veaceslav Falico <vfalico@redhat.com>
-Cc: linux-pci@vger.kernel.org, Neil Horman <nhorman@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2] msi: free msi_desc entry only after we've released
- the kobject
-Message-ID: <20131001055346.GA4759@google.com>
-References: <1380189591-1368-1-git-send-email-vfalico@redhat.com>
- <20130928213727.GC32063@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130928213727.GC32063@redhat.com>
+Received: from mail1.g1.pair.com ([66.39.3.162]:52914 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753591Ab3IPGFS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Sep 2013 02:05:18 -0400
+From: Sean Cross <xobs@kosagi.com>
+To: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Sascha Hauer <s.hauer@pengutronix.de>,
+	Zhu Richard-R65037 <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>, tharvey@gateworks.com,
+	bhelgaas@google.com, Sean Cross <xobs@kosagi.com>
+Subject: [PATCH v5 2/3] ARM: imx6q: Add PCIe bits to GPR syscon definition
+Date: Mon, 16 Sep 2013 05:48:16 +0000
+Message-Id: <1379310497-12362-3-git-send-email-xobs@kosagi.com>
+In-Reply-To: <1379310497-12362-1-git-send-email-xobs@kosagi.com>
+References: <1379310497-12362-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Russell]
+PCIe requires additional bits be defined for GPR8 and GPR12.
 
-On Sat, Sep 28, 2013 at 11:37:27PM +0200, Veaceslav Falico wrote:
-> On Thu, Sep 26, 2013 at 11:59:51AM +0200, Veaceslav Falico wrote:
-> >Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
-> >however kobject_put() doesn't guarantee us that it was the last reference
-> >and that the kobj isn't used currently by someone else, so after we
-> >kfree(entry) with the struct kobject - other users will begin using the
-> >freed memory, instead of the actual kobject.
-> 
-> Hi Bjorn,
-> 
-> I've seen that you've dropped this bugfix (and the 3 cleanup patches) with
-> "Changes Requested", however I don't recall any request to change this.
+Signed-off-by: Sean Cross <xobs@kosagi.com>
+---
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Oh, sorry, I didn't realize anybody else really looked at patchwork,
-much less the reason codes.  I just intended to dispose of those for
-now because I think we'll have several more revisions while we sort
-things out.  I definitely think this is a serious issue that needs to
-be fixed.  But you're right: I haven't given you any specific feedback
-yet because I'm not confident about what the right fix is.
-
-I think the current kobject delayed release is too aggressive, in the
-sense that even after we've released all references, the object can
-still be in sysfs, which causes future creates to fail.  E.g., this
-fails:
-
-    kset = kset_create_and_add("kobj_test", NULL, NULL);
-    kset_unregister(kset);
-    kset = kset_create_and_add("kobj_test", NULL, NULL);  // FAILS
-
-when I think it should succeed.  We don't have a way for the caller to
-determine when it's safe to do the second kset_create_and_add().
-
-After we release all references, I think it's OK for the kobject
-itself to continue to exist, i.e., we can delay calling t->release().
-But it should be impossible to find a kobject with refcount == 0 via
-sysfs, so we should be able to create a new one with the same name.
-
-In terms of code, I'm suggesting something like the following:
-
-diff --git a/lib/kobject.c b/lib/kobject.c
-index 9621751..4e1c608 100644
---- a/lib/kobject.c
-+++ b/lib/kobject.c
-@@ -536,6 +536,32 @@ static struct kobject * __must_check kobject_get_unless_zero(struct kobject *kob
- 	return kobj;
- }
+diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+index b6bdcd6..e00e9f3 100644
+--- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+@@ -241,6 +241,12 @@
  
-+static void kobject_free(struct kobject *kobj)
-+{
-+	struct kobj_type *t = get_ktype(kobj);
-+	const char *name = kobj->name;
-+
-+	if (t && t->release) {
-+		pr_debug("kobject: '%s' (%p): calling ktype release\n",
-+			 kobject_name(kobj), kobj);
-+		t->release(kobj);
-+	}
-+
-+	/* free name if we allocated it */
-+	if (name) {
-+		pr_debug("kobject: '%s': free name\n", name);
-+		kfree(name);
-+	}
-+}
-+
-+#ifdef CONFIG_DEBUG_KOBJECT_RELEASE
-+static void kobject_delayed_free(struct work_struct *work)
-+{
-+	kobject_free(container_of(to_delayed_work(work),
-+		     struct kobject, release));
-+}
-+#endif
-+
- /*
-  * kobject_cleanup - free kobject resources.
-  * @kobj: object to cleanup
-@@ -543,7 +569,6 @@ static struct kobject * __must_check kobject_get_unless_zero(struct kobject *kob
- static void kobject_cleanup(struct kobject *kobj)
- {
- 	struct kobj_type *t = get_ktype(kobj);
--	const char *name = kobj->name;
+ #define IMX6Q_GPR5_L2_CLK_STOP			BIT(8)
  
- 	pr_debug("kobject: '%s' (%p): %s, parent %p\n",
- 		 kobject_name(kobj), kobj, __func__, kobj->parent);
-@@ -567,40 +592,21 @@ static void kobject_cleanup(struct kobject *kobj)
- 		kobject_del(kobj);
- 	}
- 
--	if (t && t->release) {
--		pr_debug("kobject: '%s' (%p): calling ktype release\n",
--			 kobject_name(kobj), kobj);
--		t->release(kobj);
--	}
--
--	/* free name if we allocated it */
--	if (name) {
--		pr_debug("kobject: '%s': free name\n", name);
--		kfree(name);
--	}
--}
--
--#ifdef CONFIG_DEBUG_KOBJECT_RELEASE
--static void kobject_delayed_cleanup(struct work_struct *work)
--{
--	kobject_cleanup(container_of(to_delayed_work(work),
--				     struct kobject, release));
--}
--#endif
--
--static void kobject_release(struct kref *kref)
--{
--	struct kobject *kobj = container_of(kref, struct kobject, kref);
- #ifdef CONFIG_DEBUG_KOBJECT_RELEASE
- 	pr_debug("kobject: '%s' (%p): %s, parent %p (delayed)\n",
- 		 kobject_name(kobj), kobj, __func__, kobj->parent);
--	INIT_DELAYED_WORK(&kobj->release, kobject_delayed_cleanup);
-+	INIT_DELAYED_WORK(&kobj->release, kobject_delayed_free);
- 	schedule_delayed_work(&kobj->release, HZ);
- #else
--	kobject_cleanup(kobj);
-+	kobject_free(kobj);
- #endif
- }
- 
-+static void kobject_release(struct kref *kref)
-+{
-+	kobject_cleanup(container_of(kref, struct kobject, kref));
-+}
++#define IMX6Q_GPR8_TX_SWING_LOW			(0x7f << 25)
++#define IMX6Q_GPR8_TX_SWING_FULL		(0x7f << 18)
++#define IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB		(0x3f << 12)
++#define IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB		(0x3f << 6)
++#define IMX6Q_GPR8_TX_DEEMPH_GEN1		(0x3f << 0)
 +
- /**
-  * kobject_put - decrement refcount for object.
-  * @kobj: object.
+ #define IMX6Q_GPR9_TZASC2_BYP			BIT(1)
+ #define IMX6Q_GPR9_TZASC1_BYP			BIT(0)
+ 
+@@ -273,7 +279,9 @@
+ #define IMX6Q_GPR12_ARMP_AHB_CLK_EN		BIT(26)
+ #define IMX6Q_GPR12_ARMP_ATB_CLK_EN		BIT(25)
+ #define IMX6Q_GPR12_ARMP_APB_CLK_EN		BIT(24)
++#define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
+ #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
++#define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
+ 
+ #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
+ #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
+-- 
+1.7.9.5
+
