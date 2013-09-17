@@ -1,82 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Bhushan <r65777@freescale.com>
-To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<benh@kernel.crashing.org>, <galak@kernel.crashing.org>,
-	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
-	<scottwood@freescale.com>, <iommu@lists.linux-foundation.org>
-CC: Bharat Bhushan <bharat.bhushan@freescale.com>
-Subject: [PATCH 0/7] vfio-pci: add support for Freescale IOMMU (PAMU)
-Date: Thu, 19 Sep 2013 12:59:16 +0530
-Message-ID: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:59467 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751130Ab3IQF0s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Sep 2013 01:26:48 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MT900FVN8GIUF10@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Tue, 17 Sep 2013 14:26:47 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <001a01ceb366$5e9481b0$1bbd8510$%han@samsung.com>
+In-reply-to: <001a01ceb366$5e9481b0$1bbd8510$%han@samsung.com>
+Subject: [PATCH V2 2/3] PCI: mvebu: make local functions static
+Date: Tue, 17 Sep 2013 14:26:46 +0900
+Message-id: <001b01ceb366$812673a0$83735ae0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bharat Bhushan <bharat.bhushan@freescale.com>
+mvebu_pcie_add_bus(), mvebu_pcie_align_resource()  are used only
+in this file. Thus, these local functions should be staticized
+in order to fix the following sparse warnings:
 
-This patchset adds support for vfio-pci with Freescale
-IOMMU (PAMU- Peripheral Access Management Unit)
+drivers/pci/host/pci-mvebu.c:684:6: warning: symbol 'mvebu_pcie_add_bus' was not declared. Should it be static?
+drivers/pci/host/pci-mvebu.c:690:17: warning: symbol 'mvebu_pcie_align_resource' was not declared. Should it be static?
 
-The Freescale PAMU is an aperture-based IOMMU with the following
-characteristics.  Each device has an entry in a table in memory
-describing the iova->phys mapping. The mapping has:
-  -an overall aperture that is power of 2 sized, and has a start iova that
-   is naturally aligned
-  -has 1 or more windows within the aperture
-  -number of windows must be power of 2, max is 256
-  -size of each window is determined by aperture size / # of windows
-  -iova of each window is determined by aperture start iova / # of windows
-  -the mapped region in each window can be different than
-   the window size...mapping must power of 2
-  -physical address of the mapping must be naturally aligned
-   with the mapping size
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-mvebu.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Because of some of above said limitations we need to set limited aperture 
-window which will have space for MSI address mapping. So we create space
-for MSI windows just after the IOVA (guest memory).
-First 4 patches in this patchset are for setting up MSI window and MSI address
-at device accordingly.
-
-Fifth patch resolves compilation error.
-Sixth patch moves some common functions in a separate file so that they can be
-used by FSL_PAMU implementation (next patch uses this). These will be used later for
-iommu-none implementation. I believe we can do more of this but will take step by step.
-
-Finally the seventh patch actually adds the support for FSL-PAMU :)
-
-Bharat Bhushan (7):
-  powerpc: Add interface to get msi region information
-  iommu: add api to get iommu_domain of a device
-  fsl iommu: add get_dev_iommu_domain
-  powerpc: translate msi addr to iova if iommu is in use
-  iommu: supress loff_t compilation error on powerpc
-  vfio: moving some functions in common file
-  vfio pci: Add vfio iommu implementation for FSL_PAMU
-
- arch/powerpc/include/asm/machdep.h |    8 +
- arch/powerpc/include/asm/pci.h     |    2 +
- arch/powerpc/kernel/msi.c          |   18 +
- arch/powerpc/sysdev/fsl_msi.c      |   95 ++++-
- arch/powerpc/sysdev/fsl_msi.h      |   11 +-
- drivers/iommu/fsl_pamu_domain.c    |   30 ++
- drivers/iommu/iommu.c              |   10 +
- drivers/pci/msi.c                  |   26 +
- drivers/vfio/Kconfig               |    6 +
- drivers/vfio/Makefile              |    5 +-
- drivers/vfio/pci/vfio_pci_rdwr.c   |    3 +-
- drivers/vfio/vfio_iommu_common.c   |  235 +++++++++
- drivers/vfio/vfio_iommu_common.h   |   30 ++
- drivers/vfio/vfio_iommu_fsl_pamu.c |  952 ++++++++++++++++++++++++++++++++++++
- drivers/vfio/vfio_iommu_type1.c    |  206 +--------
- include/linux/iommu.h              |    7 +
- include/linux/msi.h                |    8 +
- include/linux/pci.h                |   13 +
- include/uapi/linux/vfio.h          |  100 ++++
- 19 files changed, 1550 insertions(+), 215 deletions(-)
- create mode 100644 drivers/vfio/vfio_iommu_common.c
- create mode 100644 drivers/vfio/vfio_iommu_common.h
- create mode 100644 drivers/vfio/vfio_iommu_fsl_pamu.c
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index d66530e..b54ceb1 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -681,17 +681,17 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	return bus;
+ }
+ 
+-void mvebu_pcie_add_bus(struct pci_bus *bus)
++static void mvebu_pcie_add_bus(struct pci_bus *bus)
+ {
+ 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
+ 	bus->msi = pcie->msi;
+ }
+ 
+-resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+-					  const struct resource *res,
+-					  resource_size_t start,
+-					  resource_size_t size,
+-					  resource_size_t align)
++static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
++						const struct resource *res,
++						resource_size_t start,
++						resource_size_t size,
++						resource_size_t align)
+ {
+ 	if (dev->bus->number != 0)
+ 		return start;
+-- 
+1.7.10.4
 
 
