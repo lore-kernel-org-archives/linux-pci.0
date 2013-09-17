@@ -1,144 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 26 Sep 2013 10:40:06 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Veaceslav Falico <vfalico@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([203.10.76.45]:37232 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752790Ab3IQOa0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Sep 2013 10:30:26 -0400
+Date: Wed, 18 Sep 2013 00:30:23 +1000
+From: Michael Ellerman <michael@ellerman.id.au>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to
- populate_msi_sysfs()
-Message-ID: <20130926144006.GA12301@hmsreliant.think-freely.org>
-References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
- <1379382464-7920-2-git-send-email-vfalico@redhat.com>
- <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
- <20130925232300.GA7368@neilslaptop.think-freely.org>
- <CAErSpo6coKuf4f3j3zMwMNp7Uj3btN9UQyHpLPdq84aU-s=5UA@mail.gmail.com>
- <20130926122552.GB4783@redhat.com>
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20130917143022.GA7707@concordia>
+References: <20130905150442.GA24148@htj.dyndns.org>
+ <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+ <20130905154436.GC24148@htj.dyndns.org>
+ <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130926122552.GB4783@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 26, 2013 at 02:25:52PM +0200, Veaceslav Falico wrote:
-> On Wed, Sep 25, 2013 at 05:35:54PM -0600, Bjorn Helgaas wrote:
-> >On Wed, Sep 25, 2013 at 5:23 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> >>On Wed, Sep 25, 2013 at 03:08:05PM -0600, Bjorn Helgaas wrote:
-> >>>[+cc Neil (he added this code in da8d1c8ba4), Greg]
-> >>>
-> >>>On Mon, Sep 16, 2013 at 7:47 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
-> >>>> Before trying to kobject_init_and_add(), we add a reference to pdev via
-> >>>> pci_dev_get(pdev). However, if it fails to init and/or add the kobject, we
-> >>>> don't return it back - even on out_unroll.
-> >>>>
-> >>>> Fix this by adding pci_dev_put(pdev) before going to unrolling section.
-> >>>>
-> >>>> CC: Bjorn Helgaas <bhelgaas@google.com>
-> >>>> CC: linux-pci@vger.kernel.org
-> >>>> CC: linux-kernel@vger.kernel.org
-> >>>> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
-> >>>> ---
-> >>>>  drivers/pci/msi.c | 4 +++-
-> >>>>  1 file changed, 3 insertions(+), 1 deletion(-)
-> >>>>
-> >>>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> >>>> index d5f90d6..14bf578 100644
-> >>>> --- a/drivers/pci/msi.c
-> >>>> +++ b/drivers/pci/msi.c
-> >>>> @@ -534,8 +534,10 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
-> >>>>                 pci_dev_get(pdev);
-> >>>>                 ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
-> >>>>                                      "%u", entry->irq);
-> >>>> -               if (ret)
-> >>>> +               if (ret) {
-> >>>> +                       pci_dev_put(pdev);
-> >>>>                         goto out_unroll;
-> >>>> +               }
-> >>>>
-> >>>>                 count++;
-> >>>>         }
-> >>>
-> >>>I don't understand why this code does the pci_dev_get() in the first
-> >>>place.  The pdev->msi_list of msi_desc structs is private to the
-> >>>pci_dev, and even without bumping the refcount, there should be no way
-> >>>for the pci_dev to be freed before the msi_desc.
-> >>>
-> >>Its been a few years now, but IIRC I did the pci_dev_get/put here to ensure that
-> >>people didn't try to remove the device prior to freeing all their interrupts
-> >>(i.e I didn't want a broken driver to go through its remove routine without
-> >>freeing all its irqs).  That might have been the wrong thing to do, but thats
-> >>what bubbles to the front of my head when looking at this.
-> >
-> >That sounds plausible, but I think I'd rather deal with that by having
-> >the PCI core remove logic free all the interrupts.  I *think* that's
-> >already in place, i.e., pci_free_resources() calls
-> >msi_remove_pci_irq_vectors().  So I propose that we remove the
-> >pci_dev_get()/put() unless we come up with a more compelling reason
-> >for it.
+On Mon, Sep 16, 2013 at 12:22:11PM +0200, Alexander Gordeev wrote:
+> On Mon, Sep 09, 2013 at 05:20:44PM +0200, Alexander Gordeev wrote:
+> > On Fri, Sep 06, 2013 at 05:32:05PM -0600, Bjorn Helgaas wrote:
+> > > I propose that you rework it that way, and at least find out what
+> > > (if anything) would break if we do that.  Or maybe we just give up
+> > > some optimization; it would be nice to quantify that, too.
+> > 
+> > Hi Bjorn,
+> > 
+> > The series is what it seems a direction to take.
+> > 
+> > Looks like we need PPC folks to agree on the quota check update
+> > for pSeries (yes, they do bail out with a positive return value
+> > from arch_msi_check_device()):
 > 
-> As an update - I've found an interesting case why exactly that
-> kobject_del() might be needed:
+> Hi Ben,
 > 
-> in kobject_del() it removes instantly the link to kset - via
-> kobj_kset_leave(), so that our kset remains without links and, thus, might
-> be instantly removed.
-> 
-> So, with kobject_del(), our kset (msi_irqs sysfs dir) remains instantly
-> without any links (i.e. other kobjects) and, when we call kset_unregister()
-> - it exits instantly (if it's not being hold somewhere elsewhere...).
-> 
-> Without it, kset_unregister() will wait till all the kobjects will be gone.
-> 
-> Now, the fun part starts - if we quickly call pci_disable_msi() and,
-> afterwards, pci_enable_msi() - we might fail because the msi_irqs kset is
-> still there, waiting to unregister, and the sysfs dir is still active.
-> 
-> It's used, for example, in tg3_open/tg3_close, which are ndo_open/close,
-> and are called on enslave/deslave in bonding.
-> 
-> What I get:
-> [   60.458319] WARNING: CPU: 0 PID: 5552 at fs/sysfs/dir.c:526 sysfs_add_one+0xbb/0xe0()
-> [   60.458350] sysfs: cannot create duplicate filename '/devices/pci0000:00/0000:00:1c.5/0000:3f:00.0/msi_irqs'
-> 
-> I'll take a deeper look at the issue, though any feedback/advise is
-> welcome. And I'll hold on with the patchset that removes pci_dev_get/put
-> and kobject_del.
-> 
-> 
-The origional post may offer some guidance here:
-https://lkml.org/lkml/2011/9/29/220
+> An initiative to simplify MSI/MSI-X allocation interface is brewing.
+> It seems pSeries quota thing is an obstacle. If it could be given up
+> (patch 2/9).
 
-In particular the v3 update I think is relevant.
-Neil
+How about no?
 
-> >
-> >>>I also don't understand this nearby code (the same pattern appears in
-> >>>free_msi_irqs()):
-> >>>
-> >>>    out_unroll:
-> >>>        list_for_each_entry(entry, &pdev->msi_list, list) {
-> >>>                if (!count)
-> >>>                        break;
-> >>>                kobject_del(&entry->kobj);
-> >>>                kobject_put(&entry->kobj);
-> >>>                count--;
-> >>>        }
-> >>>
-> >>>Why do we call kobject_del() here?  The kobject_put() will call
-> >>>kobject_del() anyway, so it looks redundant.
-> >>>Documentation/kobject.txt says kobject_del() must be called explicitly
-> >>>to break a circular reference, but I don't think we have that here.
-> >>>
-> >> I think thats exactly why I did it, because of the documentation.  I agree
-> >>however, it does look redundant.  Harmless, but redundant.
-> >
-> >OK, thanks.  I think we should remove it on the grounds that it's not
-> >needed and removing it will make this code look more similar to other
-> >callers of kobject_init_and_add(), which means bugs will have fewer
-> >places to hide.
-> >
-> >Thanks, Neil!
-> >
-> >Bjorn
-> 
+We have a small number of MSIs available, limited by hardware &
+firmware, if we don't impose a quota then the first device that probes
+will get most/all of the MSIs and other devices miss out.
+
+Anyway I don't see what problem you're trying to solve? I agree the
+-ve/0/+ve return value pattern is ugly, but it's hardly the end of the
+world.
+
+cheers
