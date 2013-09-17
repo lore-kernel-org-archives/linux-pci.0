@@ -1,59 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:34365 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754065Ab3IFBqM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2013 21:46:12 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 6 Sep 2013 07:05:25 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 99F4D394004E
-	for <linux-pci@vger.kernel.org>; Fri,  6 Sep 2013 07:15:54 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r861k4xh47382776
-	for <linux-pci@vger.kernel.org>; Fri, 6 Sep 2013 07:16:04 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r861k5aT019769
-	for <linux-pci@vger.kernel.org>; Fri, 6 Sep 2013 07:16:05 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH 2/3] PCI: Use spec name for the comment of PCIe capability field
-Date: Fri,  6 Sep 2013 09:45:57 +0800
-Message-Id: <1378431958-7874-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from top.free-electrons.com ([176.31.233.9]:34170 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753520Ab3IQTuy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Sep 2013 15:50:54 -0400
+Date: Tue, 17 Sep 2013 21:50:50 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: mvebu: Dynamically detect if the PEX link is up to
+ enable hot plug
+Message-ID: <20130917215050.4231c219@skate>
+In-Reply-To: <20130917192412.GB4067@obsidianresearch.com>
+References: <20130917183250.GA21230@obsidianresearch.com>
+	<20130917210520.284b36bc@skate>
+	<20130917192412.GB4067@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to the PCIe specification, bit 7:4 of PCI Express Capabilities
-Register in a PCI Express Capability Structure is used to identify the
-Device/Port type. If this field equals to 0x7, this PCIe device is a PCI
-Express to PCI/PCI-X Bridge. While the comment of this value in the code
-does not comply with the specification.
+Dear Jason Gunthorpe,
 
-This patch changes the comment to "PCIE to PCI/PCI-X Bridge" instead of
-"PCI/PCI-X Bridge", which comply with the specification.
+On Tue, 17 Sep 2013 13:24:12 -0600, Jason Gunthorpe wrote:
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- include/uapi/linux/pci_regs.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> > I don't have the hardware to test, but this seems to make sense to me.
+> 
+> FWIW, I have tested this on Kirkwood:
+> 
+> mvebu-pcie pex.1: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [mem 0xe0000000-0xf0000000]
+> pci_bus 0000:00: root bus resource [bus 00-ff]
+> pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+> pci 0000:00:01.0: [11ab:7846] type 01 class 0x060400
+> PCI: bus0: Fast back to back transfers disabled
+> pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> PCI: bus1: Fast back to back transfers enabled
+> pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+> pci 0000:00:01.0: PCI bridge to [bus 01]
+> [..]
+> Freeing unused kernel memory: 1096K (c02ee000 - c0400000)
+> 
+> .. hot plug the device ..
+> 
+> echo 1 > rescan
+> 
+> pci 0000:01:00.0: [170c:0001] type 00 class 0x058000
+> pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x0001ffff]
+> pci 0000:01:00.0: PME# supported from D0 D1 D2 D3hot
+> pci_bus 0000:01: busn_res: [bus 01] end is updated to 01
+> pci 0000:00:01.0: BAR 8: assigned [mem 0xe0000000-0xe00fffff]
+> pci 0000:01:00.0: BAR 0: assigned [mem 0xe0000000-0xe001ffff]
+> pci 0000:00:01.0: PCI bridge to [bus 01]
+> pci 0000:00:01.0:   bridge window [mem 0xe0000000-0xe00fffff]
+> PCI: enabling device 0000:00:01.0 (0140 -> 0143)
+> PCI: enabling device 0000:01:00.0 (0000 -> 0002)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index c3cc01d..b82b2ff 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -421,7 +421,7 @@
- #define  PCI_EXP_TYPE_ROOT_PORT 0x4	/* Root Port */
- #define  PCI_EXP_TYPE_UPSTREAM	0x5	/* Upstream Port */
- #define  PCI_EXP_TYPE_DOWNSTREAM 0x6	/* Downstream Port */
--#define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCI/PCI-X Bridge */
-+#define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCIE to PCI/PCI-X Bridge */
- #define  PCI_EXP_TYPE_PCIE_BRIDGE 0x8	/* PCI/PCI-X to PCIE Bridge */
- #define  PCI_EXP_TYPE_RC_END	0x9	/* Root Complex Integrated Endpoint */
- #define  PCI_EXP_TYPE_RC_EC	0xa	/* Root Complex Event Collector */
+Nice!
+
+Good to see that the changes needed to get PCI hotplug working were not
+so large :)
+
+Thomas
 -- 
-1.7.1
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
