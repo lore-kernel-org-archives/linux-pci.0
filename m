@@ -1,43 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:34825 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750758Ab3IJKZW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Sep 2013 06:25:22 -0400
-Message-ID: <1378808696.4121.9.camel@pasglop>
-Subject: Re: [PATCH 1/3] PCI: use pci_is_root_bus() to check whether it is a
- root bus
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Chiang <achiang@canonical.com>
-Date: Tue, 10 Sep 2013 20:24:56 +1000
-In-Reply-To: <20130910074611.GA11724@weiyang.vnet.ibm.com>
-References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <20130906230941.GC12956@google.com>
-	 <20130909070017.GB3726@weiyang.vnet.ibm.com>
-	 <CAErSpo5BTV_b1NpeifuAPwHvfsrAERpdmwgnUFMS6gQ3Asik-Q@mail.gmail.com>
-	 <20130910074611.GA11724@weiyang.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mailout4.samsung.com ([203.254.224.34]:59342 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751162Ab3IQFZ6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Sep 2013 01:25:58 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MT900FU18EDUF10@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Tue, 17 Sep 2013 14:25:49 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: 'Thierry Reding' <thierry.reding@gmail.com>,
+	linux-pci@vger.kernel.org, 'Stephen Warren' <swarren@nvidia.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH V2 1/3] PCI: tegra: add missing __iomem annotation
+Date: Tue, 17 Sep 2013 14:25:49 +0900
+Message-id: <001a01ceb366$5e9481b0$1bbd8510$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-09-10 at 15:46 +0800, Wei Yang wrote:
-> On some platforms, like powernv, each pci-dev has a dev-tree node to represent
-> it. The dev-tree node is set by pci_set_of_node() during pci_scan_device().
-> 
-> In pci_set_of_node(), it searchs for the node with the same devfn in its
-> parent. Here comes the question, who should be the VF's parent. Would be a
-> conflict for the devfn between PF and VF?
+Added missing __iomem annotation in order to fix the following
+sparse warnings:
 
-I think it makes no sense to create OFW nodes for VFs under powernv anyway ...
+drivers/pci/host/pci-tegra.c:411:41: warning: incorrect type in return expression (different address spaces)
+drivers/pci/host/pci-tegra.c:411:41:    expected void [noderef] <asn:2>*
+drivers/pci/host/pci-tegra.c:411:41:    got void *addr
+drivers/pci/host/pci-tegra.c:419:25: warning: incorrect type in return expression (different address spaces)
+drivers/pci/host/pci-tegra.c:419:25:    expected void [noderef] <asn:2>*
+drivers/pci/host/pci-tegra.c:419:25:    got void *addr
 
-(which is another reason why we need urgently to disconnect the EEH data
-from the device node ...)
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/host/pci-tegra.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Cheers,
-Ben.
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 2e9888a..7c4f38d 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -408,7 +408,7 @@ static void __iomem *tegra_pcie_bus_map(struct tegra_pcie *pcie,
+ 
+ 	list_for_each_entry(bus, &pcie->busses, list)
+ 		if (bus->nr == busnr)
+-			return bus->area->addr;
++			return (void __iomem *)bus->area->addr;
+ 
+ 	bus = tegra_pcie_bus_alloc(pcie, busnr);
+ 	if (IS_ERR(bus))
+@@ -416,7 +416,7 @@ static void __iomem *tegra_pcie_bus_map(struct tegra_pcie *pcie,
+ 
+ 	list_add_tail(&bus->list, &pcie->busses);
+ 
+-	return bus->area->addr;
++	return (void __iomem *)bus->area->addr;
+ }
+ 
+ static void __iomem *tegra_pcie_conf_address(struct pci_bus *bus,
+-- 
+1.7.10.4
 
 
