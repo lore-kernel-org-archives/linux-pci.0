@@ -1,43 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:45307 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755840Ab3ICXGX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 19:06:23 -0400
-Date: Tue, 3 Sep 2013 16:06:19 -0700
-From: Greg KH <gregkh@linux-foundation.org>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [RFC] pci: crash on pci_unregister_driver after
- pci_register_driver fails
-Message-ID: <20130903230619.GA12729@kroah.com>
-References: <20130903153815.13638272@nehalam.linuxnetplumber.net>
+Received: from quartz.orcorp.ca ([184.70.90.242]:42888 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753055Ab3IQScx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Sep 2013 14:32:53 -0400
+Date: Tue, 17 Sep 2013 12:32:50 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: linux-pci@vger.kernel.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: mvebu: Dynamically detect if the PEX link is up to
+ enable hot plug
+Message-ID: <20130917183250.GA21230@obsidianresearch.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130903153815.13638272@nehalam.linuxnetplumber.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 03, 2013 at 03:38:15PM -0700, Stephen Hemminger wrote:
-> While debugging another problem with a PCI driver, I noticed that if
-> device probe routine returns an error, the kernel will crash when module
-> is unloaded. It looks like pci_register_driver() sets drv->bus to be PCI
-> then in the module unload.
-> 
-> module_unload
->    my_device_exit_module
->       pci_unregister_driver
->          bus_remove_driver
->            OOPS
-> 
-> One way to fix this would be to have pci_register_driver clear the bus
-> flag (it has no reference) if an error was detected.
+Otherwise hotplugging the PEX doesn't work at all since the driver
+detects the link state at probe time. Simply replacing the two tests
+of haslink with a register read is enough to fix discovery.
 
-Odd, no other buses do this, why would it matter for PCI?  Maybe they
-just never fail their registering calls.
+Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+---
+ drivers/pci/host/pci-mvebu.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
 
-How about putting this in the driver core instead so that all busses get
-fixed?
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 729d5a1..f2d61f5 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -115,7 +115,6 @@ struct mvebu_pcie_port {
+ 	char *name;
+ 	void __iomem *base;
+ 	spinlock_t conf_lock;
+-	int haslink;
+ 	u32 port;
+ 	u32 lane;
+ 	int devfn;
+@@ -552,7 +551,7 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	if (bus->number == 0)
+ 		return mvebu_sw_pci_bridge_write(port, where, size, val);
+ 
+-	if (!port->haslink)
++	if (!mvebu_pcie_link_up(port))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	/*
+@@ -594,7 +593,7 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 	if (bus->number == 0)
+ 		return mvebu_sw_pci_bridge_read(port, where, size, val);
+ 
+-	if (!port->haslink) {
++	if (!mvebu_pcie_link_up(port)) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -883,22 +882,11 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+ 
+ 		mvebu_pcie_set_local_dev_nr(port, 1);
+ 
+-		if (mvebu_pcie_link_up(port)) {
+-			port->haslink = 1;
+-			dev_info(&pdev->dev, "PCIe%d.%d: link up\n",
+-				 port->port, port->lane);
+-		} else {
+-			port->haslink = 0;
+-			dev_info(&pdev->dev, "PCIe%d.%d: link down\n",
+-				 port->port, port->lane);
+-		}
+-
+ 		port->clk = of_clk_get_by_name(child, NULL);
+ 		if (IS_ERR(port->clk)) {
+ 			dev_err(&pdev->dev, "PCIe%d.%d: cannot get clock\n",
+ 			       port->port, port->lane);
+ 			iounmap(port->base);
+-			port->haslink = 0;
+ 			continue;
+ 		}
+ 
+-- 
+1.8.1.2
 
-thanks,
-
-greg k-h
