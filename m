@@ -1,85 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [PATCH 1/2] ACPI / hotplug / PCI: Avoid doing too much for spurious notifies
-Date: Sat, 07 Sep 2013 01:45:31 +0200
-Message-ID: <2376366.5EHPecn9M5@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXacWEXngMCQeB1CPVxuvL-jNW_MyMcDV-e8tK6DvY3Kw@mail.gmail.com>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <1831138.AvDtjG8RWn@vostro.rjw.lan> <CAE9FiQXacWEXngMCQeB1CPVxuvL-jNW_MyMcDV-e8tK6DvY3Kw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:34804 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752981Ab3IQTYN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Sep 2013 15:24:13 -0400
+Date: Tue, 17 Sep 2013 13:24:12 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: mvebu: Dynamically detect if the PEX link is up to
+ enable hot plug
+Message-ID: <20130917192412.GB4067@obsidianresearch.com>
+References: <20130917183250.GA21230@obsidianresearch.com>
+ <20130917210520.284b36bc@skate>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130917210520.284b36bc@skate>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, September 06, 2013 08:46:28 AM Yinghai Lu wrote:
-> On Fri, Sep 6, 2013 at 6:43 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > Sometimes we may get a spurious device check or bus check notify for
-> > a hotplug device and in those cases we should avoid doing all of the
-> > configuration work needed when something actually changes.  To that
-> > end, check the return value of pci_scan_slot() in enable_slot() and
-> > bail out early if it is 0.
-> >
-> > This turns out to help reduce the amount of diagnostic output from
-> > the ACPIPHP subsystem and speed up boot on at least one system that
-> > generates multiple device check notifies for PCIe ports during
-> > boot.
-> >
-> > Reported-by: Alex Williamson <alex.williamson@redhat.com>
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> >  drivers/pci/hotplug/acpiphp_glue.c |   35 +++++++++++++++++++++++++++--------
-> >  1 file changed, 27 insertions(+), 8 deletions(-)
-> >
-> > Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-> > +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> > @@ -542,12 +542,12 @@ static void __ref enable_slot(struct acp
-> >         struct acpiphp_func *func;
-> >         int max, pass;
-> >         LIST_HEAD(add_list);
-> > +       int nr_found;
-> >
-> >         list_for_each_entry(func, &slot->funcs, sibling)
-> >                 acpiphp_bus_add(func_to_handle(func));
-> >
-> > -       pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
-> > -
-> > +       nr_found = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
-> >         max = acpiphp_max_busnr(bus);
-> >         for (pass = 0; pass < 2; pass++) {
-> >                 list_for_each_entry(dev, &bus->devices, bus_list) {
-> > @@ -566,8 +566,11 @@ static void __ref enable_slot(struct acp
-> >                         }
-> >                 }
-> >         }
-> > -
-> >         __pci_bus_assign_resources(bus, &add_list, NULL);
-> > +       /* Nothing more to do here if there are no new devices on this bus. */
-> > +       if (!nr_found && (slot->flags & SLOT_ENABLED))
-> > +               return;
-> > +
-> >         acpiphp_sanitize_bus(bus);
-> >         acpiphp_set_hpp_values(bus);
-> >         acpiphp_set_acpi_region(slot);
-> >
+On Tue, Sep 17, 2013 at 09:05:20PM +0200, Thomas Petazzoni wrote:
+> Dear Jason Gunthorpe,
 > 
-> why not just returning early before size bridges and assign unassign resources?
+> On Tue, 17 Sep 2013 12:32:50 -0600, Jason Gunthorpe wrote:
+> > Otherwise hotplugging the PEX doesn't work at all since the driver
+> > detects the link state at probe time. Simply replacing the two tests
+> > of haslink with a register read is enough to fix discovery.
+> > 
+> > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> 
+> I don't have the hardware to test, but this seems to make sense to me.
 
-Because we still need to do that even if pci_scan_slot() returns 0.
+FWIW, I have tested this on Kirkwood:
 
-There may be new devices down in the hierarchy and we need to look for them.
+mvebu-pcie pex.1: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [mem 0xe0000000-0xf0000000]
+pci_bus 0000:00: root bus resource [bus 00-ff]
+pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+pci 0000:00:01.0: [11ab:7846] type 01 class 0x060400
+PCI: bus0: Fast back to back transfers disabled
+pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+PCI: bus1: Fast back to back transfers enabled
+pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+pci 0000:00:01.0: PCI bridge to [bus 01]
+[..]
+Freeing unused kernel memory: 1096K (c02ee000 - c0400000)
 
-Thanks,
-Rafael
+.. hot plug the device ..
 
+echo 1 > rescan
+
+pci 0000:01:00.0: [170c:0001] type 00 class 0x058000
+pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x0001ffff]
+pci 0000:01:00.0: PME# supported from D0 D1 D2 D3hot
+pci_bus 0000:01: busn_res: [bus 01] end is updated to 01
+pci 0000:00:01.0: BAR 8: assigned [mem 0xe0000000-0xe00fffff]
+pci 0000:01:00.0: BAR 0: assigned [mem 0xe0000000-0xe001ffff]
+pci 0000:00:01.0: PCI bridge to [bus 01]
+pci 0000:00:01.0:   bridge window [mem 0xe0000000-0xe00fffff]
+PCI: enabling device 0000:00:01.0 (0140 -> 0143)
+PCI: enabling device 0000:01:00.0 (0000 -> 0002)
+
+Jason
