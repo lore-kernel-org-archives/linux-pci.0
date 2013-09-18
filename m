@@ -1,83 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 5 Sep 2013 14:53:19 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 3/6] MSI/x86: Support pci_enable_msi_block_part() interface
-Message-ID: <1519938bbcfd083c0e091e5ac69b573c39664e40.1378383792.git.agordeev@redhat.com>
-References: <cover.1378383792.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1378383792.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:56404 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751627Ab3IRU0V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Sep 2013 16:26:21 -0400
+Received: by mail-qc0-f181.google.com with SMTP id q4so4904999qcx.12
+        for <linux-pci@vger.kernel.org>; Wed, 18 Sep 2013 13:26:20 -0700 (PDT)
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCHv6 00/13] MSI support for Marvell EBU PCIe driver
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+In-Reply-To: <1375828754.12557.70.camel@pasglop>
+References: <1375363516-2620-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130806201000.3e97c63b@skate> <1375828754.12557.70.camel@pasglop>
+Date: Wed, 18 Sep 2013 15:23:29 -0500
+Message-Id: <20130918202329.81368C42CF3@trevor.secretlab.ca>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This change is a prerequisite for the forthcoming update
-of the AHCI device driver to conserve 10/16 MSIs on Intel
-chipsets. The update makes use of 'nvec_mme' parameter
-for pci_enable_msi_block_part() interface.
+On Wed, 07 Aug 2013 08:39:14 +1000, Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+> On Tue, 2013-08-06 at 20:10 +0200, Thomas Petazzoni wrote:
+> > Benjamin, Thomas,
+> > 
+> > This patch set has been around for two months now, and I would really
+> > like to see it merged. Your ACKs are the only ones missing to merge the
+> > whole thing.
+> > 
+> > Would you mind having a look at:
+> > 
+> >  * Patches 4, 5, 6, 7 for Benjamin as the irqdomain maintainer.
+> 
+> Ah sorry, I wasn't aware you were actually waiting for my acks, I didn't
+> read the whole thread, my bad. I'm not irqdomain maintainer btw. I wrote
+> the original powerpc implementation but since then it has been taken
+> over by Grant and others. But I can certainly comment :-)
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/iommu/irq_remapping.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+When I moved the code I put both your name and mine in the maintainer
+file. When I resigned from irq_domain maintainership that left you as
+the maintainer by default. :-)
 
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 1a220a0..7671da3 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -49,9 +49,9 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
- }
- 
--static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
-+static int do_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme)
- {
--	int node, ret, sub_handle, nvec_pow2, index = 0;
-+	int node, ret, sub_handle, index = 0;
- 	unsigned int irq;
- 	struct msi_desc *msidesc;
- 
-@@ -60,18 +60,18 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	WARN_ON(msidesc->irq);
- 	WARN_ON(msidesc->msi_attrib.multiple);
- 	WARN_ON(msidesc->nvec_used);
-+	BUG_ON(!is_power_of_2(nvec_mme));
- 
- 	node = dev_to_node(&dev->dev);
- 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
- 	if (irq == 0)
- 		return -ENOSPC;
- 
--	nvec_pow2 = __roundup_pow_of_two(nvec);
- 	msidesc->nvec_used = nvec;
--	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
-+	msidesc->msi_attrib.multiple = ilog2(nvec_mme);
- 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
- 		if (!sub_handle) {
--			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
-+			index = msi_alloc_remapped_irq(dev, irq, nvec_mme);
- 			if (index < 0) {
- 				ret = index;
- 				goto error;
-@@ -145,7 +145,7 @@ static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
- 					int nvec, int nvec_mme, int type)
- {
- 	if (type == PCI_CAP_ID_MSI)
--		return do_setup_msi_irqs(dev, nvec);
-+		return do_setup_msi_irqs(dev, nvec, nvec_mme);
- 	else
- 		return do_setup_msix_irqs(dev, nvec);
- }
--- 
-1.7.7.6
+I would /like/ to keep maintaining the code, but as evidenced by my
+complete lack of activity on this thread, I don't have the bandwidth
+anymore. I'll comment on things whenever I can, but I'm unfortunately
+very limited in what I can do.  :-(
 
+g.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
