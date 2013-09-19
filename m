@@ -1,33 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from am1ehsobe003.messaging.microsoft.com ([213.199.154.206]:3624
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751541Ab3I1HJb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Sep 2013 03:09:31 -0400
-Date: Sat, 28 Sep 2013 14:56:13 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Sean Cross <xobs@kosagi.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Zhu Richard-R65037 <r65037@freescale.com>,
-	<tharvey@gateworks.com>, Frank Li <lznuaa@gmail.com>
-Subject: Re: [PATCH v7 0/2] Add PCIe support for i.MX6q
-Message-ID: <20130928065611.GA24611@S2101-09.ap.freescale.net>
-References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org>
- <CAErSpo4JhjW5a-74eJp5bajmAMKSn4Vxknk8NoVdD462N=Ncug@mail.gmail.com>
+Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:23066 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752253Ab3ISHhD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Sep 2013 03:37:03 -0400
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<benh@kernel.crashing.org>, <galak@kernel.crashing.org>,
+	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
+	<scottwood@freescale.com>, <iommu@lists.linux-foundation.org>
+CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
+	Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 2/7] iommu: add api to get iommu_domain of a device
+Date: Thu, 19 Sep 2013 12:59:18 +0530
+Message-ID: <1379575763-2091-3-git-send-email-Bharat.Bhushan@freescale.com>
+In-Reply-To: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAErSpo4JhjW5a-74eJp5bajmAMKSn4Vxknk8NoVdD462N=Ncug@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 27, 2013 at 01:24:26PM -0600, Bjorn Helgaas wrote:
-> I merged both of these to my pci/host-imx6 branch for v3.13.
-> 
-> I made a couple minor spelling and whitespace corrections.
+This api return the iommu domain to which the device is attached.
+The iommu_domain is required for making API calls related to iommu.
+Follow up patches which use this API to know iommu maping.
 
-Thanks Bjorn.
+Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
+---
+ drivers/iommu/iommu.c |   10 ++++++++++
+ include/linux/iommu.h |    7 +++++++
+ 2 files changed, 17 insertions(+), 0 deletions(-)
 
-Shawn
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index fbe9ca7..6ac5f50 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -696,6 +696,16 @@ void iommu_detach_device(struct iommu_domain *domain, struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(iommu_detach_device);
+ 
++struct iommu_domain *iommu_get_dev_domain(struct device *dev)
++{
++	struct iommu_ops *ops = dev->bus->iommu_ops;
++
++	if (unlikely(ops == NULL || ops->get_dev_iommu_domain == NULL))
++		return NULL;
++
++	return ops->get_dev_iommu_domain(dev);
++}
++EXPORT_SYMBOL_GPL(iommu_get_dev_domain);
+ /*
+  * IOMMU groups are really the natrual working unit of the IOMMU, but
+  * the IOMMU API works on domains and devices.  Bridge that gap by
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 7ea319e..fa046bd 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -127,6 +127,7 @@ struct iommu_ops {
+ 	int (*domain_set_windows)(struct iommu_domain *domain, u32 w_count);
+ 	/* Get the numer of window per domain */
+ 	u32 (*domain_get_windows)(struct iommu_domain *domain);
++	struct iommu_domain *(*get_dev_iommu_domain)(struct device *dev);
+ 
+ 	unsigned long pgsize_bitmap;
+ };
+@@ -190,6 +191,7 @@ extern int iommu_domain_window_enable(struct iommu_domain *domain, u32 wnd_nr,
+ 				      phys_addr_t offset, u64 size,
+ 				      int prot);
+ extern void iommu_domain_window_disable(struct iommu_domain *domain, u32 wnd_nr);
++extern struct iommu_domain *iommu_get_dev_domain(struct device *dev);
+ /**
+  * report_iommu_fault() - report about an IOMMU fault to the IOMMU framework
+  * @domain: the iommu domain where the fault has happened
+@@ -284,6 +286,11 @@ static inline void iommu_domain_window_disable(struct iommu_domain *domain,
+ {
+ }
+ 
++static inline struct iommu_domain *iommu_get_dev_domain(struct device *dev)
++{
++	return NULL;
++}
++
+ static inline phys_addr_t iommu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova)
+ {
+ 	return 0;
+-- 
+1.7.0.4
+
 
