@@ -1,55 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:62288 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754125Ab3I0S6r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 14:58:47 -0400
-Received: by mail-ie0-f182.google.com with SMTP id aq17so4815440iec.41
-        for <linux-pci@vger.kernel.org>; Fri, 27 Sep 2013 11:58:46 -0700 (PDT)
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:60240 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853Ab3ISUvg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Sep 2013 16:51:36 -0400
+Received: by mail-ie0-f172.google.com with SMTP id x13so16565232ief.17
+        for <linux-pci@vger.kernel.org>; Thu, 19 Sep 2013 13:51:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130926150228.GL11119@titan.lakedaemon.net>
-References: <CAErSpo7UX6dt0CPZp3kEQrXXbMeArpu1iFfp=-FX46LVgq0iMw@mail.gmail.com>
- <20130926150228.GL11119@titan.lakedaemon.net>
+In-Reply-To: <4974289.QhzOmFXm0s@vostro.rjw.lan>
+References: <4974289.QhzOmFXm0s@vostro.rjw.lan>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 27 Sep 2013 12:58:26 -0600
-Message-ID: <CAErSpo5tN==4nSv2u3SUBe_L4VsWn4P7TN+LtrC172Qj1vhtog@mail.gmail.com>
-Subject: Re: PCI host merge strategy and maintainers
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Frank Li <lznuaa@gmail.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Kevin Hilman <khilman@linaro.org>,
-	Stephen Warren <swarren@nvidia.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Thu, 19 Sep 2013 14:51:15 -0600
+Message-ID: <CAErSpo6ztY=Hd42UUi=KZvN62+9fd4BmyGafLDqfvwp9NxhrYw@mail.gmail.com>
+Subject: Re: [PATCH] PCI / ACPI / PM: Clear pme_poll for devices in D3cold on wakeup
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Huang Ying <ying.huang@intel.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"David E. Box" <david.e.box@intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 26, 2013 at 9:02 AM, Jason Cooper <jason@lakedaemon.net> wrote:
-> On Wed, Sep 25, 2013 at 05:28:28PM -0600, Bjorn Helgaas wrote:
->> There are patches for exynos, imx6, mvebu, and tegra on the PCI list,
->> and I want to sort out how people expect them to be merged.
->>
->> My current assumption is the following:
-> ...
->>   drivers/pci/host/pci-mvebu.c  ?? unclear; Jason Cooper has merged
->> some, I've merged some
+On Fri, Sep 13, 2013 at 7:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Commit 448bd85 (PCI/PM: add PCIe runtime D3cold support) added a
+> piece of code to pci_acpi_wake_dev() causing that function to behave
+> in a special way for devices in D3cold (so that their configuration
+> registeres are not accessed before those devices are resumed).
 
-...
+s/registeres/registers/
 
-> Well, there's nothing new here, so if you're ok with me taking them,
-> I'll continue on that path for these two series.
+> However, it didn't take the clearing of the pme_poll flag into
+> account.  That has to be done for all devices, even if they are in
+> D3cold, or pci_pme_list_scan() will not know that wakeup has been
+> signaled for the device and will poll its PME Status bit
+> unnecessarily.
+>
+> Fix the problem by moving the clearing of the pme_poll flag in
+> pci_acpi_wake_dev() before the code introduced by commit 448bd85.
+>
+> Reported-and-tested-by: David E. Box <david.e.box@intel.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-OK, I'll assume Jason will take care of pci-mvebu.c, and I will merge
-changes to everything else via the PCI tree.  I will still wait for
-acks from the following before merging things:
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-  designware: Jingoo Han <jg1.han@samsung.com>
-  exynos: Jingoo Han <jg1.han@samsung.com>
-  imx6: Shawn Guo <shawn.guo@linaro.org>
-  tegra: Thierry Reding <thierry.reding@gmail.com>
-
-Bjorn
+> Cc: 3.6+ <stable@vger.kernel.org> # 3.6+
+> ---
+>  drivers/pci/pci-acpi.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> Index: linux-pm/drivers/pci/pci-acpi.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-acpi.c
+> +++ linux-pm/drivers/pci/pci-acpi.c
+> @@ -47,6 +47,9 @@ static void pci_acpi_wake_dev(acpi_handl
+>         if (event != ACPI_NOTIFY_DEVICE_WAKE || !pci_dev)
+>                 return;
+>
+> +       if (pci_dev->pme_poll)
+> +               pci_dev->pme_poll = false;
+> +
+>         if (pci_dev->current_state == PCI_D3cold) {
+>                 pci_wakeup_event(pci_dev);
+>                 pm_runtime_resume(&pci_dev->dev);
+> @@ -57,9 +60,6 @@ static void pci_acpi_wake_dev(acpi_handl
+>         if (pci_dev->pme_support)
+>                 pci_check_pme_status(pci_dev);
+>
+> -       if (pci_dev->pme_poll)
+> -               pci_dev->pme_poll = false;
+> -
+>         pci_wakeup_event(pci_dev);
+>         pm_runtime_resume(&pci_dev->dev);
+>
+>
