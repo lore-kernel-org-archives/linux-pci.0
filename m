@@ -1,39 +1,82 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 3 Sep 2013 14:27:31 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
- pci_enable_msi_block_part() interface
-Message-ID: <20130903182731.GA27092@mtj.dyndns.org>
-References: <cover.1378111919.git.agordeev@redhat.com>
- <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
- <20130903141824.GD10522@htj.dyndns.org>
- <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<benh@kernel.crashing.org>, <galak@kernel.crashing.org>,
+	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
+	<scottwood@freescale.com>, <iommu@lists.linux-foundation.org>
+CC: Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 0/7] vfio-pci: add support for Freescale IOMMU (PAMU)
+Date: Thu, 19 Sep 2013 12:59:16 +0530
+Message-ID: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+From: Bharat Bhushan <bharat.bhushan@freescale.com>
 
-On Tue, Sep 03, 2013 at 06:19:06PM +0200, Alexander Gordeev wrote:
-> We must enable maximum possible number of MSIs - the one reported in
-> Multiple Message Capable register. Otherwise ICH device will fallback
-> to MRSM. IOW, if the result of roundup_pow_of_two(n_ports) is not what
-> in Multiple Message Capable register (i.e. as roundup_pow_of_two(6) vs 16)
-> ICH will enforce MRSM mode.
+This patchset adds support for vfio-pci with Freescale
+IOMMU (PAMU- Peripheral Access Management Unit)
 
-Hmmm... I think the interface in general is pretty messy.  Wouldn't it
-be much cleaner to have a separate function to query MSICAP and let
-the function just return success / failure?
+The Freescale PAMU is an aperture-based IOMMU with the following
+characteristics.  Each device has an entry in a table in memory
+describing the iova->phys mapping. The mapping has:
+  -an overall aperture that is power of 2 sized, and has a start iova that
+   is naturally aligned
+  -has 1 or more windows within the aperture
+  -number of windows must be power of 2, max is 256
+  -size of each window is determined by aperture size / # of windows
+  -iova of each window is determined by aperture start iova / # of windows
+  -the mapped region in each window can be different than
+   the window size...mapping must power of 2
+  -physical address of the mapping must be naturally aligned
+   with the mapping size
 
-Thanks.
+Because of some of above said limitations we need to set limited aperture 
+window which will have space for MSI address mapping. So we create space
+for MSI windows just after the IOVA (guest memory).
+First 4 patches in this patchset are for setting up MSI window and MSI address
+at device accordingly.
 
--- 
-tejun
+Fifth patch resolves compilation error.
+Sixth patch moves some common functions in a separate file so that they can be
+used by FSL_PAMU implementation (next patch uses this). These will be used later for
+iommu-none implementation. I believe we can do more of this but will take step by step.
+
+Finally the seventh patch actually adds the support for FSL-PAMU :)
+
+Bharat Bhushan (7):
+  powerpc: Add interface to get msi region information
+  iommu: add api to get iommu_domain of a device
+  fsl iommu: add get_dev_iommu_domain
+  powerpc: translate msi addr to iova if iommu is in use
+  iommu: supress loff_t compilation error on powerpc
+  vfio: moving some functions in common file
+  vfio pci: Add vfio iommu implementation for FSL_PAMU
+
+ arch/powerpc/include/asm/machdep.h |    8 +
+ arch/powerpc/include/asm/pci.h     |    2 +
+ arch/powerpc/kernel/msi.c          |   18 +
+ arch/powerpc/sysdev/fsl_msi.c      |   95 ++++-
+ arch/powerpc/sysdev/fsl_msi.h      |   11 +-
+ drivers/iommu/fsl_pamu_domain.c    |   30 ++
+ drivers/iommu/iommu.c              |   10 +
+ drivers/pci/msi.c                  |   26 +
+ drivers/vfio/Kconfig               |    6 +
+ drivers/vfio/Makefile              |    5 +-
+ drivers/vfio/pci/vfio_pci_rdwr.c   |    3 +-
+ drivers/vfio/vfio_iommu_common.c   |  235 +++++++++
+ drivers/vfio/vfio_iommu_common.h   |   30 ++
+ drivers/vfio/vfio_iommu_fsl_pamu.c |  952 ++++++++++++++++++++++++++++++++++++
+ drivers/vfio/vfio_iommu_type1.c    |  206 +--------
+ include/linux/iommu.h              |    7 +
+ include/linux/msi.h                |    8 +
+ include/linux/pci.h                |   13 +
+ include/uapi/linux/vfio.h          |  100 ++++
+ 19 files changed, 1550 insertions(+), 215 deletions(-)
+ create mode 100644 drivers/vfio/vfio_iommu_common.c
+ create mode 100644 drivers/vfio/vfio_iommu_common.h
+ create mode 100644 drivers/vfio/vfio_iommu_fsl_pamu.c
+
+
