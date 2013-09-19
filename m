@@ -1,48 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 4 Sep 2013 20:47:16 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
- pci_enable_msi_block_part() interface
-Message-ID: <20130904184715.GA24341@dhcp-26-207.brq.redhat.com>
-References: <cover.1378111919.git.agordeev@redhat.com>
- <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
- <20130903141824.GD10522@htj.dyndns.org>
- <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
- <20130903182731.GA27092@mtj.dyndns.org>
- <20130904072256.GA8726@dhcp-26-207.brq.redhat.com>
- <20130904145559.GB25788@mtj.dyndns.org>
- <20130904161442.GE8726@dhcp-26-207.brq.redhat.com>
- <20130904180607.GD26609@mtj.dyndns.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db8lp0188.outbound.messaging.microsoft.com ([213.199.154.188]:42828
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752253Ab3ISHhU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Sep 2013 03:37:20 -0400
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<benh@kernel.crashing.org>, <galak@kernel.crashing.org>,
+	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
+	<scottwood@freescale.com>, <iommu@lists.linux-foundation.org>
+CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
+	Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 4/7] powerpc: translate msi addr to iova if iommu is in use
+Date: Thu, 19 Sep 2013 12:59:20 +0530
+Message-ID: <1379575763-2091-5-git-send-email-Bharat.Bhushan@freescale.com>
+In-Reply-To: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130904180607.GD26609@mtj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 04, 2013 at 02:06:07PM -0400, Tejun Heo wrote:
-> I don't think it's necessary / a good idea to try to support
-> everything.  Just following the spec would be fine.  If that doesn't
-> work for too many devices, maybe just do one fallback?
+If the device is attached with iommu domain then set MSI address
+to the iova configured in PAMU.
 
-Calling pci_enable_msi_block_part() in a loop may seem not that terrible
-if you think of the original interface - pci_enable_msi_block(). If we
-were to enable multiple MSIs using that one we still had to use it pretty
-much the same way ;)
+Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
+---
+ arch/powerpc/sysdev/fsl_msi.c |   56 +++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 54 insertions(+), 2 deletions(-)
 
-Anyway. I will send a version which reads MMC out.
-
-> Thanks.
-> 
-> -- 
-> tejun
-
+diff --git a/arch/powerpc/sysdev/fsl_msi.c b/arch/powerpc/sysdev/fsl_msi.c
+index ed045cb..c7cf018 100644
+--- a/arch/powerpc/sysdev/fsl_msi.c
++++ b/arch/powerpc/sysdev/fsl_msi.c
+@@ -18,6 +18,7 @@
+ #include <linux/pci.h>
+ #include <linux/slab.h>
+ #include <linux/of_platform.h>
++#include <linux/iommu.h>
+ #include <sysdev/fsl_soc.h>
+ #include <asm/prom.h>
+ #include <asm/hw_irq.h>
+@@ -150,7 +151,40 @@ static void fsl_teardown_msi_irqs(struct pci_dev *pdev)
+ 	return;
+ }
+ 
+-static void fsl_compose_msi_msg(struct pci_dev *pdev, int hwirq,
++static uint64_t fsl_iommu_get_iova(struct pci_dev *pdev, dma_addr_t msi_phys)
++{
++	struct iommu_domain *domain;
++	struct iommu_domain_geometry geometry;
++	u32 wins = 0;
++	uint64_t iova, size;
++	int ret, i;
++
++	domain = iommu_get_dev_domain(&pdev->dev);
++	if (!domain)
++		return 0;
++
++	ret = iommu_domain_get_attr(domain, DOMAIN_ATTR_WINDOWS, &wins);
++	if (ret)
++		return 0;
++
++	ret = iommu_domain_get_attr(domain, DOMAIN_ATTR_GEOMETRY, &geometry);
++	if (ret)
++		return 0;
++
++	iova = geometry.aperture_start;
++	size = geometry.aperture_end - geometry.aperture_start + 1;
++	do_div(size, wins);
++	for (i = 0; i < wins; i++) {
++		phys_addr_t phys;
++		phys = iommu_iova_to_phys(domain, iova);
++		if (phys == (msi_phys & ~(PAGE_SIZE - 1)))
++			return (iova + (msi_phys & (PAGE_SIZE - 1)));
++		iova += size;
++	}
++	return 0;
++}
++
++static int fsl_compose_msi_msg(struct pci_dev *pdev, int hwirq,
+ 				struct msi_msg *msg,
+ 				struct fsl_msi *fsl_msi_data)
+ {
+@@ -168,6 +202,16 @@ static void fsl_compose_msi_msg(struct pci_dev *pdev, int hwirq,
+ 		address = fsl_pci_immrbar_base(hose) +
+ 			   (msi_data->msiir & 0xfffff);
+ 
++	/*
++	 * If the device is attached with iommu domain then set MSI address
++	 * to the iova configured in PAMU.
++	 */
++	if (iommu_get_dev_domain(&pdev->dev)) {
++		address = fsl_iommu_get_iova(pdev, msi_data->msiir);
++		if (!address)
++			return -ENODEV;
++	}
++
+ 	msg->address_lo = lower_32_bits(address);
+ 	msg->address_hi = upper_32_bits(address);
+ 
+@@ -175,6 +219,8 @@ static void fsl_compose_msi_msg(struct pci_dev *pdev, int hwirq,
+ 
+ 	pr_debug("%s: allocated srs: %d, ibs: %d\n",
+ 		__func__, hwirq / IRQS_PER_MSI_REG, hwirq % IRQS_PER_MSI_REG);
++
++	return 0;
+ }
+ 
+ static int fsl_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+@@ -244,7 +290,13 @@ static int fsl_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ 		/* chip_data is msi_data via host->hostdata in host->map() */
+ 		irq_set_msi_desc(virq, entry);
+ 
+-		fsl_compose_msi_msg(pdev, hwirq, &msg, msi_data);
++		if (fsl_compose_msi_msg(pdev, hwirq, &msg, msi_data)) {
++			dev_err(&pdev->dev, "Fail to set MSI for hwirq %i\n",
++				hwirq);
++			msi_bitmap_free_hwirqs(&msi_data->bitmap, hwirq, 1);
++			rc = -ENODEV;
++			goto out_free;
++		}
+ 		write_msi_msg(virq, &msg);
+ 	}
+ 	return 0;
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.0.4
+
+
