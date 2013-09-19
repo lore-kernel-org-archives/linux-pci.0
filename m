@@ -1,83 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 5 Sep 2013 14:54:17 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 5/6] AHCI: Check MRSM bit when multiple MSIs enabled
-Message-ID: <4bc31d6ccf3f84399b977fe8ed4fe77aadfa1c79.1378383792.git.agordeev@redhat.com>
-References: <cover.1378383792.git.agordeev@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:24665 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753064Ab3ISHhK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Sep 2013 03:37:10 -0400
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<benh@kernel.crashing.org>, <galak@kernel.crashing.org>,
+	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
+	<scottwood@freescale.com>, <iommu@lists.linux-foundation.org>
+CC: Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 3/7] fsl iommu: add get_dev_iommu_domain
+Date: Thu, 19 Sep 2013 12:59:19 +0530
+Message-ID: <1379575763-2091-4-git-send-email-Bharat.Bhushan@freescale.com>
+In-Reply-To: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1378383792.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Do not trust the hardware and always check if MSI
-Revert to Single Message mode was enforced. Fall
-back to the single MSI mode in case it did. Not
-doing so might screw up the interrupt handling.
+From: Bharat Bhushan <bharat.bhushan@freescale.com>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+returns the iommu_domain of the requested device for fsl pamu.
+
+Use PCI controller dev struct for pci devices as current LIODN schema
+assign LIODN to PCI controller not PCI device. This will be corrected
+with proper LIODN schema.
+
+Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
 ---
- drivers/ata/ahci.c |   16 ++++++++++++++++
- drivers/ata/ahci.h |    1 +
- 2 files changed, 17 insertions(+), 0 deletions(-)
+ drivers/iommu/fsl_pamu_domain.c |   30 ++++++++++++++++++++++++++++++
+ 1 files changed, 30 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a6bb618..af5d535 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1091,6 +1091,14 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- {}
- #endif
+diff --git a/drivers/iommu/fsl_pamu_domain.c b/drivers/iommu/fsl_pamu_domain.c
+index 14d803a..1d0dfe3 100644
+--- a/drivers/iommu/fsl_pamu_domain.c
++++ b/drivers/iommu/fsl_pamu_domain.c
+@@ -1140,6 +1140,35 @@ static u32 fsl_pamu_get_windows(struct iommu_domain *domain)
+ 	return dma_domain->win_cnt;
+ }
  
-+static int ahci_get_mrsm(struct ahci_host_priv *hpriv)
++static struct iommu_domain *fsl_get_dev_domain(struct device *dev)
 +{
-+	void __iomem *mmio = hpriv->mmio;
-+	u32 ctl = readl(mmio + HOST_CTL);
++	struct pci_controller *pci_ctl;
++	struct device_domain_info *info;
++	struct pci_dev *pdev;
 +
-+	return (ctl & HOST_MRSM);
++	/*
++	 * Use PCI controller dev struct for pci devices as current
++	 * LIODN schema assign LIODN to PCI controller not PCI device
++	 * This should get corrected with proper LIODN schema.
++	 */
++	if (dev->bus == &pci_bus_type) {
++		pdev = to_pci_dev(dev);
++		pci_ctl = pci_bus_to_host(pdev->bus);
++		/*
++		 * make dev point to pci controller device
++		 * so we can get the LIODN programmed by
++		 * u-boot.
++		 */
++		dev = pci_ctl->parent;
++	}
++
++	info = dev->archdata.iommu_domain;
++	if (info && info->domain)
++		return info->domain->iommu_domain;
++
++	return NULL;
 +}
 +
- int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 			 struct ahci_host_priv *hpriv)
- {
-@@ -1111,6 +1119,14 @@ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 		goto intx;
- 	if (rc)
- 		goto single_msi;
-+	if (maxvec == 1)
-+		return 1;
-+
-+	if (ahci_get_mrsm(hpriv)) {
-+		pci_disable_msi(pdev);
-+		printk(KERN_INFO "ahci: MRSM is on, fallback to single MSI\n");
-+		goto single_msi;
-+	}
+ static struct iommu_ops fsl_pamu_ops = {
+ 	.domain_init	= fsl_pamu_domain_init,
+ 	.domain_destroy = fsl_pamu_domain_destroy,
+@@ -1155,6 +1184,7 @@ static struct iommu_ops fsl_pamu_ops = {
+ 	.domain_get_attr = fsl_pamu_get_domain_attr,
+ 	.add_device	= fsl_pamu_add_device,
+ 	.remove_device	= fsl_pamu_remove_device,
++	.get_dev_iommu_domain = fsl_get_dev_domain,
+ };
  
- 	return maxvec;
- 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 1145637..19bc846 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -91,6 +91,7 @@ enum {
- 	/* HOST_CTL bits */
- 	HOST_RESET		= (1 << 0),  /* reset controller; self-clear */
- 	HOST_IRQ_EN		= (1 << 1),  /* global IRQ enable */
-+	HOST_MRSM		= (1 << 2),  /* MSI Revert to Single Message */
- 	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
- 
- 	/* HOST_CAP bits */
+ int pamu_domain_init()
 -- 
-1.7.7.6
+1.7.0.4
 
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
