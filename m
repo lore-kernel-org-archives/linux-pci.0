@@ -1,54 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:54111 "EHLO mail1.g1.pair.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753485Ab3ILEUb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Sep 2013 00:20:31 -0400
-From: Sean Cross <xobs@kosagi.com>
-To: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Sascha Hauer <s.hauer@pengutronix.de>, Sean Cross <xobs@kosagi.com>
-Subject: [PATCH v3 2/3] ARM: imx6q: Add PCIe bits to GPR syscon definition
-Date: Thu, 12 Sep 2013 04:03:30 +0000
-Message-Id: <1378958611-4274-3-git-send-email-xobs@kosagi.com>
-In-Reply-To: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
-References: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: [GIT PULL] ACPI and power management fixes for v3.12-rc2
+Date: Fri, 20 Sep 2013 21:08:34 +0200
+Message-ID: <3724780.tAvtize7I5@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe requires additional bits be defined for GPR8 and GPR12.
+Hi Linus,
 
-Signed-off-by: Sean Cross <xobs@kosagi.com>
----
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |    8 ++++++++
- 1 file changed, 8 insertions(+)
+Please pull from the git repository at
 
-diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-index b6bdcd6..1bf1fe9 100644
---- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-@@ -241,6 +241,12 @@
- 
- #define IMX6Q_GPR5_L2_CLK_STOP			BIT(8)
- 
-+#define IMX6Q_GPR8_TX_DEEMPH_GEN1		(0x3F << 0)
-+#define IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB		(0x3F << 6)
-+#define IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB		(0x3F << 12)
-+#define IMX6Q_GPR8_TX_SWING_FULL		(0x7F << 18)
-+#define IMX6Q_GPR8_TX_SWING_LOW			(0x7F << 25)
-+
- #define IMX6Q_GPR9_TZASC2_BYP			BIT(1)
- #define IMX6Q_GPR9_TZASC1_BYP			BIT(0)
- 
-@@ -273,7 +279,9 @@
- #define IMX6Q_GPR12_ARMP_AHB_CLK_EN		BIT(26)
- #define IMX6Q_GPR12_ARMP_ATB_CLK_EN		BIT(25)
- #define IMX6Q_GPR12_ARMP_APB_CLK_EN		BIT(24)
-+#define IMX6Q_GPR12_DEVICE_TYPE			(0xF << 12)
- #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
-+#define IMX6Q_GPR12_LOS_LEVEL			(0x1F << 4)
- 
- #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
- #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
--- 
-1.7.9.5
+  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm+acpi-3.12-rc2
+
+to receive ACPI and power management fixes for v3.12-rc2 with
+top-most commit d831a00510b9d400bf62464d8b11b158941348e6
+
+  Merge branch 'pm-cpufreq'
+
+on top of commit 272b98c6455f00884f0350f775c5342358ebb73f
+
+  Linux 3.12-rc1
+
+These are fixes for cpufreq issues that have emerged after recent
+changes and one fix for an older PCI/ACPI power management breakage.
+
+Specifics:
+
+ 1) Four fixes for cpufreq regressions introduced by the changes that
+    removed Device Tree parsing for CPU device nodes from cpufreq
+    drivers from Sudeep KarkadaNagesha.
+
+ 2) Two fixes for recent cpufreq regressions introduced by changes
+    related to the preservation of sysfs attributes over system
+    suspend/resume cycles from Viresh Kumar.
+
+ 3) Fix for ACPI-based wakeup signaling in the PCI subsystem that
+    fails to stop PME polling for devices put into the D3cold power
+    state from yours truly.
+
+ 4) Fix for bad interactions between cpufreq and udev on systems
+    supporting intel_pstate where acpi-cpufreq is available as well
+    from Yinghai Lu.
+
+Thanks!
+
+
+---------------
+
+Rafael J. Wysocki (1):
+      PCI / ACPI / PM: Clear pme_poll for devices in D3cold on wakeup
+
+Sudeep KarkadaNagesha (4):
+      cpufreq: cpufreq-cpu0: assign cpu_dev correctly to cpu0 device
+      cpufreq: imx6q-cpufreq: assign cpu_dev correctly to cpu0 device
+      ARM: i.MX: change dev_id to cpu0 while registering cpu clock
+      ARM: shmobile: change dev_id to cpu0 while registering cpu clock
+
+Viresh Kumar (2):
+      cpufreq: Clear policy->cpus bits in __cpufreq_remove_dev_finish()
+      cpufreq: unlock correct rwsem while updating policy->cpu
+
+Yinghai Lu (1):
+      cpufreq: return EEXIST instead of EBUSY for second registering
+
+---------------
+
+ arch/arm/mach-imx/clk-imx27.c          |  2 +-
+ arch/arm/mach-imx/clk-imx51-imx53.c    |  2 +-
+ arch/arm/mach-imx/mach-imx6q.c         |  9 +++++++--
+ arch/arm/mach-shmobile/clock-r8a73a4.c |  2 +-
+ arch/arm/mach-shmobile/clock-sh73a0.c  |  2 +-
+ drivers/cpufreq/cpufreq-cpu0.c         |  7 ++++++-
+ drivers/cpufreq/cpufreq.c              | 31 ++++++++++++++++++++-----------
+ drivers/cpufreq/imx6q-cpufreq.c        |  7 ++++++-
+ drivers/pci/pci-acpi.c                 |  6 +++---
+ 9 files changed, 46 insertions(+), 22 deletions(-)
 
