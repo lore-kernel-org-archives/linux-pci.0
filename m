@@ -1,45 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f53.google.com ([209.85.213.53]:34011 "EHLO
-	mail-yh0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755841Ab3IIXNs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 19:13:48 -0400
-Received: by mail-yh0-f53.google.com with SMTP id b20so1732678yha.26
-        for <linux-pci@vger.kernel.org>; Mon, 09 Sep 2013 16:13:48 -0700 (PDT)
-Subject: [PATCH 1/7] lspci: Label PCIe LnkCap "L0s Exit Latency" as "L0s",
- not "L0"
-To: Martin Mares <mj@ucw.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Mon, 09 Sep 2013 17:13:45 -0600
-Message-ID: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 20 Sep 2013 07:26:03 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20130920122603.GC7630@mtj.dyndns.org>
+References: <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+ <20130917143022.GA7707@concordia>
+ <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <20130918142231.GA21650@mtj.dyndns.org>
+ <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe Link Capabilities "L0s Exit Latency" is the latency to exit
-L0s, not L0, so label it "L0s" instead of "L0".  This matches the
-way we label the Device Capabilities "Endpoint L0s Acceptable Latency"
-field as "Latency L0s".  This also adds "Exit" to the description to
-help distinguish it from the "Acceptable Latency" fields in the
-Device Capabilities register.
+Hello,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- ls-caps.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, Sep 18, 2013 at 06:50:45PM +0200, Alexander Gordeev wrote:
+> Actually, I do not see much contradiction with what I proposed. The
+> key words here "determine the number of MSIs the controller wants".
+> 
+> In general case it is not what pci_msix_table_size() returns (or at
+> least we should not limit ourselves to it) - there could be non-
+> standard means to report number of MSIs: hardcoded, version-dependant,
+> device-specific registers etc.
+> 
+> Next, if we opt to determine the number of MSIs by non-MSI standard
+> means then there is no reason not to call pci_get_msix_limit() (or
+> whatever) at this step.
 
-diff --git a/ls-caps.c b/ls-caps.c
-index be19d38..a1a1546 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -753,7 +753,7 @@ static void cap_express_link(struct device *d, int where, int type)
-   u16 w;
- 
-   t = get_conf_long(d, where + PCI_EXP_LNKCAP);
--  printf("\t\tLnkCap:\tPort #%d, Speed %s, Width x%d, ASPM %s, Latency L0 %s, L1 %s\n",
-+  printf("\t\tLnkCap:\tPort #%d, Speed %s, Width x%d, ASPM %s, Exit Latency L0s %s, L1 %s\n",
- 	t >> 24,
- 	link_speed(t & PCI_EXP_LNKCAP_SPEED), (t & PCI_EXP_LNKCAP_WIDTH) >> 4,
- 	aspm_support((t & PCI_EXP_LNKCAP_ASPM) >> 10),
+Yeah, that's all fine.  My point is that we shouldn't try to use
+"degraded" multiple MSI mode where the number of MSIs allocated is
+smaller than performing full multiple MSI operation.  How that number
+is determined doesn't really matter but that number is a property
+which is solely decided by the device driver, right?  If a device
+needs full multiple MSI mode, given specific configuration, it needs
+>= X number of MSIs and that's the number it should request.
 
+> Being Captain Obvious here, but it is up to the device driver to handle
+> a failure. There could be no such option as single MSI mode after all :)
+
+I don't think there actually is a mainstream device which can't
+fallback to single interrupt.  Anyways, the point is the same, let's
+please not try to create an interface which encourages complex retry
+logic in its users which are likely to involve less traveled and
+tested paths in both the driver and firmware.
+
+Thanks.
+
+-- 
+tejun
