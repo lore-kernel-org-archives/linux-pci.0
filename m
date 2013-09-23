@@ -1,72 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:59467 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130Ab3IQF0s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Sep 2013 01:26:48 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MT900FVN8GIUF10@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Tue, 17 Sep 2013 14:26:47 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Jason Cooper' <jason@lakedaemon.net>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <001a01ceb366$5e9481b0$1bbd8510$%han@samsung.com>
-In-reply-to: <001a01ceb366$5e9481b0$1bbd8510$%han@samsung.com>
-Subject: [PATCH V2 2/3] PCI: mvebu: make local functions static
-Date: Tue, 17 Sep 2013 14:26:46 +0900
-Message-id: <001b01ceb366$812673a0$83735ae0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:36198 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752875Ab3IWUtb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 16:49:31 -0400
+Date: Mon, 23 Sep 2013 13:49:28 -0700
+From: Greg KH <greg@kroah.com>
+To: Xenia Ragiadakou <burzalodowa@gmail.com>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] xhci: fix write to USB3_PSSEN and XUSB2PRM pci config
+ registers
+Message-ID: <20130923204928.GA24225@kroah.com>
+References: <1379695553-5891-1-git-send-email-burzalodowa@gmail.com>
+ <20130923164529.GA16886@xanatos>
+ <5240833E.6050508@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5240833E.6050508@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mvebu_pcie_add_bus(), mvebu_pcie_align_resource()  are used only
-in this file. Thus, these local functions should be staticized
-in order to fix the following sparse warnings:
+On Mon, Sep 23, 2013 at 09:06:54PM +0300, Xenia Ragiadakou wrote:
+> On 09/23/2013 07:45 PM, Sarah Sharp wrote:
+> >On Fri, Sep 20, 2013 at 07:45:53PM +0300, Xenia Ragiadakou wrote:
+> >>The function pci_write_config_dword() sets the appropriate byteordering
+> >>internally so the value argument should not be converted to little-endian.
+> >>This bug was found by sparse.
+> >Can you give the exact error or warning message that sparse gave?
+> 
+> Yes, sure.
+> 
+> drivers/usb/host/pci-quirks.c:802:25: warning: incorrect type in
+> argument 3 (different base types)
+> drivers/usb/host/pci-quirks.c:802:25:    expected unsigned int
+> [unsigned] [usertype] val
+> drivers/usb/host/pci-quirks.c:802:25:    got restricted __le32
+> [usertype] <noident>
+> drivers/usb/host/pci-quirks.c:824:25: warning: incorrect type in
+> argument 3 (different base types)
+> drivers/usb/host/pci-quirks.c:824:25:    expected unsigned int
+> [unsigned] [usertype] val
+> drivers/usb/host/pci-quirks.c:824:25:    got restricted __le32
+> [usertype] <noident>
+> 
+> >
+> >I ask because this description sounded odd to Greg and I when we met
+> >last week at LinuxCon North America.  I've tried to track this down to
+> >see where the code might be converting the value from CPU format to
+> >little endian, and I don't see it.
+> >
+> >AFAICT, pci_write_config_dword() is defined in include/linux/pci.h, and
+> >calls pci_bus_write_config_dword():
+> >
+> >static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
+> >                                          u32 val)
+> >{
+> >         return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+> >}
+> >
+> >pci_bus_write_config_dword is defined as a macro in drivers/pci/access.h:
+> >
+> >#define PCI_OP_WRITE(size,type,len) \
+> >int pci_bus_write_config_##size \
+> >         (struct pci_bus *bus, unsigned int devfn, int pos, type value)  \
+> >{                                                                       \
+> >         int res;                                                        \
+> >         unsigned long flags;                                            \
+> >         if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;       \
+> >         raw_spin_lock_irqsave(&pci_lock, flags);                        \
+> >         res = bus->ops->write(bus, devfn, pos, len, value);             \
+> >         raw_spin_unlock_irqrestore(&pci_lock, flags);           \
+> >         return res;                                                     \
+> >}
+> >
+> >That macro simply calls the write function for whatever PCI bus driver
+> >is installed.  Note that bus driver can be different than the standard
+> >bus driver.  I don't see any conversion to little endian here, so that
+> >means each bus driver would have to convert it.
+> >
+> >I can dig deeper into each .write function, but if the conversion isn't
+> >done at the upper layers, it's possible someone will create a .write
+> >function without the conversion to little endian.
+> >
+> >Am I missing something?
+> 
+> I had in mind that the pci_ops .read and .write defined by the PCI
+> driver will take care of consistent byteorder access to the
+> configuration registers. At least, that was what i understood after
+> reading the
+> chapter on PCI of Linux Device Drivers (more specifically for
+> pci_write_config_* functions, it states that "The word and dword
+> functions convert the value to little-endian before writing to the
+> peripheral device.").
 
-drivers/pci/host/pci-mvebu.c:684:6: warning: symbol 'mvebu_pcie_add_bus' was not declared. Should it be static?
-drivers/pci/host/pci-mvebu.c:690:17: warning: symbol 'mvebu_pcie_align_resource' was not declared. Should it be static?
+Hm, I wrote that paragraph (or at least I think I did), but I sure
+didn't remember this at all...
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Hm, wait, I do see this happening for the PowerPC cell PCI code, so it
+might happen somewhere burried in the platform-specific code for
+different arches.  You will not see it happen on x86 as there's no need
+to swap any bytes around.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index d66530e..b54ceb1 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -681,17 +681,17 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	return bus;
- }
- 
--void mvebu_pcie_add_bus(struct pci_bus *bus)
-+static void mvebu_pcie_add_bus(struct pci_bus *bus)
- {
- 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
- 	bus->msi = pcie->msi;
- }
- 
--resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
--					  const struct resource *res,
--					  resource_size_t start,
--					  resource_size_t size,
--					  resource_size_t align)
-+static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
-+						const struct resource *res,
-+						resource_size_t start,
-+						resource_size_t size,
-+						resource_size_t align)
- {
- 	if (dev->bus->number != 0)
- 		return start;
--- 
-1.7.10.4
+thanks,
 
-
+greg k-h
