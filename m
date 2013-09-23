@@ -1,59 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ye0-f174.google.com ([209.85.213.174]:45983 "EHLO
-	mail-ye0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727Ab3IFXMr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 19:12:47 -0400
-Received: by mail-ye0-f174.google.com with SMTP id q4so1234329yen.5
-        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 16:12:47 -0700 (PDT)
-Date: Fri, 6 Sep 2013 17:12:43 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/3] PCI: Use spec name for the comment of PCIe
- capability field
-Message-ID: <20130906231243.GD12956@google.com>
-References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1378431958-7874-2-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mga09.intel.com ([134.134.136.24]:62936 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751555Ab3IWQp4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Sep 2013 12:45:56 -0400
+Date: Mon, 23 Sep 2013 09:45:29 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Xenia Ragiadakou <burzalodowa@gmail.com>
+Cc: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	Greg KH <greg@kroah.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] xhci: fix write to USB3_PSSEN and XUSB2PRM pci config
+ registers
+Message-ID: <20130923164529.GA16886@xanatos>
+References: <1379695553-5891-1-git-send-email-burzalodowa@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1378431958-7874-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1379695553-5891-1-git-send-email-burzalodowa@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 06, 2013 at 09:45:57AM +0800, Wei Yang wrote:
-> According to the PCIe specification, bit 7:4 of PCI Express Capabilities
-> Register in a PCI Express Capability Structure is used to identify the
-> Device/Port type. If this field equals to 0x7, this PCIe device is a PCI
-> Express to PCI/PCI-X Bridge. While the comment of this value in the code
-> does not comply with the specification.
+On Fri, Sep 20, 2013 at 07:45:53PM +0300, Xenia Ragiadakou wrote:
+> The function pci_write_config_dword() sets the appropriate byteordering
+> internally so the value argument should not be converted to little-endian.
+> This bug was found by sparse.
+
+Can you give the exact error or warning message that sparse gave?
+
+I ask because this description sounded odd to Greg and I when we met
+last week at LinuxCon North America.  I've tried to track this down to
+see where the code might be converting the value from CPU format to
+little endian, and I don't see it.
+
+AFAICT, pci_write_config_dword() is defined in include/linux/pci.h, and
+calls pci_bus_write_config_dword():
+
+static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
+                                         u32 val)
+{
+        return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+}
+
+pci_bus_write_config_dword is defined as a macro in drivers/pci/access.h:
+
+#define PCI_OP_WRITE(size,type,len) \
+int pci_bus_write_config_##size \
+        (struct pci_bus *bus, unsigned int devfn, int pos, type value)  \
+{                                                                       \
+        int res;                                                        \
+        unsigned long flags;                                            \
+        if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;       \
+        raw_spin_lock_irqsave(&pci_lock, flags);                        \
+        res = bus->ops->write(bus, devfn, pos, len, value);             \
+        raw_spin_unlock_irqrestore(&pci_lock, flags);           \
+        return res;                                                     \
+}
+
+That macro simply calls the write function for whatever PCI bus driver
+is installed.  Note that bus driver can be different than the standard
+bus driver.  I don't see any conversion to little endian here, so that
+means each bus driver would have to convert it.
+
+I can dig deeper into each .write function, but if the conversion isn't
+done at the upper layers, it's possible someone will create a .write
+function without the conversion to little endian.
+
+Am I missing something?
+
 > 
-> This patch changes the comment to "PCIE to PCI/PCI-X Bridge" instead of
-> "PCI/PCI-X Bridge", which comply with the specification.
-> 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Signed-off-by: Xenia Ragiadakou <burzalodowa@gmail.com>
 > ---
->  include/uapi/linux/pci_regs.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  drivers/usb/host/pci-quirks.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index c3cc01d..b82b2ff 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -421,7 +421,7 @@
->  #define  PCI_EXP_TYPE_ROOT_PORT 0x4	/* Root Port */
->  #define  PCI_EXP_TYPE_UPSTREAM	0x5	/* Upstream Port */
->  #define  PCI_EXP_TYPE_DOWNSTREAM 0x6	/* Downstream Port */
-> -#define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCI/PCI-X Bridge */
-> +#define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCIE to PCI/PCI-X Bridge */
->  #define  PCI_EXP_TYPE_PCIE_BRIDGE 0x8	/* PCI/PCI-X to PCIE Bridge */
->  #define  PCI_EXP_TYPE_RC_END	0x9	/* Root Complex Integrated Endpoint */
->  #define  PCI_EXP_TYPE_RC_EC	0xa	/* Root Complex Event Collector */
+> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+> index 2c76ef1..08ef282 100644
+> --- a/drivers/usb/host/pci-quirks.c
+> +++ b/drivers/usb/host/pci-quirks.c
+> @@ -799,7 +799,7 @@ void usb_enable_intel_xhci_ports(struct pci_dev *xhci_pdev)
+>  	 * switchable ports.
+>  	 */
+>  	pci_write_config_dword(xhci_pdev, USB_INTEL_USB3_PSSEN,
+> -			cpu_to_le32(ports_available));
+> +			ports_available);
+>  
+>  	pci_read_config_dword(xhci_pdev, USB_INTEL_USB3_PSSEN,
+>  			&ports_available);
+> @@ -821,7 +821,7 @@ void usb_enable_intel_xhci_ports(struct pci_dev *xhci_pdev)
+>  	 * host.
+>  	 */
+>  	pci_write_config_dword(xhci_pdev, USB_INTEL_XUSB2PR,
+> -			cpu_to_le32(ports_available));
+> +			ports_available);
+>  
+>  	pci_read_config_dword(xhci_pdev, USB_INTEL_XUSB2PR,
+>  			&ports_available);
 > -- 
-> 1.7.1
+> 1.8.3.4
 > 
-
-A similar change is already in Linus' tree:
-
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/include/uapi/linux/pci_regs.h?id=fbf501c347b2eea8451a615bd823b6b91a1a8eed
-
-I guess several of us found that comment confusing :)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
