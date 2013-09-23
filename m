@@ -1,136 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16654 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752428Ab3IYWOl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Sep 2013 18:14:41 -0400
-Date: Thu, 26 Sep 2013 00:12:50 +0200
-From: Veaceslav Falico <vfalico@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 3/3] msi: free msi_desc entry only after we've released
- the kobject
-Message-ID: <20130925221250.GB26965@redhat.com>
-References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
- <1379382464-7920-4-git-send-email-vfalico@redhat.com>
- <CAErSpo77PrKi9nwBada444TOA5vwjWdt06Qv+GZLreh61kNH6g@mail.gmail.com>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:65380 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753153Ab3IWSHA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 14:07:00 -0400
+Message-ID: <5240833E.6050508@gmail.com>
+Date: Mon, 23 Sep 2013 21:06:54 +0300
+From: Xenia Ragiadakou <burzalodowa@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <CAErSpo77PrKi9nwBada444TOA5vwjWdt06Qv+GZLreh61kNH6g@mail.gmail.com>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+CC: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	Greg KH <greg@kroah.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] xhci: fix write to USB3_PSSEN and XUSB2PRM pci config
+ registers
+References: <1379695553-5891-1-git-send-email-burzalodowa@gmail.com> <20130923164529.GA16886@xanatos>
+In-Reply-To: <20130923164529.GA16886@xanatos>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 25, 2013 at 03:34:58PM -0600, Bjorn Helgaas wrote:
->On Mon, Sep 16, 2013 at 7:47 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
->> Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
->> however kobject_put() doesn't guarantee us that it was the last reference
->> and that the kobj isn't used currently by someone else, so after we
->> kfree(entry) with the struct kobject - other users will begin using the
->> freed memory, instead of the actual kobject.
->>
->> Fix this by using the kobject->release callback, which is called last when
->> the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
->> which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
->> kobj itself after ->release() was called, so we're safe).
->>
->> In case we've failed to create the sysfs directories - just kfree()
->> it - cause we don't have the kobjects attached.
->>
->> Also, remove the same functionality from populate_msi_sysfs(), cause on
->> failure we anyway call free_msi_irqs(), which will take care of all the
->> kobjects properly.
->
->I agree; it looks like populate_msi_sysfs() doesn't need to have the
->cleanup in it.  Can you split that into a separate patch, since I
->don't think it depends on the kfree() fix?
+On 09/23/2013 07:45 PM, Sarah Sharp wrote:
+> On Fri, Sep 20, 2013 at 07:45:53PM +0300, Xenia Ragiadakou wrote:
+>> The function pci_write_config_dword() sets the appropriate byteordering
+>> internally so the value argument should not be converted to little-endian.
+>> This bug was found by sparse.
+> Can you give the exact error or warning message that sparse gave?
 
-Yep, will do and re-send in two patchsets.
+Yes, sure.
 
-Thank you!
+drivers/usb/host/pci-quirks.c:802:25: warning: incorrect type in 
+argument 3 (different base types)
+drivers/usb/host/pci-quirks.c:802:25:    expected unsigned int 
+[unsigned] [usertype] val
+drivers/usb/host/pci-quirks.c:802:25:    got restricted __le32 
+[usertype] <noident>
+drivers/usb/host/pci-quirks.c:824:25: warning: incorrect type in 
+argument 3 (different base types)
+drivers/usb/host/pci-quirks.c:824:25:    expected unsigned int 
+[unsigned] [usertype] val
+drivers/usb/host/pci-quirks.c:824:25:    got restricted __le32 
+[usertype] <noident>
 
 >
->Bjorn
+> I ask because this description sounded odd to Greg and I when we met
+> last week at LinuxCon North America.  I've tried to track this down to
+> see where the code might be converting the value from CPU format to
+> little endian, and I don't see it.
 >
->> CC: Bjorn Helgaas <bhelgaas@google.com>
->> CC: linux-pci@vger.kernel.org
->> CC: linux-kernel@vger.kernel.org
->> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+> AFAICT, pci_write_config_dword() is defined in include/linux/pci.h, and
+> calls pci_bus_write_config_dword():
+>
+> static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
+>                                           u32 val)
+> {
+>          return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+> }
+>
+> pci_bus_write_config_dword is defined as a macro in drivers/pci/access.h:
+>
+> #define PCI_OP_WRITE(size,type,len) \
+> int pci_bus_write_config_##size \
+>          (struct pci_bus *bus, unsigned int devfn, int pos, type value)  \
+> {                                                                       \
+>          int res;                                                        \
+>          unsigned long flags;                                            \
+>          if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;       \
+>          raw_spin_lock_irqsave(&pci_lock, flags);                        \
+>          res = bus->ops->write(bus, devfn, pos, len, value);             \
+>          raw_spin_unlock_irqrestore(&pci_lock, flags);           \
+>          return res;                                                     \
+> }
+>
+> That macro simply calls the write function for whatever PCI bus driver
+> is installed.  Note that bus driver can be different than the standard
+> bus driver.  I don't see any conversion to little endian here, so that
+> means each bus driver would have to convert it.
+>
+> I can dig deeper into each .write function, but if the conversion isn't
+> done at the upper layers, it's possible someone will create a .write
+> function without the conversion to little endian.
+>
+> Am I missing something?
+
+I had in mind that the pci_ops .read and .write defined by the PCI 
+driver will take care of consistent byteorder access to the 
+configuration registers. At least, that was what i understood after 
+reading the
+chapter on PCI of Linux Device Drivers (more specifically for 
+pci_write_config_* functions, it states that "The word and dword 
+functions convert the value to little-endian before writing to the 
+peripheral device.").
+
+regards,
+ksenia
+
+>> Signed-off-by: Xenia Ragiadakou <burzalodowa@gmail.com>
 >> ---
->>  drivers/pci/msi.c | 27 +++++++++------------------
->>  1 file changed, 9 insertions(+), 18 deletions(-)
+>>   drivers/usb/host/pci-quirks.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
 >>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index 68da921..c9236e4 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -374,19 +374,22 @@ static void free_msi_irqs(struct pci_dev *dev)
->>                                 iounmap(entry->mask_base);
->>                 }
+>> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+>> index 2c76ef1..08ef282 100644
+>> --- a/drivers/usb/host/pci-quirks.c
+>> +++ b/drivers/usb/host/pci-quirks.c
+>> @@ -799,7 +799,7 @@ void usb_enable_intel_xhci_ports(struct pci_dev *xhci_pdev)
+>>   	 * switchable ports.
+>>   	 */
+>>   	pci_write_config_dword(xhci_pdev, USB_INTEL_USB3_PSSEN,
+>> -			cpu_to_le32(ports_available));
+>> +			ports_available);
+>>   
+>>   	pci_read_config_dword(xhci_pdev, USB_INTEL_USB3_PSSEN,
+>>   			&ports_available);
+>> @@ -821,7 +821,7 @@ void usb_enable_intel_xhci_ports(struct pci_dev *xhci_pdev)
+>>   	 * host.
+>>   	 */
+>>   	pci_write_config_dword(xhci_pdev, USB_INTEL_XUSB2PR,
+>> -			cpu_to_le32(ports_available));
+>> +			ports_available);
+>>   
+>>   	pci_read_config_dword(xhci_pdev, USB_INTEL_XUSB2PR,
+>>   			&ports_available);
+>> -- 
+>> 1.8.3.4
 >>
->> +               list_del(&entry->list);
->> +
->>                 /*
->>                  * Its possible that we get into this path
->>                  * When populate_msi_sysfs fails, which means the entries
->>                  * were not registered with sysfs.  In that case don't
->> -                * unregister them.
->> +                * unregister them, and just free. Otherwise the
->> +                * kobject->release will take care of freeing the entry via
->> +                * msi_kobj_release().
->>                  */
->>                 if (entry->kobj.parent) {
->>                         kobject_del(&entry->kobj);
->>                         kobject_put(&entry->kobj);
->> +               } else {
->> +                       kfree(entry);
->>                 }
->> -
->> -               list_del(&entry->list);
->> -               kfree(entry);
->>         }
->>
->>         kset_unregister(dev->msi_kset);
->> @@ -512,6 +515,7 @@ static void msi_kobj_release(struct kobject *kobj)
->>         struct msi_desc *entry = to_msi_desc(kobj);
->>
->>         pci_dev_put(entry->dev);
->> +       kfree(entry);
->>  }
->>
->>  static struct kobj_type msi_irq_ktype = {
->> @@ -525,7 +529,6 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->>         struct msi_desc *entry;
->>         struct kobject *kobj;
->>         int ret;
->> -       int count = 0;
->>
->>         pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
->>         if (!pdev->msi_kset)
->> @@ -539,23 +542,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->>                                      "%u", entry->irq);
->>                 if (ret) {
->>                         pci_dev_put(pdev);
->> -                       goto out_unroll;
->> +                       return ret;
->>                 }
->> -
->> -               count++;
->>         }
->>
->>         return 0;
->> -
->> -out_unroll:
->> -       list_for_each_entry(entry, &pdev->msi_list, list) {
->> -               if (!count)
->> -                       break;
->> -               kobject_del(&entry->kobj);
->> -               kobject_put(&entry->kobj);
->> -               count--;
->> -       }
->> -       return ret;
->>  }
->>
->>  /**
 >> --
->> 1.8.4
->>
+>> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
