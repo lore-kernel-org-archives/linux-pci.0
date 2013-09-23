@@ -1,162 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:37367 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751327Ab3IFXfj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Sep 2013 19:35:39 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [PATCH 0/2] Re: Excess dmesg output from ACPIPHP on boot
-Date: Sat, 07 Sep 2013 01:46:35 +0200
-Message-ID: <7976063.IquRq2t0Wf@vostro.rjw.lan>
-In-Reply-To: <1378481768.3246.290.camel@ul30vt.home>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <2228690.GcUDD3xFfP@vostro.rjw.lan> <1378481768.3246.290.camel@ul30vt.home>
+Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:37059 "EHLO
+	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752582Ab3IWGvF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 02:51:05 -0400
+Date: Mon, 23 Sep 2013 12:20:41 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
+ part and Exynos part
+Message-ID: <20130923065041.GB5288@pratyush-vbox>
+References: <000701ce8741$fe47deb0$fad79c10$@samsung.com>
+ <20130912104602.GC5995@pratyush-vbox>
+ <523DB38B.4070307@ti.com>
+ <201309220003.34732.arnd@arndb.de>
+ <523ED192.901@ti.com>
+ <20130923041427.GC2246@pratyush-vbox>
+ <523FD286.608@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <523FD286.608@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, September 06, 2013 09:36:08 AM Alex Williamson wrote:
-> On Fri, 2013-09-06 at 15:42 +0200, Rafael J. Wysocki wrote:
-> > On Friday, September 06, 2013 01:36:28 AM Rafael J. Wysocki wrote:
-> > > On Thursday, September 05, 2013 05:08:03 PM Alex Williamson wrote:
-> > > > On Fri, 2013-09-06 at 00:40 +0200, Rafael J. Wysocki wrote:
-> > > > > On Thursday, September 05, 2013 04:17:25 PM Alex Williamson wrote:
-> > > > > > On Thu, 2013-09-05 at 23:39 +0200, Rafael J. Wysocki wrote:
-> > > > > > > On Thursday, September 05, 2013 09:44:26 PM Rafael J. Wysocki wrote:
-> > > > > > > > On Thursday, September 05, 2013 08:21:41 AM Alex Williamson wrote:
-> > > > > > > 
-> > > > > > > [...]
-> > > > > > > 
-> > > > > > > > > > 
-> > > > > > > > > > [   18.288122] pci 0000:00:00.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288127] pcieport 0000:00:01.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288142] pci 0000:01:00.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288157] pci 0000:01:00.1: no hotplug settings from platform
-> > > > > > > > > > [   18.288162] pcieport 0000:00:03.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288176] pci 0000:02:00.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288190] pci 0000:02:00.1: no hotplug settings from platform
-> > > > > > > > > > [   18.288195] pcieport 0000:00:07.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288209] pci 0000:03:00.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288224] pci 0000:03:00.1: no hotplug settings from platform
-> > > > > > > > > > [   18.288228] pci 0000:00:14.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288233] pci 0000:00:14.1: no hotplug settings from platform
-> > > > > > > > > > [   18.288237] pci 0000:00:14.2: no hotplug settings from platform
-> > > > > > > > > > [   18.288242] pci 0000:00:16.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288247] pci 0000:00:16.1: no hotplug settings from platform
-> > > > > > > > > > [   18.288251] pci 0000:00:16.2: no hotplug settings from platform
-> > > > > > > > > > [   18.288256] pci 0000:00:16.3: no hotplug settings from platform
-> > > > > > > > > > [   18.288260] pci 0000:00:16.4: no hotplug settings from platform
-> > > > > > > > > > [   18.288265] pci 0000:00:16.5: no hotplug settings from platform
-> > > > > > > > > > [   18.288269] pci 0000:00:16.6: no hotplug settings from platform
-> > > > > > > > > > [   18.288274] pci 0000:00:16.7: no hotplug settings from platform
-> > > > > > > > > > [   18.288278] pci 0000:00:1a.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288279] pci 0000:00:1a.0: using default PCI settings
-> > > > > > > > > > [   18.288292] pci 0000:00:1a.1: no hotplug settings from platform
-> > > > > > > > > > [   18.288293] pci 0000:00:1a.1: using default PCI settings
-> > > > > > > > > > [   18.288307] ehci-pci 0000:00:1a.7: no hotplug settings from platform
-> > > > > > > > > > [   18.288308] ehci-pci 0000:00:1a.7: using default PCI settings
-> > > > > > > > > > [   18.288322] pci 0000:00:1b.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288327] pcieport 0000:00:1c.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288332] pcieport 0000:00:1c.4: no hotplug settings from platform
-> > > > > > > > > > [   18.288344] pci 0000:05:00.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288349] pci 0000:00:1d.0: no hotplug settings from platform
-> > > > > > > > > > [   18.288350] pci 0000:00:1d.0: using default PCI settings
-> > > > > > > > > > [   18.288360] pci 0000:00:1d.1: no hotplug settings from platform
-> > > > > > > > > > [   18.288361] pci 0000:00:1d.1: using default PCI settings
-> > > > > > > > > > [   18.288374] pci 0000:00:1d.2: no hotplug settings from platform
-> > > > > > > > > > [   18.288374] pci 0000:00:1d.2: using default PCI settings
-> > > > > > > > > > [   18.288387] pci 0000:00:1d.3: no hotplug settings from platform
-> > > > > > > > > > [   18.288387] pci 0000:00:1d.3: using default PCI settings
-> > > > > > > > > > 
-> > > > > > > > > > The boot is noticeably slower.  What's going to happen on systems that
-> > > > > > > > > > actually have a significant I/O topology vs my little workstation?
-> > > > > > > > 
-> > > > > > > > That depends on how many bus check/device check events they generate on boot.
-> > > > > > > > 
-> > > > > > > > My test machines don't generate them during boot at all (even the one with
-> > > > > > > > a Thunderbolt connector), so I don't see the messages in question during boot
-> > > > > > > > on any of them.  Mika doesn't see them either I suppose, or he would have told
-> > > > > > > > me about that before.
-> > > > > > > > 
-> > > > > > > > And let's just make it clear that it is not usual or even OK to generate bus
-> > > > > > > > checks or device checks during boot like this.  And since the changes in
-> > > > > > > > question have been in linux-next since right after the 3.11 merge window, I
-> > > > > > > > think that someone would have complained already had that been a common issue.
-> > > > > > > > 
-> > > > > > > > Of course, we need to deal with that somehow nevertheless. :-)
-> > > > > > > > 
-> > > > > > > > > Just to give you an idea:
-> > > > > > > > > 
-> > > > > > > > > CONFIG_HOTPLUG_PCI_ACPI=y
-> > > > > > > > > 
-> > > > > > > > > $ dmesg | wc
-> > > > > > > > >   5697  49935 384368
-> > > > > > > > > 
-> > > > > > > > > $ dmesg | tail --lines=1
-> > > > > > > > > [   53.137123] Ebtables v2.0 registered
-> > > > > > > > > 
-> > > > > > > > > -- vs --
-> > > > > > > > > 
-> > > > > > > > > # CONFIG_HOTPLUG_PCI_ACPI is not set
-> > > > > > > > > 
-> > > > > > > > > $ dmesg | wc
-> > > > > > > > >  1053  9176 71652
-> > > > > > > > > 
-> > > > > > > > > $dmesg | tail --lines=1
-> > > > > > > > > [   28.917220] Ebtables v2.0 registered
-> > > > > > > > > 
-> > > > > > > > > So it spews out 5x more output with acpiphp enabled and takes and extra
-> > > > > > > > > 24s to boot (nearly 2x).  Not good.
-> > > > > > > > 
-> > > > > > > > The "no hotplug settings from platform" message is from pci_configure_slot().
-> > > > > > > > I think the messages you're seeing are from the call to it in
-> > > > > > > > acpiphp_set_hpp_values() which is called by enable_slot().
-> > > > > > > > 
-> > > > > > > > There, I think, we can simply check the return value of pci_scan_slot() and
-> > > > > > > > if that is 0 (no new devices), we can just skip everything under the call to
-> > > > > > > > __pci_bus_assign_resources().
-> > > > > > > > 
-> > > > > > > > However, we can't skip the scanning of bridges, if any, because there may be
-> > > > > > > > new devices below them and I guess that's what takes so much time on your
-> > > > > > > > machine.
-> > > > > > > 
-> > > > > > > OK, one piece is missing.  We may need to evaluate _OSC after handling each
-> > > > > > > event to let the platform know the status.
-> > > > > > > 
-> > > > > > > Can you please check if the appended patch makes any difference (with the
-> > > > > > > previous fix applied, of course)?
-> > > > > > > 
-> > > > > > > If fact, it is two patches combined.  One of them optimizes enable_slot()
-> > > > > > > slightly and the other adds the missing _OSC evaluation.
-> > > > > > 
-> > > > > > Better, still double the output:
-> > > > > > 
-> > > > > > $ dmesg | wc
-> > > > > >    2169   19047  152710
-> > > > > 
-> > > > > I see.
-> > > > > 
-> > > > > What about the timing?
-> > > > 
-> > > > ~40s below vs ~29s for acpiphp config'd out above.
-> > > 
-> > > Well, that's better than before.
-> > > 
-> > > I'll prepare "official" patches with the last changes then too.
-> > 
-> > The patches follow as [1/2] and [2/2].  The change in enable_slot() is
-> > literally the same, but the _OST patch is somewhat different, although the
-> > changes mostly affect the eject code path and the notifies that we don't
-> > actually handle, so they should not matter on your machine.
+On Mon, Sep 23, 2013 at 01:32:54PM +0800, Kishon Vijay Abraham I wrote:
+> Hi Pratyush,
 > 
-> Tested-by: Alex Williamson <alex.williamson@redhat.com>
+> On Monday 23 September 2013 09:44 AM, Pratyush Anand wrote:
+> > Hi Kishon,
+> > 
+> > 
+> > On Sun, Sep 22, 2013 at 07:16:34PM +0800, Kishon Vijay Abraham I wrote:
+> >> Hi Arnd,
+> >>
+> >> Thanks for replying :-)
+> >>
+> >> On Sunday 22 September 2013 03:33 AM, Arnd Bergmann wrote:
+> >>> On Saturday 21 September 2013, Kishon Vijay Abraham I wrote:
+> >>>> {
+> >>>>         u32 val;
+> >>>>         void __iomem *val1;
+> >>>>         void __iomem *dbi_base = pp->dbi_base;
+> >>>>
+> >>>>         /* Program viewport 0 : INBOUND : MEMORY*/
+> >>>>         val = PCIE_ATU_REGION_INBOUND | (0 & 0xF);
+> >>>>         dw_pcie_writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
+> >>>>         val1 = ioremap(0x80000000, 0x5fffffff);
+> >>>
+> >>> The ioremap here makes no sense at all, and I suspect it will fail anyway,
+> >>> because you exhaust the vmalloc area size, but since the value is not
+> >>> used anywhere, it won't matter.
+> >>>
+> >>>>         dw_pcie_writel_rc(pp, 0x80000000, dbi_base + PCIE_ATU_LOWER_BASE);
+> >>>>         dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
+> >>>>         /* in_mem_size must be in power of 2 */
+> >>>>         dw_pcie_writel_rc(pp, 0x5FFFFFFF, dbi_base + PCIE_ATU_LIMIT);
+> > 
+> > This is wrong. You should program here 0xBFFFFFFF.
+> 
+> That dint help :-(
+> 
+> Btw if we hadn't programmed inbound translation table, the address will go
+> untranslated (according to the data book). I guess that's how it was working
+> for Jingoo Han.
+> 
+> **
+> 3.10.4
+> Inbound iATU Operation
+> 
+> When there is no match, then the address is untranslated
+> **
+> 
 
-Thanks!
+ok.. so it seems that you might not be getting non-fatal error because
+of address translation. I am not working with PCIe for a long time,
+but if I remember correctly other reason for getting this error were
+unsupported read/write request size. Although, you have said that MRRS
+is 512 for your RC. Can you cross check both programmed MPS and MRRS
+in your RC as well as your EP (ethernet card). May be you can share
+Content of PCIe Capability Device Control Register (Offset 08h) for
+both RC and EP.
 
+Regards
+Pratyush
+
+
+
+> > 
+> > Translation rule is as follows:
+> > 
+> > Region between "Start Address" and "End Address" is translated to
+> > "Target Address" with region size = "End Address" - "Start Address".
+> > Where: Start Address = (PCIE_ATU_UPPER_BASE | PCIE_ATU_LOWER_BASE)
+> >         End Address = (PCIE_ATU_UPPER_BASE | PCIE_ATU_LIMIT)
+> >         Target Address = (PCIE_ATU_UPPER_TARGET | PCIE_ATU_LOWER_TARGET) 
+> > 
+> >>>>         dw_pcie_writel_rc(pp, 0x80000000, dbi_base + PCIE_ATU_LOWER_TARGET);
+> >>>>         dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
+> >>>
+> >>> These numbers need to come from somewhere, you shouldn't just hardcode them, 
+> >>
+> >> right. I'm still in the process of getting it work ;-)
+> >>>
+> >>> I guess you should either program an inbound window covering the entire 64-bit
+> >>> address space, or you should look at the top-level "memory" nodes to find
+> >>> the location of physical RAM.
+> >>>
+> >>> I can't see anything wrong with the way it's set up though, unless you have
+> >>> an IOMMU. Can you confirm that there is no IOMMU (aka SMMU) in your system
+> >>> that handles the PCIe root complex?
+> >>
+> >> There is a MMU for PCIe root complex but that's disabled.
+> >>>
+> >>>> I somehow starting to doubt the DMA address programmed in the ethernet card
+> >>>> which is in my RAM address range (0x80000000 to 0xBFFFFFFF). Should this
+> >>>> address be programmed in the BAR of the ethernet card? How should it be done?
+> >>>
+> >>> No, it should not be in the BAR. The ethernet device driver calls dma_map_*
+> >>> or pci_map_* interfaces to get a valid token that can be passed into the
+> >>> device registers that are starting the DMA. You have to ensure that the
+> >>> dma_map_ops for the device return the value that is set up in the translation.
+> >>>
+> >>> The normal case is an identity mapping between device DMA space and host
+> >>> memory space, i.e. PCIE_ATU_LOWER_TARGET == PCIE_ATU_LOWER_BASE, so
+> >>> in the dma_map_single implementation, phys_addr_t == dma_addr_t.
+> >>>
+> >>> If you set up the dma_addr_t space to start at 0 instead, you have to add
+> >>> the offset in the dma_map_ops.
+> >>
+> >> My DMA address is in 0x80000000 to 0xBFFFFFFF range and I program my inbound
+> >> translation for this range. Not sure what is missing still :-(
+> > 
+> > Hope, above modification helps. Let me know.
+> > 
+> > Regards
+> > Pratyush
+> >>
+> >> Thanks
+> >> Kishon
+> 
+> Thanks
+> Kishon
