@@ -1,56 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:37587 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755918Ab3IZJUv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 05:20:51 -0400
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 22260-04 for <linux-pci@vger.kernel.org>;
- Thu, 26 Sep 2013 10:20:48 +0100 (BST)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1252"
-Subject: RE: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Thu, 26 Sep 2013 09:58:53 +0100
-Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B735D@saturn3.aculab.com>
-In-Reply-To: <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
-References: <20130916102210.GA14102@dhcp-26-207.brq.redhat.com> <20130917143022.GA7707@concordia> <20130918094759.GA2353@dhcp-26-207.brq.redhat.com> <20130918142231.GA21650@mtj.dyndns.org> <20130918165045.GB2353@dhcp-26-207.brq.redhat.com> <20130920082458.GA10507@dhcp-26-207.brq.redhat.com> <20130920122736.GD7630@mtj.dyndns.org> <20130925180220.GB26273@google.com> <20130925205804.GA21737@dhcp-26-207.brq.redhat.com> <20130925210016.GA8926@htj.dyndns.org> <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
-From: "David Laight" <David.Laight@ACULAB.COM>
-To: "Alexander Gordeev" <agordeev@redhat.com>,
-	"Tejun Heo" <tj@kernel.org>
-Cc: <linux-pci@vger.kernel.org>, "Joerg Roedel" <joro@8bytes.org>,
-	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-ide@vger.kernel.org>, "Jan Beulich" <JBeulich@suse.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	<linuxppc-dev@lists.ozlabs.org>, "Ingo Molnar" <mingo@kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:24717 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835Ab3IWEfo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 00:35:44 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MTK0065DA3JHRH0@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Mon, 23 Sep 2013 13:35:43 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <001a01ceb366$5e9481b0$1bbd8510$%han@samsung.com>
+In-reply-to: 
+Subject: [PATCH V3 3/3] PCI: mvebu: return NULL instead of ERR_PTR(ret)
+Date: Mon, 23 Sep 2013 13:35:42 +0900
+Message-id: <001001ceb816$5d1aecc0$1750c640$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-> 
-> On Wed, Sep 25, 2013 at 05:00:16PM -0400, Tejun Heo wrote:
-> > Hello,
-> >
-> > On Wed, Sep 25, 2013 at 10:58:05PM +0200, Alexander Gordeev wrote:
-> > > Unfortunately, pSeries is a shows-topper here :( It seems we have to
-> > > introduce pci_get_msi{,x}_limit() interfaces to honour the quota
-> > > thing.  I just hope the hardware set for pSeries is limited and we
-> > > won't need to use it for all drivers.
-> >
-> > Can you please go into a bit of detail on that?  Why does it matter?
-> 
-> Because otherwise we will re-introduce a problem described by Michael:
-> "We have a small number of MSIs available, limited by hardware &
-> firmware, if we don't impose a quota then the first device that probes
-> will get most/all of the MSIs and other devices miss out."
+Return NULL instead of ERR_PTR(ret) in order to fix the following
+sparse warning:
 
-Would it be possible to do some kind of 2-stage allocation.
-In the first pass the driver would pass a minimum and desired
-number of MSI-X interrupts, but not actually be given any.
-Interrupts could then be allocated after it is known how many
-are required and how many are available.
+drivers/pci/host/pci-mvebu.c:744:31: warning: incorrect type in return expression (different address spaces)
+drivers/pci/host/pci-mvebu.c:744:31:    expected void [noderef] <asn:2>*
+drivers/pci/host/pci-mvebu.c:744:31:    got void *
 
-	David
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-mvebu.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 0bd3ba8..fb2474f 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -741,7 +741,7 @@ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
+ 
+ 	ret = of_address_to_resource(np, 0, &regs);
+ 	if (ret)
+-		return ERR_PTR(ret);
++		return NULL;
+ 
+ 	return devm_ioremap_resource(&pdev->dev, &regs);
+ }
+@@ -940,10 +940,9 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 			continue;
+ 
+ 		port->base = mvebu_pcie_map_registers(pdev, child, port);
+-		if (IS_ERR(port->base)) {
++		if (!port->base) {
+ 			dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
+ 				port->port, port->lane);
+-			port->base = NULL;
+ 			clk_disable_unprepare(port->clk);
+ 			continue;
+ 		}
+-- 
+1.7.10.4
 
 
