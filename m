@@ -1,58 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Sep 2013 17:28:28 -0600
-Message-ID: <CAErSpo7UX6dt0CPZp3kEQrXXbMeArpu1iFfp=-FX46LVgq0iMw@mail.gmail.com>
-Subject: PCI host merge strategy and maintainers
-To: Frank Li <lznuaa@gmail.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Kevin Hilman <khilman@linaro.org>,
-	Stephen Warren <swarren@nvidia.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:24608 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835Ab3IWEfD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 00:35:03 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MTK007B39ZU1UG0@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Mon, 23 Sep 2013 13:35:01 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <000c01ceb816$19f0dd10$4dd29730$%han@samsung.com>
+In-reply-to: <000c01ceb816$19f0dd10$4dd29730$%han@samsung.com>
+Subject: [PATCH V3 2/3] PCI: mvebu: make local functions static
+Date: Mon, 23 Sep 2013 13:35:01 +0900
+Message-id: <000f01ceb816$4419dce0$cc4d96a0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are patches for exynos, imx6, mvebu, and tegra on the PCI list,
-and I want to sort out how people expect them to be merged.
+mvebu_pcie_add_bus(), mvebu_pcie_align_resource()  are used only
+in this file. Thus, these local functions should be staticized
+in order to fix the following sparse warnings:
 
-My current assumption is the following:
+drivers/pci/host/pci-mvebu.c:684:6: warning: symbol 'mvebu_pcie_add_bus' was not declared. Should it be static?
+drivers/pci/host/pci-mvebu.c:690:17: warning: symbol 'mvebu_pcie_align_resource' was not declared. Should it be static?
 
-  drivers/pci/host/pcie-designware.c  via PCI tree since I applied
-recent changes
-  drivers/pci/host/pci-exynos.c  via PCI tree since I applied recent changes
-  drivers/pci/host/pci-imx6.c  via Shawn Guo per [1]
-  drivers/pci/host/pci-mvebu.c  ?? unclear; Jason Cooper has merged
-some, I've merged some
-  drivers/pci/host/pci-tegra.c  via PCI tree per Stephen Warren [2]
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-mvebu.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Please correct anything that's wrong above, and please give me some
-guidance on mvebu.  I'm happy to go either way; I just need to know
-whether to pay attention to them :)
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 77f8a7c..0bd3ba8 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -681,17 +681,17 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	return bus;
+ }
+ 
+-void mvebu_pcie_add_bus(struct pci_bus *bus)
++static void mvebu_pcie_add_bus(struct pci_bus *bus)
+ {
+ 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
+ 	bus->msi = pcie->msi;
+ }
+ 
+-resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+-					  const struct resource *res,
+-					  resource_size_t start,
+-					  resource_size_t size,
+-					  resource_size_t align)
++static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
++						const struct resource *res,
++						resource_size_t start,
++						resource_size_t size,
++						resource_size_t align)
+ {
+ 	if (dev->bus->number != 0)
+ 		return start;
+-- 
+1.7.10.4
 
-In addition, since I don't have time, expertise, or hardware to really
-review changes to these drivers, I'd like to have them acked by people
-who do.  My current assumption is that these are the right people:
 
-  designware: Jingoo Han <jg1.han@samsung.com>
-  exynos: Jingoo Han <jg1.han@samsung.com>
-  imx6: Shawn Guo <shawn.guo@linaro.org>
-  mvebu: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn
-<andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>
-  tegra: Thierry Reding <thierry.reding@gmail.com>
-
-Again, please correct anything that's wrong.  My plan is that I won't
-apply patches to these drivers unless they're acked by the folks
-above.
-
-Bjorn
-
-
-[1] http://lkml.kernel.org/r/20130916091059.GM31147@S2101-09.ap.freescale.net
-[2] http://lkml.kernel.org/r/521CCF9B.9000004@wwwdotorg.org
