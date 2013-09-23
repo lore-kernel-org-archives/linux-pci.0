@@ -1,44 +1,38 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5242E6FF.50800@intel.com>
-Date: Wed, 25 Sep 2013 21:37:03 +0800
-From: Lan Tianyu <tianyu.lan@intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: lenb@kernel.org, rjw@sisk.pl, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI/ACPI: Convert ACPI PCI Hot Plug core debug fuction
- to dynamic debug function
-References: <1378783035-15681-1-git-send-email-tianyu.lan@intel.com> <1378783035-15681-2-git-send-email-tianyu.lan@intel.com> <20130925001902.GF9302@google.com>
-In-Reply-To: <20130925001902.GF9302@google.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:54650 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751944Ab3IWHYr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 03:24:47 -0400
+Date: Mon, 23 Sep 2013 09:24:41 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Jason Cooper' <jason@lakedaemon.net>
+Subject: Re: [PATCH V3 3/3] PCI: mvebu: return NULL instead of ERR_PTR(ret)
+Message-ID: <20130923092441.18d79397@skate>
+In-Reply-To: <001001ceb816$5d1aecc0$1750c640$%han@samsung.com>
+References: <001a01ceb366$5e9481b0$1bbd8510$%han@samsung.com>
+	<001001ceb816$5d1aecc0$1750c640$%han@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/25/2013 08:19 AM, Bjorn Helgaas wrote:
-> On Mon, Sep 09, 2013 at 11:17:15PM -0400, tianyu.lan@intel.com wrote:
->> From: Lan Tianyu <tianyu.lan@intel.com>
->>
->> This patch is to use pr_debug/info/warn/err to replace acpiphp debug
->> functions and remove module's debug param.
->> ...
->
->>   /* local variables */
->> @@ -61,9 +60,7 @@ static struct acpiphp_attention_info *attention_info;
->>   MODULE_AUTHOR(DRIVER_AUTHOR);
->>   MODULE_DESCRIPTION(DRIVER_DESC);
->>   MODULE_LICENSE("GPL");
->> -MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
->>   MODULE_PARM_DESC(disable, "disable acpiphp driver");
->> -module_param_named(debug, acpiphp_debug, bool, 0644);
->
-> I have notes about booting with the "acpiphp.debug" parameter to turn
-> on debugging.  Can you tell me the way to do the equivalent with
-> dynamic debug?  I'll add that to the changelog before merging this.
-Hi Bjorn:
-	Sure, the counterparts of dynamic debug are "acpiphp.dyndbg=+p" and 
-"acpiphp_ibm.dyndbg=+p" parameters. Thanks to add them.
+Dear Jingoo Han,
 
->
-> Bjorn
->
+On Mon, 23 Sep 2013 13:35:42 +0900, Jingoo Han wrote:
+> Return NULL instead of ERR_PTR(ret) in order to fix the following
+> sparse warning:
+> 
+> drivers/pci/host/pci-mvebu.c:744:31: warning: incorrect type in return expression (different address spaces)
+> drivers/pci/host/pci-mvebu.c:744:31:    expected void [noderef] <asn:2>*
+> drivers/pci/host/pci-mvebu.c:744:31:    got void *
+> 
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
+Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+-- 
+Thomas Petazzoni, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
