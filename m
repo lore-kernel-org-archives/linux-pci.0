@@ -1,46 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:34937 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751065Ab3IPHq5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2013 03:46:57 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MT700BZKK9MQ0T0@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Mon, 16 Sep 2013 16:46:56 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] PCI: Fix comment typo for PCI_EXP_LNKCTL_LABIE
-Date: Mon, 16 Sep 2013 16:46:55 +0900
-Message-id: <000001ceb2b0$ea66ffd0$bf34ff70$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from eu1sys200aog108.obsmtp.com ([207.126.144.125]:43598 "EHLO
+	eu1sys200aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750712Ab3IWEOv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 00:14:51 -0400
+Date: Mon, 23 Sep 2013 09:44:28 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
+ part and Exynos part
+Message-ID: <20130923041427.GC2246@pratyush-vbox>
+References: <000701ce8741$fe47deb0$fad79c10$@samsung.com>
+ <20130912104602.GC5995@pratyush-vbox>
+ <523DB38B.4070307@ti.com>
+ <201309220003.34732.arnd@arndb.de>
+ <523ED192.901@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <523ED192.901@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix trivial typo for PCI_EXP_LNKCTL_LABIE comment.
-
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- include/uapi/linux/pci_regs.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index baa7852..18384bc 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -485,7 +485,7 @@
- #define  PCI_EXP_LNKCTL_CLKREQ_EN 0x0100 /* Enable clkreq */
- #define  PCI_EXP_LNKCTL_HAWD	0x0200	/* Hardware Autonomous Width Disable */
- #define  PCI_EXP_LNKCTL_LBMIE	0x0400	/* Link Bandwidth Management Interrupt Enable */
--#define  PCI_EXP_LNKCTL_LABIE	0x0800	/* Lnk Autonomous Bandwidth Interrupt Enable */
-+#define  PCI_EXP_LNKCTL_LABIE	0x0800	/* Link Autonomous Bandwidth Interrupt Enable */
- #define PCI_EXP_LNKSTA		18	/* Link Status */
- #define  PCI_EXP_LNKSTA_CLS	0x000f	/* Current Link Speed */
- #define  PCI_EXP_LNKSTA_CLS_2_5GB 0x0001 /* Current Link Speed 2.5GT/s */
--- 
-1.7.10.4
+Hi Kishon,
 
 
+On Sun, Sep 22, 2013 at 07:16:34PM +0800, Kishon Vijay Abraham I wrote:
+> Hi Arnd,
+> 
+> Thanks for replying :-)
+> 
+> On Sunday 22 September 2013 03:33 AM, Arnd Bergmann wrote:
+> > On Saturday 21 September 2013, Kishon Vijay Abraham I wrote:
+> >> {
+> >>         u32 val;
+> >>         void __iomem *val1;
+> >>         void __iomem *dbi_base = pp->dbi_base;
+> >>
+> >>         /* Program viewport 0 : INBOUND : MEMORY*/
+> >>         val = PCIE_ATU_REGION_INBOUND | (0 & 0xF);
+> >>         dw_pcie_writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
+> >>         val1 = ioremap(0x80000000, 0x5fffffff);
+> > 
+> > The ioremap here makes no sense at all, and I suspect it will fail anyway,
+> > because you exhaust the vmalloc area size, but since the value is not
+> > used anywhere, it won't matter.
+> > 
+> >>         dw_pcie_writel_rc(pp, 0x80000000, dbi_base + PCIE_ATU_LOWER_BASE);
+> >>         dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
+> >>         /* in_mem_size must be in power of 2 */
+> >>         dw_pcie_writel_rc(pp, 0x5FFFFFFF, dbi_base + PCIE_ATU_LIMIT);
+
+This is wrong. You should program here 0xBFFFFFFF.
+
+Translation rule is as follows:
+
+Region between "Start Address" and "End Address" is translated to
+"Target Address" with region size = "End Address" - "Start Address".
+Where: Start Address = (PCIE_ATU_UPPER_BASE | PCIE_ATU_LOWER_BASE)
+        End Address = (PCIE_ATU_UPPER_BASE | PCIE_ATU_LIMIT)
+        Target Address = (PCIE_ATU_UPPER_TARGET | PCIE_ATU_LOWER_TARGET) 
+
+> >>         dw_pcie_writel_rc(pp, 0x80000000, dbi_base + PCIE_ATU_LOWER_TARGET);
+> >>         dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
+> > 
+> > These numbers need to come from somewhere, you shouldn't just hardcode them, 
+> 
+> right. I'm still in the process of getting it work ;-)
+> > 
+> > I guess you should either program an inbound window covering the entire 64-bit
+> > address space, or you should look at the top-level "memory" nodes to find
+> > the location of physical RAM.
+> > 
+> > I can't see anything wrong with the way it's set up though, unless you have
+> > an IOMMU. Can you confirm that there is no IOMMU (aka SMMU) in your system
+> > that handles the PCIe root complex?
+> 
+> There is a MMU for PCIe root complex but that's disabled.
+> > 
+> >> I somehow starting to doubt the DMA address programmed in the ethernet card
+> >> which is in my RAM address range (0x80000000 to 0xBFFFFFFF). Should this
+> >> address be programmed in the BAR of the ethernet card? How should it be done?
+> > 
+> > No, it should not be in the BAR. The ethernet device driver calls dma_map_*
+> > or pci_map_* interfaces to get a valid token that can be passed into the
+> > device registers that are starting the DMA. You have to ensure that the
+> > dma_map_ops for the device return the value that is set up in the translation.
+> > 
+> > The normal case is an identity mapping between device DMA space and host
+> > memory space, i.e. PCIE_ATU_LOWER_TARGET == PCIE_ATU_LOWER_BASE, so
+> > in the dma_map_single implementation, phys_addr_t == dma_addr_t.
+> > 
+> > If you set up the dma_addr_t space to start at 0 instead, you have to add
+> > the offset in the dma_map_ops.
+> 
+> My DMA address is in 0x80000000 to 0xBFFFFFFF range and I program my inbound
+> translation for this range. Not sure what is missing still :-(
+
+Hope, above modification helps. Let me know.
+
+Regards
+Pratyush
+> 
+> Thanks
+> Kishon
