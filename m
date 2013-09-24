@@ -1,67 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:57074 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751871Ab3IKApx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Sep 2013 20:45:53 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 11 Sep 2013 21:39:29 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id A34062CE8051
-	for <linux-pci@vger.kernel.org>; Wed, 11 Sep 2013 10:45:46 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r8B0TFkD4260274
-	for <linux-pci@vger.kernel.org>; Wed, 11 Sep 2013 10:29:15 +1000
-Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r8B0jiFA017346
-	for <linux-pci@vger.kernel.org>; Wed, 11 Sep 2013 10:45:45 +1000
-Date: Wed, 11 Sep 2013 08:45:40 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Chiang <achiang@canonical.com>
-Subject: Re: [PATCH 1/3] PCI: use pci_is_root_bus() to check whether it is a
- root bus
-Message-ID: <20130911004540.GA7654@weiyang.vnet.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20130906230941.GC12956@google.com>
- <20130909070017.GB3726@weiyang.vnet.ibm.com>
- <CAErSpo5BTV_b1NpeifuAPwHvfsrAERpdmwgnUFMS6gQ3Asik-Q@mail.gmail.com>
- <20130910074611.GA11724@weiyang.vnet.ibm.com>
- <1378808696.4121.9.camel@pasglop>
+Received: from mail-yh0-f50.google.com ([209.85.213.50]:46247 "EHLO
+	mail-yh0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753920Ab3IXXT5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Sep 2013 19:19:57 -0400
+Received: by mail-yh0-f50.google.com with SMTP id a41so2290127yho.23
+        for <linux-pci@vger.kernel.org>; Tue, 24 Sep 2013 16:19:56 -0700 (PDT)
+Date: Tue, 24 Sep 2013 17:19:53 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, arjan@linux.intel.com
+Subject: Re: [PATCH] Intel pci device quirk remove D3 delay
+Message-ID: <20130924231953.GC9302@google.com>
+References: <20130910231043.GA31857@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1378808696.4121.9.camel@pasglop>
+In-Reply-To: <20130910231043.GA31857@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 10, 2013 at 08:24:56PM +1000, Benjamin Herrenschmidt wrote:
->On Tue, 2013-09-10 at 15:46 +0800, Wei Yang wrote:
->> On some platforms, like powernv, each pci-dev has a dev-tree node to represent
->> it. The dev-tree node is set by pci_set_of_node() during pci_scan_device().
->> 
->> In pci_set_of_node(), it searchs for the node with the same devfn in its
->> parent. Here comes the question, who should be the VF's parent. Would be a
->> conflict for the devfn between PF and VF?
->
->I think it makes no sense to create OFW nodes for VFs under powernv anyway ...
->
->(which is another reason why we need urgently to disconnect the EEH data
->from the device node ...)
+On Tue, Sep 10, 2013 at 04:10:43PM -0700, Todd E Brandt wrote:
+> The latest Ivy Bridge Intel chipsets have a hardware optimization which
 
-Ok, got it.
+You said "Ivy Bridge" above but use "Haswell" below.  Let me know if
+anything needs to be corrected here.
 
->
->Cheers,
->Ben.
->
+> allows on-chip PCI devices to ignore the 10ms delay before entering
+> or exitting D3 suspend.
+> 
+> This patch implements the optimization as a pci quirk, since we want
+> tight control over which devices use it. This way we can test each device
+> individually to be sure there are no issues before we enable the quirk.
+> The first set of devices are from the Haswell platform, which includes
+> every PCI device that is on the northbridge and southbridge.
+> 
+> After testing this patch reduces the haswell suspend time from 93 ms to
+> 47 ms and resume time from 160 ms to 64 ms. 
+> 
+> Signed-off-by: Todd Brandt <todd.e.brandt@linux.intel.com>
+> 
+>  drivers/pci/quirks.c | 23 +++++++++++++++++++++++
+>  1 file changed, 23 insertions(+)
 
--- 
-Richard Yang
-Help you, Help me
+I added Rafael's ack and applied this for v3.13 (but I can still make
+corrections if required).
 
+Let me know if you want this in v3.12 instead.
+
+Bjorn
+
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index e85d230..98ea960 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2955,6 +2955,29 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+>  
+>  /*
+> + * PCI devices which are on Intel chips can skip the 10ms delay
+> + * before entering D3 mode.
+> + */
+> +static void quirk_remove_d3_delay(struct pci_dev *dev)
+> +{
+> +	dev->d3_delay = 0;
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c00, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0412, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c0c, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c31, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3a, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3d, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c2d, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c20, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c18, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c1c, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c26, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c4e, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c02, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c22, quirk_remove_d3_delay);
+> +
+> +/*
+>   * Some devices may pass our check in pci_intx_mask_supported if
+>   * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
+>   * support this feature.
+> 
