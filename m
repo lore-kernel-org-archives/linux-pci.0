@@ -1,69 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f41.google.com ([209.85.213.41]:54407 "EHLO
-	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754006Ab3IFROy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Sep 2013 13:14:54 -0400
-Received: by mail-yh0-f41.google.com with SMTP id f73so1317900yha.14
-        for <linux-pci@vger.kernel.org>; Fri, 06 Sep 2013 10:14:54 -0700 (PDT)
-Subject: [PATCH 11/14] PCI/ACPI: Skip _OSC control tests if _OSC support
- call failed
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>
-Date: Fri, 06 Sep 2013 11:14:51 -0600
-Message-ID: <20130906171451.11482.47944.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
-References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo6m+gR6Ycumfy4CwQzWwd-wHiWjeVH9259oH6X+yyF6AQ@mail.gmail.com>
+References: <bug-61811-41252@https.bugzilla.kernel.org/> <CAErSpo6m+gR6Ycumfy4CwQzWwd-wHiWjeVH9259oH6X+yyF6AQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 24 Sep 2013 11:53:17 -0600
+Message-ID: <CAErSpo5R_CZtRx6bFQbiAam_rPBSGm5vSDSabDsLETvgP9TaOw@mail.gmail.com>
+Subject: Re: [Bug 61811] New: kms mode breaks and using radeon.agpmode=-1
+To: bruno@wolff.to
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Dave Airlie <airlied@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the _OSC support notification fails, we will never request control
-(because "support == OSC_PCI_SEGMENT_GROUPS_SUPPORT", which doesn't include
-all the features in ACPI_PCIE_REQ_SUPPORT), so we can return early to
-simplify the code.
+[+cc Dave]
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+On Mon, Sep 23, 2013 at 12:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc linux-pci, linux-kernel, dri-devel]
+>
+> On Sat, Sep 21, 2013 at 11:39 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=61811
+>>
+>>             Bug ID: 61811
+>>            Summary: kms mode breaks and using radeon.agpmode=-1
+>>            Product: Drivers
+>>            Version: 2.5
+>>     Kernel Version: 3.12
+>>           Hardware: All
+>>                 OS: Linux
+>>               Tree: Fedora
+>>             Status: NEW
+>>           Severity: normal
+>>           Priority: P1
+>>          Component: PCI
+>>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>>           Reporter: bruno@wolff.to
+>>         Regression: No
+>>
+>> I need to use radeon.agpmode=-1 with my rv280 based graphics card due to a long
+>> (2+ years) standing bug with the driver. Recently I was no longer able to start
+>> X because modesetting is no longer working. At boot I no longer see the
+>> resolution change and I got log entries later in Xor.0.log saying "[KMS] drm
+>> report modesetting isn't supported."
+>> If I boot without radeon.agpmode=-1 X starts, though becomes unusable shortly
+>> due to the pre-existing but. kernel-PAE-3.12.0-0.rc0.git22.2.fc21.i686 works
+>> for me. kernel-PAE-3.12.0-0.rc0.git24.1.fc21.i686 doesn't work. (git23's build
+>> failed so I didn't test that one.)
+>> I did a git whatchanged d5d04bb..3711d86 which I think should have showed me
+>> the commits that were in git24 and not git22 and I didn't see any specifically
+>> directed at the radeon driver. I did see some PCI related commits.
+>
+> Thanks for the report!  Can you attach the complete dmesg logs from
+> the working kernel and the failing one (booted with
+> "radeon.agpmode=-1") to the bugzilla?  Also the output of "lspci -vv".
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 0e20041..67cc43a 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -363,7 +363,7 @@ EXPORT_SYMBOL(acpi_pci_osc_control_set);
- static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
- 				 int *clear_aspm)
- {
--	u32 support, base_support, control;
-+	u32 support, control;
- 	acpi_status status;
- 	struct acpi_device *device = root->device;
- 	acpi_handle handle = device->handle;
-@@ -372,7 +372,7 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
- 	 * All supported architectures that use ACPI have support for
- 	 * PCI domains, so we indicate this in _OSC support capabilities.
- 	 */
--	support = base_support = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
-+	support = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
- 	if (pci_ext_cfg_avail())
- 		support |= OSC_PCI_EXT_CONFIG_SUPPORT;
- 	if (pcie_aspm_support_enabled())
-@@ -381,10 +381,10 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
- 		support |= OSC_PCI_MSI_SUPPORT;
- 	status = acpi_pci_osc_support(root, support);
- 	if (ACPI_FAILURE(status)) {
--		dev_info(&device->dev, "ACPI _OSC support "
--			"notification failed, disabling PCIe ASPM\n");
-+		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
-+			 acpi_format_exception(status));
- 		*no_aspm = 1;
--		support = base_support;
-+		return;
- 	}
- 
- 	if (!pcie_ports_disabled
+I don't see any obvious PCI issue there, so I reassigned the bugzilla
+to the video folks.
 
+Bjorn
