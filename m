@@ -1,38 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f175.google.com ([209.85.128.175]:48432 "EHLO
-	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921Ab3I0RKc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 13:10:32 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5242E6FF.50800@intel.com>
+Date: Wed, 25 Sep 2013 21:37:03 +0800
+From: Lan Tianyu <tianyu.lan@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVkW7d7vFx_kPJG-FEvO71SZjZmpR+dnwVm61wkYK=0YA@mail.gmail.com>
-References: <1380270519.27811.10.camel@pasglop>
-	<CAE9FiQVkW7d7vFx_kPJG-FEvO71SZjZmpR+dnwVm61wkYK=0YA@mail.gmail.com>
-Date: Fri, 27 Sep 2013 10:10:32 -0700
-Message-ID: <CA+55aFyDfMdAeaniQwkoeW6F-xd3JxrzGYwtFb6N9+NA6aRCMg@mail.gmail.com>
-Subject: Re: Please revert 928bea964827d7824b548c1f8e06eccbbc4d0d7d
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: lenb@kernel.org, rjw@sisk.pl, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI/ACPI: Convert ACPI PCI Hot Plug core debug fuction
+ to dynamic debug function
+References: <1378783035-15681-1-git-send-email-tianyu.lan@intel.com> <1378783035-15681-2-git-send-email-tianyu.lan@intel.com> <20130925001902.GF9302@google.com>
+In-Reply-To: <20130925001902.GF9302@google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 27, 2013 at 9:01 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+On 09/25/2013 08:19 AM, Bjorn Helgaas wrote:
+> On Mon, Sep 09, 2013 at 11:17:15PM -0400, tianyu.lan@intel.com wrote:
+>> From: Lan Tianyu <tianyu.lan@intel.com>
+>>
+>> This patch is to use pr_debug/info/warn/err to replace acpiphp debug
+>> functions and remove module's debug param.
+>> ...
 >
-> So i would like to use the first way that you suggest : call pci_set_master
-> PCIe port driver.
+>>   /* local variables */
+>> @@ -61,9 +60,7 @@ static struct acpiphp_attention_info *attention_info;
+>>   MODULE_AUTHOR(DRIVER_AUTHOR);
+>>   MODULE_DESCRIPTION(DRIVER_DESC);
+>>   MODULE_LICENSE("GPL");
+>> -MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
+>>   MODULE_PARM_DESC(disable, "disable acpiphp driver");
+>> -module_param_named(debug, acpiphp_debug, bool, 0644);
+>
+> I have notes about booting with the "acpiphp.debug" parameter to turn
+> on debugging.  Can you tell me the way to do the equivalent with
+> dynamic debug?  I'll add that to the changelog before merging this.
+Hi Bjorn:
+	Sure, the counterparts of dynamic debug are "acpiphp.dyndbg=+p" and 
+"acpiphp_ibm.dyndbg=+p" parameters. Thanks to add them.
 
-So I have to say, that if we can fix this with just adding a single
-new pci_set_master() call, we should do that before we decide to
-revert.
+>
+> Bjorn
+>
 
-If other, bigger issues then come up, we can decide to revert. But if
-there's a one-liner fix, let's just do that first, ok?
-
-Mind sending a patch?
-
-             Linus
