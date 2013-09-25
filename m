@@ -1,35 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 10 Sep 2013 13:53:48 +0100
-From: Mark Einon <mark.einon@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	Mike Marciniszyn <infinipath@intel.com>,
-	Roland Dreier <roland@kernel.org>,
-	Roland Dreier <roland@purestorage.com>,
-	linux-kernel@vger.kernel.org, Sean Hefty <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH 5/6] staging/et131x: Use cached pci_dev->pcie_mpss and
- pcie_set_readrq() to simplif code
-Message-ID: <20130910125348.GA22961@laugharne.auvation.com>
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
- <1378732388-4508-6-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:37731 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751070Ab3IYVtL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Sep 2013 17:49:11 -0400
+Received: by mail-ie0-f172.google.com with SMTP id x13so344968ief.17
+        for <linux-pci@vger.kernel.org>; Wed, 25 Sep 2013 14:49:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1378732388-4508-6-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130924231953.GC9302@google.com>
+References: <20130910231043.GA31857@linux.intel.com> <20130924231953.GC9302@google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Sep 2013 15:48:50 -0600
+Message-ID: <CAErSpo4C52O0iUxU8s8L2Ei=eedanLxn0u_aFtCnnvLu0yjAtA@mail.gmail.com>
+Subject: Re: [PATCH] Intel pci device quirk remove D3 delay
+To: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	arjan@linux.intel.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 09, 2013 at 09:13:07PM +0800, Yijing Wang wrote:
-> The PCI core caches the "PCI-E Max Payload Size Supported" in
-> pci_dev->pcie_mpss, so use that instead of pcie_capability_read_dword().
-> Also use pcie_set_readrq() instead of pcie_capability_clear_and_set_word()
-> to simplify code.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+On Tue, Sep 24, 2013 at 5:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Sep 10, 2013 at 04:10:43PM -0700, Todd E Brandt wrote:
+>> The latest Ivy Bridge Intel chipsets have a hardware optimization which
+>
+> You said "Ivy Bridge" above but use "Haswell" below.  Let me know if
+> anything needs to be corrected here.
 
-Acked-by: Mark Einon <mark.einon@gmail.com>
+Reading this again, the text really doesn't make sense as-is.  So
+please confirm what this should say.
+
+It sure looks like it should say "The latest *Haswell* Intel chipsets ..."
+
+If you really mean "Ivy Bridge," then you should say something about
+how Haswell is related to Ivy Bridge.  No doubt this is all obvious to
+Intel folks, but it's not to me :)
+
+Bjorn
+
+>> allows on-chip PCI devices to ignore the 10ms delay before entering
+>> or exitting D3 suspend.
+>>
+>> This patch implements the optimization as a pci quirk, since we want
+>> tight control over which devices use it. This way we can test each device
+>> individually to be sure there are no issues before we enable the quirk.
+>> The first set of devices are from the Haswell platform, which includes
+>> every PCI device that is on the northbridge and southbridge.
+>>
+>> After testing this patch reduces the haswell suspend time from 93 ms to
+>> 47 ms and resume time from 160 ms to 64 ms.
