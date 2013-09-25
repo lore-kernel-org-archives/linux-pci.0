@@ -1,91 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31846 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57233 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754499Ab3I0TCU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Sep 2013 15:02:20 -0400
-Message-ID: <5245D626.6090209@redhat.com>
-Date: Fri, 27 Sep 2013 21:01:58 +0200
-From: Zdenek Kabelac <zkabelac@redhat.com>
+	id S1755738Ab3IYWK7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Sep 2013 18:10:59 -0400
+Date: Thu, 26 Sep 2013 00:09:00 +0200
+From: Veaceslav Falico <vfalico@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to
+ populate_msi_sysfs()
+Message-ID: <20130925220900.GA26965@redhat.com>
+References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
+ <1379382464-7920-2-git-send-email-vfalico@redhat.com>
+ <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
+ <CAErSpo6jXzbgZUDbbo74vW-aSUD8MgtK5iNieFGUk=fxho102A@mail.gmail.com>
 MIME-Version: 1.0
-To: Veaceslav Falico <vfalico@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux.nics@intel.com,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: kobject_add_internal failed for msi_irqs with -EEXIST
-References: <5245896A.70705@redhat.com> <CAErSpo6L-Ud08=JPM7d=RYuPO=UFvq_9hZGbne0iQnCHiFbuHQ@mail.gmail.com> <20130927160125.GB14139@redhat.com>
-In-Reply-To: <20130927160125.GB14139@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <CAErSpo6jXzbgZUDbbo74vW-aSUD8MgtK5iNieFGUk=fxho102A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dne 27.9.2013 18:01, Veaceslav Falico napsal(a):
-> On Fri, Sep 27, 2013 at 09:58:28AM -0600, Bjorn Helgaas wrote:
->> [+cc Veaceslav, linux-pci]
+On Wed, Sep 25, 2013 at 03:30:14PM -0600, Bjorn Helgaas wrote:
+>On Wed, Sep 25, 2013 at 3:08 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Also, I think it is incorrect that free_msi_irqs() does this:
 >>
->> On Fri, Sep 27, 2013 at 7:34 AM, Zdenek Kabelac <zkabelac@redhat.com> wrote:
->>> Hi
->>>
->>> With recent build of 3.12-rc2 I'm getting this warning report from kernel:
->>> (hw Lenovo T61, C2D, 4GB Ram)
->>> (repost since linux-kernel@ rejected my gmail email....)
+>>                 if (entry->kobj.parent) {
+>>                         kobject_del(&entry->kobj);
+>>                         kobject_put(&entry->kobj);
+>>                 }
 >>
->> This looks related to the MSI/kobject issues Veaceslav is working on.
->> See
->> http://lkml.kernel.org/r/1379382464-7920-2-git-send-email-vfalico@redhat.com
->> and related messages.
+>>                 list_del(&entry->list);
+>>                 kfree(entry);
 >>
->> We don't have a resolution yet.  If you have
->> CONFIG_DEBUG_KOBJECT_RELEASE=y, you could try turning that off.  I
->> don't know if it would help, and it would only be a temporary
->> workaround anyway.
+>> I think the "kfree(entry)" should be in msi_kobj_release() instead.
 >
-> I've looked at the original post -
-> http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg510798.html
-> hope that's it - and it seems that it's disabling DEBUG_KOBJECT_RELEASE
-> won't help - the warning is about the re-registering, not about freeing it.
+>Oh, I see you fixed this in patch 3/3.  I hadn't read that far yet :)
 >
-> As a workaround I'd suggest adding some kind of delay between removing and
-> adding the msi - as in - rmmod e1000e; sleep 1; modprobe e1000e; - or
-> something like that, so that there is enough time for the /msqi_irqs/ to go
-> away.
+>Did you find these problems by inspection, or is there some easy way
+>to trigger bad behavior?  Just wondering if this is some way I can
+>reproduce the problem.
+
+Hi,
+
+I've first found it by building with CONFIG_DEBUG_KOBJECT_RELEASE and
+CONFIG_DEBUG_OBJECTS - it shows that it's freeing an object in an active
+state (I'm just running insmod/rmmod tg3 concurently, but I guess it's
+reproducible with any driver that uses msi/x).
+
+Without CONFIG_DEBUG_OBJECTS it's also reproducible, and without
+CONFIG_DEBUG_KOBJECT_RELEASE it's really hard to reproduce, but still
+reproducible (I've hit it with tg3 as a slave of bonding and concurently
+running rmmod bonding/ifup bond0 - though it's really hard). It just panics
+in kobject_put(), iirc.
+
+So, with those CONFIG_DEBUG_* it's easily triggerable, without - quite
+hard.
+
+Hope that helps.
+
+p.s. I'll adress your other comments tomorrow already, it's quite late here
+and I don't want to do something stupid now :).
+
+Thanks a lot!
+
 >
-
-I'm not readding e1000e modules myself - however I've no idea what 
-NetworkManager does. Here are messages prior warning:
-
-NetworkManager[304]: <info> monitoring kernel firmware directory '/lib/firmware'.
-NetworkManager[304]: <info> rfkill1: found WiFi radio killswitch (at 
-/sys/devices/pci0000:00/0000:00:1c.1/0000:03:00.0/ieee80211/phy0/rfkill1) 
-(driver iwl3945)
-NetworkManager[304]: <info> WiFi hardware radio set enabled
-NetworkManager[304]: <info> WiFi enabled by radio killswitch; enabled by state 
-file
-NetworkManager[304]: <info> WWAN enabled by radio killswitch; disabled by 
-state file
-NetworkManager[304]: <info> WiMAX enabled by radio killswitch; enabled by 
-state file
-NetworkManager[304]: <info> Networking is enabled by state file
-NetworkManager[304]: <info> (eth0): carrier is OFF
-NetworkManager[304]: <info> (eth0): new Ethernet device (driver: 'e1000e' 
-ifindex: 2)
-NetworkManager[304]: <info> (eth0): exported as 
-/org/freedesktop/NetworkManager/Devices/0
-NetworkManager[304]: <info> (eth0): device state change: unmanaged -> 
-unavailable (reason 'managed') [10 20 2]
-NetworkManager[304]: <info> (eth0): bringing up device.
-rpcbind: cannot create socket for udp6
-rpcbind: cannot create socket for tcp6
-kernel: [    5.727025] WARNING! power/level is deprecated; use power/control 
-instead
-
-
-So it looks like  'bringing up' causes recreation of msi_irqs ?
-
-Zdenek
-
-
-
-
-
+>Bjorn
