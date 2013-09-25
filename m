@@ -1,37 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f171.google.com ([209.85.128.171]:40616 "EHLO
-	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760085Ab3ICOJ7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 10:09:59 -0400
-Date: Tue, 3 Sep 2013 10:09:54 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 25 Sep 2013 17:00:16 -0400
 From: Tejun Heo <tj@kernel.org>
 To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
 	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 0/4] AHCI: Conserve interrupts with
- pci_enable_msi_block_part() interface
-Message-ID: <20130903140954.GC10522@htj.dyndns.org>
-References: <cover.1378111919.git.agordeev@redhat.com>
- <20130903135541.GB10522@htj.dyndns.org>
+	Jan Beulich <JBeulich@suse.com>, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20130925210016.GA8926@htj.dyndns.org>
+References: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+ <20130917143022.GA7707@concordia>
+ <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <20130918142231.GA21650@mtj.dyndns.org>
+ <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
+ <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
+ <20130920122736.GD7630@mtj.dyndns.org>
+ <20130925180220.GB26273@google.com>
+ <20130925205804.GA21737@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130903135541.GB10522@htj.dyndns.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20130925205804.GA21737@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 03, 2013 at 09:55:41AM -0400, Tejun Heo wrote:
-> Hmmm.... I've been looking at the code and and a curiosity.  Why does
-> multiple MSI support implicitly enabled threaded IRQ handling?  Why
-> are those two linked?  Also, do you have any numbers to show that this
-> actually is better?  Handling the processing off to a thread isn't a
-> light operation.
+Hello,
 
-Also, it probably is a good idea to skip dummy ports when requesting
-irqs from ahci_host_activate(), which BTW should probably be renamed
-to ahci_host_activate_mmsi().
+On Wed, Sep 25, 2013 at 10:58:05PM +0200, Alexander Gordeev wrote:
+> Unfortunately, pSeries is a shows-topper here :( It seems we have to
+> introduce pci_get_msi{,x}_limit() interfaces to honour the quota
+> thing.  I just hope the hardware set for pSeries is limited and we
+> won't need to use it for all drivers.
+
+Can you please go into a bit of detail on that?  Why does it matter?
+Is it because you're worried you might cause performance regression by
+forcing prevoius partial multiple allocations to single interrupt
+operation?
 
 Thanks.
 
