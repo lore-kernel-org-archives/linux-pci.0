@@ -1,93 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:50972 "EHLO bear.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:11224 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752822Ab3IVLQz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 22 Sep 2013 07:16:55 -0400
-Message-ID: <523ED192.901@ti.com>
-Date: Sun, 22 Sep 2013 16:46:34 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
- part and Exynos part
-References: <000701ce8741$fe47deb0$fad79c10$@samsung.com> <20130912104602.GC5995@pratyush-vbox> <523DB38B.4070307@ti.com> <201309220003.34732.arnd@arndb.de>
-In-Reply-To: <201309220003.34732.arnd@arndb.de>
-Content-Type: text/plain; charset="ISO-8859-1"
+	id S1750845Ab3IYQps (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Sep 2013 12:45:48 -0400
+Message-ID: <1380127533.3030.319.camel@ul30vt.home>
+Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain of a device
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bharat Bhushan <r65777@freescale.com>
+Cc: joro@8bytes.org, benh@kernel.crashing.org,
+	galak@kernel.crashing.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	agraf@suse.de, scottwood@freescale.com,
+	iommu@lists.linux-foundation.org,
+	Bharat Bhushan <Bharat.Bhushan@freescale.com>
+Date: Wed, 25 Sep 2013 10:45:33 -0600
+In-Reply-To: <1379575763-2091-3-git-send-email-Bharat.Bhushan@freescale.com>
+References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1379575763-2091-3-git-send-email-Bharat.Bhushan@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+On Thu, 2013-09-19 at 12:59 +0530, Bharat Bhushan wrote:
+> This api return the iommu domain to which the device is attached.
+> The iommu_domain is required for making API calls related to iommu.
+> Follow up patches which use this API to know iommu maping.
+> 
+> Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
+> ---
+>  drivers/iommu/iommu.c |   10 ++++++++++
+>  include/linux/iommu.h |    7 +++++++
+>  2 files changed, 17 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> index fbe9ca7..6ac5f50 100644
+> --- a/drivers/iommu/iommu.c
+> +++ b/drivers/iommu/iommu.c
+> @@ -696,6 +696,16 @@ void iommu_detach_device(struct iommu_domain *domain, struct device *dev)
+>  }
+>  EXPORT_SYMBOL_GPL(iommu_detach_device);
+>  
+> +struct iommu_domain *iommu_get_dev_domain(struct device *dev)
+> +{
+> +	struct iommu_ops *ops = dev->bus->iommu_ops;
+> +
+> +	if (unlikely(ops == NULL || ops->get_dev_iommu_domain == NULL))
+> +		return NULL;
+> +
+> +	return ops->get_dev_iommu_domain(dev);
+> +}
+> +EXPORT_SYMBOL_GPL(iommu_get_dev_domain);
 
-Thanks for replying :-)
+What prevents this from racing iommu_domain_free()?  There's no
+references acquired, so there's no reason for the caller to assume the
+pointer is valid.
 
-On Sunday 22 September 2013 03:33 AM, Arnd Bergmann wrote:
-> On Saturday 21 September 2013, Kishon Vijay Abraham I wrote:
->> {
->>         u32 val;
->>         void __iomem *val1;
->>         void __iomem *dbi_base = pp->dbi_base;
->>
->>         /* Program viewport 0 : INBOUND : MEMORY*/
->>         val = PCIE_ATU_REGION_INBOUND | (0 & 0xF);
->>         dw_pcie_writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
->>         val1 = ioremap(0x80000000, 0x5fffffff);
-> 
-> The ioremap here makes no sense at all, and I suspect it will fail anyway,
-> because you exhaust the vmalloc area size, but since the value is not
-> used anywhere, it won't matter.
-> 
->>         dw_pcie_writel_rc(pp, 0x80000000, dbi_base + PCIE_ATU_LOWER_BASE);
->>         dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
->>         /* in_mem_size must be in power of 2 */
->>         dw_pcie_writel_rc(pp, 0x5FFFFFFF, dbi_base + PCIE_ATU_LIMIT);
->>         dw_pcie_writel_rc(pp, 0x80000000, dbi_base + PCIE_ATU_LOWER_TARGET);
->>         dw_pcie_writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-> 
-> These numbers need to come from somewhere, you shouldn't just hardcode them, 
+>  /*
+>   * IOMMU groups are really the natrual working unit of the IOMMU, but
+>   * the IOMMU API works on domains and devices.  Bridge that gap by
+> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> index 7ea319e..fa046bd 100644
+> --- a/include/linux/iommu.h
+> +++ b/include/linux/iommu.h
+> @@ -127,6 +127,7 @@ struct iommu_ops {
+>  	int (*domain_set_windows)(struct iommu_domain *domain, u32 w_count);
+>  	/* Get the numer of window per domain */
+>  	u32 (*domain_get_windows)(struct iommu_domain *domain);
+> +	struct iommu_domain *(*get_dev_iommu_domain)(struct device *dev);
+>  
+>  	unsigned long pgsize_bitmap;
+>  };
+> @@ -190,6 +191,7 @@ extern int iommu_domain_window_enable(struct iommu_domain *domain, u32 wnd_nr,
+>  				      phys_addr_t offset, u64 size,
+>  				      int prot);
+>  extern void iommu_domain_window_disable(struct iommu_domain *domain, u32 wnd_nr);
+> +extern struct iommu_domain *iommu_get_dev_domain(struct device *dev);
+>  /**
+>   * report_iommu_fault() - report about an IOMMU fault to the IOMMU framework
+>   * @domain: the iommu domain where the fault has happened
+> @@ -284,6 +286,11 @@ static inline void iommu_domain_window_disable(struct iommu_domain *domain,
+>  {
+>  }
+>  
+> +static inline struct iommu_domain *iommu_get_dev_domain(struct device *dev)
+> +{
+> +	return NULL;
+> +}
+> +
+>  static inline phys_addr_t iommu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova)
+>  {
+>  	return 0;
 
-right. I'm still in the process of getting it work ;-)
-> 
-> I guess you should either program an inbound window covering the entire 64-bit
-> address space, or you should look at the top-level "memory" nodes to find
-> the location of physical RAM.
-> 
-> I can't see anything wrong with the way it's set up though, unless you have
-> an IOMMU. Can you confirm that there is no IOMMU (aka SMMU) in your system
-> that handles the PCIe root complex?
 
-There is a MMU for PCIe root complex but that's disabled.
-> 
->> I somehow starting to doubt the DMA address programmed in the ethernet card
->> which is in my RAM address range (0x80000000 to 0xBFFFFFFF). Should this
->> address be programmed in the BAR of the ethernet card? How should it be done?
-> 
-> No, it should not be in the BAR. The ethernet device driver calls dma_map_*
-> or pci_map_* interfaces to get a valid token that can be passed into the
-> device registers that are starting the DMA. You have to ensure that the
-> dma_map_ops for the device return the value that is set up in the translation.
-> 
-> The normal case is an identity mapping between device DMA space and host
-> memory space, i.e. PCIE_ATU_LOWER_TARGET == PCIE_ATU_LOWER_BASE, so
-> in the dma_map_single implementation, phys_addr_t == dma_addr_t.
-> 
-> If you set up the dma_addr_t space to start at 0 instead, you have to add
-> the offset in the dma_map_ops.
 
-My DMA address is in 0x80000000 to 0xBFFFFFFF range and I program my inbound
-translation for this range. Not sure what is missing still :-(
-
-Thanks
-Kishon
