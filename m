@@ -1,64 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:39458 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009Ab3IIHAZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 03:00:25 -0400
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 9 Sep 2013 12:21:51 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 1AB5D1258043
-	for <linux-pci@vger.kernel.org>; Mon,  9 Sep 2013 12:30:22 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r8972FLZ46006374
-	for <linux-pci@vger.kernel.org>; Mon, 9 Sep 2013 12:32:15 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r8970JdJ031954
-	for <linux-pci@vger.kernel.org>; Mon, 9 Sep 2013 12:30:20 +0530
-Date: Mon, 9 Sep 2013 15:00:17 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Chiang <achiang@canonical.com>
-Subject: Re: [PATCH 1/3] PCI: use pci_is_root_bus() to check whether it is a
- root bus
-Message-ID: <20130909070017.GB3726@weiyang.vnet.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20130906230941.GC12956@google.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:56223 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754988Ab3IYVfT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Sep 2013 17:35:19 -0400
+Received: by mail-ie0-f170.google.com with SMTP id x13so338122ief.15
+        for <linux-pci@vger.kernel.org>; Wed, 25 Sep 2013 14:35:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130906230941.GC12956@google.com>
+In-Reply-To: <1379382464-7920-4-git-send-email-vfalico@redhat.com>
+References: <1379382464-7920-1-git-send-email-vfalico@redhat.com> <1379382464-7920-4-git-send-email-vfalico@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Sep 2013 15:34:58 -0600
+Message-ID: <CAErSpo77PrKi9nwBada444TOA5vwjWdt06Qv+GZLreh61kNH6g@mail.gmail.com>
+Subject: Re: [PATCH 3/3] msi: free msi_desc entry only after we've released
+ the kobject
+To: Veaceslav Falico <vfalico@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 06, 2013 at 05:09:41PM -0600, Bjorn Helgaas wrote:
->[+cc Kenji, Alex]
+On Mon, Sep 16, 2013 at 7:47 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
+> Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
+> however kobject_put() doesn't guarantee us that it was the last reference
+> and that the kobj isn't used currently by someone else, so after we
+> kfree(entry) with the struct kobject - other users will begin using the
+> freed memory, instead of the actual kobject.
 >
->On Fri, Sep 06, 2013 at 09:45:56AM +0800, Wei Yang wrote:
->> In __pci_bus_size_bridges() we check whether a pci bus is a root
->> bus by testing bus->self. As indicated by commit 79af72d7
->> ("PCI: pci_is_root_bus helper"), bus->self == NULL is not a proper
->> way to check the pci root bus.
->> 
->> This patch changes it to pci_is_root_bus() to check whether it is
->> a root bus.
+> Fix this by using the kobject->release callback, which is called last when
+> the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
+> which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
+> kobj itself after ->release() was called, so we're safe).
 >
->I think this is a good change, even if only on the grounds of
->consistency.
+> In case we've failed to create the sysfs directories - just kfree()
+> it - cause we don't have the kobjects attached.
 >
->Did you trip over a case where a root bus has bus->self != NULL?
->I'd like to know more details about the case where:
+> Also, remove the same functionality from populate_msi_sysfs(), cause on
+> failure we anyway call free_msi_irqs(), which will take care of all the
+> kobjects properly.
+
+I agree; it looks like populate_msi_sysfs() doesn't need to have the
+cleanup in it.  Can you split that into a separate patch, since I
+don't think it depends on the kfree() fix?
+
+Bjorn
+
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: linux-pci@vger.kernel.org
+> CC: linux-kernel@vger.kernel.org
+> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+> ---
+>  drivers/pci/msi.c | 27 +++++++++------------------
+>  1 file changed, 9 insertions(+), 18 deletions(-)
 >
->  (bus->parent == NULL) && (bus->self != NULL)
-
-I found one case that (bus->self == NULL) and this bus is not root bus.
-
-Not sure, this case will meet your requirement?
-
--- 
-Richard Yang
-Help you, Help me
-
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 68da921..c9236e4 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -374,19 +374,22 @@ static void free_msi_irqs(struct pci_dev *dev)
+>                                 iounmap(entry->mask_base);
+>                 }
+>
+> +               list_del(&entry->list);
+> +
+>                 /*
+>                  * Its possible that we get into this path
+>                  * When populate_msi_sysfs fails, which means the entries
+>                  * were not registered with sysfs.  In that case don't
+> -                * unregister them.
+> +                * unregister them, and just free. Otherwise the
+> +                * kobject->release will take care of freeing the entry via
+> +                * msi_kobj_release().
+>                  */
+>                 if (entry->kobj.parent) {
+>                         kobject_del(&entry->kobj);
+>                         kobject_put(&entry->kobj);
+> +               } else {
+> +                       kfree(entry);
+>                 }
+> -
+> -               list_del(&entry->list);
+> -               kfree(entry);
+>         }
+>
+>         kset_unregister(dev->msi_kset);
+> @@ -512,6 +515,7 @@ static void msi_kobj_release(struct kobject *kobj)
+>         struct msi_desc *entry = to_msi_desc(kobj);
+>
+>         pci_dev_put(entry->dev);
+> +       kfree(entry);
+>  }
+>
+>  static struct kobj_type msi_irq_ktype = {
+> @@ -525,7 +529,6 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>         struct msi_desc *entry;
+>         struct kobject *kobj;
+>         int ret;
+> -       int count = 0;
+>
+>         pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
+>         if (!pdev->msi_kset)
+> @@ -539,23 +542,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>                                      "%u", entry->irq);
+>                 if (ret) {
+>                         pci_dev_put(pdev);
+> -                       goto out_unroll;
+> +                       return ret;
+>                 }
+> -
+> -               count++;
+>         }
+>
+>         return 0;
+> -
+> -out_unroll:
+> -       list_for_each_entry(entry, &pdev->msi_list, list) {
+> -               if (!count)
+> -                       break;
+> -               kobject_del(&entry->kobj);
+> -               kobject_put(&entry->kobj);
+> -               count--;
+> -       }
+> -       return ret;
+>  }
+>
+>  /**
+> --
+> 1.8.4
+>
