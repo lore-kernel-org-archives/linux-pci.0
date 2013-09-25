@@ -1,41 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db9lp0251.outbound.messaging.microsoft.com ([213.199.154.251]:31104
-	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755470Ab3IPJBj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2013 05:01:39 -0400
-Date: Mon, 16 Sep 2013 17:01:48 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Sean Cross <xobs@kosagi.com>
-CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Zhu Richard-R65037 <r65037@freescale.com>
-Subject: Re: [PATCH v4 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-Message-ID: <20130916090146.GL31147@S2101-09.ap.freescale.net>
-References: <1379065222-7275-1-git-send-email-xobs@kosagi.com>
- <1379065222-7275-4-git-send-email-xobs@kosagi.com>
- <20130916060631.GF31147@S2101-09.ap.freescale.net>
- <5236AB28.5060708@kosagi.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:36289 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755433Ab3IYVae (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Sep 2013 17:30:34 -0400
+Received: by mail-ie0-f181.google.com with SMTP id tp5so324029ieb.26
+        for <linux-pci@vger.kernel.org>; Wed, 25 Sep 2013 14:30:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <5236AB28.5060708@kosagi.com>
+In-Reply-To: <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
+References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
+ <1379382464-7920-2-git-send-email-vfalico@redhat.com> <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Sep 2013 15:30:14 -0600
+Message-ID: <CAErSpo6jXzbgZUDbbo74vW-aSUD8MgtK5iNieFGUk=fxho102A@mail.gmail.com>
+Subject: Re: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to populate_msi_sysfs()
+To: Veaceslav Falico <vfalico@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 16, 2013 at 02:54:32PM +0800, Sean Cross wrote:
-> >>@@ -116,6 +116,22 @@
-> >>  			arm,data-latency = <4 2 3>;
-> >>  		};
-> >>+		pcie: pcie@0x01000000 {
-> >>+			compatible = "fsl,imx6-pcie", "snps,dw-pcie";
-> >We generally use particular SoC name to specify the compatible string.
-> >So "fsl,imx6q-pcie" will be more appropriate.
-> Any reason to specify imx6q in particular?  It's also present on the
-> imx6d, imx6dl, and imx6s (basically, everything but the imx6sl).
+On Wed, Sep 25, 2013 at 3:08 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Also, I think it is incorrect that free_msi_irqs() does this:
+>
+>                 if (entry->kobj.parent) {
+>                         kobject_del(&entry->kobj);
+>                         kobject_put(&entry->kobj);
+>                 }
+>
+>                 list_del(&entry->list);
+>                 kfree(entry);
+>
+> I think the "kfree(entry)" should be in msi_kobj_release() instead.
 
-The compatible naming is not about coverage but versioning.  We
-generally encode the name of the SoC that firstly integrates the block
-to specify the version.
+Oh, I see you fixed this in patch 3/3.  I hadn't read that far yet :)
 
-Shawn
+Did you find these problems by inspection, or is there some easy way
+to trigger bad behavior?  Just wondering if this is some way I can
+reproduce the problem.
 
+Bjorn
