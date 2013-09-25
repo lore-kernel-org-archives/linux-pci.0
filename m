@@ -1,286 +1,215 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: tianyu.lan@intel.com
-To: lenb@kernel.org, rjw@sisk.pl, bhelgaas@google.com
-Cc: Lan Tianyu <tianyu.lan@intel.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] PCI/ACPI: Convert ACPI PCI Hot Plug core debug fuction to dynamic debug function
-Date: Mon,  9 Sep 2013 23:17:15 -0400
-Message-Id: <1378783035-15681-2-git-send-email-tianyu.lan@intel.com>
-In-Reply-To: <1378783035-15681-1-git-send-email-tianyu.lan@intel.com>
-References: <1378783035-15681-1-git-send-email-tianyu.lan@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1lp0151.outbound.protection.outlook.com ([207.46.163.151]:46731
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754062Ab3IYDfy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Sep 2013 23:35:54 -0400
+From: Peter Guo <peter.guo@bayhubtech.com>
+To: Chris Ball <cjb@laptop.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Adrian Hunter" <adrian.hunter@intel.com>,
+	reg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	"Guennadi Liakhovetski" <g.liakhovetski@gmx.de>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Samuel Guan <samuel.guan@bayhubtech.com>
+Subject: [PATCH 1/2] mmc:sdhci-pci:Add O2Micor/BayHubTect PCI SD Host
+Date: Wed, 25 Sep 2013 03:20:07 +0000
+Message-ID: <9ac149a4448d4d99a280a37b104da1e3@BN1PR04MB091.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lan Tianyu <tianyu.lan@intel.com>
+From: "peter.guo" <peter.guo@bayhubtech.com>
 
-This patch is to use pr_debug/info/warn/err to replace acpiphp debug
-functions and remove module's debug param.
+Add O2Micor/BayHubTect SD Host Controller PCI Devices IDs in pci_ids.h.
+Apply SDHCI_QUIRK_MULTIBLOCK_READ_ACMD12 for some SD Host Controller.
+Apply SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC for some SD Host Controller.
+Add O2Micro/BayHubTech SD Host Controller specified Init.
 
-Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+Signed-off-by: peter.guo <peter.guo@bayhubtech.com>
 ---
- drivers/pci/hotplug/acpiphp.h      | 10 ----------
- drivers/pci/hotplug/acpiphp_core.c | 35 +++++++++++++++++------------------
- drivers/pci/hotplug/acpiphp_glue.c | 23 ++++++++++++-----------
- 3 files changed, 29 insertions(+), 39 deletions(-)
+ drivers/mmc/host/sdhci-pci.c |  122 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci_ids.h      |    5 ++
+ 2 files changed, 127 insertions(+)
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index f4e0289..26100f5 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -39,16 +39,6 @@
- #include <linux/mutex.h>
- #include <linux/pci_hotplug.h>
- 
--#define dbg(format, arg...)					\
--	do {							\
--		if (acpiphp_debug)				\
--			printk(KERN_DEBUG "%s: " format,	\
--				MY_NAME , ## arg);		\
--	} while (0)
--#define err(format, arg...) printk(KERN_ERR "%s: " format, MY_NAME , ## arg)
--#define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME , ## arg)
--#define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME , ## arg)
--
- struct acpiphp_context;
- struct acpiphp_bridge;
- struct acpiphp_slot;
-diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
-index bf2203e..a56ae79 100644
---- a/drivers/pci/hotplug/acpiphp_core.c
-+++ b/drivers/pci/hotplug/acpiphp_core.c
-@@ -31,6 +31,8 @@
-  *
-  */
- 
-+#define pr_fmt(fmt) "acpiphp: " fmt
+diff --git a/drivers/mmc/host/sdhci-pci.c b/drivers/mmc/host/sdhci-pci.c
+index d7d6bc8..2387b3e 100644
+--- a/drivers/mmc/host/sdhci-pci.c
++++ b/drivers/mmc/host/sdhci-pci.c
+@@ -364,11 +364,42 @@ static const struct sdhci_pci_fixes sdhci_intel_byt_sd = {
+ #define O2_SD_ADMA1		0xE2
+ #define O2_SD_ADMA2		0xE7
+ #define O2_SD_INF_MOD		0xF1
++#define	O2_SD_PLL_SETTING	0x304
++#define	O2_SD_CLK_SETTING	0x328
++#define	O2_SD_UHS1_CAP_SETTING	0x33C
++#define	O2_SD_VENDOR_SETTING 0x110
 +
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/moduleparam.h>
-@@ -43,12 +45,9 @@
- #include <linux/smp.h>
- #include "acpiphp.h"
++static int o2_probe_slot(struct sdhci_pci_slot *slot)
++{
++	struct sdhci_pci_chip	*chip;
++	struct sdhci_host	*host;
++	u32			reg;
++
++	chip = slot->chip;
++	host = slot->host;
++	switch (chip->pdev->device) {
++	case PCI_DEVICE_ID_O2_8420:
++	case PCI_DEVICE_ID_O2_8421:
++	case PCI_DEVICE_ID_O2_8520:
++	case PCI_DEVICE_ID_O2_8620:
++	case PCI_DEVICE_ID_O2_8621:
++		reg = sdhci_readl(host, O2_SD_VENDOR_SETTING);
++		if (reg & 0x1)
++			host->quirks |= SDHCI_QUIRK_MULTIBLOCK_READ_ACMD12;
++
++		break;
++	default:
++		break;
++	}
++
++	return 0;
++}
  
--#define MY_NAME	"acpiphp"
--
- /* name size which is used for entries in pcihpfs */
- #define SLOT_NAME_SIZE  21              /* {_SUN} */
- 
--bool acpiphp_debug;
- bool acpiphp_disabled;
- 
- /* local variables */
-@@ -61,9 +60,7 @@ static struct acpiphp_attention_info *attention_info;
- MODULE_AUTHOR(DRIVER_AUTHOR);
- MODULE_DESCRIPTION(DRIVER_DESC);
- MODULE_LICENSE("GPL");
--MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
- MODULE_PARM_DESC(disable, "disable acpiphp driver");
--module_param_named(debug, acpiphp_debug, bool, 0644);
- module_param_named(disable, acpiphp_disabled, bool, 0444);
- 
- /* export the attention callback registration methods */
-@@ -139,7 +136,7 @@ static int enable_slot(struct hotplug_slot *hotplug_slot)
+ static int o2_probe(struct sdhci_pci_chip *chip)
  {
- 	struct slot *slot = hotplug_slot->private;
+ 	int ret;
+ 	u8 scratch;
++	u32 scratch_32;
  
--	dbg("%s - physical_slot = %s\n", __func__, slot_name(slot));
-+	pr_debug("%s - physical_slot = %s\n", __func__, slot_name(slot));
- 
- 	/* enable the specified slot */
- 	return acpiphp_enable_slot(slot->acpi_slot);
-@@ -156,7 +153,7 @@ static int disable_slot(struct hotplug_slot *hotplug_slot)
- {
- 	struct slot *slot = hotplug_slot->private;
- 
--	dbg("%s - physical_slot = %s\n", __func__, slot_name(slot));
-+	pr_debug("%s - physical_slot = %s\n", __func__, slot_name(slot));
- 
- 	/* disable the specified slot */
- 	return acpiphp_disable_and_eject_slot(slot->acpi_slot);
-@@ -176,7 +173,8 @@ static int disable_slot(struct hotplug_slot *hotplug_slot)
-  {
- 	int retval = -ENODEV;
- 
--	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot_name(hotplug_slot));
-+	pr_debug("%s - physical_slot = %s\n", __func__,
-+		hotplug_slot_name(hotplug_slot));
-  
- 	if (attention_info && try_module_get(attention_info->owner)) {
- 		retval = attention_info->set_attn(hotplug_slot, status);
-@@ -199,7 +197,7 @@ static int get_power_status(struct hotplug_slot *hotplug_slot, u8 *value)
- {
- 	struct slot *slot = hotplug_slot->private;
- 
--	dbg("%s - physical_slot = %s\n", __func__, slot_name(slot));
-+	pr_debug("%s - physical_slot = %s\n", __func__, slot_name(slot));
- 
- 	*value = acpiphp_get_power_status(slot->acpi_slot);
- 
-@@ -221,7 +219,8 @@ static int get_attention_status(struct hotplug_slot *hotplug_slot, u8 *value)
- {
- 	int retval = -EINVAL;
- 
--	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot_name(hotplug_slot));
-+	pr_debug("%s - physical_slot = %s\n", __func__,
-+		hotplug_slot_name(hotplug_slot));
- 
- 	if (attention_info && try_module_get(attention_info->owner)) {
- 		retval = attention_info->get_attn(hotplug_slot, value);
-@@ -244,7 +243,7 @@ static int get_latch_status(struct hotplug_slot *hotplug_slot, u8 *value)
- {
- 	struct slot *slot = hotplug_slot->private;
- 
--	dbg("%s - physical_slot = %s\n", __func__, slot_name(slot));
-+	pr_debug("%s - physical_slot = %s\n", __func__, slot_name(slot));
- 
- 	*value = acpiphp_get_latch_status(slot->acpi_slot);
- 
-@@ -264,7 +263,7 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- {
- 	struct slot *slot = hotplug_slot->private;
- 
--	dbg("%s - physical_slot = %s\n", __func__, slot_name(slot));
-+	pr_debug("%s - physical_slot = %s\n", __func__, slot_name(slot));
- 
- 	*value = acpiphp_get_adapter_status(slot->acpi_slot);
- 
-@@ -279,7 +278,7 @@ static void release_slot(struct hotplug_slot *hotplug_slot)
- {
- 	struct slot *slot = hotplug_slot->private;
- 
--	dbg("%s - physical_slot = %s\n", __func__, slot_name(slot));
-+	pr_debug("%s - physical_slot = %s\n", __func__, slot_name(slot));
- 
- 	kfree(slot->hotplug_slot);
- 	kfree(slot);
-@@ -322,11 +321,11 @@ int acpiphp_register_hotplug_slot(struct acpiphp_slot *acpiphp_slot,
- 	if (retval == -EBUSY)
- 		goto error_hpslot;
- 	if (retval) {
--		err("pci_hp_register failed with error %d\n", retval);
-+		pr_err("pci_hp_register failed with error %d\n", retval);
- 		goto error_hpslot;
-  	}
- 
--	info("Slot [%s] registered\n", slot_name(slot));
-+	pr_info("Slot [%s] registered\n", slot_name(slot));
+ 	switch (chip->pdev->device) {
+ 	case PCI_DEVICE_ID_O2_8220:
+@@ -419,6 +450,59 @@ static int o2_probe(struct sdhci_pci_chip *chip)
+ 			return ret;
+ 		scratch |= 0x80;
+ 		pci_write_config_byte(chip->pdev, O2_SD_LOCK_WP, scratch);
++		break;
++
++	case PCI_DEVICE_ID_O2_8420:
++	case PCI_DEVICE_ID_O2_8421:
++	case PCI_DEVICE_ID_O2_8520:
++	case PCI_DEVICE_ID_O2_8620:
++	case PCI_DEVICE_ID_O2_8621:
++	    /* UnLock WP */
++		ret = pci_read_config_byte(chip->pdev, O2_SD_LOCK_WP, &scratch);
++		if (ret)
++			return ret;
++		scratch &= 0x7f;
++		pci_write_config_byte(chip->pdev, O2_SD_LOCK_WP, scratch);
++
++		ret = pci_read_config_dword(chip->pdev,
++				O2_SD_PLL_SETTING, &scratch_32);
++		if (ret)
++			return ret;
++		/* Set timeout CLK */
++		ret = pci_read_config_dword(chip->pdev,
++				O2_SD_CLK_SETTING, &scratch_32);
++		if (ret)
++			return ret;
++		scratch_32 |= 0x07E00000;
++		pci_write_config_dword(chip->pdev,
++				O2_SD_CLK_SETTING, scratch_32);
++
++		ret = pci_read_config_dword(chip->pdev,
++				O2_SD_CLKREQ, &scratch_32);
++		if (ret)
++			return ret;
++		scratch_32 |= 0x3;
++		pci_write_config_dword(chip->pdev, O2_SD_CLKREQ, scratch_32);
++		if (chip->pdev->device == PCI_DEVICE_ID_O2_8520) {
++
++			ret = pci_read_config_dword(chip->pdev,
++				O2_SD_UHS1_CAP_SETTING, &scratch_32);
++			if (ret)
++				return ret;
++			scratch_32 |= (1 << 21);
++			pci_write_config_dword(chip->pdev,
++				O2_SD_UHS1_CAP_SETTING, scratch_32);
++		}
++
++		/* Lock WP */
++		ret = pci_read_config_byte(chip->pdev,
++				O2_SD_LOCK_WP, &scratch);
++		if (ret)
++			return ret;
++		scratch |= 0x80;
++		pci_write_config_byte(chip->pdev, O2_SD_LOCK_WP, scratch);
++
++		break;
+ 	}
  
  	return 0;
- error_hpslot:
-@@ -343,17 +342,17 @@ void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *acpiphp_slot)
- 	struct slot *slot = acpiphp_slot->slot;
- 	int retval = 0;
+@@ -615,6 +699,8 @@ static int jmicron_resume(struct sdhci_pci_chip *chip)
  
--	info("Slot [%s] unregistered\n", slot_name(slot));
-+	pr_info("Slot [%s] unregistered\n", slot_name(slot));
+ static const struct sdhci_pci_fixes sdhci_o2 = {
+ 	.probe		= o2_probe,
++	.quirks		= SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC,
++	.probe_slot = o2_probe_slot,
+ };
  
- 	retval = pci_hp_deregister(slot->hotplug_slot);
- 	if (retval)
--		err("pci_hp_deregister failed with error %d\n", retval);
-+		pr_err("pci_hp_deregister failed with error %d\n", retval);
- }
+ static const struct sdhci_pci_fixes sdhci_jmicron = {
+@@ -979,6 +1065,42 @@ static const struct pci_device_id pci_ids[] = {
+ 		.driver_data	= (kernel_ulong_t)&sdhci_o2,
+ 	},
  
- 
- void __init acpiphp_init(void)
- {
--	info(DRIVER_DESC " version: " DRIVER_VERSION "%s\n",
-+	pr_info(DRIVER_DESC " version: " DRIVER_VERSION "%s\n",
- 		acpiphp_disabled ? ", disabled by user; please report a bug"
- 				 : "");
- }
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 0b7d23b..6557702 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -39,6 +39,8 @@
-  *    bus. It loses the refcount when the the driver unloads.
-  */
- 
-+#define pr_fmt(fmt) "acpiphp_glue: " fmt
++	{
++		.vendor		= PCI_VENDOR_ID_O2,
++		.device		= PCI_DEVICE_ID_O2_8520,
++		.subvendor	= PCI_ANY_ID,
++		.subdevice	= PCI_ANY_ID,
++		.driver_data	= (kernel_ulong_t)&sdhci_o2,
++	},
++	{
++		.vendor		= PCI_VENDOR_ID_O2,
++		.device		= PCI_DEVICE_ID_O2_8420,
++		.subvendor	= PCI_ANY_ID,
++		.subdevice	= PCI_ANY_ID,
++		.driver_data	= (kernel_ulong_t)&sdhci_o2,
++	},
++	{
++		.vendor		= PCI_VENDOR_ID_O2,
++		.device		= PCI_DEVICE_ID_O2_8421,
++		.subvendor	= PCI_ANY_ID,
++		.subdevice	= PCI_ANY_ID,
++		.driver_data	= (kernel_ulong_t)&sdhci_o2,
++	},
++	{
++		.vendor		= PCI_VENDOR_ID_O2,
++		.device		= PCI_DEVICE_ID_O2_8620,
++		.subvendor	= PCI_ANY_ID,
++		.subdevice	= PCI_ANY_ID,
++		.driver_data	= (kernel_ulong_t)&sdhci_o2,
++	},
++	{
++		.vendor		= PCI_VENDOR_ID_O2,
++		.device		= PCI_DEVICE_ID_O2_8621,
++		.subvendor	= PCI_ANY_ID,
++		.subdevice	= PCI_ANY_ID,
++		.driver_data	= (kernel_ulong_t)&sdhci_o2,
++	},
 +
- #include <linux/init.h>
- #include <linux/module.h>
+ 	{	/* Generic SD host controller */
+ 		PCI_DEVICE_CLASS((PCI_CLASS_SYSTEM_SDHCI << 8), 0xFFFF00)
+ 	},
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 97fbecd..254818d 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1700,6 +1700,11 @@
+ #define PCI_DEVICE_ID_O2_8221		0x8221
+ #define PCI_DEVICE_ID_O2_8320		0x8320
+ #define PCI_DEVICE_ID_O2_8321		0x8321
++#define PCI_DEVICE_ID_O2_8520		0x8520
++#define	PCI_DEVICE_ID_O2_8420		0x8420
++#define	PCI_DEVICE_ID_O2_8421		0x8421
++#define	PCI_DEVICE_ID_O2_8620		0x8620
++#define	PCI_DEVICE_ID_O2_8621		0x8621
  
-@@ -58,8 +60,6 @@ static LIST_HEAD(bridge_list);
- static DEFINE_MUTEX(bridge_mutex);
- static DEFINE_MUTEX(acpiphp_context_lock);
- 
--#define MY_NAME "acpiphp_glue"
--
- static void handle_hotplug_event(acpi_handle handle, u32 type, void *data);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
-@@ -335,7 +335,7 @@ static acpi_status register_slot(acpi_handle handle, u32 lvl, void *data,
- 		if (ACPI_FAILURE(status))
- 			sun = bridge->nr_slots;
- 
--		dbg("found ACPI PCI Hotplug slot %llu at PCI %04x:%02x:%02x\n",
-+		pr_debug("found ACPI PCI Hotplug slot %llu at PCI %04x:%02x:%02x\n",
- 		    sun, pci_domain_nr(pbus), pbus->number, device);
- 
- 		retval = acpiphp_register_hotplug_slot(slot, sun);
-@@ -343,10 +343,10 @@ static acpi_status register_slot(acpi_handle handle, u32 lvl, void *data,
- 			slot->slot = NULL;
- 			bridge->nr_slots--;
- 			if (retval == -EBUSY)
--				warn("Slot %llu already registered by another "
-+				pr_warn("Slot %llu already registered by another "
- 					"hotplug driver\n", sun);
- 			else
--				warn("acpiphp_register_hotplug_slot failed "
-+				pr_warn("acpiphp_register_hotplug_slot failed "
- 					"(err code = 0x%x)\n", retval);
- 		}
- 		/* Even if the slot registration fails, we can still use it. */
-@@ -369,7 +369,7 @@ static acpi_status register_slot(acpi_handle handle, u32 lvl, void *data,
- 		if (register_hotplug_dock_device(handle,
- 			&acpiphp_dock_ops, context,
- 			acpiphp_dock_init, acpiphp_dock_release))
--			dbg("failed to register dock device\n");
-+			pr_debug("failed to register dock device\n");
- 	}
- 
- 	/* install notify handler */
-@@ -427,7 +427,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
- 							ACPI_SYSTEM_NOTIFY,
- 							handle_hotplug_event);
- 				if (ACPI_FAILURE(status))
--					err("failed to remove notify handler\n");
-+					pr_err("failed to remove notify handler\n");
- 			}
- 		}
- 		if (slot->slot)
-@@ -830,8 +830,9 @@ static void hotplug_event(acpi_handle handle, u32 type, void *data)
- 	switch (type) {
- 	case ACPI_NOTIFY_BUS_CHECK:
- 		/* bus re-enumerate */
--		dbg("%s: Bus check notify on %s\n", __func__, objname);
--		dbg("%s: re-enumerating slots under %s\n", __func__, objname);
-+		pr_debug("%s: Bus check notify on %s\n", __func__, objname);
-+		pr_debug("%s: re-enumerating slots under %s\n",
-+			 __func__, objname);
- 		if (bridge) {
- 			acpiphp_check_bridge(bridge);
- 		} else {
-@@ -845,7 +846,7 @@ static void hotplug_event(acpi_handle handle, u32 type, void *data)
- 
- 	case ACPI_NOTIFY_DEVICE_CHECK:
- 		/* device check */
--		dbg("%s: Device check notify on %s\n", __func__, objname);
-+		pr_debug("%s: Device check notify on %s\n", __func__, objname);
- 		if (bridge) {
- 			acpiphp_check_bridge(bridge);
- 		} else {
-@@ -866,7 +867,7 @@ static void hotplug_event(acpi_handle handle, u32 type, void *data)
- 
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
--		dbg("%s: Device eject notify on %s\n", __func__, objname);
-+		pr_debug("%s: Device eject notify on %s\n", __func__, objname);
- 		acpiphp_disable_and_eject_slot(func->slot);
- 		break;
- 	}
+ #define PCI_VENDOR_ID_3DFX		0x121a
+ #define PCI_DEVICE_ID_3DFX_VOODOO	0x0001
 -- 
-1.8.2.1
+1.7.9.5
 
