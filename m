@@ -1,51 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:61403 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763106Ab3IDQNI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Sep 2013 12:13:08 -0400
-Received: by mail-pd0-f171.google.com with SMTP id g10so507676pdj.2
-        for <linux-pci@vger.kernel.org>; Wed, 04 Sep 2013 09:13:07 -0700 (PDT)
-Date: Wed, 4 Sep 2013 09:13:02 -0700
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Greg KH <gregkh@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [RFC] pci: crash on pci_unregister_driver after
- pci_register_driver fails
-Message-ID: <20130904091302.59970bbc@nehalam.linuxnetplumber.net>
-In-Reply-To: <20130903230619.GA12729@kroah.com>
-References: <20130903153815.13638272@nehalam.linuxnetplumber.net>
-	<20130903230619.GA12729@kroah.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:58709 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754489Ab3IYQFu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Sep 2013 12:05:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <1379319655-20210-4-git-send-email-xobs@kosagi.com>
+References: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
+	<1379319655-20210-4-git-send-email-xobs@kosagi.com>
+Date: Wed, 25 Sep 2013 11:05:49 -0500
+Message-ID: <CAHrpEqQXUUtfB3BCmZsq1+YUk4kgzAyVuFHwQT2S0GL01PJjHg@mail.gmail.com>
+Subject: Re: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+From: Frank Li <lznuaa@gmail.com>
+To: Sean Cross <xobs@kosagi.com>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Zhu Richard-R65037 <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>, bhelgaas@google.com,
+	Shawn Guo <shawn.guo@linaro.org>, tharvey@gateworks.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 3 Sep 2013 16:06:19 -0700
-Greg KH <gregkh@linux-foundation.org> wrote:
+On Mon, Sep 16, 2013 at 3:20 AM, Sean Cross <xobs@kosagi.com> wrote:
+> Add support for the PCIe port present on the i.MX6 family of controllers.
+> These use the Synopsis Designware core tied to their own PHY.
+>
+> Signed-off-by: Sean Cross <xobs@kosagi.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> On Tue, Sep 03, 2013 at 03:38:15PM -0700, Stephen Hemminger wrote:
-> > While debugging another problem with a PCI driver, I noticed that if
-> > device probe routine returns an error, the kernel will crash when module
-> > is unloaded. It looks like pci_register_driver() sets drv->bus to be PCI
-> > then in the module unload.
-> > 
-> > module_unload
-> >    my_device_exit_module
-> >       pci_unregister_driver
-> >          bus_remove_driver
-> >            OOPS
-> > 
-> > One way to fix this would be to have pci_register_driver clear the bus
-> > flag (it has no reference) if an error was detected.
-> 
-> Odd, no other buses do this, why would it matter for PCI?  Maybe they
-> just never fail their registering calls.
-> 
-> How about putting this in the driver core instead so that all busses get
-> fixed?
-> 
-> thanks,
-> 
-> greg k-h
+What is the status of this patch, is it queued in next or need future change ?
 
-Never mind, buggy driver
+Best regards
+Frank Li
