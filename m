@@ -1,220 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: tianyu.lan@intel.com
-To: lenb@kernel.org, rjw@sisk.pl, bhelgaas@google.com,
-	zubarev@us.ibm.com, vernux@us.ibm.com
-Cc: Lan Tianyu <tianyu.lan@intel.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] PCI/ACPI: Convert ACPI PCI Hot Plug IBM Extension dbg/err() to pr_debug/pr_err()
-Date: Mon,  9 Sep 2013 23:17:14 -0400
-Message-Id: <1378783035-15681-1-git-send-email-tianyu.lan@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:21469 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751121Ab3IZJ30 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Sep 2013 05:29:26 -0400
+Date: Thu, 26 Sep 2013 11:27:24 +0200
+From: Veaceslav Falico <vfalico@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Neil Horman <nhorman@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to
+ populate_msi_sysfs()
+Message-ID: <20130926092724.GA4783@redhat.com>
+References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
+ <1379382464-7920-2-git-send-email-vfalico@redhat.com>
+ <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
+ <20130925232300.GA7368@neilslaptop.think-freely.org>
+ <CAErSpo6coKuf4f3j3zMwMNp7Uj3btN9UQyHpLPdq84aU-s=5UA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <CAErSpo6coKuf4f3j3zMwMNp7Uj3btN9UQyHpLPdq84aU-s=5UA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lan Tianyu <tianyu.lan@intel.com>
+On Wed, Sep 25, 2013 at 05:35:54PM -0600, Bjorn Helgaas wrote:
+>On Wed, Sep 25, 2013 at 5:23 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
+>> On Wed, Sep 25, 2013 at 03:08:05PM -0600, Bjorn Helgaas wrote:
+>>> [+cc Neil (he added this code in da8d1c8ba4), Greg]
+>>>
+>>> On Mon, Sep 16, 2013 at 7:47 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
+>>> > Before trying to kobject_init_and_add(), we add a reference to pdev via
+>>> > pci_dev_get(pdev). However, if it fails to init and/or add the kobject, we
+>>> > don't return it back - even on out_unroll.
+>>> >
+>>> > Fix this by adding pci_dev_put(pdev) before going to unrolling section.
+>>> >
+>>> > CC: Bjorn Helgaas <bhelgaas@google.com>
+>>> > CC: linux-pci@vger.kernel.org
+>>> > CC: linux-kernel@vger.kernel.org
+>>> > Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+>>> > ---
+>>> >  drivers/pci/msi.c | 4 +++-
+>>> >  1 file changed, 3 insertions(+), 1 deletion(-)
+>>> >
+>>> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>>> > index d5f90d6..14bf578 100644
+>>> > --- a/drivers/pci/msi.c
+>>> > +++ b/drivers/pci/msi.c
+>>> > @@ -534,8 +534,10 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>>> >                 pci_dev_get(pdev);
+>>> >                 ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
+>>> >                                      "%u", entry->irq);
+>>> > -               if (ret)
+>>> > +               if (ret) {
+>>> > +                       pci_dev_put(pdev);
+>>> >                         goto out_unroll;
+>>> > +               }
+>>> >
+>>> >                 count++;
+>>> >         }
+>>>
+>>> I don't understand why this code does the pci_dev_get() in the first
+>>> place.  The pdev->msi_list of msi_desc structs is private to the
+>>> pci_dev, and even without bumping the refcount, there should be no way
+>>> for the pci_dev to be freed before the msi_desc.
+>>>
+>> Its been a few years now, but IIRC I did the pci_dev_get/put here to ensure that
+>> people didn't try to remove the device prior to freeing all their interrupts
+>> (i.e I didn't want a broken driver to go through its remove routine without
+>> freeing all its irqs).  That might have been the wrong thing to do, but thats
+>> what bubbles to the front of my head when looking at this.
+>
+>That sounds plausible, but I think I'd rather deal with that by having
+>the PCI core remove logic free all the interrupts.  I *think* that's
+>already in place, i.e., pci_free_resources() calls
+>msi_remove_pci_irq_vectors().  So I propose that we remove the
+>pci_dev_get()/put() unless we come up with a more compelling reason
+>for it.
+>
+>>> I also don't understand this nearby code (the same pattern appears in
+>>> free_msi_irqs()):
+>>>
+>>>     out_unroll:
+>>>         list_for_each_entry(entry, &pdev->msi_list, list) {
+>>>                 if (!count)
+>>>                         break;
+>>>                 kobject_del(&entry->kobj);
+>>>                 kobject_put(&entry->kobj);
+>>>                 count--;
+>>>         }
+>>>
+>>> Why do we call kobject_del() here?  The kobject_put() will call
+>>> kobject_del() anyway, so it looks redundant.
+>>> Documentation/kobject.txt says kobject_del() must be called explicitly
+>>> to break a circular reference, but I don't think we have that here.
+>>>
+>>  I think thats exactly why I did it, because of the documentation.  I agree
+>> however, it does look redundant.  Harmless, but redundant.
+>
+>OK, thanks.  I think we should remove it on the grounds that it's not
+>needed and removing it will make this code look more similar to other
+>callers of kobject_init_and_add(), which means bugs will have fewer
+>places to hide.
+Hi,
 
-This patch is to convert internal debug macros to dynamic debug function
-and remove module's debug param.
+Sounds great, I'll add this as new patches and send this in a separate
+patchset with the unregister msi_kset in free_msi_irqs patch, so that it
+won't depend on the fix (both removing kobject_del() and
+pci_dev_get/put()).
 
-Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
----
- drivers/pci/hotplug/acpiphp_ibm.c | 56 ++++++++++++++++-----------------------
- 1 file changed, 23 insertions(+), 33 deletions(-)
+Thank you!
 
-diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
-index 2f5786c..32d1db6 100644
---- a/drivers/pci/hotplug/acpiphp_ibm.c
-+++ b/drivers/pci/hotplug/acpiphp_ibm.c
-@@ -25,6 +25,8 @@
-  *
-  */
- 
-+#define pr_fmt(fmt) "acpiphp_ibm: " fmt
-+
- #include <linux/init.h>
- #include <linux/slab.h>
- #include <linux/module.h>
-@@ -43,23 +45,11 @@
- #define DRIVER_AUTHOR	"Irene Zubarev <zubarev@us.ibm.com>, Vernon Mauery <vernux@us.ibm.com>"
- #define DRIVER_DESC	"ACPI Hot Plug PCI Controller Driver IBM extension"
- 
--static bool debug;
- 
- MODULE_AUTHOR(DRIVER_AUTHOR);
- MODULE_DESCRIPTION(DRIVER_DESC);
- MODULE_LICENSE("GPL");
- MODULE_VERSION(DRIVER_VERSION);
--module_param(debug, bool, 0644);
--MODULE_PARM_DESC(debug, " Debugging mode enabled or not");
--#define MY_NAME "acpiphp_ibm"
--
--#undef dbg
--#define dbg(format, arg...)				\
--do {							\
--	if (debug)					\
--		printk(KERN_DEBUG "%s: " format,	\
--				MY_NAME , ## arg);	\
--} while (0)
- 
- #define FOUND_APCI 0x61504349
- /* these are the names for the IBM ACPI pseudo-device */
-@@ -189,7 +179,7 @@ static int ibm_set_attention_status(struct hotplug_slot *slot, u8 status)
- 
- 	ibm_slot = ibm_slot_from_id(hpslot_to_sun(slot));
- 
--	dbg("%s: set slot %d (%d) attention status to %d\n", __func__,
-+	pr_debug("%s: set slot %d (%d) attention status to %d\n", __func__,
- 			ibm_slot->slot.slot_num, ibm_slot->slot.slot_id,
- 			(status ? 1 : 0));
- 
-@@ -202,10 +192,10 @@ static int ibm_set_attention_status(struct hotplug_slot *slot, u8 status)
- 
- 	stat = acpi_evaluate_integer(ibm_acpi_handle, "APLS", &params, &rc);
- 	if (ACPI_FAILURE(stat)) {
--		err("APLS evaluation failed:  0x%08x\n", stat);
-+		pr_err("APLS evaluation failed:  0x%08x\n", stat);
- 		return -ENODEV;
- 	} else if (!rc) {
--		err("APLS method failed:  0x%08llx\n", rc);
-+		pr_err("APLS method failed:  0x%08llx\n", rc);
- 		return -ERANGE;
- 	}
- 	return 0;
-@@ -234,7 +224,7 @@ static int ibm_get_attention_status(struct hotplug_slot *slot, u8 *status)
- 	else
- 		*status = 0;
- 
--	dbg("%s: get slot %d (%d) attention status is %d\n", __func__,
-+	pr_debug("%s: get slot %d (%d) attention status is %d\n", __func__,
- 			ibm_slot->slot.slot_num, ibm_slot->slot.slot_id,
- 			*status);
- 
-@@ -266,10 +256,10 @@ static void ibm_handle_events(acpi_handle handle, u32 event, void *context)
- 	u8 subevent = event & 0xf0;
- 	struct notification *note = context;
- 
--	dbg("%s: Received notification %02x\n", __func__, event);
-+	pr_debug("%s: Received notification %02x\n", __func__, event);
- 
- 	if (subevent == 0x80) {
--		dbg("%s: generationg bus event\n", __func__);
-+		pr_debug("%s: generationg bus event\n", __func__);
- 		acpi_bus_generate_netlink_event(note->device->pnp.device_class,
- 						  dev_name(&note->device->dev),
- 						  note->event, detail);
-@@ -301,7 +291,7 @@ static int ibm_get_table_from_acpi(char **bufp)
- 
- 	status = acpi_evaluate_object(ibm_acpi_handle, "APCI", NULL, &buffer);
- 	if (ACPI_FAILURE(status)) {
--		err("%s:  APCI evaluation failed\n", __func__);
-+		pr_err("%s:  APCI evaluation failed\n", __func__);
- 		return -ENODEV;
- 	}
- 
-@@ -309,13 +299,13 @@ static int ibm_get_table_from_acpi(char **bufp)
- 	if (!(package) ||
- 			(package->type != ACPI_TYPE_PACKAGE) ||
- 			!(package->package.elements)) {
--		err("%s:  Invalid APCI object\n", __func__);
-+		pr_err("%s:  Invalid APCI object\n", __func__);
- 		goto read_table_done;
- 	}
- 
- 	for(size = 0, i = 0; i < package->package.count; i++) {
- 		if (package->package.elements[i].type != ACPI_TYPE_BUFFER) {
--			err("%s:  Invalid APCI element %d\n", __func__, i);
-+			pr_err("%s:  Invalid APCI element %d\n", __func__, i);
- 			goto read_table_done;
- 		}
- 		size += package->package.elements[i].buffer.length;
-@@ -325,7 +315,7 @@ static int ibm_get_table_from_acpi(char **bufp)
- 		goto read_table_done;
- 
- 	lbuf = kzalloc(size, GFP_KERNEL);
--	dbg("%s: element count: %i, ASL table size: %i, &table = 0x%p\n",
-+	pr_debug("%s: element count: %i, ASL table size: %i, &table = 0x%p\n",
- 			__func__, package->package.count, size, lbuf);
- 
- 	if (lbuf) {
-@@ -371,7 +361,7 @@ static ssize_t ibm_read_apci_table(struct file *filp, struct kobject *kobj,
- 	int bytes_read = -EINVAL;
- 	char *table = NULL;
- 	
--	dbg("%s: pos = %d, size = %zd\n", __func__, (int)pos, size);
-+	pr_debug("%s: pos = %d, size = %zd\n", __func__, (int)pos, size);
- 
- 	if (pos == 0) {
- 		bytes_read = ibm_get_table_from_acpi(&table);
-@@ -403,7 +393,7 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
- 
- 	status = acpi_get_object_info(handle, &info);
- 	if (ACPI_FAILURE(status)) {
--		err("%s:  Failed to get device information status=0x%x\n",
-+		pr_err("%s:  Failed to get device information status=0x%x\n",
- 			__func__, status);
- 		return retval;
- 	}
-@@ -411,7 +401,7 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
- 	if (info->current_status && (info->valid & ACPI_VALID_HID) &&
- 			(!strcmp(info->hardware_id.string, IBM_HARDWARE_ID1) ||
- 			 !strcmp(info->hardware_id.string, IBM_HARDWARE_ID2))) {
--		dbg("found hardware: %s, handle: %p\n",
-+		pr_debug("found hardware: %s, handle: %p\n",
- 			info->hardware_id.string, handle);
- 		*phandle = handle;
- 		/* returning non-zero causes the search to stop
-@@ -432,18 +422,18 @@ static int __init ibm_acpiphp_init(void)
- 	struct acpi_device *device;
- 	struct kobject *sysdir = &pci_slots_kset->kobj;
- 
--	dbg("%s\n", __func__);
-+	pr_debug("%s\n", __func__);
- 
- 	if (acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
- 			ACPI_UINT32_MAX, ibm_find_acpi_device, NULL,
- 			&ibm_acpi_handle, NULL) != FOUND_APCI) {
--		err("%s: acpi_walk_namespace failed\n", __func__);
-+		pr_err("%s: acpi_walk_namespace failed\n", __func__);
- 		retval = -ENODEV;
- 		goto init_return;
- 	}
--	dbg("%s: found IBM aPCI device\n", __func__);
-+	pr_debug("%s: found IBM aPCI device\n", __func__);
- 	if (acpi_bus_get_device(ibm_acpi_handle, &device)) {
--		err("%s: acpi_bus_get_device failed\n", __func__);
-+		pr_err("%s: acpi_bus_get_device failed\n", __func__);
- 		retval = -ENODEV;
- 		goto init_return;
- 	}
-@@ -457,7 +447,7 @@ static int __init ibm_acpiphp_init(void)
- 			ACPI_DEVICE_NOTIFY, ibm_handle_events,
- 			&ibm_note);
- 	if (ACPI_FAILURE(status)) {
--		err("%s: Failed to register notification handler\n",
-+		pr_err("%s: Failed to register notification handler\n",
- 				__func__);
- 		retval = -EBUSY;
- 		goto init_cleanup;
-@@ -479,17 +469,17 @@ static void __exit ibm_acpiphp_exit(void)
- 	acpi_status status;
- 	struct kobject *sysdir = &pci_slots_kset->kobj;
- 
--	dbg("%s\n", __func__);
-+	pr_debug("%s\n", __func__);
- 
- 	if (acpiphp_unregister_attention(&ibm_attention_info))
--		err("%s: attention info deregistration failed", __func__);
-+		pr_err("%s: attention info deregistration failed", __func__);
- 
- 	status = acpi_remove_notify_handler(
- 			   ibm_acpi_handle,
- 			   ACPI_DEVICE_NOTIFY,
- 			   ibm_handle_events);
- 	if (ACPI_FAILURE(status))
--		err("%s: Notification handler removal failed\n", __func__);
-+		pr_err("%s: Notification handler removal failed\n", __func__);
- 	/* remove the /sys entries */
- 	sysfs_remove_bin_file(sysdir, &ibm_apci_table_attr);
- }
--- 
-1.8.2.1
-
+>
+>Thanks, Neil!
+>
+>Bjorn
