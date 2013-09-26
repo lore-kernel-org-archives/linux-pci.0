@@ -1,63 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH 07/14] PCI/ACPI: Drop unnecessary _OSC existence tests
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>
-Date: Fri, 06 Sep 2013 11:14:18 -0600
-Message-ID: <20130906171418.11482.83703.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
-References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.9]:58663 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933Ab3IZJvz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 05:51:55 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys part and Exynos part
+Date: Thu, 26 Sep 2013 11:51:41 +0200
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Thierry Reding'" <thierry.reding@gmail.com>,
+	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <000701ce8741$fe47deb0$fad79c10$@samsung.com> <201309242323.55323.arnd@arndb.de> <5243C0E5.7020508@ti.com>
+In-Reply-To: <5243C0E5.7020508@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201309261151.42034.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no need to check whether _OSC exists here; we eventually
-call acpi_evaluate_object(..., "_OSC", ...), and that will fail
-gracefully if _OSC doesn't exist.
+On Thursday 26 September 2013, Kishon Vijay Abraham I wrote:
+> On Wednesday 25 September 2013 02:53 AM, Arnd Bergmann wrote:
+> > On Monday 23 September 2013, Kishon Vijay Abraham I wrote:
+> >> Btw if we hadn't programmed inbound translation table, the address will go
+> >> untranslated (according to the data book). I guess that's how it was working
+> >> for Jingoo Han.
+> >>
+> >> **
+> >> 3.10.4
+> >> Inbound iATU Operation
+> >>
+> >> When there is no match, then the address is untranslated
+> >> **
+> >>
+> > 
+> > Well, that should work just as well, since you have a 1:1 translation anyway.
+> > Do you get the same error without the translation?
+> 
+> Yes. I get the same non-fatal error interrupt in RC.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c |   11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+Ok, then I guess the translation is actually not at fault here but something
+else. I would recommend looking at the IOMMU as the potential culprit. Maybe
+having it disabled means that no DMA is going through, rather than all DMA
+going through untranslated. Another possibility is that the IOMMU is set up
+so that when disabled, it maps DMA address 0 to the start of RAM, rather
+than identity mapping DMA address 0x80000000 there. If that's the case,
+you either have to use the IOMMU, or set up the mapping in the root
+complex to revert it.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 28dd555..cc87cc4 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -180,11 +180,7 @@ static acpi_status acpi_pci_query_osc(struct acpi_pci_root *root,
- static acpi_status acpi_pci_osc_support(struct acpi_pci_root *root, u32 flags)
- {
- 	acpi_status status;
--	acpi_handle tmp;
- 
--	status = acpi_get_handle(root->device->handle, "_OSC", &tmp);
--	if (ACPI_FAILURE(status))
--		return status;
- 	mutex_lock(&osc_lock);
- 	status = acpi_pci_query_osc(root, flags, NULL);
- 	mutex_unlock(&osc_lock);
-@@ -316,9 +312,8 @@ EXPORT_SYMBOL_GPL(acpi_get_pci_dev);
- acpi_status acpi_pci_osc_control_set(acpi_handle handle, u32 *mask, u32 req)
- {
- 	struct acpi_pci_root *root;
--	acpi_status status;
-+	acpi_status status = AE_OK;
- 	u32 ctrl, capbuf[3];
--	acpi_handle tmp;
- 
- 	if (!mask)
- 		return AE_BAD_PARAMETER;
-@@ -331,10 +326,6 @@ acpi_status acpi_pci_osc_control_set(acpi_handle handle, u32 *mask, u32 req)
- 	if (!root)
- 		return AE_NOT_EXIST;
- 
--	status = acpi_get_handle(handle, "_OSC", &tmp);
--	if (ACPI_FAILURE(status))
--		return status;
--
- 	mutex_lock(&osc_lock);
- 
- 	*mask = ctrl | root->osc_control_set;
-
+	Arnd
