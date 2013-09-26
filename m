@@ -1,240 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:43214 "EHLO mail1.g1.pair.com"
+Received: from mx1.redhat.com ([209.132.183.28]:64537 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753458Ab3ILGoH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Sep 2013 02:44:07 -0400
-Date: Thu, 12 Sep 2013 14:44:01 +0800
-From: Sean Cross <xobs@kosagi.com>
-To: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Shawn Guo <shawn.guo@linaro.org>
-Message-ID: <6FF3113C3FCC43A4A0D711C8656A4C03@kosagi.com>
-In-Reply-To: <20130912062859.GM30088@pengutronix.de>
-References: <1378958611-4274-1-git-send-email-xobs@kosagi.com>
- <1378958611-4274-4-git-send-email-xobs@kosagi.com>
- <20130912062859.GM30088@pengutronix.de>
-Subject: Re: [PATCH v3 3/3] PCI: imx6: Add support for i.MX6 PCIe
- controller
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S1756547Ab3IZJ7f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Sep 2013 05:59:35 -0400
+From: Veaceslav Falico <vfalico@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: Veaceslav Falico <vfalico@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] msi: free msi_desc entry only after we've released the kobject
+Date: Thu, 26 Sep 2013 11:59:51 +0200
+Message-Id: <1380189591-1368-1-git-send-email-vfalico@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Sean,
-> 
-> Several more comments.
-> 
-> Shawn,
-> 
-> A question about a clk_set_parent inside.
-> 
-> On Thu, Sep 12, 2013 at 04:03:31AM +0000, Sean Cross wrote:
-> > +
-> > +#define IMX6_ENTER_RESET 0
-> > +#define IMX6_EXIT_RESET 1
-> 
-> 
-> 
-> These are unused
-> 
-> > +
-> > +#define IMX6_POWER_OFF 0
-> > +#define IMX6_POWER_ON 1
-> 
-> 
-> 
-> unused aswell
-> 
-Thanks.  These leaked out from an earlier revision of the code.  I'll remove them. 
-> 
-> > +static int pcie_phy_poll_ack(void __iomem *dbi_base, int max_iterations,
-> > + int exp_val)
-> > +{
-> > + u32 val;
-> > + u32 wait_counter = 0;
-> > +
-> > + do {
-> > + val = readl(dbi_base + PCIE_PHY_STAT);
-> > + val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
-> > + wait_counter++;
-> > + } while ((wait_counter < max_iterations) && (val != exp_val));
-> 
-> 
-> 
-> may_iterations is never something else than 100 so you should drop the
-> argument.
-> Also I would prefer a real timeout here rather than a counter.
+Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
+however kobject_put() doesn't guarantee us that it was the last reference
+and that the kobj isn't used currently by someone else, so after we
+kfree(entry) with the struct kobject - other users will begin using the
+freed memory, instead of the actual kobject.
 
-Is there a construct to have a real timer?  Would a completion work here instead? 
-> > +
-> > + if (val != exp_val)
-> > + return -1;
-> 
-> 
-> 
-> By saying "A negative error value" I actually meant one of
-> include/uapi/asm-generic/errno*
+Fix this by using the kobject->release callback, which is called last when
+the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
+which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
+kobj itself after ->release() was called, so we're safe).
 
-Of course.  How silly of me.  I'll fix that correctly. 
-> > +static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
-> > +{
-> > + u32 var;
-> > +
-> > + /* write addr */
-> > + /* cap addr */
-> > + if (pcie_phy_wait_ack(dbi_base, addr))
-> > + return -1;
-> > +
-> > + var = data << PCIE_PHY_CTRL_DATA_LOC;
-> > + writel(var, dbi_base + PCIE_PHY_CTRL);
-> > +
-> > + /* capture data */
-> > + var |= (0x1 << PCIE_PHY_CTRL_CAP_DAT_LOC);
-> > + writel(var, dbi_base + PCIE_PHY_CTRL);
-> > +
-> > + /* wait for ack */
-> 
-> 
-> 
-> Drop this comment.
-> 
-> > + if (pcie_phy_poll_ack(dbi_base, 100, 1))
-> > + return -1;
-> > +
-> 
-> 
-> 
-> ...
-> 
-> > +static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
-> > +{
-> > + int ret;
-> > + struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> > +
-> > + if (imx6_pcie->power_on_gpio >= 0)
-> > + gpio_set_value(imx6_pcie->power_on_gpio, IMX6_POWER_ON);
-> 
-> 
-> 
-> in probe you used gpio_is_valid(). Why not here?
-Again, leftover from when that used to be exynos_pcie_assert_reset().  I'll change it to use gpio_is_valid(). 
-> > +
-> > + regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > + IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-> > + regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > + IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-> > +
-> > + ret = clk_set_parent(imx6_pcie->lvds1_sel, imx6_pcie->sata_ref);
-> > + if (ret) {
-> > + dev_err(pp->dev, "unable to set lvds1_gate parent\n");
-> > + goto err_set_parent;
-> > + }
-> 
-> 
-> 
-> I'm unsure this should be done here. Shawn, should we do this in SoC
-> code?
+In case we've failed to create the sysfs directories - just kfree()
+it - cause we don't have the kobjects attached.
 
-A different board could easily use lvds2 to drive the PCIe clock.  I think that I should change the variable names to simply "lvds_sel". 
-> > +
-> > + ret = clk_prepare_enable(imx6_pcie->pcie_ref_125m);
-> > + if (ret) {
-> > + dev_err(pp->dev, "unable to enable pcie_ref_125m\n");
-> > + goto err_pcie_ref;
-> > + }
-> > +
-> > + ret = clk_prepare_enable(imx6_pcie->lvds1_gate);
-> > + if (ret) {
-> > + dev_err(pp->dev, "unable to enable lvds1_gate\n");
-> > + goto err_lvds1_gate;
-> > + }
-> > +
-> > + ret = clk_prepare_enable(imx6_pcie->pcie_axi);
-> > + if (ret) {
-> > + dev_err(pp->dev, "unable to enable pcie_axi\n");
-> > + goto err_pcie_axi;
-> > + }
-> > +
-> > + /* allow the clocks to stabilize */
-> > + usleep_range(100, 200);
-> > +
-> > + return 0;
-> > +
-> > +err_pcie_axi:
-> > + clk_disable(imx6_pcie->lvds1_gate);
-> 
-> 
-> 
-> The counterpart of clk_prepare_enable is clk_disable_unprepare.
-I'll fix this, too. 
-> > + return;
-> > + }
-> > + }
-> > +
-> > + return;
-> 
-> 
-> 
-> unnecessary return
-I'll turn it into a "break" then. 
-> > +
-> > + imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
-> > + if (gpio_is_valid(imx6_pcie->power_on_gpio))
-> > + devm_gpio_request_one(&pdev->dev, imx6_pcie->power_on_gpio,
-> > + GPIOF_OUT_INIT_LOW,
-> > + "PCIe power enable");
-> 
-> 
-> 
-> devm_gpio_request_one can still fail.
-It can fail, but it's only critical for the power switch.  However, arguably it's a critical error even if these GPIOs can't be allocated, so I'll go ahead and add the same consistency check and error return code to the other three switches. 
-> > +
-> > + imx6_pcie->wake_up_gpio = of_get_named_gpio(np, "wake-up-gpio", 0);
-> > + if (gpio_is_valid(imx6_pcie->wake_up_gpio))
-> > + devm_gpio_request_one(&pdev->dev, imx6_pcie->wake_up_gpio,
-> > + GPIOF_IN,
-> > + "PCIe wake up");
-> > +
-> > + imx6_pcie->disable_gpio = of_get_named_gpio(np, "disable-gpio", 0);
-> > + if (gpio_is_valid(imx6_pcie->disable_gpio))
-> > + devm_gpio_request_one(&pdev->dev, imx6_pcie->disable_gpio,
-> > + GPIOF_OUT_INIT_HIGH,
-> > + "PCIe disable endpoint");
-> > +
-> > + /* Fetch clocks */
-> > + imx6_pcie->lvds1_sel = clk_get(&pdev->dev, "lvds1_sel");
-> > + if (IS_ERR(imx6_pcie->lvds1_sel)) {
-> > + dev_err(&pdev->dev,
-> > + "lvds1_sel clock missing or invalid\n");
-> > + ret = PTR_ERR(imx6_pcie->lvds1_sel);
-> > + goto err;
-> > + }
-> > +
-> > + imx6_pcie->lvds1_gate = clk_get(&pdev->dev, "lvds1_gate");
-> > + if (IS_ERR(imx6_pcie->lvds1_gate)) {
-> > + dev_err(&pdev->dev,
-> > + "lvds1_gate clock select missing or invalid\n");
-> > + ret = PTR_ERR(imx6_pcie->lvds1_gate);
-> > + goto err;
-> > + }
-> 
-> 
-> 
-> devm_clk_get(). Otherwise you need to release the clock un
-> unregister/probe failure.
+Also, remove the same functionality from populate_msi_sysfs(), cause on
+failure we anyway call free_msi_irqs(), which will take care of all the
+kobjects properly.
 
-Good point. 
-> > +static int __exit imx6_pcie_remove(struct platform_device *pdev)
-> > +{
-> > + struct imx6_pcie *imx6_pcie = platform_get_drvdata(pdev);
-> > +
-> > + clk_disable_unprepare(imx6_pcie->pcie_axi);
-> > + clk_disable_unprepare(imx6_pcie->lvds1_gate);
-> > + clk_disable_unprepare(imx6_pcie->pcie_ref_125m);
-> 
-> 
-> 
-> Still no unregister for the pcie controller?
-The Designware core doesn't support unregistering (or even module unloading).  I'm not sure how to handle that case.  For that matter, when is remove() even called on a module that can't be unloaded?
+And add the forgotten pci_dev_put(pdev) in case of failure to register the
+kobject in populate_msi_sysfs().
+
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Neil Horman <nhorman@tuxdriver.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: linux-pci@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+---
+
+Notes:
+    v1  -> v2:
+    Make it as a standalone patch, which is a bugfix, and add the forgotten
+    pci_dev_put() so that it won't break bisecting. The pci_dev_put() will
+    go away anyway in the following patchset, which cleans removes
+    kobject_del and useless pci_dev_get/put().  Rebased on linux-pci/next.
+
+ drivers/pci/msi.c | 31 ++++++++++++-------------------
+ 1 file changed, 12 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..5d70f49 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -374,19 +374,22 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 				iounmap(entry->mask_base);
+ 		}
+ 
++		list_del(&entry->list);
++
+ 		/*
+ 		 * Its possible that we get into this path
+ 		 * When populate_msi_sysfs fails, which means the entries
+ 		 * were not registered with sysfs.  In that case don't
+-		 * unregister them.
++		 * unregister them, and just free. Otherwise the
++		 * kobject->release will take care of freeing the entry via
++		 * msi_kobj_release().
+ 		 */
+ 		if (entry->kobj.parent) {
+ 			kobject_del(&entry->kobj);
+ 			kobject_put(&entry->kobj);
++		} else {
++			kfree(entry);
+ 		}
+-
+-		list_del(&entry->list);
+-		kfree(entry);
+ 	}
+ }
+ 
+@@ -509,6 +512,7 @@ static void msi_kobj_release(struct kobject *kobj)
+ 	struct msi_desc *entry = to_msi_desc(kobj);
+ 
+ 	pci_dev_put(entry->dev);
++	kfree(entry);
+ }
+ 
+ static struct kobj_type msi_irq_ktype = {
+@@ -522,7 +526,6 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 	struct msi_desc *entry;
+ 	struct kobject *kobj;
+ 	int ret;
+-	int count = 0;
+ 
+ 	pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
+ 	if (!pdev->msi_kset)
+@@ -534,23 +537,13 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 		pci_dev_get(pdev);
+ 		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
+ 				     "%u", entry->irq);
+-		if (ret)
+-			goto out_unroll;
+-
+-		count++;
++		if (ret) {
++			pci_dev_put(pdev);
++			return ret;
++		}
+ 	}
+ 
+ 	return 0;
+-
+-out_unroll:
+-	list_for_each_entry(entry, &pdev->msi_list, list) {
+-		if (!count)
+-			break;
+-		kobject_del(&entry->kobj);
+-		kobject_put(&entry->kobj);
+-		count--;
+-	}
+-	return ret;
+ }
+ 
+ /**
+-- 
+1.8.4
 
