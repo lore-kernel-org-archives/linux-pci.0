@@ -1,62 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32827 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751486Ab3IZOmM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 10:42:12 -0400
+Date: Thu, 26 Sep 2013 10:42:08 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Veaceslav Falico <vfalico@redhat.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] msi: free msi_desc entry only after we've released
+ the kobject
+Message-ID: <20130926144208.GC12301@hmsreliant.think-freely.org>
+References: <1380189591-1368-1-git-send-email-vfalico@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6m+gR6Ycumfy4CwQzWwd-wHiWjeVH9259oH6X+yyF6AQ@mail.gmail.com>
-References: <bug-61811-41252@https.bugzilla.kernel.org/> <CAErSpo6m+gR6Ycumfy4CwQzWwd-wHiWjeVH9259oH6X+yyF6AQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 24 Sep 2013 11:53:17 -0600
-Message-ID: <CAErSpo5R_CZtRx6bFQbiAam_rPBSGm5vSDSabDsLETvgP9TaOw@mail.gmail.com>
-Subject: Re: [Bug 61811] New: kms mode breaks and using radeon.agpmode=-1
-To: bruno@wolff.to
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Dave Airlie <airlied@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380189591-1368-1-git-send-email-vfalico@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Dave]
+On Thu, Sep 26, 2013 at 11:59:51AM +0200, Veaceslav Falico wrote:
+> Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
+> however kobject_put() doesn't guarantee us that it was the last reference
+> and that the kobj isn't used currently by someone else, so after we
+> kfree(entry) with the struct kobject - other users will begin using the
+> freed memory, instead of the actual kobject.
+> 
+> Fix this by using the kobject->release callback, which is called last when
+> the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
+> which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
+> kobj itself after ->release() was called, so we're safe).
+> 
+> In case we've failed to create the sysfs directories - just kfree()
+> it - cause we don't have the kobjects attached.
+> 
+> Also, remove the same functionality from populate_msi_sysfs(), cause on
+> failure we anyway call free_msi_irqs(), which will take care of all the
+> kobjects properly.
+> 
+> And add the forgotten pci_dev_put(pdev) in case of failure to register the
+> kobject in populate_msi_sysfs().
+> 
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Neil Horman <nhorman@tuxdriver.com>
+> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> CC: linux-pci@vger.kernel.org
+> CC: linux-kernel@vger.kernel.org
+> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+> ---
+> 
+Acked-by: Neil Horman <nhorman@tuxdriver.com>
 
-On Mon, Sep 23, 2013 at 12:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc linux-pci, linux-kernel, dri-devel]
->
-> On Sat, Sep 21, 2013 at 11:39 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
->> https://bugzilla.kernel.org/show_bug.cgi?id=61811
->>
->>             Bug ID: 61811
->>            Summary: kms mode breaks and using radeon.agpmode=-1
->>            Product: Drivers
->>            Version: 2.5
->>     Kernel Version: 3.12
->>           Hardware: All
->>                 OS: Linux
->>               Tree: Fedora
->>             Status: NEW
->>           Severity: normal
->>           Priority: P1
->>          Component: PCI
->>           Assignee: drivers_pci@kernel-bugs.osdl.org
->>           Reporter: bruno@wolff.to
->>         Regression: No
->>
->> I need to use radeon.agpmode=-1 with my rv280 based graphics card due to a long
->> (2+ years) standing bug with the driver. Recently I was no longer able to start
->> X because modesetting is no longer working. At boot I no longer see the
->> resolution change and I got log entries later in Xor.0.log saying "[KMS] drm
->> report modesetting isn't supported."
->> If I boot without radeon.agpmode=-1 X starts, though becomes unusable shortly
->> due to the pre-existing but. kernel-PAE-3.12.0-0.rc0.git22.2.fc21.i686 works
->> for me. kernel-PAE-3.12.0-0.rc0.git24.1.fc21.i686 doesn't work. (git23's build
->> failed so I didn't test that one.)
->> I did a git whatchanged d5d04bb..3711d86 which I think should have showed me
->> the commits that were in git24 and not git22 and I didn't see any specifically
->> directed at the radeon driver. I did see some PCI related commits.
->
-> Thanks for the report!  Can you attach the complete dmesg logs from
-> the working kernel and the failing one (booted with
-> "radeon.agpmode=-1") to the bugzilla?  Also the output of "lspci -vv".
-
-I don't see any obvious PCI issue there, so I reassigned the bugzilla
-to the video folks.
-
-Bjorn
