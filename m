@@ -1,60 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41911 "EHLO mx1.redhat.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:45399 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751461Ab3IIPXx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Sep 2013 11:23:53 -0400
-Date: Mon, 9 Sep 2013 17:25:48 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tejun Heo <tj@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>
-Subject: [PATCH 2/9] PCI/MSI/PPC: Make return values only 0/-errno when MSIs
- allocated[PATCH 5/9] PCI/MSI/s390: Make return values only 0/-errno when
- MSIs allocated
-Message-ID: <20130909152548.GF24962@dhcp-26-207.brq.redhat.com>
-References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
- <20130905150442.GA24148@htj.dyndns.org>
- <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
- <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+	id S1754851Ab3IZKMo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Sep 2013 06:12:44 -0400
+Message-ID: <5244088B.20807@ti.com>
+Date: Thu, 26 Sep 2013 15:42:27 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Thierry Reding'" <thierry.reding@gmail.com>,
+	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
+ part and Exynos part
+References: <000701ce8741$fe47deb0$fad79c10$@samsung.com> <201309242323.55323.arnd@arndb.de> <5243C0E5.7020508@ti.com> <201309261151.42034.arnd@arndb.de>
+In-Reply-To: <201309261151.42034.arnd@arndb.de>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- arch/s390/pci/pci.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Hi Arnd,
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index f17a834..c79c6e4 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -427,6 +427,8 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
- 	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
- 		return -EINVAL;
-+	if (type == PCI_CAP_ID_MSI && nvec > 1)
-+		return 1;
- 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
- 	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
- 
--- 
-1.7.7.6
+On Thursday 26 September 2013 03:21 PM, Arnd Bergmann wrote:
+> On Thursday 26 September 2013, Kishon Vijay Abraham I wrote:
+>> On Wednesday 25 September 2013 02:53 AM, Arnd Bergmann wrote:
+>>> On Monday 23 September 2013, Kishon Vijay Abraham I wrote:
+>>>> Btw if we hadn't programmed inbound translation table, the address will go
+>>>> untranslated (according to the data book). I guess that's how it was working
+>>>> for Jingoo Han.
+>>>>
+>>>> **
+>>>> 3.10.4
+>>>> Inbound iATU Operation
+>>>>
+>>>> When there is no match, then the address is untranslated
+>>>> **
+>>>>
+>>>
+>>> Well, that should work just as well, since you have a 1:1 translation anyway.
+>>> Do you get the same error without the translation?
+>>
+>> Yes. I get the same non-fatal error interrupt in RC.
+> 
+> Ok, then I guess the translation is actually not at fault here but something
+> else. I would recommend looking at the IOMMU as the potential culprit. Maybe
+> having it disabled means that no DMA is going through, rather than all DMA
+> going through untranslated. Another possibility is that the IOMMU is set up
+> so that when disabled, it maps DMA address 0 to the start of RAM, rather
+> than identity mapping DMA address 0x80000000 there. If that's the case,
+> you either have to use the IOMMU, or set up the mapping in the root
+> complex to revert it.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Thanks for your inputs. I'll check if that's the problem.
+
+Thanks
+Kishon
