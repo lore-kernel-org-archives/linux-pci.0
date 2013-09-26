@@ -1,69 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:15425 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753156Ab3IWGb0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 02:31:26 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MTK00CGPFGDJB40@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Mon, 23 Sep 2013 15:31:25 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Jason Cooper' <jason@lakedaemon.net>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <000c01ceb816$19f0dd10$4dd29730$%han@samsung.com>
-In-reply-to: <000c01ceb816$19f0dd10$4dd29730$%han@samsung.com>
-Subject: [PATCH V3 3/3] PCI: mvebu: return NULL instead of ERR_PTR(ret)
-Date: Mon, 23 Sep 2013 15:31:24 +0900
-Message-id: <000101ceb826$8695b7f0$93c127d0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:43675 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750909Ab3IZOJy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Sep 2013 10:09:54 -0400
+Date: Thu, 26 Sep 2013 16:07:51 +0200
+From: Veaceslav Falico <vfalico@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Neil Horman <nhorman@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to
+ populate_msi_sysfs()
+Message-ID: <20130926140751.GC4783@redhat.com>
+References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
+ <1379382464-7920-2-git-send-email-vfalico@redhat.com>
+ <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
+ <20130925232300.GA7368@neilslaptop.think-freely.org>
+ <CAErSpo6coKuf4f3j3zMwMNp7Uj3btN9UQyHpLPdq84aU-s=5UA@mail.gmail.com>
+ <20130926122552.GB4783@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <20130926122552.GB4783@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Return NULL instead of ERR_PTR(ret) in order to fix the following
-sparse warning:
+On Thu, Sep 26, 2013 at 02:25:52PM +0200, Veaceslav Falico wrote:
+>On Wed, Sep 25, 2013 at 05:35:54PM -0600, Bjorn Helgaas wrote:
+>>On Wed, Sep 25, 2013 at 5:23 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
+>>>On Wed, Sep 25, 2013 at 03:08:05PM -0600, Bjorn Helgaas wrote:
+>>>>[+cc Neil (he added this code in da8d1c8ba4), Greg]
+>>>>
+>>>>On Mon, Sep 16, 2013 at 7:47 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
+>>>>> Before trying to kobject_init_and_add(), we add a reference to pdev via
+>>>>> pci_dev_get(pdev). However, if it fails to init and/or add the kobject, we
+>>>>> don't return it back - even on out_unroll.
+>>>>>
+>>>>> Fix this by adding pci_dev_put(pdev) before going to unrolling section.
+>>>>>
+>>>>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>>>>> CC: linux-pci@vger.kernel.org
+>>>>> CC: linux-kernel@vger.kernel.org
+>>>>> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+>>>>> ---
+>>>>>  drivers/pci/msi.c | 4 +++-
+>>>>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>>>>> index d5f90d6..14bf578 100644
+>>>>> --- a/drivers/pci/msi.c
+>>>>> +++ b/drivers/pci/msi.c
+>>>>> @@ -534,8 +534,10 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>>>>>                 pci_dev_get(pdev);
+>>>>>                 ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
+>>>>>                                      "%u", entry->irq);
+>>>>> -               if (ret)
+>>>>> +               if (ret) {
+>>>>> +                       pci_dev_put(pdev);
+>>>>>                         goto out_unroll;
+>>>>> +               }
+>>>>>
+>>>>>                 count++;
+>>>>>         }
+>>>>
+>>>>I don't understand why this code does the pci_dev_get() in the first
+>>>>place.  The pdev->msi_list of msi_desc structs is private to the
+>>>>pci_dev, and even without bumping the refcount, there should be no way
+>>>>for the pci_dev to be freed before the msi_desc.
+>>>>
+>>>Its been a few years now, but IIRC I did the pci_dev_get/put here to ensure that
+>>>people didn't try to remove the device prior to freeing all their interrupts
+>>>(i.e I didn't want a broken driver to go through its remove routine without
+>>>freeing all its irqs).  That might have been the wrong thing to do, but thats
+>>>what bubbles to the front of my head when looking at this.
+>>
+>>That sounds plausible, but I think I'd rather deal with that by having
+>>the PCI core remove logic free all the interrupts.  I *think* that's
+>>already in place, i.e., pci_free_resources() calls
+>>msi_remove_pci_irq_vectors().  So I propose that we remove the
+>>pci_dev_get()/put() unless we come up with a more compelling reason
+>>for it.
+>
+>As an update - I've found an interesting case why exactly that
+>kobject_del() might be needed:
+>
+>in kobject_del() it removes instantly the link to kset - via
+>kobj_kset_leave(), so that our kset remains without links and, thus, might
+>be instantly removed.
+>
+>So, with kobject_del(), our kset (msi_irqs sysfs dir) remains instantly
+>without any links (i.e. other kobjects) and, when we call kset_unregister()
+>- it exits instantly (if it's not being hold somewhere elsewhere...).
+>
+>Without it, kset_unregister() will wait till all the kobjects will be gone.
+>
+>Now, the fun part starts - if we quickly call pci_disable_msi() and,
+>afterwards, pci_enable_msi() - we might fail because the msi_irqs kset is
+>still there, waiting to unregister, and the sysfs dir is still active.
+>
+>It's used, for example, in tg3_open/tg3_close, which are ndo_open/close,
+>and are called on enslave/deslave in bonding.
+>
+>What I get:
+>[   60.458319] WARNING: CPU: 0 PID: 5552 at fs/sysfs/dir.c:526 sysfs_add_one+0xbb/0xe0()
+>[   60.458350] sysfs: cannot create duplicate filename '/devices/pci0000:00/0000:00:1c.5/0000:3f:00.0/msi_irqs'
+>
+>I'll take a deeper look at the issue, though any feedback/advise is
+>welcome. And I'll hold on with the patchset that removes pci_dev_get/put
+>and kobject_del.
 
-drivers/pci/host/pci-mvebu.c:744:31: warning: incorrect type in return expression (different address spaces)
-drivers/pci/host/pci-mvebu.c:744:31:    expected void [noderef] <asn:2>*
-drivers/pci/host/pci-mvebu.c:744:31:    got void *
+Ok, this is only reproducible with CONFIG_DEBUG_KOBJECT_RELEASE, with or
+without removing kobject_del() (though it's harder to reproduce). I could
+not trigger it without CONFIG_DEBUG_KOBJECT_RELEASE, even with constantly
+poking /sys/class/net/tg3_device/device/msi_irqs/* . Though it's,
+obviously, possible, with and without cleanup and my previous bugfix.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+I'll then send now the cleanup, however this theoretical issue was, is and
+won't be fixed by it :-/. And I don't know how can we possible fix it
+without something like kobject_put_wait().
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 0bd3ba8..fb2474f 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -741,7 +741,7 @@ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
- 
- 	ret = of_address_to_resource(np, 0, &regs);
- 	if (ret)
--		return ERR_PTR(ret);
-+		return NULL;
- 
- 	return devm_ioremap_resource(&pdev->dev, &regs);
- }
-@@ -940,10 +940,9 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 			continue;
- 
- 		port->base = mvebu_pcie_map_registers(pdev, child, port);
--		if (IS_ERR(port->base)) {
-+		if (!port->base) {
- 			dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
- 				port->port, port->lane);
--			port->base = NULL;
- 			clk_disable_unprepare(port->clk);
- 			continue;
- 		}
--- 
-1.7.10.4
-
-
+>
+>
+>>
+>>>>I also don't understand this nearby code (the same pattern appears in
+>>>>free_msi_irqs()):
+>>>>
+>>>>    out_unroll:
+>>>>        list_for_each_entry(entry, &pdev->msi_list, list) {
+>>>>                if (!count)
+>>>>                        break;
+>>>>                kobject_del(&entry->kobj);
+>>>>                kobject_put(&entry->kobj);
+>>>>                count--;
+>>>>        }
+>>>>
+>>>>Why do we call kobject_del() here?  The kobject_put() will call
+>>>>kobject_del() anyway, so it looks redundant.
+>>>>Documentation/kobject.txt says kobject_del() must be called explicitly
+>>>>to break a circular reference, but I don't think we have that here.
+>>>>
+>>> I think thats exactly why I did it, because of the documentation.  I agree
+>>>however, it does look redundant.  Harmless, but redundant.
+>>
+>>OK, thanks.  I think we should remove it on the grounds that it's not
+>>needed and removing it will make this code look more similar to other
+>>callers of kobject_init_and_add(), which means bugs will have fewer
+>>places to hide.
+>>
+>>Thanks, Neil!
+>>
+>>Bjorn
