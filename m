@@ -1,90 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:58738 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753480Ab3IWV3M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 17:29:12 -0400
-Received: by mail-ie0-f173.google.com with SMTP id ar20so7353794iec.4
-        for <linux-pci@vger.kernel.org>; Mon, 23 Sep 2013 14:29:11 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:27870 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751046Ab3IZBTy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Sep 2013 21:19:54 -0400
+Message-ID: <52438BBF.8060307@oracle.com>
+Date: Thu, 26 Sep 2013 09:19:59 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1309231430540.1348-100000@iolanthe.rowland.org>
-References: <CALCETrWkr53ZjqdN3t7rTTfr=+ZKZXJoYsuBcwPf0kN_33GfAw@mail.gmail.com>
- <Pine.LNX.4.44L0.1309231430540.1348-100000@iolanthe.rowland.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 23 Sep 2013 16:28:49 -0500
-Message-ID: <CAErSpo4SGnM4Ycy=YRbdMox2b0JE=P=J_1-7HpPMwEy+=rJDjQ@mail.gmail.com>
-Subject: Re: ehci-pci D3cold logspam
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-	USB list <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Subject: Re: [PATCH 2/3 v3] Refactor MSI restore call-chain to drop unnecessary
+ argument
+References: <521EB76B.8090903@oracle.com> <CAErSpo5_Vhs5cN-1dUz051b+P0ZrUH1xuM+bkVe4C4ycMyLTNQ@mail.gmail.com>
+In-Reply-To: <CAErSpo5_Vhs5cN-1dUz051b+P0ZrUH1xuM+bkVe4C4ycMyLTNQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, linux-pm]
 
-On Mon, Sep 23, 2013 at 1:36 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Mon, 23 Sep 2013, Andy Lutomirski wrote:
+于 2013-09-26 06:22, Bjorn Helgaas 写道:
+> On Wed, Aug 28, 2013 at 8:52 PM, Zhenzhong Duan
+> <zhenzhong.duan@oracle.com> wrote:
+>> ...
+>> -v3: Update patch description per Konrad suggestion, thanks.
+>>
+>> Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+>> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+> Zhenzhong, would you mind reposting the entire series as a v4 with all
+> updates and acks?  I'm not sure I can collect all the right pieces.
 >
->> I've been getting this on several recent kernel revisions.  Is it
->> interesting?  If so, I'm happy to help diagnose it.  If not, can the
->> message be killed or severely ratelimited?  I'm getting so much of
->> this that it tends to overflow the log ring.
->
-> It's interesting only if you care about when your EHCI controllers get
-> resumed and suspended.  In this case, it's not clear why the
-> transitions happen so rapidly.  It looks like some sort of polling
-> is going on at roughly 2-second intervals.
->
->> [  287.344991] ehci-pci 0000:00:1d.0: power state changed by ACPI to D0
->> [  287.445433] ehci-pci 0000:00:1d.0: setting latency timer to 64
->> [  287.446255] ehci-pci 0000:00:1a.0: power state changed by ACPI to D0
->> [  287.456094] ehci-pci 0000:00:1d.0: power state changed by ACPI to D3cold
->> [  287.547205] ehci-pci 0000:00:1a.0: setting latency timer to 64
->> [  287.557890] ehci-pci 0000:00:1a.0: power state changed by ACPI to D3cold
->> [  290.126910] ehci-pci 0000:00:1d.0: power state changed by ACPI to D0
->> [  290.227958] ehci-pci 0000:00:1d.0: setting latency timer to 64
->> [  290.228416] ehci-pci 0000:00:1a.0: power state changed by ACPI to D0
->> [  290.238749] ehci-pci 0000:00:1d.0: power state changed by ACPI to D3cold
->> [  290.328904] ehci-pci 0000:00:1a.0: setting latency timer to 64
->> [  290.339565] ehci-pci 0000:00:1a.0: power state changed by ACPI to D3cold
->> [  292.214834] ehci-pci 0000:00:1d.0: power state changed by ACPI to D0
->> [  292.315458] ehci-pci 0000:00:1d.0: setting latency timer to 64
->> [  292.315908] ehci-pci 0000:00:1a.0: power state changed by ACPI to D0
->> [  292.326262] ehci-pci 0000:00:1d.0: power state changed by ACPI to D3cold
->> [  292.416487] ehci-pci 0000:00:1a.0: setting latency timer to 64
->> [  292.431075] ehci-pci 0000:00:1a.0: power state changed by ACPI to D3cold
->> [  295.458048] ehci-pci 0000:00:1d.0: power state changed by ACPI to D0
->> [  295.558613] ehci-pci 0000:00:1d.0: setting latency timer to 64
->
-> This question should be addressed to the PCI mailing list (cc'ed), as
-> those two messages are generated by
-> drivers/pci/pci-acpi.c:acpi_pci_set_power_state() and
-> drivers/pci/pci.c:pcibios_set_master() respectively.
+> Thanks,
+>    Bjorn
+There are some updates in upstream that conflict with mine since I wrote 
+my patches.
+So I rewrte the patches based on upstream and send to Konrad.
+He will buy a qlogic card and help a test. I'll repost those after that.
 
-d010e5769 ("PCI / ACPI: Use dev_dbg() instead of dev_info() in
-acpi_pci_set_power_state()") might be part of the solution.  That was
-done in response to https://bugzilla.kernel.org/show_bug.cgi?id=60636,
-which looks basically the same as your complaint.
-
-But if we are indeed polling every two seconds, even a dev_dbg() seems
-like overkill to me.  Rafael or Lan can probably provide a better
-answer here.
-
-As for the "setting latency timer" messages, I really doubt those are
-useful to anybody.  If nobody objects, I'll just drop it, e.g.:
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b821a62..55a947b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2854,7 +2854,7 @@ void __weak pcibios_set_master(struct pci_dev *dev)
-                lat = pcibios_max_latency;
-        else
-                return;
--       dev_printk(KERN_DEBUG, &dev->dev, "setting latency timer to %d\n", lat);
-+
-        pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
- }
+thanks
+zduan
