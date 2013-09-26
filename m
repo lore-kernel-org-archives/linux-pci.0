@@ -1,80 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:60240 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752853Ab3ISUvg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Sep 2013 16:51:36 -0400
-Received: by mail-ie0-f172.google.com with SMTP id x13so16565232ief.17
-        for <linux-pci@vger.kernel.org>; Thu, 19 Sep 2013 13:51:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4974289.QhzOmFXm0s@vostro.rjw.lan>
-References: <4974289.QhzOmFXm0s@vostro.rjw.lan>
+Received: from mail-ye0-f169.google.com ([209.85.213.169]:33104 "EHLO
+	mail-ye0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754049Ab3IZWQV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 18:16:21 -0400
+Received: by mail-ye0-f169.google.com with SMTP id r13so636937yen.14
+        for <linux-pci@vger.kernel.org>; Thu, 26 Sep 2013 15:16:18 -0700 (PDT)
+Date: Thu, 26 Sep 2013 16:16:13 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 19 Sep 2013 14:51:15 -0600
-Message-ID: <CAErSpo6ztY=Hd42UUi=KZvN62+9fd4BmyGafLDqfvwp9NxhrYw@mail.gmail.com>
-Subject: Re: [PATCH] PCI / ACPI / PM: Clear pme_poll for devices in D3cold on wakeup
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Huang Ying <ying.huang@intel.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"David E. Box" <david.e.box@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Veaceslav Falico <vfalico@redhat.com>
+Cc: Neil Horman <nhorman@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Russell King <rmk+kernel@arm.linux.org.uk>
+Subject: Re: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to
+ populate_msi_sysfs()
+Message-ID: <20130926221613.GA24611@google.com>
+References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
+ <1379382464-7920-2-git-send-email-vfalico@redhat.com>
+ <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
+ <20130925232300.GA7368@neilslaptop.think-freely.org>
+ <CAErSpo6coKuf4f3j3zMwMNp7Uj3btN9UQyHpLPdq84aU-s=5UA@mail.gmail.com>
+ <20130926122552.GB4783@redhat.com>
+ <20130926140751.GC4783@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130926140751.GC4783@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 13, 2013 at 7:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Commit 448bd85 (PCI/PM: add PCIe runtime D3cold support) added a
-> piece of code to pci_acpi_wake_dev() causing that function to behave
-> in a special way for devices in D3cold (so that their configuration
-> registeres are not accessed before those devices are resumed).
+[+cc Russell]
 
-s/registeres/registers/
+On Thu, Sep 26, 2013 at 04:07:51PM +0200, Veaceslav Falico wrote:
+> On Thu, Sep 26, 2013 at 02:25:52PM +0200, Veaceslav Falico wrote:
+> >On Wed, Sep 25, 2013 at 05:35:54PM -0600, Bjorn Helgaas wrote:
+> >>On Wed, Sep 25, 2013 at 5:23 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> >>>On Wed, Sep 25, 2013 at 03:08:05PM -0600, Bjorn Helgaas wrote:
+> >>>>On Mon, Sep 16, 2013 at 7:47 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
+...
+> >As an update - I've found an interesting case why exactly that
+> >kobject_del() might be needed:
+> >
+> >in kobject_del() it removes instantly the link to kset - via
+> >kobj_kset_leave(), so that our kset remains without links and, thus, might
+> >be instantly removed.
+> >
+> >So, with kobject_del(), our kset (msi_irqs sysfs dir) remains instantly
+> >without any links (i.e. other kobjects) and, when we call kset_unregister()
+> >- it exits instantly (if it's not being hold somewhere elsewhere...).
+> >
+> >Without it, kset_unregister() will wait till all the kobjects will be gone.
 
-> However, it didn't take the clearing of the pme_poll flag into
-> account.  That has to be done for all devices, even if they are in
-> D3cold, or pci_pme_list_scan() will not know that wakeup has been
-> signaled for the device and will poll its PME Status bit
-> unnecessarily.
->
-> Fix the problem by moving the clearing of the pme_poll flag in
-> pci_acpi_wake_dev() before the code introduced by commit 448bd85.
->
-> Reported-and-tested-by: David E. Box <david.e.box@intel.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+I don't see any waiting in kset_unregister(); all it does is a
+kobject_put().
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> >Now, the fun part starts - if we quickly call pci_disable_msi() and,
+> >afterwards, pci_enable_msi() - we might fail because the msi_irqs kset is
+> >still there, waiting to unregister, and the sysfs dir is still active.
+> >
+> >It's used, for example, in tg3_open/tg3_close, which are ndo_open/close,
+> >and are called on enslave/deslave in bonding.
+> >
+> >What I get:
+> >[   60.458319] WARNING: CPU: 0 PID: 5552 at fs/sysfs/dir.c:526 sysfs_add_one+0xbb/0xe0()
+> >[   60.458350] sysfs: cannot create duplicate filename '/devices/pci0000:00/0000:00:1c.5/0000:3f:00.0/msi_irqs'
+> >
+> >I'll take a deeper look at the issue, though any feedback/advise is
+> >welcome. And I'll hold on with the patchset that removes pci_dev_get/put
+> >and kobject_del.
+> 
+> Ok, this is only reproducible with CONFIG_DEBUG_KOBJECT_RELEASE, with or
+> without removing kobject_del() (though it's harder to reproduce). I could
+> not trigger it without CONFIG_DEBUG_KOBJECT_RELEASE, even with constantly
+> poking /sys/class/net/tg3_device/device/msi_irqs/* . Though it's,
+> obviously, possible, with and without cleanup and my previous bugfix.
+> 
+> I'll then send now the cleanup, however this theoretical issue was, is and
+> won't be fixed by it :-/. And I don't know how can we possible fix it
+> without something like kobject_put_wait().
 
-> Cc: 3.6+ <stable@vger.kernel.org> # 3.6+
-> ---
->  drivers/pci/pci-acpi.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> Index: linux-pm/drivers/pci/pci-acpi.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-acpi.c
-> +++ linux-pm/drivers/pci/pci-acpi.c
-> @@ -47,6 +47,9 @@ static void pci_acpi_wake_dev(acpi_handl
->         if (event != ACPI_NOTIFY_DEVICE_WAKE || !pci_dev)
->                 return;
->
-> +       if (pci_dev->pme_poll)
-> +               pci_dev->pme_poll = false;
-> +
->         if (pci_dev->current_state == PCI_D3cold) {
->                 pci_wakeup_event(pci_dev);
->                 pm_runtime_resume(&pci_dev->dev);
-> @@ -57,9 +60,6 @@ static void pci_acpi_wake_dev(acpi_handl
->         if (pci_dev->pme_support)
->                 pci_check_pme_status(pci_dev);
->
-> -       if (pci_dev->pme_poll)
-> -               pci_dev->pme_poll = false;
-> -
->         pci_wakeup_event(pci_dev);
->         pm_runtime_resume(&pci_dev->dev);
->
->
+I still think we should remove the kobject_del().  We don't want to
+make a race harder to hit; we want to remove it completely.  What we
+really want is to make races *easier* to hit so we can find them,
+which seems to be the point of KOBJECT_RELEASE :)
+
+That said, I think I see why you see the warning in this case.
+You're calling pci_enable_msi(), pci_disable_msi(), pci_enable_msi()
+as in this call chain:
+
+  pci_enable_msi
+    msi_capability_init
+      populate_msi_sysfs
+        dev->msi_kset = kset_create_and_add("msi_irqs", ...)
+        list_for_each_entry(entry, &dev->msi_list, ...)
+          kobj->kset = dev->msi_kset
+          kobject_init_and_add(kobj, &msi_irq_ktype, NULL, ...)
+            kobject_add_internal
+              kobject_get(&kobj->kset->kobj)    # dev->msi_kset
+
+  pci_disable_msi
+    free_msi_irqs
+      list_for_each_entry_safe(entry, ..., &dev->msi_list, ...)
+        kobject_put(&entry->kobj)
+          kobject_release
+            ... <delayed> ...
+              kobject_cleanup
+                kobject_del
+                  kobj_kset_leave
+                    kset_put(kobj->kset)        # dev->msi_kset
+                      kobject_put	# happens AFTER pci_enable_msi() below
+                t->release
+        list_del(&entry->list)
+    kset_unregister(dev->msi_kset)
+      kobject_put
+        kobject_release
+          ... <delayed> ...
+            kobject_cleanup		# happens AFTER pci_enable_msi() below
+    dev->msi_kset = NULL
+
+  pci_enable_msi
+    msi_capability_init
+      populate_msi_sysfs
+        dev->msi_kset = kset_create_and_add("msi_irqs", ...)
+          "sysfs: cannot create duplicate filename .../msi_irqs"
+
+When we kset_create_and_add("msi_irqs") the second time, the delayed
+kobject_cleanups() for the msi_desc entries and the msi_kset have
+not yet occurred, so the msi_desc entries still hold references to
+the msi_kset, etc.
+
+I'm not sure if this is a design problem in the way PCI manages
+msi_kset and msi_desc entries, or if there's something wrong in
+the way KOBJECT_RELEASE is implemented.  I could imagine changing
+it so the bulk of kobject_cleanup(), including the sysfs cleanup,
+is executed immediately when the last reference is dropped, but
+the kobj_type->release() function itself is delayed.
+
+Calling kobject_del() explicitly sort of side-steps this problem
+by doing the sysfs cleanup before the last put.  But it is quite
+subtle, and it feels error-prone to rely on that.
+
+Bjorn
