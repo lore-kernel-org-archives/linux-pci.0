@@ -1,81 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:38061 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932421Ab3ICHgA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2013 03:36:00 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
+Received: from mx1.redhat.com ([209.132.183.28]:51773 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755999Ab3IZKnx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Sep 2013 06:43:53 -0400
+Date: Thu, 26 Sep 2013 12:45:48 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+	Jan Beulich <JBeulich@suse.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"David S. Miller" <davem@davemloft.net>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	<linux-scsi@vger.kernel.org>
-Subject: [PATCH 1/7] scsi/bfa: use pcie_capability_xxx to simplify code
-Date: Tue, 3 Sep 2013 15:35:09 +0800
-Message-ID: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
+	linuxppc-dev@lists.ozlabs.org, Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20130926104548.GB16774@dhcp-26-207.brq.redhat.com>
+References: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <20130918142231.GA21650@mtj.dyndns.org>
+ <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
+ <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
+ <20130920122736.GD7630@mtj.dyndns.org>
+ <20130925180220.GB26273@google.com>
+ <20130925205804.GA21737@dhcp-26-207.brq.redhat.com>
+ <20130925210016.GA8926@htj.dyndns.org>
+ <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B735D@saturn3.aculab.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B735D@saturn3.aculab.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pcie_capability_xxx() interfaces were introudced to
-simplify code to access PCIe Cap config space. And
-because PCI core saves the PCIe Cap offset in
-set_pcie_port_type() when device is enumerated.
-So we can use pci_is_pcie() instead.
+On Thu, Sep 26, 2013 at 09:58:53AM +0100, David Laight wrote:
+> Would it be possible to do some kind of 2-stage allocation.
+> In the first pass the driver would pass a minimum and desired
+> number of MSI-X interrupts, but not actually be given any.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/scsi/bfa/bfad.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+Repeated calls to msi_enable_msi/msix() is what we are trying to avoid.
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 9611195..d726b81 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -767,7 +767,6 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
- 
- 	/* Adjust PCIe Maximum Read Request Size */
- 	if (pcie_max_read_reqsz > 0) {
--		int pcie_cap_reg;
- 		u16 pcie_dev_ctl;
- 		u16 mask = 0xffff;
- 
-@@ -794,10 +793,8 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
- 			break;
- 		}
- 
--		pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
--		if (mask != 0xffff && pcie_cap_reg) {
--			pcie_cap_reg += 0x08;
--			pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
-+		if (mask != 0xffff && pci_is_pcie(pdev)) {
-+			pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &pcie_dev_ctl);
- 			if ((pcie_dev_ctl & 0x7000) != mask) {
- 				printk(KERN_WARNING "BFA[%s]: "
- 				"pcie_max_read_request_size is %d, "
-@@ -806,7 +803,7 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
- 				pcie_max_read_reqsz);
- 
- 				pcie_dev_ctl &= ~0x7000;
--				pci_write_config_word(pdev, pcie_cap_reg,
-+				pcie_capability_write_word(pdev, PCI_EXP_DEVCTL,
- 						pcie_dev_ctl | mask);
- 			}
- 		}
+> Interrupts could then be allocated after it is known how many
+> are required and how many are available.
+
+Yep, that what we are heading to. So basic pattern I see would be like this:
+
+	int foo_driver_enable_msix(struct pci_dev *pdev, int nvec)
+	{
+		...
+
+		rc = pci_msix_table_size(pdev);
+		if (rc < 0)
+			return rc;
+
+		nvec = min(nvec, rc);
+		if (nvec < FOO_DRIVER_MINIMUM_NVEC)
+			goto single_msi;
+
+		for (i = 0; i < nvec; i++)
+			entries[i].entry = i;
+
+		rc = pci_enable_msix(pdev, entries, nvec);
+		if (rc)
+			goto single_msi;
+
+		return 0;
+
+	single_msi:
+		...
+
+	}
+
+But this will break pSeries and we might end up with something like this:
+
+	int foo_driver_enable_msix(struct pci_dev *pdev, int nvec)
+	{
+		...
+
+		rc = pci_msix_table_size(pdev);
+		if (rc < 0)
+			return rc;
+
+		nvec = min(nvec, rc);
+		if (nvec < FOO_DRIVER_MINIMUM_NVEC)
+			goto single_msi;
+
+		rc = pci_get_msix_limit(pdev, nvec);
+		if (rc < 0)
+			return rc;
+
+		nvec = min(nvec, rc);
+		if (nvec < FOO_DRIVER_MINIMUM_NVEC)
+			goto single_msi;
+
+		for (i = 0; i < nvec; i++)
+			entries[i].entry = i;
+
+		rc = pci_enable_msix(pdev, entries, nvec);
+		if (rc)
+			goto single_msi;
+
+		return 0;
+
+	single_msi:
+		...
+
+	}
+
+> 	David
+
 -- 
-1.7.1
-
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
