@@ -1,65 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:36287 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756117Ab3IJBYD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Sep 2013 21:24:03 -0400
-Subject: [PATCH] PCI/PM: Removing the function pci_pm_complete()
-From: Chuansheng Liu <chuansheng.liu@intel.com>
-To: stern@rowland.harvard.edu, rjw@sisk.pl, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chuansheng.liu@intel.com, fei.li@intel.com
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 10 Sep 2013 18:46:06 +0800
-Message-ID: <1378809966.26153.23.camel@cliu38-desktop-build>
-Mime-Version: 1.0
+Received: from mx0.aculab.com ([213.249.233.131]:37587 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755918Ab3IZJUv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 05:20:51 -0400
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 22260-04 for <linux-pci@vger.kernel.org>;
+ Thu, 26 Sep 2013 10:20:48 +0100 (BST)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="Windows-1252"
+Subject: RE: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Date: Thu, 26 Sep 2013 09:58:53 +0100
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B735D@saturn3.aculab.com>
+In-Reply-To: <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
+References: <20130916102210.GA14102@dhcp-26-207.brq.redhat.com> <20130917143022.GA7707@concordia> <20130918094759.GA2353@dhcp-26-207.brq.redhat.com> <20130918142231.GA21650@mtj.dyndns.org> <20130918165045.GB2353@dhcp-26-207.brq.redhat.com> <20130920082458.GA10507@dhcp-26-207.brq.redhat.com> <20130920122736.GD7630@mtj.dyndns.org> <20130925180220.GB26273@google.com> <20130925205804.GA21737@dhcp-26-207.brq.redhat.com> <20130925210016.GA8926@htj.dyndns.org> <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
+From: "David Laight" <David.Laight@ACULAB.COM>
+To: "Alexander Gordeev" <agordeev@redhat.com>,
+	"Tejun Heo" <tj@kernel.org>
+Cc: <linux-pci@vger.kernel.org>, "Joerg Roedel" <joro@8bytes.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-ide@vger.kernel.org>, "Jan Beulich" <JBeulich@suse.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	<linuxppc-dev@lists.ozlabs.org>, "Ingo Molnar" <mingo@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+> Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+> 
+> On Wed, Sep 25, 2013 at 05:00:16PM -0400, Tejun Heo wrote:
+> > Hello,
+> >
+> > On Wed, Sep 25, 2013 at 10:58:05PM +0200, Alexander Gordeev wrote:
+> > > Unfortunately, pSeries is a shows-topper here :( It seems we have to
+> > > introduce pci_get_msi{,x}_limit() interfaces to honour the quota
+> > > thing.  I just hope the hardware set for pSeries is limited and we
+> > > won't need to use it for all drivers.
+> >
+> > Can you please go into a bit of detail on that?  Why does it matter?
+> 
+> Because otherwise we will re-introduce a problem described by Michael:
+> "We have a small number of MSIs available, limited by hardware &
+> firmware, if we don't impose a quota then the first device that probes
+> will get most/all of the MSIs and other devices miss out."
 
-Commit(88d2613) removed the pm_runtime_put_sync() from pci_pm_complete()
-to PM core code device_complete().
+Would it be possible to do some kind of 2-stage allocation.
+In the first pass the driver would pass a minimum and desired
+number of MSI-X interrupts, but not actually be given any.
+Interrupts could then be allocated after it is known how many
+are required and how many are available.
 
-Here the pci_pm_complete() is doing the same work which can be done in
-device_complete(), so we can remove it directly.
-
-Signed-off-by: liu chuansheng <chuansheng.liu@intel.com>
----
- drivers/pci/pci-driver.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 98f7b9b..736ef3f 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -599,18 +599,10 @@ static int pci_pm_prepare(struct device *dev)
- 	return error;
- }
- 
--static void pci_pm_complete(struct device *dev)
--{
--	struct device_driver *drv = dev->driver;
--
--	if (drv && drv->pm && drv->pm->complete)
--		drv->pm->complete(dev);
--}
- 
- #else /* !CONFIG_PM_SLEEP */
- 
- #define pci_pm_prepare	NULL
--#define pci_pm_complete	NULL
- 
- #endif /* !CONFIG_PM_SLEEP */
- 
-@@ -1123,7 +1115,6 @@ static int pci_pm_runtime_idle(struct device *dev)
- 
- const struct dev_pm_ops pci_dev_pm_ops = {
- 	.prepare = pci_pm_prepare,
--	.complete = pci_pm_complete,
- 	.suspend = pci_pm_suspend,
- 	.resume = pci_pm_resume,
- 	.freeze = pci_pm_freeze,
--- 
-1.7.0.4
+	David
 
 
 
