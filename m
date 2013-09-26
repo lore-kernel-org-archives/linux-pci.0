@@ -1,65 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:62870 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963Ab3ILJcq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2013 05:32:46 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MT000ABUAIKWP00@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 12 Sep 2013 18:32:45 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: 'Thierry Reding' <thierry.reding@gmail.com>,
-	linux-pci@vger.kernel.org, 'Stephen Warren' <swarren@nvidia.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH 1/3] PCI: tegra: add missing __iomem annotation
-Date: Thu, 12 Sep 2013 18:32:45 +0900
-Message-id: <000201ceaf9b$098780b0$1c968210$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:44192 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750809Ab3IZOK6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Sep 2013 10:10:58 -0400
+From: Veaceslav Falico <vfalico@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: Veaceslav Falico <vfalico@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 2/3] msi: always unregister ->msi_kset within free_msi_irqs()
+Date: Thu, 26 Sep 2013 16:11:14 +0200
+Message-Id: <1380204675-18238-2-git-send-email-vfalico@redhat.com>
+In-Reply-To: <1380204675-18238-1-git-send-email-vfalico@redhat.com>
+References: <1380204675-18238-1-git-send-email-vfalico@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added missing __iomem annotation in order to fix the following
-sparse warnings:
+Currently we create and populate ->msi_kset while allocating irqs in
+populate_msi_sysfs(), however if it fails and/or we want to free the
+entries - we don't always remove it, and we might have problems if we've
+failed to allocate irqs and try it again.
 
-drivers/pci/host/pci-tegra.c:411:41: warning: incorrect type in return expression (different address spaces)
-drivers/pci/host/pci-tegra.c:411:41:    expected void [noderef] <asn:2>*
-drivers/pci/host/pci-tegra.c:411:41:    got void *addr
-drivers/pci/host/pci-tegra.c:419:25: warning: incorrect type in return expression (different address spaces)
-drivers/pci/host/pci-tegra.c:419:25:    expected void [noderef] <asn:2>*
-drivers/pci/host/pci-tegra.c:419:25:    got void *addr
+To fix that, move the unregister part to free_msi_irqs() and remove already
+existing ones. Also, verify if it was actually created - we don't always
+call free_msi_irqs() after populate_msi_sysfs().
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Neil Horman <nhorman@tuxdriver.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: linux-pci@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
 ---
- drivers/pci/host/pci-tegra.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 2e9888a..7c4f38d 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -408,7 +408,7 @@ static void __iomem *tegra_pcie_bus_map(struct tegra_pcie *pcie,
- 
- 	list_for_each_entry(bus, &pcie->busses, list)
- 		if (bus->nr == busnr)
--			return bus->area->addr;
-+			return (void __iomem *)bus->area->addr;
- 
- 	bus = tegra_pcie_bus_alloc(pcie, busnr);
- 	if (IS_ERR(bus))
-@@ -416,7 +416,7 @@ static void __iomem *tegra_pcie_bus_map(struct tegra_pcie *pcie,
- 
- 	list_add_tail(&bus->list, &pcie->busses);
- 
--	return bus->area->addr;
-+	return (void __iomem *)bus->area->addr;
+Notes:
+    v1  -> v2:
+    Verify if the kset was actually register before unregistering.
+
+ drivers/pci/msi.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 0771508..dafda2b 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -391,6 +391,11 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 			kfree(entry);
+ 		}
+ 	}
++
++	if (dev->msi_kset) {
++		kset_unregister(dev->msi_kset);
++		dev->msi_kset = NULL;
++	}
  }
  
- static void __iomem *tegra_pcie_conf_address(struct pci_bus *bus,
+ static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
+@@ -904,8 +909,6 @@ void pci_disable_msi(struct pci_dev *dev)
+ 
+ 	pci_msi_shutdown(dev);
+ 	free_msi_irqs(dev);
+-	kset_unregister(dev->msi_kset);
+-	dev->msi_kset = NULL;
+ }
+ EXPORT_SYMBOL(pci_disable_msi);
+ 
+@@ -1002,8 +1005,6 @@ void pci_disable_msix(struct pci_dev *dev)
+ 
+ 	pci_msix_shutdown(dev);
+ 	free_msi_irqs(dev);
+-	kset_unregister(dev->msi_kset);
+-	dev->msi_kset = NULL;
+ }
+ EXPORT_SYMBOL(pci_disable_msix);
+ 
 -- 
-1.7.10.4
-
+1.8.4
 
