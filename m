@@ -1,64 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49620 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753002Ab3I0Qz7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 12:55:59 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, Neil Horman <nhorman@tuxdriver.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH] iommu: Remove stack trace from broken irq remapping warning
-Date: Fri, 27 Sep 2013 12:53:35 -0400
-Message-Id: <1380300815-1864-1-git-send-email-nhorman@tuxdriver.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 26 Sep 2013 10:32:32 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Frank Li <lznuaa@gmail.com>, Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Kevin Hilman <khilman@linaro.org>,
+	Stephen Warren <swarren@nvidia.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: PCI host merge strategy and maintainers
+Message-ID: <20130926023230.GB21081@S2101-09.ap.freescale.net>
+References: <CAErSpo7UX6dt0CPZp3kEQrXXbMeArpu1iFfp=-FX46LVgq0iMw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAErSpo7UX6dt0CPZp3kEQrXXbMeArpu1iFfp=-FX46LVgq0iMw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The warning for the irq remapping broken check in intel_irq_remapping.c is
-pretty pointless.  We need the warning, but we know where its comming from, the
-stack trace will always be the same, and it needlessly triggers things like
-Abrt.  This changes the warning to just print a text warning about BIOS being
-broken, without the stack trace, then sets the appropriate taint bit.  Since we
-automatically disable irq remapping, theres no need to contiue making Abrt jump
-at this problem
+Hi Bjorn,
 
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-CC: Joerg Roedel <joro@8bytes.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Andy Lutomirski <luto@amacapital.net>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- drivers/iommu/intel_irq_remapping.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+On Wed, Sep 25, 2013 at 05:28:28PM -0600, Bjorn Helgaas wrote:
+> There are patches for exynos, imx6, mvebu, and tegra on the PCI list,
+> and I want to sort out how people expect them to be merged.
+> 
+> My current assumption is the following:
+> 
+>   drivers/pci/host/pcie-designware.c  via PCI tree since I applied
+> recent changes
+>   drivers/pci/host/pci-exynos.c  via PCI tree since I applied recent changes
+>   drivers/pci/host/pci-imx6.c  via Shawn Guo per [1]
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index f71673d..b97d70b 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -525,12 +525,13 @@ static int __init intel_irq_remapping_supported(void)
- 	if (disable_irq_remap)
- 		return 0;
- 	if (irq_remap_broken) {
--		WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
--			   "This system BIOS has enabled interrupt remapping\n"
--			   "on a chipset that contains an erratum making that\n"
--			   "feature unstable.  To maintain system stability\n"
--			   "interrupt remapping is being disabled.  Please\n"
--			   "contact your BIOS vendor for an update\n");
-+		printk(KERN_WARNING
-+			"This system BIOS has enabled interrupt remapping\n"
-+			"on a chipset that contains an erratum making that\n"
-+			"feature unstable.  To maintain system stability\n"
-+			"interrupt remapping is being disabled.  Please\n"
-+			"contact your BIOS vendor for an update\n");
-+		add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
- 		disable_irq_remap = 1;
- 		return 0;
- 	}
--- 
-1.8.3.1
+A second thought on that.  I would split the patch for better separation
+between driver and arch parts, so that they can go through PCI and
+arm-soc tree separately without worrying about merge conflict later.
+
+I will send you patches that we expect to go via your tree in a few
+minutes.
+
+Shawn
+
+>   drivers/pci/host/pci-mvebu.c  ?? unclear; Jason Cooper has merged
+> some, I've merged some
+>   drivers/pci/host/pci-tegra.c  via PCI tree per Stephen Warren [2]
+> 
+> Please correct anything that's wrong above, and please give me some
+> guidance on mvebu.  I'm happy to go either way; I just need to know
+> whether to pay attention to them :)
+> 
+> In addition, since I don't have time, expertise, or hardware to really
+> review changes to these drivers, I'd like to have them acked by people
+> who do.  My current assumption is that these are the right people:
+> 
+>   designware: Jingoo Han <jg1.han@samsung.com>
+>   exynos: Jingoo Han <jg1.han@samsung.com>
+>   imx6: Shawn Guo <shawn.guo@linaro.org>
+>   mvebu: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn
+> <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>
+>   tegra: Thierry Reding <thierry.reding@gmail.com>
+> 
+> Again, please correct anything that's wrong.  My plan is that I won't
+> apply patches to these drivers unless they're acked by the folks
+> above.
+> 
+> Bjorn
+> 
+> 
+> [1] http://lkml.kernel.org/r/20130916091059.GM31147@S2101-09.ap.freescale.net
+> [2] http://lkml.kernel.org/r/521CCF9B.9000004@wwwdotorg.org
 
