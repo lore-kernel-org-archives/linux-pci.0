@@ -1,58 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59924 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752831Ab3IIPZr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Sep 2013 11:25:47 -0400
-Date: Mon, 9 Sep 2013 17:27:39 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 26 Sep 2013 14:25:52 +0200
+From: Veaceslav Falico <vfalico@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tejun Heo <tj@kernel.org>,
+Cc: Neil Horman <nhorman@tuxdriver.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>
-Subject: [PATCH 6/9] PCI/MSI/s390: Remove superfluous check of MSI type
-Message-ID: <20130909152738.GH24962@dhcp-26-207.brq.redhat.com>
-References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
- <20130905150442.GA24148@htj.dyndns.org>
- <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
- <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/3] msi: add forgotten pci_dev_put(pdev) to
+ populate_msi_sysfs()
+Message-ID: <20130926122552.GB4783@redhat.com>
+References: <1379382464-7920-1-git-send-email-vfalico@redhat.com>
+ <1379382464-7920-2-git-send-email-vfalico@redhat.com>
+ <CAErSpo6+AQhpO2WvoKCSw7WokDiex_E43oi9xpuka7biPEx=7Q@mail.gmail.com>
+ <20130925232300.GA7368@neilslaptop.think-freely.org>
+ <CAErSpo6coKuf4f3j3zMwMNp7Uj3btN9UQyHpLPdq84aU-s=5UA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <CAErSpo6coKuf4f3j3zMwMNp7Uj3btN9UQyHpLPdq84aU-s=5UA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- arch/s390/pci/pci.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+On Wed, Sep 25, 2013 at 05:35:54PM -0600, Bjorn Helgaas wrote:
+>On Wed, Sep 25, 2013 at 5:23 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
+>> On Wed, Sep 25, 2013 at 03:08:05PM -0600, Bjorn Helgaas wrote:
+>>> [+cc Neil (he added this code in da8d1c8ba4), Greg]
+>>>
+>>> On Mon, Sep 16, 2013 at 7:47 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
+>>> > Before trying to kobject_init_and_add(), we add a reference to pdev via
+>>> > pci_dev_get(pdev). However, if it fails to init and/or add the kobject, we
+>>> > don't return it back - even on out_unroll.
+>>> >
+>>> > Fix this by adding pci_dev_put(pdev) before going to unrolling section.
+>>> >
+>>> > CC: Bjorn Helgaas <bhelgaas@google.com>
+>>> > CC: linux-pci@vger.kernel.org
+>>> > CC: linux-kernel@vger.kernel.org
+>>> > Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+>>> > ---
+>>> >  drivers/pci/msi.c | 4 +++-
+>>> >  1 file changed, 3 insertions(+), 1 deletion(-)
+>>> >
+>>> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>>> > index d5f90d6..14bf578 100644
+>>> > --- a/drivers/pci/msi.c
+>>> > +++ b/drivers/pci/msi.c
+>>> > @@ -534,8 +534,10 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>>> >                 pci_dev_get(pdev);
+>>> >                 ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
+>>> >                                      "%u", entry->irq);
+>>> > -               if (ret)
+>>> > +               if (ret) {
+>>> > +                       pci_dev_put(pdev);
+>>> >                         goto out_unroll;
+>>> > +               }
+>>> >
+>>> >                 count++;
+>>> >         }
+>>>
+>>> I don't understand why this code does the pci_dev_get() in the first
+>>> place.  The pdev->msi_list of msi_desc structs is private to the
+>>> pci_dev, and even without bumping the refcount, there should be no way
+>>> for the pci_dev to be freed before the msi_desc.
+>>>
+>> Its been a few years now, but IIRC I did the pci_dev_get/put here to ensure that
+>> people didn't try to remove the device prior to freeing all their interrupts
+>> (i.e I didn't want a broken driver to go through its remove routine without
+>> freeing all its irqs).  That might have been the wrong thing to do, but thats
+>> what bubbles to the front of my head when looking at this.
+>
+>That sounds plausible, but I think I'd rather deal with that by having
+>the PCI core remove logic free all the interrupts.  I *think* that's
+>already in place, i.e., pci_free_resources() calls
+>msi_remove_pci_irq_vectors().  So I propose that we remove the
+>pci_dev_get()/put() unless we come up with a more compelling reason
+>for it.
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index c79c6e4..61a3c2c 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -425,8 +425,6 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- 	int rc;
- 
- 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
--	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
--		return -EINVAL;
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
- 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
--- 
-1.7.7.6
+As an update - I've found an interesting case why exactly that
+kobject_del() might be needed:
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+in kobject_del() it removes instantly the link to kset - via
+kobj_kset_leave(), so that our kset remains without links and, thus, might
+be instantly removed.
+
+So, with kobject_del(), our kset (msi_irqs sysfs dir) remains instantly
+without any links (i.e. other kobjects) and, when we call kset_unregister()
+- it exits instantly (if it's not being hold somewhere elsewhere...).
+
+Without it, kset_unregister() will wait till all the kobjects will be gone.
+
+Now, the fun part starts - if we quickly call pci_disable_msi() and,
+afterwards, pci_enable_msi() - we might fail because the msi_irqs kset is
+still there, waiting to unregister, and the sysfs dir is still active.
+
+It's used, for example, in tg3_open/tg3_close, which are ndo_open/close,
+and are called on enslave/deslave in bonding.
+
+What I get:
+[   60.458319] WARNING: CPU: 0 PID: 5552 at fs/sysfs/dir.c:526 sysfs_add_one+0xbb/0xe0()
+[   60.458350] sysfs: cannot create duplicate filename '/devices/pci0000:00/0000:00:1c.5/0000:3f:00.0/msi_irqs'
+
+I'll take a deeper look at the issue, though any feedback/advise is
+welcome. And I'll hold on with the patchset that removes pci_dev_get/put
+and kobject_del.
+
+
+>
+>>> I also don't understand this nearby code (the same pattern appears in
+>>> free_msi_irqs()):
+>>>
+>>>     out_unroll:
+>>>         list_for_each_entry(entry, &pdev->msi_list, list) {
+>>>                 if (!count)
+>>>                         break;
+>>>                 kobject_del(&entry->kobj);
+>>>                 kobject_put(&entry->kobj);
+>>>                 count--;
+>>>         }
+>>>
+>>> Why do we call kobject_del() here?  The kobject_put() will call
+>>> kobject_del() anyway, so it looks redundant.
+>>> Documentation/kobject.txt says kobject_del() must be called explicitly
+>>> to break a circular reference, but I don't think we have that here.
+>>>
+>>  I think thats exactly why I did it, because of the documentation.  I agree
+>> however, it does look redundant.  Harmless, but redundant.
+>
+>OK, thanks.  I think we should remove it on the grounds that it's not
+>needed and removing it will make this code look more similar to other
+>callers of kobject_init_and_add(), which means bugs will have fewer
+>places to hide.
+>
+>Thanks, Neil!
+>
+>Bjorn
