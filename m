@@ -1,46 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:57002 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750710Ab3I0CRr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 22:17:47 -0400
-Date: Fri, 27 Sep 2013 10:19:27 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Zhu Richard-R65037 <r65037@freescale.com>
-CC: Tim Harvey <tharvey@gateworks.com>, Sean Cross <xobs@kosagi.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-Message-ID: <20130927021925.GF25146@S2101-09.ap.freescale.net>
-References: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
- <1379319655-20210-4-git-send-email-xobs@kosagi.com>
- <CAJ+vNU32oMZq=jrSCpk_ZjYc08kRBAqhOS8uYfor28gY8WGhnw@mail.gmail.com>
- <0E83723C55F66F43A6041464FE31119D3F7E6A@039-SN2MPN1-012.039d.mgd.msft.net>
+Received: from mx0.aculab.com ([213.249.233.131]:45878 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932144Ab3IZLga convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 07:36:30 -0400
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 26324-09 for <linux-pci@vger.kernel.org>;
+ Thu, 26 Sep 2013 12:36:28 +0100 (BST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <0E83723C55F66F43A6041464FE31119D3F7E6A@039-SN2MPN1-012.039d.mgd.msft.net>
+Content-Type: text/plain;
+	charset="Windows-1252"
+Subject: RE: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Date: Thu, 26 Sep 2013 12:34:36 +0100
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B7360@saturn3.aculab.com>
+In-Reply-To: <20130926104548.GB16774@dhcp-26-207.brq.redhat.com>
+References: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com> <20130918142231.GA21650@mtj.dyndns.org> <20130918165045.GB2353@dhcp-26-207.brq.redhat.com> <20130920082458.GA10507@dhcp-26-207.brq.redhat.com> <20130920122736.GD7630@mtj.dyndns.org> <20130925180220.GB26273@google.com> <20130925205804.GA21737@dhcp-26-207.brq.redhat.com> <20130925210016.GA8926@htj.dyndns.org> <20130926074646.GA16774@dhcp-26-207.brq.redhat.com> <AE90C24D6B3A694183C094C60CF0A2F6026B735D@saturn3.aculab.com> <20130926104548.GB16774@dhcp-26-207.brq.redhat.com>
+From: "David Laight" <David.Laight@ACULAB.COM>
+To: "Alexander Gordeev" <agordeev@redhat.com>
+Cc: "Tejun Heo" <tj@kernel.org>, <linux-pci@vger.kernel.org>,
+	"Joerg Roedel" <joro@8bytes.org>, <x86@kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+	"Jan Beulich" <JBeulich@suse.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	<linuxppc-dev@lists.ozlabs.org>, "Ingo Molnar" <mingo@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 27, 2013 at 01:38:39AM +0000, Zhu Richard-R65037 wrote:
-> Hi Tim:
-> Thanks for your tests.
-> Yes, it is. There are some problems when the PCIe switch is used on the 3.1x kernel at my side too, although the PCIe switch
-> is ok on FSL imx_3.0.35 kernels.
-> I'm debugging this issue now, and would summit the patches asap.
+> On Thu, Sep 26, 2013 at 09:58:53AM +0100, David Laight wrote:
+> > Would it be possible to do some kind of 2-stage allocation.
+> > In the first pass the driver would pass a minimum and desired
+> > number of MSI-X interrupts, but not actually be given any.
 > 
+> Repeated calls to msi_enable_msi/msix() is what we are trying to avoid.
 
->From what I read, it seems Sean's series does not support PCIe switch.
-At least, he hasn't got any device to test it.  And there is some
-problem with PCIe switch running the latest kernel, which might not be
-related to the controller driver.
+I was thinking that the first call would be done during driver probe
+(assuming such a time exists) so that the subsystem could determine
+how many interrupts all the drivers would like, so it can then
+hand out a smaller number to some of the early drivers in order
+to have some left to satisfy the minimum requirement of later
+ones.
 
-I suggest we ask Bjorn to merge the v7 I sent yesterday, so that people
-can have a same base to work on, and add PCIe switch support with
-incremental patches.   Does that sound good to you, Tim?
+So all it would do is sum the requirements of all the drivers.
 
-Shawn
+	David
+
+
 
