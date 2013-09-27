@@ -1,85 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: [GIT PULL] ACPI and power management fixes for v3.12-rc2
-Date: Fri, 20 Sep 2013 21:08:34 +0200
-Message-ID: <3724780.tAvtize7I5@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:39822 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322Ab3I0HFo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 03:05:44 -0400
+Received: by mail-we0-f174.google.com with SMTP id q58so2204790wes.19
+        for <linux-pci@vger.kernel.org>; Fri, 27 Sep 2013 00:05:43 -0700 (PDT)
+Message-ID: <52452E45.5000501@linaro.org>
+Date: Fri, 27 Sep 2013 09:05:41 +0200
+From: Daniel Lezcano <daniel.lezcano@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Hans de Bruin <jmdebruin@xmsnet.nl>
+CC: Aaron Lu <aaron.lwe@gmail.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Linux-pm mailing list <linux-pm@vger.kernel.org>
+Subject: Re: Bisected 3.12.0-rc1 Laptop screen goes blank during kernelboot
+References: <523C8238.3000200@xmsnet.nl> <523E51A9.8050609@gmail.com> <5242D734.7020800@linaro.org> <52447A4C.3020000@xmsnet.nl>
+In-Reply-To: <52447A4C.3020000@xmsnet.nl>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On 09/26/2013 08:17 PM, Hans de Bruin wrote:
 
-Please pull from the git repository at
+[ ... ]
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm+acpi-3.12-rc2
+> todays kernel with problem:
+>
+> #
+> # CPU Idle
+> #
+> CONFIG_CPU_IDLE=y
+> # CONFIG_CPU_IDLE_MULTIPLE_DRIVERS is not set
+> CONFIG_CPU_IDLE_GOV_LADDER=y
+> CONFIG_CPU_IDLE_GOV_MENU=y
+> # CONFIG_ARCH_NEEDS_CPU_IDLE_COUPLED is not set
+> CONFIG_INTEL_IDLE=y
+>
+>
+> ==> /sys/devices/system/cpu/cpuidle/current_driver <==
+> acpi_idle
+>
+> ==> /sys/devices/system/cpu/cpuidle/current_governor_ro <==
+> menu
+>
+> [    0.056000] cpuidle: using governor ladder
+> [    0.056000] cpuidle: using governor menu
+>
+>
+>
+> 3.8.0:
+> bash-4.1# tail /sys/devices/system/cpu/cpuidle/*
+> ==> /sys/devices/system/cpu/cpuidle/current_driver <==
+> acpi_idle
+>
+> ==> /sys/devices/system/cpu/cpuidle/current_governor_ro <==
+> menu
+>
+> [    1.759857] cpuidle: using governor ladder
+> [    1.763849] scsi 0:0:0:0: Direct-Access     ATA      TOSHIBA MK4009GA
+> BS11 PQ: 0 ANSI: 5
+> [    1.767098] cpuidle: using governor menu
 
-to receive ACPI and power management fixes for v3.12-rc2 with
-top-most commit d831a00510b9d400bf62464d8b11b158941348e6
-
-  Merge branch 'pm-cpufreq'
-
-on top of commit 272b98c6455f00884f0350f775c5342358ebb73f
-
-  Linux 3.12-rc1
-
-These are fixes for cpufreq issues that have emerged after recent
-changes and one fix for an older PCI/ACPI power management breakage.
-
-Specifics:
-
- 1) Four fixes for cpufreq regressions introduced by the changes that
-    removed Device Tree parsing for CPU device nodes from cpufreq
-    drivers from Sudeep KarkadaNagesha.
-
- 2) Two fixes for recent cpufreq regressions introduced by changes
-    related to the preservation of sysfs attributes over system
-    suspend/resume cycles from Viresh Kumar.
-
- 3) Fix for ACPI-based wakeup signaling in the PCI subsystem that
-    fails to stop PME polling for devices put into the D3cold power
-    state from yours truly.
-
- 4) Fix for bad interactions between cpufreq and udev on systems
-    supporting intel_pstate where acpi-cpufreq is available as well
-    from Yinghai Lu.
-
-Thanks!
+Thanks for the detailed information. Could you pastebin you kernel 
+config file or send it to me privately so I can reproduce the problem ?
 
 
----------------
+-- 
+  <http://www.linaro.org/> Linaro.org │ Open source software for ARM SoCs
 
-Rafael J. Wysocki (1):
-      PCI / ACPI / PM: Clear pme_poll for devices in D3cold on wakeup
-
-Sudeep KarkadaNagesha (4):
-      cpufreq: cpufreq-cpu0: assign cpu_dev correctly to cpu0 device
-      cpufreq: imx6q-cpufreq: assign cpu_dev correctly to cpu0 device
-      ARM: i.MX: change dev_id to cpu0 while registering cpu clock
-      ARM: shmobile: change dev_id to cpu0 while registering cpu clock
-
-Viresh Kumar (2):
-      cpufreq: Clear policy->cpus bits in __cpufreq_remove_dev_finish()
-      cpufreq: unlock correct rwsem while updating policy->cpu
-
-Yinghai Lu (1):
-      cpufreq: return EEXIST instead of EBUSY for second registering
-
----------------
-
- arch/arm/mach-imx/clk-imx27.c          |  2 +-
- arch/arm/mach-imx/clk-imx51-imx53.c    |  2 +-
- arch/arm/mach-imx/mach-imx6q.c         |  9 +++++++--
- arch/arm/mach-shmobile/clock-r8a73a4.c |  2 +-
- arch/arm/mach-shmobile/clock-sh73a0.c  |  2 +-
- drivers/cpufreq/cpufreq-cpu0.c         |  7 ++++++-
- drivers/cpufreq/cpufreq.c              | 31 ++++++++++++++++++++-----------
- drivers/cpufreq/imx6q-cpufreq.c        |  7 ++++++-
- drivers/pci/pci-acpi.c                 |  6 +++---
- 9 files changed, 46 insertions(+), 22 deletions(-)
+Follow Linaro:  <http://www.facebook.com/pages/Linaro> Facebook |
+<http://twitter.com/#!/linaroorg> Twitter |
+<http://www.linaro.org/linaro-blog/> Blog
 
