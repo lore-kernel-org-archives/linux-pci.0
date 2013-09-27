@@ -1,57 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:52914 "EHLO mail1.g1.pair.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753591Ab3IPGFS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Sep 2013 02:05:18 -0400
-From: Sean Cross <xobs@kosagi.com>
-To: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Sascha Hauer <s.hauer@pengutronix.de>,
-	Zhu Richard-R65037 <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>, tharvey@gateworks.com,
-	bhelgaas@google.com, Sean Cross <xobs@kosagi.com>
-Subject: [PATCH v5 2/3] ARM: imx6q: Add PCIe bits to GPR syscon definition
-Date: Mon, 16 Sep 2013 05:48:16 +0000
-Message-Id: <1379310497-12362-3-git-send-email-xobs@kosagi.com>
-In-Reply-To: <1379310497-12362-1-git-send-email-xobs@kosagi.com>
-References: <1379310497-12362-1-git-send-email-xobs@kosagi.com>
+Received: from mail-db9lp0249.outbound.messaging.microsoft.com ([213.199.154.249]:10667
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753201Ab3I0QsO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 12:48:14 -0400
+Message-ID: <1380300453.24959.389.camel@snotra.buserror.net>
+Subject: Re: [PATCH 2/2] pci: fsl: rework PCI driver compatible with
+ Layerscape
+From: Scott Wood <scottwood@freescale.com>
+To: Lian Minghuan-b31939 <B31939@freescale.com>
+CC: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+Date: Fri, 27 Sep 2013 11:47:33 -0500
+In-Reply-To: <52456C0C.2020504@freescale.com>
+References: <1379502122-20792-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <1379502122-20792-2-git-send-email-Minghuan.Lian@freescale.com>
+	 <52456C0C.2020504@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe requires additional bits be defined for GPR8 and GPR12.
+On Fri, 2013-09-27 at 19:29 +0800, Lian Minghuan-b31939 wrote:
+> Hi All,
+> 
+> Can anyone comment on my code or help to pick up?
 
-Signed-off-by: Sean Cross <xobs@kosagi.com>
----
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |    8 ++++++++
- 1 file changed, 8 insertions(+)
+Please break it up into multiple patches, each with one logical change
+that is individually explained.  It will be much easier to review that
+way.
 
-diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-index b6bdcd6..e00e9f3 100644
---- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-@@ -241,6 +241,12 @@
- 
- #define IMX6Q_GPR5_L2_CLK_STOP			BIT(8)
- 
-+#define IMX6Q_GPR8_TX_SWING_LOW			(0x7f << 25)
-+#define IMX6Q_GPR8_TX_SWING_FULL		(0x7f << 18)
-+#define IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB		(0x3f << 12)
-+#define IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB		(0x3f << 6)
-+#define IMX6Q_GPR8_TX_DEEMPH_GEN1		(0x3f << 0)
-+
- #define IMX6Q_GPR9_TZASC2_BYP			BIT(1)
- #define IMX6Q_GPR9_TZASC1_BYP			BIT(0)
- 
-@@ -273,7 +279,9 @@
- #define IMX6Q_GPR12_ARMP_AHB_CLK_EN		BIT(26)
- #define IMX6Q_GPR12_ARMP_ATB_CLK_EN		BIT(25)
- #define IMX6Q_GPR12_ARMP_APB_CLK_EN		BIT(24)
-+#define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
- #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
-+#define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
- 
- #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
- #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
--- 
-1.7.9.5
+-Scott
+
+
 
