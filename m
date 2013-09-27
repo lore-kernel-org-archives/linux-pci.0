@@ -1,27 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52954 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754665Ab3I3Nl2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Sep 2013 09:41:28 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20130928175956.8752.50967.stgit@amt.stowe>
-References: <20130928175956.8752.50967.stgit@amt.stowe>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: dhowells@redhat.com, yasutake.koichi@jp.panasonic.com,
-	bhelgaas@google.com, linux-am33-list@redhat.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mn10300/PCI: Remove pci_mem_start
-Date: Mon, 30 Sep 2013 14:41:22 +0100
-Message-ID: <5483.1380548482@warthog.procyon.org.uk>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:62288 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754125Ab3I0S6r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 14:58:47 -0400
+Received: by mail-ie0-f182.google.com with SMTP id aq17so4815440iec.41
+        for <linux-pci@vger.kernel.org>; Fri, 27 Sep 2013 11:58:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130926150228.GL11119@titan.lakedaemon.net>
+References: <CAErSpo7UX6dt0CPZp3kEQrXXbMeArpu1iFfp=-FX46LVgq0iMw@mail.gmail.com>
+ <20130926150228.GL11119@titan.lakedaemon.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 27 Sep 2013 12:58:26 -0600
+Message-ID: <CAErSpo5tN==4nSv2u3SUBe_L4VsWn4P7TN+LtrC172Qj1vhtog@mail.gmail.com>
+Subject: Re: PCI host merge strategy and maintainers
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Frank Li <lznuaa@gmail.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Kevin Hilman <khilman@linaro.org>,
+	Stephen Warren <swarren@nvidia.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Myron Stowe <myron.stowe@redhat.com> wrote:
+On Thu, Sep 26, 2013 at 9:02 AM, Jason Cooper <jason@lakedaemon.net> wrote:
+> On Wed, Sep 25, 2013 at 05:28:28PM -0600, Bjorn Helgaas wrote:
+>> There are patches for exynos, imx6, mvebu, and tegra on the PCI list,
+>> and I want to sort out how people expect them to be merged.
+>>
+>> My current assumption is the following:
+> ...
+>>   drivers/pci/host/pci-mvebu.c  ?? unclear; Jason Cooper has merged
+>> some, I've merged some
 
-> Remove unused 'pci_mem_start' variable.
-> 
-> CC: David Howells <dhowells@redhat.com>
-> CC: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+...
 
-Acked-by: David Howells <dhowells@redhat.com>
+> Well, there's nothing new here, so if you're ok with me taking them,
+> I'll continue on that path for these two series.
+
+OK, I'll assume Jason will take care of pci-mvebu.c, and I will merge
+changes to everything else via the PCI tree.  I will still wait for
+acks from the following before merging things:
+
+  designware: Jingoo Han <jg1.han@samsung.com>
+  exynos: Jingoo Han <jg1.han@samsung.com>
+  imx6: Shawn Guo <shawn.guo@linaro.org>
+  tegra: Thierry Reding <thierry.reding@gmail.com>
+
+Bjorn
