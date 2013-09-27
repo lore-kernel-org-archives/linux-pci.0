@@ -1,44 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ye0-f180.google.com ([209.85.213.180]:35238 "EHLO
-	mail-ye0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755712Ab3IIXOY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 19:14:24 -0400
-Received: by mail-ye0-f180.google.com with SMTP id m15so2207933yen.39
-        for <linux-pci@vger.kernel.org>; Mon, 09 Sep 2013 16:14:23 -0700 (PDT)
-Subject: [PATCH 6/7] lspci: Drop PCIe LnkCtl "Retrain Link" decoding
-To: Martin Mares <mj@ucw.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Mon, 09 Sep 2013 17:14:21 -0600
-Message-ID: <20130909231421.30095.57889.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
-References: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
+Received: from mail-vb0-f44.google.com ([209.85.212.44]:60566 "EHLO
+	mail-vb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753656Ab3I0TYb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 15:24:31 -0400
+Received: by mail-vb0-f44.google.com with SMTP id e13so2201134vbg.3
+        for <linux-pci@vger.kernel.org>; Fri, 27 Sep 2013 12:24:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1380300815-1864-1-git-send-email-nhorman@tuxdriver.com>
+References: <1380300815-1864-1-git-send-email-nhorman@tuxdriver.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 27 Sep 2013 12:24:10 -0700
+Message-ID: <CALCETrVB-rUds-u1sdXeUwgJtnTV0pFpaeZiDMKv96-uZ8uqSg@mail.gmail.com>
+Subject: Re: [PATCH] iommu: Remove stack trace from broken irq remapping warning
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per PCIe spec r3.0, Table 7-16, the Retrain Link bit is writable but
-always returns 0 when read, so decoding it gives no useful information.
+On Fri, Sep 27, 2013 at 9:53 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> The warning for the irq remapping broken check in intel_irq_remapping.c is
+> pretty pointless.  We need the warning, but we know where its comming from, the
+> stack trace will always be the same, and it needlessly triggers things like
+> Abrt.  This changes the warning to just print a text warning about BIOS being
+> broken, without the stack trace, then sets the appropriate taint bit.  Since we
+> automatically disable irq remapping, theres no need to contiue making Abrt jump
+> at this problem
+>
+> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> CC: Joerg Roedel <joro@8bytes.org>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Andy Lutomirski <luto@amacapital.net>
+> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> CC: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+> ---
+>  drivers/iommu/intel_irq_remapping.c | 13 +++++++------
+>  1 file changed, 7 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+> index f71673d..b97d70b 100644
+> --- a/drivers/iommu/intel_irq_remapping.c
+> +++ b/drivers/iommu/intel_irq_remapping.c
+> @@ -525,12 +525,13 @@ static int __init intel_irq_remapping_supported(void)
+>         if (disable_irq_remap)
+>                 return 0;
+>         if (irq_remap_broken) {
+> -               WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
+> -                          "This system BIOS has enabled interrupt remapping\n"
+> -                          "on a chipset that contains an erratum making that\n"
+> -                          "feature unstable.  To maintain system stability\n"
+> -                          "interrupt remapping is being disabled.  Please\n"
+> -                          "contact your BIOS vendor for an update\n");
+> +               printk(KERN_WARNING
+> +                       "This system BIOS has enabled interrupt remapping\n"
+> +                       "on a chipset that contains an erratum making that\n"
+> +                       "feature unstable.  To maintain system stability\n"
+> +                       "interrupt remapping is being disabled.  Please\n"
+> +                       "contact your BIOS vendor for an update\n");
+> +               add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- ls-caps.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Is the taint bit actually useful?  It seems like functionality will be
+missing if this workaround happens, but everything should be stable.
 
-diff --git a/ls-caps.c b/ls-caps.c
-index 3b554fe..f192510 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -776,9 +776,8 @@ static void cap_express_link(struct device *d, int where, int type)
-   if ((type == PCI_EXP_TYPE_ROOT_PORT) || (type == PCI_EXP_TYPE_ENDPOINT) ||
-       (type == PCI_EXP_TYPE_LEG_END) || (type == PCI_EXP_TYPE_PCI_BRIDGE))
-     printf(" RCB %d bytes", w & PCI_EXP_LNKCTL_RCB ? 128 : 64);
--  printf(" Disabled%c Retrain%c CommClk%c\n\t\t\tExtSynch%c ClockPM%c AutWidDis%c BWInt%c AutBWInt%c\n",
-+  printf(" Disabled%c CommClk%c\n\t\t\tExtSynch%c ClockPM%c AutWidDis%c BWInt%c AutBWInt%c\n",
- 	FLAG(w, PCI_EXP_LNKCTL_DISABLE),
--	FLAG(w, PCI_EXP_LNKCTL_RETRAIN),
- 	FLAG(w, PCI_EXP_LNKCTL_CLOCK),
- 	FLAG(w, PCI_EXP_LNKCTL_XSYNCH),
- 	FLAG(w, PCI_EXP_LNKCTL_CLOCKPM),
-
+--Andy
