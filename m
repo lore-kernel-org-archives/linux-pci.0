@@ -1,114 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:52922 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300Ab3IPHks (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2013 03:40:48 -0400
-Date: Mon, 16 Sep 2013 09:40:45 +0200
-From: Sascha Hauer <s.hauer@pengutronix.de>
-To: Sean Cross <xobs@kosagi.com>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Zhu Richard-R65037 <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>, tharvey@gateworks.com,
-	bhelgaas@google.com
-Subject: Re: [PATCH v5 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-Message-ID: <20130916074045.GT30088@pengutronix.de>
-References: <1379310497-12362-1-git-send-email-xobs@kosagi.com>
- <1379310497-12362-4-git-send-email-xobs@kosagi.com>
+Received: from cantor2.suse.de ([195.135.220.15]:44077 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753151Ab3I0JI5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 27 Sep 2013 05:08:57 -0400
+Date: Fri, 27 Sep 2013 11:08:51 +0200 (CEST)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Adam Radford <aradford@gmail.com>
+Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
+In-Reply-To: <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1309271106090.18703@pobox.suse.cz>
+References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz> <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz> <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
+ <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz> <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1379310497-12362-4-git-send-email-xobs@kosagi.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 16, 2013 at 05:48:17AM +0000, Sean Cross wrote:
-> Add support for the PCIe port present on the i.MX6 family of controllers.
-> These use the Synopsis Designware core tied to their own PHY.
+On Fri, 6 Sep 2013, Bjorn Helgaas wrote:
+
+> >> >> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
+> >> >> > pci device") makes MSIs be forcibly disabled at boot time.
+> >> >> >
+> >> >> > It turns out that this breaks 3ware controller -- if MSIs are disabled
+> >> >> > during PCI discovery of this controller, the device doesn't work properly
+> >> >> > (it doesn't respond to any commands that are being sent to it after
+> >> >> > initialization).
 > 
-> diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
-> index 971356b..d30ff63 100644
-> --- a/arch/arm/mach-imx/clk-imx6q.c
-> +++ b/arch/arm/mach-imx/clk-imx6q.c
-> @@ -623,6 +623,18 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
->  	if (ret)
->  		pr_warn("failed to set up CLKO: %d\n", ret);
->  
-> +	/*
-> +	 * All existing boards with PCIe use LVDS1
-> +	 */
-> +	if (IS_ENABLED(CONFIG_PCI_IMX6)) {
-> +		clk_set_parent(clk[lvds1_sel], clk[sata_ref]);
+> Is there a bug report for this issue?  
 
-This is fine,
+Yes, but unfortunately only in our internal bugzilla.
 
-> +		clk_prepare_enable(clk[lvds1_gate]);
-> +		clk_prepare_enable(clk[pcie_ref_125m]);
-> +		clk_prepare_enable(clk[sata_ref_100m]);
-> +		clk_prepare_enable(clk[pcie_axi]);
+> It's nice to have a pointer to, e.g., a bugzilla.kernel.org bug report 
+> with info such as dmesg logs, lspci output, etc., for future reference.  
 
-but the clocks should be really enabled in the driver that needs them.
+It's a customer-reported issue, so I am gathering permission to make this 
+information public (I don't think that'll be an issue).
 
-> +static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
-> +{
-> +	u32 val;
-> +	u32 max_iterations = 10;
-> +	u32 wait_counter = 0;
-> +
-> +	do {
-> +		val = readl(dbi_base + PCIE_PHY_STAT);
-> +		val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
-> +		wait_counter++;
+I'll send up a followup afterwards.
 
-		if (val == exp_val)
-			return 0;
+> Maybe somebody will figure out a more generic change that could make 
+> this quirk unnecessary, and details will help in figuring that out.
+> 
+> I assume the actual PCI discovery done in the PCI core works fine;
+> it's just that the driver doesn't work if MSIs are disabled on the
+> device.  If that's the case, can this be fixed by some driver change?
+> Maybe the driver needs to enable MSI before it sends commands to the
+> device?
 
-> +		udelay(1);
+I have tried it, but it still doesn't work. It seems like the device 
+initialization is not finalized properly with MISs disabled; meaning the 
+device is there (discovery has completed), but it "just doesn't work".
 
-Avoids the udelay when the value is correct during the first iteration.
+> Any description of what this failure looks like to a user?  How can a 
+> user or a distro connect a symptom (driver timeout, console message, or 
+> whatever) to this patch?
 
-> +	} while ((wait_counter < max_iterations) && (val != exp_val));
-> +
-> +	if (val != exp_val)
-> +		return -ETIMEDOUT;
-> +
-> +	return 0;
-> +}
-> +
+Will be hopefully part of the dmesg I will be providing later ... 
+basically any commands sent to it time out.
 
-...
-
-> +/* Read from the 16-bit PCIe PHY control registers (not memory-mapped) */
-> +static int pcie_phy_read(void __iomem *dbi_base, int addr , int *data)
-> +{
-> +	u32 val, phy_ctl;
-> +	int ret;
-> +
-> +	ret = pcie_phy_wait_ack(dbi_base, addr);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* assert Read signal */
-> +	phy_ctl = 0x1 << PCIE_PHY_CTRL_RD_LOC;
-> +	writel(phy_ctl, dbi_base + PCIE_PHY_CTRL);
-> +
-> +	ret = pcie_phy_poll_ack(dbi_base, 1);
-> +	if (ret)
-> +		return ret;
-> +
-> +	val = readl(dbi_base + PCIE_PHY_STAT);
-> +	*data = (val & (0xffff << PCIE_PHY_STAT_DATA_LOC));
-
-This works because PCIE_PHY_STAT_DATA_LOC is 0. Otherwise you would have
-to do:
-
-	*data = (val >> PCIE_PHY_STAT_DATA_LOC) & 0xfff;
-
-I suggest to simply drop the bogus zero bit shift.
-
-Sascha
+Thanks,
 
 -- 
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+Jiri Kosina
+SUSE Labs
