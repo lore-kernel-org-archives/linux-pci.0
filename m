@@ -1,73 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:38885 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756468Ab3ILGe4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Sep 2013 02:34:56 -0400
-Message-ID: <5231607C.10702@ti.com>
-Date: Thu, 12 Sep 2013 12:04:36 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: "'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH V3] pci: exynos: split into two parts such as Synopsys
- part and Exynos part
-References: <002801ce8376$a807dbf0$f81793d0$@samsung.com> <51ED49D6.9050209@ti.com> <000701ce8741$fe47deb0$fad79c10$@samsung.com> <51EE22DF.6090902@ti.com> <001301ce8772$522dfc50$f689f4f0$@samsung.com>
-In-Reply-To: <001301ce8772$522dfc50$f689f4f0$@samsung.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mailout3.samsung.com ([203.254.224.33]:11780 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008Ab3I0DkN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 23:40:13 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Shawn Guo' <shawn.guo@linaro.org>
+Cc: 'Zhu Richard-R65037' <r65037@freescale.com>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Sean Cross' <xobs@kosagi.com>, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	'Sascha Hauer' <s.hauer@pengutronix.de>, bhelgaas@google.com,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
+ <1379319655-20210-4-git-send-email-xobs@kosagi.com>
+ <CAJ+vNU32oMZq=jrSCpk_ZjYc08kRBAqhOS8uYfor28gY8WGhnw@mail.gmail.com>
+ <0E83723C55F66F43A6041464FE31119D3F7E6A@039-SN2MPN1-012.039d.mgd.msft.net>
+ <20130927021925.GF25146@S2101-09.ap.freescale.net>
+In-reply-to: <20130927021925.GF25146@S2101-09.ap.freescale.net>
+Subject: Re: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+Date: Fri, 27 Sep 2013 12:40:11 +0900
+Message-id: <017e01cebb33$44fa65b0$ceef3110$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo,
+On Friday, September 27, 2013 11:19 AM, Shawn Guo wrote:
+> On Fri, Sep 27, 2013 at 01:38:39AM +0000, Zhu Richard-R65037 wrote:
+> > Hi Tim:
+> > Thanks for your tests.
+> > Yes, it is. There are some problems when the PCIe switch is used
+> > on the 3.1x kernel at my side too,
+> although the PCIe switch
+> > is ok on FSL imx_3.0.35 kernels.
+> > I'm debugging this issue now, and would summit the patches asap.
+> >
+> 
+> From what I read, it seems Sean's series does not support PCIe switch.
+> At least, he hasn't got any device to test it.  And there is some
+> problem with PCIe switch running the latest kernel, which might not be
+> related to the controller driver.
+> 
+> I suggest we ask Bjorn to merge the v7 I sent yesterday, so that people
+> can have a same base to work on, and add PCIe switch support with
+> incremental patches.   Does that sound good to you, Tim?
+> 
 
-On Tuesday 23 July 2013 12:30 PM, Jingoo Han wrote:
-> On Tuesday, July 23, 2013 3:30 PM, Kishon Vijay Abraham I wrote:
->> On Tuesday 23 July 2013 06:44 AM, Jingoo Han wrote:
->>> On Tuesday, July 23, 2013 12:04 AM, Kishon Vijay Abraham I wrote:
->>>> On Thursday 18 July 2013 10:51 AM, Jingoo Han wrote:
->>>>> Exynos PCIe IP consists of Synopsys specific part and Exynos
->>>>> specific part. Only core block is a Synopsys designware part;
->>>>> other parts are Exynos specific.
->>>>> Also, the Synopsys designware part can be shared with other
->>>>> platforms; thus, it can be split two parts such as Synopsys
->>>>> designware part and Exynos specific part.
->>>>
->>>> some more queries and comments..
->>>
->> .
->> .
->> <snip>
->> .
->> .
->>>>> +			of_pci_range_to_resource(&range, np, &pp->cfg);
->>>>> +			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
->>>>> +			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
->>>>> +		}
->>>>> +	}
->>>>> +
->>>>> +	pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
->>>>> +				resource_size(&pp->cfg));
->>>>
->>>> Why is configuraion space divided into two?
->>>
->>> Sorry, I don't know the exact reason. :(
->>> Pratyush Anand may know about this.
->>> Pratyush Anand, could you answer the question?
->>>
->>> Also, if you find some problems, please let me know.
+Hi Shawn Guo,
 
-One more query..
+I agree with your suggestion. :-)
+The PCIe switch support patches can be added later, after the v7 patch for
+i.MX6 PCIe controller driver is merged.
 
-Where is inbound translation configuration done in your driver? how should it
-be done?
+Also, if the PCIe switch support patches modify the synopsys designware PCIe
+driver (pcie-designware.c), it should be confirmed by other related people.
 
-Thanks
-Kishon
+Best regards,
+Jingoo Han
+
