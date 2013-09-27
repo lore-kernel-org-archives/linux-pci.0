@@ -1,57 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	Mike Marciniszyn <infinipath@intel.com>,
-	Roland Dreier <roland@kernel.org>,
-	Roland Dreier <roland@purestorage.com>
-CC: <linux-kernel@vger.kernel.org>, Mark Einon <mark.einon@gmail.com>,
-	Sean Hefty <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	<linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH 1/6] PCI: Export pcie_set_mps() and pcie_get_mps()
-Date: Mon, 9 Sep 2013 21:13:03 +0800
-Message-ID: <1378732388-4508-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f181.google.com ([74.125.82.181]:58297 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904Ab3I0Dwz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 23:52:55 -0400
+Received: by mail-we0-f181.google.com with SMTP id p61so2107319wes.12
+        for <linux-pci@vger.kernel.org>; Thu, 26 Sep 2013 20:52:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130927021925.GF25146@S2101-09.ap.freescale.net>
+References: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
+	<1379319655-20210-4-git-send-email-xobs@kosagi.com>
+	<CAJ+vNU32oMZq=jrSCpk_ZjYc08kRBAqhOS8uYfor28gY8WGhnw@mail.gmail.com>
+	<0E83723C55F66F43A6041464FE31119D3F7E6A@039-SN2MPN1-012.039d.mgd.msft.net>
+	<20130927021925.GF25146@S2101-09.ap.freescale.net>
+Date: Thu, 26 Sep 2013 20:52:53 -0700
+Message-ID: <CAJ+vNU1zz21EbuL4xrxSyZ_cNH2Y=_+zFLE9mqnqHst4vuhHKw@mail.gmail.com>
+Subject: Re: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+From: Tim Harvey <tharvey@gateworks.com>
+To: Shawn Guo <shawn.guo@linaro.org>
+Cc: Zhu Richard-R65037 <r65037@freescale.com>,
+	Sean Cross <xobs@kosagi.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export pcie_get_mps() and pcie_set_mps() functions,
-so driver can use them to simplify code.
+On Thu, Sep 26, 2013 at 7:19 PM, Shawn Guo <shawn.guo@linaro.org> wrote:
+> On Fri, Sep 27, 2013 at 01:38:39AM +0000, Zhu Richard-R65037 wrote:
+>> Hi Tim:
+>> Thanks for your tests.
+>> Yes, it is. There are some problems when the PCIe switch is used on the 3.1x kernel at my side too, although the PCIe switch
+>> is ok on FSL imx_3.0.35 kernels.
+>> I'm debugging this issue now, and would summit the patches asap.
+>>
+>
+> From what I read, it seems Sean's series does not support PCIe switch.
+> At least, he hasn't got any device to test it.  And there is some
+> problem with PCIe switch running the latest kernel, which might not be
+> related to the controller driver.
+>
+> I suggest we ask Bjorn to merge the v7 I sent yesterday, so that people
+> can have a same base to work on, and add PCIe switch support with
+> incremental patches.   Does that sound good to you, Tim?
+>
+> Shawn
+>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pci.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Agreed - I would like to get this out there to a broader audience as well.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b821a62..e35f7ec 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3972,6 +3972,7 @@ int pcie_get_mps(struct pci_dev *dev)
- 
- 	return 128 << ((ctl & PCI_EXP_DEVCTL_PAYLOAD) >> 5);
- }
-+EXPORT_SYMBOL(pcie_get_mps);
- 
- /**
-  * pcie_set_mps - set PCI Express maximum payload size
-@@ -3996,6 +3997,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
- 	return pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
- 						  PCI_EXP_DEVCTL_PAYLOAD, v);
- }
-+EXPORT_SYMBOL(pcie_set_mps);
- 
- /**
-  * pci_select_bars - Make BAR mask from the type of resource
--- 
-1.7.1
+Thanks,
 
-
+Tim
