@@ -1,76 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:38168 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751889Ab3IGVyR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 7 Sep 2013 17:54:17 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH 00/14] _OSC simplification
-Date: Sun, 08 Sep 2013 00:05:14 +0200
-Message-ID: <1578973.mLOcbOuP8y@vostro.rjw.lan>
-In-Reply-To: <CAErSpo4YRS3-EC5NcFVyi-yBbEX2Fmr0G=Vt2pk_SO7+5Ad91A@mail.gmail.com>
-References: <20130906171010.11482.34235.stgit@bhelgaas-glaptop> <16818914.Hl8YjzUdJi@vostro.rjw.lan> <CAErSpo4YRS3-EC5NcFVyi-yBbEX2Fmr0G=Vt2pk_SO7+5Ad91A@mail.gmail.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:63482 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752941Ab3I0U4q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 16:56:46 -0400
+Received: by mail-ie0-f176.google.com with SMTP id as1so5025553iec.7
+        for <linux-pci@vger.kernel.org>; Fri, 27 Sep 2013 13:56:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAOJFanV9WewKjCyx6X-+nq4=EKoCwJTM6zg2PJ2BBBC_0aWNWw@mail.gmail.com>
+References: <CAOJFanW+QFjeUX40JhGHuaPRW7-7jh21OCijneWgPo=Nnf5Oaw@mail.gmail.com>
+ <CAOJFanV9WewKjCyx6X-+nq4=EKoCwJTM6zg2PJ2BBBC_0aWNWw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 27 Sep 2013 14:56:25 -0600
+Message-ID: <CAErSpo6dOq8-vDP1G=pMV8fNrf81GyBtWrR5pkvynSkr834JTA@mail.gmail.com>
+Subject: Re: PCI: PCIe rescan resource allocation/re-size failure
+To: Sasikanth babu <sasikanth.v19@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, September 07, 2013 07:59:39 AM Bjorn Helgaas wrote:
-> On Fri, Sep 6, 2013 at 6:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Friday, September 06, 2013 11:13:24 AM Bjorn Helgaas wrote:
-> >> This is a long series of mostly minor changes with the goal of
-> >> simplifying the _OSC-related code and making the negotiation between
-> >> Linux and the platform more understandable.
-> >>
-> >> My intent is that this doesn't change any behavior except for the text
-> >> in dmesg.
-> >>
-> >> However, this restructuring does raise some questions in my mind, such
-> >> as the fact that we do not call pcie_no_aspm() to disable ASPM in two
-> >> cases where it seems like we might want to:
-> >>
-> >>   1) When pcie_ports_disabled, e.g., when booting with
-> >>      "pcie_ports=compat".
-> >>
-> >>   2) When Linux doesn't support all the required services, e.g., if
-> >>      compiled with ASPM support but not MSI support.
-> >
-> > We tried that (i.e. 2)), but then it caused energy usage to increase on some
-> > systems with power-hungry graphics adapters and Phoronix made some fuss about
-> > that. :-)
-> 
-> The _OSC section of the spec is pretty obtuse, but my reading of Table
-> 4-6 (PCI Firmware r3.0) is that the OS is prohibited from writing to
-> the PCIe Capability (for ASPM, VC, AER, or other control) unless it
-> has been granted "PCI Express Capability Structure control".  That's
-> why I'm dubious about the fact that we use ASPM in those two cases
-> where we don't even *ask* for that control.
-> 
-> For the Phoronix case, I assume they made the argument that Windows
-> does use ASPM without having PCIe Capability control?
+[+cc Yinghai]
 
-No, this was regarded as a kernel regression that needed to be addressed.
+On Wed, Sep 25, 2013 at 7:01 PM, Sasikanth babu <sasikanth.v19@gmail.com> wrote:
+> Hello all,
+>
+> I have been facing an issue with PCIe device rescan, pci subsystem
+> could not be able to allocate resource.
+> I think the issue is PCIe resource resize.
+>
+> pci 0000:0a:00.0: reg 10: [mem 0x00000000-0x00003fff 64bit pref]
+> pci 0000:0a:00.0: reg 18: [mem 0x00000000-0x03ffffff 64bit pref]
+> pcieport 0000:02:08.0: BAR 9: can't assign mem pref (size 0x6000000)
+> pci 0000:0a:00.0: BAR 2: can't assign mem pref (size 0x4000000)
+> pci 0000:0a:00.0: BAR 0: can't assign mem pref (size 0x4000)
+>
+> Linux kernel : 2.6.34.10 (It is very old. Have no option so can't use
+> latest version)
+> Arch : mips
+>
+> I also applied the following patch series  to 2.6.34.10 kernel but the
+> result is same resource resize fails.
+>
+> http://lkml.indiana.edu/hypermail/linux/kernel/1102.1/02823.html  -
+> PCI: refactor io size calculation
+> https://groups.google.com/forum/#!topic/linux.kernel/LuQ4xbwwWU4 -
+> PCI: honor child buses add_size in hot plug configuration series
+> https://lkml.org/lkml/2011/6/20/422  -  PCI: fix cardbus and sriov
+> regressions series
+> https://lkml.org/lkml/2012/1/21/35  - PCI : bridge resource
+> reallocation patchset series
+> and resource: ability to resize an allocated resource patch.
 
-> Do you have any pointers to that discussion?
+Sorry, I really don't have time to work on issues with old kernels
+like this.  It's too hard to figure out whether the problem has
+already been resolved.  If you can reproduce the problem with a
+current kernel, I'd be more than happy to work on it.
 
-This is the Phoronix link:
+Yinghai knows a lot about this area, and maybe this will be obvious to him.
 
-http://www.phoronix.com/scan.php?page=article&item=linux_aspm_solution&num=1
+But in general, it's just too hard to work on old kernels unless you
+can also demonstrate the problem on a current kernel, fix it there,
+and backport the fix.  Or, if the current kernel has already been
+fixed, you can figure out what fixed it and backport it.
 
-and I think you can get to some more info from there.
+Bjorn
 
-> I don't propose changing this now, but it does raise my eyebrows.
-> Maybe some sort of dmesg note would be appropriate.
-> 
-> Thanks for looking at all this stuff; I know from experience that it's
-> pretty hard to wade through :)
-
-No problem. :-)
-
-Thanks,
-Rafael
-
+> Steps I followed
+> ===============
+>
+> 1. Put the PCIe device in reset mode from uboot
+> 2. Boot kernel    (lspci will not show the device)
+> 3. Bring PCIe device out of reset mode
+> 4. To rescan PCI bus do echo 1 > /sys/bus/pci/rescan - (rescan is
+> must, kernel's hotplug isn't working).
+>
+> After rescan I can see device in lspci and also resource allocation
+> failure message in dmesg o/p.
+>
+> In the normal scenario i.e device not in reset mode while booting
+> kernel, then the address range allocated is
+> 11c00c0000000-11c00efffffff : PCI Bus 0000:02 whereas in failure
+> scenario i.e device in reset mode, the range
+> is 11c00c0000000-11c00dfffffff : PCI Bus 0000:02.
+>
+> Attached PCI dmesg output
+>
+> dmesg.working.txt -  device not in reset mode while booting kernel
+> dmesg.rescan.txt  -   device  in reset mode while booting kernel
+>
+> The attached files also have output of /proc/iomem in both scenarios.
+>
+>
+> Thanks In advance.
