@@ -1,40 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:35738 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753834Ab3IIOvY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 10:51:24 -0400
-From: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	infinipath <infinipath@intel.com>,
-	Roland Dreier <roland@kernel.org>,
-	Roland Dreier <roland@purestorage.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mark Einon <mark.einon@gmail.com>,
-	"Hefty, Sean" <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: RE: [PATCH 3/6] IB/qib: Use pci_is_root_bus() to check whether it
- is a root bus
-Date: Mon, 9 Sep 2013 14:51:17 +0000
-Message-ID: <32E1700B9017364D9B60AED9960492BC2119F067@FMSMSX107.amr.corp.intel.com>
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
- <1378732388-4508-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1378732388-4508-4-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:63827 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753594Ab3I0W4f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Sep 2013 18:56:35 -0400
 MIME-Version: 1.0
+In-Reply-To: <1380321480.27811.53.camel@pasglop>
+References: <1380270519.27811.10.camel@pasglop>
+	<CAE9FiQVkW7d7vFx_kPJG-FEvO71SZjZmpR+dnwVm61wkYK=0YA@mail.gmail.com>
+	<CA+55aFyDfMdAeaniQwkoeW6F-xd3JxrzGYwtFb6N9+NA6aRCMg@mail.gmail.com>
+	<1380318405.27811.37.camel@pasglop>
+	<CAE9FiQXXvkfTak6oEpUog_RYs_Gwpdji7N5UJ=R11Q61==N97A@mail.gmail.com>
+	<1380321480.27811.53.camel@pasglop>
+Date: Fri, 27 Sep 2013 15:56:34 -0700
+Message-ID: <CAE9FiQWm7ALPO5k_2nV+fuZw4oNNiw+_PEx8EWkb52ymN+EYUg@mail.gmail.com>
+Subject: Re: Please revert 928bea964827d7824b548c1f8e06eccbbc4d0d7d
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=047d7bd758daeec56404e765651b
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: [PATCH 3/6] IB/qib: Use pci_is_root_bus() to check whether it is a root
-> bus
-> 
+--047d7bd758daeec56404e765651b
+Content-Type: text/plain; charset=ISO-8859-1
 
-Thanks for the patch!
+On Fri, Sep 27, 2013 at 3:38 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Fri, 2013-09-27 at 14:54 -0700, Yinghai Lu wrote:
+>> On Fri, Sep 27, 2013 at 2:46 PM, Benjamin Herrenschmidt
+>> <benh@kernel.crashing.org> wrote:
+>>
+>> > Wouldn't it be better to simply have pci_enable_device() always set bus
+>> > master on a bridge? I don't see any case where it makes sense to have
+>> > an enabled bridge without the master bit set on it...
+>>
+>> Do you mean attached?
+>
+> So this patch works and fixes the problem. I think it makes the whole
+> thing more robust and should be applied.
 
-Acked-by: Mike Marciniszyn <mike.marciniszyn@intel.com>
+good.
+
+>
+> I still don't know why the bridge doesn't get enabled properly without
+> it yes, tracking it down (the machine in question takes a LONG time to
+> reboot :-)
+
+ok, please if you are ok attached one instead. It will print some warning about
+driver skipping pci_set_master, so we can catch more problem with drivers.
+
+Thanks
+
+Yinghai
+
+--047d7bd758daeec56404e765651b
+Content-Type: application/octet-stream; name="pci_set_master_again_v2.patch"
+Content-Disposition: attachment; filename="pci_set_master_again_v2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hm40exvl0
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IFdvcmthcm91bmQgbWlzc2luZyBwY2lfc2V0X21hc3RlciBp
+biBwY2kgZHJpdmVycwoKQmVuSCBmb3VuZDoKfCA5MjhiZWE5NjQ4MjdkNzgyNGI1NDhjMWY4ZTA2
+ZWNjYmJjNGQwZDdkCnwgUENJOiBEZWxheSBlbmFibGluZyBicmlkZ2VzIHVudGlsIHRoZXkncmUg
+bmVlZGVkCgpicmVhayBQQ0kgb24gcG93ZXJwYy4gIFRoZSByZWFzb24gaXMgdGhhdCB0aGUgUENJ
+ZSBwb3J0IGRyaXZlciB3aWxsCmNhbGwgcGNpX2VuYWJsZV9kZXZpY2UoKSBvbiB0aGUgYnJpZGdl
+LCBzbyBkZXZpY2UgZW5hYmxlZCAoYnV0IHNraXAKcGNpX3NldF9tYXN0ZXIgc29tZWhvdykuCgpC
+ZWNhdXNlIG9mIHRoYXQsIHBjaV9lbmFibGVfYnJpZGdlKCkgbGF0ZXIgb24gKGNhbGxlZCBhcyBh
+IHJlc3VsdCBvZiB0aGUKY2hpbGQgZGV2aWNlIGRyaXZlciBkb2luZyBwY2lfZW5hYmxlX2Rldmlj
+ZSkgd2lsbCBzZWUgdGhlIGJyaWRnZSBhcwphbHJlYWR5IGVuYWJsZWQgYW5kIHdpbGwgbm90IGNh
+bGwgcGNpX3NldF9tYXN0ZXIoKSBvbiBpdC4KCkZpeGVkIGJ5IGFkZCBjaGVja2luZyBpbiBwY2lf
+ZW5hYmxlX2JyaWRnZSwgYW5kIGNhbGwgcGNpX3NldF9tYXN0ZXIKaWYgZHJpdmVyIHNraXAgdGhh
+dC4KClJlcG9ydGVkLWJ5OiBCZW5qYW1pbiBIZXJyZW5zY2htaWR0IDxiZW5oQGtlcm5lbC5jcmFz
+aGluZy5vcmc+ClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4K
+Ci0tLQogZHJpdmVycy9wY2kvcGNpLmMgfCAgICA4ICsrKysrKystCiAxIGZpbGUgY2hhbmdlZCwg
+NyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMv
+cGNpL3BjaS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3BjaS5j
+CisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpLmMKQEAgLTExNTYsOCArMTE1NiwxNCBAQCBz
+dGF0aWMgdm9pZCBwY2lfZW5hYmxlX2JyaWRnZShzdHJ1Y3QgcGNpCiAKIAlwY2lfZW5hYmxlX2Jy
+aWRnZShkZXYtPmJ1cy0+c2VsZik7CiAKLQlpZiAocGNpX2lzX2VuYWJsZWQoZGV2KSkKKwlpZiAo
+cGNpX2lzX2VuYWJsZWQoZGV2KSkgeworCQlpZiAoIWRldi0+aXNfYnVzbWFzdGVyKSB7CisJCQlk
+ZXZfd2FybigmZGV2LT5kZXYsICJkcml2ZXIgc2tpcCBwY2lfc2V0X21hc3RlciwgZml4IGl0IVxu
+Iik7CisJCQlwY2lfc2V0X21hc3RlcihkZXYpOworCQl9CiAJCXJldHVybjsKKwl9CisKIAlyZXR2
+YWwgPSBwY2lfZW5hYmxlX2RldmljZShkZXYpOwogCWlmIChyZXR2YWwpCiAJCWRldl9lcnIoJmRl
+di0+ZGV2LCAiRXJyb3IgZW5hYmxpbmcgYnJpZGdlICglZCksIGNvbnRpbnVpbmdcbiIsCg==
+--047d7bd758daeec56404e765651b--
