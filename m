@@ -1,88 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([122.248.162.5]:60572 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754654Ab3IJHqV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Sep 2013 03:46:21 -0400
-Received: from /spool/local
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Sep 2013 13:09:22 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id F2CD1394005C
-	for <linux-pci@vger.kernel.org>; Tue, 10 Sep 2013 13:16:01 +0530 (IST)
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r8A7mEGK38535238
-	for <linux-pci@vger.kernel.org>; Tue, 10 Sep 2013 13:18:14 +0530
-Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r8A7kCZu010527
-	for <linux-pci@vger.kernel.org>; Tue, 10 Sep 2013 13:16:13 +0530
-Date: Tue, 10 Sep 2013 15:46:11 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Chiang <achiang@canonical.com>, benh@kernel.crashing.org
-Subject: Re: [PATCH 1/3] PCI: use pci_is_root_bus() to check whether it is a
- root bus
-Message-ID: <20130910074611.GA11724@weiyang.vnet.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1378431958-7874-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20130906230941.GC12956@google.com>
- <20130909070017.GB3726@weiyang.vnet.ibm.com>
- <CAErSpo5BTV_b1NpeifuAPwHvfsrAERpdmwgnUFMS6gQ3Asik-Q@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:31846 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754499Ab3I0TCU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 27 Sep 2013 15:02:20 -0400
+Message-ID: <5245D626.6090209@redhat.com>
+Date: Fri, 27 Sep 2013 21:01:58 +0200
+From: Zdenek Kabelac <zkabelac@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5BTV_b1NpeifuAPwHvfsrAERpdmwgnUFMS6gQ3Asik-Q@mail.gmail.com>
+To: Veaceslav Falico <vfalico@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux.nics@intel.com,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: kobject_add_internal failed for msi_irqs with -EEXIST
+References: <5245896A.70705@redhat.com> <CAErSpo6L-Ud08=JPM7d=RYuPO=UFvq_9hZGbne0iQnCHiFbuHQ@mail.gmail.com> <20130927160125.GB14139@redhat.com>
+In-Reply-To: <20130927160125.GB14139@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 09, 2013 at 10:15:07AM -0600, Bjorn Helgaas wrote:
->On Mon, Sep 9, 2013 at 1:00 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Fri, Sep 06, 2013 at 05:09:41PM -0600, Bjorn Helgaas wrote:
->>>[+cc Kenji, Alex]
->>>
->>>Did you trip over a case where a root bus has bus->self != NULL?
->>>I'd like to know more details about the case where:
->>>
->>>  (bus->parent == NULL) && (bus->self != NULL)
+Dne 27.9.2013 18:01, Veaceslav Falico napsal(a):
+> On Fri, Sep 27, 2013 at 09:58:28AM -0600, Bjorn Helgaas wrote:
+>> [+cc Veaceslav, linux-pci]
 >>
->> I found one case that (bus->self == NULL) and this bus is not root bus.
+>> On Fri, Sep 27, 2013 at 7:34 AM, Zdenek Kabelac <zkabelac@redhat.com> wrote:
+>>> Hi
+>>>
+>>> With recent build of 3.12-rc2 I'm getting this warning report from kernel:
+>>> (hw Lenovo T61, C2D, 4GB Ram)
+>>> (repost since linux-kernel@ rejected my gmail email....)
 >>
->> Not sure, this case will meet your requirement?
+>> This looks related to the MSI/kobject issues Veaceslav is working on.
+>> See
+>> http://lkml.kernel.org/r/1379382464-7920-2-git-send-email-vfalico@redhat.com
+>> and related messages.
+>>
+>> We don't have a resolution yet.  If you have
+>> CONFIG_DEBUG_KOBJECT_RELEASE=y, you could try turning that off.  I
+>> don't know if it would help, and it would only be a temporary
+>> workaround anyway.
 >
->I'm definitely interested in that case as well.  Can you include a
->complete "lspci -vv" output for the case where this happens?
-
-I don't *see* it. I notice this during the code reading.
-
-So yes, this happens when a virtual bus is created for SR-IOV.
-
-Sounds this is the *only* case for (bus->self == NULl)?
-
->I suspect this happens with SR-IOV when we create "virtual" buses,
->i.e., in virtfn_add_bus().  I think maybe I'll update the comment at
->pci_is_root_bus() with a note about why we want to use it instead of
->testing for "bus->self == NULL".
+> I've looked at the original post -
+> http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg510798.html
+> hope that's it - and it seems that it's disabling DEBUG_KOBJECT_RELEASE
+> won't help - the warning is about the re-registering, not about freeing it.
 >
->I think we still have other tree traversal issues related to those
->virtual buses, e.g., the ones I mentioned here [1].  But those are a
->separate problem.
+> As a workaround I'd suggest adding some kind of delay between removing and
+> adding the msi - as in - rmmod e1000e; sleep 1; modprobe e1000e; - or
+> something like that, so that there is enough time for the /msqi_irqs/ to go
+> away.
 >
->Bjorn
->
->[1] http://lkml.kernel.org/r/CAErSpo5sFfr=O-Pp=PyaxGauaEajaTr2aK-EQ_rTVUk1zyz8cA@mail.gmail.com
 
-Here comes another problem I met recently.
+I'm not readding e1000e modules myself - however I've no idea what 
+NetworkManager does. Here are messages prior warning:
 
-On some platforms, like powernv, each pci-dev has a dev-tree node to represent
-it. The dev-tree node is set by pci_set_of_node() during pci_scan_device().
+NetworkManager[304]: <info> monitoring kernel firmware directory '/lib/firmware'.
+NetworkManager[304]: <info> rfkill1: found WiFi radio killswitch (at 
+/sys/devices/pci0000:00/0000:00:1c.1/0000:03:00.0/ieee80211/phy0/rfkill1) 
+(driver iwl3945)
+NetworkManager[304]: <info> WiFi hardware radio set enabled
+NetworkManager[304]: <info> WiFi enabled by radio killswitch; enabled by state 
+file
+NetworkManager[304]: <info> WWAN enabled by radio killswitch; disabled by 
+state file
+NetworkManager[304]: <info> WiMAX enabled by radio killswitch; enabled by 
+state file
+NetworkManager[304]: <info> Networking is enabled by state file
+NetworkManager[304]: <info> (eth0): carrier is OFF
+NetworkManager[304]: <info> (eth0): new Ethernet device (driver: 'e1000e' 
+ifindex: 2)
+NetworkManager[304]: <info> (eth0): exported as 
+/org/freedesktop/NetworkManager/Devices/0
+NetworkManager[304]: <info> (eth0): device state change: unmanaged -> 
+unavailable (reason 'managed') [10 20 2]
+NetworkManager[304]: <info> (eth0): bringing up device.
+rpcbind: cannot create socket for udp6
+rpcbind: cannot create socket for tcp6
+kernel: [    5.727025] WARNING! power/level is deprecated; use power/control 
+instead
 
-In pci_set_of_node(), it searchs for the node with the same devfn in its
-parent. Here comes the question, who should be the VF's parent. Would be a
-conflict for the devfn between PF and VF?
 
--- 
-Richard Yang
-Help you, Help me
+So it looks like  'bringing up' causes recreation of msi_irqs ?
+
+Zdenek
+
+
+
+
 
