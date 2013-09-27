@@ -1,54 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:52446 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969Ab3IINRD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Sep 2013 09:17:03 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	Mike Marciniszyn <infinipath@intel.com>,
-	Roland Dreier <roland@kernel.org>,
-	Roland Dreier <roland@purestorage.com>
-CC: <linux-kernel@vger.kernel.org>, Mark Einon <mark.einon@gmail.com>,
-	Sean Hefty <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	<linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH 3/6] IB/qib: Use pci_is_root_bus() to check whether it is a root bus
-Date: Mon, 9 Sep 2013 21:13:05 +0800
-Message-ID: <1378732388-4508-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from gate.crashing.org ([63.228.1.57]:49039 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753419Ab3I0WiV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 27 Sep 2013 18:38:21 -0400
+Message-ID: <1380321480.27811.53.camel@pasglop>
+Subject: Re: Please revert 928bea964827d7824b548c1f8e06eccbbc4d0d7d
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+Date: Sat, 28 Sep 2013 08:38:00 +1000
+In-Reply-To: <CAE9FiQXXvkfTak6oEpUog_RYs_Gwpdji7N5UJ=R11Q61==N97A@mail.gmail.com>
+References: <1380270519.27811.10.camel@pasglop>
+	 <CAE9FiQVkW7d7vFx_kPJG-FEvO71SZjZmpR+dnwVm61wkYK=0YA@mail.gmail.com>
+	 <CA+55aFyDfMdAeaniQwkoeW6F-xd3JxrzGYwtFb6N9+NA6aRCMg@mail.gmail.com>
+	 <1380318405.27811.37.camel@pasglop>
+	 <CAE9FiQXXvkfTak6oEpUog_RYs_Gwpdji7N5UJ=R11Q61==N97A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_is_root_bus() instead of "if (bus->parent)" statement
-for better readability.
+On Fri, 2013-09-27 at 14:54 -0700, Yinghai Lu wrote:
+> On Fri, Sep 27, 2013 at 2:46 PM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+> 
+> > Wouldn't it be better to simply have pci_enable_device() always set bus
+> > master on a bridge? I don't see any case where it makes sense to have
+> > an enabled bridge without the master bit set on it...
+> 
+> Do you mean attached?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/infiniband/hw/qib/qib_pcie.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+So this patch works and fixes the problem. I think it makes the whole
+thing more robust and should be applied.
 
-diff --git a/drivers/infiniband/hw/qib/qib_pcie.c b/drivers/infiniband/hw/qib/qib_pcie.c
-index c574ec7..3a5b99b 100644
---- a/drivers/infiniband/hw/qib/qib_pcie.c
-+++ b/drivers/infiniband/hw/qib/qib_pcie.c
-@@ -590,7 +590,7 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
- 
- 	/* Find out supported and configured values for parent (root) */
- 	parent = dd->pcidev->bus->self;
--	if (parent->bus->parent) {
-+	if (!pci_is_root_bus(parent->bus)) {
- 		qib_devinfo(dd->pcidev, "Parent not root\n");
- 		goto bail;
- 	}
--- 
-1.7.1
+I still don't know why the bridge doesn't get enabled properly without
+it yes, tracking it down (the machine in question takes a LONG time to
+reboot :-)
+
+Cheers,
+Ben.
 
 
