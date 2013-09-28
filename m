@@ -1,96 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11224 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750845Ab3IYQps (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Sep 2013 12:45:48 -0400
-Message-ID: <1380127533.3030.319.camel@ul30vt.home>
-Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain of a device
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bharat Bhushan <r65777@freescale.com>
-Cc: joro@8bytes.org, benh@kernel.crashing.org,
-	galak@kernel.crashing.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	agraf@suse.de, scottwood@freescale.com,
-	iommu@lists.linux-foundation.org,
-	Bharat Bhushan <Bharat.Bhushan@freescale.com>
-Date: Wed, 25 Sep 2013 10:45:33 -0600
-In-Reply-To: <1379575763-2091-3-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1379575763-2091-3-git-send-email-Bharat.Bhushan@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:18606 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752838Ab3I1UNW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Sep 2013 16:13:22 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: Workaround missing pci_set_master in pci drivers
+Date: Sat, 28 Sep 2013 13:13:07 -0700
+Message-Id: <1380399187-4962-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1380337550.27811.71.camel@pasglop>
+References: <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-09-19 at 12:59 +0530, Bharat Bhushan wrote:
-> This api return the iommu domain to which the device is attached.
-> The iommu_domain is required for making API calls related to iommu.
-> Follow up patches which use this API to know iommu maping.
-> 
-> Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
-> ---
->  drivers/iommu/iommu.c |   10 ++++++++++
->  include/linux/iommu.h |    7 +++++++
->  2 files changed, 17 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index fbe9ca7..6ac5f50 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -696,6 +696,16 @@ void iommu_detach_device(struct iommu_domain *domain, struct device *dev)
->  }
->  EXPORT_SYMBOL_GPL(iommu_detach_device);
->  
-> +struct iommu_domain *iommu_get_dev_domain(struct device *dev)
-> +{
-> +	struct iommu_ops *ops = dev->bus->iommu_ops;
-> +
-> +	if (unlikely(ops == NULL || ops->get_dev_iommu_domain == NULL))
-> +		return NULL;
-> +
-> +	return ops->get_dev_iommu_domain(dev);
-> +}
-> +EXPORT_SYMBOL_GPL(iommu_get_dev_domain);
+BenH found:
+| 928bea964827d7824b548c1f8e06eccbbc4d0d7d
+| PCI: Delay enabling bridges until they're needed
 
-What prevents this from racing iommu_domain_free()?  There's no
-references acquired, so there's no reason for the caller to assume the
-pointer is valid.
+break PCI on powerpc.  The reason is that the PCIe port driver will
+call pci_enable_device() on the bridge, so device enabled (but skip
+pci_set_master because pcie_port_auto and no acpi on powerpc ).
 
->  /*
->   * IOMMU groups are really the natrual working unit of the IOMMU, but
->   * the IOMMU API works on domains and devices.  Bridge that gap by
-> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-> index 7ea319e..fa046bd 100644
-> --- a/include/linux/iommu.h
-> +++ b/include/linux/iommu.h
-> @@ -127,6 +127,7 @@ struct iommu_ops {
->  	int (*domain_set_windows)(struct iommu_domain *domain, u32 w_count);
->  	/* Get the numer of window per domain */
->  	u32 (*domain_get_windows)(struct iommu_domain *domain);
-> +	struct iommu_domain *(*get_dev_iommu_domain)(struct device *dev);
->  
->  	unsigned long pgsize_bitmap;
->  };
-> @@ -190,6 +191,7 @@ extern int iommu_domain_window_enable(struct iommu_domain *domain, u32 wnd_nr,
->  				      phys_addr_t offset, u64 size,
->  				      int prot);
->  extern void iommu_domain_window_disable(struct iommu_domain *domain, u32 wnd_nr);
-> +extern struct iommu_domain *iommu_get_dev_domain(struct device *dev);
->  /**
->   * report_iommu_fault() - report about an IOMMU fault to the IOMMU framework
->   * @domain: the iommu domain where the fault has happened
-> @@ -284,6 +286,11 @@ static inline void iommu_domain_window_disable(struct iommu_domain *domain,
->  {
->  }
->  
-> +static inline struct iommu_domain *iommu_get_dev_domain(struct device *dev)
-> +{
-> +	return NULL;
-> +}
-> +
->  static inline phys_addr_t iommu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova)
->  {
->  	return 0;
+Because of that, pci_enable_bridge() later on (called as a result of the
+child device driver doing pci_enable_device) will see the bridge as
+already enabled and will not call pci_set_master() on it.
 
+Fixed by add checking in pci_enable_bridge, and call pci_set_master
+if driver skip that.
+That will make the code more robot and wade off problem for missing
+pci_set_master in drivers.
 
+Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
+---
+ drivers/pci/pci.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+Index: linux-2.6/drivers/pci/pci.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci.c
++++ linux-2.6/drivers/pci/pci.c
+@@ -1156,8 +1156,14 @@ static void pci_enable_bridge(struct pci
+ 
+ 	pci_enable_bridge(dev->bus->self);
+ 
+-	if (pci_is_enabled(dev))
++	if (pci_is_enabled(dev)) {
++		if (!dev->is_busmaster) {
++			dev_warn(&dev->dev, "driver skip pci_set_master, fix it!\n");
++			pci_set_master(dev);
++		}
+ 		return;
++	}
++
+ 	retval = pci_enable_device(dev);
+ 	if (retval)
+ 		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
