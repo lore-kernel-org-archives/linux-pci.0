@@ -1,71 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:47533 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999Ab3IZEcU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2013 00:32:20 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <001a01ceaace$013ec980$03bc5c80$%han@samsung.com>
-In-reply-to: <001a01ceaace$013ec980$03bc5c80$%han@samsung.com>
-Subject: Re: [PATCH V3] PCI: exynos: add support for MSI
-Date: Thu, 26 Sep 2013 13:32:18 +0900
-Message-id: <001b01ceba71$62ca02c0$285e0840$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:46681 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753221Ab3I1KMK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Sep 2013 06:12:10 -0400
+Received: by mail-pd0-f181.google.com with SMTP id g10so3633548pdj.12
+        for <linux-pci@vger.kernel.org>; Sat, 28 Sep 2013 03:12:10 -0700 (PDT)
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, sachin.kamat@linaro.org
+Subject: [PATCH 1/2] PCI: sysfs: Staticize local symbols
+Date: Sat, 28 Sep 2013 15:42:00 +0530
+Message-Id: <1380363121-1977-1-git-send-email-sachin.kamat@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, September 06, 2013 3:55 PM, Jingoo Han wrote:
-> 
-> This patch adds support for Message Signaled Interrupt in the
-> Exynos PCIe diver using Synopsys designware PCIe core IP.
-> 
-> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Signed-off-by: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> Cc: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+Local variables used only in this file are made static.
 
-Hi Bjorn Helgaas,
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+---
+ drivers/pci/pci-sysfs.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-There is no comment for last 3 weeks.
-Would you merge this patch to your tree?
-Thank you.
-
-Best regards,
-Jingoo Han
-
-> ---
-> Changes since v2:
-> - fixed MAX_MSI_CTRLS because MAX_MSI_IRQS is 32 only
-> - used __get_free_pages() to allocate msi_data
-> - used one msi_data and msi_irq_in_use per one RC
-> - used irq_domain to represent the MSI controller
-> - removed msi-base irq number from device tree because this is not
->   a hardware property.
-> 
-> Changes since v1:
-> - removed unnecessary exynos_pcie_clear_irq_level()
-> - updated the bindings documentation
-> - used new msi_chip infrastructure
-> - removed ARCH_SUPPORTS_MSI
-> - replaced #ifdef guards with IS_ENABLED(CONFIG_PCI_MSI)
-> 
->  drivers/pci/host/pci-exynos.c      |   44 +++++++
->  drivers/pci/host/pcie-designware.c |  240 ++++++++++++++++++++++++++++++++++++
->  drivers/pci/host/pcie-designware.h |   14 +++
->  3 files changed, 298 insertions(+)
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d8eb880..ec1dbea 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -304,7 +304,7 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ }
+ static BUS_ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, bus_rescan_store);
+ 
+-struct attribute *pci_bus_attrs[] = {
++static struct attribute *pci_bus_attrs[] = {
+ 	&bus_attr_rescan.attr,
+ 	NULL,
+ };
+@@ -335,8 +335,9 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 	}
+ 	return count;
+ }
+-struct device_attribute dev_rescan_attr = __ATTR(rescan, (S_IWUSR|S_IWGRP),
+-						 NULL, dev_rescan_store);
++static struct device_attribute dev_rescan_attr = __ATTR(rescan,
++							(S_IWUSR|S_IWGRP),
++							NULL, dev_rescan_store);
+ 
+ static void remove_callback(struct device *dev)
+ {
+@@ -366,8 +367,9 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+ 		count = ret;
+ 	return count;
+ }
+-struct device_attribute dev_remove_attr = __ATTR(remove, (S_IWUSR|S_IWGRP),
+-						 NULL, remove_store);
++static struct device_attribute dev_remove_attr = __ATTR(remove,
++							(S_IWUSR|S_IWGRP),
++							NULL, remove_store);
+ 
+ static ssize_t
+ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+@@ -554,7 +556,7 @@ boot_vga_show(struct device *dev, struct device_attribute *attr, char *buf)
+ 		!!(pdev->resource[PCI_ROM_RESOURCE].flags &
+ 		   IORESOURCE_ROM_SHADOW));
+ }
+-struct device_attribute vga_attr = __ATTR_RO(boot_vga);
++static struct device_attribute vga_attr = __ATTR_RO(boot_vga);
+ 
+ static ssize_t
+ pci_read_config(struct file *filp, struct kobject *kobj,
+-- 
+1.7.9.5
 
