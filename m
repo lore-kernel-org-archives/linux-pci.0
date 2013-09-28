@@ -1,76 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49836 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:27656 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762995Ab3IDQMs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Sep 2013 12:12:48 -0400
-Date: Wed, 4 Sep 2013 18:14:43 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
- pci_enable_msi_block_part() interface
-Message-ID: <20130904161442.GE8726@dhcp-26-207.brq.redhat.com>
-References: <cover.1378111919.git.agordeev@redhat.com>
- <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
- <20130903141824.GD10522@htj.dyndns.org>
- <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
- <20130903182731.GA27092@mtj.dyndns.org>
- <20130904072256.GA8726@dhcp-26-207.brq.redhat.com>
- <20130904145559.GB25788@mtj.dyndns.org>
+	id S1750908Ab3I1SsI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 28 Sep 2013 14:48:08 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH] mn10300/PCI: Remove pci_mem_start
+To: dhowells@redhat.com, yasutake.koichi@jp.panasonic.com,
+	bhelgaas@google.com
+Cc: linux-am33-list@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Sat, 28 Sep 2013 11:59:56 -0600
+Message-ID: <20130928175956.8752.50967.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130904145559.GB25788@mtj.dyndns.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 04, 2013 at 10:55:59AM -0400, Tejun Heo wrote:
-> Hello,
-> 
-> On Wed, Sep 04, 2013 at 09:22:57AM +0200, Alexander Gordeev wrote:
-> > I think a general approach that will cover it all (including ICH and undesired
-> > sharing of interrupt vectors) - start MME from roundup_pow_of_two(n_ports) and
-> > ensure MRSM bit is unset. If not - double MME and retry. If still not and the
-> > limit is reached - fall back to single MSI.
-> > 
-> > Makes sense?
-> 
-> Ugh... I really don't want this sort of retry loop.  I'm still a bit
-> lost on why this is necessary.  Can you please elaborate?
+Remove unused 'pci_mem_start' variable.
 
-Sure.
+CC: David Howells <dhowells@redhat.com>
+CC: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-1. We do not support sharing MSI messages since there is no appropriate
-interrupt handling for it. I am not sure if any hardware supports it at
-all. This assumption is just for clarity here.
+ arch/mn10300/include/asm/pci.h |    1 -
+ arch/mn10300/kernel/setup.c    |    3 ---
+ 2 files changed, 0 insertions(+), 4 deletions(-)
 
-2. We can not just read out MMC value and try to write it to MME, because
-we are not sure the hardware honours the specification.  I.e. in case of 6
-ports and MMC value of 16 the value of 8 in MME could enable multiple MSIs
-while the value of 16 could enforce MRSM. Contradicts to the AHCI
-specification, but look how weird ICH is [4].
+diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
+index 6f31cc0..1663238 100644
+--- a/arch/mn10300/include/asm/pci.h
++++ b/arch/mn10300/include/asm/pci.h
+@@ -44,7 +44,6 @@ extern void unit_pci_init(void);
+ #define pcibios_assign_all_busses()	0
+ #endif
+ 
+-extern unsigned long pci_mem_start;
+ #define PCIBIOS_MIN_IO		0xBE000004
+ #define PCIBIOS_MIN_MEM		0xB8000000
+ 
+diff --git a/arch/mn10300/kernel/setup.c b/arch/mn10300/kernel/setup.c
+index ebac9c1..2ad7f32 100644
+--- a/arch/mn10300/kernel/setup.c
++++ b/arch/mn10300/kernel/setup.c
+@@ -35,9 +35,6 @@
+ 
+ struct mn10300_cpuinfo boot_cpu_data;
+ 
+-/* For PCI or other memory-mapped resources */
+-unsigned long pci_mem_start = 0x18000000;
+-
+ static char __initdata cmd_line[COMMAND_LINE_SIZE];
+ char redboot_command_line[COMMAND_LINE_SIZE] =
+ 	"console=ttyS0,115200 root=/dev/mtdblock3 rw";
 
-3. Enabling more MSIs than needed (MME == MMC instead of MME < MMC) could
-lead to unnecessary allocation of internal device resources. Bit lame, but
-still true.
-
-4. We can not derive the value of MME needed from the number of ports, at
-least in case of ICH. I.e. with 6 ports and MMC value of 16 the value of 8
-in MME is what would be expected according to the AHCI specification. But
-the ICH reserves it and MRSMs in case 8 is written to MME.
-
-So to cover all the above assumptions we need to scan from lowest possible
-and watch the MRSM bit is unset.
-
-> Thanks.
-> 
-> -- 
-> tejun
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
