@@ -1,45 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f49.google.com ([209.85.128.49]:63939 "EHLO
-	mail-qe0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762628Ab3IDO4I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Sep 2013 10:56:08 -0400
-Date: Wed, 4 Sep 2013 10:55:59 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
- pci_enable_msi_block_part() interface
-Message-ID: <20130904145559.GB25788@mtj.dyndns.org>
-References: <cover.1378111919.git.agordeev@redhat.com>
- <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
- <20130903141824.GD10522@htj.dyndns.org>
- <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
- <20130903182731.GA27092@mtj.dyndns.org>
- <20130904072256.GA8726@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130904072256.GA8726@dhcp-26-207.brq.redhat.com>
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:44924 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753221Ab3I1KMN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Sep 2013 06:12:13 -0400
+Received: by mail-pb0-f45.google.com with SMTP id mc17so3565868pbc.4
+        for <linux-pci@vger.kernel.org>; Sat, 28 Sep 2013 03:12:12 -0700 (PDT)
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, sachin.kamat@linaro.org
+Subject: [PATCH 2/2] PCI: driver: Staticize pci_dev_pm_ops
+Date: Sat, 28 Sep 2013 15:42:01 +0530
+Message-Id: <1380363121-1977-2-git-send-email-sachin.kamat@linaro.org>
+In-Reply-To: <1380363121-1977-1-git-send-email-sachin.kamat@linaro.org>
+References: <1380363121-1977-1-git-send-email-sachin.kamat@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+'pci_dev_pm_ops' is local to this file. Make it static.
 
-On Wed, Sep 04, 2013 at 09:22:57AM +0200, Alexander Gordeev wrote:
-> I think a general approach that will cover it all (including ICH and undesired
-> sharing of interrupt vectors) - start MME from roundup_pow_of_two(n_ports) and
-> ensure MRSM bit is unset. If not - double MME and retry. If still not and the
-> limit is reached - fall back to single MSI.
-> 
-> Makes sense?
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+---
+ drivers/pci/pci-driver.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Ugh... I really don't want this sort of retry loop.  I'm still a bit
-lost on why this is necessary.  Can you please elaborate?
-
-Thanks.
-
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 38f3c01..653c8c5 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1124,7 +1124,7 @@ static int pci_pm_runtime_idle(struct device *dev)
+ 
+ #ifdef CONFIG_PM
+ 
+-const struct dev_pm_ops pci_dev_pm_ops = {
++static const struct dev_pm_ops pci_dev_pm_ops = {
+ 	.prepare = pci_pm_prepare,
+ 	.complete = pci_pm_complete,
+ 	.suspend = pci_pm_suspend,
 -- 
-tejun
+1.7.9.5
+
