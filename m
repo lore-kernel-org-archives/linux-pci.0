@@ -1,128 +1,40 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>, Peter Wu <lekensteyn@gmail.com>
-Subject: [PATCH] ACPI / bind: Prefer device objects with _STA to those without it
-Date: Mon, 09 Sep 2013 14:22:19 +0200
-Message-ID: <5039378.mVJXDJKcfO@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:53017 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754745Ab3I1UOe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Sep 2013 16:14:34 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1380337550.27811.71.camel@pasglop>
+References: <1380270519.27811.10.camel@pasglop>
+	<CAE9FiQVkW7d7vFx_kPJG-FEvO71SZjZmpR+dnwVm61wkYK=0YA@mail.gmail.com>
+	<CA+55aFyDfMdAeaniQwkoeW6F-xd3JxrzGYwtFb6N9+NA6aRCMg@mail.gmail.com>
+	<1380318405.27811.37.camel@pasglop>
+	<CAE9FiQXXvkfTak6oEpUog_RYs_Gwpdji7N5UJ=R11Q61==N97A@mail.gmail.com>
+	<1380321480.27811.53.camel@pasglop>
+	<CAE9FiQWm7ALPO5k_2nV+fuZw4oNNiw+_PEx8EWkb52ymN+EYUg@mail.gmail.com>
+	<1380323960.27811.67.camel@pasglop>
+	<CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
+	<1380337550.27811.71.camel@pasglop>
+Date: Sat, 28 Sep 2013 13:14:33 -0700
+Message-ID: <CAE9FiQUnwmANf5x8rw5=QViyVPdi0FLMpSGGnO9u-Twp_YXMpg@mail.gmail.com>
+Subject: Re: Please revert 928bea964827d7824b548c1f8e06eccbbc4d0d7d
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Fri, Sep 27, 2013 at 8:05 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Fri, 2013-09-27 at 16:44 -0700, Yinghai Lu wrote:
+>
+> In the meantime, can you properly submit the other one with the warning
+> to Linus ? It will make things more robust overall...
 
-As reported at https://bugzilla.kernel.org/show_bug.cgi?id=60829,
-there still are cases in which do_find_child() doesn't choose the
-ACPI device object it is "expected" to choose if there are more such
-objects matching one PCI device present.  This particular problem may
-be worked around by making do_find_child() return device obejcts witn
-_STA whose result indicates that the device is enabled before device
-objects without _STA if there's more than one device object to choose
-from.
-
-This change doesn't affect the case in which there's only one
-matching ACPI device object per PCI device.
-
-References: https://bugzilla.kernel.org/show_bug.cgi?id=60829
-Reported-by: Peter Wu <lekensteyn@gmail.com>
-Tested-by: Felix Lisczyk <felix.lisczyk@gmail.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/glue.c |   35 ++++++++++++++++++++++++-----------
- 1 file changed, 24 insertions(+), 11 deletions(-)
-
-Index: linux-pm/drivers/acpi/glue.c
-===================================================================
---- linux-pm.orig/drivers/acpi/glue.c
-+++ linux-pm/drivers/acpi/glue.c
-@@ -79,6 +79,9 @@ static struct acpi_bus_type *acpi_get_bu
- 	return ret;
- }
- 
-+#define FIND_CHILD_MIN_SCORE	1
-+#define FIND_CHILD_MAX_SCORE	2
-+
- static acpi_status acpi_dev_present(acpi_handle handle, u32 lvl_not_used,
- 				  void *not_used, void **ret_p)
- {
-@@ -92,14 +95,17 @@ static acpi_status acpi_dev_present(acpi
- 	return AE_OK;
- }
- 
--static bool acpi_extra_checks_passed(acpi_handle handle, bool is_bridge)
-+static int do_find_child_checks(acpi_handle handle, bool is_bridge)
- {
-+	bool sta_present = true;
- 	unsigned long long sta;
- 	acpi_status status;
- 
--	status = acpi_bus_get_status_handle(handle, &sta);
--	if (ACPI_FAILURE(status) || !(sta & ACPI_STA_DEVICE_ENABLED))
--		return false;
-+	status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
-+	if (status == AE_NOT_FOUND)
-+		sta_present = false;
-+	else if (ACPI_FAILURE(status) || !(sta & ACPI_STA_DEVICE_ENABLED))
-+		return -ENODEV;
- 
- 	if (is_bridge) {
- 		void *test = NULL;
-@@ -107,16 +113,17 @@ static bool acpi_extra_checks_passed(acp
- 		/* Check if this object has at least one child device. */
- 		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
- 				    acpi_dev_present, NULL, NULL, &test);
--		return !!test;
-+		if (!test)
-+			return -ENODEV;
- 	}
--	return true;
-+	return sta_present ? FIND_CHILD_MAX_SCORE : FIND_CHILD_MIN_SCORE;
- }
- 
- struct find_child_context {
- 	u64 addr;
- 	bool is_bridge;
- 	acpi_handle ret;
--	bool ret_checked;
-+	int ret_score;
- };
- 
- static acpi_status do_find_child(acpi_handle handle, u32 lvl_not_used,
-@@ -125,6 +132,7 @@ static acpi_status do_find_child(acpi_ha
- 	struct find_child_context *context = data;
- 	unsigned long long addr;
- 	acpi_status status;
-+	int score;
- 
- 	status = acpi_evaluate_integer(handle, METHOD_NAME__ADR, NULL, &addr);
- 	if (ACPI_FAILURE(status) || addr != context->addr)
-@@ -144,15 +152,20 @@ static acpi_status do_find_child(acpi_ha
- 	 * its handle if so.  Second, check the same for the object that we've
- 	 * just found.
- 	 */
--	if (!context->ret_checked) {
--		if (acpi_extra_checks_passed(context->ret, context->is_bridge))
-+	if (!context->ret_score) {
-+		score = do_find_child_checks(context->ret, context->is_bridge);
-+		if (score == FIND_CHILD_MAX_SCORE)
- 			return AE_CTRL_TERMINATE;
- 		else
--			context->ret_checked = true;
-+			context->ret_score = score;
- 	}
--	if (acpi_extra_checks_passed(handle, context->is_bridge)) {
-+	score = do_find_child_checks(handle, context->is_bridge);
-+	if (score == FIND_CHILD_MAX_SCORE) {
- 		context->ret = handle;
- 		return AE_CTRL_TERMINATE;
-+	} else if (score > context->ret_score) {
-+		context->ret = handle;
-+		context->ret_score = score;
- 	}
- 	return AE_OK;
- }
-
+https://patchwork.kernel.org/patch/2959121/
