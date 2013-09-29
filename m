@@ -1,112 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51773 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755999Ab3IZKnx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 Sep 2013 06:43:53 -0400
-Date: Thu, 26 Sep 2013 12:45:48 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org,
-	Joerg Roedel <joro@8bytes.org>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20130926104548.GB16774@dhcp-26-207.brq.redhat.com>
-References: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20130918142231.GA21650@mtj.dyndns.org>
- <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
- <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
- <20130920122736.GD7630@mtj.dyndns.org>
- <20130925180220.GB26273@google.com>
- <20130925205804.GA21737@dhcp-26-207.brq.redhat.com>
- <20130925210016.GA8926@htj.dyndns.org>
- <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
- <AE90C24D6B3A694183C094C60CF0A2F6026B735D@saturn3.aculab.com>
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:47416 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751232Ab3I2Wqf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Sep 2013 18:46:35 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B735D@saturn3.aculab.com>
+In-Reply-To: <20130929224106.GA19331@thunk.org>
+References: <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
+	<1380399187-4962-1-git-send-email-yinghai@kernel.org>
+	<20130929224106.GA19331@thunk.org>
+Date: Sun, 29 Sep 2013 15:46:33 -0700
+Message-ID: <CA+55aFwjjfV-nV8N8qMnuee_hg=b-3tb9P5hHv1cJR3pp-4wQQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Workaround missing pci_set_master in pci drivers
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: "Theodore Ts'o" <tytso@mit.edu>, Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 26, 2013 at 09:58:53AM +0100, David Laight wrote:
-> Would it be possible to do some kind of 2-stage allocation.
-> In the first pass the driver would pass a minimum and desired
-> number of MSI-X interrupts, but not actually be given any.
+On Sun, Sep 29, 2013 at 3:41 PM, Theodore Ts'o <tytso@mit.edu> wrote:
+> On Sat, Sep 28, 2013 at 01:13:07PM -0700, Yinghai Lu wrote:
+>> Fixed by add checking in pci_enable_bridge, and call pci_set_master
+>> if driver skip that.
+>> That will make the code more robot and wade off problem for missing
+>> pci_set_master in drivers.
+>
+> Petty spelling nit; feel free to ignore unless you need to respin the
+> patch anyway....
+>
+> s/robot/robost/
 
-Repeated calls to msi_enable_msi/msix() is what we are trying to avoid.
+That's an oddly spelled nitpick "correction".
 
-> Interrupts could then be allocated after it is known how many
-> are required and how many are available.
+If you really want to fix it, it's "robust" and "ward off problems".
+But it's too late now, and the wrong spelling and word choice is in
+the git tree and released in the -rc3 I just pushed out.
 
-Yep, that what we are heading to. So basic pattern I see would be like this:
-
-	int foo_driver_enable_msix(struct pci_dev *pdev, int nvec)
-	{
-		...
-
-		rc = pci_msix_table_size(pdev);
-		if (rc < 0)
-			return rc;
-
-		nvec = min(nvec, rc);
-		if (nvec < FOO_DRIVER_MINIMUM_NVEC)
-			goto single_msi;
-
-		for (i = 0; i < nvec; i++)
-			entries[i].entry = i;
-
-		rc = pci_enable_msix(pdev, entries, nvec);
-		if (rc)
-			goto single_msi;
-
-		return 0;
-
-	single_msi:
-		...
-
-	}
-
-But this will break pSeries and we might end up with something like this:
-
-	int foo_driver_enable_msix(struct pci_dev *pdev, int nvec)
-	{
-		...
-
-		rc = pci_msix_table_size(pdev);
-		if (rc < 0)
-			return rc;
-
-		nvec = min(nvec, rc);
-		if (nvec < FOO_DRIVER_MINIMUM_NVEC)
-			goto single_msi;
-
-		rc = pci_get_msix_limit(pdev, nvec);
-		if (rc < 0)
-			return rc;
-
-		nvec = min(nvec, rc);
-		if (nvec < FOO_DRIVER_MINIMUM_NVEC)
-			goto single_msi;
-
-		for (i = 0; i < nvec; i++)
-			entries[i].entry = i;
-
-		rc = pci_enable_msix(pdev, entries, nvec);
-		if (rc)
-			goto single_msi;
-
-		return 0;
-
-	single_msi:
-		...
-
-	}
-
-> 	David
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+           Linus
