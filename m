@@ -1,45 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f46.google.com ([209.85.213.46]:37780 "EHLO
-	mail-yh0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754646Ab3ITM1q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Sep 2013 08:27:46 -0400
-Date: Fri, 20 Sep 2013 07:27:36 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
+Received: from imap.thunk.org ([74.207.234.97]:39999 "EHLO imap.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752709Ab3I2W5N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 29 Sep 2013 18:57:13 -0400
+Date: Sun, 29 Sep 2013 18:57:03 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Yinghai Lu <yinghai@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20130920122736.GD7630@mtj.dyndns.org>
-References: <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20130918142231.GA21650@mtj.dyndns.org>
- <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
- <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Workaround missing pci_set_master in pci drivers
+Message-ID: <20130929225703.GC19331@thunk.org>
+References: <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
+ <1380399187-4962-1-git-send-email-yinghai@kernel.org>
+ <20130929224106.GA19331@thunk.org>
+ <CA+55aFwjjfV-nV8N8qMnuee_hg=b-3tb9P5hHv1cJR3pp-4wQQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <CA+55aFwjjfV-nV8N8qMnuee_hg=b-3tb9P5hHv1cJR3pp-4wQQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 20, 2013 at 10:24:59AM +0200, Alexander Gordeev wrote:
-> * Make pci_enable_msix() return 0/-errno
+On Sun, Sep 29, 2013 at 03:46:33PM -0700, Linus Torvalds wrote:
+> On Sun, Sep 29, 2013 at 3:41 PM, Theodore Ts'o <tytso@mit.edu> wrote:
+> > On Sat, Sep 28, 2013 at 01:13:07PM -0700, Yinghai Lu wrote:
+> >> Fixed by add checking in pci_enable_bridge, and call pci_set_master
+> >> if driver skip that.
+> >> That will make the code more robot and wade off problem for missing
+> >> pci_set_master in drivers.
+> >
+> > Petty spelling nit; feel free to ignore unless you need to respin the
+> > patch anyway....
+> >
+> > s/robot/robost/
+> 
+> That's an oddly spelled nitpick "correction".
 
-My choice would be this one.
+Sorry, typed too quickly.  :-(
 
-Thanks.
-
--- 
-tejun
+						- Ted
