@@ -1,140 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:40667 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757752Ab3IDNqN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Sep 2013 09:46:13 -0400
-Received: by mail-wg0-f41.google.com with SMTP id a12so2592480wgh.4
-        for <linux-pci@vger.kernel.org>; Wed, 04 Sep 2013 06:46:11 -0700 (PDT)
-From: Tom Gundersen <teg@jklm.no>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Tom Gundersen <teg@jklm.no>,
-	Martin Mares <mj@ucw.cz>
-Subject: [PATCH RESEND][pciutils] libpci: pci_id_lookup - add udev/hwdb support
-Date: Wed,  4 Sep 2013 15:47:08 +0200
-Message-Id: <1378302428-19758-1-git-send-email-teg@jklm.no>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:9542 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635Ab3I2BdJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Sep 2013 21:33:09 -0400
+Message-ID: <52478345.5090608@huawei.com>
+Date: Sun, 29 Sep 2013 09:32:53 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [PATCH 2/2] PCI: Warn if power_state != PCI_D0 when write MSI
+ message
+References: <1378974012-13364-1-git-send-email-wangyijing@huawei.com> <CAErSpo5XWa3qTfE_p5vDqJOkrrdkcM9_Nr-u_qFYSdAob1sEig@mail.gmail.com>
+In-Reply-To: <CAErSpo5XWa3qTfE_p5vDqJOkrrdkcM9_Nr-u_qFYSdAob1sEig@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This lets you select hwdb support at compile time.
+>> @@ -291,6 +291,8 @@ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>>  {
+>>         if (entry->dev->current_state != PCI_D0) {
+>>                 /* Don't touch the hardware now */
+>> +               dev_warn(&entry->dev->dev,
+>> +                       "current_state != PCI_D0, ignore writing MSI message!\n");
+> 
+> Is there a real problem here?  If there is a real problem, a printk
+> doesn't help fix it.  If there's no problem, I don't see the point of
+> this printk.
+> 
+> I would expect that if the device is not in D0, we should remember the
+> hardware updates that need to be made, and if the device returns to
+> D0, we should apply the updates then.  If that's the case this is not
+> an error and we shouldn't warn about it.
 
-hwdb is an efficient hardware database shipped with recent versions of udev. It contains
-among other sources pci.ids so querying hwdb rather than reading pci.ids directly should give
-the same result.
+My colleagues found some msi irqs can not work normally in their driver which works
+normally in SLES11 SP1(2.6.32 kernel). I review their code and found that they forget to
+call pci_enable_device(), so their device always in PCI_UNKNOWN state despite the really PCI Power
+State in PM register is PCI_D0 state. In this case, users call pci_enable_msi() always return success,
+but actually, nothing was wrote to the MSI registers.
 
-Ideally Linux distros using udev could stop shipping pci.ids, but use hwdb as the only source
-of this information, which this patch allows.
+So I think we should warn here, if someone use pci_enable_msi(), but their devices are not in PCI_D0.
 
-Cc: Martin Mares <mj@ucw.cz>
----
- lib/configure    | 17 ++++++++++++++++
- lib/names-hash.c | 59 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 74 insertions(+), 2 deletions(-)
+Thanks!
+Yijing.
 
-diff --git a/lib/configure b/lib/configure
-index 27388bc..bb9a983 100755
---- a/lib/configure
-+++ b/lib/configure
-@@ -141,6 +141,23 @@ esac
- echo >>$c '#define PCI_HAVE_PM_DUMP'
- echo " dump"
- 
-+echo_n "Checking for udev hwdb support... "
-+if [ "$HWDB" = yes -o "$HWDB" = no ] ; then
-+	echo "$HWDB (set manually)"
-+else
-+	if [ -f /usr/include/libudev.h -o -f /usr/local/include/libudev.h ] ; then
-+		HWDB=yes
-+	else
-+		HWDB=no
-+	fi
-+	echo "$HWDB (auto-detected)"
-+fi
-+if [ "$HWDB" = yes ] ; then
-+	echo >>$c '#define PCI_HAVE_HWDB'
-+	echo >>$m 'LIBUDEV=-ludev'
-+	echo >>$m 'WITH_LIBS+=$(LIBUDEV)'
-+fi
-+
- echo_n "Checking for zlib support... "
- if [ "$ZLIB" = yes -o "$ZLIB" = no ] ; then
- 	echo "$ZLIB (set manually)"
-diff --git a/lib/names-hash.c b/lib/names-hash.c
-index 33f3c11..9661d03 100644
---- a/lib/names-hash.c
-+++ b/lib/names-hash.c
-@@ -11,6 +11,11 @@
- #include "internal.h"
- #include "names.h"
- 
-+#ifdef PCI_HAVE_HWDB
-+#include <libudev.h>
-+#include <stdio.h>
-+#endif
-+
- struct id_bucket {
-   struct id_bucket *next;
-   unsigned int full;
-@@ -86,8 +91,58 @@ char
- *pci_id_lookup(struct pci_access *a, int flags, int cat, int id1, int id2, int id3, int id4)
- {
-   struct id_entry *n, *best;
--  u32 id12 = id_pair(id1, id2);
--  u32 id34 = id_pair(id3, id4);
-+  u32 id12, id34;
-+
-+#ifdef PCI_HAVE_HWDB
-+  if (!(flags & PCI_LOOKUP_SKIP_LOCAL))
-+    {
-+      char modalias[64];
-+      const char *key = NULL;
-+      struct udev *udev = udev_new();
-+      struct udev_hwdb *hwdb = udev_hwdb_new(udev);
-+      struct udev_list_entry *entry;
-+
-+      switch(cat)
-+        {
-+        case ID_VENDOR:
-+          sprintf(modalias, "pci:v%08X*", id1);
-+          key = "ID_VENDOR_FROM_DATABASE";
-+          break;
-+        case ID_DEVICE:
-+          sprintf(modalias, "pci:v%08Xd%08X*", id1, id2);
-+          key = "ID_MODEL_FROM_DATABASE";
-+          break;
-+        case ID_SUBSYSTEM:
-+          sprintf(modalias, "pci:v%08Xd%08Xsv%08Xsd%08X*", id1, id2, id3, id4);
-+          key = "ID_MODEL_FROM_DATABASE";
-+          break;
-+        case ID_GEN_SUBSYSTEM:
-+          sprintf(modalias, "pci:v*d*sv%08Xsd%08X*", id1, id2);
-+          key = "ID_MODEL_FROM_DATABASE";
-+          break;
-+        case ID_CLASS:
-+          sprintf(modalias, "pci:v*d*sv*sd*bc%02X*", id1);
-+          key = "ID_PCI_CLASS_FROM_DATABASE";
-+          break;
-+        case ID_SUBCLASS:
-+          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02X*", id1, id2);
-+          key = "ID_PCI_SUBCLASS_FROM_DATABASE";
-+          break;
-+        case ID_PROGIF:
-+          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02Xi%02X*", id1, id2, id3);
-+          key = "ID_PCI_INTERFACE_FROM_DATABASE";
-+          break;
-+        }
-+
-+      if (key)
-+          udev_list_entry_foreach(entry, udev_hwdb_get_properties_list_entry(hwdb, modalias, 0))
-+              if (strcmp(udev_list_entry_get_name(entry), key) == 0)
-+                return udev_list_entry_get_value(entry);
-+    }
-+#endif
-+
-+  id12 = id_pair(id1, id2);
-+  id34 = id_pair(id3, id4);
- 
-   if (a->id_hash)
-     {
+> 
+>>         } else if (entry->msi_attrib.is_msix) {
+>>                 void __iomem *base;
+>>                 base = entry->mask_base +
+>> --
+>> 1.7.1
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
+
 -- 
-1.8.4
+Thanks!
+Yijing
 
