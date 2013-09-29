@@ -1,79 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5228310A.20106@huawei.com>
-Date: Thu, 5 Sep 2013 15:21:46 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from muin.pair.com ([209.68.1.55]:53710 "EHLO muin.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753065Ab3I3AFp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 29 Sep 2013 20:05:45 -0400
+Received: from mail-vc0-f175.google.com (mail-vc0-f175.google.com [209.85.220.175])
+	by muin.pair.com (Postfix) with ESMTPSA id 671BC8FC12
+	for <linux-pci@vger.kernel.org>; Sun, 29 Sep 2013 19:56:19 -0400 (EDT)
+Received: by mail-vc0-f175.google.com with SMTP id ia10so3225337vcb.20
+        for <linux-pci@vger.kernel.org>; Sun, 29 Sep 2013 16:56:18 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	<linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 1/7] scsi/bfa: use pcie_capability_xxx to simplify code
-References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com> <20130903233438.GB24733@google.com>
-In-Reply-To: <20130903233438.GB24733@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1379502122-20792-2-git-send-email-Minghuan.Lian@freescale.com>
+References: <1379502122-20792-1-git-send-email-Minghuan.Lian@freescale.com>
+	<1379502122-20792-2-git-send-email-Minghuan.Lian@freescale.com>
+Date: Sun, 29 Sep 2013 18:56:18 -0500
+Message-ID: <CAOZdJXUF3ibW5iuB-2p5bhPp-Uw9MVKzqZiDdukMfi4f1d3Phw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] pci: fsl: rework PCI driver compatible with Layerscape
+From: Timur Tabi <timur@tabi.org>
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+Cc: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	linux-pci@vger.kernel.org, Zang Roy-R61911 <r61911@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> @@ -794,10 +793,8 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
->>  			break;
->>  		}
->>  
->> -		pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
->> -		if (mask != 0xffff && pcie_cap_reg) {
->> -			pcie_cap_reg += 0x08;
->> -			pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
->> +		if (mask != 0xffff && pci_is_pcie(pdev)) {
-> 
-> Please move the pci_is_pcie() test up to the
-> "if (pcie_mas_read_reqsz ..." statement.  There's no point in doing
-> the switch statement if this isn't a PCIe device.
+On Wed, Sep 18, 2013 at 6:02 AM, Minghuan Lian
+<Minghuan.Lian@freescale.com> wrote:
 
-Right, will update.
+> diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+> index 38f3b7e..6fd6348 100644
+> --- a/arch/powerpc/Kconfig
+> +++ b/arch/powerpc/Kconfig
+> @@ -690,6 +690,7 @@ config FSL_SOC
+>
+>  config FSL_PCI
+>         bool
+> +       select PCI_FSL if FSL_SOC_BOOKE || PPC_86xx
 
-> 
->> +			pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &pcie_dev_ctl);
->>  			if ((pcie_dev_ctl & 0x7000) != mask) {
->>  				printk(KERN_WARNING "BFA[%s]: "
->>  				"pcie_max_read_request_size is %d, "
->> @@ -806,7 +803,7 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
->>  				pcie_max_read_reqsz);
->>  
->>  				pcie_dev_ctl &= ~0x7000;
->> -				pci_write_config_word(pdev, pcie_cap_reg,
->> +				pcie_capability_write_word(pdev, PCI_EXP_DEVCTL,
->>  						pcie_dev_ctl | mask);
-> 
-> Please rework this to use pcie_set_readrq() instead of writing
-> the capability directly.  If we write the capability directly, we
-> risk writing a value that is incompatible with the MPS
-> configuration done by the PCI core.
-
-Ah, this code is Long-winded, use pcie_set_readrq()/pcie_get_readrq() can simplify
-this code much.
-
-Thanks!
-Yijing.
-
-> 
->>  			}
->>  		}
->> -- 
->> 1.7.1
->>
->>
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+I think having two config options, one called FSL_PCI and the other
+PCI_FSL, is very confusing.  Surely, you can pick better names than
+that?
