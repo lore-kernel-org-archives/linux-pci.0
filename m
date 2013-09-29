@@ -1,57 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58560 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754186Ab3IWSg5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Sep 2013 14:36:57 -0400
-Date: Mon, 23 Sep 2013 14:36:56 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Andy Lutomirski <luto@amacapital.net>
-cc: USB list <linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: ehci-pci D3cold logspam
-In-Reply-To: <CALCETrWkr53ZjqdN3t7rTTfr=+ZKZXJoYsuBcwPf0kN_33GfAw@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1309231430540.1348-100000@iolanthe.rowland.org>
+Received: from co9ehsobe003.messaging.microsoft.com ([207.46.163.26]:36106
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751159Ab3I2LuX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Sep 2013 07:50:23 -0400
+Message-ID: <5248144A.6070307@freescale.com>
+Date: Sun, 29 Sep 2013 19:51:38 +0800
+From: Lian Minghuan-b31939 <B31939@freescale.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Scott Wood <scottwood@freescale.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+CC: <linuxppc-dev@lists.ozlabs.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] pci: fsl: rework PCI driver compatible with Layerscape
+References: <1379502122-20792-1-git-send-email-Minghuan.Lian@freescale.com>	 <1379502122-20792-2-git-send-email-Minghuan.Lian@freescale.com> <1380300847.24959.394.camel@snotra.buserror.net>
+In-Reply-To: <1380300847.24959.394.camel@snotra.buserror.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 23 Sep 2013, Andy Lutomirski wrote:
+Hi Scott,
 
-> I've been getting this on several recent kernel revisions.  Is it
-> interesting?  If so, I'm happy to help diagnose it.  If not, can the
-> message be killed or severely ratelimited?  I'm getting so much of
-> this that it tends to overflow the log ring.
+please see my comments inline.
 
-It's interesting only if you care about when your EHCI controllers get
-resumed and suspended.  In this case, it's not clear why the
-transitions happen so rapidly.  It looks like some sort of polling
-is going on at roughly 2-second intervals.
+On 09/28/2013 12:54 AM, Scott Wood wrote:
+> On Wed, 2013-09-18 at 19:02 +0800, Minghuan Lian wrote:
+>> @@ -592,6 +719,7 @@ int fsl_pci_mcheck_exception(struct pt_regs *regs)
+>>   #if defined(CONFIG_FSL_SOC_BOOKE) || defined(CONFIG_PPC_86xx)
+>>   
+>>   struct device_node *fsl_pci_primary;
+>> +extern const struct of_device_id fsl_pci_ids[];
+> Externs go in headers.
+[Minghuan] ok.
+>
+>> -static int fsl_pci_probe(struct platform_device *pdev)
+>> +static int __init fsl_pci_probe(struct platform_device *pdev)
+>>   {
+>>   	int ret;
+>> -	struct device_node *node;
+>> +	struct fsl_pci *pci;
+>> +
+>> +	if (!of_device_is_available(pdev->dev.of_node)) {
+>> +		dev_warn(&pdev->dev, "disabled\n");
+>> +		return -ENODEV;
+>> +	}
+> This should be dev_dbg().
+[Minghuan] ok.
+>> -#ifdef CONFIG_PM
+>> -static int fsl_pci_resume(struct device *dev)
+>> +static int __exit fsl_pci_remove(struct platform_device *pdev)
+> Why __exit?  What happens if someone unbinds the PCI controller via
+> sysfs?
+>   
+[Minghuan] Sorry. should remove __exit
+>> +/*
+>> + * Structure of a PCI controller (host bridge)
+>> + */
+>> +struct fsl_pci {
+>> +	struct list_head node;
+>> +	int is_pcie;
+> bool is_pcie;
+[Minghuan] ok.
+>> +/* Return link status 0-> link, 1-> no link */
+>> +int fsl_pci_check_link(struct fsl_pci *pci);
+> bool
+[Minghuan] ok.
+>> +
+>> +/*
+>> + * The fsl_arch_* functions are arch hooks. Those functions are
+>> + * implemented as weak symbols so that they can be overridden by
+>> + * architecture specific code if needed.
+>> + */
+>> +
+>> +/* Return PCI64 DMA offset */
+>> +u64 fsl_arch_pci64_dma_offset(void);
+> Is this always guaranteed to exist?
+[Minghuan] Yes. I define a __weak implementation in pci-fsl.c
+>> +/* Register PCI/PCIe controller to architecture system */
+>> +int __weak fsl_arch_pci_sys_register(struct fsl_pci *pci);
+>> +
+>> +/* Remove PCI/PCIe controller from architecture system */
+>> +void __weak fsl_arch_pci_sys_remove(struct fsl_pci *pci);
+> Why do these need to be weak?  Won't there be exactly one implementation
+> per supported arch?
+[Minghuan] I added __weak for compiling kernel when selecting pci-fsl 
+module but
+there is no related arch pci implementation.
+I can remove the __weak, and use
+"depends on FSL_SOC_BOOKE || PPC_86xx" in Kconfig to make sure there is 
+one implementation
+of supported arch.
+> -Scott
+>
+>
 
-> [  287.344991] ehci-pci 0000:00:1d.0: power state changed by ACPI to D0
-> [  287.445433] ehci-pci 0000:00:1d.0: setting latency timer to 64
-> [  287.446255] ehci-pci 0000:00:1a.0: power state changed by ACPI to D0
-> [  287.456094] ehci-pci 0000:00:1d.0: power state changed by ACPI to D3cold
-> [  287.547205] ehci-pci 0000:00:1a.0: setting latency timer to 64
-> [  287.557890] ehci-pci 0000:00:1a.0: power state changed by ACPI to D3cold
-> [  290.126910] ehci-pci 0000:00:1d.0: power state changed by ACPI to D0
-> [  290.227958] ehci-pci 0000:00:1d.0: setting latency timer to 64
-> [  290.228416] ehci-pci 0000:00:1a.0: power state changed by ACPI to D0
-> [  290.238749] ehci-pci 0000:00:1d.0: power state changed by ACPI to D3cold
-> [  290.328904] ehci-pci 0000:00:1a.0: setting latency timer to 64
-> [  290.339565] ehci-pci 0000:00:1a.0: power state changed by ACPI to D3cold
-> [  292.214834] ehci-pci 0000:00:1d.0: power state changed by ACPI to D0
-> [  292.315458] ehci-pci 0000:00:1d.0: setting latency timer to 64
-> [  292.315908] ehci-pci 0000:00:1a.0: power state changed by ACPI to D0
-> [  292.326262] ehci-pci 0000:00:1d.0: power state changed by ACPI to D3cold
-> [  292.416487] ehci-pci 0000:00:1a.0: setting latency timer to 64
-> [  292.431075] ehci-pci 0000:00:1a.0: power state changed by ACPI to D3cold
-> [  295.458048] ehci-pci 0000:00:1d.0: power state changed by ACPI to D0
-> [  295.558613] ehci-pci 0000:00:1d.0: setting latency timer to 64
-
-This question should be addressed to the PCI mailing list (cc'ed), as
-those two messages are generated by
-drivers/pci/pci-acpi.c:acpi_pci_set_power_state() and
-drivers/pci/pci.c:pcibios_set_master() respectively.
-
-Alan Stern
 
