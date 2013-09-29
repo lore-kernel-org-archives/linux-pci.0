@@ -1,71 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44077 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753151Ab3I0JI5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Sep 2013 05:08:57 -0400
-Date: Fri, 27 Sep 2013 11:08:51 +0200 (CEST)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Adam Radford <aradford@gmail.com>
-Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
-In-Reply-To: <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
-Message-ID: <alpine.LNX.2.00.1309271106090.18703@pobox.suse.cz>
-References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz> <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz> <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
- <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz> <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:62186 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753466Ab3I2C3N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Sep 2013 22:29:13 -0400
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Date: Sun, 29 Sep 2013 10:29:11 +0800
+Message-ID: <CAPgLHd_RTNxi-OYhmTZ35NttjnAg-gQ_WKHkUQr5ueMhXVLTMg@mail.gmail.com>
+Subject: [PATCH] PCI: exynos: missing clk_disable_unprepare() on error in exynos_pcie_probe()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: bhelgaas@google.com, kgene.kim@samsung.com,
+	grant.likely@linaro.org, rob.herring@calxeda.com,
+	jg1.han@samsung.com, tgih.jun@samsung.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 6 Sep 2013, Bjorn Helgaas wrote:
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-> >> >> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
-> >> >> > pci device") makes MSIs be forcibly disabled at boot time.
-> >> >> >
-> >> >> > It turns out that this breaks 3ware controller -- if MSIs are disabled
-> >> >> > during PCI discovery of this controller, the device doesn't work properly
-> >> >> > (it doesn't respond to any commands that are being sent to it after
-> >> >> > initialization).
-> 
-> Is there a bug report for this issue?  
+Add the missing clk_disable_unprepare() before return
+from exynos_pcie_probe() in the error handling case.
 
-Yes, but unfortunately only in our internal bugzilla.
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/pci/host/pci-exynos.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-> It's nice to have a pointer to, e.g., a bugzilla.kernel.org bug report 
-> with info such as dmesg logs, lspci output, etc., for future reference.  
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 94e096b..e25598a 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -487,18 +487,24 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 
+ 	elbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	exynos_pcie->elbi_base = devm_ioremap_resource(&pdev->dev, elbi_base);
+-	if (IS_ERR(exynos_pcie->elbi_base))
+-		return PTR_ERR(exynos_pcie->elbi_base);
++	if (IS_ERR(exynos_pcie->elbi_base)) {
++		ret = PTR_ERR(exynos_pcie->elbi_base);
++		goto fail_bus_clk;
++	}
+ 
+ 	phy_base = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+ 	exynos_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy_base);
+-	if (IS_ERR(exynos_pcie->phy_base))
+-		return PTR_ERR(exynos_pcie->phy_base);
++	if (IS_ERR(exynos_pcie->phy_base)) {
++		ret = PTR_ERR(exynos_pcie->phy_base);
++		goto fail_bus_clk;
++	}
+ 
+ 	block_base = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+ 	exynos_pcie->block_base = devm_ioremap_resource(&pdev->dev, block_base);
+-	if (IS_ERR(exynos_pcie->block_base))
+-		return PTR_ERR(exynos_pcie->block_base);
++	if (IS_ERR(exynos_pcie->block_base)) {
++		ret = PTR_ERR(exynos_pcie->block_base);
++		goto fail_bus_clk;
++	}
+ 
+ 	ret = add_pcie_port(pp, pdev);
+ 	if (ret < 0)
 
-It's a customer-reported issue, so I am gathering permission to make this 
-information public (I don't think that'll be an issue).
-
-I'll send up a followup afterwards.
-
-> Maybe somebody will figure out a more generic change that could make 
-> this quirk unnecessary, and details will help in figuring that out.
-> 
-> I assume the actual PCI discovery done in the PCI core works fine;
-> it's just that the driver doesn't work if MSIs are disabled on the
-> device.  If that's the case, can this be fixed by some driver change?
-> Maybe the driver needs to enable MSI before it sends commands to the
-> device?
-
-I have tried it, but it still doesn't work. It seems like the device 
-initialization is not finalized properly with MISs disabled; meaning the 
-device is there (discovery has completed), but it "just doesn't work".
-
-> Any description of what this failure looks like to a user?  How can a 
-> user or a distro connect a symptom (driver timeout, console message, or 
-> whatever) to this patch?
-
-Will be hopefully part of the dmesg I will be providing later ... 
-basically any commands sent to it time out.
-
-Thanks,
-
--- 
-Jiri Kosina
-SUSE Labs
