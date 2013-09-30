@@ -1,65 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:34804 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752981Ab3IQTYN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Sep 2013 15:24:13 -0400
-Date: Tue, 17 Sep 2013 13:24:12 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: mvebu: Dynamically detect if the PEX link is up to
- enable hot plug
-Message-ID: <20130917192412.GB4067@obsidianresearch.com>
-References: <20130917183250.GA21230@obsidianresearch.com>
- <20130917210520.284b36bc@skate>
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:45050
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754420Ab3I3Wuv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Sep 2013 18:50:51 -0400
+Message-ID: <1380581443.24959.531.camel@snotra.buserror.net>
+Subject: Re: [PATCH 2/2] pci: fsl: rework PCI driver compatible with
+ Layerscape
+From: Scott Wood <scottwood@freescale.com>
+To: Lian Minghuan-b31939 <B31939@freescale.com>
+CC: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+Date: Mon, 30 Sep 2013 17:50:43 -0500
+In-Reply-To: <5248144A.6070307@freescale.com>
+References: <1379502122-20792-1-git-send-email-Minghuan.Lian@freescale.com>
+		 <1379502122-20792-2-git-send-email-Minghuan.Lian@freescale.com>
+	 <1380300847.24959.394.camel@snotra.buserror.net>
+	 <5248144A.6070307@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130917210520.284b36bc@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 17, 2013 at 09:05:20PM +0200, Thomas Petazzoni wrote:
-> Dear Jason Gunthorpe,
-> 
-> On Tue, 17 Sep 2013 12:32:50 -0600, Jason Gunthorpe wrote:
-> > Otherwise hotplugging the PEX doesn't work at all since the driver
-> > detects the link state at probe time. Simply replacing the two tests
-> > of haslink with a register read is enough to fix discovery.
-> > 
-> > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> 
-> I don't have the hardware to test, but this seems to make sense to me.
+On Sun, 2013-09-29 at 19:51 +0800, Lian Minghuan-b31939 wrote:
+> >> +/*
+> >> + * The fsl_arch_* functions are arch hooks. Those functions are
+> >> + * implemented as weak symbols so that they can be overridden by
+> >> + * architecture specific code if needed.
+> >> + */
+> >> +
+> >> +/* Return PCI64 DMA offset */
+> >> +u64 fsl_arch_pci64_dma_offset(void);
+> > Is this always guaranteed to exist?
+> [Minghuan] Yes. I define a __weak implementation in pci-fsl.c
 
-FWIW, I have tested this on Kirkwood:
+I meant is it guaranteed that such a mapping exists?  The API doesn't
+give a way to say "no".
 
-mvebu-pcie pex.1: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [mem 0xe0000000-0xf0000000]
-pci_bus 0000:00: root bus resource [bus 00-ff]
-pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
-pci 0000:00:01.0: [11ab:7846] type 01 class 0x060400
-PCI: bus0: Fast back to back transfers disabled
-pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-PCI: bus1: Fast back to back transfers enabled
-pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-pci 0000:00:01.0: PCI bridge to [bus 01]
-[..]
-Freeing unused kernel memory: 1096K (c02ee000 - c0400000)
+Also you should describe what "PCI64 DMA offset" means.
 
-.. hot plug the device ..
+> >> +/* Register PCI/PCIe controller to architecture system */
+> >> +int __weak fsl_arch_pci_sys_register(struct fsl_pci *pci);
+> >> +
+> >> +/* Remove PCI/PCIe controller from architecture system */
+> >> +void __weak fsl_arch_pci_sys_remove(struct fsl_pci *pci);
+> > Why do these need to be weak?  Won't there be exactly one implementation
+> > per supported arch?
+> [Minghuan] I added __weak for compiling kernel when selecting pci-fsl 
+> module but
+> there is no related arch pci implementation.
 
-echo 1 > rescan
+The module should not be buildable on arches that don't have support.
 
-pci 0000:01:00.0: [170c:0001] type 00 class 0x058000
-pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x0001ffff]
-pci 0000:01:00.0: PME# supported from D0 D1 D2 D3hot
-pci_bus 0000:01: busn_res: [bus 01] end is updated to 01
-pci 0000:00:01.0: BAR 8: assigned [mem 0xe0000000-0xe00fffff]
-pci 0000:01:00.0: BAR 0: assigned [mem 0xe0000000-0xe001ffff]
-pci 0000:00:01.0: PCI bridge to [bus 01]
-pci 0000:00:01.0:   bridge window [mem 0xe0000000-0xe00fffff]
-PCI: enabling device 0000:00:01.0 (0140 -> 0143)
-PCI: enabling device 0000:01:00.0 (0000 -> 0002)
+-Scott
 
-Jason
+
+
