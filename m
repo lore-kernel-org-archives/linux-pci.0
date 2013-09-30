@@ -1,44 +1,27 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34575 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52954 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752206Ab3IEPiq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Sep 2013 11:38:46 -0400
-Date: Thu, 5 Sep 2013 17:40:42 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
-References: <cover.1378383792.git.agordeev@redhat.com>
- <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
- <20130905130902.GA26314@htj.dyndns.org>
- <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
- <20130905150442.GA24148@htj.dyndns.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130905150442.GA24148@htj.dyndns.org>
+	id S1754665Ab3I3Nl2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Sep 2013 09:41:28 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20130928175956.8752.50967.stgit@amt.stowe>
+References: <20130928175956.8752.50967.stgit@amt.stowe>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: dhowells@redhat.com, yasutake.koichi@jp.panasonic.com,
+	bhelgaas@google.com, linux-am33-list@redhat.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] mn10300/PCI: Remove pci_mem_start
+Date: Mon, 30 Sep 2013 14:41:22 +0100
+Message-ID: <5483.1380548482@warthog.procyon.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 05, 2013 at 11:04:42AM -0400, Tejun Heo wrote:
-> The thing is, do we even have cases where arch code returns positive
-> return to indicate possible partial allocation?  If not, the whole
-> interface is convoluted for no good reason and we can just make
-> everything return 0 or -errno, which is a lot simpler.  No?
+Myron Stowe <myron.stowe@redhat.com> wrote:
 
-As I mentioned in my other note, at least PPC has a concept of MSI quota,
-so exceeding it would be the very case, I believe.
-
-> Thanks.
+> Remove unused 'pci_mem_start' variable.
 > 
-> -- 
-> tejun
+> CC: David Howells <dhowells@redhat.com>
+> CC: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Acked-by: David Howells <dhowells@redhat.com>
