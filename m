@@ -1,61 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52996 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753855Ab3JIOdJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Oct 2013 10:33:09 -0400
-Date: Wed, 9 Oct 2013 16:33:04 +0200
-From: Jean Delvare <jdelvare@suse.de>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Takashi Iwai <tiwai@suse.de>
-Subject: [PATCH] PCI/portdrv: Set master earlier
-Message-ID: <20131009163304.62b439a9@endymion.delvare>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:60161 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751251Ab3JARmb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Oct 2013 13:42:31 -0400
+MIME-Version: 1.0
+In-Reply-To: <20131001160014.GA7438@google.com>
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org>
+	<1376189294-32022-26-git-send-email-yinghai@kernel.org>
+	<20131001160014.GA7438@google.com>
+Date: Tue, 1 Oct 2013 10:42:30 -0700
+Message-ID: <CAE9FiQVSGRMbW34vQoYpLBHfu2yhh_2_MDeeRP_xEZhsTvbtqA@mail.gmail.com>
+Subject: Re: [PATCH v4 25/28] PCI, x86: Make ioapic hotplug support built-in
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since kernel 3.12-rc3, I get the following warning messages at boot:
-pcieport 0000:00:07.0: driver skip pci_set_master, fix it!
-pcieport 0000:00:01.0: driver skip pci_set_master, fix it!
+On Tue, Oct 1, 2013 at 9:00 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sat, Aug 10, 2013 at 07:48:11PM -0700, Yinghai Lu wrote:
+>> ioapic hotplug should be built-in like pci root bus hotplug.
+>>
+>> Also need to make it depends on X86_IO_APIC.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> Hi Yinghai,
+>
+> What's the status of these?  It looks like the last three or four
+> could go via my PCI tree, but I don't know whether they depend on
+> the earlier patches.  If they could be applied separately, I could
+> merge them and we could make *some* progress.
 
-These are:
-00:01.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 1 (rev 13)
-00:07.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 7 (rev 13)
+they are rely on other patches.
 
-Calling pci_set_master() immediately after pci_enable_device() makes
-the warning messages go away.
+would be better if you give them ack, and let them via tip/x86/irq etc.
 
-Signed-off-by: Jean Delvare <jdelvare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
-Please note that I am far from certain that this is the correct fix.
-Another approach would be to disable the device if
-get_port_device_capability() returns no capabilities. I suppose the
-device would then be re-enabled later if really needed. What's the best
-approach?
+or in two parts: after first part go to upstream via tip, and we can
+push left pci related via pci tree.
 
- drivers/pci/pcie/portdrv_core.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> Also, it looks like you planned some rework related to _UID and
+> resource parsing, so I've been waiting for that to show up before
+> doing much more.
 
---- linux-3.12-rc4.orig/drivers/pci/pcie/portdrv_core.c	2013-09-24 00:41:09.000000000 +0200
-+++ linux-3.12-rc4/drivers/pci/pcie/portdrv_core.c	2013-10-09 15:43:54.205943783 +0200
-@@ -366,13 +366,13 @@ int pcie_port_device_register(struct pci
- 	status = pci_enable_device(dev);
- 	if (status)
- 		return status;
-+	pci_set_master(dev);
- 
- 	/* Get and check PCI Express port services */
- 	capabilities = get_port_device_capability(dev);
- 	if (!capabilities)
- 		return 0;
- 
--	pci_set_master(dev);
- 	/*
- 	 * Initialize service irqs. Don't use service devices that
- 	 * require interrupts if there is no way to generate them.
+yes, I have that ready. will post them shortly.
 
+Thanks
 
--- 
-Jean Delvare
-Suse L3 Support
+Yinghai
