@@ -1,161 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26210 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755037Ab3JBRaA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:30:00 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 06/77] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Wed,  2 Oct 2013 12:48:22 +0200
-Message-Id: <9c282c4ab92731c719d161d2db6fc54ce33891d9.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:49477 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751509Ab3JAR6O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Oct 2013 13:58:14 -0400
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH RESEND] PCI: mvebu: Dynamically detect if the PEX link is up to enable hot plug
+Date: Tue,  1 Oct 2013 11:58:00 -0600
+Message-Id: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This update is needed to facilitate a forthcoming re-design
-MSI/MSI-X interrupts enabling pattern.
+Otherwise hotplugging the PEX doesn't work at all since the driver
+detects the link state at probe time. Simply replacing the two tests
+of haslink with a register read is enough to fix it.
 
-Device drivers will use this interface to obtain maximum number
-of MSI interrupts the device supports and use that value in the
-following call to pci_enable_msi_block() interface.
+Tested on kirkwood with repeated plug/unplug of the link partner.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 ---
- Documentation/PCI/MSI-HOWTO.txt |   15 +++++++++++++++
- drivers/pci/msi.c               |   33 +++++++++++++++++++++------------
- include/linux/pci.h             |    6 ++++++
- 3 files changed, 42 insertions(+), 12 deletions(-)
+ drivers/pci/host/pci-mvebu.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index 35b2d64..1f37ce2 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -169,6 +169,21 @@ on any interrupt for which it previously called request_irq().
- Failure to do so results in a BUG_ON(), leaving the device with
- MSI enabled and thus leaking its vector.
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 729d5a1..f2d61f5 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -115,7 +115,6 @@ struct mvebu_pcie_port {
+ 	char *name;
+ 	void __iomem *base;
+ 	spinlock_t conf_lock;
+-	int haslink;
+ 	u32 port;
+ 	u32 lane;
+ 	int devfn;
+@@ -552,7 +551,7 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	if (bus->number == 0)
+ 		return mvebu_sw_pci_bridge_write(port, where, size, val);
  
-+4.2.5 pci_get_msi_cap
-+
-+int pci_get_msi_cap(struct pci_dev *dev)
-+
-+This function could be used to retrieve the number of MSI vectors the
-+device requested (via the Multiple Message Capable register). The MSI
-+specification only allows the returned value to be a power of two,
-+up to a maximum of 2^5 (32).
-+
-+If this function returns a negative number, it indicates the device is
-+not capable of sending MSIs.
-+
-+If this function returns a positive number, it indicates the maximum
-+number of MSI interrupt vectors that could be allocated.
-+
- 4.3 Using MSI-X
+-	if (!port->haslink)
++	if (!mvebu_pcie_link_up(port))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
  
- The MSI-X capability is much more flexible than the MSI capability.
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 875c353..ca59bfc 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -812,6 +812,21 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- 	return 0;
- }
+ 	/*
+@@ -594,7 +593,7 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 	if (bus->number == 0)
+ 		return mvebu_sw_pci_bridge_read(port, where, size, val);
  
-+int pci_get_msi_cap(struct pci_dev *dev)
-+{
-+	int ret;
-+	u16 msgctl;
-+
-+	if (!dev->msi_cap)
-+		return -EINVAL;
-+
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-+	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_get_msi_cap);
-+
- /**
-  * pci_enable_msi_block - configure device's MSI capability structure
-  * @dev: device to configure
-@@ -828,13 +843,10 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
- 	int status, maxvec;
--	u16 msgctl;
+-	if (!port->haslink) {
++	if (!mvebu_pcie_link_up(port)) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -883,22 +882,11 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
  
--	if (!dev->msi_cap)
--		return -EINVAL;
+ 		mvebu_pcie_set_local_dev_nr(port, 1);
+ 
+-		if (mvebu_pcie_link_up(port)) {
+-			port->haslink = 1;
+-			dev_info(&pdev->dev, "PCIe%d.%d: link up\n",
+-				 port->port, port->lane);
+-		} else {
+-			port->haslink = 0;
+-			dev_info(&pdev->dev, "PCIe%d.%d: link down\n",
+-				 port->port, port->lane);
+-		}
 -
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	maxvec = pci_get_msi_cap(dev);
-+	if (maxvec < 0)
-+		return maxvec;
- 	if (nvec > maxvec)
- 		return maxvec;
+ 		port->clk = of_clk_get_by_name(child, NULL);
+ 		if (IS_ERR(port->clk)) {
+ 			dev_err(&pdev->dev, "PCIe%d.%d: cannot get clock\n",
+ 			       port->port, port->lane);
+ 			iounmap(port->base);
+-			port->haslink = 0;
+ 			continue;
+ 		}
  
-@@ -859,13 +871,10 @@ EXPORT_SYMBOL(pci_enable_msi_block);
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
- {
- 	int ret, nvec;
--	u16 msgctl;
- 
--	if (!dev->msi_cap)
--		return -EINVAL;
--
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	ret = pci_get_msi_cap(dev);
-+	if (ret < 0)
-+		return ret;
- 
- 	if (maxvec)
- 		*maxvec = ret;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index da172f9..2fa92ef 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1144,6 +1144,11 @@ struct msix_entry {
- 
- 
- #ifndef CONFIG_PCI_MSI
-+static inline int pci_get_msi_cap(struct pci_dev *dev)
-+{
-+	return -1;
-+}
-+
- static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
- 	return -1;
-@@ -1185,6 +1190,7 @@ static inline int pci_msi_enabled(void)
- 	return 0;
- }
- #else
-+int pci_get_msi_cap(struct pci_dev *dev);
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
- void pci_msi_shutdown(struct pci_dev *dev);
 -- 
-1.7.7.6
+1.8.1.2
 
