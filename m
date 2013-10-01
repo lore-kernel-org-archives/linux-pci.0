@@ -1,130 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:56223 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754988Ab3IYVfT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Sep 2013 17:35:19 -0400
-Received: by mail-ie0-f170.google.com with SMTP id x13so338122ief.15
-        for <linux-pci@vger.kernel.org>; Wed, 25 Sep 2013 14:35:18 -0700 (PDT)
+Received: from muin.pair.com ([209.68.1.55]:64778 "EHLO muin.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754625Ab3JABTH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Sep 2013 21:19:07 -0400
+Received: from mail-ve0-f182.google.com (mail-ve0-f182.google.com [209.85.128.182])
+	by muin.pair.com (Postfix) with ESMTPSA id CE6908FC3F
+	for <linux-pci@vger.kernel.org>; Mon, 30 Sep 2013 21:19:04 -0400 (EDT)
+Received: by mail-ve0-f182.google.com with SMTP id oy12so4770132veb.13
+        for <linux-pci@vger.kernel.org>; Mon, 30 Sep 2013 18:19:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1379382464-7920-4-git-send-email-vfalico@redhat.com>
-References: <1379382464-7920-1-git-send-email-vfalico@redhat.com> <1379382464-7920-4-git-send-email-vfalico@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Sep 2013 15:34:58 -0600
-Message-ID: <CAErSpo77PrKi9nwBada444TOA5vwjWdt06Qv+GZLreh61kNH6g@mail.gmail.com>
-Subject: Re: [PATCH 3/3] msi: free msi_desc entry only after we've released
- the kobject
-To: Veaceslav Falico <vfalico@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <5248D94E.7080904@freescale.com>
+References: <1379502122-20792-1-git-send-email-Minghuan.Lian@freescale.com>
+	<1379502122-20792-2-git-send-email-Minghuan.Lian@freescale.com>
+	<CAOZdJXUF3ibW5iuB-2p5bhPp-Uw9MVKzqZiDdukMfi4f1d3Phw@mail.gmail.com>
+	<5248D94E.7080904@freescale.com>
+Date: Mon, 30 Sep 2013 20:19:04 -0500
+Message-ID: <CAOZdJXUS4QEnKv1MNi=7CFgSGhkSE6hSb=T0xY5o4NqRdN-mjg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] pci: fsl: rework PCI driver compatible with Layerscape
+From: Timur Tabi <timur@tabi.org>
+To: Lian Minghuan-b31939 <B31939@freescale.com>
+Cc: Timur Tabi <timur@tabi.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 16, 2013 at 7:47 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
-> Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
-> however kobject_put() doesn't guarantee us that it was the last reference
-> and that the kobj isn't used currently by someone else, so after we
-> kfree(entry) with the struct kobject - other users will begin using the
-> freed memory, instead of the actual kobject.
+On Sun, Sep 29, 2013 at 8:52 PM, Lian Minghuan-b31939
+<B31939@freescale.com> wrote:
 >
-> Fix this by using the kobject->release callback, which is called last when
-> the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
-> which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
-> kobj itself after ->release() was called, so we're safe).
->
-> In case we've failed to create the sysfs directories - just kfree()
-> it - cause we don't have the kobjects attached.
->
-> Also, remove the same functionality from populate_msi_sysfs(), cause on
-> failure we anyway call free_msi_irqs(), which will take care of all the
-> kobjects properly.
+> How about PCI_FSL_COMMON?
 
-I agree; it looks like populate_msi_sysfs() doesn't need to have the
-cleanup in it.  Can you split that into a separate patch, since I
-don't think it depends on the kfree() fix?
-
-Bjorn
-
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: linux-pci@vger.kernel.org
-> CC: linux-kernel@vger.kernel.org
-> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
-> ---
->  drivers/pci/msi.c | 27 +++++++++------------------
->  1 file changed, 9 insertions(+), 18 deletions(-)
->
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 68da921..c9236e4 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -374,19 +374,22 @@ static void free_msi_irqs(struct pci_dev *dev)
->                                 iounmap(entry->mask_base);
->                 }
->
-> +               list_del(&entry->list);
-> +
->                 /*
->                  * Its possible that we get into this path
->                  * When populate_msi_sysfs fails, which means the entries
->                  * were not registered with sysfs.  In that case don't
-> -                * unregister them.
-> +                * unregister them, and just free. Otherwise the
-> +                * kobject->release will take care of freeing the entry via
-> +                * msi_kobj_release().
->                  */
->                 if (entry->kobj.parent) {
->                         kobject_del(&entry->kobj);
->                         kobject_put(&entry->kobj);
-> +               } else {
-> +                       kfree(entry);
->                 }
-> -
-> -               list_del(&entry->list);
-> -               kfree(entry);
->         }
->
->         kset_unregister(dev->msi_kset);
-> @@ -512,6 +515,7 @@ static void msi_kobj_release(struct kobject *kobj)
->         struct msi_desc *entry = to_msi_desc(kobj);
->
->         pci_dev_put(entry->dev);
-> +       kfree(entry);
->  }
->
->  static struct kobj_type msi_irq_ktype = {
-> @@ -525,7 +529,6 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->         struct msi_desc *entry;
->         struct kobject *kobj;
->         int ret;
-> -       int count = 0;
->
->         pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
->         if (!pdev->msi_kset)
-> @@ -539,23 +542,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->                                      "%u", entry->irq);
->                 if (ret) {
->                         pci_dev_put(pdev);
-> -                       goto out_unroll;
-> +                       return ret;
->                 }
-> -
-> -               count++;
->         }
->
->         return 0;
-> -
-> -out_unroll:
-> -       list_for_each_entry(entry, &pdev->msi_list, list) {
-> -               if (!count)
-> -                       break;
-> -               kobject_del(&entry->kobj);
-> -               kobject_put(&entry->kobj);
-> -               count--;
-> -       }
-> -       return ret;
->  }
->
->  /**
-> --
-> 1.8.4
->
+That's not any better.  The problem is that you have two symbols for
+generic/common FSL PCI support.  Adding the word "common" does not
+help.  You need to make the symbols distinct.  Either that, or merge
+them into one symbol.
