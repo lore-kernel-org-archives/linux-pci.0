@@ -1,55 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26940 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755829Ab3JBRsW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:48:22 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 61/77] qlogic: Return -EINVAL in case MSI-X is not supported
-Date: Wed,  2 Oct 2013 12:49:17 +0200
-Message-Id: <c64f2f34b18acdd71ad113228f78fefdcf1cfd26.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+Received: from mga11.intel.com ([192.55.52.93]:18130 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752555Ab3JAT4y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Oct 2013 15:56:54 -0400
+From: David Cohen <david.a.cohen@linux.intel.com>
+To: cjb@laptop.org, bhelgaas@google.com, adrian.hunter@intel.com,
+	wfp5p@virginia.edu, gregkh@linuxfoundation.org,
+	g.liakhovetski@gmx.de
+Cc: linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	David Cohen <david.a.cohen@linux.intel.com>
+Subject: [PATCH 1/2] pci_id: add Intel Merrifield mmc pci id
+Date: Tue,  1 Oct 2013 13:00:32 -0700
+Message-Id: <1380657633-19543-1-git-send-email-david.a.cohen@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
 ---
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ include/linux/pci_ids.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-index c6018bb..ff6a78b 100644
---- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-+++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-@@ -568,7 +568,7 @@ int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
- {
- 	struct pci_dev *pdev = adapter->pdev;
- 	int max_tx_rings, max_sds_rings, tx_vector;
--	int err = -1, i;
-+	int err = -EINVAL, i;
- 
- 	if (adapter->flags & QLCNIC_TX_INTR_SHARED) {
- 		max_tx_rings = 0;
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 97fbecd..2a89103 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2551,6 +2551,7 @@
+ #define PCI_DEVICE_ID_INTEL_MFD_EMMC0	0x0823
+ #define PCI_DEVICE_ID_INTEL_MFD_EMMC1	0x0824
+ #define PCI_DEVICE_ID_INTEL_MRST_SD2	0x084F
++#define PCI_DEVICE_ID_INTEL_MRFL_MMC	0x1190
+ #define PCI_DEVICE_ID_INTEL_I960	0x0960
+ #define PCI_DEVICE_ID_INTEL_I960RM	0x0962
+ #define PCI_DEVICE_ID_INTEL_CENTERTON_ILB	0x0c60
 -- 
-1.7.7.6
+1.8.4.rc3
 
