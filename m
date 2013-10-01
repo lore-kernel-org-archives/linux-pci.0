@@ -1,104 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 3 Oct 2013 11:02:54 +0300
-From: Jack Morgenstein <jackm@dev.mellanox.co.il>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([203.10.76.45]:55183 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751508Ab3JAHfv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Oct 2013 03:35:51 -0400
+Date: Tue, 1 Oct 2013 17:35:48 +1000
+From: Michael Ellerman <michael@ellerman.id.au>
+To: Tejun Heo <tj@kernel.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org,
-	ogerlitz@mellanox.com, eli@mellanox.com
-Subject: Re: [PATCH RFC 46/77] mlx4: Update MSI/MSI-X interrupts enablement
- code
-Message-ID: <20131003110254.5f10fbb8@jpm-OptiPlex-GX620>
-In-Reply-To: <b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-	<b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20131001073548.GI17966@concordia>
+References: <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+ <20130917143022.GA7707@concordia>
+ <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <20130918142231.GA21650@mtj.dyndns.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130918142231.GA21650@mtj.dyndns.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed,  2 Oct 2013 12:49:02 +0200
-Alexander Gordeev <agordeev@redhat.com> wrote:
-
-NACK.  This change does not do anything logically as far as I can tell.
-pci_enable_msix in the current upstream kernel itself calls
-pci_msix_table_size.  The current code yields the same results
-as the code suggested below. (i.e., the suggested code has no effect on
-optimality).
-
-BTW, pci_msix_table_size never returns a value < 0 (if msix is not
-enabled, it returns 0 for the table size), so the (err < 0) check here
-is not correct. (I also do not like using "err" here anyway for the
-value returned by pci_msix_table_size().  There is no error here, and
-it is simply confusing.
-
--Jack
-
-> As result of recent re-design of the MSI/MSI-X interrupts enabling
-> pattern this driver has to be updated to use the new technique to
-> obtain a optimal number of MSI/MSI-X interrupts required.
+On Wed, Sep 18, 2013 at 09:22:31AM -0500, Tejun Heo wrote:
+> Hello,
 > 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/net/ethernet/mellanox/mlx4/main.c |   17 ++++++++---------
->  1 files changed, 8 insertions(+), 9 deletions(-)
+> On Wed, Sep 18, 2013 at 11:48:00AM +0200, Alexander Gordeev wrote:
+> > On Wed, Sep 18, 2013 at 12:30:23AM +1000, Michael Ellerman wrote:
+> > > How about no?
+> > > 
+> > > We have a small number of MSIs available, limited by hardware &
+> > > firmware, if we don't impose a quota then the first device that probes
+> > > will get most/all of the MSIs and other devices miss out.
+> > 
+> > Out of curiosity - how pSeries has had done it without quotas before
+> > 448e2ca ("powerpc/pseries: Implement a quota system for MSIs")?
 > 
-> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c
-> b/drivers/net/ethernet/mellanox/mlx4/main.c index 60c9f4f..377a5ea
-> 100644 --- a/drivers/net/ethernet/mellanox/mlx4/main.c
-> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-> @@ -1852,8 +1852,16 @@ static void mlx4_enable_msi_x(struct mlx4_dev
-> *dev) int i;
->  
->  	if (msi_x) {
-> +		err = pci_msix_table_size(dev->pdev);
-> +		if (err < 0)
-> +			goto no_msi;
-> +
-> +		/* Try if at least 2 vectors are available */
->  		nreq = min_t(int, dev->caps.num_eqs -
-> dev->caps.reserved_eqs, nreq);
-> +		nreq = min_t(int, nreq, err);
-> +		if (nreq < 2)
-> +			goto no_msi;
->  
->  		entries = kcalloc(nreq, sizeof *entries, GFP_KERNEL);
->  		if (!entries)
-> @@ -1862,17 +1870,8 @@ static void mlx4_enable_msi_x(struct mlx4_dev
-> *dev) for (i = 0; i < nreq; ++i)
->  			entries[i].entry = i;
->  
-> -	retry:
->  		err = pci_enable_msix(dev->pdev, entries, nreq);
->  		if (err) {
-> -			/* Try again if at least 2 vectors are
-> available */
-> -			if (err > 1) {
-> -				mlx4_info(dev, "Requested %d
-> vectors, "
-> -					  "but only %d MSI-X vectors
-> available, "
-> -					  "trying again\n", nreq,
-> err);
-> -				nreq = err;
-> -				goto retry;
-> -			}
->  			kfree(entries);
->  			goto no_msi;
->  		}
+> Hmmm... do we need to treat this any differently?  If the platform
+> can't allocate full range of requested MSIs, just failing should be
+> enough regardless of why such allocation can't be met, no?
+> 
+> > > Anyway I don't see what problem you're trying to solve? I agree the
+> > > -ve/0/+ve return value pattern is ugly, but it's hardly the end of the
+> > > world.
+> > 
+> > Well, the interface recently has been re-classified from "ugly" to
+> > "unnecessarily complex and actively harmful" in Tejun's words ;)
+> 
+> LOL. :)
+> 
+> > Indeed, I checked most of the drivers and it is incredible how people
+> > are creative in misusing the interface: from innocent pci_disable_msix()
+> > calls when if pci_enable_msix() failed to assuming MSI-Xs were enabled
+> > if pci_enable_msix() returned a positive value (apparently untested).
+> > 
+> > Roughly third of the drivers just do not care and bail out once
+> > pci_enable_msix() has not succeeded. Not sure how many of these are
+> > mandated by the hardware.
+> 
+> Yeah, I mean, this type of interface is a trap.  People have to
+> actively resist to avoid doing silly stuff which is a lot to ask.
 
+I really think you're overstating the complexity here.
+
+Functions typically return a boolean   -> nothing to see here
+This function returns a tristate value -> brain explosion!
+
+
+> > 	/*
+> > 	 * Retrieving 'nvec' by means other than pci_msix_table_size()
+> > 	 */
+> > 
+> > 	rc = pci_get_msix_limit(pdev);
+> > 	if (rc < 0)
+> > 		return rc;
+> > 
+> > 	/*
+> > 	 * nvec = min(rc, nvec);
+> > 	 */
+> > 
+> > 	for (i = 0; i < nvec; i++)
+> > 		msix_entry[i].entry = i;
+> > 
+> > 	rc = pci_enable_msix(pdev, msix_entry, nvec);
+> > 	if (rc)
+> > 		return rc;
+> 
+> I really think what we should do is
+> 
+> * Determine the number of MSIs the controller wants.  Don't worry
+>   about quotas or limits or anything.  Just determine the number
+>   necessary to enable enhanced interrupt handling.
+> 	
+> * Try allocating that number of MSIs.  If it fails, then just revert
+>   to single interrupt mode.  It's not the end of the world and mostly
+>   guaranteed to work.  Let's please not even try to do partial
+>   multiple interrupts.  I really don't think it's worth the risk or
+>   complexity.
+
+It will potentially break existing setups on our hardware.
+
+Can I make that any clearer?
+
+cheers
