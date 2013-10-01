@@ -1,52 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:39696 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752255Ab3JLCaI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 22:30:08 -0400
-From: Marek Vasut <marex@denx.de>
-To: "Zhu Richard-R65037" <r65037@freescale.com>
-Subject: Re: [PATCH v7 0/2] Add PCIe support for i.MX6q
-Date: Sat, 12 Oct 2013 04:30:04 +0200
-Cc: Tim Harvey <tharvey@gateworks.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Shawn Guo <shawn.guo@linaro.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 1 Oct 2013 17:51:33 +1000
+From: Michael Ellerman <michael@ellerman.id.au>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Frank Li <lznuaa@gmail.com>, Sean Cross <xobs@kosagi.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>
-References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org> <CAJ+vNU0HJs9NxPy8Erer1ZUzCAkzhQn+c0atmEZ=ZZWLgXb6Kw@mail.gmail.com> <0E83723C55F66F43A6041464FE31119D40A9C9@039-SN2MPN1-011.039d.mgd.msft.net>
-In-Reply-To: <0E83723C55F66F43A6041464FE31119D40A9C9@039-SN2MPN1-011.039d.mgd.msft.net>
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20131001075133.GJ17966@concordia>
+References: <20130905154436.GC24148@htj.dyndns.org>
+ <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+ <20130917143022.GA7707@concordia>
+ <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201310120430.04282.marex@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Richard,
+On Wed, Sep 18, 2013 at 11:48:00AM +0200, Alexander Gordeev wrote:
+> On Wed, Sep 18, 2013 at 12:30:23AM +1000, Michael Ellerman wrote:
+> > How about no?
+> > 
+> > We have a small number of MSIs available, limited by hardware &
+> > firmware, if we don't impose a quota then the first device that probes
+> > will get most/all of the MSIs and other devices miss out.
+> 
+> Out of curiosity - how pSeries has had done it without quotas before
+> 448e2ca ("powerpc/pseries: Implement a quota system for MSIs")?
+> 
+> > Anyway I don't see what problem you're trying to solve? I agree the
+> > -ve/0/+ve return value pattern is ugly, but it's hardly the end of the
+> > world.
+> 
+> Well, the interface recently has been re-classified from "ugly" to
+> "unnecessarily complex and actively harmful" in Tejun's words ;)
+> 
+> Indeed, I checked most of the drivers and it is incredible how people
+> are creative in misusing the interface: from innocent pci_disable_msix()
+> calls when if pci_enable_msix() failed to assuming MSI-Xs were enabled
+> if pci_enable_msix() returned a positive value (apparently untested).
 
-> Hi Tim:
-> As I know that the clock of pcie controller should be always running.
-> There are not clock gate on/off operations in host driver after the
-> initialization.
+OK, but we have the source to the drivers, we could just fix them.
 
-I think the problem might happen when the PCIe device (Ethernet adapter) is bus-
-master and either initiates PCIe->AXI->memory write or memory->AXI->PCIe read 
-transfer. This is because when the Intel ethernet (igb) is probed, it only uses 
-the MEM window that's mapped into the AXI space (that window at 0x01100000). On 
-the other hand, when some packet is transfered, the Intel controller operates 
-with structures in DRAM directly. And the stall only happens when the interface 
-either receives or attempts to send a packet.
+We could even add:
 
-Is this theory of mine even reasonable? If this doesn't work properly, could 
-this stall the CPU? How can I check if this works correctly? What can I try if 
-it does not?
+  pci_enable_msix_i_am_stupid()
 
-Thanks!
+Which swallows the positive return and just gives back -ve/0.
 
-btw. Please be careful about the top-posting ;-)
+> Roughly third of the drivers just do not care and bail out once
+> pci_enable_msix() has not succeeded. Not sure how many of these are
+> mandated by the hardware.
 
-Best regards,
-Marek Vasut
+Sure, that's fine if those drivers do that, it's up to the drivers after
+all.
+
+> Another quite common pattern is a call to pci_enable_msix() to figure out
+> the number of MSI-Xs available and a repeated call of pci_enable_msix()
+> to enable those MSI-Xs, this time.
+
+Also fine, though as the documentation suggests a loop is the best
+construct rather than two explicit calls.
+
+> The recommended practice would be:
+> 
+> 	/*
+> 	 * Retrieving 'nvec' by means other than pci_msix_table_size()
+> 	 */
+> 
+> 	rc = pci_get_msix_limit(pdev);
+> 	if (rc < 0)
+> 		return rc;
+> 
+> 	/*
+> 	 * nvec = min(rc, nvec);
+> 	 */
+> 
+> 	for (i = 0; i < nvec; i++)
+> 		msix_entry[i].entry = i;
+> 
+> 	rc = pci_enable_msix(pdev, msix_entry, nvec);
+> 	if (rc)
+> 		return rc;
+> 
+> Thoughts?
+
+We could probably make that work.
+
+The disadvantage is that any restriction imposed on us above the quota
+can only be reported as an error from pci_enable_msix().
+
+The quota code, called from pci_get_msix_limit(), can only do so much to
+interogate firmware about the limitations. The ultimate way to check if
+firmware will give us enough MSIs is to try and allocate them. But we
+can't do that from pci_get_msix_limit() because the driver is not asking
+us to enable MSIs, just query them.
+
+You'll also need to add another arch hook, for the quota check, and
+we'll have to add it to our per-platform indirection as well.
+
+All a lot of bother for no real gain IMHO.
+
+cheers
