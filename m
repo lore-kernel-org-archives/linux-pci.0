@@ -1,32 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:39374 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751345Ab3JDXz6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 19:55:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6aE-vxhOHk_mgyWMYrgkG0Juuy8Bs-S2Hjb_7k8S=n8Q@mail.gmail.com>
-References: <20131004011806.GE20450@dangermouse.emea.sgi.com>
-	<CAErSpo6aE-vxhOHk_mgyWMYrgkG0Juuy8Bs-S2Hjb_7k8S=n8Q@mail.gmail.com>
-Date: Fri, 4 Oct 2013 16:55:56 -0700
-Message-ID: <CAE9FiQV_aDmUqGO7HyybwH5fMYqjVpimKF7YA=Jp4EDSFzbQDA@mail.gmail.com>
-Subject: Re: Commit 07f9b61 breaks systems that don't implement a _CBA method
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mx1.redhat.com ([209.132.183.28]:42355 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753098Ab3JAKdb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Oct 2013 06:33:31 -0400
+Date: Tue, 1 Oct 2013 12:35:27 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Michael Ellerman <michael@ellerman.id.au>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ethan Zhao <ethan.zhao@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20131001103526.GA5053@dhcp-26-207.brq.redhat.com>
+References: <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+ <20130917143022.GA7707@concordia>
+ <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <20131001075133.GJ17966@concordia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131001075133.GJ17966@concordia>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 4, 2013 at 3:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Oct 3, 2013 at 7:18 PM, Hedi Berriche <hedi@sgi.com> wrote:
+On Tue, Oct 01, 2013 at 05:51:33PM +1000, Michael Ellerman wrote:
+> The disadvantage is that any restriction imposed on us above the quota
+> can only be reported as an error from pci_enable_msix().
+> 
+> The quota code, called from pci_get_msix_limit(), can only do so much to
+> interogate firmware about the limitations. The ultimate way to check if
+> firmware will give us enough MSIs is to try and allocate them. But we
+> can't do that from pci_get_msix_limit() because the driver is not asking
+> us to enable MSIs, just query them.
 
-> It's regrettable that the code is so subtle.  The obvious thing to do
-> would be to check for _CBA, and if it doesn't exist, look for an MCFG
-> entry.  But for various historical reasons, the code is a mess, and we
-> haven't figured out how to safely simplify it.
->
-> Ethan, Yinghai, any objections to reverting 07f9b61?
+If things are this way then pci_enable_msix() already exposed to this
+problem internally on pSeries.
 
-yes, that is right solution.
+I see that even successful quota checks in rtas_msi_check_device() and
+rtas_setup_msi_irqs() do not guarantee (as you say) that firmware will
+give enough MSIs. Hence, pci_enable_msix() might fail even though the
+its quota checks succeeded.
+
+Therefore, nothing will really change if we make pci_get_msix_limit() check
+quota and hope the follow-up call to pci_enable_msix() succeeded.
+
+(Of course, we could allocate-deallocate MSIs at check time, but I think it
+is an overkill).
+
+> You'll also need to add another arch hook, for the quota check, and
+> we'll have to add it to our per-platform indirection as well.
+
+Already, in a branch, hidden from Bjorn & Tejun eyes ;)
+
+> All a lot of bother for no real gain IMHO.
+
+Well, I do not have a strong opinion here. I leave it to the ones who have :)
+But few drivers have became clearer as result of this change (and messy ones
+are still messy).
+
+> cheers
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
