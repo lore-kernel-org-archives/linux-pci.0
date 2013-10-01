@@ -1,55 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f44.google.com ([209.85.213.44]:56919 "EHLO
-	mail-yh0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440Ab3JECpW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 22:45:22 -0400
-Received: by mail-yh0-f44.google.com with SMTP id f64so1195217yha.3
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 19:45:21 -0700 (PDT)
-Date: Fri, 4 Oct 2013 20:45:17 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Hedi Berriche <hedi@sgi.com>,
-	"ethan.zhao" <ethan.zhao@oracle.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [GIT PULL] PCI updates for v3.12
-Message-ID: <20131005024517.GC26108@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga14.intel.com ([143.182.124.37]:38233 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750994Ab3JAT4d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Oct 2013 15:56:33 -0400
+From: David Cohen <david.a.cohen@linux.intel.com>
+To: cjb@laptop.org, bhelgaas@google.com, adrian.hunter@intel.com,
+	wfp5p@virginia.edu, gregkh@linuxfoundation.org,
+	g.liakhovetski@gmx.de
+Cc: linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	David Cohen <david.a.cohen@linux.intel.com>
+Subject: [PATCH 2/2] mmc: sdhci-pci: add Intel Merrifield support
+Date: Tue,  1 Oct 2013 13:00:33 -0700
+Message-Id: <1380657633-19543-2-git-send-email-david.a.cohen@linux.intel.com>
+In-Reply-To: <1380657633-19543-1-git-send-email-david.a.cohen@linux.intel.com>
+References: <1380657633-19543-1-git-send-email-david.a.cohen@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+Implement initial SDHCI Intel Merrifield support.
+This patch is based on previous one from Yunpeng Gao <yunpeng.gao@intel.com>
 
-Here's a fix for v3.12.  We merged what was intended to be an MMCONFIG
-cleanup, but in fact, for systems without _CBA (which is almost
-everything), it broke extended config space for domain 0 and it
-broke all config space for other domains.  This reverts the change.
+Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
+---
+ drivers/mmc/host/sdhci-pci.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-Bjorn
+diff --git a/drivers/mmc/host/sdhci-pci.c b/drivers/mmc/host/sdhci-pci.c
+index d7d6bc8..10bd17e 100644
+--- a/drivers/mmc/host/sdhci-pci.c
++++ b/drivers/mmc/host/sdhci-pci.c
+@@ -356,6 +356,28 @@ static const struct sdhci_pci_fixes sdhci_intel_byt_sd = {
+ 	.allow_runtime_pm = true,
+ };
+ 
++/* Define Host controllers for Intel Merrifield platform */
++#define INTEL_MRFL_EMMC_0	0
++#define INTEL_MRFL_EMMC_1	1
++
++static int intel_mrfl_mmc_probe_slot(struct sdhci_pci_slot *slot)
++{
++	if ((PCI_FUNC(slot->chip->pdev->devfn) != INTEL_MRFL_EMMC_0) &&
++	    (PCI_FUNC(slot->chip->pdev->devfn) != INTEL_MRFL_EMMC_1))
++		/* SD support is not ready yet */
++		return -ENODEV;
++
++	slot->host->mmc->caps |= MMC_CAP_8_BIT_DATA | MMC_CAP_NONREMOVABLE |
++				 MMC_CAP_1_8V_DDR;
++
++	return 0;
++}
++
++static const struct sdhci_pci_fixes sdhci_intel_mrfl_mmc = {
++	.quirks		= SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC,
++	.probe_slot	= intel_mrfl_mmc_probe_slot,
++};
++
+ /* O2Micro extra registers */
+ #define O2_SD_LOCK_WP		0xD3
+ #define O2_SD_MULTI_VCC3V	0xEE
+@@ -940,6 +962,13 @@ static const struct pci_device_id pci_ids[] = {
+ 	},
+ 
+ 	{
++		.vendor		= PCI_VENDOR_ID_INTEL,
++		.device		= PCI_DEVICE_ID_INTEL_MRFL_MMC,
++		.subvendor	= PCI_ANY_ID,
++		.subdevice	= PCI_ANY_ID,
++		.driver_data	= (kernel_ulong_t)&sdhci_intel_mrfl_mmc,
++	},
++	{
+ 		.vendor		= PCI_VENDOR_ID_O2,
+ 		.device		= PCI_DEVICE_ID_O2_8120,
+ 		.subvendor	= PCI_ANY_ID,
+-- 
+1.8.4.rc3
 
-
-The following changes since commit 4a10c2ac2f368583138b774ca41fac4207911983:
-
-  Linux 3.12-rc2 (2013-09-23 15:41:09 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.12-fixes-1
-
-for you to fetch changes up to 67d470e0e1711ca4a4c3a0e5524e0d580654053e:
-
-  Revert "x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero" (2013-10-04 16:15:29 -0600)
-
-----------------------------------------------------------------
-PCI update for v3.12:
-
-  MMCONFIG
-      Revert "x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero"
-
-----------------------------------------------------------------
-Bjorn Helgaas (1):
-      Revert "x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero"
-
- arch/x86/pci/mmconfig-shared.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
