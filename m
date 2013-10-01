@@ -1,88 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [PATCH 25/30] ACPI / hotplug / PCI: Check for new devices on enabled slots
-Date: Thu, 05 Sep 2013 01:35:05 +0200
-Message-ID: <16239518.dJxs4RVK1M@vostro.rjw.lan>
-In-Reply-To: <1378336334.3246.158.camel@ul30vt.home>
-References: <26431283.HJCKsss0rt@vostro.rjw.lan> <2449715.ReJj2CQeDS@vostro.rjw.lan> <1378336334.3246.158.camel@ul30vt.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:64688 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754816Ab3JABdo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Sep 2013 21:33:44 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Wei Yongjun' <weiyj.lk@gmail.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	'Grant Likely' <grant.likely@linaro.org>,
+	'Rob Herring' <rob.herring@calxeda.com>,
+	'Seungwon Jeon' <tgih.jun@samsung.com>,
+	'Wei Yongjun' <yongjun_wei@trendmicro.com.cn>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <CAPgLHd_RTNxi-OYhmTZ35NttjnAg-gQ_WKHkUQr5ueMhXVLTMg@mail.gmail.com>
+In-reply-to: <CAPgLHd_RTNxi-OYhmTZ35NttjnAg-gQ_WKHkUQr5ueMhXVLTMg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: exynos: missing clk_disable_unprepare() on error in
+ exynos_pcie_probe()
+Date: Tue, 01 Oct 2013 10:33:41 +0900
+Message-id: <000301cebe46$42e86e00$c8b94a00$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 04, 2013 05:12:14 PM Alex Williamson wrote:
-> On Thu, 2013-09-05 at 00:54 +0200, Rafael J. Wysocki wrote:
-> > On Wednesday, September 04, 2013 02:36:34 PM Alex Williamson wrote:
-> > > On Thu, 2013-07-18 at 01:32 +0200, Rafael J. Wysocki wrote:
-> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > 
-> > > > The current implementation of acpiphp_check_bridge() is pretty dumb:
-> > > >  - It enables a slot if it's not enabled and the slot status is
-> > > >    ACPI_STA_ALL.
-> > > >  - It disables a slot if it's enabled and the slot status is not
-> > > >    ACPI_STA_ALL.
-> > > > 
-> > > > This behavior is not sufficient to handle the Thunderbolt daisy
-> > > > chaining case properly, however, because in that case the bus
-> > > > behind the already enabled slot needs to be rescanned for new
-> > > > devices.
-> > > > 
-> > > > For this reason, modify acpiphp_check_bridge() so that slots are
-> > > > disabled and stopped if they are not in the ACPI_STA_ALL state.
-> > > > 
-> > > > For slots in the ACPI_STA_ALL state, devices behind them that don't
-> > > > respond are trimmed using a new function, trim_stale_devices(),
-> > > > introduced specifically for this purpose.  That function walks
-> > > > the given bus and checks each device on it.  If the device doesn't
-> > > > respond, it is assumed to be gone and is removed.
-> > > > 
-> > > > Once all of the stale devices directy behind the slot have been
-> > > > removed, acpiphp_check_bridge() will start looking for new devices
-> > > > that might have appeared on the given bus.  It will do that even if
-> > > > the slot is already enabled (SLOT_ENABLED is set for it).
-> > > > 
-> > > > In addition to that, make the bus check notification ignore
-> > > > SLOT_ENABLED and go for enable_device() directly if bridge is NULL,
-> > > > so that devices behind the slot are re-enumerated in that case too.
-> > > > 
-> > > > This change is based on earlier patches from Kirill A Shutemov
-> > > > and Mika Westerberg.
-> > > > 
-> > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > > ---
-> > > 
-> > > FYI, git bisect landed on this patch as the cause of my serial console
-> > > dying on current upstream.  Further debugging to come...  Thanks,
-> > 
-> > Well, sorry about that.
-> > 
-> > What exactly do you mean by "dying"?
+On Sunday, September 29, 2013 11:29 AM, Wei Yongjun wrote:
 > 
-> Sorry, I was hoping to have more details quickly, but it's been a pain
-> to debug.  By dying I mean serial console output suddenly stops during
-> kernel boot and nothing more comes out of it until after the system is
-> rebooted.  The problem happens when acpiphp_check_bridge() calls
-> enable_slot().  The serial console dies somewhere down in
-> acpiphp_bus_trim().  I think this is happening on the 00:1f ISA bridge,
-> so there's a good chance the serial ports are described as somewhere
-> under there.
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Add the missing clk_disable_unprepare() before return
+> from exynos_pcie_probe() in the error handling case.
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Can you please check if that is the acpiphp_bus_trim() called by
-acpiphp_bus_add() or the other one called from trim_stale_devices()?
+Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-Just add a dump_stack() or WARN_ON(1) to trim_stale_devices() next to
-the acpiphp_bus_trim() call and see if that triggers.  I *think* it's the one
-in acpiphp_bus_add(), but it won't hurt to verify that.
+However, the commit name should be fixed as below:
+[PATCH] PCI: exynos: use missing clk_disable_unprepare() on error in exynos_pcie_probe()
 
-Thanks,
-Rafael
+Best regards,
+Jingoo Han
+
+> ---
+>  drivers/pci/host/pci-exynos.c | 18 ++++++++++++------
+>  1 file changed, 12 insertions(+), 6 deletions(-)
+>
 
