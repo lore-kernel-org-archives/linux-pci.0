@@ -1,58 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:11249 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750944Ab3JSGVi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:21:38 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
+Received: from ozlabs.org ([203.10.76.45]:44931 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751663Ab3JAHT6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Oct 2013 03:19:58 -0400
+Date: Tue, 1 Oct 2013 17:19:55 +1000
+From: Michael Ellerman <michael@ellerman.id.au>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 27/29] vmxnet3: Return -ENOSPC when not enough MSI-X vectors available
-Date: Fri, 18 Oct 2013 19:12:27 +0200
-Message-Id: <b016b15d6671a3d759610972d5643472a057cdb6.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20131001071954.GG17966@concordia>
+References: <20130918142231.GA21650@mtj.dyndns.org>
+ <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
+ <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
+ <20130920122736.GD7630@mtj.dyndns.org>
+ <20130925180220.GB26273@google.com>
+ <20130925205804.GA21737@dhcp-26-207.brq.redhat.com>
+ <20130925210016.GA8926@htj.dyndns.org>
+ <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
+ <20130926131147.GA31249@mtj.dyndns.org>
+ <20130926143901.GE16774@dhcp-26-207.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130926143901.GE16774@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/vmxnet3/vmxnet3_drv.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+On Thu, Sep 26, 2013 at 04:39:02PM +0200, Alexander Gordeev wrote:
+> On Thu, Sep 26, 2013 at 09:11:47AM -0400, Tejun Heo wrote:
+> > > Because otherwise we will re-introduce a problem described by Michael:
+> > > "We have a small number of MSIs available, limited by hardware &
+> > > firmware, if we don't impose a quota then the first device that probes
+> > > will get most/all of the MSIs and other devices miss out."
+> > 
+> > Still not following.  Why wouldn't just letting the drivers request
+> > the optimal number they want and falling back to single interrupt mode
+> > work?  ie. why can't we just have an all or nothing interface?
+> 
+> I can imagine a scenario where the first device probes in, requests its
+> optimal number, acquires that number and exhausts MSIs in pSeries firmware.
+> The next few devices possibly end up with single MSI, since no MSIs left
+> to satisfy their optimal numbers. If one of those single-MSI'ed devices
+> happened to be a high-performance HBA hitting a degraded performance that
+> alone would force (IBM) to introduce the quotas.
 
-diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
-index 3518173..3df7f32 100644
---- a/drivers/net/vmxnet3/vmxnet3_drv.c
-+++ b/drivers/net/vmxnet3/vmxnet3_drv.c
-@@ -2752,7 +2752,10 @@ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
- 				   "Failed to enable MSI-X, error: %d\n", err);
- 			return err;
- 		} else if (err < vector_threshold) {
--			break;
-+			dev_info(&adapter->pdev->dev,
-+				 "Number of MSI-Xs which can be allocated "
-+				 "is lower than min threshold required.\n");
-+			return -ENOSPC;
- 		} else {
- 			/* If fails to enable required number of MSI-x vectors
- 			 * try enabling minimum number of vectors required.
-@@ -2764,9 +2767,6 @@ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
- 		}
- 	}
- 
--	dev_info(&adapter->pdev->dev,
--		 "Number of MSI-X interrupts which can be allocated "
--		 "is lower than min threshold required.\n");
- 	return err;
- }
- 
--- 
-1.7.7.6
+Yes that's exactly the scenario, and I didn't imagine it, our test
+people actually hit it and yelled at me.
 
+I don't remember exactly which adapters it was, I might be able to find
+the details if I looked hard, a quick search through my mail archive
+didn't find it - it might have come in via irc / bugzilla etc.
+
+cheers
