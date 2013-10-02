@@ -1,43 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:42300 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753442Ab3JHRZN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 13:25:13 -0400
-Date: Tue, 8 Oct 2013 13:25:10 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: linux-pci@vger.kernel.org,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Subject: Re: [PATCH v3] PCI: mvebu: add I/O access wrappers
-Message-ID: <20131008172510.GQ5402@titan.lakedaemon.net>
-References: <001e01cea3e5$410cf6d0$c326e470$%jun@samsung.com>
- <20130828141417.139ad2b0@skate>
- <002101cec0e8$3ec9c7c0$bc5d5740$%jun@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <002101cec0e8$3ec9c7c0$bc5d5740$%jun@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 19/77] csiostor: Do not call pci_disable_msix() if pci_enable_msix() failed
+Date: Wed,  2 Oct 2013 12:48:35 +0200
+Message-Id: <3697708ec423a6b6f3d924ea4af9a56874f5787a.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 04, 2013 at 06:58:15PM +0900, Seungwon Jeon wrote:
-> This change adds wrapper functions for MMIO access to PCIe IP block.
-> And some 8/16-bit access are replaced by 32-bit.
-> 
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> ---
-> Changes in v3:
->  - Just rebased
->  - Modified commit message
-> 
-> Changes in v2:
->  - Only 32-bit accessors are kept(from Thomas Petazzoni)
-> 
->  drivers/pci/host/pci-mvebu.c |   97 ++++++++++++++++++++++++------------------
->  1 files changed, 55 insertions(+), 42 deletions(-)
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/csiostor/csio_isr.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-Applied to mvebu/drivers
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 7ee9777..91ba91d 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -529,10 +529,8 @@ csio_enable_msix(struct csio_hw *hw)
+ 			csio_reduce_sqsets(hw, cnt - extra);
+ 		}
+ 	} else {
+-		if (rv > 0) {
+-			pci_disable_msix(hw->pdev);
++		if (rv > 0)
+ 			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+-		}
+ 
+ 		kfree(entries);
+ 		return -ENOMEM;
+-- 
+1.7.7.6
 
-thx,
-
-Jason.
