@@ -1,12 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20622 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751416Ab3JDI2E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Oct 2013 04:28:04 -0400
-Date: Fri, 4 Oct 2013 10:29:20 +0200
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27437 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756008Ab3JBSMl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 14:12:41 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -24,61 +24,38 @@ Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Message-ID: <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+Subject: [PATCH RFC 58/77] qib: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:49:14 +0200
+Message-Id: <5dac1d5d1329cb290043f93b250d26290e553be9.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
- <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 03, 2013 at 11:49:45PM +0100, Ben Hutchings wrote:
-> On Wed, 2013-10-02 at 12:48 +0200, Alexander Gordeev wrote:
-> > This update converts pci_enable_msix() and pci_enable_msi_block()
-> > interfaces to canonical kernel functions and makes them return a
-> > error code in case of failure or 0 in case of success.
-> [...]
-> 
-> I think this is fundamentally flawed: pci_msix_table_size() and
-> pci_get_msi_cap() can only report the limits of the *device* (which the
-> driver usually already knows), whereas MSI allocation can also be
-> constrained due to *global* limits on the number of distinct IRQs.
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
-Even the current implementation by no means addresses it. Although it
-might seem a case for architectures to report the number of IRQs available
-for a driver to retry, in fact they all just fail. The same applies to
-*any* other type of resource involved: irq_desc's, CPU interrupt vector
-space, msi_desc's etc. No platform cares about it and just bails out once
-a constrain met (please correct me if I am wrong here). Given that Linux
-has been doing well even on embedded I think we should not change it.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/infiniband/hw/qib/qib_pcie.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-The only exception to the above is pSeries platform which takes advantage
-of the current design (to implement MSI quota). There are indications we
-can satisfy pSeries requirements, but the design proposed in this RFC
-is not going to change drastically anyway. The start of the discusstion
-is here: https://lkml.org/lkml/2013/9/5/293
-
-> Currently pci_enable_msix() will report a positive value if it fails due
-> to the global limit.  Your patch 7 removes that.  pci_enable_msi_block()
-> unfortunately doesn't appear to do this.
-
-pci_enable_msi_block() can do more than one MSI only on x86 (with IOMMU),
-but it does not bother to return positive numbers, indeed.
-
-> It seems to me that a more useful interface would take a minimum and
-> maximum number of vectors from the driver.  This wouldn't allow the
-> driver to specify that it could only accept, say, any even number within
-> a certain range, but you could still leave the current functions
-> available for any driver that needs that.
-
-Mmmm.. I am not sure I am getting it. Could you please rephrase?
-
-> Ben.
-
+diff --git a/drivers/infiniband/hw/qib/qib_pcie.c b/drivers/infiniband/hw/qib/qib_pcie.c
+index 3f14009..9580903 100644
+--- a/drivers/infiniband/hw/qib/qib_pcie.c
++++ b/drivers/infiniband/hw/qib/qib_pcie.c
+@@ -218,10 +218,6 @@ static void qib_msix_setup(struct qib_devdata *dd, int pos, u32 *msixcnt,
+ 	if (tabsize > *msixcnt)
+ 		tabsize = *msixcnt;
+ 	ret = pci_enable_msix(dd->pcidev, msix_entry, tabsize);
+-	if (ret > 0) {
+-		tabsize = ret;
+-		ret = pci_enable_msix(dd->pcidev, msix_entry, tabsize);
+-	}
+ do_intx:
+ 	if (ret) {
+ 		qib_dev_err(dd,
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.7.6
+
