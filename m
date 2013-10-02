@@ -1,73 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:1607
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755789Ab3JHWrf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 18:47:35 -0400
-Message-ID: <1381272382.7979.292.camel@snotra.buserror.net>
-Subject: Re: [PATCH 1/2][v2] pci: fsl: derive the common PCI driver to
- drivers/pci/host
-From: Scott Wood <scottwood@freescale.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26633 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755388Ab3JBRkk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:40:40 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Date: Tue, 8 Oct 2013 17:46:22 -0500
-In-Reply-To: <CAErSpo7LXqXmrw1gPwKHsJkKaAcDr2W_+tcC8b9T_5Mab1Arnw@mail.gmail.com>
-References: <1380531175-14836-1-git-send-email-Minghuan.Lian@freescale.com>
-	 <CAErSpo7LXqXmrw1gPwKHsJkKaAcDr2W_+tcC8b9T_5Mab1Arnw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 54/77] ntb: Ensure number of MSIs on SNB is enough for the link interrupt
+Date: Wed,  2 Oct 2013 12:49:10 +0200
+Message-Id: <5d9c5b2d3bbc444ff32bddeece7a239d046bd79c.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-10-08 at 13:13 -0600, Bjorn Helgaas wrote:
-> [+cc Ben, Paul, linuxppc-dev]
-> 
-> On Mon, Sep 30, 2013 at 04:52:54PM +0800, Minghuan Lian wrote:
-> > The Freescale's Layerscape series processors will use ARM cores.
-> > The LS1's PCIe controllers is the same as T4240's. So it's better
-> > the PCIe controller driver can support PowerPC and ARM
-> > simultaneously. This patch is for this purpose. It derives
-> > the common functions from arch/powerpc/sysdev/fsl_pci.c to
-> > drivers/pci/host/pci-fsl-common.c and leaves the architecture
-> > specific functions which should be implemented in arch related files.
-> >
-> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> 
-> I cc'd the powerpc maintainers so we can work out which tree this
-> should go through.
-> 
-> > ---
-> > change log:
-> > v1-v2:
-> > 1. rename pci.h to pci-common.h
-> > 2. rename pci-fsl.c to pci-fsl-common.c
-> >
-> > Based on upstream master.
-> > Based on the discussion of RFC version here
-> > http://patchwork.ozlabs.org/patch/274487/
-> >
-> >  arch/powerpc/sysdev/fsl_pci.c                      | 521 +-----------------
-> >  arch/powerpc/sysdev/fsl_pci.h                      |  89 ----
-> >  .../fsl_pci.c => drivers/pci/host/pci-fsl-common.c | 591 +--------------------
-> >  .../fsl_pci.h => include/linux/fsl/pci-common.h    |  45 +-
-> 
-> Is there any way to avoid putting this file in include/linux?  I know
-> you want to share it beyond PowerPC, and I know there are similar
-> examples there already, but this is all arch-specific or
-> chipset-specific stuff that seems like it should be in some
-> not-so-public place.  It doesn't seem scalable to add an include/linux
-> subdirectory for every chipset that might be shared across
-> architectures.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/ntb/ntb_hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-What specifically is the problem with it, as long as it's properly
-namespaced?
-
--Scott
-
-
+diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+index de2062c..eccd5e5 100644
+--- a/drivers/ntb/ntb_hw.c
++++ b/drivers/ntb/ntb_hw.c
+@@ -1066,7 +1066,7 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+ 		/* On SNB, the link interrupt is always tied to 4th vector.  If
+ 		 * we can't get all 4, then we can't use MSI-X.
+ 		 */
+-		if (ndev->hw_type != BWD_HW) {
++		if ((rc < SNB_MSIX_CNT) && (ndev->hw_type != BWD_HW)) {
+ 			rc = -EIO;
+ 			goto err1;
+ 		}
+-- 
+1.7.7.6
 
