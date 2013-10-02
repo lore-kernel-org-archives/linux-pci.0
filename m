@@ -1,119 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:43199
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752256Ab3JLCQX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Oct 2013 22:16:23 -0400
-From: Zhu Richard-R65037 <r65037@freescale.com>
-To: Tim Harvey <tharvey@gateworks.com>, Marek Vasut <marex@denx.de>
-CC: Yinghai Lu <yinghai@kernel.org>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27258 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753898Ab3JBSAB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 14:00:01 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Frank Li <lznuaa@gmail.com>, Sean Cross <xobs@kosagi.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>
-Subject: RE: [PATCH v7 0/2] Add PCIe support for i.MX6q
-Date: Sat, 12 Oct 2013 02:16:17 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D40A9C9@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org>
-	<201310110418.56460.marex@denx.de>
-	<CAE9FiQXKgkwgzA0ciRyahObDHvnFtEJxzOhHRo6gytdeKQ-XQQ@mail.gmail.com>
-	<201310111644.22844.marex@denx.de>
- <CAJ+vNU0HJs9NxPy8Erer1ZUzCAkzhQn+c0atmEZ=ZZWLgXb6Kw@mail.gmail.com>
-In-Reply-To: <CAJ+vNU0HJs9NxPy8Erer1ZUzCAkzhQn+c0atmEZ=ZZWLgXb6Kw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 48/77] mlx5: Return -ENOSPC when not enough MSI-X vectors available
+Date: Wed,  2 Oct 2013 12:49:04 +0200
+Message-Id: <28ed0fe9f5fee281652930a36246919dff14a33d.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tim:
-As I know that the clock of pcie controller should be always running.
-There are not clock gate on/off operations in host driver after the initialization.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/mellanox/mlx5/core/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-
-Best Regards
-Richard Zhu
-
-
------Original Message-----
-From: Tim Harvey [mailto:tharvey@gateworks.com] 
-Sent: Friday, October 11, 2013 11:25 PM
-To: Marek Vasut
-Cc: Yinghai Lu; Bjorn Helgaas; Zhu Richard-R65037; linux-arm-kernel@lists.infradead.org; Shawn Guo; linux-pci@vger.kernel.org; Frank Li; Sean Cross; Sascha Hauer
-Subject: Re: [PATCH v7 0/2] Add PCIe support for i.MX6q
-
-Marek,
-
-Looks like you and I are getting the same results now.  Device enumeration is working fine through the switch however when I attempt to use a device behind the switch (gige adapter in my case) I find that I get a few interrupts to that devices irq handler then the system hangs (like what occurs when a read is done to dbi without the pcie controllers clock running).
-
-Anyone have any ideas?
-
-Tim
-
-On Fri, Oct 11, 2013 at 7:44 AM, Marek Vasut <marex@denx.de> wrote:
-> Hi Yinghai,
->
->> On Thu, Oct 10, 2013 at 7:18 PM, Marek Vasut <marex@denx.de> wrote:
->> > And so does the probe log (but the pcieport failure still persists):
->> >
->> >
->> > pci_bus 0000:04: bus scan returning with max=04 pci_bus 0000:04: 
->> > busn_res: [bus 04-ff] end is updated to 04 pci_bus 0000:02: bus 
->> > scan returning with max=04 pci_bus 0000:02: busn_res: [bus 02-ff] 
->> > end is updated to 04 pci_bus 0000:01: bus scan returning with 
->> > max=04 pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 04 
->> > pci_bus 0000:00: bus scan returning with max=04 pci_bus 0000:00: 
->> > busn_res: [bus 00-ff] end is updated to 04
->> > PCI: Device 0000:00:00.0 not available because of resource 
->> > collisions
->> > pcieport: probe of 0000:00:00.0 failed with error -22
->>
->> load pcieport driver too early.
->
-> OK
->
-> [...]
->
->> > pci_bus 0000:00: resource 4 [io  0x1000-0x10000] pci_bus 0000:00: 
->> > resource 5 [mem 0x01000000-0x01efffff] pci_bus 0000:01: resource 0 
->> > [io  0x1000-0x1fff] pci_bus 0000:01: resource 1 [mem 
->> > 0x01000000-0x01bfffff] pci_bus 0000:02: resource 0 [io  
->> > 0x1000-0x1fff] pci_bus 0000:02: resource 1 [mem 
->> > 0x01000000-0x01bfffff] pci_bus 0000:03: resource 0 [io  
->> > 0x1000-0x1fff] pci_bus 0000:03: resource 1 [mem 
->> > 0x01000000-0x01bfffff]
->>
->> Looks your arch call pci_assign_unassigned_resources() too late.
->>
->> you should have call it with fs_initcall()...
->
-> You're right, the pci_assign_unassigned_resources() is called from 
-> probe() call of the MX6 PCIe driver, which is called from module_init().
->
-> imx6_pcie_init() -> imx6_pcie_probe() -> imx6_add_pcie_port() ->
-> dw_pcie_host_init() -> pci_assign_unassigned_resources()
->
->> please try to boot with "debug ignore_loglevel initcall_debug" to 
->> sort out the initcall sequence.
->
-> Yes, probing the MX6 PCIe driver in fs_initcall() actually fixed my issues:
->
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c 
-> index 32b30ca..771892a 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
->
-> @@ -587,7 +590,7 @@ static int __init imx6_pcie_init(void)  {
->         return platform_driver_probe(&imx6_pcie_driver, 
-> imx6_pcie_probe);  } -module_init(imx6_pcie_init);
-> +fs_initcall(imx6_pcie_init);
->
->  MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");  
-> MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
->
-> Best regards,
-> Marek Vasut
-
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index 3573ba4..5e5c9a3 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -122,7 +122,7 @@ static int mlx5_enable_msix(struct mlx5_core_dev *dev)
+ 	nvec = dev->caps.num_ports * num_online_cpus() + MLX5_EQ_VEC_COMP_BASE;
+ 	nvec = min_t(int, nvec, num_eqs);
+ 	if (nvec <= MLX5_EQ_VEC_COMP_BASE)
+-		return -ENOMEM;
++		return -ENOSPC;
+ 
+ 	table->msix_arr = kzalloc(nvec * sizeof(*table->msix_arr), GFP_KERNEL);
+ 	if (!table->msix_arr)
+@@ -144,7 +144,7 @@ retry:
+ 	mlx5_core_dbg(dev, "received %d MSI vectors out of %d requested\n", err, nvec);
+ 	kfree(table->msix_arr);
+ 
+-	return 0;
++	return -ENOSPC;
+ }
+ 
+ static void mlx5_disable_msix(struct mlx5_core_dev *dev)
+-- 
+1.7.7.6
 
