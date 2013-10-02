@@ -1,76 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ye0-f172.google.com ([209.85.213.172]:50921 "EHLO
-	mail-ye0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755454Ab3JCWOL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 18:14:11 -0400
-Received: by mail-ye0-f172.google.com with SMTP id m12so782478yen.31
-        for <linux-pci@vger.kernel.org>; Thu, 03 Oct 2013 15:14:10 -0700 (PDT)
-Date: Thu, 3 Oct 2013 16:06:28 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Workaround missing pci_set_master in pci drivers
-Message-ID: <20131003220628.GA14835@google.com>
-References: <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
- <1380399187-4962-1-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380399187-4962-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 55/77] ntb: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:49:11 +0200
+Message-Id: <49eb592e15aaec804f9c11ca132d2b85c516aefa.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 28, 2013 at 01:13:07PM -0700, Yinghai Lu wrote:
-> BenH found:
-> | 928bea964827d7824b548c1f8e06eccbbc4d0d7d
-> | PCI: Delay enabling bridges until they're needed
-> 
-> break PCI on powerpc.  The reason is that the PCIe port driver will
-> call pci_enable_device() on the bridge, so device enabled (but skip
-> pci_set_master because pcie_port_auto and no acpi on powerpc ).
-> 
-> Because of that, pci_enable_bridge() later on (called as a result of the
-> child device driver doing pci_enable_device) will see the bridge as
-> already enabled and will not call pci_set_master() on it.
-> 
-> Fixed by add checking in pci_enable_bridge, and call pci_set_master
-> if driver skip that.
-> That will make the code more robot and wade off problem for missing
-> pci_set_master in drivers.
-> 
-> Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  drivers/pci/pci.c |    8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> Index: linux-2.6/drivers/pci/pci.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci.c
-> +++ linux-2.6/drivers/pci/pci.c
-> @@ -1156,8 +1156,14 @@ static void pci_enable_bridge(struct pci
->  
->  	pci_enable_bridge(dev->bus->self);
->  
-> -	if (pci_is_enabled(dev))
-> +	if (pci_is_enabled(dev)) {
-> +		if (!dev->is_busmaster) {
-> +			dev_warn(&dev->dev, "driver skip pci_set_master, fix it!\n");
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
-I know this is already in Linus' tree, but if we're going to enable
-bus mastering here, what's the point of the warning?  If somebody
-fixes the driver by adding a pci_set_master() call there, does that
-improve something?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/ntb/ntb_hw.c |   41 +++++++++++++----------------------------
+ drivers/ntb/ntb_hw.h |    2 --
+ 2 files changed, 13 insertions(+), 30 deletions(-)
 
-Bjorn
+diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+index eccd5e5..7776429 100644
+--- a/drivers/ntb/ntb_hw.c
++++ b/drivers/ntb/ntb_hw.c
+@@ -1032,23 +1032,26 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+ 	struct msix_entry *msix;
+ 	int msix_entries;
+ 	int rc, i;
+-	u16 val;
+ 
+-	if (!pdev->msix_cap) {
+-		rc = -EIO;
++	rc = pci_msix_table_size(pdev);
++	if (rc < 0)
+ 		goto err;
+-	}
+ 
+-	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
+-	if (rc)
++	/*
++	 * On SNB, the link interrupt is always tied to 4th vector.  If
++	 * we can't get all 4, then we can't use MSI-X.
++	 */
++	if ((rc < SNB_MSIX_CNT) && (ndev->hw_type != BWD_HW)) {
++		rc = -ENOSPC;
+ 		goto err;
+-
+-	msix_entries = msix_table_size(val);
+-	if (msix_entries > ndev->limits.msix_cnt) {
++	}
++	if (rc > ndev->limits.msix_cnt) {
+ 		rc = -EINVAL;
+ 		goto err;
+ 	}
+ 
++	msix_entries = rc;
++
+ 	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
+ 				     GFP_KERNEL);
+ 	if (!ndev->msix_entries) {
+@@ -1060,26 +1063,8 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+ 		ndev->msix_entries[i].entry = i;
+ 
+ 	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+-	if (rc < 0)
++	if (rc)
+ 		goto err1;
+-	if (rc > 0) {
+-		/* On SNB, the link interrupt is always tied to 4th vector.  If
+-		 * we can't get all 4, then we can't use MSI-X.
+-		 */
+-		if ((rc < SNB_MSIX_CNT) && (ndev->hw_type != BWD_HW)) {
+-			rc = -EIO;
+-			goto err1;
+-		}
+-
+-		dev_warn(&pdev->dev,
+-			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+-			 rc);
+-		msix_entries = rc;
+-
+-		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+-		if (rc)
+-			goto err1;
+-	}
+ 
+ 	for (i = 0; i < msix_entries; i++) {
+ 		msix = &ndev->msix_entries[i];
+diff --git a/drivers/ntb/ntb_hw.h b/drivers/ntb/ntb_hw.h
+index 0a31ced..50bd760 100644
+--- a/drivers/ntb/ntb_hw.h
++++ b/drivers/ntb/ntb_hw.h
+@@ -60,8 +60,6 @@
+ #define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
+ #define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
+ 
+-#define msix_table_size(control)	((control & PCI_MSIX_FLAGS_QSIZE)+1)
+-
+ #ifndef readq
+ static inline u64 readq(void __iomem *addr)
+ {
+-- 
+1.7.7.6
 
-> +			pci_set_master(dev);
-> +		}
->  		return;
-> +	}
-> +
->  	retval = pci_enable_device(dev);
->  	if (retval)
->  		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
