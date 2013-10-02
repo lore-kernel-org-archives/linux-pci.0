@@ -1,62 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:33127 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755732Ab3JCVq3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 17:46:29 -0400
-Message-ID: <1380836781.3419.17.camel@bwh-desktop.uk.level5networks.com>
-Subject: Re: [PATCH RFC 01/77] PCI/MSI: Fix return value when
- populate_msi_sysfs() failed
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Jon Mason <jon.mason@intel.com>
-CC: Alexander Gordeev <agordeev@redhat.com>,
-	<linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
+Received: from mx1.redhat.com ([209.132.183.28]:12237 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752784Ab3JBHYi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Oct 2013 03:24:38 -0400
+Date: Wed, 2 Oct 2013 09:26:30 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Mark Lord <kernel@start.ca>
+Cc: Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	"Ingo Molnar" <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	<stable@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-mips@linux-mips.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux390@de.ibm.com>, <linux-s390@vger.kernel.org>,
-	<x86@kernel.org>, <linux-ide@vger.kernel.org>,
-	<iss_storagedev@hp.com>, <linux-nvme@lists.infradead.org>,
-	<linux-rdma@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<e1000-devel@lists.sourceforge.net>, <linux-driver@qlogic.com>,
-	"Solarflare linux maintainers" <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>,
-	<linux-scsi@vger.kernel.org>
-Date: Thu, 3 Oct 2013 22:46:21 +0100
-In-Reply-To: <20131003003905.GK6768@jonmason-lab>
-References: <cover.1380703262.git.agordeev@redhat.com>
-	 <3ff5236944aae69f2cd934b5b6da7c1c269df7c1.1380703262.git.agordeev@redhat.com>
-	 <20131003003905.GK6768@jonmason-lab>
-Content-Type: text/plain; charset="UTF-8"
+	Tejun Heo <tj@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20131002072629.GB29860@dhcp-26-207.brq.redhat.com>
+References: <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+ <20130917143022.GA7707@concordia>
+ <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <52442975.9000603@start.ca>
+ <20130926130328.GD16774@dhcp-26-207.brq.redhat.com>
+ <524B8908.8080607@start.ca>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <524B8908.8080607@start.ca>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-10-02 at 17:39 -0700, Jon Mason wrote:
-> On Wed, Oct 02, 2013 at 12:48:17PM +0200, Alexander Gordeev wrote:
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+On Tue, Oct 01, 2013 at 10:46:32PM -0400, Mark Lord wrote:
+> >>> The last pattern makes most of sense to me and could be updated with a more
+> >>> clear sequence - a call to (bit modified) pci_msix_table_size() followed
+> >>> by a call to pci_enable_msix(). I think this pattern can effectively
+> >>> supersede the currently recommended "loop" practice.
+> >>
+> >> The loop is still necessary, because there's a race between those two calls,
+> >> so that pci_enable_msix() can still fail due to lack of MSIX slots.
+> > 
+> > Moreover, the existing loop pattern is racy and could fail just as easily ;)
 > 
-> Since you are changing the behavior of the msix_capability_init
-> function on populate_msi_sysfs error, a comment describing why in this
-> commit would be nice.
-[...]
+> Yes, but it then loops again to correct things.
 
-This function was already treating that error as fatal, and freeing the
-MSIs.  The change in behaviour is that it now returns the error code in
-this case, rather than 0.  This is obviously correct and properly
-described by the one-line summary.
-
-Ben.
+No. If it failed it should exit the loop.
 
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
