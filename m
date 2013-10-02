@@ -1,82 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1381040386.645.143.camel@pasglop>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Ben Hutchings <bhutchings@solarflare.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27329 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754358Ab3JBSDn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 14:03:43 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Martin Schwidefsky <schwidefsky@de.ibm.com>,
 	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
 	Dan Williams <dan.j.williams@intel.com>,
 	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
 	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
 	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
 	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Date: Sun, 06 Oct 2013 17:19:46 +1100
-In-Reply-To: <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+Subject: [PATCH RFC 41/77] lpfc: Do not call pci_disable_msix() if pci_enable_msix() failed
+Date: Wed,  2 Oct 2013 12:48:57 +0200
+Message-Id: <8e18482bc1c22d1764a743f053909c348d7acdec.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
-	 <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
-	 <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
-	 <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
-	 <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
-	 <1381009586.645.141.camel@pasglop>
-	 <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2013-10-06 at 08:02 +0200, Alexander Gordeev wrote:
-> On Sun, Oct 06, 2013 at 08:46:26AM +1100, Benjamin Herrenschmidt wrote:
-> > On Sat, 2013-10-05 at 16:20 +0200, Alexander Gordeev wrote:
-> > > So my point is - drivers should first obtain a number of MSIs they *can*
-> > > get, then *derive* a number of MSIs the device is fine with and only then
-> > > request that number. Not terribly different from memory or any other type
-> > > of resource allocation ;)
-> > 
-> > What if the limit is for a group of devices ? Your interface is racy in
-> > that case, another driver could have eaten into the limit in between the
-> > calls.
-> 
-> Well, the another driver has had a better karma ;) But seriously, the
-> current scheme with a loop is not race-safe wrt to any other type of
-> resource which might exhaust. What makes the quota so special so we
-> should care about it and should not care i.e. about lack of msi_desc's?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-I'm not saying the current scheme is better but I prefer the option of
-passing a min,max to the request function.
-
-> Yeah, I know the quota might hit more likely. But why it is not addressed
-> right now then? Not a single function in chains...
->   rtas_msi_check_device() -> msi_quota_for_device() -> traverse_pci_devices()
->   rtas_setup_msi_irqs() -> msi_quota_for_device() -> traverse_pci_devices()
-> ...is race-safe. So if it has not been bothering anyone until now then 
-> no reason to start worrying now :)
->
-> In fact, in the current design to address the quota race decently the
-> drivers would have to protect the *loop* to prevent the quota change
-> between a pci_enable_msix() returned a positive number and the the next
-> call to pci_enable_msix() with that number. Is it doable?
-
-I am not advocating for the current design, simply saying that your
-proposal doesn't address this issue while Ben's does.
-
-Cheers,
-Ben.
-
-> > Ben.
-> > 
-> > 
-> 
-
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 647f5bf..0803b84 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8080,7 +8080,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0420 PCI enable MSI-X failed (%d)\n", rc);
+-		goto msi_fail_out;
++		goto vec_fail_out;
+ 	}
+ 	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+@@ -8158,6 +8158,8 @@ irq_fail_out:
+ msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+ 	pci_disable_msix(phba->pcidev);
++
++vec_fail_out:
+ 	return rc;
+ }
+ 
+@@ -8646,7 +8648,7 @@ enable_msix_vectors:
+ 	} else if (rc) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0484 PCI enable MSI-X failed (%d)\n", rc);
+-		goto msi_fail_out;
++		goto vec_fail_out;
+ 	}
+ 
+ 	/* Log MSI-X vector assignment */
+@@ -8698,9 +8700,10 @@ cfg_fail_out:
+ 			 &phba->sli4_hba.fcp_eq_hdl[index]);
+ 	}
+ 
+-msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+ 	pci_disable_msix(phba->pcidev);
++
++vec_fail_out:
+ 	return rc;
+ }
+ 
+-- 
+1.7.7.6
 
