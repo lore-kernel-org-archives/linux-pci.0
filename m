@@ -1,89 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39155 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753705Ab3J2Vty (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 17:49:54 -0400
-Date: Tue, 29 Oct 2013 14:49:53 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:24722 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754126Ab3JBQlP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 12:41:15 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Neil Horman <nhorman@tuxdriver.com>
-Subject: Re: [PATCH v3 1/3] msi: free msi_desc entry only after we've
- released the kobject
-Message-ID: <20131029214953.GB19354@kroah.com>
-References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
- <1383042632-7102-2-git-send-email-vfalico@redhat.com>
- <CA+55aFxt9KnmZnK5QdkPcpHNR+Ath5WTzhRibu5Y=xOhiz3fzA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFxt9KnmZnK5QdkPcpHNR+Ath5WTzhRibu5Y=xOhiz3fzA@mail.gmail.com>
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 45/77] megaraid: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:49:01 +0200
+Message-Id: <9c28bb824f403b6418840970f2a3b63d9fa9d924.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 29, 2013 at 09:34:28AM -0700, Linus Torvalds wrote:
-> On Tue, Oct 29, 2013 at 3:30 AM, Veaceslav Falico <vfalico@redhat.com> wrote:
-> >                 /*
-> >                  * Its possible that we get into this path
-> >                  * When populate_msi_sysfs fails, which means the entries
-> >                  * were not registered with sysfs.  In that case don't
-> > -                * unregister them.
-> > +                * unregister them, and just free. Otherwise the
-> > +                * kobject->release will take care of freeing the entry via
-> > +                * msi_kobj_release().
-> >                  */
-> >                 if (entry->kobj.parent) {
-> >                         kobject_del(&entry->kobj);
-> >                         kobject_put(&entry->kobj);
-> > +               } else {
-> > +                       kfree(entry);
-> >                 }
-> > -
-> > -               list_del(&entry->list);
-> > -               kfree(entry);
-> 
-> So this code sequence still makes me very unhappy.
-> 
-> Why does not just a simple unconditional
-> 
->         kobject_del(&entry->kobj);
->         kobject_put(&entry->kobj);
-> 
-> work for the "not registered with sysfs" case? And if the sysfs code
-> really gets confused, why not
-> 
->         if (entry->kobj.parent)
->                 kobject_del(&entry->kobj);
->         kobject_put(&entry->kobj);
-> 
-> (btw, looking at the sysfs code, this looks *very* suspicious in
-> sysfs_remove_dir():
-> 
->         struct sysfs_dirent *sd = kobj->sd;
-> 
->         spin_lock(&sysfs_assoc_lock);
->         kobj->sd = NULL;
->         spin_unlock(&sysfs_assoc_lock);
-> 
-> and I would suggest that "sd = kobj->sd" should be done under the
-> lock, because otherwise the lock is kind of pointless..)
-> 
-> Greg?
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
-That is really odd, but I guess it works as-is because no one ever calls
-that function on the same kobject at the same time.  I don't know what
-that is trying to do.  There has been some work by Tejun in this area
-for linux-next, but that lock and logic is still there, I'll look into
-fixing that up...
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c |   20 +++++++++-----------
+ 1 files changed, 9 insertions(+), 11 deletions(-)
 
-thanks,
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 3020921..b5973e4 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3727,18 +3727,16 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 					     (unsigned int)num_online_cpus());
+ 		for (i = 0; i < instance->msix_vectors; i++)
+ 			instance->msixentry[i].entry = i;
+-		i = pci_enable_msix(instance->pdev, instance->msixentry,
+-				    instance->msix_vectors);
+-		if (i >= 0) {
+-			if (i) {
+-				if (!pci_enable_msix(instance->pdev,
+-						     instance->msixentry, i))
+-					instance->msix_vectors = i;
+-				else
+-					instance->msix_vectors = 0;
+-			}
+-		} else
++		i = pci_msix_table_size(instance->pdev);
++		if (i < 0) {
+ 			instance->msix_vectors = 0;
++		} else {
++			if (!pci_enable_msix(instance->pdev,
++					     instance->msixentry, i))
++				instance->msix_vectors = i;
++			else
++				instance->msix_vectors = 0;
++		}
+ 
+ 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
+ 			"<%d> MSIX vector,Online CPUs: <%d>,"
+-- 
+1.7.7.6
 
-greg k-h
