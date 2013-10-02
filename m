@@ -1,67 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7145 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753882Ab3JHHbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Oct 2013 03:31:47 -0400
-Date: Tue, 8 Oct 2013 09:33:02 +0200
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27068 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754686Ab3JBRwu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:52:50 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
-To: Michael Ellerman <michael@ellerman.id.au>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Martin Schwidefsky <schwidefsky@de.ibm.com>,
 	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
 	Dan Williams <dan.j.williams@intel.com>,
 	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
 	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
 	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
 	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Message-ID: <20131008073301.GC10669@dhcp-26-207.brq.redhat.com>
+Subject: [PATCH RFC 03/77] PCI/MSI/s390: Fix single MSI only check
+Date: Wed,  2 Oct 2013 12:48:19 +0200
+Message-Id: <8c9811b13fd93e73641dab8e3bd1bd5b2dc37a61.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
- <20131008043330.GF31666@concordia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131008043330.GF31666@concordia>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 08, 2013 at 03:33:30PM +1100, Michael Ellerman wrote:
-> On Wed, Oct 02, 2013 at 12:29:04PM +0200, Alexander Gordeev wrote:
-> > This technique proved to be confusing and error-prone. Vast share
-> > of device drivers simply fail to follow the described guidelines.
-> 
-> To clarify "Vast share of device drivers":
-> 
->  - 58 drivers call pci_enable_msix()
->  - 24 try a single allocation and then fallback to MSI/LSI
->  - 19 use the loop style allocation as above
->  - 14 try an allocation, and if it fails retry once
->  - 1  incorrectly continues when pci_enable_msix() returns > 0
-> 
-> So 33 drivers (> 50%) successfully make use of the "confusing and
-> error-prone" return value.
+Multiple MSIs have never been supported on s390 architecture,
+but the platform code fails to report single MSI only.
 
-Ok, you caught me - 'vast share' is incorrect and is a subject to
-rewording. But out of 19/58 how many drivers tested fallbacks on the
-real hardware? IOW, which drivers are affected by the pSeries quota?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ arch/s390/pci/pci.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> And yes, one is buggy, so obviously the interface is too complex. Thanks
-> drivers/ntb/ntb_hw.c
-
-vmxnet3 would be the best example.
-
-> cheers
-
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index f17a834..c79c6e4 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -427,6 +427,8 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
+ 	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
+ 		return -EINVAL;
++	if (type == PCI_CAP_ID_MSI && nvec > 1)
++		return 1;
+ 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
+ 	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
+ 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.7.6
+
