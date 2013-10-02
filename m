@@ -1,66 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:38715 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756810Ab3J1Qxo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 12:53:44 -0400
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: Andrew Murray <amurray@embedded-bits.co.uk>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: AER driver on ARM platform
-Date: Mon, 28 Oct 2013 16:53:42 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B704626477@DFLE11.ent.ti.com>
-References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
-	<CAPcvp5Epf+6tOp+0=ZbBLusCzq4dF98aS+Ou0D7Nyko_VwM8KA@mail.gmail.com>
-	<3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
- <CAPcvp5EwTb7qm_aMzqJzLX0ScrD3A0VFog1qga76dqTT5cBW3g@mail.gmail.com>
-In-Reply-To: <CAPcvp5EwTb7qm_aMzqJzLX0ScrD3A0VFog1qga76dqTT5cBW3g@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:25621 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754340Ab3JBREV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:04:21 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 69/77] tg3: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:49:25 +0200
+Message-Id: <7439a70d0bb225702097714d92df2169ffd94dd6.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> -----Original Message-----
->> From: Andrew Murray [mailto:amurray@embedded-bits.co.uk]
->> Sent: Friday, October 25, 2013 3:01 PM
->> To: Karicheri, Muralidharan
->> Cc: linux-pci@vger.kernel.org
->> Subject: Re: AER driver on ARM platform
->> 
->> On 25 October 2013 19:18, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
->> >
->> > >> -----Original Message-----
->> > >> From: Andrew Murray [mailto:amurray@embedded-bits.co.uk]
->> > >> Sent: Friday, October 25, 2013 12:27 PM
->> > >> To: Karicheri, Muralidharan
->> > >> Cc: linux-pci@vger.kernel.org
->> > >> Subject: Re: AER driver on ARM platform
->> > >>
->> > >> On 25 October 2013 16:56, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
->> > >> > Did anyone successfully tested PCIe AER driver on an ARM
->> > >> > platform? I saw this enabled in
->> > >> a tegra platform. Could someone from nVidia respond?
->> > >>
->> > >> I've previously used this on a custom ARM platform - it works.
->> > >>
->> > >> You need to ensure that PCIe port services are enabled, I believe
->> > >> at one point this required 'pcie_ports=native' to be set on the kernel command line.
->> > >>
->> > >> Andrew Murray
->> > >>
->> >
->> > Yes. That was it. It probes the driver now. Did you try error inject feature?
->> 
->> I did have a look at that, but it really depends on what exactly you want to test. There are
->> many things this won't help you with, you ought to examine the aer inject driver to see
->> what it does. For example if you are bringing up a new device and want to see it raise an
->> AER interrupt then aer inject won't help. In this case you'll need to find a way to trigger real
->> errors.
->> 
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
-I am basically trying to test if an error in a PCIe device gets reported to AER driver. As I understand, there is a error_handle in the PCI device driver that gets called when an error is received by the AER driver so that device can handle it. At this point, I am trying to test the AER driver with any error that can be injected to check if the error handle is being called.  I will dig more into the inject feature to get an answer, but if you know this is possible or not, please reply.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/broadcom/tg3.c |   24 +++++++++++++-----------
+ 1 files changed, 13 insertions(+), 11 deletions(-)
 
-Thanks.
+diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
+index 12d961c..2e842ef3 100644
+--- a/drivers/net/ethernet/broadcom/tg3.c
++++ b/drivers/net/ethernet/broadcom/tg3.c
+@@ -11241,6 +11241,10 @@ static bool tg3_enable_msix(struct tg3 *tp)
+ 	int i, rc;
+ 	struct msix_entry msix_ent[TG3_IRQ_MAX_VECS];
+ 
++	rc = pci_msix_table_size(tp->pdev);
++	if (rc < 0)
++		return false;
++
+ 	tp->txq_cnt = tp->txq_req;
+ 	tp->rxq_cnt = tp->rxq_req;
+ 	if (!tp->rxq_cnt)
+@@ -11256,6 +11260,14 @@ static bool tg3_enable_msix(struct tg3 *tp)
+ 		tp->txq_cnt = 1;
+ 
+ 	tp->irq_cnt = tg3_irq_count(tp);
++	if (tp->irq_cnt > rc) {
++		netdev_notice(tp->dev, "Requested %d MSI-Xs, available %d\n",
++			      tp->irq_cnt, rc);
++		tp->irq_cnt = rc;
++		tp->rxq_cnt = max(rc - 1, 1);
++		if (tp->txq_cnt)
++			tp->txq_cnt = min(tp->rxq_cnt, tp->txq_max);
++	}
+ 
+ 	for (i = 0; i < tp->irq_max; i++) {
+ 		msix_ent[i].entry  = i;
+@@ -11263,18 +11275,8 @@ static bool tg3_enable_msix(struct tg3 *tp)
+ 	}
+ 
+ 	rc = pci_enable_msix(tp->pdev, msix_ent, tp->irq_cnt);
+-	if (rc < 0) {
++	if (rc)
+ 		return false;
+-	} else if (rc != 0) {
+-		if (pci_enable_msix(tp->pdev, msix_ent, rc))
+-			return false;
+-		netdev_notice(tp->dev, "Requested %d MSI-X vectors, received %d\n",
+-			      tp->irq_cnt, rc);
+-		tp->irq_cnt = rc;
+-		tp->rxq_cnt = max(rc - 1, 1);
+-		if (tp->txq_cnt)
+-			tp->txq_cnt = min(tp->rxq_cnt, tp->txq_max);
+-	}
+ 
+ 	for (i = 0; i < tp->irq_max; i++)
+ 		tp->napi[i].irq_vec = msix_ent[i].vector;
+-- 
+1.7.7.6
 
-Murali
-
->> Andrew Murray
