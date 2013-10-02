@@ -1,89 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:25229 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752326Ab3JKGs5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 02:48:57 -0400
-Message-ID: <52579F20.7040606@huawei.com>
-Date: Fri, 11 Oct 2013 14:48:00 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from e39.co.us.ibm.com ([32.97.110.160]:50777 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753839Ab3JBTbu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 15:31:50 -0400
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Wed, 2 Oct 2013 13:31:49 -0600
+Message-ID: <524C748D.8080803@linux.vnet.ibm.com>
+Date: Wed, 02 Oct 2013 14:31:25 -0500
+From: Brian King <brking@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
+	"VMware, Inc." <pv-drivers@vmware.com>,
+	linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org,
+	stable@vger.kernel.org, linux-s390@vger.kernel.org,
+	Andy King <acking@vmware.com>, linux-scsi@vger.kernel.org,
+	linux-rdma@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, iss_storagedev@hp.com,
+	linux-driver@qlogic.com, Tejun Heo <tj@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"Paul Mackerras" <paulus@samba.org>
-Subject: Re: [PATCH v2] powerpc/pci: use pci_is_pcie() to simplify code
-References: <1381472809-11556-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1381472809-11556-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Dan Williams <dan.j.williams@intel.com>,
+	Jon Mason <jon.mason@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	netdev@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+	e1000-devel@lists.sourceforge.net,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	linux390@de.ibm.com, linuxppc-dev@lists.ozlabs.org,
+	Wendy Xiong <wenxiong@linux.vnet.ibm.com>
+Subject: Re: [PATCH RFC 36/77] ipr: Enable MSI-X when IPR_USE_MSIX type is
+ set, not IPR_USE_MSI
+References: <cover.1380703262.git.agordeev@redhat.com> <2d4272136269f3cb3b1a5ac53b12aa45c7ea65c0.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <2d4272136269f3cb3b1a5ac53b12aa45c7ea65c0.1380703263.git.agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry, this patch should v3 not v2, please ignore, and v3 patch will resend.
-
-Thanks!
-
-On 2013/10/11 14:26, Yijing Wang wrote:
-> Use pci_is_pcie() to simplify code.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Acked-by: Kumar Gala <galak@kernel.crashing.org>
-> Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> 
+On 10/02/2013 05:48 AM, Alexander Gordeev wrote:
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > ---
+>  drivers/scsi/ipr.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> v1->v2: use dev->pcie_cap instead of "cap" in eeh_ops->read_config()
->         "cap" is stale after remove PCIe Cap find code.
->         Point out by Benjamin Herrenschmidt.
-> 
-> ---
->  arch/powerpc/kernel/eeh.c     |    5 ++---
->  arch/powerpc/sysdev/fsl_pci.c |    2 +-
->  2 files changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-> index 55593ee..db86f97 100644
-> --- a/arch/powerpc/kernel/eeh.c
-> +++ b/arch/powerpc/kernel/eeh.c
-> @@ -189,14 +189,13 @@ static size_t eeh_gather_pci_data(struct eeh_dev *edev, char * buf, size_t len)
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index fb57e21..762a93e 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -9527,7 +9527,7 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
+>  		ipr_number_of_msix = IPR_MAX_MSIX_VECTORS;
 >  	}
->  
->  	/* If PCI-E capable, dump PCI-E cap 10, and the AER */
-> -	cap = pci_find_capability(dev, PCI_CAP_ID_EXP);
-> -	if (cap) {
-> +	if (pci_is_pcie(dev)) {
->  		n += scnprintf(buf+n, len-n, "pci-e cap10:\n");
->  		printk(KERN_WARNING
->  		       "EEH: PCI-E capabilities and status follow:\n");
->  
->  		for (i=0; i<=8; i++) {
-> -			eeh_ops->read_config(dn, cap+4*i, 4, &cfg);
-> +			eeh_ops->read_config(dn, dev->pcie_cap+4*i, 4, &cfg);
->  			n += scnprintf(buf+n, len-n, "%02x:%x\n", 4*i, cfg);
->  			printk(KERN_WARNING "EEH: PCI-E %02x: %08x\n", i, cfg);
->  		}
-> diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-> index ccfb50d..92e7258 100644
-> --- a/arch/powerpc/sysdev/fsl_pci.c
-> +++ b/arch/powerpc/sysdev/fsl_pci.c
-> @@ -45,7 +45,7 @@ static void quirk_fsl_pcie_header(struct pci_dev *dev)
->  	u8 hdr_type;
->  
->  	/* if we aren't a PCIe don't bother */
-> -	if (!pci_find_capability(dev, PCI_CAP_ID_EXP))
-> +	if (!pci_is_pcie(dev))
->  		return;
->  
->  	/* if we aren't in host mode don't bother */
+> 
+> -	if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
+> +	if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSIX &&
+>  			ipr_enable_msix(ioa_cfg) == 0)
+>  		ioa_cfg->intr_flag = IPR_USE_MSIX;
+>  	else if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
 > 
 
+Nack. ioa_cfg->ipr_chip->intr_type gets initialized from the ipr_chip table
+at the top of the driver which never sets intr_type to IPR_USE_MSIX, so this
+will break MSI-X support for ipr. 
+
+We indicate at the chip level only whether we want to force LSI or whether
+we want to enable MSI / MSI-X and then try enabling MSI-X and fall back to
+MSI if MSI-X is not available or does not work. We then set intr_flag to indicate
+what we are actually using on the specific adapter.
+
+Thanks,
+
+Brian
 
 -- 
-Thanks!
-Yijing
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
 
