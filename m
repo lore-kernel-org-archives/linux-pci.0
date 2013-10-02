@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:24640 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753339Ab3JBQei (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 12:34:38 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
@@ -20,12 +24,12 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 55/77] ntb: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:49:11 +0200
-Message-Id: <49eb592e15aaec804f9c11ca132d2b85c516aefa.1380703263.git.agordeev@redhat.com>
+Subject: [PATCH RFC 52/77] niu: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:49:08 +0200
+Message-Id: <9808b7b5600043632fab8fa19f5b8e7845637de0.1380703263.git.agordeev@redhat.com>
 In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 As result of recent re-design of the MSI/MSI-X interrupts enabling
@@ -34,91 +38,51 @@ obtain a optimal number of MSI/MSI-X interrupts required.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/ntb/ntb_hw.c |   41 +++++++++++++----------------------------
- drivers/ntb/ntb_hw.h |    2 --
- 2 files changed, 13 insertions(+), 30 deletions(-)
+ drivers/net/ethernet/sun/niu.c |   20 +++++++++++---------
+ 1 files changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
-index eccd5e5..7776429 100644
---- a/drivers/ntb/ntb_hw.c
-+++ b/drivers/ntb/ntb_hw.c
-@@ -1032,23 +1032,26 @@ static int ntb_setup_msix(struct ntb_device *ndev)
- 	struct msix_entry *msix;
- 	int msix_entries;
- 	int rc, i;
--	u16 val;
+diff --git a/drivers/net/ethernet/sun/niu.c b/drivers/net/ethernet/sun/niu.c
+index f28460c..54c41b9 100644
+--- a/drivers/net/ethernet/sun/niu.c
++++ b/drivers/net/ethernet/sun/niu.c
+@@ -9051,26 +9051,28 @@ static void niu_try_msix(struct niu *np, u8 *ldg_num_map)
+ 		    (np->port == 0 ? 3 : 1));
+ 	BUG_ON(num_irqs > (NIU_NUM_LDG / parent->num_ports));
  
--	if (!pdev->msix_cap) {
--		rc = -EIO;
-+	rc = pci_msix_table_size(pdev);
-+	if (rc < 0)
- 		goto err;
--	}
- 
--	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
--	if (rc)
-+	/*
-+	 * On SNB, the link interrupt is always tied to 4th vector.  If
-+	 * we can't get all 4, then we can't use MSI-X.
-+	 */
-+	if ((rc < SNB_MSIX_CNT) && (ndev->hw_type != BWD_HW)) {
-+		rc = -ENOSPC;
- 		goto err;
--
--	msix_entries = msix_table_size(val);
--	if (msix_entries > ndev->limits.msix_cnt) {
-+	}
-+	if (rc > ndev->limits.msix_cnt) {
- 		rc = -EINVAL;
- 		goto err;
+-retry:
++	err = pci_msix_table_size(pdev);
++	if (err < 0)
++		goto fail;
++
++	num_irqs = min(num_irqs, err);
+ 	for (i = 0; i < num_irqs; i++) {
+ 		msi_vec[i].vector = 0;
+ 		msi_vec[i].entry = i;
  	}
  
-+	msix_entries = rc;
-+
- 	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
- 				     GFP_KERNEL);
- 	if (!ndev->msix_entries) {
-@@ -1060,26 +1063,8 @@ static int ntb_setup_msix(struct ntb_device *ndev)
- 		ndev->msix_entries[i].entry = i;
- 
- 	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
--	if (rc < 0)
-+	if (rc)
- 		goto err1;
--	if (rc > 0) {
--		/* On SNB, the link interrupt is always tied to 4th vector.  If
--		 * we can't get all 4, then we can't use MSI-X.
--		 */
--		if ((rc < SNB_MSIX_CNT) && (ndev->hw_type != BWD_HW)) {
--			rc = -EIO;
--			goto err1;
--		}
--
--		dev_warn(&pdev->dev,
--			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
--			 rc);
--		msix_entries = rc;
--
--		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
--		if (rc)
--			goto err1;
+ 	err = pci_enable_msix(pdev, msi_vec, num_irqs);
+-	if (err < 0) {
+-		np->flags &= ~NIU_FLAGS_MSIX;
+-		return;
 -	}
+-	if (err > 0) {
+-		num_irqs = err;
+-		goto retry;
+-	}
++	if (err)
++		goto fail;
  
- 	for (i = 0; i < msix_entries; i++) {
- 		msix = &ndev->msix_entries[i];
-diff --git a/drivers/ntb/ntb_hw.h b/drivers/ntb/ntb_hw.h
-index 0a31ced..50bd760 100644
---- a/drivers/ntb/ntb_hw.h
-+++ b/drivers/ntb/ntb_hw.h
-@@ -60,8 +60,6 @@
- #define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
- #define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
+ 	np->flags |= NIU_FLAGS_MSIX;
+ 	for (i = 0; i < num_irqs; i++)
+ 		np->ldg[i].irq = msi_vec[i].vector;
+ 	np->num_ldg = num_irqs;
++	return;
++
++fail:
++	np->flags &= ~NIU_FLAGS_MSIX;
+ }
  
--#define msix_table_size(control)	((control & PCI_MSIX_FLAGS_QSIZE)+1)
--
- #ifndef readq
- static inline u64 readq(void __iomem *addr)
- {
+ static int niu_n2_irq_init(struct niu *np, u8 *ldg_num_map)
 -- 
 1.7.7.6
 
