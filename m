@@ -1,50 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:10963 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754787Ab3JHSDl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 14:03:41 -0400
-Date: Tue, 8 Oct 2013 14:03:37 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: mvebu: Make mvebu_pcie_align_resource() static
-Message-ID: <20131008180337.GV5402@titan.lakedaemon.net>
-References: <20131007233846.11805.50302.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20131008092137.0ed32a32@skate>
- <CAErSpo4bn_TVbquQrs_WzLnL8Q=2urk1VyrWPiqDBnh6OrQbtQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4bn_TVbquQrs_WzLnL8Q=2urk1VyrWPiqDBnh6OrQbtQ@mail.gmail.com>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26071 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754182Ab3JBRZV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:25:21 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 63/77] qlcnic: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:49:19 +0200
+Message-Id: <c92efbde96541d08f37510422c096d543bb01279.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 08, 2013 at 10:07:52AM -0600, Bjorn Helgaas wrote:
-> On Tue, Oct 8, 2013 at 1:21 AM, Thomas Petazzoni
-> <thomas.petazzoni@free-electrons.com> wrote:
-> > Dear Bjorn Helgaas,
-> >
-> > On Mon, 07 Oct 2013 17:38:46 -0600, Bjorn Helgaas wrote:
-> >> mvebu_pcie_align_resource() is only used inside pci-mvebu.c, so
-> >> make it static.
-> >>
-> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >
-> > I'm obviously fine with that, but there is already a patch "[PATCH V2
-> > 2/3] PCI: mvebu: make local functions static" hanging around to do the
-> > same.
-> 
-> OK, sorry for the duplication.  I dropped Jingoo's patch from
-> patchwork because Jason C. is merging mvebu stuff, and then it's "out
-> of sight, out of mind."
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
-Ok, I dug Jingoo's patch out of the Internet (it has everything!), and
-applied it.  Unfortunately, I don't have the original email to reply
-to, so this email will have to suffice.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |   56 ++++++++++++---------
+ 1 files changed, 32 insertions(+), 24 deletions(-)
 
-Applied to mvebu/drivers
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+index b94e679..a137c14 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+@@ -590,7 +590,37 @@ int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
+ 	adapter->flags &= ~(QLCNIC_MSI_ENABLED | QLCNIC_MSIX_ENABLED);
+ 
+ 	if (adapter->ahw->msix_supported) {
+- enable_msix:
++		err = pci_msix_table_size(pdev);
++		if (err < 0)
++			goto fail;
++
++		if (err < num_msix) {
++			dev_info(&pdev->dev,
++				 "Unable to allocate %d MSI-X interrupt vectors\n",
++				 num_msix);
++			if (qlcnic_83xx_check(adapter)) {
++				if (err < (QLC_83XX_MINIMUM_VECTOR - tx_vector))
++					return -ENOSPC;
++				err -= (max_tx_rings + 1);
++				num_msix = rounddown_pow_of_two(err);
++				num_msix += (max_tx_rings + 1);
++			} else {
++				num_msix = rounddown_pow_of_two(err);
++				if (qlcnic_check_multi_tx(adapter))
++					num_msix += max_tx_rings;
++			}
++
++			if (!num_msix) {
++				err = -ENOSPC;
++				goto fail;
++			}
++
++			dev_info(&pdev->dev,
++				 "Trying to allocate %d MSI-X interrupt vectors\n",
++				 num_msix);
++			}
++		}
++
+ 		for (i = 0; i < num_msix; i++)
+ 			adapter->msix_entries[i].entry = i;
+ 		err = pci_enable_msix(pdev, adapter->msix_entries, num_msix);
+@@ -613,30 +643,8 @@ int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
+ 				adapter->max_sds_rings = max_sds_rings;
+ 			}
+ 			dev_info(&pdev->dev, "using msi-x interrupts\n");
+-		} else if (err > 0) {
+-			dev_info(&pdev->dev,
+-				 "Unable to allocate %d MSI-X interrupt vectors\n",
+-				 num_msix);
+-			if (qlcnic_83xx_check(adapter)) {
+-				if (err < (QLC_83XX_MINIMUM_VECTOR - tx_vector))
+-					return -ENOSPC;
+-				err -= (max_tx_rings + 1);
+-				num_msix = rounddown_pow_of_two(err);
+-				num_msix += (max_tx_rings + 1);
+-			} else {
+-				num_msix = rounddown_pow_of_two(err);
+-				if (qlcnic_check_multi_tx(adapter))
+-					num_msix += max_tx_rings;
+-			}
+-
+-			if (num_msix) {
+-				dev_info(&pdev->dev,
+-					 "Trying to allocate %d MSI-X interrupt vectors\n",
+-					 num_msix);
+-				goto enable_msix;
+-			}
+-			err = -ENOSPC;
+ 		} else {
++fail:
+ 			dev_info(&pdev->dev,
+ 				 "Unable to allocate %d MSI-X interrupt vectors\n",
+ 				 num_msix);
+-- 
+1.7.7.6
 
-thx,
-
-Jason.
