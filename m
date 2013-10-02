@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:24700 "EHLO
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26148 "EHLO
 	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753256Ab3JBQjt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 12:39:49 -0400
+	by vger.kernel.org with ESMTP id S1753937Ab3JBR2F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:28:05 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
@@ -24,9 +24,9 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 59/77] qla2xxx: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:49:15 +0200
-Message-Id: <54f6b89372f51cd27a6adf6ecc91b8bf6bb5ba74.1380703263.git.agordeev@redhat.com>
+Subject: [PATCH RFC 75/77] vmxnet3: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:49:31 +0200
+Message-Id: <6714315cab9b5eea79e6516caeb712362992bcc5.1380703263.git.agordeev@redhat.com>
 In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
@@ -38,41 +38,96 @@ obtain a optimal number of MSI/MSI-X interrupts required.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c |   18 +++++++++++-------
- 1 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/net/vmxnet3/vmxnet3_drv.c |   68 ++++++++++++++++++-------------------
+ 1 files changed, 33 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index df1b30b..6c11ab9 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2836,16 +2836,20 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 	for (i = 0; i < ha->msix_count; i++)
- 		entries[i].entry = i;
+diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
+index 00dc0d0..8d3321b 100644
+--- a/drivers/net/vmxnet3/vmxnet3_drv.c
++++ b/drivers/net/vmxnet3/vmxnet3_drv.c
+@@ -2724,49 +2724,47 @@ vmxnet3_read_mac_addr(struct vmxnet3_adapter *adapter, u8 *mac)
  
--	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--	if (ret) {
-+	ret = pci_msix_table_size(ha->pdev);
-+	if (ret < 0) {
-+		goto msix_failed;
-+	} else {
- 		if (ret < MIN_MSIX_COUNT)
- 			goto msix_failed;
+ #ifdef CONFIG_PCI_MSI
  
--		ql_log(ql_log_warn, vha, 0x00c6,
--		    "MSI-X: Failed to enable support "
--		    "-- %d/%d\n Retry with %d vectors.\n",
--		    ha->msix_count, ret, ret);
--		ha->msix_count = ret;
-+		if (ret < ha->msix_count) {
-+			ql_log(ql_log_warn, vha, 0x00c6,
-+			    "MSI-X: Failed to enable support "
-+			    "-- %d/%d\n Retry with %d vectors.\n",
-+			    ha->msix_count, ret, ret);
-+			ha->msix_count = ret;
-+		}
- 		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
- 		if (ret) {
- msix_failed:
+-/*
+- * Enable MSIx vectors.
+- * Returns :
+- *	0 on successful enabling of required vectors,
+- *	VMXNET3_LINUX_MIN_MSIX_VECT when only minimum number of vectors required
+- *	 could be enabled.
+- *	number of vectors which can be enabled otherwise (this number is smaller
+- *	 than VMXNET3_LINUX_MIN_MSIX_VECT)
+- */
+-
+ static int
+ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
+ 			     int vectors)
+ {
+-	int err = -EINVAL, vector_threshold;
++	int err, vector_threshold;
++
+ 	vector_threshold = VMXNET3_LINUX_MIN_MSIX_VECT;
++	if (vectors < vector_threshold)
++		return -EINVAL;
+ 
+-	while (vectors >= vector_threshold) {
+-		err = pci_enable_msix(adapter->pdev, adapter->intr.msix_entries,
+-				      vectors);
+-		if (!err) {
+-			adapter->intr.num_intrs = vectors;
+-			return 0;
+-		} else if (err < 0) {
+-			dev_err(&adapter->netdev->dev,
+-				   "Failed to enable MSI-X, error: %d\n", err);
+-			return err;
+-		} else if (err < vector_threshold) {
+-			dev_info(&adapter->pdev->dev,
+-				 "Number of MSI-Xs which can be allocated "
+-				 "is lower than min threshold required.\n");
+-			return -ENOSPC;
+-		} else {
+-			/* If fails to enable required number of MSI-x vectors
+-			 * try enabling minimum number of vectors required.
+-			 */
+-			dev_err(&adapter->netdev->dev,
+-				"Failed to enable %d MSI-X, trying %d instead\n",
+-				    vectors, vector_threshold);
+-			vectors = vector_threshold;
+-		}
++	err = pci_msix_table_size(adapter->pdev);
++	if (err < 0)
++		goto err_msix;
++	if (err < vector_threshold) {
++		dev_info(&adapter->pdev->dev,
++			 "Number of MSI-X interrupts which can be allocated "
++			 "is lower than min threshold required.\n");
++		return -ENOSPC;
++	}
++	if (err < vectors) {
++		/*
++		 * If fails to enable required number of MSI-x vectors
++		 * try enabling minimum number of vectors required.
++		 */
++		dev_err(&adapter->netdev->dev,
++			"Failed to enable %d MSI-X, trying %d instead\n",
++			vectors, vector_threshold);
++		vectors = vector_threshold;
+ 	}
+ 
++	err = pci_enable_msix(adapter->pdev, adapter->intr.msix_entries,
++			      vectors);
++	if (err)
++		goto err_msix;
++
++	adapter->intr.num_intrs = vectors;
++	return 0;
++
++err_msix:
++	dev_err(&adapter->netdev->dev,
++		"Failed to enable MSI-X, error: %d\n", err);
+ 	return err;
+ }
+ 
 -- 
 1.7.7.6
 
