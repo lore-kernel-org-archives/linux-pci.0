@@ -1,78 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:56753 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154Ab3JaRgo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Oct 2013 13:36:44 -0400
-Received: by mail-ie0-f180.google.com with SMTP id e14so5439123iej.39
-        for <linux-pci@vger.kernel.org>; Thu, 31 Oct 2013 10:36:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201310301552.28866.marex@denx.de>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
- <CAErSpo6v4nvKQ4W9BhnUsNEjzsXoCiLxeFY-K=z=bMZ4AFOyGg@mail.gmail.com> <201310301552.28866.marex@denx.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 31 Oct 2013 11:36:23 -0600
-Message-ID: <CAErSpo7Bba=b_eH=TpxM7E8xqvSJQdfeCUuTSPsDKiOAkiSOrA@mail.gmail.com>
-Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
-To: Marek Vasut <marex@denx.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26724 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755255Ab3JBRmi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:42:38 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 23/77] cxgb3: Return -ENOSPC when not enough MSI-X vectors available
+Date: Wed,  2 Oct 2013 12:48:39 +0200
+Message-Id: <cbdbe5f2d6d9d8826c9c234ba45bd52c059cf66e.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 30, 2013 at 8:52 AM, Marek Vasut <marex@denx.de> wrote:
-> Dear Bjorn Helgaas,
->
->> On Tue, Oct 15, 2013 at 10:06 AM, Marek Vasut <marex@denx.de> wrote:
->> > Set of random fixes for the PCIe driver for i.MX6 . With these fixes, my
->> > setup with MX6Q -> PCIe bridge -> i210 ethernet adapter works as
->> > expected.
->> >
->> > NOTE: I'm sure this will start some discussion. There are quite a few
->> > patches
->> >
->> >       that are more of a hacks. Shawn, I didn't ignore your remark about
->> >       the clock patches, I will test it ASAP, I just want to have these
->> >       fixes in the public so others can comment/test.
->> >
->> > Marek Vasut (6):
->> >   PCI: imx6: Make reset-gpio optional
->> >   PCI: imx6: Fix the clock for PCIe
->> >   ARM: dts: imx6qdl: Fix the clock for PCIe
->> >   PCI: imx6: Probe the PCIe in fs_initcall()
->> >   PCI: imx6: Force Gen1 operation
->> >   PCI: designware: Fix DT resource retrieval
->> >
->> >  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
->> >  arch/arm/boot/dts/imx6qdl.dtsi                     |  4 +-
->> >  drivers/pci/host/pci-imx6.c                        | 63
->> >  ++++++++++++++++------ drivers/pci/host/pcie-designware.c
->> >    | 17 +++---
->> >  4 files changed, 55 insertions(+), 31 deletions(-)
->>
->> I'm ignoring this series for now.  I assume you'll post an updated
->> series as mentioned in your Oct 17 response to "[Patch 5/6] PCI: imx6:
->> Force Gen1 operation."  Please mark that series as "v2" when you post
->> it.  My assumption is still that Shawn Guo will ack the
->> drivers/pci/host/ pieces before I apply them [1].
->
-> Can you maybe pick at least these two:
->
-> PCI: imx6: Make reset-gpio optional
-> PCI: imx6: Probe the PCIe in fs_initcall()
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Applied "Probe the PCIe in fs_initcall()" with Shawn's ack to my
-pci/host-imx6 branch for v3.13, thanks.
+diff --git a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+index 9bd3099..915729c 100644
+--- a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+@@ -3099,7 +3099,7 @@ static int cxgb_enable_msix(struct adapter *adap)
+ 
+ 	if (!err && vectors < (adap->params.nports + 1)) {
+ 		pci_disable_msix(adap->pdev);
+-		err = -1;
++		err = -ENOSPC;
+ 	}
+ 
+ 	if (!err) {
+-- 
+1.7.7.6
 
-Bjorn
