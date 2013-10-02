@@ -1,90 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:46543 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754273Ab3JJNnc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 09:43:32 -0400
-From: Marek Vasut <marex@denx.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v7 0/2] Add PCIe support for i.MX6q
-Date: Thu, 10 Oct 2013 15:43:28 +0200
-Cc: "Zhu Richard-R65037" <r65037@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>,
-	Frank Li <lznuaa@gmail.com>, Sean Cross <xobs@kosagi.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>
-References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org> <201310101225.10455.marex@denx.de> <CAErSpo7oHK1tyndKdgk_6f3F7O0pMCSUV+RLUy0V75OKKFniow@mail.gmail.com>
-In-Reply-To: <CAErSpo7oHK1tyndKdgk_6f3F7O0pMCSUV+RLUy0V75OKKFniow@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201310101543.29145.marex@denx.de>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26806 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755596Ab3JBRp1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:45:27 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 71/77] vmxnet3: Return -EINVAL if number of requested MSI-Xs is not enough
+Date: Wed,  2 Oct 2013 12:49:27 +0200
+Message-Id: <e97bde9008434668e2c3f35d43056a4bd1d69ad1.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/vmxnet3/vmxnet3_drv.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> On Thu, Oct 10, 2013 at 4:25 AM, Marek Vasut <marex@denx.de> wrote:
-> > In the meantime, this is what I see upon probe with V6 of the patches:
-> > 
-> > Linux version 3.12.0-rc2-next-20130927+
-> > [...]
-> > imx6q-pcie 1ffc000.pcie: phy link never came up
-> > PCI host bridge to bus 0000:00
-> > pci_bus 0000:00: root bus resource [io  0x1000-0x10000]
-> > pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-> > pci_bus 0000:00: No busn resource found for root bus, will use [bus
-> > 00-ff]
-> 
-> This indicates a bug in your host bridge driver.  You must supply the
-> bus number range claimed by the host bridge.  There's no way the PCI
-> core can figure that out itself.  We do assume [bus 00-ff], but that's
-> only a fallback and will prevent multi-host bridge configurations from
-> working.
+diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
+index 7e2788c..5b8ea71 100644
+--- a/drivers/net/vmxnet3/vmxnet3_drv.c
++++ b/drivers/net/vmxnet3/vmxnet3_drv.c
+@@ -2738,7 +2738,7 @@ static int
+ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
+ 			     int vectors)
+ {
+-	int err = 0, vector_threshold;
++	int err = -EINVAL, vector_threshold;
+ 	vector_threshold = VMXNET3_LINUX_MIN_MSIX_VECT;
+ 
+ 	while (vectors >= vector_threshold) {
+-- 
+1.7.7.6
 
-Ah, thanks for this information, this is very helpful! I implemented mx6 PCIe 
-driver for U-Boot and this is my topology (detected by U-Boot)
-
-  00:01.0     - 16c3:abcd - Bridge device
-   01:00.0    - 12d8:2303 - Bridge device
-    02:01.0   - 12d8:2303 - Bridge device
-     03:00.0  - 8086:1531 - Network controller
-    02:02.0   - 12d8:2303 - Bridge device
-
-(The mnenomic is BUS:DEV.FN)
-
-So I shouldn't even touch 0000:00:00.0 in Linux, but use 0000:00:01.0 as that's 
-the root hub (16c3:abcd), no?
-
-> > PCI: bus0: Fast back to back transfers disabled
-> > PCI: bus1: Fast back to back transfers enabled
-> > PCI: Device 0000:00:00.0 not available because of resource collisions
-> > pcieport: probe of 0000:00:00.0 failed with error -22
-> 
-> If you boot with "ignore_loglevel", you should see more details about
-> this device, including the BAR values we read from it.  Based on
-> pcibios_enable_device() in arch/arm/kernel/bios32.c, my guess is that
-> 00:00.0 has an uninitialized BAR (maybe it is in power-on state), and
-> you didn't do anything to assign the BAR before trying to bind the
-> pcieport driver to it.  You might be missing a call to
-> pci_bus_assign_resources() or pci_assign_unassigned_resources().
-
-Will check this, thank you!
-
-> > pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
-> > pci 0000:00:00.0: BAR 6: assigned [mem 0x01100000-0x0110ffff pref]
-> > pci 0000:00:00.0: PCI bridge to [bus 01]
-> > pci 0000:00:00.0: PCI bridge to [bus 01]
-> > 
-> > Is this line normal/expected? Is this related to the PCIe switch I have
-> > there? pcieport: probe of 0000:00:00.0 failed with error -22
-> > 
-> > Thank you for your help!
-> > 
-> > Best regards,
-> > Marek Vasut
-
-Best regards,
-Marek Vasut
