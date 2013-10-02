@@ -1,99 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:58460 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752086Ab3JKFxT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Oct 2013 01:53:19 -0400
-Message-ID: <1381470596.5630.61.camel@pasglop>
-Subject: Re: [PATCH v2 3/6] powerpc/pci: use pci_is_pcie() to simplify code
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Date: Fri, 11 Oct 2013 16:49:56 +1100
-In-Reply-To: <20130906203035.GA27940@google.com>
-References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
-	 <1378367730-25996-3-git-send-email-wangyijing@huawei.com>
-	 <20130906203035.GA27940@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27307 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753653Ab3JBSCE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 14:02:04 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 60/77] qlcnic: Return -ENOSPC when not enough MSI-X vectors available
+Date: Wed,  2 Oct 2013 12:49:16 +0200
+Message-Id: <530f1aac8bdfcd600abe1eab52657409269f8a4a.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-09-06 at 14:30 -0600, Bjorn Helgaas wrote:
-> On Thu, Sep 05, 2013 at 03:55:27PM +0800, Yijing Wang wrote:
-> > Use pci_is_pcie() to simplify code.
-> > 
-> > Acked-by: Kumar Gala <galak@kernel.crashing.org>
-> > Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> > Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-> > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> > Cc: Paul Mackerras <paulus@samba.org>
-> > Cc: linuxppc-dev@lists.ozlabs.org
-> > Cc: linux-kernel@vger.kernel.org
-> > ---
-> >  arch/powerpc/kernel/eeh.c     |    3 +--
-> >  arch/powerpc/sysdev/fsl_pci.c |    2 +-
-> >  2 files changed, 2 insertions(+), 3 deletions(-)
-> 
-> Ben, Paul, this has no dependencies on anything new to PCI or any
-> other patches in this series, so you can take it through the POWERPC
-> tree.  If you don't want to do that, let me know and I can take it.
-> 
-> If you want it:
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-It's also quite broken :-)
-
-See below:
-
-> > diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-> > index 55593ee..6ebbe54 100644
-> > --- a/arch/powerpc/kernel/eeh.c
-> > +++ b/arch/powerpc/kernel/eeh.c
-> > @@ -189,8 +189,7 @@ static size_t eeh_gather_pci_data(struct eeh_dev *edev, char * buf, size_t len)
-> >  	}
-> >  
-> >  	/* If PCI-E capable, dump PCI-E cap 10, and the AER */
-> > -	cap = pci_find_capability(dev, PCI_CAP_ID_EXP);
-> > -	if (cap) {
-> > +	if (pci_is_pcie(dev)) {
-> >  		n += scnprintf(buf+n, len-n, "pci-e cap10:\n");
-> >  		printk(KERN_WARNING
-> >  		       "EEH: PCI-E capabilities and status follow:\n");
-
-So we remove reading of "cap", but slightly further down the code does:
-
-		for (i=0; i<=8; i++) {
-			eeh_ops->read_config(dn, cap+4*i, 4, &cfg);
-			n += scnprintf(buf+n, len-n, "%02x:%x\n", 4*i, cfg);
-			printk(KERN_WARNING "EEH: PCI-E %02x: %08x\n", i, cfg);
-		}
-
-Which actually *uses* the value of "cap" ... oops :-)
-
-> > diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-> > index 46ac1dd..5402a1d 100644
-> > --- a/arch/powerpc/sysdev/fsl_pci.c
-> > +++ b/arch/powerpc/sysdev/fsl_pci.c
-> > @@ -41,7 +41,7 @@ static void quirk_fsl_pcie_header(struct pci_dev *dev)
-> >  	u8 hdr_type;
-> >  
-> >  	/* if we aren't a PCIe don't bother */
-> > -	if (!pci_find_capability(dev, PCI_CAP_ID_EXP))
-> > +	if (!pci_is_pcie(dev))
-> >  		return;
-> >  
-> >  	/* if we aren't in host mode don't bother */
-> > -- 
-> > 1.7.1
-> > 
-> > 
-
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+index c4c5023..c6018bb 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+@@ -620,7 +620,7 @@ int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
+ 				 num_msix);
+ 			if (qlcnic_83xx_check(adapter)) {
+ 				if (err < (QLC_83XX_MINIMUM_VECTOR - tx_vector))
+-					return err;
++					return -ENOSPC;
+ 				err -= (max_tx_rings + 1);
+ 				num_msix = rounddown_pow_of_two(err);
+ 				num_msix += (max_tx_rings + 1);
+@@ -636,6 +636,7 @@ int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
+ 					 num_msix);
+ 				goto enable_msix;
+ 			}
++			err = -ENOSPC;
+ 		} else {
+ 			dev_info(&pdev->dev,
+ 				 "Unable to allocate %d MSI-X interrupt vectors\n",
+-- 
+1.7.7.6
 
