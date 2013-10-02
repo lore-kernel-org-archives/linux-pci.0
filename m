@@ -1,94 +1,358 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:35236 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751369Ab3JYFNU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 01:13:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com>
-References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
-	<CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
-	<20131015024452.GA31951@srcf.ucam.org>
-	<20131016202123.GA17866@google.com>
-	<CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
-	<CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
-	<CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
-	<CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com>
-Date: Thu, 24 Oct 2013 22:13:18 -0700
-Message-ID: <CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27406 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753380Ab3JBSJW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 14:09:22 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 07/77] PCI/MSI: Re-design MSI/MSI-X interrupts enablement pattern
+Date: Wed,  2 Oct 2013 12:48:23 +0200
+Message-Id: <d8c36203ada6efbfa9f7ce92c2f713ee3b6d6b8d.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 24, 2013 at 8:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->>>> Bisection points to 928bea964827d7824b548c1f8e06eccbbc4d0d7d .
->>>
->>> This is "PCI: Delay enabling bridges until they're needed" by Yinghai.
->>
->> that double disabling should be addressed by:
->>
->> https://lkml.org/lkml/2013/4/25/608
->>
->> [PATCH] PCI: Remove duplicate pci_disable_device for pcie port
->
-> I'll look at that patch again.  I had some questions about it the
-> first time, but perhaps it makes more sense after 928bea9648 has been
-> applied.
->
-> Andreas originally reported a GPF oops in pci_pme_list_scan().  I
-> posted a refcounting patch, which made the problem go away, but I
-> can't explain why, and I don't want to apply it without understanding
-> that.  Decoding his oops shows this:
->
->   24: 0f 1f 00             nopl   (%rax)
->   27: 48 8b 50 10           mov    0x10(%rax),%rdx
->   2b:* 48 8b 52 38           mov    0x38(%rdx),%rdx <-- trapping instruction
->   2f: 48 85 d2             test   %rdx,%rdx
->
-> %rax is the pci_dev pointer, so 0x10(%rax) is the dev->bus pointer,
-> which we put in %rdx.  The oops says %rdx = 6b6b6b6b6b6b6b6b, which is
-> POISON_FREE, so I think we loaded dev->bus out of a struct pci_dev
-> that has already been freed.
->
-> pci_pme_list_scan() holds pci_pme_list_mutex while it traverses
-> pci_pme_list, and the pci_stop_and_remove_bus_device() path removes
-> the pci_dev by calling pci_pme_active(), which also holds
-> pci_pme_list_mutex, so I don't understand how pci_pme_list_scan() can
-> see a pci_dev that has already been freed.
->
-> If I understand Andreas correctly, 928bea9648 also fixes the crash,
-> even without my refcounting change.  Can you explain why?
+Currently pci_enable_msi_block() and pci_enable_msix() interfaces
+return a error code in case of failure, 0 in case of success and a
+positive value which indicates the number of MSI-X/MSI interrupts
+that could have been allocated. The latter value should be passed
+to a repeated call to the interfaces until a failure or success.
 
-928bea will make the dev->enable_cnt increase wrongly, as we have
-pci_enable_device for child
-   pci_enable_bridge for parent
-     pci_enable_bridge for grandparent
-       pci_enable_device for grandparent
-   pci_enable_device for parent
-       pci_enable_brdige for grandparent
-         pci_enable_device for grandparent.
-...
+This technique proved to be confusing and error-prone. Vast share
+of device drivers simply fail to follow the described guidelines.
 
-in that case grandprent will be enabled two times, and will enable_cnt will have
-extra increase.
+This update converts pci_enable_msix() and pci_enable_msi_block()
+interfaces to canonical kernel functions and makes them return a
+error code in case of failure or 0 in case of success.
 
-so later pci_disable_device will not really call do_pci_disable_device
-do the really work, as enable_cnt still big.
+As result, device drivers will cease to use the overcomplicated
+repeated fallbacks technique and resort to a straightforward
+pattern - determine the number of MSI/MSI-X interrupts required
+before calling pci_enable_msix() and pci_enable_msi_block()
+interfaces.
 
-solution could be:
-let pci_enable_bridge call __pci_enable_device.
-and __pci_enable_device will not call pci_enable_bridge.
+Device drivers will use their knowledge of underlying hardware
+to determine the number of MSI/MSI-X interrupts required.
 
-Thanks
+The simplest case would be requesting all available interrupts -
+to obtain that value device drivers will use pci_get_msi_cap()
+interface for MSI and pci_msix_table_size() for MSI-X.
 
-Yinghai
+More complex cases would entail matching device capabilities
+with the system environment, i.e. limiting number of hardware
+queues (and hence associated MSI/MSI-X interrupts) to the number
+of online CPUs.
+
+Suggested-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ Documentation/PCI/MSI-HOWTO.txt      |   71 ++++++++++++++++++---------------
+ arch/mips/pci/msi-octeon.c           |    2 +-
+ arch/powerpc/kernel/msi.c            |    2 +-
+ arch/powerpc/platforms/pseries/msi.c |    2 +-
+ arch/s390/pci/pci.c                  |    2 +-
+ arch/x86/kernel/apic/io_apic.c       |    2 +-
+ drivers/pci/msi.c                    |   52 +++++++------------------
+ 7 files changed, 58 insertions(+), 75 deletions(-)
+
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 1f37ce2..40abcfb 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -111,21 +111,27 @@ the device are in the range dev->irq to dev->irq + count - 1.
+ 
+ If this function returns a negative number, it indicates an error and
+ the driver should not attempt to request any more MSI interrupts for
+-this device.  If this function returns a positive number, it is
+-less than 'count' and indicates the number of interrupts that could have
+-been allocated.  In neither case is the irq value updated or the device
+-switched into MSI mode.
+-
+-The device driver must decide what action to take if
+-pci_enable_msi_block() returns a value less than the number requested.
+-For instance, the driver could still make use of fewer interrupts;
+-in this case the driver should call pci_enable_msi_block()
+-again.  Note that it is not guaranteed to succeed, even when the
+-'count' has been reduced to the value returned from a previous call to
+-pci_enable_msi_block().  This is because there are multiple constraints
+-on the number of vectors that can be allocated; pci_enable_msi_block()
+-returns as soon as it finds any constraint that doesn't allow the
+-call to succeed.
++this device.
++
++Device drivers should normally call pci_get_msi_cap() function before
++calling this function to determine maximum number of MSI interrupts
++a device can send.
++
++A sequence to achieve that might look like:
++
++static int foo_driver_enable_msi(struct foo_adapter *adapter, int nvec)
++{
++	rc = pci_get_msi_cap(adapter->pdev);
++	if (rc < 0)
++		return rc;
++
++	nvec = min(nvec, rc);
++	if (nvec < FOO_DRIVER_MINIMUM_NVEC) {
++		return -ENOSPC;
++
++	rc = pci_enable_msi_block(adapter->pdev, nvec);
++	return rc;
++}
+ 
+ 4.2.3 pci_enable_msi_block_auto
+ 
+@@ -218,9 +224,7 @@ interrupts assigned to the MSI-X vectors so it can free them again later.
+ 
+ If this function returns a negative number, it indicates an error and
+ the driver should not attempt to allocate any more MSI-X interrupts for
+-this device.  If it returns a positive number, it indicates the maximum
+-number of interrupt vectors that could have been allocated. See example
+-below.
++this device.
+ 
+ This function, in contrast with pci_enable_msi(), does not adjust
+ dev->irq.  The device will not generate interrupts for this interrupt
+@@ -229,24 +233,27 @@ number once MSI-X is enabled.
+ Device drivers should normally call this function once per device
+ during the initialization phase.
+ 
+-It is ideal if drivers can cope with a variable number of MSI-X interrupts;
+-there are many reasons why the platform may not be able to provide the
+-exact number that a driver asks for.
++Device drivers should normally call pci_msix_table_size() function before
++calling this function to determine maximum number of MSI-X interrupts
++a device can send.
+ 
+-A request loop to achieve that might look like:
++A sequence to achieve that might look like:
+ 
+ static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
+ {
+-	while (nvec >= FOO_DRIVER_MINIMUM_NVEC) {
+-		rc = pci_enable_msix(adapter->pdev,
+-				     adapter->msix_entries, nvec);
+-		if (rc > 0)
+-			nvec = rc;
+-		else
+-			return rc;
+-	}
+-
+-	return -ENOSPC;
++	rc = pci_msix_table_size(adapter->pdev);
++	if (rc < 0)
++		return rc;
++
++	nvec = min(nvec, rc);
++	if (nvec < FOO_DRIVER_MINIMUM_NVEC) {
++		return -ENOSPC;
++
++	for (i = 0; i < nvec; i++)
++		adapter->msix_entries[i].entry = i;
++
++	rc = pci_enable_msix(adapter->pdev, adapter->msix_entries, nvec);
++	return rc;
+ }
+ 
+ 4.3.2 pci_disable_msix
+diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
+index d37be36..0ee5f4d 100644
+--- a/arch/mips/pci/msi-octeon.c
++++ b/arch/mips/pci/msi-octeon.c
+@@ -193,7 +193,7 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 	 * override arch_setup_msi_irqs()
+ 	 */
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+-		return 1;
++		return -EINVAL;
+ 
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+ 		ret = arch_setup_msi_irq(dev, entry);
+diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
+index 8bbc12d..36d70b9 100644
+--- a/arch/powerpc/kernel/msi.c
++++ b/arch/powerpc/kernel/msi.c
+@@ -22,7 +22,7 @@ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
+ 
+ 	/* PowerPC doesn't support multiple MSI yet */
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+-		return 1;
++		return -EINVAL;
+ 
+ 	if (ppc_md.msi_check_device) {
+ 		pr_debug("msi: Using platform check routine.\n");
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index 009ec73..89648c1 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -348,7 +348,7 @@ static int rtas_msi_check_device(struct pci_dev *pdev, int nvec, int type)
+ 	quota = msi_quota_for_device(pdev, nvec);
+ 
+ 	if (quota && quota < nvec)
+-		return quota;
++		return -ENOSPC;
+ 
+ 	return 0;
+ }
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 61a3c2c..45a1875 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -426,7 +426,7 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ 
+ 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+-		return 1;
++		return -EINVAL;
+ 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
+ 	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index e63a5bd..6126eaf 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3145,7 +3145,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ 	/* Multiple MSI vectors only supported with interrupt remapping */
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+-		return 1;
++		return -EINVAL;
+ 
+ 	node = dev_to_node(&dev->dev);
+ 	irq_want = nr_irqs_gsi;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index ca59bfc..583ace1 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -719,7 +719,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 
+ 	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+ 	if (ret)
+-		goto out_avail;
++		goto error;
+ 
+ 	/*
+ 	 * Some devices require MSI-X to be enabled before we can touch the
+@@ -733,7 +733,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 
+ 	ret = populate_msi_sysfs(dev);
+ 	if (ret)
+-		goto out_free;
++		goto error;
+ 
+ 	/* Set MSI-X enabled bits and unmask the function */
+ 	pci_intx_for_msi(dev, 0);
+@@ -744,24 +744,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 
+ 	return 0;
+ 
+-out_avail:
+-	if (ret < 0) {
+-		/*
+-		 * If we had some success, report the number of irqs
+-		 * we succeeded in setting up.
+-		 */
+-		struct msi_desc *entry;
+-		int avail = 0;
+-
+-		list_for_each_entry(entry, &dev->msi_list, list) {
+-			if (entry->irq != 0)
+-				avail++;
+-		}
+-		if (avail != 0)
+-			ret = avail;
+-	}
+-
+-out_free:
++error:
+ 	free_msi_irqs(dev);
+ 
+ 	return ret;
+@@ -832,13 +815,11 @@ EXPORT_SYMBOL(pci_get_msi_cap);
+  * @dev: device to configure
+  * @nvec: number of interrupts to configure
+  *
+- * Allocate IRQs for a device with the MSI capability.
+- * This function returns a negative errno if an error occurs.  If it
+- * is unable to allocate the number of interrupts requested, it returns
+- * the number of interrupts it might be able to allocate.  If it successfully
+- * allocates at least the number of interrupts requested, it returns 0 and
+- * updates the @dev's irq member to the lowest new interrupt number; the
+- * other interrupt numbers allocated to this device are consecutive.
++ * Allocate IRQs for a device with the MSI capability. This function returns
++ * a negative errno if an error occurs. If it successfully allocates at least
++ * the number of interrupts requested, it returns 0 and updates the @dev's
++ * irq member to the lowest new interrupt number; the other interrupt numbers
++ * allocated to this device are consecutive.
+  */
+ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ {
+@@ -848,7 +829,7 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ 	if (maxvec < 0)
+ 		return maxvec;
+ 	if (nvec > maxvec)
+-		return maxvec;
++		return -EINVAL;
+ 
+ 	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
+ 	if (status)
+@@ -879,13 +860,11 @@ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+ 	if (maxvec)
+ 		*maxvec = ret;
+ 
+-	do {
+-		nvec = ret;
+-		ret = pci_enable_msi_block(dev, nvec);
+-	} while (ret > 0);
+-
+-	if (ret < 0)
++	nvec = ret;
++	ret = pci_enable_msi_block(dev, nvec);
++	if (ret)
+ 		return ret;
++
+ 	return nvec;
+ }
+ EXPORT_SYMBOL(pci_enable_msi_block_auto);
+@@ -955,9 +934,6 @@ EXPORT_SYMBOL(pci_msix_table_size);
+  * MSI-X mode enabled on its hardware device function. A return of zero
+  * indicates the successful configuration of MSI-X capability structure
+  * with new allocated MSI-X irqs. A return of < 0 indicates a failure.
+- * Or a return of > 0 indicates that driver request is exceeding the number
+- * of irqs or MSI-X vectors available. Driver should use the returned value to
+- * re-send its request.
+  **/
+ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ {
+@@ -975,7 +951,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	if (nr_entries < 0)
+ 		return nr_entries;
+ 	if (nvec > nr_entries)
+-		return nr_entries;
++		return -EINVAL;
+ 
+ 	/* Check for any invalid entries */
+ 	for (i = 0; i < nvec; i++) {
+-- 
+1.7.7.6
+
