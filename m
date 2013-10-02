@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:25978 "EHLO
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:25803 "EHLO
 	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754404Ab3JBRUC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:20:02 -0400
+	by vger.kernel.org with ESMTP id S1754300Ab3JBRK7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:10:59 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
@@ -24,9 +24,9 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 66/77] qlge: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:49:22 +0200
-Message-Id: <5161bfdf162c8edd77d03e96312d48edb54242bc.1380703263.git.agordeev@redhat.com>
+Subject: [PATCH RFC 31/77] hpsa: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:48:47 +0200
+Message-Id: <2ebbbb417719ad6501bbe59969409c1f5c63ae48.1380703263.git.agordeev@redhat.com>
 In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
@@ -38,76 +38,61 @@ obtain a optimal number of MSI/MSI-X interrupts required.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/net/ethernet/qlogic/qlge/qlge_main.c |   39 +++++++++++--------------
- 1 files changed, 17 insertions(+), 22 deletions(-)
+ drivers/scsi/hpsa.c |   28 +++++++++++++---------------
+ 1 files changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/ethernet/qlogic/qlge/qlge_main.c b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
-index ac54cb0..d6fdd93 100644
---- a/drivers/net/ethernet/qlogic/qlge/qlge_main.c
-+++ b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
-@@ -3258,45 +3258,40 @@ static void ql_enable_msix(struct ql_adapter *qdev)
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 393c8db..eb17b3d 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4103,34 +4103,32 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+ 	int err, i;
+ 	struct msix_entry hpsa_msix_entries[MAX_REPLY_QUEUES];
  
- 	/* Get the MSIX vectors. */
- 	if (qlge_irq_type == MSIX_IRQ) {
-+		err = pci_msix_table_size(qdev->pdev);
-+		if (err < 0)
-+			goto msix_fail;
-+
-+		qdev->intr_count = min_t(u32, qdev->intr_count, err);
-+
- 		/* Try to alloc space for the msix struct,
- 		 * if it fails then go to MSI/legacy.
- 		 */
- 		qdev->msi_x_entry = kcalloc(qdev->intr_count,
- 					    sizeof(struct msix_entry),
- 					    GFP_KERNEL);
--		if (!qdev->msi_x_entry) {
--			qlge_irq_type = MSI_IRQ;
--			goto msi;
--		}
-+		if (!qdev->msi_x_entry)
-+			goto msix_fail;
- 
- 		for (i = 0; i < qdev->intr_count; i++)
- 			qdev->msi_x_entry[i].entry = i;
- 
--		/* Loop to get our vectors.  We start with
--		 * what we want and settle for what we get.
--		 */
--		do {
--			err = pci_enable_msix(qdev->pdev,
--				qdev->msi_x_entry, qdev->intr_count);
--			if (err > 0)
--				qdev->intr_count = err;
--		} while (err > 0);
+-	for (i = 0; i < MAX_REPLY_QUEUES; i++) {
+-		hpsa_msix_entries[i].vector = 0;
+-		hpsa_msix_entries[i].entry = i;
+-	}
 -
--		if (err < 0) {
--			kfree(qdev->msi_x_entry);
--			qdev->msi_x_entry = NULL;
--			netif_warn(qdev, ifup, qdev->ndev,
--				   "MSI-X Enable failed, trying MSI.\n");
--			qlge_irq_type = MSI_IRQ;
--		} else if (err == 0) {
-+		if (!pci_enable_msix(qdev->pdev,
-+				     qdev->msi_x_entry, qdev->intr_count)) {
- 			set_bit(QL_MSIX_ENABLED, &qdev->flags);
- 			netif_info(qdev, ifup, qdev->ndev,
- 				   "MSI-X Enabled, got %d vectors.\n",
- 				   qdev->intr_count);
+ 	/* Some boards advertise MSI but don't really support it */
+ 	if ((h->board_id == 0x40700E11) || (h->board_id == 0x40800E11) ||
+ 	    (h->board_id == 0x40820E11) || (h->board_id == 0x40830E11))
+ 		goto default_int_mode;
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
+ 		dev_info(&h->pdev->dev, "MSIX\n");
++
++		err = pci_msix_table_size(h->pdev);
++		if (err < ARRAY_SIZE(hpsa_msix_entries))
++			goto default_int_mode;
++
++		for (i = 0; i < ARRAY_SIZE(hpsa_msix_entries); i++) {
++			hpsa_msix_entries[i].vector = 0;
++			hpsa_msix_entries[i].entry = i;
++		}
++
+ 		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
+-						MAX_REPLY_QUEUES);
++				      ARRAY_SIZE(hpsa_msix_entries));
+ 		if (!err) {
+ 			for (i = 0; i < MAX_REPLY_QUEUES; i++)
+ 				h->intr[i] = hpsa_msix_entries[i].vector;
+ 			h->msix_vector = 1;
  			return;
  		}
-+
-+		kfree(qdev->msi_x_entry);
-+		qdev->msi_x_entry = NULL;
-+msix_fail:
-+		netif_warn(qdev, ifup, qdev->ndev,
-+			   "MSI-X Enable failed, trying MSI.\n");
-+		qlge_irq_type = MSI_IRQ;
+-		if (err > 0) {
+-			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
+-			       "available\n", err);
+-			goto default_int_mode;
+-		} else {
+-			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
+-			       err);
+-			goto default_int_mode;
+-		}
++		dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
++		goto default_int_mode;
  	}
--msi:
- 	qdev->intr_count = 1;
- 	if (qlge_irq_type == MSI_IRQ) {
- 		if (!pci_enable_msi(qdev->pdev)) {
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+ 		dev_info(&h->pdev->dev, "MSI\n");
 -- 
 1.7.7.6
 
