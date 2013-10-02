@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26001 "EHLO
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:24804 "EHLO
 	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753638Ab3JBRV4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:21:56 -0400
+	by vger.kernel.org with ESMTP id S1754199Ab3JBQrn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 12:47:43 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
@@ -24,9 +24,9 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 09/77] ahci: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:48:25 +0200
-Message-Id: <4cced33c3809e6a53ada2dd8c781fcc5242e19ab.1380703262.git.agordeev@redhat.com>
+Subject: [PATCH RFC 16/77] cciss: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:48:32 +0200
+Message-Id: <0498333a0ddc360d43d4496310917a5d0f9a51fd.1380703262.git.agordeev@redhat.com>
 In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
@@ -38,93 +38,44 @@ obtain a optimal number of MSI/MSI-X interrupts required.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/ata/ahci.c |   56 ++++++++++++++++++++++++++++++++-------------------
- 1 files changed, 35 insertions(+), 21 deletions(-)
+ drivers/block/cciss.c |   17 +++++++----------
+ 1 files changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 9d715ae..f1c8838 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1091,26 +1091,40 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- {}
- #endif
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index d2d95ff..80068a0 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -4079,7 +4079,11 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
+ 		goto default_int_mode;
  
--int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
-+int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
-+			 struct ahci_host_priv *hpriv)
- {
--	int rc;
--	unsigned int maxvec;
-+	int rc, nvec;
- 
--	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
--		rc = pci_enable_msi_block_auto(pdev, &maxvec);
--		if (rc > 0) {
--			if ((rc == maxvec) || (rc == 1))
--				return rc;
--			/*
--			 * Assume that advantage of multipe MSIs is negated,
--			 * so fallback to single MSI mode to save resources
--			 */
--			pci_disable_msi(pdev);
--			if (!pci_enable_msi(pdev))
--				return 1;
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
+-		err = pci_enable_msix(h->pdev, cciss_msix_entries, 4);
++		err = pci_msix_table_size(h->pdev);
++		if (err < ARRAY_SIZE(cciss_msix_entries))
++			goto default_int_mode;
++		err = pci_enable_msix(h->pdev, cciss_msix_entries,
++				      ARRAY_SIZE(cciss_msix_entries));
+ 		if (!err) {
+ 			h->intr[0] = cciss_msix_entries[0].vector;
+ 			h->intr[1] = cciss_msix_entries[1].vector;
+@@ -4088,15 +4092,8 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
+ 			h->msix_vector = 1;
+ 			return;
+ 		}
+-		if (err > 0) {
+-			dev_warn(&h->pdev->dev,
+-				"only %d MSI-X vectors available\n", err);
+-			goto default_int_mode;
+-		} else {
+-			dev_warn(&h->pdev->dev,
+-				"MSI-X init failed %d\n", err);
+-			goto default_int_mode;
 -		}
--	}
-+	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
-+		goto intx;
-+
-+	rc = pci_get_msi_cap(pdev);
-+	if (rc < 0)
-+		goto intx;
-+
-+	/*
-+	 * If number of MSIs is less than number of ports then Sharing Last
-+	 * Message mode could be enforced. In this case assume that advantage
-+	 * of multipe MSIs is negated and use single MSI mode instead.
-+	 */
-+	if (rc < n_ports)
-+		goto single_msi;
-+
-+	nvec = rc;
-+	rc = pci_enable_msi_block(pdev, nvec);
-+	if (rc)
-+		goto intx;
- 
-+	return nvec;
-+
-+single_msi:
-+	rc = pci_enable_msi(pdev);
-+	if (rc)
-+		goto intx;
-+	return 1;
-+
-+intx:
- 	pci_intx(pdev, 1);
- 	return 0;
- }
-@@ -1277,10 +1291,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
- 
--	n_msis = ahci_init_interrupts(pdev, hpriv);
--	if (n_msis > 1)
--		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
--
- 	/* save initial config */
- 	ahci_pci_save_initial_config(pdev, hpriv);
- 
-@@ -1335,6 +1345,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 */
- 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
- 
-+	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
-+	if (n_msis > 1)
-+		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
-+
- 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
- 	if (!host)
- 		return -ENOMEM;
++		dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
++		goto default_int_mode;
+ 	}
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+ 		if (!pci_enable_msi(h->pdev))
 -- 
 1.7.7.6
 
