@@ -1,12 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27031 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754751Ab3JBRvb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:51:31 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:50225 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753425Ab3JBSTL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 14:19:11 -0400
+Date: Wed, 2 Oct 2013 11:17:49 -0700
+From: Greg KH <greg@kroah.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -24,36 +24,29 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 25/77] cxgb4: Return -ENOSPC when not enough MSI-X vectors available
-Date: Wed,  2 Oct 2013 12:48:41 +0200
-Message-Id: <3c7f347b79afdce03af1fadf4f50f7906979ee94.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+Subject: Re: [PATCH RFC 04/77] PCI/MSI/s390: Remove superfluous check of MSI
+ type
+Message-ID: <20131002181749.GA6942@kroah.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
+ <bae65aa3e30dfd23bd5ed47add7310cfbb96243a.1380703262.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bae65aa3e30dfd23bd5ed47add7310cfbb96243a.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+On Wed, Oct 02, 2013 at 12:48:20PM +0200, Alexander Gordeev wrote:
+> arch_setup_msi_irqs() hook can only be called from the generic
+> MSI code which ensures correct MSI type parameter.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  arch/s390/pci/pci.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index c73cabd..9425bc6 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -5732,9 +5732,11 @@ static int enable_msix(struct adapter *adap)
- 		}
- 		for (i = 0; i < want; ++i)
- 			adap->msix_info[i].vec = entries[i].vector;
--	} else if (err > 0)
-+	} else if (err > 0) {
- 		dev_info(adap->pdev_dev,
- 			 "only %d MSI-X vectors left, not using MSI-X\n", err);
-+		err = -ENOSPC;
-+	}
- 	return err;
- }
- 
--- 
-1.7.7.6
+I have no idea why you sent the stable@ alias so many patches, all in
+the incorrect form for them to be ever accepted in the stable kernel
+releases.  Please read Documentation/stable_kernel_rules.txt for how to
+do this properly.
 
+greg k-h
