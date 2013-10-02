@@ -1,59 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:54281 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753529Ab3JYTsb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 15:48:31 -0400
-Received: by mail-ie0-f173.google.com with SMTP id u16so7390917iet.32
-        for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 12:48:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
-References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
- <CAPcvp5Epf+6tOp+0=ZbBLusCzq4dF98aS+Ou0D7Nyko_VwM8KA@mail.gmail.com> <3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 25 Oct 2013 13:48:10 -0600
-Message-ID: <CAErSpo4TOvYZsjxc3UhCbPUv1NPEy3m-DjtLh-v8q0geGvPhUg@mail.gmail.com>
-Subject: Re: AER driver on ARM platform
-To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-Cc: Andrew Murray <amurray@embedded-bits.co.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26771 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754618Ab3JBRoK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:44:10 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 02/77] PCI/MSI/PPC: Fix wrong RTAS error code reporting
+Date: Wed,  2 Oct 2013 12:48:18 +0200
+Message-Id: <d9da231bddf5e54ad1ff81e19c9c8ed4dc234946.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 25, 2013 at 12:18 PM, Karicheri, Muralidharan
-<m-karicheri2@ti.com> wrote:
->>> -----Original Message-----
->>> From: Andrew Murray [mailto:amurray@embedded-bits.co.uk]
->>> Sent: Friday, October 25, 2013 12:27 PM
->>> To: Karicheri, Muralidharan
->>> Cc: linux-pci@vger.kernel.org
->>> Subject: Re: AER driver on ARM platform
->>>
->>> On 25 October 2013 16:56, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
->>> > Did anyone successfully tested PCIe AER driver on an ARM platform? I saw this enabled in
->>> a tegra platform. Could someone from nVidia respond?
->>>
->>> I've previously used this on a custom ARM platform - it works.
->>>
->>> You need to ensure that PCIe port services are enabled, I believe at one point this required
->>> 'pcie_ports=native' to be set on the kernel command line.
->>>
->>> Andrew Murray
->>>
->
-> Yes. That was it. It probes the driver now.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ arch/powerpc/platforms/pseries/msi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-You should not have to boot with "pcie_ports=native" unless you are
-debugging or working around a firmware issue.
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index 6d2f0ab..009ec73 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -467,7 +467,7 @@ again:
+ 	list_for_each_entry(entry, &pdev->msi_list, list) {
+ 		hwirq = rtas_query_irq_number(pdn, i++);
+ 		if (hwirq < 0) {
+-			pr_debug("rtas_msi: error (%d) getting hwirq\n", rc);
++			pr_debug("rtas_msi: error (%d) getting hwirq\n", hwirq);
+ 			return hwirq;
+ 		}
+ 
+-- 
+1.7.7.6
 
-It looks like get_port_device_capability() expects the arch to
-implement a pcie_port_platform_notify() that sets a bitmask of PCIe
-services that Linux should take control of.  But that's only
-implemented for ACPI systems (x86 and ia64), so probably every other
-arch is stuck with the "pcie_ports=native" hack.
-
-This is a bug, and somebody should fix it.  Consider yourself
-empowered to implement whatever you need on ARM to negotiate for
-control of these PCIe services.
-
-Bjorn
