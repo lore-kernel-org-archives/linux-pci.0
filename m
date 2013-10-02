@@ -1,47 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mouse.start.ca ([64.140.120.56]:50269 "EHLO mouse.start.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753857Ab3JYCXe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Oct 2013 22:23:34 -0400
-Message-ID: <5269D61A.80602@start.ca>
-Date: Thu, 24 Oct 2013 22:23:22 -0400
-From: Mark Lord <kernel@start.ca>
-MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>
-CC: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26423 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755448Ab3JBRfT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:35:19 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	"H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*() family
- helpers
-References: <cover.1382103786.git.agordeev@redhat.com> <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com> <20131024105158.GB13159@mtj.dyndns.org> <20131024143108.GB26610@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20131024143108.GB26610@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset=UTF-8
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 20/77] csiostor: Return -ENOSPC when not enough MSI-X vectors available
+Date: Wed,  2 Oct 2013 12:48:36 +0200
+Message-Id: <db7d3fc15ca0d902ea354d0aa293416563c440c3.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13-10-24 10:31 AM, Alexander Gordeev wrote:
-> On Thu, Oct 24, 2013 at 11:51:58AM +0100, Tejun Heo wrote:
->> I haven't looked into any details but, if the above works for most use
->> cases, it looks really good to me.
-> 
-> Well, if we reuse Michael's statistics:
-> 
->  - 58 drivers call pci_enable_msix()
->  - 24 try a single allocation and then fallback to MSI/LSI
->  - 19 use the loop style allocation
->  - 14 try an allocation, and if it fails retry once
-> 
-> ...then I expect most of 19/58 (loop style) could be converted to
-> pcim_enable_msix() and pcim_enable_msix_range() and all of 14/58
-> (single fallback) should be converted to pcim_enable_msix() users.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/csiostor/csio_isr.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Those are just the in-kernel drivers.
-There are many, many more out-of-kernel drivers for embedded platforms,
-hardware in-development, etc..
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 91ba91d..abf20ab 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -533,7 +533,7 @@ csio_enable_msix(struct csio_hw *hw)
+ 			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+ 
+ 		kfree(entries);
+-		return -ENOMEM;
++		return -ENOSPC;
+ 	}
+ 
+ 	/* Save off vectors */
+-- 
+1.7.7.6
 
-Let's not be overly presumptive about the size of the user base.
-
-Cheers
