@@ -1,91 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:55287 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759122Ab3JOQHF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 12:07:05 -0400
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27447 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756008Ab3JBSNF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 14:13:05 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 5/6] PCI: imx6: Force Gen1 operation
-Date: Tue, 15 Oct 2013 18:06:39 +0200
-Message-Id: <1381853200-5534-6-git-send-email-marex@denx.de>
-In-Reply-To: <1381853200-5534-1-git-send-email-marex@denx.de>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 34/77] ioat: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:48:50 +0200
+Message-Id: <63caad476ca6b7f3481d5512febcb4ef3db72209.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Without forcing the PCIe core into Gen1 operation, the PCIe switch
-attached directly to the PCIe port is not recognised at all. The
-PCIe switch is Gen2 capable to make this issue even more puzzling.
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/pci/host/pci-imx6.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ drivers/dma/ioat/dma.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index ca8c5de..8402e9a 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -321,6 +321,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
- {
- 	int count = 0;
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-+	uint32_t tmp;
+diff --git a/drivers/dma/ioat/dma.c b/drivers/dma/ioat/dma.c
+index acee3b2..b352ee6 100644
+--- a/drivers/dma/ioat/dma.c
++++ b/drivers/dma/ioat/dma.c
+@@ -915,15 +915,19 @@ int ioat_dma_setup_interrupts(struct ioatdma_device *device)
  
- 	imx6_pcie_assert_core_reset(pp);
- 
-@@ -330,13 +331,23 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
- 
- 	dw_pcie_setup_rc(pp);
- 
-+	/*
-+	 * FIXME:
-+	 * Force Gen1 operation. In case the IP block is in Gen2 operation
-+	 * mode, it does not detect the PCIe switch at all.
-+	 */
-+	tmp = readl(pp->dbi_base + 0x7c);
-+	tmp &= ~0xf;
-+	tmp |= 0x1;
-+	writel(tmp, pp->dbi_base + 0x7c);
+ msix:
+ 	/* The number of MSI-X vectors should equal the number of channels */
++	err = pci_msix_table_size(pdev);
++	if (err < 0)
++		goto msi;
++	if (err < device->common.chancnt)
++		goto msix_single_vector;
 +
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
+ 	msixcnt = device->common.chancnt;
+ 	for (i = 0; i < msixcnt; i++)
+ 		device->msix_entries[i].entry = i;
  
- 	while (!dw_pcie_link_up(pp)) {
- 		usleep_range(100, 1000);
- 		count++;
--		if (count >= 10) {
-+		if (count >= 200) {
- 			dev_err(pp->dev, "phy link never came up\n");
- 			dev_dbg(pp->dev,
- 				"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+ 	err = pci_enable_msix(pdev, device->msix_entries, msixcnt);
+-	if (err < 0)
++	if (err)
+ 		goto msi;
+-	if (err > 0)
+-		goto msix_single_vector;
+ 
+ 	for (i = 0; i < msixcnt; i++) {
+ 		msix = &device->msix_entries[i];
 -- 
-1.8.4.rc3
+1.7.7.6
 
