@@ -1,64 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:47788 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755962Ab3JIBek (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Oct 2013 21:34:40 -0400
-Date: Wed, 9 Oct 2013 12:34:37 +1100
-From: Michael Ellerman <michael@ellerman.id.au>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26845 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754569Ab3JBRqz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:46:55 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Martin Schwidefsky <schwidefsky@de.ibm.com>,
 	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
 	Dan Williams <dan.j.williams@intel.com>,
 	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
 	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
 	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
 	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Message-ID: <20131009013437.GC23780@concordia>
+Subject: [PATCH RFC 28/77] cxgb4vf: Return -ENOSPC when not enough MSI-X vectors available
+Date: Wed,  2 Oct 2013 12:48:44 +0200
+Message-Id: <ba3b9232eedfaa0dcac4a8926483e10d2ada1d7a.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
- <20131008043330.GF31666@concordia>
- <20131008073301.GC10669@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131008073301.GC10669@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 08, 2013 at 09:33:02AM +0200, Alexander Gordeev wrote:
-> On Tue, Oct 08, 2013 at 03:33:30PM +1100, Michael Ellerman wrote:
-> > On Wed, Oct 02, 2013 at 12:29:04PM +0200, Alexander Gordeev wrote:
-> > > This technique proved to be confusing and error-prone. Vast share
-> > > of device drivers simply fail to follow the described guidelines.
-> > 
-> > To clarify "Vast share of device drivers":
-> > 
-> >  - 58 drivers call pci_enable_msix()
-> >  - 24 try a single allocation and then fallback to MSI/LSI
-> >  - 19 use the loop style allocation as above
-> >  - 14 try an allocation, and if it fails retry once
-> >  - 1  incorrectly continues when pci_enable_msix() returns > 0
-> > 
-> > So 33 drivers (> 50%) successfully make use of the "confusing and
-> > error-prone" return value.
-> 
-> Ok, you caught me - 'vast share' is incorrect and is a subject to
-> rewording. But out of 19/58 how many drivers tested fallbacks on the
-> real hardware? IOW, which drivers are affected by the pSeries quota?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-It's not 19/58, it's 33/58.
+diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
+index 87a82fc..11cbce1 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
+@@ -2470,6 +2470,7 @@ static int enable_msix(struct adapter *adapter)
+ 	} else if (err > 0) {
+ 		dev_info(adapter->pdev_dev, "only %d MSI-X vectors left,"
+ 			 " not using MSI-X\n", err);
++		err = -ENOSPC;
+ 	}
+ 	return err;
+ }
+-- 
+1.7.7.6
 
-As to how many we care about on powerpc I can't say, so you have a point
-there. But I still think the interface is not actually that terrible.
-
-cheers
