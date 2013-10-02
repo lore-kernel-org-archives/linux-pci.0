@@ -1,55 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1382912874.3371.9.camel@concordia>
-Subject: Re: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*()
- family helpers
-From: Michael Ellerman <michael@ellerman.id.au>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, Tejun Heo <tj@kernel.org>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26950 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754836Ab3JBRsn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:48:43 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org
-Date: Mon, 28 Oct 2013 09:27:54 +1100
-In-Reply-To: <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
-	 <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
-	 <20131024105158.GB13159@mtj.dyndns.org>
-	 <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com>
-	 <20131024114133.GA26610@dhcp-26-207.brq.redhat.com>
-	 <5269D5D1.60103@start.ca>
-	 <AE90C24D6B3A694183C094C60CF0A2F6026B73B0@saturn3.aculab.com>
-	 <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 65/77] qlge: Remove a redundant assignment
+Date: Wed,  2 Oct 2013 12:49:21 +0200
+Message-Id: <2d9997f8ec6637dd41c10363785754698f6aa173.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-10-25 at 12:01 +0200, Alexander Gordeev wrote:
-> On Fri, Oct 25, 2013 at 10:10:02AM +0100, David Laight wrote:
-> > What this doesn't resolve is a driver requesting a lot of interrupts
-> > early on and leaving none for later drivers.
-> 
-> If this problem really exists anywhere besides pSeries?
-> 
-> I can imagine x86 hitting lack of vectors in interrupt table when
-> number of CPUs exceeds hundreds, but do we have this problem now?
-> 
-> > Really the system needs to allocate the minimum number to all
-> > drivers before giving out any extra ones - I've NFI how this
-> > would be arranged!
-> 
-> Do not know. The pSeries quota approach seems more reasonable to me.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/qlogic/qlge/qlge_main.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-When the system boots each driver should get a fair share of the
-available MSIs, the quota achieves this.
-
-But ideally the sysadmin would then be able to override that, and give
-more MSIs to one device, the quota doesn't allow that.
-
-Hopefully we'll see the number of available MSIs grow faster than the
-number required by devices (usually driven by NR_CPUs), and so this will
-become a non-problem.
-
-cheers
+diff --git a/drivers/net/ethernet/qlogic/qlge/qlge_main.c b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
+index 2553cf4..ac54cb0 100644
+--- a/drivers/net/ethernet/qlogic/qlge/qlge_main.c
++++ b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
+@@ -3287,7 +3287,6 @@ static void ql_enable_msix(struct ql_adapter *qdev)
+ 			qdev->msi_x_entry = NULL;
+ 			netif_warn(qdev, ifup, qdev->ndev,
+ 				   "MSI-X Enable failed, trying MSI.\n");
+-			qdev->intr_count = 1;
+ 			qlge_irq_type = MSI_IRQ;
+ 		} else if (err == 0) {
+ 			set_bit(QL_MSIX_ENABLED, &qdev->flags);
+-- 
+1.7.7.6
 
