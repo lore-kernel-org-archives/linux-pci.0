@@ -1,9 +1,13 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 1 Oct 2013 17:51:33 +1000
-From: Michael Ellerman <michael@ellerman.id.au>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:43225 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752560Ab3JBDXn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Oct 2013 23:23:43 -0400
+Date: Tue, 1 Oct 2013 23:23:38 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Michael Ellerman <michael@ellerman.id.au>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"x86@kernel.org" <x86@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -13,105 +17,92 @@ Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	linuxppc-dev@lists.ozlabs.org
 Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20131001075133.GJ17966@concordia>
-References: <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
+Message-ID: <20131002032338.GA2417@htj.dyndns.org>
+References: <20130906160621.GF22763@mtj.dyndns.org>
  <20130906233205.GF12956@google.com>
  <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
  <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
  <20130917143022.GA7707@concordia>
  <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <20130918142231.GA21650@mtj.dyndns.org>
+ <20131001073548.GI17966@concordia>
+ <20131001115503.GA23722@mtj.dyndns.org>
+ <20131002023337.GB22748@concordia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20131002023337.GB22748@concordia>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 18, 2013 at 11:48:00AM +0200, Alexander Gordeev wrote:
-> On Wed, Sep 18, 2013 at 12:30:23AM +1000, Michael Ellerman wrote:
-> > How about no?
-> > 
-> > We have a small number of MSIs available, limited by hardware &
-> > firmware, if we don't impose a quota then the first device that probes
-> > will get most/all of the MSIs and other devices miss out.
+On Wed, Oct 02, 2013 at 12:33:38PM +1000, Michael Ellerman wrote:
+> > It is an interface which forces the driver writers to write
+> > complicated fallback code which won't usually be excercised.  
 > 
-> Out of curiosity - how pSeries has had done it without quotas before
-> 448e2ca ("powerpc/pseries: Implement a quota system for MSIs")?
+> It does not force anyone to do anything. That's just bull.
+
+Yeah, sure, we don't have shitty code in drivers which don't need any
+of that retry logic, right?  What the hell is up with the gratuituous
+escalation?  You really wanna go that way?
+
+> Code which is unwilling or unable to cope with the extra complexity
+> can simply do:
 > 
-> > Anyway I don't see what problem you're trying to solve? I agree the
-> > -ve/0/+ve return value pattern is ugly, but it's hardly the end of the
-> > world.
+> if (pci_enable_msix(..))
+> 	goto fail;
 > 
-> Well, the interface recently has been re-classified from "ugly" to
-> "unnecessarily complex and actively harmful" in Tejun's words ;)
+> It's as simple as that.
+
+You apparently have no clue how people behave.  You give a function
+which indicates complex failure mode, driver writers *will* try to
+handle that whether they actually understand the implication or not.
+That's a natural and correct behavior too because any half-competent
+software eng would design API so that it receives and returns
+information which is relevant to its users.  If there are special
+cases to handle, make the damn interface for it special too so that it
+doesn't confuse the common case.
+
+Driver codes already have generally lower quality than core code, if
+for nothing else, due to the sheer volume, and there are many driver
+writers who aren't too privvy with various kernel subsystems.  They
+usually just copy whatever other similar driver is doing, and this one
+is a lot worse - this thing affects hardware directly.  If you expect
+all the shitty implementations of ahci to handle the different
+variations of multiple MSI config cases, you just don't have any
+experience dealing with cheap commodity hardware.
+
+Driver APIs should be intuitive, clear in its intentions, and don't
+tempt fate with hairy configs for vast majority of cases.
+
+> +int pci_enable_msix_or_fail(struct pci_dev *dev, struct msix_entry *entries,
+> +                           int nvec)
+> +{
+> +       int rc;
+> +
+> +       rc = pci_enable_msix(dev, entries, nvec);
+> +       if (rc > 0)
+> +               rc = -ENOSPC;
+> +
+> +       return rc;
+> +}
+
+Make the *default* case simple and give clearly special interface for
+the special cases.  What's so hard about that?
+
+> > Are we talking about some limited number of device drivers here?  
 > 
-> Indeed, I checked most of the drivers and it is incredible how people
-> are creative in misusing the interface: from innocent pci_disable_msix()
-> calls when if pci_enable_msix() failed to assuming MSI-Xs were enabled
-> if pci_enable_msix() returned a positive value (apparently untested).
+> I don't have a list, but yeah there are certain drivers that folks care about.
 
-OK, but we have the source to the drivers, we could just fix them.
+And here's another problem with the current interface.  Because the
+default interface is the unnecessrily complicated one, now we can't
+tell which ones actually need the complicated treatment.
 
-We could even add:
-
-  pci_enable_msix_i_am_stupid()
-
-Which swallows the positive return and just gives back -ve/0.
-
-> Roughly third of the drivers just do not care and bail out once
-> pci_enable_msix() has not succeeded. Not sure how many of these are
-> mandated by the hardware.
-
-Sure, that's fine if those drivers do that, it's up to the drivers after
-all.
-
-> Another quite common pattern is a call to pci_enable_msix() to figure out
-> the number of MSI-Xs available and a repeated call of pci_enable_msix()
-> to enable those MSI-Xs, this time.
-
-Also fine, though as the documentation suggests a loop is the best
-construct rather than two explicit calls.
-
-> The recommended practice would be:
+> > Also, is the quota still necessary for machines in production today?
 > 
-> 	/*
-> 	 * Retrieving 'nvec' by means other than pci_msix_table_size()
-> 	 */
-> 
-> 	rc = pci_get_msix_limit(pdev);
-> 	if (rc < 0)
-> 		return rc;
-> 
-> 	/*
-> 	 * nvec = min(rc, nvec);
-> 	 */
-> 
-> 	for (i = 0; i < nvec; i++)
-> 		msix_entry[i].entry = i;
-> 
-> 	rc = pci_enable_msix(pdev, msix_entry, nvec);
-> 	if (rc)
-> 		return rc;
-> 
-> Thoughts?
+> As far as I know yes. The number of MSIs is growing on modern systems, but so
+> is the number of cpus and devices.
 
-We could probably make that work.
+That's a bummer, but let's please make the default interface simple.
+I really don't wanna see partial allocations for ahci.
 
-The disadvantage is that any restriction imposed on us above the quota
-can only be reported as an error from pci_enable_msix().
-
-The quota code, called from pci_get_msix_limit(), can only do so much to
-interogate firmware about the limitations. The ultimate way to check if
-firmware will give us enough MSIs is to try and allocate them. But we
-can't do that from pci_get_msix_limit() because the driver is not asking
-us to enable MSIs, just query them.
-
-You'll also need to add another arch hook, for the quota check, and
-we'll have to add it to our per-platform indirection as well.
-
-All a lot of bother for no real gain IMHO.
-
-cheers
+-- 
+tejun
