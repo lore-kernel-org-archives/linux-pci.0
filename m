@@ -1,49 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:46405 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751707Ab3J2WP3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 18:15:29 -0400
-Received: by mail-ie0-f169.google.com with SMTP id ar20so891721iec.14
-        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 15:15:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1382346403-29576-3-git-send-email-sachin.kamat@linaro.org>
-References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org> <1382346403-29576-3-git-send-email-sachin.kamat@linaro.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 29 Oct 2013 16:15:07 -0600
-Message-ID: <CAErSpo4Ao2PjbTt-XTyG3kfspMEdw09cOUdh=Lne1jpPcGr8LA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI: exynos: Remove redundant of_match_ptr
-To: Sachin Kamat <sachin.kamat@linaro.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27121 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754924Ab3JBRyx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:54:53 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 43/77] lpfc: Return -ENOSPC when not enough MSI-X vectors available
+Date: Wed,  2 Oct 2013 12:48:59 +0200
+Message-Id: <90e19597e04fa29c5f435d1f43059b69ae7314d4.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 21, 2013 at 3:06 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
-> This driver is DT only. Hence of_match_ptr is not required.
->
-> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-> Cc: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-Applied with Jingoo's ack to my pci/host-exynos branch for v3.13, thanks!
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index d83a1a3..0ec8008 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8645,9 +8645,13 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
+ 		goto msg_fail_out;
+ 
+ 	vectors = min(vectors, rc);
+-	if (vectors > 1)
+-		rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
+-				     vectors);
++	if (vectors < 2) {
++		rc = -ENOSPC;
++		goto msg_fail_out;
++	}
++
++	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
++			     vectors);
+ 	if (rc) {
+ msg_fail_out:
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-- 
+1.7.7.6
 
-> ---
->  drivers/pci/host/pci-exynos.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index ee692c2..c4798fb 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -647,7 +647,7 @@ static struct platform_driver exynos_pcie_driver = {
->         .driver = {
->                 .name   = "exynos-pcie",
->                 .owner  = THIS_MODULE,
-> -               .of_match_table = of_match_ptr(exynos_pcie_of_match),
-> +               .of_match_table = exynos_pcie_of_match,
->         },
->  };
->
-> --
-> 1.7.9.5
->
