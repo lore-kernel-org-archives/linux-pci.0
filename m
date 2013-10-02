@@ -1,87 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:38730 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861Ab3JYF2q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 01:28:46 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com>
-References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
-	<CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
-	<20131015024452.GA31951@srcf.ucam.org>
-	<20131016202123.GA17866@google.com>
-	<CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
-	<CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
-	<CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
-	<CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com>
-	<CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com>
-Date: Thu, 24 Oct 2013 22:28:43 -0700
-Message-ID: <CAE9FiQX2nobvu0Pm4KLo24QwOE7Ped91aQ905HkYyTAKj=ifKg@mail.gmail.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27105 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755179Ab3JBRyB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:54:01 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 49/77] mlx5: Fix minimum number of MSI-Xs
+Date: Wed,  2 Oct 2013 12:49:05 +0200
+Message-Id: <ca7fd594d9c5fb86d1f19cd9090730fb31c0dccf.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 24, 2013 at 10:13 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Oct 24, 2013 at 8:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->>>>> Bisection points to 928bea964827d7824b548c1f8e06eccbbc4d0d7d .
->>>>
->>>> This is "PCI: Delay enabling bridges until they're needed" by Yinghai.
->>>
->>> that double disabling should be addressed by:
->>>
->>> https://lkml.org/lkml/2013/4/25/608
->>>
->>> [PATCH] PCI: Remove duplicate pci_disable_device for pcie port
->>
->> I'll look at that patch again.  I had some questions about it the
->> first time, but perhaps it makes more sense after 928bea9648 has been
->> applied.
->>
->> Andreas originally reported a GPF oops in pci_pme_list_scan().  I
->> posted a refcounting patch, which made the problem go away, but I
->> can't explain why, and I don't want to apply it without understanding
->> that.  Decoding his oops shows this:
->>
->>   24: 0f 1f 00             nopl   (%rax)
->>   27: 48 8b 50 10           mov    0x10(%rax),%rdx
->>   2b:* 48 8b 52 38           mov    0x38(%rdx),%rdx <-- trapping instruction
->>   2f: 48 85 d2             test   %rdx,%rdx
->>
->> %rax is the pci_dev pointer, so 0x10(%rax) is the dev->bus pointer,
->> which we put in %rdx.  The oops says %rdx = 6b6b6b6b6b6b6b6b, which is
->> POISON_FREE, so I think we loaded dev->bus out of a struct pci_dev
->> that has already been freed.
->>
->> pci_pme_list_scan() holds pci_pme_list_mutex while it traverses
->> pci_pme_list, and the pci_stop_and_remove_bus_device() path removes
->> the pci_dev by calling pci_pme_active(), which also holds
->> pci_pme_list_mutex, so I don't understand how pci_pme_list_scan() can
->> see a pci_dev that has already been freed.
->>
->> If I understand Andreas correctly, 928bea9648 also fixes the crash,
->> even without my refcounting change.  Can you explain why?
->
-> 928bea will make the dev->enable_cnt increase wrongly, as we have
-> pci_enable_device for child
->    pci_enable_bridge for parent
->      pci_enable_bridge for grandparent
->        pci_enable_device for grandparent
->    pci_enable_device for parent
->        pci_enable_brdige for grandparent
->          pci_enable_device for grandparent.  ===> looks like i read the code wrongly. This one is skipped as we have pci_is_enabled checking.
+The minimum number of MSI-Xs is (MLX5_EQ_VEC_COMP_BASE + 1) in
+one check and 2 in another check. Make the checks consistent and
+assume the minimum number is (MLX5_EQ_VEC_COMP_BASE + 1).
 
-928bea delay bridge enabling, and it's pci_is_enabled checking will prevent
-pci bridge get enabled second time, so enable_cnt will be only 1. instead of
-2. if we enable bridge at first and then pcie port driver.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/mellanox/mlx5/core/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Yinghai
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index 5e5c9a3..adf0e5d 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -136,7 +136,7 @@ retry:
+ 	err = pci_enable_msix(dev->pdev, table->msix_arr, nvec);
+ 	if (err <= 0) {
+ 		return err;
+-	} else if (err > 2) {
++	} else if (err > MLX5_EQ_VEC_COMP_BASE) {
+ 		nvec = err;
+ 		goto retry;
+ 	}
+-- 
+1.7.7.6
+
