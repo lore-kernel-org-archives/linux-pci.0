@@ -1,58 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 1/2] kobject: remove kset from sysfs immediately in
- kset_unregister()
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Neil Horman <nhorman@tuxdriver.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Zdenek Kabelac <zkabelac@redhat.com>
-Date: Tue, 08 Oct 2013 14:20:16 -0600
-Message-ID: <20131008202016.19377.17182.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20131008201915.19377.34185.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131008201915.19377.34185.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26815 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755637Ab3JBRpm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:45:42 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 17/77] cciss: Update a misleading comment on interrupt usage
+Date: Wed,  2 Oct 2013 12:48:33 +0200
+Message-Id: <3607cede809d07e1d1d6548a5f249d1ac2f9094c.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no explicit "unlink from sysfs" interface for ksets, so I think
-callers of kset_unregister() expect the kset to be removed from sysfs
-immediately, without waiting for the last reference to be released.
-
-This patch makes the sysfs removal happen immediately, so the caller may
-create a new kset with the same name as soon as kset_unregister() returns.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- Documentation/kobject.txt |    3 ++-
- lib/kobject.c             |    1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/block/cciss.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/Documentation/kobject.txt b/Documentation/kobject.txt
-index c5182bb..8e8b501 100644
---- a/Documentation/kobject.txt
-+++ b/Documentation/kobject.txt
-@@ -342,7 +342,8 @@ kset use:
- 
- When you are finished with the kset, call:
-   void kset_unregister(struct kset *kset);
--to destroy it.
-+to destroy it.  This removes the kset from sysfs and, after the kset
-+reference count goes to zero, releases it.
- 
- An example of using a kset can be seen in the
- samples/kobject/kset-example.c file in the kernel tree.
-diff --git a/lib/kobject.c b/lib/kobject.c
-index 9621751..9098992 100644
---- a/lib/kobject.c
-+++ b/lib/kobject.c
-@@ -753,6 +753,7 @@ void kset_unregister(struct kset *k)
- {
- 	if (!k)
- 		return;
-+	kobject_del(&k->kobj);
- 	kobject_put(&k->kobj);
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 80068a0..bf11540 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -4103,7 +4103,10 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
+ 	}
+ default_int_mode:
+ #endif				/* CONFIG_PCI_MSI */
+-	/* if we get here we're going to use the default interrupt mode */
++	/*
++	 * If we get here we're going to use either the
++	 * default interrupt mode or single MSI mode
++	 */
+ 	h->intr[h->intr_mode] = h->pdev->irq;
+ 	return;
  }
- 
+-- 
+1.7.7.6
 
