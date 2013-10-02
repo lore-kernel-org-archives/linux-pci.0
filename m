@@ -1,81 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:45999 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756848Ab3J1RYC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 13:24:02 -0400
-Received: by mail-ie0-f179.google.com with SMTP id aq17so11800299iec.38
-        for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2013 10:24:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20131027212407.GA17439@kroah.com>
-References: <525BD08C.2080101@t-online.de> <CA+55aFwN++wO=rTFaH7m6YYQX+Fv3qDt6Hxs7UnPUJpFsrwSkA@mail.gmail.com>
- <CA+55aFy7TpvkVuPEOJ7Qqirwap1gXoD1_MrYLhgPAYuVpN8u=w@mail.gmail.com>
- <alpine.DEB.2.02.1310251221310.5266@ionos.tec.linutronix.de>
- <CA+55aFxw1Hm4QVeEigkByP5RppSL30oHnLoR16C=henf-a=uFQ@mail.gmail.com>
- <CA+55aFyb72qoZ1Tjpb+=q-6+GmwoOXjfntY_zZnf300gg3d1Hg@mail.gmail.com>
- <CA+55aFxuVpDo3LvmG9j-Hu7sENLTcsB6_CY2TA4mE-k+CuTeGg@mail.gmail.com>
- <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com> <20131027212407.GA17439@kroah.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 Oct 2013 11:23:41 -0600
-Message-ID: <CAErSpo5NmBDqRA3URAQPmw4iC3xvpDdd9JFROuftLJE1YsbPhA@mail.gmail.com>
-Subject: Re: [BUG 3.12.rc4] Oops: unable to handle kernel paging request
- during shutdown
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
+Received: from ozlabs.org ([203.10.76.45]:37109 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752331Ab3JBCdo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Oct 2013 22:33:44 -0400
+Date: Wed, 2 Oct 2013 12:33:38 +1000
+From: Michael Ellerman <michael@ellerman.id.au>
+To: Tejun Heo <tj@kernel.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Veaceslav Falico <vfalico@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Message-ID: <20131002023337.GB22748@concordia>
+References: <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+ <20130917143022.GA7707@concordia>
+ <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <20130918142231.GA21650@mtj.dyndns.org>
+ <20131001073548.GI17966@concordia>
+ <20131001115503.GA23722@mtj.dyndns.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131001115503.GA23722@mtj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Veaceslav]
+On Tue, Oct 01, 2013 at 07:55:03AM -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Tue, Oct 01, 2013 at 05:35:48PM +1000, Michael Ellerman wrote:
+> > > > Roughly third of the drivers just do not care and bail out once
+> > > > pci_enable_msix() has not succeeded. Not sure how many of these are
+> > > > mandated by the hardware.
+> > > 
+> > > Yeah, I mean, this type of interface is a trap.  People have to
+> > > actively resist to avoid doing silly stuff which is a lot to ask.
+> > 
+> > I really think you're overstating the complexity here.
+> > 
+> > Functions typically return a boolean   -> nothing to see here
+> > This function returns a tristate value -> brain explosion!
+> 
+> It is an interface which forces the driver writers to write
+> complicated fallback code which won't usually be excercised.  
 
-On Sun, Oct 27, 2013 at 3:24 PM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> On Sun, Oct 27, 2013 at 09:13:29PM +0000, Linus Torvalds wrote:
->> .. and one more case of freeing a delayed work object (likely a kobject again):
->>
->> This time it looks like it's in the PCI layer, freeing the msi irq information.
->>
->> It looks like that code simply does
->>
->>     kobject_del(&entry->kobj);
->>     kobject_put(&entry->kobj);
->>     list_del(&entry->list);
->>     kfree(entry);
->>
->> and the problem is that the "entry->kobj" may have *other* references
->> to it, thanks to people accessing it through /sys, so despite doing a
->> kojbect_del/kobject_put(), it's not at all ok to then do a "kfree()"
->> on it. The embedded kobj might still be in use.
->>
->> Afaik, that code should do the kfree() on the kobject in the _release_
->> method, not synchronously like that.
->>
->> We already have a msi_kobj_release(), I'm wondering why that doesn't
->> do the kfree().
->>
->> Bjorn? Yinghai? Greg, comments about that msi kobj usage?
->
-> Ick, it really should be doing a kfree() in the release only.  Bjorn has
-> had a bunch of changes in this area recently, perhaps they are in
-> linux-next waiting for 3.13, and I've talked to him about getting rid of
-> all of the kobjects for msi files, as I don't think it's needed at all.
+It does not force anyone to do anything. That's just bull.
 
-IIRC, you said you might take a look at converting this to attributes
-on the train back home, so I haven't looked into it myself :)
+Code which is unwilling or unable to cope with the extra complexity
+can simply do:
 
-> Bjorn, don't you have a fix for this problem already done somewhere?
+if (pci_enable_msix(..))
+	goto fail;
 
-Yep, this is clearly wrong, and Veaceslav has a patch that moves the
-kfree() to the release function.  I've been waiting for a consolidated
-repost of all his MSI-related fixes, but maybe he's been waiting for
-*me*.
+It's as simple as that.
 
-Bjorn
+> > > * Determine the number of MSIs the controller wants.  Don't worry
+> > >   about quotas or limits or anything.  Just determine the number
+> > >   necessary to enable enhanced interrupt handling.
+> > > 	
+> > > * Try allocating that number of MSIs.  If it fails, then just revert
+> > >   to single interrupt mode.  It's not the end of the world and mostly
+> > >   guaranteed to work.  Let's please not even try to do partial
+> > >   multiple interrupts.  I really don't think it's worth the risk or
+> > >   complexity.
+> > 
+> > It will potentially break existing setups on our hardware.
+> 
+> I think it'd be much better to have a separate interface for the
+> drivers which actually require it *in practice* rather than forcing
+> everyone to go "oh this interface supports that, I don't know if I
+> need it but let's implement fallback logic which I won't and have no
+> means of testing".  
+
+Sure, that's easy:
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..48d0252 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -988,6 +988,18 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ }
+ EXPORT_SYMBOL(pci_enable_msix);
+ 
++int pci_enable_msix_or_fail(struct pci_dev *dev, struct msix_entry *entries,
++                           int nvec)
++{
++       int rc;
++
++       rc = pci_enable_msix(dev, entries, nvec);
++       if (rc > 0)
++               rc = -ENOSPC;
++
++       return rc;
++}
++
+ void pci_msix_shutdown(struct pci_dev *dev)
+ {
+        struct msi_desc *entry;
+
+
+> Are we talking about some limited number of device drivers here?  
+
+I don't have a list, but yeah there are certain drivers that folks care about.
+
+> Also, is the quota still necessary for machines in production today?
+
+As far as I know yes. The number of MSIs is growing on modern systems, but so
+is the number of cpus and devices.
+
+cheers
