@@ -1,81 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:34997 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233Ab3JKCNH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 22:13:07 -0400
-From: Marek Vasut <marex@denx.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v7 0/2] Add PCIe support for i.MX6q
-Date: Fri, 11 Oct 2013 04:13:02 +0200
-Cc: "Zhu Richard-R65037" <r65037@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>,
-	Frank Li <lznuaa@gmail.com>, Sean Cross <xobs@kosagi.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>
-References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org> <201310101939.44295.marex@denx.de> <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
-In-Reply-To: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201310110413.02354.marex@denx.de>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26629 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754950Ab3JBRkf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:40:35 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 30/77] hpsa: Update a misleading comment on interrupt usage
+Date: Wed,  2 Oct 2013 12:48:46 +0200
+Message-Id: <3e551608cba10cab0f33f5201a29e67905b3cd02.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/hpsa.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-> On Thu, Oct 10, 2013 at 11:39 AM, Marek Vasut <marex@denx.de> wrote:
-> > Hi Bjorn,
-> > 
-> >> [+cc Yinghai]
-> >> 
-> >> On Thu, Oct 10, 2013 at 9:58 AM, Marek Vasut <marex@denx.de> wrote:
-> >> >> On Thu, Oct 10, 2013 at 4:25 AM, Marek Vasut <marex@denx.de> wrote:
-> >> > I tried you suggestion, this is what I got now (and with V7 of the
-> >> > patches):
-> >> > 
-> >> > Note that my topology is: rootport->2_port_switch->ethernet_chip , the
-> >> > other port of the switch is not used .
-> >> > 
-> >> > imx6q-pcie 1ffc000.pcie: phy link never came up
-
-After discussing with Tim a little, looks like a clock bit was missing. The 
-above line was the cause of all the issues. Now I can probe the bus, but I still 
-need more patches:
-
-This dirty patch here limits the PCIe operation to GEN1 only. It's based on this 
-Freescale patch [1]. Without this change, the PCIe switch is not detected. Any 
-idea why? (I also had to increase the PHY startup delay to get GEN1 going).
-
-[1] https://www.osadl.org/monitoring/patches/r8s7/1342-ENGR00180230-MX6-PCIE-
-enlarge-the-eye-diagram-and-fo.patch
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 32b30ca..df2838b 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -330,13 +330,16 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
- 
-        dw_pcie_setup_rc(pp);
- 
-+// Enable GEN1
-+writel(((readl(pp->dbi_base + 0x7c) & 0xfffffff0) | 0x1), pp->dbi_base + 0x7c);
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 891c86b..393c8db 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4141,7 +4141,11 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+ 	}
+ default_int_mode:
+ #endif				/* CONFIG_PCI_MSI */
+-	/* if we get here we're going to use the default interrupt mode */
++	/*
++	 * If we get here we're going to use either the
++	 * default interrupt mode or single MSI mode
++	 */
 +
-        regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-                        IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
+ 	h->intr[h->intr_mode] = h->pdev->irq;
+ }
  
-        while (!dw_pcie_link_up(pp)) {
-                usleep_range(100, 1000);
-                count++;
--               if (count >= 10) {
-+               if (count >= 200) {
-                        dev_err(pp->dev, "phy link never came up\n");
-                        dev_dbg(pp->dev,
-                                "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+-- 
+1.7.7.6
 
-Best regards,
-Marek Vasut
