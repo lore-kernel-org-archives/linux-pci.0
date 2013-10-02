@@ -1,59 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe005.messaging.microsoft.com ([207.46.163.28]:58759
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755492Ab3JHXfd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 19:35:33 -0400
-Message-ID: <1381275325.7979.320.camel@snotra.buserror.net>
-Subject: Re: [PATCH 1/7] powerpc: Add interface to get msi region information
-From: Scott Wood <scottwood@freescale.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Bharat Bhushan <r65777@freescale.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27197 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755602Ab3JBR6n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:58:43 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexander Graf <agraf@suse.de>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Bharat Bhushan <Bharat.Bhushan@freescale.com>
-Date: Tue, 8 Oct 2013 18:35:25 -0500
-In-Reply-To: <CAErSpo7+7SHVcOJkHkW5cjb6pN+bqYeRdPBA=MVX0RLz=-pP6Q@mail.gmail.com>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1381273037.7979.298.camel@snotra.buserror.net>
-	 <CAErSpo7+7SHVcOJkHkW5cjb6pN+bqYeRdPBA=MVX0RLz=-pP6Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 76/77] vxge: Sanitize MSI-X allocation routine error codes
+Date: Wed,  2 Oct 2013 12:49:32 +0200
+Message-Id: <20ecd1136cc5bd932c1bb4a2d89dae1ca0d900dd.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-10-08 at 17:25 -0600, Bjorn Helgaas wrote:
-> >> -     u32 msiir_offset; /* Offset of MSIIR, relative to start of CCSR */
-> >> +     dma_addr_t msiir; /* MSIIR Address in CCSR */
-> >
-> > Are you sure dma_addr_t is right here, versus phys_addr_t?  It implies
-> > that it's the output of the DMA API, but I don't think the DMA API is
-> > used in the MSI driver.  Perhaps it should be, but we still want the raw
-> > physical address to pass on to VFIO.
-> 
-> I don't know what "msiir" is used for, but if it's an address you
-> program into a PCI device, then it's a dma_addr_t even if you didn't
-> get it from the DMA API.  Maybe "bus_addr_t" would have been a more
-> suggestive name than "dma_addr_t".  That said, I have no idea how this
-> relates to VFIO.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/neterion/vxge/vxge-main.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-It's a bit awkward because it gets used both as something to program
-into a PCI device (and it's probably a bug that the DMA API doesn't get
-used), and also (if I understand the current plans correctly) as a
-physical address to give to VFIO to be a destination address in an IOMMU
-mapping.  So I think the value we keep here should be a phys_addr_t (it
-comes straight from the MMIO address in the device tree), which gets
-trivially turned into a dma_addr_t by the non-VFIO code path because
-there's currently no translation there.
-
--Scott
-
-
+diff --git a/drivers/net/ethernet/neterion/vxge/vxge-main.c b/drivers/net/ethernet/neterion/vxge/vxge-main.c
+index 5a20eaf..b81ff8b 100644
+--- a/drivers/net/ethernet/neterion/vxge/vxge-main.c
++++ b/drivers/net/ethernet/neterion/vxge/vxge-main.c
+@@ -2352,7 +2352,7 @@ start:
+ 			"%s: MSI-X enable failed for %d vectors, ret: %d",
+ 			VXGE_DRIVER_NAME, vdev->intr_cnt, ret);
+ 		if ((max_config_vpath != VXGE_USE_DEFAULT) || (ret < 3)) {
+-			ret = -ENODEV;
++			ret = -ENOSPC;
+ 			goto enable_msix_failed;
+ 		}
+ 
+@@ -2365,10 +2365,8 @@ start:
+ 		vxge_close_vpaths(vdev, temp);
+ 		vdev->no_of_vpath = temp;
+ 		goto start;
+-	} else if (ret < 0) {
+-		ret = -ENODEV;
++	} else if (ret < 0)
+ 		goto enable_msix_failed;
+-	}
+ 	return 0;
+ 
+ enable_msix_failed:
+-- 
+1.7.7.6
 
