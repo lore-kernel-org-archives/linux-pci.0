@@ -1,88 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:24640 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753339Ab3JBQei (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 12:34:38 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
+Received: from mouse.start.ca ([64.140.120.56]:34667 "EHLO mouse.start.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752223Ab3JBCqz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Oct 2013 22:46:55 -0400
+Message-ID: <524B8908.8080607@start.ca>
+Date: Tue, 01 Oct 2013 22:46:32 -0400
+From: Mark Lord <kernel@start.ca>
+MIME-Version: 1.0
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 52/77] niu: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:49:08 +0200
-Message-Id: <9808b7b5600043632fab8fa19f5b8e7845637de0.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+	Tejun Heo <tj@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+References: <20130905185440.GA13175@dhcp-26-207.brq.redhat.com> <20130905200608.GA3846@htj.dyndns.org> <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com> <20130906160621.GF22763@mtj.dyndns.org> <20130906233205.GF12956@google.com> <20130909152044.GA24962@dhcp-26-207.brq.redhat.com> <20130916102210.GA14102@dhcp-26-207.brq.redhat.com> <20130917143022.GA7707@concordia> <20130918094759.GA2353@dhcp-26-207.brq.redhat.com> <52442975.9000603@start.ca> <20130926130328.GD16774@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20130926130328.GD16774@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
+On 13-09-26 09:03 AM, Alexander Gordeev wrote:
+> On Thu, Sep 26, 2013 at 08:32:53AM -0400, Mark Lord wrote:
+>> On 13-09-18 05:48 AM, Alexander Gordeev wrote:
+>>> The last pattern makes most of sense to me and could be updated with a more
+>>> clear sequence - a call to (bit modified) pci_msix_table_size() followed
+>>> by a call to pci_enable_msix(). I think this pattern can effectively
+>>> supersede the currently recommended "loop" practice.
+>>
+>> The loop is still necessary, because there's a race between those two calls,
+>> so that pci_enable_msix() can still fail due to lack of MSIX slots.
+> 
+> Moreover, the existing loop pattern is racy and could fail just as easily ;)
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/sun/niu.c |   20 +++++++++++---------
- 1 files changed, 11 insertions(+), 9 deletions(-)
+Yes, but it then loops again to correct things.
 
-diff --git a/drivers/net/ethernet/sun/niu.c b/drivers/net/ethernet/sun/niu.c
-index f28460c..54c41b9 100644
---- a/drivers/net/ethernet/sun/niu.c
-+++ b/drivers/net/ethernet/sun/niu.c
-@@ -9051,26 +9051,28 @@ static void niu_try_msix(struct niu *np, u8 *ldg_num_map)
- 		    (np->port == 0 ? 3 : 1));
- 	BUG_ON(num_irqs > (NIU_NUM_LDG / parent->num_ports));
- 
--retry:
-+	err = pci_msix_table_size(pdev);
-+	if (err < 0)
-+		goto fail;
-+
-+	num_irqs = min(num_irqs, err);
- 	for (i = 0; i < num_irqs; i++) {
- 		msi_vec[i].vector = 0;
- 		msi_vec[i].entry = i;
- 	}
- 
- 	err = pci_enable_msix(pdev, msi_vec, num_irqs);
--	if (err < 0) {
--		np->flags &= ~NIU_FLAGS_MSIX;
--		return;
--	}
--	if (err > 0) {
--		num_irqs = err;
--		goto retry;
--	}
-+	if (err)
-+		goto fail;
- 
- 	np->flags |= NIU_FLAGS_MSIX;
- 	for (i = 0; i < num_irqs; i++)
- 		np->ldg[i].irq = msi_vec[i].vector;
- 	np->num_ldg = num_irqs;
-+	return;
-+
-+fail:
-+	np->flags &= ~NIU_FLAGS_MSIX;
- }
- 
- static int niu_n2_irq_init(struct niu *np, u8 *ldg_num_map)
--- 
-1.7.7.6
+> But (1) that is something drivers should expect and (2) there is basically
+> nothing to race against - that is probably the reason it has not been a
+> problem for pSeries. So I think we should not care about this.
+
+I always care about race conditions.
+
 
