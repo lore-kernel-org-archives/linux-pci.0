@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27151 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755050Ab3JBR4f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:56:35 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
@@ -11,76 +15,56 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Dan Williams <dan.j.williams@intel.com>,
 	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
 	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
 	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
 	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 15/77] bnx2: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:48:31 +0200
-Message-Id: <69c0bf5f6ee4b2a913891cfc94442a3c9a3f9434.1380703262.git.agordeev@redhat.com>
+Subject: [PATCH RFC 35/77] ipr: Do not call pci_disable_msi/msix() if pci_enable_msi/msix() failed
+Date: Wed,  2 Oct 2013 12:48:51 +0200
+Message-Id: <5d673eed9f7742f0551214d273a4fa905a721ac4.1380703263.git.agordeev@redhat.com>
 In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
-
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/net/ethernet/broadcom/bnx2.c |   27 ++++++++++++++-------------
- 1 files changed, 14 insertions(+), 13 deletions(-)
+ drivers/scsi/ipr.c |    8 ++------
+ 1 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/ethernet/broadcom/bnx2.c b/drivers/net/ethernet/broadcom/bnx2.c
-index e838a3f..c902627 100644
---- a/drivers/net/ethernet/broadcom/bnx2.c
-+++ b/drivers/net/ethernet/broadcom/bnx2.c
-@@ -6202,25 +6202,26 @@ bnx2_enable_msix(struct bnx2 *bp, int msix_vecs)
- 	 *  is setup properly */
- 	BNX2_RD(bp, BNX2_PCI_MSIX_CONTROL);
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 36ac1c3..fb57e21 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -9255,10 +9255,8 @@ static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
+ 	while ((err = pci_enable_msix(ioa_cfg->pdev, entries, vectors)) > 0)
+ 			vectors = err;
  
--	for (i = 0; i < BNX2_MAX_MSIX_VEC; i++) {
--		msix_ent[i].entry = i;
--		msix_ent[i].vector = 0;
+-	if (err < 0) {
+-		pci_disable_msix(ioa_cfg->pdev);
++	if (err < 0)
+ 		return err;
 -	}
--
- 	total_vecs = msix_vecs;
- #ifdef BCM_CNIC
- 	total_vecs++;
- #endif
--	rc = -ENOSPC;
--	while (total_vecs >= BNX2_MIN_MSIX_VEC) {
--		rc = pci_enable_msix(bp->pdev, msix_ent, total_vecs);
--		if (rc <= 0)
--			break;
--		if (rc > 0)
--			total_vecs = rc;
-+	rc = pci_msix_table_size(bp->pdev);
-+	if (rc < 0)
-+		return;
-+
-+	total_vecs = min(total_vecs, rc);
-+	if (total_vecs < BNX2_MIN_MSIX_VEC)
-+		return;
-+
-+	BUG_ON(total_vecs > ARRAY_SIZE(msix_ent));
-+	for (i = 0; i < total_vecs; i++) {
-+		msix_ent[i].entry = i;
-+		msix_ent[i].vector = 0;
- 	}
  
--	if (rc != 0)
-+	rc = pci_enable_msix(bp->pdev, msix_ent, total_vecs);
-+	if (rc)
- 		return;
+ 	if (!err) {
+ 		for (i = 0; i < vectors; i++)
+@@ -9278,10 +9276,8 @@ static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
+ 	while ((err = pci_enable_msi_block(ioa_cfg->pdev, vectors)) > 0)
+ 			vectors = err;
  
- 	msix_vecs = total_vecs;
+-	if (err < 0) {
+-		pci_disable_msi(ioa_cfg->pdev);
++	if (err < 0)
+ 		return err;
+-	}
+ 
+ 	if (!err) {
+ 		for (i = 0; i < vectors; i++)
 -- 
 1.7.7.6
 
