@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:25820 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753385Ab3JBRM4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:12:56 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
@@ -15,88 +11,71 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Dan Williams <dan.j.williams@intel.com>,
 	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
 	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
 	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
 	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 13/77] bna: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:48:29 +0200
-Message-Id: <e138df4579979bc0f60940258525036f5da61424.1380703262.git.agordeev@redhat.com>
+Subject: [PATCH RFC 01/77] PCI/MSI: Fix return value when populate_msi_sysfs() failed
+Date: Wed,  2 Oct 2013 12:48:17 +0200
+Message-Id: <3ff5236944aae69f2cd934b5b6da7c1c269df7c1.1380703262.git.agordeev@redhat.com>
 In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
-
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/net/ethernet/brocade/bna/bnad.c |   34 ++++++++++++------------------
- 1 files changed, 14 insertions(+), 20 deletions(-)
+ drivers/pci/msi.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/ethernet/brocade/bna/bnad.c b/drivers/net/ethernet/brocade/bna/bnad.c
-index b78e69e..d41257c 100644
---- a/drivers/net/ethernet/brocade/bna/bnad.c
-+++ b/drivers/net/ethernet/brocade/bna/bnad.c
-@@ -2469,21 +2469,11 @@ bnad_enable_msix(struct bnad *bnad)
- 	if (bnad->msix_table)
- 		return;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..b43f391 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -719,7 +719,7 @@ static int msix_capability_init(struct pci_dev *dev,
  
--	bnad->msix_table =
--		kcalloc(bnad->msix_num, sizeof(struct msix_entry), GFP_KERNEL);
--
--	if (!bnad->msix_table)
-+	ret = pci_msix_table_size(bnad->pcidev);
-+	if (ret < 0)
- 		goto intx_mode;
+ 	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+ 	if (ret)
+-		goto error;
++		goto out_avail;
  
--	for (i = 0; i < bnad->msix_num; i++)
--		bnad->msix_table[i].entry = i;
--
--	ret = pci_enable_msix(bnad->pcidev, bnad->msix_table, bnad->msix_num);
--	if (ret > 0) {
--		/* Not enough MSI-X vectors. */
--		pr_warn("BNA: %d MSI-X vectors allocated < %d requested\n",
--			ret, bnad->msix_num);
--
-+	if (ret < bnad->msix_num) {
- 		spin_lock_irqsave(&bnad->bna_lock, flags);
- 		/* ret = #of vectors that we got */
- 		bnad_q_num_adjust(bnad, (ret - BNAD_MAILBOX_MSIX_VECTORS) / 2,
-@@ -2495,15 +2485,19 @@ bnad_enable_msix(struct bnad *bnad)
+ 	/*
+ 	 * Some devices require MSI-X to be enabled before we can touch the
+@@ -732,10 +732,8 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	msix_program_entries(dev, entries);
  
- 		if (bnad->msix_num > ret)
- 			goto intx_mode;
-+	}
- 
--		/* Try once more with adjusted numbers */
--		/* If this fails, fall back to INTx */
--		ret = pci_enable_msix(bnad->pcidev, bnad->msix_table,
--				      bnad->msix_num);
--		if (ret)
--			goto intx_mode;
-+	bnad->msix_table =
-+		kcalloc(bnad->msix_num, sizeof(struct msix_entry), GFP_KERNEL);
-+
-+	if (!bnad->msix_table)
-+		goto intx_mode;
- 
--	} else if (ret < 0)
-+	for (i = 0; i < bnad->msix_num; i++)
-+		bnad->msix_table[i].entry = i;
-+
-+	ret = pci_enable_msix(bnad->pcidev, bnad->msix_table, bnad->msix_num);
+ 	ret = populate_msi_sysfs(dev);
+-	if (ret) {
+-		ret = 0;
+-		goto error;
+-	}
 +	if (ret)
- 		goto intx_mode;
++		goto out_free;
  
- 	pci_intx(bnad->pcidev, 0);
+ 	/* Set MSI-X enabled bits and unmask the function */
+ 	pci_intx_for_msi(dev, 0);
+@@ -746,7 +744,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 
+ 	return 0;
+ 
+-error:
++out_avail:
+ 	if (ret < 0) {
+ 		/*
+ 		 * If we had some success, report the number of irqs
+@@ -763,6 +761,7 @@ error:
+ 			ret = avail;
+ 	}
+ 
++out_free:
+ 	free_msi_irqs(dev);
+ 
+ 	return ret;
 -- 
 1.7.7.6
 
