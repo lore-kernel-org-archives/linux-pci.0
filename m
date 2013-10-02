@@ -1,56 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36725 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752028Ab3JHJGF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Oct 2013 05:06:05 -0400
-Date: Tue, 8 Oct 2013 11:07:16 +0200
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26940 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755829Ab3JBRsW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:48:22 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
 	Dan Williams <dan.j.williams@intel.com>,
 	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
 	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
 	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
 	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Message-ID: <20131008090716.GA10561@dhcp-26-207.brq.redhat.com>
+Subject: [PATCH RFC 61/77] qlogic: Return -EINVAL in case MSI-X is not supported
+Date: Wed,  2 Oct 2013 12:49:17 +0200
+Message-Id: <c64f2f34b18acdd71ad113228f78fefdcf1cfd26.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
- <20131007182117.GC27396@htj.dyndns.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131007182117.GC27396@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 07, 2013 at 02:21:17PM -0400, Tejun Heo wrote:
-> Whee.... that's a lot more than I expected.  I was just scanning
-> multiple msi users.  Maybe we can stage the work in more manageable
-> steps so that you don't have to go through massive conversion only to
-> do it all over again afterwards and likewise people don't get
-> bombarded on each iteration?  Maybe we can first update pci / msi code
-> proper, msi and then msix?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Multipe MSIs is just a handful of drivers, really. MSI-X impact still
-will be huge. But if we opt a different name for the new pci_enable_msix()
-then we could first update pci/msi, then drivers (in few stages possibly)
-and finally remove the old implementation.
-
-> tejun
-
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+index c6018bb..ff6a78b 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+@@ -568,7 +568,7 @@ int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
+ {
+ 	struct pci_dev *pdev = adapter->pdev;
+ 	int max_tx_rings, max_sds_rings, tx_vector;
+-	int err = -1, i;
++	int err = -EINVAL, i;
+ 
+ 	if (adapter->flags & QLCNIC_TX_INTR_SHARED) {
+ 		max_tx_rings = 0;
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.7.6
+
