@@ -1,47 +1,51 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 25 Oct 2013 12:01:04 +0200
 From: Alexander Gordeev <agordeev@redhat.com>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: Mark Lord <kernel@start.ca>, Tejun Heo <tj@kernel.org>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*()
- family helpers
-Message-ID: <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
- <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
- <20131024105158.GB13159@mtj.dyndns.org>
- <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com>
- <20131024114133.GA26610@dhcp-26-207.brq.redhat.com>
- <5269D5D1.60103@start.ca>
- <AE90C24D6B3A694183C094C60CF0A2F6026B73B0@saturn3.aculab.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B73B0@saturn3.aculab.com>
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 72/77] vmxnet3: Fixup a weird loop exit
+Date: Wed,  2 Oct 2013 12:49:28 +0200
+Message-Id: <93fde8941d272e952e796abbf6526f19dc2d265f.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 25, 2013 at 10:10:02AM +0100, David Laight wrote:
-> What this doesn't resolve is a driver requesting a lot of interrupts
-> early on and leaving none for later drivers.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/vmxnet3/vmxnet3_drv.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-If this problem really exists anywhere besides pSeries?
-
-I can imagine x86 hitting lack of vectors in interrupt table when
-number of CPUs exceeds hundreds, but do we have this problem now?
-
-> Really the system needs to allocate the minimum number to all
-> drivers before giving out any extra ones - I've NFI how this
-> would be arranged!
-
-Do not know. The pSeries quota approach seems more reasonable to me.
-
-> 	David
-
+diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
+index 5b8ea71..3518173 100644
+--- a/drivers/net/vmxnet3/vmxnet3_drv.c
++++ b/drivers/net/vmxnet3/vmxnet3_drv.c
+@@ -2750,7 +2750,7 @@ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
+ 		} else if (err < 0) {
+ 			dev_err(&adapter->netdev->dev,
+ 				   "Failed to enable MSI-X, error: %d\n", err);
+-			vectors = 0;
++			return err;
+ 		} else if (err < vector_threshold) {
+ 			break;
+ 		} else {
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.7.6
+
