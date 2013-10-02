@@ -1,49 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:33685 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754326Ab3JDRj4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 13:39:56 -0400
-Received: by mail-ie0-f179.google.com with SMTP id e14so9407102iej.24
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 10:39:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1378974000-13168-1-git-send-email-wangyijing@huawei.com>
-References: <1378974000-13168-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Oct 2013 11:39:36 -0600
-Message-ID: <CAErSpo5VjnPiscS5it3NLx9fC7dTaxbOZ-NwGeWSP3svZarBAg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: remove unused "deprecated" macro PCI_MSIX_FLAGS_BIRMASK
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 38/77] ixgbe: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:48:54 +0200
+Message-Id: <5b809a723104ca6350f4aefaae1ca2a44f7e7116.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 12, 2013 at 2:20 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> PCI_MSIX_FLAGS_BIRMASK has been replaced by PCI_MSIX_TABLE_BIR
-> for better readability. Now no one uses it, remove it.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
-Applied, thanks!
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c |   62 +++++++++++++------------
+ 1 files changed, 32 insertions(+), 30 deletions(-)
 
-> ---
->  include/uapi/linux/pci_regs.h |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
->
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index baa7852..f050914 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -319,7 +319,6 @@
->  #define PCI_MSIX_PBA           8       /* Pending Bit Array offset */
->  #define  PCI_MSIX_PBA_BIR      0x00000007 /* BAR index */
->  #define  PCI_MSIX_PBA_OFFSET   0xfffffff8 /* Offset into specified BAR */
-> -#define  PCI_MSIX_FLAGS_BIRMASK        (7 << 0)   /* deprecated */
->  #define PCI_CAP_MSIX_SIZEOF    12      /* size of MSIX registers */
->
->  /* MSI-X entry's format */
-> --
-> 1.7.1
->
->
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
+index 90b4e10..2444a4d 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
+@@ -711,37 +711,39 @@ static void ixgbe_acquire_msix_vectors(struct ixgbe_adapter *adapter,
+ 	 * Right now, we simply care about how many we'll get; we'll
+ 	 * set them up later while requesting irq's.
+ 	 */
+-	while (vectors >= vector_threshold) {
+-		err = pci_enable_msix(adapter->pdev, adapter->msix_entries,
+-				      vectors);
+-		if (!err) /* Success in acquiring all requested vectors. */
+-			break;
+-		else if (err < 0)
+-			vectors = 0; /* Nasty failure, quit now */
+-		else /* err == number of vectors we should try again with */
+-			vectors = err;
+-	}
++	err = pci_msix_table_size(adapter->pdev);
++	if (err < 0)
++		goto err_alloc_msix;
+ 
+-	if (vectors < vector_threshold) {
+-		/* Can't allocate enough MSI-X interrupts?  Oh well.
+-		 * This just means we'll go with either a single MSI
+-		 * vector or fall back to legacy interrupts.
+-		 */
+-		netif_printk(adapter, hw, KERN_DEBUG, adapter->netdev,
+-			     "Unable to allocate MSI-X interrupts\n");
+-		adapter->flags &= ~IXGBE_FLAG_MSIX_ENABLED;
+-		kfree(adapter->msix_entries);
+-		adapter->msix_entries = NULL;
+-	} else {
+-		adapter->flags |= IXGBE_FLAG_MSIX_ENABLED; /* Woot! */
+-		/*
+-		 * Adjust for only the vectors we'll use, which is minimum
+-		 * of max_msix_q_vectors + NON_Q_VECTORS, or the number of
+-		 * vectors we were allocated.
+-		 */
+-		vectors -= NON_Q_VECTORS;
+-		adapter->num_q_vectors = min(vectors, adapter->max_q_vectors);
+-	}
++	vectors = min(vectors, err);
++	if (vectors < vector_threshold)
++		goto err_alloc_msix;
++
++	err = pci_enable_msix(adapter->pdev, adapter->msix_entries, vectors);
++	if (err)
++		goto err_alloc_msix;
++
++	adapter->flags |= IXGBE_FLAG_MSIX_ENABLED; /* Woot! */
++	/*
++	 * Adjust for only the vectors we'll use, which is minimum
++	 * of max_msix_q_vectors + NON_Q_VECTORS, or the number of
++	 * vectors we were allocated.
++	 */
++	vectors -= NON_Q_VECTORS;
++	adapter->num_q_vectors = min(vectors, adapter->max_q_vectors);
++
++	return;
++
++err_alloc_msix:
++	/* Can't allocate enough MSI-X interrupts?  Oh well.
++	 * This just means we'll go with either a single MSI
++	 * vector or fall back to legacy interrupts.
++	 */
++	netif_printk(adapter, hw, KERN_DEBUG, adapter->netdev,
++		     "Unable to allocate MSI-X interrupts\n");
++	adapter->flags &= ~IXGBE_FLAG_MSIX_ENABLED;
++	kfree(adapter->msix_entries);
++	adapter->msix_entries = NULL;
+ }
+ 
+ static void ixgbe_add_ring(struct ixgbe_ring *ring,
+-- 
+1.7.7.6
+
