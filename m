@@ -1,114 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:52155 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752305Ab3J3DSP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 23:18:15 -0400
-Received: by mail-wi0-f171.google.com with SMTP id f4so2214904wiw.4
-        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 20:18:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1383126637-4641-1-git-send-email-cl91tp@gmail.com>
-References: <1383126637-4641-1-git-send-email-cl91tp@gmail.com>
-Date: Wed, 30 Oct 2013 03:18:14 +0000
-Message-ID: <CAMZVYU8mVn6bo5R97Ym83wB0Rr4RFvOO-29+MjVKZB5+6n=7_A@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Blacklist certain hardware from clearing Bus Master bit
-From: Chang Liu <cl91tp@gmail.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 15/77] bnx2: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:48:31 +0200
+Message-Id: <69c0bf5f6ee4b2a913891cfc94442a3c9a3f9434.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Please ignore this one. I'll resend with signed-off-by
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
-2013/10/30 Chang Liu <cl91tp@gmail.com>:
-> This patch adds a blacklist that prevents pci device shutdown code
-> from clearing Bus Master bit on certain hardware that cannot tolerate it.
->
-> Clearing Bus Master bit was originally added in commit b566a22 to address
-> the issue of some PCI device breaking kexec by continuing to do DMA
-> after having been signaled to shutdown. However, this introduced a
-> regression (https://bugzilla.kernel.org/show_bug.cgi?id=63861) that
-> hangs the machine on kernel power off path.
->
-> It has been pointed out previously (https://lkml.org/lkml/2012/6/6/545)
-> that clearing Bus Master bit during PCI shutdown may have surprising
-> consequences as some devices may not tolerate this, and may hang the
-> system indefinitely. However, not doing so may break kexec. Since only
-> one bug report has come up since the introduction of b566a22, therefore
-> indicating that these misbehaving devices are in the minority, the
-> logical way to fix the hang while not breaking kexec is to blacklist
-> these devices from having their Bus Master bit cleared during the PCI
-> shutdown routine.
-> ---
-> This fixes the above mentioned bug https://bugzilla.kernel.org/show_bug.cgi?id=63861
->
-> As Alan Cox has warned in https://lkml.org/lkml/2012/6/6/545, some device
-> will break if we clear bus master bit on shutdown. So sooner or later
-> we will need to blacklist some device if we are to keep Bus Master being cleared
-> as the default behavior. Now with the first (as I have been aware) device
-> that breaks under this default behavior has surfaced, we might as well
-> add the infrastructure code now in case some other devices break down
-> in the future. These devices may not be many so a blacklist likely won't
-> add much maintainance overhead. And we should keep the blacklist here in
-> the pci shutdown code instead of in individual device drivers since this
-> is the most direct way and will likely aid future debug process.
->
->  drivers/pci/pci-driver.c | 34 +++++++++++++++++++++++++++++++++-
->  1 file changed, 33 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 98f7b9b..1744ebf 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -376,6 +376,29 @@ static int pci_device_remove(struct device * dev)
->         return 0;
->  }
->
-> +/*
-> + * Blacklisting certain hardware from having their Bus Master bit cleared
-> + * during device shutdown. This is to workaround certain hardware's issue
-> + * with clearing Bus Master bit that hangs the entire system.
-> + */
-> +struct {
-> +       unsigned short vendor;
-> +       unsigned short device;
-> +} pci_bus_master_blacklist[] = {
-> +       { 0x8086, 0x9c03 },     /* Intel Corporation Lynx Point-LP SATA Controller */
-> +};
-> +
-> +static bool pci_should_clear_master(struct pci_dev *pdev)
-> +{
-> +       int i;
-> +       for (i = 0; i < ARRAY_SIZE(pci_bus_master_blacklist); i++) {
-> +               if (pdev->vendor == pci_bus_master_blacklist[i].vendor
-> +                   && pdev->device == pci_bus_master_blacklist[i].device)
-> +                       return false;
-> +       }
-> +       return true;
-> +}
-> +
->  static void pci_device_shutdown(struct device *dev)
->  {
->         struct pci_dev *pci_dev = to_pci_dev(dev);
-> @@ -391,9 +414,18 @@ static void pci_device_shutdown(struct device *dev)
->         /*
->          * Turn off Bus Master bit on the device to tell it to not
->          * continue to do DMA. Don't touch devices in D3cold or unknown states.
-> +        * This is useful for proper kexec. However, a number of hardware
-> +        * aren't happy with this. At the slightest, some hardware simply
-> +        * ignore the bus master bit. For some other hardware, clearing
-> +        * the bit on shutdown path hangs the entire system.
-> +        * This is likely to be a firmware or hardware problem, but
-> +        * we can workaround it here by blacklisting these hardware
-> +        * from having their bus master bit cleared during device shutdown.
->          */
-> -       if (pci_dev->current_state <= PCI_D3hot)
-> +       if (pci_should_clear_master(pci_dev)
-> +           && pci_dev->current_state <= PCI_D3hot) {
->                 pci_clear_master(pci_dev);
-> +       }
->  }
->
->  #ifdef CONFIG_PM
-> --
-> 1.8.4.1
->
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/broadcom/bnx2.c |   27 ++++++++++++++-------------
+ 1 files changed, 14 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/ethernet/broadcom/bnx2.c b/drivers/net/ethernet/broadcom/bnx2.c
+index e838a3f..c902627 100644
+--- a/drivers/net/ethernet/broadcom/bnx2.c
++++ b/drivers/net/ethernet/broadcom/bnx2.c
+@@ -6202,25 +6202,26 @@ bnx2_enable_msix(struct bnx2 *bp, int msix_vecs)
+ 	 *  is setup properly */
+ 	BNX2_RD(bp, BNX2_PCI_MSIX_CONTROL);
+ 
+-	for (i = 0; i < BNX2_MAX_MSIX_VEC; i++) {
+-		msix_ent[i].entry = i;
+-		msix_ent[i].vector = 0;
+-	}
+-
+ 	total_vecs = msix_vecs;
+ #ifdef BCM_CNIC
+ 	total_vecs++;
+ #endif
+-	rc = -ENOSPC;
+-	while (total_vecs >= BNX2_MIN_MSIX_VEC) {
+-		rc = pci_enable_msix(bp->pdev, msix_ent, total_vecs);
+-		if (rc <= 0)
+-			break;
+-		if (rc > 0)
+-			total_vecs = rc;
++	rc = pci_msix_table_size(bp->pdev);
++	if (rc < 0)
++		return;
++
++	total_vecs = min(total_vecs, rc);
++	if (total_vecs < BNX2_MIN_MSIX_VEC)
++		return;
++
++	BUG_ON(total_vecs > ARRAY_SIZE(msix_ent));
++	for (i = 0; i < total_vecs; i++) {
++		msix_ent[i].entry = i;
++		msix_ent[i].vector = 0;
+ 	}
+ 
+-	if (rc != 0)
++	rc = pci_enable_msix(bp->pdev, msix_ent, total_vecs);
++	if (rc)
+ 		return;
+ 
+ 	msix_vecs = total_vecs;
+-- 
+1.7.7.6
+
