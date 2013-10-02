@@ -1,42 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:45821 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754676Ab3JUJHr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Oct 2013 05:07:47 -0400
-Received: by mail-pb0-f48.google.com with SMTP id ma3so6634774pbc.7
-        for <linux-pci@vger.kernel.org>; Mon, 21 Oct 2013 02:07:47 -0700 (PDT)
-From: Sachin Kamat <sachin.kamat@linaro.org>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, sachin.kamat@linaro.org,
-	Sean Cross <xobs@kosagi.com>
-Subject: [PATCH 1/3] PCI: imx6: Remove redeundant of_match_ptr
-Date: Mon, 21 Oct 2013 14:36:41 +0530
-Message-Id: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:25820 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753385Ab3JBRM4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:12:56 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 13/77] bna: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:48:29 +0200
+Message-Id: <e138df4579979bc0f60940258525036f5da61424.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-imx6_pcie_of_match is always compiled in. Hence of_match_ptr is
-not required.
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
-Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-Cc: Sean Cross <xobs@kosagi.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/pci/host/pci-imx6.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/ethernet/brocade/bna/bnad.c |   34 ++++++++++++------------------
+ 1 files changed, 14 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 5afa922..64aaa8e 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -558,7 +558,7 @@ static struct platform_driver imx6_pcie_driver = {
- 	.driver = {
- 		.name	= "imx6q-pcie",
- 		.owner	= THIS_MODULE,
--		.of_match_table = of_match_ptr(imx6_pcie_of_match),
-+		.of_match_table = imx6_pcie_of_match,
- 	},
- };
+diff --git a/drivers/net/ethernet/brocade/bna/bnad.c b/drivers/net/ethernet/brocade/bna/bnad.c
+index b78e69e..d41257c 100644
+--- a/drivers/net/ethernet/brocade/bna/bnad.c
++++ b/drivers/net/ethernet/brocade/bna/bnad.c
+@@ -2469,21 +2469,11 @@ bnad_enable_msix(struct bnad *bnad)
+ 	if (bnad->msix_table)
+ 		return;
  
+-	bnad->msix_table =
+-		kcalloc(bnad->msix_num, sizeof(struct msix_entry), GFP_KERNEL);
+-
+-	if (!bnad->msix_table)
++	ret = pci_msix_table_size(bnad->pcidev);
++	if (ret < 0)
+ 		goto intx_mode;
+ 
+-	for (i = 0; i < bnad->msix_num; i++)
+-		bnad->msix_table[i].entry = i;
+-
+-	ret = pci_enable_msix(bnad->pcidev, bnad->msix_table, bnad->msix_num);
+-	if (ret > 0) {
+-		/* Not enough MSI-X vectors. */
+-		pr_warn("BNA: %d MSI-X vectors allocated < %d requested\n",
+-			ret, bnad->msix_num);
+-
++	if (ret < bnad->msix_num) {
+ 		spin_lock_irqsave(&bnad->bna_lock, flags);
+ 		/* ret = #of vectors that we got */
+ 		bnad_q_num_adjust(bnad, (ret - BNAD_MAILBOX_MSIX_VECTORS) / 2,
+@@ -2495,15 +2485,19 @@ bnad_enable_msix(struct bnad *bnad)
+ 
+ 		if (bnad->msix_num > ret)
+ 			goto intx_mode;
++	}
+ 
+-		/* Try once more with adjusted numbers */
+-		/* If this fails, fall back to INTx */
+-		ret = pci_enable_msix(bnad->pcidev, bnad->msix_table,
+-				      bnad->msix_num);
+-		if (ret)
+-			goto intx_mode;
++	bnad->msix_table =
++		kcalloc(bnad->msix_num, sizeof(struct msix_entry), GFP_KERNEL);
++
++	if (!bnad->msix_table)
++		goto intx_mode;
+ 
+-	} else if (ret < 0)
++	for (i = 0; i < bnad->msix_num; i++)
++		bnad->msix_table[i].entry = i;
++
++	ret = pci_enable_msix(bnad->pcidev, bnad->msix_table, bnad->msix_num);
++	if (ret)
+ 		goto intx_mode;
+ 
+ 	pci_intx(bnad->pcidev, 0);
 -- 
-1.7.9.5
+1.7.7.6
 
