@@ -1,88 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1252"
-Subject: RE: [PATCH RFC v2 29/29] vmxnet3: Make use of pcim_enable_msix_range() interface
-Date: Mon, 21 Oct 2013 09:51:32 +0100
-Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B7398@saturn3.aculab.com>
-In-Reply-To: <75788c5da384b16633fdab43d37a277aa92f38fd.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com> <75788c5da384b16633fdab43d37a277aa92f38fd.1382103786.git.agordeev@redhat.com>
-From: "David Laight" <David.Laight@ACULAB.COM>
-To: "Alexander Gordeev" <agordeev@redhat.com>,
-	<linux-kernel@vger.kernel.org>
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>,
-	"Michael Ellerman" <michael@ellerman.id.au>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	"Tejun Heo" <tj@kernel.org>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	"Mark Lord" <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	<linux-pci@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26772 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754330Ab3JBRoM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:44:12 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 36/77] ipr: Enable MSI-X when IPR_USE_MSIX type is set, not IPR_USE_MSI
+Date: Wed,  2 Oct 2013 12:48:52 +0200
+Message-Id: <2d4272136269f3cb3b1a5ac53b12aa45c7ea65c0.1380703263.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: [PATCH RFC v2 29/29] vmxnet3: Make use of pcim_enable_msix_range() interface
-...
-> diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
-> index d33802c..e552d2b 100644
-> --- a/drivers/net/vmxnet3/vmxnet3_drv.c
-> +++ b/drivers/net/vmxnet3/vmxnet3_drv.c
-> @@ -2735,39 +2735,19 @@ vmxnet3_read_mac_addr(struct vmxnet3_adapter *adapter, u8 *mac)
->   */
-> 
->  static int
-> -vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
-> -			     int vectors)
-> +vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter, int vectors)
->  {
-> -	int err = -EINVAL, vector_threshold;
-> -	vector_threshold = VMXNET3_LINUX_MIN_MSIX_VECT;
-> -
-> -	while (vectors >= vector_threshold) {
-> -		err = pci_enable_msix(adapter->pdev, adapter->intr.msix_entries,
-> -				      vectors);
-> -		if (!err) {
-> -			adapter->intr.num_intrs = vectors;
-> -			return 0;
-> -		} else if (err < 0) {
-> -			dev_err(&adapter->netdev->dev,
-> -				   "Failed to enable MSI-X, error: %d\n", err);
-> -			return err;
-> -		} else if (err < vector_threshold) {
-> -			dev_info(&adapter->pdev->dev,
-> -				 "Number of MSI-Xs which can be allocated "
-> -				 "is lower than min threshold required.\n");
-> -			return -ENOSPC;
-> -		} else {
-> -			/* If fails to enable required number of MSI-x vectors
-> -			 * try enabling minimum number of vectors required.
-> -			 */
-> -			dev_err(&adapter->netdev->dev,
-> -				"Failed to enable %d MSI-X, trying %d instead\n",
-> -				    vectors, vector_threshold);
-> -			vectors = vector_threshold;
-> -		}
-> +	vectors = pcim_enable_msix_range(adapter->pdev,
-> +					 adapter->intr.msix_entries, vectors,
-> +					 VMXNET3_LINUX_MIN_MSIX_VECT);
-> +	if (vectors < 0) {
-> +		dev_err(&adapter->netdev->dev,
-> +			"Failed to enable MSI-X, error: %d\n", vectors);
-> +		return vectors;
->  	}
-> 
-> -	return err;
-> +	adapter->intr.num_intrs = vectors;
-> +	return 0;
->  }
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/ipr.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-AFAICT the old code either used the requested number or the minimum number.
-The new code seems to claim an intermediate number of interrupts - but probably
-only uses the minimum number.
-This wastes the last few MSI-X interrupts.
-The code (especially the calling code) would be easier to read if the 'vectors'
-value wasn't explicitly passed.
-
-	David
-
-
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index fb57e21..762a93e 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -9527,7 +9527,7 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
+ 		ipr_number_of_msix = IPR_MAX_MSIX_VECTORS;
+ 	}
+ 
+-	if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
++	if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSIX &&
+ 			ipr_enable_msix(ioa_cfg) == 0)
+ 		ioa_cfg->intr_flag = IPR_USE_MSIX;
+ 	else if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
+-- 
+1.7.7.6
 
