@@ -1,60 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <524E04C1.7010605@redhat.com>
-Date: Thu, 03 Oct 2013 19:58:57 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vb0-f53.google.com ([209.85.212.53]:44540 "EHLO
+	mail-vb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753706Ab3JBUnr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 16:43:47 -0400
+Received: by mail-vb0-f53.google.com with SMTP id i3so951059vbh.40
+        for <linux-pci@vger.kernel.org>; Wed, 02 Oct 2013 13:43:46 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ACPI / PCI: don't allow PCI devices without irq to
- be enabled
-References: <1375965314-24232-1-git-send-email-heikki.krogerus@linux.intel.com> <1375965314-24232-2-git-send-email-heikki.krogerus@linux.intel.com> <14983102.aCV009CSMA@vostro.rjw.lan> <CAErSpo6N65EOy6ieZSKN8eO09GoCFe05YOMRNMhx8RLHbqN=yw@mail.gmail.com> <CAE9FiQV3ohndZGvWHByA76G=Cb3NEVn4ukpoF==zHsLw8oaopA@mail.gmail.com> <CAErSpo6dmSwcM5ensq1fKL=-mbLNyi9G+U+LPA1P=pP8j9=EoA@mail.gmail.com>
-In-Reply-To: <CAErSpo6dmSwcM5ensq1fKL=-mbLNyi9G+U+LPA1P=pP8j9=EoA@mail.gmail.com>
+Date: Wed, 2 Oct 2013 16:43:46 -0400
+Message-ID: <CAOsGJpcuNuaEsBHk9mV2Lh_qiygzgfLYigSsbDoBke1GJ_XG-Q@mail.gmail.com>
+Subject: ASMedia ASM1083/1085 rev3 and Xen DMA Failure
+From: Aaron Opfer <me@aaronopfer.com>
+To: linux-pci@vger.kernel.org
+Cc: Clemens Ladisch <clemens@ladisch.de>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+First time submitting the kernel dev list, so if I have demonstrated
+gross incompetence in some way, please cut me some slack. :)
 
+I discussed with Clemens Ladisch an issue I was having that I thought
+was related to the driver he authored for my soundcard, but on his
+suggestion I experimented with other PCI devices and we have narrowed
+the issue to the PCI Bridge.
 
-On 08/12/2013 06:32 PM, Bjorn Helgaas wrote:
-> On Mon, Aug 12, 2013 at 3:32 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Mon, Aug 12, 2013 at 2:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Thu, Aug 8, 2013 at 7:57 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>>> On Thursday, August 08, 2013 03:35:13 PM Heikki Krogerus wrote:
->>>>> If there is no ACPI entry for the irq, returning error from
->>>>> acpi_pci_enable_irq() if the irq is 0.
->>>>>
->>>>> Prarit Bhargava reported an issue where he noticed that his
->>>>> Dell PowerEdge 840 has buggy BIOS that does not supply ACPI
->>>>> entries for irq with some devices. That lead into kernel
->>>>> generating a warning "genirq: Flags mismatch irq 0...". This
->>>>> will fix that issue.
->>>>>
->>>>> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
->>>>> Tested-by: Prarit Bhargava <prarit@redhat.com>
->>>>
->>>> Hi Bjorn,
->>>>
->>>> Any objections to this?
->>>
->>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->>
->> some USB3 host controller does not have intx configured, but still
->> work with MSI?
-> 
-> Huh, OK, I take back my ack, at least while we investigate this.
-> 
+What hints me toward DMA handling being the fault is the following
+message I receive during kernel initialization after rebooting from an
+Xen hypervisor into a baremetal-kernel, without a power-cycle:
 
-Bjorn, as suggested I've opened up a BZ here:
+[0.012815] dmar: DRHD: handling fault status reg 3
+[0.012868] dmar: DMAR:[DMA Read] Request device [07:00.0] fault addr 7e00000
+[0.012868] DMAR:[fault reason 02] Present bit in context entry is clear
 
-https://bugzilla.kernel.org/show_bug.cgi?id=62521
+In addition to other hints, such as simple IO like changing the active
+port on the soundcard worked (I could hear the relays clicking) but
+not the functions that DMA would be used (streaming audio).
 
-I've only cc'd yourself and Rafael.  Heikki -- I didn't find an account under
-your intel.com address ...
+The PCI devices in my system are connected via this device, as listed by lspci:
 
-P.
+06:00.0 PCI bridge: ASMedia Technology Inc. ASM1083/1085 PCIe to PCI
+Bridge (rev 03)
+
+This PCI bridge works under bare-metal Linux normally (w/ various
+debian kernels stable/unstable/testing/backports), but under Xen
+Hypervisor the PCI devices connected exhibit bad behavior. For
+instance, aformentioned sound card outputs no sound and gets no
+microphone input at all, and an ethernet card causes a system lockup
+as soon as gnome's network manager attempts DHCP over it (presumably;
+I did not test this as thoroughly as the sound card).
+
+I've used Xen Hypervisors 4.1 and 4.2 and had the issues I described
+above with both of them. I was briefly running 4.3 but I did not test
+the device.
+
+Rev1 of the ASM1083 was apparently buggy to the point of being
+unusable, as Clemens pointed out. I would be disappointed if this
+device is similarly unsalvageable,but would be happier if this buggy
+hardware at the very least outputted warnings to users who attempt to
+use it (in Xen).
+
+All The Best,
+
+Aaron Opfer
