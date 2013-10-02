@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27135 "EHLO
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26110 "EHLO
 	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755430Ab3JBRzT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:55:19 -0400
+	by vger.kernel.org with ESMTP id S1754196Ab3JBR0k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:26:40 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
@@ -15,48 +15,116 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Dan Williams <dan.j.williams@intel.com>,
 	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
 	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
 	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
 	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 53/77] ntb: Fix missed call to pci_enable_msix()
-Date: Wed,  2 Oct 2013 12:49:09 +0200
-Message-Id: <0590d63c3432229a3824bada71e07a08fb955498.1380703263.git.agordeev@redhat.com>
+Subject: [PATCH RFC 26/77] cxgb4: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:48:42 +0200
+Message-Id: <384501214b90270df2f9414e3ddcffbe0335ddff.1380703262.git.agordeev@redhat.com>
 In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current MSI-X enablement code assumes MSI-Xs were successfully
-allocated in case less than requested vectors were available.
-That assumption is wrong, since MSI-Xs should be enabled with
-a repeated call to pci_enable_msix(). This update fixes this.
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/ntb/ntb_hw.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |   62 +++++++++++++----------
+ 1 files changed, 35 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
-index 1cb6e51..de2062c 100644
---- a/drivers/ntb/ntb_hw.c
-+++ b/drivers/ntb/ntb_hw.c
-@@ -1075,6 +1075,10 @@ static int ntb_setup_msix(struct ntb_device *ndev)
- 			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
- 			 rc);
- 		msix_entries = rc;
-+
-+		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
-+		if (rc)
-+			goto err1;
- 	}
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index 9425bc6..e5fbbd3 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -5699,9 +5699,6 @@ static int enable_msix(struct adapter *adap)
+ 	unsigned int nchan = adap->params.nports;
+ 	struct msix_entry entries[MAX_INGQ + 1];
  
- 	for (i = 0; i < msix_entries; i++) {
+-	for (i = 0; i < ARRAY_SIZE(entries); ++i)
+-		entries[i].entry = i;
+-
+ 	want = s->max_ethqsets + EXTRA_VECS;
+ 	if (is_offload(adap)) {
+ 		want += s->rdmaqs + s->ofldqsets;
+@@ -5710,34 +5707,45 @@ static int enable_msix(struct adapter *adap)
+ 	}
+ 	need = adap->params.nports + EXTRA_VECS + ofld_need;
+ 
+-	while ((err = pci_enable_msix(adap->pdev, entries, want)) >= need)
+-		want = err;
++	err = pci_msix_table_size(adap->pdev);
++	if (err < 0)
++		return err;
+ 
+-	if (!err) {
+-		/*
+-		 * Distribute available vectors to the various queue groups.
+-		 * Every group gets its minimum requirement and NIC gets top
+-		 * priority for leftovers.
+-		 */
+-		i = want - EXTRA_VECS - ofld_need;
+-		if (i < s->max_ethqsets) {
+-			s->max_ethqsets = i;
+-			if (i < s->ethqsets)
+-				reduce_ethqs(adap, i);
+-		}
+-		if (is_offload(adap)) {
+-			i = want - EXTRA_VECS - s->max_ethqsets;
+-			i -= ofld_need - nchan;
+-			s->ofldqsets = (i / nchan) * nchan;  /* round down */
+-		}
+-		for (i = 0; i < want; ++i)
+-			adap->msix_info[i].vec = entries[i].vector;
+-	} else if (err > 0) {
++	want = min(want, err);
++	if (want < need) {
+ 		dev_info(adap->pdev_dev,
+ 			 "only %d MSI-X vectors left, not using MSI-X\n", err);
+-		err = -ENOSPC;
++		return -ENOSPC;
+ 	}
+-	return err;
++
++	BUG_ON(want > ARRAY_SIZE(entries));
++	for (i = 0; i < want; ++i)
++		entries[i].entry = i;
++
++	err = pci_enable_msix(adap->pdev, entries, want);
++	if (err)
++		return err;
++
++	/*
++	 * Distribute available vectors to the various queue groups.
++	 * Every group gets its minimum requirement and NIC gets top
++	 * priority for leftovers.
++	 */
++	i = want - EXTRA_VECS - ofld_need;
++	if (i < s->max_ethqsets) {
++		s->max_ethqsets = i;
++		if (i < s->ethqsets)
++			reduce_ethqs(adap, i);
++	}
++	if (is_offload(adap)) {
++		i = want - EXTRA_VECS - s->max_ethqsets;
++		i -= ofld_need - nchan;
++		s->ofldqsets = (i / nchan) * nchan;  /* round down */
++	}
++	for (i = 0; i < want; ++i)
++		adap->msix_info[i].vec = entries[i].vector;
++
++	return 0;
+ }
+ 
+ #undef EXTRA_VECS
 -- 
 1.7.7.6
 
