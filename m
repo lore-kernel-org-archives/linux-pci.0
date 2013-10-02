@@ -1,124 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:55810
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750863Ab3JQHD2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Oct 2013 03:03:28 -0400
-From: Zhu Richard-R65037 <r65037@freescale.com>
-To: Marek Vasut <marex@denx.de>, Pratyush Anand <pratyush.anand@st.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: RE: [PATCH 5/6] PCI: imx6: Force Gen1 operation
-Date: Thu, 17 Oct 2013 07:02:19 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D40F6D8@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
- <1381853200-5534-6-git-send-email-marex@denx.de>
- <20131016055427.GB2740@pratyush-vbox> <201310161557.41041.marex@denx.de>
-In-Reply-To: <201310161557.41041.marex@denx.de>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26001 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753638Ab3JBRV4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:21:56 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH RFC 09/77] ahci: Update MSI/MSI-X interrupts enablement code
+Date: Wed,  2 Oct 2013 12:48:25 +0200
+Message-Id: <4cced33c3809e6a53ada2dd8c781fcc5242e19ab.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek:
+As result of recent re-design of the MSI/MSI-X interrupts enabling
+pattern this driver has to be updated to use the new technique to
+obtain a optimal number of MSI/MSI-X interrupts required.
 
-> -----Original Message-----
-[...]
-> > > ---
-> > >
-> > >  drivers/pci/host/pci-imx6.c | 13 ++++++++++++-
-> > >  1 file changed, 12 insertions(+), 1 deletion(-)
-> > >
-> > > diff --git a/drivers/pci/host/pci-imx6.c
-> > > b/drivers/pci/host/pci-imx6.c index ca8c5de..8402e9a 100644
-> > > --- a/drivers/pci/host/pci-imx6.c
-> > > +++ b/drivers/pci/host/pci-imx6.c
-> > > @@ -321,6 +321,7 @@ static void imx6_pcie_host_init(struct pcie_port
-> > > *pp)
-> > >
-> > >  {
-> > >
-> > >  	int count = 0;
-> > >  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> > >
-> > > +	uint32_t tmp;
-> > >
-> > >  	imx6_pcie_assert_core_reset(pp);
-> > >
-> > > @@ -330,13 +331,23 @@ static void imx6_pcie_host_init(struct
-> > > pcie_port
-> > > *pp)
-> > >
-> > >  	dw_pcie_setup_rc(pp);
-> > >
-> > > +	/*
-> > > +	 * FIXME:
-> > > +	 * Force Gen1 operation. In case the IP block is in Gen2 operation
-> > > +	 * mode, it does not detect the PCIe switch at all.
-> > > +	 */
-> > > +	tmp = readl(pp->dbi_base + 0x7c);
-> > > +	tmp &= ~0xf;
-> > > +	tmp |= 0x1;
-> > > +	writel(tmp, pp->dbi_base + 0x7c);
-> > > +
-> >
-> > Since you are forcing RC to work in GEN1, so you will not be able to
-> > connect any device at GEN2 now.
-> 
-> I'd rather prefer to know WHY if the RC is operating in Gen2 mode by default,
-> I cannot see the PCIe switch (Pericom PI7C9X2G303) connected to it. I was
-> unable to figure this out. Tim pointed out this thread [1] , so it might be
-> related in some way.
-> 
-> [1] https://community.freescale.com/message/316162#316162
-> 
-> I tried switching the PCIe RC to Gen2 operation right after LinkUp by writing
-> this register with 0x2 again and re-issuing the LinkUp check, which passed and
-> the status register reported Gen2 operation, but then the PCIe Intel NIC
-> connected to the downstream port of the Pericom switch still reported Gen1
-> operation for some reason.
-> 
- [Richard] Is your Inetl NIC GEN1 EP device?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/ata/ahci.c |   56 ++++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 35 insertions(+), 21 deletions(-)
 
-> > Yes, There are some buggy PCIe devices which works with GEN1 only host.
-> 
-> The pericom one is Gen2 according to it's datasheet.
-[Richard] Yes, it is. Pericom's PI7C9X2G303EL is GEN2 PCIe switch.
-It had been verified on FSL's 3.0.35 releases.
-
-> 
-> > So better solution should be to initialize RC by default at GEN2 or
-> > highest speed. Further, a parameter say gen_only can be passed from DT
-> > to force GEN1 only mode.
-> >
-> > What do you say?
-> 
-> I say I'd like to know the root cause of this problem. This Gen2 fix was
-> pulled from one of the myriad variants of the FSL PCIe driver, so apparently
-> this issue happens to other people as well. But why and how to properly fix
-> this so the whole PCIe bus does operate in Gen2 mode, I cannot tell :-(
-[Richard] GEN2 mode had been verified in FSL 3.0.35 kernel releases before.
-I don't know why it can't work in GEN2 mode in the latest kernel.
-BTW, Based on for-next branch of shawn's git reops and applied Merak's patch-set,
- my PI7C9X2G303EL with intel e1000e network card plugged can't be detected at all. :(.
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
-
-
-Best Regards
-Richard Zhu
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 9d715ae..f1c8838 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1091,26 +1091,40 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
+ 
+-int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
++int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
++			 struct ahci_host_priv *hpriv)
+ {
+-	int rc;
+-	unsigned int maxvec;
++	int rc, nvec;
+ 
+-	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
+-		rc = pci_enable_msi_block_auto(pdev, &maxvec);
+-		if (rc > 0) {
+-			if ((rc == maxvec) || (rc == 1))
+-				return rc;
+-			/*
+-			 * Assume that advantage of multipe MSIs is negated,
+-			 * so fallback to single MSI mode to save resources
+-			 */
+-			pci_disable_msi(pdev);
+-			if (!pci_enable_msi(pdev))
+-				return 1;
+-		}
+-	}
++	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
++		goto intx;
++
++	rc = pci_get_msi_cap(pdev);
++	if (rc < 0)
++		goto intx;
++
++	/*
++	 * If number of MSIs is less than number of ports then Sharing Last
++	 * Message mode could be enforced. In this case assume that advantage
++	 * of multipe MSIs is negated and use single MSI mode instead.
++	 */
++	if (rc < n_ports)
++		goto single_msi;
++
++	nvec = rc;
++	rc = pci_enable_msi_block(pdev, nvec);
++	if (rc)
++		goto intx;
+ 
++	return nvec;
++
++single_msi:
++	rc = pci_enable_msi(pdev);
++	if (rc)
++		goto intx;
++	return 1;
++
++intx:
+ 	pci_intx(pdev, 1);
+ 	return 0;
+ }
+@@ -1277,10 +1291,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
+ 
+-	n_msis = ahci_init_interrupts(pdev, hpriv);
+-	if (n_msis > 1)
+-		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+-
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
+@@ -1335,6 +1345,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
+ 
++	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
++	if (n_msis > 1)
++		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
++
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
+-- 
+1.7.7.6
 
