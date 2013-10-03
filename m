@@ -1,97 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:34776 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752452Ab3JHRNs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 13:13:48 -0400
-Date: Tue, 8 Oct 2013 18:13:44 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Michal Simek <monstr@monstr.eu>,
+Received: from mail-ye0-f172.google.com ([209.85.213.172]:50921 "EHLO
+	mail-ye0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755454Ab3JCWOL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 18:14:11 -0400
+Received: by mail-ye0-f172.google.com with SMTP id m12so782478yen.31
+        for <linux-pci@vger.kernel.org>; Thu, 03 Oct 2013 15:14:10 -0700 (PDT)
+Date: Thu, 3 Oct 2013 16:06:28 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [RFC] Architecture independent pcibios?
-Message-ID: <20131008171343.GB25606@e102652-lin.cambridge.arm.com>
-References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
- <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Workaround missing pci_set_master in pci drivers
+Message-ID: <20131003220628.GA14835@google.com>
+References: <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
+ <1380399187-4962-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380399187-4962-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 08, 2013 at 05:32:57PM +0100, Bjorn Helgaas wrote:
-> [+cc Grant, Rob, devicetree list]
+On Sat, Sep 28, 2013 at 01:13:07PM -0700, Yinghai Lu wrote:
+> BenH found:
+> | 928bea964827d7824b548c1f8e06eccbbc4d0d7d
+> | PCI: Delay enabling bridges until they're needed
 > 
-> On Tue, Oct 8, 2013 at 8:42 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > Hello,
-> >
-> > I am working on adding PCIe support for a new architecture and looking
-> > at various existing implementations of pcibios functions I've realised
-> > that some architectures share a lot of common code. As I don't like to
-> > repeat the pattern again without any good reasons, I am wondering if
-> > there is any appetite for carving out those common functions into
-> > a generic place under drivers/pci/pcibios.c where they can be reused.
-> >
-> > Things that I am specifically looking at are pcibios_{alloc,free}_controller,
-> > pci_process_bridge_OF_ranges and anything that will make adding support
-> > for PCI/PCIe in a new architecture easier. Candidates for promoting
-> > to a generic place are the functions found in both powerpc and microblaze
-> > as they seem to be mostly identical, they support DT bindings and are
-> > 64bits ready.
+> break PCI on powerpc.  The reason is that the PCIe port driver will
+> call pci_enable_device() on the bridge, so device enabled (but skip
+> pci_set_master because pcie_port_auto and no acpi on powerpc ).
 > 
-> I'm very much in favor of unifying code to reduce duplication across
-> architectures.
+> Because of that, pci_enable_bridge() later on (called as a result of the
+> child device driver doing pci_enable_device) will see the bridge as
+> already enabled and will not call pci_set_master() on it.
 > 
-> In general, the pcibios_*() interfaces are things used by the PCI core
-> (drivers/pci) but implemented by the architecture.  The specific cases
-> you mentioned are not actually used by the PCI core, so my inclination
-> would be to name them something else and possibly put them somewhere
-> other than drivers/pci.
-
-There are at least a handful of architectures that seem to share the same
-implementation for most (all?) of the pcibios_*() functions. (PowerPC and
-microblaze the most obvious offenders, x86 to a certain extent).
-
+> Fixed by add checking in pci_enable_bridge, and call pci_set_master
+> if driver skip that.
+> That will make the code more robot and wade off problem for missing
+> pci_set_master in drivers.
 > 
-> I wonder if pci_process_bridge_OF_ranges() would fit somewhere in
-> drivers/of?  The implementations I looked at are mostly concerned with
-> parsing OF resources, and they don't have much to do with PCI
-> directly.
-
-Andrew Murray did sent a patch that was placing pci_process_bridge_OF_ranges()
-in the drivers/of. I can update that, as I have taken over his work.
-
+> Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 > 
-> pcibios_alloc_controller() is implemented by microblaze, powerpc, and
-> xtensa.  Each of those arches defines its own "struct pci_controller",
-> so it won't be completely trivial to unify this.  I tried to start
-> some unification with the "struct pci_host_bridge" in the core, but
-> haven't made much progress there.
-
-Do you have anything that you could share? I would pretty much like to take
-on that as well, as I don't want to create yet another
-"struct pci_controller." BTW, powerpc and microblaze again share a very
-similarly looking structure.
-
-Best regards,
-Liviu
-
+> ---
+>  drivers/pci/pci.c |    8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
 > 
-> Bjorn
-> 
+> Index: linux-2.6/drivers/pci/pci.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.c
+> +++ linux-2.6/drivers/pci/pci.c
+> @@ -1156,8 +1156,14 @@ static void pci_enable_bridge(struct pci
+>  
+>  	pci_enable_bridge(dev->bus->self);
+>  
+> -	if (pci_is_enabled(dev))
+> +	if (pci_is_enabled(dev)) {
+> +		if (!dev->is_busmaster) {
+> +			dev_warn(&dev->dev, "driver skip pci_set_master, fix it!\n");
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+I know this is already in Linus' tree, but if we're going to enable
+bus mastering here, what's the point of the warning?  If somebody
+fixes the driver by adding a pci_set_master() call there, does that
+improve something?
 
+Bjorn
+
+> +			pci_set_master(dev);
+> +		}
+>  		return;
+> +	}
+> +
+>  	retval = pci_enable_device(dev);
+>  	if (retval)
+>  		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
