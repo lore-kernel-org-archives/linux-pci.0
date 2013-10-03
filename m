@@ -1,116 +1,144 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 11 Oct 2013 09:01:53 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [BUG] WARN_ON(!context) in drivers/pci/hotplug/acpiphp_glue.c
-Message-ID: <20131011090153.7760db6b@gandalf.local.home>
-In-Reply-To: <2096980.ZtIelfoX39@vostro.rjw.lan>
-References: <20131010165905.7815defa@gandalf.local.home>
-	<18685640.N2BnVjDmHD@vostro.rjw.lan>
-	<CA+55aFwqf7kkh0dy6AhCvB87XYkQ03YUpsYEDJmnkiRe8GQfMQ@mail.gmail.com>
-	<2096980.ZtIelfoX39@vostro.rjw.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:55133 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753114Ab3JCBCc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Oct 2013 21:02:32 -0400
+Date: Wed, 2 Oct 2013 18:02:30 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 55/77] ntb: Update MSI/MSI-X interrupts enablement
+ code
+Message-ID: <20131003010230.GN6768@jonmason-lab>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <49eb592e15aaec804f9c11ca132d2b85c516aefa.1380703263.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49eb592e15aaec804f9c11ca132d2b85c516aefa.1380703263.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 11 Oct 2013 13:13:47 +0200
-"Rafael J. Wysocki" <rjw@rjwysocki.net> wrote:
+On Wed, Oct 02, 2013 at 12:49:11PM +0200, Alexander Gordeev wrote:
+> As result of recent re-design of the MSI/MSI-X interrupts enabling
+> pattern this driver has to be updated to use the new technique to
+> obtain a optimal number of MSI/MSI-X interrupts required.
 > 
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: ACPI / hotplug / PCI: Accept coexistence with native PCIe hotplug
-> 
-> Allow ACPIPHP (ACPI-based PCI hotplug) to handle event signaling for
-> devices that have already been claimed by the native PCIe hotplug
-> (pciehp).
-> 
-> The ACPI hotplug events are essentially re-scan, remove and eject
-> requests.  Re-scan and remove should work regardless, because they
-> may be triggered by user space via sysfs and the ACPI eject (_EJ0)
-> should work if the BIOS wants us to use it.  There may be an issue
-> if the BIOS signals ACPI eject and wants us to use the native eject,
-> but that doesn't work without this change anyway.
-> 
-> This change prevents the WARN_ON() in acpiphp_enumerate_slots() from
-> triggering unnecessarily for bridges whose parents are managed by
-> pciehp.
-> 
-
-Reported-by: Steven Rostedt <rostedt@goodmis.org>
-Tested-by: Steven Rostedt <rostedt@goodmis.org>
-
--- Steve
-
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > ---
->  drivers/pci/hotplug/acpiphp_glue.c |   32 ++++++++++++++++++++++++++------
->  1 file changed, 26 insertions(+), 6 deletions(-)
+>  drivers/ntb/ntb_hw.c |   41 +++++++++++++----------------------------
+>  drivers/ntb/ntb_hw.h |    2 --
+>  2 files changed, 13 insertions(+), 30 deletions(-)
 > 
-> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -259,6 +259,31 @@ static void acpiphp_dock_release(void *d
->  	put_bridge(context->func.parent);
->  }
+> diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+> index eccd5e5..7776429 100644
+> --- a/drivers/ntb/ntb_hw.c
+> +++ b/drivers/ntb/ntb_hw.c
+> @@ -1032,23 +1032,26 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+>  	struct msix_entry *msix;
+>  	int msix_entries;
+>  	int rc, i;
+> -	u16 val;
 >  
-> +/**
-> + * slot_should_be_exposed - Check whether or not to expose a slot to userland.
-> + * @bridge: ACPIPHP bridge the slot belongs to.
-> + * @handle: ACPI handle of a device in the slot.
-> + */
-> +static inline bool slot_should_be_exposed(struct acpiphp_bridge *bridge,
-> +					  acpi_handle handle)
-> +{
-> +	struct pci_bus *pbus = bridge->pci_bus;
-> +	struct pci_dev *pdev = bridge->pci_dev;
-> +
+> -	if (!pdev->msix_cap) {
+> -		rc = -EIO;
+> +	rc = pci_msix_table_size(pdev);
+> +	if (rc < 0)
+>  		goto err;
+> -	}
+>  
+> -	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
+> -	if (rc)
 > +	/*
-> +	 * Do not expose slots whose bridges are managed by pciehp, because they
-> +	 * will be exposed to user space by the pciehp driver.
+> +	 * On SNB, the link interrupt is always tied to 4th vector.  If
+> +	 * we can't get all 4, then we can't use MSI-X.
 > +	 */
-> +	if (pdev && device_is_managed_by_native_pciehp(pdev))
-> +		return false;
-> +
-> +	/*
-> +	 * Expose slots for devices with either _EJ0 or _RMV and for devices
-> +	 * on docking stations.
-> +	 */
-> +	return acpi_pci_check_ejectable(pbus, handle) || is_dock_device(handle);
-> +}
-> +
->  /* callback routine to register each ACPI PCI slot object */
->  static acpi_status register_slot(acpi_handle handle, u32 lvl, void *data,
->  				 void **rv)
-> @@ -271,12 +296,8 @@ static acpi_status register_slot(acpi_ha
->  	unsigned long long adr;
->  	int device, function;
->  	struct pci_bus *pbus = bridge->pci_bus;
-> -	struct pci_dev *pdev = bridge->pci_dev;
->  	u32 val;
->  
-> -	if (pdev && device_is_managed_by_native_pciehp(pdev))
-> -		return AE_OK;
-> -
->  	status = acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
->  	if (ACPI_FAILURE(status)) {
->  		acpi_handle_warn(handle, "can't evaluate _ADR (%#x)\n", status);
-> @@ -325,8 +346,7 @@ static acpi_status register_slot(acpi_ha
->  
->  	list_add_tail(&slot->node, &bridge->slots);
->  
-> -	/* Register slots for ejectable funtions only. */
-> -	if (acpi_pci_check_ejectable(pbus, handle)  || is_dock_device(handle)) {
-> +	if (slot_should_be_exposed(bridge, handle)) {
->  		unsigned long long sun;
->  		int retval;
->  
+> +	if ((rc < SNB_MSIX_CNT) && (ndev->hw_type != BWD_HW)) {
 
+Please check for the HW type first, and then compare to
+ndev->limits.msix_cnt (which will be SNB_MSIX_CNT on SNB HW).  Also,
+put the comment inside the if statement and remove the unecessary "()"
+around the comparisons.  OCD on my part, but I like it that way.  
+
+> +		rc = -ENOSPC;
+>  		goto err;
+> -
+> -	msix_entries = msix_table_size(val);
+> -	if (msix_entries > ndev->limits.msix_cnt) {
+> +	}
+
+else if...
+
+> +	if (rc > ndev->limits.msix_cnt) {
+>  		rc = -EINVAL;
+>  		goto err;
+>  	}
+>  
+> +	msix_entries = rc;
+> +
+>  	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
+>  				     GFP_KERNEL);
+>  	if (!ndev->msix_entries) {
+> @@ -1060,26 +1063,8 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+>  		ndev->msix_entries[i].entry = i;
+>  
+>  	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> -	if (rc < 0)
+> +	if (rc)
+>  		goto err1;
+> -	if (rc > 0) {
+> -		/* On SNB, the link interrupt is always tied to 4th vector.  If
+> -		 * we can't get all 4, then we can't use MSI-X.
+> -		 */
+> -		if ((rc < SNB_MSIX_CNT) && (ndev->hw_type != BWD_HW)) {
+> -			rc = -EIO;
+> -			goto err1;
+> -		}
+> -
+> -		dev_warn(&pdev->dev,
+> -			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+> -			 rc);
+> -		msix_entries = rc;
+> -
+> -		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> -		if (rc)
+> -			goto err1;
+> -	}
+>  
+>  	for (i = 0; i < msix_entries; i++) {
+>  		msix = &ndev->msix_entries[i];
+> diff --git a/drivers/ntb/ntb_hw.h b/drivers/ntb/ntb_hw.h
+> index 0a31ced..50bd760 100644
+> --- a/drivers/ntb/ntb_hw.h
+> +++ b/drivers/ntb/ntb_hw.h
+> @@ -60,8 +60,6 @@
+>  #define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
+>  #define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
+>  
+> -#define msix_table_size(control)	((control & PCI_MSIX_FLAGS_QSIZE)+1)
+
+Good riddance!  :-)
+
+> -
+>  #ifndef readq
+>  static inline u64 readq(void __iomem *addr)
+>  {
+> -- 
+> 1.7.7.6
+> 
