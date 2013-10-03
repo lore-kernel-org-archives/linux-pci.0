@@ -1,39 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:49319 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750779Ab3JaIyw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Oct 2013 04:54:52 -0400
-Date: Thu, 31 Oct 2013 09:54:46 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: mvebu - The bridge secondary status register
- should be 0
-Message-ID: <20131031095446.3c95fbb5@skate>
-In-Reply-To: <1381868190-8595-1-git-send-email-jgunthorpe@obsidianresearch.com>
-References: <1381868190-8595-1-git-send-email-jgunthorpe@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Ralf Baechle" <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	<linux-pci@vger.kernel.org>, <linux-mips@linux-mips.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux390@de.ibm.com>,
+	<linux-s390@vger.kernel.org>, <x86@kernel.org>,
+	<linux-ide@vger.kernel.org>, <iss_storagedev@hp.com>,
+	<linux-nvme@lists.infradead.org>, <linux-rdma@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <e1000-devel@lists.sourceforge.net>,
+	<linux-driver@qlogic.com>,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>,
+	<linux-scsi@vger.kernel.org>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 3 Oct 2013 23:49:45 +0100
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
-
-On Tue, 15 Oct 2013 14:16:30 -0600, Jason Gunthorpe wrote:
-> There are no writable bits in the secondary status register, only
-> write 1 to clear bits. The driver never sets any of the write 1 to
-> clear bits so the status register should always be 0, just remove
-> the set from the write path.
+On Wed, 2013-10-02 at 12:48 +0200, Alexander Gordeev wrote:
+> This series is against "next" branch in Bjorn's repo:
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
 > 
-> Someday the write 1 to clear bits should be copied/cleared directly
-> from registers in the HW.
+> Currently pci_enable_msi_block() and pci_enable_msix() interfaces
+> return a error code in case of failure, 0 in case of success and a
+> positive value which indicates the number of MSI-X/MSI interrupts
+> that could have been allocated. The latter value should be passed
+> to a repeated call to the interfaces until a failure or success:
+>
 > 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> 	for (i = 0; i < FOO_DRIVER_MAXIMUM_NVEC; i++)
+> 		adapter->msix_entries[i].entry = i;
+> 
+> 	while (nvec >= FOO_DRIVER_MINIMUM_NVEC) {
+> 		rc = pci_enable_msix(adapter->pdev,
+> 				     adapter->msix_entries, nvec);
+> 		if (rc > 0)
+> 			nvec = rc;
+> 		else
+> 			return rc;
+> 	}
+> 
+> 	return -ENOSPC;
+> 
+> 
+> This technique proved to be confusing and error-prone. Vast share
+> of device drivers simply fail to follow the described guidelines.
+> 
+> This update converts pci_enable_msix() and pci_enable_msi_block()
+> interfaces to canonical kernel functions and makes them return a
+> error code in case of failure or 0 in case of success.
+[...]
 
-Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+I think this is fundamentally flawed: pci_msix_table_size() and
+pci_get_msi_cap() can only report the limits of the *device* (which the
+driver usually already knows), whereas MSI allocation can also be
+constrained due to *global* limits on the number of distinct IRQs.
+
+Currently pci_enable_msix() will report a positive value if it fails due
+to the global limit.  Your patch 7 removes that.  pci_enable_msi_block()
+unfortunately doesn't appear to do this.
+
+It seems to me that a more useful interface would take a minimum and
+maximum number of vectors from the driver.  This wouldn't allow the
+driver to specify that it could only accept, say, any even number within
+a certain range, but you could still leave the current functions
+available for any driver that needs that.
+
+Ben.
+
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
