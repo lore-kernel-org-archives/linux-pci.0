@@ -1,88 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:64591 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752687Ab3JGUqP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 16:46:15 -0400
-Message-ID: <1381178766.1536.26.camel@bwh-desktop.uk.level5networks.com>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: Tejun Heo <tj@kernel.org>, Alexander Gordeev <agordeev@redhat.com>,
-	<linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Ralf Baechle" <ralf@linux-mips.org>,
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:54215 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753947Ab3JCI1H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 04:27:07 -0400
+Received: by mail-ea0-f179.google.com with SMTP id b10so909649eae.38
+        for <linux-pci@vger.kernel.org>; Thu, 03 Oct 2013 01:27:05 -0700 (PDT)
+Date: Thu, 3 Oct 2013 11:27:02 +0300
+From: Jack Morgenstein <jackm@dev.mellanox.co.il>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
 	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>,
-	"Jon Mason" <jon.mason@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	<linux-pci@vger.kernel.org>, <linux-mips@linux-mips.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux390@de.ibm.com>,
-	<linux-s390@vger.kernel.org>, <x86@kernel.org>,
-	<linux-ide@vger.kernel.org>, <iss_storagedev@hp.com>,
-	<linux-nvme@lists.infradead.org>, <linux-rdma@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <e1000-devel@lists.sourceforge.net>,
-	<linux-driver@qlogic.com>,
-	"Solarflare linux maintainers" <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>,
-	<linux-scsi@vger.kernel.org>
-Date: Mon, 7 Oct 2013 21:46:06 +0100
-In-Reply-To: <1381176656.645.171.camel@pasglop>
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org,
+	ogerlitz@mellanox.com, eli@mellanox.com
+Subject: Re: [PATCH RFC 46/77] mlx4: Update MSI/MSI-X interrupts enablement
+ code
+Message-ID: <20131003112702.6f3210b0@jpm-OptiPlex-GX620>
+In-Reply-To: <b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
-	 <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
-	 <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
-	 <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
-	 <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
-	 <1381009586.645.141.camel@pasglop>
-	 <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
-	 <1381040386.645.143.camel@pasglop>
-	 <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
-	 <20131007180111.GC2481@htj.dyndns.org> <1381176656.645.171.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+ <b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-10-08 at 07:10 +1100, Benjamin Herrenschmidt wrote:
-> On Mon, 2013-10-07 at 14:01 -0400, Tejun Heo wrote:
-> > I don't think the same race condition would happen with the loop.  The
-> > problem case is where multiple msi(x) allocation fails completely
-> > because the global limit went down before inquiry and allocation.  In
-> > the loop based interface, it'd retry with the lower number.
-> > 
-> > As long as the number of drivers which need this sort of adaptive
-> > allocation isn't too high and the common cases can be made simple, I
-> > don't think the "complex" part of interface is all that important.
-> > Maybe we can have reserve / cancel type interface or just keep the
-> > loop with more explicit function names (ie. try_enable or something
-> > like that).
+On Wed,  2 Oct 2013 12:49:02 +0200
+Alexander Gordeev <agordeev@redhat.com> wrote:
+
+UPDATING THIS REPLY.
+Your change log confused me. The change below is not from a "recent
+re-design", it is required due to an earlier patch in this patch set.
+>From the log, I assumed that the change you are talking about is already
+upstream.
+
+I will re-review.
+
+-Jack
+
+NACK.  This change does not do anything logically as far as I can tell.
+pci_enable_msix in the current upstream kernel itself calls
+pci_msix_table_size.  The current code yields the same resultswill
+as the code suggested below. (i.e., the suggested code has no effect on
+optimality).
+
+BTW, pci_msix_table_size never returns a value < 0 (if msix is not
+enabled, it returns 0 for the table size), so the (err < 0) check here
+is not correct. (I also do not like using "err" here anyway for the
+value returned by pci_msix_table_size().  There is no error here, and
+it is simply confusing.
+
+-Jack
+
+> As result of recent re-design of the MSI/MSI-X interrupts enabling
+> pattern this driver has to be updated to use the new technique to
+> obtain a optimal number of MSI/MSI-X interrupts required.
 > 
-> I'm thinking a better API overall might just have been to request
-> individual MSI-X one by one :-)
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/net/ethernet/mellanox/mlx4/main.c |   17 ++++++++---------
+>  1 files changed, 8 insertions(+), 9 deletions(-)
 > 
-> We want to be able to request an MSI-X at runtime anyway ... if I want
-> to dynamically add a queue to my network interface, I want it to be able
-> to pop a new arbitrary MSI-X.
-
-Yes, this would be very useful.
-
-> And we don't want to lock drivers into contiguous MSI-X sets either.
-
-I don't think there's any such limitation now.  The entries array passed
-to pci_enable_msix() specifies which MSI-X vectors the driver wants to
-enable.  It's usually filled with 0..nvec-1 in order, but not always.
-And the IRQ numbers returned aren't usually contiguous either, on x86.
-
-Ben.
-
-> And for the cleanup ... well that's what the "pcim" functions are for,
-> we can just make MSI-X variants.
-
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c
+> b/drivers/net/ethernet/mellanox/mlx4/main.c index 60c9f4f..377a5ea
+> 100644 --- a/drivers/net/ethernet/mellanox/mlx4/main.c
+> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+> @@ -1852,8 +1852,16 @@ static void mlx4_enable_msi_x(struct mlx4_dev
+> *dev) int i;
+>  
+>  	if (msi_x) {
+> +		err = pci_msix_table_size(dev->pdev);
+> +		if (err < 0)
+> +			goto no_msi;
+> +
+> +		/* Try if at least 2 vectors are available */
+>  		nreq = min_t(int, dev->caps.num_eqs -
+> dev->caps.reserved_eqs, nreq);
+> +		nreq = min_t(int, nreq, err);
+> +		if (nreq < 2)
+> +			goto no_msi;
+>  
+>  		entries = kcalloc(nreq, sizeof *entries, GFP_KERNEL);
+>  		if (!entries)
+> @@ -1862,17 +1870,8 @@ static void mlx4_enable_msi_x(struct mlx4_dev
+> *dev) for (i = 0; i < nreq; ++i)
+>  			entries[i].entry = i;
+>  
+> -	retry:
+>  		err = pci_enable_msix(dev->pdev, entries, nreq);
+>  		if (err) {
+> -			/* Try again if at least 2 vectors are
+> available */
+> -			if (err > 1) {
+> -				mlx4_info(dev, "Requested %d
+> vectors, "
+> -					  "but only %d MSI-X vectors
+> available, "
+> -					  "trying again\n", nreq,
+> err);
+> -				nreq = err;
+> -				goto retry;
+> -			}
+>  			kfree(entries);
+>  			goto no_msi;
+>  		}
 
