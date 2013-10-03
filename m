@@ -1,12 +1,8 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:24910 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754521Ab3JBQyD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 12:54:03 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 3 Oct 2013 11:02:54 +0300
+From: Jack Morgenstein <jackm@dev.mellanox.co.il>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -23,69 +19,86 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 24/77] cxgb3: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:48:40 +0200
-Message-Id: <a23ee43c52ece3e83885caff72ae2f2cfe0de935.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org,
+	ogerlitz@mellanox.com, eli@mellanox.com
+Subject: Re: [PATCH RFC 46/77] mlx4: Update MSI/MSI-X interrupts enablement
+ code
+Message-ID: <20131003110254.5f10fbb8@jpm-OptiPlex-GX620>
+In-Reply-To: <b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+	<b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
+On Wed,  2 Oct 2013 12:49:02 +0200
+Alexander Gordeev <agordeev@redhat.com> wrote:
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c |   29 ++++++++++++-----------
- 1 files changed, 15 insertions(+), 14 deletions(-)
+NACK.  This change does not do anything logically as far as I can tell.
+pci_enable_msix in the current upstream kernel itself calls
+pci_msix_table_size.  The current code yields the same results
+as the code suggested below. (i.e., the suggested code has no effect on
+optimality).
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
-index 915729c..bf14fd6 100644
---- a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
-@@ -3090,25 +3090,26 @@ static int cxgb_enable_msix(struct adapter *adap)
- 	int vectors;
- 	int i, err;
- 
--	vectors = ARRAY_SIZE(entries);
-+	err = pci_msix_table_size(adap->pdev);
-+	if (err < 0)
-+		return err;
-+
-+	vectors = min_t(int, err, ARRAY_SIZE(entries));
-+	if (vectors < (adap->params.nports + 1))
-+		return -ENOSPC;
-+
- 	for (i = 0; i < vectors; ++i)
- 		entries[i].entry = i;
- 
--	while ((err = pci_enable_msix(adap->pdev, entries, vectors)) > 0)
--		vectors = err;
--
--	if (!err && vectors < (adap->params.nports + 1)) {
--		pci_disable_msix(adap->pdev);
--		err = -ENOSPC;
--	}
-+	err = pci_enable_msix(adap->pdev, entries, vectors);
-+	if (err)
-+		return err;
- 
--	if (!err) {
--		for (i = 0; i < vectors; ++i)
--			adap->msix_info[i].vec = entries[i].vector;
--		adap->msix_nvectors = vectors;
--	}
-+	for (i = 0; i < vectors; ++i)
-+		adap->msix_info[i].vec = entries[i].vector;
-+	adap->msix_nvectors = vectors;
- 
--	return err;
-+	return 0;
- }
- 
- static void print_port_info(struct adapter *adap, const struct adapter_info *ai)
--- 
-1.7.7.6
+BTW, pci_msix_table_size never returns a value < 0 (if msix is not
+enabled, it returns 0 for the table size), so the (err < 0) check here
+is not correct. (I also do not like using "err" here anyway for the
+value returned by pci_msix_table_size().  There is no error here, and
+it is simply confusing.
+
+-Jack
+
+> As result of recent re-design of the MSI/MSI-X interrupts enabling
+> pattern this driver has to be updated to use the new technique to
+> obtain a optimal number of MSI/MSI-X interrupts required.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/net/ethernet/mellanox/mlx4/main.c |   17 ++++++++---------
+>  1 files changed, 8 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c
+> b/drivers/net/ethernet/mellanox/mlx4/main.c index 60c9f4f..377a5ea
+> 100644 --- a/drivers/net/ethernet/mellanox/mlx4/main.c
+> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+> @@ -1852,8 +1852,16 @@ static void mlx4_enable_msi_x(struct mlx4_dev
+> *dev) int i;
+>  
+>  	if (msi_x) {
+> +		err = pci_msix_table_size(dev->pdev);
+> +		if (err < 0)
+> +			goto no_msi;
+> +
+> +		/* Try if at least 2 vectors are available */
+>  		nreq = min_t(int, dev->caps.num_eqs -
+> dev->caps.reserved_eqs, nreq);
+> +		nreq = min_t(int, nreq, err);
+> +		if (nreq < 2)
+> +			goto no_msi;
+>  
+>  		entries = kcalloc(nreq, sizeof *entries, GFP_KERNEL);
+>  		if (!entries)
+> @@ -1862,17 +1870,8 @@ static void mlx4_enable_msi_x(struct mlx4_dev
+> *dev) for (i = 0; i < nreq; ++i)
+>  			entries[i].entry = i;
+>  
+> -	retry:
+>  		err = pci_enable_msix(dev->pdev, entries, nreq);
+>  		if (err) {
+> -			/* Try again if at least 2 vectors are
+> available */
+> -			if (err > 1) {
+> -				mlx4_info(dev, "Requested %d
+> vectors, "
+> -					  "but only %d MSI-X vectors
+> available, "
+> -					  "trying again\n", nreq,
+> err);
+> -				nreq = err;
+> -				goto retry;
+> -			}
+>  			kfree(entries);
+>  			goto no_msi;
+>  		}
 
