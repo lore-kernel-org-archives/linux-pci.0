@@ -1,123 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:45499 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784Ab3J3Pa5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 11:30:57 -0400
-From: Marek Vasut <marex@denx.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: imx6: fix imprecise abort handler
-Date: Wed, 30 Oct 2013 15:55:02 +0100
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>
-References: <1382056042-7299-1-git-send-email-tharvey@gateworks.com> <CAHM4w1nyXCuTya+TR7Rxiw0ojmwZHwz9iUmz=cG8z_8h2wKhSw@mail.gmail.com> <CAErSpo5NHXXZPm5wj05DSD94KkzEUkefceHPC_Zup+-APUYdKQ@mail.gmail.com>
-In-Reply-To: <CAErSpo5NHXXZPm5wj05DSD94KkzEUkefceHPC_Zup+-APUYdKQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201310301555.02807.marex@denx.de>
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:38126 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754724Ab3JCQLG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 12:11:06 -0400
+Received: by mail-ea0-f180.google.com with SMTP id h10so1221548eaj.11
+        for <linux-pci@vger.kernel.org>; Thu, 03 Oct 2013 09:11:04 -0700 (PDT)
+Date: Thu, 3 Oct 2013 19:11:00 +0300
+From: Jack Morgenstein <jackm@dev.mellanox.co.il>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 51/77] mthca: Update MSI/MSI-X interrupts enablement
+ code
+Message-ID: <20131003191100.3e3e3bfd@jpm-OptiPlex-GX620>
+In-Reply-To: <9d424912ef78993dc75e2af5006cd12913e9e7e7.1380703263.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	<9d424912ef78993dc75e2af5006cd12913e9e7e7.1380703263.git.agordeev@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn Helgaas,
+On Wed,  2 Oct 2013 12:49:07 +0200
+Alexander Gordeev <agordeev@redhat.com> wrote:
 
-> On Mon, Oct 21, 2013 at 2:16 AM, Pratyush Anand
+> Subject: [PATCH RFC 51/77] mthca: Update MSI/MSI-X interrupts
+> enablement code Date: Wed,  2 Oct 2013 12:49:07 +0200
+> Sender: linux-rdma-owner@vger.kernel.org
+> X-Mailer: git-send-email 1.7.7.6
 > 
-> <pratyush.anand@gmail.com> wrote:
-> > Hi,
-> > 
-> > On Sat, Oct 19, 2013 at 7:03 AM, Marek Vasut <marex@denx.de> wrote:
-> >> Dear Tim Harvey,
-> >> 
-> >> > An imprecise abort is triggered when a port behind a switch is
-> >> > accessed and no device is present.  At enumeration, imprecise aborts
-> >> > are not enabled
-> > 
-> > I do not know the complete history. But I do not understand, why
-> > imprecise aborts are not enabled during kernel enumeration.
-> > What happens when PCIe switch is already connected before boot?
-> > pci_common_init will try to read vendor/product ID for a non-existing
-> > function during kernel enumeration itself, which should result in
-> > imprecise external abort. In fact, I had observed with my system that if
-> > a switch is connected to PCIe RC, then abort occurs during kernel
-> > initialization itself. So a proper handling was needed. We called
-> > hook_fault_code from
-> > a subsys_init pcie_init (or similar) function, which insured that abort
-> > handler is called whenever, software tries to read vendor/product id of
-> > a non-existing function
-> > 
-> >> > thus this ends up getting deferred until the kernel has completed
-> >> > init. At
-> >> > that point we must not adjust PC - the handler must do nothing, but a
-> >> > handler must exist.
-> >> > 
-> >> > This fixes random crashes that occur right after freeing init.
-> >> > This is against linux-pci/host-imx6.
-> >> > 
-> >> > Acked-by: Marek Vasut <marex@denx.de>
-> >> > Tested-by: Marek Vasut <marex@denx.de>
-> >> > Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> >> 
-> >> Expanding CC a bit, let's have more eyes on this.
-> >> 
-> >> > ---
-> >> > 
-> >> >  drivers/pci/host/pci-imx6.c |    6 ------
-> >> >  1 file changed, 6 deletions(-)
-> >> > 
-> >> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> >> > index 966bac6..90fce05 100644
-> >> > --- a/drivers/pci/host/pci-imx6.c
-> >> > +++ b/drivers/pci/host/pci-imx6.c
-> >> > @@ -200,12 +200,6 @@ static int pcie_phy_write(void __iomem *dbi_base,
-> >> > int
-> >> > addr, int data) static int imx6q_pcie_abort_handler(unsigned long
-> >> > addr,
-> >> > 
-> >> >               unsigned int fsr, struct pt_regs *regs)
-> >> >  
-> >> >  {
-> >> > 
-> >> > -     /*
-> >> > -      * If it was an imprecise abort, then we need to correct the
-> >> > -      * return address to be _after_ the instruction.
-> >> > -      */
-> >> > -     if (fsr & (1 << 10))
-> >> > -             regs->ARM_pc += 4;
-> > 
-> > Just for knowledge, is there any case other than read of IDs which might
-> > cause imprecise abort? If not, then this handler can be modified a bit to
-> > insure
-> > that it does not handle any unintended imprecise abort.
-> > 
-> > Regards
-> > Pratyush
-> > 
-> >> >       return 0;
-> >> >  
-> >> >  }
+> As result of recent re-design of the MSI/MSI-X interrupts enabling
+> pattern this driver has to be updated to use the new technique to
+> obtain a optimal number of MSI/MSI-X interrupts required.
 > 
-> I'm sort of dubious about imx6q_pcie_abort_handler() to begin with --
-> it seems like it assumes that imprecise aborts are either enabled or
-> disabled.  Isn't there some way it can *check* whether that's the
-> case, so it won't break if those aborts are enabled at a different
-> point in the future?
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
 
-The best way here would be to find a way to prevent the DWC controller from 
-generating data abort on missing device _at_all_ and just make the read from 
-that portion of config space be 0xffffffff or zeroes . I didn't find any 
-configuration bit that would be able to do it though :( Richard, can you maybe 
-check with FSL if such an option exists on the controller?
+ACK.
 
-> For now, I'll apply this to my pci/host-imx6 branch for v3.13, but let
-> me know if you want to tweak it somehow.
-> 
-> Bjorn
+-Jack
