@@ -1,109 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog123.obsmtp.com ([207.126.144.155]:41749 "EHLO
-	eu1sys200aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750844Ab3JPFzR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Oct 2013 01:55:17 -0400
-Date: Wed, 16 Oct 2013 11:24:27 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Marek Vasut <marex@denx.de>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 5/6] PCI: imx6: Force Gen1 operation
-Message-ID: <20131016055427.GB2740@pratyush-vbox>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
- <1381853200-5534-6-git-send-email-marex@denx.de>
+Received: from 8bytes.org ([85.214.48.195]:59377 "EHLO mail.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754739Ab3JCUI1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Oct 2013 16:08:27 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.8bytes.org (Postfix) with SMTP id 0D19312B0EF
+	for <linux-pci@vger.kernel.org>; Thu,  3 Oct 2013 22:08:26 +0200 (CEST)
+Date: Thu, 3 Oct 2013 22:08:24 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH] iommu: Remove stack trace from broken irq remapping
+ warning
+Message-ID: <20131003200824.GA17455@8bytes.org>
+References: <1380300815-1864-1-git-send-email-nhorman@tuxdriver.com>
+ <20131003172142.GA20660@hmsreliant.think-freely.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1381853200-5534-6-git-send-email-marex@denx.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131003172142.GA20660@hmsreliant.think-freely.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 16, 2013 at 12:06:39AM +0800, Marek Vasut wrote:
-> Without forcing the PCIe core into Gen1 operation, the PCIe switch
-> attached directly to the PCIe port is not recognised at all. The
-> PCIe switch is Gen2 capable to make this issue even more puzzling.
+On Thu, Oct 03, 2013 at 01:21:42PM -0400, Neil Horman wrote:
+> On Fri, Sep 27, 2013 at 12:53:35PM -0400, Neil Horman wrote:
+> > The warning for the irq remapping broken check in intel_irq_remapping.c is
+> > pretty pointless.  We need the warning, but we know where its comming from, the
+> > stack trace will always be the same, and it needlessly triggers things like
+> > Abrt.  This changes the warning to just print a text warning about BIOS being
+> > broken, without the stack trace, then sets the appropriate taint bit.  Since we
+> > automatically disable irq remapping, theres no need to contiue making Abrt jump
+> > at this problem
+> > 
+> > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> > CC: Joerg Roedel <joro@8bytes.org>
+> > CC: Bjorn Helgaas <bhelgaas@google.com>
+> > CC: Andy Lutomirski <luto@amacapital.net>
+> > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > CC: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 > 
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Frank Li <lznuaa@gmail.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
-> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> Cc: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Richard Zhu <r65037@freescale.com>
-> Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> Cc: Sean Cross <xobs@kosagi.com>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
-> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> Cc: Tim Harvey <tharvey@gateworks.com>
-> Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/host/pci-imx6.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index ca8c5de..8402e9a 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -321,6 +321,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
->  {
->  	int count = 0;
->  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> +	uint32_t tmp;
->  
->  	imx6_pcie_assert_core_reset(pp);
->  
-> @@ -330,13 +331,23 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
->  
->  	dw_pcie_setup_rc(pp);
->  
-> +	/*
-> +	 * FIXME:
-> +	 * Force Gen1 operation. In case the IP block is in Gen2 operation
-> +	 * mode, it does not detect the PCIe switch at all.
-> +	 */
-> +	tmp = readl(pp->dbi_base + 0x7c);
-> +	tmp &= ~0xf;
-> +	tmp |= 0x1;
-> +	writel(tmp, pp->dbi_base + 0x7c);
-> +
+> Ping Bjorn, Jeorg, any thoughts here?
 
-Since you are forcing RC to work in GEN1, so you will not be able to
-connect any device at GEN2 now.
+Yes, the patch is doing the right thing. I have it already on my list
+and will merge it soon.
 
-Yes, There are some buggy PCIe devices which works with GEN1 only host.
 
-So better solution should be to initialize RC by default at GEN2 or
-highest speed. Further, a parameter say gen_only can be passed from
-DT to force GEN1 only mode.
+	Joerg
 
-What do you say?
 
-Regards
-Pratyush
-
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
->  			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
->  
->  	while (!dw_pcie_link_up(pp)) {
->  		usleep_range(100, 1000);
->  		count++;
-> -		if (count >= 10) {
-> +		if (count >= 200) {
->  			dev_err(pp->dev, "phy link never came up\n");
->  			dev_dbg(pp->dev,
->  				"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
-> -- 
-> 1.8.4.rc3
