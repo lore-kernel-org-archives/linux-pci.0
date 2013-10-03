@@ -1,45 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f172.google.com ([209.85.161.172]:61512 "EHLO
-	mail-gg0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755441Ab3JHUUa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 16:20:30 -0400
-Received: by mail-gg0-f172.google.com with SMTP id a5so1565779ggn.3
-        for <linux-pci@vger.kernel.org>; Tue, 08 Oct 2013 13:20:29 -0700 (PDT)
-Subject: [PATCH 2/2] kobject: fix kset sample error path
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Neil Horman <nhorman@tuxdriver.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Zdenek Kabelac <zkabelac@redhat.com>
-Date: Tue, 08 Oct 2013 14:20:24 -0600
-Message-ID: <20131008202024.19377.25396.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20131008201915.19377.34185.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131008201915.19377.34185.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from top.free-electrons.com ([176.31.233.9]:41476 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754266Ab3JCMpC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 08:45:02 -0400
+Date: Thu, 3 Oct 2013 14:44:57 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH RESEND] PCI: mvebu: Dynamically detect if the PEX link
+ is up to enable hot plug
+Message-ID: <20131003144457.4131aea3@skate>
+In-Reply-To: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
+References: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, example_init() leaked a kset if any of the object creations
-failed.  This fixes the leak by calling kset_unregister() in the error
-path.
+Dear Jason Gunthorpe,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- samples/kobject/kset-example.c |    1 +
- 1 file changed, 1 insertion(+)
+On Tue,  1 Oct 2013 11:58:00 -0600, Jason Gunthorpe wrote:
+> Otherwise hotplugging the PEX doesn't work at all since the driver
+> detects the link state at probe time. Simply replacing the two tests
+> of haslink with a register read is enough to fix it.
+> 
+> Tested on kirkwood with repeated plug/unplug of the link partner.
+> 
+> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 
-diff --git a/samples/kobject/kset-example.c b/samples/kobject/kset-example.c
-index d0c687f..5dce351 100644
---- a/samples/kobject/kset-example.c
-+++ b/samples/kobject/kset-example.c
-@@ -262,6 +262,7 @@ baz_error:
- bar_error:
- 	destroy_foo_obj(foo_obj);
- foo_error:
-+	kset_unregister(example_kset);
- 	return -EINVAL;
- }
- 
-
+Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+-- 
+Thomas Petazzoni, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
