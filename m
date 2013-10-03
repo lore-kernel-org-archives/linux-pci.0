@@ -1,109 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 28 Oct 2013 18:39:49 +0100
-From: Veaceslav Falico <vfalico@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [BUG 3.12.rc4] Oops: unable to handle kernel paging request
- during shutdown
-Message-ID: <20131028173949.GG11209@redhat.com>
-References: <CA+55aFy7TpvkVuPEOJ7Qqirwap1gXoD1_MrYLhgPAYuVpN8u=w@mail.gmail.com>
- <alpine.DEB.2.02.1310251221310.5266@ionos.tec.linutronix.de>
- <CA+55aFxw1Hm4QVeEigkByP5RppSL30oHnLoR16C=henf-a=uFQ@mail.gmail.com>
- <CA+55aFyb72qoZ1Tjpb+=q-6+GmwoOXjfntY_zZnf300gg3d1Hg@mail.gmail.com>
- <CA+55aFxuVpDo3LvmG9j-Hu7sENLTcsB6_CY2TA4mE-k+CuTeGg@mail.gmail.com>
- <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com>
- <20131027212407.GA17439@kroah.com>
- <CAErSpo5NmBDqRA3URAQPmw4iC3xvpDdd9JFROuftLJE1YsbPhA@mail.gmail.com>
- <20131028173056.GF11209@redhat.com>
- <CAErSpo4YgTgapdUcMwMWZzQqDHn8AcGu-OPQfWbP4svUerr0Ow@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from webmail.solarflare.com ([12.187.104.25]:58199 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755823Ab3JCVxA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 17:53:00 -0400
+Message-ID: <1380837174.3419.21.camel@bwh-desktop.uk.level5networks.com>
+Subject: Re: [PATCH RFC 06/77] PCI/MSI: Factor out pci_get_msi_cap()
+ interface
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	<linux-pci@vger.kernel.org>, <linux-mips@linux-mips.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux390@de.ibm.com>,
+	<linux-s390@vger.kernel.org>, <x86@kernel.org>,
+	<linux-ide@vger.kernel.org>, <iss_storagedev@hp.com>,
+	<linux-nvme@lists.infradead.org>, <linux-rdma@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <e1000-devel@lists.sourceforge.net>,
+	<linux-driver@qlogic.com>,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>,
+	<linux-scsi@vger.kernel.org>
+Date: Thu, 3 Oct 2013 22:52:54 +0100
+In-Reply-To: <9c282c4ab92731c719d161d2db6fc54ce33891d9.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	 <9c282c4ab92731c719d161d2db6fc54ce33891d9.1380703262.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <CAErSpo4YgTgapdUcMwMWZzQqDHn8AcGu-OPQfWbP4svUerr0Ow@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 28, 2013 at 11:35:09AM -0600, Bjorn Helgaas wrote:
->On Mon, Oct 28, 2013 at 11:30 AM, Veaceslav Falico <vfalico@redhat.com> wrote:
->> On Mon, Oct 28, 2013 at 11:23:41AM -0600, Bjorn Helgaas wrote:
->>>
->>> [+cc Veaceslav]
->>>
->>> On Sun, Oct 27, 2013 at 3:24 PM, Greg Kroah-Hartman
->>> <gregkh@linuxfoundation.org> wrote:
->>>>
->>>> On Sun, Oct 27, 2013 at 09:13:29PM +0000, Linus Torvalds wrote:
->>>>>
->>>>> .. and one more case of freeing a delayed work object (likely a kobject
->>>>> again):
->>>>>
->>>>> This time it looks like it's in the PCI layer, freeing the msi irq
->>>>> information.
->>>>>
->>>>> It looks like that code simply does
->>>>>
->>>>>     kobject_del(&entry->kobj);
->>>>>     kobject_put(&entry->kobj);
->>>>>     list_del(&entry->list);
->>>>>     kfree(entry);
->>>>>
->>>>> and the problem is that the "entry->kobj" may have *other* references
->>>>> to it, thanks to people accessing it through /sys, so despite doing a
->>>>> kojbect_del/kobject_put(), it's not at all ok to then do a "kfree()"
->>>>> on it. The embedded kobj might still be in use.
->>>>>
->>>>> Afaik, that code should do the kfree() on the kobject in the _release_
->>>>> method, not synchronously like that.
->>>>>
->>>>> We already have a msi_kobj_release(), I'm wondering why that doesn't
->>>>> do the kfree().
->>>>>
->>>>> Bjorn? Yinghai? Greg, comments about that msi kobj usage?
->>>>
->>>>
->>>> Ick, it really should be doing a kfree() in the release only.  Bjorn has
->>>> had a bunch of changes in this area recently, perhaps they are in
->>>> linux-next waiting for 3.13, and I've talked to him about getting rid of
->>>> all of the kobjects for msi files, as I don't think it's needed at all.
->>>
->>>
->>> IIRC, you said you might take a look at converting this to attributes
->>> on the train back home, so I haven't looked into it myself :)
->>>
->>>> Bjorn, don't you have a fix for this problem already done somewhere?
->>>
->>>
->>> Yep, this is clearly wrong, and Veaceslav has a patch that moves the
->>> kfree() to the release function.  I've been waiting for a consolidated
->>> repost of all his MSI-related fixes, but maybe he's been waiting for
->>> *me*.
->>
->>
->> https://lkml.org/lkml/2013/10/9/170
->>
->> My patchset is ready to be applied, in its v2 state.
->>
->> Except that the bits with kobject_del() (theoretical race) - which are done
->> in your patch "kobject: remove kset from sysfs immediately in
->> kset_unregister()", though I didn't see it accepted.
->>
->> Should I re-send the patchset?
->
->Can you please repost it?  That will be easier for me than digging
->individual messages out of the archives.  Thanks, and sorry for my
->confusion.
+On Wed, 2013-10-02 at 12:48 +0200, Alexander Gordeev wrote:
+[...]
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -812,6 +812,21 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>  	return 0;
+>  }
+>  
+> +int pci_get_msi_cap(struct pci_dev *dev)
+> +{
+> +	int ret;
+> +	u16 msgctl;
+> +
+> +	if (!dev->msi_cap)
+> +		return -EINVAL;
+[...]
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1144,6 +1144,11 @@ struct msix_entry {
+>  
+> 
+>  #ifndef CONFIG_PCI_MSI
+> +static inline int pci_get_msi_cap(struct pci_dev *dev)
+> +{
+> +	return -1;
+[...]
 
-Will rebase and repost, sorry for all the noise about it :).
+Shouldn't this also return -EINVAL?
 
-Thank you!
+Ben.
 
->
->Bjorn
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
