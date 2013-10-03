@@ -1,145 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:36673 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933761Ab3JPAPJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 20:15:09 -0400
-Received: by mail-wg0-f48.google.com with SMTP id b13so12432wgh.3
-        for <linux-pci@vger.kernel.org>; Tue, 15 Oct 2013 17:15:07 -0700 (PDT)
+Received: from mga03.intel.com ([143.182.124.21]:54365 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753216Ab3JCA3s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Oct 2013 20:29:48 -0400
+Date: Wed, 2 Oct 2013 17:29:42 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 77/77] vxge: Update MSI/MSI-X interrupts enablement
+ code
+Message-ID: <20131003002941.GJ6768@jonmason-lab>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <467ce10b1df795edf80ed222816ab739fee7b0ea.1380703263.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1381853200-5534-7-git-send-email-marex@denx.de>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
-	<1381853200-5534-7-git-send-email-marex@denx.de>
-Date: Tue, 15 Oct 2013 17:15:07 -0700
-Message-ID: <CAJ+vNU0e1LDFuqt_PCaycrrrD=dYRPU6fKEQZxkskO4hcJFcRw@mail.gmail.com>
-Subject: Re: [PATCH 6/6] PCI: designware: Fix DT resource retrieval
-From: Tim Harvey <tharvey@gateworks.com>
-To: Marek Vasut <marex@denx.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <467ce10b1df795edf80ed222816ab739fee7b0ea.1380703263.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 15, 2013 at 9:06 AM, Marek Vasut <marex@denx.de> wrote:
->
-> The resource retrieval from the DT was not done right. This resulted
-> in bogus values in the IO/MEM window configuration. I re-used the code
-> implementation from pci-tegra.c to do the resource retrieval correctly.
->
-> This in turn resulted in very strange behavior on two different kinds
-> of setup:
->
-> Setup #1:                             ,-------> Intel i210 (igb driver)
->            i.MX6 root port -----> PCIe switch
->                                       `-------> Empty slot
->
-> Setup #2:                             ,-------> Marvell Yukon (sky2 driver)
->            i.MX6 root port -----> PCIe switch
->                                       `-------> Empty slot
->
-> Both setups expressed the same behavior. The system booted and the
-> ethernet controllers were properly detected. After the controllers
-> were configured and just after they reported "Ethernet Link Up", the
-> entire system froze. It is now clear this happened because the resources
-> were incorrectly configured, which in turn means the iATU was also not
-> configured correctly.
->
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Frank Li <lznuaa@gmail.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
-> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> Cc: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Richard Zhu <r65037@freescale.com>
-> Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> Cc: Sean Cross <xobs@kosagi.com>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
-> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> Cc: Tim Harvey <tharvey@gateworks.com>
-> Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
+On Wed, Oct 02, 2013 at 12:49:33PM +0200, Alexander Gordeev wrote:
+> As result of recent re-design of the MSI/MSI-X interrupts enabling
+> pattern this driver has to be updated to use the new technique to
+> obtain a optimal number of MSI/MSI-X interrupts required.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > ---
->  drivers/pci/host/pcie-designware.c | 17 ++++++-----------
->  1 file changed, 6 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 5d183ae..97c5951 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -370,6 +370,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->         struct device_node *np = pp->dev->of_node;
->         struct of_pci_range range;
->         struct of_pci_range_parser parser;
-> +       struct resource res;
->         u32 val;
->
->         struct irq_domain *irq_domain;
-> @@ -381,28 +382,22 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->
->         /* Get the I/O and memory ranges from DT */
->         for_each_of_pci_range(&parser, &range) {
-> -               unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
-> +               of_pci_range_to_resource(&range, np, &res);
-> +               unsigned long restype = res.flags & IORESOURCE_TYPE_BITS;
->                 if (restype == IORESOURCE_IO) {
-> -                       of_pci_range_to_resource(&range, np, &pp->io);
-> +                       memcpy(&pp->io, &res, sizeof(res));
->                         pp->io.name = "I/O";
-> -                       pp->io.start = max_t(resource_size_t,
-> -                                            PCIBIOS_MIN_IO,
-> -                                            range.pci_addr + global_io_offset);
-> -                       pp->io.end = min_t(resource_size_t,
-> -                                          IO_SPACE_LIMIT,
-> -                                          range.pci_addr + range.size
-> -                                          + global_io_offset);
+>  drivers/net/ethernet/neterion/vxge/vxge-main.c |   36 ++++++++++-------------
+>  1 files changed, 16 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/neterion/vxge/vxge-main.c b/drivers/net/ethernet/neterion/vxge/vxge-main.c
+> index b81ff8b..b4d40dd 100644
+> --- a/drivers/net/ethernet/neterion/vxge/vxge-main.c
+> +++ b/drivers/net/ethernet/neterion/vxge/vxge-main.c
+> @@ -2297,7 +2297,21 @@ static int vxge_alloc_msix(struct vxgedev *vdev)
+>  	int msix_intr_vect = 0, temp;
+>  	vdev->intr_cnt = 0;
+>  
+> -start:
+> +	ret = pci_msix_table_size(vdev->pdev);
+> +	if (ret < 0)
+> +		goto alloc_entries_failed;
+> +
+> +	if (ret < (vdev->no_of_vpath * 2 + 1)) {
+> +		if ((max_config_vpath != VXGE_USE_DEFAULT) || (ret < 3)) {
+> +			ret = -ENOSPC;
+> +			goto alloc_entries_failed;
+> +		}
+> +		/* Try with less no of vector by reducing no of vpaths count */
+> +		temp = (ret - 1)/2;
+> +		vxge_close_vpaths(vdev, temp);
+> +		vdev->no_of_vpath = temp;
+> +	}
 
-Nak - removing the adjustment to io.start/io.end breaks the io space
-mapping as the entire io-space allocation gets taken by the root
-complex.  This causes any device that requests io space to fail to
-obtain it (your igb driver from Setup1 apparently doesn't use io space
-where my sky2 device from Setup2 above does).
+The original code was ugly (not my code, so I can say that).  I'd like
+to see it a little stream lined.  Something like:
 
-If I put back the adjustment to io.start/io.end above my sky2 device
-gets its io resource properly but still hangs the bus after a few
-interrupts.  Are you sure you don't have other changes that you
-haven't posted yet that could have addressed the hang you get when you
-bring up your igb device?
 
-I agree that the the 'hang' we are seeing is a bus-hang caused by an
-improper iATU mapping, however I'm not convinced its a dts parsing
-issue.
+        vdev->intr_cnt = pci_msix_table_size(vdev->pdev);
 
-Tim
+        if (vdev->intr_cnt % 2 == 0)
+                vdev->intr_cnt--;
 
->                         pp->config.io_size = resource_size(&pp->io);
->                         pp->config.io_bus_addr = range.pci_addr;
->                 }
->                 if (restype == IORESOURCE_MEM) {
-> -                       of_pci_range_to_resource(&range, np, &pp->mem);
-> +                       memcpy(&pp->mem, &res, sizeof(res));
->                         pp->mem.name = "MEM";
->                         pp->config.mem_size = resource_size(&pp->mem);
->                         pp->config.mem_bus_addr = range.pci_addr;
->                 }
->                 if (restype == 0) {
-> -                       of_pci_range_to_resource(&range, np, &pp->cfg);
-> +                       memcpy(&pp->cfg, &res, sizeof(res));
->                         pp->config.cfg0_size = resource_size(&pp->cfg)/2;
->                         pp->config.cfg1_size = resource_size(&pp->cfg)/2;
->                 }
-> --
-> 1.8.4.rc3
->
+        if (vdev->intr_cnt < 3 || max_config_vpath != VXGE_USE_DEFAULT)
+                goto alloc_entries_failed;
+
+        if (vdev->intr_cnt != vdev->no_of_vpath * 2 + 1) {
+                vxge_close_vpaths(vdev, vdev->intr_cnt / 2);
+                vdev->no_of_vpath = vdev->intr_cnt / 2;
+        }
+
+
+> +
+>  	/* Tx/Rx MSIX Vectors count */
+>  	vdev->intr_cnt = vdev->no_of_vpath * 2;
+>  
+> @@ -2347,25 +2361,7 @@ start:
+>  	vdev->vxge_entries[j].in_use = 0;
+>  
+>  	ret = pci_enable_msix(vdev->pdev, vdev->entries, vdev->intr_cnt);
+> -	if (ret > 0) {
+> -		vxge_debug_init(VXGE_ERR,
+> -			"%s: MSI-X enable failed for %d vectors, ret: %d",
+> -			VXGE_DRIVER_NAME, vdev->intr_cnt, ret);
+> -		if ((max_config_vpath != VXGE_USE_DEFAULT) || (ret < 3)) {
+> -			ret = -ENOSPC;
+> -			goto enable_msix_failed;
+> -		}
+> -
+> -		kfree(vdev->entries);
+> -		kfree(vdev->vxge_entries);
+> -		vdev->entries = NULL;
+> -		vdev->vxge_entries = NULL;
+> -		/* Try with less no of vector by reducing no of vpaths count */
+> -		temp = (ret - 1)/2;
+> -		vxge_close_vpaths(vdev, temp);
+> -		vdev->no_of_vpath = temp;
+> -		goto start;
+> -	} else if (ret < 0)
+> +	if (ret)
+>  		goto enable_msix_failed;
+
+Nit, space here please.
+
+>  	return 0;
+>  
+> -- 
+> 1.7.7.6
+> 
