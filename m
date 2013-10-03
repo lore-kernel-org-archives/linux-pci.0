@@ -1,171 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:35651 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753786Ab3JaXdF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Oct 2013 19:33:05 -0400
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 2/2] PCI: mvebu - Support a bridge with no IO port window
-Date: Thu, 31 Oct 2013 17:33:00 -0600
-Message-Id: <1383262380-6984-2-git-send-email-jgunthorpe@obsidianresearch.com>
-In-Reply-To: <1383262380-6984-1-git-send-email-jgunthorpe@obsidianresearch.com>
-References: <1383262380-6984-1-git-send-email-jgunthorpe@obsidianresearch.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 3 Oct 2013 10:14:33 +0300
+From: Eli Cohen <eli@dev.mellanox.co.il>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 50/77] mlx5: Update MSI/MSI-X interrupts enablement
+ code
+Message-ID: <20131003071433.GA7299@mtldesk30>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <9650a7dfbcfd5f1da21f7b093665abf4b1041071.1380703263.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9650a7dfbcfd5f1da21f7b093665abf4b1041071.1380703263.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make pcie-io-aperture and the IO port MBUS ID in ranges optional.
-If not provided the bridge reports to Linux that IO space mapping is
-not supported and refuses to configure an IO mbus window.
+On Wed, Oct 02, 2013 at 12:49:06PM +0200, Alexander Gordeev wrote:
+>  
+> +	err = pci_msix_table_size(dev->pdev);
+> +	if (err < 0)
+> +		return err;
+> +
+>  	nvec = dev->caps.num_ports * num_online_cpus() + MLX5_EQ_VEC_COMP_BASE;
+>  	nvec = min_t(int, nvec, num_eqs);
+> +	nvec = min_t(int, nvec, err);
+>  	if (nvec <= MLX5_EQ_VEC_COMP_BASE)
+>  		return -ENOSPC;
 
-This allows both complete disable (do not specify pcie-io-aperture) and
-per-port disable (do not specify a IO target ranges entry for the port)
+Making sure we don't request more vectors then the device's is capable
+of -- looks good.
+>  
+> @@ -131,20 +136,15 @@ static int mlx5_enable_msix(struct mlx5_core_dev *dev)
+>  	for (i = 0; i < nvec; i++)
+>  		table->msix_arr[i].entry = i;
+>  
+> -retry:
+> -	table->num_comp_vectors = nvec - MLX5_EQ_VEC_COMP_BASE;
+>  	err = pci_enable_msix(dev->pdev, table->msix_arr, nvec);
+> -	if (err <= 0) {
+> +	if (err) {
+> +		kfree(table->msix_arr);
+>  		return err;
+> -	} else if (err > MLX5_EQ_VEC_COMP_BASE) {
+> -		nvec = err;
+> -		goto retry;
+>  	}
+>  
 
-Most PCIE devices these days do not require IO support to function,
-so having an option to disable it in the driver is useful.
+According to latest sources, pci_enable_msix() may still fail so why
+do you want to remove this code?
 
-Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
----
- drivers/pci/host/pci-mvebu.c | 63 ++++++++++++++++++++++++++++++--------------
- 1 file changed, 43 insertions(+), 20 deletions(-)
-
-v3 changes:
- - Remove the bogus <= changes when checking the IO limit register
- - Rebase ontop of 'PCI: mvebu - The bridge should obey the MEM and IO command bits'
-   which is a necessary dependency.
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 721fca9..b36b91b 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -132,6 +132,11 @@ struct mvebu_pcie_port {
- 	size_t iowin_size;
- };
- 
-+static inline bool mvebu_has_ioport(struct mvebu_pcie_port *port)
-+{
-+	return port->io_target != -1 && port->io_attr != -1;
-+}
-+
- static bool mvebu_pcie_link_up(struct mvebu_pcie_port *port)
- {
- 	return !(readl(port->base + PCIE_STAT_OFF) & PCIE_STAT_LINK_DOWN);
-@@ -293,6 +298,12 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
- 		return;
- 	}
- 
-+	if (!mvebu_has_ioport(port)) {
-+		dev_WARN(&port->pcie->pdev->dev,
-+			 "Attempt to set IO when IO is disabled\n");
-+		return;
-+	}
-+
- 	/*
- 	 * We read the PCI-to-PCI bridge emulated registers, and
- 	 * calculate the base address and size of the address decoding
-@@ -407,9 +418,12 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
- 		break;
- 
- 	case PCI_IO_BASE:
--		*value = (bridge->secondary_status << 16 |
--			  bridge->iolimit          <<  8 |
--			  bridge->iobase);
-+		if (!mvebu_has_ioport(port))
-+			*value = bridge->secondary_status << 16;
-+		else
-+			*value = (bridge->secondary_status << 16 |
-+				  bridge->iolimit          <<  8 |
-+				  bridge->iobase);
- 		break;
- 
- 	case PCI_MEMORY_BASE:
-@@ -469,6 +483,9 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
- 	{
- 		u32 old = bridge->command;
- 
-+		if (!mvebu_has_ioport(port))
-+			value &= ~PCI_COMMAND_IO;
-+
- 		bridge->command = value & 0xffff;
- 		if ((old ^ bridge->command) & PCI_COMMAND_IO)
- 			mvebu_pcie_handle_iobase_change(port);
-@@ -639,7 +656,9 @@ static int __init mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
- 	struct mvebu_pcie *pcie = sys_to_pcie(sys);
- 	int i;
- 
--	pci_add_resource_offset(&sys->resources, &pcie->realio, sys->io_offset);
-+	if (resource_size(&pcie->realio) != 0)
-+		pci_add_resource_offset(&sys->resources, &pcie->realio,
-+					sys->io_offset);
- 	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
- 	pci_add_resource(&sys->resources, &pcie->busn);
- 
-@@ -748,12 +767,17 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
- #define DT_CPUADDR_TO_ATTR(cpuaddr)   (((cpuaddr) >> 48) & 0xFF)
- 
- static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
--			      unsigned long type, int *tgt, int *attr)
-+			      unsigned long type,
-+			      unsigned int *tgt,
-+			      unsigned int *attr)
- {
- 	const int na = 3, ns = 2;
- 	const __be32 *range;
- 	int rlen, nranges, rangesz, pna, i;
- 
-+	*tgt = -1;
-+	*attr = -1;
-+
- 	range = of_get_property(np, "ranges", &rlen);
- 	if (!range)
- 		return -EINVAL;
-@@ -807,16 +831,15 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	mvebu_mbus_get_pcie_io_aperture(&pcie->io);
--	if (resource_size(&pcie->io) == 0) {
--		dev_err(&pdev->dev, "invalid I/O aperture size\n");
--		return -EINVAL;
--	}
- 
--	pcie->realio.flags = pcie->io.flags;
--	pcie->realio.start = PCIBIOS_MIN_IO;
--	pcie->realio.end = min_t(resource_size_t,
--				  IO_SPACE_LIMIT,
--				  resource_size(&pcie->io));
-+	if (resource_size(&pcie->io) != 0) {
-+		pcie->realio.flags = pcie->io.flags;
-+		pcie->realio.start = PCIBIOS_MIN_IO;
-+		pcie->realio.end = min_t(resource_size_t,
-+					 IO_SPACE_LIMIT,
-+					 resource_size(&pcie->io));
-+	} else
-+		pcie->realio = pcie->io;
- 
- 	/* Get the bus range */
- 	ret = of_pci_parse_bus_range(np, &pcie->busn);
-@@ -873,12 +896,12 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 			continue;
- 		}
- 
--		ret = mvebu_get_tgt_attr(np, port->devfn, IORESOURCE_IO,
--					 &port->io_target, &port->io_attr);
--		if (ret < 0) {
--			dev_err(&pdev->dev, "PCIe%d.%d: cannot get tgt/attr for io window\n",
--				port->port, port->lane);
--			continue;
-+		if (resource_size(&pcie->io) != 0)
-+			mvebu_get_tgt_attr(np, port->devfn, IORESOURCE_IO,
-+					   &port->io_target, &port->io_attr);
-+		else {
-+			port->io_target = -1;
-+			port->io_attr = -1;
- 		}
- 
- 		port->base = mvebu_pcie_map_registers(pdev, child, port);
--- 
-1.8.1.2
-
+> -	mlx5_core_dbg(dev, "received %d MSI vectors out of %d requested\n", err, nvec);
+> -	kfree(table->msix_arr);
+> +	table->num_comp_vectors = nvec - MLX5_EQ_VEC_COMP_BASE;
+>  
+> -	return -ENOSPC;
+> +	return 0;
+>  }
+>  
+>  static void mlx5_disable_msix(struct mlx5_core_dev *dev)
+> -- 
+> 1.7.7.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
