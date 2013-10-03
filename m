@@ -1,66 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27193 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754740Ab3JBR6j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:58:39 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39263 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754548Ab3JCU02 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 16:26:28 -0400
+Date: Thu, 3 Oct 2013 16:26:10 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 32/77] hpsa: Fallback to single MSI mode in case MSI-X failed
-Date: Wed,  2 Oct 2013 12:48:48 +0200
-Message-Id: <a8343fb00f8dfdcb637913b5a691dcea7ecffffc.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+	Andy Lutomirski <luto@amacapital.net>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH] iommu: Remove stack trace from broken irq remapping
+ warning
+Message-ID: <20131003202610.GB20660@hmsreliant.think-freely.org>
+References: <1380300815-1864-1-git-send-email-nhorman@tuxdriver.com>
+ <20131003172142.GA20660@hmsreliant.think-freely.org>
+ <20131003200824.GA17455@8bytes.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131003200824.GA17455@8bytes.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/scsi/hpsa.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+On Thu, Oct 03, 2013 at 10:08:24PM +0200, Joerg Roedel wrote:
+> On Thu, Oct 03, 2013 at 01:21:42PM -0400, Neil Horman wrote:
+> > On Fri, Sep 27, 2013 at 12:53:35PM -0400, Neil Horman wrote:
+> > > The warning for the irq remapping broken check in intel_irq_remapping.c is
+> > > pretty pointless.  We need the warning, but we know where its comming from, the
+> > > stack trace will always be the same, and it needlessly triggers things like
+> > > Abrt.  This changes the warning to just print a text warning about BIOS being
+> > > broken, without the stack trace, then sets the appropriate taint bit.  Since we
+> > > automatically disable irq remapping, theres no need to contiue making Abrt jump
+> > > at this problem
+> > > 
+> > > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> > > CC: Joerg Roedel <joro@8bytes.org>
+> > > CC: Bjorn Helgaas <bhelgaas@google.com>
+> > > CC: Andy Lutomirski <luto@amacapital.net>
+> > > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > > CC: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+> > 
+> > Ping Bjorn, Jeorg, any thoughts here?
+> 
+> Yes, the patch is doing the right thing. I have it already on my list
+> and will merge it soon.
+> 
+Awesome, thanks guys.  Regarding the taint, I'll propose something for that
+early next week.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index eb17b3d..252b65d 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4112,7 +4112,7 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 
- 		err = pci_msix_table_size(h->pdev);
- 		if (err < ARRAY_SIZE(hpsa_msix_entries))
--			goto default_int_mode;
-+			goto single_msi_mode;
- 
- 		for (i = 0; i < ARRAY_SIZE(hpsa_msix_entries); i++) {
- 			hpsa_msix_entries[i].vector = 0;
-@@ -4128,8 +4128,9 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 			return;
- 		}
- 		dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
--		goto default_int_mode;
-+		goto single_msi_mode;
- 	}
-+single_msi_mode:
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
- 		dev_info(&h->pdev->dev, "MSI\n");
- 		if (!pci_enable_msi(h->pdev))
--- 
-1.7.7.6
+Regards
+Neil
 
+> 
+> 	Joerg
+> 
+> 
+> 
