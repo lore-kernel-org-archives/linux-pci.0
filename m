@@ -1,107 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:37823 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756921Ab3JJP6l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 11:58:41 -0400
-From: Marek Vasut <marex@denx.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v7 0/2] Add PCIe support for i.MX6q
-Date: Thu, 10 Oct 2013 17:58:34 +0200
-Cc: "Zhu Richard-R65037" <r65037@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>,
-	Frank Li <lznuaa@gmail.com>, Sean Cross <xobs@kosagi.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>
-References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org> <201310101225.10455.marex@denx.de> <CAErSpo7oHK1tyndKdgk_6f3F7O0pMCSUV+RLUy0V75OKKFniow@mail.gmail.com>
-In-Reply-To: <CAErSpo7oHK1tyndKdgk_6f3F7O0pMCSUV+RLUy0V75OKKFniow@mail.gmail.com>
+Received: from newmail.cct.lsu.edu ([130.39.21.13]:47571 "EHLO
+	envelope.cct.lsu.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750842Ab3JDHxn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 03:53:43 -0400
+Date: Fri, 4 Oct 2013 02:19:17 -0500
+From: Bryce Lelbach <blelbach@cct.lsu.edu>
+To: Don Dutile <ddutile@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: Patch: Increase maximum bus memory window size (for Xeon Phi)
+Message-ID: <20131004071917.GB5246@pyxis.br.cox.net>
+References: <20130524165947.GA2487@pyxis.br.cox.net>
+ <51ACE76B.1000307@redhat.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201310101758.35085.marex@denx.de>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="zx4FCpZtqtKETZ7O"
+In-Reply-To: <51ACE76B.1000307@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
 
-> On Thu, Oct 10, 2013 at 4:25 AM, Marek Vasut <marex@denx.de> wrote:
-> > In the meantime, this is what I see upon probe with V6 of the patches:
-> > 
-> > Linux version 3.12.0-rc2-next-20130927+
-> > [...]
-> > imx6q-pcie 1ffc000.pcie: phy link never came up
-> > PCI host bridge to bus 0000:00
-> > pci_bus 0000:00: root bus resource [io  0x1000-0x10000]
-> > pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-> > pci_bus 0000:00: No busn resource found for root bus, will use [bus
-> > 00-ff]
-> 
-> This indicates a bug in your host bridge driver.  You must supply the
-> bus number range claimed by the host bridge.  There's no way the PCI
-> core can figure that out itself.  We do assume [bus 00-ff], but that's
-> only a fallback and will prevent multi-host bridge configurations from
-> working.
-> 
-> > PCI: bus0: Fast back to back transfers disabled
-> > PCI: bus1: Fast back to back transfers enabled
-> > PCI: Device 0000:00:00.0 not available because of resource collisions
-> > pcieport: probe of 0000:00:00.0 failed with error -22
-> 
-> If you boot with "ignore_loglevel", you should see more details about
-> this device, including the BAR values we read from it.  Based on
-> pcibios_enable_device() in arch/arm/kernel/bios32.c, my guess is that
-> 00:00.0 has an uninitialized BAR (maybe it is in power-on state), and
-> you didn't do anything to assign the BAR before trying to bind the
-> pcieport driver to it.  You might be missing a call to
-> pci_bus_assign_resources() or pci_assign_unassigned_resources().
+--zx4FCpZtqtKETZ7O
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I tried you suggestion, this is what I got now (and with V7 of the patches):
+Sorry, my mistake (re: the RHEL thing).
 
-Note that my topology is: rootport->2_port_switch->ethernet_chip , the other 
-port of the switch is not used .
+I'll see if I can dig up the original author's name.
 
-imx6q-pcie 1ffc000.pcie: phy link never came up
-PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x1000-0x10000]
-pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
-pci_bus 0000:00: scanning bus
-pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
-pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
-pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
-pci 0000:00:00.0: calling pci_fixup_ide_bases+0x0/0x5c
-pci 0000:00:00.0: supports D1
-pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
-pci 0000:00:00.0: PME# disabled
-pci_bus 0000:00: fixups for bus
-PCI: bus0: Fast back to back transfers disabled
-pci 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 0
-pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
-pci_bus 0000:01: scanning bus
-pci_bus 0000:01: fixups for bus
-PCI: bus1: Fast back to back transfers enabled
-pci_bus 0000:01: bus scan returning with max=01
-pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-pci_bus 0000:00: bus scan returning with max=01
-pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to 01
-PCI: Device 0000:00:00.0 not available because of resource collisions
-pcieport: probe of 0000:00:00.0 failed with error -22
-pci 0000:00:00.0: fixup irq: got 155
-pci 0000:00:00.0: assigning IRQ 155                                                                                                                                         
-pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]                                                                                                               
-pci 0000:00:00.0: BAR 0: set to [mem 0x01000000-0x010fffff] (PCI address 
-[0x1000000-0x10                                                                                    
-fffff])                                                                                                                                                                     
-pci 0000:00:00.0: BAR 6: assigned [mem 0x01100000-0x0110ffff pref]                                                                                                          
-pci 0000:00:00.0: PCI bridge to [bus 01]                                                                                                                                    
-pci 0000:00:00.0: PCI bridge to [bus 01]                                                                                                                                    
-pci_bus 0000:00: resource 4 [io  0x1000-0x10000]                                                                                                                            
-pci_bus 0000:00: resource 5 [mem 0x01000000-0x01efffff]
+--=20
+Bryce Adelstein-Lelbach aka wash
+STE||AR Group, Center for Computation and Technology, LSU
+--
+225-317-3866 - iPhone
+225-578-6182 - Work (no voicemail)
+--
+stellar.cct.lsu.edu
+boost-spirit.com
+llvm.linuxfoundation.org
+cppnow.org
+--
 
-What is this conflicting device 0000:00:01 I observe here? Does it have to do 
-with the switch ?
+--zx4FCpZtqtKETZ7O
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-Best regards,
-Marek Vasut
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQEcBAEBAgAGBQJSTmv1AAoJEBLaNmtPI4b8600IALNzBYKriixje1red9FvlVQI
+fSKX+eYi0iWlzitboXT55wNGtUzURzpDANOwaD86YEb3wOP+rcZEsYQiwdhV762y
+bHT4QHaJJGFvOBVru3Z0VT5ga+VT09JSEqE7uFrQ+oSyTEnfuVlB+WnnpwjbndtD
+5dkFKyVwQfUK5kVO+m121wQVR0FR1A7oJnDjByhZoILZVRYw+ZP/YuTS+324XxjY
+PHD3fmkgTKYwJfTE0Mh6A3RoFdKdDoBs72dVJtrS/tdA14IPoUgKDe2MVcLDCx75
+Tsk2pZ2akna+iNSWMt0u/IR98vAMGmjus8UZY+11j3HQM2xzQFEVDH+w573OjE0=
+=tP0+
+-----END PGP SIGNATURE-----
+
+--zx4FCpZtqtKETZ7O--
