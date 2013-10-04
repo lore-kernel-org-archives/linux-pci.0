@@ -1,86 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:13398 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750960Ab3JSGpt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:45:49 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 29/29] vmxnet3: Make use of pcim_enable_msix_range() interface
-Date: Fri, 18 Oct 2013 19:12:29 +0200
-Message-Id: <75788c5da384b16633fdab43d37a277aa92f38fd.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18865 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752610Ab3JDSeV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 14:34:21 -0400
+Date: Fri, 4 Oct 2013 14:34:09 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, boris.ostrovsky@oracle.com
+Cc: Aaron Opfer <me@aaronopfer.com>, linux-pci@vger.kernel.org,
+	Clemens Ladisch <clemens@ladisch.de>,
+	xen-devel@lists.xenproject.org
+Subject: Re: ASMedia ASM1083/1085 rev3 and Xen DMA Failure
+Message-ID: <20131004183409.GA21802@phenom.dumpdata.com>
+References: <CAOsGJpcuNuaEsBHk9mV2Lh_qiygzgfLYigSsbDoBke1GJ_XG-Q@mail.gmail.com>
+ <20131004172958.GA18743@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131004172958.GA18743@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/vmxnet3/vmxnet3_drv.c |   40 +++++++++---------------------------
- 1 files changed, 10 insertions(+), 30 deletions(-)
+On Fri, Oct 04, 2013 at 11:29:58AM -0600, Bjorn Helgaas wrote:
+> [+cc Konrad, xen-devel]
 
-diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
-index d33802c..e552d2b 100644
---- a/drivers/net/vmxnet3/vmxnet3_drv.c
-+++ b/drivers/net/vmxnet3/vmxnet3_drv.c
-@@ -2735,39 +2735,19 @@ vmxnet3_read_mac_addr(struct vmxnet3_adapter *adapter, u8 *mac)
-  */
- 
- static int
--vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
--			     int vectors)
-+vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter, int vectors)
- {
--	int err = -EINVAL, vector_threshold;
--	vector_threshold = VMXNET3_LINUX_MIN_MSIX_VECT;
--
--	while (vectors >= vector_threshold) {
--		err = pci_enable_msix(adapter->pdev, adapter->intr.msix_entries,
--				      vectors);
--		if (!err) {
--			adapter->intr.num_intrs = vectors;
--			return 0;
--		} else if (err < 0) {
--			dev_err(&adapter->netdev->dev,
--				   "Failed to enable MSI-X, error: %d\n", err);
--			return err;
--		} else if (err < vector_threshold) {
--			dev_info(&adapter->pdev->dev,
--				 "Number of MSI-Xs which can be allocated "
--				 "is lower than min threshold required.\n");
--			return -ENOSPC;
--		} else {
--			/* If fails to enable required number of MSI-x vectors
--			 * try enabling minimum number of vectors required.
--			 */
--			dev_err(&adapter->netdev->dev,
--				"Failed to enable %d MSI-X, trying %d instead\n",
--				    vectors, vector_threshold);
--			vectors = vector_threshold;
--		}
-+	vectors = pcim_enable_msix_range(adapter->pdev,
-+					 adapter->intr.msix_entries, vectors,
-+					 VMXNET3_LINUX_MIN_MSIX_VECT);
-+	if (vectors < 0) {
-+		dev_err(&adapter->netdev->dev,
-+			"Failed to enable MSI-X, error: %d\n", vectors);
-+		return vectors;
- 	}
- 
--	return err;
-+	adapter->intr.num_intrs = vectors;
-+	return 0;
- }
- 
- 
--- 
-1.7.7.6
+Hey Bjorn, Thanks!
+> 
+> On Wed, Oct 02, 2013 at 04:43:46PM -0400, Aaron Opfer wrote:
+> > First time submitting the kernel dev list, so if I have demonstrated
+> > gross incompetence in some way, please cut me some slack. :)
+> > 
+> > I discussed with Clemens Ladisch an issue I was having that I thought
+> > was related to the driver he authored for my soundcard, but on his
+> > suggestion I experimented with other PCI devices and we have narrowed
+> > the issue to the PCI Bridge.
+> > 
+> > What hints me toward DMA handling being the fault is the following
+> > message I receive during kernel initialization after rebooting from an
+> > Xen hypervisor into a baremetal-kernel, without a power-cycle:
+> > 
+> > [0.012815] dmar: DRHD: handling fault status reg 3
+> > [0.012868] dmar: DMAR:[DMA Read] Request device [07:00.0] fault addr 7e00000
+> > [0.012868] DMAR:[fault reason 02] Present bit in context entry is clear
+> 
+> Presumably 07:00.0 is your soundcard, and apparently it did a DMA
+> read to 0x7e00000, which wasn't mapped by the IOMMU.
+> 
+> > In addition to other hints, such as simple IO like changing the active
+> > port on the soundcard worked (I could hear the relays clicking) but
+> > not the functions that DMA would be used (streaming audio).
+> > 
+> > The PCI devices in my system are connected via this device, as listed by lspci:
+> > 
+> > 06:00.0 PCI bridge: ASMedia Technology Inc. ASM1083/1085 PCIe to PCI
+> > Bridge (rev 03)
+> > 
+> > This PCI bridge works under bare-metal Linux normally (w/ various
+> > debian kernels stable/unstable/testing/backports), but under Xen
+> > Hypervisor the PCI devices connected exhibit bad behavior.
+> 
+> So it fails with Xen but works otherwise?  I assume there are other
+> PCI devices, too?  Do they work?
+> 
+> If you want to open a report at http://bugzilla.kernel.org, that would
+> be a handy place to attach a complete dmesg log and "lspci -vv" output
+> for more details.
+> 
+> > For
+> > instance, aformentioned sound card outputs no sound and gets no
+> > microphone input at all, and an ethernet card causes a system lockup
+> > as soon as gnome's network manager attempts DHCP over it (presumably;
+> > I did not test this as thoroughly as the sound card).
+> > 
+> > I've used Xen Hypervisors 4.1 and 4.2 and had the issues I described
+> > above with both of them. I was briefly running 4.3 but I did not test
+> > the device.
 
+So lets seperate some of these issues. The sound-card issue might be
+related to the Linux kernel Xen-SWIOTLB (fixed at some point)- so could
+you tell me what the kernel version you have?
+
+Xen 4.3 also has numerous fixes in the IOMMU path.
+
+> > 
+> > Rev1 of the ASM1083 was apparently buggy to the point of being
+> > unusable, as Clemens pointed out. I would be disappointed if this
+> > device is similarly unsalvageable,but would be happier if this buggy
+> > hardware at the very least outputted warnings to users who attempt to
+> > use it (in Xen).
+> > 
+> > All The Best,
+> > 
+> > Aaron Opfer
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
