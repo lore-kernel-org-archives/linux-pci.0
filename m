@@ -1,63 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:55194 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755681Ab3JGUcA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 16:32:00 -0400
-Received: by mail-ie0-f180.google.com with SMTP id u16so16917647iet.39
-        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 13:31:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <b13ea983a4154c7d9567b171e8316ca9@BLUPR05MB118.namprd05.prod.outlook.com>
-References: <b13ea983a4154c7d9567b171e8316ca9@BLUPR05MB118.namprd05.prod.outlook.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 7 Oct 2013 14:31:39 -0600
-Message-ID: <CAErSpo4Yg-kUz3LHaWPVmzE1rGhdiqeJWuHwrM=-hxhP_zYH_g@mail.gmail.com>
-Subject: Re: Enhancing pciehp (was: pcielw An alternate pcie hotplug driver)
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: "ebiederm@xmission.com" <ebiederm@xmission.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Guenter Roeck <groeck@juniper.net>,
-	"tom.l.nguyen@intel.com" <tom.l.nguyen@intel.com>,
-	"kristen.c.accardi@intel.com" <kristen.c.accardi@intel.com>,
-	"rajesh.shah@intel.com" <rajesh.shah@intel.com>,
-	"rajatjain.linux@gmail.com" <rajatjain.linux@gmail.com>
+Received: from e06smtp13.uk.ibm.com ([195.75.94.109]:51370 "EHLO
+	e06smtp13.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752905Ab3JDHlL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 03:41:11 -0400
+Received: from /spool/local
+	by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <schwidefsky@de.ibm.com>;
+	Fri, 4 Oct 2013 08:41:09 +0100
+Date: Fri, 4 Oct 2013 09:40:53 +0200
+From: Martin Schwidefsky <schwidefsky@de.ibm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 04/77] PCI/MSI/s390: Remove superfluous check of MSI
+ type
+Message-ID: <20131004094053.5e846a29@mschwide>
+In-Reply-To: <bae65aa3e30dfd23bd5ed47add7310cfbb96243a.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	<bae65aa3e30dfd23bd5ed47add7310cfbb96243a.1380703262.git.agordeev@redhat.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 7, 2013 at 12:58 PM, Rajat Jain <rajatjain@juniper.net> wrote:
-> Hello Bjorn / Eric / Folks,
->
-> This is to seek suggestions about a problem I'm trying to solve.
->
-> The problem
-> ===========
-> 1) My company makes routers that have hot-pluggable cards with PCI express interfaces on them. We need to be able to hot-plug those cards, however the cards or the slots do not have the fancy bells & whistles (hot plug elements like MRL, sensor, attention button etc), and hence the hot-plug signals from the PCIe switch aren't really connected.
+On Wed,  2 Oct 2013 12:48:20 +0200
+Alexander Gordeev <agordeev@redhat.com> wrote:
 
-The elements you mention are optional per the spec (PCIe r3.0, sec
-6.7.1).  The lack of them, by itself, should not be enough to force
-you to write a new hotplug driver.  pciehp is used for ExpressCard
-hotplug, and that's a similar situation where there's no MRL, no MRL
-sensor, no interlock, no attention button, etc.
+> arch_setup_msi_irqs() hook can only be called from the generic
+> MSI code which ensures correct MSI type parameter.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  arch/s390/pci/pci.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index c79c6e4..61a3c2c 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -425,8 +425,6 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>  	int rc;
+> 
+>  	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
+> -	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
+> -		return -EINVAL;
+>  	if (type == PCI_CAP_ID_MSI && nvec > 1)
+>  		return 1;
+>  	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
 
-What connects the hot-pluggable card to the system?  PCI?  PCIe?
-Something else?  If it's PCIe, it seems like you'd make your life
-simpler by taking advantage of some or all of the hotplug support that
-is likely in the PCIe Root Port or Downstream Port leading to the
-slot.
+Acked-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
 
-> 2) In addition to the above, we have onboard ASICs that are reachable via the PCIe. However, as part of regular operation of a router (e.g. user wants to switch off some ports), the ASICs can be off-lined / on-lined via out-of-band HW pins. The result is that we could see the PCIe link go down or up to that ASIC. This can be thought of as a "virtual" hot-plug of ASIC devices. Since the ASICs are themselves on the board, there is really no slot, and the HP signals again do not make much sense in this case.
+-- 
+blue skies,
+   Martin.
 
-It doesn't really matter that there's no physical slot and the user
-can't replace an ASIC with a different one.  You can still use the
-hotplug signals that *are* relevant, e.g., it sounds like things
-related to Hot-Plug Surprise, Presence Detect, and Data Link Layer
-State would still make sense.
+"Reality continues to ruin my life." - Calvin.
 
-The current pciehp driver doesn't really do anything with the Data
-Link Layer State Changed Enable bit (it looks like we *disable* that
-notification, but never *enable* it).  It sounds like a reasonable
-thing to add to pciehp, though.
-
-Bjorn
