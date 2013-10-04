@@ -1,60 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:51215 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751475Ab3JGWkM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Oct 2013 18:40:12 -0400
-Date: Mon, 7 Oct 2013 16:40:06 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Seungwon Jeon <tgih.jun@samsung.com>
-Subject: Re: [PATCH RESEND] PCI: mvebu: Dynamically detect if the PEX link is
- up to enable hot plug
-Message-ID: <20131007224006.GA27499@obsidianresearch.com>
-References: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
- <CAErSpo6pvAQ9exEUsB0p8nmoqs0s5yzfYsstx7wh-2bqDtzBOQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo6pvAQ9exEUsB0p8nmoqs0s5yzfYsstx7wh-2bqDtzBOQ@mail.gmail.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:50070 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751325Ab3JDIvs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 04:51:48 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MU400DM3Z8E9DA0@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Fri, 04 Oct 2013 17:51:46 +0900 (KST)
+From: Seungwon Jeon <tgih.jun@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: 'Jingoo Han' <jg1.han@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+References: <001d01cea3e5$3a07c8b0$ae175a10$%jun@samsung.com>
+ <000f01cea48e$f5fc3160$e1f49420$%han@samsung.com>
+In-reply-to: 
+Subject: [PATCH] PCI: designware: add missing header guards
+Date: Fri, 04 Oct 2013 17:51:45 +0900
+Message-id: <002001cec0de$f4cd48d0$de67da70$%jun@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 07, 2013 at 04:28:52PM -0600, Bjorn Helgaas wrote:
-> [+cc Seungwon]
-> 
-> On Tue, Oct 1, 2013 at 11:58 AM, Jason Gunthorpe
-> <jgunthorpe@obsidianresearch.com> wrote:
-> > Otherwise hotplugging the PEX doesn't work at all since the driver
-> > detects the link state at probe time. Simply replacing the two tests
-> > of haslink with a register read is enough to fix it.
-> >
-> > Tested on kirkwood with repeated plug/unplug of the link partner.
-> >
-> > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> 
-> Last I heard (Sep 26), you had some mvebu changes in your tree
-> already, Jason, so I was assuming you'd handle pci-mvebu.c changes, at
-> least for the v3.13 merge window.  But you marked this "resend"; does
-> that mean you're waiting for me to do something with it?
+Added missing header guards against the redundant inclusion.
 
-Are you thinking of Jason C.? He is handling much of the mvebu stuff.
+Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+---
+ drivers/pci/host/pcie-designware.h |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-Hopefully Jason C. can clarify which route these patches should take
-to hit the 3.13 merge window.
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index faccbbf..0b685b5 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -11,6 +11,9 @@
+  * published by the Free Software Foundation.
+  */
+ 
++#ifndef _PCIE_DESIGNWARE_H_
++#define _PCIE_DESIGNWARE_H_
++
+ struct pcie_port_info {
+ 	u32		cfg0_size;
+ 	u32		cfg1_size;
+@@ -77,3 +80,5 @@ int dw_pcie_host_init(struct pcie_port *pp);
+ int dw_pcie_setup(int nr, struct pci_sys_data *sys);
+ struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys);
+ int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin);
++
++#endif /* _PCIE_DESIGNWARE_H_ */
+-- 
+1.7.0.4
 
-This was reposted at the request of Thomas, IIRC.
 
->   PCI: mvebu - Support a bridge with no IO port window
-
-This one is broken, I have yet to fix it still.
-
->   PCI: mvebu: add I/O access wrappers
-
-This isn't one of mine ..
-
-Regards,
-Jason
