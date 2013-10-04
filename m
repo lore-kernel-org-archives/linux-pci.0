@@ -1,79 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:58808 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753745Ab3JLU5S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Oct 2013 16:57:18 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [GIT PULL] ACPI and power management fixes for v3.12-rc5
-Date: Sat, 12 Oct 2013 23:09:03 +0200
-Message-ID: <2749952.3MjEW76cA8@vostro.rjw.lan>
+Received: from mail-gg0-f170.google.com ([209.85.161.170]:48416 "EHLO
+	mail-gg0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592Ab3JDXBX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 19:01:23 -0400
+Received: by mail-gg0-f170.google.com with SMTP id f4so672909ggn.1
+        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 16:01:23 -0700 (PDT)
+Date: Fri, 4 Oct 2013 17:01:18 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Rajat Jain <rajatjain.linux@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, tom.l.nguyen@intel.com,
+	yanmin.zhang@intel.com
+Subject: Re: pciehp & other hot-plug drivers (shpc etc..)
+Message-ID: <20131004230118.GB26108@google.com>
+References: <CADTPrLTuzvj3iSMdNVs2BjDFHsWqjRPM4qDkkpmv+P11LMP0JQ@mail.gmail.com>
+ <20130930020500.GB28774@kroah.com>
+ <CADTPrLSpfnY6Z1MgpR=C4SRH7yXJ2BKi3w5ChLpTuWL3zZWx_Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CADTPrLSpfnY6Z1MgpR=C4SRH7yXJ2BKi3w5ChLpTuWL3zZWx_Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Thu, Oct 03, 2013 at 06:08:15PM -0700, Rajat Jain wrote:
+>  Hello,
+> 
+> On Sun, Sep 29, 2013 at 7:05 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> > On Sun, Sep 29, 2013 at 11:27:23AM -0700, Rajat Jain wrote:
+> >> Hello List,
+> >>
+> >> Today all the PCI Hot-plug drivers (shpc, acpihp, cpqhp, ibmhp etc
+> >> except pciedhp) directly claim the downstream port bridge device.
+> >> Where as in case of pciehp, the PCIe port bus driver claims the bridge
+> >> device, and service drivers (aer, pm, pciehp) simply register for the
+> >> service with it.
+> >>
+> >> 1) Does that mean that in a system where I am using a driver other
+> >> than pciehp for hot-plug (eg. shpc), I cannot use service drivers like
+> >> AER or PM on the same port (since the device would be claimed by
+> >> shpc, it would not be available to port bus driver)?
+> >
+> > It depends on your system, and you BIOS, which sets up all of this
+> > stuff.  It's up to the kernel to bind to the proper things it exposes.
+> 
+> Actually, I just wanted to understand that on a machine where
+> shpchp.ko is to be used for hot-plug, can I still use the AER port bus
+> service driver? My understanding is NO, because shpc will claim the
+> downstream port bridge, and hence port bus driver will not be able to
+> claim it?
 
-Please pull from the git repository at
+I think you are correct, at least in principle.  Both pcie_portdriver
+and shpc_driver try to claim all PCI bridge devices.  pcie_portdrv_probe()
+succeeds only for PCIe Root Ports, Upstream Ports, and Downstream Ports.
+shpc_probe() succeeds only for bridges with the SHPC capability.  If
+one of them does claim the bridge, the driver core should not call the
+other probe method.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm+acpi-3.12-rc5
+So if you have a PCIe Root Port or switch port that has the SHPC
+capability, either pcie_portdrv_probe() or shpc_probe() will fail,
+depending on which was called first.
 
-to receive ACPI and power management fixes for v3.12-rc5 with
-top-most commit 2c5bfce855ead529e2ea6f33757aa26a651d4460
+I've never seen such a device, so I don't know whether this is a
+problem in practice.
 
-  Merge branch 'acpi-pci-hotplug'
-
-on top of commit d0e639c9e06d44e713170031fe05fb60ebe680af
-
-  Linux 3.12-rc4
-
-These fix two recent bugs in ACPIPHP (ACPI-based PCI hotplug) and
-update a bunch of web links and e-mail addresses in MAINTAINERS, docs
-and Kconfig that either are stale or will expire soon.
-
-Specifics:
-
- - The WARN_ON() in acpiphp_enumerate_slots() triggers as a false
-   positive in some cases, so drop it.
-
- - Add a missing pci_dev_put() to an error code path in
-   acpiphp_enumerate_slots().
-
- - Replace my old e-mail address that's going to expire with a new one.
-
- - Update ACPI web links and git tree information in MAINTAINERS.
-
- - Update links to the Linux-ACPI project's page in MAINTAINERS.
-
- - Update some stale links and e-mail addresses under Documentation
-   and in the ACPI Kconfig file.
-
-Thanks!
-
-
----------------
-
-Rafael J. Wysocki (6):
-      MAINTAINERS / Documentation: Update Rafael's e-mail address
-      MAINTAINERS / ACPI: Update links and git tree information
-      MAINTAINERS / ACPI: Update links to the Linux-ACPI project web page
-      ACPI / PM / Documentation: Replace outdated project links and addresses
-      ACPI / hotplug / PCI: Fix error code path in acpiphp_enumerate_slots()
-      ACPI / hotplug / PCI: Drop WARN_ON() from acpiphp_enumerate_slots()
-
----------------
-
- Documentation/ABI/stable/sysfs-bus-usb        |    8 +++----
- Documentation/ABI/testing/sysfs-devices-power |   32 ++++++++++++-------------
- Documentation/ABI/testing/sysfs-power         |   22 ++++++++---------
- Documentation/acpi/dsdt-override.txt          |    2 +-
- MAINTAINERS                                   |   26 ++++++++++----------
- drivers/acpi/Kconfig                          |    2 +-
- drivers/pci/hotplug/acpiphp_glue.c            |    8 ++++---
- 7 files changed, 51 insertions(+), 49 deletions(-)
-
+Bjorn
