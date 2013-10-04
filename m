@@ -1,90 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:25464 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753274Ab3JBRCL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:02:11 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 68/77] sfc: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:49:24 +0200
-Message-Id: <d1d4c1c82e340283193c6a56e2e21c691956e605.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+Received: from host217-34-137-81.in-addr.btopenworld.com ([217.34.137.81]:34344
+	"EHLO external.sentinel2" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753965Ab3JDTn7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 15:43:59 -0400
+Message-ID: <524F1812.6060707@bobich.net>
+Date: Fri, 04 Oct 2013 20:33:38 +0100
+From: Gordan Bobic <gordan@bobich.net>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Aaron Opfer <me@aaronopfer.com>, linux-pci@vger.kernel.org,
+	Clemens Ladisch <clemens@ladisch.de>,
+	xen-devel@lists.xenproject.org
+Subject: Re: [Xen-devel] ASMedia ASM1083/1085 rev3 and Xen DMA Failure
+References: <CAOsGJpcuNuaEsBHk9mV2Lh_qiygzgfLYigSsbDoBke1GJ_XG-Q@mail.gmail.com> <20131004172958.GA18743@google.com>
+In-Reply-To: <20131004172958.GA18743@google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
+On 10/04/2013 06:29 PM, Bjorn Helgaas wrote:
+> [+cc Konrad, xen-devel]
+>
+> On Wed, Oct 02, 2013 at 04:43:46PM -0400, Aaron Opfer wrote:
+>> First time submitting the kernel dev list, so if I have demonstrated
+>> gross incompetence in some way, please cut me some slack. :)
+>>
+>> I discussed with Clemens Ladisch an issue I was having that I thought
+>> was related to the driver he authored for my soundcard, but on his
+>> suggestion I experimented with other PCI devices and we have narrowed
+>> the issue to the PCI Bridge.
+>>
+>> What hints me toward DMA handling being the fault is the following
+>> message I receive during kernel initialization after rebooting from an
+>> Xen hypervisor into a baremetal-kernel, without a power-cycle:
+>>
+>> [0.012815] dmar: DRHD: handling fault status reg 3
+>> [0.012868] dmar: DMAR:[DMA Read] Request device [07:00.0] fault addr 7e00000
+>> [0.012868] DMAR:[fault reason 02] Present bit in context entry is clear
+>
+> Presumably 07:00.0 is your soundcard, and apparently it did a DMA
+> read to 0x7e00000, which wasn't mapped by the IOMMU.
+>
+>> In addition to other hints, such as simple IO like changing the active
+>> port on the soundcard worked (I could hear the relays clicking) but
+>> not the functions that DMA would be used (streaming audio).
+>>
+>> The PCI devices in my system are connected via this device, as listed by lspci:
+>>
+>> 06:00.0 PCI bridge: ASMedia Technology Inc. ASM1083/1085 PCIe to PCI
+>> Bridge (rev 03)
+>>
+>> This PCI bridge works under bare-metal Linux normally (w/ various
+>> debian kernels stable/unstable/testing/backports), but under Xen
+>> Hypervisor the PCI devices connected exhibit bad behavior.
+>
+> So it fails with Xen but works otherwise?  I assume there are other
+> PCI devices, too?  Do they work?
+>
+> If you want to open a report at http://bugzilla.kernel.org, that would
+> be a handy place to attach a complete dmesg log and "lspci -vv" output
+> for more details.
+>
+>> For
+>> instance, aformentioned sound card outputs no sound and gets no
+>> microphone input at all, and an ethernet card causes a system lockup
+>> as soon as gnome's network manager attempts DHCP over it (presumably;
+>> I did not test this as thoroughly as the sound card).
+>>
+>> I've used Xen Hypervisors 4.1 and 4.2 and had the issues I described
+>> above with both of them. I was briefly running 4.3 but I did not test
+>> the device.
+>>
+>> Rev1 of the ASM1083 was apparently buggy to the point of being
+>> unusable, as Clemens pointed out. I would be disappointed if this
+>> device is similarly unsalvageable,but would be happier if this buggy
+>> hardware at the very least outputted warnings to users who attempt to
+>> use it (in Xen).
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/sfc/efx.c |   18 +++++++++++-------
- 1 files changed, 11 insertions(+), 7 deletions(-)
+Just out of interest, have you tried without Xen, with a normal kernel 
+with full virtualization support with intel_iommu=1 (or equivalent AMD 
+option)? If you still get the same problem it is likely the same issue I 
+have with phantom PCI bridges.
 
-diff --git a/drivers/net/ethernet/sfc/efx.c b/drivers/net/ethernet/sfc/efx.c
-index 07c9bc4..184ef9f 100644
---- a/drivers/net/ethernet/sfc/efx.c
-+++ b/drivers/net/ethernet/sfc/efx.c
-@@ -1261,21 +1261,24 @@ static int efx_probe_interrupts(struct efx_nic *efx)
- 		n_channels += extra_channels;
- 		n_channels = min(n_channels, efx->max_channels);
- 
--		for (i = 0; i < n_channels; i++)
--			xentries[i].entry = i;
--		rc = pci_enable_msix(efx->pci_dev, xentries, n_channels);
--		if (rc > 0) {
-+		rc = pci_msix_table_size(efx->pci_dev);
-+		if (rc < 0)
-+			goto msi;
-+
-+		if (rc < n_channels) {
- 			netif_err(efx, drv, efx->net_dev,
- 				  "WARNING: Insufficient MSI-X vectors"
- 				  " available (%d < %u).\n", rc, n_channels);
- 			netif_err(efx, drv, efx->net_dev,
- 				  "WARNING: Performance may be reduced.\n");
--			EFX_BUG_ON_PARANOID(rc >= n_channels);
- 			n_channels = rc;
--			rc = pci_enable_msix(efx->pci_dev, xentries,
--					     n_channels);
- 		}
- 
-+		EFX_BUG_ON_PARANOID(n_channels > ARRAY_SIZE(xentries));
-+		for (i = 0; i < n_channels; i++)
-+			xentries[i].entry = i;
-+
-+		rc = pci_enable_msix(efx->pci_dev, xentries, n_channels);
- 		if (rc == 0) {
- 			efx->n_channels = n_channels;
- 			if (n_channels > extra_channels)
-@@ -1293,6 +1296,7 @@ static int efx_probe_interrupts(struct efx_nic *efx)
- 				efx_get_channel(efx, i)->irq =
- 					xentries[i].vector;
- 		} else {
-+msi:
- 			/* Fall back to single channel MSI */
- 			efx->interrupt_mode = EFX_INT_MODE_MSI;
- 			netif_err(efx, drv, efx->net_dev,
--- 
-1.7.7.6
-
+Gordan
