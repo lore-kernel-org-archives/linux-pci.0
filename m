@@ -1,39 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:46943 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819Ab3JaNHH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Oct 2013 09:07:07 -0400
-Received: by mail-ie0-f172.google.com with SMTP id tp5so4913434ieb.31
-        for <linux-pci@vger.kernel.org>; Thu, 31 Oct 2013 06:07:07 -0700 (PDT)
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:41198 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751043Ab3JDSJn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 14:09:43 -0400
+Received: by mail-ie0-f175.google.com with SMTP id e14so9775289iej.20
+        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 11:09:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXp+9XKbs8ccJVt08icax6SOWioDfL5s+H1SWGi9cTAiw@mail.gmail.com>
-References: <5270DBFC.3050705@cn.fujitsu.com> <CAE9FiQXp+9XKbs8ccJVt08icax6SOWioDfL5s+H1SWGi9cTAiw@mail.gmail.com>
+In-Reply-To: <1380363121-1977-2-git-send-email-sachin.kamat@linaro.org>
+References: <1380363121-1977-1-git-send-email-sachin.kamat@linaro.org> <1380363121-1977-2-git-send-email-sachin.kamat@linaro.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 31 Oct 2013 07:06:46 -0600
-Message-ID: <CAErSpo6GURsmnjd8THvi4V1PruQChKLTOyCUAaiO+p4JDiwz=g@mail.gmail.com>
-Subject: Re: [PATCH] pci: fix invalid list entry warning for double pci device
- removing via sysfs
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
+Date: Fri, 4 Oct 2013 12:09:22 -0600
+Message-ID: <CAErSpo6nO_t9HOZt8Z7S8Ca7yKjntWJWEg7uON05LmvHWEieZA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: driver: Staticize pci_dev_pm_ops
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 31, 2013 at 12:45 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-
-> I have updated version, please check if attached patches fix the problem.
+On Sat, Sep 28, 2013 at 4:12 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+> 'pci_dev_pm_ops' is local to this file. Make it static.
 >
-> virtfn_release.patch
-> fix_cx3_hotplug_2.patch
-> fix_racing_removing_6_1.patch
-> fix_racing_removing_6_2.patch
-> fix_racing_removing_6_3.patch
+> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
 
-Ignored because it's a hassle for me to deal with attachments.  They
-don't show up in patchwork, it's hard for reviewers to comment on
-them, and I have to manually download the attachments and keep track
-of what order they need to go in.
+Applied to pci/misc, thanks!
 
 Bjorn
+
+> ---
+>  drivers/pci/pci-driver.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 38f3c01..653c8c5 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1124,7 +1124,7 @@ static int pci_pm_runtime_idle(struct device *dev)
+>
+>  #ifdef CONFIG_PM
+>
+> -const struct dev_pm_ops pci_dev_pm_ops = {
+> +static const struct dev_pm_ops pci_dev_pm_ops = {
+>         .prepare = pci_pm_prepare,
+>         .complete = pci_pm_complete,
+>         .suspend = pci_pm_suspend,
+> --
+> 1.7.9.5
+>
