@@ -1,77 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24146 "EHLO mx1.redhat.com"
+Received: from multi.imgtec.com ([194.200.65.239]:11391 "EHLO multi.imgtec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751306Ab3JFGBl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 6 Oct 2013 02:01:41 -0400
-Date: Sun, 6 Oct 2013 08:02:44 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Ben Hutchings <bhutchings@solarflare.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Message-ID: <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
- <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
- <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
- <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
- <1381009586.645.141.camel@pasglop>
+	id S1751181Ab3JDXb2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Oct 2013 19:31:28 -0400
+From: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
+CC: <james.hogan@imgtec.com>, <Qais.Yousef@imgtec.com>,
+	Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
+Subject: [PATCH v2 1/4] PCI/quirks: Fix PIIX4 memory base and size mask
+Date: Fri, 4 Oct 2013 16:30:50 -0700
+Message-ID: <1380929453-15428-2-git-send-email-dengcheng.zhu@imgtec.com>
+In-Reply-To: <1380929453-15428-1-git-send-email-dengcheng.zhu@imgtec.com>
+References: <1380929453-15428-1-git-send-email-dengcheng.zhu@imgtec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1381009586.645.141.camel@pasglop>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 06, 2013 at 08:46:26AM +1100, Benjamin Herrenschmidt wrote:
-> On Sat, 2013-10-05 at 16:20 +0200, Alexander Gordeev wrote:
-> > So my point is - drivers should first obtain a number of MSIs they *can*
-> > get, then *derive* a number of MSIs the device is fine with and only then
-> > request that number. Not terribly different from memory or any other type
-> > of resource allocation ;)
-> 
-> What if the limit is for a group of devices ? Your interface is racy in
-> that case, another driver could have eaten into the limit in between the
-> calls.
+From: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
 
-Well, the another driver has had a better karma ;) But seriously, the
-current scheme with a loop is not race-safe wrt to any other type of
-resource which might exhaust. What makes the quota so special so we
-should care about it and should not care i.e. about lack of msi_desc's?
+According to Intel PIIX4 datasheet: The memory address consists of a 17-bit
+base address (AD[31:15]) and a 7-bit mask (AD[21:15]). This provides memory
+ranges from 32 Kbytes to 4 Mbytes in size.
 
-Yeah, I know the quota might hit more likely. But why it is not addressed
-right now then? Not a single function in chains...
-  rtas_msi_check_device() -> msi_quota_for_device() -> traverse_pci_devices()
-  rtas_setup_msi_irqs() -> msi_quota_for_device() -> traverse_pci_devices()
-...is race-safe. So if it has not been bothering anyone until now then
-no reason to start worrying now :)
+This is true for both devices 12 and 13. This patch fixes it.
 
-In fact, in the current design to address the quota race decently the
-drivers would have to protect the *loop* to prevent the quota change
-between a pci_enable_msix() returned a positive number and the the next
-call to pci_enable_msix() with that number. Is it doable?
+Ref 1: www.intel.com/assets/pdf/datasheet/290562.pdf
+       April 1997 version 001 (p131 bottom, p226 top)
+Ref 2: www.intel.com/assets/pdf/specupdate/297738.pdf
+       January 2002 version 017 (Nothing against the fix in the
+       specification update was found.)
 
-> Ben.
-> 
-> 
+Signed-off-by: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
+Reviewed-by: James Hogan <james.hogan@imgtec.com>
+---
+ drivers/pci/quirks.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index f6c31fa..3e7e489 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -414,9 +414,9 @@ static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int
+ 	pci_read_config_dword(dev, port, &devres);
+ 	if ((devres & enable) != enable)
+ 		return;
+-	base = devres & 0xffff0000;
+-	mask = (devres & 0x3f) << 16;
+-	size = 128 << 16;
++	base = devres & 0xffff8000;
++	mask = (devres & 0x7f) << 15;
++	size = 128 << 15;
+ 	for (;;) {
+ 		unsigned bit = size >> 1;
+ 		if ((bit & mask) == bit)
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.1
+
+
