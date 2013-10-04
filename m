@@ -1,55 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26724 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755255Ab3JBRmi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:42:38 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 23/77] cxgb3: Return -ENOSPC when not enough MSI-X vectors available
-Date: Wed,  2 Oct 2013 12:48:39 +0200
-Message-Id: <cbdbe5f2d6d9d8826c9c234ba45bd52c059cf66e.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:47884 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544Ab3JDVJw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 17:09:52 -0400
+Received: by mail-ie0-f173.google.com with SMTP id ar20so10634995iec.32
+        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 14:09:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1380524558-25188-1-git-send-email-wangyijing@huawei.com>
+References: <1380524558-25188-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 Oct 2013 15:09:31 -0600
+Message-ID: <CAErSpo5K0sMtg6OnK+Ve_8LDe7axspDvTGxeKNVbgUYzdWNmsg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Introudce pci_dev_show_local_cpu() to simplify code
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Mon, Sep 30, 2013 at 1:02 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Local_cpus_show() and local_cpulist_show() are almost the same,
+> introudce a new helper function pci_dev_show_local_cpu() to simplify
+> code.
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
-index 9bd3099..915729c 100644
---- a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
-@@ -3099,7 +3099,7 @@ static int cxgb_enable_msix(struct adapter *adap)
- 
- 	if (!err && vectors < (adap->params.nports + 1)) {
- 		pci_disable_msix(adap->pdev);
--		err = -1;
-+		err = -ENOSPC;
- 	}
- 
- 	if (!err) {
--- 
-1.7.7.6
+Applied to pci/misc, thanks!
 
+Bjorn
+
+> ---
+>  drivers/pci/pci-sysfs.c |   32 +++++++++++++++-----------------
+>  1 files changed, 15 insertions(+), 17 deletions(-)
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 7128cfd..3b41405 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -74,9 +74,11 @@ static ssize_t broken_parity_status_store(struct device *dev,
+>         return count;
+>  }
+>
+> -static ssize_t local_cpus_show(struct device *dev,
+> -                       struct device_attribute *attr, char *buf)
+> -{
+> +static ssize_t pci_dev_show_local_cpu(struct device *dev,
+> +               int type,
+> +               struct device_attribute *attr,
+> +               char *buf)
+> +{
+>         const struct cpumask *mask;
+>         int len;
+>
+> @@ -86,29 +88,25 @@ static ssize_t local_cpus_show(struct device *dev,
+>  #else
+>         mask = cpumask_of_pcibus(to_pci_dev(dev)->bus);
+>  #endif
+> -       len = cpumask_scnprintf(buf, PAGE_SIZE-2, mask);
+> +       len = type ?
+> +               cpumask_scnprintf(buf, PAGE_SIZE-2, mask) :
+> +               cpulist_scnprintf(buf, PAGE_SIZE-2, mask);
+> +
+>         buf[len++] = '\n';
+>         buf[len] = '\0';
+>         return len;
+>  }
+>
+> +static ssize_t local_cpus_show(struct device *dev,
+> +                       struct device_attribute *attr, char *buf)
+> +{
+> +       return pci_dev_show_local_cpu(dev, 1, attr, buf);
+> +}
+>
+>  static ssize_t local_cpulist_show(struct device *dev,
+>                         struct device_attribute *attr, char *buf)
+>  {
+> -       const struct cpumask *mask;
+> -       int len;
+> -
+> -#ifdef CONFIG_NUMA
+> -       mask = (dev_to_node(dev) == -1) ? cpu_online_mask :
+> -                                         cpumask_of_node(dev_to_node(dev));
+> -#else
+> -       mask = cpumask_of_pcibus(to_pci_dev(dev)->bus);
+> -#endif
+> -       len = cpulist_scnprintf(buf, PAGE_SIZE-2, mask);
+> -       buf[len++] = '\n';
+> -       buf[len] = '\0';
+> -       return len;
+> +       return pci_dev_show_local_cpu(dev, 0, attr, buf);
+>  }
+>
+>  /*
+> --
+> 1.7.1
+>
+>
