@@ -1,83 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:59284 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253Ab3JQXbr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2013 19:31:47 -0400
-Received: by mail-qa0-f45.google.com with SMTP id ii20so157815qab.18
-        for <linux-pci@vger.kernel.org>; Thu, 17 Oct 2013 16:31:47 -0700 (PDT)
+Received: from multi.imgtec.com ([194.200.65.239]:11394 "EHLO multi.imgtec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751181Ab3JDXb1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Oct 2013 19:31:27 -0400
+From: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
+CC: <james.hogan@imgtec.com>, <Qais.Yousef@imgtec.com>,
+	Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
+Subject: [PATCH v2 2/4] PCI/quirks: Rename piix4_[io|mem]_quirk to add acpi
+Date: Fri, 4 Oct 2013 16:30:51 -0700
+Message-ID: <1380929453-15428-3-git-send-email-dengcheng.zhu@imgtec.com>
+In-Reply-To: <1380929453-15428-1-git-send-email-dengcheng.zhu@imgtec.com>
+References: <1380929453-15428-1-git-send-email-dengcheng.zhu@imgtec.com>
 MIME-Version: 1.0
-In-Reply-To: <1381853200-5534-5-git-send-email-marex@denx.de>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
-	<1381853200-5534-5-git-send-email-marex@denx.de>
-Date: Thu, 17 Oct 2013 16:31:46 -0700
-Message-ID: <CAJ+vNU0rJY0xMCpJxFQ1ue7Gnfe+49Xv3=2zawCTzHEd_eAK0Q@mail.gmail.com>
-Subject: Re: [PATCH 4/6] PCI: imx6: Probe the PCIe in fs_initcall()
-From: Tim Harvey <tharvey@gateworks.com>
-To: Marek Vasut <marex@denx.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 15, 2013 at 9:06 AM, Marek Vasut <marex@denx.de> wrote:
-> Probe the PCIe driver in fs_initcall() instead of module_init()
-> to assure that pci_assign_unassigned_resources(); will be called
-> early. This function is called in dw_pcie_host_init(), which is
-> in turn called from imx6_add_pcie_port(), which is called from
-> imx6_pcie_probe() . If this is not called early, we will hit
-> resource collisions since pcieport driver is then probed way too
-> late.
->
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Frank Li <lznuaa@gmail.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
-> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> Cc: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Richard Zhu <r65037@freescale.com>
-> Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> Cc: Sean Cross <xobs@kosagi.com>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
-> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> Cc: Tim Harvey <tharvey@gateworks.com>
-> Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/host/pci-imx6.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 94e4d0f..ca8c5de 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -586,7 +586,7 @@ static int __init imx6_pcie_init(void)
->  {
->         return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
->  }
-> -module_init(imx6_pcie_init);
-> +fs_initcall(imx6_pcie_init);
->
->  MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");
->  MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
-> --
-> 1.8.4.rc3
->
+From: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
 
-Acked-by: Tim Harvey <tharvey@gateworks.com>
-Tested-by: Tim Harvey <tharvey@gateworks.com>
+Rename piix4_[io|mem]_quirk to piix4_acpi_[io|mem]_quirk because these 2
+functions only deal with the function 3 (power management) of PIIX4.
 
-Tim
+Signed-off-by: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
+Reviewed-by: James Hogan <james.hogan@imgtec.com>
+---
+ drivers/pci/quirks.c |   22 ++++++++++++----------
+ 1 files changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 3e7e489..a2b66c3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -380,7 +380,8 @@ static void quirk_ali7101_acpi(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
+ 
+-static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
++static void piix4_acpi_io_quirk(struct pci_dev *dev, const char *name,
++				unsigned int port, unsigned int enable)
+ {
+ 	u32 devres;
+ 	u32 mask, size, base;
+@@ -406,7 +407,8 @@ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int p
+ 	dev_info(&dev->dev, "%s PIO at %04x-%04x\n", name, base, base + size - 1);
+ }
+ 
+-static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
++static void piix4_acpi_mem_quirk(struct pci_dev *dev, const char *name,
++				 unsigned int port, unsigned int enable)
+ {
+ 	u32 devres;
+ 	u32 mask, size, base;
+@@ -447,23 +449,23 @@ static void quirk_piix4_acpi(struct pci_dev *dev)
+ 	/* Device resource A has enables for some of the other ones */
+ 	pci_read_config_dword(dev, 0x5c, &res_a);
+ 
+-	piix4_io_quirk(dev, "PIIX4 devres B", 0x60, 3 << 21);
+-	piix4_io_quirk(dev, "PIIX4 devres C", 0x64, 3 << 21);
++	piix4_acpi_io_quirk(dev, "PIIX4 devres B", 0x60, 3 << 21);
++	piix4_acpi_io_quirk(dev, "PIIX4 devres C", 0x64, 3 << 21);
+ 
+ 	/* Device resource D is just bitfields for static resources */
+ 
+ 	/* Device 12 enabled? */
+ 	if (res_a & (1 << 29)) {
+-		piix4_io_quirk(dev, "PIIX4 devres E", 0x68, 1 << 20);
+-		piix4_mem_quirk(dev, "PIIX4 devres F", 0x6c, 1 << 7);
++		piix4_acpi_io_quirk(dev, "PIIX4 devres E", 0x68, 1 << 20);
++		piix4_acpi_mem_quirk(dev, "PIIX4 devres F", 0x6c, 1 << 7);
+ 	}
+ 	/* Device 13 enabled? */
+ 	if (res_a & (1 << 30)) {
+-		piix4_io_quirk(dev, "PIIX4 devres G", 0x70, 1 << 20);
+-		piix4_mem_quirk(dev, "PIIX4 devres H", 0x74, 1 << 7);
++		piix4_acpi_io_quirk(dev, "PIIX4 devres G", 0x70, 1 << 20);
++		piix4_acpi_mem_quirk(dev, "PIIX4 devres H", 0x74, 1 << 7);
+ 	}
+-	piix4_io_quirk(dev, "PIIX4 devres I", 0x78, 1 << 20);
+-	piix4_io_quirk(dev, "PIIX4 devres J", 0x7c, 1 << 20);
++	piix4_acpi_io_quirk(dev, "PIIX4 devres I", 0x78, 1 << 20);
++	piix4_acpi_io_quirk(dev, "PIIX4 devres J", 0x7c, 1 << 20);
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82371AB_3,	quirk_piix4_acpi);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82443MX_3,	quirk_piix4_acpi);
+-- 
+1.7.1
+
+
