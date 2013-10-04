@@ -1,67 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:52317 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752167Ab3JDUuA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 16:50:00 -0400
-Received: by mail-ie0-f178.google.com with SMTP id to1so10710396ieb.9
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 13:49:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <32E1700B9017364D9B60AED9960492BC211AE5BF@FMSMSX107.amr.corp.intel.com>
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
- <1378732388-4508-5-git-send-email-wangyijing@huawei.com> <32E1700B9017364D9B60AED9960492BC2119F081@FMSMSX107.amr.corp.intel.com>
- <20130924203806.GA9302@google.com> <32E1700B9017364D9B60AED9960492BC211AE5BF@FMSMSX107.amr.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Oct 2013 14:49:39 -0600
-Message-ID: <CAErSpo41332ti7m=BTSWik_DrGzpqNOc0zwDde_iYmr696gZUQ@mail.gmail.com>
-Subject: Re: [PATCH 4/6] IB/qib: Use pcie_set_mps() and pcie_get_mps() to
- simplify code
-To: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	infinipath <infinipath@intel.com>,
-	Roland Dreier <roland@kernel.org>,
-	Roland Dreier <roland@purestorage.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mark Einon <mark.einon@gmail.com>,
-	"Hefty, Sean" <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e06smtp17.uk.ibm.com ([195.75.94.113]:50780 "EHLO
+	e06smtp17.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750728Ab3JDHkO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 03:40:14 -0400
+Received: from /spool/local
+	by e06smtp17.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <schwidefsky@de.ibm.com>;
+	Fri, 4 Oct 2013 08:40:12 +0100
+Date: Fri, 4 Oct 2013 09:39:56 +0200
+From: Martin Schwidefsky <schwidefsky@de.ibm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 03/77] PCI/MSI/s390: Fix single MSI only check
+Message-ID: <20131004093956.183f6901@mschwide>
+In-Reply-To: <8c9811b13fd93e73641dab8e3bd1bd5b2dc37a61.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	<8c9811b13fd93e73641dab8e3bd1bd5b2dc37a61.1380703262.git.agordeev@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 30, 2013 at 8:56 AM, Marciniszyn, Mike
-<mike.marciniszyn@intel.com> wrote:
->>
->> Is something like the following what you had in mind?  If so, I can
->> just queue it up.  Otherwise, I'll wait for Yijing to post a v2 patch.
->>
->>
->> IB/qib: Use pcie_set_mps() and pcie_get_mps() to simplify code
->>
->> From: Yijing Wang <wangyijing@huawei.com>
->>
->> Refactor qib_tune_pcie_caps().  Use pcie_get_mps(), pcie_set_mps(),
->> pcie_get_readrq(), and pcie_set_readrq() to simplify the code.  The PCI
->> core caches the "PCIe Max Payload Size Supported" in pci_dev->pcie_mpss,
->> so use that instead of pcie_capability_read_word().  Remove the unused
->> val2fld() and fld2val().
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> This works!
->
-> Go ahead and queue it up.
+On Wed,  2 Oct 2013 12:48:19 +0200
+Alexander Gordeev <agordeev@redhat.com> wrote:
 
-Applied to my pci/yijing-mps-v1 branch with your ack:
+> Multiple MSIs have never been supported on s390 architecture,
+> but the platform code fails to report single MSI only.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  arch/s390/pci/pci.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index f17a834..c79c6e4 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -427,6 +427,8 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>  	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
+>  	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
+>  		return -EINVAL;
+> +	if (type == PCI_CAP_ID_MSI && nvec > 1)
+> +		return 1;
+>  	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
+>  	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
+> 
 
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/yijing-mps-v1&id=0ce0e62f1f7893f983a8f61bc8f5306e80d520b1
+Acked-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
 
-Let me know if that's not what you had in mind.  Thanks!
+-- 
+blue skies,
+   Martin.
 
-Bjorn
+"Reality continues to ruin my life." - Calvin.
+
