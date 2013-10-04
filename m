@@ -1,78 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:24722 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754126Ab3JBQlP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 12:41:15 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:37717 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751043Ab3JDJTz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Oct 2013 05:19:55 -0400
+Date: Fri, 4 Oct 2013 11:21:09 +0200
 From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: Ben Hutchings <bhutchings@solarflare.com>,
+	linux-mips@linux-mips.org, "VMware, Inc." <pv-drivers@vmware.com>,
+	linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org,
+	linux-s390@vger.kernel.org, Andy King <acking@vmware.com>,
+	linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+	x86@kernel.org, Ingo Molnar <mingo@redhat.com>,
+	linux-pci@vger.kernel.org, iss_storagedev@hp.com,
+	linux-driver@qlogic.com, Tejun Heo <tj@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
 	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
+	Jon Mason <jon.mason@intel.com>,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 45/77] megaraid: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:49:01 +0200
-Message-Id: <9c28bb824f403b6418840970f2a3b63d9fa9d924.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>,
+	e1000-devel@lists.sourceforge.net,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	linux390@de.ibm.com, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Message-ID: <20131004092108.GB4536@dhcp-26-207.brq.redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
+ <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B7371@saturn3.aculab.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B7371@saturn3.aculab.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
+On Fri, Oct 04, 2013 at 09:31:49AM +0100, David Laight wrote:
+> > Mmmm.. I am not sure I am getting it. Could you please rephrase?
+> 
+> One possibility is for drivers than can use a lot of interrupts to
+> request a minimum number initially and then request the additional
+> ones much later on.
+> That would make it less likely that none will be available for
+> devices/drivers that need them but are initialised later.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c |   20 +++++++++-----------
- 1 files changed, 9 insertions(+), 11 deletions(-)
+It sounds as a whole new topic for me. Isn't it?
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3020921..b5973e4 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3727,18 +3727,16 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 					     (unsigned int)num_online_cpus());
- 		for (i = 0; i < instance->msix_vectors; i++)
- 			instance->msixentry[i].entry = i;
--		i = pci_enable_msix(instance->pdev, instance->msixentry,
--				    instance->msix_vectors);
--		if (i >= 0) {
--			if (i) {
--				if (!pci_enable_msix(instance->pdev,
--						     instance->msixentry, i))
--					instance->msix_vectors = i;
--				else
--					instance->msix_vectors = 0;
--			}
--		} else
-+		i = pci_msix_table_size(instance->pdev);
-+		if (i < 0) {
- 			instance->msix_vectors = 0;
-+		} else {
-+			if (!pci_enable_msix(instance->pdev,
-+					     instance->msixentry, i))
-+				instance->msix_vectors = i;
-+			else
-+				instance->msix_vectors = 0;
-+		}
- 
- 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
- 			"<%d> MSIX vector,Online CPUs: <%d>,"
+Anyway, what prevents the above from being done with pci_enable_msix(nvec1) -
+pci_disable_msix() - pci_enable_msix(nvec2) where nvec1 < nvec2?
+
+> 	David
+
 -- 
-1.7.7.6
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
