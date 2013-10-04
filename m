@@ -1,62 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50059 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751610Ab3JXIMK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Oct 2013 04:12:10 -0400
-Date: Thu, 24 Oct 2013 09:12:05 +0100
-From: "Daniel P. Berrange" <berrange@redhat.com>
-To: Niilona <niilona@gmail.com>
-Cc: linux-pci@vger.kernel.org, libvir-list <libvir-list@redhat.com>
-Subject: Re: [libvirt] PATCH: pci-subsystem: ixgbe: SR-IOV: kernel way to
- order driver's virtfn -entries is odd causing libvirt failures.
-Message-ID: <20131024081205.GA7503@redhat.com>
-Reply-To: "Daniel P. Berrange" <berrange@redhat.com>
-References: <CAE5WV7OXKGvOCTOyZyK5cOCA2nxpN1WcDdqj9h+pakyhgT2sTA@mail.gmail.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:64281 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753969Ab3JDUWY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 16:22:24 -0400
+Received: by mail-ie0-f180.google.com with SMTP id u16so10162413iet.39
+        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 13:22:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAE5WV7OXKGvOCTOyZyK5cOCA2nxpN1WcDdqj9h+pakyhgT2sTA@mail.gmail.com>
+In-Reply-To: <20130928175956.8752.50967.stgit@amt.stowe>
+References: <20130928175956.8752.50967.stgit@amt.stowe>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 Oct 2013 14:22:03 -0600
+Message-ID: <CAErSpo5iFVZn4kanEHY=cWzt1ynQYt4XDX+iNP-fn1qm89e+5Q@mail.gmail.com>
+Subject: Re: [PATCH] mn10300/PCI: Remove pci_mem_start
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	linux-am33-list@redhat.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 24, 2013 at 09:52:31AM +0300, Niilona wrote:
-> Hi.
-> 
-> As Bjorn Helgaas recommend, this might be the item to discuss in the wider area.
-> -----------------------------------
-> 
-> There is a behavior effecting virtfn -entries in sysfs, when amount of
-> them increases over 10.
-> Run VM's through LIBVIRT -> QEMU/KVM, this causes :
-> - MAC address setting by LIBVIRT disordered ie. setting targeted to wrong VF.
-> - VLAN setting by LIBVIRT overall failed
-> 
-> Basics of this are in "/libvirt-x.x.x/src/util/virpci.c" ; in function below,
-> which don't order virtfn entries correctly.
-> 
-> /*
->  * Returns virtual functions of a physical function
->  */
-> int
-> virPCIGetVirtualFunctions(const char *sysfs_path,
->                           virPCIDeviceAddressPtr **virtual_functions,
->                           unsigned int *num_virtual_functions)
-> {
-> 
-> But I let you to decide which is best way to fix this, as if every
-> application reads "virtfn" entries from PF's directory, they all need
-> to sort entries in alphabet. order to avoid this
-> influence.
-> So personally I did get over this by adding pre-zeroes to names to
-> have them in sorted order in PF's directory.
+On Sat, Sep 28, 2013 at 11:59 AM, Myron Stowe <myron.stowe@redhat.com> wrote:
+> Remove unused 'pci_mem_start' variable.
+>
+> CC: David Howells <dhowells@redhat.com>
+> CC: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 
-Libvirt has to work correctly with all existing released kernels,
-so we have to fix libvirt to deal with ordering correctly. Thus
-changing the kernel naming here doesn't really help. We need to
-fix libvirt to deal with this.
+Applied to pci/misc with David's ack.  Thanks!
 
-Daniel
--- 
-|: http://berrange.com      -o-    http://www.flickr.com/photos/dberrange/ :|
-|: http://libvirt.org              -o-             http://virt-manager.org :|
-|: http://autobuild.org       -o-         http://search.cpan.org/~danberr/ :|
-|: http://entangle-photo.org       -o-       http://live.gnome.org/gtk-vnc :|
+Bjorn
+
+> ---
+>
+>  arch/mn10300/include/asm/pci.h |    1 -
+>  arch/mn10300/kernel/setup.c    |    3 ---
+>  2 files changed, 0 insertions(+), 4 deletions(-)
+>
+> diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
+> index 6f31cc0..1663238 100644
+> --- a/arch/mn10300/include/asm/pci.h
+> +++ b/arch/mn10300/include/asm/pci.h
+> @@ -44,7 +44,6 @@ extern void unit_pci_init(void);
+>  #define pcibios_assign_all_busses()    0
+>  #endif
+>
+> -extern unsigned long pci_mem_start;
+>  #define PCIBIOS_MIN_IO         0xBE000004
+>  #define PCIBIOS_MIN_MEM                0xB8000000
+>
+> diff --git a/arch/mn10300/kernel/setup.c b/arch/mn10300/kernel/setup.c
+> index ebac9c1..2ad7f32 100644
+> --- a/arch/mn10300/kernel/setup.c
+> +++ b/arch/mn10300/kernel/setup.c
+> @@ -35,9 +35,6 @@
+>
+>  struct mn10300_cpuinfo boot_cpu_data;
+>
+> -/* For PCI or other memory-mapped resources */
+> -unsigned long pci_mem_start = 0x18000000;
+> -
+>  static char __initdata cmd_line[COMMAND_LINE_SIZE];
+>  char redboot_command_line[COMMAND_LINE_SIZE] =
+>         "console=ttyS0,115200 root=/dev/mtdblock3 rw";
+>
