@@ -1,99 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:23362
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753076Ab3JWKmQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 06:42:16 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>
-CC: Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: [PATCH 12/12][v3] pci: fsl: fix function check_pci_ctl_endpt_part
-Date: Wed, 23 Oct 2013 18:41:34 +0800
-Message-ID: <1382524894-15164-12-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:58195 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995Ab3JDQqw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 12:46:52 -0400
+Received: by mail-ie0-f175.google.com with SMTP id e14so9274507iej.6
+        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 09:46:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130928213727.GC32063@redhat.com>
+References: <1380189591-1368-1-git-send-email-vfalico@redhat.com> <20130928213727.GC32063@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 Oct 2013 10:46:31 -0600
+Message-ID: <CAErSpo67Uy0OZ+9jB6xvCwfjwh-NxX3FHuBnqdpWviJPVhG4dQ@mail.gmail.com>
+Subject: Re: [PATCH v2] msi: free msi_desc entry only after we've released the kobject
+To: Veaceslav Falico <vfalico@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The new FSL PCI driver does not use cfg_addr of pci_controller,
-we may directly access PCI CCSR using fsl_pci->regs.
+On Sat, Sep 28, 2013 at 3:37 PM, Veaceslav Falico <vfalico@redhat.com> wrote:
+> On Thu, Sep 26, 2013 at 11:59:51AM +0200, Veaceslav Falico wrote:
+>>
+>> Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
+>> however kobject_put() doesn't guarantee us that it was the last reference
+>> and that the kobj isn't used currently by someone else, so after we
+>> kfree(entry) with the struct kobject - other users will begin using the
+>> freed memory, instead of the actual kobject.
+>
+>
+> Hi Bjorn,
+>
+> I've seen that you've dropped this bugfix (and the 3 cleanup patches) with
+> "Changes Requested", however I don't recall any request to change this.
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
-change log:
-v1-v3:
-The new patch to fix function check_pci_ctl_endpt_part
+I talked to Greg KH about this recently, and he said he might take a
+look at doing a more extensive cleanup of populate_msi_sysfs() using
+attribute groups, so I don't know if you want to wait and see whether
+he does anything, or go ahead on the path you were on.
 
-Based on upstream master.
-Based on the discussion of RFC version here
-http://patchwork.ozlabs.org/patch/274487/
+If you continue, my advice is:
 
- arch/powerpc/sysdev/fsl_pci.h   | 5 -----
- drivers/iommu/fsl_pamu_domain.c | 6 ++++--
- include/linux/fsl/pci-common.h  | 1 +
- 3 files changed, 5 insertions(+), 7 deletions(-)
+  - Put all these patches in a single series with a version number (I
+think the next posting would be v3) to help me keep track of them.
 
-diff --git a/arch/powerpc/sysdev/fsl_pci.h b/arch/powerpc/sysdev/fsl_pci.h
-index ae4dbe2..3176eb2 100644
---- a/arch/powerpc/sysdev/fsl_pci.h
-+++ b/arch/powerpc/sysdev/fsl_pci.h
-@@ -16,11 +16,6 @@
- 
- struct platform_device;
- 
--
--/* FSL PCI controller BRR1 register */
--#define PCI_FSL_BRR1      0xbf8
--#define PCI_FSL_BRR1_VER 0xffff
--
- extern void fsl_pcibios_fixup_bus(struct pci_bus *bus);
- extern int mpc83xx_add_bridge(struct device_node *dev);
- u64 fsl_pci_immrbar_base(struct pci_controller *hose);
-diff --git a/drivers/iommu/fsl_pamu_domain.c b/drivers/iommu/fsl_pamu_domain.c
-index c857c30..dd7bc25 100644
---- a/drivers/iommu/fsl_pamu_domain.c
-+++ b/drivers/iommu/fsl_pamu_domain.c
-@@ -36,6 +36,7 @@
- 
- #include <asm/pci-bridge.h>
- #include <sysdev/fsl_pci.h>
-+#include <linux/fsl/pci-common.h>
- 
- #include "fsl_pamu_domain.h"
- #include "pci.h"
-@@ -908,10 +909,11 @@ static struct iommu_group *get_device_iommu_group(struct device *dev)
- static  bool check_pci_ctl_endpt_part(struct pci_controller *pci_ctl)
- {
- 	u32 version;
-+	struct fsl_pci *pci = fsl_arch_sys_to_pci(pci_ctl);
- 
- 	/* Check the PCI controller version number by readding BRR1 register */
--	version = in_be32(pci_ctl->cfg_addr + (PCI_FSL_BRR1 >> 2));
--	version &= PCI_FSL_BRR1_VER;
-+	version = in_be32(&pci->regs->block_rev1);
-+	version &= PCIE_IP_REV_MASK;
- 	/* If PCI controller version is >= 0x204 we can partition endpoints*/
- 	if (version >= 0x204)
- 		return 1;
-diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
-index 84b0801..6112adf 100644
---- a/include/linux/fsl/pci-common.h
-+++ b/include/linux/fsl/pci-common.h
-@@ -18,6 +18,7 @@
- #define PCIE_LTSSM_L0	0x16		/* L0 state */
- #define PCIE_IP_REV_2_2		0x02080202 /* PCIE IP block version Rev2.2 */
- #define PCIE_IP_REV_3_0		0x02080300 /* PCIE IP block version Rev3.0 */
-+#define PCIE_IP_REV_MASK	0xffff
- #define PIWAR_EN		0x80000000	/* Enable */
- #define PIWAR_PF		0x20000000	/* prefetch */
- #define PIWAR_TGI_LOCAL		0x00f00000	/* target - local memory */
--- 
-1.8.1.2
+  - In populate_msi_sysfs(), drop the pci_dev_get() (or explain why
+it's needed).  My reasoning is that the "msi_irqs" kset should already
+hold a reference on the pdev (acquired in kset_create_and_add() ->
+kset_register() -> kobject_add_internal()), and each irq entry should
+hold a reference on the kset (see kobject_add_internal() again),  so
+it is redundant to acquire a reference on the pdev directly.  This
+means dropping the pci_dev_put() in msi_kobj_release(), of course.
 
+- Move the kfree(entry) from free_msi_irqs() to msi_kobj_release() (I
+think one of your patches already did this).
 
+  - In populate_msi_sysfs(), drop the kobject_del() in the out_unroll
+loop.  I think we would only need that if there were a way to create a
+new irq entry in "msi_irqs" before the old irq entry was released.
+But I don't think that's possible.  We only create irq entries in
+populate_msi_sysfs(), which always starts with a fresh, empty
+"msi_irqs" kset.
+
+  - In free_msi_irqs(), similarly remove the kobject_del().
+
+  - Add a kobject_del() before each kset_unregister(dev->msi_kset)
+call.  This will remove "msi_irqs" from sysfs, so future creates will
+succeed even if somebody still has the old "msi_irqs" open.
+
+  - Keep the msi_kset cleanup in populate_msi_sysfs() instead of
+relying on free_msi_irqs().  I think it's less error prone to keep the
+creation and error path cleanup in the same function.
+
+Bjorn
