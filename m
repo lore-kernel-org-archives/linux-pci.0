@@ -1,61 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2210 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754566Ab3JHHzs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Oct 2013 03:55:48 -0400
-Date: Tue, 8 Oct 2013 09:56:59 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 05/77] PCI/MSI: Convert pci_msix_table_size() to a
- public interface
-Message-ID: <20131008075658.GE10669@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <e8b51bd48c24d0fc4ee8adea5c138c9bf84191e9.1380703262.git.agordeev@redhat.com>
- <20131007181043.GA27396@htj.dyndns.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60060 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751372Ab3JDCn7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 22:43:59 -0400
+Date: Thu, 3 Oct 2013 19:36:39 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	"kernelnewbies@kernelnewbies.org" <kernelnewbies@kernelnewbies.org>,
+	"linux-newbie@vger.kernel.org" <linux-newbie@vger.kernel.org>
+Subject: Re: [PCIe spec question] How to get PCI express link up / link down
+ notifications?
+Message-ID: <20131004023639.GA3417@kroah.com>
+References: <1fa2fecbcbe147cc83a3011ff23e3d1a@BN1PR05MB123.namprd05.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131007181043.GA27396@htj.dyndns.org>
+In-Reply-To: <1fa2fecbcbe147cc83a3011ff23e3d1a@BN1PR05MB123.namprd05.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 07, 2013 at 02:10:43PM -0400, Tejun Heo wrote:
-> On Wed, Oct 02, 2013 at 12:48:21PM +0200, Alexander Gordeev wrote:
-> > Make pci_msix_table_size() to return a error code if the device
-> > does not support MSI-X. This update is needed to facilitate a
-> > forthcoming re-design MSI/MSI-X interrupts enabling pattern.
-> > 
-> > Device drivers will use this interface to obtain maximum number
-> > of MSI-X interrupts the device supports and use that value in
-> > the following call to pci_enable_msix() interface.
+On Fri, Oct 04, 2013 at 01:40:49AM +0000, Rajat Jain wrote:
+> Hello,
 > 
-> Hmmm... I probably missed something but why is this necessary?  To
-> discern between -EINVAL and -ENOSPC?  If so, does that really matter?
+> I have a HW which is not compliant with the PCI Express hot-plug (as
+> described in the PCI express spec) because the HP signals from the
+> downstream port are simply not connected. And I have a PCI express
+> endpoint, that in the course of its life, will routinely undergo
+> power-off and power-on on cycles. Hence the PCIe link to this device
+> is expected to come down, and come up as part of regular operation.
 
-pci_msix_table_size() is kind of helper and returns 0 if a device does
-not have MSI-X table. If we want drivers to use it we need return -EINVAL
-for MSI-X incapable/disabled devices. Nothing about -ENOSPC.
+What hardware is this?  Why not ask the manufacturer of it as they are
+the ones in control of this type of thing.
 
-> tejun
+> I'm reading the PCI express spec trying to understand if it is
+> possible to get notification interrupts, whenever the PCIe link to
+> this device goes down or goes up. Can someone please help me
+> understand if it is possible?
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Notification where?
+
+thanks,
+
+greg k-h
