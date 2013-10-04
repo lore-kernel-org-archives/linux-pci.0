@@ -1,73 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:3166 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756563Ab3JKIXm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 04:23:42 -0400
-Message-ID: <5257B541.9050400@huawei.com>
-Date: Fri, 11 Oct 2013 16:22:25 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:47449 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348Ab3JDWMo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 18:12:44 -0400
+Received: by mail-ie0-f178.google.com with SMTP id to1so10918337ieb.9
+        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 15:12:43 -0700 (PDT)
 MIME-Version: 1.0
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+In-Reply-To: <20131004011806.GE20450@dangermouse.emea.sgi.com>
+References: <20131004011806.GE20450@dangermouse.emea.sgi.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 Oct 2013 16:11:12 -0600
+Message-ID: <CAErSpo6aE-vxhOHk_mgyWMYrgkG0Juuy8Bs-S2Hjb_7k8S=n8Q@mail.gmail.com>
+Subject: Re: Commit 07f9b61 breaks systems that don't implement a _CBA method
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ethan Zhao <ethan.zhao@oracle.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Paul Mackerras <paulus@samba.org>,
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH v2 3/6] powerpc/pci: use pci_is_pcie() to simplify code
-References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com> <1378367730-25996-3-git-send-email-wangyijing@huawei.com> <20130906203035.GA27940@google.com> <1381470596.5630.61.camel@pasglop> <20131011061654.GA561@shangw.(null)> <52579BD6.40802@huawei.com> <20131011065329.GA5013@shangw.(null)> <5257A882.1070809@huawei.com> <20131011075642.GA20443@shangw.(null)>
-In-Reply-To: <20131011075642.GA20443@shangw.(null)>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> In my idea, dev->pcie_cap(here is pci_dev->pcie_cap) will update in set_pcie_port_type() function,
->> and this function always be called after allocate pci device. We get pci_dev by eeh_dev_to_pci_dev(),
->> I think pci_dev has been initialized completely.
->>
->>> This function has possibility to be invoked before that. However,
->>> we don't have the binding (eeh device <-> PCI device) for the case.
->>> So the piece of code shouldn't be running
->>
->> In PCI core, I knew
->>
->> pci_scan_device()
->>   pci_setup_device()
->>       set_pcie_port_type()
->>            pci_dev->pcie_cap = pci_find_capability(pdev, PCI_CAP_ID_EXP);
->>
->> In powerpc, I also found
->>
->> of_scan_pci_dev()
->>   of_create_pci_dev()
->>       set_pcie_port_type()
->> 	    pci_dev->pcie_cap = pci_find_capability(pdev, PCI_CAP_ID_EXP);
->>>
->>> However, it's a bit safer to have pci_find_capability(dev, PCI_CAP_ID_EXP)
->>> as well even though we needn't it for 99.9% cases if you agree :-)
->>
->> I agree, this function is not the performance bottleneck,
->> safety is more important. :)
->> So if Bjorn and Benjamin think it's not safe, it's ok to drop it. :)
->>
-> 
-> No, it's not what I mean. Anyway, "v3" looks good to me.
-> At least, it can save PCI-CFG access cycles find locate
-> the PCIe capability position :-)
+On Thu, Oct 3, 2013 at 7:18 PM, Hedi Berriche <hedi@sgi.com> wrote:
+> Chaps,
+>
+> The following failure was encountered on hardware that does *not*
+> implement a _CBA method which is AFAICT (and confirmed to me by BIOS
+> chaps) optional.
 
-Thanks! :)
+_CBA is definitely optional.
 
-> 
-> Thanks,
-> Gavin
-> 
-> 
-> .
-> 
+> [    1.230647] PCI: MMCONFIG for domain 0000 [bus 00-0c] at [mem 0x80000000-0x80cfffff] (base 0x80000000)
+> [    1.241046] PCI: MMCONFIG for domain 0001 [bus 00-02] at [mem 0xff84000000-0xff842fffff] (base 0xff84000000)
+> [    1.252025] PCI: MMCONFIG for domain 1000 [bus 3f-3f] at [mem 0xff83f00000-0xff83ffffff] (base 0xff80000000)
+> [    1.263006] PCI: MMCONFIG for domain 1001 [bus 3f-3f] at [mem 0xff87f00000-0xff87ffffff] (base 0xff84000000)
+> [    1.273984] PCI: MMCONFIG at [mem 0x80000000-0x80cfffff] reserved in E820
+> [    1.281564] PCI: MMCONFIG at [mem 0xff84000000-0xff842fffff] reserved in E820
+> [    1.289535] PCI: MMCONFIG at [mem 0xff83f00000-0xff83ffffff] reserved in E820
+> [    1.297505] PCI: MMCONFIG at [mem 0xff87f00000-0xff87ffffff] reserved in E820
+>
+> <snip>
+>
+> [    1.427926] ACPI: PCI Root Bridge [I001] (domain 0001 [bus 00-3d])
+> [    1.434968] acpi PNP0A08:00: fail to add MMCONFIG information, can't access PCI configuration space under this host bridge.
+> [    1.447405] acpi PNP0A08:00: Bus 0001:00 not present in PCI namespace
+...
 
+> Bisection points to this commit (included in full given its brevity):
+>
+> commit 07f9b61c3915e8eb156cb4461b3946736356ad02
+> Author: ethan.zhao <ethan.zhao@oracle.com>
+> Date:   Fri Jul 26 11:21:24 2013 -0600
+>
+>     x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero
+>
+>     We can check for addr being zero earlier and thus avoid the mutex_unlock()
+>     cleanup path.
+>
+>     [bhelgaas: drop warning printk]
+>     Signed-off-by: ethan.zhao <ethan.zhao@oracle.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Acked-by: Yinghai Lu <yinghai@kernel.org>
+...
 
--- 
-Thanks!
-Yijing
+> So the question is should commit
+>
+>         07f9b61 x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero
+>
+> be reverted? or am I missing something?
 
+I think we should revert it.  As far as I can tell, it was only a
+cleanup and it did not fix anything itself.  So since it did break
+something, we should revert it.
+
+It's regrettable that the code is so subtle.  The obvious thing to do
+would be to check for _CBA, and if it doesn't exist, look for an MCFG
+entry.  But for various historical reasons, the code is a mess, and we
+haven't figured out how to safely simplify it.
+
+Ethan, Yinghai, any objections to reverting 07f9b61?
+
+Bjorn
