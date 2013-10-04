@@ -1,81 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54440 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:7237 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752774Ab3JJKP5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Oct 2013 06:15:57 -0400
-Date: Thu, 10 Oct 2013 12:17:05 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	id S1751374Ab3JDA7P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Oct 2013 20:59:15 -0400
+Date: Thu, 3 Oct 2013 17:59:13 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Martin Schwidefsky <schwidefsky@de.ibm.com>,
 	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
 	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Andy King <acking@vmware.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
 	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
 	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
 	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Message-ID: <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
+Subject: Re: [PATCH RFC 01/77] PCI/MSI: Fix return value when
+ populate_msi_sysfs() failed
+Message-ID: <20131004005912.GB4787@jonmason-lab>
 References: <cover.1380703262.git.agordeev@redhat.com>
- <5254D397.9030307@zytor.com>
- <1381292648.645.259.camel@pasglop>
+ <3ff5236944aae69f2cd934b5b6da7c1c269df7c1.1380703262.git.agordeev@redhat.com>
+ <20131003003905.GK6768@jonmason-lab>
+ <1380836781.3419.17.camel@bwh-desktop.uk.level5networks.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1381292648.645.259.camel@pasglop>
+In-Reply-To: <1380836781.3419.17.camel@bwh-desktop.uk.level5networks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 09, 2013 at 03:24:08PM +1100, Benjamin Herrenschmidt wrote:
-> On Tue, 2013-10-08 at 20:55 -0700, H. Peter Anvin wrote:
-> > Why not add a minimum number to pci_enable_msix(), i.e.:
+On Thu, Oct 03, 2013 at 10:46:21PM +0100, Ben Hutchings wrote:
+> On Wed, 2013-10-02 at 17:39 -0700, Jon Mason wrote:
+> > On Wed, Oct 02, 2013 at 12:48:17PM +0200, Alexander Gordeev wrote:
+> > > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > > 
-> > pci_enable_msix(pdev, msix_entries, nvec, minvec)
-> > 
-> > ... which means "nvec" is the number of interrupts *requested*, and
-> > "minvec" is the minimum acceptable number (otherwise fail).
+> > Since you are changing the behavior of the msix_capability_init
+> > function on populate_msi_sysfs error, a comment describing why in this
+> > commit would be nice.
+> [...]
 > 
-> Which is exactly what Ben (the other Ben :-) suggested and that I
-> supports...
+> This function was already treating that error as fatal, and freeing the
+> MSIs.  The change in behaviour is that it now returns the error code in
+> this case, rather than 0.  This is obviously correct and properly
+> described by the one-line summary.
 
-Ok, this suggestion sounded in one or another form by several people.
-What about name it pcim_enable_msix_range() and wrap in couple more
-helpers to complete an API:
+If someone dumb, like me, is looking at this commit and trying to
+figure out what is happening, having ANY commit message is good.  "Fix
+the return value" doesn't tell me anything.  Documenting what issue(s)
+would've been seen had the error case been encountered and what will
+now been seen would be very nice.
 
-int pcim_enable_msix_range(pdev, msix_entries, nvec, minvec);
-	<0 - error code
-	>0 - number of MSIs allocated, where minvec >= result <= nvec
-
-int pcim_enable_msix(pdev, msix_entries, nvec);
-	<0 - error code
-	>0 - number of MSIs allocated, where 1 >= result <= nvec 
-
-int pcim_enable_msix_exact(pdev, msix_entries, nvec);
-	<0 - error code
-	>0 - number of MSIs allocated, where result == nvec
-
-The latter's return value seems odd, but I can not help to make
-it consistent with the first two.
-
-
-(Sorry if you see this message twice - my MUA seems struggle with one of CC).
-
-> Cheers,
+> 
 > Ben.
 > 
+> -- 
+> Ben Hutchings, Staff Engineer, Solarflare
+> Not speaking for my employer; that's the marketing department's job.
+> They asked us to note that Solarflare product names are trademarked.
 > 
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
