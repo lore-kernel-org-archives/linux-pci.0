@@ -1,85 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:57624 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752303Ab3J3Mtc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 08:49:32 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <lenb@kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Always rescan the slot for new devices
-Date: Wed, 30 Oct 2013 14:01:40 +0100
-Message-ID: <1406112.LRdFoqkugQ@vostro.rjw.lan>
-In-Reply-To: <1383136836-15306-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1383136836-15306-1-git-send-email-mika.westerberg@linux.intel.com>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:33685 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754326Ab3JDRj4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 13:39:56 -0400
+Received: by mail-ie0-f179.google.com with SMTP id e14so9407102iej.24
+        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 10:39:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1378974000-13168-1-git-send-email-wangyijing@huawei.com>
+References: <1378974000-13168-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 Oct 2013 11:39:36 -0600
+Message-ID: <CAErSpo5VjnPiscS5it3NLx9fC7dTaxbOZ-NwGeWSP3svZarBAg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: remove unused "deprecated" macro PCI_MSIX_FLAGS_BIRMASK
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 30, 2013 02:40:36 PM Mika Westerberg wrote:
-> Commit 2dc4128 (ACPI / hotplug / PCI: Avoid doing too much for spurious
-> notifies) changed the enable_slot() to check return value of pci_scan_slot()
-> and if it is zero return early from the function. It means that there were
-> no new devices in this particular slot.
-> 
-> However, if a device appeared deeper in the hierarchy the code now ignores
-> it causing things like Thunderbolt chaining fail to recognize new devices.
-> 
-> The problem with Alex Williamson's machine was solved with commit
-> a47d8c8 (ACPI / hotplug / PCI: Avoid parent bus rescans on spurious device
-> checks) and hence we should be able to restore the original functionality
-> that we always rescan on bus check notification.
-> 
-> On a device check notification we still check what acpiphp_rescan_slot()
-> returns and on zero bail out early.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+On Thu, Sep 12, 2013 at 2:20 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> PCI_MSIX_FLAGS_BIRMASK has been replaced by PCI_MSIX_TABLE_BIR
+> for better readability. Now no one uses it, remove it.
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-So, this is a revert of commit a47d8c8, correct?
-
-Rafael
-
+Applied, thanks!
 
 > ---
-> Alex,
-> 
-> Are you able to check if your machine still works and doesn't slow down
-> during boot after this patch is applied?
-> 
-> Thanks.
-> 
->  drivers/pci/hotplug/acpiphp_glue.c | 6 +-----
->  1 file changed, 1 insertion(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index be12fbf..1ea7523 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -552,9 +552,8 @@ static void __ref enable_slot(struct acpiphp_slot *slot)
->  	struct acpiphp_func *func;
->  	int max, pass;
->  	LIST_HEAD(add_list);
-> -	int nr_found;
->  
-> -	nr_found = acpiphp_rescan_slot(slot);
-> +	acpiphp_rescan_slot(slot);
->  	max = acpiphp_max_busnr(bus);
->  	for (pass = 0; pass < 2; pass++) {
->  		list_for_each_entry(dev, &bus->devices, bus_list) {
-> @@ -574,9 +573,6 @@ static void __ref enable_slot(struct acpiphp_slot *slot)
->  		}
->  	}
->  	__pci_bus_assign_resources(bus, &add_list, NULL);
-> -	/* Nothing more to do here if there are no new devices on this bus. */
-> -	if (!nr_found && (slot->flags & SLOT_ENABLED))
-> -		return;
->  
->  	acpiphp_sanitize_bus(bus);
->  	acpiphp_set_hpp_values(bus);
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>  include/uapi/linux/pci_regs.h |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+>
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index baa7852..f050914 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -319,7 +319,6 @@
+>  #define PCI_MSIX_PBA           8       /* Pending Bit Array offset */
+>  #define  PCI_MSIX_PBA_BIR      0x00000007 /* BAR index */
+>  #define  PCI_MSIX_PBA_OFFSET   0xfffffff8 /* Offset into specified BAR */
+> -#define  PCI_MSIX_FLAGS_BIRMASK        (7 << 0)   /* deprecated */
+>  #define PCI_CAP_MSIX_SIZEOF    12      /* size of MSIX registers */
+>
+>  /* MSI-X entry's format */
+> --
+> 1.7.1
+>
+>
