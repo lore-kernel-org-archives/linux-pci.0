@@ -1,267 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:2312 "EHLO
-	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752749Ab3JWKlv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 06:41:51 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>
-CC: Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: [PATCH 03/12][v3] pci: fsl: add PCI indirect access support
-Date: Wed, 23 Oct 2013 18:41:25 +0800
-Message-ID: <1382524894-15164-3-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:40584 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754091Ab3JDTBh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 15:01:37 -0400
+Message-ID: <524F111A.8080404@oracle.com>
+Date: Fri, 04 Oct 2013 15:03:54 -0400
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Aaron Opfer <me@aaronopfer.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Clemens Ladisch <clemens@ladisch.de>,
+	xen-devel@lists.xenproject.org
+Subject: Re: ASMedia ASM1083/1085 rev3 and Xen DMA Failure
+References: <CAOsGJpcuNuaEsBHk9mV2Lh_qiygzgfLYigSsbDoBke1GJ_XG-Q@mail.gmail.com> <20131004172958.GA18743@google.com> <20131004183409.GA21802@phenom.dumpdata.com>
+In-Reply-To: <20131004183409.GA21802@phenom.dumpdata.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch adds PCI indirect read/write functions. The main code
-is ported from arch/powerpc/sysdev/indirect_pci.c. We use general
-IO API iowrite32be/ioread32be instead of out_be32/in_be32, and
-use structure fsl_Pci instead of PowerPC's pci_controller.
-The patch also provides fsl_pcie_check_link() to check PCI link.
-The weak function fsl_arch_pci_exclude_device() is provided to
-call ppc_md.pci_exclude_device() for PowerPC architecture.
+On 10/04/2013 02:34 PM, Konrad Rzeszutek Wilk wrote:
+> On Fri, Oct 04, 2013 at 11:29:58AM -0600, Bjorn Helgaas wrote:
+>> [+cc Konrad, xen-devel]
+> Hey Bjorn, Thanks!
+>> On Wed, Oct 02, 2013 at 04:43:46PM -0400, Aaron Opfer wrote:
+>>> First time submitting the kernel dev list, so if I have demonstrated
+>>> gross incompetence in some way, please cut me some slack. :)
+>>>
+>>> I discussed with Clemens Ladisch an issue I was having that I thought
+>>> was related to the driver he authored for my soundcard, but on his
+>>> suggestion I experimented with other PCI devices and we have narrowed
+>>> the issue to the PCI Bridge.
+>>>
+>>> What hints me toward DMA handling being the fault is the following
+>>> message I receive during kernel initialization after rebooting from an
+>>> Xen hypervisor into a baremetal-kernel, without a power-cycle:
+>>>
+>>> [0.012815] dmar: DRHD: handling fault status reg 3
+>>> [0.012868] dmar: DMAR:[DMA Read] Request device [07:00.0] fault addr 7e00000
+>>> [0.012868] DMAR:[fault reason 02] Present bit in context entry is clear
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
-change log:
-v1-v3:
-Derived from http://patchwork.ozlabs.org/patch/278965/
+But if you powercycle the system you don't see this error?
 
-Based on upstream master.
-Based on the discussion of RFC version here
-http://patchwork.ozlabs.org/patch/274487/
+Have you tried booting your kernel with "intel_iommu=off"?
 
- drivers/pci/host/pci-fsl-common.c | 169 ++++++++++++++++++++++++++++++++------
- include/linux/fsl/pci-common.h    |   6 ++
- 2 files changed, 151 insertions(+), 24 deletions(-)
+-boris
 
-diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
-index 69d338b..8bc9a64 100644
---- a/drivers/pci/host/pci-fsl-common.c
-+++ b/drivers/pci/host/pci-fsl-common.c
-@@ -35,52 +35,173 @@
- #include <sysdev/fsl_soc.h>
- #include <sysdev/fsl_pci.h>
- 
--static int fsl_pcie_check_link(struct pci_controller *hose)
-+/* Indirect type */
-+#define INDIRECT_TYPE_EXT_REG			0x00000002
-+#define INDIRECT_TYPE_SURPRESS_PRIMARY_BUS	0x00000004
-+#define INDIRECT_TYPE_NO_PCIE_LINK		0x00000008
-+#define INDIRECT_TYPE_BIG_ENDIAN		0x00000010
-+#define INDIRECT_TYPE_FSL_CFG_REG_LINK		0x00000040
-+
-+int __weak fsl_arch_pci_exclude_device(struct fsl_pci *pci, u8 bus, u8 devfn)
-+{
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int fsl_pci_read_config(struct fsl_pci *pci, int bus, int devfn,
-+				int offset, int len, u32 *val)
-+{
-+	u32 bus_no, reg, data;
-+
-+	if (pci->indirect_type & INDIRECT_TYPE_NO_PCIE_LINK) {
-+		if (bus != pci->first_busno)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		if (devfn != 0)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	if (fsl_arch_pci_exclude_device(pci, bus, devfn))
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	bus_no = (bus == pci->first_busno) ? pci->self_busno : bus;
-+
-+	if (pci->indirect_type & INDIRECT_TYPE_EXT_REG)
-+		reg = ((offset & 0xf00) << 16) | (offset & 0xfc);
-+	else
-+		reg = offset & 0xfc;
-+
-+	if (pci->indirect_type & INDIRECT_TYPE_BIG_ENDIAN)
-+		iowrite32be(0x80000000 | (bus_no << 16) | (devfn << 8) | reg,
-+			    &pci->regs->config_addr);
-+	else
-+		iowrite32(0x80000000 | (bus_no << 16) | (devfn << 8) | reg,
-+			  &pci->regs->config_addr);
-+
-+	/*
-+	 * Note: the caller has already checked that offset is
-+	 * suitably aligned and that len is 1, 2 or 4.
-+	 */
-+	data = ioread32(&pci->regs->config_data);
-+	switch (len) {
-+	case 1:
-+		*val = (data >> (8 * (offset & 3))) & 0xff;
-+		break;
-+	case 2:
-+		*val = (data >> (8 * (offset & 3))) & 0xffff;
-+		break;
-+	default:
-+		*val = data;
-+		break;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int fsl_pci_write_config(struct fsl_pci *pci, int bus, int devfn,
-+				 int offset, int len, u32 val)
-+{
-+	void __iomem *cfg_data;
-+	u32 bus_no, reg;
-+
-+	if (pci->indirect_type & INDIRECT_TYPE_NO_PCIE_LINK) {
-+		if (bus != pci->first_busno)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		if (devfn != 0)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	if (fsl_arch_pci_exclude_device(pci, bus, devfn))
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	bus_no = (bus == pci->first_busno) ?
-+			pci->self_busno : bus;
-+
-+	if (pci->indirect_type & INDIRECT_TYPE_EXT_REG)
-+		reg = ((offset & 0xf00) << 16) | (offset & 0xfc);
-+	else
-+		reg = offset & 0xfc;
-+
-+	if (pci->indirect_type & INDIRECT_TYPE_BIG_ENDIAN)
-+		iowrite32be(0x80000000 | (bus_no << 16) | (devfn << 8) | reg,
-+			    &pci->regs->config_addr);
-+	else
-+		iowrite32(0x80000000 | (bus_no << 16) | (devfn << 8) | reg,
-+			  &pci->regs->config_addr);
-+
-+	/* suppress setting of PCI_PRIMARY_BUS */
-+	if (pci->indirect_type & INDIRECT_TYPE_SURPRESS_PRIMARY_BUS)
-+		if ((offset == PCI_PRIMARY_BUS) &&
-+		    (bus == pci->first_busno))
-+			val &= 0xffffff00;
-+
-+	/*
-+	 * Note: the caller has already checked that offset is
-+	 * suitably aligned and that len is 1, 2 or 4.
-+	 */
-+	cfg_data = ((void *) &(pci->regs->config_data)) + (offset & 3);
-+	switch (len) {
-+	case 1:
-+		iowrite8(val, cfg_data);
-+		break;
-+	case 2:
-+		iowrite16(val, cfg_data);
-+		break;
-+	default:
-+		iowrite32(val, cfg_data);
-+		break;
-+	}
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+bool fsl_pci_check_link(struct fsl_pci *pci)
- {
- 	u32 val = 0;
- 
--	if (hose->indirect_type & PPC_INDIRECT_TYPE_FSL_CFG_REG_LINK) {
--		if (hose->ops->read == fsl_indirect_read_config) {
--			struct pci_bus bus;
--			bus.number = hose->first_busno;
--			bus.sysdata = hose;
--			bus.ops = hose->ops;
--			indirect_read_config(&bus, 0, PCIE_LTSSM, 4, &val);
--		} else
--			early_read_config_dword(hose, 0, 0, PCIE_LTSSM, &val);
-+	if (pci->indirect_type & INDIRECT_TYPE_FSL_CFG_REG_LINK) {
-+		fsl_pci_read_config(pci, 0, 0, PCIE_LTSSM, 4, &val);
- 		if (val < PCIE_LTSSM_L0)
--			return 1;
-+			return false;
- 	} else {
--		struct ccsr_pci __iomem *pci = hose->private_data;
- 		/* for PCIe IP rev 3.0 or greater use CSR0 for link state */
--		val = (in_be32(&pci->pex_csr0) & PEX_CSR0_LTSSM_MASK)
-+		val = (ioread32be(&pci->regs->pex_csr0) & PEX_CSR0_LTSSM_MASK)
- 				>> PEX_CSR0_LTSSM_SHIFT;
- 		if (val != PEX_CSR0_LTSSM_L0)
--			return 1;
-+			return false;
- 	}
- 
--	return 0;
-+	return true;
- }
- 
- static int fsl_indirect_read_config(struct pci_bus *bus, unsigned int devfn,
- 				    int offset, int len, u32 *val)
- {
--	struct pci_controller *hose = pci_bus_to_host(bus);
-+	struct fsl_pci *pci = fsl_arch_sys_to_pci(bus->sysdata);
-+
-+	if (!pci)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	if (fsl_pcie_check_link(hose))
--		hose->indirect_type |= PPC_INDIRECT_TYPE_NO_PCIE_LINK;
-+	if (fsl_pci_check_link(pci))
-+		pci->indirect_type &= ~INDIRECT_TYPE_NO_PCIE_LINK;
- 	else
--		hose->indirect_type &= ~PPC_INDIRECT_TYPE_NO_PCIE_LINK;
-+		pci->indirect_type |= INDIRECT_TYPE_NO_PCIE_LINK;
- 
--	return indirect_read_config(bus, devfn, offset, len, val);
-+	return fsl_pci_read_config(pci, bus->number, devfn, offset, len, val);
- }
- 
--#if defined(CONFIG_FSL_SOC_BOOKE) || defined(CONFIG_PPC_86xx)
--
--static struct pci_ops fsl_indirect_pcie_ops =
-+static int fsl_indirect_write_config(struct pci_bus *bus, unsigned int devfn,
-+				     int offset, int len, u32 val)
- {
-+	struct fsl_pci *pci = fsl_arch_sys_to_pci(bus->sysdata);
-+
-+	if (!pci)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	return fsl_pci_write_config(pci, bus->number, devfn,
-+				     offset, len, val);
-+}
-+
-+static struct pci_ops fsl_indirect_pci_ops = {
- 	.read = fsl_indirect_read_config,
--	.write = indirect_write_config,
-+	.write = fsl_indirect_write_config,
- };
- 
- static int setup_one_atmu(struct ccsr_pci __iomem *pci,
-diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
-index e56a040..7df4355 100644
---- a/include/linux/fsl/pci-common.h
-+++ b/include/linux/fsl/pci-common.h
-@@ -143,5 +143,11 @@ struct fsl_pci {
-  */
- extern struct fsl_pci *fsl_arch_sys_to_pci(void *sys);
- 
-+/* Return link status true -> link, false -> no link */
-+bool fsl_pci_check_link(struct fsl_pci *pci);
-+
-+/* To avoid touching specified devices */
-+int fsl_arch_pci_exclude_device(struct fsl_pci *pci, u8 bus, u8 devfn);
-+
- #endif /* __PCI_COMMON_H */
- #endif /* __KERNEL__ */
--- 
-1.8.1.2
-
+>> Presumably 07:00.0 is your soundcard, and apparently it did a DMA
+>> read to 0x7e00000, which wasn't mapped by the IOMMU.
+>>
+>>> In addition to other hints, such as simple IO like changing the active
+>>> port on the soundcard worked (I could hear the relays clicking) but
+>>> not the functions that DMA would be used (streaming audio).
+>>>
+>>> The PCI devices in my system are connected via this device, as listed by lspci:
+>>>
+>>> 06:00.0 PCI bridge: ASMedia Technology Inc. ASM1083/1085 PCIe to PCI
+>>> Bridge (rev 03)
+>>>
+>>> This PCI bridge works under bare-metal Linux normally (w/ various
+>>> debian kernels stable/unstable/testing/backports), but under Xen
+>>> Hypervisor the PCI devices connected exhibit bad behavior.
+>> So it fails with Xen but works otherwise?  I assume there are other
+>> PCI devices, too?  Do they work?
+>>
+>> If you want to open a report at http://bugzilla.kernel.org, that would
+>> be a handy place to attach a complete dmesg log and "lspci -vv" output
+>> for more details.
+>>
+>>> For
+>>> instance, aformentioned sound card outputs no sound and gets no
+>>> microphone input at all, and an ethernet card causes a system lockup
+>>> as soon as gnome's network manager attempts DHCP over it (presumably;
+>>> I did not test this as thoroughly as the sound card).
+>>>
+>>> I've used Xen Hypervisors 4.1 and 4.2 and had the issues I described
+>>> above with both of them. I was briefly running 4.3 but I did not test
+>>> the device.
+> So lets seperate some of these issues. The sound-card issue might be
+> related to the Linux kernel Xen-SWIOTLB (fixed at some point)- so could
+> you tell me what the kernel version you have?
+>
+> Xen 4.3 also has numerous fixes in the IOMMU path.
+>
+>>> Rev1 of the ASM1083 was apparently buggy to the point of being
+>>> unusable, as Clemens pointed out. I would be disappointed if this
+>>> device is similarly unsalvageable,but would be happier if this buggy
+>>> hardware at the very least outputted warnings to users who attempt to
+>>> use it (in Xen).
+>>>
+>>> All The Best,
+>>>
+>>> Aaron Opfer
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
