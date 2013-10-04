@@ -1,142 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26202 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754164Ab3JBR3p (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:29:45 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 14/77] bnx2x: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:48:30 +0200
-Message-Id: <1a91f00e27e06e93806bd8af34fccd580ec68585.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1378809966.26153.23.camel@cliu38-desktop-build>
+References: <1378809966.26153.23.camel@cliu38-desktop-build>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 Oct 2013 11:47:25 -0600
+Message-ID: <CAErSpo6Sm1hDWRFaMYtiZN6_KJ8N05eiRHj_GKJ6AhMjdR91Bw@mail.gmail.com>
+Subject: Re: [PATCH] PCI/PM: Removing the function pci_pm_complete()
+To: Chuansheng Liu <chuansheng.liu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	fei.li@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
+On Tue, Sep 10, 2013 at 4:46 AM, Chuansheng Liu
+<chuansheng.liu@intel.com> wrote:
+>
+> Commit(88d2613) removed the pm_runtime_put_sync() from pci_pm_complete()
+> to PM core code device_complete().
+>
+> Here the pci_pm_complete() is doing the same work which can be done in
+> device_complete(), so we can remove it directly.
+>
+> Signed-off-by: liu chuansheng <chuansheng.liu@intel.com>
+> ---
+>  drivers/pci/pci-driver.c |    9 ---------
+>  1 files changed, 0 insertions(+), 9 deletions(-)
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c |   54 ++++++++++-------------
- 1 files changed, 23 insertions(+), 31 deletions(-)
+This looks correct to me, but I'd like Rafael to ack it before I apply it.
 
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
-index 61726af..edf31d2 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
-@@ -1564,7 +1564,7 @@ void bnx2x_free_irq(struct bnx2x *bp)
- 
- int bnx2x_enable_msix(struct bnx2x *bp)
- {
--	int msix_vec = 0, i, rc;
-+	int msix_vec = 0, nvec, i, rc;
- 
- 	/* VFs don't have a default status block */
- 	if (IS_PF(bp)) {
-@@ -1590,60 +1590,52 @@ int bnx2x_enable_msix(struct bnx2x *bp)
- 		msix_vec++;
- 	}
- 
-+	rc = pci_msix_table_size(bp->pdev);
-+	if (rc < 0)
-+		goto no_msix;
-+
-+	nvec = min(msix_vec, rc);
-+	if (nvec < BNX2X_MIN_MSIX_VEC_CNT(bp))
-+		nvec = 1;
-+
- 	DP(BNX2X_MSG_SP, "about to request enable msix with %d vectors\n",
- 	   msix_vec);
- 
--	rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], msix_vec);
-+	rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], nvec);
-+	if (rc)
-+		goto no_msix;
- 
- 	/*
- 	 * reconfigure number of tx/rx queues according to available
- 	 * MSI-X vectors
- 	 */
--	if (rc >= BNX2X_MIN_MSIX_VEC_CNT(bp)) {
--		/* how less vectors we will have? */
--		int diff = msix_vec - rc;
--
--		BNX2X_DEV_INFO("Trying to use less MSI-X vectors: %d\n", rc);
-+	if (nvec == 1) {
-+		bp->flags |= USING_SINGLE_MSIX_FLAG;
- 
--		rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], rc);
-+		bp->num_ethernet_queues = 1;
-+		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
-+	} else if (nvec < msix_vec) {
-+		/* how less vectors we will have? */
-+		int diff = msix_vec - nvec;
- 
--		if (rc) {
--			BNX2X_DEV_INFO("MSI-X is not attainable rc %d\n", rc);
--			goto no_msix;
--		}
- 		/*
- 		 * decrease number of queues by number of unallocated entries
- 		 */
- 		bp->num_ethernet_queues -= diff;
- 		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
-+	}
- 
-+	if (nvec != msix_vec)
- 		BNX2X_DEV_INFO("New queue configuration set: %d\n",
- 			       bp->num_queues);
--	} else if (rc > 0) {
--		/* Get by with single vector */
--		rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], 1);
--		if (rc) {
--			BNX2X_DEV_INFO("Single MSI-X is not attainable rc %d\n",
--				       rc);
--			goto no_msix;
--		}
--
--		BNX2X_DEV_INFO("Using single MSI-X vector\n");
--		bp->flags |= USING_SINGLE_MSIX_FLAG;
--
--		BNX2X_DEV_INFO("set number of queues to 1\n");
--		bp->num_ethernet_queues = 1;
--		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
--	} else if (rc < 0) {
--		BNX2X_DEV_INFO("MSI-X is not attainable  rc %d\n", rc);
--		goto no_msix;
--	}
- 
- 	bp->flags |= USING_MSIX_FLAG;
- 
- 	return 0;
- 
- no_msix:
-+	BNX2X_DEV_INFO("MSI-X is not attainable rc %d\n", rc);
-+
- 	/* fall to INTx if not enough memory */
- 	if (rc == -ENOMEM)
- 		bp->flags |= DISABLE_MSI_FLAG;
--- 
-1.7.7.6
-
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 98f7b9b..736ef3f 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -599,18 +599,10 @@ static int pci_pm_prepare(struct device *dev)
+>         return error;
+>  }
+>
+> -static void pci_pm_complete(struct device *dev)
+> -{
+> -       struct device_driver *drv = dev->driver;
+> -
+> -       if (drv && drv->pm && drv->pm->complete)
+> -               drv->pm->complete(dev);
+> -}
+>
+>  #else /* !CONFIG_PM_SLEEP */
+>
+>  #define pci_pm_prepare NULL
+> -#define pci_pm_complete        NULL
+>
+>  #endif /* !CONFIG_PM_SLEEP */
+>
+> @@ -1123,7 +1115,6 @@ static int pci_pm_runtime_idle(struct device *dev)
+>
+>  const struct dev_pm_ops pci_dev_pm_ops = {
+>         .prepare = pci_pm_prepare,
+> -       .complete = pci_pm_complete,
+>         .suspend = pci_pm_suspend,
+>         .resume = pci_pm_resume,
+>         .freeze = pci_pm_freeze,
+> --
+> 1.7.0.4
+>
+>
+>
