@@ -1,67 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:22407 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755331Ab3JNAJI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Oct 2013 20:09:08 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MUM008KOTR67UA0@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Mon, 14 Oct 2013 09:09:06 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Wei Yongjun' <weiyj.lk@gmail.com>
-Cc: 'Shawn Guo' <shawn.guo@linaro.org>,
-	'Grant Likely' <grant.likely@linaro.org>,
-	'Rob Herring' <rob.herring@calxeda.com>, xobs@kosagi.com,
-	'Sascha Hauer' <s.hauer@pengutronix.de>,
-	'Wei Yongjun' <yongjun_wei@trendmicro.com.cn>,
-	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <CAPgLHd-M6y2VkZv_TWkOqugXnu=NgFuxyBVskd-2fQjy79u61g@mail.gmail.com>
- <20131012081130.GG21305@S2101-09.ap.freescale.net>
-In-reply-to: <20131012081130.GG21305@S2101-09.ap.freescale.net>
-Subject: Re: [PATCH -next] PCI: imx6: remove redundant dev_err call in
- imx6_pcie_probe()
-Date: Mon, 14 Oct 2013 09:09:05 +0900
-Message-id: <000601cec871$9892f2f0$c9b8d8d0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:49542 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751502Ab3JEK5d (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Oct 2013 06:57:33 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQV_aDmUqGO7HyybwH5fMYqjVpimKF7YA=Jp4EDSFzbQDA@mail.gmail.com>
+References: <20131004011806.GE20450@dangermouse.emea.sgi.com>
+	<CAErSpo6aE-vxhOHk_mgyWMYrgkG0Juuy8Bs-S2Hjb_7k8S=n8Q@mail.gmail.com>
+	<CAE9FiQV_aDmUqGO7HyybwH5fMYqjVpimKF7YA=Jp4EDSFzbQDA@mail.gmail.com>
+Date: Sat, 5 Oct 2013 18:57:32 +0800
+Message-ID: <CABawtvPL3ECq=QLVxDNtmgjWWV2B6+Z=5S+wJ9VXwT0jRsxh8w@mail.gmail.com>
+Subject: Re: Commit 07f9b61 breaks systems that don't implement a _CBA method
+From: Ethan Zhao <ethan.kernel@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ethan Zhao <ethan.zhao@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, October 12, 2013 5:12 PM, Shawn Guo wrote:
-> On Sat, Oct 12, 2013 at 02:11:02PM +0800, Wei Yongjun wrote:
-> > From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> >
-> > There is a error message within devm_ioremap_resource
-> > already, so remove the dev_err call to avoid redundant
-> > error message.
-> >
-> > Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> Acked-by: Shawn Guo <shawn.guo@linaro.org>
+On Sat, Oct 5, 2013 at 7:55 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Oct 4, 2013 at 3:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Oct 3, 2013 at 7:18 PM, Hedi Berriche <hedi@sgi.com> wrote:
+>
+>> It's regrettable that the code is so subtle.  The obvious thing to do
+>> would be to check for _CBA, and if it doesn't exist, look for an MCFG
+>> entry.  But for various historical reasons, the code is a mess, and we
+>> haven't figured out how to safely simplify it.
+>>
+>> Ethan, Yinghai, any objections to reverting 07f9b61?
+>
+> yes, that is right solution.
+> --
+Thanks, pull it out from the trap.
 
-Reviewed-by: Jingoo Han <jg1.han@samsung.com>
-
-Best regards,
-Jingoo Han
-
-> 
-> > ---
-> >  drivers/pci/host/pci-imx6.c | 1 -
-> >  1 file changed, 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> > index 5afa922..51338ac 100644
-> > --- a/drivers/pci/host/pci-imx6.c
-> > +++ b/drivers/pci/host/pci-imx6.c
-> > @@ -439,7 +439,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
-> >
-> >  	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
-> >  	if (IS_ERR(pp->dbi_base)) {
-> > -		dev_err(&pdev->dev, "unable to remap dbi_base\n");
-> >  		ret = PTR_ERR(pp->dbi_base);
-> >  		goto err;
-> >  	}
-
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
