@@ -1,67 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:12774 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751156Ab3JSGmL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:42:11 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:65145 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750983Ab3JEOTo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 5 Oct 2013 10:19:44 -0400
+Date: Sat, 5 Oct 2013 16:20:55 +0200
 From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 15/29] ixgbe: Make use of pcim_enable_msix_range() interface
-Date: Fri, 18 Oct 2013 19:12:15 +0200
-Message-Id: <1845544d7b17de17198be343bba08dae83fea75e.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Message-ID: <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c |   16 ++++------------
- 1 files changed, 4 insertions(+), 12 deletions(-)
+On Fri, Oct 04, 2013 at 10:29:16PM +0100, Ben Hutchings wrote:
+> On Fri, 2013-10-04 at 10:29 +0200, Alexander Gordeev wrote:
+> All I can see there is that Tejun didn't think that the global limits
+> and positive return values were implemented by any architecture.
 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
-index 90b4e10..9954b7a 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
-@@ -697,7 +697,7 @@ static void ixgbe_set_num_queues(struct ixgbe_adapter *adapter)
- static void ixgbe_acquire_msix_vectors(struct ixgbe_adapter *adapter,
- 				       int vectors)
- {
--	int err, vector_threshold;
-+	int vector_threshold;
- 
- 	/* We'll want at least 2 (vector_threshold):
- 	 * 1) TxQ[0] + RxQ[0] handler
-@@ -711,18 +711,10 @@ static void ixgbe_acquire_msix_vectors(struct ixgbe_adapter *adapter,
- 	 * Right now, we simply care about how many we'll get; we'll
- 	 * set them up later while requesting irq's.
- 	 */
--	while (vectors >= vector_threshold) {
--		err = pci_enable_msix(adapter->pdev, adapter->msix_entries,
--				      vectors);
--		if (!err) /* Success in acquiring all requested vectors. */
--			break;
--		else if (err < 0)
--			vectors = 0; /* Nasty failure, quit now */
--		else /* err == number of vectors we should try again with */
--			vectors = err;
--	}
-+	vectors = pcim_enable_msix_range(adapter->pdev, adapter->msix_entries,
-+					 vectors, vector_threshold);
- 
--	if (vectors < vector_threshold) {
-+	if (vectors < 0) {
- 		/* Can't allocate enough MSI-X interrupts?  Oh well.
- 		 * This just means we'll go with either a single MSI
- 		 * vector or fall back to legacy interrupts.
+I would say more than just that :) I picked few quotes which in my
+reading represent the guys positions:
+
+Tejun Heo: "...do we really
+care about possible partial success?  This sort of interface is
+unnecessarily complex and actively harmful.  It forces all users to
+wonder what could possibly happen and implement all sorts of nutty
+fallback logic which is highly likely to be error-prone on both the
+software and hardware side.  Seriously, how much testing would such
+code path would get both on the driver and firmware sides?"
+
+Bjorn Helgaas: "I agree, that would be much simpler.
+I propose that you rework it that way, and at least find out what
+(if anything) would break if we do that."
+
+Michael Ellerman: "I really think you're overstating the complexity here.
+Functions typically return a boolean   -> nothing to see here
+This function returns a tristate value -> brain explosion!";
+"All a lot of bother for no real gain IMHO."
+
+> But you have a counter-example, so I'm not sure what your point is.
+
+I concur with Tejun. I think we need to get rid of the loop.
+
+As of the counter-example I think we could honour the pSeries quota by
+inroducing an interface to interrogate what you call global limits -
+pci_get_msix_limit(), i.e.:
+
+	rc = pci_msix_table_size(pdev, nvec);
+	if (rc < 0)
+		return rc;
+
+	nvec = min(rc, nvec);
+
+	rc = pci_get_msix_limit(pdev, nvec);
+	if (rc < 0)
+		return rc;
+
+	nvec = min(rc, nvec);
+
+	for (i = 0; i < nvec; i++)
+		msix_entry[i].entry = i;
+
+	rc = pci_enable_msix(pdev, msix_entry, nvec);
+	if (rc)
+		return rc;
+
+The latest state of those discussion is somewhere around Michael's:
+"We could probably make that work." and Tejun's: "Are we talking about
+some limited number of device drivers here? Also, is the quota still
+necessary for machines in production today?"
+
+So my point is - drivers should first obtain a number of MSIs they *can*
+get, then *derive* a number of MSIs the device is fine with and only then
+request that number. Not terribly different from memory or any other type
+of resource allocation ;)
+
+> It has been quite a while since I saw this happen on x86.  But I just
+> checked on a test system running RHEL 5 i386 (Linux 2.6.18).  If I ask
+> for 16 MSI-X vectors on a device that supports 1024, the return value is
+> 8, and indeed I can then successfully allocate 8.
+> 
+> Now that's going quite a way back, and it may be that global limits
+> aren't a significant problem any more.  With the x86_64 build of RHEL 5
+> on an identical system, I can allocate 16 or even 32, so this is
+> apparently not a hardware limit in this case.
+
+Well, I do not know how to comment here. 2.6.18 has a significantly
+different codebase wrt MSIs. What about a recent version?
+
+> Most drivers seem to either:
+> (a) require exactly a certain number of MSI vectors, or
+> (b) require a minimum number of MSI vectors, usually want to allocate
+> more, and work with any number in between
+> 
+> We can support drivers in both classes by adding new allocation
+> functions that allow specifying a minimum (required) and maximum
+> (wanted) number of MSI vectors.  Those in class (a) would just specify
+> the same value for both.  These new functions can take account of any
+> global limit or allocation policy without any further changes to the
+> drivers that use them.
+
+I think such interface is redundant wrt the current pci_enable_msix()
+implementation.. and you propose to leave it. IMO it unnecessarily blows
+the generic MSI API with no demand from drivers.
+
+> The few drivers with more specific requirements would still need to
+> implement the currently recommended loop, using the old allocation
+> functions.
+
+Although the classes of drivers you specified indeed exist, I do believe
+just a single interface is enough to handle them all.
+
+> Ben.
+
 -- 
-1.7.7.6
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
