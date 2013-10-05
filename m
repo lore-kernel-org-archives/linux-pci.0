@@ -1,55 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26771 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754618Ab3JBRoK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:44:10 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 02/77] PCI/MSI/PPC: Fix wrong RTAS error code reporting
-Date: Wed,  2 Oct 2013 12:48:18 +0200
-Message-Id: <d9da231bddf5e54ad1ff81e19c9c8ed4dc234946.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:51867 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752231Ab3JEWgB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Oct 2013 18:36:01 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Chuansheng Liu <chuansheng.liu@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	fei.li@intel.com
+Subject: Re: [PATCH] PCI/PM: Removing the function pci_pm_complete()
+Date: Sun, 06 Oct 2013 00:47:36 +0200
+Message-ID: <4130856.aaSGkRrri4@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6Sm1hDWRFaMYtiZN6_KJ8N05eiRHj_GKJ6AhMjdR91Bw@mail.gmail.com>
+References: <1378809966.26153.23.camel@cliu38-desktop-build> <CAErSpo6Sm1hDWRFaMYtiZN6_KJ8N05eiRHj_GKJ6AhMjdR91Bw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- arch/powerpc/platforms/pseries/msi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Friday, October 04, 2013 11:47:25 AM Bjorn Helgaas wrote:
+> On Tue, Sep 10, 2013 at 4:46 AM, Chuansheng Liu
+> <chuansheng.liu@intel.com> wrote:
+> >
+> > Commit(88d2613) removed the pm_runtime_put_sync() from pci_pm_complete()
+> > to PM core code device_complete().
+> >
+> > Here the pci_pm_complete() is doing the same work which can be done in
+> > device_complete(), so we can remove it directly.
+> >
+> > Signed-off-by: liu chuansheng <chuansheng.liu@intel.com>
+> > ---
+> >  drivers/pci/pci-driver.c |    9 ---------
+> >  1 files changed, 0 insertions(+), 9 deletions(-)
+> 
+> This looks correct to me, but I'd like Rafael to ack it before I apply it.
 
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 6d2f0ab..009ec73 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -467,7 +467,7 @@ again:
- 	list_for_each_entry(entry, &pdev->msi_list, list) {
- 		hwirq = rtas_query_irq_number(pdn, i++);
- 		if (hwirq < 0) {
--			pr_debug("rtas_msi: error (%d) getting hwirq\n", rc);
-+			pr_debug("rtas_msi: error (%d) getting hwirq\n", hwirq);
- 			return hwirq;
- 		}
- 
+Yes, it should work, so ACK.
+
+Sorry for the delay.
+
+> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> > index 98f7b9b..736ef3f 100644
+> > --- a/drivers/pci/pci-driver.c
+> > +++ b/drivers/pci/pci-driver.c
+> > @@ -599,18 +599,10 @@ static int pci_pm_prepare(struct device *dev)
+> >         return error;
+> >  }
+> >
+> > -static void pci_pm_complete(struct device *dev)
+> > -{
+> > -       struct device_driver *drv = dev->driver;
+> > -
+> > -       if (drv && drv->pm && drv->pm->complete)
+> > -               drv->pm->complete(dev);
+> > -}
+> >
+> >  #else /* !CONFIG_PM_SLEEP */
+> >
+> >  #define pci_pm_prepare NULL
+> > -#define pci_pm_complete        NULL
+> >
+> >  #endif /* !CONFIG_PM_SLEEP */
+> >
+> > @@ -1123,7 +1115,6 @@ static int pci_pm_runtime_idle(struct device *dev)
+> >
+> >  const struct dev_pm_ops pci_dev_pm_ops = {
+> >         .prepare = pci_pm_prepare,
+> > -       .complete = pci_pm_complete,
+> >         .suspend = pci_pm_suspend,
+> >         .resume = pci_pm_resume,
+> >         .freeze = pci_pm_freeze,
+> > --
+> > 1.7.0.4
+
+Thanks!
+
 -- 
-1.7.7.6
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
