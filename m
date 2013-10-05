@@ -1,121 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:51568 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188Ab3JRFdZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Oct 2013 01:33:25 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: zhenzhong.duan@oracle.com, 'Bjorn Helgaas' <bhelgaas@google.com>
+Received: from mail-yh0-f44.google.com ([209.85.213.44]:56919 "EHLO
+	mail-yh0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440Ab3JECpW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 22:45:22 -0400
+Received: by mail-yh0-f44.google.com with SMTP id f64so1195217yha.3
+        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 19:45:21 -0700 (PDT)
+Date: Fri, 4 Oct 2013 20:45:17 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	'xen-devel' <xen-devel@lists.xen.org>,
-	'Konrad Rzeszutek Wilk' <konrad.wilk@oracle.com>,
-	'Feng Jin' <joe.jin@oracle.com>,
-	'Sucheta Chakraborty' <sucheta.chakraborty@qlogic.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <525E3320.5080700@oracle.com>
-In-reply-to: <525E3320.5080700@oracle.com>
-Subject: Re: [PATCH 2/3] PCI: Refactor MSI/MSIX mask restore code to fix
- interrupt lost issue
-Date: Fri, 18 Oct 2013 14:32:14 +0900
-Message-id: <000101cecbc3$67291550$357b3ff0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Hedi Berriche <hedi@sgi.com>,
+	"ethan.zhao" <ethan.zhao@oracle.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [GIT PULL] PCI updates for v3.12
+Message-ID: <20131005024517.GC26108@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 16, 2013 3:33 PM, Zhenzhong Duan wrote:
-> 
-> Driver init call graph under baremetal:
-> driver_init->
->     msix_capability_init->
->         msix_program_entries->
->             msix_mask_irq->
->                 entry->masked = 1
->     request_irq->
->         __setup_irq->
->             irq_startup->
->                 unmask_msi_irq->
->                     msix_mask_irq->
->                         entry->masked = 0;
-> 
-> So entry->masked is always updated with newest value and its value could be used
-> to restore to mask register in device.
-> 
-> But in initial domain (aka priviliged guest), it's different.
-> Driver init call graph under initial domain:
-> driver_init->
->     msix_capability_init->
->         msix_program_entries->
->             msix_mask_irq->
->                 entry->masked = 1
->     request_irq->
->         __setup_irq->
->             irq_startup->
->                 __startup_pirq->
->                     EVTCHNOP_bind_pirq hypercall    (trap into Xen)
-> [Xen:]
-> pirq_guest_bind->
->     startup_msi_irq->
->         unmask_msi_irq->
->             msi_set_mask_bit->
->                 entry->msi_attrib.masked = 0;
-> 
-> So entry->msi_attrib.masked in xen side always has newest value. entry->masked
-> in initial domain is untouched and is 1 after msix_capability_init.
-> 
-> Based on above, it's Xen's duty to restore entry->msi_attrib.masked to device,
-> but with current code, entry->masked is used and MSI-x interrupt is masked.
-> 
-> Before patch, restore call graph under initial domain:
-> pci_reset_function->
->     pci_restore_state->
->         __pci_restore_msix_state->
->             arch_restore_msi_irqs->
->                 xen_initdom_restore_msi_irqs->
->                     PHYSDEVOP_restore_msi hypercall (first mask restore)
->             msix_mask_irq(entry, entry->masked)     (second mask restore)
-> 
-> So msix_mask_irq call in initial domain call graph needs to be removed.
-> 
-> Based on this we can move the restore of the mask in default_restore_msi_irqs
-> which would avoid restoring the invalid mask under Xen. Furthermore this
-> simplifies the API by making everything related to restoring an MSI be in the
-> platform specific APIs instead of just parts of it.
-> 
-> After patch, restore call graph under initial domain:
-> pci_reset_function->
->     pci_restore_state->
->         __pci_restore_msix_state->
->             arch_restore_msi_irqs->
->                 xen_initdom_restore_msi_irqs->
->                     PHYSDEVOP_restore_msi hypercall (first mask restore)
-> 
-> Logic for baremetal is not changed.
-> Before patch, restore call graph under baremetal:
-> pci_reset_function->
->     pci_restore_state->
->         __pci_restore_msix_state->
->             arch_restore_msi_irqs->
->                 default_restore_msi_irqs->
->             msix_mask_irq(entry, entry->masked)     (first mask restore)
-> 
-> After patch, restore call graph under baremetal:
-> pci_reset_function->
->     pci_restore_state->
->         __pci_restore_msix_state->
->             arch_restore_msi_irqs->
->                 default_restore_msi_irqs->
->                     msix_mask_irq(entry, entry->masked) (first mask restore)
-> 
-> The process for MSI code is similiar.
-> 
-> Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Hi Linus,
 
-Reviewed-by: Jingoo Han <jg1.han@samsung.com>
+Here's a fix for v3.12.  We merged what was intended to be an MMCONFIG
+cleanup, but in fact, for systems without _CBA (which is almost
+everything), it broke extended config space for domain 0 and it
+broke all config space for other domains.  This reverts the change.
 
-It looks good. Also, I tested this patch on Exynos5440.
+Bjorn
 
-Best regards,
-Jingoo Han
 
+The following changes since commit 4a10c2ac2f368583138b774ca41fac4207911983:
+
+  Linux 3.12-rc2 (2013-09-23 15:41:09 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.12-fixes-1
+
+for you to fetch changes up to 67d470e0e1711ca4a4c3a0e5524e0d580654053e:
+
+  Revert "x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero" (2013-10-04 16:15:29 -0600)
+
+----------------------------------------------------------------
+PCI update for v3.12:
+
+  MMCONFIG
+      Revert "x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero"
+
+----------------------------------------------------------------
+Bjorn Helgaas (1):
+      Revert "x86/PCI: MMCONFIG: Check earlier for MMCONFIG region at address zero"
+
+ arch/x86/pci/mmconfig-shared.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
