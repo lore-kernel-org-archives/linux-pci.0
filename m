@@ -1,62 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:44191 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794Ab3JRFE7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Oct 2013 01:04:59 -0400
-Received: by mail-wi0-f173.google.com with SMTP id ey11so397715wid.0
-        for <linux-pci@vger.kernel.org>; Thu, 17 Oct 2013 22:04:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1381853200-5534-6-git-send-email-marex@denx.de>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
-	<1381853200-5534-6-git-send-email-marex@denx.de>
-Date: Thu, 17 Oct 2013 22:04:57 -0700
-Message-ID: <CAJ+vNU2_=qVP4mvzwcjBRMxo88Qa+8OQqqwo1f9SqVxSNyavgA@mail.gmail.com>
-Subject: Re: [PATCH 5/6] PCI: imx6: Force Gen1 operation
-From: Tim Harvey <tharvey@gateworks.com>
-To: Marek Vasut <marex@denx.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from gate.crashing.org ([63.228.1.57]:46609 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752610Ab3JEVsV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 5 Oct 2013 17:48:21 -0400
+Message-ID: <1381009586.645.141.camel@pasglop>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Ben Hutchings <bhutchings@solarflare.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Date: Sun, 06 Oct 2013 08:46:26 +1100
+In-Reply-To: <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	 <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+	 <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+	 <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+	 <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 15, 2013 at 9:06 AM, Marek Vasut <marex@denx.de> wrote:
-> Without forcing the PCIe core into Gen1 operation, the PCIe switch
-> attached directly to the PCIe port is not recognised at all. The
-> PCIe switch is Gen2 capable to make this issue even more puzzling.
->
-[...]
->
->         while (!dw_pcie_link_up(pp)) {
->                 usleep_range(100, 1000);
->                 count++;
-> -               if (count >= 10) {
-> +               if (count >= 200) {
->                         dev_err(pp->dev, "phy link never came up\n");
->                         dev_dbg(pp->dev,
->                                 "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
-> --
-> 1.8.4.rc3
->
+On Sat, 2013-10-05 at 16:20 +0200, Alexander Gordeev wrote:
+> So my point is - drivers should first obtain a number of MSIs they *can*
+> get, then *derive* a number of MSIs the device is fine with and only then
+> request that number. Not terribly different from memory or any other type
+> of resource allocation ;)
 
-Marek,
+What if the limit is for a group of devices ? Your interface is racy in
+that case, another driver could have eaten into the limit in between the
+calls.
 
-Can you split this patch out?  I found that with the PLX PEX860x PCIe
-switches I have on the i.MX6 RC I needed this longer wait for link as
-well, but I don't think this is related to gen1/gen2.
+Ben.
 
-Thanks,
 
-Tim
