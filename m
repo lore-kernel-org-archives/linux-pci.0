@@ -1,82 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51867 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752231Ab3JEWgB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Oct 2013 18:36:01 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chuansheng Liu <chuansheng.liu@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	fei.li@intel.com
-Subject: Re: [PATCH] PCI/PM: Removing the function pci_pm_complete()
-Date: Sun, 06 Oct 2013 00:47:36 +0200
-Message-ID: <4130856.aaSGkRrri4@vostro.rjw.lan>
-In-Reply-To: <CAErSpo6Sm1hDWRFaMYtiZN6_KJ8N05eiRHj_GKJ6AhMjdR91Bw@mail.gmail.com>
-References: <1378809966.26153.23.camel@cliu38-desktop-build> <CAErSpo6Sm1hDWRFaMYtiZN6_KJ8N05eiRHj_GKJ6AhMjdR91Bw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout4.samsung.com ([203.254.224.34]:32549 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330Ab3JEAZv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 20:25:51 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MU600D7O6J2FR60@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Sat, 05 Oct 2013 09:25:50 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Seungwon Jeon' <tgih.jun@samsung.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <001d01cea3e5$3a07c8b0$ae175a10$%jun@samsung.com>
+ <000f01cea48e$f5fc3160$e1f49420$%han@samsung.com>
+ <002001cec0de$f4cd48d0$de67da70$%jun@samsung.com>
+In-reply-to: <002001cec0de$f4cd48d0$de67da70$%jun@samsung.com>
+Subject: Re: [PATCH] PCI: designware: add missing header guards
+Date: Sat, 05 Oct 2013 09:25:50 +0900
+Message-id: <001701cec161$71b5a040$5520e0c0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, October 04, 2013 11:47:25 AM Bjorn Helgaas wrote:
-> On Tue, Sep 10, 2013 at 4:46 AM, Chuansheng Liu
-> <chuansheng.liu@intel.com> wrote:
-> >
-> > Commit(88d2613) removed the pm_runtime_put_sync() from pci_pm_complete()
-> > to PM core code device_complete().
-> >
-> > Here the pci_pm_complete() is doing the same work which can be done in
-> > device_complete(), so we can remove it directly.
-> >
-> > Signed-off-by: liu chuansheng <chuansheng.liu@intel.com>
-> > ---
-> >  drivers/pci/pci-driver.c |    9 ---------
-> >  1 files changed, 0 insertions(+), 9 deletions(-)
+On Friday, October 04, 2013 5:52 PM, Seungwon Jeon wrote:
 > 
-> This looks correct to me, but I'd like Rafael to ack it before I apply it.
+> Added missing header guards against the redundant inclusion.
+> 
+> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> ---
+>  drivers/pci/host/pcie-designware.h |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index faccbbf..0b685b5 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -11,6 +11,9 @@
+>   * published by the Free Software Foundation.
+>   */
+> 
+> +#ifndef _PCIE_DESIGNWARE_H_
+> +#define _PCIE_DESIGNWARE_H_
 
-Yes, it should work, so ACK.
+It looks good.
+But, I prefer '_PCIE_DESIGNWARE_H'.
+I will fix and send v2 patch, soon.
 
-Sorry for the delay.
+Best regards,
+Jingoo Han
 
-> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > index 98f7b9b..736ef3f 100644
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -599,18 +599,10 @@ static int pci_pm_prepare(struct device *dev)
-> >         return error;
-> >  }
-> >
-> > -static void pci_pm_complete(struct device *dev)
-> > -{
-> > -       struct device_driver *drv = dev->driver;
-> > -
-> > -       if (drv && drv->pm && drv->pm->complete)
-> > -               drv->pm->complete(dev);
-> > -}
-> >
-> >  #else /* !CONFIG_PM_SLEEP */
-> >
-> >  #define pci_pm_prepare NULL
-> > -#define pci_pm_complete        NULL
-> >
-> >  #endif /* !CONFIG_PM_SLEEP */
-> >
-> > @@ -1123,7 +1115,6 @@ static int pci_pm_runtime_idle(struct device *dev)
-> >
-> >  const struct dev_pm_ops pci_dev_pm_ops = {
-> >         .prepare = pci_pm_prepare,
-> > -       .complete = pci_pm_complete,
-> >         .suspend = pci_pm_suspend,
-> >         .resume = pci_pm_resume,
-> >         .freeze = pci_pm_freeze,
-> > --
-> > 1.7.0.4
+> +
+>  struct pcie_port_info {
+>  	u32		cfg0_size;
+>  	u32		cfg1_size;
+> @@ -77,3 +80,5 @@ int dw_pcie_host_init(struct pcie_port *pp);
+>  int dw_pcie_setup(int nr, struct pci_sys_data *sys);
+>  struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys);
+>  int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin);
+> +
+> +#endif /* _PCIE_DESIGNWARE_H_ */
+> --
+> 1.7.0.4
 
-Thanks!
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
