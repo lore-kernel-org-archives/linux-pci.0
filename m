@@ -1,44 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:13410 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842Ab3JVFQM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Oct 2013 01:16:12 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MV200H3I1AOOLN0@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Tue, 22 Oct 2013 14:16:01 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kishon Vijay Abraham I' <kishon@ti.com>, linux-pci@vger.kernel.org
-Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <mohit.kumar@st.com>,
-	'Ajay KHANDELWAL' <ajay.khandelwal@st.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <52652BF1.4040507@ti.com>
-In-reply-to: <52652BF1.4040507@ti.com>
-Subject: Re: [QUERY] Number of address translation regions in designware
-Date: Tue, 22 Oct 2013 14:16:00 +0900
-Message-id: <000001cecee5$cbeafa10$63c0ee30$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1381040386.645.143.camel@pasglop>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Ben Hutchings <bhutchings@solarflare.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Date: Sun, 06 Oct 2013 17:19:46 +1100
+In-Reply-To: <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	 <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+	 <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+	 <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+	 <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+	 <1381009586.645.141.camel@pasglop>
+	 <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, October 21, 2013 10:28 PM, Kishon Vijay Abraham I wrote:
+On Sun, 2013-10-06 at 08:02 +0200, Alexander Gordeev wrote:
+> On Sun, Oct 06, 2013 at 08:46:26AM +1100, Benjamin Herrenschmidt wrote:
+> > On Sat, 2013-10-05 at 16:20 +0200, Alexander Gordeev wrote:
+> > > So my point is - drivers should first obtain a number of MSIs they *can*
+> > > get, then *derive* a number of MSIs the device is fine with and only then
+> > > request that number. Not terribly different from memory or any other type
+> > > of resource allocation ;)
+> > 
+> > What if the limit is for a group of devices ? Your interface is racy in
+> > that case, another driver could have eaten into the limit in between the
+> > calls.
 > 
-> Currently I see in pcie-designware.c we use only 2 ATU regions. We re-use
-> INDEX0 for mem outbound and cfg0, and INDEX1 for cfg1 and io. So I'd like to
-> know if in your platform, do you have only 2 address translation regions? In
-> DRA7xx we have 16 outbound regions and 4 inbound regions.
+> Well, the another driver has had a better karma ;) But seriously, the
+> current scheme with a loop is not race-safe wrt to any other type of
+> resource which might exhaust. What makes the quota so special so we
+> should care about it and should not care i.e. about lack of msi_desc's?
 
-In Exynos, there are only 2 inbound and 2 outbound viewpoints.
+I'm not saying the current scheme is better but I prefer the option of
+passing a min,max to the request function.
 
-> Also the same designware IP can be used as a EP also no? Shouldn't we move it
-> out of drivers/pci/host and allow it to be configured as EP also?
+> Yeah, I know the quota might hit more likely. But why it is not addressed
+> right now then? Not a single function in chains...
+>   rtas_msi_check_device() -> msi_quota_for_device() -> traverse_pci_devices()
+>   rtas_setup_msi_irqs() -> msi_quota_for_device() -> traverse_pci_devices()
+> ...is race-safe. So if it has not been bothering anyone until now then 
+> no reason to start worrying now :)
+>
+> In fact, in the current design to address the quota race decently the
+> drivers would have to protect the *loop* to prevent the quota change
+> between a pci_enable_msix() returned a positive number and the the next
+> call to pci_enable_msix() with that number. Is it doable?
 
-Currently, Exynos PCIe IP does not support EP mode.
+I am not advocating for the current design, simply saying that your
+proposal doesn't address this issue while Ben's does.
 
-Best regards,
-Jingoo Han
+Cheers,
+Ben.
+
+> > Ben.
+> > 
+> > 
+> 
+
 
