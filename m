@@ -1,61 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f42.google.com ([209.85.128.42]:56162 "EHLO
-	mail-qe0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758Ab3J3Cod (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 22:44:33 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:53446 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751327Ab3JFHJW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 6 Oct 2013 03:09:22 -0400
+Date: Sun, 6 Oct 2013 09:10:30 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Ben Hutchings <bhutchings@solarflare.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Message-ID: <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+ <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+ <1381009586.645.141.camel@pasglop>
+ <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+ <1381040386.645.143.camel@pasglop>
 MIME-Version: 1.0
-Date: Wed, 30 Oct 2013 10:44:32 +0800
-Message-ID: <CAFiDJ59naSs9z_g3RRHnFEYkzp_tSfA0nvBrADvkv1iO018Ukw@mail.gmail.com>
-Subject: BUG_ON(irq_has_action(entry->irq + i)) in free_msi_irqs()
-From: "LF.Tan" <lftan.linux@gmail.com>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1381040386.645.143.camel@pasglop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all
+On Sun, Oct 06, 2013 at 05:19:46PM +1100, Benjamin Herrenschmidt wrote:
+> On Sun, 2013-10-06 at 08:02 +0200, Alexander Gordeev wrote:
+> > In fact, in the current design to address the quota race decently the
+> > drivers would have to protect the *loop* to prevent the quota change
+> > between a pci_enable_msix() returned a positive number and the the next
+> > call to pci_enable_msix() with that number. Is it doable?
+> 
+> I am not advocating for the current design, simply saying that your
+> proposal doesn't address this issue while Ben's does.
 
-I am new in PCI and now working on MSI support on our PCIe host
-driver. I have an endpoint driver requests for a MSI interrupt. When
-the endpoint driver try to free the interrupt, it cause the kernel
-BUG_ON() message is printed out.
+There is one major flaw in min-max approach - the generic MSI layer
+will have to take decisions on exact number of MSIs to request, not
+device drivers.
 
-The software flow:
-Endpoint driver --> pci_disable_msi -->free_msi_irqs -->
-BUG_ON(irq_has_action(entry->irq + i));
+This will never work for all devices, because there might be specific
+requirements which are not covered by the min-max. That is what Ben
+described "...say, any even number within a certain range". Ben suggests
+to leave the existing loop scheme to cover such devices, which I think is
+not right.
 
-I have checked desc->action in irq_has_action(), it is non-zero.
-It is running on ARM platform. CONFIG_GENERIC_HARDIRQS is turn on by default.
+What about introducing pci_lock_msi() and pci_unlock_msi() and let device
+drivers care about their ranges and specifics in race-safe manner?
+I do not call to introduce it right now (since it appears pSeries has not
+been hitting the race for years) just as a possible alternative to Ben's
+proposal.
 
-Anyone how to fix this issue? Thanks.
-
-
-static void free_msi_irqs(struct pci_dev *dev)
-{
-        struct msi_desc *entry, *tmp;
-
-        list_for_each_entry(entry, &dev->msi_list, list) {
-                int i, nvec;
-
-                if (!entry->irq)
-                        continue;
-                nvec = 1 << entry->msi_attrib.multiple;
-#ifdef CONFIG_GENERIC_HARDIRQS
-                for (i = 0; i < nvec; i++)
-                        BUG_ON(irq_has_action(entry->irq + i));
-#endif
-        }
-        .....................
-}
-
-
-static inline int irq_has_action(unsigned int irq)
-{
-         struct irq_desc *desc = irq_to_desc(irq);
-        return desc->action != NULL;
-}
-
-
-
-Regards
-LF Tan
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
