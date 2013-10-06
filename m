@@ -1,194 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:19774
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752760Ab3JWKmB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 06:42:01 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>
-CC: Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: [PATCH 07/12][v3] pci: fsl: port PCI platform driver
-Date: Wed, 23 Oct 2013 18:41:29 +0800
-Message-ID: <1382524894-15164-7-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from mx1.redhat.com ([209.132.183.28]:24146 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751306Ab3JFGBl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 6 Oct 2013 02:01:41 -0400
+Date: Sun, 6 Oct 2013 08:02:44 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Ben Hutchings <bhutchings@solarflare.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Message-ID: <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+ <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+ <1381009586.645.141.camel@pasglop>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1381009586.645.141.camel@pasglop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. The patch ports FSL PCI platform driver. probe function
-initialize fsl_pci and register it to architecture PCI system,
-remove function removes fsl_pci from architecture PCI system.
-fsl_arch_pci_sys_register() and fsl_arch_pci_sys_remove() should
-be implemented in architecture-specific driver to provide
-register/remove functionality.
-2. Remove architecture-specific header and unnecessary header.
-3. Change Kconfig and Makefile to support FSL PCI common driver
+On Sun, Oct 06, 2013 at 08:46:26AM +1100, Benjamin Herrenschmidt wrote:
+> On Sat, 2013-10-05 at 16:20 +0200, Alexander Gordeev wrote:
+> > So my point is - drivers should first obtain a number of MSIs they *can*
+> > get, then *derive* a number of MSIs the device is fine with and only then
+> > request that number. Not terribly different from memory or any other type
+> > of resource allocation ;)
+> 
+> What if the limit is for a group of devices ? Your interface is racy in
+> that case, another driver could have eaten into the limit in between the
+> calls.
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
-change log:
-v1-v3:
-Derived from http://patchwork.ozlabs.org/patch/278965/
+Well, the another driver has had a better karma ;) But seriously, the
+current scheme with a loop is not race-safe wrt to any other type of
+resource which might exhaust. What makes the quota so special so we
+should care about it and should not care i.e. about lack of msi_desc's?
 
-Based on upstream master.
-Based on the discussion of RFC version here
-http://patchwork.ozlabs.org/patch/274487/
+Yeah, I know the quota might hit more likely. But why it is not addressed
+right now then? Not a single function in chains...
+  rtas_msi_check_device() -> msi_quota_for_device() -> traverse_pci_devices()
+  rtas_setup_msi_irqs() -> msi_quota_for_device() -> traverse_pci_devices()
+...is race-safe. So if it has not been bothering anyone until now then
+no reason to start worrying now :)
 
- arch/powerpc/Kconfig              |  1 +
- drivers/pci/host/Kconfig          | 10 ++++++++
- drivers/pci/host/Makefile         |  1 +
- drivers/pci/host/pci-fsl-common.c | 53 +++++++++++++++++++++++++--------------
- include/linux/fsl/pci-common.h    |  6 +++++
- 5 files changed, 52 insertions(+), 19 deletions(-)
+In fact, in the current design to address the quota race decently the
+drivers would have to protect the *loop* to prevent the quota change
+between a pci_enable_msix() returned a positive number and the the next
+call to pci_enable_msix() with that number. Is it doable?
 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index 38f3b7e..7447d97d 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -690,6 +690,7 @@ config FSL_SOC
- 
- config FSL_PCI
-  	bool
-+	select PCI_FSL_COMMON if FSL_SOC_BOOKE || PPC_86xx
- 	select PPC_INDIRECT_PCI
- 	select PCI_QUIRKS
- 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 3d95048..48242b33 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -19,4 +19,14 @@ config PCI_TEGRA
- 	bool "NVIDIA Tegra PCIe controller"
- 	depends on ARCH_TEGRA
- 
-+config PCI_FSL_COMMON
-+	bool "Common driver for Freescale PCI/PCIe controller"
-+	depends on FSL_SOC_BOOKE || PPC_86xx
-+	help
-+	  This driver provides common support for PCI/PCIE controller
-+	  on Freescale embedded processors 85xx/86xx/QorIQ/Layerscape.
-+	  Additional drivers must be enabled in order to provide some
-+	  architecture-dependent functions and register the controller
-+	  to PCI subsystem.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index c9a997b..7c338a7 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -2,3 +2,4 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
- obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
-+obj-$(CONFIG_PCI_FSL_COMMON) += pci-fsl-common.o
-diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
-index e09a0ec..c7bc472 100644
---- a/drivers/pci/host/pci-fsl-common.c
-+++ b/drivers/pci/host/pci-fsl-common.c
-@@ -16,26 +16,12 @@
-  */
- #include <linux/kernel.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
--#include <linux/string.h>
- #include <linux/init.h>
--#include <linux/bootmem.h>
- #include <linux/memblock.h>
- #include <linux/log2.h>
--#include <linux/slab.h>
--#include <linux/uaccess.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
--
--#include <asm/io.h>
--#include <asm/prom.h>
--#include <asm/pci-bridge.h>
--#include <asm/ppc-pci.h>
--#include <asm/machdep.h>
--#include <asm/disassemble.h>
--#include <asm/ppc-opcode.h>
--#include <sysdev/fsl_soc.h>
--#include <sysdev/fsl_pci.h>
-+#include <linux/fsl/pci-common.h>
- 
- /* Indirect type */
- #define INDIRECT_TYPE_EXT_REG			0x00000002
-@@ -672,12 +658,40 @@ static const struct of_device_id pci_ids[] = {
- static int fsl_pci_probe(struct platform_device *pdev)
- {
- 	int ret;
--	struct device_node *node;
-+	struct fsl_pci *pci;
-+
-+	if (!of_device_is_available(pdev->dev.of_node)) {
-+		dev_dbg(&pdev->dev, "disabled\n");
-+		return -ENODEV;
-+	}
-+
-+	pci = devm_kzalloc(&pdev->dev, sizeof(*pci), GFP_KERNEL);
-+	if (!pci) {
-+		dev_err(&pdev->dev, "no memory for fsl_pci\n");
-+		return -ENOMEM;
-+	}
-+
-+	ret = fsl_pci_setup(pdev, pci);
-+	if (ret)
-+		return ret;
-+
-+	ret = fsl_arch_pci_sys_register(pci);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to register pcie to Arch\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
- 
--	node = pdev->dev.of_node;
--	ret = fsl_add_bridge(pdev, fsl_pci_primary == node);
-+static int fsl_pci_remove(struct platform_device *pdev)
-+{
-+	struct fsl_pci *pci = platform_get_drvdata(pdev);
-+
-+	if (!pci)
-+		return -ENODEV;
- 
--	mpc85xx_pci_err_probe(pdev);
-+	fsl_arch_pci_sys_remove(pci);
- 
- 	return 0;
- }
-@@ -721,6 +735,7 @@ static struct platform_driver fsl_pci_driver = {
- 		.of_match_table = pci_ids,
- 	},
- 	.probe = fsl_pci_probe,
-+	.remove = fsl_pci_remove,
- };
- 
- static int __init fsl_pci_init(void)
-diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
-index 490ee53..bfb1f03 100644
---- a/include/linux/fsl/pci-common.h
-+++ b/include/linux/fsl/pci-common.h
-@@ -159,5 +159,11 @@ extern struct pci_bus *fsl_arch_fake_pci_bus(struct fsl_pci *pci, int busnr);
- /* Return PCI64 DMA offset */
- u64 fsl_arch_pci64_dma_offset(void);
- 
-+/* Register PCI/PCIe controller to architecture system */
-+extern int fsl_arch_pci_sys_register(struct fsl_pci *pci);
-+
-+/* Remove PCI/PCIe controller from architecture system */
-+extern void fsl_arch_pci_sys_remove(struct fsl_pci *pci);
-+
- #endif /* __PCI_COMMON_H */
- #endif /* __KERNEL__ */
+> Ben.
+> 
+> 
+
 -- 
-1.8.1.2
-
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
