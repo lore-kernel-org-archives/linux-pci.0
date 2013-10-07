@@ -1,102 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:14142 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751251Ab3JSGtg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:49:36 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
+Received: from co1ehsobe005.messaging.microsoft.com ([216.32.180.188]:56330
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752754Ab3JGS6i convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Oct 2013 14:58:38 -0400
+From: Rajat Jain <rajatjain@juniper.net>
+To: "ebiederm@xmission.com" <ebiederm@xmission.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 14/29] ipr: Make use of pcim_enable_msi/msix() interfaces
-Date: Fri, 18 Oct 2013 19:12:14 +0200
-Message-Id: <1d960601fcd3c0a6366ad84bbba507583a80027d.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
+CC: Greg KH <gregkh@linuxfoundation.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	"tom.l.nguyen@intel.com" <tom.l.nguyen@intel.com>,
+	"kristen.c.accardi@intel.com" <kristen.c.accardi@intel.com>,
+	"rajesh.shah@intel.com" <rajesh.shah@intel.com>,
+	"rajatjain.linux@gmail.com" <rajatjain.linux@gmail.com>
+Subject: Enhancing pciehp (was: pcielw An alternate pcie hotplug driver)
+Date: Mon, 7 Oct 2013 18:58:32 +0000
+Message-ID: <b13ea983a4154c7d9567b171e8316ca9@BLUPR05MB118.namprd05.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/scsi/ipr.c |   47 ++++++++++++++++++-----------------------------
- 1 files changed, 18 insertions(+), 29 deletions(-)
+Hello Bjorn / Eric / Folks,
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index fb57e21..d7c94d5 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9245,47 +9245,36 @@ ipr_get_chip_info(const struct pci_device_id *dev_id)
- static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
- {
- 	struct msix_entry entries[IPR_MAX_MSIX_VECTORS];
--	int i, err, vectors;
-+	int i, vectors;
- 
--	for (i = 0; i < ARRAY_SIZE(entries); ++i)
-+	vectors = min_t(int, ARRAY_SIZE(entries), ipr_number_of_msix);
-+	for (i = 0; i < vectors; ++i)
- 		entries[i].entry = i;
- 
--	vectors = ipr_number_of_msix;
-+	vectors = pcim_enable_msix(ioa_cfg->pdev, entries, vectors);
-+	if (vectors < 0)
-+		return vectors;
- 
--	while ((err = pci_enable_msix(ioa_cfg->pdev, entries, vectors)) > 0)
--			vectors = err;
-+	for (i = 0; i < vectors; i++)
-+		ioa_cfg->vectors_info[i].vec = entries[i].vector;
-+	ioa_cfg->nvectors = vectors;
- 
--	if (err < 0)
--		return err;
--
--	if (!err) {
--		for (i = 0; i < vectors; i++)
--			ioa_cfg->vectors_info[i].vec = entries[i].vector;
--		ioa_cfg->nvectors = vectors;
--	}
--
--	return err;
-+	return 0;
- }
- 
- static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
- {
--	int i, err, vectors;
-+	int i, vectors;
- 
--	vectors = ipr_number_of_msix;
-+	vectors = pcim_enable_msi(ioa_cfg->pdev, ipr_number_of_msix);
-+	if (vectors < 0)
-+		return vectors;
- 
--	while ((err = pci_enable_msi_block(ioa_cfg->pdev, vectors)) > 0)
--			vectors = err;
-+	for (i = 0; i < vectors; i++)
-+		ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
-+	ioa_cfg->nvectors = vectors;
- 
--	if (err < 0)
--		return err;
--
--	if (!err) {
--		for (i = 0; i < vectors; i++)
--			ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
--		ioa_cfg->nvectors = vectors;
--	}
--
--	return err;
-+	return 0;
- }
- 
- static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
--- 
-1.7.7.6
+This is to seek suggestions about a problem I'm trying to solve.
+
+The problem
+===========
+1) My company makes routers that have hot-pluggable cards with PCI express interfaces on them. We need to be able to hot-plug those cards, however the cards or the slots do not have the fancy bells & whistles (hot plug elements like MRL, sensor, attention button etc), and hence the hot-plug signals from the PCIe switch aren't really connected.
+
+2) In addition to the above, we have onboard ASICs that are reachable via the PCIe. However, as part of regular operation of a router (e.g. user wants to switch off some ports), the ASICs can be off-lined / on-lined via out-of-band HW pins. The result is that we could see the PCIe link go down or up to that ASIC. This can be thought of as a "virtual" hot-plug of ASIC devices. Since the ASICs are themselves on the board, there is really no slot, and the HP signals again do not make much sense in this case.
+
+What I found
+=============
+What I was looking for, was a way to hot-plug and un-plug based on link state changes (since that is pretty much what is available in my case). And I found this:
+http://www.spinics.net/lists/linux-pci/msg05783.html
+http://www.spinics.net/lists/linux-pci/msg05880.html
+
+My questions
+============
+a) I was wanting to know if what is the latest on this, or if any progress was made on this? If useful, I am willing to volunteer to work on this. Do you think there is interest in getting this to work? I feel there may be many such systems that are in the same situation.
+
+b) If I wanted to make use of Eric's patch in a way that is useful to the community, what is the best way to move forward? Do you still want to enhance the pciehp to include this functionality? Or a separate service driver (what Eric already has) seems a better idea? I'd appreciate if you could please provide any guidance here.
+
+TIA,
+
+Rajat
+
 
