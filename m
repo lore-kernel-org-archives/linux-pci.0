@@ -1,90 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from multi.imgtec.com ([194.200.65.239]:11394 "EHLO multi.imgtec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751181Ab3JDXb1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Oct 2013 19:31:27 -0400
-From: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
-CC: <james.hogan@imgtec.com>, <Qais.Yousef@imgtec.com>,
-	Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
-Subject: [PATCH v2 2/4] PCI/quirks: Rename piix4_[io|mem]_quirk to add acpi
-Date: Fri, 4 Oct 2013 16:30:51 -0700
-Message-ID: <1380929453-15428-3-git-send-email-dengcheng.zhu@imgtec.com>
-In-Reply-To: <1380929453-15428-1-git-send-email-dengcheng.zhu@imgtec.com>
-References: <1380929453-15428-1-git-send-email-dengcheng.zhu@imgtec.com>
+Received: from mail-gg0-f181.google.com ([209.85.161.181]:64384 "EHLO
+	mail-gg0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751377Ab3JGXiu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 19:38:50 -0400
+Received: by mail-gg0-f181.google.com with SMTP id i2so1269194ggn.26
+        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 16:38:49 -0700 (PDT)
+Subject: [PATCH] PCI: mvebu: Make mvebu_pcie_align_resource() static
+To: Jason Cooper <jason@lakedaemon.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-pci@vger.kernel.org
+Date: Mon, 07 Oct 2013 17:38:46 -0600
+Message-ID: <20131007233846.11805.50302.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
+mvebu_pcie_align_resource() is only used inside pci-mvebu.c, so
+make it static.
 
-Rename piix4_[io|mem]_quirk to piix4_acpi_[io|mem]_quirk because these 2
-functions only deal with the function 3 (power management) of PIIX4.
-
-Signed-off-by: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
-Reviewed-by: James Hogan <james.hogan@imgtec.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/quirks.c |   22 ++++++++++++----------
- 1 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/pci/host/pci-mvebu.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 3e7e489..a2b66c3 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -380,7 +380,8 @@ static void quirk_ali7101_acpi(struct pci_dev *dev)
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 729d5a1..bf4ff23 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -673,11 +673,11 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	return bus;
  }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
  
--static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-+static void piix4_acpi_io_quirk(struct pci_dev *dev, const char *name,
-+				unsigned int port, unsigned int enable)
+-resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+-					  const struct resource *res,
+-					  resource_size_t start,
+-					  resource_size_t size,
+-					  resource_size_t align)
++static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
++						 const struct resource *res,
++						 resource_size_t start,
++						 resource_size_t size,
++						 resource_size_t align)
  {
- 	u32 devres;
- 	u32 mask, size, base;
-@@ -406,7 +407,8 @@ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int p
- 	dev_info(&dev->dev, "%s PIO at %04x-%04x\n", name, base, base + size - 1);
- }
- 
--static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-+static void piix4_acpi_mem_quirk(struct pci_dev *dev, const char *name,
-+				 unsigned int port, unsigned int enable)
- {
- 	u32 devres;
- 	u32 mask, size, base;
-@@ -447,23 +449,23 @@ static void quirk_piix4_acpi(struct pci_dev *dev)
- 	/* Device resource A has enables for some of the other ones */
- 	pci_read_config_dword(dev, 0x5c, &res_a);
- 
--	piix4_io_quirk(dev, "PIIX4 devres B", 0x60, 3 << 21);
--	piix4_io_quirk(dev, "PIIX4 devres C", 0x64, 3 << 21);
-+	piix4_acpi_io_quirk(dev, "PIIX4 devres B", 0x60, 3 << 21);
-+	piix4_acpi_io_quirk(dev, "PIIX4 devres C", 0x64, 3 << 21);
- 
- 	/* Device resource D is just bitfields for static resources */
- 
- 	/* Device 12 enabled? */
- 	if (res_a & (1 << 29)) {
--		piix4_io_quirk(dev, "PIIX4 devres E", 0x68, 1 << 20);
--		piix4_mem_quirk(dev, "PIIX4 devres F", 0x6c, 1 << 7);
-+		piix4_acpi_io_quirk(dev, "PIIX4 devres E", 0x68, 1 << 20);
-+		piix4_acpi_mem_quirk(dev, "PIIX4 devres F", 0x6c, 1 << 7);
- 	}
- 	/* Device 13 enabled? */
- 	if (res_a & (1 << 30)) {
--		piix4_io_quirk(dev, "PIIX4 devres G", 0x70, 1 << 20);
--		piix4_mem_quirk(dev, "PIIX4 devres H", 0x74, 1 << 7);
-+		piix4_acpi_io_quirk(dev, "PIIX4 devres G", 0x70, 1 << 20);
-+		piix4_acpi_mem_quirk(dev, "PIIX4 devres H", 0x74, 1 << 7);
- 	}
--	piix4_io_quirk(dev, "PIIX4 devres I", 0x78, 1 << 20);
--	piix4_io_quirk(dev, "PIIX4 devres J", 0x7c, 1 << 20);
-+	piix4_acpi_io_quirk(dev, "PIIX4 devres I", 0x78, 1 << 20);
-+	piix4_acpi_io_quirk(dev, "PIIX4 devres J", 0x7c, 1 << 20);
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82371AB_3,	quirk_piix4_acpi);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82443MX_3,	quirk_piix4_acpi);
--- 
-1.7.1
-
+ 	if (dev->bus->number != 0)
+ 		return start;
 
