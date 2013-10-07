@@ -1,48 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:39264
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751519Ab3JGMPi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Oct 2013 08:15:38 -0400
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>
+CC: David Airlie <airlied@linux.ie>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	"Koenig, Christian" <Christian.Koenig@amd.com>
+Subject: RE: [PATCH 6/6] radeon: Use pcie_get_readrq() and pcie_set_readrq()
+ to simplify code
+Date: Mon, 7 Oct 2013 12:15:29 +0000
+Message-ID: <A3397C8B8B789E45844E7EC5DEAD89D02E80EE9B@satlexdag05.amd.com>
+References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
+ <1378732388-4508-7-git-send-email-wangyijing@huawei.com>
+ <CAErSpo5epkfhw0zyn-xXr-xCVeWmna8Eu_v3SmOrKU7EqwfDJw@mail.gmail.com>
+In-Reply-To: <CAErSpo5epkfhw0zyn-xXr-xCVeWmna8Eu_v3SmOrKU7EqwfDJw@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <2096980.ZtIelfoX39@vostro.rjw.lan>
-References: <20131010165905.7815defa@gandalf.local.home>
-	<18685640.N2BnVjDmHD@vostro.rjw.lan>
-	<CA+55aFwqf7kkh0dy6AhCvB87XYkQ03YUpsYEDJmnkiRe8GQfMQ@mail.gmail.com>
-	<2096980.ZtIelfoX39@vostro.rjw.lan>
-Date: Fri, 11 Oct 2013 10:21:35 -0700
-Message-ID: <CA+55aFyJL5gLGtg8-z1t1xSY1ih9MAzsDzMZaxrEYZOFZ7rRBw@mail.gmail.com>
-Subject: Re: [BUG] WARN_ON(!context) in drivers/pci/hotplug/acpiphp_glue.c
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 11, 2013 at 4:13 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> +/**
-> + * slot_should_be_exposed - Check whether or not to expose a slot to userland.
-> + * @bridge: ACPIPHP bridge the slot belongs to.
-> + * @handle: ACPI handle of a device in the slot.
-> + */
-> +static inline bool slot_should_be_exposed(struct acpiphp_bridge *bridge,
-> +                                         acpi_handle handle)
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Friday, October 04, 2013 4:45 PM
+> To: Yijing Wang
+> Cc: David Airlie; linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org;
+> Hanjun Guo; Deucher, Alexander; Koenig, Christian
+> Subject: Re: [PATCH 6/6] radeon: Use pcie_get_readrq() and
+> pcie_set_readrq() to simplify code
+> 
+> [-cc unrelated folks, +cc Alex, Christian]
+> 
+> On Mon, Sep 9, 2013 at 7:13 AM, Yijing Wang <wangyijing@huawei.com>
+> wrote:
+> > Use pcie_get_readrq() and pcie_set_readrq() functions to simplify code.
+> >
+> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> 
+> I believe the following patch is correct, and I'd be happy to merge it
+> via the PCI tree along with the rest of this series.
+> 
+> But it'd be better to have an ack from Alex, and he might prefer to
+> merge it directly.
 
-Thanks, that looks much better.
+Patch looks correct to me.  Feel free to merge it via the pci tree.
 
-I do worry that we now seem to add the slot to all the acpiphp lists
-even if it is managed by pciehp. That gets rid of the warning Steven
-saw (because now it always has that context), but I'm left wondering
-how much pcihp and aciphp will fight over the slot.
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
 
-Yes, the acpiphp_register_hotplug_slot() doesn't get called, but we
-still do register_hotplug_dock_device(), for example. How does that
-interact with pcihp that thinks it owns the slot?
+> 
+> Bjorn
+> 
+> > ---
+> >  drivers/gpu/drm/radeon/evergreen.c |   19 ++++++-------------
+> >  1 files changed, 6 insertions(+), 13 deletions(-)
+> >
+> > diff --git a/drivers/gpu/drm/radeon/evergreen.c
+> b/drivers/gpu/drm/radeon/evergreen.c
+> > index d5b49e3..b191f92 100644
+> > --- a/drivers/gpu/drm/radeon/evergreen.c
+> > +++ b/drivers/gpu/drm/radeon/evergreen.c
+> > @@ -1169,23 +1169,16 @@ int evergreen_set_uvd_clocks(struct
+> radeon_device *rdev, u32 vclk, u32 dclk)
+> >
+> >  void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
+> >  {
+> > -       u16 ctl, v;
+> > -       int err;
+> > -
+> > -       err = pcie_capability_read_word(rdev->pdev, PCI_EXP_DEVCTL, &ctl);
+> > -       if (err)
+> > -               return;
+> > -
+> > -       v = (ctl & PCI_EXP_DEVCTL_READRQ) >> 12;
+> > +       int readrq;
+> > +       u16 v;
+> >
+> > +       readrq = pcie_get_readrq(rdev->pdev);
+> > +       v = ffs(readrq) - 8;
+> >         /* if bios or OS sets MAX_READ_REQUEST_SIZE to an invalid value, fix it
+> >          * to avoid hangs or perfomance issues
+> >          */
+> > -       if ((v == 0) || (v == 6) || (v == 7)) {
+> > -               ctl &= ~PCI_EXP_DEVCTL_READRQ;
+> > -               ctl |= (2 << 12);
+> > -               pcie_capability_write_word(rdev->pdev, PCI_EXP_DEVCTL, ctl);
+> > -       }
+> > +       if ((v == 0) || (v == 6) || (v == 7))
+> > +               pcie_set_readrq(rdev->pdev, 512);
+> >  }
+> >
+> >  static bool dce4_is_in_vblank(struct radeon_device *rdev, int crtc)
+> > --
+> > 1.7.1
+> >
+> >
 
-Or am I misreading the code? It's more readable, and no longer makes
-me homicidal, but I don't actually know the code itself.
 
-             Linus
