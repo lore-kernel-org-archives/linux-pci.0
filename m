@@ -1,70 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:56827 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932312Ab3JONUY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 09:20:24 -0400
-Received: by mail-we0-f174.google.com with SMTP id u56so8391722wes.5
-        for <linux-pci@vger.kernel.org>; Tue, 15 Oct 2013 06:20:23 -0700 (PDT)
-From: Grant Likely <grant.likely@linaro.org>
-Subject: Re: [RFC] Architecture independent pcibios?
-To: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Michal Simek <monstr@monstr.eu>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-In-Reply-To: <20131009090923.GE25606@e102652-lin.cambridge.arm.com>
-References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com> <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com> <525438F6.3090600@gmail.com> <1381264135.645.230.camel@pasglop> <20131009090923.GE25606@e102652-lin.cambridge.arm.com>
-Date: Tue, 15 Oct 2013 12:48:27 +0100
-Message-Id: <20131015114827.850BCC4009B@trevor.secretlab.ca>
+Received: from mga14.intel.com ([143.182.124.37]:2898 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755681Ab3JGUcC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Oct 2013 16:32:02 -0400
+Date: Mon, 7 Oct 2013 13:31:18 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 54/77] ntb: Ensure number of MSIs on SNB is enough
+ for the link interrupt
+Message-ID: <20131007203114.GD24536@jonmason-lab>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <5d9c5b2d3bbc444ff32bddeece7a239d046bd79c.1380703263.git.agordeev@redhat.com>
+ <20131003004805.GL6768@jonmason-lab>
+ <20131005214303.GA21589@dhcp-26-207.brq.redhat.com>
+ <20131007165056.GA24536@jonmason-lab>
+ <20131007183845.GA1834@dhcp-26-207.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131007183845.GA1834@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 9 Oct 2013 10:09:23 +0100, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Tue, Oct 08, 2013 at 09:28:55PM +0100, Benjamin Herrenschmidt wrote:
-> > On Tue, 2013-10-08 at 11:55 -0500, Rob Herring wrote:
-> > 
-> > > > I wonder if pci_process_bridge_OF_ranges() would fit somewhere in
-> > > > drivers/of?  The implementations I looked at are mostly concerned with
-> > > > parsing OF resources, and they don't have much to do with PCI
-> > > > directly.
+On Mon, Oct 07, 2013 at 08:38:45PM +0200, Alexander Gordeev wrote:
+> On Mon, Oct 07, 2013 at 09:50:57AM -0700, Jon Mason wrote:
+> > On Sat, Oct 05, 2013 at 11:43:04PM +0200, Alexander Gordeev wrote:
+> > > On Wed, Oct 02, 2013 at 05:48:05PM -0700, Jon Mason wrote:
+> > > > On Wed, Oct 02, 2013 at 12:49:10PM +0200, Alexander Gordeev wrote:
+> > > > > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > > > > ---
+> > > > >  drivers/ntb/ntb_hw.c |    2 +-
+> > > > >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > > > > 
+> > > > > diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+> > > > > index de2062c..eccd5e5 100644
+> > > > > --- a/drivers/ntb/ntb_hw.c
+> > > > > +++ b/drivers/ntb/ntb_hw.c
+> > > > > @@ -1066,7 +1066,7 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+> > > > >  		/* On SNB, the link interrupt is always tied to 4th vector.  If
+> > > > >  		 * we can't get all 4, then we can't use MSI-X.
+> > > > >  		 */
+> > > > > -		if (ndev->hw_type != BWD_HW) {
+> > > > > +		if ((rc < SNB_MSIX_CNT) && (ndev->hw_type != BWD_HW)) {
+> > > > 
+> > > > Nack, this check is unnecessary.
 > > > 
-> > > This was being done until Ben weighed in:
-> > > 
-> > > https://lkml.org/lkml/2013/5/4/103
+> > > If SNB can do more than SNB_MSIX_CNT MSI-Xs then this check is needed
+> > > to enable less than maximum MSI-Xs in case the maximum was not allocated.
+> > > Otherwise SNB will fallback to single MSI instead of multiple MSI-Xs.
 > > 
-> > Well, I proposed an alternative (better) approach which I of course had
-> > no time to actually implement yet :-)
+> > Per the comment in the code snippet above, "If we can't get all 4,
+> > then we can't use MSI-X".  There is already a check to see if more
+> > than 4 were acquired.  So it's not possible to hit this.  Even if it
+> > was, don't use SNB_MSIX_CNT here (limits.msix_cnt is the preferred
+> > variable).  Also, the "()" are unnecessary.
 > 
-> In order to avoid any confusion, could you please point me again to the
-> relevant message(s) where you proposed your approach?
+> The changelog is definitely bogus. I meant here an improvement to the
+> existing scheme, not a conversion to the new one:
 > 
-> > 
-> > I have done the changes I needed to do to powerpc
-> > pci_process_bridge_OF_ranges so it would be possible to move that now to
-> > a generic place, but I still think it's not a great idea. It means the
-> > pci_controller structure with its resources will have to become generic
-> > which somewhat overlaps with the pci_host_bridge that Bjorn introduced,
-> > so that's really not great.
-> > 
-> > I still think an arch with DT and simpler PCI code that powerpc could
-> > start looking at the transition to a better model that I hinted at...
+> 	msix_entries = msix_table_size(val);
 > 
-> As tempting as it is to start anew and with a cleaner code, I am wary
-> that porting the existing platforms to the new code will take longer
-> that way. My intentions are to make the (probably infrequent) task of
-> adding a new architecture to the PCI infrastructure a simple and
-> straighforward task. But adding code for my platform is no guarantee
-> that new ones will have an easier job.
+> Getting i.e. 16 vectors here.
+> 
+> 	if (msix_entries > ndev->limits.msix_cnt) {
 
-In the previous thread I Nacked an approach that creates new code
-without making at least two existing platforms (microblaze & powerpc are
-the easy targets because they are so similar) use said new code. I know
-that makes things harder for you, but not migrating is a bigger
-maintenance burden in the long run.
+On SNB HW, limits.msix_cnt is set to SNB_MSIX_CNT (4)
+http://lxr.free-electrons.com/source/drivers/ntb/ntb_hw.c#L558
 
-g.
+> 		rc = -EINVAL;
+> 		goto err;
+> 	}
+> 
+> Upper limit check i.e. succeeds.
+> 
+> 	[...]
+> 
+> 	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> 
+> pci_enable_msix() does not success and returns i.e. 8 here, should retry.
 
+Per the above, since our upper bound is 4.  We will either have this
+return 0 for all 4 or a number between 1 and 3 (or an error, but
+that's not relevant to this discussion).
+
+> 	if (rc < 0)
+> 		goto err1;
+> 	if (rc > 0) {
+> 		/* On SNB, the link interrupt is always tied to 4th vector.  If
+> 		 * we can't get all 4, then we can't use MSI-X.
+> 		 */
+> 		if (ndev->hw_type != BWD_HW) {
+> 
+> On SNB bail out here, although could have continue with 8 vectors.
+> Can only use SNB_MSIX_CNT here, since limits.msix_cnt is the upper limit.
+
+Since we can guarantee that rc is between 1 and 3 at this point (on
+SNB HW), we should error out.
+
+Thanks,
+Jon
+
+
+> 
+> 			rc = -EIO;
+> 			goto err1;
+> 		}
+> 
+> 		[...]
+> 	}
+> 
+> -- 
+> Regards,
+> Alexander Gordeev
+> agordeev@redhat.com
