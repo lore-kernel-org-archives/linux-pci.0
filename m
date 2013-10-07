@@ -1,127 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db8lp0185.outbound.messaging.microsoft.com ([213.199.154.185]:33575
-	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752238Ab3JUGdo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Oct 2013 02:33:44 -0400
-From: Zhu Richard-R65037 <r65037@freescale.com>
-To: Marek Vasut <marex@denx.de>
-CC: Pratyush Anand <pratyush.anand@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: RE: [PATCH 5/6] PCI: imx6: Force Gen1 operation
-Date: Mon, 21 Oct 2013 06:33:35 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D41096D@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
- <201310171934.34021.marex@denx.de>
- <0E83723C55F66F43A6041464FE31119D40FB22@039-SN2MPN1-011.039d.mgd.msft.net>
- <201310190707.15783.marex@denx.de>
-In-Reply-To: <201310190707.15783.marex@denx.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga14.intel.com ([143.182.124.37]:49018 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756378Ab3JGQvB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Oct 2013 12:51:01 -0400
+Date: Mon, 7 Oct 2013 09:50:57 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 54/77] ntb: Ensure number of MSIs on SNB is enough
+ for the link interrupt
+Message-ID: <20131007165056.GA24536@jonmason-lab>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <5d9c5b2d3bbc444ff32bddeece7a239d046bd79c.1380703263.git.agordeev@redhat.com>
+ <20131003004805.GL6768@jonmason-lab>
+ <20131005214303.GA21589@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131005214303.GA21589@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Merak:
-> Hi Richard,
+On Sat, Oct 05, 2013 at 11:43:04PM +0200, Alexander Gordeev wrote:
+> On Wed, Oct 02, 2013 at 05:48:05PM -0700, Jon Mason wrote:
+> > On Wed, Oct 02, 2013 at 12:49:10PM +0200, Alexander Gordeev wrote:
+> > > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > > ---
+> > >  drivers/ntb/ntb_hw.c |    2 +-
+> > >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > > 
+> > > diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+> > > index de2062c..eccd5e5 100644
+> > > --- a/drivers/ntb/ntb_hw.c
+> > > +++ b/drivers/ntb/ntb_hw.c
+> > > @@ -1066,7 +1066,7 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+> > >  		/* On SNB, the link interrupt is always tied to 4th vector.  If
+> > >  		 * we can't get all 4, then we can't use MSI-X.
+> > >  		 */
+> > > -		if (ndev->hw_type != BWD_HW) {
+> > > +		if ((rc < SNB_MSIX_CNT) && (ndev->hw_type != BWD_HW)) {
+> > 
+> > Nack, this check is unnecessary.
 > 
-> > Hi Merak:
-> > Thanks for your great help on the imx6 pcie switch support on the
-> > latest kernel fristly.
-> 
-> Let's get this PCIe thing working well :)
-> 
-> [...]
-> 
-> 
-> > Regarding to your comments why FORCE GEN1 mode in RC " Force Gen1
-> > operation. In case the IP block is in Gen2 operation mode, it does not
-> > detect the PCIe switch at all.", does the gen2 link can be set-up
-> > without force gen1 mode?
-> 
-> What I did in the end for testing purpose was I followed the thread at FSL
-> community in the link above, forced the link into Gen1 mode , then waited for
-> link up, then started directed gen2 switch and waited for linkup again. This
-> worked and the PCIe indicated the link is in Gen2 mode.
-> 
-> Interestingly enough, I also implemented PCIe driver for MX6 for U-Boot (will
-> submit it shortly to U-Boot ML) and use it with the Intel i210 ethernet NIC
-> now.
-> When I use the PCIe in U-Boot, I don't need the Force-Gen1 thing above. I
-> suspect though, that the Gen1 setting is preserved from U-Boot, where I have
-> this as well.
-> 
-[Richard] It's great, thanks.
-> > About the errata mentioned in
-> > https://community.freescale.com/thread/304284, the
-> > errata-SW-workaround of initialization is contained in previous Sean Cross'
-> codes, like this. /*
-> >          * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
-> >          * Wait 2ms (LTSSM timeout is 24ms, PHY lock is ~5us in gen2).
-> >          * If (MAC/LTSSM.state == Recovery.RcvrLock)
-> >          * && (PHY/rx_valid==0) then pulse PHY/rx_reset. Transition
-> >          * to gen2 is stuck
-> >          */
-> 
-> Is this not handling only the PHY part ? Honestly, I'm quite lost in the
-> flurry of different opinions on the MX6 PCIe. Maybe you as a FSL guy could
-> scrounge some internal knowledge ?
-> 
-[Richard] Take it easy, maybe there is a misunderstand between you and me.
-It is handling only the PHY part.
-The errata "PCIe: Clock pointers can lose sync during clock rate changes",
- I mentioned previously is discussed in 
-(https://community.freescale.com/message/316162#316162) too.
+> If SNB can do more than SNB_MSIX_CNT MSI-Xs then this check is needed
+> to enable less than maximum MSI-Xs in case the maximum was not allocated.
+> Otherwise SNB will fallback to single MSI instead of multiple MSI-Xs.
 
-Charies Powe think that the SW workaround contained in FSL BSP is not complete for the errata.
-Because I couldn't reproduce this issue at my side, the complete version of the SW workaround
-of this errata is not included in the BSP yet.
-That's all. Thanks.
+Per the comment in the code snippet above, "If we can't get all 4,
+then we can't use MSI-X".  There is already a check to see if more
+than 4 were acquired.  So it's not possible to hit this.  Even if it
+was, don't use SNB_MSIX_CNT here (limits.msix_cnt is the preferred
+variable).  Also, the "()" are unnecessary.
 
-> > > > > > So better solution should be to initialize RC by default at
-> > > > > > GEN2 or highest speed. Further, a parameter say gen_only can
-> > > > > > be passed from DT to force GEN1 only mode.
-> > > > > >
-> > > > > > What do you say?
-> > > > >
-> > > > > I say I'd like to know the root cause of this problem. This Gen2
-> > > > > fix was pulled from one of the myriad variants of the FSL PCIe
-> > > > > driver, so apparently this issue happens to other people as
-> > > > > well. But why and how to properly fix this so the whole PCIe bus
-> > > > > does operate in
-> > > > > Gen2 mode, I cannot tell :-(
-> > > >
-> > > > [Richard] GEN2 mode had been verified in FSL 3.0.35 kernel
-> > > > releases before. I don't know why it can't work in GEN2 mode in
-> > > > the latest kernel. BTW, Based on for-next branch of shawn's git
-> > > > reops and applied Merak's patch-set, my PI7C9X2G303EL with intel
-> > > > e1000e network card plugged can't be detected at all. :(.
-> > >
-> > > I think we're still fighting some issue with resource mappings here.
-> > > We also agreed with Tim that my patches are incomplete. I will send
-> > > out a new version ASAP.
-> >
-> > [Richard] What's I said above is just curious that I encounter
-> > different phenomena at my side With the almost same codes.
-> 
-> I talked to Tim about the mappings some more. It seems if the IOspace is
-> disabled, everything works without hangs. If the IOspace is not disabled on
-> the ethernet NICs, we get a hang.
-[Richard] Ok, I see. Thanks.
+Thanks,
+Jon
 
-
-Best Regards
-Richard.
-
-
+> -- 
+> Regards,
+> Alexander Gordeev
+> agordeev@redhat.com
