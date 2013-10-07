@@ -1,79 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f48.google.com ([209.85.212.48]:34222 "EHLO
-	mail-vb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753033Ab3J2Qe3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 12:34:29 -0400
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:55194 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755681Ab3JGUcA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 16:32:00 -0400
+Received: by mail-ie0-f180.google.com with SMTP id u16so16917647iet.39
+        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 13:31:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1383042632-7102-2-git-send-email-vfalico@redhat.com>
-References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
-	<1383042632-7102-2-git-send-email-vfalico@redhat.com>
-Date: Tue, 29 Oct 2013 09:34:28 -0700
-Message-ID: <CA+55aFxt9KnmZnK5QdkPcpHNR+Ath5WTzhRibu5Y=xOhiz3fzA@mail.gmail.com>
-Subject: Re: [PATCH v3 1/3] msi: free msi_desc entry only after we've released
- the kobject
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Veaceslav Falico <vfalico@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?UTF-8?B?RnLDqWTDqXJpYyBXZWlzYmVja2Vy?= <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Neil Horman <nhorman@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <b13ea983a4154c7d9567b171e8316ca9@BLUPR05MB118.namprd05.prod.outlook.com>
+References: <b13ea983a4154c7d9567b171e8316ca9@BLUPR05MB118.namprd05.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 7 Oct 2013 14:31:39 -0600
+Message-ID: <CAErSpo4Yg-kUz3LHaWPVmzE1rGhdiqeJWuHwrM=-hxhP_zYH_g@mail.gmail.com>
+Subject: Re: Enhancing pciehp (was: pcielw An alternate pcie hotplug driver)
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: "ebiederm@xmission.com" <ebiederm@xmission.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	"tom.l.nguyen@intel.com" <tom.l.nguyen@intel.com>,
+	"kristen.c.accardi@intel.com" <kristen.c.accardi@intel.com>,
+	"rajesh.shah@intel.com" <rajesh.shah@intel.com>,
+	"rajatjain.linux@gmail.com" <rajatjain.linux@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 29, 2013 at 3:30 AM, Veaceslav Falico <vfalico@redhat.com> wrote:
->                 /*
->                  * Its possible that we get into this path
->                  * When populate_msi_sysfs fails, which means the entries
->                  * were not registered with sysfs.  In that case don't
-> -                * unregister them.
-> +                * unregister them, and just free. Otherwise the
-> +                * kobject->release will take care of freeing the entry via
-> +                * msi_kobj_release().
->                  */
->                 if (entry->kobj.parent) {
->                         kobject_del(&entry->kobj);
->                         kobject_put(&entry->kobj);
-> +               } else {
-> +                       kfree(entry);
->                 }
-> -
-> -               list_del(&entry->list);
-> -               kfree(entry);
+On Mon, Oct 7, 2013 at 12:58 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+> Hello Bjorn / Eric / Folks,
+>
+> This is to seek suggestions about a problem I'm trying to solve.
+>
+> The problem
+> ===========
+> 1) My company makes routers that have hot-pluggable cards with PCI express interfaces on them. We need to be able to hot-plug those cards, however the cards or the slots do not have the fancy bells & whistles (hot plug elements like MRL, sensor, attention button etc), and hence the hot-plug signals from the PCIe switch aren't really connected.
 
-So this code sequence still makes me very unhappy.
+The elements you mention are optional per the spec (PCIe r3.0, sec
+6.7.1).  The lack of them, by itself, should not be enough to force
+you to write a new hotplug driver.  pciehp is used for ExpressCard
+hotplug, and that's a similar situation where there's no MRL, no MRL
+sensor, no interlock, no attention button, etc.
 
-Why does not just a simple unconditional
+What connects the hot-pluggable card to the system?  PCI?  PCIe?
+Something else?  If it's PCIe, it seems like you'd make your life
+simpler by taking advantage of some or all of the hotplug support that
+is likely in the PCIe Root Port or Downstream Port leading to the
+slot.
 
-        kobject_del(&entry->kobj);
-        kobject_put(&entry->kobj);
+> 2) In addition to the above, we have onboard ASICs that are reachable via the PCIe. However, as part of regular operation of a router (e.g. user wants to switch off some ports), the ASICs can be off-lined / on-lined via out-of-band HW pins. The result is that we could see the PCIe link go down or up to that ASIC. This can be thought of as a "virtual" hot-plug of ASIC devices. Since the ASICs are themselves on the board, there is really no slot, and the HP signals again do not make much sense in this case.
 
-work for the "not registered with sysfs" case? And if the sysfs code
-really gets confused, why not
+It doesn't really matter that there's no physical slot and the user
+can't replace an ASIC with a different one.  You can still use the
+hotplug signals that *are* relevant, e.g., it sounds like things
+related to Hot-Plug Surprise, Presence Detect, and Data Link Layer
+State would still make sense.
 
-        if (entry->kobj.parent)
-                kobject_del(&entry->kobj);
-        kobject_put(&entry->kobj);
+The current pciehp driver doesn't really do anything with the Data
+Link Layer State Changed Enable bit (it looks like we *disable* that
+notification, but never *enable* it).  It sounds like a reasonable
+thing to add to pciehp, though.
 
-(btw, looking at the sysfs code, this looks *very* suspicious in
-sysfs_remove_dir():
-
-        struct sysfs_dirent *sd = kobj->sd;
-
-        spin_lock(&sysfs_assoc_lock);
-        kobj->sd = NULL;
-        spin_unlock(&sysfs_assoc_lock);
-
-and I would suggest that "sd = kobj->sd" should be done under the
-lock, because otherwise the lock is kind of pointless..)
-
-Greg?
-
-                Linus
+Bjorn
