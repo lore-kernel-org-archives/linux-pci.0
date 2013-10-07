@@ -1,148 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [207.46.163.25] ([207.46.163.25]:36251 "EHLO
-	co9outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750920Ab3JDQtk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 12:49:40 -0400
-From: Bhushan Bharat-R65777 <R65777@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"galak@kernel.crashing.org" <galak@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Wood Scott-B07421 <B07421@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: RE: [PATCH 2/7] iommu: add api to get iommu_domain of a device
-Date: Fri, 4 Oct 2013 16:47:33 +0000
-Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D07190F35@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1379575763-2091-3-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1380127533.3030.319.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0718FD1C@039-SN2MPN1-011.039d.mgd.msft.net>
- <1380901507.2673.204.camel@ul30vt.home>
-In-Reply-To: <1380901507.2673.204.camel@ul30vt.home>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:42380 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475Ab3JGWkx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 18:40:53 -0400
+Received: by mail-ie0-f170.google.com with SMTP id x13so17904344ief.15
+        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 15:40:53 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <001801cec162$4d74f770$e85ee650$%han@samsung.com>
+References: <001801cec162$4d74f770$e85ee650$%han@samsung.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 7 Oct 2013 16:40:32 -0600
+Message-ID: <CAErSpo6Mns0QzwzvKpDxfiZOCDFVjg3Vocq-Yz0E3WjRiMzxVg@mail.gmail.com>
+Subject: Re: [PATCH V2] PCI: designware: add missing header guards
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Seungwon Jeon <tgih.jun@samsung.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
-IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IEZyaWRheSwgT2N0
-b2JlciAwNCwgMjAxMyA5OjE1IFBNDQo+IFRvOiBCaHVzaGFuIEJoYXJhdC1SNjU3NzcNCj4gQ2M6
-IGpvcm9AOGJ5dGVzLm9yZzsgYmVuaEBrZXJuZWwuY3Jhc2hpbmcub3JnOyBnYWxha0BrZXJuZWwu
-Y3Jhc2hpbmcub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXhwcGMt
-ZGV2QGxpc3RzLm96bGFicy5vcmc7IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBhZ3Jh
-ZkBzdXNlLmRlOyBXb29kIFNjb3R0LUIwNzQyMTsgaW9tbXVAbGlzdHMubGludXgtDQo+IGZvdW5k
-YXRpb24ub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMi83XSBpb21tdTogYWRkIGFwaSB0byBn
-ZXQgaW9tbXVfZG9tYWluIG9mIGEgZGV2aWNlDQo+IA0KPiBPbiBGcmksIDIwMTMtMTAtMDQgYXQg
-MDk6NTQgKzAwMDAsIEJodXNoYW4gQmhhcmF0LVI2NTc3NyB3cm90ZToNCj4gPg0KPiA+ID4gLS0t
-LS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IGxpbnV4LXBjaS1vd25lckB2Z2Vy
-Lmtlcm5lbC5vcmcNCj4gPiA+IFttYWlsdG86bGludXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9y
-Z10NCj4gPiA+IE9uIEJlaGFsZiBPZiBBbGV4IFdpbGxpYW1zb24NCj4gPiA+IFNlbnQ6IFdlZG5l
-c2RheSwgU2VwdGVtYmVyIDI1LCAyMDEzIDEwOjE2IFBNDQo+ID4gPiBUbzogQmh1c2hhbiBCaGFy
-YXQtUjY1Nzc3DQo+ID4gPiBDYzogam9yb0A4Ynl0ZXMub3JnOyBiZW5oQGtlcm5lbC5jcmFzaGlu
-Zy5vcmc7DQo+ID4gPiBnYWxha0BrZXJuZWwuY3Jhc2hpbmcub3JnOyBsaW51eC0ga2VybmVsQHZn
-ZXIua2VybmVsLm9yZzsNCj4gPiA+IGxpbnV4cHBjLWRldkBsaXN0cy5vemxhYnMub3JnOyBsaW51
-eC0gcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+IGFncmFmQHN1c2UuZGU7IFdvb2QgU2NvdHQt
-QjA3NDIxOyBpb21tdUBsaXN0cy5saW51eC0gZm91bmRhdGlvbi5vcmc7DQo+ID4gPiBCaHVzaGFu
-IEJoYXJhdC1SNjU3NzcNCj4gPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMi83XSBpb21tdTogYWRk
-IGFwaSB0byBnZXQgaW9tbXVfZG9tYWluIG9mIGENCj4gPiA+IGRldmljZQ0KPiA+ID4NCj4gPiA+
-IE9uIFRodSwgMjAxMy0wOS0xOSBhdCAxMjo1OSArMDUzMCwgQmhhcmF0IEJodXNoYW4gd3JvdGU6
-DQo+ID4gPiA+IFRoaXMgYXBpIHJldHVybiB0aGUgaW9tbXUgZG9tYWluIHRvIHdoaWNoIHRoZSBk
-ZXZpY2UgaXMgYXR0YWNoZWQuDQo+ID4gPiA+IFRoZSBpb21tdV9kb21haW4gaXMgcmVxdWlyZWQg
-Zm9yIG1ha2luZyBBUEkgY2FsbHMgcmVsYXRlZCB0byBpb21tdS4NCj4gPiA+ID4gRm9sbG93IHVw
-IHBhdGNoZXMgd2hpY2ggdXNlIHRoaXMgQVBJIHRvIGtub3cgaW9tbXUgbWFwaW5nLg0KPiA+ID4g
-Pg0KPiA+ID4gPiBTaWduZWQtb2ZmLWJ5OiBCaGFyYXQgQmh1c2hhbiA8YmhhcmF0LmJodXNoYW5A
-ZnJlZXNjYWxlLmNvbT4NCj4gPiA+ID4gLS0tDQo+ID4gPiA+ICBkcml2ZXJzL2lvbW11L2lvbW11
-LmMgfCAgIDEwICsrKysrKysrKysNCj4gPiA+ID4gIGluY2x1ZGUvbGludXgvaW9tbXUuaCB8ICAg
-IDcgKysrKysrKw0KPiA+ID4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAxNyBpbnNlcnRpb25zKCspLCAw
-IGRlbGV0aW9ucygtKQ0KPiA+ID4gPg0KPiA+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9pb21t
-dS9pb21tdS5jIGIvZHJpdmVycy9pb21tdS9pb21tdS5jIGluZGV4DQo+ID4gPiA+IGZiZTljYTcu
-LjZhYzVmNTAgMTAwNjQ0DQo+ID4gPiA+IC0tLSBhL2RyaXZlcnMvaW9tbXUvaW9tbXUuYw0KPiA+
-ID4gPiArKysgYi9kcml2ZXJzL2lvbW11L2lvbW11LmMNCj4gPiA+ID4gQEAgLTY5Niw2ICs2OTYs
-MTYgQEAgdm9pZCBpb21tdV9kZXRhY2hfZGV2aWNlKHN0cnVjdCBpb21tdV9kb21haW4NCj4gPiA+
-ID4gKmRvbWFpbiwgc3RydWN0IGRldmljZSAqZGV2KSAgfQ0KPiA+ID4gPiBFWFBPUlRfU1lNQk9M
-X0dQTChpb21tdV9kZXRhY2hfZGV2aWNlKTsNCj4gPiA+ID4NCj4gPiA+ID4gK3N0cnVjdCBpb21t
-dV9kb21haW4gKmlvbW11X2dldF9kZXZfZG9tYWluKHN0cnVjdCBkZXZpY2UgKmRldikgew0KPiA+
-ID4gPiArCXN0cnVjdCBpb21tdV9vcHMgKm9wcyA9IGRldi0+YnVzLT5pb21tdV9vcHM7DQo+ID4g
-PiA+ICsNCj4gPiA+ID4gKwlpZiAodW5saWtlbHkob3BzID09IE5VTEwgfHwgb3BzLT5nZXRfZGV2
-X2lvbW11X2RvbWFpbiA9PSBOVUxMKSkNCj4gPiA+ID4gKwkJcmV0dXJuIE5VTEw7DQo+ID4gPiA+
-ICsNCj4gPiA+ID4gKwlyZXR1cm4gb3BzLT5nZXRfZGV2X2lvbW11X2RvbWFpbihkZXYpOyB9DQo+
-ID4gPiA+ICtFWFBPUlRfU1lNQk9MX0dQTChpb21tdV9nZXRfZGV2X2RvbWFpbik7DQo+ID4gPg0K
-PiA+ID4gV2hhdCBwcmV2ZW50cyB0aGlzIGZyb20gcmFjaW5nIGlvbW11X2RvbWFpbl9mcmVlKCk/
-ICBUaGVyZSdzIG5vDQo+ID4gPiByZWZlcmVuY2VzIGFjcXVpcmVkLCBzbyB0aGVyZSdzIG5vIHJl
-YXNvbiBmb3IgdGhlIGNhbGxlciB0byBhc3N1bWUgdGhlDQo+IHBvaW50ZXIgaXMgdmFsaWQuDQo+
-ID4NCj4gPiBTb3JyeSBmb3IgbGF0ZSBxdWVyeSwgc29tZWhvdyB0aGlzIGVtYWlsIHdlbnQgaW50
-byBhIGZvbGRlciBhbmQNCj4gPiBlc2NhcGVkOw0KPiA+DQo+ID4gSnVzdCB0byBiZSBzdXJlLCB0
-aGVyZSBpcyBub3QgbG9jayBhdCBnZW5lcmljICJzdHJ1Y3QgaW9tbXVfZG9tYWluIiwgYnV0IElQ
-DQo+IHNwZWNpZmljIHN0cnVjdHVyZSAobGluayBGU0wgZG9tYWluKSBsaW5rZWQgaW4gaW9tbXVf
-ZG9tYWluLT5wcml2IGhhdmUgYSBsb2NrLA0KPiBzbyB3ZSBuZWVkIHRvIGVuc3VyZSB0aGlzIHJh
-Y2UgaW4gRlNMIGlvbW11IGNvZGUgKHNheQ0KPiBkcml2ZXJzL2lvbW11L2ZzbF9wYW11X2RvbWFp
-bi5jKSwgcmlnaHQ/DQo+IA0KPiBObywgaXQncyBub3Qgc3VmZmljaWVudCB0byBtYWtlIHN1cmUg
-dGhhdCB5b3VyIHVzZSBvZiB0aGUgaW50ZXJmYWNlIGlzIHJhY2UNCj4gZnJlZS4gIFRoZSBpbnRl
-cmZhY2UgaXRzZWxmIG5lZWRzIHRvIGJlIGRlc2lnbmVkIHNvIHRoYXQgaXQncyBkaWZmaWN1bHQg
-dG8gdXNlDQo+IGluY29ycmVjdGx5Lg0KDQpTbyB3ZSBjYW4gZGVmaW5lIGlvbW11X2dldF9kZXZf
-ZG9tYWluKCkvaW9tbXVfcHV0X2Rldl9kb21haW4oKTsgIGlvbW11X2dldF9kZXZfZG9tYWluKCkg
-d2lsbCByZXR1cm4gZG9tYWluIHdpdGggdGhlIGxvY2sgaGVsZCwgYW5kIGlvbW11X3B1dF9kZXZf
-ZG9tYWluKCkgd2lsbCByZWxlYXNlIHRoZSBsb2NrPyBBbmQgaW9tbXVfZ2V0X2Rldl9kb21haW4o
-KSBtdXN0IGFsd2F5cyBiZSBmb2xsb3dlZCBieSBpb21tdV9nZXRfZGV2X2RvbWFpbigpLg0KDQoN
-Cj4gVGhhdCdzIG5vdCB0aGUgY2FzZSBoZXJlLiAgVGhpcyBpcyBhIGJhY2tkb29yIHRvIGdldCB0
-aGUgaW9tbXUNCj4gZG9tYWluIGZyb20gdGhlIGlvbW11IGRyaXZlciByZWdhcmRsZXNzIG9mIHdo
-byBpcyB1c2luZyBpdCBvciBob3cuICBUaGUgaW9tbXUNCj4gZG9tYWluIGlzIGNyZWF0ZWQgYW5k
-IG1hbmFnZWQgYnkgdmZpbywgc28gc2hvdWxkbid0IHdlIGJlIGxvb2tpbmcgYXQgaG93IHRvIGRv
-DQo+IHRoaXMgdGhyb3VnaCB2ZmlvPw0KDQpMZXQgbWUgZmlyc3QgZGVzY3JpYmUgd2hhdCB3ZSBh
-cmUgZG9pbmcgaGVyZToNCkR1cmluZyBpbml0aWFsaXphdGlvbjotDQogLSB2ZmlvIHRhbGtzIHRv
-IE1TSSBzeXN0ZW0gdG8ga25vdyB0aGUgTVNJLXBhZ2UgYW5kIHNpemUNCiAtIHZmaW8gdGhlbiBp
-bnRlcmFjdHMgd2l0aCBpb21tdSB0byBtYXAgdGhlIE1TSS1wYWdlIGluIGlvbW11IChJT1ZBIGlz
-IGRlY2lkZWQgYnkgdXNlcnNwYWNlIGFuZCBwaHlzaWNhbCBhZGRyZXNzIGlzIHRoZSBNU0ktcGFn
-ZSkNCiAtIFNvIHRoZSBJT1ZBIHN1YndpbmRvdyBtYXBwaW5nIGlzIGNyZWF0ZWQgaW4gaW9tbXUg
-YW5kIHllcyBWRklPIGtub3cgYWJvdXQgdGhpcyBtYXBwaW5nLg0KDQpOb3cgZG8gU0VUX0lSUShN
-U0kvTVNJWCkgaW9jdGw6DQogLSBjYWxscyBwY2lfZW5hYmxlX21zaXgoKS9wY2lfZW5hYmxlX21z
-aV9ibG9jaygpOiB3aGljaCBpcyBzdXBwb3NlZCB0byBzZXQgTVNJIGFkZHJlc3MvZGF0YSBpbiBk
-ZXZpY2UuDQogLSBTbyBpbiBjdXJyZW50IGltcGxlbWVudGF0aW9uICh0aGlzIHBhdGNoc2V0KSBt
-c2ktc3Vic3lzdGVtIGdldHMgdGhlIElPVkEgZnJvbSBpb21tdSB2aWEgdGhpcyBkZWZpbmVkIGlu
-dGVyZmFjZS4NCiAtIEFyZSB5b3Ugc2F5aW5nIHRoYXQgcmF0aGVyIHRoYW4gZ2V0dGluZyB0aGlz
-IGZyb20gaW9tbXUsIHdlIHNob3VsZCBnZXQgdGhpcyBmcm9tIHZmaW8/IFdoYXQgZGlmZmVyZW5j
-ZSBkb2VzIHRoaXMgbWFrZT8NCg0KVGhhbmtzDQotQmhhcmF0DQoNCj4gSXQgc2VlbXMgbGlrZSB5
-b3UnZCB3YW50IHRvIHVzZSB5b3VyIGRldmljZSB0byBnZXQgYSB2ZmlvDQo+IGdyb3VwIHJlZmVy
-ZW5jZSwgZnJvbSB3aGljaCB5b3UgY291bGQgZG8gc29tZXRoaW5nIHdpdGggdGhlIHZmaW8gZXh0
-ZXJuYWwgdXNlcg0KPiBpbnRlcmZhY2UgYW5kIGdldCB0aGUgaW9tbXUgZG9tYWluIHJlZmVyZW5j
-ZS4gIFRoYW5rcywNCj4gDQo+IEFsZXgNCj4gDQo+ID4gPiA+ICAvKg0KPiA+ID4gPiAgICogSU9N
-TVUgZ3JvdXBzIGFyZSByZWFsbHkgdGhlIG5hdHJ1YWwgd29ya2luZyB1bml0IG9mIHRoZSBJT01N
-VSwgYnV0DQo+ID4gPiA+ICAgKiB0aGUgSU9NTVUgQVBJIHdvcmtzIG9uIGRvbWFpbnMgYW5kIGRl
-dmljZXMuICBCcmlkZ2UgdGhhdCBnYXANCj4gPiA+ID4gYnkgZGlmZiAtLWdpdCBhL2luY2x1ZGUv
-bGludXgvaW9tbXUuaCBiL2luY2x1ZGUvbGludXgvaW9tbXUuaA0KPiA+ID4gPiBpbmRleCA3ZWEz
-MTllLi5mYTA0NmJkIDEwMDY0NA0KPiA+ID4gPiAtLS0gYS9pbmNsdWRlL2xpbnV4L2lvbW11LmgN
-Cj4gPiA+ID4gKysrIGIvaW5jbHVkZS9saW51eC9pb21tdS5oDQo+ID4gPiA+IEBAIC0xMjcsNiAr
-MTI3LDcgQEAgc3RydWN0IGlvbW11X29wcyB7DQo+ID4gPiA+ICAJaW50ICgqZG9tYWluX3NldF93
-aW5kb3dzKShzdHJ1Y3QgaW9tbXVfZG9tYWluICpkb21haW4sIHUzMg0KPiB3X2NvdW50KTsNCj4g
-PiA+ID4gIAkvKiBHZXQgdGhlIG51bWVyIG9mIHdpbmRvdyBwZXIgZG9tYWluICovDQo+ID4gPiA+
-ICAJdTMyICgqZG9tYWluX2dldF93aW5kb3dzKShzdHJ1Y3QgaW9tbXVfZG9tYWluICpkb21haW4p
-Ow0KPiA+ID4gPiArCXN0cnVjdCBpb21tdV9kb21haW4gKigqZ2V0X2Rldl9pb21tdV9kb21haW4p
-KHN0cnVjdCBkZXZpY2UNCj4gPiA+ID4gKypkZXYpOw0KPiA+ID4gPg0KPiA+ID4gPiAgCXVuc2ln
-bmVkIGxvbmcgcGdzaXplX2JpdG1hcDsNCj4gPiA+ID4gIH07DQo+ID4gPiA+IEBAIC0xOTAsNiAr
-MTkxLDcgQEAgZXh0ZXJuIGludCBpb21tdV9kb21haW5fd2luZG93X2VuYWJsZShzdHJ1Y3QNCj4g
-PiA+ID4gaW9tbXVfZG9tYWluDQo+ID4gPiAqZG9tYWluLCB1MzIgd25kX25yLA0KPiA+ID4gPiAg
-CQkJCSAgICAgIHBoeXNfYWRkcl90IG9mZnNldCwgdTY0IHNpemUsDQo+ID4gPiA+ICAJCQkJICAg
-ICAgaW50IHByb3QpOw0KPiA+ID4gPiAgZXh0ZXJuIHZvaWQgaW9tbXVfZG9tYWluX3dpbmRvd19k
-aXNhYmxlKHN0cnVjdCBpb21tdV9kb21haW4NCj4gPiA+ID4gKmRvbWFpbiwNCj4gPiA+ID4gdTMy
-IHduZF9ucik7DQo+ID4gPiA+ICtleHRlcm4gc3RydWN0IGlvbW11X2RvbWFpbiAqaW9tbXVfZ2V0
-X2Rldl9kb21haW4oc3RydWN0IGRldmljZQ0KPiA+ID4gPiArKmRldik7DQo+ID4gPiA+ICAvKioN
-Cj4gPiA+ID4gICAqIHJlcG9ydF9pb21tdV9mYXVsdCgpIC0gcmVwb3J0IGFib3V0IGFuIElPTU1V
-IGZhdWx0IHRvIHRoZSBJT01NVQ0KPiBmcmFtZXdvcmsNCj4gPiA+ID4gICAqIEBkb21haW46IHRo
-ZSBpb21tdSBkb21haW4gd2hlcmUgdGhlIGZhdWx0IGhhcyBoYXBwZW5lZCBAQA0KPiA+ID4gPiAt
-Mjg0LDYNCj4gPiA+ID4gKzI4NiwxMSBAQCBzdGF0aWMgaW5saW5lIHZvaWQgaW9tbXVfZG9tYWlu
-X3dpbmRvd19kaXNhYmxlKHN0cnVjdA0KPiA+ID4gPiBpb21tdV9kb21haW4gKmRvbWFpbiwgIHsg
-IH0NCj4gPiA+ID4NCj4gPiA+ID4gK3N0YXRpYyBpbmxpbmUgc3RydWN0IGlvbW11X2RvbWFpbiAq
-aW9tbXVfZ2V0X2Rldl9kb21haW4oc3RydWN0DQo+ID4gPiA+ICtkZXZpY2UNCj4gPiA+ID4gKypk
-ZXYpIHsNCj4gPiA+ID4gKwlyZXR1cm4gTlVMTDsNCj4gPiA+ID4gK30NCj4gPiA+ID4gKw0KPiA+
-ID4gPiAgc3RhdGljIGlubGluZSBwaHlzX2FkZHJfdCBpb21tdV9pb3ZhX3RvX3BoeXMoc3RydWN0
-IGlvbW11X2RvbWFpbg0KPiA+ID4gPiAqZG9tYWluLCBkbWFfYWRkcl90IGlvdmEpICB7DQo+ID4g
-PiA+ICAJcmV0dXJuIDA7DQo+ID4gPg0KPiA+ID4NCj4gPiA+DQo+ID4gPiAtLQ0KPiA+ID4gVG8g
-dW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxp
-bnV4LXBjaSINCj4gPiA+IGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdl
-ci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vDQo+ID4gPiBpbmZvIGF0IGh0dHA6Ly92Z2VyLmtl
-cm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPiA+DQo+IA0KPiANCj4gDQoNCg==
+On Fri, Oct 4, 2013 at 6:31 PM, Jingoo Han <jg1.han@samsung.com> wrote:
+> From: Seungwon Jeon <tgih.jun@samsung.com>
+>
+> Add missing header guards against the redundant inclusion.
+>
+> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
+Applied to my pci/host-designware branch for v3.13, thanks!
+
+Bjorn
+
+> ---
+>  drivers/pci/host/pcie-designware.h |    5 +++++
+>  1 file changed, 5 insertions(+)
+>
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index faccbbf..d87fbae 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -11,6 +11,9 @@
+>   * published by the Free Software Foundation.
+>   */
+>
+> +#ifndef _PCIE_DESIGNWARE_H
+> +#define _PCIE_DESIGNWARE_H
+> +
+>  struct pcie_port_info {
+>         u32             cfg0_size;
+>         u32             cfg1_size;
+> @@ -77,3 +80,5 @@ int dw_pcie_host_init(struct pcie_port *pp);
+>  int dw_pcie_setup(int nr, struct pci_sys_data *sys);
+>  struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys);
+>  int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin);
+> +
+> +#endif /* _PCIE_DESIGNWARE_H */
+> --
+> 1.7.10.4
+>
+>
