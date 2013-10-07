@@ -1,85 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:24683 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753715Ab3JBQh7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 12:37:59 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
+Received: from webmail.solarflare.com ([12.187.104.25]:64591 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752687Ab3JGUqP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 16:46:15 -0400
+Message-ID: <1381178766.1536.26.camel@bwh-desktop.uk.level5networks.com>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: Tejun Heo <tj@kernel.org>, Alexander Gordeev <agordeev@redhat.com>,
+	<linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
+	"Ralf Baechle" <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
 	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Andy King <acking@vmware.com>,
+	"Jon Mason" <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 70/77] vmci: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:49:26 +0200
-Message-Id: <654a7884b9ad6fbe777d00bb0a226010e421b3b9.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+	<linux-pci@vger.kernel.org>, <linux-mips@linux-mips.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux390@de.ibm.com>,
+	<linux-s390@vger.kernel.org>, <x86@kernel.org>,
+	<linux-ide@vger.kernel.org>, <iss_storagedev@hp.com>,
+	<linux-nvme@lists.infradead.org>, <linux-rdma@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <e1000-devel@lists.sourceforge.net>,
+	<linux-driver@qlogic.com>,
+	"Solarflare linux maintainers" <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>,
+	<linux-scsi@vger.kernel.org>
+Date: Mon, 7 Oct 2013 21:46:06 +0100
+In-Reply-To: <1381176656.645.171.camel@pasglop>
 References: <cover.1380703262.git.agordeev@redhat.com>
+	 <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+	 <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+	 <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+	 <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+	 <1381009586.645.141.camel@pasglop>
+	 <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+	 <1381040386.645.143.camel@pasglop>
+	 <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+	 <20131007180111.GC2481@htj.dyndns.org> <1381176656.645.171.camel@pasglop>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
+On Tue, 2013-10-08 at 07:10 +1100, Benjamin Herrenschmidt wrote:
+> On Mon, 2013-10-07 at 14:01 -0400, Tejun Heo wrote:
+> > I don't think the same race condition would happen with the loop.  The
+> > problem case is where multiple msi(x) allocation fails completely
+> > because the global limit went down before inquiry and allocation.  In
+> > the loop based interface, it'd retry with the lower number.
+> > 
+> > As long as the number of drivers which need this sort of adaptive
+> > allocation isn't too high and the common cases can be made simple, I
+> > don't think the "complex" part of interface is all that important.
+> > Maybe we can have reserve / cancel type interface or just keep the
+> > loop with more explicit function names (ie. try_enable or something
+> > like that).
+> 
+> I'm thinking a better API overall might just have been to request
+> individual MSI-X one by one :-)
+> 
+> We want to be able to request an MSI-X at runtime anyway ... if I want
+> to dynamically add a queue to my network interface, I want it to be able
+> to pop a new arbitrary MSI-X.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/misc/vmw_vmci/vmci_guest.c |   22 +++++++++++++++-------
- 1 files changed, 15 insertions(+), 7 deletions(-)
+Yes, this would be very useful.
 
-diff --git a/drivers/misc/vmw_vmci/vmci_guest.c b/drivers/misc/vmw_vmci/vmci_guest.c
-index b3a2b76..af5caf8 100644
---- a/drivers/misc/vmw_vmci/vmci_guest.c
-+++ b/drivers/misc/vmw_vmci/vmci_guest.c
-@@ -377,19 +377,27 @@ static int vmci_enable_msix(struct pci_dev *pdev,
- {
- 	int i;
- 	int result;
-+	int nvec;
- 
--	for (i = 0; i < VMCI_MAX_INTRS; ++i) {
-+	result = pci_msix_table_size(pdev);
-+	if (result < 0)
-+		return result;
-+
-+	nvec = min(result, VMCI_MAX_INTRS);
-+	if (nvec < VMCI_MAX_INTRS)
-+		nvec = 1;
-+
-+	for (i = 0; i < nvec; ++i) {
- 		vmci_dev->msix_entries[i].entry = i;
- 		vmci_dev->msix_entries[i].vector = i;
- 	}
- 
--	result = pci_enable_msix(pdev, vmci_dev->msix_entries, VMCI_MAX_INTRS);
--	if (result == 0)
--		vmci_dev->exclusive_vectors = true;
--	else if (result > 0)
--		result = pci_enable_msix(pdev, vmci_dev->msix_entries, 1);
-+	result = pci_enable_msix(pdev, vmci_dev->msix_entries, nvec);
-+	if (result)
-+		return result;
- 
--	return result;
-+	vmci_dev->exclusive_vectors = true;
-+	return 0;
- }
- 
- /*
+> And we don't want to lock drivers into contiguous MSI-X sets either.
+
+I don't think there's any such limitation now.  The entries array passed
+to pci_enable_msix() specifies which MSI-X vectors the driver wants to
+enable.  It's usually filled with 0..nvec-1 in order, but not always.
+And the IRQ numbers returned aren't usually contiguous either, on x86.
+
+Ben.
+
+> And for the cleanup ... well that's what the "pcim" functions are for,
+> we can just make MSI-X variants.
+
 -- 
-1.7.7.6
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
