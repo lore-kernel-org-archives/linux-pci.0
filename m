@@ -1,70 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog104.obsmtp.com ([207.126.144.117]:55170 "EHLO
-	eu1sys200aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750870Ab3JWFB6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 01:01:58 -0400
-Date: Wed, 23 Oct 2013 10:06:10 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Ajay KHANDELWAL <ajay.khandelwal@st.com>
-Subject: Re: [QUERY] Number of address translation regions in designware
-Message-ID: <20131023043610.GA5521@pratyush-vbox>
-References: <52652BF1.4040507@ti.com>
- <000001cecee5$cbeafa10$63c0ee30$%han@samsung.com>
- <52668991.1020208@ti.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:36302 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753218Ab3JGRks convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 13:40:48 -0400
+Received: by mail-ie0-f173.google.com with SMTP id ar20so16897929iec.32
+        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 10:40:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <52668991.1020208@ti.com>
+In-Reply-To: <CAK9yfHxxxpZx5Yd=nUdNMe2kz_bZupZFdizG2tL3wUffDOkPCQ@mail.gmail.com>
+References: <1380363121-1977-1-git-send-email-sachin.kamat@linaro.org>
+ <CAErSpo77zy6K3yMa8_31zbrehA6MByXTBbn5Trr8Sv5TL7ScZQ@mail.gmail.com> <CAK9yfHxxxpZx5Yd=nUdNMe2kz_bZupZFdizG2tL3wUffDOkPCQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 7 Oct 2013 11:40:27 -0600
+Message-ID: <CAErSpo64J9bzGw3U7WC+4ykWZTsDn0=hs8mhuwmy_m8cg-XgfQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: sysfs: Staticize local symbols
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+On Sun, Oct 6, 2013 at 9:55 PM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+> On 4 October 2013 23:39, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Sat, Sep 28, 2013 at 4:12 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+>>>
+>>> -struct attribute *pci_bus_attrs[] = {
+>>> +static struct attribute *pci_bus_attrs[] = {
+>>
+>> Did you compile this?  I see this:
+>>
+>> drivers/pci/pci-sysfs.c:306:29: error: static declaration of
+>> ‘pci_bus_attrs’ follows non-static declaration
+>> drivers/pci/pci.h:159:29: note: previous declaration of ‘pci_bus_attrs’ was here
+>
+> Hmm.. strange. I did compile both these patches and did not see this
+> error on my setup.
+> Infact it was during compilation that I came across the need for this
+> change and verified it after. However I used
+> the linux-next tree and not your tree to generate these.
 
-On Tue, Oct 22, 2013 at 10:20:01PM +0800, Kishon Vijay Abraham I wrote:
-> Hi Pratyush, Jingoo,
-> 
-> On Tuesday 22 October 2013 10:46 AM, Jingoo Han wrote:
-> > On Monday, October 21, 2013 10:28 PM, Kishon Vijay Abraham I wrote:
-> >>
-> >> Currently I see in pcie-designware.c we use only 2 ATU regions. We re-use
-> >> INDEX0 for mem outbound and cfg0, and INDEX1 for cfg1 and io. So I'd like to
-> >> know if in your platform, do you have only 2 address translation regions? In
-> >> DRA7xx we have 16 outbound regions and 4 inbound regions.
-> > 
-> > In Exynos, there are only 2 inbound and 2 outbound viewpoints.
-> > 
-> >> Also the same designware IP can be used as a EP also no? Shouldn't we move it
-> >> out of drivers/pci/host and allow it to be configured as EP also?
-> > 
-> > Currently, Exynos PCIe IP does not support EP mode.
-> 
-> Thanks for the information. I think we can do some optimization w.r.t address
-> translation regions. Will post a RFC soon.
-> 
-> One more query.
-> In dw_pcie_prog_viewport_cfg0/dw_pcie_prog_viewport_cfg1 functions, the *lower
-> target* is programmed to busdev. Is it for any specific reason?
-> I mean doing that will leave lot of holes in the PCIe address space.
-> IIUC, if we don't set that to busdev, consecutive pcie address space will be
-> used for each function no?
+Oh, I see what happened.  Greg's 244afeca ("PCI: convert bus code to
+use bus_groups") removed the use of pci_bus_attrs[] in pci-driver.c.
+That commit is in linux-next, but not in my tree.  I probably should
+have merged that commit via my tree to avoid confusion like this.  Oh,
+well, maybe I'll do better next time.
 
-Yes, I think even if CX_ATU_MIN_REGION_SIZE is 64KB in any controller,
-bus, dev and function number can be used to define target address.
-
-So you are trying to allocate statically a separate viewport for each
-function's cfg0 transfer (whereever sufficient number of viewport is
-avilable)?
-
-If viewport is programmed dynamically at each cfg transfer, then
-whether you use bus and dev only or function also, will it really make
-any difference in saving of address space?
-
-Regards
-Pratyush
-
-> 
-> Thanks
-> Kishon
+Bjorn
