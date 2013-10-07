@@ -1,110 +1,239 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23427 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751816Ab3JANCw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Oct 2013 09:02:52 -0400
-Date: Tue, 1 Oct 2013 15:00:46 +0200
-From: Veaceslav Falico <vfalico@redhat.com>
-To: Zdenek Kabelac <zkabelac@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux.nics@intel.com,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: kobject_add_internal failed for msi_irqs with -EEXIST
-Message-ID: <20131001130046.GC6096@redhat.com>
-References: <5245896A.70705@redhat.com>
- <CAErSpo6L-Ud08=JPM7d=RYuPO=UFvq_9hZGbne0iQnCHiFbuHQ@mail.gmail.com>
- <20130927160125.GB14139@redhat.com>
- <5245D626.6090209@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <5245D626.6090209@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+Subject: [PATCH 01/11] pci: convert bus code to use dev_groups
+Date: Sun,  6 Oct 2013 23:55:40 -0700
+Message-Id: <1381128950-28125-2-git-send-email-gregkh@linuxfoundation.org>
+In-Reply-To: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
+References: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 27, 2013 at 09:01:58PM +0200, Zdenek Kabelac wrote:
->Dne 27.9.2013 18:01, Veaceslav Falico napsal(a):
->>On Fri, Sep 27, 2013 at 09:58:28AM -0600, Bjorn Helgaas wrote:
->>>[+cc Veaceslav, linux-pci]
->>>
->>>On Fri, Sep 27, 2013 at 7:34 AM, Zdenek Kabelac <zkabelac@redhat.com> wrote:
->>>>Hi
->>>>
->>>>With recent build of 3.12-rc2 I'm getting this warning report from kernel:
->>>>(hw Lenovo T61, C2D, 4GB Ram)
->>>>(repost since linux-kernel@ rejected my gmail email....)
->>>
->>>This looks related to the MSI/kobject issues Veaceslav is working on.
->>>See
->>>http://lkml.kernel.org/r/1379382464-7920-2-git-send-email-vfalico@redhat.com
->>>and related messages.
->>>
->>>We don't have a resolution yet.  If you have
->>>CONFIG_DEBUG_KOBJECT_RELEASE=y, you could try turning that off.  I
->>>don't know if it would help, and it would only be a temporary
->>>workaround anyway.
->>
->>I've looked at the original post -
->>http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg510798.html
->>hope that's it - and it seems that it's disabling DEBUG_KOBJECT_RELEASE
->>won't help - the warning is about the re-registering, not about freeing it.
->>
->>As a workaround I'd suggest adding some kind of delay between removing and
->>adding the msi - as in - rmmod e1000e; sleep 1; modprobe e1000e; - or
->>something like that, so that there is enough time for the /msqi_irqs/ to go
->>away.
->>
->
->I'm not readding e1000e modules myself - however I've no idea what 
->NetworkManager does. Here are messages prior warning:
->
->NetworkManager[304]: <info> monitoring kernel firmware directory '/lib/firmware'.
->NetworkManager[304]: <info> rfkill1: found WiFi radio killswitch (at /sys/devices/pci0000:00/0000:00:1c.1/0000:03:00.0/ieee80211/phy0/rfkill1) 
->(driver iwl3945)
->NetworkManager[304]: <info> WiFi hardware radio set enabled
->NetworkManager[304]: <info> WiFi enabled by radio killswitch; enabled 
->by state file
->NetworkManager[304]: <info> WWAN enabled by radio killswitch; 
->disabled by state file
->NetworkManager[304]: <info> WiMAX enabled by radio killswitch; 
->enabled by state file
->NetworkManager[304]: <info> Networking is enabled by state file
->NetworkManager[304]: <info> (eth0): carrier is OFF
->NetworkManager[304]: <info> (eth0): new Ethernet device (driver: 
->'e1000e' ifindex: 2)
->NetworkManager[304]: <info> (eth0): exported as 
->/org/freedesktop/NetworkManager/Devices/0
->NetworkManager[304]: <info> (eth0): device state change: unmanaged -> 
->unavailable (reason 'managed') [10 20 2]
->NetworkManager[304]: <info> (eth0): bringing up device.
->rpcbind: cannot create socket for udp6
->rpcbind: cannot create socket for tcp6
->kernel: [    5.727025] WARNING! power/level is deprecated; use 
->power/control instead
->
->
->So it looks like  'bringing up' causes recreation of msi_irqs ?
+The dev_attrs field of struct bus_type is going away soon, dev_groups
+should be used instead.  This converts the PCI bus code to use the
+correct field.
 
-Yep, seems like that. .ndo_stop() (e1000_close(), which removes msi irqs
-and the /msi_irqs/ kset) instantly followed by .ndo_open() (e1000_open(),
-which enables the requested msi irqs via pci_enable_msi() - and,
-consequently, re-creates the /msi_irqs/ kset) triggers it - because the
-kset, in the meanwhile, isn't freed - maybe because of some readers, maybe
-because of the delay introduced by DEBUG_KOBJECT_RELEASE.
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-pci@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
 
-I'm now slowly fighting this (and adjacent) issues, will put you on CC if
-I'll come up with patches.
+Bjorn, I can take this through my driver-core tree if you like, just let
+me know what would be the easiest for you.
 
-In the meanwhile - can you please try disabling DEBUG_KOBJECT_RELEASE and
-test if you see the warning _constantly_?
+ drivers/pci/pci-driver.c |  2 +-
+ drivers/pci/pci-sysfs.c  | 73 ++++++++++++++++++++++++++++++------------------
+ drivers/pci/pci.h        |  2 +-
+ 3 files changed, 48 insertions(+), 29 deletions(-)
 
-Cause if you do - we might have another issue here...
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 38f3c01..9f85960 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1319,7 +1319,7 @@ struct bus_type pci_bus_type = {
+ 	.probe		= pci_device_probe,
+ 	.remove		= pci_device_remove,
+ 	.shutdown	= pci_device_shutdown,
+-	.dev_attrs	= pci_dev_attrs,
++	.dev_groups	= pci_dev_groups,
+ 	.bus_groups	= pci_bus_groups,
+ 	.drv_groups	= pci_drv_groups,
+ 	.pm		= PCI_PM_OPS_PTR,
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d8eb880..618c060 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -42,7 +42,8 @@ field##_show(struct device *dev, struct device_attribute *attr, char *buf)				\
+ 									\
+ 	pdev = to_pci_dev (dev);					\
+ 	return sprintf (buf, format_string, pdev->field);		\
+-}
++}									\
++static DEVICE_ATTR_RO(field)
+ 
+ pci_config_attr(vendor, "0x%04x\n");
+ pci_config_attr(device, "0x%04x\n");
+@@ -73,6 +74,7 @@ static ssize_t broken_parity_status_store(struct device *dev,
+ 
+ 	return count;
+ }
++static DEVICE_ATTR_RW(broken_parity_status);
+ 
+ static ssize_t local_cpus_show(struct device *dev,
+ 			struct device_attribute *attr, char *buf)
+@@ -91,7 +93,7 @@ static ssize_t local_cpus_show(struct device *dev,
+ 	buf[len] = '\0';
+ 	return len;
+ }
+-
++static DEVICE_ATTR_RO(local_cpus);
+ 
+ static ssize_t local_cpulist_show(struct device *dev,
+ 			struct device_attribute *attr, char *buf)
+@@ -110,6 +112,7 @@ static ssize_t local_cpulist_show(struct device *dev,
+ 	buf[len] = '\0';
+ 	return len;
+ }
++static DEVICE_ATTR_RO(local_cpulist);
+ 
+ /*
+  * PCI Bus Class Devices
+@@ -170,6 +173,7 @@ resource_show(struct device * dev, struct device_attribute *attr, char * buf)
+ 	}
+ 	return (str - buf);
+ }
++static DEVICE_ATTR_RO(resource);
+ 
+ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+@@ -181,10 +185,11 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+ 		       (u8)(pci_dev->class >> 16), (u8)(pci_dev->class >> 8),
+ 		       (u8)(pci_dev->class));
+ }
++static DEVICE_ATTR_RO(modalias);
+ 
+-static ssize_t is_enabled_store(struct device *dev,
+-				struct device_attribute *attr, const char *buf,
+-				size_t count)
++static ssize_t enabled_store(struct device *dev,
++			     struct device_attribute *attr, const char *buf,
++			     size_t count)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	unsigned long val;
+@@ -208,14 +213,15 @@ static ssize_t is_enabled_store(struct device *dev,
+ 	return result < 0 ? result : count;
+ }
+ 
+-static ssize_t is_enabled_show(struct device *dev,
+-			       struct device_attribute *attr, char *buf)
++static ssize_t enabled_show(struct device *dev,
++			    struct device_attribute *attr, char *buf)
+ {
+ 	struct pci_dev *pdev;
+ 
+ 	pdev = to_pci_dev (dev);
+ 	return sprintf (buf, "%u\n", atomic_read(&pdev->enable_cnt));
+ }
++static DEVICE_ATTR_RW(enabled);
+ 
+ #ifdef CONFIG_NUMA
+ static ssize_t
+@@ -223,6 +229,7 @@ numa_node_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+ 	return sprintf (buf, "%d\n", dev->numa_node);
+ }
++static DEVICE_ATTR_RO(numa_node);
+ #endif
+ 
+ static ssize_t
+@@ -232,6 +239,7 @@ dma_mask_bits_show(struct device *dev, struct device_attribute *attr, char *buf)
+ 
+ 	return sprintf (buf, "%d\n", fls64(pdev->dma_mask));
+ }
++static DEVICE_ATTR_RO(dma_mask_bits);
+ 
+ static ssize_t
+ consistent_dma_mask_bits_show(struct device *dev, struct device_attribute *attr,
+@@ -239,6 +247,7 @@ consistent_dma_mask_bits_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	return sprintf (buf, "%d\n", fls64(dev->coherent_dma_mask));
+ }
++static DEVICE_ATTR_RO(consistent_dma_mask_bits);
+ 
+ static ssize_t
+ msi_bus_show(struct device *dev, struct device_attribute *attr, char *buf)
+@@ -283,6 +292,7 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
+ 
+ 	return count;
+ }
++static DEVICE_ATTR_RW(msi_bus);
+ 
+ static DEFINE_MUTEX(pci_remove_rescan_mutex);
+ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+@@ -414,6 +424,7 @@ static ssize_t d3cold_allowed_show(struct device *dev,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	return sprintf (buf, "%u\n", pdev->d3cold_allowed);
+ }
++static DEVICE_ATTR_RW(d3cold_allowed);
+ #endif
+ 
+ #ifdef CONFIG_PCI_IOV
+@@ -499,30 +510,38 @@ static struct device_attribute sriov_numvfs_attr =
+ 		       sriov_numvfs_show, sriov_numvfs_store);
+ #endif /* CONFIG_PCI_IOV */
+ 
+-struct device_attribute pci_dev_attrs[] = {
+-	__ATTR_RO(resource),
+-	__ATTR_RO(vendor),
+-	__ATTR_RO(device),
+-	__ATTR_RO(subsystem_vendor),
+-	__ATTR_RO(subsystem_device),
+-	__ATTR_RO(class),
+-	__ATTR_RO(irq),
+-	__ATTR_RO(local_cpus),
+-	__ATTR_RO(local_cpulist),
+-	__ATTR_RO(modalias),
++struct attribute *pci_dev_attrs[] = {
++	&dev_attr_resource.attr,
++	&dev_attr_vendor.attr,
++	&dev_attr_device.attr,
++	&dev_attr_subsystem_vendor.attr,
++	&dev_attr_subsystem_device.attr,
++	&dev_attr_class.attr,
++	&dev_attr_irq.attr,
++	&dev_attr_local_cpus.attr,
++	&dev_attr_local_cpulist.attr,
++	&dev_attr_modalias.attr,
+ #ifdef CONFIG_NUMA
+-	__ATTR_RO(numa_node),
++	&dev_attr_numa_node.attr,
+ #endif
+-	__ATTR_RO(dma_mask_bits),
+-	__ATTR_RO(consistent_dma_mask_bits),
+-	__ATTR(enable, 0600, is_enabled_show, is_enabled_store),
+-	__ATTR(broken_parity_status,(S_IRUGO|S_IWUSR),
+-		broken_parity_status_show,broken_parity_status_store),
+-	__ATTR(msi_bus, 0644, msi_bus_show, msi_bus_store),
++	&dev_attr_dma_mask_bits.attr,
++	&dev_attr_consistent_dma_mask_bits.attr,
++	&dev_attr_enabled.attr,
++	&dev_attr_broken_parity_status.attr,
++	&dev_attr_msi_bus.attr,
+ #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
+-	__ATTR(d3cold_allowed, 0644, d3cold_allowed_show, d3cold_allowed_store),
++	&dev_attr_d3cold_allowed.attr,
+ #endif
+-	__ATTR_NULL,
++	NULL,
++};
++
++static const struct attribute_group pci_dev_group = {
++	.attrs = pci_dev_attrs,
++};
++
++const struct attribute_group *pci_dev_groups[] = {
++	&pci_dev_group,
++	NULL,
+ };
+ 
+ static struct attribute *pcibus_attrs[] = {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 607be58..9c91ecc 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -153,7 +153,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
+ 	return (dev->no_d1d2 || parent_dstates);
+ 
+ }
+-extern struct device_attribute pci_dev_attrs[];
++extern const struct attribute_group *pci_dev_groups[];
+ extern const struct attribute_group *pcibus_groups[];
+ extern struct device_type pci_dev_type;
+ extern const struct attribute_group *pci_bus_groups[];
+-- 
+1.8.4.6.g82e253f.dirty
 
->
->Zdenek
->
->
->
->
->
