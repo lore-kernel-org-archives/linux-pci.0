@@ -1,170 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from beta.dmz-ap.st.com ([138.198.100.35]:46597 "EHLO
-	beta.dmz-ap.st.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774Ab3J2HjP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 03:39:15 -0400
-Date: Tue, 29 Oct 2013 12:40:15 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Jingoo Han <jg1.han@samsung.com>,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:33844 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563Ab3JGUlu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 16:41:50 -0400
+Date: Mon, 7 Oct 2013 13:41:28 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Ajay KHANDELWAL <ajay.khandelwal@st.com>,
-	Marek Vasut <marex@denx.de>,
-	Tim Harvey <tharvey@gateworks.com>,
-	'Arnd Bergmann' <arnd@arndb.de>
-Subject: Re: [QUERY] Number of address translation regions in designware
-Message-ID: <20131029071015.GB2297@pratyush-vbox>
-References: <52652BF1.4040507@ti.com>
- <000001cecee5$cbeafa10$63c0ee30$%han@samsung.com>
- <52668991.1020208@ti.com>
- <20131023043610.GA5521@pratyush-vbox>
- <5267EF1E.1010101@ti.com>
+	Sachin Kamat <sachin.kamat@linaro.org>
+Subject: Re: [PATCH 01/11] pci: convert bus code to use dev_groups
+Message-ID: <20131007204128.GB7600@kroah.com>
+References: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
+ <1381128950-28125-2-git-send-email-gregkh@linuxfoundation.org>
+ <CAErSpo7srZ8K_0EChA3Tqv5Zt4bA4MdKEx-n4KRNfrgSwcazyQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <5267EF1E.1010101@ti.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7srZ8K_0EChA3Tqv5Zt4bA4MdKEx-n4KRNfrgSwcazyQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+ Marek, Tim, arnd
-
-Hi Kishon,
-
-On Wed, Oct 23, 2013 at 11:45:34PM +0800, Kishon Vijay Abraham I wrote:
-> Hi Pratyush,
+On Mon, Oct 07, 2013 at 12:21:36PM -0600, Bjorn Helgaas wrote:
+> [+cc Sachin]
 > 
-> On Wednesday 23 October 2013 10:06 AM, Pratyush Anand wrote:
-> > Hi Kishon,
-> > 
-> > On Tue, Oct 22, 2013 at 10:20:01PM +0800, Kishon Vijay Abraham I wrote:
-> >> Hi Pratyush, Jingoo,
-> >>
-> >> On Tuesday 22 October 2013 10:46 AM, Jingoo Han wrote:
-> >>> On Monday, October 21, 2013 10:28 PM, Kishon Vijay Abraham I wrote:
-> >>>>
-> >>>> Currently I see in pcie-designware.c we use only 2 ATU regions. We re-use
-> >>>> INDEX0 for mem outbound and cfg0, and INDEX1 for cfg1 and io. So I'd like to
-> >>>> know if in your platform, do you have only 2 address translation regions? In
-> >>>> DRA7xx we have 16 outbound regions and 4 inbound regions.
-> >>>
-> >>> In Exynos, there are only 2 inbound and 2 outbound viewpoints.
-> >>>
-> >>>> Also the same designware IP can be used as a EP also no? Shouldn't we move it
-> >>>> out of drivers/pci/host and allow it to be configured as EP also?
-> >>>
-> >>> Currently, Exynos PCIe IP does not support EP mode.
-> >>
-> >> Thanks for the information. I think we can do some optimization w.r.t address
-> >> translation regions. Will post a RFC soon.
-> >>
-> >> One more query.
-> >> In dw_pcie_prog_viewport_cfg0/dw_pcie_prog_viewport_cfg1 functions, the *lower
-> >> target* is programmed to busdev. Is it for any specific reason?
-> >> I mean doing that will leave lot of holes in the PCIe address space.
-> >> IIUC, if we don't set that to busdev, consecutive pcie address space will be
-> >> used for each function no?
-> > 
-> > Yes, I think even if CX_ATU_MIN_REGION_SIZE is 64KB in any controller,
-> > bus, dev and function number can be used to define target address.
+> On Mon, Oct 7, 2013 at 12:55 AM, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> > The dev_attrs field of struct bus_type is going away soon, dev_groups
+> > should be used instead.  This converts the PCI bus code to use the
+> > correct field.
+> >
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: <linux-pci@vger.kernel.org>
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > ---
+> >
+> > Bjorn, I can take this through my driver-core tree if you like, just let
+> > me know what would be the easiest for you.
 > 
-> I meant for function 0 the configuration space will be from (0x0 t0 0xfff -
-> 4KB). If we use *busdev* for programming target, for function 1 the
-> configuration space will start at 0x10000 PCIe address which will leave a small
-> hole from (0x1000 to 0xffff). I'm not sure if it will have a big impact though.
-> Also till we haven't exhausted the 64KB space (minimum), we wouldn't be needing
-> to program a new viewport. That's good enough to accommodate 18 functions for
-> the number of devices.
+> Let me take it, if I can figure out how to do it.  I already tripped
+> over a conflict where Sachin made pci_bus_attrs static, which is fine
+> in linux-next (with your 244afeca ("PCI: convert bus code to
+> use bus_groups") commit), but not fine in pci/next, which didn't have that.
 
-Yes, I agree with you that using *busdev* will create hole and we
-should avoid it. More on this at the end.
+Ah, yeah, that will conflict, sorry.
 
-> > 
-> > So you are trying to allocate statically a separate viewport for each
-> > function's cfg0 transfer (whereever sufficient number of viewport is
-> > avilable)?
-> 
-> Actually in DRA7xx, we face a different problem in that, we can't program the
-> translation region directly from the ranges. Because while programming the
-> address translation window, the most significant 4 bits are not used.
-> 
-> For example if you see, the cpu address of memory window starts @ 0x20012000
-> but while programming the address translation window we have to give 0x00012000.
-> 
-> My dt data looked like this.
-> ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00001000
-> 	  0x81000000 0 0	  0x20002000 0 0x00010000
-> 	  0x82000000 0 0x20012000 0x20012000 0 0xffee000>;
-> 
-> translation = <(OUTBOUND | INDEX0) CFG0 0x0 0x00001000 0x0000fff 0x0 0x00001000
-> 	       (OUTBOUND | INDEX1) IO   0x0 0x00002000 0x000ffff 0x0 0x00002000
-> 	       (OUTBOUND | INDEX2) MEM  0x0 0x00012000 0xffee000 0x0 0x20012000
-> >;
+> I should be able to "git merge --no-ff --log gregkh/driver-core-next"
+> into my "next" branch, then apply your patch as usual, right?
 
-I too have some doubt here..not very clear.. may be someone more
-expert can correct (I keep arnd in cc).... How should be the
-translation?
-In my opinion, input address of translation should be in "bus address
-domain"  ie address what PCIe sees and translated output for memory
-transaction should be in "parent bus address domain" ie what CPUs
-see. If my understanding is correct, then pcie designware driver needs
-fixes at some places.
+You can, but do you really want all of my driver-core changes in there?
+I can just send you the one pci change and you can then apply both of
+them.  Then when we merge with Linus, there will not be any conflicts as
+the same patches just showed up in two different trees, which should be
+fine.
 
-I am not much used to DT, but if I understood correctly, in your case
-parent bus address and bus address are different.
+thanks,
 
-pp->mem_base = bus address  = range.pci_addr = 0x0000000000012000
-pp->config.mem_bus_addr = parent bus address = range.cpu_addr = 0x20012000
-
-So, shouldn't your ranges look like this:
-
-ranges = <0x00000800 0 0x00001000 0x20001000 0 0x00001000
- 	  0x81000000 0 0	  0x20002000 0 0x00010000
- 	  0x82000000 0 0x00012000 0x20012000 0 0xffee000>;
-
-And then I think with the proper designware driver fixes you should be
-able to work.
-
-> (btw that translation is a wip I tried to get pcie working in dra7x).
-> 
-> Since I wanted to do the translation configuration from dt data, I was thinking
-> whether it is necessary to program the viewport dynamically.
-> 
-> But now I think some sort of dynamic programming would be needed, considering
-> the limitation on few SoCs.
-
-Yes, some dynamic programming is needed and not sure how to manage in
-case of only one outbound viewport. What about following idea:
-1. We keep dynamic for cfg and static for others.
-2. We use single viewport for cfg0 and cfg1 both. We do not use
-separate cfg0/1 base rather use only cfg_base and cfg_size=64K (we
-could have done with even 4K, but some controller might have min
-viewport size as 64K). As per viewport CR programmed, translated
-output will be cfg0 or cfg1.
-3. Now if a controller has only one viewport, a warning message is
-generated that IO transaction may not work correctly. (I think IO
-will always need translation. Just for curiosity anyone knows a ARM
-based system which uses PCIe IO transaction?).
-4. If a controller has atleast 2 viewport, we program second viewport
-statically for IO transaction.
-5. If it has only two viewport, and cpu_addr != pci_addr, a warning
-message is generated that MEM transaction may not work correctly.
-6. Else, 3rd viewport is programmed for mem transaction.
-
-Regards
-Pratyush
-
-> 
-> Thanks
-> Kishon
-> 
-> > 
-> > If viewport is programmed dynamically at each cfg transfer, then
-> > whether you use bus and dev only or function also, will it really make
-> > any difference in saving of address space?
-> > 
-> > Regards
-> > Pratyush
-> > 
-> >>
-> >> Thanks
-> >> Kishon
+greg k-h
