@@ -1,51 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:46597 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413Ab3JGHTw convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:5:1>);
-	Mon, 7 Oct 2013 03:19:52 -0400
-Message-Id: <52527CB102000078000F91F3@nat28.tlf.novell.com>
-Date: Mon, 07 Oct 2013 08:19:45 +0100
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Aaron Opfer" <me@aaronopfer.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>
-Cc: "Clemens Ladisch" <clemens@ladisch.de>,
-	<xen-devel@lists.xenproject.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [Xen-devel] ASMedia ASM1083/1085 rev3 and Xen DMA Failure
-References: <CAOsGJpcuNuaEsBHk9mV2Lh_qiygzgfLYigSsbDoBke1GJ_XG-Q@mail.gmail.com>
- <20131004172958.GA18743@google.com>
-In-Reply-To: <20131004172958.GA18743@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:58300 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466Ab3JGSaq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 14:30:46 -0400
+Received: by mail-ie0-f169.google.com with SMTP id tp5so16807419ieb.14
+        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 11:30:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <A3397C8B8B789E45844E7EC5DEAD89D02E80EE9B@satlexdag05.amd.com>
+References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
+ <1378732388-4508-7-git-send-email-wangyijing@huawei.com> <CAErSpo5epkfhw0zyn-xXr-xCVeWmna8Eu_v3SmOrKU7EqwfDJw@mail.gmail.com>
+ <A3397C8B8B789E45844E7EC5DEAD89D02E80EE9B@satlexdag05.amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 7 Oct 2013 12:30:25 -0600
+Message-ID: <CAErSpo4z1VmYwrCQv+vgyNET+1eFirEV3hAnbpF78DW+N18Nig@mail.gmail.com>
+Subject: Re: [PATCH 6/6] radeon: Use pcie_get_readrq() and pcie_set_readrq()
+ to simplify code
+To: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	David Airlie <airlied@linux.ie>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	"Koenig, Christian" <Christian.Koenig@amd.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 04.10.13 at 19:29, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Oct 02, 2013 at 04:43:46PM -0400, Aaron Opfer wrote:
->> First time submitting the kernel dev list, so if I have demonstrated
->> gross incompetence in some way, please cut me some slack. :)
->> 
->> I discussed with Clemens Ladisch an issue I was having that I thought
->> was related to the driver he authored for my soundcard, but on his
->> suggestion I experimented with other PCI devices and we have narrowed
->> the issue to the PCI Bridge.
->> 
->> What hints me toward DMA handling being the fault is the following
->> message I receive during kernel initialization after rebooting from an
->> Xen hypervisor into a baremetal-kernel, without a power-cycle:
->> 
->> [0.012815] dmar: DRHD: handling fault status reg 3
->> [0.012868] dmar: DMAR:[DMA Read] Request device [07:00.0] fault addr 7e00000
->> [0.012868] DMAR:[fault reason 02] Present bit in context entry is clear
+On Mon, Oct 7, 2013 at 6:15 AM, Deucher, Alexander
+<Alexander.Deucher@amd.com> wrote:
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> Sent: Friday, October 04, 2013 4:45 PM
+>> To: Yijing Wang
+>> Cc: David Airlie; linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org;
+>> Hanjun Guo; Deucher, Alexander; Koenig, Christian
+>> Subject: Re: [PATCH 6/6] radeon: Use pcie_get_readrq() and
+>> pcie_set_readrq() to simplify code
+>>
+>> [-cc unrelated folks, +cc Alex, Christian]
+>>
+>> On Mon, Sep 9, 2013 at 7:13 AM, Yijing Wang <wangyijing@huawei.com>
+>> wrote:
+>> > Use pcie_get_readrq() and pcie_set_readrq() functions to simplify code.
+>> >
+>> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>
+>> I believe the following patch is correct, and I'd be happy to merge it
+>> via the PCI tree along with the rest of this series.
+>>
+>> But it'd be better to have an ack from Alex, and he might prefer to
+>> merge it directly.
+>
+> Patch looks correct to me.  Feel free to merge it via the pci tree.
+>
+> Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
 
-That's a firmware or native Linux problem then - even during a
-"warm" boot all settings a prior OS may have effected to the
-hardware must be erased by the firmware (i.e. all components
-have to undergo a sufficient level of resetting) for the new OS
-to be permitted to make assumptions of the system coming up
-in a reasonably consistent state. IOW either some assumption
-made by native Linux is invalid, or the firmware doesn't make
-sure a valid assumption actually holds.
+Thanks, I'll add your Reviewed-by and merge it.
 
-Jan
+Bjorn
 
+>> > ---
+>> >  drivers/gpu/drm/radeon/evergreen.c |   19 ++++++-------------
+>> >  1 files changed, 6 insertions(+), 13 deletions(-)
+>> >
+>> > diff --git a/drivers/gpu/drm/radeon/evergreen.c
+>> b/drivers/gpu/drm/radeon/evergreen.c
+>> > index d5b49e3..b191f92 100644
+>> > --- a/drivers/gpu/drm/radeon/evergreen.c
+>> > +++ b/drivers/gpu/drm/radeon/evergreen.c
+>> > @@ -1169,23 +1169,16 @@ int evergreen_set_uvd_clocks(struct
+>> radeon_device *rdev, u32 vclk, u32 dclk)
+>> >
+>> >  void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
+>> >  {
+>> > -       u16 ctl, v;
+>> > -       int err;
+>> > -
+>> > -       err = pcie_capability_read_word(rdev->pdev, PCI_EXP_DEVCTL, &ctl);
+>> > -       if (err)
+>> > -               return;
+>> > -
+>> > -       v = (ctl & PCI_EXP_DEVCTL_READRQ) >> 12;
+>> > +       int readrq;
+>> > +       u16 v;
+>> >
+>> > +       readrq = pcie_get_readrq(rdev->pdev);
+>> > +       v = ffs(readrq) - 8;
+>> >         /* if bios or OS sets MAX_READ_REQUEST_SIZE to an invalid value, fix it
+>> >          * to avoid hangs or perfomance issues
+>> >          */
+>> > -       if ((v == 0) || (v == 6) || (v == 7)) {
+>> > -               ctl &= ~PCI_EXP_DEVCTL_READRQ;
+>> > -               ctl |= (2 << 12);
+>> > -               pcie_capability_write_word(rdev->pdev, PCI_EXP_DEVCTL, ctl);
+>> > -       }
+>> > +       if ((v == 0) || (v == 6) || (v == 7))
+>> > +               pcie_set_readrq(rdev->pdev, 512);
+>> >  }
+>> >
+>> >  static bool dce4_is_in_vblank(struct radeon_device *rdev, int crtc)
+>> > --
+>> > 1.7.1
+>> >
+>> >
+>
+>
