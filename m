@@ -1,42 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1381353063.2050.24.camel@joe-AO722>
-Subject: Re: [PATCH] MAINTAINERS: Add arch/x86/pci to PCI file patterns
-From: Joe Perches <joe@perches.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org,
-	x86@kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 09 Oct 2013 14:11:03 -0700
-In-Reply-To: <20131009210219.31110.62076.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131009210219.31110.62076.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from webmail.solarflare.com ([12.187.104.25]:64644 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752598Ab3JGUsI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 16:48:08 -0400
+Message-ID: <1381178881.1536.28.camel@bwh-desktop.uk.level5networks.com>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Ralf Baechle" <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	<linux-pci@vger.kernel.org>, <linux-mips@linux-mips.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux390@de.ibm.com>,
+	<linux-s390@vger.kernel.org>, <x86@kernel.org>,
+	<linux-ide@vger.kernel.org>, <iss_storagedev@hp.com>,
+	<linux-nvme@lists.infradead.org>, <linux-rdma@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <e1000-devel@lists.sourceforge.net>,
+	<linux-driver@qlogic.com>,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>,
+	<linux-scsi@vger.kernel.org>
+Date: Mon, 7 Oct 2013 21:48:01 +0100
+In-Reply-To: <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	 <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+	 <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+	 <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+	 <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+	 <1381009586.645.141.camel@pasglop>
+	 <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+	 <1381040386.645.143.camel@pasglop>
+	 <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Bjorn
+On Sun, 2013-10-06 at 09:10 +0200, Alexander Gordeev wrote:
+> On Sun, Oct 06, 2013 at 05:19:46PM +1100, Benjamin Herrenschmidt wrote:
+> > On Sun, 2013-10-06 at 08:02 +0200, Alexander Gordeev wrote:
+> > > In fact, in the current design to address the quota race decently the
+> > > drivers would have to protect the *loop* to prevent the quota change
+> > > between a pci_enable_msix() returned a positive number and the the next
+> > > call to pci_enable_msix() with that number. Is it doable?
+> > 
+> > I am not advocating for the current design, simply saying that your
+> > proposal doesn't address this issue while Ben's does.
+> 
+> There is one major flaw in min-max approach - the generic MSI layer
+> will have to take decisions on exact number of MSIs to request, not
+> device drivers.
+[...
 
-On Wed, 2013-10-09 at 15:02 -0600, Bjorn Helgaas wrote:
-> I handle many arch/x86/pci changes, so help those patches get to the
-> PCI patchwork.
+No, the min-max functions should be implemented using the same loop that
+drivers are expected to use now.
 
-[]
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index e61c2e8..d1ab647 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6338,6 +6338,7 @@ S:	Supported
->  F:	Documentation/PCI/
->  F:	drivers/pci/
->  F:	include/linux/pci*
-> +F:	arch/x86/pci/*
+Ben.
 
-This could be
-
-F:	arch/x86/pci/
-
-so that if anyone ever sticks a subdirectory
-in there, you'd still get notified.
-
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
