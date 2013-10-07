@@ -1,53 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:32988 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524Ab3JIOa4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 10:30:56 -0400
-Received: by mail-ie0-f170.google.com with SMTP id x13so2011718ief.1
-        for <linux-pci@vger.kernel.org>; Wed, 09 Oct 2013 07:30:56 -0700 (PDT)
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:34923 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754093Ab3JGDzH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Oct 2013 23:55:07 -0400
+Received: by mail-ob0-f170.google.com with SMTP id gq1so978654obb.1
+        for <linux-pci@vger.kernel.org>; Sun, 06 Oct 2013 20:55:06 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20131009104553.GI25606@e102652-lin.cambridge.arm.com>
-References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
- <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
- <525438F6.3090600@gmail.com> <1381264135.645.230.camel@pasglop>
- <20131009090923.GE25606@e102652-lin.cambridge.arm.com> <1381315068.4330.1.camel@pasglop>
- <20131009104553.GI25606@e102652-lin.cambridge.arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Oct 2013 08:30:35 -0600
-Message-ID: <CAErSpo6ujYmoOz4RMo3ATEJ+REMPiz6oR2pEUn=jW5GMDEB+Yw@mail.gmail.com>
-Subject: Re: [RFC] Architecture independent pcibios?
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <robherring2@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Michal Simek <monstr@monstr.eu>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAErSpo77zy6K3yMa8_31zbrehA6MByXTBbn5Trr8Sv5TL7ScZQ@mail.gmail.com>
+References: <1380363121-1977-1-git-send-email-sachin.kamat@linaro.org>
+	<CAErSpo77zy6K3yMa8_31zbrehA6MByXTBbn5Trr8Sv5TL7ScZQ@mail.gmail.com>
+Date: Mon, 7 Oct 2013 09:25:05 +0530
+Message-ID: <CAK9yfHxxxpZx5Yd=nUdNMe2kz_bZupZFdizG2tL3wUffDOkPCQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: sysfs: Staticize local symbols
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 9, 2013 at 4:45 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+On 4 October 2013 23:39, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sat, Sep 28, 2013 at 4:12 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+>>
+>> -struct attribute *pci_bus_attrs[] = {
+>> +static struct attribute *pci_bus_attrs[] = {
+>
+> Did you compile this?  I see this:
+>
+> drivers/pci/pci-sysfs.c:306:29: error: static declaration of
+> ‘pci_bus_attrs’ follows non-static declaration
+> drivers/pci/pci.h:159:29: note: previous declaration of ‘pci_bus_attrs’ was here
 
-> Semantic question: what is the perceived difference between a pci_controller
-> and a pci_host_bridge? Are they just historical naming artifacts of the
-> same concept? (person A deciding to do a cleanup of the code and picks a
-> new name in order not to upset the old APIs)
+Hmm.. strange. I did compile both these patches and did not see this
+error on my setup.
+Infact it was during compilation that I came across the need for this
+change and verified it after. However I used
+the linux-next tree and not your tree to generate these.
 
-pci_controller is a typical name for the arch-dependent PCI host
-bridge structure.  Some arches use different names, e.g.,
-pci_sys_data, pci_hba_data, pci_channel, etc.
+>
+> and there is a use in drivers/pci/pci-driver.c.
+>
+> I applied this (without the pci_bus_attrs hunk) to my pci/misc branch, thanks!
 
-When I added support in the PCI core for host bridge address
-translation, e.g., ACPI _TRA, I named the core structure
-pci_host_bridge.
+Thanks for taking care of this and sorry for the trouble. I will check
+this once again on my setup.
 
-Some of the stuff in pci_controller and similar arch-dependent
-structures could probably be moved into pci_host_bridge, given
-appropriate PCI core interfaces to supply the information (or maybe
-pcibios_*() functions the core could use to retrieve it).  But I doubt
-we could completely remove the arch-dependent structures.
-
-Bjorn
+With warm regards,
+Sachin
