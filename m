@@ -1,68 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:64281 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753969Ab3JDUWY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 16:22:24 -0400
-Received: by mail-ie0-f180.google.com with SMTP id u16so10162413iet.39
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 13:22:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130928175956.8752.50967.stgit@amt.stowe>
-References: <20130928175956.8752.50967.stgit@amt.stowe>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Oct 2013 14:22:03 -0600
-Message-ID: <CAErSpo5iFVZn4kanEHY=cWzt1ynQYt4XDX+iNP-fn1qm89e+5Q@mail.gmail.com>
-Subject: Re: [PATCH] mn10300/PCI: Remove pci_mem_start
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	linux-am33-list@redhat.com,
+Received: from co9ehsobe005.messaging.microsoft.com ([207.46.163.28]:58759
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755492Ab3JHXfd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 19:35:33 -0400
+Message-ID: <1381275325.7979.320.camel@snotra.buserror.net>
+Subject: Re: [PATCH 1/7] powerpc: Add interface to get msi region information
+From: Scott Wood <scottwood@freescale.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Bharat Bhushan <r65777@freescale.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Alexander Graf <agraf@suse.de>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Bharat Bhushan <Bharat.Bhushan@freescale.com>
+Date: Tue, 8 Oct 2013 18:35:25 -0500
+In-Reply-To: <CAErSpo7+7SHVcOJkHkW5cjb6pN+bqYeRdPBA=MVX0RLz=-pP6Q@mail.gmail.com>
+References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1381273037.7979.298.camel@snotra.buserror.net>
+	 <CAErSpo7+7SHVcOJkHkW5cjb6pN+bqYeRdPBA=MVX0RLz=-pP6Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 28, 2013 at 11:59 AM, Myron Stowe <myron.stowe@redhat.com> wrote:
-> Remove unused 'pci_mem_start' variable.
->
-> CC: David Howells <dhowells@redhat.com>
-> CC: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+On Tue, 2013-10-08 at 17:25 -0600, Bjorn Helgaas wrote:
+> >> -     u32 msiir_offset; /* Offset of MSIIR, relative to start of CCSR */
+> >> +     dma_addr_t msiir; /* MSIIR Address in CCSR */
+> >
+> > Are you sure dma_addr_t is right here, versus phys_addr_t?  It implies
+> > that it's the output of the DMA API, but I don't think the DMA API is
+> > used in the MSI driver.  Perhaps it should be, but we still want the raw
+> > physical address to pass on to VFIO.
+> 
+> I don't know what "msiir" is used for, but if it's an address you
+> program into a PCI device, then it's a dma_addr_t even if you didn't
+> get it from the DMA API.  Maybe "bus_addr_t" would have been a more
+> suggestive name than "dma_addr_t".  That said, I have no idea how this
+> relates to VFIO.
 
-Applied to pci/misc with David's ack.  Thanks!
+It's a bit awkward because it gets used both as something to program
+into a PCI device (and it's probably a bug that the DMA API doesn't get
+used), and also (if I understand the current plans correctly) as a
+physical address to give to VFIO to be a destination address in an IOMMU
+mapping.  So I think the value we keep here should be a phys_addr_t (it
+comes straight from the MMIO address in the device tree), which gets
+trivially turned into a dma_addr_t by the non-VFIO code path because
+there's currently no translation there.
 
-Bjorn
+-Scott
 
-> ---
->
->  arch/mn10300/include/asm/pci.h |    1 -
->  arch/mn10300/kernel/setup.c    |    3 ---
->  2 files changed, 0 insertions(+), 4 deletions(-)
->
-> diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
-> index 6f31cc0..1663238 100644
-> --- a/arch/mn10300/include/asm/pci.h
-> +++ b/arch/mn10300/include/asm/pci.h
-> @@ -44,7 +44,6 @@ extern void unit_pci_init(void);
->  #define pcibios_assign_all_busses()    0
->  #endif
->
-> -extern unsigned long pci_mem_start;
->  #define PCIBIOS_MIN_IO         0xBE000004
->  #define PCIBIOS_MIN_MEM                0xB8000000
->
-> diff --git a/arch/mn10300/kernel/setup.c b/arch/mn10300/kernel/setup.c
-> index ebac9c1..2ad7f32 100644
-> --- a/arch/mn10300/kernel/setup.c
-> +++ b/arch/mn10300/kernel/setup.c
-> @@ -35,9 +35,6 @@
->
->  struct mn10300_cpuinfo boot_cpu_data;
->
-> -/* For PCI or other memory-mapped resources */
-> -unsigned long pci_mem_start = 0x18000000;
-> -
->  static char __initdata cmd_line[COMMAND_LINE_SIZE];
->  char redboot_command_line[COMMAND_LINE_SIZE] =
->         "console=ttyS0,115200 root=/dev/mtdblock3 rw";
->
+
+
