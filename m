@@ -1,107 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:52494 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718Ab3JIKp6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 06:45:58 -0400
-Date: Wed, 9 Oct 2013 11:45:54 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Michal Simek <monstr@monstr.eu>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [RFC] Architecture independent pcibios?
-Message-ID: <20131009104553.GI25606@e102652-lin.cambridge.arm.com>
-References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
- <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
- <525438F6.3090600@gmail.com>
- <1381264135.645.230.camel@pasglop>
- <20131009090923.GE25606@e102652-lin.cambridge.arm.com>
- <1381315068.4330.1.camel@pasglop>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:59051 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755709Ab3JHXNb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 19:13:31 -0400
+Received: by mail-ie0-f180.google.com with SMTP id u16so15073iet.39
+        for <linux-pci@vger.kernel.org>; Tue, 08 Oct 2013 16:13:30 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1381315068.4330.1.camel@pasglop>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <5253243E.3040709@imgtec.com>
+References: <1380929453-15428-1-git-send-email-dengcheng.zhu@imgtec.com>
+ <1380929453-15428-2-git-send-email-dengcheng.zhu@imgtec.com>
+ <CAErSpo47zCU_sR46s1osmZ00AtkX-z++eezzbxee4yr3yDhQgw@mail.gmail.com>
+ <1F7D814BDD93B94493CEE724A97FB4DC01C80AAE@BADAG02.ba.imgtec.org>
+ <CAErSpo7z4c+DUKH4AWMyMZKTxTz_oi1iGtiUuHqQjhFG0gMu0g@mail.gmail.com> <5253243E.3040709@imgtec.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 8 Oct 2013 17:13:10 -0600
+Message-ID: <CAErSpo4pbyth6FU5XUNpRpah94BAuH3fyrGG20VGROyqTfZUtA@mail.gmail.com>
+Subject: Re: [PATCH v2 1/4] PCI/quirks: Fix PIIX4 memory base and size mask
+To: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	James Hogan <James.Hogan@imgtec.com>,
+	Qais Yousef <Qais.Yousef@imgtec.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 09, 2013 at 11:37:48AM +0100, Benjamin Herrenschmidt wrote:
-> On Wed, 2013-10-09 at 10:09 +0100, Liviu Dudau wrote:
-> > On Tue, Oct 08, 2013 at 09:28:55PM +0100, Benjamin Herrenschmidt wrote:
-> > > On Tue, 2013-10-08 at 11:55 -0500, Rob Herring wrote:
-> > >
-> > > > > I wonder if pci_process_bridge_OF_ranges() would fit somewhere in
-> > > > > drivers/of?  The implementations I looked at are mostly concerned with
-> > > > > parsing OF resources, and they don't have much to do with PCI
-> > > > > directly.
-> > > >
-> > > > This was being done until Ben weighed in:
-> > > >
-> > > > https://lkml.org/lkml/2013/5/4/103
-> > >
-> > > Well, I proposed an alternative (better) approach which I of course had
-> > > no time to actually implement yet :-)
-> > 
-> > In order to avoid any confusion, could you please point me again to the
-> > relevant message(s) where you proposed your approach?
-> 
-> The one pointed to by the above URL ?
-> 
-> > > I have done the changes I needed to do to powerpc
-> > > pci_process_bridge_OF_ranges so it would be possible to move that now to
-> > > a generic place, but I still think it's not a great idea. It means the
-> > > pci_controller structure with its resources will have to become generic
-> > > which somewhat overlaps with the pci_host_bridge that Bjorn introduced,
-> > > so that's really not great.
-> > >
-> > > I still think an arch with DT and simpler PCI code that powerpc could
-> > > start looking at the transition to a better model that I hinted at...
-> > 
-> > As tempting as it is to start anew and with a cleaner code, I am wary
-> > that porting the existing platforms to the new code will take longer
-> > that way. My intentions are to make the (probably infrequent) task of
-> > adding a new architecture to the PCI infrastructure a simple and
-> > straighforward task. But adding code for my platform is no guarantee
-> > that new ones will have an easier job.
-> 
-> It still makes little sense to generalize a pci_controller with
-> resources & offset on top of the generic pci_host_bridge with apertures.
+On Mon, Oct 7, 2013 at 3:14 PM, Deng-Cheng Zhu <dengcheng.zhu@imgtec.com> wrote:
+> [Resend to the mailing list due to the bounceback caused by html format]
+>
+>
+> On 10/04/2013 09:37 PM, Bjorn Helgaas wrote:
+>>
+>> On Fri, Oct 4, 2013 at 9:42 PM, DengCheng Zhu <DengCheng.Zhu@imgtec.com>
+>> wrote:
+>>>>
+>>>> Does this fix a user-visible problem?  If so, what does it look like
+>>>> when the problem occurs?
+>>>
+>>> No, I found the problem while debugging another issue and trying to
+>>> understand this piece of code and after looking into different versions
+>>> of
+>>> PIIX4 datasheets. But I don't think it should prevent such a fix because
+>>> the code is straightforward and the spec is clear enough. If the existing
+>>> encoding was intentionally made like this by the code author due to the
+>>> inaccuracy of the spec, then it's very likely some code comments were
+>>> placed here. There are 2 possibilities:
+>>>
+>>> - This fix breaks something. People should have to bisect the problem.
+>>> - This fix is valid. Some day people need PIIX4 mem quirks and they don't
+>>>    have to run into a possibly well-hidden issue.
+>>>
+>>> What do you think?
+>>
+>> Don't worry, I'm willing to fix it even if nobody has actually
+>> reported a problem.  It's just nice to include the symptoms if
+>> somebody *has* reported it, so when other people see the same symptom,
+>> they can more easily find the fix.
+>
+>
+> Ah, I see. Thanks.
+>
+> So far I didn't see them on any branch in kernel/git/helgaas/pci.git
+> <https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/>
 
-Agreed. I'm looking on how to move functions that use pci_controller to
-use pci_host_bridge.
+This change definitely makes the code match the specs you mentioned.
+But we don't have any problem reports, and when Linus added this code
+(6693e74a "PCI: be more verbose about resource quirks), he presumably
+was looking at a spec, too.  It's possible he transcribed the masks
+incorrectly, but twice in one patch?
 
-Semantic question: what is the perceived difference between a pci_controller
-and a pci_host_bridge? Are they just historical naming artifacts of the
-same concept? (person A deciding to do a cleanup of the code and picks a
-new name in order not to upset the old APIs)
+The PIIX4 is an old part, and for something like that I would
+generally say "don't touch it" because the risk of breakage outweighs
+a possible fix for machines nobody uses anymore.
 
-Best regards,
-Liviu
+However, I see that the PIIX4 is emulated in, e.g., qemu, so it's
+still relevant.  But before I apply this, can you please research qemu
+and how it uses these registers?  For example, if you can show that
+qemu emulates the registers with the additional bits you add to the
+masks here, then we should be able to make linux act incorrectly by
+setting those bits in a qemu BIOS.
 
-> 
-> Ben.
-> 
-> > Best regards,
-> > Liviu
-> > 
-> > >
-> > > Cheers,
-> > > Ben.
-> > >
-> > >
-> > >
-> > 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Bjorn
