@@ -1,86 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:24824 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753716Ab3JBQuN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 12:50:13 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 57/77] pmcraid: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:49:13 +0200
-Message-Id: <70ae1192fb37922e07d9efe1448d902a3223921c.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <6A3DF150A5B70D4F9B66A25E3F7C888D0718FA58@039-SN2MPN1-011.039d.mgd.msft.net>
+References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+ <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com>
+ <20130924235812.GD9302@google.com> <6A3DF150A5B70D4F9B66A25E3F7C888D0718FA58@039-SN2MPN1-011.039d.mgd.msft.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 8 Oct 2013 10:47:49 -0600
+Message-ID: <CAErSpo742BOxzxRaFQn+UnsNday4_8LM6+3G6=cfp9DHecPxDg@mail.gmail.com>
+Subject: Re: [PATCH 1/7] powerpc: Add interface to get msi region information
+To: Bhushan Bharat-R65777 <R65777@freescale.com>
+Cc: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"galak@kernel.crashing.org" <galak@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Wood Scott-B07421 <B07421@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
+On Thu, Oct 3, 2013 at 11:19 PM, Bhushan Bharat-R65777
+<R65777@freescale.com> wrote:
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/scsi/pmcraid.c |   23 +++++++++++------------
- 1 files changed, 11 insertions(+), 12 deletions(-)
+>> I don't know enough about VFIO to understand why these new interfaces are
+>> needed.  Is this the first VFIO IOMMU driver?  I see vfio_iommu_spapr_tce.c and
+>> vfio_iommu_type1.c but I don't know if they're comparable to the Freescale PAMU.
+>> Do other VFIO IOMMU implementations support MSI?  If so, do they handle the
+>> problem of mapping the MSI regions in a different way?
+>
+> PAMU is an aperture type of IOMMU while other are paging type, So they are completely different from what PAMU is and handle that differently.
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 1eb7b028..5c62d22 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4680,24 +4680,23 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
- 
- 	if ((pmcraid_enable_msix) &&
- 		(pci_find_capability(pdev, PCI_CAP_ID_MSIX))) {
--		int num_hrrq = PMCRAID_NUM_MSIX_VECTORS;
- 		struct msix_entry entries[PMCRAID_NUM_MSIX_VECTORS];
-+		int num_hrrq = ARRAY_SIZE(entries);
- 		int i;
--		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
--			entries[i].entry = i;
--
--		rc = pci_enable_msix(pdev, entries, num_hrrq);
--		if (rc < 0)
--			goto pmcraid_isr_legacy;
- 
- 		/* Check how many MSIX vectors are allocated and register
- 		 * msi-x handlers for each of them giving appropriate buffer
- 		 */
--		if (rc > 0) {
--			num_hrrq = rc;
--			if (pci_enable_msix(pdev, entries, num_hrrq))
--				goto pmcraid_isr_legacy;
--		}
-+		rc = pci_msix_table_size(pdev);
-+		if (rc < 0)
-+			goto pmcraid_isr_legacy;
-+
-+		num_hrrq = min(num_hrrq, rc);
-+		for (i = 0; i < num_hrrq; i++)
-+			entries[i].entry = i;
-+
-+		if (pci_enable_msix(pdev, entries, num_hrrq))
-+			goto pmcraid_isr_legacy;
- 
- 		for (i = 0; i < num_hrrq; i++) {
- 			pinstance->hrrq_vector[i].hrrq_id = i;
--- 
-1.7.7.6
+This is not an explanation or a justification for adding new
+interfaces.  I still have no idea what an "aperture type IOMMU" is,
+other than that it is "different."  But I see that Alex is working on
+this issue with you in a different thread, so I'm sure you guys will
+sort it out.
 
+Bjorn
