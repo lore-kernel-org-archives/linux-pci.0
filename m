@@ -1,63 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Rostedt <rostedt@goodmis.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [BUG] WARN_ON(!context) in drivers/pci/hotplug/acpiphp_glue.c
-Date: Fri, 11 Oct 2013 01:09:33 +0200
-Message-ID: <2679976.SxBsymIdoJ@vostro.rjw.lan>
-In-Reply-To: <CA+55aFwA8WZ+ARtNFFY+z4d8kS5AUBLg32iu7Jkk3rsz_i1OZw@mail.gmail.com>
-References: <20131010165905.7815defa@gandalf.local.home> <81272921.7ZJW2CaxNE@vostro.rjw.lan> <CA+55aFwA8WZ+ARtNFFY+z4d8kS5AUBLg32iu7Jkk3rsz_i1OZw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:36335 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755504Ab3JHUbn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 16:31:43 -0400
+Message-ID: <1381264278.645.232.camel@pasglop>
+Subject: Re: [RFC] Architecture independent pcibios?
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
+	Michal Simek <monstr@monstr.eu>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Date: Wed, 09 Oct 2013 07:31:18 +1100
+In-Reply-To: <20131008171343.GB25606@e102652-lin.cambridge.arm.com>
+References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
+	 <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
+	 <20131008171343.GB25606@e102652-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, October 10, 2013 02:37:15 PM Linus Torvalds wrote:
-> On Thu, Oct 10, 2013 at 2:35 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >
-> > Well, I must have overlooked the original report.  Is it available anywhere
-> > I can find it?
-> 
-> I think Steven has some buggered email system, he has other emails
-> being eaten by lkml too, and apparently other mail gateways (because
-> you were direct-cc'd on the original).
+On Tue, 2013-10-08 at 18:13 +0100, Liviu Dudau wrote:
+> There are at least a handful of architectures that seem to share the same
+> implementation for most (all?) of the pcibios_*() functions. (PowerPC and
+> microblaze the most obvious offenders, x86 to a certain extent).
 
-Mailer issues aside, I've just seen the original (Bjorn forwarded it to me,
-thanks!) and I'm wondering if the message added by the debug patch below is
-triggered along with the WARN_ON().  If it is, I think it's better to drop
-the WARN_ON(), at least for now (until we sort out the acpiphp/pciehp
-coexistence).
+That's because microblaze started by copying the powerpc code :-) The
+other part about x86 is mostly me over the year changing the powerpc
+code to make it closer to x86 especially in the area of resource
+management. This leads to less overall surprises and issues when the
+generic code changes and in a few cases has made it easier to move bits
+to the core.
 
-Rafael
+The main remaining difference is our use of IORESOURCE_UNSET and our
+flags to force reallocation.
 
-
----
- drivers/pci/hotplug/acpiphp_glue.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -991,6 +991,11 @@ void acpiphp_enumerate_slots(struct pci_
- 
- 	if (!pci_is_root_bus(bridge->pci_bus)) {
- 		struct acpiphp_context *context;
-+		struct pci_dev *parent = bridge->pci_bus->parent->self;
-+
-+		if (parent && device_is_managed_by_native_pciehp(parent))
-+			dev_warn(&bridge->pci_dev->dev,
-+				 "Parent is managed by pciehp!\n");
- 
- 		/*
- 		 * This bridge should have been registered as a hotplug function
-
+Ben.
 
 
