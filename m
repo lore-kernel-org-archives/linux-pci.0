@@ -1,80 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out01.mta.xmission.com ([166.70.13.231]:48722 "EHLO
-	out01.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197Ab3JGWnF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 18:43:05 -0400
-From: ebiederm@xmission.com (Eric W. Biederman)
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-hotplug\@vger.kernel.org" <linux-hotplug@vger.kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Guenter Roeck <groeck@juniper.net>,
-	"tom.l.nguyen\@intel.com" <tom.l.nguyen@intel.com>,
-	"kristen.c.accardi\@intel.com" <kristen.c.accardi@intel.com>,
-	"rajesh.shah\@intel.com" <rajesh.shah@intel.com>,
-	"rajatjain.linux\@gmail.com" <rajatjain.linux@gmail.com>
-References: <b13ea983a4154c7d9567b171e8316ca9@BLUPR05MB118.namprd05.prod.outlook.com>
-Date: Mon, 07 Oct 2013 15:42:56 -0700
-In-Reply-To: <b13ea983a4154c7d9567b171e8316ca9@BLUPR05MB118.namprd05.prod.outlook.com>
-	(Rajat Jain's message of "Mon, 7 Oct 2013 18:58:32 +0000")
-Message-ID: <87r4bwvh1r.fsf@xmission.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:54283 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751821Ab3JHAHp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 20:07:45 -0400
+Received: by mail-ie0-f171.google.com with SMTP id at1so17406180iec.2
+        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 17:07:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Subject: Re: Enhancing pciehp
+In-Reply-To: <20131008000435.12954.92136.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20131008000435.12954.92136.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 7 Oct 2013 18:07:24 -0600
+Message-ID: <CAErSpo6KauiOBXh3QOS9=6QC_bjQqTgiDtnCAo1eb0d=uKgo-A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: designware: Make dw_pcie_rd_own_conf(), etc., static
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rajat Jain <rajatjain@juniper.net> writes:
-
-> Hello Bjorn / Eric / Folks,
+On Mon, Oct 7, 2013 at 6:04 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> The following variables and functions are used only in pcie-designware.c,
+> so make them static:
+...
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index c10e9ac..900e875 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -64,7 +64,7 @@
 >
-> This is to seek suggestions about a problem I'm trying to solve.
+>  static struct hw_pci dw_pci;
 >
-> The problem
-> ===========
-> 1) My company makes routers that have hot-pluggable cards with PCI express interfaces on them. We need to be able to hot-plug those cards, however the cards or the slots do not have the fancy bells & whistles (hot plug elements like MRL, sensor, attention button etc), and hence the hot-plug signals from the PCIe switch aren't really connected.
->
-> 2) In addition to the above, we have onboard ASICs that are reachable via the PCIe. However, as part of regular operation of a router (e.g. user wants to switch off some ports), the ASICs can be off-lined / on-lined via out-of-band HW pins. The result is that we could see the PCIe link go down or up to that ASIC. This can be thought of as a "virtual" hot-plug of ASIC devices. Since the ASICs are themselves on the board, there is really no slot, and the HP signals again do not make much sense in this case.
->
-> What I found
-> =============
-> What I was looking for, was a way to hot-plug and un-plug based on link state changes (since that is pretty much what is available in my case). And I found this:
-> http://www.spinics.net/lists/linux-pci/msg05783.html
-> http://www.spinics.net/lists/linux-pci/msg05880.html
->
-> My questions
-> ============
+> -unsigned long global_io_offset;
+> +static unsigned long global_io_offset;
 
-> a) I was wanting to know if what is the latest on this, or if any
-> progress was made on this? If useful, I am willing to volunteer to
-> work on this. Do you think there is interest in getting this to work?
-> I feel there may be many such systems that are in the same situation.
+While you're looking at this, I think "cfg_read()" and "cfg_write()"
+are too generic to be global symbols.  I don't know if it would make
+sense to rename them "dw_cfg_read()", pass around pointers in a
+structure or what.
 
-Agreed.  It appears this is a design that is likely to come up more than
-once.
-
-> b) If I wanted to make use of Eric's patch in a way that is useful to
-> the community, what is the best way to move forward? Do you still want
-> to enhance the pciehp to include this functionality? Or a separate
-> service driver (what Eric already has) seems a better idea? I'd
-> appreciate if you could please provide any guidance here.
-
-Where I wound up was I unfortunately had not left time in my schedule to
-completely rewrite what I had done and to merge that into pciehp.
-
-I wrote pcielw simply because the pciehp driver did not and may still
-not work with multiple layers of pci hotplug so I needed to do some deep
-digging.  Dealing with all of the cases of physical buttons when I did
-not have those was prohibitive for my poor schedule.
-
-I work somewhere else now and I don't have this problem so I will not be
-looking at this problem again any time soon.
-
-I do agree with Bjorn that one driver that can handle everything is
-doable and ideal.  So if you are willing to do that work it would be
-great.  pcielw should certainly work as a proof of concept solution to
-any of the problems, and time permitting I am willing to answer
-questions of the what was I thinking variety.
-
-Eric
+Bjorn
