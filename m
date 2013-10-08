@@ -1,81 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:24804 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754199Ab3JBQrn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 12:47:43 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
+Received: from gate.crashing.org ([63.228.1.57]:60474 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753965Ab3JHUdS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 16:33:18 -0400
+Message-ID: <1381264375.645.234.camel@pasglop>
+Subject: Re: [RFC] Architecture independent pcibios?
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+Cc: Rob Herring <robherring2@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 16/77] cciss: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:48:32 +0200
-Message-Id: <0498333a0ddc360d43d4496310917a5d0f9a51fd.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
+	Michal Simek <monstr@monstr.eu>,
+	Grant Likely <grant.likely@linaro.org>,
+	devicetree@vger.kernel.org
+Date: Wed, 09 Oct 2013 07:32:55 +1100
+In-Reply-To: <CAPcvp5Fvf5nkYXWviz8cKnOsMd0nOBJXrBXgMrDKCXkSP5L-Hw@mail.gmail.com>
+References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
+	 <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
+	 <525438F6.3090600@gmail.com>
+	 <CAPcvp5Fvf5nkYXWviz8cKnOsMd0nOBJXrBXgMrDKCXkSP5L-Hw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
+On Tue, 2013-10-08 at 18:20 +0100, Andrew Murray wrote:
+> I then refactored some of the pci_process_bridge_OF_ranges functions
+> to use this parser, this was accepted by Microblaze [2] and has been
+> recently acked by Ralf for MIPS but not made it upstream yet [3]. I
+> think I submitted a patch for PowerPC at one point, but not sure what
+> happened to that.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/block/cciss.c |   17 +++++++----------
- 1 files changed, 7 insertions(+), 10 deletions(-)
+Probably slipped through as I was doing some other changes in that
+area on powerpc and things conflicted. I can have a look at introducing
+the use of your helpers again whenever I manage to get my head out of
+meetings and patch monkeying for more than 5mn...
 
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index d2d95ff..80068a0 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -4079,7 +4079,11 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
- 		goto default_int_mode;
- 
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
--		err = pci_enable_msix(h->pdev, cciss_msix_entries, 4);
-+		err = pci_msix_table_size(h->pdev);
-+		if (err < ARRAY_SIZE(cciss_msix_entries))
-+			goto default_int_mode;
-+		err = pci_enable_msix(h->pdev, cciss_msix_entries,
-+				      ARRAY_SIZE(cciss_msix_entries));
- 		if (!err) {
- 			h->intr[0] = cciss_msix_entries[0].vector;
- 			h->intr[1] = cciss_msix_entries[1].vector;
-@@ -4088,15 +4092,8 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
- 			h->msix_vector = 1;
- 			return;
- 		}
--		if (err > 0) {
--			dev_warn(&h->pdev->dev,
--				"only %d MSI-X vectors available\n", err);
--			goto default_int_mode;
--		} else {
--			dev_warn(&h->pdev->dev,
--				"MSI-X init failed %d\n", err);
--			goto default_int_mode;
--		}
-+		dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
-+		goto default_int_mode;
- 	}
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
- 		if (!pci_enable_msi(h->pdev))
--- 
-1.7.7.6
+Cheers,
+Ben.
+
+> [1]
+> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=29b635c00f3ebcdaf7a52c4948f6d948ad3757d3
+> [2]
+> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=4f7b6de437544cd1e2e210919cb58cbe5cc3c393
+> [3]
+> http://www.linux-mips.org/archives/linux-mips/2013-09/msg00125.html
+> 
+> I'd like to get involved, but don't have any time at the moment.
+
 
