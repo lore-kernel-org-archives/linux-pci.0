@@ -1,127 +1,400 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:46798 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765Ab3JRH1x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Oct 2013 03:27:53 -0400
-Received: by mail-we0-f181.google.com with SMTP id t60so3317700wes.12
-        for <linux-pci@vger.kernel.org>; Fri, 18 Oct 2013 00:27:52 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5253A4DA.7090306@ti.com>
+Date: Tue, 8 Oct 2013 11:53:22 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <0E83723C55F66F43A6041464FE31119D40FC99@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1379319655-20210-1-git-send-email-xobs@kosagi.com>
-	<1379319655-20210-4-git-send-email-xobs@kosagi.com>
-	<CAJ+vNU36neHP77dVnqSP=+oMxaU=-6PxWQ8Afni-tTRjNTkM_A@mail.gmail.com>
-	<0E83723C55F66F43A6041464FE31119D40FC99@039-SN2MPN1-011.039d.mgd.msft.net>
-Date: Fri, 18 Oct 2013 00:27:51 -0700
-Message-ID: <CAJ+vNU13FA5s7tt-yEnBYNSBV+FHmHqZNoykFq8aF=O=TvqTnA@mail.gmail.com>
-Subject: Re: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-From: Tim Harvey <tharvey@gateworks.com>
-To: Zhu Richard-R65037 <r65037@freescale.com>
-Cc: Sean Cross <xobs@kosagi.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?B?TWFyZWsgVmHFoXV0?= <marex@denx.de>,
-	Jingoo Han <jg1.han@samsung.com>,
+To: Jingoo Han <jg1.han@samsung.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-samsung-soc@vger.kernel.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
 	Pratyush Anand <pratyush.anand@st.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Thierry Reding'" <thierry.reding@gmail.com>,
+	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH V3] PCI: exynos: add support for MSI
+References: <001a01ceaace$013ec980$03bc5c80$%han@samsung.com>
+In-Reply-To: <001a01ceaace$013ec980$03bc5c80$%han@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 17, 2013 at 11:34 PM, Zhu Richard-R65037
-<r65037@freescale.com> wrote:
+Hi Jingoo,
 
-[...]
+On Friday 06 September 2013 12:24 PM, Jingoo Han wrote:
+> This patch adds support for Message Signaled Interrupt in the
+> Exynos PCIe diver using Synopsys designware PCIe core IP.
+> 
+> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Signed-off-by: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> Cc: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> ---
+> Changes since v2:
+> - fixed MAX_MSI_CTRLS because MAX_MSI_IRQS is 32 only
+> - used __get_free_pages() to allocate msi_data
+> - used one msi_data and msi_irq_in_use per one RC
+> - used irq_domain to represent the MSI controller
+> - removed msi-base irq number from device tree because this is not
+>   a hardware property.
+> 
+> Changes since v1:
+> - removed unnecessary exynos_pcie_clear_irq_level()
+> - updated the bindings documentation
+> - used new msi_chip infrastructure
+> - removed ARCH_SUPPORTS_MSI
+> - replaced #ifdef guards with IS_ENABLED(CONFIG_PCI_MSI)
+> 
+>  drivers/pci/host/pci-exynos.c      |   44 +++++++
+>  drivers/pci/host/pcie-designware.c |  240 ++++++++++++++++++++++++++++++++++++
+>  drivers/pci/host/pcie-designware.h |   14 +++
+>  3 files changed, 298 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index 94e096b..f062aca 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -48,6 +48,7 @@ struct exynos_pcie {
+>  #define PCIE_IRQ_SPECIAL		0x008
+>  #define PCIE_IRQ_EN_PULSE		0x00c
+>  #define PCIE_IRQ_EN_LEVEL		0x010
+> +#define IRQ_MSI_ENABLE			(0x1 << 2)
+>  #define PCIE_IRQ_EN_SPECIAL		0x014
+>  #define PCIE_PWR_RESET			0x018
+>  #define PCIE_CORE_RESET			0x01c
+> @@ -342,9 +343,36 @@ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+>  	return IRQ_HANDLED;
+>  }
+>  
+> +static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
+> +{
+> +	struct pcie_port *pp = arg;
+> +
+> +	dw_handle_msi_irq(pp);
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
+> +static void exynos_pcie_msi_init(struct pcie_port *pp)
+> +{
+> +	u32 val;
+> +	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+> +
+> +	dw_pcie_msi_init(pp);
+> +
+> +	/* enable MSI interrupt */
+> +	val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_EN_LEVEL);
+> +	val |= IRQ_MSI_ENABLE;
+> +	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_LEVEL);
+> +	return;
+> +}
+> +
+>  static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
+>  {
+>  	exynos_pcie_enable_irq_pulse(pp);
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+> +		exynos_pcie_msi_init(pp);
+> +
+>  	return;
+>  }
+>  
+> @@ -430,6 +458,22 @@ static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+>  		return ret;
+>  	}
+>  
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		pp->msi_irq = platform_get_irq(pdev, 0);
+> +		if (!pp->msi_irq) {
+> +			dev_err(&pdev->dev, "failed to get msi irq\n");
+> +			return -ENODEV;
+> +		}
+> +
+> +		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+> +					exynos_pcie_msi_irq_handler,
+> +					IRQF_SHARED, "exynos-pcie", pp);
+> +		if (ret) {
+> +			dev_err(&pdev->dev, "failed to request msi irq\n");
+> +			return ret;
+> +		}
+> +	}
+> +
+>  	pp->root_bus_nr = -1;
+>  	pp->ops = &exynos_pcie_host_ops;
+>  
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index c10e9ac..8963017 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -11,8 +11,11 @@
+>   * published by the Free Software Foundation.
+>   */
+>  
+> +#include <linux/irq.h>
+> +#include <linux/irqdomain.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+> +#include <linux/msi.h>
+>  #include <linux/of_address.h>
+>  #include <linux/pci.h>
+>  #include <linux/pci_regs.h>
+> @@ -142,6 +145,204 @@ int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+>  	return ret;
+>  }
+>  
+> +static struct irq_chip dw_msi_irq_chip = {
+> +	.name = "PCI-MSI",
+> +	.irq_enable = unmask_msi_irq,
+> +	.irq_disable = mask_msi_irq,
+> +	.irq_mask = mask_msi_irq,
+> +	.irq_unmask = unmask_msi_irq,
+> +};
+> +
+> +/* MSI int handler */
+> +void dw_handle_msi_irq(struct pcie_port *pp)
+> +{
+> +	unsigned long val;
+> +	int i, pos;
+> +
+> +	for (i = 0; i < MAX_MSI_CTRLS; i++) {
+> +		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+> +				(u32 *)&val);
+> +		if (val) {
+> +			pos = 0;
+> +			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
+> +				generic_handle_irq(pp->msi_irq_start
+> +					+ (i * 32) + pos);
+> +				pos++;
+> +			}
+> +		}
+> +		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4, val);
+> +	}
+> +}
+> +
+> +void dw_pcie_msi_init(struct pcie_port *pp)
+> +{
+> +	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+> +
+> +	/* program the msi_data */
+> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+> +			virt_to_phys((void *)pp->msi_data));
+> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+> +}
+> +
+> +static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
+> +{
+> +	int flag = 1;
+> +
+> +	do {
+> +		pos = find_next_zero_bit(pp->msi_irq_in_use,
+> +				MAX_MSI_IRQS, pos);
+> +		/*if you have reached to the end then get out from here.*/
+> +		if (pos == MAX_MSI_IRQS)
+> +			return -ENOSPC;
+> +		/*
+> +		 * Check if this position is at correct offset.nvec is always a
+> +		 * power of two. pos0 must be nvec bit alligned.
+> +		 */
+> +		if (pos % msgvec)
+> +			pos += msgvec - (pos % msgvec);
+> +		else
+> +			flag = 0;
+> +	} while (flag);
+> +
+> +	*pos0 = pos;
+> +	return 0;
+> +}
+> +
+> +static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+> +{
+> +	int res, bit, irq, pos0, pos1, i;
+> +	u32 val;
+> +	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
+> +
+> +	if (!pp) {
+> +		BUG();
+> +		return -EINVAL;
+> +	}
+> +
+> +	pos0 = find_first_zero_bit(pp->msi_irq_in_use,
+> +			MAX_MSI_IRQS);
+> +	if (pos0 % no_irqs) {
+> +		if (find_valid_pos0(pp, no_irqs, pos0, &pos0))
+> +			goto no_valid_irq;
+> +	}
+> +	if (no_irqs > 1) {
+> +		pos1 = find_next_bit(pp->msi_irq_in_use,
+> +				MAX_MSI_IRQS, pos0);
+> +		/* there must be nvec number of consecutive free bits */
+> +		while ((pos1 - pos0) < no_irqs) {
+> +			if (find_valid_pos0(pp, no_irqs, pos1, &pos0))
+> +				goto no_valid_irq;
+> +			pos1 = find_next_bit(pp->msi_irq_in_use,
+> +					MAX_MSI_IRQS, pos0);
+> +		}
+> +	}
+> +
+> +	irq = (pp->msi_irq_start + pos0);
+> +
+> +	if ((irq + no_irqs) > (pp->msi_irq_start + MAX_MSI_IRQS-1))
+> +		goto no_valid_irq;
+> +
+> +	i = 0;
+> +	while (i < no_irqs) {
+> +		set_bit(pos0 + i, pp->msi_irq_in_use);
+> +		irq_alloc_descs((irq + i), (irq + i), 1, 0);
+> +		irq_set_msi_desc(irq + i, desc);
+> +		/*Enable corresponding interrupt in MSI interrupt controller */
+> +		res = ((pos0 + i) / 32) * 12;
+> +		bit = (pos0 + i) % 32;
+> +		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+> +		val |= 1 << bit;
+> +		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
+> +		i++;
+> +	}
+> +
+> +	*pos = pos0;
+> +	return irq;
+> +
+> +no_valid_irq:
+> +	*pos = pos0;
+> +	return -ENOSPC;
+> +}
+> +
+> +static void clear_irq(unsigned int irq)
+> +{
+> +	int res, bit, val, pos;
+> +	struct irq_desc *desc;
+> +	struct msi_desc *msi;
+> +	struct pcie_port *pp;
+> +
+> +	/* get the port structure */
+> +	desc = irq_to_desc(irq);
+> +	msi = irq_desc_get_msi_desc(desc);
+> +	pp = sys_to_pcie(msi->dev->bus->sysdata);
+> +	if (!pp) {
+> +		BUG();
+> +		return;
+> +	}
+> +
+> +	pos = irq - pp->msi_irq_start;
+> +
+> +	irq_free_desc(irq);
+> +
+> +	clear_bit(pos, pp->msi_irq_in_use);
+> +
+> +	/* Disable corresponding interrupt on MSI interrupt controller */
+> +	res = (pos / 32) * 12;
+> +	bit = pos % 32;
+> +	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+> +	val &= ~(1 << bit);
+> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
+> +}
+> +
+> +static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+> +			struct msi_desc *desc)
+> +{
+> +	int irq, pos, msgvec;
+> +	u16 msg_ctr;
+> +	struct msi_msg msg;
+> +	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> +
+> +	if (!pp) {
+> +		BUG();
+> +		return -EINVAL;
+> +	}
+> +
+> +	pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
+> +				&msg_ctr);
+> +	msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
+> +	if (msgvec == 0)
+> +		msgvec = (msg_ctr & PCI_MSI_FLAGS_QMASK) >> 1;
+> +	if (msgvec > 5)
+> +		msgvec = 0;
+> +
+> +	irq = assign_irq((1 << msgvec), desc, &pos);
+> +	if (irq < 0)
+> +		return irq;
+> +
+> +	msg_ctr &= ~PCI_MSI_FLAGS_QSIZE;
+> +	msg_ctr |= msgvec << 4;
+> +	pci_write_config_word(pdev, desc->msi_attrib.pos + PCI_MSI_FLAGS,
+> +				msg_ctr);
+> +	desc->msi_attrib.multiple = msgvec;
+> +
+> +	msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> +	msg.address_hi = 0x0;
+> +	msg.data = pos;
+> +	write_msi_msg(irq, &msg);
+> +
+> +	return 0;
+> +}
+> +
+> +static void dw_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
+> +{
+> +	clear_irq(irq);
+> +}
+> +
+> +static struct msi_chip dw_pcie_msi_chip = {
+> +	.setup_irq = dw_msi_setup_irq,
+> +	.teardown_irq = dw_msi_teardown_irq,
+> +};
+> +
+>  int dw_pcie_link_up(struct pcie_port *pp)
+>  {
+>  	if (pp->ops->link_up)
+> @@ -150,6 +351,20 @@ int dw_pcie_link_up(struct pcie_port *pp)
+>  		return 0;
+>  }
+>  
+> +static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> +			irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+> +	irq_set_chip_data(irq, domain->host_data);
+> +	set_irq_flags(irq, IRQF_VALID);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct irq_domain_ops msi_domain_ops = {
+> +	.map = dw_pcie_msi_map,
+> +};
+> +
+>  int __init dw_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct device_node *np = pp->dev->of_node;
+> @@ -157,6 +372,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  	struct of_pci_range_parser parser;
+>  	u32 val;
+>  
+> +	struct irq_domain *irq_domain;
+> +
+>  	if (of_pci_range_parser_init(&parser, np)) {
+>  		dev_err(pp->dev, "missing ranges property\n");
+>  		return -EINVAL;
+> @@ -223,6 +440,18 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  		return -EINVAL;
+>  	}
+>  
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		irq_domain = irq_domain_add_linear(pp->dev->of_node,
+> +					MAX_MSI_IRQS, &msi_domain_ops,
+> +					&dw_pcie_msi_chip);
+> +		if (!irq_domain) {
+> +			dev_err(pp->dev, "irq domain init failed\n");
+> +			return -ENXIO;
+> +		}
+> +
+> +		pp->msi_irq_start = irq_find_mapping(irq_domain, 0);
 
-> Hi Tim:
-> Regarding to my experience, the difference shouldn't be related with the bus hang.
-> Here are my DT region setup when I trying to bring up imx6 pcie on 3.1x kernel by my own driver.
->                         clock-names = "pcie_axi", "pcie_ref", "pcie_bus_in", "pcie_bus_out";
->                         #address-cells = <3>;
->                         #size-cells = <2>;
->                         ranges = <0x00000800 0 0x01f00000 0x01f00000 0 0x00080000   /* configuration space */
->                                   0x81000000 0 0          0x01f80000 0 0x00010000   /* downstream I/O */
->                                   0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
->                         num-lanes = <1>;
->
-> It works sometimes, although that there is random kernel panic and system hang(log is pasted below):(
-> LOGS, when pericom's PI7C9X2G303EL and Intel e1000e network card is used.
-> ...
-> imx-pcie 1ffc000.pcie: legacy_irq 155
-> imx-pcie 1ffc000.pcie: map [mem 0x01ffc000-0x01ffffff]
-> IMX PCIe port: link up.
-> PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [io  0x1000-0x10000]
-> pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-> pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
-> PCI: bus0: Fast back to back transfers disabled
-> PCI: bus1: Fast back to back transfers disabled
-> pci 0000:01:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> PCI: bus2: Fast back to back transfers disabled
-> pci 0000:02:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> pci 0000:02:02.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> PCI: bus3: Fast back to back transfers disabled
-> PCI: bus4: Fast back to back transfers enabled
-> pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff 64bit]
-> pci 0000:00:00.0: BAR 8: assigned [mem 0x01100000-0x012fffff]
-> pci 0000:00:00.0: BAR 6: assigned [mem 0x01300000-0x0130ffff pref]
-> pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-> pci 0000:01:00.0: BAR 8: assigned [mem 0x01100000-0x012fffff]
-> pci 0000:01:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-> pci 0000:02:01.0: BAR 8: assigned [mem 0x01100000-0x012fffff]
-> pci 0000:02:01.0: BAR 7: assigned [io  0x1000-0x1fff]
-> pci 0000:03:00.0: BAR 1: assigned [mem 0x01100000-0x011fffff]
-> pci 0000:03:00.0: BAR 0: assigned [mem 0x01200000-0x0121ffff]
-> pci 0000:03:00.0: BAR 3: assigned [mem 0x01220000-0x01223fff]
-> pci 0000:03:00.0: BAR 2: assigned [io  0x1000-0x101f]
-> pci 0000:02:01.0: PCI bridge to [bus 03]
-> pci 0000:02:01.0:   bridge window [io  0x1000-0x1fff]
-> pci 0000:02:01.0:   bridge window [mem 0x01100000-0x012fffff]
-> pci 0000:02:02.0: PCI bridge to [bus 04]
-> pci 0000:01:00.0: PCI bridge to [bus 02-04]
-> pci 0000:01:00.0:   bridge window [io  0x1000-0x1fff]
-> pci 0000:01:00.0:   bridge window [mem 0x01100000-0x012fffff]
-> pci 0000:00:00.0: PCI bridge to [bus 01-04]
-> pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-> pci 0000:00:00.0:   bridge window [mem 0x01100000-0x012fffff]
-> PCI: enabling device 0000:01:00.0 (0140 -> 0143)
-> PCI: enabling device 0000:02:01.0 (0140 -> 0143)
-> PCI: enabling device 0000:02:02.0 (0140 -> 0143)
-> ...
-> e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
-> e1000e: Copyright(c) 1999 - 2013 Intel Corporation.
-> e1000e 0000:03:00.0: Disabling ASPM L0s L1
-> PCI: enabling device 0000:03:00.0 (0140 -> 0142)
-> e1000e 0000:03:00.0: Interrupt Throttling Rate (ints/sec) set to dynamic conservative mode
-> e1000e 0000:03:00.0 eth1: registered PHC clock
-> e1000e 0000:03:00.0 eth1: (PCI Express:2.5GT/s:Width x1) 00:1b:21:3a:18:8b
-> e1000e 0000:03:00.0 eth1: Intel(R) PRO/1000 Network Connection
-> e1000e 0000:03:00.0 eth1: MAC: 3, PHY: 8, PBA No: E42641-005
-> igb: Intel(R) Gigabit Ethernet Network Driver - version 5.0.3-k
-> igb: Copyright (c) 2007-2013 Intel Corporation.
-> ...
->
-> ALSA device list:
->   #0: wm8962-audio
-> VFS: Mounted root (nfs filesystem) on device 0:11.
-> devtmpfs: mounted
-> Freeing unused kernel memory: 324K (8082d000 - 8087e000)
-> Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b  <-- Kernel panic here randomly. Same phenomena when the root-fs is located in SD.
+Where is the irq_create_mapping done for this irq domain? Is that not needed?
+Without that I'm not getting the correct irq number.
 
-Richard,
-
-I would suspect this is the imprecise abort issue.  Please see my
-patch (http://thread.gmane.org/gmane.linux.kernel.pci/26159) resolves
-that for you and reply to that thread if so.
-
-I believe that the imprecise abort's only occurs if you have a PCIe
-switch on the bus - is this your topology and if so are you
-experiencing any issues with devices behind the bus that use io
-regions?  If you do have a switch, perhaps you can provide me with an
-'lspci -v' for comparison.
-
-Tim
+Thanks
+Kishon
