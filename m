@@ -1,76 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:43655 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933434Ab3JOTvR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Oct 2013 15:51:17 -0400
-Date: Tue, 15 Oct 2013 13:51:11 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH RESEND] PCI: mvebu - Support a bridge with no IO port
- window
-Message-ID: <20131015195111.GB30106@obsidianresearch.com>
-References: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
- <1380650281-16175-2-git-send-email-jgunthorpe@obsidianresearch.com>
- <20131003140648.52734cfc@skate>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:48533 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752528Ab3JHS6C (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 14:58:02 -0400
+Received: by mail-ie0-f182.google.com with SMTP id as1so2034757iec.41
+        for <linux-pci@vger.kernel.org>; Tue, 08 Oct 2013 11:58:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131003140648.52734cfc@skate>
+In-Reply-To: <20131008171343.GB25606@e102652-lin.cambridge.arm.com>
+References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
+	<CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
+	<20131008171343.GB25606@e102652-lin.cambridge.arm.com>
+Date: Tue, 8 Oct 2013 12:58:00 -0600
+Message-ID: <CAErSpo5UuYp9CmBtmwP1jmnTvGPDSP=upDakA21C+mWggLhPBQ@mail.gmail.com>
+Subject: Re: [RFC] Architecture independent pcibios?
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
+	Michal Simek <monstr@monstr.eu>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 03, 2013 at 02:06:48PM +0200, Thomas Petazzoni wrote:
-> Dear Jason Gunthorpe,
-> 
-> On Tue,  1 Oct 2013 11:58:01 -0600, Jason Gunthorpe wrote:
-> > Make pcie-io-aperture and the IO port MBUS ID in ranges optional.
-> > If not provided the bridge reports to Linux that IO space mapping is
-> > not supported and refuses to configure an IO mbus window.
-> > 
-> > This allows both complete disable (do not specify pcie-io-aperture) and
-> > per-port disable (do not specify a IO target ranges entry for the port)
-> > 
-> > Most PCIE devices these days do not require IO support to function,
-> > so having an option to disable it in the driver is useful.
-> > 
-> > This depends on 'bus: mvebu-mbus: Fix optional pcie-mem/io-aperture properties'
-> > to work properly.
-> 
-> This doesn't work here, I get multiple warnings "Attempt to set IO when
-> IO is disabled" :
+On 10/8/13, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Tue, Oct 08, 2013 at 05:32:57PM +0100, Bjorn Helgaas wrote:
+>> [+cc Grant, Rob, devicetree list]
+>>
+>> On Tue, Oct 8, 2013 at 8:42 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> > Hello,
+>> >
+>> > I am working on adding PCIe support for a new architecture and looking
+>> > at various existing implementations of pcibios functions I've realised
+>> > that some architectures share a lot of common code. As I don't like to
+>> > repeat the pattern again without any good reasons, I am wondering if
+>> > there is any appetite for carving out those common functions into
+>> > a generic place under drivers/pci/pcibios.c where they can be reused.
+>> >
+>> > Things that I am specifically looking at are
+>> > pcibios_{alloc,free}_controller,
+>> > pci_process_bridge_OF_ranges and anything that will make adding support
+>> > for PCI/PCIe in a new architecture easier. Candidates for promoting
+>> > to a generic place are the functions found in both powerpc and
+>> > microblaze
+>> > as they seem to be mostly identical, they support DT bindings and are
+>> > 64bits ready.
+>>
+>> I'm very much in favor of unifying code to reduce duplication across
+>> architectures.
+>>
+>> In general, the pcibios_*() interfaces are things used by the PCI core
+>> (drivers/pci) but implemented by the architecture.  The specific cases
+>> you mentioned are not actually used by the PCI core, so my inclination
+>> would be to name them something else and possibly put them somewhere
+>> other than drivers/pci.
+>
+> There are at least a handful of architectures that seem to share the same
+> implementation for most (all?) of the pcibios_*() functions. (PowerPC and
+> microblaze the most obvious offenders, x86 to a certain extent).
 
-Okay, I looked into this.
+Yes.  We've unified some of these by putting the generic version in
+drivers/pci as a weak function.
 
-The warnings are caused by the bogus mvebu_has_ioport you noted, 
-and this is also required:
+>> I wonder if pci_process_bridge_OF_ranges() would fit somewhere in
+>> drivers/of?  The implementations I looked at are mostly concerned with
+>> parsing OF resources, and they don't have much to do with PCI
+>> directly.
+>
+> Andrew Murray did sent a patch that was placing
+> pci_process_bridge_OF_ranges()
+> in the drivers/of. I can update that, as I have taken over his work.
+>
+>>
+>> pcibios_alloc_controller() is implemented by microblaze, powerpc, and
+>> xtensa.  Each of those arches defines its own "struct pci_controller",
+>> so it won't be completely trivial to unify this.  I tried to start
+>> some unification with the "struct pci_host_bridge" in the core, but
+>> haven't made much progress there.
+>
+> Do you have anything that you could share? I would pretty much like to take
+> on that as well, as I don't want to create yet another
+> "struct pci_controller." BTW, powerpc and microblaze again share a very
+> similarly looking structure.
 
-        /* Are the new iobase/iolimit values invalid? */
--       if (port->bridge.iolimit < port->bridge.iobase ||
-+       if (port->bridge.iolimit <= port->bridge.iobase ||
-            port->bridge.iolimitupper < port->bridge.iobaseupper) {
+No, I don't have any code (or plans).  I think pci_domain_nr() and
+pcibus_to_node() should be pretty easy to start unifying.  I'd be
+thrilled if you started pushing on this.
 
-> >  	case PCI_IO_BASE:
-> > -		*value = (bridge->secondary_status << 16 |
-> > -			  bridge->iolimit          <<  8 |
-> > -			  bridge->iobase);
-> > +		if (!mvebu_has_ioport(port))
-> > +			*value = 0;
-> > +		else
-> > +			*value = (bridge->secondary_status << 16 |
-> > +				  bridge->iolimit          <<  8 |
-> > +				  bridge->iobase);
-> 
-> While I do understand that you're returning 0 for iolimit and iobase,
-> I'm not sure why the secondary status is affected by the value of
-> mvebu_has_ioport().
-
-This is an error, of sorts. 0 is actually the correct value for 
-secondary status with the current capabilities of the driver.. I'll
-fix it here as you noted and send a patch to fix that up separately.
-
-New patches in a sec..
-
-Thanks,
-Jason
+Bjorn
