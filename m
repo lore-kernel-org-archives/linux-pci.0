@@ -1,62 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:11157 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750964Ab3JSGTi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:19:38 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:2210 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754566Ab3JHHzs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 03:55:48 -0400
+Date: Tue, 8 Oct 2013 09:56:59 +0200
 From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 07/29] PCI/MSI: Return -ENOSYS for unimplemented interfaces, not -1
-Date: Fri, 18 Oct 2013 19:12:07 +0200
-Message-Id: <de85dc2f3aa27ff883504bd30d3f5f929145fe0d.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 05/77] PCI/MSI: Convert pci_msix_table_size() to a
+ public interface
+Message-ID: <20131008075658.GE10669@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <e8b51bd48c24d0fc4ee8adea5c138c9bf84191e9.1380703262.git.agordeev@redhat.com>
+ <20131007181043.GA27396@htj.dyndns.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131007181043.GA27396@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Suggested-by: Ben Hutchings <bhutchings@solarflare.com>
----
- include/linux/pci.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On Mon, Oct 07, 2013 at 02:10:43PM -0400, Tejun Heo wrote:
+> On Wed, Oct 02, 2013 at 12:48:21PM +0200, Alexander Gordeev wrote:
+> > Make pci_msix_table_size() to return a error code if the device
+> > does not support MSI-X. This update is needed to facilitate a
+> > forthcoming re-design MSI/MSI-X interrupts enabling pattern.
+> > 
+> > Device drivers will use this interface to obtain maximum number
+> > of MSI-X interrupts the device supports and use that value in
+> > the following call to pci_enable_msix() interface.
+> 
+> Hmmm... I probably missed something but why is this necessary?  To
+> discern between -EINVAL and -ENOSPC?  If so, does that really matter?
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d3a888a..5cfe54c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1148,13 +1148,13 @@ struct msix_entry {
- #ifndef CONFIG_PCI_MSI
- static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
--	return -1;
-+	return -ENOSYS;
- }
- 
- static inline int
- pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
- {
--	return -1;
-+	return -ENOSYS;
- }
- 
- static inline void pci_msi_shutdown(struct pci_dev *dev)
-@@ -1169,7 +1169,7 @@ static inline int pci_msix_table_size(struct pci_dev *dev)
- static inline int pci_enable_msix(struct pci_dev *dev,
- 				  struct msix_entry *entries, int nvec)
- {
--	return -1;
-+	return -ENOSYS;
- }
- 
- static inline void pci_msix_shutdown(struct pci_dev *dev)
+pci_msix_table_size() is kind of helper and returns 0 if a device does
+not have MSI-X table. If we want drivers to use it we need return -EINVAL
+for MSI-X incapable/disabled devices. Nothing about -ENOSPC.
+
+> tejun
+
 -- 
-1.7.7.6
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
