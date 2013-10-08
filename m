@@ -1,79 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46825 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753616Ab3J2Kax (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Oct 2013 06:30:53 -0400
-From: Veaceslav Falico <vfalico@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: torvalds@linux-foundation.org, tglx@linutronix.de,
-	yinghai@kernel.org, Knut_Petersen@t-online.de, mingo@kernel.org,
-	paulmck@linux.vnet.ibm.com, fweisbec@gmail.com,
-	linux-kernel@vger.kernel.org,
-	Veaceslav Falico <vfalico@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v3 3/3] msi: always unregister ->msi_kset within free_msi_irqs()
-Date: Tue, 29 Oct 2013 11:30:32 +0100
-Message-Id: <1383042632-7102-4-git-send-email-vfalico@redhat.com>
-In-Reply-To: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
-References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:42300 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753442Ab3JHRZN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 13:25:13 -0400
+Date: Tue, 8 Oct 2013 13:25:10 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Seungwon Jeon <tgih.jun@samsung.com>
+Cc: linux-pci@vger.kernel.org,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Subject: Re: [PATCH v3] PCI: mvebu: add I/O access wrappers
+Message-ID: <20131008172510.GQ5402@titan.lakedaemon.net>
+References: <001e01cea3e5$410cf6d0$c326e470$%jun@samsung.com>
+ <20130828141417.139ad2b0@skate>
+ <002101cec0e8$3ec9c7c0$bc5d5740$%jun@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <002101cec0e8$3ec9c7c0$bc5d5740$%jun@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we create and populate ->msi_kset while allocating irqs in
-populate_msi_sysfs(), however if it fails and/or we want to free the
-entries - we don't always remove it, and we might have problems if we've
-failed to allocate irqs and try it again.
+On Fri, Oct 04, 2013 at 06:58:15PM +0900, Seungwon Jeon wrote:
+> This change adds wrapper functions for MMIO access to PCIe IP block.
+> And some 8/16-bit access are replaced by 32-bit.
+> 
+> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> ---
+> Changes in v3:
+>  - Just rebased
+>  - Modified commit message
+> 
+> Changes in v2:
+>  - Only 32-bit accessors are kept(from Thomas Petazzoni)
+> 
+>  drivers/pci/host/pci-mvebu.c |   97 ++++++++++++++++++++++++------------------
+>  1 files changed, 55 insertions(+), 42 deletions(-)
 
-To fix that, move the unregister part to free_msi_irqs() and remove already
-existing ones. Also, verify if it was actually created - we don't always
-call free_msi_irqs() after populate_msi_sysfs().
+Applied to mvebu/drivers
 
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Neil Horman <nhorman@tuxdriver.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: linux-pci@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
----
- drivers/pci/msi.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+thx,
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 0771508..dafda2b 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -391,6 +391,11 @@ static void free_msi_irqs(struct pci_dev *dev)
- 			kfree(entry);
- 		}
- 	}
-+
-+	if (dev->msi_kset) {
-+		kset_unregister(dev->msi_kset);
-+		dev->msi_kset = NULL;
-+	}
- }
- 
- static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
-@@ -904,8 +909,6 @@ void pci_disable_msi(struct pci_dev *dev)
- 
- 	pci_msi_shutdown(dev);
- 	free_msi_irqs(dev);
--	kset_unregister(dev->msi_kset);
--	dev->msi_kset = NULL;
- }
- EXPORT_SYMBOL(pci_disable_msi);
- 
-@@ -1002,8 +1005,6 @@ void pci_disable_msix(struct pci_dev *dev)
- 
- 	pci_msix_shutdown(dev);
- 	free_msi_irqs(dev);
--	kset_unregister(dev->msi_kset);
--	dev->msi_kset = NULL;
- }
- EXPORT_SYMBOL(pci_disable_msix);
- 
--- 
-1.8.4
-
+Jason.
