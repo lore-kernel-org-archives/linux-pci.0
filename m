@@ -1,75 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:58199 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755823Ab3JCVxA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 17:53:00 -0400
-Message-ID: <1380837174.3419.21.camel@bwh-desktop.uk.level5networks.com>
-Subject: Re: [PATCH RFC 06/77] PCI/MSI: Factor out pci_get_msi_cap()
- interface
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: <linux-kernel@vger.kernel.org>,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:44473 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754632Ab3JHVgQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 17:36:16 -0400
+Date: Tue, 8 Oct 2013 14:30:11 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Neil Horman <nhorman@tuxdriver.com>, stable@vger.kernel.org,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	<linux-pci@vger.kernel.org>, <linux-mips@linux-mips.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux390@de.ibm.com>,
-	<linux-s390@vger.kernel.org>, <x86@kernel.org>,
-	<linux-ide@vger.kernel.org>, <iss_storagedev@hp.com>,
-	<linux-nvme@lists.infradead.org>, <linux-rdma@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <e1000-devel@lists.sourceforge.net>,
-	<linux-driver@qlogic.com>,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>,
-	<linux-scsi@vger.kernel.org>
-Date: Thu, 3 Oct 2013 22:52:54 +0100
-In-Reply-To: <9c282c4ab92731c719d161d2db6fc54ce33891d9.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-	 <9c282c4ab92731c719d161d2db6fc54ce33891d9.1380703262.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: [stable PATCH] iommu/vt-d: add quirk for broken interrupt
+ remapping on 55XX chipsets
+Message-ID: <20131008213011.GB10765@kroah.com>
+References: <20130708154111.GA27952@kroah.com>
+ <1373303174-21977-1-git-send-email-nhorman@tuxdriver.com>
+ <20130723170602.GA15090@kroah.com>
+ <1381265132.4598.18.camel@chaos.site>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1381265132.4598.18.camel@chaos.site>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-10-02 at 12:48 +0200, Alexander Gordeev wrote:
-[...]
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -812,6 +812,21 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
->  	return 0;
->  }
->  
-> +int pci_get_msi_cap(struct pci_dev *dev)
-> +{
-> +	int ret;
-> +	u16 msgctl;
-> +
-> +	if (!dev->msi_cap)
-> +		return -EINVAL;
-[...]
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1144,6 +1144,11 @@ struct msix_entry {
->  
+On Tue, Oct 08, 2013 at 10:45:32PM +0200, Jean Delvare wrote:
+> Hi Greg, hi Neil,
 > 
->  #ifndef CONFIG_PCI_MSI
-> +static inline int pci_get_msi_cap(struct pci_dev *dev)
-> +{
-> +	return -1;
-[...]
+> Le Tuesday 23 July 2013 à 10:06 -0700, Greg KH a écrit :
+> > On Mon, Jul 08, 2013 at 01:06:14PM -0400, Neil Horman wrote:
+> > > A few years back intel published a spec update:
+> > > http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+> > > 
+> > > For the 5520 and 5500 chipsets which contained an errata (specificially errata
+> > > 53), which noted that these chipsets can't properly do interrupt remapping, and
+> > > as a result the recommend that interrupt remapping be disabled in bios.  While
+> > > many vendors have a bios update to do exactly that, not all do, and of course
+> > > not all users update their bios to a level that corrects the problem.  As a
+> > > result, occasionally interrupts can arrive at a cpu even after affinity for that
+> > > interrupt has be moved, leading to lost or spurrious interrupts (usually
+> > > characterized by the message:
+> > > kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+> > > 
+> > > There have been several incidents recently of people seeing this error, and
+> > > investigation has shown that they have system for which their BIOS level is such
+> > > that this feature was not properly turned off.  As such, it would be good to
+> > > give them a reminder that their systems are vulnurable to this problem.  For
+> > > details of those that reported the problem, please see:
+> > > https://bugzilla.redhat.com/show_bug.cgi?id=887006
+> > > 
+> > > [ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+> > > 
+> > > Notes: Modified early-quirks.c to include linux/irq.h, to fix warnings.  This
+> > > isn't needed in the upstream tree
+> > > 
+> > > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> > > CC: Prarit Bhargava <prarit@redhat.com>
+> > > CC: Don Zickus <dzickus@redhat.com>
+> > > CC: Don Dutile <ddutile@redhat.com>
+> > > CC: Bjorn Helgaas <bhelgaas@google.com>
+> > > CC: Asit Mallick <asit.k.mallick@intel.com>
+> > > CC: David Woodhouse <dwmw2@infradead.org>
+> > > CC: linux-pci@vger.kernel.org
+> > > CC: Joerg Roedel <joro@8bytes.org>
+> > > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > > CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+> > > CC: Jean Delvare <jdelvare@suse.de>
+> > > CC: Greg KH <gregkh@linuxfoundation.org>
+> > > Signed-off-by: Joerg Roedel <joro@8bytes.org>
+> > > (cherry picked from commit 03bbcb2e7e292838bb0244f5a7816d194c911d62)
+> > 
+> > As 3.9-stable is now dead, this one missed that window, sorry about
+> > that.
+> 
+> Sorry for jumping in a little late, but I am looking into this again
+> because one customer of ours requested this fix. I'm a bit confused now,
+> by two different things:
+> 
+> 1* Why did Greg claim that the fix missed the 3.9-stable window while I
+> can see Neil's backport of the fix made it into 3.9.9?
 
-Shouldn't this also return -EINVAL?
+Greg doesn't remember what patches he applied to what stable tree, nor
+if he had applied them to a previous stable release at all.  His
+short-term memory is almost non-existant given the huge rate of patches
+flowing through him, and he is feeling strange referring to himself in
+the third person...
 
-Ben.
+> 2* Why was the backport only added to 3.9-stable and not also
+> 3.4-longterm and 3.0 longterm?
 
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+Probably because the patch sent to me didn't apply there?
 
+> I need the fix for the SLE11 SP3 kernel which is based on 3.0. Neil, do
+> you have a backport of the fix for this kernel? The 3.9 doesn't apply :(
+
+Ah, yes, that's why I didn't apply it.
+
+If someone sends me a version that does, I will add it to those trees.
+
+thanks,
+
+greg k-h
