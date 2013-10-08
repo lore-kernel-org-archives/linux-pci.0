@@ -1,62 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f170.google.com ([209.85.220.170]:33756 "EHLO
-	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754127Ab3JDBIQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 21:08:16 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130930020500.GB28774@kroah.com>
-References: <CADTPrLTuzvj3iSMdNVs2BjDFHsWqjRPM4qDkkpmv+P11LMP0JQ@mail.gmail.com>
-	<20130930020500.GB28774@kroah.com>
-Date: Thu, 3 Oct 2013 18:08:15 -0700
-Message-ID: <CADTPrLSpfnY6Z1MgpR=C4SRH7yXJ2BKi3w5ChLpTuWL3zZWx_Q@mail.gmail.com>
-Subject: Re: pciehp & other hot-plug drivers (shpc etc..)
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:47768 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753965Ab3JHUpq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 16:45:46 -0400
+Subject: Re: [stable PATCH] iommu/vt-d: add quirk for broken interrupt
+ remapping on 55XX chipsets
+From: Jean Delvare <jdelvare@suse.de>
 To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-pci@vger.kernel.org, linux-hotplug@vger.kernel.org,
-	tom.l.nguyen@intel.com, yanmin.zhang@intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Neil Horman <nhorman@tuxdriver.com>, stable@vger.kernel.org,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Arkadiusz =?UTF-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+In-Reply-To: <20130723170602.GA15090@kroah.com>
+References: <20130708154111.GA27952@kroah.com>
+	 <1373303174-21977-1-git-send-email-nhorman@tuxdriver.com>
+	 <20130723170602.GA15090@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Oct 2013 22:45:32 +0200
+Message-ID: <1381265132.4598.18.camel@chaos.site>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- Hello,
+Hi Greg, hi Neil,
 
-On Sun, Sep 29, 2013 at 7:05 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Sun, Sep 29, 2013 at 11:27:23AM -0700, Rajat Jain wrote:
->> Hello List,
->>
->> Today all the PCI Hot-plug drivers (shpc, acpihp, cpqhp, ibmhp etc
->> except pciedhp) directly claim the downstream port bridge device.
->> Where as in case of pciehp, the PCIe port bus driver claims the bridge
->> device, and service drivers (aer, pm, pciehp) simply register for the
->> service with it.
->>
->> 1) Does that mean that in a system where I am using a driver other
->> than pciehp for hot-plug (eg. shpc), I cannot use service drivers like
->> AER or PM on the same port (since the device would be claimed by
->> shpc, it would not be available to port bus driver)?
->
-> It depends on your system, and you BIOS, which sets up all of this
-> stuff.  It's up to the kernel to bind to the proper things it exposes.
+Le Tuesday 23 July 2013 à 10:06 -0700, Greg KH a écrit :
+> On Mon, Jul 08, 2013 at 01:06:14PM -0400, Neil Horman wrote:
+> > A few years back intel published a spec update:
+> > http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+> > 
+> > For the 5520 and 5500 chipsets which contained an errata (specificially errata
+> > 53), which noted that these chipsets can't properly do interrupt remapping, and
+> > as a result the recommend that interrupt remapping be disabled in bios.  While
+> > many vendors have a bios update to do exactly that, not all do, and of course
+> > not all users update their bios to a level that corrects the problem.  As a
+> > result, occasionally interrupts can arrive at a cpu even after affinity for that
+> > interrupt has be moved, leading to lost or spurrious interrupts (usually
+> > characterized by the message:
+> > kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+> > 
+> > There have been several incidents recently of people seeing this error, and
+> > investigation has shown that they have system for which their BIOS level is such
+> > that this feature was not properly turned off.  As such, it would be good to
+> > give them a reminder that their systems are vulnurable to this problem.  For
+> > details of those that reported the problem, please see:
+> > https://bugzilla.redhat.com/show_bug.cgi?id=887006
+> > 
+> > [ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+> > 
+> > Notes: Modified early-quirks.c to include linux/irq.h, to fix warnings.  This
+> > isn't needed in the upstream tree
+> > 
+> > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> > CC: Prarit Bhargava <prarit@redhat.com>
+> > CC: Don Zickus <dzickus@redhat.com>
+> > CC: Don Dutile <ddutile@redhat.com>
+> > CC: Bjorn Helgaas <bhelgaas@google.com>
+> > CC: Asit Mallick <asit.k.mallick@intel.com>
+> > CC: David Woodhouse <dwmw2@infradead.org>
+> > CC: linux-pci@vger.kernel.org
+> > CC: Joerg Roedel <joro@8bytes.org>
+> > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+> > CC: Jean Delvare <jdelvare@suse.de>
+> > CC: Greg KH <gregkh@linuxfoundation.org>
+> > Signed-off-by: Joerg Roedel <joro@8bytes.org>
+> > (cherry picked from commit 03bbcb2e7e292838bb0244f5a7816d194c911d62)
+> 
+> As 3.9-stable is now dead, this one missed that window, sorry about
+> that.
 
-Actually, I just wanted to understand that on a machine where
-shpchp.ko is to be used for hot-plug, can I still use the AER port bus
-service driver? My understanding is NO, because shpc will claim the
-downstream port bridge, and hence port bus driver will not be able to
-claim it?
+Sorry for jumping in a little late, but I am looking into this again
+because one customer of ours requested this fix. I'm a bit confused now,
+by two different things:
 
->
->> 2) In the same system, can I use SHPC on one port, and pciehp on
->> another port? I believe not?
->
-> Yes you can, but such a system seems really strange, do you know of any
-> that require it?
->
->> Please note that it may not be a realistic scenarios, my intent of
->> asking is to just understand how things are intended to behave.
->
-> Again, it depends on your BIOS / hardware.  They are the ones that
-> determine which driver handles this type of thing.
->
-> Hope this helps,
->
-> greg k-h
+1* Why did Greg claim that the fix missed the 3.9-stable window while I
+can see Neil's backport of the fix made it into 3.9.9?
+
+2* Why was the backport only added to 3.9-stable and not also
+3.4-longterm and 3.0 longterm?
+
+I need the fix for the SLE11 SP3 kernel which is based on 3.0. Neil, do
+you have a backport of the fix for this kernel? The 3.9 doesn't apply :(
+
+Thanks,
+-- 
+Jean Delvare
+Suse L3 Support
+
