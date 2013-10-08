@@ -1,84 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:52452 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755893Ab3J1Sw1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 14:52:27 -0400
-Date: Mon, 28 Oct 2013 11:52:25 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Veaceslav Falico <vfalico@redhat.com>
-Subject: Re: [BUG 3.12.rc4] Oops: unable to handle kernel paging request
- during shutdown
-Message-ID: <20131028185225.GB31829@kroah.com>
-References: <525BD08C.2080101@t-online.de>
- <CA+55aFwN++wO=rTFaH7m6YYQX+Fv3qDt6Hxs7UnPUJpFsrwSkA@mail.gmail.com>
- <CA+55aFy7TpvkVuPEOJ7Qqirwap1gXoD1_MrYLhgPAYuVpN8u=w@mail.gmail.com>
- <alpine.DEB.2.02.1310251221310.5266@ionos.tec.linutronix.de>
- <CA+55aFxw1Hm4QVeEigkByP5RppSL30oHnLoR16C=henf-a=uFQ@mail.gmail.com>
- <CA+55aFyb72qoZ1Tjpb+=q-6+GmwoOXjfntY_zZnf300gg3d1Hg@mail.gmail.com>
- <CA+55aFxuVpDo3LvmG9j-Hu7sENLTcsB6_CY2TA4mE-k+CuTeGg@mail.gmail.com>
- <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com>
- <20131027212407.GA17439@kroah.com>
- <CAErSpo5NmBDqRA3URAQPmw4iC3xvpDdd9JFROuftLJE1YsbPhA@mail.gmail.com>
+Received: from mail-db9lp0250.outbound.messaging.microsoft.com ([213.199.154.250]:20451
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756129Ab3JHW51 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 18:57:27 -0400
+Message-ID: <1381273037.7979.298.camel@snotra.buserror.net>
+Subject: Re: [PATCH 1/7] powerpc: Add interface to get msi region information
+From: Scott Wood <scottwood@freescale.com>
+To: Bharat Bhushan <r65777@freescale.com>
+CC: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<benh@kernel.crashing.org>, <galak@kernel.crashing.org>,
+	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
+	<iommu@lists.linux-foundation.org>,
+	Bharat Bhushan <Bharat.Bhushan@freescale.com>
+Date: Tue, 8 Oct 2013 17:57:17 -0500
+In-Reply-To: <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com>
+References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5NmBDqRA3URAQPmw4iC3xvpDdd9JFROuftLJE1YsbPhA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 28, 2013 at 11:23:41AM -0600, Bjorn Helgaas wrote:
-> [+cc Veaceslav]
-> 
-> On Sun, Oct 27, 2013 at 3:24 PM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Sun, Oct 27, 2013 at 09:13:29PM +0000, Linus Torvalds wrote:
-> >> .. and one more case of freeing a delayed work object (likely a kobject again):
-> >>
-> >> This time it looks like it's in the PCI layer, freeing the msi irq information.
-> >>
-> >> It looks like that code simply does
-> >>
-> >>     kobject_del(&entry->kobj);
-> >>     kobject_put(&entry->kobj);
-> >>     list_del(&entry->list);
-> >>     kfree(entry);
-> >>
-> >> and the problem is that the "entry->kobj" may have *other* references
-> >> to it, thanks to people accessing it through /sys, so despite doing a
-> >> kojbect_del/kobject_put(), it's not at all ok to then do a "kfree()"
-> >> on it. The embedded kobj might still be in use.
-> >>
-> >> Afaik, that code should do the kfree() on the kobject in the _release_
-> >> method, not synchronously like that.
-> >>
-> >> We already have a msi_kobj_release(), I'm wondering why that doesn't
-> >> do the kfree().
-> >>
-> >> Bjorn? Yinghai? Greg, comments about that msi kobj usage?
-> >
-> > Ick, it really should be doing a kfree() in the release only.  Bjorn has
-> > had a bunch of changes in this area recently, perhaps they are in
-> > linux-next waiting for 3.13, and I've talked to him about getting rid of
-> > all of the kobjects for msi files, as I don't think it's needed at all.
-> 
-> IIRC, you said you might take a look at converting this to attributes
-> on the train back home, so I haven't looked into it myself :)
+On Thu, 2013-09-19 at 12:59 +0530, Bharat Bhushan wrote:
+> @@ -376,6 +405,7 @@ static int fsl_of_msi_probe(struct platform_device *dev)
+>  	int len;
+>  	u32 offset;
+>  	static const u32 all_avail[] = { 0, NR_MSI_IRQS };
+> +	static int bank_index;
+>  
+>  	match = of_match_device(fsl_of_msi_ids, &dev->dev);
+>  	if (!match)
+> @@ -419,8 +449,8 @@ static int fsl_of_msi_probe(struct platform_device *dev)
+>  				dev->dev.of_node->full_name);
+>  			goto error_out;
+>  		}
+> -		msi->msiir_offset =
+> -			features->msiir_offset + (res.start & 0xfffff);
+> +		msi->msiir = res.start + features->msiir_offset;
+> +		printk("msi->msiir = %llx\n", msi->msiir);
 
-Yes, I was supposed to, but James and I ended up splitting a bottle of
-wine on the train, and it's not a good idea to do driver model work with
-wine.  Hard liquor is usually needed :)
+dev_dbg or remove
 
-It's on my todo list...
+>  	}
+>  
+>  	msi->feature = features->fsl_pic_ip;
+> @@ -470,6 +500,7 @@ static int fsl_of_msi_probe(struct platform_device *dev)
+>  		}
+>  	}
+>  
+> +	msi->bank_index = bank_index++;
 
-thanks,
+What if multiple MSIs are boing probed in parallel?  bank_index is not
+atomic.
 
-greg k-h
+> diff --git a/arch/powerpc/sysdev/fsl_msi.h b/arch/powerpc/sysdev/fsl_msi.h
+> index 8225f86..6bd5cfc 100644
+> --- a/arch/powerpc/sysdev/fsl_msi.h
+> +++ b/arch/powerpc/sysdev/fsl_msi.h
+> @@ -29,12 +29,19 @@ struct fsl_msi {
+>  	struct irq_domain *irqhost;
+>  
+>  	unsigned long cascade_irq;
+> -
+> -	u32 msiir_offset; /* Offset of MSIIR, relative to start of CCSR */
+> +	dma_addr_t msiir; /* MSIIR Address in CCSR */
+
+Are you sure dma_addr_t is right here, versus phys_addr_t?  It implies
+that it's the output of the DMA API, but I don't think the DMA API is
+used in the MSI driver.  Perhaps it should be, but we still want the raw
+physical address to pass on to VFIO.
+
+>  	void __iomem *msi_regs;
+>  	u32 feature;
+>  	int msi_virqs[NR_MSI_REG];
+>  
+> +	/*
+> +	 * During probe each bank is assigned a index number.
+> +	 * index number ranges from 0 to 2^32.
+> +	 * Example  MSI bank 1 = 0
+> +	 * MSI bank 2 = 1, and so on.
+> +	 */
+> +	int bank_index;
+
+2^32 doesn't fit in "int" (nor does 2^32 - 1).
+
+Just say that indices start at 0.
+
+-Scott
+
+
+
