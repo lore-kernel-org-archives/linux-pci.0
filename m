@@ -1,129 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:43039 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758031Ab3J2Dat (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 23:30:49 -0400
-Received: by mail-ie0-f170.google.com with SMTP id at1so13325856iec.29
-        for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2013 20:30:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20131016202123.GA17866@google.com>
-References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
- <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
- <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 Oct 2013 21:30:28 -0600
-Message-ID: <CAErSpo6g5vR0NMs18YZBz+6RGZd0zNeDu_=1Pk4c5a+OqHfS1g@mail.gmail.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
+Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:20570 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755341Ab3JHXUw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 19:20:52 -0400
+Message-ID: <1381274440.7979.309.camel@snotra.buserror.net>
+Subject: Re: [PATCH 1/2][v2] pci: fsl: derive the common PCI driver to
+ drivers/pci/host
+From: Scott Wood <scottwood@freescale.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>
+Date: Tue, 8 Oct 2013 18:20:40 -0500
+In-Reply-To: <CAErSpo76_w+wK76m73kkdYS1PouhYcGfZus_FYF5E2FHJTA6gQ@mail.gmail.com>
+References: <1380531175-14836-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <CAErSpo7LXqXmrw1gPwKHsJkKaAcDr2W_+tcC8b9T_5Mab1Arnw@mail.gmail.com>
+	 <1381272382.7979.292.camel@snotra.buserror.net>
+	 <CAErSpo76_w+wK76m73kkdYS1PouhYcGfZus_FYF5E2FHJTA6gQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 16, 2013 at 2:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Oct 15, 2013 at 03:44:52AM +0100, Matthew Garrett wrote:
->> On Mon, Oct 14, 2013 at 05:50:38PM -0600, Bjorn Helgaas wrote:
->> > [+cc Rafael, Mika, Kirill, linux-pci]
->> >
->> > On Mon, Oct 14, 2013 at 4:47 PM, Andreas Noever
->> > <andreas.noever@gmail.com> wrote:
->> > > When I unplug the Thunderbolt ethernet adapter on my MacBookPro Linux
->> > > crashes a few seconds later. Using
->> > > echo 1 > /sys/bus/pci/devices/0000:08:00.0/remove
->> > > to remove a bridge two levels above the device triggers the fault immediately:
->> >
->> > There have been significant changes in acpiphp related to Thunderbolt
->> > since v3.11.
->>
->> Apple don't expose Thunderbolt via ACPI, so it appears as native PCIe.
->> I'd be surprised if acpiphp makes a difference here.
+On Tue, 2013-10-08 at 17:09 -0600, Bjorn Helgaas wrote:
+> On Tue, Oct 8, 2013 at 4:46 PM, Scott Wood <scottwood@freescale.com> wrote:
+> > On Tue, 2013-10-08 at 13:13 -0600, Bjorn Helgaas wrote:
+> >> [+cc Ben, Paul, linuxppc-dev]
+> >>
+> >> On Mon, Sep 30, 2013 at 04:52:54PM +0800, Minghuan Lian wrote:
+> >> > The Freescale's Layerscape series processors will use ARM cores.
+> >> > The LS1's PCIe controllers is the same as T4240's. So it's better
+> >> > the PCIe controller driver can support PowerPC and ARM
+> >> > simultaneously. This patch is for this purpose. It derives
+> >> > the common functions from arch/powerpc/sysdev/fsl_pci.c to
+> >> > drivers/pci/host/pci-fsl-common.c and leaves the architecture
+> >> > specific functions which should be implemented in arch related files.
+> >> >
+> >> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> >>
+> >> I cc'd the powerpc maintainers so we can work out which tree this
+> >> should go through.
+> >>
+> >> > ---
+> >> > change log:
+> >> > v1-v2:
+> >> > 1. rename pci.h to pci-common.h
+> >> > 2. rename pci-fsl.c to pci-fsl-common.c
+> >> >
+> >> > Based on upstream master.
+> >> > Based on the discussion of RFC version here
+> >> > http://patchwork.ozlabs.org/patch/274487/
+> >> >
+> >> >  arch/powerpc/sysdev/fsl_pci.c                      | 521 +-----------------
+> >> >  arch/powerpc/sysdev/fsl_pci.h                      |  89 ----
+> >> >  .../fsl_pci.c => drivers/pci/host/pci-fsl-common.c | 591 +--------------------
+> >> >  .../fsl_pci.h => include/linux/fsl/pci-common.h    |  45 +-
+> >>
+> >> Is there any way to avoid putting this file in include/linux?  I know
+> >> you want to share it beyond PowerPC, and I know there are similar
+> >> examples there already, but this is all arch-specific or
+> >> chipset-specific stuff that seems like it should be in some
+> >> not-so-public place.  It doesn't seem scalable to add an include/linux
+> >> subdirectory for every chipset that might be shared across
+> >> architectures.
+> >
+> > What specifically is the problem with it, as long as it's properly
+> > namespaced?
+> 
+> Well, as I said above, it doesn't seem scalable,
+
+I'm not sure what scaling problems you're picturing, assuming proper
+namespacing and organization within include/linux/.
+
+>  and it doesn't seem to be the common existing practice. 
 >
-> Yeah, you're right; I wasn't paying attention.
->
-> We save a pci_dev pointer in the pci_pme_list, which of course has a
-> longer lifetime than the pci_dev itself, but we don't acquire a reference
-> on it, so I suspect the pci_dev got released before we got around to
-> doing the pci_pme_list_scan().
->
-> Andreas, can you try the patch below?  It's against v3.12-rc2, but it
-> should apply to v3.11, too.
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index ad7fc72..8b0a2f3 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1580,6 +1580,7 @@ static void pci_pme_list_scan(struct work_struct *work)
->                                 pci_pme_wakeup(pme_dev->dev, NULL);
->                         } else {
->                                 list_del(&pme_dev->list);
-> +                               pci_dev_put(pme_dev->dev);
->                                 kfree(pme_dev);
->                         }
->                 }
-> @@ -1640,7 +1641,7 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
->                                           GFP_KERNEL);
->                         if (!pme_dev)
->                                 goto out;
-> -                       pme_dev->dev = dev;
-> +                       pme_dev->dev = pci_dev_get(dev);
->                         mutex_lock(&pci_pme_list_mutex);
->                         list_add(&pme_dev->list, &pci_pme_list);
->                         if (list_is_singular(&pci_pme_list))
-> @@ -1652,6 +1653,7 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
->                         list_for_each_entry(pme_dev, &pci_pme_list, list) {
->                                 if (pme_dev->dev == dev) {
->                                         list_del(&pme_dev->list);
-> +                                       pci_dev_put(pme_dev->dev);
->                                         kfree(pme_dev);
->                                         break;
->                                 }
+> Possibly this is just because sharing chipsets across arches isn't very common yet.
+> 
+> I hadn't noticed that include/linux/fsl exists already; I thought you
+> were adding it.  Given that it *does* exist already, I guess I'm OK
+> with putting more stuff in it.
 
-The patch above covered up the problem, but is incorrect.  The topology is:
+I see other existing practice as well.  Besides plenty of
+"include/linux/fsl*" that ought to be moved to "include/linux/fsl/", I
+see things like include/linux/amba/, include/linux/scx200*,
+include/linux/clksrc-dbx500-prcmu.h, include/linux/com202020.h, etc.
+These are just a few random examples out of many.
 
-  08:00.0 PCI bridge to [bus 09-0a] Thunderbolt Upstream Port
-  09:00.0 PCI bridge to [bus 0a]    Thunderbolt Downstream Port
-  0a:00.0 tg3 NIC
+> So I'll apply these given an ack from the powerpc folks.
 
-and the sequence leading to the crash is (edited for brevity):
+ACK this patch.  The second one I'd like to see broken up into
+digestible chunks so I can better review it.
 
-  remove_store(08:00.0)
-    pci_stop_and_remove_bus_device(08:00.0)     # Upstream Port
-      pci_stop_bus_device(08:00.0)
-        pci_stop_bus_device(09:00.0)            # Downstream Port
-          pci_stop_bus_device(0a:00.0)          # tg3 device
-            pci_stop_dev(0a:00.0)
-              pci_pme_active(0a:00.0, false)    # remove from pci_pme_list
-              device_del(0a:00.0)
-                device_release_driver
-                  tg3_remove_one
-                    unregister_netdev
-                      dev->netdev_ops->ndo_stop # tg3_close
-                      tg3_close
-                        pci_wake_from_d3
-                          pci_pme_active(dev, true)     # add to pci_pme_list
-      pci_remove_bus_device(08:00.0)
-        pci_remove_bus_device(09:00.0)
-          pci_remove_bus_device(0a:00.0)
-            pci_destroy_dev(0a:00.0)
-              put_device(0a:00.0)               # drop last tg3
-pci_dev reference
-              ...
-              pci_release_dev                   # pci_dev release function
-                kfree(0a:00.0)
-  ...
-  pci_pme_list_scan
-    0a:00.0 still on list => use-after-free
+-Scott
 
-The patch above avoids the crash by acquiring a reference when adding
-to pci_pme_list, so when pci_destroy_dev() drops the reference, it's
-not the *last* reference, so the pci_dev is not released.
 
-The problem is that the reference acquired when we add to pci_pme_list
-will *never* be dropped, so we leaked the pci_dev.
 
-Bjorn
