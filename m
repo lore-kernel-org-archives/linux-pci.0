@@ -1,45 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:10092 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750881Ab3JSGDU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:03:20 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:1607
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755789Ab3JHWrf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 18:47:35 -0400
+Message-ID: <1381272382.7979.292.camel@snotra.buserror.net>
+Subject: Re: [PATCH 1/2][v2] pci: fsl: derive the common PCI driver to
+ drivers/pci/host
+From: Scott Wood <scottwood@freescale.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 26/29] vmxnet3: Fixup a weird loop exit
-Date: Fri, 18 Oct 2013 19:12:26 +0200
-Message-Id: <f0a5f1e64d1b25589aeaf185ce143da123605559.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
+	Paul Mackerras <paulus@samba.org>
+Date: Tue, 8 Oct 2013 17:46:22 -0500
+In-Reply-To: <CAErSpo7LXqXmrw1gPwKHsJkKaAcDr2W_+tcC8b9T_5Mab1Arnw@mail.gmail.com>
+References: <1380531175-14836-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <CAErSpo7LXqXmrw1gPwKHsJkKaAcDr2W_+tcC8b9T_5Mab1Arnw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/vmxnet3/vmxnet3_drv.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Tue, 2013-10-08 at 13:13 -0600, Bjorn Helgaas wrote:
+> [+cc Ben, Paul, linuxppc-dev]
+> 
+> On Mon, Sep 30, 2013 at 04:52:54PM +0800, Minghuan Lian wrote:
+> > The Freescale's Layerscape series processors will use ARM cores.
+> > The LS1's PCIe controllers is the same as T4240's. So it's better
+> > the PCIe controller driver can support PowerPC and ARM
+> > simultaneously. This patch is for this purpose. It derives
+> > the common functions from arch/powerpc/sysdev/fsl_pci.c to
+> > drivers/pci/host/pci-fsl-common.c and leaves the architecture
+> > specific functions which should be implemented in arch related files.
+> >
+> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> 
+> I cc'd the powerpc maintainers so we can work out which tree this
+> should go through.
+> 
+> > ---
+> > change log:
+> > v1-v2:
+> > 1. rename pci.h to pci-common.h
+> > 2. rename pci-fsl.c to pci-fsl-common.c
+> >
+> > Based on upstream master.
+> > Based on the discussion of RFC version here
+> > http://patchwork.ozlabs.org/patch/274487/
+> >
+> >  arch/powerpc/sysdev/fsl_pci.c                      | 521 +-----------------
+> >  arch/powerpc/sysdev/fsl_pci.h                      |  89 ----
+> >  .../fsl_pci.c => drivers/pci/host/pci-fsl-common.c | 591 +--------------------
+> >  .../fsl_pci.h => include/linux/fsl/pci-common.h    |  45 +-
+> 
+> Is there any way to avoid putting this file in include/linux?  I know
+> you want to share it beyond PowerPC, and I know there are similar
+> examples there already, but this is all arch-specific or
+> chipset-specific stuff that seems like it should be in some
+> not-so-public place.  It doesn't seem scalable to add an include/linux
+> subdirectory for every chipset that might be shared across
+> architectures.
 
-diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
-index 5b8ea71..3518173 100644
---- a/drivers/net/vmxnet3/vmxnet3_drv.c
-+++ b/drivers/net/vmxnet3/vmxnet3_drv.c
-@@ -2750,7 +2750,7 @@ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
- 		} else if (err < 0) {
- 			dev_err(&adapter->netdev->dev,
- 				   "Failed to enable MSI-X, error: %d\n", err);
--			vectors = 0;
-+			return err;
- 		} else if (err < vector_threshold) {
- 			break;
- 		} else {
--- 
-1.7.7.6
+What specifically is the problem with it, as long as it's properly
+namespaced?
+
+-Scott
+
+
 
