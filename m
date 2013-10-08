@@ -1,48 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:13302
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756086Ab3JIRmh convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Oct 2013 13:42:37 -0400
-From: Rajat Jain <rajatjain@juniper.net>
+Received: from 8bytes.org ([85.214.48.195]:36585 "EHLO mail.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751686Ab3JHRCd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 13:02:33 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.8bytes.org (Postfix) with SMTP id 8CF8B12B165
+	for <linux-pci@vger.kernel.org>; Tue,  8 Oct 2013 19:02:31 +0200 (CEST)
+Date: Tue, 8 Oct 2013 19:02:28 +0200
+From: "joro@8bytes.org" <joro@8bytes.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
-Subject: RE: Difference between hot-plug on PCIe rootport vs downstream port
-Date: Wed, 9 Oct 2013 17:42:31 +0000
-Message-ID: <5519286ef69743e39c17efe621de300d@BLUPR05MB118.namprd05.prod.outlook.com>
-References: <43e5eb8dd8c04af197a01dc974f52924@BLUPR05MB118.namprd05.prod.outlook.com>
- <CAErSpo5W9=oFo5kEzWQPCj_OePuCtYU8w7RhVRfz9jH-O=XupQ@mail.gmail.com>
-In-Reply-To: <CAErSpo5W9=oFo5kEzWQPCj_OePuCtYU8w7RhVRfz9jH-O=XupQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Cc: Bhushan Bharat-R65777 <R65777@freescale.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"galak@kernel.crashing.org" <galak@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Wood Scott-B07421 <B07421@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Subject: Re: [PATCH 1/7] powerpc: Add interface to get msi region information
+Message-ID: <20131008170228.GD17455@8bytes.org>
+References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+ <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com>
+ <20130924235812.GD9302@google.com>
+ <6A3DF150A5B70D4F9B66A25E3F7C888D0718FA58@039-SN2MPN1-011.039d.mgd.msft.net>
+ <CAErSpo742BOxzxRaFQn+UnsNday4_8LM6+3G6=cfp9DHecPxDg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo742BOxzxRaFQn+UnsNday4_8LM6+3G6=cfp9DHecPxDg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> >
-> > 1) Does the pciehp support hotplug on both rootport and downstream
-> port?
-> 
-> Yes.  To be precise, pciehp supports hotplug of PCIe devices below Root
-> Ports and Downstream Ports.
-> 
-> > 2) What is so different about these that downstream port hotplug was
-> part of the kernel since very long, but root port hotplug was included
-> releatively recently? Are there any added complexities? I couldn't find
-> anything on the net on this. From my understanding it should be exactly
-> similar?
-> 
-> Hotplugging of PCIe devices below Root Ports and Downstream Ports
-> should be identical.
+On Tue, Oct 08, 2013 at 10:47:49AM -0600, Bjorn Helgaas wrote:
+> I still have no idea what an "aperture type IOMMU" is,
+> other than that it is "different."
 
-Thanks a lot, I think you are right. I got confused between hot-plug of a device on root port, and hot-plug of the root port itself. 
+An aperture based IOMMU is basically any GART-like IOMMU which can only
+remap a small window (the aperture) of the DMA address space. DMA
+outside of that window is either blocked completly or passed through
+untranslated.
 
-No I'm not bothered about the hot-plug of the host bridge itself. I was talking abouthot-plug of a device directly under the root port.
 
-So I' assuming I should be good with pciehp then.
-
-Thanks,
-
-Rajat
+	Joerg
 
 
