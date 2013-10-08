@@ -1,69 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:7237 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751374Ab3JDA7P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Oct 2013 20:59:15 -0400
-Date: Thu, 3 Oct 2013 17:59:13 -0700
-From: Jon Mason <jon.mason@intel.com>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 01/77] PCI/MSI: Fix return value when
- populate_msi_sysfs() failed
-Message-ID: <20131004005912.GB4787@jonmason-lab>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <3ff5236944aae69f2cd934b5b6da7c1c269df7c1.1380703262.git.agordeev@redhat.com>
- <20131003003905.GK6768@jonmason-lab>
- <1380836781.3419.17.camel@bwh-desktop.uk.level5networks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380836781.3419.17.camel@bwh-desktop.uk.level5networks.com>
+Received: from top.free-electrons.com ([176.31.233.9]:59368 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751733Ab3JHHco (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 03:32:44 -0400
+Date: Tue, 8 Oct 2013 09:32:40 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Seungwon Jeon <tgih.jun@samsung.com>
+Subject: Re: [PATCH RESEND] PCI: mvebu: Dynamically detect if the PEX link
+ is up to enable hot plug
+Message-ID: <20131008093240.15ec78ee@skate>
+In-Reply-To: <CAErSpo6pvAQ9exEUsB0p8nmoqs0s5yzfYsstx7wh-2bqDtzBOQ@mail.gmail.com>
+References: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
+	<CAErSpo6pvAQ9exEUsB0p8nmoqs0s5yzfYsstx7wh-2bqDtzBOQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 03, 2013 at 10:46:21PM +0100, Ben Hutchings wrote:
-> On Wed, 2013-10-02 at 17:39 -0700, Jon Mason wrote:
-> > On Wed, Oct 02, 2013 at 12:48:17PM +0200, Alexander Gordeev wrote:
-> > > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > 
-> > Since you are changing the behavior of the msix_capability_init
-> > function on populate_msi_sysfs error, a comment describing why in this
-> > commit would be nice.
-> [...]
-> 
-> This function was already treating that error as fatal, and freeing the
-> MSIs.  The change in behaviour is that it now returns the error code in
-> this case, rather than 0.  This is obviously correct and properly
-> described by the one-line summary.
+Dear Bjorn Helgaas,
 
-If someone dumb, like me, is looking at this commit and trying to
-figure out what is happening, having ANY commit message is good.  "Fix
-the return value" doesn't tell me anything.  Documenting what issue(s)
-would've been seen had the error case been encountered and what will
-now been seen would be very nice.
+On Mon, 7 Oct 2013 16:28:52 -0600, Bjorn Helgaas wrote:
 
+> I see the following mvebu patches in patchwork:
 > 
-> Ben.
-> 
-> -- 
-> Ben Hutchings, Staff Engineer, Solarflare
-> Not speaking for my employer; that's the marketing department's job.
-> They asked us to note that Solarflare product names are trademarked.
-> 
+>   PCI: mvebu: Dynamically detect if the PEX link is up to enable hot plug
+
+This one got my Acked-by, see <20131003144457.4131aea3@skate>.
+
+>   PCI: mvebu - Support a bridge with no IO port window
+
+This one has issues, as I reported to Jason Gunthorpe.
+
+>   PCI: mvebu: add I/O access wrappers
+
+I need to test this one.
+
+Jason Cooper will confirm, but my understanding is that for the 3.13,
+he wanted to merge all the pci-mvebu patches, because he already has
+MSI related changes (that span PCI and irqchip drivers). Of course, if
+you agree with this.
+
+But indeed, this means that Jason C. should also take care of all other
+pci-mvebu patches :)
+
+Jason C, do not hesitate to ping me if you need testing/confirmation on
+some pci-mvebu patches I might have overlooked.
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
