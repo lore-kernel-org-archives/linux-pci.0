@@ -1,48 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61965 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754526Ab3JXO3Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Oct 2013 10:29:24 -0400
-Date: Thu, 24 Oct 2013 16:31:08 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*()
- family helpers
-Message-ID: <20131024143108.GB26610@dhcp-26-207.brq.redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
- <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
- <20131024105158.GB13159@mtj.dyndns.org>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:63334 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756179Ab3JHX0B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 19:26:01 -0400
+Received: by mail-ie0-f178.google.com with SMTP id to1so43611ieb.23
+        for <linux-pci@vger.kernel.org>; Tue, 08 Oct 2013 16:26:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131024105158.GB13159@mtj.dyndns.org>
+In-Reply-To: <1381273037.7979.298.camel@snotra.buserror.net>
+References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+ <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com> <1381273037.7979.298.camel@snotra.buserror.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 8 Oct 2013 17:25:40 -0600
+Message-ID: <CAErSpo7+7SHVcOJkHkW5cjb6pN+bqYeRdPBA=MVX0RLz=-pP6Q@mail.gmail.com>
+Subject: Re: [PATCH 1/7] powerpc: Add interface to get msi region information
+To: Scott Wood <scottwood@freescale.com>
+Cc: Bharat Bhushan <r65777@freescale.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexander Graf <agraf@suse.de>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Bharat Bhushan <Bharat.Bhushan@freescale.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 24, 2013 at 11:51:58AM +0100, Tejun Heo wrote:
-> I haven't looked into any details but, if the above works for most use
-> cases, it looks really good to me.
+>> -     u32 msiir_offset; /* Offset of MSIIR, relative to start of CCSR */
+>> +     dma_addr_t msiir; /* MSIIR Address in CCSR */
+>
+> Are you sure dma_addr_t is right here, versus phys_addr_t?  It implies
+> that it's the output of the DMA API, but I don't think the DMA API is
+> used in the MSI driver.  Perhaps it should be, but we still want the raw
+> physical address to pass on to VFIO.
 
-Well, if we reuse Michael's statistics:
+I don't know what "msiir" is used for, but if it's an address you
+program into a PCI device, then it's a dma_addr_t even if you didn't
+get it from the DMA API.  Maybe "bus_addr_t" would have been a more
+suggestive name than "dma_addr_t".  That said, I have no idea how this
+relates to VFIO.
 
- - 58 drivers call pci_enable_msix()
- - 24 try a single allocation and then fallback to MSI/LSI
- - 19 use the loop style allocation
- - 14 try an allocation, and if it fails retry once
-
-...then I expect most of 19/58 (loop style) could be converted to
-pcim_enable_msix() and pcim_enable_msix_range() and all of 14/58
-(single fallback) should be converted to pcim_enable_msix() users.
-
-> tejun
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Bjorn
