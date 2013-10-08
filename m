@@ -1,91 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:34723 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753702Ab3JPGcI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Oct 2013 02:32:08 -0400
-Message-ID: <525E32FC.3010604@oracle.com>
-Date: Wed, 16 Oct 2013 14:32:28 +0800
-From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Reply-To: zhenzhong.duan@oracle.com
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:53772 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752004Ab3JHL5j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 07:57:39 -0400
+Date: Tue, 8 Oct 2013 07:57:27 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Seungwon Jeon <tgih.jun@samsung.com>
+Subject: Re: [PATCH RESEND] PCI: mvebu: Dynamically detect if the PEX link
+ is up to enable hot plug
+Message-ID: <20131008115727.GD5402@titan.lakedaemon.net>
+References: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
+ <CAErSpo6pvAQ9exEUsB0p8nmoqs0s5yzfYsstx7wh-2bqDtzBOQ@mail.gmail.com>
 MIME-Version: 1.0
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	xen-devel <xen-devel@lists.xen.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Feng Jin <joe.jin@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Subject: [PATCH 1/3] PCI: Refactor restore_msi_irqs - code movement
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6pvAQ9exEUsB0p8nmoqs0s5yzfYsstx7wh-2bqDtzBOQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move default_restore_msi_irqs down to reference msi_mask_irq and msix_mask_irq.
+On Mon, Oct 07, 2013 at 04:28:52PM -0600, Bjorn Helgaas wrote:
+> [+cc Seungwon]
+> 
+> On Tue, Oct 1, 2013 at 11:58 AM, Jason Gunthorpe
+> <jgunthorpe@obsidianresearch.com> wrote:
+> > Otherwise hotplugging the PEX doesn't work at all since the driver
+> > detects the link state at probe time. Simply replacing the two tests
+> > of haslink with a register read is enough to fix it.
+> >
+> > Tested on kirkwood with repeated plug/unplug of the link partner.
+> >
+> > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> 
+> Last I heard (Sep 26), you had some mvebu changes in your tree
+> already, Jason, so I was assuming you'd handle pci-mvebu.c changes, at
+> least for the v3.13 merge window.  But you marked this "resend"; 
 
-This patch lays the groundwork for patch titled:
-'PCI: Refactor MSI/MSIX mask restore code to fix interrupt lost issue'
+That's correct.  I somehow missed these two and I asked JasonG to resend
+them to me.
 
-Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- drivers/pci/msi.c |   36 ++++++++++++++++++------------------
- 1 files changed, 18 insertions(+), 18 deletions(-)
+> does that mean you're waiting for me to do something with it?
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d5f90d6..ecd4cdf 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -116,24 +116,6 @@ void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
- 	return default_teardown_msi_irqs(dev);
- }
- 
--void default_restore_msi_irqs(struct pci_dev *dev, int irq)
--{
--	struct msi_desc *entry;
--
--	entry = NULL;
--	if (dev->msix_enabled) {
--		list_for_each_entry(entry, &dev->msi_list, list) {
--			if (irq == entry->irq)
--				break;
--		}
--	} else if (dev->msi_enabled)  {
--		entry = irq_get_msi_desc(irq);
--	}
--
--	if (entry)
--		write_msi_msg(irq, &entry->msg);
--}
--
- void __weak arch_restore_msi_irqs(struct pci_dev *dev, int irq)
- {
- 	return default_restore_msi_irqs(dev, irq);
-@@ -252,6 +234,24 @@ void unmask_msi_irq(struct irq_data *data)
- 	msi_set_mask_bit(data, 0);
- }
- 
-+void default_restore_msi_irqs(struct pci_dev *dev, int irq)
-+{
-+	struct msi_desc *entry;
-+
-+	entry = NULL;
-+	if (dev->msix_enabled) {
-+		list_for_each_entry(entry, &dev->msi_list, list) {
-+			if (irq == entry->irq)
-+				break;
-+		}
-+	} else if (dev->msi_enabled)  {
-+		entry = irq_get_msi_desc(irq);
-+	}
-+
-+	if (entry)
-+		write_msi_msg(irq, &entry->msg);
-+}
-+
- void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	BUG_ON(entry->dev->current_state != PCI_D0);
--- 
-1.7.3
+Nope, It means I'm looking for a slice of time to get caught up :-P
 
+> I see the following mvebu patches in patchwork:
+> 
+>   PCI: mvebu: Dynamically detect if the PEX link is up to enable hot plug
+>   PCI: mvebu - Support a bridge with no IO port window
+>   PCI: mvebu: add I/O access wrappers
+> 
+> Let me know if I need to do anything with any of them.
+
+I always appreciate an extra set of eyes ;-)  Hopefully, after v3.13, we
+can get back to normal wrt patches going through proper trees.
+
+thx,
+
+Jason.
