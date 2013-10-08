@@ -1,27 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:37436 "EHLO comal.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36725 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753244Ab3JYP47 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 11:56:59 -0400
-Received: from dflxv15.itg.ti.com ([128.247.5.124])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id r9PFuw7X018548
-	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 10:56:58 -0500
-Received: from DLEE71.ent.ti.com (dlee71.ent.ti.com [157.170.170.114])
-	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id r9PFuwv5008219
-	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 10:56:58 -0500
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: AER driver on ARM platform
-Date: Fri, 25 Oct 2013 15:56:57 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752028Ab3JHJGF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 05:06:05 -0400
+Date: Tue, 8 Oct 2013 11:07:16 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Message-ID: <20131008090716.GA10561@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <20131007182117.GC27396@htj.dyndns.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131007182117.GC27396@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Did anyone successfully tested PCIe AER driver on an ARM platform? I saw this enabled in a tegra platform. Could someone from nVidia respond?
+On Mon, Oct 07, 2013 at 02:21:17PM -0400, Tejun Heo wrote:
+> Whee.... that's a lot more than I expected.  I was just scanning
+> multiple msi users.  Maybe we can stage the work in more manageable
+> steps so that you don't have to go through massive conversion only to
+> do it all over again afterwards and likewise people don't get
+> bombarded on each iteration?  Maybe we can first update pci / msi code
+> proper, msi and then msix?
 
-Murali Karicheri
-Team Lead, Linux Kernel
+Multipe MSIs is just a handful of drivers, really. MSI-X impact still
+will be huge. But if we opt a different name for the new pci_enable_msix()
+then we could first update pci/msi, then drivers (in few stages possibly)
+and finally remove the old implementation.
 
+> tejun
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
