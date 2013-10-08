@@ -1,72 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:64644 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752598Ab3JGUsI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 16:48:08 -0400
-Message-ID: <1381178881.1536.28.camel@bwh-desktop.uk.level5networks.com>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Ralf Baechle" <ralf@linux-mips.org>,
+Received: from mx1.redhat.com ([209.132.183.28]:8282 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754370Ab3JHHrL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 03:47:11 -0400
+Date: Tue, 8 Oct 2013 09:48:26 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
 	Dan Williams <dan.j.williams@intel.com>,
 	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	<linux-pci@vger.kernel.org>, <linux-mips@linux-mips.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux390@de.ibm.com>,
-	<linux-s390@vger.kernel.org>, <x86@kernel.org>,
-	<linux-ide@vger.kernel.org>, <iss_storagedev@hp.com>,
-	<linux-nvme@lists.infradead.org>, <linux-rdma@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <e1000-devel@lists.sourceforge.net>,
-	<linux-driver@qlogic.com>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>,
-	<linux-scsi@vger.kernel.org>
-Date: Mon, 7 Oct 2013 21:48:01 +0100
-In-Reply-To: <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 07/77] PCI/MSI: Re-design MSI/MSI-X interrupts
+ enablement pattern
+Message-ID: <20131008074826.GD10669@dhcp-26-207.brq.redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
-	 <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
-	 <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
-	 <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
-	 <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
-	 <1381009586.645.141.camel@pasglop>
-	 <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
-	 <1381040386.645.143.camel@pasglop>
-	 <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+ <d8c36203ada6efbfa9f7ce92c2f713ee3b6d6b8d.1380703262.git.agordeev@redhat.com>
+ <20131007181749.GB27396@htj.dyndns.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131007181749.GB27396@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2013-10-06 at 09:10 +0200, Alexander Gordeev wrote:
-> On Sun, Oct 06, 2013 at 05:19:46PM +1100, Benjamin Herrenschmidt wrote:
-> > On Sun, 2013-10-06 at 08:02 +0200, Alexander Gordeev wrote:
-> > > In fact, in the current design to address the quota race decently the
-> > > drivers would have to protect the *loop* to prevent the quota change
-> > > between a pci_enable_msix() returned a positive number and the the next
-> > > call to pci_enable_msix() with that number. Is it doable?
-> > 
-> > I am not advocating for the current design, simply saying that your
-> > proposal doesn't address this issue while Ben's does.
+On Mon, Oct 07, 2013 at 02:17:49PM -0400, Tejun Heo wrote:
+> Hello,
 > 
-> There is one major flaw in min-max approach - the generic MSI layer
-> will have to take decisions on exact number of MSIs to request, not
-> device drivers.
-[...
+> On Wed, Oct 02, 2013 at 12:48:23PM +0200, Alexander Gordeev wrote:
+> > +static int foo_driver_enable_msi(struct foo_adapter *adapter, int nvec)
+> > +{
+> > +	rc = pci_get_msi_cap(adapter->pdev);
+> > +	if (rc < 0)
+> > +		return rc;
+> > +
+> > +	nvec = min(nvec, rc);
+> > +	if (nvec < FOO_DRIVER_MINIMUM_NVEC) {
+> > +		return -ENOSPC;
+> > +
+> > +	rc = pci_enable_msi_block(adapter->pdev, nvec);
+> > +	return rc;
+> > +}
+> 
+> If there are many which duplicate the above pattern, it'd probably be
+> worthwhile to provide a helper?  It's usually a good idea to reduce
+> the amount of boilerplate code in drivers.
 
-No, the min-max functions should be implemented using the same loop that
-drivers are expected to use now.
+I wanted to limit discussion in v1 to as little changes as possible.
+I 'planned' those helper(s) for a separate effort if/when the most
+important change is accepted and soaked a bit.
 
-Ben.
+> > @@ -975,7 +951,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+> >  	if (nr_entries < 0)
+> >  		return nr_entries;
+> >  	if (nvec > nr_entries)
+> > -		return nr_entries;
+> > +		return -EINVAL;
+> >  
+> >  	/* Check for any invalid entries */
+> >  	for (i = 0; i < nvec; i++) {
+> 
+> If we do things this way, it breaks all drivers using this interface
+> until they're converted, right?
+
+Right. And the rest of the series does it.
+
+> Also, it probably isn't the best idea
+> to flip the behavior like this as this can go completely unnoticed (no
+> compiler warning or anything, the same function just behaves
+> differently).  Maybe it'd be a better idea to introduce a simpler
+> interface that most can be converted to?
+
+Well, an *other* interface is a good idea. What do you mean with the
+simpler here?
+
+> tejun
 
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
