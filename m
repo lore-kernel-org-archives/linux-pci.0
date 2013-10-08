@@ -1,63 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:54415 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752163Ab3JIJsq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Oct 2013 05:48:46 -0400
-Message-ID: <5255266B.6040809@ti.com>
-Date: Wed, 9 Oct 2013 15:18:27 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:52418 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754986Ab3JHQzW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 12:55:22 -0400
+Message-ID: <525438F6.3090600@gmail.com>
+Date: Tue, 08 Oct 2013 11:55:18 -0500
+From: Rob Herring <robherring2@gmail.com>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>,
-	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH] PCI: designware: Add irq_create_mapping()
-References: <000401cec4c6$dc415180$94c3f480$%han@samsung.com> <52551C6E.1040404@ti.com> <003901cec4d0$5d83e650$188bb2f0$%han@samsung.com>
-In-Reply-To: <003901cec4d0$5d83e650$188bb2f0$%han@samsung.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
+	Michal Simek <monstr@monstr.eu>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	devicetree@vger.kernel.org
+Subject: Re: [RFC] Architecture independent pcibios?
+References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com> <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
+In-Reply-To: <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 09 October 2013 02:47 PM, Jingoo Han wrote:
-> On Wednesday, October 09, 2013 6:06 PM, Kishon Vijay Abraham I wrote:
->> On Wednesday 09 October 2013 01:39 PM, Jingoo Han wrote:
->>> Without irq_create_mapping(), the correct irq number cannot be
->>> provided. In this case, it makes problem such as NULL deference.
->>> Thus, irq_create_mapping() should be added for MSI.
->>>
->>> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
->>> Cc: Kishon Vijay Abraham I <kishon@ti.com>
->>> ---
->>> Tested on Exynos5440.
->>>
->>>  drivers/pci/host/pcie-designware.c |   10 ++++------
->>>  drivers/pci/host/pcie-designware.h |    1 +
->>>  2 files changed, 5 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->>> index 8963017..e536bb6 100644
->>> --- a/drivers/pci/host/pcie-designware.c
->>> +++ b/drivers/pci/host/pcie-designware.c
->>> @@ -237,6 +237,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
->>>  		}
->>>  	}
->>>
->>> +	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, 0);
->>> +
+On 10/08/2013 11:32 AM, Bjorn Helgaas wrote:
+> [+cc Grant, Rob, devicetree list]
+> 
+> On Tue, Oct 8, 2013 at 8:42 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> Hello,
 >>
->> I think irq_create_mapping should be done for all the MSI irq lines instead of
->> only the first line. So you might have to do for MAX_MSI_IRQS lines.
+>> I am working on adding PCIe support for a new architecture and looking
+>> at various existing implementations of pcibios functions I've realised
+>> that some architectures share a lot of common code. As I don't like to
+>> repeat the pattern again without any good reasons, I am wondering if
+>> there is any appetite for carving out those common functions into
+>> a generic place under drivers/pci/pcibios.c where they can be reused.
+>>
+>> Things that I am specifically looking at are pcibios_{alloc,free}_controller,
+>> pci_process_bridge_OF_ranges and anything that will make adding support
+>> for PCI/PCIe in a new architecture easier. Candidates for promoting
+>> to a generic place are the functions found in both powerpc and microblaze
+>> as they seem to be mostly identical, they support DT bindings and are
+>> 64bits ready.
+> 
+> I'm very much in favor of unifying code to reduce duplication across
+> architectures.
+> 
+> In general, the pcibios_*() interfaces are things used by the PCI core
+> (drivers/pci) but implemented by the architecture.  The specific cases
+> you mentioned are not actually used by the PCI core, so my inclination
+> would be to name them something else and possibly put them somewhere
+> other than drivers/pci.
+> 
+> I wonder if pci_process_bridge_OF_ranges() would fit somewhere in
+> drivers/of?  The implementations I looked at are mostly concerned with
+> parsing OF resources, and they don't have much to do with PCI
+> directly.
 
-Maybe it should be only till MAX_MSI_IRQS-1?
+This was being done until Ben weighed in:
 
-Thanks
-Kishon
+https://lkml.org/lkml/2013/5/4/103
+
+Rob
+
+> pcibios_alloc_controller() is implemented by microblaze, powerpc, and
+> xtensa.  Each of those arches defines its own "struct pci_controller",
+> so it won't be completely trivial to unify this.  I tried to start
+> some unification with the "struct pci_host_bridge" in the core, but
+> haven't made much progress there.
+> 
+> Bjorn
+> 
+
