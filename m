@@ -1,165 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:15503 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752638Ab3J2Le1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 07:34:27 -0400
-From: Bharat Bhushan <r65777@freescale.com>
-To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<galak@kernel.crashing.org>, <scottwood@freescale.com>,
-	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
-	<stuart.yoder@freescale.com>
-CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
-	Bharat Bhushan <bharat.bhushan@freescale.com>
-Subject: [PATCH 3/5 RFC] powerpc: msi: Extend the msi region interface to get info from fsl_msi
-Date: Tue, 29 Oct 2013 16:57:39 +0530
-Message-ID: <1383046062-16520-3-git-send-email-Bharat.Bhushan@freescale.com>
-In-Reply-To: <1383046062-16520-1-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1383046062-16520-1-git-send-email-Bharat.Bhushan@freescale.com>
+Received: from service87.mimecast.com ([91.220.42.44]:34776 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752452Ab3JHRNs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 13:13:48 -0400
+Date: Tue, 8 Oct 2013 18:13:44 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
+	Michal Simek <monstr@monstr.eu>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [RFC] Architecture independent pcibios?
+Message-ID: <20131008171343.GB25606@e102652-lin.cambridge.arm.com>
+References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
+ <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The FSL MSI will provide the interface to get:
-  - Number of MSI regions (which is number of MSI banks for powerpc)
-  - Get the region address range: Physical page which have the
-    address/addresses used for generating MSI interrupt
-    and size of the page.
+On Tue, Oct 08, 2013 at 05:32:57PM +0100, Bjorn Helgaas wrote:
+> [+cc Grant, Rob, devicetree list]
+> 
+> On Tue, Oct 8, 2013 at 8:42 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > Hello,
+> >
+> > I am working on adding PCIe support for a new architecture and looking
+> > at various existing implementations of pcibios functions I've realised
+> > that some architectures share a lot of common code. As I don't like to
+> > repeat the pattern again without any good reasons, I am wondering if
+> > there is any appetite for carving out those common functions into
+> > a generic place under drivers/pci/pcibios.c where they can be reused.
+> >
+> > Things that I am specifically looking at are pcibios_{alloc,free}_controller,
+> > pci_process_bridge_OF_ranges and anything that will make adding support
+> > for PCI/PCIe in a new architecture easier. Candidates for promoting
+> > to a generic place are the functions found in both powerpc and microblaze
+> > as they seem to be mostly identical, they support DT bindings and are
+> > 64bits ready.
+> 
+> I'm very much in favor of unifying code to reduce duplication across
+> architectures.
+> 
+> In general, the pcibios_*() interfaces are things used by the PCI core
+> (drivers/pci) but implemented by the architecture.  The specific cases
+> you mentioned are not actually used by the PCI core, so my inclination
+> would be to name them something else and possibly put them somewhere
+> other than drivers/pci.
 
-These are required to create IOMMU (Freescale PAMU) mapping for
-devices which are directly assigned using VFIO.
+There are at least a handful of architectures that seem to share the same
+implementation for most (all?) of the pcibios_*() functions. (PowerPC and
+microblaze the most obvious offenders, x86 to a certain extent).
 
-Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
----
- arch/powerpc/sysdev/fsl_msi.c |   42 +++++++++++++++++++++++++++++++++++-----
- arch/powerpc/sysdev/fsl_msi.h |   11 ++++++++-
- 2 files changed, 45 insertions(+), 8 deletions(-)
+> 
+> I wonder if pci_process_bridge_OF_ranges() would fit somewhere in
+> drivers/of?  The implementations I looked at are mostly concerned with
+> parsing OF resources, and they don't have much to do with PCI
+> directly.
 
-diff --git a/arch/powerpc/sysdev/fsl_msi.c b/arch/powerpc/sysdev/fsl_msi.c
-index 77efbae..eeebbf0 100644
---- a/arch/powerpc/sysdev/fsl_msi.c
-+++ b/arch/powerpc/sysdev/fsl_msi.c
-@@ -109,6 +109,34 @@ static int fsl_msi_init_allocator(struct fsl_msi *msi_data)
- 	return 0;
- }
- 
-+static int fsl_msi_get_region_count(void)
-+{
-+	int count = 0;
-+	struct fsl_msi *msi_data;
-+
-+	list_for_each_entry(msi_data, &msi_head, list)
-+		count++;
-+
-+	return count;
-+}
-+
-+static int fsl_msi_get_region(int region_num, struct msi_region *region)
-+{
-+	struct fsl_msi *msi_data;
-+
-+	list_for_each_entry(msi_data, &msi_head, list) {
-+		if (msi_data->bank_index == region_num) {
-+			region->region_num = msi_data->bank_index;
-+			/* Setting PAGE_SIZE as MSIIR is a 4 byte register */
-+			region->size = PAGE_SIZE;
-+			region->addr = msi_data->msiir & ~(region->size - 1);
-+			return 0;
-+		}
-+	}
-+
-+	return -ENODEV;
-+}
-+
- static int fsl_msi_check_device(struct pci_dev *pdev, int nvec, int type)
- {
- 	if (type == PCI_CAP_ID_MSIX)
-@@ -150,7 +178,8 @@ static void fsl_compose_msi_msg(struct pci_dev *pdev, int hwirq,
- 	if (reg && (len == sizeof(u64)))
- 		address = be64_to_cpup(reg);
- 	else
--		address = fsl_pci_immrbar_base(hose) + msi_data->msiir_offset;
-+		address = fsl_pci_immrbar_base(hose) +
-+			   (msi_data->msiir & 0xfffff);
- 
- 	msg->address_lo = lower_32_bits(address);
- 	msg->address_hi = upper_32_bits(address);
-@@ -393,6 +422,7 @@ static int fsl_of_msi_probe(struct platform_device *dev)
- 	const struct fsl_msi_feature *features;
- 	int len;
- 	u32 offset;
-+	static atomic_t bank_index = ATOMIC_INIT(-1);
- 
- 	match = of_match_device(fsl_of_msi_ids, &dev->dev);
- 	if (!match)
-@@ -436,18 +466,15 @@ static int fsl_of_msi_probe(struct platform_device *dev)
- 				dev->dev.of_node->full_name);
- 			goto error_out;
- 		}
--		msi->msiir_offset =
--			features->msiir_offset + (res.start & 0xfffff);
- 
- 		/*
- 		 * First read the MSIIR/MSIIR1 offset from dts
- 		 * On failure use the hardcode MSIIR offset
- 		 */
- 		if (of_address_to_resource(dev->dev.of_node, 1, &msiir))
--			msi->msiir_offset = features->msiir_offset +
--					    (res.start & MSIIR_OFFSET_MASK);
-+			msi->msiir = res.start + features->msiir_offset;
- 		else
--			msi->msiir_offset = msiir.start & MSIIR_OFFSET_MASK;
-+			msi->msiir = msiir.start;
- 	}
- 
- 	msi->feature = features->fsl_pic_ip;
-@@ -521,6 +548,7 @@ static int fsl_of_msi_probe(struct platform_device *dev)
- 		}
- 	}
- 
-+	msi->bank_index = atomic_inc_return(&bank_index);
- 	list_add_tail(&msi->list, &msi_head);
- 
- 	/* The multiple setting ppc_md.setup_msi_irqs will not harm things */
-@@ -528,6 +556,8 @@ static int fsl_of_msi_probe(struct platform_device *dev)
- 		ppc_md.setup_msi_irqs = fsl_setup_msi_irqs;
- 		ppc_md.teardown_msi_irqs = fsl_teardown_msi_irqs;
- 		ppc_md.msi_check_device = fsl_msi_check_device;
-+		ppc_md.msi_get_region_count = fsl_msi_get_region_count;
-+		ppc_md.msi_get_region = fsl_msi_get_region;
- 	} else if (ppc_md.setup_msi_irqs != fsl_setup_msi_irqs) {
- 		dev_err(&dev->dev, "Different MSI driver already installed!\n");
- 		err = -ENODEV;
-diff --git a/arch/powerpc/sysdev/fsl_msi.h b/arch/powerpc/sysdev/fsl_msi.h
-index df9aa9f..a2cc5a2 100644
---- a/arch/powerpc/sysdev/fsl_msi.h
-+++ b/arch/powerpc/sysdev/fsl_msi.h
-@@ -31,14 +31,21 @@ struct fsl_msi {
- 	struct irq_domain *irqhost;
- 
- 	unsigned long cascade_irq;
--
--	u32 msiir_offset; /* Offset of MSIIR, relative to start of CCSR */
-+	phys_addr_t msiir; /* MSIIR Address in CCSR */
- 	u32 ibs_shift; /* Shift of interrupt bit select */
- 	u32 srs_shift; /* Shift of the shared interrupt register select */
- 	void __iomem *msi_regs;
- 	u32 feature;
- 	int msi_virqs[NR_MSI_REG_MAX];
- 
-+	/*
-+	 * During probe each bank is assigned a index number.
-+	 * index number start from 0.
-+	 * Example  MSI bank 1 = 0
-+	 * MSI bank 2 = 1, and so on.
-+	 */
-+	int bank_index;
-+
- 	struct msi_bitmap bitmap;
- 
- 	struct list_head list;          /* support multiple MSI banks */
+Andrew Murray did sent a patch that was placing pci_process_bridge_OF_ranges()
+in the drivers/of. I can update that, as I have taken over his work.
+
+> 
+> pcibios_alloc_controller() is implemented by microblaze, powerpc, and
+> xtensa.  Each of those arches defines its own "struct pci_controller",
+> so it won't be completely trivial to unify this.  I tried to start
+> some unification with the "struct pci_host_bridge" in the core, but
+> haven't made much progress there.
+
+Do you have anything that you could share? I would pretty much like to take
+on that as well, as I don't want to create yet another
+"struct pci_controller." BTW, powerpc and microblaze again share a very
+similarly looking structure.
+
+Best regards,
+Liviu
+
+> 
+> Bjorn
+> 
+
 -- 
-1.7.0.4
-
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
