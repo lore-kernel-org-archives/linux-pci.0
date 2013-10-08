@@ -1,38 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:14027 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754128Ab3JHQym (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 12:54:42 -0400
-Date: Tue, 8 Oct 2013 12:54:35 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCH RESEND] PCI: mvebu: Dynamically detect if the PEX link
- is up to enable hot plug
-Message-ID: <20131008165435.GO5402@titan.lakedaemon.net>
-References: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
+Received: from gate.crashing.org ([63.228.1.57]:36321 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756002Ab3JHU31 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 16:29:27 -0400
+Message-ID: <1381264135.645.230.camel@pasglop>
+Subject: Re: [RFC] Architecture independent pcibios?
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
+	Michal Simek <monstr@monstr.eu>,
+	Grant Likely <grant.likely@linaro.org>,
+	devicetree@vger.kernel.org
+Date: Wed, 09 Oct 2013 07:28:55 +1100
+In-Reply-To: <525438F6.3090600@gmail.com>
+References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
+	 <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
+	 <525438F6.3090600@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 01, 2013 at 11:58:00AM -0600, Jason Gunthorpe wrote:
-> Otherwise hotplugging the PEX doesn't work at all since the driver
-> detects the link state at probe time. Simply replacing the two tests
-> of haslink with a register read is enough to fix it.
+On Tue, 2013-10-08 at 11:55 -0500, Rob Herring wrote:
+
+> > I wonder if pci_process_bridge_OF_ranges() would fit somewhere in
+> > drivers/of?  The implementations I looked at are mostly concerned with
+> > parsing OF resources, and they don't have much to do with PCI
+> > directly.
 > 
-> Tested on kirkwood with repeated plug/unplug of the link partner.
+> This was being done until Ben weighed in:
 > 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> ---
->  drivers/pci/host/pci-mvebu.c | 16 ++--------------
->  1 file changed, 2 insertions(+), 14 deletions(-)
+> https://lkml.org/lkml/2013/5/4/103
 
-Applied to mvebu/drivers with Thomas' Ack and Tested-by.
+Well, I proposed an alternative (better) approach which I of course had
+no time to actually implement yet :-)
 
-thx,
+I have done the changes I needed to do to powerpc
+pci_process_bridge_OF_ranges so it would be possible to move that now to
+a generic place, but I still think it's not a great idea. It means the
+pci_controller structure with its resources will have to become generic
+which somewhat overlaps with the pci_host_bridge that Bjorn introduced,
+so that's really not great.
 
-Jason.
+I still think an arch with DT and simpler PCI code that powerpc could
+start looking at the transition to a better model that I hinted at...
+
+Cheers,
+Ben.
+
+
