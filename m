@@ -1,46 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:43561 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751858Ab3JYJMM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 Oct 2013 05:12:12 -0400
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 23173-01 for <linux-pci@vger.kernel.org>;
- Fri, 25 Oct 2013 10:12:07 +0100 (BST)
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:14027 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754128Ab3JHQym (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 12:54:42 -0400
+Date: Tue, 8 Oct 2013 12:54:35 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: Re: [PATCH RESEND] PCI: mvebu: Dynamically detect if the PEX link
+ is up to enable hot plug
+Message-ID: <20131008165435.GO5402@titan.lakedaemon.net>
+References: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Subject: RE: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*() family helpers
-Date: Fri, 25 Oct 2013 10:10:02 +0100
-Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B73B0@saturn3.aculab.com>
-In-Reply-To: <5269D5D1.60103@start.ca>
-References: <cover.1382103786.git.agordeev@redhat.com> <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com> <20131024105158.GB13159@mtj.dyndns.org> <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com> <20131024114133.GA26610@dhcp-26-207.brq.redhat.com> <5269D5D1.60103@start.ca>
-From: "David Laight" <David.Laight@ACULAB.COM>
-To: "Mark Lord" <kernel@start.ca>,
-	"Alexander Gordeev" <agordeev@redhat.com>
-Cc: "Tejun Heo" <tj@kernel.org>, <linux-kernel@vger.kernel.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"Michael Ellerman" <michael@ellerman.id.au>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiA+IHBjaW1fZW5hYmxlX21zaXhfbWluX21heChzdHJ1Y3QgcGNpX2RldiAqZGV2LCBzdHJ1Y3Qg
-bXNpeF9lbnRyeSAqZW50cmllcywNCj4gPiAJCQkgdW5zaWduZWQgaW50IG1pbnZlYywgdW5zaWdu
-ZWQgaW50IG1heHZlYyk7DQo+IA0KPiBUaGUgaGFyZHdhcmUgSSBoYXZlIGluIG1pbmQgaGVyZSB3
-b3JrcyBvbmx5IGZvciBwb3dlcnMgb2YgdHdvLg0KPiBFZy4gMTYsIDgsIDQsIDIsIG9yIDEgTVNJ
-LVggdmVjdG9yLiAgTm90IHRoZSBvZGQgdmFsdWVzIGluIGJldHdlZW4uDQo+IA0KPiBCdXQgaXQg
-YXBwZWFycyBJIGNhbiBzdGlsbCBqdXN0IHVzZSBhIGxvb3AgZm9yIHRoYXQgY2FzZSwNCj4gY2Fs
-bGluZyB0aGUgbmV3IGZ1bmN0aW9uIGFib3ZlIGluc3RlYWQgb2YgdGhlIG9sZCBmdW5jdGlvbnMu
-DQoNCllvdSdkIGVpdGhlciBoYXZlIHRvIGxvb3Agd2l0aCBtaW4gYW5kIG1heCB0aGUgc2FtZSAo
-c3RhcnRpbmcgYXQgMTYpLA0Kb3IgZG8gYSBzaW5nbGUgY2FsbCB3aXRoIG1pbj0xIGFuZCBtYXg9
-MTYgYW5kIHRoZSByZWxlYXNlIHRoZQ0KdW53YW50ZWQgb25lcy4NCg0KVGhlIGxhdHRlciBtaWdo
-dCBiZSBwcmVmZXJyZWQgYmVjYXVzZSBpdCBtaWdodCBzdG9wIGFuIGFubm95aW5nDQp0cmFjZSBh
-Ym91dCB0aGUgc3lzdGVtIG5vdCBoYXZpbmcgZW5vdWdoIE1TSSBpbnRlcnJ1cHRzLg0KDQpXaGF0
-IHRoaXMgZG9lc24ndCByZXNvbHZlIGlzIGEgZHJpdmVyIHJlcXVlc3RpbmcgYSBsb3Qgb2YgaW50
-ZXJydXB0cw0KZWFybHkgb24gYW5kIGxlYXZpbmcgbm9uZSBmb3IgbGF0ZXIgZHJpdmVycy4NCg0K
-UmVhbGx5IHRoZSBzeXN0ZW0gbmVlZHMgdG8gYWxsb2NhdGUgdGhlIG1pbmltdW0gbnVtYmVyIHRv
-IGFsbA0KZHJpdmVycyBiZWZvcmUgZ2l2aW5nIG91dCBhbnkgZXh0cmEgb25lcyAtIEkndmUgTkZJ
-IGhvdyB0aGlzDQp3b3VsZCBiZSBhcnJhbmdlZCENCg0KCURhdmlkDQoNCg==
+On Tue, Oct 01, 2013 at 11:58:00AM -0600, Jason Gunthorpe wrote:
+> Otherwise hotplugging the PEX doesn't work at all since the driver
+> detects the link state at probe time. Simply replacing the two tests
+> of haslink with a register read is enough to fix it.
+> 
+> Tested on kirkwood with repeated plug/unplug of the link partner.
+> 
+> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> ---
+>  drivers/pci/host/pci-mvebu.c | 16 ++--------------
+>  1 file changed, 2 insertions(+), 14 deletions(-)
+
+Applied to mvebu/drivers with Thomas' Ack and Tested-by.
+
+thx,
+
+Jason.
