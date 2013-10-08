@@ -1,82 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:28992
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750799Ab3JIEsC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 00:48:02 -0400
-From: Bhushan Bharat-R65777 <R65777@freescale.com>
-To: Wood Scott-B07421 <B07421@freescale.com>
-CC: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"galak@kernel.crashing.org" <galak@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: RE: [PATCH 1/7] powerpc: Add interface to get msi region information
-Date: Wed, 9 Oct 2013 04:47:19 +0000
-Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D071A1526@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com>
- <1381273037.7979.298.camel@snotra.buserror.net>
-In-Reply-To: <1381273037.7979.298.camel@snotra.buserror.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:36917 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753963Ab3JHQIN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 12:08:13 -0400
+Received: by mail-ie0-f181.google.com with SMTP id tp5so19619961ieb.40
+        for <linux-pci@vger.kernel.org>; Tue, 08 Oct 2013 09:08:13 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20131008092137.0ed32a32@skate>
+References: <20131007233846.11805.50302.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20131008092137.0ed32a32@skate>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 8 Oct 2013 10:07:52 -0600
+Message-ID: <CAErSpo4bn_TVbquQrs_WzLnL8Q=2urk1VyrWPiqDBnh6OrQbtQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: mvebu: Make mvebu_pcie_align_resource() static
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogV29vZCBTY290dC1CMDc0
-MjENCj4gU2VudDogV2VkbmVzZGF5LCBPY3RvYmVyIDA5LCAyMDEzIDQ6MjcgQU0NCj4gVG86IEJo
-dXNoYW4gQmhhcmF0LVI2NTc3Nw0KPiBDYzogYWxleC53aWxsaWFtc29uQHJlZGhhdC5jb207IGpv
-cm9AOGJ5dGVzLm9yZzsgYmVuaEBrZXJuZWwuY3Jhc2hpbmcub3JnOw0KPiBnYWxha0BrZXJuZWwu
-Y3Jhc2hpbmcub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eHBwYy0NCj4g
-ZGV2QGxpc3RzLm96bGFicy5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGFncmFmQHN1
-c2UuZGU7DQo+IGlvbW11QGxpc3RzLmxpbnV4LWZvdW5kYXRpb24ub3JnOyBCaHVzaGFuIEJoYXJh
-dC1SNjU3NzcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzddIHBvd2VycGM6IEFkZCBpbnRlcmZh
-Y2UgdG8gZ2V0IG1zaSByZWdpb24gaW5mb3JtYXRpb24NCj4gDQo+IE9uIFRodSwgMjAxMy0wOS0x
-OSBhdCAxMjo1OSArMDUzMCwgQmhhcmF0IEJodXNoYW4gd3JvdGU6DQo+ID4gQEAgLTM3Niw2ICs0
-MDUsNyBAQCBzdGF0aWMgaW50IGZzbF9vZl9tc2lfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2Rldmlj
-ZSAqZGV2KQ0KPiA+ICAJaW50IGxlbjsNCj4gPiAgCXUzMiBvZmZzZXQ7DQo+ID4gIAlzdGF0aWMg
-Y29uc3QgdTMyIGFsbF9hdmFpbFtdID0geyAwLCBOUl9NU0lfSVJRUyB9Ow0KPiA+ICsJc3RhdGlj
-IGludCBiYW5rX2luZGV4Ow0KPiA+DQo+ID4gIAltYXRjaCA9IG9mX21hdGNoX2RldmljZShmc2xf
-b2ZfbXNpX2lkcywgJmRldi0+ZGV2KTsNCj4gPiAgCWlmICghbWF0Y2gpDQo+ID4gQEAgLTQxOSw4
-ICs0NDksOCBAQCBzdGF0aWMgaW50IGZzbF9vZl9tc2lfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2Rl
-dmljZSAqZGV2KQ0KPiA+ICAJCQkJZGV2LT5kZXYub2Zfbm9kZS0+ZnVsbF9uYW1lKTsNCj4gPiAg
-CQkJZ290byBlcnJvcl9vdXQ7DQo+ID4gIAkJfQ0KPiA+IC0JCW1zaS0+bXNpaXJfb2Zmc2V0ID0N
-Cj4gPiAtCQkJZmVhdHVyZXMtPm1zaWlyX29mZnNldCArIChyZXMuc3RhcnQgJiAweGZmZmZmKTsN
-Cj4gPiArCQltc2ktPm1zaWlyID0gcmVzLnN0YXJ0ICsgZmVhdHVyZXMtPm1zaWlyX29mZnNldDsN
-Cj4gPiArCQlwcmludGsoIm1zaS0+bXNpaXIgPSAlbGx4XG4iLCBtc2ktPm1zaWlyKTsNCj4gDQo+
-IGRldl9kYmcgb3IgcmVtb3ZlDQoNCk9vcHMsIHNvcnJ5IGl0IHdhcyBsZWZ0b3ZlciBvZiBkZWJ1
-Z2dpbmcgOigNCg0KPiANCj4gPiAgCX0NCj4gPg0KPiA+ICAJbXNpLT5mZWF0dXJlID0gZmVhdHVy
-ZXMtPmZzbF9waWNfaXA7IEBAIC00NzAsNiArNTAwLDcgQEAgc3RhdGljIGludA0KPiA+IGZzbF9v
-Zl9tc2lfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZSAqZGV2KQ0KPiA+ICAJCX0NCj4gPiAg
-CX0NCj4gPg0KPiA+ICsJbXNpLT5iYW5rX2luZGV4ID0gYmFua19pbmRleCsrOw0KPiANCj4gV2hh
-dCBpZiBtdWx0aXBsZSBNU0lzIGFyZSBib2luZyBwcm9iZWQgaW4gcGFyYWxsZWw/DQoNCk9oaCwg
-SSBoYXZlIG5vdCB0aG91Z2h0IHRoYXQgaXQgY2FuIGJlIGNhbGxlZCBpbiBwYXJhbGxlbA0KDQo+
-ICBiYW5rX2luZGV4IGlzIG5vdCBhdG9taWMuDQoNCldpbGwgZGVjbGFyZSBiYW5rX2ludGV4IGFz
-IGF0b21pY190IGFuZCB1c2UgYXRvbWljX2luY19yZXR1cm4oJmJhbmtfaW5kZXgpDQoNCj4gDQo+
-ID4gZGlmZiAtLWdpdCBhL2FyY2gvcG93ZXJwYy9zeXNkZXYvZnNsX21zaS5oDQo+ID4gYi9hcmNo
-L3Bvd2VycGMvc3lzZGV2L2ZzbF9tc2kuaCBpbmRleCA4MjI1Zjg2Li42YmQ1Y2ZjIDEwMDY0NA0K
-PiA+IC0tLSBhL2FyY2gvcG93ZXJwYy9zeXNkZXYvZnNsX21zaS5oDQo+ID4gKysrIGIvYXJjaC9w
-b3dlcnBjL3N5c2Rldi9mc2xfbXNpLmgNCj4gPiBAQCAtMjksMTIgKzI5LDE5IEBAIHN0cnVjdCBm
-c2xfbXNpIHsNCj4gPiAgCXN0cnVjdCBpcnFfZG9tYWluICppcnFob3N0Ow0KPiA+DQo+ID4gIAl1
-bnNpZ25lZCBsb25nIGNhc2NhZGVfaXJxOw0KPiA+IC0NCj4gPiAtCXUzMiBtc2lpcl9vZmZzZXQ7
-IC8qIE9mZnNldCBvZiBNU0lJUiwgcmVsYXRpdmUgdG8gc3RhcnQgb2YgQ0NTUiAqLw0KPiA+ICsJ
-ZG1hX2FkZHJfdCBtc2lpcjsgLyogTVNJSVIgQWRkcmVzcyBpbiBDQ1NSICovDQo+IA0KPiBBcmUg
-eW91IHN1cmUgZG1hX2FkZHJfdCBpcyByaWdodCBoZXJlLCB2ZXJzdXMgcGh5c19hZGRyX3Q/ICBJ
-dCBpbXBsaWVzIHRoYXQgaXQncw0KPiB0aGUgb3V0cHV0IG9mIHRoZSBETUEgQVBJLCBidXQgSSBk
-b24ndCB0aGluayB0aGUgRE1BIEFQSSBpcyB1c2VkIGluIHRoZSBNU0kNCj4gZHJpdmVyLiAgUGVy
-aGFwcyBpdCBzaG91bGQgYmUsIGJ1dCB3ZSBzdGlsbCB3YW50IHRoZSByYXcgcGh5c2ljYWwgYWRk
-cmVzcyB0bw0KPiBwYXNzIG9uIHRvIFZGSU8uDQoNCkxvb2tpbmcgdGhyb3VnaCB0aGUgY29udmVy
-c2F0aW9uIEkgd2lsbCBtYWtlIHRoaXMgcGh5c19hZGRyX3QNCg0KPiANCj4gPiAgCXZvaWQgX19p
-b21lbSAqbXNpX3JlZ3M7DQo+ID4gIAl1MzIgZmVhdHVyZTsNCj4gPiAgCWludCBtc2lfdmlycXNb
-TlJfTVNJX1JFR107DQo+ID4NCj4gPiArCS8qDQo+ID4gKwkgKiBEdXJpbmcgcHJvYmUgZWFjaCBi
-YW5rIGlzIGFzc2lnbmVkIGEgaW5kZXggbnVtYmVyLg0KPiA+ICsJICogaW5kZXggbnVtYmVyIHJh
-bmdlcyBmcm9tIDAgdG8gMl4zMi4NCj4gPiArCSAqIEV4YW1wbGUgIE1TSSBiYW5rIDEgPSAwDQo+
-ID4gKwkgKiBNU0kgYmFuayAyID0gMSwgYW5kIHNvIG9uLg0KPiA+ICsJICovDQo+ID4gKwlpbnQg
-YmFua19pbmRleDsNCj4gDQo+IDJeMzIgZG9lc24ndCBmaXQgaW4gImludCIgKG5vciBkb2VzIDJe
-MzIgLSAxKS4NCg0KUmlnaHQgOigNCg0KPiANCj4gSnVzdCBzYXkgdGhhdCBpbmRpY2VzIHN0YXJ0
-IGF0IDAuDQoNCldpbGwgY29ycmVjdCB0aGlzDQoNClRoYW5rcw0KLUJoYXJhdA0KDQo+IA0KPiAt
-U2NvdHQNCj4gDQoNCg==
+On Tue, Oct 8, 2013 at 1:21 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> Dear Bjorn Helgaas,
+>
+> On Mon, 07 Oct 2013 17:38:46 -0600, Bjorn Helgaas wrote:
+>> mvebu_pcie_align_resource() is only used inside pci-mvebu.c, so
+>> make it static.
+>>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> I'm obviously fine with that, but there is already a patch "[PATCH V2
+> 2/3] PCI: mvebu: make local functions static" hanging around to do the
+> same.
 
+OK, sorry for the duplication.  I dropped Jingoo's patch from
+patchwork because Jason C. is merging mvebu stuff, and then it's "out
+of sight, out of mind."
+
+Bjorn
