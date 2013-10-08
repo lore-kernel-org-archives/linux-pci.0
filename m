@@ -1,67 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:46307 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751182Ab3J2WUk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 18:20:40 -0400
-Received: by mail-ie0-f169.google.com with SMTP id ar20so900199iec.14
-        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 15:20:39 -0700 (PDT)
-Date: Tue, 29 Oct 2013 16:20:36 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 1/2] kobject: remove kset from sysfs immediately in
+ kset_unregister()
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Marek Vasut <marex@denx.de>, Frank Li <lznuaa@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PCI: imx6: increase link startup
-Message-ID: <20131029222036.GB15159@google.com>
-References: <1382505138-23286-1-git-send-email-tharvey@gateworks.com>
+Cc: Veaceslav Falico <vfalico@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Neil Horman <nhorman@tuxdriver.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Zdenek Kabelac <zkabelac@redhat.com>
+Date: Tue, 08 Oct 2013 14:20:16 -0600
+Message-ID: <20131008202016.19377.17182.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20131008201915.19377.34185.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20131008201915.19377.34185.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382505138-23286-1-git-send-email-tharvey@gateworks.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 22, 2013 at 10:12:18PM -0700, Tim Harvey wrote:
-> An increase link startup delay is required when certain PCI switches are
-> attached to the root complex.  This was tested with a Pericom switch
-> and a PLX switch.
-> 
-> From: Marek Vasut <marex@denx.de>
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Acked-by: Tim Harvey <tharvey@gateworks.com>
+There's no explicit "unlink from sysfs" interface for ksets, so I think
+callers of kset_unregister() expect the kset to be removed from sysfs
+immediately, without waiting for the last reference to be released.
 
-I applied this with Shawn's ack to my pci/host-imx6 branch for v3.13,
-thanks!
+This patch makes the sysfs removal happen immediately, so the caller may
+create a new kset with the same name as soon as kset_unregister() returns.
 
-I assume the intent was that this patch was written by Marek, per the
-"From:" line you added above, so I fixed that in the patch so Marek
-appears as the author.  Let me know if this is incorrect.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ Documentation/kobject.txt |    3 ++-
+ lib/kobject.c             |    1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-> ---
->  drivers/pci/host/pci-imx6.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 90fce05..34c571a 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -318,7 +318,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
->  	while (!dw_pcie_link_up(pp)) {
->  		usleep_range(100, 1000);
->  		count++;
-> -		if (count >= 10) {
-> +		if (count >= 200) {
->  			dev_err(pp->dev, "phy link never came up\n");
->  			dev_dbg(pp->dev,
->  				"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
-> -- 
-> 1.7.9.5
-> 
+diff --git a/Documentation/kobject.txt b/Documentation/kobject.txt
+index c5182bb..8e8b501 100644
+--- a/Documentation/kobject.txt
++++ b/Documentation/kobject.txt
+@@ -342,7 +342,8 @@ kset use:
+ 
+ When you are finished with the kset, call:
+   void kset_unregister(struct kset *kset);
+-to destroy it.
++to destroy it.  This removes the kset from sysfs and, after the kset
++reference count goes to zero, releases it.
+ 
+ An example of using a kset can be seen in the
+ samples/kobject/kset-example.c file in the kernel tree.
+diff --git a/lib/kobject.c b/lib/kobject.c
+index 9621751..9098992 100644
+--- a/lib/kobject.c
++++ b/lib/kobject.c
+@@ -753,6 +753,7 @@ void kset_unregister(struct kset *k)
+ {
+ 	if (!k)
+ 		return;
++	kobject_del(&k->kobj);
+ 	kobject_put(&k->kobj);
+ }
+ 
+
