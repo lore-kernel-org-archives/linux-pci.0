@@ -1,52 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:58170 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755976Ab3JRA1c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2013 20:27:32 -0400
-Received: by mail-pd0-f178.google.com with SMTP id w10so3668860pde.37
-        for <linux-pci@vger.kernel.org>; Thu, 17 Oct 2013 17:27:32 -0700 (PDT)
-From: Tim Harvey <tharvey@gateworks.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Marek Vasut <marex@denx.de>
-Subject: [PATCH] PCI: imx6: fix imprecise abort handler
-Date: Thu, 17 Oct 2013 17:27:22 -0700
-Message-Id: <1382056042-7299-1-git-send-email-tharvey@gateworks.com>
+Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:13302
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756086Ab3JIRmh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Oct 2013 13:42:37 -0400
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
+Subject: RE: Difference between hot-plug on PCIe rootport vs downstream port
+Date: Wed, 9 Oct 2013 17:42:31 +0000
+Message-ID: <5519286ef69743e39c17efe621de300d@BLUPR05MB118.namprd05.prod.outlook.com>
+References: <43e5eb8dd8c04af197a01dc974f52924@BLUPR05MB118.namprd05.prod.outlook.com>
+ <CAErSpo5W9=oFo5kEzWQPCj_OePuCtYU8w7RhVRfz9jH-O=XupQ@mail.gmail.com>
+In-Reply-To: <CAErSpo5W9=oFo5kEzWQPCj_OePuCtYU8w7RhVRfz9jH-O=XupQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An imprecise abort is triggered when a port behind a switch is accessed
-and no device is present.  At enumeration, imprecise aborts are not enabled
-thus this ends up getting deferred until the kernel has completed init.  At
-that point we must not adjust PC - the handler must do nothing, but a handler
-must exist.
+> >
+> > 1) Does the pciehp support hotplug on both rootport and downstream
+> port?
+> 
+> Yes.  To be precise, pciehp supports hotplug of PCIe devices below Root
+> Ports and Downstream Ports.
+> 
+> > 2) What is so different about these that downstream port hotplug was
+> part of the kernel since very long, but root port hotplug was included
+> releatively recently? Are there any added complexities? I couldn't find
+> anything on the net on this. From my understanding it should be exactly
+> similar?
+> 
+> Hotplugging of PCIe devices below Root Ports and Downstream Ports
+> should be identical.
 
-This fixes random crashes that occur right after freeing init.
-This is against linux-pci/host-imx6.
+Thanks a lot, I think you are right. I got confused between hot-plug of a device on root port, and hot-plug of the root port itself. 
 
-Acked-by: Marek Vasut <marex@denx.de>
-Tested-by: Marek Vasut <marex@denx.de>
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
----
- drivers/pci/host/pci-imx6.c |    6 ------
- 1 file changed, 6 deletions(-)
+No I'm not bothered about the hot-plug of the host bridge itself. I was talking abouthot-plug of a device directly under the root port.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 966bac6..90fce05 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -200,12 +200,6 @@ static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
- static int imx6q_pcie_abort_handler(unsigned long addr,
- 		unsigned int fsr, struct pt_regs *regs)
- {
--	/*
--	 * If it was an imprecise abort, then we need to correct the
--	 * return address to be _after_ the instruction.
--	 */
--	if (fsr & (1 << 10))
--		regs->ARM_pc += 4;
- 	return 0;
- }
- 
--- 
-1.7.9.5
+So I' assuming I should be good with pciehp then.
+
+Thanks,
+
+Rajat
+
 
