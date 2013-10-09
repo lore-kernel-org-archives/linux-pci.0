@@ -1,90 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 28 Oct 2013 18:30:56 +0100
-From: Veaceslav Falico <vfalico@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [BUG 3.12.rc4] Oops: unable to handle kernel paging request
- during shutdown
-Message-ID: <20131028173056.GF11209@redhat.com>
-References: <525BD08C.2080101@t-online.de>
- <CA+55aFwN++wO=rTFaH7m6YYQX+Fv3qDt6Hxs7UnPUJpFsrwSkA@mail.gmail.com>
- <CA+55aFy7TpvkVuPEOJ7Qqirwap1gXoD1_MrYLhgPAYuVpN8u=w@mail.gmail.com>
- <alpine.DEB.2.02.1310251221310.5266@ionos.tec.linutronix.de>
- <CA+55aFxw1Hm4QVeEigkByP5RppSL30oHnLoR16C=henf-a=uFQ@mail.gmail.com>
- <CA+55aFyb72qoZ1Tjpb+=q-6+GmwoOXjfntY_zZnf300gg3d1Hg@mail.gmail.com>
- <CA+55aFxuVpDo3LvmG9j-Hu7sENLTcsB6_CY2TA4mE-k+CuTeGg@mail.gmail.com>
- <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com>
- <20131027212407.GA17439@kroah.com>
- <CAErSpo5NmBDqRA3URAQPmw4iC3xvpDdd9JFROuftLJE1YsbPhA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from terminus.zytor.com ([198.137.202.10]:46300 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754595Ab3JID5k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 23:57:40 -0400
+Message-ID: <5254D397.9030307@zytor.com>
+Date: Tue, 08 Oct 2013 20:55:03 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <CAErSpo5NmBDqRA3URAQPmw4iC3xvpDdd9JFROuftLJE1YsbPhA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	VMware@dhcp-26-207.brq.redhat.com, "Inc." <pv-drivers@vmware.com>,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement pattern
+References: <cover.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 28, 2013 at 11:23:41AM -0600, Bjorn Helgaas wrote:
->[+cc Veaceslav]
->
->On Sun, Oct 27, 2013 at 3:24 PM, Greg Kroah-Hartman
-><gregkh@linuxfoundation.org> wrote:
->> On Sun, Oct 27, 2013 at 09:13:29PM +0000, Linus Torvalds wrote:
->>> .. and one more case of freeing a delayed work object (likely a kobject again):
->>>
->>> This time it looks like it's in the PCI layer, freeing the msi irq information.
->>>
->>> It looks like that code simply does
->>>
->>>     kobject_del(&entry->kobj);
->>>     kobject_put(&entry->kobj);
->>>     list_del(&entry->list);
->>>     kfree(entry);
->>>
->>> and the problem is that the "entry->kobj" may have *other* references
->>> to it, thanks to people accessing it through /sys, so despite doing a
->>> kojbect_del/kobject_put(), it's not at all ok to then do a "kfree()"
->>> on it. The embedded kobj might still be in use.
->>>
->>> Afaik, that code should do the kfree() on the kobject in the _release_
->>> method, not synchronously like that.
->>>
->>> We already have a msi_kobj_release(), I'm wondering why that doesn't
->>> do the kfree().
->>>
->>> Bjorn? Yinghai? Greg, comments about that msi kobj usage?
->>
->> Ick, it really should be doing a kfree() in the release only.  Bjorn has
->> had a bunch of changes in this area recently, perhaps they are in
->> linux-next waiting for 3.13, and I've talked to him about getting rid of
->> all of the kobjects for msi files, as I don't think it's needed at all.
->
->IIRC, you said you might take a look at converting this to attributes
->on the train back home, so I haven't looked into it myself :)
->
->> Bjorn, don't you have a fix for this problem already done somewhere?
->
->Yep, this is clearly wrong, and Veaceslav has a patch that moves the
->kfree() to the release function.  I've been waiting for a consolidated
->repost of all his MSI-related fixes, but maybe he's been waiting for
->*me*.
+On 10/02/2013 03:29 AM, Alexander Gordeev wrote:
+> 
+> As result, device drivers will cease to use the overcomplicated
+> repeated fallbacks technique and resort to a straightforward
+> pattern - determine the number of MSI/MSI-X interrupts required
+> before calling pci_enable_msi_block() and pci_enable_msix()
+> interfaces:
+> 
+> 
+> 	rc = pci_msix_table_size(adapter->pdev);
+> 	if (rc < 0)
+> 		return rc;
+> 
+> 	nvec = min(nvec, rc);
+> 	if (nvec < FOO_DRIVER_MINIMUM_NVEC) {
+> 		return -ENOSPC;
+> 
+> 	for (i = 0; i < nvec; i++)
+> 		adapter->msix_entries[i].entry = i;
+> 
+> 	rc = pci_enable_msix(adapter->pdev,
+> 			     adapter->msix_entries, nvec);
+> 	return rc;
+> 
 
-https://lkml.org/lkml/2013/10/9/170
+Why not add a minimum number to pci_enable_msix(), i.e.:
 
-My patchset is ready to be applied, in its v2 state.
+pci_enable_msix(pdev, msix_entries, nvec, minvec)
 
-Except that the bits with kobject_del() (theoretical race) - which are done
-in your patch "kobject: remove kset from sysfs immediately in
-kset_unregister()", though I didn't see it accepted.
+... which means "nvec" is the number of interrupts *requested*, and
+"minvec" is the minimum acceptable number (otherwise fail).
 
-Should I re-send the patchset?
+	-hpa
 
->
->Bjorn
