@@ -1,91 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:38227 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198Ab3JKOo0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 10:44:26 -0400
-From: Marek Vasut <marex@denx.de>
-To: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v7 0/2] Add PCIe support for i.MX6q
-Date: Fri, 11 Oct 2013 16:44:22 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Zhu Richard-R65037" <r65037@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>,
-	Frank Li <lznuaa@gmail.com>, Sean Cross <xobs@kosagi.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>
-References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org> <201310110418.56460.marex@denx.de> <CAE9FiQXKgkwgzA0ciRyahObDHvnFtEJxzOhHRo6gytdeKQ-XQQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQXKgkwgzA0ciRyahObDHvnFtEJxzOhHRo6gytdeKQ-XQQ@mail.gmail.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:51204 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754781Ab3JIOyJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 10:54:09 -0400
+Received: by mail-ie0-f178.google.com with SMTP id to1so2041215ieb.37
+        for <linux-pci@vger.kernel.org>; Wed, 09 Oct 2013 07:54:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201310111644.22844.marex@denx.de>
+In-Reply-To: <52552C8D.1050303@freescale.com>
+References: <1380531175-14836-1-git-send-email-Minghuan.Lian@freescale.com>
+ <CAErSpo7LXqXmrw1gPwKHsJkKaAcDr2W_+tcC8b9T_5Mab1Arnw@mail.gmail.com> <52552C8D.1050303@freescale.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 9 Oct 2013 08:53:48 -0600
+Message-ID: <CAErSpo7K5CCqDvHiKwypWqNxiyZ8n1MXcsjK66d=NzGSV0nYOg@mail.gmail.com>
+Subject: Re: [PATCH 1/2][v2] pci: fsl: derive the common PCI driver to drivers/pci/host
+To: Lian Minghuan-b31939 <B31939@freescale.com>
+Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
+On Wed, Oct 9, 2013 at 4:14 AM, Lian Minghuan-b31939
+<B31939@freescale.com> wrote:
 
-> On Thu, Oct 10, 2013 at 7:18 PM, Marek Vasut <marex@denx.de> wrote:
-> > And so does the probe log (but the pcieport failure still persists):
-> > 
-> > 
-> > pci_bus 0000:04: bus scan returning with max=04
-> > pci_bus 0000:04: busn_res: [bus 04-ff] end is updated to 04
-> > pci_bus 0000:02: bus scan returning with max=04
-> > pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to 04
-> > pci_bus 0000:01: bus scan returning with max=04
-> > pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 04
-> > pci_bus 0000:00: bus scan returning with max=04
-> > pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to 04
-> > PCI: Device 0000:00:00.0 not available because of resource collisions
-> > pcieport: probe of 0000:00:00.0 failed with error -22
-> 
-> load pcieport driver too early.
+>  arch/powerpc/sysdev/fsl_pci.c                      | 521 +-----------------
+>  arch/powerpc/sysdev/fsl_pci.h                      |  89 ----
+>  .../fsl_pci.c => drivers/pci/host/pci-fsl-common.c | 591
+> +--------------------
+>  .../fsl_pci.h => include/linux/fsl/pci-common.h    |  45 +-
+>
+> Is there any way to avoid putting this file in include/linux?  I know
+> you want to share it beyond PowerPC, and I know there are similar
+> examples there already, but this is all arch-specific or
+> chipset-specific stuff that seems like it should be in some
+> not-so-public place.  It doesn't seem scalable to add an include/linux
+> subdirectory for every chipset that might be shared across
+> architectures.
+>
+> [Minghuan] I can move pci-common.h to drivers/pci/host/
+> But in arch/powerpc/sysdev/fsl_pci.c I must include the header file
+> like this:
+> #include "../../../drivers/pci/host/pci-fsl-common.h".
+> How about this modification?
 
-OK
+Given the existence of include/linux/fsl/ even before this patch, I'm
+OK with it as-is.
 
-[...]
+After you work through Scott's comments on [2/2] and get his ack, I'll
+merge the whole bundle as a group.
 
-> > pci_bus 0000:00: resource 4 [io  0x1000-0x10000]
-> > pci_bus 0000:00: resource 5 [mem 0x01000000-0x01efffff]
-> > pci_bus 0000:01: resource 0 [io  0x1000-0x1fff]
-> > pci_bus 0000:01: resource 1 [mem 0x01000000-0x01bfffff]
-> > pci_bus 0000:02: resource 0 [io  0x1000-0x1fff]
-> > pci_bus 0000:02: resource 1 [mem 0x01000000-0x01bfffff]
-> > pci_bus 0000:03: resource 0 [io  0x1000-0x1fff]
-> > pci_bus 0000:03: resource 1 [mem 0x01000000-0x01bfffff]
-> 
-> Looks your arch call pci_assign_unassigned_resources() too late.
-> 
-> you should have call it with fs_initcall()...
-
-You're right, the pci_assign_unassigned_resources() is called from probe() call 
-of the MX6 PCIe driver, which is called from module_init().
-
-imx6_pcie_init() -> imx6_pcie_probe() -> imx6_add_pcie_port() -> 
-dw_pcie_host_init() -> pci_assign_unassigned_resources()
-
-> please try to boot with "debug ignore_loglevel initcall_debug" to sort out
-> the initcall sequence.
-
-Yes, probing the MX6 PCIe driver in fs_initcall() actually fixed my issues:
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 32b30ca..771892a 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-
-@@ -587,7 +590,7 @@ static int __init imx6_pcie_init(void)
- {
-        return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
- }                                                                                                                                                                          
--module_init(imx6_pcie_init);                                                                                                                                               
-+fs_initcall(imx6_pcie_init);                                                                                                                                               
-                                                                                                                                                                            
- MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");                                                                                                                             
- MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
-
-Best regards,
-Marek Vasut
+Bjorn
