@@ -1,47 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:47370 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995Ab3JGSV5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 14:21:57 -0400
-Received: by mail-ie0-f173.google.com with SMTP id ar20so17037729iec.32
-        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 11:21:57 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 9 Oct 2013 11:43:23 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Message-ID: <20131009154323.GB22495@htj.dyndns.org>
+References: <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+ <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+ <1381009586.645.141.camel@pasglop>
+ <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+ <1381040386.645.143.camel@pasglop>
+ <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+ <20131007180111.GC2481@htj.dyndns.org>
+ <20131009125715.GC32733@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1381128950-28125-2-git-send-email-gregkh@linuxfoundation.org>
-References: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org> <1381128950-28125-2-git-send-email-gregkh@linuxfoundation.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 7 Oct 2013 12:21:36 -0600
-Message-ID: <CAErSpo7srZ8K_0EChA3Tqv5Zt4bA4MdKEx-n4KRNfrgSwcazyQ@mail.gmail.com>
-Subject: Re: [PATCH 01/11] pci: convert bus code to use dev_groups
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sachin Kamat <sachin.kamat@linaro.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131009125715.GC32733@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Sachin]
+Hello,
 
-On Mon, Oct 7, 2013 at 12:55 AM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> The dev_attrs field of struct bus_type is going away soon, dev_groups
-> should be used instead.  This converts the PCI bus code to use the
-> correct field.
->
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: <linux-pci@vger.kernel.org>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
->
-> Bjorn, I can take this through my driver-core tree if you like, just let
-> me know what would be the easiest for you.
+On Wed, Oct 09, 2013 at 02:57:16PM +0200, Alexander Gordeev wrote:
+> On Mon, Oct 07, 2013 at 02:01:11PM -0400, Tejun Heo wrote:
+> > Hmmm... yean, the race condition could be an issue as multiple msi
+> > allocation might fail even if the driver can and explicitly handle
+> > multiple allocation if the quota gets reduced inbetween.
+> 
+> BTW, should we care about the quota getting increased inbetween?
+> That would entail.. kind of pci_get_msi_limit() :), but IMHO it is
+> not worth it.
 
-Let me take it, if I can figure out how to do it.  I already tripped
-over a conflict where Sachin made pci_bus_attrs static, which is fine
-in linux-next (with your 244afeca ("PCI: convert bus code to
-use bus_groups") commit), but not fine in pci/next, which didn't have that.
+I think we shouldn't.  If the resource was low during a point in time
+during allocation, it's fine to base the result on that - the resource
+was actually low and which answer we return is just a question of
+timing and both are correct.  The only reason the existing race
+condition is problematic is because it may fail even if the resource
+never falls below the failure point.
 
-I should be able to "git merge --no-ff --log gregkh/driver-core-next"
-into my "next" branch, then apply your patch as usual, right?
+Thanks.
 
-Bjorn
+-- 
+tejun
