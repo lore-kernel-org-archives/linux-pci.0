@@ -1,45 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:51039 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754636Ab3JDP4V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 11:56:21 -0400
-Received: by mail-ie0-f173.google.com with SMTP id ar20so9667997iec.32
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 08:56:20 -0700 (PDT)
+Received: from multi.imgtec.com ([194.200.65.239]:17664 "EHLO multi.imgtec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753958Ab3JIBpl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 21:45:41 -0400
+Message-ID: <5254B52C.1050500@imgtec.com>
+Date: Tue, 8 Oct 2013 18:45:16 -0700
+From: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVYZ2pRTs5Xsc2MKgUiWfLbSExLA-vF0HK2iy=tVw2OHA@mail.gmail.com>
-References: <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
- <1380399187-4962-1-git-send-email-yinghai@kernel.org> <20131003220628.GA14835@google.com>
- <CAE9FiQVYZ2pRTs5Xsc2MKgUiWfLbSExLA-vF0HK2iy=tVw2OHA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Oct 2013 09:55:59 -0600
-Message-ID: <CAErSpo79xHn7RNNrbQBa49M464xryqjwi_iTPjTCnhEphkCvEg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Workaround missing pci_set_master in pci drivers
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	James Hogan <james.hogan@imgtec.com>,
+	Qais Yousef <Qais.Yousef@imgtec.com>
+Subject: Re: [PATCH v2 2/4] PCI/quirks: Rename piix4_[io|mem]_quirk to add
+ acpi
+References: <1380929453-15428-1-git-send-email-dengcheng.zhu@imgtec.com> <1380929453-15428-3-git-send-email-dengcheng.zhu@imgtec.com> <CAErSpo4mWXhfgvxWkYtD6GqtuSHZ26HZ0vTnf5NTZo6W+U04LQ@mail.gmail.com>
+In-Reply-To: <CAErSpo4mWXhfgvxWkYtD6GqtuSHZ26HZ0vTnf5NTZo6W+U04LQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 3, 2013 at 5:35 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Oct 3, 2013 at 3:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Sat, Sep 28, 2013 at 01:13:07PM -0700, Yinghai Lu wrote:
->>> @@ -1156,8 +1156,14 @@ static void pci_enable_bridge(struct pci
->>>
->>>       pci_enable_bridge(dev->bus->self);
->>>
->>> -     if (pci_is_enabled(dev))
->>> +     if (pci_is_enabled(dev)) {
->>> +             if (!dev->is_busmaster) {
->>> +                     dev_warn(&dev->dev, "driver skip pci_set_master, fix it!\n");
+On 10/08/2013 04:14 PM, Bjorn Helgaas wrote:
+> On Fri, Oct 4, 2013 at 5:30 PM, Deng-Cheng Zhu <dengcheng.zhu@imgtec.com> wrote:
+>> From: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
 >>
->> I know this is already in Linus' tree, but if we're going to enable
->> bus mastering here, what's the point of the warning?  If somebody
->> fixes the driver by adding a pci_set_master() call there, does that
->> improve something?
->
-> Help us to catch other offender and fix them.
+>> Rename piix4_[io|mem]_quirk to piix4_acpi_[io|mem]_quirk because these 2
+>> functions only deal with the function 3 (power management) of PIIX4.
+>>
+>> Signed-off-by: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
+>> Reviewed-by: James Hogan <james.hogan@imgtec.com>
+> I don't really see the point in patches 2-4.  We end up with 50 more
+> lines of code.  Most of this is new #defines.  They do add names where
+> before we only had numbers, which *sounds* attractive, but it looks
+> like each #define is used only once, and it's in chipset-dependent
+> code where a careful reader has to compare every line with the spec
+> anyway.  Adding a #define means you have to look at the definition,
+> the use, and the spec.  Without the #define, you only have to look at
+> the code and the spec.  I don't think it's worth it.
 
-What is improved by doing it in the driver instead of here?
+Sometimes (most of the time) reader doesn't want to dig into spec since the 
+code is already there and the device is working. Reader may only want to 
+know what the code is doing. The macros help (otherwise one can only know 
+that pci_read_config_dword is reading a config register and then the output 
+will be used to OR or AND). Variable names do give some hints, but macros 
+give additional info. Yes, many of them are used only once, but they help a 
+bit when used. Some examples are in the same file drivers/pci/quirks.c, 
+such as ICH*. And you can easily find other examples by grepping, e.g. 
+drivers/thermal/armada_thermal.c.
+
+The above is about patch #4. About #2, it is an effort to make the code 
+have more sense, as explained in the commit message. It IS an improvement, 
+isn't it?
+
+About #3, do you really think reusing the same logic by putting it in a 
+function is worthless?
+
+
+Deng-Cheng
+
+
