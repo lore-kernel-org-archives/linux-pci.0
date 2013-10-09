@@ -1,103 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:39264
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751519Ab3JGMPi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Oct 2013 08:15:38 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>
-CC: David Airlie <airlied@linux.ie>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"Koenig, Christian" <Christian.Koenig@amd.com>
-Subject: RE: [PATCH 6/6] radeon: Use pcie_get_readrq() and pcie_set_readrq()
- to simplify code
-Date: Mon, 7 Oct 2013 12:15:29 +0000
-Message-ID: <A3397C8B8B789E45844E7EC5DEAD89D02E80EE9B@satlexdag05.amd.com>
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com>
- <1378732388-4508-7-git-send-email-wangyijing@huawei.com>
- <CAErSpo5epkfhw0zyn-xXr-xCVeWmna8Eu_v3SmOrKU7EqwfDJw@mail.gmail.com>
-In-Reply-To: <CAErSpo5epkfhw0zyn-xXr-xCVeWmna8Eu_v3SmOrKU7EqwfDJw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:62518 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751380Ab3JIM4J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Oct 2013 08:56:09 -0400
+Date: Wed, 9 Oct 2013 14:57:16 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Message-ID: <20131009125715.GC32733@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+ <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+ <1381009586.645.141.camel@pasglop>
+ <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+ <1381040386.645.143.camel@pasglop>
+ <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+ <20131007180111.GC2481@htj.dyndns.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131007180111.GC2481@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Friday, October 04, 2013 4:45 PM
-> To: Yijing Wang
-> Cc: David Airlie; linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org;
-> Hanjun Guo; Deucher, Alexander; Koenig, Christian
-> Subject: Re: [PATCH 6/6] radeon: Use pcie_get_readrq() and
-> pcie_set_readrq() to simplify code
-> 
-> [-cc unrelated folks, +cc Alex, Christian]
-> 
-> On Mon, Sep 9, 2013 at 7:13 AM, Yijing Wang <wangyijing@huawei.com>
-> wrote:
-> > Use pcie_get_readrq() and pcie_set_readrq() functions to simplify code.
-> >
-> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> 
-> I believe the following patch is correct, and I'd be happy to merge it
-> via the PCI tree along with the rest of this series.
-> 
-> But it'd be better to have an ack from Alex, and he might prefer to
-> merge it directly.
+On Mon, Oct 07, 2013 at 02:01:11PM -0400, Tejun Heo wrote:
+> Hmmm... yean, the race condition could be an issue as multiple msi
+> allocation might fail even if the driver can and explicitly handle
+> multiple allocation if the quota gets reduced inbetween.
 
-Patch looks correct to me.  Feel free to merge it via the pci tree.
+BTW, should we care about the quota getting increased inbetween?
+That would entail.. kind of pci_get_msi_limit() :), but IMHO it is
+not worth it.
 
-Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+> tejun
 
-> 
-> Bjorn
-> 
-> > ---
-> >  drivers/gpu/drm/radeon/evergreen.c |   19 ++++++-------------
-> >  1 files changed, 6 insertions(+), 13 deletions(-)
-> >
-> > diff --git a/drivers/gpu/drm/radeon/evergreen.c
-> b/drivers/gpu/drm/radeon/evergreen.c
-> > index d5b49e3..b191f92 100644
-> > --- a/drivers/gpu/drm/radeon/evergreen.c
-> > +++ b/drivers/gpu/drm/radeon/evergreen.c
-> > @@ -1169,23 +1169,16 @@ int evergreen_set_uvd_clocks(struct
-> radeon_device *rdev, u32 vclk, u32 dclk)
-> >
-> >  void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
-> >  {
-> > -       u16 ctl, v;
-> > -       int err;
-> > -
-> > -       err = pcie_capability_read_word(rdev->pdev, PCI_EXP_DEVCTL, &ctl);
-> > -       if (err)
-> > -               return;
-> > -
-> > -       v = (ctl & PCI_EXP_DEVCTL_READRQ) >> 12;
-> > +       int readrq;
-> > +       u16 v;
-> >
-> > +       readrq = pcie_get_readrq(rdev->pdev);
-> > +       v = ffs(readrq) - 8;
-> >         /* if bios or OS sets MAX_READ_REQUEST_SIZE to an invalid value, fix it
-> >          * to avoid hangs or perfomance issues
-> >          */
-> > -       if ((v == 0) || (v == 6) || (v == 7)) {
-> > -               ctl &= ~PCI_EXP_DEVCTL_READRQ;
-> > -               ctl |= (2 << 12);
-> > -               pcie_capability_write_word(rdev->pdev, PCI_EXP_DEVCTL, ctl);
-> > -       }
-> > +       if ((v == 0) || (v == 6) || (v == 7))
-> > +               pcie_set_readrq(rdev->pdev, 512);
-> >  }
-> >
-> >  static bool dce4_is_in_vblank(struct radeon_device *rdev, int crtc)
-> > --
-> > 1.7.1
-> >
-> >
-
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
