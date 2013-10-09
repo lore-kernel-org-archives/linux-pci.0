@@ -1,75 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:29034 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756983Ab3J1SWO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 14:22:14 -0400
-Message-ID: <1382984523.3410.23.camel@snotra.buserror.net>
-Subject: Re: [PATCH 02/12][v3] pci: fsl: add structure fsl_pci
-From: Scott Wood <scottwood@freescale.com>
-To: Lian Minghuan-b31939 <B31939@freescale.com>
-CC: Kumar Gala <galak@kernel.crashing.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	"linuxppc-dev@lists.ozlabs.org list" <linuxppc-dev@lists.ozlabs.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Date: Mon, 28 Oct 2013 13:22:03 -0500
-In-Reply-To: <526A086E.305@freescale.com>
-References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
-	 <1382524894-15164-2-git-send-email-Minghuan.Lian@freescale.com>
-	 <2B28E421-9B64-4CEC-9E00-8893502CE12F@kernel.crashing.org>
-	 <526A086E.305@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:58026 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753951Ab3JIXZH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 19:25:07 -0400
+Received: by mail-ie0-f170.google.com with SMTP id x13so3572102ief.29
+        for <linux-pci@vger.kernel.org>; Wed, 09 Oct 2013 16:25:05 -0700 (PDT)
+Date: Wed, 9 Oct 2013 17:25:02 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexey Neyman <stilor@att.net>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Feng Tang <feng.tang@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] Fix coalescing host bridge windows in arch/x86/pci/acpi.c
+Message-ID: <20131009232502.GA3837@google.com>
+References: <6362938.J7ZtNEOFpc@mistral>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6362938.J7ZtNEOFpc@mistral>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-10-25 at 13:58 +0800, Lian Minghuan-b31939 wrote:
-> Hi Kumar,
+[+cc linux-pci]
+
+On Sun, Sep 22, 2013 at 11:15:46PM -0700, Alexey Neyman wrote:
+> [Resending due to no response to the original message in a week]
 > 
-> please see my comment inline.
+> Hi all,
 > 
-> On 10/24/2013 12:11 PM, Kumar Gala wrote:
-> > On Oct 23, 2013, at 5:41 AM, Minghuan Lian wrote:
-> >
-> >> PowerPC uses structure pci_controller to describe PCI controller,
-> >> but ARM uses structure pci_sys_data. In order to support PowerPC
-> >> and ARM simultaneously, the patch adds a structure fsl_pci that
-> >> contains most of the members of the pci_controller and pci_sys_data.
-> >> Meanwhile, it defines a interface fsl_arch_sys_to_pci() which should
-> >> be implemented in architecture-specific PCI controller driver to
-> >> convert pci_controller or pci_sys_data to fsl_pci.
-> >>
-> >> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> >> ---
-> >> change log:
-> >> v1-v3:
-> >> Derived from http://patchwork.ozlabs.org/patch/278965/
-> >>
-> >> Based on upstream master.
-> >> Based on the discussion of RFC version here
-> >> http://patchwork.ozlabs.org/patch/274487/
-> >>
-> >> include/linux/fsl/pci-common.h | 41 +++++++++++++++++++++++++++++++++++++++++
-> >> 1 file changed, 41 insertions(+)
-> > NAK.
-> >
-> > We discussed this some at the ARM Summit this week and the feeling is we need to move to a common interface between the various ARCHs.
-> [Minghuan] Do you mean we will use the common interface instead of 
-> arch/powerpc/kernel/pci-common.c...
-> and arch/arm/kernel/bios32.c?  Who will do the code movement and when 
-> will the work be completed? The patches just move the common functions 
-> of FSL PCI controller operation which can be re-used by PowerPC and ARM. 
-> LS1 is coming, I worry about not having enough time to wait for the move 
-> is completed.
+> I have a board with a BIOS bug that reports the following I/O port regions in 
+> _CRS on one of the host bridges:
+> 
+> 0x0000-0x03af // #0
+> 0x03e0-0x0cf7 // #1
+> 0x03b0-0x03bb // #2
+> 0x03c0-0x03df // #3
+> 0x0000-0xdfff // #4
+> 0xf000-0xffff // #5
+> 
+> Obviously, region number #4 is erroneous as it overlaps with regions #0..3. 
+> The code in coalesce_windows() in arch/x86/pci/acpi.c attempts to recover from 
+> such kind of BIOS bugs by merging the overlapping regions. Current code 
+> expands region #0 to 0x0000-0xdffff and makes region #4 ignored. As a result, 
+> overlap of the expanded region #0 with regions #1..3 remains undetected (as 
+> the inner loop already compared them with region #0). As a result, regions 
+> #1..3 are inserted into the resource tree even though they overlap with 
+> adjusted region #0 - which later results in resource conflicts for PCI devices 
+> with IO ports in one of those regions (e.g., for an PCI IDE controller in 
+> legacy mode - which has port 0x3f6). The kernel then refuses to initialize 
+> these devices.
+> 
+> The fix: instead of expanding res1 and ignoring res2, do the opposite. The 
+> res2 window is yet to be compared against all windows between res1 and res2 
+> (regions #1..3 in the above example), so the resulting resource map will 
+> include just the expanded region - and will ignore any overlapping ones.
+> 
+> Signed-off-by: Alexey Neyman <stilor@att.net>
 
-I agree -- it can take quite a while to get from "the feeling is we need
-to move to a common interface" to actually having something we can use.
-If and when this unification is achieved, we can drop this extra layer.
-It's a better interim solution than just duplicating the entire driver
-and letting them drift apart.
+I added the bugzilla reference (thanks for that) and applied the
+following patch to my pci/misc branch for v3.13.
 
--Scott
+Sorry this took so long; part of the reason was that it wasn't on
+linux-pci, so it didn't show up in the PCI patchwork.  I also added
+a MAINTAINERS patch so in the future, get_maintainers.pl will include
+linux-pci and me as co-maintainer of arch/x86/pci/*.  Also, it helps
+if you include the patch in-line rather than as an attachment because
+I have to manually combine the in-line changelog with the attached
+patch.
+
+Thanks for the fix and your persistence!
+
+Bjorn
 
 
+x86/PCI: Coalesce multiple overlapping host bridge windows
 
+From: Alexey Neyman <stilor@att.net>
+
+Previously we coalesced windows by expanding the first overlapping one and
+making the second invalid.  But we never look at the expanded first window
+again, so we fail to notice other windows that overlap it.  For example, we
+coalesced these:
+
+  [io  0x0000-0x03af] // #0
+  [io  0x03e0-0x0cf7] // #1
+  [io  0x0000-0xdfff] // #2
+
+into these, which still overlap:
+
+  [io  0x0000-0xdfff] // #0
+  [io  0x03e0-0x0cf7] // #1
+
+The fix is to expand the *second* overlapping resource and ignore the
+first, so we get this instead with no overlaps:
+
+  [io  0x0000-0xdfff] // #2
+
+[bhelgaas: changelog]
+Reference: https://bugzilla.kernel.org/show_bug.cgi?id=62511
+Signed-off-by: Alexey Neyman <stilor@att.net>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index b30e937..7fb24e5 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -354,12 +354,12 @@ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+ 			 * the kernel resource tree doesn't allow overlaps.
+ 			 */
+ 			if (resource_overlaps(res1, res2)) {
+-				res1->start = min(res1->start, res2->start);
+-				res1->end = max(res1->end, res2->end);
++				res2->start = min(res1->start, res2->start);
++				res2->end = max(res1->end, res2->end);
+ 				dev_info(&info->bridge->dev,
+ 					 "host bridge window expanded to %pR; %pR ignored\n",
+-					 res1, res2);
+-				res2->flags = 0;
++					 res2, res1);
++				res1->flags = 0;
+ 			}
+ 		}
+ 	}
