@@ -1,62 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:34861 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174Ab3JDUVz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 16:21:55 -0400
-Received: by mail-ie0-f182.google.com with SMTP id aq17so10310312iec.41
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 13:21:54 -0700 (PDT)
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:33523 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899Ab3JIWCP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 18:02:15 -0400
+Received: by mail-ie0-f178.google.com with SMTP id to1so3436314ieb.9
+        for <linux-pci@vger.kernel.org>; Wed, 09 Oct 2013 15:02:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130928175548.8612.84198.stgit@amt.stowe>
-References: <20130928175548.8612.84198.stgit@amt.stowe>
+In-Reply-To: <5255C5B3.60004@zytor.com>
+References: <20131009210219.31110.62076.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAErSpo4RYGakLpJuhHyGTAMXvaZc63sjLiMrMneG9NjohanVZA@mail.gmail.com> <5255C5B3.60004@zytor.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Oct 2013 14:21:34 -0600
-Message-ID: <CAErSpo69K-xJsjRHYTtZOu+NjZuvegc3n+y1v1dUdQ+TtdNDbA@mail.gmail.com>
-Subject: Re: [PATCH] cris/PCI: Remove pci_mem_start
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: starvik@axis.com, jesper.nilsson@axis.com,
-	linux-cris-kernel@axis.com,
+Date: Wed, 9 Oct 2013 16:01:54 -0600
+Message-ID: <CAErSpo7EJD1AvUt7ahmKR5xgQc8EpJOca2CSTcS2vG2gLa5teQ@mail.gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: Add arch/x86/pci to PCI file patterns
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 28, 2013 at 11:55 AM, Myron Stowe <myron.stowe@redhat.com> wrote:
-> Remove unused 'pci_mem_start' variable.
+On Wed, Oct 9, 2013 at 3:08 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+> On 10/09/2013 02:04 PM, Bjorn Helgaas wrote:
+>> On Wed, Oct 9, 2013 at 3:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> I handle many arch/x86/pci changes, so help those patches get to the
+>>> PCI patchwork.
+>>>
+>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> I'll merge this via the PCI tree unless anybody objects.
+>>
 >
-> CC: Mikael Starvik <starvik@axis.com>
-> CC: Jesper Nilsson <jesper.nilsson@axis.com>
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> Acked-by: H. Peter Anvin <hpa@zytor.com>
+>
+> ... as long as you don't keep us out of the loop.
 
-Applied to pci/misc, thanks!
-
-It'd be nice if we could someday get rid of PCIBIOS_MIN_IO and
-PCIBIOS_MIN_MEM, too.  They're really just relics from the days when
-we assumed there was a single host bridge, and we didn't have any idea
-what the host bridge apertures were (or we assumed the host bridge
-essentially subtractively decoded everything).
-
-Now that we can tell the PCI core about host bridge apertures, the
-arch should be able to achieve the effect of PCIBIOS_MIN_MEM by
-clipping the window itself.
+Thanks.  I'm certainly not trying to keep you out of the loop; my
+objective is to make get_maintainer.pl show both the x86 folks (as it
+does today) *and* linux-pci (so things show up in the PCI patchwork).
+I've been slow responding to an arch/x86/pci/acpi.c patch partly
+because it's not in my patchwork, so it's easy to forget.
 
 Bjorn
-
-> ---
->
->  arch/cris/include/asm/pci.h |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
->
-> diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
-> index 146da90..f666734 100644
-> --- a/arch/cris/include/asm/pci.h
-> +++ b/arch/cris/include/asm/pci.h
-> @@ -11,7 +11,6 @@
->
->  #define pcibios_assign_all_busses(void) 1
->
-> -extern unsigned long pci_mem_start;
->  #define PCIBIOS_MIN_IO         0x1000
->  #define PCIBIOS_MIN_MEM                0x10000000
->
->
