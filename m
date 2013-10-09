@@ -1,57 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:50070 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751325Ab3JDIvs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 04:51:48 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MU400DM3Z8E9DA0@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 04 Oct 2013 17:51:46 +0900 (KST)
-From: Seungwon Jeon <tgih.jun@samsung.com>
-To: linux-pci@vger.kernel.org
-Cc: 'Jingoo Han' <jg1.han@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-References: <001d01cea3e5$3a07c8b0$ae175a10$%jun@samsung.com>
- <000f01cea48e$f5fc3160$e1f49420$%han@samsung.com>
-In-reply-to: 
-Subject: [PATCH] PCI: designware: add missing header guards
-Date: Fri, 04 Oct 2013 17:51:45 +0900
-Message-id: <002001cec0de$f4cd48d0$de67da70$%jun@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 9 Oct 2013 11:46:06 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Message-ID: <20131009154606.GC22495@htj.dyndns.org>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+ <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+ <1381009586.645.141.camel@pasglop>
+ <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+ <1381040386.645.143.camel@pasglop>
+ <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+ <1381178881.1536.28.camel@bwh-desktop.uk.level5networks.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1381178881.1536.28.camel@bwh-desktop.uk.level5networks.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added missing header guards against the redundant inclusion.
+On Mon, Oct 07, 2013 at 09:48:01PM +0100, Ben Hutchings wrote:
+> > There is one major flaw in min-max approach - the generic MSI layer
+> > will have to take decisions on exact number of MSIs to request, not
+> > device drivers.
+> [...
+> 
+> No, the min-max functions should be implemented using the same loop that
+> drivers are expected to use now.
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
----
- drivers/pci/host/pcie-designware.h |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Wheee... earlier in the thread I thought you guys were referring to
+yourselves in the third person and was getting a bit worried. :)
 
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index faccbbf..0b685b5 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -11,6 +11,9 @@
-  * published by the Free Software Foundation.
-  */
- 
-+#ifndef _PCIE_DESIGNWARE_H_
-+#define _PCIE_DESIGNWARE_H_
-+
- struct pcie_port_info {
- 	u32		cfg0_size;
- 	u32		cfg1_size;
-@@ -77,3 +80,5 @@ int dw_pcie_host_init(struct pcie_port *pp);
- int dw_pcie_setup(int nr, struct pci_sys_data *sys);
- struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys);
- int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin);
-+
-+#endif /* _PCIE_DESIGNWARE_H_ */
 -- 
-1.7.0.4
-
-
+tejun
