@@ -1,58 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33844 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563Ab3JGUlu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 16:41:50 -0400
-Date: Mon, 7 Oct 2013 13:41:28 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sachin Kamat <sachin.kamat@linaro.org>
-Subject: Re: [PATCH 01/11] pci: convert bus code to use dev_groups
-Message-ID: <20131007204128.GB7600@kroah.com>
-References: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
- <1381128950-28125-2-git-send-email-gregkh@linuxfoundation.org>
- <CAErSpo7srZ8K_0EChA3Tqv5Zt4bA4MdKEx-n4KRNfrgSwcazyQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7srZ8K_0EChA3Tqv5Zt4bA4MdKEx-n4KRNfrgSwcazyQ@mail.gmail.com>
+Received: from mailout3.samsung.com ([203.254.224.33]:52683 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755502Ab3JIHun (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 03:50:43 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MUE002IV5RXSWK0@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 09 Oct 2013 16:50:37 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <20131008000435.12954.92136.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-reply-to: <20131008000435.12954.92136.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Subject: Re: [PATCH] PCI: designware: Make dw_pcie_rd_own_conf(), etc., static
+Date: Wed, 09 Oct 2013 16:50:36 +0900
+Message-id: <000301cec4c4$3dc751f0$b955f5d0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 07, 2013 at 12:21:36PM -0600, Bjorn Helgaas wrote:
-> [+cc Sachin]
+On Tuesday, October 08, 2013 9:05 AM, Bjorn Helgaas wrote:
 > 
-> On Mon, Oct 7, 2013 at 12:55 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > The dev_attrs field of struct bus_type is going away soon, dev_groups
-> > should be used instead.  This converts the PCI bus code to use the
-> > correct field.
-> >
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: <linux-pci@vger.kernel.org>
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > ---
-> >
-> > Bjorn, I can take this through my driver-core tree if you like, just let
-> > me know what would be the easiest for you.
+> The following variables and functions are used only in pcie-designware.c,
+> so make them static:
 > 
-> Let me take it, if I can figure out how to do it.  I already tripped
-> over a conflict where Sachin made pci_bus_attrs static, which is fine
-> in linux-next (with your 244afeca ("PCI: convert bus code to
-> use bus_groups") commit), but not fine in pci/next, which didn't have that.
+>   global_io_offset
+>   dw_pcie_rd_own_conf()
+>   dw_pcie_wr_own_conf()
+>   dw_pcie_setup()
+>   dw_pcie_scan_bus()
+>   dw_pcie_map_irq()
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Ah, yeah, that will conflict, sorry.
+Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-> I should be able to "git merge --no-ff --log gregkh/driver-core-next"
-> into my "next" branch, then apply your patch as usual, right?
+It looks good.
+Also I tested this patch on Exynos5440. It works properly.
+Thank you for sending the patch.
 
-You can, but do you really want all of my driver-core changes in there?
-I can just send you the one pci change and you can then apply both of
-them.  Then when we merge with Linus, there will not be any conflicts as
-the same patches just showed up in two different trees, which should be
-fine.
+Best regards,
+Jingoo Han
 
-thanks,
+> ---
+>  drivers/pci/host/pcie-designware.c |   16 ++++++++--------
+>  drivers/pci/host/pcie-designware.h |    7 -------
+>  2 files changed, 8 insertions(+), 15 deletions(-)
 
-greg k-h
