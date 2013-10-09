@@ -1,68 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:54239 "EHLO e8.ny.us.ibm.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:47006 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751476Ab3J3DFe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Oct 2013 23:05:34 -0400
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <zhenghch@linux.vnet.ibm.com>;
-	Tue, 29 Oct 2013 23:05:33 -0400
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id BB2C738C803B
-	for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 23:05:29 -0400 (EDT)
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by b01cxnp22033.gho.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r9U35U7550462744
-	for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 03:05:30 GMT
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r9U35TKW031147
-	for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 01:05:30 -0200
-Message-ID: <1383102327.8618.0.camel@stefan-ThinkPad-T420>
-Subject: Re: [PATCH] lspci: Skip scanning empty slot in sysfs_fill_slots
-From: Zheng Huai Cheng <zhenghch@linux.vnet.ibm.com>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 30 Oct 2013 11:05:27 +0800
-In-Reply-To: <mj+md-20131029.120828.26872.nikam@ucw.cz>
-References: <526F4EB4.4090101@linux.vnet.ibm.com>
-	 <mj+md-20131029.120828.26872.nikam@ucw.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1756944Ab3JIK1f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Oct 2013 06:27:35 -0400
+Message-ID: <52552F84.2020901@ti.com>
+Date: Wed, 9 Oct 2013 15:57:16 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: Jingoo Han <jg1.han@samsung.com>
+CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"'Pratyush Anand'" <pratyush.anand@st.com>,
+	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Thierry Reding'" <thierry.reding@gmail.com>,
+	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH] PCI: designware: Add irq_create_mapping()
+References: <000401cec4c6$dc415180$94c3f480$%han@samsung.com> <52551C6E.1040404@ti.com> <003901cec4d0$5d83e650$188bb2f0$%han@samsung.com> <5255266B.6040809@ti.com> <000501cec4d7$1233a3f0$369aebd0$%han@samsung.com>
+In-Reply-To: <000501cec4d7$1233a3f0$369aebd0$%han@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-10-29 at 13:09 +0100, Martin Mares wrote:
-> Hello!
-> 
-> > When slot is empty, lspci will report "pcilib: sysfs_fill_slots:
-> > Couldn't parse entry address 0000:01",this is because address entry will
-> > only contain domain and bus number when the slot is empty.
-> > 
-> > [root@uselp6 ~]# cat /sys/bus/pci/slots/U5802.001.RCHB059-P1-C7/address
-> > 0000:01
+On Wednesday 09 October 2013 03:35 PM, Jingoo Han wrote:
+> On Wednesday, October 09, 2013 6:48 PM, Kishon Vijay Abraham I wrote:
+>> On Wednesday 09 October 2013 02:47 PM, Jingoo Han wrote:
+>>> On Wednesday, October 09, 2013 6:06 PM, Kishon Vijay Abraham I wrote:
+>>>> On Wednesday 09 October 2013 01:39 PM, Jingoo Han wrote:
+>>>>> Without irq_create_mapping(), the correct irq number cannot be
+>>>>> provided. In this case, it makes problem such as NULL deference.
+>>>>> Thus, irq_create_mapping() should be added for MSI.
+>>>>>
+>>>>> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+>>>>> Cc: Kishon Vijay Abraham I <kishon@ti.com>
+>>>>> ---
+>>>>> Tested on Exynos5440.
+>>>>>
+>>>>>  drivers/pci/host/pcie-designware.c |   10 ++++------
+>>>>>  drivers/pci/host/pcie-designware.h |    1 +
+>>>>>  2 files changed, 5 insertions(+), 6 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>>>>> index 8963017..e536bb6 100644
+>>>>> --- a/drivers/pci/host/pcie-designware.c
+>>>>> +++ b/drivers/pci/host/pcie-designware.c
+>>>>> @@ -237,6 +237,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>>>>>  		}
+>>>>>  	}
+>>>>>
+>>>>> +	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, 0);
+>>>>> +
+>>>>
+>>>> I think irq_create_mapping should be done for all the MSI irq lines instead of
+>>>> only the first line. So you might have to do for MAX_MSI_IRQS lines.
+>>
+>> Maybe it should be only till MAX_MSI_IRQS-1?
 
-> Is this behavior intentional?  It does not make much sense to me.
-> 
-> 				Have a nice fortnight
-although I am not a expert in PCI, seems this related to PCI hotplug.
-And I also found a description in kernel source code
+I meant something like this,
 
-"
-Placeholder slots:
-In most cases, @pci_bus, @slot_nr will be sufficient to uniquely
-identify a slot. There is one notable exception - pSeries (rpaphp),
-where the @slot_nr cannot be determined until a device is actually
-inserted into the slot. In this scenario, the caller may pass -1 for
-@slot_nr.The following semantics are imposed when the caller passes
-@slot_nr == -1. First, we no longer check for an existing %struct
-pci_slot, as there may be many slots with @slot_nr of -1.  The other
-change in semantics is user-visible, which is the 'address' parameter
-presented in sysfs will consist solely of a dddd:bb tuple, where dddd is
-the PCI domain of the %struct pci_bus and bb is the bus number. In other
-words, the devfn of the 'placeholder' slot will not be
-displayed.                             
-"
+	for (i = 0; i < MAX_MSI_IRQS; i++)
+		irq_create_mapping(pp->irq_domain, i);
 
-so when slots are empty in some cases, "address" solely contain dddd:bb
-tuple. But lspci will originally assume address in dddd:dd:dd tuple. so
-we should skip dddd:bb case in sysfs_fill_slots
+That didn't give me any issues though.
 
+Thanks
+Kishon
