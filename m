@@ -1,124 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:15253 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751240Ab3JSHG0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 03:06:26 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 11/29] PCI/MSI: Convert pci_msix_table_size() to a public interface
-Date: Fri, 18 Oct 2013 19:12:11 +0200
-Message-Id: <04a7098780907bd8848d4939b24a74e70e274866.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:51815 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752402Ab3JIMeR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 08:34:17 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: 'Kishon Vijay Abraham I' <kishon@ti.com>,
+	linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH V2] PCI: designware: Add irq_create_mapping()
+Date: Wed, 09 Oct 2013 21:32:12 +0900
+Message-id: <000a01cec4eb$942dc7f0$bc8957d0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make pci_msix_table_size() return error code if the device
-does not support MSI-X. This update is needed to create a
-consistent MSI-X counterpart for pci_get_msi_cap() MSI
-interface.
+From: Pratyush Anand <pratyush.anand@st.com>
 
-Device drivers can use this interface to obtain maximum number
-of MSI-X interrupts the device supports and i.e. use that number
-in a following call to pci_enable_msix() interface.
+Without irq_create_mapping(), the correct irq number cannot be
+provided. In this case, it makes problems such as NULL deference.
+Thus, irq_create_mapping() should be added for MSI.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Suggested-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- Documentation/PCI/MSI-HOWTO.txt |   13 +++++++++++++
- drivers/pci/msi.c               |    5 ++++-
- drivers/pci/pcie/portdrv_core.c |    5 +++--
- include/linux/pci.h             |    2 +-
- 4 files changed, 21 insertions(+), 4 deletions(-)
+Tested on Exynos5440.
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index 47118f3..fdf3ae3 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -245,6 +245,19 @@ MSI-X Table.  This address is mapped by the PCI subsystem, and should not
- be accessed directly by the device driver.  If the driver wishes to
- mask or unmask an interrupt, it should call disable_irq() / enable_irq().
- 
-+4.3.4 pci_msix_table_size
-+
-+int pci_msix_table_size(struct pci_dev *dev)
-+
-+This function could be used to retrieve number of entries in the device
-+MSI-X table.
-+
-+If this function returns a negative number, it indicates the device is
-+not capable of sending MSI-Xs.
-+
-+If this function returns a positive number, it indicates the maximum
-+number of MSI-X interrupt vectors that could be allocated.
-+
- 4.4 Handling devices implementing both MSI and MSI-X capabilities
- 
- If a device implements both MSI and MSI-X capabilities, it can
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 13bd901..96f51d0 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -898,11 +898,12 @@ int pci_msix_table_size(struct pci_dev *dev)
- 	u16 control;
- 
- 	if (!dev->msix_cap)
--		return 0;
-+		return -EINVAL;
- 
- 	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
- 	return msix_table_size(control);
- }
-+EXPORT_SYMBOL(pci_msix_table_size);
- 
- /**
-  * pci_enable_msix - configure device's MSI-X capability structure
-@@ -933,6 +934,8 @@ int pci_enable_msix(struct pci_dev *dev,
- 		return status;
- 
- 	nr_entries = pci_msix_table_size(dev);
-+	if (nr_entries < 0)
-+		return nr_entries;
- 	if (nvec > nr_entries)
- 		return nr_entries;
- 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 31063ac..242f9ff 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -80,8 +80,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
- 	u32 reg32;
- 
- 	nr_entries = pci_msix_table_size(dev);
--	if (!nr_entries)
--		return -EINVAL;
-+	if (nr_entries < 0)
-+		return nr_entries;
-+	BUG_ON(!nr_entries);
- 	if (nr_entries > PCIE_PORT_MAX_MSIX_ENTRIES)
- 		nr_entries = PCIE_PORT_MAX_MSIX_ENTRIES;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a04f5da..bef5775 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1163,7 +1163,7 @@ static inline void pci_disable_msi(struct pci_dev *dev)
- 
- static inline int pci_msix_table_size(struct pci_dev *dev)
+ drivers/pci/host/pcie-designware.c |   25 +++++++++++++------------
+ drivers/pci/host/pcie-designware.h |    2 +-
+ 2 files changed, 14 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 8963017..92d58fd 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -157,7 +157,7 @@ static struct irq_chip dw_msi_irq_chip = {
+ void dw_handle_msi_irq(struct pcie_port *pp)
  {
--	return 0;
-+	return -ENOSYS;
- }
- static inline int pci_enable_msix(struct pci_dev *dev,
- 				  struct msix_entry *entries, int unsigned nvec)
+ 	unsigned long val;
+-	int i, pos;
++	int i, pos, irq;
+ 
+ 	for (i = 0; i < MAX_MSI_CTRLS; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+@@ -165,8 +165,9 @@ void dw_handle_msi_irq(struct pcie_port *pp)
+ 		if (val) {
+ 			pos = 0;
+ 			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
+-				generic_handle_irq(pp->msi_irq_start
+-					+ (i * 32) + pos);
++				irq = irq_find_mapping(pp->irq_domain,
++						i * 32 + pos);
++				generic_handle_irq(irq);
+ 				pos++;
+ 			}
+ 		}
+@@ -237,9 +238,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+ 		}
+ 	}
+ 
+-	irq = (pp->msi_irq_start + pos0);
+-
+-	if ((irq + no_irqs) > (pp->msi_irq_start + MAX_MSI_IRQS-1))
++	irq = irq_find_mapping(pp->irq_domain, pos0);
++	if (!irq)
+ 		goto no_valid_irq;
+ 
+ 	i = 0;
+@@ -270,6 +270,7 @@ static void clear_irq(unsigned int irq)
+ 	struct irq_desc *desc;
+ 	struct msi_desc *msi;
+ 	struct pcie_port *pp;
++	struct irq_data *data = irq_get_irq_data(irq);
+ 
+ 	/* get the port structure */
+ 	desc = irq_to_desc(irq);
+@@ -280,7 +281,7 @@ static void clear_irq(unsigned int irq)
+ 		return;
+ 	}
+ 
+-	pos = irq - pp->msi_irq_start;
++	pos = data->hwirq;
+ 
+ 	irq_free_desc(irq);
+ 
+@@ -371,8 +372,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
+ 	u32 val;
+-
+-	struct irq_domain *irq_domain;
++	int i;
+ 
+ 	if (of_pci_range_parser_init(&parser, np)) {
+ 		dev_err(pp->dev, "missing ranges property\n");
+@@ -441,15 +441,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		irq_domain = irq_domain_add_linear(pp->dev->of_node,
++		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+ 					MAX_MSI_IRQS, &msi_domain_ops,
+ 					&dw_pcie_msi_chip);
+-		if (!irq_domain) {
++		if (!pp->irq_domain) {
+ 			dev_err(pp->dev, "irq domain init failed\n");
+ 			return -ENXIO;
+ 		}
+ 
+-		pp->msi_irq_start = irq_find_mapping(irq_domain, 0);
++		for (i = 0; i < MAX_MSI_IRQS; i++)
++			irq_create_mapping(pp->irq_domain, i);
+ 	}
+ 
+ 	if (pp->ops->host_init)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index faccbbf..1bf9fc5 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -47,7 +47,7 @@ struct pcie_port {
+ 	u32			lanes;
+ 	struct pcie_host_ops	*ops;
+ 	int			msi_irq;
+-	int			msi_irq_start;
++	struct irq_domain	*irq_domain;
+ 	unsigned long		msi_data;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+ };
 -- 
-1.7.7.6
+1.7.10.4
+
 
