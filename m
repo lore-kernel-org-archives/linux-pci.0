@@ -1,66 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:51184 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758971Ab3JOQHA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 12:07:00 -0400
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 0/6] PCI: imx6: Random fixes
-Date: Tue, 15 Oct 2013 18:06:34 +0200
-Message-Id: <1381853200-5534-1-git-send-email-marex@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 9 Oct 2013 11:54:13 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 07/77] PCI/MSI: Re-design MSI/MSI-X interrupts
+ enablement pattern
+Message-ID: <20131009155413.GD22495@htj.dyndns.org>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <d8c36203ada6efbfa9f7ce92c2f713ee3b6d6b8d.1380703262.git.agordeev@redhat.com>
+ <20131007181749.GB27396@htj.dyndns.org>
+ <20131008074826.GD10669@dhcp-26-207.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131008074826.GD10669@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Set of random fixes for the PCIe driver for i.MX6 . With these fixes, my
-setup with MX6Q -> PCIe bridge -> i210 ethernet adapter works as expected.
+Hello, Alexander.
 
-NOTE: I'm sure this will start some discussion. There are quite a few patches
-      that are more of a hacks. Shawn, I didn't ignore your remark about the
-      clock patches, I will test it ASAP, I just want to have these fixes in
-      the public so others can comment/test.
+On Tue, Oct 08, 2013 at 09:48:26AM +0200, Alexander Gordeev wrote:
+> > If there are many which duplicate the above pattern, it'd probably be
+> > worthwhile to provide a helper?  It's usually a good idea to reduce
+> > the amount of boilerplate code in drivers.
+> 
+> I wanted to limit discussion in v1 to as little changes as possible.
+> I 'planned' those helper(s) for a separate effort if/when the most
+> important change is accepted and soaked a bit.
 
-Marek Vasut (6):
-  PCI: imx6: Make reset-gpio optional
-  PCI: imx6: Fix the clock for PCIe
-  ARM: dts: imx6qdl: Fix the clock for PCIe
-  PCI: imx6: Probe the PCIe in fs_initcall()
-  PCI: imx6: Force Gen1 operation
-  PCI: designware: Fix DT resource retrieval
+The thing is doing it this way generates more churns and noises.  Once
+the simpler ones live behind a wrapper which can be built on the
+existing interface, we can have both reduced cost and more latitude on
+the complex cases.
 
- .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
- arch/arm/boot/dts/imx6qdl.dtsi                     |  4 +-
- drivers/pci/host/pci-imx6.c                        | 63 ++++++++++++++++------
- drivers/pci/host/pcie-designware.c                 | 17 +++---
- 4 files changed, 55 insertions(+), 31 deletions(-)
+> > If we do things this way, it breaks all drivers using this interface
+> > until they're converted, right?
+> 
+> Right. And the rest of the series does it.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
+Which breaks bisection which we shouldn't do.
+
+> > Also, it probably isn't the best idea
+> > to flip the behavior like this as this can go completely unnoticed (no
+> > compiler warning or anything, the same function just behaves
+> > differently).  Maybe it'd be a better idea to introduce a simpler
+> > interface that most can be converted to?
+> 
+> Well, an *other* interface is a good idea. What do you mean with the
+> simpler here?
+
+I'm still talking about a simpler wrapper for common cases, which is
+the important part anyway.
+
+Thanks.
 
 -- 
-1.8.4.rc3
-
+tejun
