@@ -1,57 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:56281 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751196Ab3JEAc0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 20:32:26 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MU600FTF6TBCA30@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Sat, 05 Oct 2013 09:31:59 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Seungwon Jeon' <tgih.jun@samsung.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH V2] PCI: designware: add missing header guards
-Date: Sat, 05 Oct 2013 09:31:59 +0900
-Message-id: <001801cec162$4d74f770$e85ee650$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from cantor2.suse.de ([195.135.220.15]:52996 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753855Ab3JIOdJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Oct 2013 10:33:09 -0400
+Date: Wed, 9 Oct 2013 16:33:04 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Takashi Iwai <tiwai@suse.de>
+Subject: [PATCH] PCI/portdrv: Set master earlier
+Message-ID: <20131009163304.62b439a9@endymion.delvare>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Seungwon Jeon <tgih.jun@samsung.com>
+Since kernel 3.12-rc3, I get the following warning messages at boot:
+pcieport 0000:00:07.0: driver skip pci_set_master, fix it!
+pcieport 0000:00:01.0: driver skip pci_set_master, fix it!
 
-Add missing header guards against the redundant inclusion.
+These are:
+00:01.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 1 (rev 13)
+00:07.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 7 (rev 13)
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Calling pci_set_master() immediately after pci_enable_device() makes
+the warning messages go away.
+
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-designware.h |    5 +++++
- 1 file changed, 5 insertions(+)
+Please note that I am far from certain that this is the correct fix.
+Another approach would be to disable the device if
+get_port_device_capability() returns no capabilities. I suppose the
+device would then be re-enabled later if really needed. What's the best
+approach?
 
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index faccbbf..d87fbae 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -11,6 +11,9 @@
-  * published by the Free Software Foundation.
-  */
+ drivers/pci/pcie/portdrv_core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- linux-3.12-rc4.orig/drivers/pci/pcie/portdrv_core.c	2013-09-24 00:41:09.000000000 +0200
++++ linux-3.12-rc4/drivers/pci/pcie/portdrv_core.c	2013-10-09 15:43:54.205943783 +0200
+@@ -366,13 +366,13 @@ int pcie_port_device_register(struct pci
+ 	status = pci_enable_device(dev);
+ 	if (status)
+ 		return status;
++	pci_set_master(dev);
  
-+#ifndef _PCIE_DESIGNWARE_H
-+#define _PCIE_DESIGNWARE_H
-+
- struct pcie_port_info {
- 	u32		cfg0_size;
- 	u32		cfg1_size;
-@@ -77,3 +80,5 @@ int dw_pcie_host_init(struct pcie_port *pp);
- int dw_pcie_setup(int nr, struct pci_sys_data *sys);
- struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys);
- int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin);
-+
-+#endif /* _PCIE_DESIGNWARE_H */
+ 	/* Get and check PCI Express port services */
+ 	capabilities = get_port_device_capability(dev);
+ 	if (!capabilities)
+ 		return 0;
+ 
+-	pci_set_master(dev);
+ 	/*
+ 	 * Initialize service irqs. Don't use service devices that
+ 	 * require interrupts if there is no way to generate them.
+
+
 -- 
-1.7.10.4
-
-
+Jean Delvare
+Suse L3 Support
