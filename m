@@ -1,53 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f179.google.com ([209.85.215.179]:57186 "EHLO
-	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321Ab3JYTBW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 15:01:22 -0400
-Received: by mail-ea0-f179.google.com with SMTP id b10so900289eae.10
-        for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 12:01:21 -0700 (PDT)
+Received: from mouse.start.ca ([64.140.120.56]:50642 "EHLO mouse.start.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753378Ab3JIB4j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 21:56:39 -0400
+Message-ID: <5254B78E.3020009@start.ca>
+Date: Tue, 08 Oct 2013 21:55:26 -0400
+From: Mark Lord <kernel@start.ca>
 MIME-Version: 1.0
-In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
-References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
-	<CAPcvp5Epf+6tOp+0=ZbBLusCzq4dF98aS+Ou0D7Nyko_VwM8KA@mail.gmail.com>
-	<3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
-Date: Fri, 25 Oct 2013 20:01:21 +0100
-Message-ID: <CAPcvp5EwTb7qm_aMzqJzLX0ScrD3A0VFog1qga76dqTT5cBW3g@mail.gmail.com>
-Subject: Re: AER driver on ARM platform
-From: Andrew Murray <amurray@embedded-bits.co.uk>
-To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel@vger.kernel.org
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	VMware@dhcp-26-207.brq.redhat.com, "Inc." <pv-drivers@vmware.com>,
+	linux-scsi@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement pattern
+References: <cover.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25 October 2013 19:18, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
->
-> >> -----Original Message-----
-> >> From: Andrew Murray [mailto:amurray@embedded-bits.co.uk]
-> >> Sent: Friday, October 25, 2013 12:27 PM
-> >> To: Karicheri, Muralidharan
-> >> Cc: linux-pci@vger.kernel.org
-> >> Subject: Re: AER driver on ARM platform
-> >>
-> >> On 25 October 2013 16:56, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
-> >> > Did anyone successfully tested PCIe AER driver on an ARM platform? I saw this enabled in
-> >> a tegra platform. Could someone from nVidia respond?
-> >>
-> >> I've previously used this on a custom ARM platform - it works.
-> >>
-> >> You need to ensure that PCIe port services are enabled, I believe at one point this required
-> >> 'pcie_ports=native' to be set on the kernel command line.
-> >>
-> >> Andrew Murray
-> >>
->
-> Yes. That was it. It probes the driver now. Did you try error inject feature?
+On 13-10-02 06:29 AM, Alexander Gordeev wrote:
+..
+> This update converts pci_enable_msix() and pci_enable_msi_block()
+> interfaces to canonical kernel functions and makes them return a
+> error code in case of failure or 0 in case of success.
 
-I did have a look at that, but it really depends on what exactly you
-want to test. There are many things this won't help you with, you
-ought to examine the aer inject driver to see what it does. For
-example if you are bringing up a new device and want to see it raise
-an AER interrupt then aer inject won't help. In this case you'll need
-to find a way to trigger real errors.
+Rather than silently break dozens of drivers in mysterious ways,
+please invent new function names for the replacements to the
+existing pci_enable_msix() and pci_enable_msi_block() functions.
 
-Andrew Murray
+That way, both in-tree and out-of-tree drivers will notice the API change,
+rather than having it go unseen and just failing for unknown reasons.
+
+Thanks.
