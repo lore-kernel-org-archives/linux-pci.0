@@ -1,117 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:55183 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751508Ab3JAHfv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Oct 2013 03:35:51 -0400
-Date: Tue, 1 Oct 2013 17:35:48 +1000
-From: Michael Ellerman <michael@ellerman.id.au>
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20131001073548.GI17966@concordia>
-References: <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20130918142231.GA21650@mtj.dyndns.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130918142231.GA21650@mtj.dyndns.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kishon Vijay Abraham I' <kishon@ti.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <000401cec4c6$dc415180$94c3f480$%han@samsung.com>
+ <52551C6E.1040404@ti.com> <003901cec4d0$5d83e650$188bb2f0$%han@samsung.com>
+ <5255266B.6040809@ti.com>
+In-reply-to: <5255266B.6040809@ti.com>
+Subject: Re: [PATCH] PCI: designware: Add irq_create_mapping()
+Date: Wed, 09 Oct 2013 19:05:24 +0900
+Message-id: <000501cec4d7$1233a3f0$369aebd0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 18, 2013 at 09:22:31AM -0500, Tejun Heo wrote:
-> Hello,
+On Wednesday, October 09, 2013 6:48 PM, Kishon Vijay Abraham I wrote:
+> On Wednesday 09 October 2013 02:47 PM, Jingoo Han wrote:
+> > On Wednesday, October 09, 2013 6:06 PM, Kishon Vijay Abraham I wrote:
+> >> On Wednesday 09 October 2013 01:39 PM, Jingoo Han wrote:
+> >>> Without irq_create_mapping(), the correct irq number cannot be
+> >>> provided. In this case, it makes problem such as NULL deference.
+> >>> Thus, irq_create_mapping() should be added for MSI.
+> >>>
+> >>> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> >>> Cc: Kishon Vijay Abraham I <kishon@ti.com>
+> >>> ---
+> >>> Tested on Exynos5440.
+> >>>
+> >>>  drivers/pci/host/pcie-designware.c |   10 ++++------
+> >>>  drivers/pci/host/pcie-designware.h |    1 +
+> >>>  2 files changed, 5 insertions(+), 6 deletions(-)
+> >>>
+> >>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> >>> index 8963017..e536bb6 100644
+> >>> --- a/drivers/pci/host/pcie-designware.c
+> >>> +++ b/drivers/pci/host/pcie-designware.c
+> >>> @@ -237,6 +237,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+> >>>  		}
+> >>>  	}
+> >>>
+> >>> +	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, 0);
+> >>> +
+> >>
+> >> I think irq_create_mapping should be done for all the MSI irq lines instead of
+> >> only the first line. So you might have to do for MAX_MSI_IRQS lines.
 > 
-> On Wed, Sep 18, 2013 at 11:48:00AM +0200, Alexander Gordeev wrote:
-> > On Wed, Sep 18, 2013 at 12:30:23AM +1000, Michael Ellerman wrote:
-> > > How about no?
-> > > 
-> > > We have a small number of MSIs available, limited by hardware &
-> > > firmware, if we don't impose a quota then the first device that probes
-> > > will get most/all of the MSIs and other devices miss out.
-> > 
-> > Out of curiosity - how pSeries has had done it without quotas before
-> > 448e2ca ("powerpc/pseries: Implement a quota system for MSIs")?
-> 
-> Hmmm... do we need to treat this any differently?  If the platform
-> can't allocate full range of requested MSIs, just failing should be
-> enough regardless of why such allocation can't be met, no?
-> 
-> > > Anyway I don't see what problem you're trying to solve? I agree the
-> > > -ve/0/+ve return value pattern is ugly, but it's hardly the end of the
-> > > world.
-> > 
-> > Well, the interface recently has been re-classified from "ugly" to
-> > "unnecessarily complex and actively harmful" in Tejun's words ;)
-> 
-> LOL. :)
-> 
-> > Indeed, I checked most of the drivers and it is incredible how people
-> > are creative in misusing the interface: from innocent pci_disable_msix()
-> > calls when if pci_enable_msix() failed to assuming MSI-Xs were enabled
-> > if pci_enable_msix() returned a positive value (apparently untested).
-> > 
-> > Roughly third of the drivers just do not care and bail out once
-> > pci_enable_msix() has not succeeded. Not sure how many of these are
-> > mandated by the hardware.
-> 
-> Yeah, I mean, this type of interface is a trap.  People have to
-> actively resist to avoid doing silly stuff which is a lot to ask.
+> Maybe it should be only till MAX_MSI_IRQS-1?
 
-I really think you're overstating the complexity here.
+I am not sure; however, it doesn't look correct.
 
-Functions typically return a boolean   -> nothing to see here
-This function returns a tristate value -> brain explosion!
+irq_create_mapping() is defined as below.
+According to the comment, irq_create_mapping() maps 'a' hardware interrupt,
+not max value of MSI IRQ lines.
+
+./kernel/irq/irqdomain.c
+/**
+ * irq_create_mapping() - Map a hardware interrupt into linux irq space
+ * @domain: domain owning this hardware interrupt or NULL for default domain
+ * @hwirq: hardware irq number in that domain space
+[.....]
+unsigned int irq_create_mapping(struct irq_domain *domain,
+                                irq_hw_number_t hwirq)
+
+Also, another value of 'irq' can be selected, because 'pos0' is added.
+
+	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, 0);
+	irq = (pp->msi_irq_start + pos0);
 
 
-> > 	/*
-> > 	 * Retrieving 'nvec' by means other than pci_msix_table_size()
-> > 	 */
-> > 
-> > 	rc = pci_get_msix_limit(pdev);
-> > 	if (rc < 0)
-> > 		return rc;
-> > 
-> > 	/*
-> > 	 * nvec = min(rc, nvec);
-> > 	 */
-> > 
-> > 	for (i = 0; i < nvec; i++)
-> > 		msix_entry[i].entry = i;
-> > 
-> > 	rc = pci_enable_msix(pdev, msix_entry, nvec);
-> > 	if (rc)
-> > 		return rc;
-> 
-> I really think what we should do is
-> 
-> * Determine the number of MSIs the controller wants.  Don't worry
->   about quotas or limits or anything.  Just determine the number
->   necessary to enable enhanced interrupt handling.
-> 	
-> * Try allocating that number of MSIs.  If it fails, then just revert
->   to single interrupt mode.  It's not the end of the world and mostly
->   guaranteed to work.  Let's please not even try to do partial
->   multiple interrupts.  I really don't think it's worth the risk or
->   complexity.
+Pratyush Anand,
+If I am wrong, please let me know. :-)
 
-It will potentially break existing setups on our hardware.
+Best regards,
+Jingoo Han
 
-Can I make that any clearer?
-
-cheers
