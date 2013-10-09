@@ -1,79 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f42.google.com ([209.85.213.42]:49093 "EHLO
-	mail-yh0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166Ab3JDWuq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 18:50:46 -0400
-Received: by mail-yh0-f42.google.com with SMTP id z12so1162283yhz.1
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 15:50:45 -0700 (PDT)
-Date: Fri, 4 Oct 2013 16:50:39 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: kgene.kim@samsung.com, grant.likely@linaro.org,
-	rob.herring@calxeda.com, jg1.han@samsung.com, tgih.jun@samsung.com,
-	yongjun_wei@trendmicro.com.cn, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	Sylwester Nawrocki <sylvester.nawrocki@gmail.com>
-Subject: Re: [PATCH] PCI: exynos: missing clk_disable_unprepare() on error in
- exynos_pcie_probe()
-Message-ID: <20131004225039.GA26108@google.com>
-References: <CAPgLHd_RTNxi-OYhmTZ35NttjnAg-gQ_WKHkUQr5ueMhXVLTMg@mail.gmail.com>
+Received: from service87.mimecast.com ([91.220.42.44]:52494 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751718Ab3JIKp6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 06:45:58 -0400
+Date: Wed, 9 Oct 2013 11:45:54 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
+	Michal Simek <monstr@monstr.eu>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [RFC] Architecture independent pcibios?
+Message-ID: <20131009104553.GI25606@e102652-lin.cambridge.arm.com>
+References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
+ <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
+ <525438F6.3090600@gmail.com>
+ <1381264135.645.230.camel@pasglop>
+ <20131009090923.GE25606@e102652-lin.cambridge.arm.com>
+ <1381315068.4330.1.camel@pasglop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPgLHd_RTNxi-OYhmTZ35NttjnAg-gQ_WKHkUQr5ueMhXVLTMg@mail.gmail.com>
+In-Reply-To: <1381315068.4330.1.camel@pasglop>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 29, 2013 at 10:29:11AM +0800, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Wed, Oct 09, 2013 at 11:37:48AM +0100, Benjamin Herrenschmidt wrote:
+> On Wed, 2013-10-09 at 10:09 +0100, Liviu Dudau wrote:
+> > On Tue, Oct 08, 2013 at 09:28:55PM +0100, Benjamin Herrenschmidt wrote:
+> > > On Tue, 2013-10-08 at 11:55 -0500, Rob Herring wrote:
+> > >
+> > > > > I wonder if pci_process_bridge_OF_ranges() would fit somewhere in
+> > > > > drivers/of?  The implementations I looked at are mostly concerned with
+> > > > > parsing OF resources, and they don't have much to do with PCI
+> > > > > directly.
+> > > >
+> > > > This was being done until Ben weighed in:
+> > > >
+> > > > https://lkml.org/lkml/2013/5/4/103
+> > >
+> > > Well, I proposed an alternative (better) approach which I of course had
+> > > no time to actually implement yet :-)
+> > 
+> > In order to avoid any confusion, could you please point me again to the
+> > relevant message(s) where you proposed your approach?
 > 
-> Add the missing clk_disable_unprepare() before return
-> from exynos_pcie_probe() in the error handling case.
+> The one pointed to by the above URL ?
 > 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> > > I have done the changes I needed to do to powerpc
+> > > pci_process_bridge_OF_ranges so it would be possible to move that now to
+> > > a generic place, but I still think it's not a great idea. It means the
+> > > pci_controller structure with its resources will have to become generic
+> > > which somewhat overlaps with the pci_host_bridge that Bjorn introduced,
+> > > so that's really not great.
+> > >
+> > > I still think an arch with DT and simpler PCI code that powerpc could
+> > > start looking at the transition to a better model that I hinted at...
+> > 
+> > As tempting as it is to start anew and with a cleaner code, I am wary
+> > that porting the existing platforms to the new code will take longer
+> > that way. My intentions are to make the (probably infrequent) task of
+> > adding a new architecture to the PCI infrastructure a simple and
+> > straighforward task. But adding code for my platform is no guarantee
+> > that new ones will have an easier job.
+> 
+> It still makes little sense to generalize a pci_controller with
+> resources & offset on top of the generic pci_host_bridge with apertures.
 
-Applied with Jingoo's ack and Sylwester's subject line to
-pci/host-exynos.  Thanks!
+Agreed. I'm looking on how to move functions that use pci_controller to
+use pci_host_bridge.
 
-Bjorn
+Semantic question: what is the perceived difference between a pci_controller
+and a pci_host_bridge? Are they just historical naming artifacts of the
+same concept? (person A deciding to do a cleanup of the code and picks a
+new name in order not to upset the old APIs)
 
-> ---
->  drivers/pci/host/pci-exynos.c | 18 ++++++++++++------
->  1 file changed, 12 insertions(+), 6 deletions(-)
+Best regards,
+Liviu
+
 > 
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index 94e096b..e25598a 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -487,18 +487,24 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
->  
->  	elbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->  	exynos_pcie->elbi_base = devm_ioremap_resource(&pdev->dev, elbi_base);
-> -	if (IS_ERR(exynos_pcie->elbi_base))
-> -		return PTR_ERR(exynos_pcie->elbi_base);
-> +	if (IS_ERR(exynos_pcie->elbi_base)) {
-> +		ret = PTR_ERR(exynos_pcie->elbi_base);
-> +		goto fail_bus_clk;
-> +	}
->  
->  	phy_base = platform_get_resource(pdev, IORESOURCE_MEM, 1);
->  	exynos_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy_base);
-> -	if (IS_ERR(exynos_pcie->phy_base))
-> -		return PTR_ERR(exynos_pcie->phy_base);
-> +	if (IS_ERR(exynos_pcie->phy_base)) {
-> +		ret = PTR_ERR(exynos_pcie->phy_base);
-> +		goto fail_bus_clk;
-> +	}
->  
->  	block_base = platform_get_resource(pdev, IORESOURCE_MEM, 2);
->  	exynos_pcie->block_base = devm_ioremap_resource(&pdev->dev, block_base);
-> -	if (IS_ERR(exynos_pcie->block_base))
-> -		return PTR_ERR(exynos_pcie->block_base);
-> +	if (IS_ERR(exynos_pcie->block_base)) {
-> +		ret = PTR_ERR(exynos_pcie->block_base);
-> +		goto fail_bus_clk;
-> +	}
->  
->  	ret = add_pcie_port(pp, pdev);
->  	if (ret < 0)
+> Ben.
 > 
+> > Best regards,
+> > Liviu
+> > 
+> > >
+> > > Cheers,
+> > > Ben.
+> > >
+> > >
+> > >
+> > 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
