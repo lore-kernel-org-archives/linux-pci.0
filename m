@@ -1,73 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:58660 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753823Ab3JaNR0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Oct 2013 09:17:26 -0400
-Received: by mail-ie0-f169.google.com with SMTP id ar20so4930630iec.14
-        for <linux-pci@vger.kernel.org>; Thu, 31 Oct 2013 06:17:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <8761sexu2l.fsf@xmission.com>
-References: <8761sexu2l.fsf@xmission.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 31 Oct 2013 07:17:04 -0600
-Message-ID: <CAErSpo7BH3k7nmECwRzgRFzhQLyiGhSkxbpwW8dtn+yk7MnrXg@mail.gmail.com>
-Subject: Re: WTF: driver-core-next contains recursive directory removal!
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Tejun Heo <tj@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout1.samsung.com ([203.254.224.24]:29612 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798Ab3JIIKM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 04:10:12 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: 'Kishon Vijay Abraham I' <kishon@ti.com>,
+	linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH] PCI: designware: Add irq_create_mapping()
+Date: Wed, 09 Oct 2013 17:09:21 +0900
+Message-id: <000401cec4c6$dc415180$94c3f480$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+Without irq_create_mapping(), the correct irq number cannot be
+provided. In this case, it makes problem such as NULL deference.
+Thus, irq_create_mapping() should be added for MSI.
 
-On Wed, Oct 30, 2013 at 4:38 PM, Eric W. Biederman
-<ebiederm@xmission.com> wrote:
->
-> Greg what is  going on?  I just looked and Tejuns ill-conceived recursive
-> directory deletion code has been merged into your driver-core-next tree.
->
-> That code is semantically broken.  I reviewed it and I gave the reasons
-> why it was wrong.  You came up to me and mentioned at LPC that you
-> agreed with my reasons.  And yet I just looked in driver-core-next and
-> there the code is in all of it's broken glory.
->
-> Please pull out that crap it has no business ever going into a stable
-> kernel.
->
-> The short version is unless someone has drastically changed pci hotplug
-> since last time I looked the code is dramatically wrong as pci hotplug
-> removes directories in the wrong order remove the parent first.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Tested on Exynos5440.
 
-Can you please elaborate on exactly where PCI hotplug removes things
-in the wrong order?  We are struggling with many issues in PCI
-removal, and if you can help us fix them by pointing out an issue,
-that would be great.
+ drivers/pci/host/pcie-designware.c |   10 ++++------
+ drivers/pci/host/pcie-designware.h |    1 +
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-I did work through removal of a small tree [1], and it appeared to me
-that we removed sysfs things in bottom-up order, but maybe I missed
-something or you're talking about a different situation.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 8963017..e536bb6 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -237,6 +237,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+ 		}
+ 	}
+ 
++	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, 0);
++
+ 	irq = (pp->msi_irq_start + pos0);
+ 
+ 	if ((irq + no_irqs) > (pp->msi_irq_start + MAX_MSI_IRQS-1))
+@@ -372,8 +374,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	struct of_pci_range_parser parser;
+ 	u32 val;
+ 
+-	struct irq_domain *irq_domain;
+-
+ 	if (of_pci_range_parser_init(&parser, np)) {
+ 		dev_err(pp->dev, "missing ranges property\n");
+ 		return -EINVAL;
+@@ -441,15 +441,13 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		irq_domain = irq_domain_add_linear(pp->dev->of_node,
++		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+ 					MAX_MSI_IRQS, &msi_domain_ops,
+ 					&dw_pcie_msi_chip);
+-		if (!irq_domain) {
++		if (!pp->irq_domain) {
+ 			dev_err(pp->dev, "irq domain init failed\n");
+ 			return -ENXIO;
+ 		}
+-
+-		pp->msi_irq_start = irq_find_mapping(irq_domain, 0);
+ 	}
+ 
+ 	if (pp->ops->host_init)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index faccbbf..240fc11 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -50,6 +50,7 @@ struct pcie_port {
+ 	int			msi_irq_start;
+ 	unsigned long		msi_data;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
++	struct irq_domain	*irq_domain;
+ };
+ 
+ struct pcie_host_ops {
+-- 
+1.7.10.4
 
-Thanks,
-  Bjorn
 
-[1] http://lkml.kernel.org/r/CAErSpo6g5vR0NMs18YZBz+6RGZd0zNeDu_=1Pk4c5a+OqHfS1g@mail.gmail.com
-
-> So now we have sysfs code that is remove directories multiple times, and
-> we just finished the conversation about sysfs_assoc_lock where Tejun was
-> just explaining how multiple removal of kobjects is not safe.
->
-> This sysfs semantic change is an unmaintainable disaster.
->
-> Linus if you would be so kind as to not merge this disaster when the
-> merge window opens I would very much appreciate it.
->
-> Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
