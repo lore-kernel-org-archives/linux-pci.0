@@ -1,74 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:49052 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511Ab3J3RWK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 13:22:10 -0400
-Received: by mail-ie0-f173.google.com with SMTP id u16so2835048iet.18
-        for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 10:22:09 -0700 (PDT)
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:64612 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751494Ab3JIDAo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 23:00:44 -0400
+Received: by mail-pa0-f52.google.com with SMTP id kl14so363107pab.11
+        for <linux-pci@vger.kernel.org>; Tue, 08 Oct 2013 20:00:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20131030151936.48ba7af5@samsung.com>
-References: <1383150426-24730-1-git-send-email-arozansk@redhat.com>
- <1383150426-24730-2-git-send-email-arozansk@redhat.com> <20131030164020.GF13290@pd.tnic>
- <20131030151936.48ba7af5@samsung.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 30 Oct 2013 11:21:49 -0600
-Message-ID: <CAErSpo5rhsDqmROLRhagbQP=6Ydfun9ZD0PFP0FO_08j0FQ4vQ@mail.gmail.com>
-Subject: Re: [PATCH 01/12] sb_edac: move PCI IDs to pci_ids.h
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>
-Cc: Aristeu Rozanski <arozansk@redhat.com>,
-	Borislav Petkov <bp@alien8.de>, linux-edac@vger.kernel.org,
-	Tony Luck <tony.luck@intel.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	open list <linux-kernel@vger.kernel.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+In-Reply-To: <CAErSpo6nO_t9HOZt8Z7S8Ca7yKjntWJWEg7uON05LmvHWEieZA@mail.gmail.com>
+References: <1380363121-1977-1-git-send-email-sachin.kamat@linaro.org>
+	<1380363121-1977-2-git-send-email-sachin.kamat@linaro.org>
+	<CAErSpo6nO_t9HOZt8Z7S8Ca7yKjntWJWEg7uON05LmvHWEieZA@mail.gmail.com>
+Date: Wed, 9 Oct 2013 08:30:43 +0530
+Message-ID: <CAK9yfHwpB-ae1ax-D9cMr+Mg3gmbXxhyTv8EaaGVrqHrQZ6Dkg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: driver: Staticize pci_dev_pm_ops
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 30, 2013 at 11:19 AM, Mauro Carvalho Chehab
-<m.chehab@samsung.com> wrote:
-> Em Wed, 30 Oct 2013 17:40:20 +0100
-> Borislav Petkov <bp@alien8.de> escreveu:
->
->> On Wed, Oct 30, 2013 at 12:26:55PM -0400, Aristeu Rozanski wrote:
->> > According to the comment, it should be done before submitting upstream.
->> >
->> > Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
->> > ---
->> >  drivers/edac/sb_edac.c  |   21 ++-------------------
->> >  include/linux/pci_ids.h |   11 +++++++++++
->> >  2 files changed, 13 insertions(+), 19 deletions(-)
->> >
->> > diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
->> > index e04462b..4cdd948 100644
->> > --- a/drivers/edac/sb_edac.c
->> > +++ b/drivers/edac/sb_edac.c
->> > @@ -57,26 +57,9 @@ static int probed;
->> >   */
->> >
->> >  /*
->> > - * FIXME: For now, let's order by device function, as it makes
->> > - * easier for driver's development process. This table should be
->> > - * moved to pci_id.h when submitted upstream
+On 4 October 2013 23:39, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sat, Sep 28, 2013 at 4:12 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+>> 'pci_dev_pm_ops' is local to this file. Make it static.
 >>
->> Why, is anything else besides sb_edac.c using those?
->>
-> I think that this patch makes sense, as the other Sandy Bridge registers
-> are at pci_ids.h. So, it is a matter of consistency.
+>> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
 >
-> Also, I won't doubt that other drivers could need to access those, as
-> there are other things there on a few of those PCI IDs.
->
-> Yet, on patch 12/12, you're adding the Ivy Bridge specific PCI IDs
-> inside the driver.
->
-> So, IMHO, you should either move all to pci_ids.h or to keep them inside
-> the driver.
->
-> My personal taste would be to move them all to pci_ids.h.
+> Applied to pci/misc, thanks!
 
-As long as it follows the guideline at the top of pci_ids.h (add them
-there only if they are shared between multiple drivers), I'm fine with
-putting them in pci_ids.h.
+Looks like this branch hasn't been pushed out yet.
 
-Bjorn
+-- 
+With warm regards,
+Sachin
