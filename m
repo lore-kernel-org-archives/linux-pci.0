@@ -1,50 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 33/77] ioat: Disable MSI-X in case request of IRQ failed
-Date: Wed,  2 Oct 2013 12:48:49 +0200
-Message-Id: <7e419c7c306eaf3be6fad3250e20d1b3da9675a8.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:35668 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753317Ab3JIBTC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Oct 2013 21:19:02 -0400
+Message-ID: <5254AEB0.9060304@linux.intel.com>
+Date: Tue, 08 Oct 2013 18:17:36 -0700
+From: David Cohen <david.a.cohen@linux.intel.com>
+MIME-Version: 1.0
+To: cjb@laptop.org, bhelgaas@google.com, adrian.hunter@intel.com,
+	wfp5p@virginia.edu, gregkh@linuxfoundation.org,
+	g.liakhovetski@gmx.de
+CC: linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] mmc: sdhci-pci: add Intel Merrifield support
+References: <1380658695-20047-1-git-send-email-david.a.cohen@linux.intel.com>
+In-Reply-To: <1380658695-20047-1-git-send-email-david.a.cohen@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/dma/ioat/dma.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Kindly ping :)
+Any comments?
 
-diff --git a/drivers/dma/ioat/dma.c b/drivers/dma/ioat/dma.c
-index 5ff6fc1..acee3b2 100644
---- a/drivers/dma/ioat/dma.c
-+++ b/drivers/dma/ioat/dma.c
-@@ -937,6 +937,7 @@ msix:
- 				chan = ioat_chan_by_index(device, j);
- 				devm_free_irq(dev, msix->vector, chan);
- 			}
-+			pci_disable_msix(pdev);
- 			goto msix_single_vector;
- 		}
- 	}
--- 
-1.7.7.6
+Br, David Cohen
+
+On 10/01/2013 01:18 PM, David Cohen wrote:
+> Implement initial SDHCI Intel Merrifield support.
+> This patch is based on previous one from Yunpeng Gao <yunpeng.gao@intel.com>
+>
+> Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
+> ---
+>   drivers/mmc/host/sdhci-pci.c | 30 ++++++++++++++++++++++++++++++
+>   1 file changed, 30 insertions(+)
+>
+> diff --git a/drivers/mmc/host/sdhci-pci.c b/drivers/mmc/host/sdhci-pci.c
+> index d7d6bc8..06f026a 100644
+> --- a/drivers/mmc/host/sdhci-pci.c
+> +++ b/drivers/mmc/host/sdhci-pci.c
+> @@ -37,6 +37,7 @@
+>   #define PCI_DEVICE_ID_INTEL_BYT_SDIO	0x0f15
+>   #define PCI_DEVICE_ID_INTEL_BYT_SD	0x0f16
+>   #define PCI_DEVICE_ID_INTEL_BYT_EMMC2	0x0f50
+> +#define PCI_DEVICE_ID_INTEL_MRFL_MMC	0x1190
+>
+>   /*
+>    * PCI registers
+> @@ -356,6 +357,28 @@ static const struct sdhci_pci_fixes sdhci_intel_byt_sd = {
+>   	.allow_runtime_pm = true,
+>   };
+>
+> +/* Define Host controllers for Intel Merrifield platform */
+> +#define INTEL_MRFL_EMMC_0	0
+> +#define INTEL_MRFL_EMMC_1	1
+> +
+> +static int intel_mrfl_mmc_probe_slot(struct sdhci_pci_slot *slot)
+> +{
+> +	if ((PCI_FUNC(slot->chip->pdev->devfn) != INTEL_MRFL_EMMC_0) &&
+> +	    (PCI_FUNC(slot->chip->pdev->devfn) != INTEL_MRFL_EMMC_1))
+> +		/* SD support is not ready yet */
+> +		return -ENODEV;
+> +
+> +	slot->host->mmc->caps |= MMC_CAP_8_BIT_DATA | MMC_CAP_NONREMOVABLE |
+> +				 MMC_CAP_1_8V_DDR;
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct sdhci_pci_fixes sdhci_intel_mrfl_mmc = {
+> +	.quirks		= SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC,
+> +	.probe_slot	= intel_mrfl_mmc_probe_slot,
+> +};
+> +
+>   /* O2Micro extra registers */
+>   #define O2_SD_LOCK_WP		0xD3
+>   #define O2_SD_MULTI_VCC3V	0xEE
+> @@ -940,6 +963,13 @@ static const struct pci_device_id pci_ids[] = {
+>   	},
+>
+>   	{
+> +		.vendor		= PCI_VENDOR_ID_INTEL,
+> +		.device		= PCI_DEVICE_ID_INTEL_MRFL_MMC,
+> +		.subvendor	= PCI_ANY_ID,
+> +		.subdevice	= PCI_ANY_ID,
+> +		.driver_data	= (kernel_ulong_t)&sdhci_intel_mrfl_mmc,
+> +	},
+> +	{
+>   		.vendor		= PCI_VENDOR_ID_O2,
+>   		.device		= PCI_DEVICE_ID_O2_8120,
+>   		.subvendor	= PCI_ANY_ID,
+>
 
