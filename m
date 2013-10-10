@@ -1,50 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:54280 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757292Ab3J1SJ6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 14:09:58 -0400
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: Andrew Murray <amurray@embedded-bits.co.uk>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: AER driver on ARM platform
-Date: Mon, 28 Oct 2013 18:09:55 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B7046265B4@DFLE11.ent.ti.com>
-References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
-	<CAPcvp5Epf+6tOp+0=ZbBLusCzq4dF98aS+Ou0D7Nyko_VwM8KA@mail.gmail.com>
-	<3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
- <CAPcvp5EwTb7qm_aMzqJzLX0ScrD3A0VFog1qga76dqTT5cBW3g@mail.gmail.com>
-In-Reply-To: <CAPcvp5EwTb7qm_aMzqJzLX0ScrD3A0VFog1qga76dqTT5cBW3g@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from szxga01-in.huawei.com ([119.145.14.64]:45321 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751269Ab3JJM7I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 08:59:08 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Ben Hutchings <ben@decadent.org.uk>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [Update PATCH -v2] PCI: Avoid initialize MSI/MSIX if device power state != PCI_D0
+Date: Thu, 10 Oct 2013 20:58:11 +0800
+Message-ID: <1381409891-4704-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Andrewl,
+Currently, if device power state != PCI_D0, we still initialize
+device MSI/MSIX, but we won't write the MSI message to device
+MSI/MSIX registers. It's weird, we don't configure MSI/MSIX
+registers properly, but pci_enable_msi() or pci_enable_msix()
+return success, and even these registers will never be updated later.
+So I think it should return error if device power state != PCI_D0.
 
-Thanks. I got some questions on AER irq handling below. 
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Acked-by: Ben Hutchings <bhutchings@solarflare.com>
 
->> > Yes. That was it. It probes the driver now. Did you try error inject feature?
->> 
->> I did have a look at that, but it really depends on what exactly you want to test. There are
->> many things this won't help you with, you ought to examine the aer inject driver to see
->> what it does. For example if you are bringing up a new device and want to see it raise an
->> AER interrupt then aer inject won't help. In this case you'll need to find a way to trigger real
->> errors.
->> 
+---
 
-What is the IRQ line tied to the AER driver? Since this is handling the root port error irq as well as the upstream/downstream device irqs. Does this driver assumes that error interrupt is raised on Legacy IRQ0 or MSI IRQ 0 for all of the ports (root, downstream and upstream)? When I have dumped the irq number in the AER driver it shows Legacy irq0 (when nomsi boot parameter is used) or MSI irq0. Our PCIe IP acts as a RC and has a separate IRQ line (12) for root port irq as below
+v1->v2: keep __write_msi_msg() function device power state statement,
+	    because Ben Hutchings point out this function may be called
+		during device in D3 state to set irq affinity. We should not
+		touch that.
+---
+ drivers/pci/msi.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-12 Error Interrupts
-           [0] System error (OR of fatal, nonfatal, correctable errors) (RC mode only)
-           [1] PCIe fatal error (RC mode only)
-           [2] PCIe non-fatal error (RC mode only)
-           [3] PCIe correctable error (RC mode only)
-           [4] AXI Error due to fatal condition in AXI bridge (EP/RC modes)
-           [5] PCIe advanced error (RC mode only)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..604265c 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -831,7 +831,7 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ 	int status, maxvec;
+ 	u16 msgctl;
+ 
+-	if (!dev->msi_cap)
++	if (!dev->msi_cap || dev->current_state != PCI_D0)
+ 		return -EINVAL;
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+@@ -862,7 +862,7 @@ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+ 	int ret, nvec;
+ 	u16 msgctl;
+ 
+-	if (!dev->msi_cap)
++	if (!dev->msi_cap || dev->current_state != PCI_D0)
+ 		return -EINVAL;
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+@@ -955,7 +955,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	int status, nr_entries;
+ 	int i, j;
+ 
+-	if (!entries || !dev->msix_cap)
++	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
+ 		return -EINVAL;
+ 
+ 	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
+-- 
+1.7.1
 
-Does that mean, I need to modify the AER driver to support separate IRQ line for root port (port_type = PCI_EXP_TYPE_ROOT_PORT) for the hw I am working on. Any help?
 
-
-Murali Karicheri
-Linux Kernel, Software Development
->> Andrew Murray
