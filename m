@@ -1,105 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:57654 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754472Ab3JRTjU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Oct 2013 15:39:20 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Rostedt <rostedt@goodmis.org>
 Cc: LKML <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: [GIT PULL] ACPI and power management fixes for v3.12-rc6
-Date: Fri, 18 Oct 2013 21:51:13 +0200
-Message-ID: <2799827.4Qn62kYzMV@vostro.rjw.lan>
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [BUG] WARN_ON(!context) in drivers/pci/hotplug/acpiphp_glue.c
+Date: Fri, 11 Oct 2013 01:09:33 +0200
+Message-ID: <2679976.SxBsymIdoJ@vostro.rjw.lan>
+In-Reply-To: <CA+55aFwA8WZ+ARtNFFY+z4d8kS5AUBLg32iu7Jkk3rsz_i1OZw@mail.gmail.com>
+References: <20131010165905.7815defa@gandalf.local.home> <81272921.7ZJW2CaxNE@vostro.rjw.lan> <CA+55aFwA8WZ+ARtNFFY+z4d8kS5AUBLg32iu7Jkk3rsz_i1OZw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Thursday, October 10, 2013 02:37:15 PM Linus Torvalds wrote:
+> On Thu, Oct 10, 2013 at 2:35 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >
+> > Well, I must have overlooked the original report.  Is it available anywhere
+> > I can find it?
+> 
+> I think Steven has some buggered email system, he has other emails
+> being eaten by lkml too, and apparently other mail gateways (because
+> you were direct-cc'd on the original).
 
-Please pull from the git repository at
+Mailer issues aside, I've just seen the original (Bjorn forwarded it to me,
+thanks!) and I'm wondering if the message added by the debug patch below is
+triggered along with the WARN_ON().  If it is, I think it's better to drop
+the WARN_ON(), at least for now (until we sort out the acpiphp/pciehp
+coexistence).
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm+acpi-3.12-rc6
-
-to receive ACPI and power management fixes for v3.12-rc6 with
-top-most commit 981984cbd09e41c05b4ec6260e3f68591354cd54
-
-  Merge branch Merge branch 'acpi-fixes'
-
-on top of commit 35f9162d67c3e20a82b4bd6ec538f3e9c14fb055
-
-  Merge tag 'pm+acpi-3.12-rc5' of git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm
-
-These fix a bug related to system suspend/resume in intel_pstate and fix it
-up after a recent change, make a forgotten structure field change in one of
-cpufreq drivers, remove a leftover reference to /proc/acpi/event in Kconfig
-help, add a missing mutex unlock to an error code path in ACPI power resources
-code and drop a pile of unuseful code related to power resources that causes
-problems to happen on real systems.
-
-Specifics:
-
- - intel_pstate fix for misbehavior after system resume if sysfs
-   attributes are set in a specific way before the corresponding
-   suspend from Dirk Brandewie.
-
- - A recent intel_pstate fix has no effect if unsigned long is 32-bit,
-   so fix it up to cover that case as well.
-
- - The s3c64xx cpufreq driver was not updated when the index field of
-   struct cpufreq_frequency_table was replaced with driver_data, so
-   update it now.  From Charles Keepax.
-
- - The Kconfig help text for ACPI_BUTTON still refers to /proc/acpi/event
-   that has been dropped recently, so modify it to remove that reference.
-   From Krzysztof Mazur.
-
- - A Lan Tianyu's change adds a missing mutex unlock to an error code
-   path in acpi_resume_power_resources().
-
- - Some code related to ACPI power resources, whose very purpose is
-   questionable to put it lightly, turns out to cause problems to
-   happen during testing on real systems, so remove it completely
-   (we may revisit that in the future if there's a compelling enough
-   reason).  From yours truly and Aaron Lu.
-
-Thanks!
+Rafael
 
 
----------------
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-Aaron Lu (1):
-      ATA / ACPI: remove power dependent device handling
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -991,6 +991,11 @@ void acpiphp_enumerate_slots(struct pci_
+ 
+ 	if (!pci_is_root_bus(bridge->pci_bus)) {
+ 		struct acpiphp_context *context;
++		struct pci_dev *parent = bridge->pci_bus->parent->self;
++
++		if (parent && device_is_managed_by_native_pciehp(parent))
++			dev_warn(&bridge->pci_dev->dev,
++				 "Parent is managed by pciehp!\n");
+ 
+ 		/*
+ 		 * This bridge should have been registered as a hotplug function
 
-Charles Keepax (1):
-      cpufreq: s3c64xx: Rename index to driver_data
 
-Dirk Brandewie (1):
-      cpufreq / intel_pstate: Fix max_perf_pct on resume
-
-Krzysztof Mazur (1):
-      ACPI: remove /proc/acpi/event from ACPI_BUTTON help
-
-Lan Tianyu (1):
-      ACPI / power: Release resource_lock after acpi_power_get_state() return error
-
-Rafael J. Wysocki (3):
-      intel_pstate: Fix type mismatch warning
-      ACPI / power: Drop automaitc resume of power resource dependent devices
-      ACPI / PM: Drop two functions that are not used any more
-
----------------
-
- drivers/acpi/Kconfig              |    6 +--
- drivers/acpi/device_pm.c          |   56 --------------------
- drivers/acpi/power.c              |  104 ++-----------------------------------
- drivers/acpi/scan.c               |    1 -
- drivers/ata/libata-acpi.c         |   14 -----
- drivers/ata/libata-scsi.c         |    3 --
- drivers/ata/libata.h              |    4 --
- drivers/cpufreq/intel_pstate.c    |   14 ++---
- drivers/cpufreq/s3c64xx-cpufreq.c |    2 +-
- include/acpi/acpi_bus.h           |    7 ---
- 10 files changed, 15 insertions(+), 196 deletions(-)
 
