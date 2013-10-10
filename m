@@ -1,75 +1,266 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:4725 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933769Ab3JOVLp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 17:11:45 -0400
-From: Toshi Kani <toshi.kani@hp.com>
-To: mingo@kernel.org, hpa@zytor.com, tglx@linutronix.de
-Cc: akpm@linux-foundation.org, linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, yinghai@kernel.org, tj@kernel.org,
-	rientjes@google.com, isimatu.yasuaki@jp.fujitsu.com,
-	Toshi Kani <toshi.kani@hp.com>
-Subject: [PATCH] x86/numa: Allow node distance table to have I/O nodes
-Date: Tue, 15 Oct 2013 15:07:44 -0600
-Message-Id: <1381871264-14070-1-git-send-email-toshi.kani@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1381437698.2796.53.camel@ul30vt.home>
+Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain of a device
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sethi Varun-B16395 <B16395@freescale.com>
+Cc: Bhushan Bharat-R65777 <R65777@freescale.com>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Wood Scott-B07421 <B07421@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"galak@kernel.crashing.org" <galak@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Date: Thu, 10 Oct 2013 14:41:38 -0600
+In-Reply-To: <C5ECD7A89D1DC44195F34B25E172658D0A52BAC7@039-SN2MPN1-013.039d.mgd.msft.net>
+References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1379575763-2091-3-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1380127533.3030.319.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0718FD1C@039-SN2MPN1-011.039d.mgd.msft.net>
+	 <1380901507.2673.204.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D07190F35@039-SN2MPN1-011.039d.mgd.msft.net>
+	 <1380906772.25705.19.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D07191143@039-SN2MPN1-011.039d.mgd.msft.net>
+	 <1380910322.25705.56.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0719385B@039-SN2MPN1-011.039d.mgd.msft.net>
+	 <1381201980.6330.4.camel@ul30vt.home>
+	 <C5ECD7A89D1DC44195F34B25E172658D0A52BAC7@039-SN2MPN1-013.039d.mgd.msft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a system has I/O devices (ex. PCI bridges) with their own
-locality, the following error message shows up.
+On Thu, 2013-10-10 at 20:09 +0000, Sethi Varun-B16395 wrote:
+> 
+> > -----Original Message-----
+> > From: iommu-bounces@lists.linux-foundation.org [mailto:iommu-
+> > bounces@lists.linux-foundation.org] On Behalf Of Alex Williamson
+> > Sent: Tuesday, October 08, 2013 8:43 AM
+> > To: Bhushan Bharat-R65777
+> > Cc: agraf@suse.de; Wood Scott-B07421; linux-pci@vger.kernel.org;
+> > galak@kernel.crashing.org; linux-kernel@vger.kernel.org;
+> > iommu@lists.linux-foundation.org; benh@kernel.crashing.org; linuxppc-
+> > dev@lists.ozlabs.org
+> > Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain of a device
+> > 
+> > On Mon, 2013-10-07 at 05:46 +0000, Bhushan Bharat-R65777 wrote:
+> > >
+> > > > -----Original Message-----
+> > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > > Sent: Friday, October 04, 2013 11:42 PM
+> > > > To: Bhushan Bharat-R65777
+> > > > Cc: joro@8bytes.org; benh@kernel.crashing.org;
+> > > > galak@kernel.crashing.org; linux- kernel@vger.kernel.org;
+> > > > linuxppc-dev@lists.ozlabs.org; linux- pci@vger.kernel.org;
+> > > > agraf@suse.de; Wood Scott-B07421; iommu@lists.linux- foundation.org
+> > > > Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain of a
+> > > > device
+> > > >
+> > > > On Fri, 2013-10-04 at 17:23 +0000, Bhushan Bharat-R65777 wrote:
+> > > > >
+> > > > > > -----Original Message-----
+> > > > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > > > > Sent: Friday, October 04, 2013 10:43 PM
+> > > > > > To: Bhushan Bharat-R65777
+> > > > > > Cc: joro@8bytes.org; benh@kernel.crashing.org;
+> > > > > > galak@kernel.crashing.org; linux- kernel@vger.kernel.org;
+> > > > > > linuxppc-dev@lists.ozlabs.org; linux- pci@vger.kernel.org;
+> > > > > > agraf@suse.de; Wood Scott-B07421; iommu@lists.linux-
+> > > > > > foundation.org
+> > > > > > Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain of a
+> > > > > > device
+> > > > > >
+> > > > > > On Fri, 2013-10-04 at 16:47 +0000, Bhushan Bharat-R65777 wrote:
+> > > > > > >
+> > > > > > > > -----Original Message-----
+> > > > > > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > > > > > > Sent: Friday, October 04, 2013 9:15 PM
+> > > > > > > > To: Bhushan Bharat-R65777
+> > > > > > > > Cc: joro@8bytes.org; benh@kernel.crashing.org;
+> > > > > > > > galak@kernel.crashing.org; linux- kernel@vger.kernel.org;
+> > > > > > > > linuxppc-dev@lists.ozlabs.org; linux- pci@vger.kernel.org;
+> > > > > > > > agraf@suse.de; Wood Scott-B07421; iommu@lists.linux-
+> > > > > > > > foundation.org
+> > > > > > > > Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain
+> > > > > > > > of a device
+> > > > > > > >
+> > > > > > > > On Fri, 2013-10-04 at 09:54 +0000, Bhushan Bharat-R65777
+> > wrote:
+> > > > > > > > >
+> > > > > > > > > > -----Original Message-----
+> > > > > > > > > > From: linux-pci-owner@vger.kernel.org
+> > > > > > > > > > [mailto:linux-pci-owner@vger.kernel.org]
+> > > > > > > > > > On Behalf Of Alex Williamson
+> > > > > > > > > > Sent: Wednesday, September 25, 2013 10:16 PM
+> > > > > > > > > > To: Bhushan Bharat-R65777
+> > > > > > > > > > Cc: joro@8bytes.org; benh@kernel.crashing.org;
+> > > > > > > > > > galak@kernel.crashing.org; linux-
+> > > > > > > > > > kernel@vger.kernel.org; linuxppc-dev@lists.ozlabs.org;
+> > > > > > > > > > linux- pci@vger.kernel.org; agraf@suse.de; Wood
+> > > > > > > > > > Scott-B07421; iommu@lists.linux- foundation.org; Bhushan
+> > > > > > > > > > Bharat-R65777
+> > > > > > > > > > Subject: Re: [PATCH 2/7] iommu: add api to get
+> > > > > > > > > > iommu_domain of a device
+> > > > > > > > > >
+> > > > > > > > > > On Thu, 2013-09-19 at 12:59 +0530, Bharat Bhushan wrote:
+> > > > > > > > > > > This api return the iommu domain to which the device is
+> > attached.
+> > > > > > > > > > > The iommu_domain is required for making API calls
+> > > > > > > > > > > related to
+> > > > iommu.
+> > > > > > > > > > > Follow up patches which use this API to know iommu
+> > maping.
+> > > > > > > > > > >
+> > > > > > > > > > > Signed-off-by: Bharat Bhushan
+> > > > > > > > > > > <bharat.bhushan@freescale.com>
+> > > > > > > > > > > ---
+> > > > > > > > > > >  drivers/iommu/iommu.c |   10 ++++++++++
+> > > > > > > > > > >  include/linux/iommu.h |    7 +++++++
+> > > > > > > > > > >  2 files changed, 17 insertions(+), 0 deletions(-)
+> > > > > > > > > > >
+> > > > > > > > > > > diff --git a/drivers/iommu/iommu.c
+> > > > > > > > > > > b/drivers/iommu/iommu.c index
+> > > > > > > > > > > fbe9ca7..6ac5f50 100644
+> > > > > > > > > > > --- a/drivers/iommu/iommu.c
+> > > > > > > > > > > +++ b/drivers/iommu/iommu.c
+> > > > > > > > > > > @@ -696,6 +696,16 @@ void iommu_detach_device(struct
+> > > > > > > > > > > iommu_domain *domain, struct device *dev)  }
+> > > > > > > > > > > EXPORT_SYMBOL_GPL(iommu_detach_device);
+> > > > > > > > > > >
+> > > > > > > > > > > +struct iommu_domain *iommu_get_dev_domain(struct
+> > device *dev) {
+> > > > > > > > > > > +	struct iommu_ops *ops = dev->bus->iommu_ops;
+> > > > > > > > > > > +
+> > > > > > > > > > > +	if (unlikely(ops == NULL ||
+> > > > > > > > > > > +ops->get_dev_iommu_domain ==
+> > > > NULL))
+> > > > > > > > > > > +		return NULL;
+> > > > > > > > > > > +
+> > > > > > > > > > > +	return ops->get_dev_iommu_domain(dev); }
+> > > > > > > > > > > +EXPORT_SYMBOL_GPL(iommu_get_dev_domain);
+> > > > > > > > > >
+> > > > > > > > > > What prevents this from racing iommu_domain_free()?
+> > > > > > > > > > There's no references acquired, so there's no reason for
+> > > > > > > > > > the caller to assume the
+> > > > > > > > pointer is valid.
+> > > > > > > > >
+> > > > > > > > > Sorry for late query, somehow this email went into a
+> > > > > > > > > folder and escaped;
+> > > > > > > > >
+> > > > > > > > > Just to be sure, there is not lock at generic "struct
+> > > > > > > > > iommu_domain", but IP
+> > > > > > > > specific structure (link FSL domain) linked in
+> > > > > > > > iommu_domain->priv have a lock, so we need to ensure this
+> > > > > > > > race in FSL iommu code (say drivers/iommu/fsl_pamu_domain.c),
+> > right?
+> > > > > > > >
+> > > > > > > > No, it's not sufficient to make sure that your use of the
+> > > > > > > > interface is race free.  The interface itself needs to be
+> > > > > > > > designed so that it's difficult to use incorrectly.
+> > > > > > >
+> > > > > > > So we can define
+> > > > > > > iommu_get_dev_domain()/iommu_put_dev_domain();
+> > > > > > > iommu_get_dev_domain() will return domain with the lock held,
+> > > > > > > and
+> > > > > > > iommu_put_dev_domain() will release the lock? And
+> > > > > > > iommu_get_dev_domain() must always be followed by
+> > > > > > > iommu_get_dev_domain().
+> > > > > >
+> > > > > > What lock?  get/put are generally used for reference counting,
+> > > > > > not locking in the kernel.
+> > > > > >
+> > > > > > > > That's not the case here.  This is a backdoor to get the
+> > > > > > > > iommu domain from the iommu driver regardless of who is using
+> > it or how.
+> > > > > > > > The iommu domain is created and managed by vfio, so
+> > > > > > > > shouldn't we be looking at how to do this through vfio?
+> > > > > > >
+> > > > > > > Let me first describe what we are doing here:
+> > > > > > > During initialization:-
+> > > > > > >  - vfio talks to MSI system to know the MSI-page and size
+> > > > > > >  - vfio then interacts with iommu to map the MSI-page in iommu
+> > > > > > > (IOVA is decided by userspace and physical address is the
+> > > > > > > MSI-page)
+> > > > > > >  - So the IOVA subwindow mapping is created in iommu and yes
+> > > > > > > VFIO know about
+> > > > > > this mapping.
+> > > > > > >
+> > > > > > > Now do SET_IRQ(MSI/MSIX) ioctl:
+> > > > > > >  - calls pci_enable_msix()/pci_enable_msi_block(): which is
+> > > > > > > supposed to set
+> > > > > > MSI address/data in device.
+> > > > > > >  - So in current implementation (this patchset) msi-subsystem
+> > > > > > > gets the IOVA
+> > > > > > from iommu via this defined interface.
+> > > > > > >  - Are you saying that rather than getting this from iommu, we
+> > > > > > > should get this
+> > > > > > from vfio? What difference does this make?
+> > > > > >
+> > > > > > Yes, you just said above that vfio knows the msi to iova
+> > > > > > mapping, so why go outside of vfio to find it later?  The
+> > > > > > difference is one case you can have a proper reference to data
+> > > > > > structures to make sure the pointer you get back actually has
+> > > > > > meaning at the time you're using it vs the code here where
+> > > > > > you're defining an API that returns a meaningless value
+> > > > >
+> > > > > With FSL-PAMU we will always get consistant data from iommu or
+> > > > > vfio-data
+> > > > structure.
+> > > >
+> > > > Great, but you're trying to add a generic API to the IOMMU subsystem
+> > > > that's difficult to use correctly.  The fact that you use it
+> > > > correctly does not justify the API.
+> > > >
+> > > > > > because you can't check or
+> > > > > > enforce that an arbitrary caller is using it correctly.
+> > > > >
+> > > > > I am not sure what is arbitrary caller? pdev is known to vfio, so
+> > > > > vfio will only make pci_enable_msix()/pci_enable_msi_block() for
+> > this pdev.
+> > > > > If anyother code makes then it is some other unexpectedly thing
+> > > > > happening in system, no?
+> > > >
+> > > > What's proposed here is a generic IOMMU API.  Anybody can call this.
+> > > > What if the host SCSI driver decides to go get the iommu domain for
+> > > > it's device (or any other device)?  Does that fit your usage model?
+> > > >
+> > > > > >  It's not maintainable.
+> > > > > > Thanks,
+> > > > >
+> > > > > I do not have any issue with this as well, can you also describe
+> > > > > the type of API you are envisioning; I can think of defining some
+> > > > > function in vfio.c/vfio_iommu*.c, make them global and declare
+> > > > > then in include/Linux/vfio.h And include <Linux/vfio.h> in caller
+> > > > > file
+> > > > > (arch/powerpc/kernel/msi.c)
+> > > >
+> > > > Do you really want module dependencies between vfio and your core
+> > > > kernel MSI setup?  Look at the vfio external user interface that
+> > we've already defined.
+> > > > That allows other components of the kernel to get a proper reference
+> > > > to a vfio group.  From there you can work out how to get what you
+> > > > want.  Another alternative is that vfio could register an MSI to
+> > > > IOVA mapping with architecture code when the mapping is created.
+> > > > The MSI setup path could then do a lookup in architecture code for
+> > > > the mapping.  You could even store the MSI to IOVA mapping in VFIO
+> > > > and create an interface where SET_IRQ passes that mapping into setup
+> > code.
+> [Sethi Varun-B16395] What you are suggesting is that the MSI setup
+> path queries the vfio subsystem for the mapping, rather than directly
+> querying the iommu subsystem. So, say if we add an interface for
+> getting MSI to IOVA mapping in the msi setup path, wouldn't this again
+> be specific to vfio? I reckon that this interface would again ppc
+> machine specific interface.
 
- NUMA: Warning: node ids are out of bound, from=-1 to=-1 distance=10
+Sure, if this is a generic MSI setup path then clearly vfio should not
+be involved.  But by that same notion, if this is a generic MSI setup
+path, how can the proposed solutions guarantee that the iommu_domain or
+iova returned is still valid in all cases?  It's racy.  If the caller
+trying to setup MSI has the information needed, why doesn't it pass it
+in as part of the setup?  Thanks,
 
-acpi_numa_slit_init() calls numa_set_distance(), which assumes
-that all nodes on the system have been parsed with SRAT already.
-However, SRAT does not list I/O devices.  SLIT has the distance
-table for all localities including I/Os.  Hence, the above message
-shows up when a system has a unique I/O device locality.
+Alex
 
-This patch changes acpi_numa_slit_init() to make sure all the
-nodes are parsed, so that it can initialize the distance table
-with all the localities.
 
-The following map tables may contain I/O nodes as a result.
- - numa_distance[], i.e. node distance table
- - node_states[N_POSSIBLE], aka. node_possible_map
- - mp_bus_to_node[], i.e. pci bus# to node# map
 
-There is no functional change since there is no code that makes
-use of the I/O nodes.
- - I/O nodes are set to off-line.
- - pci_acpi_scan_root() continues to set -1 to pci_sysdata.node
-   of a PCI bridge with a unique locality (per commit b755de8d).
-
-Signed-off-by: Toshi Kani <toshi.kani@hp.com>
----
- arch/x86/mm/srat.c |   15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
-
-diff --git a/arch/x86/mm/srat.c b/arch/x86/mm/srat.c
-index 26f4e12..fb5bd73 100644
---- a/arch/x86/mm/srat.c
-+++ b/arch/x86/mm/srat.c
-@@ -45,7 +45,20 @@ static __init inline int srat_disabled(void)
- /* Callback for SLIT parsing */
- void __init acpi_numa_slit_init(struct acpi_table_slit *slit)
- {
--	int i, j;
-+	int node, i, j;
-+
-+	/* SLIT may have I/O nodes, which are not listed in SRAT */
-+	for (i = 0; i < slit->locality_count; i++) {
-+		if (pxm_to_node(i) != NUMA_NO_NODE)
-+			continue;
-+
-+		node = setup_node(i);
-+		if (WARN_ONCE(node < 0, "SLIT: Too many proximity domains.\n"))
-+			continue;
-+
-+		node_set(node, numa_nodes_parsed);
-+		pr_info("SLIT: Node %u PXM %u I/O only\n", node, i);
-+	}
- 
- 	for (i = 0; i < slit->locality_count; i++)
- 		for (j = 0; j < slit->locality_count; j++)
