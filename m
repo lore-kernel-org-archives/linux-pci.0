@@ -1,94 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:14836 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753530Ab3JIKuY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 06:50:24 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kishon Vijay Abraham I' <kishon@ti.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <000401cec4c6$dc415180$94c3f480$%han@samsung.com>
- <52551C6E.1040404@ti.com> <003901cec4d0$5d83e650$188bb2f0$%han@samsung.com>
- <5255266B.6040809@ti.com> <000501cec4d7$1233a3f0$369aebd0$%han@samsung.com>
- <52552F84.2020901@ti.com>
-In-reply-to: <52552F84.2020901@ti.com>
-Subject: Re: [PATCH] PCI: designware: Add irq_create_mapping()
-Date: Wed, 09 Oct 2013 19:49:15 +0900
-Message-id: <000c01cec4dd$32d92070$988b6150$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-out.m-online.net ([212.18.0.9]:54450 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755686Ab3JJRkA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 13:40:00 -0400
+From: Marek Vasut <marex@denx.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v7 0/2] Add PCIe support for i.MX6q
+Date: Thu, 10 Oct 2013 19:39:44 +0200
+Cc: "Zhu Richard-R65037" <r65037@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>,
+	Frank Li <lznuaa@gmail.com>, Sean Cross <xobs@kosagi.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>
+References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org> <201310101758.35085.marex@denx.de> <CAErSpo64NbDhA0LX95s1T=DvuBhWi7qeqS2maNJn15zbG8GCUA@mail.gmail.com>
+In-Reply-To: <CAErSpo64NbDhA0LX95s1T=DvuBhWi7qeqS2maNJn15zbG8GCUA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310101939.44295.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 09, 2013 7:27 PM, Kishon Vijay Abraham I wrote:
-> On Wednesday 09 October 2013 03:35 PM, Jingoo Han wrote:
-> > On Wednesday, October 09, 2013 6:48 PM, Kishon Vijay Abraham I wrote:
-> >> On Wednesday 09 October 2013 02:47 PM, Jingoo Han wrote:
-> >>> On Wednesday, October 09, 2013 6:06 PM, Kishon Vijay Abraham I wrote:
-> >>>> On Wednesday 09 October 2013 01:39 PM, Jingoo Han wrote:
-> >>>>> Without irq_create_mapping(), the correct irq number cannot be
-> >>>>> provided. In this case, it makes problem such as NULL deference.
-> >>>>> Thus, irq_create_mapping() should be added for MSI.
-> >>>>>
-> >>>>> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> >>>>> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> >>>>> ---
-> >>>>> Tested on Exynos5440.
-> >>>>>
-> >>>>>  drivers/pci/host/pcie-designware.c |   10 ++++------
-> >>>>>  drivers/pci/host/pcie-designware.h |    1 +
-> >>>>>  2 files changed, 5 insertions(+), 6 deletions(-)
-> >>>>>
-> >>>>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> >>>>> index 8963017..e536bb6 100644
-> >>>>> --- a/drivers/pci/host/pcie-designware.c
-> >>>>> +++ b/drivers/pci/host/pcie-designware.c
-> >>>>> @@ -237,6 +237,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
-> >>>>>  		}
-> >>>>>  	}
-> >>>>>
-> >>>>> +	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, 0);
-> >>>>> +
-> >>>>
-> >>>> I think irq_create_mapping should be done for all the MSI irq lines instead of
-> >>>> only the first line. So you might have to do for MAX_MSI_IRQS lines.
-> >>
-> >> Maybe it should be only till MAX_MSI_IRQS-1?
+Hi Bjorn,
+
+> [+cc Yinghai]
 > 
-> I meant something like this,
+> On Thu, Oct 10, 2013 at 9:58 AM, Marek Vasut <marex@denx.de> wrote:
+> >> On Thu, Oct 10, 2013 at 4:25 AM, Marek Vasut <marex@denx.de> wrote:
+> > I tried you suggestion, this is what I got now (and with V7 of the
+> > patches):
+> > 
+> > Note that my topology is: rootport->2_port_switch->ethernet_chip , the
+> > other port of the switch is not used .
+> > 
+> > imx6q-pcie 1ffc000.pcie: phy link never came up
+> > PCI host bridge to bus 0000:00
+> > pci_bus 0000:00: root bus resource [io  0x1000-0x10000]
+> > pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
+> > pci_bus 0000:00: No busn resource found for root bus, will use [bus
+> > 00-ff] pci_bus 0000:00: scanning bus
+> > pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
+> > pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
+> > pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
 > 
-> 	for (i = 0; i < MAX_MSI_IRQS; i++)
-> 		irq_create_mapping(pp->irq_domain, i);
->
-> That didn't give me any issues though.
+> This is probably your Root Port, and it looks like its BARs haven't
+> been programmed.
 
-However, no driver calls irq_create_mapping() like this.
-For example, Tegra PCI driver gives 'hwirq' as single offset value
-to irq_create_mapping() without any loop.
+The BAR programming should be happening in:
 
-static int tegra_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
-                               struct msi_desc *desc)
-{
-	hwirq = tegra_msi_alloc(msi);
-	irq = irq_create_mapping(msi->domain, hwirq);
+drivers/pci/host/pcie-designware.c
 
-Maybe, the following can be used, it uses 'pos0' as the offset value.
+494 void dw_pcie_setup_rc(struct pcie_port *pp)
+495 {
+[...]
+532 
+533         /* setup RC BARs */
+534         dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_0);
+535         dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_1);
 
-	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, pos0);
-	irq = pp->msi_irq_start;
+Or am I mistaken?
 
+> > pci 0000:00:00.0: calling pci_fixup_ide_bases+0x0/0x5c
+> > pci 0000:00:00.0: supports D1
+> > pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
+> > pci 0000:00:00.0: PME# disabled
+> > pci_bus 0000:00: fixups for bus
+> > PCI: bus0: Fast back to back transfers disabled
+> > pci 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 0
+> > pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
+> > pci_bus 0000:01: scanning bus
+> > pci_bus 0000:01: fixups for bus
+> > PCI: bus1: Fast back to back transfers enabled
+> > pci_bus 0000:01: bus scan returning with max=01
+> > pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+> > pci_bus 0000:00: bus scan returning with max=01
+> > pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to 01
+> 
+> We should have found the switch (an Upstream Port and two Downstream
+> Ports) and the ethernet device here.  Have you ever seen this work,
+> i.e., have we ever found those devices, with any kernel?
 
-Best regards,
-Jingoo Han
+I got it working in U-Boot, but the PCI stack there is ported from older kernel 
+version and the MX6 PCIe driver is entirely custom (even though it's copying the 
+behavior of the MX6 PCIe driver in kernel).
 
+I managed to detect the whole topology in U-Boot:
+
+  00:01.0     - 16c3:abcd - Bridge device
+   01:00.0    - 12d8:2303 - Bridge device
+    02:01.0   - 12d8:2303 - Bridge device
+     03:00.0  - 8086:1531 - Network controller
+    02:02.0   - 12d8:2303 - Bridge device
+
+The 00:01.0 is the MX6 root bridge , the 01:00.0 is the switch's upstream port, 
+02:01.0 and 02:02.0 are the downstream ports and the 03:00.0 is the ethernet 
+controller.
+
+I suspect the PCIe works without issues here.
+
+> It's possible that your host bridge is configured to only generate
+> config cycles for bus 00, i.e., the host bridge resource is actually
+> "[bus 00]".  If that were the case, we'd never see anything on bus 01.
+>  This would be i.MX6q-specific configuration, so I can't help here.
+
+I checked the pcie-designware.c code and maybe this is where this is set up?
+
+543         /* setup bus numbers */
+544         dw_pcie_readl_rc(pp, PCI_PRIMARY_BUS, &val);
+545         val &= 0xff000000;
+546         val |= 0x00010100;
+547         dw_pcie_writel_rc(pp, val, PCI_PRIMARY_BUS);
+
+> I suppose it's conceivable this is related to 928bea96 "PCI: Delay
+> enabling bridges until they're needed".  Per spec (PCI-to-PCI Bridge
+> Spec, r1.2, sec 3.2.4.3), I don't think the bridge enable bits affect
+> config transaction forwarding, but if your Root Port were defective
+> and only forwarded config transactions when enabled, you'd also see
+> this.  You could try forcibly setting the enable bits in
+> pci_scan_bridge() just as an experiment.
+
+Will try. I can also try reverting this or the whole set:
+
+    * pci/yinghai-assign-unassigned-v6:
+      PCI: Assign resources for hot-added host bridge more aggressively
+      PCI: Move resource reallocation code to non-__init
+      PCI: Delay enabling bridges until they're needed
+      PCI: Assign resources on a per-bus basis
+      PCI: Enable unassigned resource reallocation on per-bus basis
+      PCI: Turn on reallocation for unassigned resources with host bridge offset
+      PCI: Look for unassigned resources on per-bus basis
+      PCI: Drop temporary variable in pci_assign_unassigned_resources()
+
+Would that help maybe?
+
+> > PCI: Device 0000:00:00.0 not available because of resource collisions
+> > pcieport: probe of 0000:00:00.0 failed with error -22
+> > pci 0000:00:00.0: fixup irq: got 155
+> > pci 0000:00:00.0: assigning IRQ 155
+> > pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
+> > pci 0000:00:00.0: BAR 0: set to [mem 0x01000000-0x010fffff] (PCI address
+> > [0x1000000-0x10
+> > fffff])
+> > pci 0000:00:00.0: BAR 6: assigned [mem 0x01100000-0x0110ffff pref]
+> 
+> You *are* assigning resources here; I'm not sure why we're trying to
+> bind the pcieport driver before resource assignment.  That seems out
+> of order.
+
+Could it be a bug in the PCIe subsystem then ?
+
+> > pci 0000:00:00.0: PCI bridge to [bus 01]
+> > pci 0000:00:00.0: PCI bridge to [bus 01]
+> > pci_bus 0000:00: resource 4 [io  0x1000-0x10000]
+> > pci_bus 0000:00: resource 5 [mem 0x01000000-0x01efffff]
+> > 
+> > What is this conflicting device 0000:00:01 I observe here? Does it have
+> > to do with the switch ?
+> 
+> I don't see a 0000:00:01.  That's not a complete PCI ID anyway; it
+> means domain 0000, bus 00, device 01, but there's no function number.
+
+It is there somewhere around the middle of the log I pasted, see:
+
+-->8--
+pci_bus 0000:01: scanning bus
+pci_bus 0000:01: fixups for bus
+PCI: bus1: Fast back to back transfers enabled
+pci_bus 0000:01: bus scan returning with max=01
+pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+pci_bus 0000:00: bus scan returning with max=01
+pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to 01
+--8<--
+
+Thank you for the help!
