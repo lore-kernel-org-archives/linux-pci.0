@@ -1,93 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db9lp0250.outbound.messaging.microsoft.com ([213.199.154.250]:20451
-	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756129Ab3JHW51 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 18:57:27 -0400
-Message-ID: <1381273037.7979.298.camel@snotra.buserror.net>
-Subject: Re: [PATCH 1/7] powerpc: Add interface to get msi region information
-From: Scott Wood <scottwood@freescale.com>
-To: Bharat Bhushan <r65777@freescale.com>
-CC: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<benh@kernel.crashing.org>, <galak@kernel.crashing.org>,
-	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
-	<iommu@lists.linux-foundation.org>,
-	Bharat Bhushan <Bharat.Bhushan@freescale.com>
-Date: Tue, 8 Oct 2013 17:57:17 -0500
-In-Reply-To: <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:54440 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752774Ab3JJKP5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Oct 2013 06:15:57 -0400
+Date: Thu, 10 Oct 2013 12:17:05 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Message-ID: <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <5254D397.9030307@zytor.com>
+ <1381292648.645.259.camel@pasglop>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1381292648.645.259.camel@pasglop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-09-19 at 12:59 +0530, Bharat Bhushan wrote:
-> @@ -376,6 +405,7 @@ static int fsl_of_msi_probe(struct platform_device *dev)
->  	int len;
->  	u32 offset;
->  	static const u32 all_avail[] = { 0, NR_MSI_IRQS };
-> +	static int bank_index;
->  
->  	match = of_match_device(fsl_of_msi_ids, &dev->dev);
->  	if (!match)
-> @@ -419,8 +449,8 @@ static int fsl_of_msi_probe(struct platform_device *dev)
->  				dev->dev.of_node->full_name);
->  			goto error_out;
->  		}
-> -		msi->msiir_offset =
-> -			features->msiir_offset + (res.start & 0xfffff);
-> +		msi->msiir = res.start + features->msiir_offset;
-> +		printk("msi->msiir = %llx\n", msi->msiir);
+On Wed, Oct 09, 2013 at 03:24:08PM +1100, Benjamin Herrenschmidt wrote:
+> On Tue, 2013-10-08 at 20:55 -0700, H. Peter Anvin wrote:
+> > Why not add a minimum number to pci_enable_msix(), i.e.:
+> > 
+> > pci_enable_msix(pdev, msix_entries, nvec, minvec)
+> > 
+> > ... which means "nvec" is the number of interrupts *requested*, and
+> > "minvec" is the minimum acceptable number (otherwise fail).
+> 
+> Which is exactly what Ben (the other Ben :-) suggested and that I
+> supports...
 
-dev_dbg or remove
+Ok, this suggestion sounded in one or another form by several people.
+What about name it pcim_enable_msix_range() and wrap in couple more
+helpers to complete an API:
 
->  	}
->  
->  	msi->feature = features->fsl_pic_ip;
-> @@ -470,6 +500,7 @@ static int fsl_of_msi_probe(struct platform_device *dev)
->  		}
->  	}
->  
-> +	msi->bank_index = bank_index++;
+int pcim_enable_msix_range(pdev, msix_entries, nvec, minvec);
+	<0 - error code
+	>0 - number of MSIs allocated, where minvec >= result <= nvec
 
-What if multiple MSIs are boing probed in parallel?  bank_index is not
-atomic.
+int pcim_enable_msix(pdev, msix_entries, nvec);
+	<0 - error code
+	>0 - number of MSIs allocated, where 1 >= result <= nvec 
 
-> diff --git a/arch/powerpc/sysdev/fsl_msi.h b/arch/powerpc/sysdev/fsl_msi.h
-> index 8225f86..6bd5cfc 100644
-> --- a/arch/powerpc/sysdev/fsl_msi.h
-> +++ b/arch/powerpc/sysdev/fsl_msi.h
-> @@ -29,12 +29,19 @@ struct fsl_msi {
->  	struct irq_domain *irqhost;
->  
->  	unsigned long cascade_irq;
-> -
-> -	u32 msiir_offset; /* Offset of MSIIR, relative to start of CCSR */
-> +	dma_addr_t msiir; /* MSIIR Address in CCSR */
+int pcim_enable_msix_exact(pdev, msix_entries, nvec);
+	<0 - error code
+	>0 - number of MSIs allocated, where result == nvec
 
-Are you sure dma_addr_t is right here, versus phys_addr_t?  It implies
-that it's the output of the DMA API, but I don't think the DMA API is
-used in the MSI driver.  Perhaps it should be, but we still want the raw
-physical address to pass on to VFIO.
-
->  	void __iomem *msi_regs;
->  	u32 feature;
->  	int msi_virqs[NR_MSI_REG];
->  
-> +	/*
-> +	 * During probe each bank is assigned a index number.
-> +	 * index number ranges from 0 to 2^32.
-> +	 * Example  MSI bank 1 = 0
-> +	 * MSI bank 2 = 1, and so on.
-> +	 */
-> +	int bank_index;
-
-2^32 doesn't fit in "int" (nor does 2^32 - 1).
-
-Just say that indices start at 0.
-
--Scott
+The latter's return value seems odd, but I can not help to make
+it consistent with the first two.
 
 
+(Sorry if you see this message twice - my MUA seems struggle with one of CC).
 
+> Cheers,
+> Ben.
+> 
+> 
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
