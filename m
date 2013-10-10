@@ -1,97 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:38884 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752470Ab3JaXcw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Oct 2013 19:32:52 -0400
-Date: Thu, 31 Oct 2013 17:32:45 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI: mvebu - Support a bridge with no IO port window
-Message-ID: <20131031233245.GA9853@obsidianresearch.com>
-References: <1381868182-8544-1-git-send-email-jgunthorpe@obsidianresearch.com>
- <20131031101357.5a56e2d0@skate>
- <20131031164810.GA26426@obsidianresearch.com>
- <CAErSpo7bUP63J5RkXr-DkQE8qmvKT7ri-vjkfq+TtGEaYWxSwA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7bUP63J5RkXr-DkQE8qmvKT7ri-vjkfq+TtGEaYWxSwA@mail.gmail.com>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:36180 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752076Ab3JJMpt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 08:45:49 -0400
+Message-ID: <1381409146.2788.116.camel@deadeye.wl.decadent.org.uk>
+Subject: Re: [PATCH -v2] PCI: Avoid initialize MSI/MSIX if device power
+ state != PCI_D0
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>
+Date: Thu, 10 Oct 2013 13:45:46 +0100
+In-Reply-To: <1381408907-11724-1-git-send-email-wangyijing@huawei.com>
+References: <1381408907-11724-1-git-send-email-wangyijing@huawei.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-4xwHkuiIyoieXllTkiVy"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 31, 2013 at 11:10:42AM -0600, Bjorn Helgaas wrote:
-> On Thu, Oct 31, 2013 at 10:48 AM, Jason Gunthorpe
-> <jgunthorpe@obsidianresearch.com> wrote:
-> 
-> > Indeed.. I was having problems here because linux was writing 0,0
-> > during discovery to the base,limit registers to 'disable' the IO
-> > window, which triggered a window allocation. So I re-read the PCI
-> > bridge spec (apparently too quickly) and decided 0,0 was OK, and it
-> > should be <=.
-> >
-> > However, looking again at the spec - it is very clear, < is the
-> > correct test, and when the values is equal a 4k window should be
-> > created.
-> >
-> > So, I wonder if there is a little bug in the Linux discovery code
-> > path, should it write FFFF,0 instead?
-> 
-> Sounds like a bug to me.  Do you want to fix it, or point me at it the
-> place where we write 0,0 so I can fix it?
 
-Okay, I remember this now, it was annoying to debug because the PCI
-driver inits before the serial port starts working, fortunately
-Sebastian fixed that up, now it is much easier to see what is going
-on..
+--=-4xwHkuiIyoieXllTkiVy
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The 0,0 write comes from this trace:
+On Thu, 2013-10-10 at 20:41 +0800, Yijing Wang wrote:
+> Currently, if device power state !=3D PCI_D0, we still initialize
+> device MSI/MSIX, but we won't write the MSI message to device
+> MSI/MSIX registers. It's weird, we don't configure MSI/MSIX
+> registers properly, but pci_enable_msi() or pci_enable_msix()
+> return success, and even these registers will never be updated later.
+> So I think it should return error if device power state !=3D PCI_D0.
+>=20
+> ---
+>=20
+> v1->v2: keep __write_msi_msg() function device power state statement,
+> 	    because Ben Hutchings point out this function may be called
+> 		during device in D3 state to set irq affinity. We should not
+> 		touch that.
+>=20
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
- [<c0111b58>] (mvebu_pcie_handle_iobase_change+0x0/0x140) from [<c0111e70>] (mvebu_pcie_wr_conf+0x1d8/0x318) r5:00000000 r4:c78d0850
- [<c0111c98>] (mvebu_pcie_wr_conf+0x0/0x318) from [<c0100e90>] (pci_bus_write_config_word+0x40/0x4c)
- [<c0100e50>] (pci_bus_write_config_word+0x0/0x4c) from [<c02273d0>] (__pci_bus_size_bridges+0x2e4/0x744) r4:00000000
- [<c02270ec>] (__pci_bus_size_bridges+0x0/0x744) from [<c0227344>] (__pci_bus_size_bridges+0x258/0x744)
- [<c02270ec>] (__pci_bus_size_bridges+0x0/0x744) from [<c0227844>] (pci_bus_size_bridges+0x14/0x18)
- [<c0227830>] (pci_bus_size_bridges+0x0/0x18) from [<c000cdc0>] (pci_common_init_dev+0x26c/0x2c0)
- [<c000cb54>] (pci_common_init_dev+0x0/0x2c0) from [<c0111608>] (mvebu_pcie_probe+0x41c/0x480)
- [<c01111ec>] (mvebu_pcie_probe+0x0/0x480) from [<c01335f0>] (platform_drv_probe+0x1c/0x20)
+S-o-b needs to be above the first '---' but perhaps Bjorn can fix that
+up before applying.
 
-And specifically this code sequence in pci_bridge_check_ranges:
+Acked-by: Ben Hutchings <bhutchings@solarflare.com>
 
-	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-	if (!io) {
-		pci_write_config_word(bridge, PCI_IO_BASE, 0xf0f0);
-		pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
- 	}
- 	if (io)
-		b_res[0].flags |= IORESOURCE_IO;
+> ---
+>  drivers/pci/msi.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index d5f90d6..604265c 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -831,7 +831,7 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigne=
+d int nvec)
+>  	int status, maxvec;
+>  	u16 msgctl;
+> =20
+> -	if (!dev->msi_cap)
+> +	if (!dev->msi_cap || dev->current_state !=3D PCI_D0)
+>  		return -EINVAL;
+> =20
+>  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+> @@ -862,7 +862,7 @@ int pci_enable_msi_block_auto(struct pci_dev *dev, un=
+signed int *maxvec)
+>  	int ret, nvec;
+>  	u16 msgctl;
+> =20
+> -	if (!dev->msi_cap)
+> +	if (!dev->msi_cap || dev->current_state !=3D PCI_D0)
+>  		return -EINVAL;
+> =20
+>  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+> @@ -955,7 +955,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_=
+entry *entries, int nvec)
+>  	int status, nr_entries;
+>  	int i, j;
+> =20
+> -	if (!entries || !dev->msix_cap)
+> +	if (!entries || !dev->msix_cap || dev->current_state !=3D PCI_D0)
+>  		return -EINVAL;
+> =20
+>  	status =3D pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
 
-If I read this properly, the first sets the IO window to a 4k region
-at 0xF000, and the second sets the IO window to a 4k region at 0x0.
+--=20
+Ben Hutchings
+A free society is one where it is safe to be unpopular. - Adlai Stevenson
 
-How about this instead:
+--=-4xwHkuiIyoieXllTkiVy
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-	if (!io) {
-	        /* Disable the IO window by setting limit < base */
-		pci_write_config_word(bridge, PCI_IO_BASE, 0x00f0);
-		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-	}
-        /* Bridges without IO support must wire the IO register to 0 */
- 	if (io)
-		b_res[0].flags |= IORESOURCE_IO;
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
 
-3.2.5.6 is clear that limit < base disables the decoder (however this
-alone is not reliable if the upper 16 bits are programmed)
+iQIVAwUAUlaheue/yOyVhhEJAQpilw/9HUA4VwcfhiW+defMU/0RS26dRcmH7zAb
+WbPALvlUdmF08n61PZNK8q1AD/0trFEM/GHejUMMx9+pjaivenXcKxpnFNUyiFNK
+EfmMLbOr8yC1AXFqucNfTZj6guV9sgFuHgH8z4VVyVfBbvL7neuohjBBQMQjb6Sm
+/h5e+qmQ5ydCWffRWhRPpcUKFzp/Rs5npVH7BVeuPrurdEHCNJBVBIJXzGFeXpEW
+Lt+ydRmMaYvlF0rZQ0Zr/jXuhYcP5JvNjBEFrqVLrHBR3tDD5/MbnrOe+f2TAQPY
+xyEkIh0hZ+86u1FrRqzC1hggq8Da7ZQed7z0O0Aid79jBlNnIwk04nS5djMUe9ZT
+svWl9yqZrLqp3tkAIcKibtZej3DZJv3y5n/VfSkgOQ2vuo2TA4gsqamYcG79+f6L
+xC2n+XJsQX7O1KIbxUwgAYqWIEcIOq775Fy6CGq4jZCugaDpDZHmY/2bNPybKLsO
+QJnXlnjAIZ++BpfOH3yQRD0oYTeuOo8uzNyNmiBYqp/seHJY8gnkI/MkMQjMJALq
+6XX27RP9A2D+a0X4h7EvdMWVjf+DQgawVhXRGe1f1AiGWXRep6dAXG6eEANVppWX
+9wFWlXiZgGptvp+QaluSY0A2w8PLJomGQJt+7LTFaWH+XtY9TxRFch/6FC0wVdtg
+CudsUmO+NfY=
+=ZTU7
+-----END PGP SIGNATURE-----
 
-However, I'm guessing earlier in the sequence the PCI core clears
-PCI_COMMAND_IO in the bridge command register? If so this isn't a
-functional problem, it is just weird looking.
-
-Which is the reason why my assert triggers, the driver ignores
-PCI_COMMAND_IO/MEMORY.. Fixing that solves the issue completely.
-
-Jason
+--=-4xwHkuiIyoieXllTkiVy--
