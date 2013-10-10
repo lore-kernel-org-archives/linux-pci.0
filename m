@@ -1,69 +1,27 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:33342 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755628Ab3JWDYO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Oct 2013 23:24:14 -0400
-Received: by mail-ie0-f178.google.com with SMTP id x13so384681ief.9
-        for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2013 20:24:14 -0700 (PDT)
-Subject: [PATCH 2/2] mn10300/PCI: Remove useless pcibios_last_bus
-To: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-am33-list@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Tue, 22 Oct 2013 21:24:12 -0600
-Message-ID: <20131023032412.12410.9371.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20131023032140.12410.43295.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131023032140.12410.43295.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:34858
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755926Ab3JJTTf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Oct 2013 15:19:35 -0400
+From: Rajat Jain <rajatjain@juniper.net>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
+Subject: pre-configuring PCIe switch
+Date: Thu, 10 Oct 2013 19:19:29 +0000
+Message-ID: <3036fa5270dc4ede90e60abdbe6f0b57@BLUPR05MB118.namprd05.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcibios_last_bus was apparently copied from x86.  On mn10300, it is
-statically initialized to -1 and may be set with the "pci=lastbus=<X>"
-boot option, but it is never tested.  This patch removes everything
-related to pcibios_last_bus.
+Hello,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/mn10300/unit-asb2305/pci-asb2305.h |    1 -
- arch/mn10300/unit-asb2305/pci.c         |    5 -----
- 2 files changed, 6 deletions(-)
+For the purposes of hot-plug, I want to configure my PCI Express's switch's downstream port capabilities before enumeration. (I am currently interested in setting "Slot Implemented", "hot-plug capable" and "physical slot number". But in future, this may also come in handy to configure some downstream ports as non-transparent). These registers seem to be only writable via an external EEPROM (which is not populated), or an I2C bus. Thus PCI quirks cannot be used. What is the best way to achieve this? 
 
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.h b/arch/mn10300/unit-asb2305/pci-asb2305.h
-index 7fa66a0..9e17aca 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.h
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.h
-@@ -35,7 +35,6 @@ extern void pcibios_resource_survey(void);
- 
- /* pci.c */
- 
--extern int pcibios_last_bus;
- extern struct pci_ops *pci_root_ops;
- 
- extern struct irq_routing_table *pcibios_get_irq_routing_table(void);
-diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-index e37fac0..6b4339f 100644
---- a/arch/mn10300/unit-asb2305/pci.c
-+++ b/arch/mn10300/unit-asb2305/pci.c
-@@ -24,7 +24,6 @@
- 
- unsigned int pci_probe = 1;
- 
--int pcibios_last_bus = -1;
- struct pci_ops *pci_root_ops;
- 
- /*
-@@ -392,10 +391,6 @@ char *__init pcibios_setup(char *str)
- 	if (!strcmp(str, "off")) {
- 		pci_probe = 0;
- 		return NULL;
--
--	} else if (!strncmp(str, "lastbus=", 8)) {
--		pcibios_last_bus = simple_strtol(str+8, NULL, 0);
--		return NULL;
- 	}
- 
- 	return str;
+I'm thinking of configuring over I2C before the PCI enumeration begins. My question is how do I ensure that the I2C subsystem is ready to be used, before the PCI subsystem is scanned by the kernel? (This is a Powerpc system, no ACPI or BIOS) Is it OK to use I2C bus at such an early stage in boot up, for purposes like this?
+
+Thanks,
+
+Rajat
 
