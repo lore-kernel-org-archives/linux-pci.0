@@ -1,70 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:55955 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750730Ab3JaBip (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 21:38:45 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MVI002Q6F855TA0@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 31 Oct 2013 10:38:43 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Shawn Guo' <shawn.guo@linaro.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: 'Marek Vasut' <marex@denx.de>, linux-pci@vger.kernel.org,
-	'linux-arm' <linux-arm-kernel@lists.infradead.org>,
-	'Frank Li' <lznuaa@gmail.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Sascha Hauer' <s.hauer@pengutronix.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
-	'Tim Harvey' <tharvey@gateworks.com>,
-	'Troy Kisky' <troy.kisky@boundarydevices.com>,
-	'Yinghai Lu' <yinghai@kernel.org>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
- <CAErSpo6v4nvKQ4W9BhnUsNEjzsXoCiLxeFY-K=z=bMZ4AFOyGg@mail.gmail.com>
- <201310301552.28866.marex@denx.de>
- <CAErSpo5dcqA+OkORmPO41THd+QaG53jXgZPogw3U5-1GP-hyoA@mail.gmail.com>
- <20131031012615.GA19362@S2101-09.ap.freescale.net>
-In-reply-to: <20131031012615.GA19362@S2101-09.ap.freescale.net>
-Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
-Date: Thu, 31 Oct 2013 10:38:42 +0900
-Message-id: <003101ced5d9$ee6f63a0$cb4e2ae0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from szxga01-in.huawei.com ([119.145.14.64]:41479 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016Ab3JJMl6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 08:41:58 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Ben Hutchings <ben@decadent.org.uk>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH -v2] PCI: Avoid initialize MSI/MSIX if device power state != PCI_D0
+Date: Thu, 10 Oct 2013 20:41:47 +0800
+Message-ID: <1381408907-11724-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, October 31, 2013 10:26 AM, Shawn Guo wrote:
-> On Wed, Oct 30, 2013 at 10:25:37AM -0600, Bjorn Helgaas wrote:
-> > > Can you maybe pick at least these two:
-> > >
-> > > PCI: imx6: Make reset-gpio optional
-> 
-> Isn't there a comment from Jingoo on this patch unresolved?
+Currently, if device power state != PCI_D0, we still initialize
+device MSI/MSIX, but we won't write the MSI message to device
+MSI/MSIX registers. It's weird, we don't configure MSI/MSIX
+registers properly, but pci_enable_msi() or pci_enable_msix()
+return success, and even these registers will never be updated later.
+So I think it should return error if device power state != PCI_D0.
 
-(+cc Kishon Vijay Abraham I)
+---
 
-Oh, right.
-Please fix the Documentation part as below.
-: http://www.spinics.net/lists/linux-pci/msg25951.html
+v1->v2: keep __write_msi_msg() function device power state statement,
+	    because Ben Hutchings point out this function may be called
+		during device in D3 state to set irq affinity. We should not
+		touch that.
 
-> 
-> > > PCI: imx6: Probe the PCIe in fs_initcall()
-> 
-> Acked-by: Shawn Guo <shawn.guo@linaro.org>
-> 
-> > >
-> > > I think they should be harmless and the later one fixes a problem on MX6. I'm
-> > > now digging in the PCIe MX6 again btw.
-> >
-> > I'm fine with taking these as long as Shawn acks them.
-> >
-> > Bjorn
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/msi.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..604265c 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -831,7 +831,7 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ 	int status, maxvec;
+ 	u16 msgctl;
+ 
+-	if (!dev->msi_cap)
++	if (!dev->msi_cap || dev->current_state != PCI_D0)
+ 		return -EINVAL;
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+@@ -862,7 +862,7 @@ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+ 	int ret, nvec;
+ 	u16 msgctl;
+ 
+-	if (!dev->msi_cap)
++	if (!dev->msi_cap || dev->current_state != PCI_D0)
+ 		return -EINVAL;
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+@@ -955,7 +955,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	int status, nr_entries;
+ 	int i, j;
+ 
+-	if (!entries || !dev->msix_cap)
++	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
+ 		return -EINVAL;
+ 
+ 	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
+-- 
+1.7.1
+
 
