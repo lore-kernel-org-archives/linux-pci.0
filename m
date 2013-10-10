@@ -1,38 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:58673 "EHLO mail.zytor.com"
+Received: from terminus.zytor.com ([198.137.202.10]:44646 "EHLO mail.zytor.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753980Ab3JIVIX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Oct 2013 17:08:23 -0400
-Message-ID: <5255C5B3.60004@zytor.com>
-Date: Wed, 09 Oct 2013 14:08:03 -0700
+	id S1755688Ab3JJQaB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Oct 2013 12:30:01 -0400
+Message-ID: <5256D5AB.4050105@zytor.com>
+Date: Thu, 10 Oct 2013 09:28:27 -0700
 From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] MAINTAINERS: Add arch/x86/pci to PCI file patterns
-References: <20131009210219.31110.62076.stgit@bhelgaas-glaptop.roam.corp.google.com> <CAErSpo4RYGakLpJuhHyGTAMXvaZc63sjLiMrMneG9NjohanVZA@mail.gmail.com>
-In-Reply-To: <CAErSpo4RYGakLpJuhHyGTAMXvaZc63sjLiMrMneG9NjohanVZA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement pattern
+References: <cover.1380703262.git.agordeev@redhat.com> <5254D397.9030307@zytor.com> <1381292648.645.259.camel@pasglop> <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/09/2013 02:04 PM, Bjorn Helgaas wrote:
-> On Wed, Oct 9, 2013 at 3:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> I handle many arch/x86/pci changes, so help those patches get to the
->> PCI patchwork.
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On 10/10/2013 03:17 AM, Alexander Gordeev wrote:
+> On Wed, Oct 09, 2013 at 03:24:08PM +1100, Benjamin Herrenschmidt wrote:
 > 
-> I'll merge this via the PCI tree unless anybody objects.
+> Ok, this suggestion sounded in one or another form by several people.
+> What about name it pcim_enable_msix_range() and wrap in couple more
+> helpers to complete an API:
+> 
+> int pcim_enable_msix_range(pdev, msix_entries, nvec, minvec);
+> 	<0 - error code
+> 	>0 - number of MSIs allocated, where minvec >= result <= nvec
+> 
+> int pcim_enable_msix(pdev, msix_entries, nvec);
+> 	<0 - error code
+> 	>0 - number of MSIs allocated, where 1 >= result <= nvec 
+> 
+> int pcim_enable_msix_exact(pdev, msix_entries, nvec);
+> 	<0 - error code
+> 	>0 - number of MSIs allocated, where result == nvec
+> 
+> The latter's return value seems odd, but I can not help to make
+> it consistent with the first two.
 > 
 
-Acked-by: H. Peter Anvin <hpa@zytor.com>
-
-... as long as you don't keep us out of the loop.
+Is there a reason for the wrappers, as opposed to just specifying either
+1 or nvec as the minimum?
 
 	-hpa
 
