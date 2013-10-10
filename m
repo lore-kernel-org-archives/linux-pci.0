@@ -1,63 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:48701
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751568Ab3JWHqm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 03:46:42 -0400
-Date: Wed, 23 Oct 2013 15:46:27 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Tim Harvey <tharvey@gateworks.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PCI: imx6: increase link startup
-Message-ID: <20131023074618.GL2839@S2101-09.ap.freescale.net>
-References: <1382505138-23286-1-git-send-email-tharvey@gateworks.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:41871 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755849Ab3JJV7u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 17:59:50 -0400
+Received: by mail-ie0-f169.google.com with SMTP id tp5so6558516ieb.14
+        for <linux-pci@vger.kernel.org>; Thu, 10 Oct 2013 14:59:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1382505138-23286-1-git-send-email-tharvey@gateworks.com>
+In-Reply-To: <20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
+References: <20130515132401.6a8ff7fb@jlaw-desktop.mno.stratus.com>
+ <20130515132948.7dc4c551@jlaw-desktop.mno.stratus.com> <CAErSpo4OU2LRdmBLNBMbw79fYiR4yqYVJ++2ecju0qBNhAp-vA@mail.gmail.com>
+ <20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 10 Oct 2013 15:59:28 -0600
+Message-ID: <CAErSpo4=6=3+VNgw9rKBoYO92DMnbPp0NZW5Z_j4WweKTymjmg@mail.gmail.com>
+Subject: Re: mpt2sas,mpt3sas watchdog device removal
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
+	"Desai, Kashyap" <Kashyap.Desai@lsi.com>,
+	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 22, 2013 at 10:12:18PM -0700, Tim Harvey wrote:
-> An increase link startup delay is required when certain PCI switches are
-> attached to the root complex.  This was tested with a Pericom switch
-> and a PLX switch.
-> 
-> From: Marek Vasut <marex@denx.de>
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Acked-by: Tim Harvey <tharvey@gateworks.com>
+On Fri, May 17, 2013 at 3:42 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
+> On Fri, 17 May 2013 09:29:06 -0600
+> Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> [+cc linux-pci]
+>>
+>> On Wed, May 15, 2013 at 11:29 AM, Joe Lawrence
+>> <joe.lawrence@stratus.com> wrote:
+>> > From 84ac7a35ebd61e84d4254eae78bb967de17254c2 Mon Sep 17 00:00:00
+>> > 2001 From: Joe Lawrence <joe.lawrence@stratus.com>
+>> > Date: Wed, 15 May 2013 12:52:31 -0400
+>> > Subject: [PATCH] mpt2sas,mpt3sas: make watchdog instantiated device
+>> > removal safe
+>> >
+>> > Calling pci_stop_and_remove_bus_device from a SCSI LLD may introduce
+>> > device removal races with PCI callback functions.
+>> >
+>> > Simplify the mpt2sas watchdog mechanism by separating PCI device
+>> > removal from SCSI midlayer detachment. When the watchdog wishes to
+>> > remove a SCSI device from the topology, detach from the SCSI
+>> > midlayer, leaving the PCI device alone. Adjust various pci_driver
+>> > callbacks to account for a potentially SCSI detached PCI device.
+>>
+>> I don't know the details of the SCSI detachment, but this approach
+>> looks much cleaner to me.
+>
+> Thanks for commenting, Bjorn.  I think this approach more closely
+> represents what this watchdog is trying to accomplish.
+>
+> Off list, Sreekanth from LSI tested and noticed a few issues with this
+> patch:
+>
+>  - mpt2sas_base_stop_watchdog is called twice: The call from
+>    mpt2sas_base_detach is safe, but now unnecessary (as a call was
+>    added earlier up in the PCI driver callbacks to ensure that the
+>    watchdog was out of the way.) This second invocation can be removed.
+>
+>  - If the watchdog detects a bad IOC, the watchdog remains running:
+>    The watchdog workqueue isn't cleaned up until
+>    mpt2sas_base_stop_watchdog is called, so in the case that the
+>    watchdog removes the device from SCSI topo, the workqueue will
+>    remain unused until PCI .remove/.shutdown cleans it up. Perhaps a
+>    single watchdog that iterates over all adapters would be simpler?
+>
+> Finally, if SCSI topo detachment is all that is interesting here, would
+> it make more sense to move the watchdog into the MPT "scsi" code?  I
+> haven't looked at the code yet, but this might make an MPT fusion patch
+> easier (due to dependencies between its "scsi" and "base" modules).
 
-Acked-by: Shawn Guo <shawn.guo@linaro.org>
+Hi Joe,
 
-> ---
->  drivers/pci/host/pci-imx6.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 90fce05..34c571a 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -318,7 +318,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
->  	while (!dw_pcie_link_up(pp)) {
->  		usleep_range(100, 1000);
->  		count++;
-> -		if (count >= 10) {
-> +		if (count >= 200) {
->  			dev_err(pp->dev, "phy link never came up\n");
->  			dev_dbg(pp->dev,
->  				"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
-> -- 
-> 1.7.9.5
-> 
+I noticed this when looking through old email.  I can't remember if
+anything happened with this.  It seems like nice work; did it go
+anywhere?
 
+Bjorn
