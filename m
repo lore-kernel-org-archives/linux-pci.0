@@ -1,117 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f177.google.com ([209.85.161.177]:52377 "EHLO
-	mail-gg0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718Ab3JHAEj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 20:04:39 -0400
-Received: by mail-gg0-f177.google.com with SMTP id t2so1280228ggn.36
-        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 17:04:38 -0700 (PDT)
-Subject: [PATCH] PCI: designware: Make dw_pcie_rd_own_conf(), etc., static
-To: Jingoo Han <jg1.han@samsung.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Mon, 07 Oct 2013 18:04:35 -0600
-Message-ID: <20131008000435.12954.92136.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:53866 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752197Ab3JJIdE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 04:33:04 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Ben Hutchings <ben@decadent.org.uk>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH] PCI: Avoid initialize MSI/MSIX if device power state != PCI_D0
+Date: Thu, 10 Oct 2013 16:31:56 +0800
+Message-ID: <1381393916-12268-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following variables and functions are used only in pcie-designware.c,
-so make them static:
+Currently, if device power state != PCI_D0, we still initialize
+device MSI/MSIX, but we won't write the MSI message to device
+MSI/MSIX registers. It's weird, we don't configure MSI/MSIX
+registers properly, but pci_enable_msi() or pci_enable_msix()
+return success, and even these registers will never be updated later.
+So I think it should return error if device power state != PCI_D0.
 
-  global_io_offset
-  dw_pcie_rd_own_conf()
-  dw_pcie_wr_own_conf()
-  dw_pcie_setup()
-  dw_pcie_scan_bus()
-  dw_pcie_map_irq()
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/host/pcie-designware.c |   16 ++++++++--------
- drivers/pci/host/pcie-designware.h |    7 -------
- 2 files changed, 8 insertions(+), 15 deletions(-)
+ drivers/pci/msi.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index c10e9ac..900e875 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -64,7 +64,7 @@
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..eb502f6 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -308,9 +308,7 @@ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
  
- static struct hw_pci dw_pci;
- 
--unsigned long global_io_offset;
-+static unsigned long global_io_offset;
- 
- static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
  {
-@@ -115,8 +115,8 @@ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
- 		writel(val, pp->dbi_base + reg);
- }
+-	if (entry->dev->current_state != PCI_D0) {
+-		/* Don't touch the hardware now */
+-	} else if (entry->msi_attrib.is_msix) {
++	if (entry->msi_attrib.is_msix) {
+ 		void __iomem *base;
+ 		base = entry->mask_base +
+ 			entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
+@@ -831,7 +829,7 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ 	int status, maxvec;
+ 	u16 msgctl;
  
--int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
--				u32 *val)
-+static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
-+			       u32 *val)
- {
- 	int ret;
+-	if (!dev->msi_cap)
++	if (!dev->msi_cap || dev->current_state != PCI_D0)
+ 		return -EINVAL;
  
-@@ -128,8 +128,8 @@ int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	return ret;
- }
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+@@ -862,7 +860,7 @@ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+ 	int ret, nvec;
+ 	u16 msgctl;
  
--int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
--				u32 val)
-+static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
-+			       u32 val)
- {
- 	int ret;
+-	if (!dev->msi_cap)
++	if (!dev->msi_cap || dev->current_state != PCI_D0)
+ 		return -EINVAL;
  
-@@ -438,7 +438,7 @@ static struct pci_ops dw_pcie_ops = {
- 	.write = dw_pcie_wr_conf,
- };
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+@@ -955,7 +953,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	int status, nr_entries;
+ 	int i, j;
  
--int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-+static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
- {
- 	struct pcie_port *pp;
+-	if (!entries || !dev->msix_cap)
++	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
+ 		return -EINVAL;
  
-@@ -461,7 +461,7 @@ int dw_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
- 
--struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-+static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- {
- 	struct pci_bus *bus;
- 	struct pcie_port *pp = sys_to_pcie(sys);
-@@ -478,7 +478,7 @@ struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	return bus;
- }
- 
--int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-+static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- {
- 	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
- 
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 133820f..401b154 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -51,15 +51,8 @@ struct pcie_host_ops {
- 	void (*host_init)(struct pcie_port *pp);
- };
- 
--extern unsigned long global_io_offset;
--
- int cfg_read(void __iomem *addr, int where, int size, u32 *val);
- int cfg_write(void __iomem *addr, int where, int size, u32 val);
--int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size, u32 val);
--int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size, u32 *val);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
--int dw_pcie_setup(int nr, struct pci_sys_data *sys);
--struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys);
--int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin);
+ 	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
+-- 
+1.7.1
+
 
