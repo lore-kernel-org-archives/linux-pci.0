@@ -1,8 +1,14 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:44553 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752443Ab3JJP3t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 11:29:49 -0400
+Received: by mail-ea0-f179.google.com with SMTP id b10so1220028eae.24
+        for <linux-pci@vger.kernel.org>; Thu, 10 Oct 2013 08:29:48 -0700 (PDT)
+Date: Thu, 10 Oct 2013 18:29:45 +0300
+From: Eli Cohen <eli@dev.mellanox.co.il>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -11,62 +17,38 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Dan Williams <dan.j.williams@intel.com>,
 	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
 	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
 	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
 	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
 	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
 	linux-driver@qlogic.com,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 74/77] vmxnet3: Limit number of rx queues to 1 if per-queue MSI-Xs failed
-Date: Wed,  2 Oct 2013 12:49:30 +0200
-Message-Id: <f029865a23808e2f788f90f878355fddf3b04ad2.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+Subject: Re: [PATCH RFC 50/77] mlx5: Update MSI/MSI-X interrupts enablement
+ code
+Message-ID: <20131010152945.GC7299@mtldesk30>
 References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+ <9650a7dfbcfd5f1da21f7b093665abf4b1041071.1380703263.git.agordeev@redhat.com>
+ <20131003071433.GA7299@mtldesk30>
+ <20131003194837.GA27636@dhcp-26-207.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131003194837.GA27636@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/vmxnet3/vmxnet3_drv.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+On Thu, Oct 03, 2013 at 09:48:39PM +0200, Alexander Gordeev wrote:
+> 
+> pci_enable_msix() may fail, but it can not return a positive number.
+>
 
-diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
-index 3df7f32..00dc0d0 100644
---- a/drivers/net/vmxnet3/vmxnet3_drv.c
-+++ b/drivers/net/vmxnet3/vmxnet3_drv.c
-@@ -2814,12 +2814,14 @@ vmxnet3_alloc_intr_resources(struct vmxnet3_adapter *adapter)
- 
- 		err = vmxnet3_acquire_msix_vectors(adapter,
- 						   adapter->intr.num_intrs);
--		/* If we cannot allocate one MSIx vector per queue
--		 * then limit the number of rx queues to 1
--		 */
--		if (err == VMXNET3_LINUX_MIN_MSIX_VECT) {
--			if (adapter->share_intr != VMXNET3_INTR_BUDDYSHARE
--			    || adapter->num_rx_queues != 1) {
-+		if (!err) {
-+			/* If we cannot allocate one MSIx vector per queue
-+			 * then limit the number of rx queues to 1
-+			 */
-+			if ((adapter->intr.num_intrs ==
-+			     VMXNET3_LINUX_MIN_MSIX_VECT) &&
-+			    ((adapter->share_intr != VMXNET3_INTR_BUDDYSHARE) ||
-+			     (adapter->num_rx_queues != 1))) {
- 				adapter->share_intr = VMXNET3_INTR_TXSHARE;
- 				netdev_err(adapter->netdev,
- 					   "Number of rx queues : 1\n");
-@@ -2829,8 +2831,6 @@ vmxnet3_alloc_intr_resources(struct vmxnet3_adapter *adapter)
- 			}
- 			return;
- 		}
--		if (!err)
--			return;
- 
- 		/* If we cannot allocate MSIx vectors use only one rx queue */
- 		dev_info(&adapter->pdev->dev,
--- 
-1.7.7.6
+That is true according to the current logic but the comment on top of
+pci_enable_msix() still says:
+"A return of < 0 indicates a failure.  Or a return of > 0 indicates
+that driver request is exceeding the number of irqs or MSI-X vectors
+available"
 
+So you're counting on an implementation that may change in the future.
+I think leaving the code as it is now is safer.
