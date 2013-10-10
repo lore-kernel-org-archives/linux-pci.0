@@ -1,59 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39263 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754548Ab3JCU02 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 16:26:28 -0400
-Date: Thu, 3 Oct 2013 16:26:10 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: [PATCH] iommu: Remove stack trace from broken irq remapping
- warning
-Message-ID: <20131003202610.GB20660@hmsreliant.think-freely.org>
-References: <1380300815-1864-1-git-send-email-nhorman@tuxdriver.com>
- <20131003172142.GA20660@hmsreliant.think-freely.org>
- <20131003200824.GA17455@8bytes.org>
+Received: from mouse.start.ca ([64.140.120.56]:57475 "EHLO mouse.start.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752020Ab3JJXSa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Oct 2013 19:18:30 -0400
+Message-ID: <5257357E.8080506@start.ca>
+Date: Thu, 10 Oct 2013 19:17:18 -0400
+From: Mark Lord <kernel@start.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131003200824.GA17455@8bytes.org>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement pattern
+References: <cover.1380703262.git.agordeev@redhat.com> <5254D397.9030307@zytor.com> <1381292648.645.259.camel@pasglop> <20131010101704.GC11874@dhcp-26-207.brq.redhat.com> <5256D5AB.4050105@zytor.com> <20131010180704.GA15719@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20131010180704.GA15719@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 03, 2013 at 10:08:24PM +0200, Joerg Roedel wrote:
-> On Thu, Oct 03, 2013 at 01:21:42PM -0400, Neil Horman wrote:
-> > On Fri, Sep 27, 2013 at 12:53:35PM -0400, Neil Horman wrote:
-> > > The warning for the irq remapping broken check in intel_irq_remapping.c is
-> > > pretty pointless.  We need the warning, but we know where its comming from, the
-> > > stack trace will always be the same, and it needlessly triggers things like
-> > > Abrt.  This changes the warning to just print a text warning about BIOS being
-> > > broken, without the stack trace, then sets the appropriate taint bit.  Since we
-> > > automatically disable irq remapping, theres no need to contiue making Abrt jump
-> > > at this problem
-> > > 
-> > > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> > > CC: Joerg Roedel <joro@8bytes.org>
-> > > CC: Bjorn Helgaas <bhelgaas@google.com>
-> > > CC: Andy Lutomirski <luto@amacapital.net>
-> > > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > > CC: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-> > 
-> > Ping Bjorn, Jeorg, any thoughts here?
-> 
-> Yes, the patch is doing the right thing. I have it already on my list
-> and will merge it soon.
-> 
-Awesome, thanks guys.  Regarding the taint, I'll propose something for that
-early next week.
+Just to help us all understand "the loop" issue..
 
-Regards
-Neil
+Here's an example of driver code which uses the existing MSI-X interfaces,
+for a device which can work with either 16, 8, 4, 2, or 1 MSI-X interrupt.
+This is from a new driver I'm working on right now:
 
-> 
-> 	Joerg
-> 
-> 
-> 
+
+static int xx_alloc_msix_irqs (struct xx_dev *dev, int nvec)
+{
+        xx_disable_all_irqs(dev);
+        do {
+                if (nvec < 2)
+                        xx_prep_for_1_msix_vector(dev);
+                else if (nvec < 4)
+                        xx_prep_for_2_msix_vectors(dev);
+                else if (nvec < 8)
+                        xx_prep_for_4_msix_vectors(dev);
+                else if (nvec < 16)
+                        xx_prep_for_8_msix_vectors(dev);
+                else
+                        xx_prep_for_16_msix_vectors(dev);
+                nvec = pci_enable_msix(dev->pdev, dev->irqs, dev->num_vectors);
+        } while (nvec > 0);
+
+        if (nvec) {
+                kerr(dev->name, "pci_enable_msix() failed, err=%d", nvec);
+                dev->num_vectors = 0;
+                return nvec;
+        }
+        return 0;       /* success */
+}
