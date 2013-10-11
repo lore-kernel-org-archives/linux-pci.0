@@ -1,77 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:40324 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752318Ab3JWXx4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 19:53:56 -0400
-Received: by mail-ie0-f170.google.com with SMTP id at1so2653619iec.15
-        for <linux-pci@vger.kernel.org>; Wed, 23 Oct 2013 16:53:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
-References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
- <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
- <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com> <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 23 Oct 2013 17:53:34 -0600
-Message-ID: <CAErSpo7x7ym=Lp=UmsQ=JM7QaALoouShnv366EthRTwr=eAMYg@mail.gmail.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
+Received: from mail-out.m-online.net ([212.18.0.9]:39445 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932126Ab3JKUNp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 16:13:45 -0400
+From: Marek Vasut <marex@denx.de>
+To: Tim Harvey <tharvey@gateworks.com>
+Subject: Re: [PATCH v7 0/2] Add PCIe support for i.MX6q
+Date: Fri, 11 Oct 2013 22:13:42 +0200
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Zhu Richard-R65037" <r65037@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Shawn Guo <shawn.guo@linaro.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Frank Li <lznuaa@gmail.com>, Sean Cross <xobs@kosagi.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>
+References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org> <201310111644.22844.marex@denx.de> <CAJ+vNU0HJs9NxPy8Erer1ZUzCAkzhQn+c0atmEZ=ZZWLgXb6Kw@mail.gmail.com>
+In-Reply-To: <CAJ+vNU0HJs9NxPy8Erer1ZUzCAkzhQn+c0atmEZ=ZZWLgXb6Kw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310112213.42221.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 17, 2013 at 7:59 AM, Andreas Noever
-<andreas.noever@gmail.com> wrote:
-> On Wed, Oct 16, 2013 at 10:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Oct 15, 2013 at 03:44:52AM +0100, Matthew Garrett wrote:
->>> On Mon, Oct 14, 2013 at 05:50:38PM -0600, Bjorn Helgaas wrote:
->>> > [+cc Rafael, Mika, Kirill, linux-pci]
->>> >
->>> > On Mon, Oct 14, 2013 at 4:47 PM, Andreas Noever
->>> > <andreas.noever@gmail.com> wrote:
->>> > > When I unplug the Thunderbolt ethernet adapter on my MacBookPro Linux
->>> > > crashes a few seconds later. Using
->>> > > echo 1 > /sys/bus/pci/devices/0000:08:00.0/remove
->>> > > to remove a bridge two levels above the device triggers the fault immediately:
->>> >
->>> > There have been significant changes in acpiphp related to Thunderbolt
->>> > since v3.11.
->>>
->>> Apple don't expose Thunderbolt via ACPI, so it appears as native PCIe.
->>> I'd be surprised if acpiphp makes a difference here.
->>
->> Yeah, you're right; I wasn't paying attention.
->>
->> We save a pci_dev pointer in the pci_pme_list, which of course has a
->> longer lifetime than the pci_dev itself, but we don't acquire a reference
->> on it, so I suspect the pci_dev got released before we got around to
->> doing the pci_pme_list_scan().
->>
->> Andreas, can you try the patch below?  It's against v3.12-rc2, but it
->> should apply to v3.11, too.
->
-> I have tested your patch against 3.11 where it solves the problem. Thanks!
+Dear Tim Harvey,
 
-Hi Andreas, sorry for the delay here.  I'm still trying to understand
-exactly why my patch fixes the problem, since I don't see a relevant
-refcounting change between v3.11 and v3.12-rc5.  And I don't actually
-see the hole yet from inspection.  It seems like we should be safe
-even without my patch.
+> Marek,
+> 
+> Looks like you and I are getting the same results now.  Device
+> enumeration is working fine through the switch however when I attempt
+> to use a device behind the switch (gige adapter in my case) I find
+> that I get a few interrupts to that devices irq handler then the
+> system hangs (like what occurs when a read is done to dbi without the
+> pcie controllers clock running).
+> 
+> Anyone have any ideas?
 
-But maybe it's a case of releasing the pci_bus before releasing a
-pci_dev on the bus.  I thought we recently fixed a hole there, but
-maybe not.  I'll look more carefully at that path.
+Certainly. My Intel "igb" card now shows Link UP, sends about two packets and 
+then the whole system freezes entirely. Not even my BDI3000 is able to "halt" it 
+via JTAG.
 
-Can I trouble you to collect a complete dmesg log from v3.11 without
-my patch?  Maybe if I stare long enough at that and the lspci you
-supplied, I can figure out what's going on.  If you were really
-gung-ho, you could add instrumentation to print out the pci_dev and
-pci_bus pointers as we enumerate them.  My guess is that we'd see one
-of those pointers in the GPF register dump.
+btw. Tim, just a nit-pick. Top-posting into a public ML is frowned upon.
 
-Bjorn
+Best regards,
+Marek Vasut
