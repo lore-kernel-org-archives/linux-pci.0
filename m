@@ -1,53 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe010.messaging.microsoft.com ([216.32.180.30]:59563
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750730Ab3JaB0Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 21:26:25 -0400
-Date: Thu, 31 Oct 2013 09:26:18 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Marek Vasut <marex@denx.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
-Message-ID: <20131031012615.GA19362@S2101-09.ap.freescale.net>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
- <CAErSpo6v4nvKQ4W9BhnUsNEjzsXoCiLxeFY-K=z=bMZ4AFOyGg@mail.gmail.com>
- <201310301552.28866.marex@denx.de>
- <CAErSpo5dcqA+OkORmPO41THd+QaG53jXgZPogw3U5-1GP-hyoA@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [BUG] WARN_ON(!context) in drivers/pci/hotplug/acpiphp_glue.c
+Date: Fri, 11 Oct 2013 23:58:48 +0200
+Message-ID: <4905498.aEGIofg2fM@vostro.rjw.lan>
+In-Reply-To: <CA+55aFyJL5gLGtg8-z1t1xSY1ih9MAzsDzMZaxrEYZOFZ7rRBw@mail.gmail.com>
+References: <20131010165905.7815defa@gandalf.local.home> <2096980.ZtIelfoX39@vostro.rjw.lan> <CA+55aFyJL5gLGtg8-z1t1xSY1ih9MAzsDzMZaxrEYZOFZ7rRBw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAErSpo5dcqA+OkORmPO41THd+QaG53jXgZPogw3U5-1GP-hyoA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 30, 2013 at 10:25:37AM -0600, Bjorn Helgaas wrote:
-> > Can you maybe pick at least these two:
-> >
-> > PCI: imx6: Make reset-gpio optional
-
-Isn't there a comment from Jingoo on this patch unresolved?
-
-> > PCI: imx6: Probe the PCIe in fs_initcall()
-
-Acked-by: Shawn Guo <shawn.guo@linaro.org>
-
-> >
-> > I think they should be harmless and the later one fixes a problem on MX6. I'm
-> > now digging in the PCIe MX6 again btw.
+On Friday, October 11, 2013 10:21:35 AM Linus Torvalds wrote:
+> On Fri, Oct 11, 2013 at 4:13 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > +/**
+> > + * slot_should_be_exposed - Check whether or not to expose a slot to userland.
+> > + * @bridge: ACPIPHP bridge the slot belongs to.
+> > + * @handle: ACPI handle of a device in the slot.
+> > + */
+> > +static inline bool slot_should_be_exposed(struct acpiphp_bridge *bridge,
+> > +                                         acpi_handle handle)
 > 
-> I'm fine with taking these as long as Shawn acks them.
+> Thanks, that looks much better.
 > 
-> Bjorn
+> I do worry that we now seem to add the slot to all the acpiphp lists
+> even if it is managed by pciehp. That gets rid of the warning Steven
+> saw (because now it always has that context), but I'm left wondering
+> how much pcihp and aciphp will fight over the slot.
+>
+> Yes, the acpiphp_register_hotplug_slot() doesn't get called, but we
+> still do register_hotplug_dock_device(), for example. How does that
+> interact with pcihp that thinks it owns the slot?
+
+Well, owning the slot doesn't really mean much here, because the "rescan"
+and "remove" things may always be triggered by user space via sysfs from
+under the PCI device in question (regardless of whether or not pciehp
+thinks that it "owns" that device).  So if they are triggered by an ACPI
+notify instead, that should still be fine.
+
+Ejects are more of a gray area, but they do the "remove" first and only
+then they go for an actual "eject".  Question is if we should execute
+_EJ0 provided that it's actually present for the pciehp slots (which we will
+do with the patch applied).  It might be safer to trigger the native eject
+then, but again I'd be surprised if _EJ0 didn't work anyway (if there is a
+system in which _EJ0 is available for a device handled by pciehp in the first
+place).
+
+As far as docking stations go, the undock is done by ACPI anyway and it will
+carry out "remove" for all devices under the dock, so the patch doesn't change
+this particular case as far as I can say.
+
+> Or am I misreading the code? It's more readable, and no longer makes
+> me homicidal, but I don't actually know the code itself.
+
+I think you're reading it correctly, it really makes acpiphp see all slots
+even if pciehp sees them too.  So the change is somewhat risky.
+
+That said the risk doesn't seem to be huge and there seem to be cases in
+which it actually would be useful to have both acpiphp and pciehp signaling
+available for the same device.  For example, even if the BIOS told us that
+we could use the native mechanism (pciehp), it may not actually work.  That is,
+we may not get any hotplug interrupts from PCIe ports due to platform bugs of
+some sort and we may get ACPI notifications instead (because the platform
+designer knew about those bugs and thought it would be smart to use ACPI to
+work around them).
+
+There are bug reports indicating thinks like that, so we were going to allow
+acpiphp and pciehp to handle the same devices anyway at one point.  I thought
+we might as well try to do it now and see how it goes.  Still, if you think
+it's too risky for this stage of the cycle, I'll just send a patch removing
+the WARN_ON() and we'll revisit that thing in 3.13.
+
+Rafael
 
