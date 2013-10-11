@@ -1,78 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:47912 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751735Ab3JILwd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 07:52:33 -0400
-Received: by mail-ea0-f175.google.com with SMTP id m14so344635eaj.6
-        for <linux-pci@vger.kernel.org>; Wed, 09 Oct 2013 04:52:31 -0700 (PDT)
-Message-ID: <5255437D.7040207@monstr.eu>
-Date: Wed, 09 Oct 2013 13:52:29 +0200
-From: Michal Simek <monstr@monstr.eu>
-Reply-To: monstr@monstr.eu
-MIME-Version: 1.0
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [RFC] Architecture independent pcibios?
-References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>  <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>  <20131008171343.GB25606@e102652-lin.cambridge.arm.com> <1381264278.645.232.camel@pasglop>
-In-Reply-To: <1381264278.645.232.camel@pasglop>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="bIRq6vEKG3hBrsvKettFvR9aujdGMmfRQ"
+Received: from mailout2.samsung.com ([203.254.224.25]:33767 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753214Ab3JKHJj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 03:09:39 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MUH0000AT7TF370@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Fri, 11 Oct 2013 16:09:31 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Marek Vasut' <marex@denx.de>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Frank Li' <lznuaa@gmail.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Yinghai Lu' <yinghai@kernel.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
+ <1381457552-6575-1-git-send-email-marex@denx.de>
+In-reply-to: <1381457552-6575-1-git-send-email-marex@denx.de>
+Subject: Re: [PATCH 1/2] PCI: imx6: Make reset-gpio optional
+Date: Fri, 11 Oct 2013 16:09:30 +0900
+Message-id: <000b01cec650$d4547070$7cfd5150$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---bIRq6vEKG3hBrsvKettFvR9aujdGMmfRQ
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Friday, October 11, 2013 11:13 AM, Marek Vasut wrote:
+> 
+> Some boards do not have a PCIe reset GPIO. To avoid probe
+> failure on these boards, make the reset GPIO optional as
+> well.
+> 
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Frank Li <lznuaa@gmail.com>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> Cc: Sean Cross <xobs@kosagi.com>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Tim Harvey <tharvey@gateworks.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
 
-On 10/08/2013 10:31 PM, Benjamin Herrenschmidt wrote:
-> On Tue, 2013-10-08 at 18:13 +0100, Liviu Dudau wrote:
->> There are at least a handful of architectures that seem to share the s=
-ame
->> implementation for most (all?) of the pcibios_*() functions. (PowerPC =
-and
->> microblaze the most obvious offenders, x86 to a certain extent).
->=20
-> That's because microblaze started by copying the powerpc code :-)=20
+Reviewed-by: Jingoo Han <jg1.han@samsung.com>
 
-yes and the reason was that xilinx ppc405 and then ppc440 used
-the same pci IPs that's why it was easier just to use this code.
+Best regards,
+Jingoo Han
 
-I am keeping microblaze pcie driver out of mainline but definitely
-unification work has to be done.
+> ---
+>  drivers/pci/host/pci-imx6.c | 29 +++++++++++++++--------------
+>  1 file changed, 15 insertions(+), 14 deletions(-)
 
-Thanks,
-Michal
-
---=20
-Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
-w: www.monstr.eu p: +42-0-721842854
-Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
-Maintainer of Linux kernel - Xilinx Zynq ARM architecture
-Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
-
-
-
---bIRq6vEKG3hBrsvKettFvR9aujdGMmfRQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iEYEARECAAYFAlJVQ30ACgkQykllyylKDCGKZwCeLy0FOGAo9PbI5sfn7j+F6wFM
-vS0An0ode+IiphH8glruGnmMeyZDo0Z2
-=abnv
------END PGP SIGNATURE-----
-
---bIRq6vEKG3hBrsvKettFvR9aujdGMmfRQ--
