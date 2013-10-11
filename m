@@ -1,132 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43594 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751761Ab3J2KjS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Oct 2013 06:39:18 -0400
-From: Veaceslav Falico <vfalico@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: torvalds@linux-foundation.org, tglx@linutronix.de,
-	yinghai@kernel.org, Knut_Petersen@t-online.de, mingo@kernel.org,
-	paulmck@linux.vnet.ibm.com, fweisbec@gmail.com,
-	linux-kernel@vger.kernel.org,
-	Veaceslav Falico <vfalico@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v3 1/3] msi: free msi_desc entry only after we've released the kobject
-Date: Tue, 29 Oct 2013 11:30:30 +0100
-Message-Id: <1383042632-7102-2-git-send-email-vfalico@redhat.com>
-In-Reply-To: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
-References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:34997 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233Ab3JKCNH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 22:13:07 -0400
+From: Marek Vasut <marex@denx.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v7 0/2] Add PCIe support for i.MX6q
+Date: Fri, 11 Oct 2013 04:13:02 +0200
+Cc: "Zhu Richard-R65037" <r65037@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>,
+	Frank Li <lznuaa@gmail.com>, Sean Cross <xobs@kosagi.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tim Harvey <tharvey@gateworks.com>
+References: <1380165887-13506-1-git-send-email-shawn.guo@linaro.org> <201310101939.44295.marex@denx.de> <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
+In-Reply-To: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310110413.02354.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
-however kobject_put() doesn't guarantee us that it was the last reference
-and that the kobj isn't used currently by someone else, so after we
-kfree(entry) with the struct kobject - other users will begin using the
-freed memory, instead of the actual kobject.
+Hi Bjorn,
 
-Fix this by using the kobject->release callback, which is called last when
-the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
-which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
-kobj itself after ->release() was called, so we're safe).
+> On Thu, Oct 10, 2013 at 11:39 AM, Marek Vasut <marex@denx.de> wrote:
+> > Hi Bjorn,
+> > 
+> >> [+cc Yinghai]
+> >> 
+> >> On Thu, Oct 10, 2013 at 9:58 AM, Marek Vasut <marex@denx.de> wrote:
+> >> >> On Thu, Oct 10, 2013 at 4:25 AM, Marek Vasut <marex@denx.de> wrote:
+> >> > I tried you suggestion, this is what I got now (and with V7 of the
+> >> > patches):
+> >> > 
+> >> > Note that my topology is: rootport->2_port_switch->ethernet_chip , the
+> >> > other port of the switch is not used .
+> >> > 
+> >> > imx6q-pcie 1ffc000.pcie: phy link never came up
 
-In case we've failed to create the sysfs directories - just kfree()
-it - cause we don't have the kobjects attached.
+After discussing with Tim a little, looks like a clock bit was missing. The 
+above line was the cause of all the issues. Now I can probe the bus, but I still 
+need more patches:
 
-Also, remove the same functionality from populate_msi_sysfs(), cause on
-failure we anyway call free_msi_irqs(), which will take care of all the
-kobjects properly.
+This dirty patch here limits the PCIe operation to GEN1 only. It's based on this 
+Freescale patch [1]. Without this change, the PCIe switch is not detected. Any 
+idea why? (I also had to increase the PHY startup delay to get GEN1 going).
 
-And add the forgotten pci_dev_put(pdev) in case of failure to register the
-kobject in populate_msi_sysfs().
+[1] https://www.osadl.org/monitoring/patches/r8s7/1342-ENGR00180230-MX6-PCIE-
+enlarge-the-eye-diagram-and-fo.patch
 
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Neil Horman <nhorman@tuxdriver.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: linux-pci@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
----
- drivers/pci/msi.c | 31 ++++++++++++-------------------
- 1 file changed, 12 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d5f90d6..5d70f49 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -374,19 +374,22 @@ static void free_msi_irqs(struct pci_dev *dev)
- 				iounmap(entry->mask_base);
- 		}
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 32b30ca..df2838b 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -330,13 +330,16 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
  
-+		list_del(&entry->list);
+        dw_pcie_setup_rc(pp);
+ 
++// Enable GEN1
++writel(((readl(pp->dbi_base + 0x7c) & 0xfffffff0) | 0x1), pp->dbi_base + 0x7c);
 +
- 		/*
- 		 * Its possible that we get into this path
- 		 * When populate_msi_sysfs fails, which means the entries
- 		 * were not registered with sysfs.  In that case don't
--		 * unregister them.
-+		 * unregister them, and just free. Otherwise the
-+		 * kobject->release will take care of freeing the entry via
-+		 * msi_kobj_release().
- 		 */
- 		if (entry->kobj.parent) {
- 			kobject_del(&entry->kobj);
- 			kobject_put(&entry->kobj);
-+		} else {
-+			kfree(entry);
- 		}
--
--		list_del(&entry->list);
--		kfree(entry);
- 	}
- }
+        regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+                        IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
  
-@@ -509,6 +512,7 @@ static void msi_kobj_release(struct kobject *kobj)
- 	struct msi_desc *entry = to_msi_desc(kobj);
- 
- 	pci_dev_put(entry->dev);
-+	kfree(entry);
- }
- 
- static struct kobj_type msi_irq_ktype = {
-@@ -522,7 +526,6 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 	struct msi_desc *entry;
- 	struct kobject *kobj;
- 	int ret;
--	int count = 0;
- 
- 	pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
- 	if (!pdev->msi_kset)
-@@ -534,23 +537,13 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 		pci_dev_get(pdev);
- 		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
- 				     "%u", entry->irq);
--		if (ret)
--			goto out_unroll;
--
--		count++;
-+		if (ret) {
-+			pci_dev_put(pdev);
-+			return ret;
-+		}
- 	}
- 
- 	return 0;
--
--out_unroll:
--	list_for_each_entry(entry, &pdev->msi_list, list) {
--		if (!count)
--			break;
--		kobject_del(&entry->kobj);
--		kobject_put(&entry->kobj);
--		count--;
--	}
--	return ret;
- }
- 
- /**
--- 
-1.8.4
+        while (!dw_pcie_link_up(pp)) {
+                usleep_range(100, 1000);
+                count++;
+-               if (count >= 10) {
++               if (count >= 200) {
+                        dev_err(pp->dev, "phy link never came up\n");
+                        dev_dbg(pp->dev,
+                                "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
 
+Best regards,
+Marek Vasut
