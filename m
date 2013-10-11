@@ -1,103 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:45630
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752863Ab3JWKmJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 06:42:09 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>
-CC: Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: [PATCH 10/12][v3] pci: fsl: support function fsl_pci_assign_primary
-Date: Wed, 23 Oct 2013 18:41:32 +0800
-Message-ID: <1382524894-15164-10-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:17227 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755677Ab3JKHah (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 03:30:37 -0400
+Message-ID: <5257A882.1070809@huawei.com>
+Date: Fri, 11 Oct 2013 15:28:02 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Paul Mackerras <paulus@samba.org>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH v2 3/6] powerpc/pci: use pci_is_pcie() to simplify code
+References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com> <1378367730-25996-3-git-send-email-wangyijing@huawei.com> <20130906203035.GA27940@google.com> <1381470596.5630.61.camel@pasglop> <20131011061654.GA561@shangw.(null)> <52579BD6.40802@huawei.com> <20131011065329.GA5013@shangw.(null)>
+In-Reply-To: <20131011065329.GA5013@shangw.(null)>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change pci_ids to fsl_pci_ids Freescale-specific name and change
-static to extern modifier for using in fsl_pci_assign_primary().
+On 2013/10/11 14:53, Gavin Shan wrote:
+> On Fri, Oct 11, 2013 at 02:33:58PM +0800, Yijing Wang wrote:
+>> On 2013/10/11 14:16, Gavin Shan wrote:
+>>> On Fri, Oct 11, 2013 at 04:49:56PM +1100, Benjamin Herrenschmidt wrote:
+>>>> On Fri, 2013-09-06 at 14:30 -0600, Bjorn Helgaas wrote:
+>>>>> On Thu, Sep 05, 2013 at 03:55:27PM +0800, Yijing Wang wrote:
+> 
+> .../...
+> 
+>>>>>> Use pci_is_pcie() to simplify code.
+>>>>>> diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+>>>>>> index 55593ee..6ebbe54 100644
+>>>>>> --- a/arch/powerpc/kernel/eeh.c
+>>>>>> +++ b/arch/powerpc/kernel/eeh.c
+>>>>>> @@ -189,8 +189,7 @@ static size_t eeh_gather_pci_data(struct eeh_dev *edev, char * buf, size_t len)
+>>>>>>  	}
+>>>>>>  
+>>>>>>  	/* If PCI-E capable, dump PCI-E cap 10, and the AER */
+>>>>>> -	cap = pci_find_capability(dev, PCI_CAP_ID_EXP);
+>>>>>> -	if (cap) {
+>>>>>> +	if (pci_is_pcie(dev)) {
+>>>>>>  		n += scnprintf(buf+n, len-n, "pci-e cap10:\n");
+>>>>>>  		printk(KERN_WARNING
+>>>>>>  		       "EEH: PCI-E capabilities and status follow:\n");
+>>>>
+>>>> So we remove reading of "cap", but slightly further down the code does:
+>>>>
+>>>> 		for (i=0; i<=8; i++) {
+>>>> 			eeh_ops->read_config(dn, cap+4*i, 4, &cfg);
+>>>> 			n += scnprintf(buf+n, len-n, "%02x:%x\n", 4*i, cfg);
+>>>> 			printk(KERN_WARNING "EEH: PCI-E %02x: %08x\n", i, cfg);
+>>>> 		}
+>>>>
+>>>> Which actually *uses* the value of "cap" ... oops :-)
+>>>>
+>>>
+>>> It's my fault and I should have looked into the changes more closely.
+>>> How about changing it like this:
+>>>
+>>> 	cap = pci_is_pcie(dev) ? pci_pcie_cap(dev) :
+>>> 	      pci_find_capability(dev, PCI_CAP_ID_EXP);
+>>> 	if (cap) {
+>>> 		...
+>>> 	}
+>>>
+>>> It would save some PCI-CFG access cycles for most cases :-)
+>>
+>> Hi Gavin,  it's not your fault, it's my fault. :)
+>>
+>> Because pci_pcie_cap(dev) == dev->pcie_cap == pci_find_capability(dev, PCI_CAP_ID_EXP);
+>>
+>> so I think it's ok to use dev->pcie_cap instead of stale "cap".
+>>
+> 
+> Yijing, There has one exception: dev->pcie_cap isn't updated yet.
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
-change log:
-v1-v3:
-Derived from http://patchwork.ozlabs.org/patch/278965/
+In my idea, dev->pcie_cap(here is pci_dev->pcie_cap) will update in set_pcie_port_type() function,
+and this function always be called after allocate pci device. We get pci_dev by eeh_dev_to_pci_dev(),
+I think pci_dev has been initialized completely.
 
-Based on upstream master.
-Based on the discussion of RFC version here
-http://patchwork.ozlabs.org/patch/274487/
+> This function has possibility to be invoked before that. However,
+> we don't have the binding (eeh device <-> PCI device) for the case.
+> So the piece of code shouldn't be running
 
- arch/powerpc/sysdev/fsl_pci.c     | 5 +++--
- drivers/pci/host/pci-fsl-common.c | 4 ++--
- include/linux/fsl/pci-common.h    | 2 ++
- 3 files changed, 7 insertions(+), 4 deletions(-)
+In PCI core, I knew
 
-diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-index 0a0c240..40d2e1d 100644
---- a/arch/powerpc/sysdev/fsl_pci.c
-+++ b/arch/powerpc/sysdev/fsl_pci.c
-@@ -735,7 +735,8 @@ void fsl_pci_assign_primary(void)
- 		of_node_put(np);
- 		np = fsl_pci_primary;
- 
--		if (of_match_node(pci_ids, np) && of_device_is_available(np))
-+		if (of_match_node(fsl_pci_ids, np) &&
-+		    of_device_is_available(np))
- 			return;
- 	}
- 
-@@ -744,7 +745,7 @@ void fsl_pci_assign_primary(void)
- 	 * designate one as primary.  This can go away once
- 	 * various bugs with primary-less systems are fixed.
- 	 */
--	for_each_matching_node(np, pci_ids) {
-+	for_each_matching_node(np, fsl_pci_ids) {
- 		if (of_device_is_available(np)) {
- 			fsl_pci_primary = np;
- 			of_node_put(np);
-diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
-index 729a5f4..8b4f793 100644
---- a/drivers/pci/host/pci-fsl-common.c
-+++ b/drivers/pci/host/pci-fsl-common.c
-@@ -634,7 +634,7 @@ no_bridge:
- 	return -ENODEV;
- }
- 
--static const struct of_device_id pci_ids[] = {
-+const struct of_device_id fsl_pci_ids[] = {
- 	{ .compatible = "fsl,mpc8540-pci", },
- 	{ .compatible = "fsl,mpc8548-pcie", },
- 	{ .compatible = "fsl,mpc8610-pci", },
-@@ -725,7 +725,7 @@ static struct platform_driver fsl_pci_driver = {
- 	.driver = {
- 		.name = "fsl-pci",
- 		.pm = PCI_PM_OPS,
--		.of_match_table = pci_ids,
-+		.of_match_table = fsl_pci_ids,
- 	},
- 	.probe = fsl_pci_probe,
- 	.remove = fsl_pci_remove,
-diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
-index bfb1f03..84b0801 100644
---- a/include/linux/fsl/pci-common.h
-+++ b/include/linux/fsl/pci-common.h
-@@ -136,6 +136,8 @@ struct fsl_pci {
- 	void *sys;
- };
- 
-+extern const struct of_device_id fsl_pci_ids[];
-+
- /*
-  * Convert architecture specific pci controller structure to fsl_pci
-  * PowerPC uses structure pci_controller and ARM uses structure pci_sys_data
+pci_scan_device()
+   pci_setup_device()
+       set_pcie_port_type()
+            pci_dev->pcie_cap = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+
+In powerpc, I also found
+
+of_scan_pci_dev()
+   of_create_pci_dev()
+       set_pcie_port_type()
+	    pci_dev->pcie_cap = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+> 
+> However, it's a bit safer to have pci_find_capability(dev, PCI_CAP_ID_EXP)
+> as well even though we needn't it for 99.9% cases if you agree :-)
+
+I agree, this function is not the performance bottleneck,
+safety is more important. :)
+So if Bjorn and Benjamin think it's not safe, it's ok to drop it. :)
+
+Thanks!
+Yijing.
+
+> 
+> Thanks,
+> Gavin
+> 
+> 
+> .
+> 
+
+
 -- 
-1.8.1.2
-
+Thanks!
+Yijing
 
