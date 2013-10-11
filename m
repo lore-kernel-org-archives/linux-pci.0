@@ -1,76 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:12827 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750944Ab3JSGn5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:43:57 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 21/29] qla2xxx: Make use of pcim_enable_msix_range() interface
-Date: Fri, 18 Oct 2013 19:12:21 +0200
-Message-Id: <5476e68f2f260f7c5d14cf0fa27d0f2406decd49.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20131011090153.7760db6b@gandalf.local.home>
+References: <20131010165905.7815defa@gandalf.local.home> <18685640.N2BnVjDmHD@vostro.rjw.lan>
+ <CA+55aFwqf7kkh0dy6AhCvB87XYkQ03YUpsYEDJmnkiRe8GQfMQ@mail.gmail.com>
+ <2096980.ZtIelfoX39@vostro.rjw.lan> <20131011090153.7760db6b@gandalf.local.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 11 Oct 2013 09:08:40 -0600
+Message-ID: <CAErSpo7MWaJpY3pw1Db0J6vLZd22LcxReRxs3i2CUZb6qMexXw@mail.gmail.com>
+Subject: Re: [BUG] WARN_ON(!context) in drivers/pci/hotplug/acpiphp_glue.c
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/scsi/qla2xxx/qla_isr.c |   28 ++++++++++++----------------
- 1 files changed, 12 insertions(+), 16 deletions(-)
+On Fri, Oct 11, 2013 at 7:01 AM, Steven Rostedt <rostedt@goodmis.org> wrote:
+> On Fri, 11 Oct 2013 13:13:47 +0200
+> "Rafael J. Wysocki" <rjw@rjwysocki.net> wrote:
+>>
+>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> Subject: ACPI / hotplug / PCI: Accept coexistence with native PCIe hotplug
+>>
+>> Allow ACPIPHP (ACPI-based PCI hotplug) to handle event signaling for
+>> devices that have already been claimed by the native PCIe hotplug
+>> (pciehp).
+>>
+>> The ACPI hotplug events are essentially re-scan, remove and eject
+>> requests.  Re-scan and remove should work regardless, because they
+>> may be triggered by user space via sysfs and the ACPI eject (_EJ0)
+>> should work if the BIOS wants us to use it.  There may be an issue
+>> if the BIOS signals ACPI eject and wants us to use the native eject,
+>> but that doesn't work without this change anyway.
+>>
+>> This change prevents the WARN_ON() in acpiphp_enumerate_slots() from
+>> triggering unnecessarily for bridges whose parents are managed by
+>> pciehp.
+>>
+>
+> Reported-by: Steven Rostedt <rostedt@goodmis.org>
+> Tested-by: Steven Rostedt <rostedt@goodmis.org>
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index df1b30b..3238a0ac 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2836,27 +2836,23 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 	for (i = 0; i < ha->msix_count; i++)
- 		entries[i].entry = i;
- 
--	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--	if (ret) {
--		if (ret < MIN_MSIX_COUNT)
--			goto msix_failed;
--
-+	ret = pcim_enable_msix_range(ha->pdev,
-+				     entries, ha->msix_count, MIN_MSIX_COUNT);
-+	if (ret < 0) {
-+		ql_log(ql_log_fatal, vha, 0x00c7,
-+		    "MSI-X: Failed to enable support, "
-+		    "giving   up -- %d/%d.\n",
-+		    ha->msix_count, ret);
-+		goto msix_out;
-+	}
-+	if (ret < ha->msix_count) {
- 		ql_log(ql_log_warn, vha, 0x00c6,
- 		    "MSI-X: Failed to enable support "
- 		    "-- %d/%d\n Retry with %d vectors.\n",
- 		    ha->msix_count, ret, ret);
--		ha->msix_count = ret;
--		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--		if (ret) {
--msix_failed:
--			ql_log(ql_log_fatal, vha, 0x00c7,
--			    "MSI-X: Failed to enable support, "
--			    "giving   up -- %d/%d.\n",
--			    ha->msix_count, ret);
--			goto msix_out;
--		}
--		ha->max_rsp_queues = ha->msix_count - 1;
- 	}
-+	ha->msix_count = ret;
-+	ha->max_rsp_queues = ha->msix_count - 1;
- 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
- 				ha->msix_count, GFP_KERNEL);
- 	if (!ha->msix_entries) {
--- 
-1.7.7.6
+I opened https://bugzilla.kernel.org/show_bug.cgi?id=62831 for this
+issue because I don't think this question of how to coordinate acpiphp
+and pciehp is completely resolved, and I think it might be interesting
+to have the complete dmesg, acpidump, and "lspci -vv" output attached
+there for future reference.
 
+Steve, I tried to attach the dmesg you mentioned yesterday in IRC, but
+the link didn't work for me.  Would you mind attaching this info?
+
+Rafael, I assume you'll probably merge this through your tree.  Would
+you mind adding a reference to this bugzilla in the changelog?  I do
+have a "convert to dynamic debug" acpiphp patch in my "next" branch
+(bd950799), but I suspect you have several more interesting ones in
+your tree.
+
+Bjorn
+
+>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> ---
+>>  drivers/pci/hotplug/acpiphp_glue.c |   32 ++++++++++++++++++++++++++------
+>>  1 file changed, 26 insertions(+), 6 deletions(-)
+>>
+>> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+>> ===================================================================
+>> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
+>> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+>> @@ -259,6 +259,31 @@ static void acpiphp_dock_release(void *d
+>>       put_bridge(context->func.parent);
+>>  }
+>>
+>> +/**
+>> + * slot_should_be_exposed - Check whether or not to expose a slot to userland.
+>> + * @bridge: ACPIPHP bridge the slot belongs to.
+>> + * @handle: ACPI handle of a device in the slot.
+>> + */
+>> +static inline bool slot_should_be_exposed(struct acpiphp_bridge *bridge,
+>> +                                       acpi_handle handle)
+>> +{
+>> +     struct pci_bus *pbus = bridge->pci_bus;
+>> +     struct pci_dev *pdev = bridge->pci_dev;
+>> +
+>> +     /*
+>> +      * Do not expose slots whose bridges are managed by pciehp, because they
+>> +      * will be exposed to user space by the pciehp driver.
+>> +      */
+>> +     if (pdev && device_is_managed_by_native_pciehp(pdev))
+>> +             return false;
+>> +
+>> +     /*
+>> +      * Expose slots for devices with either _EJ0 or _RMV and for devices
+>> +      * on docking stations.
+>> +      */
+>> +     return acpi_pci_check_ejectable(pbus, handle) || is_dock_device(handle);
+>> +}
+>> +
+>>  /* callback routine to register each ACPI PCI slot object */
+>>  static acpi_status register_slot(acpi_handle handle, u32 lvl, void *data,
+>>                                void **rv)
+>> @@ -271,12 +296,8 @@ static acpi_status register_slot(acpi_ha
+>>       unsigned long long adr;
+>>       int device, function;
+>>       struct pci_bus *pbus = bridge->pci_bus;
+>> -     struct pci_dev *pdev = bridge->pci_dev;
+>>       u32 val;
+>>
+>> -     if (pdev && device_is_managed_by_native_pciehp(pdev))
+>> -             return AE_OK;
+>> -
+>>       status = acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
+>>       if (ACPI_FAILURE(status)) {
+>>               acpi_handle_warn(handle, "can't evaluate _ADR (%#x)\n", status);
+>> @@ -325,8 +346,7 @@ static acpi_status register_slot(acpi_ha
+>>
+>>       list_add_tail(&slot->node, &bridge->slots);
+>>
+>> -     /* Register slots for ejectable funtions only. */
+>> -     if (acpi_pci_check_ejectable(pbus, handle)  || is_dock_device(handle)) {
+>> +     if (slot_should_be_exposed(bridge, handle)) {
+>>               unsigned long long sun;
+>>               int retval;
+>>
+>
