@@ -1,59 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26629 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754950Ab3JBRkf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:40:35 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 30/77] hpsa: Update a misleading comment on interrupt usage
-Date: Wed,  2 Oct 2013 12:48:46 +0200
-Message-Id: <3e551608cba10cab0f33f5201a29e67905b3cd02.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:58632 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495Ab3JKLzv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 07:55:51 -0400
+From: Marek Vasut <marex@denx.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH 2/2] PCI: imx6: Fix the clock for PCIe
+Date: Fri, 11 Oct 2013 13:55:04 +0200
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Frank Li'" <lznuaa@gmail.com>,
+	"'Richard Zhu'" <r65037@freescale.com>,
+	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Shawn Guo'" <shawn.guo@linaro.org>,
+	"'Tim Harvey'" <tharvey@gateworks.com>,
+	"'Yinghai Lu'" <yinghai@kernel.org>
+References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com> <1381457552-6575-2-git-send-email-marex@denx.de> <000c01cec652$55adbb30$01093190$%han@samsung.com>
+In-Reply-To: <000c01cec652$55adbb30$01093190$%han@samsung.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310111355.04746.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/scsi/hpsa.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+Dear Jingoo Han,
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 891c86b..393c8db 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4141,7 +4141,11 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 	}
- default_int_mode:
- #endif				/* CONFIG_PCI_MSI */
--	/* if we get here we're going to use the default interrupt mode */
-+	/*
-+	 * If we get here we're going to use either the
-+	 * default interrupt mode or single MSI mode
-+	 */
-+
- 	h->intr[h->intr_mode] = h->pdev->irq;
- }
- 
--- 
-1.7.7.6
+> On Friday, October 11, 2013 11:13 AM, Marek Vasut wrote:
+> > The clk #205 are lvds_sel, not lvds_gate , so fix this. Moreover,
+> > the PCIe needs lvds_gate for successful operation, so make the PCIe
+> > driver enable (set as output) the lvds_gate .
+> > 
+> > Signed-off-by: Marek Vasut <marex@denx.de>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Frank Li <lznuaa@gmail.com>
+> > Cc: Richard Zhu <r65037@freescale.com>
+> > Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> > Cc: Sean Cross <xobs@kosagi.com>
+> > Cc: Shawn Guo <shawn.guo@linaro.org>
+> > Cc: Tim Harvey <tharvey@gateworks.com>
+> > Cc: Yinghai Lu <yinghai@kernel.org>
+> > ---
+> > 
+> >  arch/arm/boot/dts/imx6qdl.dtsi |  6 +++---
+> >  drivers/pci/host/pci-imx6.c    | 19 ++++++++++++++++++-
+> >  2 files changed, 21 insertions(+), 4 deletions(-)
+> 
+> Hi Marek Vasut,
+> 
+> How about splitting this patch into two patches such as
+> arch part and driver part?
+> 
+> It is because driver part was merged into PCI tree by Bjorn Helgaas,[1]
+> and arch part was merged into i.MX tree by Shawn Guo.[2]
+> Thus, your patch can make the conflict issue.
+> 
+> For example,
+>   [PATCH 1/2] ARM: dts: imx6qdl: Fix the clock for PCIe
+>   [PATCH 2/2] PCI: imx6: Fix the clock for PCIe
+> 
+> Then, 1st patch can be merged to i.MX tree, and 2nd patch can be merged
+> to PCI tree.
+> 
+> If I am wrong, please let me know kindly. :-)
 
+By all means, you're right. Is the patch addressing the issue correctly (if we 
+ignore that it's not split)? Shawn?
+
+Best regards,
+Marek Vasut
