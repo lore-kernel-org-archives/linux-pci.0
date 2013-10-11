@@ -1,47 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:36302 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218Ab3JGRks convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 13:40:48 -0400
-Received: by mail-ie0-f173.google.com with SMTP id ar20so16897929iec.32
-        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 10:40:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAK9yfHxxxpZx5Yd=nUdNMe2kz_bZupZFdizG2tL3wUffDOkPCQ@mail.gmail.com>
-References: <1380363121-1977-1-git-send-email-sachin.kamat@linaro.org>
- <CAErSpo77zy6K3yMa8_31zbrehA6MByXTBbn5Trr8Sv5TL7ScZQ@mail.gmail.com> <CAK9yfHxxxpZx5Yd=nUdNMe2kz_bZupZFdizG2tL3wUffDOkPCQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 7 Oct 2013 11:40:27 -0600
-Message-ID: <CAErSpo64J9bzGw3U7WC+4ykWZTsDn0=hs8mhuwmy_m8cg-XgfQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: sysfs: Staticize local symbols
-To: Sachin Kamat <sachin.kamat@linaro.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-out.m-online.net ([212.18.0.9]:58168 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048Ab3JKCMv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 22:12:51 -0400
+From: Marek Vasut <marex@denx.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/2] PCI: imx6: Make reset-gpio optional
+Date: Fri, 11 Oct 2013 04:12:31 +0200
+Message-Id: <1381457552-6575-1-git-send-email-marex@denx.de>
+In-Reply-To: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
+References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 6, 2013 at 9:55 PM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
-> On 4 October 2013 23:39, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Sat, Sep 28, 2013 at 4:12 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
->>>
->>> -struct attribute *pci_bus_attrs[] = {
->>> +static struct attribute *pci_bus_attrs[] = {
->>
->> Did you compile this?  I see this:
->>
->> drivers/pci/pci-sysfs.c:306:29: error: static declaration of
->> ‘pci_bus_attrs’ follows non-static declaration
->> drivers/pci/pci.h:159:29: note: previous declaration of ‘pci_bus_attrs’ was here
->
-> Hmm.. strange. I did compile both these patches and did not see this
-> error on my setup.
-> Infact it was during compilation that I came across the need for this
-> change and verified it after. However I used
-> the linux-next tree and not your tree to generate these.
+Some boards do not have a PCIe reset GPIO. To avoid probe
+failure on these boards, make the reset GPIO optional as
+well.
 
-Oh, I see what happened.  Greg's 244afeca ("PCI: convert bus code to
-use bus_groups") removed the use of pci_bus_attrs[] in pci-driver.c.
-That commit is in linux-next, but not in my tree.  I probably should
-have merged that commit via my tree to avoid confusion like this.  Oh,
-well, maybe I'll do better next time.
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <lznuaa@gmail.com>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Tim Harvey <tharvey@gateworks.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/host/pci-imx6.c | 29 +++++++++++++++--------------
+ 1 file changed, 15 insertions(+), 14 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index d3639aa..8e7adce 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -220,9 +220,12 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+ 
+-	gpio_set_value(imx6_pcie->reset_gpio, 0);
+-	msleep(100);
+-	gpio_set_value(imx6_pcie->reset_gpio, 1);
++	/* Some boards don't have PCIe reset GPIO. */
++	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
++		gpio_set_value(imx6_pcie->reset_gpio, 0);
++		msleep(100);
++		gpio_set_value(imx6_pcie->reset_gpio, 1);
++	}
+ 
+ 	return 0;
+ }
+@@ -447,17 +450,15 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 
+ 	/* Fetch GPIOs */
+ 	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+-	if (!gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		dev_err(&pdev->dev, "no reset-gpio defined\n");
+-		ret = -ENODEV;
+-	}
+-	ret = devm_gpio_request_one(&pdev->dev,
+-				imx6_pcie->reset_gpio,
+-				GPIOF_OUT_INIT_LOW,
+-				"PCIe reset");
+-	if (ret) {
+-		dev_err(&pdev->dev, "unable to get reset gpio\n");
+-		goto err;
++	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
++		ret = devm_gpio_request_one(&pdev->dev,
++					imx6_pcie->reset_gpio,
++					GPIOF_OUT_INIT_LOW,
++					"PCIe reset");
++		if (ret) {
++			dev_err(&pdev->dev, "unable to get reset gpio\n");
++			goto err;
++		}
+ 	}
+ 
+ 	imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
+-- 
+1.8.4.rc3
+
