@@ -1,64 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:42588
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752091Ab3JHRJb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 13:09:31 -0400
-Message-ID: <1381252156.7979.247.camel@snotra.buserror.net>
-Subject: Re: [PATCH 1/7] powerpc: Add interface to get msi region information
-From: Scott Wood <scottwood@freescale.com>
+Received: from gate.crashing.org ([63.228.1.57]:58460 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752086Ab3JKFxT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Oct 2013 01:53:19 -0400
+Message-ID: <1381470596.5630.61.camel@pasglop>
+Subject: Re: [PATCH v2 3/6] powerpc/pci: use pci_is_pcie() to simplify code
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Bhushan Bharat-R65777 <R65777@freescale.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"galak@kernel.crashing.org" <galak@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Wood Scott-B07421 <B07421@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Date: Tue, 8 Oct 2013 12:09:16 -0500
-In-Reply-To: <CAErSpo742BOxzxRaFQn+UnsNday4_8LM6+3G6=cfp9DHecPxDg@mail.gmail.com>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1379575763-2091-2-git-send-email-Bharat.Bhushan@freescale.com>
-	 <20130924235812.GD9302@google.com>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0718FA58@039-SN2MPN1-011.039d.mgd.msft.net>
-	 <CAErSpo742BOxzxRaFQn+UnsNday4_8LM6+3G6=cfp9DHecPxDg@mail.gmail.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Date: Fri, 11 Oct 2013 16:49:56 +1100
+In-Reply-To: <20130906203035.GA27940@google.com>
+References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+	 <1378367730-25996-3-git-send-email-wangyijing@huawei.com>
+	 <20130906203035.GA27940@google.com>
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-10-08 at 10:47 -0600, Bjorn Helgaas wrote:
-> On Thu, Oct 3, 2013 at 11:19 PM, Bhushan Bharat-R65777
-> <R65777@freescale.com> wrote:
+On Fri, 2013-09-06 at 14:30 -0600, Bjorn Helgaas wrote:
+> On Thu, Sep 05, 2013 at 03:55:27PM +0800, Yijing Wang wrote:
+> > Use pci_is_pcie() to simplify code.
+> > 
+> > Acked-by: Kumar Gala <galak@kernel.crashing.org>
+> > Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> > Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
+> > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> > Cc: Paul Mackerras <paulus@samba.org>
+> > Cc: linuxppc-dev@lists.ozlabs.org
+> > Cc: linux-kernel@vger.kernel.org
+> > ---
+> >  arch/powerpc/kernel/eeh.c     |    3 +--
+> >  arch/powerpc/sysdev/fsl_pci.c |    2 +-
+> >  2 files changed, 2 insertions(+), 3 deletions(-)
 > 
-> >> I don't know enough about VFIO to understand why these new interfaces are
-> >> needed.  Is this the first VFIO IOMMU driver?  I see vfio_iommu_spapr_tce.c and
-> >> vfio_iommu_type1.c but I don't know if they're comparable to the Freescale PAMU.
-> >> Do other VFIO IOMMU implementations support MSI?  If so, do they handle the
-> >> problem of mapping the MSI regions in a different way?
-> >
-> > PAMU is an aperture type of IOMMU while other are paging type, So they are completely different from what PAMU is and handle that differently.
+> Ben, Paul, this has no dependencies on anything new to PCI or any
+> other patches in this series, so you can take it through the POWERPC
+> tree.  If you don't want to do that, let me know and I can take it.
 > 
-> This is not an explanation or a justification for adding new
-> interfaces.  I still have no idea what an "aperture type IOMMU" is,
-> other than that it is "different."  But I see that Alex is working on
-> this issue with you in a different thread, so I'm sure you guys will
-> sort it out.
+> If you want it:
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-PAMU is a very constrained IOMMU that cannot do arbitrary page mappings.
-Due to these constraints, we cannot map the MSI I/O page at its normal
-address while also mapping RAM at the address we want.  The address we
-can map it at depends on the addresses of other mappings, so it can't be
-hidden in the IOMMU driver -- the user needs to be in control.
+It's also quite broken :-)
 
-Another difference is that (if I understand correctly) PCs handle MSIs
-specially, via interrupt remapping, rather than being translated as a
-normal memory access through the IOMMU.
+See below:
 
--Scott
+> > diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+> > index 55593ee..6ebbe54 100644
+> > --- a/arch/powerpc/kernel/eeh.c
+> > +++ b/arch/powerpc/kernel/eeh.c
+> > @@ -189,8 +189,7 @@ static size_t eeh_gather_pci_data(struct eeh_dev *edev, char * buf, size_t len)
+> >  	}
+> >  
+> >  	/* If PCI-E capable, dump PCI-E cap 10, and the AER */
+> > -	cap = pci_find_capability(dev, PCI_CAP_ID_EXP);
+> > -	if (cap) {
+> > +	if (pci_is_pcie(dev)) {
+> >  		n += scnprintf(buf+n, len-n, "pci-e cap10:\n");
+> >  		printk(KERN_WARNING
+> >  		       "EEH: PCI-E capabilities and status follow:\n");
 
+So we remove reading of "cap", but slightly further down the code does:
+
+		for (i=0; i<=8; i++) {
+			eeh_ops->read_config(dn, cap+4*i, 4, &cfg);
+			n += scnprintf(buf+n, len-n, "%02x:%x\n", 4*i, cfg);
+			printk(KERN_WARNING "EEH: PCI-E %02x: %08x\n", i, cfg);
+		}
+
+Which actually *uses* the value of "cap" ... oops :-)
+
+> > diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+> > index 46ac1dd..5402a1d 100644
+> > --- a/arch/powerpc/sysdev/fsl_pci.c
+> > +++ b/arch/powerpc/sysdev/fsl_pci.c
+> > @@ -41,7 +41,7 @@ static void quirk_fsl_pcie_header(struct pci_dev *dev)
+> >  	u8 hdr_type;
+> >  
+> >  	/* if we aren't a PCIe don't bother */
+> > -	if (!pci_find_capability(dev, PCI_CAP_ID_EXP))
+> > +	if (!pci_is_pcie(dev))
+> >  		return;
+> >  
+> >  	/* if we aren't in host mode don't bother */
+> > -- 
+> > 1.7.1
+> > 
+> > 
 
 
