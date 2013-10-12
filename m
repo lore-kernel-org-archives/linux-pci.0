@@ -1,41 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:49542 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502Ab3JEK5d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Oct 2013 06:57:33 -0400
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:41642
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754266Ab3JLHMy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Oct 2013 03:12:54 -0400
+Date: Sat, 12 Oct 2013 15:13:15 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Marek Vasut <marex@denx.de>
+CC: Jingoo Han <jg1.han@samsung.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Frank Li' <lznuaa@gmail.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Yinghai Lu' <yinghai@kernel.org>
+Subject: Re: [PATCH 2/2] PCI: imx6: Fix the clock for PCIe
+Message-ID: <20131012071312.GA21305@S2101-09.ap.freescale.net>
+References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
+ <1381457552-6575-2-git-send-email-marex@denx.de>
+ <000c01cec652$55adbb30$01093190$%han@samsung.com>
+ <201310111355.04746.marex@denx.de>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV_aDmUqGO7HyybwH5fMYqjVpimKF7YA=Jp4EDSFzbQDA@mail.gmail.com>
-References: <20131004011806.GE20450@dangermouse.emea.sgi.com>
-	<CAErSpo6aE-vxhOHk_mgyWMYrgkG0Juuy8Bs-S2Hjb_7k8S=n8Q@mail.gmail.com>
-	<CAE9FiQV_aDmUqGO7HyybwH5fMYqjVpimKF7YA=Jp4EDSFzbQDA@mail.gmail.com>
-Date: Sat, 5 Oct 2013 18:57:32 +0800
-Message-ID: <CABawtvPL3ECq=QLVxDNtmgjWWV2B6+Z=5S+wJ9VXwT0jRsxh8w@mail.gmail.com>
-Subject: Re: Commit 07f9b61 breaks systems that don't implement a _CBA method
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ethan Zhao <ethan.zhao@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201310111355.04746.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 5, 2013 at 7:55 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Oct 4, 2013 at 3:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Thu, Oct 3, 2013 at 7:18 PM, Hedi Berriche <hedi@sgi.com> wrote:
->
->> It's regrettable that the code is so subtle.  The obvious thing to do
->> would be to check for _CBA, and if it doesn't exist, look for an MCFG
->> entry.  But for various historical reasons, the code is a mess, and we
->> haven't figured out how to safely simplify it.
->>
->> Ethan, Yinghai, any objections to reverting 07f9b61?
->
-> yes, that is right solution.
-> --
-Thanks, pull it out from the trap.
+On Fri, Oct 11, 2013 at 01:55:04PM +0200, Marek Vasut wrote:
+> > It is because driver part was merged into PCI tree by Bjorn Helgaas,[1]
+> > and arch part was merged into i.MX tree by Shawn Guo.[2]
+> > Thus, your patch can make the conflict issue.
+> > 
+> > For example,
+> >   [PATCH 1/2] ARM: dts: imx6qdl: Fix the clock for PCIe
+> >   [PATCH 2/2] PCI: imx6: Fix the clock for PCIe
+> > 
+> > Then, 1st patch can be merged to i.MX tree, and 2nd patch can be merged
+> > to PCI tree.
+> > 
+> > If I am wrong, please let me know kindly. :-)
+> 
+> By all means, you're right. Is the patch addressing the issue correctly (if we 
+> ignore that it's not split)? Shawn?
 
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I need to first understand if you are seeing the issue with the latest
+linux-next like next-20131010.  Note, linux-next tree goes to
+git://gitorious.org/thierryreding/linux-next [1] these days.
+
+Shawn
+
+[1] https://lkml.org/lkml/2013/9/30/179
+
