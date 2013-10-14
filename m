@@ -1,79 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:40124 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752779Ab3JKG2l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 02:28:41 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
-	"Hanjun Guo" <guohanjun@huawei.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"Paul Mackerras" <paulus@samba.org>
-Subject: [PATCH v2] powerpc/pci: use pci_is_pcie() to simplify code
-Date: Fri, 11 Oct 2013 14:26:49 +0800
-Message-ID: <1381472809-11556-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mailout1.samsung.com ([203.254.224.24]:28610 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755587Ab3JNCd5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Oct 2013 22:33:57 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MUN0052L0GIYV40@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Mon, 14 Oct 2013 11:33:54 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Marek Vasut' <marex@denx.de>
+Cc: 'Shawn Guo' <shawn.guo@linaro.org>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Frank Li' <lznuaa@gmail.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Yinghai Lu' <yinghai@kernel.org>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
+ <000501cec870$9aebcc80$d0c36580$%han@samsung.com>
+ <201310140244.48433.marex@denx.de> <201310140317.56961.marex@denx.de>
+In-reply-to: <201310140317.56961.marex@denx.de>
+Subject: Re: [PATCH 1/2] PCI: imx6: Make reset-gpio optional
+Date: Mon, 14 Oct 2013 11:33:54 +0900
+Message-id: <000401cec885$d3567fb0$7a037f10$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_is_pcie() to simplify code.
+On Monday, October 14, 2013 10:18 AM, Marek Vasut wrote:
+> > > On Saturday, October 12, 2013 6:29 PM, Marek Vasut wrote:
+> > > > > On Fri, Oct 11, 2013 at 04:12:31AM +0200, Marek Vasut wrote:
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Kumar Gala <galak@kernel.crashing.org>
-Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
+[.....]
 
----
+> > > +cc Kishon Vijay Abraham I, Pratyush Anand, Mohit KUMAR
+> > >
+> > > Yes, right.
+> > > "reset-gpio" property can be moved to an optional property.
+> > > Also, the patch to fix 'Designware' part such as 'designware-pcie.txt'
+> > > can be shared with other related people as below.
+> > >
+> > >   - Samsung Exynos PCIe: Jingoo Han
+> > >   - ST Spear PCIe: Pratyush Anand, Mohit KUMAR
+> > >   - TI OMAP PCIe: Kishon Vijay Abraham I
+> >
+> > I'm in the process of rebasing the patches on top of next 2013-10-10. Right
+> > now I'm getting a crash in __write_msi_msg() when my Intel "igb" reports
+> > "enabling bus mastering" . Any quick idea? Seems like this MSI support is
+> > new in the pcie- designware.c .
+> >
+> > I'll just start plumbing to see what it is.
+> 
+> Looks like irq_alloc_descs() return -EEXIST for me in assign_irq() . Noone
+> checks the return value of it , so it can fail later on ;-) Now, why does it
+> return -EEXIST in the first place? I'm sure someone more experienced with PCI
+> would know right away .
 
-v1->v2: use dev->pcie_cap instead of "cap" in eeh_ops->read_config()
-        "cap" is stale after remove PCIe Cap find code.
-        Point out by Benjamin Herrenschmidt.
+Hi Marek,
 
----
- arch/powerpc/kernel/eeh.c     |    5 ++---
- arch/powerpc/sysdev/fsl_pci.c |    2 +-
- 2 files changed, 3 insertions(+), 4 deletions(-)
+How about applying the following patch, which was made by Pratyush Anand? :-)
+I am not sure; however, the patch resolved some problems that were found on
+OMAP PCIe and Exynos PCIe, when MSI is enabled.
 
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index 55593ee..db86f97 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -189,14 +189,13 @@ static size_t eeh_gather_pci_data(struct eeh_dev *edev, char * buf, size_t len)
- 	}
- 
- 	/* If PCI-E capable, dump PCI-E cap 10, and the AER */
--	cap = pci_find_capability(dev, PCI_CAP_ID_EXP);
--	if (cap) {
-+	if (pci_is_pcie(dev)) {
- 		n += scnprintf(buf+n, len-n, "pci-e cap10:\n");
- 		printk(KERN_WARNING
- 		       "EEH: PCI-E capabilities and status follow:\n");
- 
- 		for (i=0; i<=8; i++) {
--			eeh_ops->read_config(dn, cap+4*i, 4, &cfg);
-+			eeh_ops->read_config(dn, dev->pcie_cap+4*i, 4, &cfg);
- 			n += scnprintf(buf+n, len-n, "%02x:%x\n", 4*i, cfg);
- 			printk(KERN_WARNING "EEH: PCI-E %02x: %08x\n", i, cfg);
- 		}
-diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-index ccfb50d..92e7258 100644
---- a/arch/powerpc/sysdev/fsl_pci.c
-+++ b/arch/powerpc/sysdev/fsl_pci.c
-@@ -45,7 +45,7 @@ static void quirk_fsl_pcie_header(struct pci_dev *dev)
- 	u8 hdr_type;
- 
- 	/* if we aren't a PCIe don't bother */
--	if (!pci_find_capability(dev, PCI_CAP_ID_EXP))
-+	if (!pci_is_pcie(dev))
- 		return;
- 
- 	/* if we aren't in host mode don't bother */
--- 
-1.7.1
+"PCI: designware: Add irq_create_mapping()"
 
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-exynos&id=904d0e7889933fb48d921c998fd1cabb3a9d6635
+
+Best regards,
+Jingoo Han
 
