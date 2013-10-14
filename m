@@ -1,54 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from multi.imgtec.com ([194.200.65.239]:49386 "EHLO multi.imgtec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752687Ab3JGVPM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Oct 2013 17:15:12 -0400
-Message-ID: <5253243E.3040709@imgtec.com>
-Date: Mon, 7 Oct 2013 14:14:38 -0700
-From: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:42336 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755365Ab3JNAoy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Oct 2013 20:44:54 -0400
+From: Marek Vasut <marex@denx.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH 1/2] PCI: imx6: Make reset-gpio optional
+Date: Mon, 14 Oct 2013 02:44:48 +0200
+Cc: "'Shawn Guo'" <shawn.guo@linaro.org>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Frank Li'" <lznuaa@gmail.com>,
+	"'Richard Zhu'" <r65037@freescale.com>,
+	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Tim Harvey'" <tharvey@gateworks.com>,
+	"'Yinghai Lu'" <yinghai@kernel.org>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	"'Pratyush Anand'" <pratyush.anand@st.com>,
+	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>
+References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com> <201310121128.31801.marex@denx.de> <000501cec870$9aebcc80$d0c36580$%han@samsung.com>
+In-Reply-To: <000501cec870$9aebcc80$d0c36580$%han@samsung.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	James Hogan <James.Hogan@imgtec.com>,
-	Qais Yousef <Qais.Yousef@imgtec.com>
-Subject: Re: [PATCH v2 1/4] PCI/quirks: Fix PIIX4 memory base and size mask
-References: <1380929453-15428-1-git-send-email-dengcheng.zhu@imgtec.com> <1380929453-15428-2-git-send-email-dengcheng.zhu@imgtec.com> <CAErSpo47zCU_sR46s1osmZ00AtkX-z++eezzbxee4yr3yDhQgw@mail.gmail.com> <1F7D814BDD93B94493CEE724A97FB4DC01C80AAE@BADAG02.ba.imgtec.org> <CAErSpo7z4c+DUKH4AWMyMZKTxTz_oi1iGtiUuHqQjhFG0gMu0g@mail.gmail.com>
-In-Reply-To: <CAErSpo7z4c+DUKH4AWMyMZKTxTz_oi1iGtiUuHqQjhFG0gMu0g@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310140244.48433.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Resend to the mailing list due to the bounceback caused by html format]
+Hello Han,
 
-On 10/04/2013 09:37 PM, Bjorn Helgaas wrote:
-> On Fri, Oct 4, 2013 at 9:42 PM, DengCheng Zhu <DengCheng.Zhu@imgtec.com> wrote:
->>> Does this fix a user-visible problem?  If so, what does it look like
->>> when the problem occurs?
->> No, I found the problem while debugging another issue and trying to
->> understand this piece of code and after looking into different versions of
->> PIIX4 datasheets. But I don't think it should prevent such a fix because
->> the code is straightforward and the spec is clear enough. If the existing
->> encoding was intentionally made like this by the code author due to the
->> inaccuracy of the spec, then it's very likely some code comments were
->> placed here. There are 2 possibilities:
->>
->> - This fix breaks something. People should have to bisect the problem.
->> - This fix is valid. Some day people need PIIX4 mem quirks and they don't
->>    have to run into a possibly well-hidden issue.
->>
->> What do you think?
-> Don't worry, I'm willing to fix it even if nobody has actually
-> reported a problem.  It's just nice to include the symptoms if
-> somebody *has* reported it, so when other people see the same symptom,
-> they can more easily find the fix.
+> On Saturday, October 12, 2013 6:29 PM, Marek Vasut wrote:
+> > > On Fri, Oct 11, 2013 at 04:12:31AM +0200, Marek Vasut wrote:
+> > > > Some boards do not have a PCIe reset GPIO. To avoid probe
+> > > > failure on these boards, make the reset GPIO optional as
+> > > > well.
+> > > > 
+> > > > Signed-off-by: Marek Vasut <marex@denx.de>
+> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > Cc: Frank Li <lznuaa@gmail.com>
+> > > > Cc: Richard Zhu <r65037@freescale.com>
+> > > > Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> > > > Cc: Sean Cross <xobs@kosagi.com>
+> > > > Cc: Shawn Guo <shawn.guo@linaro.org>
+> > > > Cc: Tim Harvey <tharvey@gateworks.com>
+> > > > Cc: Yinghai Lu <yinghai@kernel.org>
+> > > > ---
+> > > > 
+> > > >  drivers/pci/host/pci-imx6.c | 29 +++++++++++++++--------------
+> > > >  1 file changed, 15 insertions(+), 14 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/pci/host/pci-imx6.c
+> > > > b/drivers/pci/host/pci-imx6.c index d3639aa..8e7adce 100644
+> > > > --- a/drivers/pci/host/pci-imx6.c
+> > > > +++ b/drivers/pci/host/pci-imx6.c
+> > > > @@ -220,9 +220,12 @@ static int imx6_pcie_assert_core_reset(struct
+> > > > pcie_port *pp)
+> > > > 
+> > > >  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> > > >  	
+> > > >  			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+> > > > 
+> > > > -	gpio_set_value(imx6_pcie->reset_gpio, 0);
+> > > > -	msleep(100);
+> > > > -	gpio_set_value(imx6_pcie->reset_gpio, 1);
+> > > > +	/* Some boards don't have PCIe reset GPIO. */
+> > > > +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> > > > +		gpio_set_value(imx6_pcie->reset_gpio, 0);
+> > > > +		msleep(100);
+> > > > +		gpio_set_value(imx6_pcie->reset_gpio, 1);
+> > > > +	}
+> > > > 
+> > > >  	return 0;
+> > > >  
+> > > >  }
+> > > > 
+> > > > @@ -447,17 +450,15 @@ static int __init imx6_pcie_probe(struct
+> > > > platform_device *pdev)
+> > > > 
+> > > >  	/* Fetch GPIOs */
+> > > >  	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> > > > 
+> > > > -	if (!gpio_is_valid(imx6_pcie->reset_gpio)) {
+> > > > -		dev_err(&pdev->dev, "no reset-gpio defined\n");
+> > > > -		ret = -ENODEV;
+> > > > -	}
+> > > 
+> > > The 'reset-gpio' is documented as a required property in bindings doc
+> > > Documentation/devicetree/bindings/pci/designware-pcie.txt.  You need
+> > > to update bindings doc if you turn it into an optional property.
+> > 
+> > That's true, thanks for pointing it out!
+> 
+> +cc Kishon Vijay Abraham I, Pratyush Anand, Mohit KUMAR
+> 
+> Yes, right.
+> "reset-gpio" property can be moved to an optional property.
+> Also, the patch to fix 'Designware' part such as 'designware-pcie.txt'
+> can be shared with other related people as below.
+> 
+>   - Samsung Exynos PCIe: Jingoo Han
+>   - ST Spear PCIe: Pratyush Anand, Mohit KUMAR
+>   - TI OMAP PCIe: Kishon Vijay Abraham I
 
-Ah, I see. Thanks.
+I'm in the process of rebasing the patches on top of next 2013-10-10. Right now 
+I'm getting a crash in __write_msi_msg() when my Intel "igb" reports "enabling 
+bus mastering" . Any quick idea? Seems like this MSI support is new in the pcie-
+designware.c .
 
-So far I didn't see them on any branch in kernel/git/helgaas/pci.git 
-<https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/>
-Is this the right place to look at? Thanks.
+I'll just start plumbing to see what it is.
 
-
-Deng-Cheng
-
-
+Best regards,
+Marek Vasut
