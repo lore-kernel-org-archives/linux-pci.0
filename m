@@ -1,148 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:14960 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750948Ab3JSHDI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 03:03:08 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 09/29] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Fri, 18 Oct 2013 19:12:09 +0200
-Message-Id: <85500e7239fcb104df091bbfa873eef8ae654772.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:43440 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755454Ab3JNBSB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Oct 2013 21:18:01 -0400
+From: Marek Vasut <marex@denx.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH 1/2] PCI: imx6: Make reset-gpio optional
+Date: Mon, 14 Oct 2013 03:17:56 +0200
+Cc: "'Shawn Guo'" <shawn.guo@linaro.org>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Frank Li'" <lznuaa@gmail.com>,
+	"'Richard Zhu'" <r65037@freescale.com>,
+	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Tim Harvey'" <tharvey@gateworks.com>,
+	"'Yinghai Lu'" <yinghai@kernel.org>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	"'Pratyush Anand'" <pratyush.anand@st.com>,
+	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>
+References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com> <000501cec870$9aebcc80$d0c36580$%han@samsung.com> <201310140244.48433.marex@denx.de>
+In-Reply-To: <201310140244.48433.marex@denx.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310140317.56961.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Device drivers can use this interface to obtain maximum number
-of MSI interrupts the device supports and use that number i.e.
-in a following call to pci_enable_msi_block() interface.
+Hello Han,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- Documentation/PCI/MSI-HOWTO.txt |   15 +++++++++++++++
- drivers/pci/msi.c               |   33 +++++++++++++++++++++------------
- include/linux/pci.h             |    6 ++++++
- 3 files changed, 42 insertions(+), 12 deletions(-)
+> > On Saturday, October 12, 2013 6:29 PM, Marek Vasut wrote:
+> > > > On Fri, Oct 11, 2013 at 04:12:31AM +0200, Marek Vasut wrote:
+> > > > > Some boards do not have a PCIe reset GPIO. To avoid probe
+> > > > > failure on these boards, make the reset GPIO optional as
+> > > > > well.
+> > > > > 
+> > > > > Signed-off-by: Marek Vasut <marex@denx.de>
+> > > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > > Cc: Frank Li <lznuaa@gmail.com>
+> > > > > Cc: Richard Zhu <r65037@freescale.com>
+> > > > > Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> > > > > Cc: Sean Cross <xobs@kosagi.com>
+> > > > > Cc: Shawn Guo <shawn.guo@linaro.org>
+> > > > > Cc: Tim Harvey <tharvey@gateworks.com>
+> > > > > Cc: Yinghai Lu <yinghai@kernel.org>
+> > > > > ---
+> > > > > 
+> > > > >  drivers/pci/host/pci-imx6.c | 29 +++++++++++++++--------------
+> > > > >  1 file changed, 15 insertions(+), 14 deletions(-)
+> > > > > 
+> > > > > diff --git a/drivers/pci/host/pci-imx6.c
+> > > > > b/drivers/pci/host/pci-imx6.c index d3639aa..8e7adce 100644
+> > > > > --- a/drivers/pci/host/pci-imx6.c
+> > > > > +++ b/drivers/pci/host/pci-imx6.c
+> > > > > @@ -220,9 +220,12 @@ static int imx6_pcie_assert_core_reset(struct
+> > > > > pcie_port *pp)
+> > > > > 
+> > > > >  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> > > > >  	
+> > > > >  			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+> > > > > 
+> > > > > -	gpio_set_value(imx6_pcie->reset_gpio, 0);
+> > > > > -	msleep(100);
+> > > > > -	gpio_set_value(imx6_pcie->reset_gpio, 1);
+> > > > > +	/* Some boards don't have PCIe reset GPIO. */
+> > > > > +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> > > > > +		gpio_set_value(imx6_pcie->reset_gpio, 0);
+> > > > > +		msleep(100);
+> > > > > +		gpio_set_value(imx6_pcie->reset_gpio, 1);
+> > > > > +	}
+> > > > > 
+> > > > >  	return 0;
+> > > > >  
+> > > > >  }
+> > > > > 
+> > > > > @@ -447,17 +450,15 @@ static int __init imx6_pcie_probe(struct
+> > > > > platform_device *pdev)
+> > > > > 
+> > > > >  	/* Fetch GPIOs */
+> > > > >  	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> > > > > 
+> > > > > -	if (!gpio_is_valid(imx6_pcie->reset_gpio)) {
+> > > > > -		dev_err(&pdev->dev, "no reset-gpio defined\n");
+> > > > > -		ret = -ENODEV;
+> > > > > -	}
+> > > > 
+> > > > The 'reset-gpio' is documented as a required property in bindings doc
+> > > > Documentation/devicetree/bindings/pci/designware-pcie.txt.  You need
+> > > > to update bindings doc if you turn it into an optional property.
+> > > 
+> > > That's true, thanks for pointing it out!
+> > 
+> > +cc Kishon Vijay Abraham I, Pratyush Anand, Mohit KUMAR
+> > 
+> > Yes, right.
+> > "reset-gpio" property can be moved to an optional property.
+> > Also, the patch to fix 'Designware' part such as 'designware-pcie.txt'
+> > can be shared with other related people as below.
+> > 
+> >   - Samsung Exynos PCIe: Jingoo Han
+> >   - ST Spear PCIe: Pratyush Anand, Mohit KUMAR
+> >   - TI OMAP PCIe: Kishon Vijay Abraham I
+> 
+> I'm in the process of rebasing the patches on top of next 2013-10-10. Right
+> now I'm getting a crash in __write_msi_msg() when my Intel "igb" reports
+> "enabling bus mastering" . Any quick idea? Seems like this MSI support is
+> new in the pcie- designware.c .
+> 
+> I'll just start plumbing to see what it is.
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index 845edb5..e7e3b20 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -169,6 +169,21 @@ on any interrupt for which it previously called request_irq().
- Failure to do so results in a BUG_ON(), leaving the device with
- MSI enabled and thus leaking its vector.
- 
-+4.2.5 pci_get_msi_cap
-+
-+int pci_get_msi_cap(struct pci_dev *dev)
-+
-+This function could be used to retrieve the number of MSI vectors the
-+device requested (via the Multiple Message Capable register). The MSI
-+specification only allows the returned value to be a power of two,
-+up to a maximum of 2^5 (32).
-+
-+If this function returns a negative number, it indicates the device is
-+not capable of sending MSIs.
-+
-+If this function returns a positive number, it indicates the maximum
-+number of MSI interrupt vectors that could be allocated.
-+
- 4.3 Using MSI-X
- 
- The MSI-X capability is much more flexible than the MSI capability.
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index fdae3a4..14dc4d1 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -795,6 +795,21 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- 	return 0;
- }
- 
-+int pci_get_msi_cap(struct pci_dev *dev)
-+{
-+	int ret;
-+	u16 msgctl;
-+
-+	if (!dev->msi_cap)
-+		return -EINVAL;
-+
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-+	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_get_msi_cap);
-+
- /**
-  * pci_enable_msi_block - configure device's MSI capability structure
-  * @dev: device to configure
-@@ -811,13 +826,10 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
- 	int status, maxvec;
--	u16 msgctl;
- 
--	if (!dev->msi_cap)
--		return -EINVAL;
--
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	maxvec = pci_get_msi_cap(dev);
-+	if (maxvec < 0)
-+		return maxvec;
- 	if (nvec > maxvec)
- 		return maxvec;
- 
-@@ -842,13 +854,10 @@ EXPORT_SYMBOL(pci_enable_msi_block);
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
- {
- 	int ret, nvec;
--	u16 msgctl;
- 
--	if (!dev->msi_cap)
--		return -EINVAL;
--
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	ret = pci_get_msi_cap(dev);
-+	if (ret < 0)
-+		return ret;
- 
- 	if (maxvec)
- 		*maxvec = ret;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d6832de..df72084 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1146,6 +1146,11 @@ struct msix_entry {
- 
- 
- #ifndef CONFIG_PCI_MSI
-+static inline int pci_get_msi_cap(struct pci_dev *dev)
-+{
-+	return -ENOSYS;
-+}
-+
- static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
- 	return -ENOSYS;
-@@ -1187,6 +1192,7 @@ static inline int pci_msi_enabled(void)
- 	return 0;
- }
- #else
-+int pci_get_msi_cap(struct pci_dev *dev);
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
- void pci_msi_shutdown(struct pci_dev *dev);
--- 
-1.7.7.6
-
+Looks like irq_alloc_descs() return -EEXIST for me in assign_irq() . Noone 
+checks the return value of it , so it can fail later on ;-) Now, why does it 
+return -EEXIST in the first place? I'm sure someone more experienced with PCI 
+would know right away .
