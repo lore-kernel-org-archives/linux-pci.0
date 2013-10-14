@@ -1,116 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:43440 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755454Ab3JNBSB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Oct 2013 21:18:01 -0400
-From: Marek Vasut <marex@denx.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 1/2] PCI: imx6: Make reset-gpio optional
-Date: Mon, 14 Oct 2013 03:17:56 +0200
-Cc: "'Shawn Guo'" <shawn.guo@linaro.org>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Frank Li'" <lznuaa@gmail.com>,
-	"'Richard Zhu'" <r65037@freescale.com>,
-	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Tim Harvey'" <tharvey@gateworks.com>,
-	"'Yinghai Lu'" <yinghai@kernel.org>,
-	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>
-References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com> <000501cec870$9aebcc80$d0c36580$%han@samsung.com> <201310140244.48433.marex@denx.de>
-In-Reply-To: <201310140244.48433.marex@denx.de>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:58333 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757385Ab3JNXu6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Oct 2013 19:50:58 -0400
+Received: by mail-ie0-f179.google.com with SMTP id aq17so11614963iec.24
+        for <linux-pci@vger.kernel.org>; Mon, 14 Oct 2013 16:50:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201310140317.56961.marex@denx.de>
+In-Reply-To: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
+References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 14 Oct 2013 17:50:38 -0600
+Message-ID: <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
+Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Han,
+[+cc Rafael, Mika, Kirill, linux-pci]
 
-> > On Saturday, October 12, 2013 6:29 PM, Marek Vasut wrote:
-> > > > On Fri, Oct 11, 2013 at 04:12:31AM +0200, Marek Vasut wrote:
-> > > > > Some boards do not have a PCIe reset GPIO. To avoid probe
-> > > > > failure on these boards, make the reset GPIO optional as
-> > > > > well.
-> > > > > 
-> > > > > Signed-off-by: Marek Vasut <marex@denx.de>
-> > > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > > Cc: Frank Li <lznuaa@gmail.com>
-> > > > > Cc: Richard Zhu <r65037@freescale.com>
-> > > > > Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> > > > > Cc: Sean Cross <xobs@kosagi.com>
-> > > > > Cc: Shawn Guo <shawn.guo@linaro.org>
-> > > > > Cc: Tim Harvey <tharvey@gateworks.com>
-> > > > > Cc: Yinghai Lu <yinghai@kernel.org>
-> > > > > ---
-> > > > > 
-> > > > >  drivers/pci/host/pci-imx6.c | 29 +++++++++++++++--------------
-> > > > >  1 file changed, 15 insertions(+), 14 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/pci/host/pci-imx6.c
-> > > > > b/drivers/pci/host/pci-imx6.c index d3639aa..8e7adce 100644
-> > > > > --- a/drivers/pci/host/pci-imx6.c
-> > > > > +++ b/drivers/pci/host/pci-imx6.c
-> > > > > @@ -220,9 +220,12 @@ static int imx6_pcie_assert_core_reset(struct
-> > > > > pcie_port *pp)
-> > > > > 
-> > > > >  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > > > >  	
-> > > > >  			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
-> > > > > 
-> > > > > -	gpio_set_value(imx6_pcie->reset_gpio, 0);
-> > > > > -	msleep(100);
-> > > > > -	gpio_set_value(imx6_pcie->reset_gpio, 1);
-> > > > > +	/* Some boards don't have PCIe reset GPIO. */
-> > > > > +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-> > > > > +		gpio_set_value(imx6_pcie->reset_gpio, 0);
-> > > > > +		msleep(100);
-> > > > > +		gpio_set_value(imx6_pcie->reset_gpio, 1);
-> > > > > +	}
-> > > > > 
-> > > > >  	return 0;
-> > > > >  
-> > > > >  }
-> > > > > 
-> > > > > @@ -447,17 +450,15 @@ static int __init imx6_pcie_probe(struct
-> > > > > platform_device *pdev)
-> > > > > 
-> > > > >  	/* Fetch GPIOs */
-> > > > >  	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-> > > > > 
-> > > > > -	if (!gpio_is_valid(imx6_pcie->reset_gpio)) {
-> > > > > -		dev_err(&pdev->dev, "no reset-gpio defined\n");
-> > > > > -		ret = -ENODEV;
-> > > > > -	}
-> > > > 
-> > > > The 'reset-gpio' is documented as a required property in bindings doc
-> > > > Documentation/devicetree/bindings/pci/designware-pcie.txt.  You need
-> > > > to update bindings doc if you turn it into an optional property.
-> > > 
-> > > That's true, thanks for pointing it out!
-> > 
-> > +cc Kishon Vijay Abraham I, Pratyush Anand, Mohit KUMAR
-> > 
-> > Yes, right.
-> > "reset-gpio" property can be moved to an optional property.
-> > Also, the patch to fix 'Designware' part such as 'designware-pcie.txt'
-> > can be shared with other related people as below.
-> > 
-> >   - Samsung Exynos PCIe: Jingoo Han
-> >   - ST Spear PCIe: Pratyush Anand, Mohit KUMAR
-> >   - TI OMAP PCIe: Kishon Vijay Abraham I
-> 
-> I'm in the process of rebasing the patches on top of next 2013-10-10. Right
-> now I'm getting a crash in __write_msi_msg() when my Intel "igb" reports
-> "enabling bus mastering" . Any quick idea? Seems like this MSI support is
-> new in the pcie- designware.c .
-> 
-> I'll just start plumbing to see what it is.
+On Mon, Oct 14, 2013 at 4:47 PM, Andreas Noever
+<andreas.noever@gmail.com> wrote:
+> When I unplug the Thunderbolt ethernet adapter on my MacBookPro Linux
+> crashes a few seconds later. Using
+> echo 1 > /sys/bus/pci/devices/0000:08:00.0/remove
+> to remove a bridge two levels above the device triggers the fault immediately:
 
-Looks like irq_alloc_descs() return -EEXIST for me in assign_irq() . Noone 
-checks the return value of it , so it can fail later on ;-) Now, why does it 
-return -EEXIST in the first place? I'm sure someone more experienced with PCI 
-would know right away .
+There have been significant changes in acpiphp related to Thunderbolt
+since v3.11.  Any chance you can try reproduce this problem on a
+current kernel, e.g., v3.12-rc5?  If it still happens, can you collect
+a complete dmesg log, acpidump, and "lspci -vv" output, and attach
+them to a new http://bugzilla.kernel.org report?
+
+Since you're doing a remove two levels above the Thunderbolt device,
+and it looks like pciehp is handling this part, you might be seeing
+something new, but the info above will still be a good start in
+looking at it.
+
+Bjorn
+
+> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
+> pci_bus 0000:0a: busn_res: [bus 0a] is released
+> pci_bus 0000:09: busn_res: [bus 09-0a] is released
+> general protection fault: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
+> ....
+> Workqueue: events pci_pme_list_scan
+> task: ffff88044b0b8000 ti: ffff88044ac62000 task.ti: ffff88044ac62000
+> RIP: 0010:[<ffffffff812bdc8c>]  [<ffffffff812bdc8c>] pci_pme_list_scan+0x3c/0xe0
+> RSP: 0018:ffff88044ac63e10  EFLAGS: 00010202
+> RAX: ffff88045601e7b0 RBX: ffffffff8187b070 RCX: 0000000000000000
+> RDX: 6b6b6b6b6b6b6b6b RSI: ffff88044ac63da0 RDI: ffff880453250ca8
+> RBP: ffff88044ac63e20 R08: ffff88044ac63da0 R09: 0001f9e0c287afc0
+> R10: 0001f9e0c287afc0 R11: 0000000000000000 R12: ffff880453250ca8
+> R13: ffff88046d053d00 R14: ffff88046d058200 R15: ffffffff8187afc8
+> FS:  0000000000000000(0000) GS:ffff88046d040000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007fd301d57000 CR3: 000000000280d000 CR4: 00000000001407e0
+> Stack:
+>  ffffffff8187afc0 ffff88044a920e40 ffff88044ac63e68 ffffffff8107ddd6
+>  000000006d053d00 0000000000000000 ffff88046d053d00 ffff88046d053d18
+>  ffff88044a920e70 ffff88044b0b8000 ffff88044a920e40 ffff88044ac63ec8
+> Call Trace:
+>  [<ffffffff8107ddd6>] process_one_work+0x176/0x470
+>  [<ffffffff8107e79b>] worker_thread+0x11b/0x3a0
+>  [<ffffffff8107e680>] ? manage_workers.isra.21+0x2b0/0x2b0
+>  [<ffffffff810855e0>] kthread+0xc0/0xd0
+>  [<ffffffff81085520>] ? kthread_create_on_node+0x110/0x110
+>  [<ffffffff814f4c2c>] ret_from_fork+0x7c/0xb0
+>  [<ffffffff81085520>] ? kthread_create_on_node+0x110/0x110
+> Code: 54 53 e8 f8 c6 22 00 4c 8b 25 01 d4 5b 00 49 81 fc 70 b0 87 81
+> 0f 84 98 00 00 00 49 8b 1c 24 4c 89 e7 eb 36 0f 1f 00 48 8b 50 10 <48>
+> 8b 52 38 48 85 d2 74 07 8b 4a 78 85 c9 75 0a 31 f6 48 89 c7
+> RIP  [<ffffffff812bdc8c>] pci_pme_list_scan+0x3c/0xe0
+>  RSP <ffff88044ac63e10>
+> ---[ end trace 3905f90a7dacf7b3 ]---
+>
+> The offending line is:
+> (gdb) list *(pci_pme_list_scan+0x3c)
+> 0xffffffff812bdc8c is in pci_pme_list_scan (drivers/pci/pci.c:1551).
+> 1546            if (!list_empty(&pci_pme_list)) {
+> 1547                    list_for_each_entry_safe(pme_dev, n,
+> &pci_pme_list, list) {
+> 1548                            if (pme_dev->dev->pme_poll) {
+> 1549                                    struct pci_dev *bridge;
+> 1550
+> 1551                                    bridge = pme_dev->dev->bus->self;
+> 1552                                    /*
+> 1553                                     * If bridge is in low power state, the
+> 1554                                     * configuration space of
+> subordinate devices
+> 1555                                     * may be not accessible
+> If I read the disassembly correctly then the deref of bus seems to
+> cause the oops.
+>
+> An almost identical bug was reported (and fixed) some time ago:
+> http://lkml.indiana.edu/hypermail/linux/kernel/1302.1/01165.html
+>
+> Andreas
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
