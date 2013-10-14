@@ -1,130 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:58026 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753951Ab3JIXZH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 19:25:07 -0400
-Received: by mail-ie0-f170.google.com with SMTP id x13so3572102ief.29
-        for <linux-pci@vger.kernel.org>; Wed, 09 Oct 2013 16:25:05 -0700 (PDT)
-Date: Wed, 9 Oct 2013 17:25:02 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexey Neyman <stilor@att.net>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Feng Tang <feng.tang@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] Fix coalescing host bridge windows in arch/x86/pci/acpi.c
-Message-ID: <20131009232502.GA3837@google.com>
-References: <6362938.J7ZtNEOFpc@mistral>
+Received: from mail-out.m-online.net ([212.18.0.10]:59700 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755817Ab3JNDXd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Oct 2013 23:23:33 -0400
+From: Marek Vasut <marex@denx.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH 1/2] PCI: imx6: Make reset-gpio optional
+Date: Mon, 14 Oct 2013 05:23:15 +0200
+Cc: "'Shawn Guo'" <shawn.guo@linaro.org>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Frank Li'" <lznuaa@gmail.com>,
+	"'Richard Zhu'" <r65037@freescale.com>,
+	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Tim Harvey'" <tharvey@gateworks.com>,
+	"'Yinghai Lu'" <yinghai@kernel.org>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	"'Pratyush Anand'" <pratyush.anand@st.com>,
+	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>
+References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com> <201310140317.56961.marex@denx.de> <000401cec885$d3567fb0$7a037f10$%han@samsung.com>
+In-Reply-To: <000401cec885$d3567fb0$7a037f10$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6362938.J7ZtNEOFpc@mistral>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310140523.15623.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+Hello Han,
 
-On Sun, Sep 22, 2013 at 11:15:46PM -0700, Alexey Neyman wrote:
-> [Resending due to no response to the original message in a week]
+> On Monday, October 14, 2013 10:18 AM, Marek Vasut wrote:
+> > > > On Saturday, October 12, 2013 6:29 PM, Marek Vasut wrote:
+> > > > > > On Fri, Oct 11, 2013 at 04:12:31AM +0200, Marek Vasut wrote:
+> [.....]
 > 
-> Hi all,
+> > > > +cc Kishon Vijay Abraham I, Pratyush Anand, Mohit KUMAR
+> > > > 
+> > > > Yes, right.
+> > > > "reset-gpio" property can be moved to an optional property.
+> > > > Also, the patch to fix 'Designware' part such as
+> > > > 'designware-pcie.txt' can be shared with other related people as
+> > > > below.
+> > > > 
+> > > >   - Samsung Exynos PCIe: Jingoo Han
+> > > >   - ST Spear PCIe: Pratyush Anand, Mohit KUMAR
+> > > >   - TI OMAP PCIe: Kishon Vijay Abraham I
+> > > 
+> > > I'm in the process of rebasing the patches on top of next 2013-10-10.
+> > > Right now I'm getting a crash in __write_msi_msg() when my Intel "igb"
+> > > reports "enabling bus mastering" . Any quick idea? Seems like this MSI
+> > > support is new in the pcie- designware.c .
+> > > 
+> > > I'll just start plumbing to see what it is.
+> > 
+> > Looks like irq_alloc_descs() return -EEXIST for me in assign_irq() .
+> > Noone checks the return value of it , so it can fail later on ;-) Now,
+> > why does it return -EEXIST in the first place? I'm sure someone more
+> > experienced with PCI would know right away .
 > 
-> I have a board with a BIOS bug that reports the following I/O port regions in 
-> _CRS on one of the host bridges:
+> Hi Marek,
 > 
-> 0x0000-0x03af // #0
-> 0x03e0-0x0cf7 // #1
-> 0x03b0-0x03bb // #2
-> 0x03c0-0x03df // #3
-> 0x0000-0xdfff // #4
-> 0xf000-0xffff // #5
+> How about applying the following patch, which was made by Pratyush Anand?
+> :-) I am not sure; however, the patch resolved some problems that were
+> found on OMAP PCIe and Exynos PCIe, when MSI is enabled.
 > 
-> Obviously, region number #4 is erroneous as it overlaps with regions #0..3. 
-> The code in coalesce_windows() in arch/x86/pci/acpi.c attempts to recover from 
-> such kind of BIOS bugs by merging the overlapping regions. Current code 
-> expands region #0 to 0x0000-0xdffff and makes region #4 ignored. As a result, 
-> overlap of the expanded region #0 with regions #1..3 remains undetected (as 
-> the inner loop already compared them with region #0). As a result, regions 
-> #1..3 are inserted into the resource tree even though they overlap with 
-> adjusted region #0 - which later results in resource conflicts for PCI devices 
-> with IO ports in one of those regions (e.g., for an PCI IDE controller in 
-> legacy mode - which has port 0x3f6). The kernel then refuses to initialize 
-> these devices.
+> "PCI: designware: Add irq_create_mapping()"
 > 
-> The fix: instead of expanding res1 and ignoring res2, do the opposite. The 
-> res2 window is yet to be compared against all windows between res1 and res2 
-> (regions #1..3 in the above example), so the resulting resource map will 
-> include just the expanded region - and will ignore any overlapping ones.
-> 
-> Signed-off-by: Alexey Neyman <stilor@att.net>
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/h
+> ost-exynos&id=904d0e7889933fb48d921c998fd1cabb3a9d6635
 
-I added the bugzilla reference (thanks for that) and applied the
-following patch to my pci/misc branch for v3.13.
+Wow, thanks! I'll check it once I get some sleep, I've been at it for too long 
+now.
 
-Sorry this took so long; part of the reason was that it wasn't on
-linux-pci, so it didn't show up in the PCI patchwork.  I also added
-a MAINTAINERS patch so in the future, get_maintainers.pl will include
-linux-pci and me as co-maintainer of arch/x86/pci/*.  Also, it helps
-if you include the patch in-line rather than as an attachment because
-I have to manually combine the in-line changelog with the attached
-patch.
+btw. do you happen to have any idea why would the whole system freeze when I do 
+"ifconfig up" on my PCIe-connected intel i210 ethernet adapter (driven by the 
+"igb" driver)? It seems that upon reception or transmission of a single packet, 
+the whole system freezes to a point where not even JTAG can break (halt) the CPU 
+so I can figure out what the problem is. Interestingly enough, the whole probe 
+routine of the "igb" driver finishes correctly, the hard-freeze only happens 
+shortly after I see that the link is up. Any new ideas on why this might happen 
+would be really helpful. Just for completeness, it seems Tim has the same issue 
+on Marvell Yucon card (sky2 driver).
 
-Thanks for the fix and your persistence!
+Thank you for your help again!
 
-Bjorn
-
-
-x86/PCI: Coalesce multiple overlapping host bridge windows
-
-From: Alexey Neyman <stilor@att.net>
-
-Previously we coalesced windows by expanding the first overlapping one and
-making the second invalid.  But we never look at the expanded first window
-again, so we fail to notice other windows that overlap it.  For example, we
-coalesced these:
-
-  [io  0x0000-0x03af] // #0
-  [io  0x03e0-0x0cf7] // #1
-  [io  0x0000-0xdfff] // #2
-
-into these, which still overlap:
-
-  [io  0x0000-0xdfff] // #0
-  [io  0x03e0-0x0cf7] // #1
-
-The fix is to expand the *second* overlapping resource and ignore the
-first, so we get this instead with no overlaps:
-
-  [io  0x0000-0xdfff] // #2
-
-[bhelgaas: changelog]
-Reference: https://bugzilla.kernel.org/show_bug.cgi?id=62511
-Signed-off-by: Alexey Neyman <stilor@att.net>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/pci/acpi.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index b30e937..7fb24e5 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -354,12 +354,12 @@ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
- 			 * the kernel resource tree doesn't allow overlaps.
- 			 */
- 			if (resource_overlaps(res1, res2)) {
--				res1->start = min(res1->start, res2->start);
--				res1->end = max(res1->end, res2->end);
-+				res2->start = min(res1->start, res2->start);
-+				res2->end = max(res1->end, res2->end);
- 				dev_info(&info->bridge->dev,
- 					 "host bridge window expanded to %pR; %pR ignored\n",
--					 res1, res2);
--				res2->flags = 0;
-+					 res2, res1);
-+				res1->flags = 0;
- 			}
- 		}
- 	}
+Best regards,
+Marek Vasut
