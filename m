@@ -1,98 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f51.google.com ([209.85.216.51]:41052 "EHLO
-	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218Ab3JGSRz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 14:17:55 -0400
-Date: Mon, 7 Oct 2013 14:17:49 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 07/77] PCI/MSI: Re-design MSI/MSI-X interrupts
- enablement pattern
-Message-ID: <20131007181749.GB27396@htj.dyndns.org>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <d8c36203ada6efbfa9f7ce92c2f713ee3b6d6b8d.1380703262.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d8c36203ada6efbfa9f7ce92c2f713ee3b6d6b8d.1380703262.git.agordeev@redhat.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:40353 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759538Ab3JOQHE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 12:07:04 -0400
+From: Marek Vasut <marex@denx.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/6] PCI: imx6: Fix the clock for PCIe
+Date: Tue, 15 Oct 2013 18:06:36 +0200
+Message-Id: <1381853200-5534-3-git-send-email-marex@denx.de>
+In-Reply-To: <1381853200-5534-1-git-send-email-marex@denx.de>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+The PCIe needs lvds_gate for successful operation, so make the PCIe
+driver enable (set as output) the lvds_gate .
 
-On Wed, Oct 02, 2013 at 12:48:23PM +0200, Alexander Gordeev wrote:
-> +static int foo_driver_enable_msi(struct foo_adapter *adapter, int nvec)
-> +{
-> +	rc = pci_get_msi_cap(adapter->pdev);
-> +	if (rc < 0)
-> +		return rc;
-> +
-> +	nvec = min(nvec, rc);
-> +	if (nvec < FOO_DRIVER_MINIMUM_NVEC) {
-> +		return -ENOSPC;
-> +
-> +	rc = pci_enable_msi_block(adapter->pdev, nvec);
-> +	return rc;
-> +}
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <lznuaa@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Cc: Tim Harvey <tharvey@gateworks.com>
+Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/host/pci-imx6.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-If there are many which duplicate the above pattern, it'd probably be
-worthwhile to provide a helper?  It's usually a good idea to reduce
-the amount of boilerplate code in drivers.
-
->  static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
->  {
-> +	rc = pci_msix_table_size(adapter->pdev);
-> +	if (rc < 0)
-> +		return rc;
-> +
-> +	nvec = min(nvec, rc);
-> +	if (nvec < FOO_DRIVER_MINIMUM_NVEC) {
-> +		return -ENOSPC;
-> +
-> +	for (i = 0; i < nvec; i++)
-> +		adapter->msix_entries[i].entry = i;
-> +
-> +	rc = pci_enable_msix(adapter->pdev, adapter->msix_entries, nvec);
-> +	return rc;
->  }
-
-Ditto.
-
-> @@ -975,7 +951,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
->  	if (nr_entries < 0)
->  		return nr_entries;
->  	if (nvec > nr_entries)
-> -		return nr_entries;
-> +		return -EINVAL;
->  
->  	/* Check for any invalid entries */
->  	for (i = 0; i < nvec; i++) {
-
-If we do things this way, it breaks all drivers using this interface
-until they're converted, right?  Also, it probably isn't the best idea
-to flip the behavior like this as this can go completely unnoticed (no
-compiler warning or anything, the same function just behaves
-differently).  Maybe it'd be a better idea to introduce a simpler
-interface that most can be converted to?
-
-Thanks.
-
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 728989a..94e4d0f 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -35,6 +35,7 @@ struct imx6_pcie {
+ 	int			power_on_gpio;
+ 	int			wake_up_gpio;
+ 	int			disable_gpio;
++	struct clk		*lvds_sel;
+ 	struct clk		*lvds_gate;
+ 	struct clk		*sata_ref_100m;
+ 	struct clk		*pcie_ref_125m;
+@@ -255,6 +256,12 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie_ref;
+ 	}
+ 
++	ret = clk_prepare_enable(imx6_pcie->lvds_sel);
++	if (ret) {
++		dev_err(pp->dev, "unable to enable lvds_sel\n");
++		goto err_lvds_sel;
++	}
++
+ 	ret = clk_prepare_enable(imx6_pcie->lvds_gate);
+ 	if (ret) {
+ 		dev_err(pp->dev, "unable to enable lvds_gate\n");
+@@ -273,8 +280,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 	return 0;
+ 
+ err_pcie_axi:
+-	clk_disable_unprepare(imx6_pcie->lvds_gate);
++	clk_disable_unprepare(imx6_pcie->lvds_sel);
+ err_lvds_gate:
++	clk_disable_unprepare(imx6_pcie->lvds_gate);
++err_lvds_sel:
+ 	clk_disable_unprepare(imx6_pcie->pcie_ref_125m);
+ err_pcie_ref:
+ 	clk_disable_unprepare(imx6_pcie->sata_ref_100m);
+@@ -497,6 +506,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	/* Fetch clocks */
++	imx6_pcie->lvds_sel = devm_clk_get(&pdev->dev, "lvds_sel");
++	if (IS_ERR(imx6_pcie->lvds_sel)) {
++		dev_err(&pdev->dev,
++			"lvds_sel clock select missing or invalid\n");
++		ret = PTR_ERR(imx6_pcie->lvds_sel);
++		goto err;
++	}
++
+ 	imx6_pcie->lvds_gate = devm_clk_get(&pdev->dev, "lvds_gate");
+ 	if (IS_ERR(imx6_pcie->lvds_gate)) {
+ 		dev_err(&pdev->dev,
 -- 
-tejun
+1.8.4.rc3
+
