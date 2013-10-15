@@ -1,199 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39060 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889Ab3J2Vqc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 17:46:32 -0400
-Date: Tue, 29 Oct 2013 14:46:31 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Neil Horman <nhorman@tuxdriver.com>
-Subject: [RFC PATCH] PCI: export MSI mode using attributes, not kobjects
-Message-ID: <20131029214631.GA19354@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-out.m-online.net ([212.18.0.10]:39466 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758971Ab3JOQHE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 12:07:04 -0400
+From: Marek Vasut <marex@denx.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 4/6] PCI: imx6: Probe the PCIe in fs_initcall()
+Date: Tue, 15 Oct 2013 18:06:38 +0200
+Message-Id: <1381853200-5534-5-git-send-email-marex@denx.de>
+In-Reply-To: <1381853200-5534-1-git-send-email-marex@denx.de>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Probe the PCIe driver in fs_initcall() instead of module_init()
+to assure that pci_assign_unassigned_resources(); will be called
+early. This function is called in dw_pcie_host_init(), which is
+in turn called from imx6_add_pcie_port(), which is called from
+imx6_pcie_probe() . If this is not called early, we will hit
+resource collisions since pcieport driver is then probed way too
+late.
 
-The PCI MSI sysfs code is a mess with kobjects for things that don't
-really need to be kobjects.  This patch creates attributes dynamically
-for the MSI interrupts instead of using kobjects.
-
-Note, this does not delete the existing sysfs MSI code, but puts the
-attributes under a "msi_irqs_2" directory for testing / example.
-
-Also note, this removes a directory from the current MSI interrupt sysfs
-code:
-
-old MSI kobjects:
-pci_device
-   └── msi_irqs
-       └── 40
-           └── mode
-
-new MSI attributes:
-pci_device
-   └── msi_irqs_2
-       └── 40
-
-As there was only one file "mode" with the kobject model, the interrupt
-number is now a file that returns the "mode" of the interrupt (msi vs.
-msix).
-
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <lznuaa@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Cc: Tim Harvey <tharvey@gateworks.com>
+Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
 ---
+ drivers/pci/host/pci-imx6.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bjorn, I can make up a patch that rips out the existing kobject code
-here, but I figured this patch would make things easier to follow
-instead of having to dig through the removed logic at the same time.
-
-I'll clean up the error handling path for the create attribute logic as
-well, this was just a proof of concept that this could be done.
-
-Do you think that anyone cares about the current mode files in sysfs to
-move things in this manner?
-
- drivers/pci/msi.c   |   85 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    1 
- 2 files changed, 86 insertions(+)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d5f90d63..53848ab9 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -353,6 +353,9 @@ void write_msi_msg(unsigned int irq, struct msi_msg *msg)
- static void free_msi_irqs(struct pci_dev *dev)
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 94e4d0f..ca8c5de 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -586,7 +586,7 @@ static int __init imx6_pcie_init(void)
  {
- 	struct msi_desc *entry, *tmp;
-+	struct attribute **msi_attrs;
-+	struct device_attribute *dev_attr;
-+	int count = 0;
- 
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		int i, nvec;
-@@ -388,6 +391,22 @@ static void free_msi_irqs(struct pci_dev *dev)
- 		list_del(&entry->list);
- 		kfree(entry);
- 	}
-+
-+	if (dev->msi_irq_groups) {
-+		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
-+		msi_attrs = dev->msi_irq_groups[0]->attrs;
-+		list_for_each_entry(entry, &dev->msi_list, list) {
-+			dev_attr = container_of(msi_attrs[count],
-+						struct device_attribute, attr);
-+			kfree(dev_attr->attr.name);
-+			kfree(dev_attr);
-+			++count;
-+		}
-+		kfree(msi_attrs);
-+		kfree(dev->msi_irq_groups[0]);
-+		kfree(dev->msi_irq_groups);
-+		dev->msi_irq_groups = NULL;
-+	}
+ 	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
  }
+-module_init(imx6_pcie_init);
++fs_initcall(imx6_pcie_init);
  
- static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
-@@ -517,13 +536,79 @@ static struct kobj_type msi_irq_ktype = {
- 	.default_attrs = msi_irq_default_attrs,
- };
- 
-+static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
-+			     char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct msi_desc *entry;
-+	unsigned long irq;
-+	int retval;
-+
-+	retval = kstrtoul(attr->attr.name, 10, &irq);
-+	if (retval)
-+		return retval;
-+
-+	list_for_each_entry(entry, &pdev->msi_list, list) {
-+		if (entry->irq == irq) {
-+			return sprintf(buf, "%s\n",
-+				       entry->msi_attrib.is_msix ? "msix" : "msi");
-+		}
-+	}
-+	return -ENODEV;
-+}
-+
- static int populate_msi_sysfs(struct pci_dev *pdev)
- {
-+	struct attribute **msi_attrs;
-+	struct device_attribute *msi_dev_attr;
-+	struct attribute_group *msi_irq_group;
-+	const struct attribute_group **msi_irq_groups;
- 	struct msi_desc *entry;
- 	struct kobject *kobj;
- 	int ret;
-+	int num_msi = 0;
- 	int count = 0;
- 
-+	/* Determine how many msi entries we have */
-+	list_for_each_entry(entry, &pdev->msi_list, list) {
-+		++num_msi;
-+	}
-+	if (!num_msi)
-+		return 0;
-+
-+	/* Dynamically create the MSI attributes for the PCI device */
-+	msi_attrs = kzalloc(sizeof(void *) * (num_msi + 1), GFP_KERNEL);
-+	if (!msi_attrs)
-+		return -ENOMEM;
-+	list_for_each_entry(entry, &pdev->msi_list, list) {
-+		char *name = kmalloc(20, GFP_KERNEL);
-+		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
-+		if (!msi_dev_attr)
-+			return -ENOMEM;
-+		sprintf(name, "%d", entry->irq);
-+		msi_dev_attr->attr.name = name;
-+		msi_dev_attr->attr.mode = S_IRUGO;
-+		msi_dev_attr->show = msi_mode_show;
-+		msi_attrs[count] = &msi_dev_attr->attr;
-+		++count;
-+	}
-+
-+	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
-+	if (!msi_irq_group)
-+		return -ENOMEM;
-+	msi_irq_group->name = "msi_irqs_2";
-+	msi_irq_group->attrs = msi_attrs;
-+
-+	msi_irq_groups = kzalloc(sizeof(void *) * 2, GFP_KERNEL);
-+	if (!msi_irq_groups)
-+		return -ENOMEM;
-+	msi_irq_groups[0] = msi_irq_group;
-+
-+	ret = sysfs_create_groups(&pdev->dev.kobj, msi_irq_groups);
-+	if (ret)
-+		return ret;
-+	pdev->msi_irq_groups = msi_irq_groups;
-+
- 	pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
- 	if (!pdev->msi_kset)
- 		return -ENOMEM;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index da172f95..9540110f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -354,6 +354,7 @@ struct pci_dev {
- #ifdef CONFIG_PCI_MSI
- 	struct list_head msi_list;
- 	struct kset *msi_kset;
-+	const struct attribute_group **msi_irq_groups;
- #endif
- 	struct pci_vpd *vpd;
- #ifdef CONFIG_PCI_ATS
+ MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");
+ MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
+-- 
+1.8.4.rc3
+
