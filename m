@@ -1,71 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:4547 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753089Ab3JCAtc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Oct 2013 20:49:32 -0400
-Date: Wed, 2 Oct 2013 17:49:28 -0700
-From: Jon Mason <jon.mason@intel.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 53/77] ntb: Fix missed call to pci_enable_msix()
-Message-ID: <20131003004928.GM6768@jonmason-lab>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <0590d63c3432229a3824bada71e07a08fb955498.1380703263.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0590d63c3432229a3824bada71e07a08fb955498.1380703263.git.agordeev@redhat.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:51877 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759537Ab3JOQHE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 12:07:04 -0400
+From: Marek Vasut <marex@denx.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/6] PCI: imx6: Make reset-gpio optional
+Date: Tue, 15 Oct 2013 18:06:35 +0200
+Message-Id: <1381853200-5534-2-git-send-email-marex@denx.de>
+In-Reply-To: <1381853200-5534-1-git-send-email-marex@denx.de>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 02, 2013 at 12:49:09PM +0200, Alexander Gordeev wrote:
-> Current MSI-X enablement code assumes MSI-Xs were successfully
-> allocated in case less than requested vectors were available.
-> That assumption is wrong, since MSI-Xs should be enabled with
-> a repeated call to pci_enable_msix(). This update fixes this.
+Some boards do not have a PCIe reset GPIO. To avoid probe
+failure on these boards, make the reset GPIO optional as
+well.
 
-Good catch, I'll pull it in for my next NTB release.
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <lznuaa@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Cc: Tim Harvey <tharvey@gateworks.com>
+Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+---
+ .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
+ drivers/pci/host/pci-imx6.c                        | 29 +++++++++++-----------
+ 2 files changed, 16 insertions(+), 15 deletions(-)
 
-Thanks,
-Jon
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index d5d26d4..b7a2279 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -19,9 +19,9 @@ Required properties:
+ 	to define the mapping of the PCIe interface to interrupt
+ 	numbers.
+ - num-lanes: number of lanes to use
+-- reset-gpio: gpio pin number of power good signal
+ 
+ Optional properties for fsl,imx6q-pcie
++- reset-gpio: gpio pin number of power good signal
+ - power-on-gpio: gpio pin number of power-enable signal
+ - wake-up-gpio: gpio pin number of incoming wakeup signal
+ - disable-gpio: gpio pin number of outgoing rfkill/endpoint disable signal
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 5afa922..728989a 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -220,9 +220,12 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+ 
+-	gpio_set_value(imx6_pcie->reset_gpio, 0);
+-	msleep(100);
+-	gpio_set_value(imx6_pcie->reset_gpio, 1);
++	/* Some boards don't have PCIe reset GPIO. */
++	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
++		gpio_set_value(imx6_pcie->reset_gpio, 0);
++		msleep(100);
++		gpio_set_value(imx6_pcie->reset_gpio, 1);
++	}
+ 
+ 	return 0;
+ }
+@@ -446,17 +449,15 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 
+ 	/* Fetch GPIOs */
+ 	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+-	if (!gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		dev_err(&pdev->dev, "no reset-gpio defined\n");
+-		ret = -ENODEV;
+-	}
+-	ret = devm_gpio_request_one(&pdev->dev,
+-				imx6_pcie->reset_gpio,
+-				GPIOF_OUT_INIT_LOW,
+-				"PCIe reset");
+-	if (ret) {
+-		dev_err(&pdev->dev, "unable to get reset gpio\n");
+-		goto err;
++	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
++		ret = devm_gpio_request_one(&pdev->dev,
++					imx6_pcie->reset_gpio,
++					GPIOF_OUT_INIT_LOW,
++					"PCIe reset");
++		if (ret) {
++			dev_err(&pdev->dev, "unable to get reset gpio\n");
++			goto err;
++		}
+ 	}
+ 
+ 	imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
+-- 
+1.8.4.rc3
 
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/ntb/ntb_hw.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
-> index 1cb6e51..de2062c 100644
-> --- a/drivers/ntb/ntb_hw.c
-> +++ b/drivers/ntb/ntb_hw.c
-> @@ -1075,6 +1075,10 @@ static int ntb_setup_msix(struct ntb_device *ndev)
->  			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
->  			 rc);
->  		msix_entries = rc;
-> +
-> +		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
-> +		if (rc)
-> +			goto err1;
->  	}
->  
->  	for (i = 0; i < msix_entries; i++) {
-> -- 
-> 1.7.7.6
-> 
