@@ -1,46 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:51970 "EHLO comal.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38362 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754663Ab3JXVq0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Oct 2013 17:46:26 -0400
-Received: from dflxv15.itg.ti.com ([128.247.5.124])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id r9OLkQfd005856
-	for <linux-pci@vger.kernel.org>; Thu, 24 Oct 2013 16:46:26 -0500
-Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
-	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id r9OLkQfK001661
-	for <linux-pci@vger.kernel.org>; Thu, 24 Oct 2013 16:46:26 -0500
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: Intel e1000e pcie NIC driver issue on RT Linux kernel
-Date: Thu, 24 Oct 2013 21:46:25 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B70462535D@DFLE11.ent.ti.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1754203Ab3JOP3s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Oct 2013 11:29:48 -0400
+Date: Tue, 15 Oct 2013 17:30:29 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Mark Lord <kernel@start.ca>
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-driver@qlogic.com,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Message-ID: <20131015153028.GB17687@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <5254D397.9030307@zytor.com>
+ <1381292648.645.259.camel@pasglop>
+ <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
+ <5256D5AB.4050105@zytor.com>
+ <20131010180704.GA15719@dhcp-26-207.brq.redhat.com>
+ <5257357E.8080506@start.ca>
+ <20131011084108.GA25702@dhcp-26-207.brq.redhat.com>
+ <52585FB3.7080508@start.ca>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52585FB3.7080508@start.ca>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The driver was downloaded from intel website and uses legacy irq. I am using 1G ethenet switch to connect my PC to the Ethernet port. 
+On Fri, Oct 11, 2013 at 04:29:39PM -0400, Mark Lord wrote:
+> > static int xx_alloc_msix_irqs(struct xx_dev *dev, int nvec)
+> > {
+> > 	nvec = roundup_pow_of_two(nvec);	/* assume 0 > nvec <= 16 */
+> > 
+> > 	xx_disable_all_irqs(dev);
+> > 
+> > 	pci_lock_msi(dev->pdev);
+> > 
+> > 	rc = pci_get_msix_limit(dev->pdev, nvec);
+> > 	if (rc < 0)
+> > 		goto err;
+> > 
+> > 	nvec = min(nvec, rc);		/* if limit is more than requested */
+> > 	nvec = rounddown_pow_of_two(nvec);	/* (a) */
+> > 
+> > 	xx_prep_for_msix_vectors(dev, nvec);
+> > 
+> > 	rc = pci_enable_msix(dev->pdev, dev->irqs, nvec);	/* (b)	*/
+> > 	if (rc < 0)
+> > 		goto err;
+> > 
+> > 	pci_unlock_msi(dev->pdev);
+> > 
+> > 	dev->num_vectors = nvec;		/* (b) */
+> > 	return 0;
+> > 
+> > err:
+> > 	pci_unlock_msi(dev->pdev);
+> > 
+> >         kerr(dev->name, "pci_enable_msix() failed, err=%d", rc);
+> >         dev->num_vectors = 0;
+> >         return rc;
+> > }
+> 
+> That would still need a loop, to handle the natural race between
+> the calls to pci_get_msix_limit() and pci_enable_msix() -- the driver and device
+> can and should fall back to a smaller number of vectors when pci_enable_msix() fails.
 
-Murali Karicheri
->> -----Original Message-----
->> From: Karicheri, Muralidharan
->> Sent: Thursday, October 24, 2013 5:41 PM
->> To: 'linux-pci-owner@vger.kernel.org'
->> Subject: Intel e1000e pcie NIC driver issue on RT Linux kernel
->> 
->> Hi,
->> 
->> I am having issues with e1000e driver to run on a RT patched Linux kernel. I am using
->> v3.10.10 on our custom platform. The driver works fine on non-RT kernel. When I do iperf,
->> the console is hung. The ping works fine. There is issue when passing higher traffic rate.
->> Anyone has any clue? Anybody tried this driver on a RT patched kernel and has success?
->> 
->> Please respond.
->> 
->> Thanks
->> 
->> Murali Karicheri
->> 
->> 
+Could you please explain why the value returned by pci_get_msix_limit()
+might change before pci_enable_msix() returned, while both protected by
+pci_lock_msi()?
 
+Anyway, although the loop-free code (IMHO) reads better, pci_lock_msi()
+it is not a part of the original proposal and the more I think about it
+the less I like it.
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
