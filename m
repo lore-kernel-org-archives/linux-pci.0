@@ -1,70 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:2937 "EHLO
-	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752863Ab3JWKmH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 06:42:07 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>
-CC: Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
+Received: from mail-we0-f174.google.com ([74.125.82.174]:56827 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932312Ab3JONUY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 09:20:24 -0400
+Received: by mail-we0-f174.google.com with SMTP id u56so8391722wes.5
+        for <linux-pci@vger.kernel.org>; Tue, 15 Oct 2013 06:20:23 -0700 (PDT)
+From: Grant Likely <grant.likely@linaro.org>
+Subject: Re: [RFC] Architecture independent pcibios?
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rob Herring <robherring2@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: [PATCH 09/12][v3] pci: fsl: update PCI PM driver
-Date: Wed, 23 Oct 2013 18:41:31 +0800
-Message-ID: <1382524894-15164-9-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
+	Michal Simek <monstr@monstr.eu>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+In-Reply-To: <20131009090923.GE25606@e102652-lin.cambridge.arm.com>
+References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com> <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com> <525438F6.3090600@gmail.com> <1381264135.645.230.camel@pasglop> <20131009090923.GE25606@e102652-lin.cambridge.arm.com>
+Date: Tue, 15 Oct 2013 12:48:27 +0100
+Message-Id: <20131015114827.850BCC4009B@trevor.secretlab.ca>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch updates PCI PM driver, uses fsl_pci instead of
-pci_controller.
+On Wed, 9 Oct 2013 10:09:23 +0100, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Tue, Oct 08, 2013 at 09:28:55PM +0100, Benjamin Herrenschmidt wrote:
+> > On Tue, 2013-10-08 at 11:55 -0500, Rob Herring wrote:
+> > 
+> > > > I wonder if pci_process_bridge_OF_ranges() would fit somewhere in
+> > > > drivers/of?  The implementations I looked at are mostly concerned with
+> > > > parsing OF resources, and they don't have much to do with PCI
+> > > > directly.
+> > > 
+> > > This was being done until Ben weighed in:
+> > > 
+> > > https://lkml.org/lkml/2013/5/4/103
+> > 
+> > Well, I proposed an alternative (better) approach which I of course had
+> > no time to actually implement yet :-)
+> 
+> In order to avoid any confusion, could you please point me again to the
+> relevant message(s) where you proposed your approach?
+> 
+> > 
+> > I have done the changes I needed to do to powerpc
+> > pci_process_bridge_OF_ranges so it would be possible to move that now to
+> > a generic place, but I still think it's not a great idea. It means the
+> > pci_controller structure with its resources will have to become generic
+> > which somewhat overlaps with the pci_host_bridge that Bjorn introduced,
+> > so that's really not great.
+> > 
+> > I still think an arch with DT and simpler PCI code that powerpc could
+> > start looking at the transition to a better model that I hinted at...
+> 
+> As tempting as it is to start anew and with a cleaner code, I am wary
+> that porting the existing platforms to the new code will take longer
+> that way. My intentions are to make the (probably infrequent) task of
+> adding a new architecture to the PCI infrastructure a simple and
+> straighforward task. But adding code for my platform is no guarantee
+> that new ones will have an easier job.
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
-change log:
-v1-v3:
-Derived from http://patchwork.ozlabs.org/patch/278965/
+In the previous thread I Nacked an approach that creates new code
+without making at least two existing platforms (microblaze & powerpc are
+the easy targets because they are so similar) use said new code. I know
+that makes things harder for you, but not migrating is a bigger
+maintenance burden in the long run.
 
-Based on upstream master.
-Based on the discussion of RFC version here
-http://patchwork.ozlabs.org/patch/274487/
-
- drivers/pci/host/pci-fsl-common.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
-index c7bc472..729a5f4 100644
---- a/drivers/pci/host/pci-fsl-common.c
-+++ b/drivers/pci/host/pci-fsl-common.c
-@@ -699,19 +699,12 @@ static int fsl_pci_remove(struct platform_device *pdev)
- #ifdef CONFIG_PM
- static int fsl_pci_resume(struct device *dev)
- {
--	struct pci_controller *hose;
--	struct resource pci_rsrc;
-+	struct fsl_pci *pci = dev_get_drvdata(dev);
- 
--	hose = pci_find_hose_for_OF_device(dev->of_node);
--	if (!hose)
-+	if (!pci)
- 		return -ENODEV;
- 
--	if (of_address_to_resource(dev->of_node, 0, &pci_rsrc)) {
--		dev_err(dev, "Get pci register base failed.");
--		return -ENODEV;
--	}
--
--	setup_pci_atmu(hose);
-+	setup_pci_atmu(pci);
- 
- 	return 0;
- }
--- 
-1.8.1.2
-
+g.
 
