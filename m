@@ -1,83 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:38674 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754054Ab3JDUow (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 16:44:52 -0400
-Received: by mail-ie0-f179.google.com with SMTP id e14so10675873iej.10
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 13:44:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1378732388-4508-7-git-send-email-wangyijing@huawei.com>
-References: <1378732388-4508-1-git-send-email-wangyijing@huawei.com> <1378732388-4508-7-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Oct 2013 14:44:31 -0600
-Message-ID: <CAErSpo5epkfhw0zyn-xXr-xCVeWmna8Eu_v3SmOrKU7EqwfDJw@mail.gmail.com>
-Subject: Re: [PATCH 6/6] radeon: Use pcie_get_readrq() and pcie_set_readrq()
- to simplify code
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: David Airlie <airlied@linux.ie>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	=?ISO-8859-1?Q?Christian_K=F6nig?= <christian.koenig@amd.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-out.m-online.net ([212.18.0.9]:41982 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759122Ab3JOQHD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 12:07:03 -0400
+From: Marek Vasut <marex@denx.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/6] ARM: dts: imx6qdl: Fix the clock for PCIe
+Date: Tue, 15 Oct 2013 18:06:37 +0200
+Message-Id: <1381853200-5534-4-git-send-email-marex@denx.de>
+In-Reply-To: <1381853200-5534-1-git-send-email-marex@denx.de>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[-cc unrelated folks, +cc Alex, Christian]
+The clk #205 are lvds_sel, not lvds_gate , so fix this. Moreover,
+the PCIe needs lvds_gate for successful operation, so supply these
+clock to the PCIe driver.
 
-On Mon, Sep 9, 2013 at 7:13 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Use pcie_get_readrq() and pcie_set_readrq() functions to simplify code.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <lznuaa@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Cc: Tim Harvey <tharvey@gateworks.com>
+Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/arm/boot/dts/imx6qdl.dtsi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I believe the following patch is correct, and I'd be happy to merge it
-via the PCI tree along with the rest of this series.
+diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
+index 6e1113e..4497f3e 100644
+--- a/arch/arm/boot/dts/imx6qdl.dtsi
++++ b/arch/arm/boot/dts/imx6qdl.dtsi
+@@ -127,8 +127,8 @@
+ 				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
+ 			num-lanes = <1>;
+ 			interrupts = <0 123 0x04>;
+-			clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
+-			clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_gate", "pcie_axi";
++			clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>, <&clks 204>;
++			clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_sel", "pcie_axi", "lvds_gate";
+ 			status = "disabled";
+ 		};
+ 
+-- 
+1.8.4.rc3
 
-But it'd be better to have an ack from Alex, and he might prefer to
-merge it directly.
-
-Bjorn
-
-> ---
->  drivers/gpu/drm/radeon/evergreen.c |   19 ++++++-------------
->  1 files changed, 6 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/gpu/drm/radeon/evergreen.c b/drivers/gpu/drm/radeon/evergreen.c
-> index d5b49e3..b191f92 100644
-> --- a/drivers/gpu/drm/radeon/evergreen.c
-> +++ b/drivers/gpu/drm/radeon/evergreen.c
-> @@ -1169,23 +1169,16 @@ int evergreen_set_uvd_clocks(struct radeon_device *rdev, u32 vclk, u32 dclk)
->
->  void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
->  {
-> -       u16 ctl, v;
-> -       int err;
-> -
-> -       err = pcie_capability_read_word(rdev->pdev, PCI_EXP_DEVCTL, &ctl);
-> -       if (err)
-> -               return;
-> -
-> -       v = (ctl & PCI_EXP_DEVCTL_READRQ) >> 12;
-> +       int readrq;
-> +       u16 v;
->
-> +       readrq = pcie_get_readrq(rdev->pdev);
-> +       v = ffs(readrq) - 8;
->         /* if bios or OS sets MAX_READ_REQUEST_SIZE to an invalid value, fix it
->          * to avoid hangs or perfomance issues
->          */
-> -       if ((v == 0) || (v == 6) || (v == 7)) {
-> -               ctl &= ~PCI_EXP_DEVCTL_READRQ;
-> -               ctl |= (2 << 12);
-> -               pcie_capability_write_word(rdev->pdev, PCI_EXP_DEVCTL, ctl);
-> -       }
-> +       if ((v == 0) || (v == 6) || (v == 7))
-> +               pcie_set_readrq(rdev->pdev, 512);
->  }
->
->  static bool dce4_is_in_vblank(struct radeon_device *rdev, int crtc)
-> --
-> 1.7.1
->
->
