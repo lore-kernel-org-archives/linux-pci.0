@@ -1,100 +1,178 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:47036 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759606Ab3JPADv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 20:03:51 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MUQ006G5IS1PI50@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 16 Oct 2013 09:03:49 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Marek Vasut' <marex@denx.de>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Frank Li' <lznuaa@gmail.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Sascha Hauer' <s.hauer@pengutronix.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
-	'Tim Harvey' <tharvey@gateworks.com>,
-	'Troy Kisky' <troy.kisky@boundarydevices.com>,
-	'Yinghai Lu' <yinghai@kernel.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
-In-reply-to: <1381853200-5534-1-git-send-email-marex@denx.de>
-Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
-Date: Wed, 16 Oct 2013 09:03:48 +0900
-Message-id: <003b01ceca03$309b9ba0$91d2d2e0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <525E3348.9040007@oracle.com>
+Date: Wed, 16 Oct 2013 14:33:44 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
+MIME-Version: 1.0
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Feng Jin <joe.jin@oracle.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Subject: [PATCH 3/3] Update x86_msi.restore_msi_irqs API param
+Content-Type: text/plain; charset=GB2312
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Change x86_msi.restore_msi_irqs(struct pci_dev *dev, int irq) to
+x86_msi.restore_msi_irqs(struct pci_dev *dev)
 
+>From its naming, restore_msi_irqs is used to restore multiple msix irqs,
+param 'int irq' is unneeded. This could make code looks consistent in vm
+and bare metal.
 
-> -----Original Message-----
-> From: Marek Vasut [mailto:marex@denx.de]
-> Sent: Wednesday, October 16, 2013 1:07 AM
-> To: linux-pci@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org; Marek Vasut; Bjorn Helgaas; Frank Li; Jingoo Han; Mohit
-> KUMAR; Pratyush Anand; Richard Zhu; Sascha Hauer; Sean Cross; Shawn Guo; Siva Reddy Kallam; Srikanth T
-> Shivanand; Tim Harvey; Troy Kisky; Yinghai Lu
-> Subject: [PATCH 0/6] PCI: imx6: Random fixes
-> 
-> Set of random fixes for the PCIe driver for i.MX6 . With these fixes, my
-> setup with MX6Q -> PCIe bridge -> i210 ethernet adapter works as expected.
-> 
-> NOTE: I'm sure this will start some discussion. There are quite a few patches
->       that are more of a hacks. Shawn, I didn't ignore your remark about the
->       clock patches, I will test it ASAP, I just want to have these fixes in
->       the public so others can comment/test.
-> 
-> Marek Vasut (6):
->   PCI: imx6: Make reset-gpio optional
->   PCI: imx6: Fix the clock for PCIe
->   ARM: dts: imx6qdl: Fix the clock for PCIe
->   PCI: imx6: Probe the PCIe in fs_initcall()
->   PCI: imx6: Force Gen1 operation
->   PCI: designware: Fix DT resource retrieval
-> 
->  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
->  arch/arm/boot/dts/imx6qdl.dtsi                     |  4 +-
->  drivers/pci/host/pci-imx6.c                        | 63 ++++++++++++++++------
->  drivers/pci/host/pcie-designware.c                 | 17 +++---
->  4 files changed, 55 insertions(+), 31 deletions(-)
+Dom0 msix restore code could be optimized a bit with this change.
 
-Hi Marek,
+Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
+ arch/x86/include/asm/pci.h      |    2 +-
+ arch/x86/include/asm/x86_init.h |    2 +-
+ arch/x86/kernel/x86_init.c      |    4 ++--
+ arch/x86/pci/xen.c              |    2 +-
+ drivers/pci/msi.c               |   21 ++++++++++++++-------
+ include/linux/msi.h             |    4 ++--
+ 6 files changed, 21 insertions(+), 14 deletions(-)
 
-Your patchset modifies Synopsys Designware part. (pcie-designware.c)
-Thus, it would be better to share this patchset with Kishon Vijay Abraham I.
-He is also developing OMAP PCIe driver using 'pcie-designware.c'.
-
-Best regards,
-Jingoo Han
-
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Frank Li <lznuaa@gmail.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
-> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> Cc: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Richard Zhu <r65037@freescale.com>
-> Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> Cc: Sean Cross <xobs@kosagi.com>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
-> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> Cc: Tim Harvey <tharvey@gateworks.com>
-> Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> 
-> --
-> 1.8.4.rc3
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 7d74432..d44baf4 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -104,7 +104,7 @@ extern void pci_iommu_alloc(void);
+ struct msi_desc;
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void native_teardown_msi_irq(unsigned int irq);
+-void native_restore_msi_irqs(struct pci_dev *dev, int irq);
++void native_restore_msi_irqs(struct pci_dev *dev);
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 		  unsigned int irq_base, unsigned int irq_offset);
+ #else
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 828a156..f58a9c7 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -180,7 +180,7 @@ struct x86_msi_ops {
+ 			       u8 hpet_id);
+ 	void (*teardown_msi_irq)(unsigned int irq);
+ 	void (*teardown_msi_irqs)(struct pci_dev *dev);
+-	void (*restore_msi_irqs)(struct pci_dev *dev, int irq);
++	void (*restore_msi_irqs)(struct pci_dev *dev);
+ 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
+ };
+ 
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 8ce0072..234b072 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -134,9 +134,9 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 	x86_msi.teardown_msi_irq(irq);
+ }
+ 
+-void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
++void arch_restore_msi_irqs(struct pci_dev *dev)
+ {
+-	x86_msi.restore_msi_irqs(dev, irq);
++	x86_msi.restore_msi_irqs(dev);
+ }
+ #endif
+ 
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 48e8461..cdd869f 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -337,7 +337,7 @@ out:
+ 	return ret;
+ }
+ 
+-static void xen_initdom_restore_msi_irqs(struct pci_dev *dev, int irq)
++static void xen_initdom_restore_msi_irqs(struct pci_dev *dev)
+ {
+ 	int ret = 0;
+ 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 38237f4..c16928e 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -116,9 +116,9 @@ void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
+ 	return default_teardown_msi_irqs(dev);
+ }
+ 
+-void __weak arch_restore_msi_irqs(struct pci_dev *dev, int irq)
++void __weak arch_restore_msi_irqs(struct pci_dev *dev)
+ {
+-	return default_restore_msi_irqs(dev, irq);
++	return default_restore_msi_irqs(dev);
+ }
+ 
+ static void msi_set_enable(struct pci_dev *dev, int enable)
+@@ -234,7 +234,7 @@ void unmask_msi_irq(struct irq_data *data)
+ 	msi_set_mask_bit(data, 0);
+ }
+ 
+-void default_restore_msi_irqs(struct pci_dev *dev, int irq)
++static void default_restore_msi_irq(struct pci_dev *dev, int irq)
+ {
+ 	int pos;
+ 	u16 control;
+@@ -265,6 +265,15 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+ 	}
+ }
+ 
++void default_restore_msi_irqs(struct pci_dev *dev)
++{
++	struct msi_desc *entry;
++
++	list_for_each_entry(entry, &dev->msi_list, list) {
++		default_restore_msi_irq(dev, entry->irq);
++	}
++}
++
+ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	BUG_ON(entry->dev->current_state != PCI_D0);
+@@ -433,7 +442,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+ 
+ 	pci_intx_for_msi(dev, 0);
+ 	msi_set_enable(dev, 0);
+-	arch_restore_msi_irqs(dev, dev->irq);
++	arch_restore_msi_irqs(dev);
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+ 	control &= ~PCI_MSI_FLAGS_QSIZE;
+@@ -457,9 +466,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 	control |= PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL;
+ 	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, control);
+ 
+-	list_for_each_entry(entry, &dev->msi_list, list) {
+-		arch_restore_msi_irqs(dev, entry->irq);
+-	}
++	arch_restore_msi_irqs(dev);
+ 
+ 	control &= ~PCI_MSIX_FLAGS_MASKALL;
+ 	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, control);
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index b17ead8..cea1123 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -60,10 +60,10 @@ void arch_teardown_msi_irq(unsigned int irq);
+ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void arch_teardown_msi_irqs(struct pci_dev *dev);
+ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
+-void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
++void arch_restore_msi_irqs(struct pci_dev *dev);
+ 
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+-void default_restore_msi_irqs(struct pci_dev *dev, int irq);
++void default_restore_msi_irqs(struct pci_dev *dev);
+ 
+ struct msi_chip {
+ 	struct module *owner;
+-- 
+1.7.3
 
