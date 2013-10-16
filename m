@@ -1,61 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:38678 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754003Ab3JXKwF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Oct 2013 06:52:05 -0400
-Date: Thu, 24 Oct 2013 11:51:58 +0100
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*()
- family helpers
-Message-ID: <20131024105158.GB13159@mtj.dyndns.org>
-References: <cover.1382103786.git.agordeev@redhat.com>
- <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
+Received: from mailout3.samsung.com ([203.254.224.33]:52221 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753143Ab3JPBY7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 21:24:59 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MUQ00D7SMLHXV50@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 16 Oct 2013 10:24:58 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Marek Vasut' <marex@denx.de>, linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Frank Li' <lznuaa@gmail.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Troy Kisky' <troy.kisky@boundarydevices.com>,
+	'Yinghai Lu' <yinghai@kernel.org>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
+ <1381853200-5534-2-git-send-email-marex@denx.de>
+In-reply-to: <1381853200-5534-2-git-send-email-marex@denx.de>
+Subject: Re: [PATCH 1/6] PCI: imx6: Make reset-gpio optional
+Date: Wed, 16 Oct 2013 10:24:56 +0900
+Message-id: <006401ceca0e$86427be0$92c773a0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello, Alexander.
-
-On Fri, Oct 18, 2013 at 07:12:12PM +0200, Alexander Gordeev wrote:
-> So i.e. the request loop described in the documentation...
+On Wednesday, October 16, 2013 1:07 AM, Marek Vasut wrote:
 > 
-> 	int foo_driver_enable_msix(struct foo_adapter *adapter,
-> 				   int nvec)
-> 	{
-> 		while (nvec >= FOO_DRIVER_MINIMUM_NVEC) {
-> 			rc = pci_enable_msix(adapter->pdev,
-> 					     adapter->msix_entries,
-> 					     nvec);
-> 			if (rc > 0)
-> 				nvec = rc;
-> 			else
-> 				return rc;
-> 		}
+> Some boards do not have a PCIe reset GPIO. To avoid probe
+> failure on these boards, make the reset GPIO optional as
+> well.
 > 
-> 		return -ENOSPC;
-> 	}
+> Signed-off-by: Marek Vasut <marex@denx.de>
+
+[.....]
+
+> ---
+>  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
+>  drivers/pci/host/pci-imx6.c                        | 29 +++++++++++-----------
+>  2 files changed, 16 insertions(+), 15 deletions(-)
 > 
-> ...would turn into a single helper call....
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index d5d26d4..b7a2279 100644
+> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -19,9 +19,9 @@ Required properties:
+>  	to define the mapping of the PCIe interface to interrupt
+>  	numbers.
+>  - num-lanes: number of lanes to use
+> -- reset-gpio: gpio pin number of power good signal
 > 
-> 	rc = pcim_enable_msix_range(adapter->pdev,
-> 				    adapter->msix_entries,
-> 				    nvec,
-> 				    FOO_DRIVER_MINIMUM_NVEC);
+>  Optional properties for fsl,imx6q-pcie
+> +- reset-gpio: gpio pin number of power good signal
+>  - power-on-gpio: gpio pin number of power-enable signal
+>  - wake-up-gpio: gpio pin number of incoming wakeup signal
+>  - disable-gpio: gpio pin number of outgoing rfkill/endpoint disable signal
 
-I haven't looked into any details but, if the above works for most use
-cases, it looks really good to me.
+(+cc Kishon Vijay Abraham I)
 
-Thanks!
+Also, 'reset-gpio' property can be used for 'samsung,exynos5440-pcie'.
+Thus, it is not specific for 'fsl,imx6q-pcie'.
 
--- 
-tejun
+Please, modify it as below:
+
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -19,6 +19,8 @@ Required properties:
+        to define the mapping of the PCIe interface to interrupt
+        numbers.
+ - num-lanes: number of lanes to use
++
++Optional properties
+ - reset-gpio: gpio pin number of power good signal
+
+ Optional properties for fsl,imx6q-pcie
+
+Best regards,
+Jingoo Han
+
