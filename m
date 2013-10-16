@@ -1,58 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27068 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754686Ab3JBRwu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:52:50 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 03/77] PCI/MSI/s390: Fix single MSI only check
-Date: Wed,  2 Oct 2013 12:48:19 +0200
-Message-Id: <8c9811b13fd93e73641dab8e3bd1bd5b2dc37a61.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:46868 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761210Ab3JPUV1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Oct 2013 16:21:27 -0400
+Received: by mail-ie0-f177.google.com with SMTP id e14so2218290iej.8
+        for <linux-pci@vger.kernel.org>; Wed, 16 Oct 2013 13:21:27 -0700 (PDT)
+Date: Wed, 16 Oct 2013 14:21:23 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
+Message-ID: <20131016202123.GA17866@google.com>
+References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
+ <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
+ <20131015024452.GA31951@srcf.ucam.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131015024452.GA31951@srcf.ucam.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Multiple MSIs have never been supported on s390 architecture,
-but the platform code fails to report single MSI only.
+On Tue, Oct 15, 2013 at 03:44:52AM +0100, Matthew Garrett wrote:
+> On Mon, Oct 14, 2013 at 05:50:38PM -0600, Bjorn Helgaas wrote:
+> > [+cc Rafael, Mika, Kirill, linux-pci]
+> > 
+> > On Mon, Oct 14, 2013 at 4:47 PM, Andreas Noever
+> > <andreas.noever@gmail.com> wrote:
+> > > When I unplug the Thunderbolt ethernet adapter on my MacBookPro Linux
+> > > crashes a few seconds later. Using
+> > > echo 1 > /sys/bus/pci/devices/0000:08:00.0/remove
+> > > to remove a bridge two levels above the device triggers the fault immediately:
+> > 
+> > There have been significant changes in acpiphp related to Thunderbolt
+> > since v3.11.
+> 
+> Apple don't expose Thunderbolt via ACPI, so it appears as native PCIe. 
+> I'd be surprised if acpiphp makes a difference here.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- arch/s390/pci/pci.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Yeah, you're right; I wasn't paying attention.
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index f17a834..c79c6e4 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -427,6 +427,8 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
- 	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
- 		return -EINVAL;
-+	if (type == PCI_CAP_ID_MSI && nvec > 1)
-+		return 1;
- 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
- 	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
- 
--- 
-1.7.7.6
+We save a pci_dev pointer in the pci_pme_list, which of course has a
+longer lifetime than the pci_dev itself, but we don't acquire a reference
+on it, so I suspect the pci_dev got released before we got around to
+doing the pci_pme_list_scan().
 
+Andreas, can you try the patch below?  It's against v3.12-rc2, but it
+should apply to v3.11, too.
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ad7fc72..8b0a2f3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1580,6 +1580,7 @@ static void pci_pme_list_scan(struct work_struct *work)
+ 				pci_pme_wakeup(pme_dev->dev, NULL);
+ 			} else {
+ 				list_del(&pme_dev->list);
++				pci_dev_put(pme_dev->dev);
+ 				kfree(pme_dev);
+ 			}
+ 		}
+@@ -1640,7 +1641,7 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+ 					  GFP_KERNEL);
+ 			if (!pme_dev)
+ 				goto out;
+-			pme_dev->dev = dev;
++			pme_dev->dev = pci_dev_get(dev);
+ 			mutex_lock(&pci_pme_list_mutex);
+ 			list_add(&pme_dev->list, &pci_pme_list);
+ 			if (list_is_singular(&pci_pme_list))
+@@ -1652,6 +1653,7 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+ 			list_for_each_entry(pme_dev, &pci_pme_list, list) {
+ 				if (pme_dev->dev == dev) {
+ 					list_del(&pme_dev->list);
++					pci_dev_put(pme_dev->dev);
+ 					kfree(pme_dev);
+ 					break;
+ 				}
