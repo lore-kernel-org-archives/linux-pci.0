@@ -1,90 +1,176 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:65022 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043Ab3JDSJY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 14:09:24 -0400
-Received: by mail-ie0-f173.google.com with SMTP id ar20so10100659iec.32
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 11:09:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1380363121-1977-1-git-send-email-sachin.kamat@linaro.org>
-References: <1380363121-1977-1-git-send-email-sachin.kamat@linaro.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Oct 2013 12:09:03 -0600
-Message-ID: <CAErSpo77zy6K3yMa8_31zbrehA6MByXTBbn5Trr8Sv5TL7ScZQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: sysfs: Staticize local symbols
-To: Sachin Kamat <sachin.kamat@linaro.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+Received: from mailout3.samsung.com ([203.254.224.33]:25424 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759016Ab3JPD5A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 23:57:00 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MUQ00CBATMRI4F0@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 16 Oct 2013 12:56:58 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Tim Harvey' <tharvey@gateworks.com>, 'Marek Vasut' <marex@denx.de>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Frank Li' <lznuaa@gmail.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
+	'Troy Kisky' <troy.kisky@boundarydevices.com>,
+	'Yinghai Lu' <yinghai@kernel.org>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
+ <1381853200-5534-7-git-send-email-marex@denx.de>
+ <CAJ+vNU0e1LDFuqt_PCaycrrrD=dYRPU6fKEQZxkskO4hcJFcRw@mail.gmail.com>
+In-reply-to: <CAJ+vNU0e1LDFuqt_PCaycrrrD=dYRPU6fKEQZxkskO4hcJFcRw@mail.gmail.com>
+Subject: Re: [PATCH 6/6] PCI: designware: Fix DT resource retrieval
+Date: Wed, 16 Oct 2013 12:56:57 +0900
+Message-id: <000701ceca23$c2bdd550$48397ff0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 28, 2013 at 4:12 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
-> Local variables used only in this file are made static.
->
-> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-> ---
->  drivers/pci/pci-sysfs.c |   14 ++++++++------
->  1 file changed, 8 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index d8eb880..ec1dbea 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -304,7 +304,7 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
->  }
->  static BUS_ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, bus_rescan_store);
->
-> -struct attribute *pci_bus_attrs[] = {
-> +static struct attribute *pci_bus_attrs[] = {
+On Wednesday, October 16, 2013 9:15 AM, Tim Harvey wrote:
+> On Tue, Oct 15, 2013 at 9:06 AM, Marek Vasut <marex@denx.de> wrote:
+> >
+> > The resource retrieval from the DT was not done right. This resulted
+> > in bogus values in the IO/MEM window configuration. I re-used the code
+> > implementation from pci-tegra.c to do the resource retrieval correctly.
+> >
+> > This in turn resulted in very strange behavior on two different kinds
+> > of setup:
+> >
+> > Setup #1:                             ,-------> Intel i210 (igb driver)
+> >            i.MX6 root port -----> PCIe switch
+> >                                       `-------> Empty slot
+> >
+> > Setup #2:                             ,-------> Marvell Yukon (sky2 driver)
+> >            i.MX6 root port -----> PCIe switch
+> >                                       `-------> Empty slot
+> >
+> > Both setups expressed the same behavior. The system booted and the
+> > ethernet controllers were properly detected. After the controllers
+> > were configured and just after they reported "Ethernet Link Up", the
+> > entire system froze. It is now clear this happened because the resources
+> > were incorrectly configured, which in turn means the iATU was also not
+> > configured correctly.
+> >
+> > Signed-off-by: Marek Vasut <marex@denx.de>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Frank Li <lznuaa@gmail.com>
+> > Cc: Jingoo Han <jg1.han@samsung.com>
+> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> > Cc: Pratyush Anand <pratyush.anand@st.com>
+> > Cc: Richard Zhu <r65037@freescale.com>
+> > Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> > Cc: Sean Cross <xobs@kosagi.com>
+> > Cc: Shawn Guo <shawn.guo@linaro.org>
+> > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+> > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> > Cc: Tim Harvey <tharvey@gateworks.com>
+> > Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+> > Cc: Yinghai Lu <yinghai@kernel.org>
+> > ---
+> >  drivers/pci/host/pcie-designware.c | 17 ++++++-----------
+> >  1 file changed, 6 insertions(+), 11 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 5d183ae..97c5951 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -370,6 +370,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >         struct device_node *np = pp->dev->of_node;
+> >         struct of_pci_range range;
+> >         struct of_pci_range_parser parser;
+> > +       struct resource res;
+> >         u32 val;
+> >
+> >         struct irq_domain *irq_domain;
+> > @@ -381,28 +382,22 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >
+> >         /* Get the I/O and memory ranges from DT */
+> >         for_each_of_pci_range(&parser, &range) {
+> > -               unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
+> > +               of_pci_range_to_resource(&range, np, &res);
+> > +               unsigned long restype = res.flags & IORESOURCE_TYPE_BITS;
 
-Did you compile this?  I see this:
+This makes the following build warning.
+warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
 
-drivers/pci/pci-sysfs.c:306:29: error: static declaration of
-‘pci_bus_attrs’ follows non-static declaration
-drivers/pci/pci.h:159:29: note: previous declaration of ‘pci_bus_attrs’ was here
+Please modify it as below:
 
-and there is a use in drivers/pci/pci-driver.c.
+		unsigned long restype;
 
-I applied this (without the pci_bus_attrs hunk) to my pci/misc branch, thanks!
+		of_pci_range_to_resource(&range, np, &res);
+		restype = res.flags & IORESOURCE_TYPE_BITS;
 
-Bjorn
+> >                 if (restype == IORESOURCE_IO) {
+> > -                       of_pci_range_to_resource(&range, np, &pp->io);
+> > +                       memcpy(&pp->io, &res, sizeof(res));
+> >                         pp->io.name = "I/O";
+> > -                       pp->io.start = max_t(resource_size_t,
+> > -                                            PCIBIOS_MIN_IO,
+> > -                                            range.pci_addr + global_io_offset);
+> > -                       pp->io.end = min_t(resource_size_t,
+> > -                                          IO_SPACE_LIMIT,
+> > -                                          range.pci_addr + range.size
+> > -                                          + global_io_offset);
+> 
+> Nak - removing the adjustment to io.start/io.end breaks the io space
+> mapping as the entire io-space allocation gets taken by the root
+> complex.  This causes any device that requests io space to fail to
+> obtain it (your igb driver from Setup1 apparently doesn't use io space
+> where my sky2 device from Setup2 above does).
+> 
+> If I put back the adjustment to io.start/io.end above my sky2 device
+> gets its io resource properly but still hangs the bus after a few
+> interrupts.  Are you sure you don't have other changes that you
+> haven't posted yet that could have addressed the hang you get when you
+> bring up your igb device?
+> 
+> I agree that the the 'hang' we are seeing is a bus-hang caused by an
+> improper iATU mapping, however I'm not convinced its a dts parsing
+> issue.
+> 
+> Tim
 
->         &bus_attr_rescan.attr,
->         NULL,
->  };
-> @@ -335,8 +335,9 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
->         }
->         return count;
->  }
-> -struct device_attribute dev_rescan_attr = __ATTR(rescan, (S_IWUSR|S_IWGRP),
-> -                                                NULL, dev_rescan_store);
-> +static struct device_attribute dev_rescan_attr = __ATTR(rescan,
-> +                                                       (S_IWUSR|S_IWGRP),
-> +                                                       NULL, dev_rescan_store);
->
->  static void remove_callback(struct device *dev)
->  {
-> @@ -366,8 +367,9 @@ remove_store(struct device *dev, struct device_attribute *dummy,
->                 count = ret;
->         return count;
->  }
-> -struct device_attribute dev_remove_attr = __ATTR(remove, (S_IWUSR|S_IWGRP),
-> -                                                NULL, remove_store);
-> +static struct device_attribute dev_remove_attr = __ATTR(remove,
-> +                                                       (S_IWUSR|S_IWGRP),
-> +                                                       NULL, remove_store);
->
->  static ssize_t
->  dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
-> @@ -554,7 +556,7 @@ boot_vga_show(struct device *dev, struct device_attribute *attr, char *buf)
->                 !!(pdev->resource[PCI_ROM_RESOURCE].flags &
->                    IORESOURCE_ROM_SHADOW));
->  }
-> -struct device_attribute vga_attr = __ATTR_RO(boot_vga);
-> +static struct device_attribute vga_attr = __ATTR_RO(boot_vga);
->
->  static ssize_t
->  pci_read_config(struct file *filp, struct kobject *kobj,
-> --
-> 1.7.9.5
->
++cc Kishon Vijay Abraham I, Arnd Bergmann
+
+I agree with Tim's opinion.
+
+Please, don't remove the adjustment to io.start/io.end mapping.
+It was already confirmed by Arnd Bergmann (ARM-SoC Maintainer).
+
+Best regards,
+Jingoo Han
+
+> 
+> >                         pp->config.io_size = resource_size(&pp->io);
+> >                         pp->config.io_bus_addr = range.pci_addr;
+> >                 }
+> >                 if (restype == IORESOURCE_MEM) {
+> > -                       of_pci_range_to_resource(&range, np, &pp->mem);
+> > +                       memcpy(&pp->mem, &res, sizeof(res));
+> >                         pp->mem.name = "MEM";
+> >                         pp->config.mem_size = resource_size(&pp->mem);
+> >                         pp->config.mem_bus_addr = range.pci_addr;
+> >                 }
+> >                 if (restype == 0) {
+> > -                       of_pci_range_to_resource(&range, np, &pp->cfg);
+> > +                       memcpy(&pp->cfg, &res, sizeof(res));
+> >                         pp->config.cfg0_size = resource_size(&pp->cfg)/2;
+> >                         pp->config.cfg1_size = resource_size(&pp->cfg)/2;
+> >                 }
+> > --
+> > 1.8.4.rc3
+> >
+
