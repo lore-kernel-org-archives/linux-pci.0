@@ -1,64 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:44646 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755688Ab3JJQaB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Oct 2013 12:30:01 -0400
-Message-ID: <5256D5AB.4050105@zytor.com>
-Date: Thu, 10 Oct 2013 09:28:27 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:34723 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753702Ab3JPGcI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Oct 2013 02:32:08 -0400
+Message-ID: <525E32FC.3010604@oracle.com>
+Date: Wed, 16 Oct 2013 14:32:28 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement pattern
-References: <cover.1380703262.git.agordeev@redhat.com> <5254D397.9030307@zytor.com> <1381292648.645.259.camel@pasglop> <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Subject: [PATCH 1/3] PCI: Refactor restore_msi_irqs - code movement
+Content-Type: text/plain; charset=GB2312
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/10/2013 03:17 AM, Alexander Gordeev wrote:
-> On Wed, Oct 09, 2013 at 03:24:08PM +1100, Benjamin Herrenschmidt wrote:
-> 
-> Ok, this suggestion sounded in one or another form by several people.
-> What about name it pcim_enable_msix_range() and wrap in couple more
-> helpers to complete an API:
-> 
-> int pcim_enable_msix_range(pdev, msix_entries, nvec, minvec);
-> 	<0 - error code
-> 	>0 - number of MSIs allocated, where minvec >= result <= nvec
-> 
-> int pcim_enable_msix(pdev, msix_entries, nvec);
-> 	<0 - error code
-> 	>0 - number of MSIs allocated, where 1 >= result <= nvec 
-> 
-> int pcim_enable_msix_exact(pdev, msix_entries, nvec);
-> 	<0 - error code
-> 	>0 - number of MSIs allocated, where result == nvec
-> 
-> The latter's return value seems odd, but I can not help to make
-> it consistent with the first two.
-> 
+Move default_restore_msi_irqs down to reference msi_mask_irq and msix_mask_irq.
 
-Is there a reason for the wrappers, as opposed to just specifying either
-1 or nvec as the minimum?
+This patch lays the groundwork for patch titled:
+'PCI: Refactor MSI/MSIX mask restore code to fix interrupt lost issue'
 
-	-hpa
+Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
+ drivers/pci/msi.c |   36 ++++++++++++++++++------------------
+ 1 files changed, 18 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..ecd4cdf 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -116,24 +116,6 @@ void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
+ 	return default_teardown_msi_irqs(dev);
+ }
+ 
+-void default_restore_msi_irqs(struct pci_dev *dev, int irq)
+-{
+-	struct msi_desc *entry;
+-
+-	entry = NULL;
+-	if (dev->msix_enabled) {
+-		list_for_each_entry(entry, &dev->msi_list, list) {
+-			if (irq == entry->irq)
+-				break;
+-		}
+-	} else if (dev->msi_enabled)  {
+-		entry = irq_get_msi_desc(irq);
+-	}
+-
+-	if (entry)
+-		write_msi_msg(irq, &entry->msg);
+-}
+-
+ void __weak arch_restore_msi_irqs(struct pci_dev *dev, int irq)
+ {
+ 	return default_restore_msi_irqs(dev, irq);
+@@ -252,6 +234,24 @@ void unmask_msi_irq(struct irq_data *data)
+ 	msi_set_mask_bit(data, 0);
+ }
+ 
++void default_restore_msi_irqs(struct pci_dev *dev, int irq)
++{
++	struct msi_desc *entry;
++
++	entry = NULL;
++	if (dev->msix_enabled) {
++		list_for_each_entry(entry, &dev->msi_list, list) {
++			if (irq == entry->irq)
++				break;
++		}
++	} else if (dev->msi_enabled)  {
++		entry = irq_get_msi_desc(irq);
++	}
++
++	if (entry)
++		write_msi_msg(irq, &entry->msg);
++}
++
+ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	BUG_ON(entry->dev->current_state != PCI_D0);
+-- 
+1.7.3
 
