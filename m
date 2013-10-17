@@ -1,60 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:55673 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750754Ab3J3QHS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 12:07:18 -0400
-Received: by mail-ie0-f179.google.com with SMTP id aq17so2628234iec.38
-        for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 09:07:18 -0700 (PDT)
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:59284 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253Ab3JQXbr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2013 19:31:47 -0400
+Received: by mail-qa0-f45.google.com with SMTP id ii20so157815qab.18
+        for <linux-pci@vger.kernel.org>; Thu, 17 Oct 2013 16:31:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6n4F1zREyYXuwq9LCRLCD+yZ9o8j==ANamiAZesFz=EA@mail.gmail.com>
-References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
- <1382346403-29576-2-git-send-email-sachin.kamat@linaro.org> <CAErSpo6n4F1zREyYXuwq9LCRLCD+yZ9o8j==ANamiAZesFz=EA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 30 Oct 2013 10:06:58 -0600
-Message-ID: <CAErSpo4CFitR_CbG+TBYF-S-nKLdz9+CfV2mex76b=pnh24Vqw@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI: mvebu: Remove redeundant of_match_ptr
-To: Sachin Kamat <sachin.kamat@linaro.org>
+In-Reply-To: <1381853200-5534-5-git-send-email-marex@denx.de>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
+	<1381853200-5534-5-git-send-email-marex@denx.de>
+Date: Thu, 17 Oct 2013 16:31:46 -0700
+Message-ID: <CAJ+vNU0rJY0xMCpJxFQ1ue7Gnfe+49Xv3=2zawCTzHEd_eAK0Q@mail.gmail.com>
+Subject: Re: [PATCH 4/6] PCI: imx6: Probe the PCIe in fs_initcall()
+From: Tim Harvey <tharvey@gateworks.com>
+To: Marek Vasut <marex@denx.de>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 29, 2013 at 4:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Jason]
+On Tue, Oct 15, 2013 at 9:06 AM, Marek Vasut <marex@denx.de> wrote:
+> Probe the PCIe driver in fs_initcall() instead of module_init()
+> to assure that pci_assign_unassigned_resources(); will be called
+> early. This function is called in dw_pcie_host_init(), which is
+> in turn called from imx6_add_pcie_port(), which is called from
+> imx6_pcie_probe() . If this is not called early, we will hit
+> resource collisions since pcieport driver is then probed way too
+> late.
 >
-> On Mon, Oct 21, 2013 at 3:06 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
->> mvebu_pcie_of_match_table is always compiled in. Hence of_match_ptr is
->> not required.
->>
->> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
->> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Frank Li <lznuaa@gmail.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> Cc: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> Cc: Sean Cross <xobs@kosagi.com>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> Cc: Tim Harvey <tharvey@gateworks.com>
+> Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/host/pci-imx6.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> Jason, I assume you'll merge this if you want it.
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 94e4d0f..ca8c5de 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -586,7 +586,7 @@ static int __init imx6_pcie_init(void)
+>  {
+>         return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
+>  }
+> -module_init(imx6_pcie_init);
+> +fs_initcall(imx6_pcie_init);
+>
+>  MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");
+>  MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
+> --
+> 1.8.4.rc3
+>
 
-BTW, Jason, if you think of it, fix the typo in the subject
-(s/redeundant/redundant/).  It was correct for the exynos patch, but
-wrong for the mvebu and imx6 patches.
+Acked-by: Tim Harvey <tharvey@gateworks.com>
+Tested-by: Tim Harvey <tharvey@gateworks.com>
 
->> ---
->>  drivers/pci/host/pci-mvebu.c |    3 +--
->>  1 file changed, 1 insertion(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
->> index 20c470c..7adae6e 100644
->> --- a/drivers/pci/host/pci-mvebu.c
->> +++ b/drivers/pci/host/pci-mvebu.c
->> @@ -1016,8 +1016,7 @@ static struct platform_driver mvebu_pcie_driver = {
->>         .driver = {
->>                 .owner = THIS_MODULE,
->>                 .name = "mvebu-pcie",
->> -               .of_match_table =
->> -                  of_match_ptr(mvebu_pcie_of_match_table),
->> +               .of_match_table = mvebu_pcie_of_match_table,
->>                 /* driver unloading/unbinding currently not supported */
->>                 .suppress_bind_attrs = true,
->>         },
->> --
->> 1.7.9.5
->>
+Tim
