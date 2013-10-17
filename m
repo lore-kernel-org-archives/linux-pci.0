@@ -1,155 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:53233 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754735Ab3JIPQr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 11:16:47 -0400
-Received: by mail-ie0-f171.google.com with SMTP id at1so2175127iec.30
-        for <linux-pci@vger.kernel.org>; Wed, 09 Oct 2013 08:16:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <000a01cec4eb$942dc7f0$bc8957d0$%han@samsung.com>
-References: <000a01cec4eb$942dc7f0$bc8957d0$%han@samsung.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Oct 2013 09:16:27 -0600
-Message-ID: <CAErSpo6fuT8Gj0dG59ptH801H3UbLh0bymEYUFhf9p8XX3zCNw@mail.gmail.com>
-Subject: Re: [PATCH V2] PCI: designware: Add irq_create_mapping()
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:55810
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750863Ab3JQHD2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Oct 2013 03:03:28 -0400
+From: Zhu Richard-R65037 <r65037@freescale.com>
+To: Marek Vasut <marex@denx.de>, Pratyush Anand <pratyush.anand@st.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-samsung-soc@vger.kernel.org,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
 	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	SRIKANTH TUMKUR SHIVANAND <ts.srikanth@samsung.com>,
-	Arnd Bergmann <arnd@arndb.de>, Sean Cross <xobs@kosagi.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: RE: [PATCH 5/6] PCI: imx6: Force Gen1 operation
+Date: Thu, 17 Oct 2013 07:02:19 +0000
+Message-ID: <0E83723C55F66F43A6041464FE31119D40F6D8@039-SN2MPN1-011.039d.mgd.msft.net>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
+ <1381853200-5534-6-git-send-email-marex@denx.de>
+ <20131016055427.GB2740@pratyush-vbox> <201310161557.41041.marex@denx.de>
+In-Reply-To: <201310161557.41041.marex@denx.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 9, 2013 at 6:32 AM, Jingoo Han <jg1.han@samsung.com> wrote:
-> From: Pratyush Anand <pratyush.anand@st.com>
->
-> Without irq_create_mapping(), the correct irq number cannot be
-> provided. In this case, it makes problems such as NULL deference.
-> Thus, irq_create_mapping() should be added for MSI.
->
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> Suggested-by: Kishon Vijay Abraham I <kishon@ti.com>
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Hi Marek:
 
-Applied to my pci/host-exynos branch for v3.13, thanks!
+> -----Original Message-----
+[...]
+> > > ---
+> > >
+> > >  drivers/pci/host/pci-imx6.c | 13 ++++++++++++-
+> > >  1 file changed, 12 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/pci/host/pci-imx6.c
+> > > b/drivers/pci/host/pci-imx6.c index ca8c5de..8402e9a 100644
+> > > --- a/drivers/pci/host/pci-imx6.c
+> > > +++ b/drivers/pci/host/pci-imx6.c
+> > > @@ -321,6 +321,7 @@ static void imx6_pcie_host_init(struct pcie_port
+> > > *pp)
+> > >
+> > >  {
+> > >
+> > >  	int count = 0;
+> > >  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> > >
+> > > +	uint32_t tmp;
+> > >
+> > >  	imx6_pcie_assert_core_reset(pp);
+> > >
+> > > @@ -330,13 +331,23 @@ static void imx6_pcie_host_init(struct
+> > > pcie_port
+> > > *pp)
+> > >
+> > >  	dw_pcie_setup_rc(pp);
+> > >
+> > > +	/*
+> > > +	 * FIXME:
+> > > +	 * Force Gen1 operation. In case the IP block is in Gen2 operation
+> > > +	 * mode, it does not detect the PCIe switch at all.
+> > > +	 */
+> > > +	tmp = readl(pp->dbi_base + 0x7c);
+> > > +	tmp &= ~0xf;
+> > > +	tmp |= 0x1;
+> > > +	writel(tmp, pp->dbi_base + 0x7c);
+> > > +
+> >
+> > Since you are forcing RC to work in GEN1, so you will not be able to
+> > connect any device at GEN2 now.
+> 
+> I'd rather prefer to know WHY if the RC is operating in Gen2 mode by default,
+> I cannot see the PCIe switch (Pericom PI7C9X2G303) connected to it. I was
+> unable to figure this out. Tim pointed out this thread [1] , so it might be
+> related in some way.
+> 
+> [1] https://community.freescale.com/message/316162#316162
+> 
+> I tried switching the PCIe RC to Gen2 operation right after LinkUp by writing
+> this register with 0x2 again and re-issuing the LinkUp check, which passed and
+> the status register reported Gen2 operation, but then the PCIe Intel NIC
+> connected to the downstream port of the Pericom switch still reported Gen1
+> operation for some reason.
+> 
+ [Richard] Is your Inetl NIC GEN1 EP device?
 
-Bjorn
+> > Yes, There are some buggy PCIe devices which works with GEN1 only host.
+> 
+> The pericom one is Gen2 according to it's datasheet.
+[Richard] Yes, it is. Pericom's PI7C9X2G303EL is GEN2 PCIe switch.
+It had been verified on FSL's 3.0.35 releases.
 
-> ---
-> Tested on Exynos5440.
->
->  drivers/pci/host/pcie-designware.c |   25 +++++++++++++------------
->  drivers/pci/host/pcie-designware.h |    2 +-
->  2 files changed, 14 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 8963017..92d58fd 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -157,7 +157,7 @@ static struct irq_chip dw_msi_irq_chip = {
->  void dw_handle_msi_irq(struct pcie_port *pp)
->  {
->         unsigned long val;
-> -       int i, pos;
-> +       int i, pos, irq;
->
->         for (i = 0; i < MAX_MSI_CTRLS; i++) {
->                 dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
-> @@ -165,8 +165,9 @@ void dw_handle_msi_irq(struct pcie_port *pp)
->                 if (val) {
->                         pos = 0;
->                         while ((pos = find_next_bit(&val, 32, pos)) != 32) {
-> -                               generic_handle_irq(pp->msi_irq_start
-> -                                       + (i * 32) + pos);
-> +                               irq = irq_find_mapping(pp->irq_domain,
-> +                                               i * 32 + pos);
-> +                               generic_handle_irq(irq);
->                                 pos++;
->                         }
->                 }
-> @@ -237,9 +238,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
->                 }
->         }
->
-> -       irq = (pp->msi_irq_start + pos0);
-> -
-> -       if ((irq + no_irqs) > (pp->msi_irq_start + MAX_MSI_IRQS-1))
-> +       irq = irq_find_mapping(pp->irq_domain, pos0);
-> +       if (!irq)
->                 goto no_valid_irq;
->
->         i = 0;
-> @@ -270,6 +270,7 @@ static void clear_irq(unsigned int irq)
->         struct irq_desc *desc;
->         struct msi_desc *msi;
->         struct pcie_port *pp;
-> +       struct irq_data *data = irq_get_irq_data(irq);
->
->         /* get the port structure */
->         desc = irq_to_desc(irq);
-> @@ -280,7 +281,7 @@ static void clear_irq(unsigned int irq)
->                 return;
->         }
->
-> -       pos = irq - pp->msi_irq_start;
-> +       pos = data->hwirq;
->
->         irq_free_desc(irq);
->
-> @@ -371,8 +372,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->         struct of_pci_range range;
->         struct of_pci_range_parser parser;
->         u32 val;
-> -
-> -       struct irq_domain *irq_domain;
-> +       int i;
->
->         if (of_pci_range_parser_init(&parser, np)) {
->                 dev_err(pp->dev, "missing ranges property\n");
-> @@ -441,15 +441,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->         }
->
->         if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> -               irq_domain = irq_domain_add_linear(pp->dev->of_node,
-> +               pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
->                                         MAX_MSI_IRQS, &msi_domain_ops,
->                                         &dw_pcie_msi_chip);
-> -               if (!irq_domain) {
-> +               if (!pp->irq_domain) {
->                         dev_err(pp->dev, "irq domain init failed\n");
->                         return -ENXIO;
->                 }
->
-> -               pp->msi_irq_start = irq_find_mapping(irq_domain, 0);
-> +               for (i = 0; i < MAX_MSI_IRQS; i++)
-> +                       irq_create_mapping(pp->irq_domain, i);
->         }
->
->         if (pp->ops->host_init)
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index faccbbf..1bf9fc5 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -47,7 +47,7 @@ struct pcie_port {
->         u32                     lanes;
->         struct pcie_host_ops    *ops;
->         int                     msi_irq;
-> -       int                     msi_irq_start;
-> +       struct irq_domain       *irq_domain;
->         unsigned long           msi_data;
->         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->  };
+> 
+> > So better solution should be to initialize RC by default at GEN2 or
+> > highest speed. Further, a parameter say gen_only can be passed from DT
+> > to force GEN1 only mode.
+> >
+> > What do you say?
+> 
+> I say I'd like to know the root cause of this problem. This Gen2 fix was
+> pulled from one of the myriad variants of the FSL PCIe driver, so apparently
+> this issue happens to other people as well. But why and how to properly fix
+> this so the whole PCIe bus does operate in Gen2 mode, I cannot tell :-(
+[Richard] GEN2 mode had been verified in FSL 3.0.35 kernel releases before.
+I don't know why it can't work in GEN2 mode in the latest kernel.
+BTW, Based on for-next branch of shawn's git reops and applied Merak's patch-set,
+ my PI7C9X2G303EL with intel e1000e network card plugged can't be detected at all. :(.
+
 > --
-> 1.7.10.4
->
->
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
+
+
+Best Regards
+Richard Zhu
+
