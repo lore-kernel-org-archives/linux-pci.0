@@ -1,240 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22300 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752579Ab3JHDNS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Oct 2013 23:13:18 -0400
-Message-ID: <1381201980.6330.4.camel@ul30vt.home>
-Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain of a device
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bhushan Bharat-R65777 <R65777@freescale.com>
-Cc: "joro@8bytes.org" <joro@8bytes.org>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"galak@kernel.crashing.org" <galak@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+Received: from mail-out.m-online.net ([212.18.0.10]:58658 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757861Ab3JQRjU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2013 13:39:20 -0400
+From: Marek Vasut <marex@denx.de>
+To: "Zhu Richard-R65037" <r65037@freescale.com>
+Subject: Re: [PATCH 5/6] PCI: imx6: Force Gen1 operation
+Date: Thu, 17 Oct 2013 19:34:33 +0200
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Wood Scott-B07421 <B07421@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Date: Mon, 07 Oct 2013 21:13:00 -0600
-In-Reply-To: <6A3DF150A5B70D4F9B66A25E3F7C888D0719385B@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1379575763-2091-3-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1380127533.3030.319.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0718FD1C@039-SN2MPN1-011.039d.mgd.msft.net>
-	 <1380901507.2673.204.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D07190F35@039-SN2MPN1-011.039d.mgd.msft.net>
-	 <1380906772.25705.19.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D07191143@039-SN2MPN1-011.039d.mgd.msft.net>
-	 <1380910322.25705.56.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0719385B@039-SN2MPN1-011.039d.mgd.msft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+References: <1381853200-5534-1-git-send-email-marex@denx.de> <201310161557.41041.marex@denx.de> <0E83723C55F66F43A6041464FE31119D40F6D8@039-SN2MPN1-011.039d.mgd.msft.net>
+In-Reply-To: <0E83723C55F66F43A6041464FE31119D40F6D8@039-SN2MPN1-011.039d.mgd.msft.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310171934.34021.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-10-07 at 05:46 +0000, Bhushan Bharat-R65777 wrote:
-> 
+Hi Richard,
+
+> Hi Marek:
 > > -----Original Message-----
-> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > Sent: Friday, October 04, 2013 11:42 PM
-> > To: Bhushan Bharat-R65777
-> > Cc: joro@8bytes.org; benh@kernel.crashing.org; galak@kernel.crashing.org; linux-
-> > kernel@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; linux-
-> > pci@vger.kernel.org; agraf@suse.de; Wood Scott-B07421; iommu@lists.linux-
-> > foundation.org
-> > Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain of a device
-> > 
-> > On Fri, 2013-10-04 at 17:23 +0000, Bhushan Bharat-R65777 wrote:
-> > >
-> > > > -----Original Message-----
-> > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > > Sent: Friday, October 04, 2013 10:43 PM
-> > > > To: Bhushan Bharat-R65777
-> > > > Cc: joro@8bytes.org; benh@kernel.crashing.org;
-> > > > galak@kernel.crashing.org; linux- kernel@vger.kernel.org;
-> > > > linuxppc-dev@lists.ozlabs.org; linux- pci@vger.kernel.org;
-> > > > agraf@suse.de; Wood Scott-B07421; iommu@lists.linux- foundation.org
-> > > > Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain of a
-> > > > device
-> > > >
-> > > > On Fri, 2013-10-04 at 16:47 +0000, Bhushan Bharat-R65777 wrote:
-> > > > >
-> > > > > > -----Original Message-----
-> > > > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > > > > Sent: Friday, October 04, 2013 9:15 PM
-> > > > > > To: Bhushan Bharat-R65777
-> > > > > > Cc: joro@8bytes.org; benh@kernel.crashing.org;
-> > > > > > galak@kernel.crashing.org; linux- kernel@vger.kernel.org;
-> > > > > > linuxppc-dev@lists.ozlabs.org; linux- pci@vger.kernel.org;
-> > > > > > agraf@suse.de; Wood Scott-B07421; iommu@lists.linux-
-> > > > > > foundation.org
-> > > > > > Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain of a
-> > > > > > device
-> > > > > >
-> > > > > > On Fri, 2013-10-04 at 09:54 +0000, Bhushan Bharat-R65777 wrote:
-> > > > > > >
-> > > > > > > > -----Original Message-----
-> > > > > > > > From: linux-pci-owner@vger.kernel.org
-> > > > > > > > [mailto:linux-pci-owner@vger.kernel.org]
-> > > > > > > > On Behalf Of Alex Williamson
-> > > > > > > > Sent: Wednesday, September 25, 2013 10:16 PM
-> > > > > > > > To: Bhushan Bharat-R65777
-> > > > > > > > Cc: joro@8bytes.org; benh@kernel.crashing.org;
-> > > > > > > > galak@kernel.crashing.org; linux- kernel@vger.kernel.org;
-> > > > > > > > linuxppc-dev@lists.ozlabs.org; linux- pci@vger.kernel.org;
-> > > > > > > > agraf@suse.de; Wood Scott-B07421; iommu@lists.linux-
-> > > > > > > > foundation.org; Bhushan Bharat-R65777
-> > > > > > > > Subject: Re: [PATCH 2/7] iommu: add api to get iommu_domain
-> > > > > > > > of a device
-> > > > > > > >
-> > > > > > > > On Thu, 2013-09-19 at 12:59 +0530, Bharat Bhushan wrote:
-> > > > > > > > > This api return the iommu domain to which the device is attached.
-> > > > > > > > > The iommu_domain is required for making API calls related to
-> > iommu.
-> > > > > > > > > Follow up patches which use this API to know iommu maping.
-> > > > > > > > >
-> > > > > > > > > Signed-off-by: Bharat Bhushan
-> > > > > > > > > <bharat.bhushan@freescale.com>
-> > > > > > > > > ---
-> > > > > > > > >  drivers/iommu/iommu.c |   10 ++++++++++
-> > > > > > > > >  include/linux/iommu.h |    7 +++++++
-> > > > > > > > >  2 files changed, 17 insertions(+), 0 deletions(-)
-> > > > > > > > >
-> > > > > > > > > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> > > > > > > > > index
-> > > > > > > > > fbe9ca7..6ac5f50 100644
-> > > > > > > > > --- a/drivers/iommu/iommu.c
-> > > > > > > > > +++ b/drivers/iommu/iommu.c
-> > > > > > > > > @@ -696,6 +696,16 @@ void iommu_detach_device(struct
-> > > > > > > > > iommu_domain *domain, struct device *dev)  }
-> > > > > > > > > EXPORT_SYMBOL_GPL(iommu_detach_device);
-> > > > > > > > >
-> > > > > > > > > +struct iommu_domain *iommu_get_dev_domain(struct device *dev) {
-> > > > > > > > > +	struct iommu_ops *ops = dev->bus->iommu_ops;
-> > > > > > > > > +
-> > > > > > > > > +	if (unlikely(ops == NULL || ops->get_dev_iommu_domain ==
-> > NULL))
-> > > > > > > > > +		return NULL;
-> > > > > > > > > +
-> > > > > > > > > +	return ops->get_dev_iommu_domain(dev); }
-> > > > > > > > > +EXPORT_SYMBOL_GPL(iommu_get_dev_domain);
-> > > > > > > >
-> > > > > > > > What prevents this from racing iommu_domain_free()?  There's
-> > > > > > > > no references acquired, so there's no reason for the caller
-> > > > > > > > to assume the
-> > > > > > pointer is valid.
-> > > > > > >
-> > > > > > > Sorry for late query, somehow this email went into a folder
-> > > > > > > and escaped;
-> > > > > > >
-> > > > > > > Just to be sure, there is not lock at generic "struct
-> > > > > > > iommu_domain", but IP
-> > > > > > specific structure (link FSL domain) linked in
-> > > > > > iommu_domain->priv have a lock, so we need to ensure this race
-> > > > > > in FSL iommu code (say drivers/iommu/fsl_pamu_domain.c), right?
-> > > > > >
-> > > > > > No, it's not sufficient to make sure that your use of the
-> > > > > > interface is race free.  The interface itself needs to be
-> > > > > > designed so that it's difficult to use incorrectly.
-> > > > >
-> > > > > So we can define iommu_get_dev_domain()/iommu_put_dev_domain();
-> > > > > iommu_get_dev_domain() will return domain with the lock held, and
-> > > > > iommu_put_dev_domain() will release the lock? And
-> > > > > iommu_get_dev_domain() must always be followed by
-> > > > > iommu_get_dev_domain().
-> > > >
-> > > > What lock?  get/put are generally used for reference counting, not
-> > > > locking in the kernel.
-> > > >
-> > > > > > That's not the case here.  This is a backdoor to get the iommu
-> > > > > > domain from the iommu driver regardless of who is using it or how.
-> > > > > > The iommu domain is created and managed by vfio, so shouldn't we
-> > > > > > be looking at how to do this through vfio?
-> > > > >
-> > > > > Let me first describe what we are doing here:
-> > > > > During initialization:-
-> > > > >  - vfio talks to MSI system to know the MSI-page and size
-> > > > >  - vfio then interacts with iommu to map the MSI-page in iommu
-> > > > > (IOVA is decided by userspace and physical address is the
-> > > > > MSI-page)
-> > > > >  - So the IOVA subwindow mapping is created in iommu and yes VFIO
-> > > > > know about
-> > > > this mapping.
-> > > > >
-> > > > > Now do SET_IRQ(MSI/MSIX) ioctl:
-> > > > >  - calls pci_enable_msix()/pci_enable_msi_block(): which is
-> > > > > supposed to set
-> > > > MSI address/data in device.
-> > > > >  - So in current implementation (this patchset) msi-subsystem gets
-> > > > > the IOVA
-> > > > from iommu via this defined interface.
-> > > > >  - Are you saying that rather than getting this from iommu, we
-> > > > > should get this
-> > > > from vfio? What difference does this make?
-> > > >
-> > > > Yes, you just said above that vfio knows the msi to iova mapping, so
-> > > > why go outside of vfio to find it later?  The difference is one case
-> > > > you can have a proper reference to data structures to make sure the
-> > > > pointer you get back actually has meaning at the time you're using
-> > > > it vs the code here where you're defining an API that returns a
-> > > > meaningless value
-> > >
-> > > With FSL-PAMU we will always get consistant data from iommu or vfio-data
-> > structure.
-> > 
-> > Great, but you're trying to add a generic API to the IOMMU subsystem that's
-> > difficult to use correctly.  The fact that you use it correctly does not justify
-> > the API.
-> > 
-> > > > because you can't check or
-> > > > enforce that an arbitrary caller is using it correctly.
-> > >
-> > > I am not sure what is arbitrary caller? pdev is known to vfio, so vfio
-> > > will only make pci_enable_msix()/pci_enable_msi_block() for this pdev.
-> > > If anyother code makes then it is some other unexpectedly thing
-> > > happening in system, no?
-> > 
-> > What's proposed here is a generic IOMMU API.  Anybody can call this.
-> > What if the host SCSI driver decides to go get the iommu domain for it's device
-> > (or any other device)?  Does that fit your usage model?
-> > 
-> > > >  It's not maintainable.
-> > > > Thanks,
-> > >
-> > > I do not have any issue with this as well, can you also describe the
-> > > type of API you are envisioning; I can think of defining some function
-> > > in vfio.c/vfio_iommu*.c, make them global and declare then in
-> > > include/Linux/vfio.h And include <Linux/vfio.h> in caller file
-> > > (arch/powerpc/kernel/msi.c)
-> > 
-> > Do you really want module dependencies between vfio and your core kernel MSI
-> > setup?  Look at the vfio external user interface that we've already defined.
-> > That allows other components of the kernel to get a proper reference to a vfio
-> > group.  From there you can work out how to get what you want.  Another
-> > alternative is that vfio could register an MSI to IOVA mapping with architecture
-> > code when the mapping is created.  The MSI setup path could then do a lookup in
-> > architecture code for the mapping.  You could even store the MSI to IOVA mapping
-> > in VFIO and create an interface where SET_IRQ passes that mapping into setup
-> > code.
 > 
-> Ok, What I want is to get IOVA associated with a physical address
-> (physical address of MSI-bank).
-> And currently I do not see a way to know IOVA of a physical address
-> and doing all this domain get and then search through all of
-> iommu-windows of that domain.
+> [...]
 > 
-> What if we add an iommu-API which can return the IOVA mapping of a
-> physical address. Current use case is setting up MSI's for aperture
-> type of IOMMU also getting a phys_to_iova() mapping is independent of
-> VFIO, your thought?
+> > > > ---
+> > > > 
+> > > >  drivers/pci/host/pci-imx6.c | 13 ++++++++++++-
+> > > >  1 file changed, 12 insertions(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/drivers/pci/host/pci-imx6.c
+> > > > b/drivers/pci/host/pci-imx6.c index ca8c5de..8402e9a 100644
+> > > > --- a/drivers/pci/host/pci-imx6.c
+> > > > +++ b/drivers/pci/host/pci-imx6.c
+> > > > @@ -321,6 +321,7 @@ static void imx6_pcie_host_init(struct pcie_port
+> > > > *pp)
+> > > > 
+> > > >  {
+> > > >  
+> > > >  	int count = 0;
+> > > >  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> > > > 
+> > > > +	uint32_t tmp;
+> > > > 
+> > > >  	imx6_pcie_assert_core_reset(pp);
+> > > > 
+> > > > @@ -330,13 +331,23 @@ static void imx6_pcie_host_init(struct
+> > > > pcie_port
+> > > > *pp)
+> > > > 
+> > > >  	dw_pcie_setup_rc(pp);
+> > > > 
+> > > > +	/*
+> > > > +	 * FIXME:
+> > > > +	 * Force Gen1 operation. In case the IP block is in Gen2 
+operation
+> > > > +	 * mode, it does not detect the PCIe switch at all.
+> > > > +	 */
+> > > > +	tmp = readl(pp->dbi_base + 0x7c);
+> > > > +	tmp &= ~0xf;
+> > > > +	tmp |= 0x1;
+> > > > +	writel(tmp, pp->dbi_base + 0x7c);
+> > > > +
+> > > 
+> > > Since you are forcing RC to work in GEN1, so you will not be able to
+> > > connect any device at GEN2 now.
+> > 
+> > I'd rather prefer to know WHY if the RC is operating in Gen2 mode by
+> > default, I cannot see the PCIe switch (Pericom PI7C9X2G303) connected to
+> > it. I was unable to figure this out. Tim pointed out this thread [1] ,
+> > so it might be related in some way.
+> > 
+> > [1] https://community.freescale.com/message/316162#316162
+> > 
+> > I tried switching the PCIe RC to Gen2 operation right after LinkUp by
+> > writing this register with 0x2 again and re-issuing the LinkUp check,
+> > which passed and the status register reported Gen2 operation, but then
+> > the PCIe Intel NIC connected to the downstream port of the Pericom
+> > switch still reported Gen1 operation for some reason.
+> 
+>  [Richard] Is your Inetl NIC GEN1 EP device?
 
-A physical address can be mapped to multiple IOVAs, so the interface
-seems flawed by design.  It also has the same problem as above, it's a
-backdoor that can be called asynchronous to the owner of the domain, so
-what reason is there to believe the result?  It just replaces an
-iommu_domain pointer with an IOVA.  VFIO knows this mapping, so why are
-we trying to go behind its back and ask the IOMMU?  Thanks,
+Yes, the i210 is PCIe v2.1 (2.5GT/s) x1 device.
 
-Alex
+> > > Yes, There are some buggy PCIe devices which works with GEN1 only host.
+> > 
+> > The pericom one is Gen2 according to it's datasheet.
+> 
+> [Richard] Yes, it is. Pericom's PI7C9X2G303EL is GEN2 PCIe switch.
+> It had been verified on FSL's 3.0.35 releases.
 
+Verified how? What does it mean?
+
+Note that when I followed [1] in this manner:
+
+1) Force GEN1 mode
+2) Wait for PHY link up
+3) Allow GEN2 mode
+4) Start GEN2 speed change
+5) Wait for PHY link up
+
+my devices were detected and the link between pericom and mx6 was operating in 
+gen2 mode. Thus I suspect we might need to start the port in Gen1 mode and 
+switch to Gen2 only after link is up. Does that make sense?
+
+https://community.freescale.com/thread/304284
+
+> > > So better solution should be to initialize RC by default at GEN2 or
+> > > highest speed. Further, a parameter say gen_only can be passed from DT
+> > > to force GEN1 only mode.
+> > > 
+> > > What do you say?
+> > 
+> > I say I'd like to know the root cause of this problem. This Gen2 fix was
+> > pulled from one of the myriad variants of the FSL PCIe driver, so
+> > apparently this issue happens to other people as well. But why and how
+> > to properly fix this so the whole PCIe bus does operate in Gen2 mode, I
+> > cannot tell :-(
+> 
+> [Richard] GEN2 mode had been verified in FSL 3.0.35 kernel releases before.
+> I don't know why it can't work in GEN2 mode in the latest kernel.
+> BTW, Based on for-next branch of shawn's git reops and applied Merak's
+> patch-set, my PI7C9X2G303EL with intel e1000e network card plugged can't
+> be detected at all. :(.
+
+I think we're still fighting some issue with resource mappings here. We also 
+agreed with Tim that my patches are incomplete. I will send out a new version 
+ASAP.
