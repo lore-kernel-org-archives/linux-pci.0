@@ -1,91 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db8lp0187.outbound.messaging.microsoft.com ([213.199.154.187]:16023
-	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752167Ab3J2Lef (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 07:34:35 -0400
-From: Bharat Bhushan <r65777@freescale.com>
-To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<galak@kernel.crashing.org>, <scottwood@freescale.com>,
-	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
-	<stuart.yoder@freescale.com>
-CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
-	Bharat Bhushan <bharat.bhushan@freescale.com>
-Subject: [PATCH 2/5 RFC] powerpc: pci: Add arch specific msi region interface
-Date: Tue, 29 Oct 2013 16:57:40 +0530
-Message-ID: <1383046062-16520-4-git-send-email-Bharat.Bhushan@freescale.com>
-In-Reply-To: <1383046062-16520-1-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1383046062-16520-1-git-send-email-Bharat.Bhushan@freescale.com>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:19672 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753811Ab3JQNEt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2013 09:04:49 -0400
+Date: Thu, 17 Oct 2013 09:04:44 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Andrew Lunn' <andrew@lunn.ch>,
+	'Gregory Clement' <gregory.clement@free-electrons.com>
+Subject: Re: [PATCH V3 3/3] PCI: mvebu: return NULL instead of ERR_PTR(ret)
+Message-ID: <20131017130444.GC22434@titan.lakedaemon.net>
+References: <000c01ceb816$19f0dd10$4dd29730$%han@samsung.com>
+ <000101ceb826$8695b7f0$93c127d0$%han@samsung.com>
+ <000001cec986$9f8ef570$deace050$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <000001cec986$9f8ef570$deace050$%han@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the interface to get the msi region information from arch
-specific code. The machine spicific code is not yet defined.
+On Tue, Oct 15, 2013 at 06:12:07PM +0900, Jingoo Han wrote:
+> On Monday, September 23, 2013 3:31 PM, Jingoo Han wrote:
+> > 
+> > Return NULL instead of ERR_PTR(ret) in order to fix the following
+> > sparse warning:
+> > 
+> > drivers/pci/host/pci-mvebu.c:744:31: warning: incorrect type in return expression (different address
+> > spaces)
+> > drivers/pci/host/pci-mvebu.c:744:31:    expected void [noderef] <asn:2>*
+> > drivers/pci/host/pci-mvebu.c:744:31:    got void *
+> > 
+> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> > Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> 
+> (+cc Andrew Lunn, Gregory Clement)
+> 
+> Hi Jason Cooper,
+> 
+> Would you apply this patch into your 'linux-mvebu.git' tree?
+> It was already Acked by Thomas Petazzoni.
+> Also, it is a trivial change to fix sparse warning.
+> Thank you.
 
-Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
----
- arch/powerpc/include/asm/machdep.h |    8 ++++++++
- arch/powerpc/kernel/msi.c          |   18 ++++++++++++++++++
- 2 files changed, 26 insertions(+), 0 deletions(-)
+Applied to mvebu/drivers
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 8b48090..8d1b787 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -30,6 +30,7 @@ struct file;
- struct pci_controller;
- struct kimage;
- struct pci_host_bridge;
-+struct msi_region;
- 
- struct machdep_calls {
- 	char		*name;
-@@ -124,6 +125,13 @@ struct machdep_calls {
- 	int		(*setup_msi_irqs)(struct pci_dev *dev,
- 					  int nvec, int type);
- 	void		(*teardown_msi_irqs)(struct pci_dev *dev);
-+
-+	/* Returns the number of MSI regions (banks) */
-+	int		(*msi_get_region_count)(void);
-+
-+	/* Returns the requested region's address and size */
-+	int		(*msi_get_region)(int region_num,
-+					  struct msi_region *region);
- #endif
- 
- 	void		(*restart)(char *cmd);
-diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
-index 8bbc12d..1a67787 100644
---- a/arch/powerpc/kernel/msi.c
-+++ b/arch/powerpc/kernel/msi.c
-@@ -13,6 +13,24 @@
- 
- #include <asm/machdep.h>
- 
-+int arch_msi_get_region_count(void)
-+{
-+	if (ppc_md.msi_get_region_count) {
-+		pr_debug("msi: Using platform get_region_count routine.\n");
-+		return ppc_md.msi_get_region_count();
-+	}
-+	return 0;
-+}
-+
-+int arch_msi_get_region(int region_num, struct msi_region *region)
-+{
-+	if (ppc_md.msi_get_region) {
-+		pr_debug("msi: Using platform get_region routine.\n");
-+		return ppc_md.msi_get_region(region_num, region);
-+	}
-+	return 0;
-+}
-+
- int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
- {
- 	if (!ppc_md.setup_msi_irqs || !ppc_md.teardown_msi_irqs) {
--- 
-1.7.0.4
+thx,
 
-
+Jason.
