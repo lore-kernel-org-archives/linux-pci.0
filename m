@@ -1,70 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:62993 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751424Ab3JIJR1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 05:17:27 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kishon Vijay Abraham I' <kishon@ti.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <000401cec4c6$dc415180$94c3f480$%han@samsung.com>
- <52551C6E.1040404@ti.com>
-In-reply-to: <52551C6E.1040404@ti.com>
-Subject: Re: [PATCH] PCI: designware: Add irq_create_mapping()
-Date: Wed, 09 Oct 2013 18:17:24 +0900
-Message-id: <003901cec4d0$5d83e650$188bb2f0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:11306 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750985Ab3JSGX1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:23:27 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 17/29] megaraid: Make use of pcim_enable_msix() interface
+Date: Fri, 18 Oct 2013 19:12:17 +0200
+Message-Id: <857b0c2709f6f6ecf0ab1090fabba8c14c4b2d70.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 09, 2013 6:06 PM, Kishon Vijay Abraham I wrote:
-> On Wednesday 09 October 2013 01:39 PM, Jingoo Han wrote:
-> > Without irq_create_mapping(), the correct irq number cannot be
-> > provided. In this case, it makes problem such as NULL deference.
-> > Thus, irq_create_mapping() should be added for MSI.
-> >
-> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> > ---
-> > Tested on Exynos5440.
-> >
-> >  drivers/pci/host/pcie-designware.c |   10 ++++------
-> >  drivers/pci/host/pcie-designware.h |    1 +
-> >  2 files changed, 5 insertions(+), 6 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 8963017..e536bb6 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -237,6 +237,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
-> >  		}
-> >  	}
-> >
-> > +	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, 0);
-> > +
-> 
-> I think irq_create_mapping should be done for all the MSI irq lines instead of
-> only the first line. So you might have to do for MAX_MSI_IRQS lines.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c |   16 +++++-----------
+ 1 files changed, 5 insertions(+), 11 deletions(-)
 
-I tested PCIe LAN card after I replaced 0 with MAX_MSI_IRQS.
-However, it makes an error message as below:
-But, PCIe LAN card works properly.
-
-WARNING: CPU: 1 PID: 1 at kernel/irq/irqdomain.c:276 irq_domain_associate+0x150/0x1a8()
-error: hwirq 0x20 is too large for (null)
-
-Best regards,
-Jingoo Han
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 3020921..e54c2e7 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3727,18 +3727,12 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 					     (unsigned int)num_online_cpus());
+ 		for (i = 0; i < instance->msix_vectors; i++)
+ 			instance->msixentry[i].entry = i;
+-		i = pci_enable_msix(instance->pdev, instance->msixentry,
+-				    instance->msix_vectors);
+-		if (i >= 0) {
+-			if (i) {
+-				if (!pci_enable_msix(instance->pdev,
+-						     instance->msixentry, i))
+-					instance->msix_vectors = i;
+-				else
+-					instance->msix_vectors = 0;
+-			}
+-		} else
++		i = pcim_enable_msix(instance->pdev, instance->msixentry,
++				     instance->msix_vectors);
++		if (i < 0)
+ 			instance->msix_vectors = 0;
++		else
++			instance->msix_vectors = i;
+ 
+ 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
+ 			"<%d> MSIX vector,Online CPUs: <%d>,"
+-- 
+1.7.7.6
 
