@@ -1,41 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:37747 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754721Ab3JQNKj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2013 09:10:39 -0400
-Date: Thu, 17 Oct 2013 09:10:31 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCH v2] PCI: mvebu - Support a bridge with no IO port window
-Message-ID: <20131017131031.GD22434@titan.lakedaemon.net>
-References: <1381868182-8544-1-git-send-email-jgunthorpe@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1381868182-8544-1-git-send-email-jgunthorpe@obsidianresearch.com>
+Received: from mailout3.samsung.com ([203.254.224.33]:64536 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185Ab3JRFbf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Oct 2013 01:31:35 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Zhenzhong Duan ' <zhenzhong.duan@oracle.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	'xen-devel' <xen-devel@lists.xen.org>,
+	'Konrad Rzeszutek Wilk' <konrad.wilk@oracle.com>,
+	'Feng Jin' <joe.jin@oracle.com>,
+	'Sucheta Chakraborty' <sucheta.chakraborty@qlogic.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <525E32FC.3010604@oracle.com>
+In-reply-to: <525E32FC.3010604@oracle.com>
+Subject: Re: [PATCH 1/3] PCI: Refactor restore_msi_irqs - code movement
+Date: Fri, 18 Oct 2013 14:31:15 +0900
+Message-id: <000001cecbc3$43853e30$ca8fba90$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 15, 2013 at 02:16:22PM -0600, Jason Gunthorpe wrote:
-> Make pcie-io-aperture and the IO port MBUS ID in ranges optional.
-> If not provided the bridge reports to Linux that IO space mapping is
-> not supported and refuses to configure an IO mbus window.
+On Wednesday, October 16, 2013 3:32 PM, Zhenzhong Duan wrote:
 > 
-> This allows both complete disable (do not specify pcie-io-aperture) and
-> per-port disable (do not specify a IO target ranges entry for the port)
+> Move default_restore_msi_irqs down to reference msi_mask_irq and msix_mask_irq.
 > 
-> Most PCIE devices these days do not require IO support to function,
-> so having an option to disable it in the driver is useful.
+> This patch lays the groundwork for patch titled:
+> 'PCI: Refactor MSI/MSIX mask restore code to fix interrupt lost issue'
 > 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> ---
->  drivers/pci/host/pci-mvebu.c | 64 +++++++++++++++++++++++++++++---------------
->  1 file changed, 43 insertions(+), 21 deletions(-)
+> Tested-by: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 
-Applied to mvebu/drivers
+Reviewed-by: Jingoo Han <jg1.han@samsung.com>
 
-thx,
+It looks good. Also, I tested this patch on Exynos5440.
 
-Jason.
+Best regards,
+Jingoo Han
+
