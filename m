@@ -1,68 +1,232 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27296 "EHLO
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:15265 "EHLO
 	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753500Ab3JBSBn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 14:01:43 -0400
+	by vger.kernel.org with ESMTP id S1751326Ab3JSHGs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 03:06:48 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 73/77] vmxnet3: Return -ENOSPC when not enough MSI-X vectors available
-Date: Wed,  2 Oct 2013 12:49:29 +0200
-Message-Id: <a24303b6fa85cfb01b4e1b6c67ff26825824d7f7.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 10/29] PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
+Date: Fri, 18 Oct 2013 19:12:10 +0200
+Message-Id: <246d1586c10fc8c787935e6d14c80f7fc268cd00.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+As result of introduction of pci_get_msi_cap() interface
+pci_enable_msi_block_auto() function became superflous.
+
+To enable maximum possible number of MSIs drivers will
+first obtain that number from pci_get_msi_cap() function
+and then call pci_enable_msi_block() interface.
+
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/net/vmxnet3/vmxnet3_drv.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ Documentation/PCI/MSI-HOWTO.txt |   30 +-------------------
+ drivers/ata/ahci.c              |   56 ++++++++++++++++++++++++--------------
+ drivers/pci/msi.c               |   22 ---------------
+ include/linux/pci.h             |    7 -----
+ 4 files changed, 37 insertions(+), 78 deletions(-)
 
-diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
-index 3518173..3df7f32 100644
---- a/drivers/net/vmxnet3/vmxnet3_drv.c
-+++ b/drivers/net/vmxnet3/vmxnet3_drv.c
-@@ -2752,7 +2752,10 @@ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
- 				   "Failed to enable MSI-X, error: %d\n", err);
- 			return err;
- 		} else if (err < vector_threshold) {
--			break;
-+			dev_info(&adapter->pdev->dev,
-+				 "Number of MSI-Xs which can be allocated "
-+				 "is lower than min threshold required.\n");
-+			return -ENOSPC;
- 		} else {
- 			/* If fails to enable required number of MSI-x vectors
- 			 * try enabling minimum number of vectors required.
-@@ -2764,9 +2767,6 @@ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
- 		}
- 	}
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index e7e3b20..47118f3 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -127,33 +127,7 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
+ returns as soon as it finds any constraint that doesn't allow the
+ call to succeed.
  
--	dev_info(&adapter->pdev->dev,
--		 "Number of MSI-X interrupts which can be allocated "
--		 "is lower than min threshold required.\n");
- 	return err;
+-4.2.3 pci_enable_msi_block_auto
+-
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
+-
+-This variation on pci_enable_msi() call allows a device driver to request
+-the maximum possible number of MSIs.  The MSI specification only allows
+-interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
+-
+-If this function returns a positive number, it indicates that it has
+-succeeded and the returned value is the number of allocated interrupts. In
+-this case, the function enables MSI on this device and updates dev->irq to
+-be the lowest of the new interrupts assigned to it.  The other interrupts
+-assigned to the device are in the range dev->irq to dev->irq + returned
+-value - 1.
+-
+-If this function returns a negative number, it indicates an error and
+-the driver should not attempt to request any more MSI interrupts for
+-this device.
+-
+-If the device driver needs to know the number of interrupts the device
+-supports it can pass the pointer count where that number is stored. The
+-device driver must decide what action to take if pci_enable_msi_block_auto()
+-succeeds, but returns a value less than the number of interrupts supported.
+-If the device driver does not need to know the number of interrupts
+-supported, it can set the pointer count to NULL.
+-
+-4.2.4 pci_disable_msi
++4.2.3 pci_disable_msi
+ 
+ void pci_disable_msi(struct pci_dev *dev)
+ 
+@@ -169,7 +143,7 @@ on any interrupt for which it previously called request_irq().
+ Failure to do so results in a BUG_ON(), leaving the device with
+ MSI enabled and thus leaking its vector.
+ 
+-4.2.5 pci_get_msi_cap
++4.2.4 pci_get_msi_cap
+ 
+ int pci_get_msi_cap(struct pci_dev *dev)
+ 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 9d715ae..f1c8838 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1091,26 +1091,40 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
+ 
+-int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
++int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
++			 struct ahci_host_priv *hpriv)
+ {
+-	int rc;
+-	unsigned int maxvec;
++	int rc, nvec;
+ 
+-	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
+-		rc = pci_enable_msi_block_auto(pdev, &maxvec);
+-		if (rc > 0) {
+-			if ((rc == maxvec) || (rc == 1))
+-				return rc;
+-			/*
+-			 * Assume that advantage of multipe MSIs is negated,
+-			 * so fallback to single MSI mode to save resources
+-			 */
+-			pci_disable_msi(pdev);
+-			if (!pci_enable_msi(pdev))
+-				return 1;
+-		}
+-	}
++	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
++		goto intx;
++
++	rc = pci_get_msi_cap(pdev);
++	if (rc < 0)
++		goto intx;
++
++	/*
++	 * If number of MSIs is less than number of ports then Sharing Last
++	 * Message mode could be enforced. In this case assume that advantage
++	 * of multipe MSIs is negated and use single MSI mode instead.
++	 */
++	if (rc < n_ports)
++		goto single_msi;
++
++	nvec = rc;
++	rc = pci_enable_msi_block(pdev, nvec);
++	if (rc)
++		goto intx;
+ 
++	return nvec;
++
++single_msi:
++	rc = pci_enable_msi(pdev);
++	if (rc)
++		goto intx;
++	return 1;
++
++intx:
+ 	pci_intx(pdev, 1);
+ 	return 0;
+ }
+@@ -1277,10 +1291,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
+ 
+-	n_msis = ahci_init_interrupts(pdev, hpriv);
+-	if (n_msis > 1)
+-		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+-
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
+@@ -1335,6 +1345,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
+ 
++	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
++	if (n_msis > 1)
++		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
++
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 14dc4d1..13bd901 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -851,28 +851,6 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ }
+ EXPORT_SYMBOL(pci_enable_msi_block);
+ 
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+-{
+-	int ret, nvec;
+-
+-	ret = pci_get_msi_cap(dev);
+-	if (ret < 0)
+-		return ret;
+-
+-	if (maxvec)
+-		*maxvec = ret;
+-
+-	do {
+-		nvec = ret;
+-		ret = pci_enable_msi_block(dev, nvec);
+-	} while (ret > 0);
+-
+-	if (ret < 0)
+-		return ret;
+-	return nvec;
+-}
+-EXPORT_SYMBOL(pci_enable_msi_block_auto);
+-
+ void pci_msi_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *desc;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index df72084..a04f5da 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1156,12 +1156,6 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ 	return -ENOSYS;
  }
  
+-static inline int
+-pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+-{
+-	return -ENOSYS;
+-}
+-
+ static inline void pci_msi_shutdown(struct pci_dev *dev)
+ { }
+ static inline void pci_disable_msi(struct pci_dev *dev)
+@@ -1194,7 +1188,6 @@ static inline int pci_msi_enabled(void)
+ #else
+ int pci_get_msi_cap(struct pci_dev *dev);
+ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_table_size(struct pci_dev *dev);
 -- 
 1.7.7.6
 
