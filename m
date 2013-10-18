@@ -1,105 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:40353 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759538Ab3JOQHE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 12:07:04 -0400
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:15041 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750948Ab3JSHE6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 03:04:58 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/6] PCI: imx6: Fix the clock for PCIe
-Date: Tue, 15 Oct 2013 18:06:36 +0200
-Message-Id: <1381853200-5534-3-git-send-email-marex@denx.de>
-In-Reply-To: <1381853200-5534-1-git-send-email-marex@denx.de>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 00/29] Introduce pcim_enable_msi*() family helpers
+Date: Fri, 18 Oct 2013 19:12:00 +0200
+Message-Id: <cover.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe needs lvds_gate for successful operation, so make the PCIe
-driver enable (set as output) the lvds_gate .
+This series is against "next" branch in Bjorn's repo:
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/host/pci-imx6.c | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+Currently many device drivers need contiguously call functions
+pci_enable_msix() for MSI-X or pci_enable_msi_block() for MSI
+in a loop until success or failure. This update generalizes
+this usage pattern and introduces pcim_enable_msi*() family
+helpers.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 728989a..94e4d0f 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -35,6 +35,7 @@ struct imx6_pcie {
- 	int			power_on_gpio;
- 	int			wake_up_gpio;
- 	int			disable_gpio;
-+	struct clk		*lvds_sel;
- 	struct clk		*lvds_gate;
- 	struct clk		*sata_ref_100m;
- 	struct clk		*pcie_ref_125m;
-@@ -255,6 +256,12 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie_ref;
- 	}
- 
-+	ret = clk_prepare_enable(imx6_pcie->lvds_sel);
-+	if (ret) {
-+		dev_err(pp->dev, "unable to enable lvds_sel\n");
-+		goto err_lvds_sel;
-+	}
-+
- 	ret = clk_prepare_enable(imx6_pcie->lvds_gate);
- 	if (ret) {
- 		dev_err(pp->dev, "unable to enable lvds_gate\n");
-@@ -273,8 +280,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 	return 0;
- 
- err_pcie_axi:
--	clk_disable_unprepare(imx6_pcie->lvds_gate);
-+	clk_disable_unprepare(imx6_pcie->lvds_sel);
- err_lvds_gate:
-+	clk_disable_unprepare(imx6_pcie->lvds_gate);
-+err_lvds_sel:
- 	clk_disable_unprepare(imx6_pcie->pcie_ref_125m);
- err_pcie_ref:
- 	clk_disable_unprepare(imx6_pcie->sata_ref_100m);
-@@ -497,6 +506,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	/* Fetch clocks */
-+	imx6_pcie->lvds_sel = devm_clk_get(&pdev->dev, "lvds_sel");
-+	if (IS_ERR(imx6_pcie->lvds_sel)) {
-+		dev_err(&pdev->dev,
-+			"lvds_sel clock select missing or invalid\n");
-+		ret = PTR_ERR(imx6_pcie->lvds_sel);
-+		goto err;
-+	}
-+
- 	imx6_pcie->lvds_gate = devm_clk_get(&pdev->dev, "lvds_gate");
- 	if (IS_ERR(imx6_pcie->lvds_gate)) {
- 		dev_err(&pdev->dev,
+As result, device drivers do not have to deal with tri-state
+return values from pci_enable_msix() and pci_enable_msi_block()
+functions directly and expected to have more clearer and straight
+code.
+
+So i.e. the request loop described in the documentation...
+
+	int foo_driver_enable_msix(struct foo_adapter *adapter,
+				   int nvec)
+	{
+		while (nvec >= FOO_DRIVER_MINIMUM_NVEC) {
+			rc = pci_enable_msix(adapter->pdev,
+					     adapter->msix_entries,
+					     nvec);
+			if (rc > 0)
+				nvec = rc;
+			else
+				return rc;
+		}
+
+		return -ENOSPC;
+	}
+
+...would turn into a single helper call....
+
+	rc = pcim_enable_msix_range(adapter->pdev,
+				    adapter->msix_entries,
+				    nvec,
+				    FOO_DRIVER_MINIMUM_NVEC);
+
+
+Device drivers with more specific requirements (i.e. a number of
+MSI-Xs which is a multiple of a certain number within a specified
+range) would still need to implement the loop using the two old
+functions.
+
+It is fair to say the proposal in v1 ("Re-design MSI/MSI-X interrupts
+enablement pattern")is scrapped. Thus, I do not clarify what are the
+changes since v1  - the whole v2 series could be
+considered as completely new.
+
+Device driver updates (patches 12-29) are provided to clarify the
+change and expected to get reviews in follow-up post(s) when/if
+patch 12 ("PCI/MSI: Introduce pcim_enable_msi*() family helpers")
+is accepted.
+
+Patches 1,2	- ACK'ed tweaks for s390 architecture
+Patches 3,4	- fixes for PowerPC pSeries platform
+Patches 5-12	- fixes, tweaks and changes of the generic MSI code
+Patches 12-29	- example updates of few device drivers
+
+The tree could be found in "pci-next-msi-v2" branch in repo:
+https://github.com/a-gordeev/linux.git
+
+Alexander Gordeev (29):
+  PCI/MSI/s390: Fix single MSI only check
+  PCI/MSI/s390: Remove superfluous check of MSI type
+  PCI/MSI/pSeries: Fix wrong error code reporting
+  PCI/MSI/pSeries: Make quota traversing and requesting race-safe
+  PCI/MSI: Fix return value when populate_msi_sysfs() failed
+  PCI/MSI: Get rid of useless count of msi_desc leftovers
+  PCI/MSI: Return -ENOSYS for unimplemented interfaces, not -1
+  PCI/MSI: Make pci_enable_msix() 'nvec' argument unsigned int
+  PCI/MSI: Factor out pci_get_msi_cap() interface
+  PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
+  PCI/MSI: Convert pci_msix_table_size() to a public interface
+  PCI/MSI: Introduce pcim_enable_msi*() family helpers
+  ipr: Do not call pci_disable_msi/msix() if pci_enable_msi/msix()
+    failed
+  ipr: Make use of pcim_enable_msi/msix() interfaces
+  ixgbe: Make use of pcim_enable_msix_range() interface
+  ixgbevf: Make use of pcim_enable_msix_range() interface
+  megaraid: Make use of pcim_enable_msix() interface
+  ntb: Fix missed call to pci_enable_msix()
+  ntb: Make use of pcim_enable_msix/msix_exact() interfaces
+  qib: Make use of pcim_enable_msix() and pci_msix_table_size()
+    interfaces
+  qla2xxx: Make use of pcim_enable_msix_range() interface
+  qlge: Get rid of an redundant assignment
+  qlge: Make use of pcim_enable_msix() interface
+  tg3: Make use of pcim_enable_msix() interface
+  vmxnet3: Return -EINVAL if number of requested MSI-Xs is not enough
+  vmxnet3: Fixup a weird loop exit
+  vmxnet3: Return -ENOSPC when not enough MSI-X vectors available
+  vmxnet3: Limit number of rx queues to 1 if per-queue MSI-Xs failed
+  vmxnet3: Make use of pcim_enable_msix_range() interface
+
+ Documentation/PCI/MSI-HOWTO.txt                   |  169 ++++++++++++++++++---
+ arch/powerpc/platforms/pseries/msi.c              |   26 +++-
+ arch/s390/pci/pci.c                               |    4 +-
+ drivers/ata/ahci.c                                |   56 +++++---
+ drivers/infiniband/hw/qib/qib_pcie.c              |   48 +++---
+ drivers/net/ethernet/broadcom/tg3.c               |    6 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c      |   16 +--
+ drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c |   33 ++---
+ drivers/net/ethernet/qlogic/qlge/qlge_main.c      |   16 +--
+ drivers/net/vmxnet3/vmxnet3_drv.c                 |   58 +++-----
+ drivers/ntb/ntb_hw.c                              |   34 ++---
+ drivers/pci/msi.c                                 |  129 +++++++++-------
+ drivers/pci/pcie/portdrv_core.c                   |    5 +-
+ drivers/scsi/ipr.c                                |   51 +++----
+ drivers/scsi/megaraid/megaraid_sas_base.c         |   16 +--
+ drivers/scsi/qla2xxx/qla_isr.c                    |   28 ++--
+ include/linux/pci.h                               |   79 +++++++++--
+ 17 files changed, 466 insertions(+), 308 deletions(-)
+
 -- 
-1.8.4.rc3
+1.7.7.6
 
