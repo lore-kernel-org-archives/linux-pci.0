@@ -1,54 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:40426 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750971Ab3J2WM6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 18:12:58 -0400
-Received: by mail-ie0-f177.google.com with SMTP id e14so862796iej.8
-        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 15:12:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1382346403-29576-2-git-send-email-sachin.kamat@linaro.org>
-References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org> <1382346403-29576-2-git-send-email-sachin.kamat@linaro.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 29 Oct 2013 16:12:37 -0600
-Message-ID: <CAErSpo6n4F1zREyYXuwq9LCRLCD+yZ9o8j==ANamiAZesFz=EA@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI: mvebu: Remove redeundant of_match_ptr
-To: Sachin Kamat <sachin.kamat@linaro.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:58170 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755976Ab3JRA1c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2013 20:27:32 -0400
+Received: by mail-pd0-f178.google.com with SMTP id w10so3668860pde.37
+        for <linux-pci@vger.kernel.org>; Thu, 17 Oct 2013 17:27:32 -0700 (PDT)
+From: Tim Harvey <tharvey@gateworks.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Marek Vasut <marex@denx.de>
+Subject: [PATCH] PCI: imx6: fix imprecise abort handler
+Date: Thu, 17 Oct 2013 17:27:22 -0700
+Message-Id: <1382056042-7299-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jason]
+An imprecise abort is triggered when a port behind a switch is accessed
+and no device is present.  At enumeration, imprecise aborts are not enabled
+thus this ends up getting deferred until the kernel has completed init.  At
+that point we must not adjust PC - the handler must do nothing, but a handler
+must exist.
 
-On Mon, Oct 21, 2013 at 3:06 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
-> mvebu_pcie_of_match_table is always compiled in. Hence of_match_ptr is
-> not required.
->
-> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+This fixes random crashes that occur right after freeing init.
+This is against linux-pci/host-imx6.
 
-Jason, I assume you'll merge this if you want it.
+Acked-by: Marek Vasut <marex@denx.de>
+Tested-by: Marek Vasut <marex@denx.de>
+Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+---
+ drivers/pci/host/pci-imx6.c |    6 ------
+ 1 file changed, 6 deletions(-)
 
-> ---
->  drivers/pci/host/pci-mvebu.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 20c470c..7adae6e 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -1016,8 +1016,7 @@ static struct platform_driver mvebu_pcie_driver = {
->         .driver = {
->                 .owner = THIS_MODULE,
->                 .name = "mvebu-pcie",
-> -               .of_match_table =
-> -                  of_match_ptr(mvebu_pcie_of_match_table),
-> +               .of_match_table = mvebu_pcie_of_match_table,
->                 /* driver unloading/unbinding currently not supported */
->                 .suppress_bind_attrs = true,
->         },
-> --
-> 1.7.9.5
->
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 966bac6..90fce05 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -200,12 +200,6 @@ static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
+ static int imx6q_pcie_abort_handler(unsigned long addr,
+ 		unsigned int fsr, struct pt_regs *regs)
+ {
+-	/*
+-	 * If it was an imprecise abort, then we need to correct the
+-	 * return address to be _after_ the instruction.
+-	 */
+-	if (fsr & (1 << 10))
+-		regs->ARM_pc += 4;
+ 	return 0;
+ }
+ 
+-- 
+1.7.9.5
+
