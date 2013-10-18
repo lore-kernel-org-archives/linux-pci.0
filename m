@@ -1,40 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:41852 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754721Ab3JQNMG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2013 09:12:06 -0400
-Date: Thu, 17 Oct 2013 09:12:01 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCH] PCI: mvebu - The bridge secondary status register
- should be 0
-Message-ID: <20131017131201.GE22434@titan.lakedaemon.net>
-References: <1381868190-8595-1-git-send-email-jgunthorpe@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1381868190-8595-1-git-send-email-jgunthorpe@obsidianresearch.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 19/29] ntb: Make use of pcim_enable_msix/msix_exact() interfaces
+Date: Fri, 18 Oct 2013 19:12:19 +0200
+Message-Id: <99464bf7495829672d97faa9beac3d456877b7b4.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 15, 2013 at 02:16:30PM -0600, Jason Gunthorpe wrote:
-> There are no writable bits in the secondary status register, only
-> write 1 to clear bits. The driver never sets any of the write 1 to
-> clear bits so the status register should always be 0, just remove
-> the set from the write path.
-> 
-> Someday the write 1 to clear bits should be copied/cleared directly
-> from registers in the HW.
-> 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> ---
->  drivers/pci/host/pci-mvebu.c | 1 -
->  1 file changed, 1 deletion(-)
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/ntb/ntb_hw.c |   38 +++++++++++++-------------------------
+ 1 files changed, 13 insertions(+), 25 deletions(-)
 
-Applied to mvebu/drivers
+diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+index de2062c..b7d6eed 100644
+--- a/drivers/ntb/ntb_hw.c
++++ b/drivers/ntb/ntb_hw.c
+@@ -1032,22 +1032,15 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+ 	struct msix_entry *msix;
+ 	int msix_entries;
+ 	int rc, i;
+-	u16 val;
+ 
+-	if (!pdev->msix_cap) {
+-		rc = -EIO;
+-		goto err;
+-	}
+-
+-	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
+-	if (rc)
++	rc = pci_msix_table_size(pdev);
++	if (rc < 0)
+ 		goto err;
+-
+-	msix_entries = msix_table_size(val);
+-	if (msix_entries > ndev->limits.msix_cnt) {
++	else if (rc > ndev->limits.msix_cnt) {
+ 		rc = -EINVAL;
+ 		goto err;
+-	}
++	} else
++		msix_entries = rc;
+ 
+ 	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
+ 				     GFP_KERNEL);
+@@ -1059,26 +1052,21 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+ 	for (i = 0; i < msix_entries; i++)
+ 		ndev->msix_entries[i].entry = i;
+ 
+-	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+-	if (rc < 0)
+-		goto err1;
+-	if (rc > 0) {
++	if (ndev->hw_type != BWD_HW)
+ 		/* On SNB, the link interrupt is always tied to 4th vector.  If
+ 		 * we can't get all 4, then we can't use MSI-X.
+ 		 */
+-		if (ndev->hw_type != BWD_HW) {
+-			rc = -EIO;
+-			goto err1;
+-		}
+-
++		rc = pcim_enable_msix_exact(pdev,
++					    ndev->msix_entries, msix_entries);
++	else
++		rc = pcim_enable_msix(pdev, ndev->msix_entries, msix_entries);
++	if (rc < 0)
++		goto err1;
++	else if (rc < msix_entries) {
+ 		dev_warn(&pdev->dev,
+ 			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+ 			 rc);
+ 		msix_entries = rc;
+-
+-		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+-		if (rc)
+-			goto err1;
+ 	}
+ 
+ 	for (i = 0; i < msix_entries; i++) {
+-- 
+1.7.7.6
 
-thx,
-
-Jason.
