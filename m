@@ -1,66 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.w2.samsung.com ([211.189.100.13]:44144 "EHLO
-	usmailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752109Ab3J3RTn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 13:19:43 -0400
-Date: Wed, 30 Oct 2013 15:19:36 -0200
-From: Mauro Carvalho Chehab <m.chehab@samsung.com>
-To: Aristeu Rozanski <arozansk@redhat.com>
-Cc: Borislav Petkov <bp@alien8.de>, linux-edac@vger.kernel.org,
-	tony.luck@intel.com, Doug Thompson <dougthompson@xmission.com>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:11157 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750964Ab3JSGTi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:19:38 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	open list <linux-kernel@vger.kernel.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/12] sb_edac: move PCI IDs to pci_ids.h
-Message-id: <20131030151936.48ba7af5@samsung.com>
-In-reply-to: <20131030164020.GF13290@pd.tnic>
-References: <1383150426-24730-1-git-send-email-arozansk@redhat.com>
- <1383150426-24730-2-git-send-email-arozansk@redhat.com>
- <20131030164020.GF13290@pd.tnic>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 07/29] PCI/MSI: Return -ENOSYS for unimplemented interfaces, not -1
+Date: Fri, 18 Oct 2013 19:12:07 +0200
+Message-Id: <de85dc2f3aa27ff883504bd30d3f5f929145fe0d.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Wed, 30 Oct 2013 17:40:20 +0100
-Borislav Petkov <bp@alien8.de> escreveu:
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Suggested-by: Ben Hutchings <bhutchings@solarflare.com>
+---
+ include/linux/pci.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-> On Wed, Oct 30, 2013 at 12:26:55PM -0400, Aristeu Rozanski wrote:
-> > According to the comment, it should be done before submitting upstream.
-> > 
-> > Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
-> > ---
-> >  drivers/edac/sb_edac.c  |   21 ++-------------------
-> >  include/linux/pci_ids.h |   11 +++++++++++
-> >  2 files changed, 13 insertions(+), 19 deletions(-)
-> > 
-> > diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
-> > index e04462b..4cdd948 100644
-> > --- a/drivers/edac/sb_edac.c
-> > +++ b/drivers/edac/sb_edac.c
-> > @@ -57,26 +57,9 @@ static int probed;
-> >   */
-> >  
-> >  /*
-> > - * FIXME: For now, let's order by device function, as it makes
-> > - * easier for driver's development process. This table should be
-> > - * moved to pci_id.h when submitted upstream
-> 
-> Why, is anything else besides sb_edac.c using those?
-> 
-I think that this patch makes sense, as the other Sandy Bridge registers
-are at pci_ids.h. So, it is a matter of consistency.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d3a888a..5cfe54c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1148,13 +1148,13 @@ struct msix_entry {
+ #ifndef CONFIG_PCI_MSI
+ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ {
+-	return -1;
++	return -ENOSYS;
+ }
+ 
+ static inline int
+ pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+ {
+-	return -1;
++	return -ENOSYS;
+ }
+ 
+ static inline void pci_msi_shutdown(struct pci_dev *dev)
+@@ -1169,7 +1169,7 @@ static inline int pci_msix_table_size(struct pci_dev *dev)
+ static inline int pci_enable_msix(struct pci_dev *dev,
+ 				  struct msix_entry *entries, int nvec)
+ {
+-	return -1;
++	return -ENOSYS;
+ }
+ 
+ static inline void pci_msix_shutdown(struct pci_dev *dev)
+-- 
+1.7.7.6
 
-Also, I won't doubt that other drivers could need to access those, as
-there are other things there on a few of those PCI IDs.
-
-Yet, on patch 12/12, you're adding the Ivy Bridge specific PCI IDs
-inside the driver.
-
-So, IMHO, you should either move all to pci_ids.h or to keep them inside
-the driver.
-
-My personal taste would be to move them all to pci_ids.h.
-
-Regards,
-Mauro
