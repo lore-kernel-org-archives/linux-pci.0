@@ -1,35 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from multi.imgtec.com ([194.200.65.239]:11391 "EHLO multi.imgtec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751126Ab3JDXb1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Oct 2013 19:31:27 -0400
-From: Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
-CC: <james.hogan@imgtec.com>, <Qais.Yousef@imgtec.com>,
-	Deng-Cheng Zhu <dengcheng.zhu@imgtec.com>
-Subject: [PATCH v2 0/4] PCI/quirks: PIIX4 ACPI bugfix and cleanups
-Date: Fri, 4 Oct 2013 16:30:49 -0700
-Message-ID: <1380929453-15428-1-git-send-email-dengcheng.zhu@imgtec.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 23/29] qlge: Make use of pcim_enable_msix() interface
+Date: Fri, 18 Oct 2013 19:12:23 +0200
+Message-Id: <84bd57a265673b51df874ad09222d48b341fc480.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix the PIIX4 ACPI memory base and size mask, perform cleanups.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/qlogic/qlge/qlge_main.c |   15 ++++-----------
+ 1 files changed, 4 insertions(+), 11 deletions(-)
 
-CHANGES:
-----------
-v2 - v1:
-o Split renaming, refactoring and macros into 3 patches.
-----------
-
-Deng-Cheng Zhu (4):
-  PCI/quirks: Fix PIIX4 memory base and size mask
-  PCI/quirks: Rename piix4_[io|mem]_quirk to add acpi
-  PCI/quirks: Extract the size detection logic of PIIX4 ACPI io and mem
-  PCI/quirks: Convert hard-coded values to macros for PIIX4 ACPI quirks
-
- drivers/pci/quirks.c |  116 ++++++++++++++++++++++++++++++++++++--------------
- 1 files changed, 84 insertions(+), 32 deletions(-)
-
+diff --git a/drivers/net/ethernet/qlogic/qlge/qlge_main.c b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
+index ac54cb0..b142902 100644
+--- a/drivers/net/ethernet/qlogic/qlge/qlge_main.c
++++ b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
+@@ -3272,24 +3272,17 @@ static void ql_enable_msix(struct ql_adapter *qdev)
+ 		for (i = 0; i < qdev->intr_count; i++)
+ 			qdev->msi_x_entry[i].entry = i;
+ 
+-		/* Loop to get our vectors.  We start with
+-		 * what we want and settle for what we get.
+-		 */
+-		do {
+-			err = pci_enable_msix(qdev->pdev,
+-				qdev->msi_x_entry, qdev->intr_count);
+-			if (err > 0)
+-				qdev->intr_count = err;
+-		} while (err > 0);
+-
++		err = pcim_enable_msix(qdev->pdev,
++				       qdev->msi_x_entry, qdev->intr_count);
+ 		if (err < 0) {
+ 			kfree(qdev->msi_x_entry);
+ 			qdev->msi_x_entry = NULL;
+ 			netif_warn(qdev, ifup, qdev->ndev,
+ 				   "MSI-X Enable failed, trying MSI.\n");
+ 			qlge_irq_type = MSI_IRQ;
+-		} else if (err == 0) {
++		} else {
+ 			set_bit(QL_MSIX_ENABLED, &qdev->flags);
++			qdev->intr_count = err;
+ 			netif_info(qdev, ifup, qdev->ndev,
+ 				   "MSI-X Enabled, got %d vectors.\n",
+ 				   qdev->intr_count);
+-- 
+1.7.7.6
 
