@@ -1,64 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51845 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751287Ab3J2XUl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 19:20:41 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] PCI: Report pci_pme_active() kmalloc failure
-Date: Wed, 30 Oct 2013 00:32:50 +0100
-Message-ID: <2930311.2be2J0XGoi@vostro.rjw.lan>
-In-Reply-To: <20131029231437.19711.61623.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131029231437.19711.61623.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:12774 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751156Ab3JSGmL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:42:11 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 15/29] ixgbe: Make use of pcim_enable_msix_range() interface
+Date: Fri, 18 Oct 2013 19:12:15 +0200
+Message-Id: <1845544d7b17de17198be343bba08dae83fea75e.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, October 29, 2013 05:14:38 PM Bjorn Helgaas wrote:
-> Previously, if kmalloc() failed, we claimed "PME# enabled" in dmesg,
-> even though we didn't add the device to the pci_pme_list.  This prints
-> a more correct warning.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c |   16 ++++------------
+ 1 files changed, 4 insertions(+), 12 deletions(-)
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-> ---
->  drivers/pci/pci.c |    7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index ad7fc72..36cc8d5 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1638,8 +1638,10 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
->  		if (enable) {
->  			pme_dev = kmalloc(sizeof(struct pci_pme_device),
->  					  GFP_KERNEL);
-> -			if (!pme_dev)
-> -				goto out;
-> +			if (!pme_dev) {
-> +				dev_warn(&dev->dev, "can't enable PME#\n");
-> +				return;
-> +			}
->  			pme_dev->dev = dev;
->  			mutex_lock(&pci_pme_list_mutex);
->  			list_add(&pme_dev->list, &pci_pme_list);
-> @@ -1660,7 +1662,6 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
->  		}
->  	}
->  
-> -out:
->  	dev_dbg(&dev->dev, "PME# %s\n", enable ? "enabled" : "disabled");
->  }
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
+index 90b4e10..9954b7a 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
+@@ -697,7 +697,7 @@ static void ixgbe_set_num_queues(struct ixgbe_adapter *adapter)
+ static void ixgbe_acquire_msix_vectors(struct ixgbe_adapter *adapter,
+ 				       int vectors)
+ {
+-	int err, vector_threshold;
++	int vector_threshold;
+ 
+ 	/* We'll want at least 2 (vector_threshold):
+ 	 * 1) TxQ[0] + RxQ[0] handler
+@@ -711,18 +711,10 @@ static void ixgbe_acquire_msix_vectors(struct ixgbe_adapter *adapter,
+ 	 * Right now, we simply care about how many we'll get; we'll
+ 	 * set them up later while requesting irq's.
+ 	 */
+-	while (vectors >= vector_threshold) {
+-		err = pci_enable_msix(adapter->pdev, adapter->msix_entries,
+-				      vectors);
+-		if (!err) /* Success in acquiring all requested vectors. */
+-			break;
+-		else if (err < 0)
+-			vectors = 0; /* Nasty failure, quit now */
+-		else /* err == number of vectors we should try again with */
+-			vectors = err;
+-	}
++	vectors = pcim_enable_msix_range(adapter->pdev, adapter->msix_entries,
++					 vectors, vector_threshold);
+ 
+-	if (vectors < vector_threshold) {
++	if (vectors < 0) {
+ 		/* Can't allocate enough MSI-X interrupts?  Oh well.
+ 		 * This just means we'll go with either a single MSI
+ 		 * vector or fall back to legacy interrupts.
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.7.6
+
