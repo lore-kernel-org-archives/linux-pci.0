@@ -1,86 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:57793 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752065Ab3JIQXE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 12:23:04 -0400
-Date: Wed, 9 Oct 2013 17:23:00 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rob Herring <robherring2@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Michal Simek <monstr@monstr.eu>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [RFC] Architecture independent pcibios?
-Message-ID: <20131009162300.GK25606@e102652-lin.cambridge.arm.com>
-References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
- <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
- <525438F6.3090600@gmail.com>
- <1381264135.645.230.camel@pasglop>
- <20131009090923.GE25606@e102652-lin.cambridge.arm.com>
- <1381315068.4330.1.camel@pasglop>
- <20131009104553.GI25606@e102652-lin.cambridge.arm.com>
- <CAErSpo6ujYmoOz4RMo3ATEJ+REMPiz6oR2pEUn=jW5GMDEB+Yw@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6ujYmoOz4RMo3ATEJ+REMPiz6oR2pEUn=jW5GMDEB+Yw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:12827 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750944Ab3JSGn5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:43:57 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 21/29] qla2xxx: Make use of pcim_enable_msix_range() interface
+Date: Fri, 18 Oct 2013 19:12:21 +0200
+Message-Id: <5476e68f2f260f7c5d14cf0fa27d0f2406decd49.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 09, 2013 at 03:30:35PM +0100, Bjorn Helgaas wrote:
-> On Wed, Oct 9, 2013 at 4:45 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> 
-> > Semantic question: what is the perceived difference between a pci_controller
-> > and a pci_host_bridge? Are they just historical naming artifacts of the
-> > same concept? (person A deciding to do a cleanup of the code and picks a
-> > new name in order not to upset the old APIs)
-> 
-> pci_controller is a typical name for the arch-dependent PCI host
-> bridge structure.  Some arches use different names, e.g.,
-> pci_sys_data, pci_hba_data, pci_channel, etc.
-> 
-> When I added support in the PCI core for host bridge address
-> translation, e.g., ACPI _TRA, I named the core structure
-> pci_host_bridge.
-> 
-> Some of the stuff in pci_controller and similar arch-dependent
-> structures could probably be moved into pci_host_bridge, given
-> appropriate PCI core interfaces to supply the information (or maybe
-> pcibios_*() functions the core could use to retrieve it).  But I doubt
-> we could completely remove the arch-dependent structures.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/qla2xxx/qla_isr.c |   28 ++++++++++++----------------
+ 1 files changed, 12 insertions(+), 16 deletions(-)
 
-How about this as a battle plan:
-
-  - create a "generic pci_controller struct" (actual name to be picked later)
-    that parses the DT for ranges and creates the relevant
-    pci_host_bridge_windows, then calls pci_scan_root_bus()
-
-  - provide some weak function definitions that arch-dependent code
-    can override for the cases where the "generic pci_controller struct"
-    version does not fit the bill.
-
-Best regards,
-Liviu
-
-
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index df1b30b..3238a0ac 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2836,27 +2836,23 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 	for (i = 0; i < ha->msix_count; i++)
+ 		entries[i].entry = i;
+ 
+-	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-	if (ret) {
+-		if (ret < MIN_MSIX_COUNT)
+-			goto msix_failed;
+-
++	ret = pcim_enable_msix_range(ha->pdev,
++				     entries, ha->msix_count, MIN_MSIX_COUNT);
++	if (ret < 0) {
++		ql_log(ql_log_fatal, vha, 0x00c7,
++		    "MSI-X: Failed to enable support, "
++		    "giving   up -- %d/%d.\n",
++		    ha->msix_count, ret);
++		goto msix_out;
++	}
++	if (ret < ha->msix_count) {
+ 		ql_log(ql_log_warn, vha, 0x00c6,
+ 		    "MSI-X: Failed to enable support "
+ 		    "-- %d/%d\n Retry with %d vectors.\n",
+ 		    ha->msix_count, ret, ret);
+-		ha->msix_count = ret;
+-		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-		if (ret) {
+-msix_failed:
+-			ql_log(ql_log_fatal, vha, 0x00c7,
+-			    "MSI-X: Failed to enable support, "
+-			    "giving   up -- %d/%d.\n",
+-			    ha->msix_count, ret);
+-			goto msix_out;
+-		}
+-		ha->max_rsp_queues = ha->msix_count - 1;
+ 	}
++	ha->msix_count = ret;
++	ha->max_rsp_queues = ha->msix_count - 1;
+ 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
+ 				ha->msix_count, GFP_KERNEL);
+ 	if (!ha->msix_entries) {
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.7.6
 
