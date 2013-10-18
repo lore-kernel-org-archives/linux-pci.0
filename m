@@ -1,83 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:50519 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752426Ab3JBCn3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Oct 2013 22:43:29 -0400
-Date: Wed, 2 Oct 2013 12:43:24 +1000
-From: Michael Ellerman <michael@ellerman.id.au>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:14142 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751251Ab3JSGtg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:49:36 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20131002024324.GC22748@concordia>
-References: <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20131001075133.GJ17966@concordia>
- <20131001103526.GA5053@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131001103526.GA5053@dhcp-26-207.brq.redhat.com>
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 14/29] ipr: Make use of pcim_enable_msi/msix() interfaces
+Date: Fri, 18 Oct 2013 19:12:14 +0200
+Message-Id: <1d960601fcd3c0a6366ad84bbba507583a80027d.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 01, 2013 at 12:35:27PM +0200, Alexander Gordeev wrote:
-> On Tue, Oct 01, 2013 at 05:51:33PM +1000, Michael Ellerman wrote:
-> > The disadvantage is that any restriction imposed on us above the quota
-> > can only be reported as an error from pci_enable_msix().
-> > 
-> > The quota code, called from pci_get_msix_limit(), can only do so much to
-> > interogate firmware about the limitations. The ultimate way to check if
-> > firmware will give us enough MSIs is to try and allocate them. But we
-> > can't do that from pci_get_msix_limit() because the driver is not asking
-> > us to enable MSIs, just query them.
-> 
-> If things are this way then pci_enable_msix() already exposed to this
-> problem internally on pSeries.
-> 
-> I see that even successful quota checks in rtas_msi_check_device() and
-> rtas_setup_msi_irqs() do not guarantee (as you say) that firmware will
-> give enough MSIs. Hence, pci_enable_msix() might fail even though the
-> its quota checks succeeded.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/ipr.c |   47 ++++++++++++++++++-----------------------------
+ 1 files changed, 18 insertions(+), 29 deletions(-)
 
-Yes, but it can report that failure to the caller, which can then retry.
-
-> Therefore, nothing will really change if we make pci_get_msix_limit() check
-> quota and hope the follow-up call to pci_enable_msix() succeeded.
-
-No that's not equivalent. Under your scheme if pci_enable_msix() fails
-then the caller just bails, it will never try again with a lower number.
-
-> (Of course, we could allocate-deallocate MSIs at check time, but I think it
-> is an overkill).
-
-It's not only overkill, it's messing with the device behind the drivers
-back, which is definitely a no-no in my opinion.
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index fb57e21..d7c94d5 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -9245,47 +9245,36 @@ ipr_get_chip_info(const struct pci_device_id *dev_id)
+ static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
+ {
+ 	struct msix_entry entries[IPR_MAX_MSIX_VECTORS];
+-	int i, err, vectors;
++	int i, vectors;
  
-> > You'll also need to add another arch hook, for the quota check, and
-> > we'll have to add it to our per-platform indirection as well.
-> 
-> Already, in a branch, hidden from Bjorn & Tejun eyes ;)
-> 
-> > All a lot of bother for no real gain IMHO.
-> 
-> Well, I do not have a strong opinion here. I leave it to the ones who have :)
-> But few drivers have became clearer as result of this change (and messy ones
-> are still messy).
+-	for (i = 0; i < ARRAY_SIZE(entries); ++i)
++	vectors = min_t(int, ARRAY_SIZE(entries), ipr_number_of_msix);
++	for (i = 0; i < vectors; ++i)
+ 		entries[i].entry = i;
+ 
+-	vectors = ipr_number_of_msix;
++	vectors = pcim_enable_msix(ioa_cfg->pdev, entries, vectors);
++	if (vectors < 0)
++		return vectors;
+ 
+-	while ((err = pci_enable_msix(ioa_cfg->pdev, entries, vectors)) > 0)
+-			vectors = err;
++	for (i = 0; i < vectors; i++)
++		ioa_cfg->vectors_info[i].vec = entries[i].vector;
++	ioa_cfg->nvectors = vectors;
+ 
+-	if (err < 0)
+-		return err;
+-
+-	if (!err) {
+-		for (i = 0; i < vectors; i++)
+-			ioa_cfg->vectors_info[i].vec = entries[i].vector;
+-		ioa_cfg->nvectors = vectors;
+-	}
+-
+-	return err;
++	return 0;
+ }
+ 
+ static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
+ {
+-	int i, err, vectors;
++	int i, vectors;
+ 
+-	vectors = ipr_number_of_msix;
++	vectors = pcim_enable_msi(ioa_cfg->pdev, ipr_number_of_msix);
++	if (vectors < 0)
++		return vectors;
+ 
+-	while ((err = pci_enable_msi_block(ioa_cfg->pdev, vectors)) > 0)
+-			vectors = err;
++	for (i = 0; i < vectors; i++)
++		ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
++	ioa_cfg->nvectors = vectors;
+ 
+-	if (err < 0)
+-		return err;
+-
+-	if (!err) {
+-		for (i = 0; i < vectors; i++)
+-			ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
+-		ioa_cfg->nvectors = vectors;
+-	}
+-
+-	return err;
++	return 0;
+ }
+ 
+ static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
+-- 
+1.7.7.6
 
-Amen.
-
-cheers
