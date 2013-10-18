@@ -1,61 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:58691 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751491Ab3JaQsQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Oct 2013 12:48:16 -0400
-Date: Thu, 31 Oct 2013 10:48:10 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: mvebu - Support a bridge with no IO port window
-Message-ID: <20131031164810.GA26426@obsidianresearch.com>
-References: <1381868182-8544-1-git-send-email-jgunthorpe@obsidianresearch.com>
- <20131031101357.5a56e2d0@skate>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131031101357.5a56e2d0@skate>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:13398 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750960Ab3JSGpt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:45:49 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 29/29] vmxnet3: Make use of pcim_enable_msix_range() interface
+Date: Fri, 18 Oct 2013 19:12:29 +0200
+Message-Id: <75788c5da384b16633fdab43d37a277aa92f38fd.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 31, 2013 at 10:13:57AM +0100, Thomas Petazzoni wrote:
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/vmxnet3/vmxnet3_drv.c |   40 +++++++++---------------------------
+ 1 files changed, 10 insertions(+), 30 deletions(-)
 
-> Sorry for the delay in testing this, I was busy with kernel summit /
-> ELCE. Unfortunately, this patch still causes problems here: it breaks
-> usage of I/O region. I have a modified version of the e1000e driver
-> that makes it access an I/O region, that I have used for testing that
-> I/O handling is at least minimally working. Without your patch, it
-> works fine:
+diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
+index d33802c..e552d2b 100644
+--- a/drivers/net/vmxnet3/vmxnet3_drv.c
++++ b/drivers/net/vmxnet3/vmxnet3_drv.c
+@@ -2735,39 +2735,19 @@ vmxnet3_read_mac_addr(struct vmxnet3_adapter *adapter, u8 *mac)
+  */
+ 
+ static int
+-vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
+-			     int vectors)
++vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter, int vectors)
+ {
+-	int err = -EINVAL, vector_threshold;
+-	vector_threshold = VMXNET3_LINUX_MIN_MSIX_VECT;
+-
+-	while (vectors >= vector_threshold) {
+-		err = pci_enable_msix(adapter->pdev, adapter->intr.msix_entries,
+-				      vectors);
+-		if (!err) {
+-			adapter->intr.num_intrs = vectors;
+-			return 0;
+-		} else if (err < 0) {
+-			dev_err(&adapter->netdev->dev,
+-				   "Failed to enable MSI-X, error: %d\n", err);
+-			return err;
+-		} else if (err < vector_threshold) {
+-			dev_info(&adapter->pdev->dev,
+-				 "Number of MSI-Xs which can be allocated "
+-				 "is lower than min threshold required.\n");
+-			return -ENOSPC;
+-		} else {
+-			/* If fails to enable required number of MSI-x vectors
+-			 * try enabling minimum number of vectors required.
+-			 */
+-			dev_err(&adapter->netdev->dev,
+-				"Failed to enable %d MSI-X, trying %d instead\n",
+-				    vectors, vector_threshold);
+-			vectors = vector_threshold;
+-		}
++	vectors = pcim_enable_msix_range(adapter->pdev,
++					 adapter->intr.msix_entries, vectors,
++					 VMXNET3_LINUX_MIN_MSIX_VECT);
++	if (vectors < 0) {
++		dev_err(&adapter->netdev->dev,
++			"Failed to enable MSI-X, error: %d\n", vectors);
++		return vectors;
+ 	}
+ 
+-	return err;
++	adapter->intr.num_intrs = vectors;
++	return 0;
+ }
+ 
+ 
+-- 
+1.7.7.6
 
-No problem, thank you for testing it, I don't have any hardware like
-this..
-
-> After debugging, it turns out that the following change is the problem:
-> 
-> -	if (port->bridge.iolimit < port->bridge.iobase ||
-> +	if (port->bridge.iolimit <= port->bridge.iobase ||
-
-Indeed.. I was having problems here because linux was writing 0,0
-during discovery to the base,limit registers to 'disable' the IO
-window, which triggered a window allocation. So I re-read the PCI
-bridge spec (apparently too quickly) and decided 0,0 was OK, and it
-should be <=.
-
-However, looking again at the spec - it is very clear, < is the
-correct test, and when the values is equal a 4k window should be
-created.
-
-So, I wonder if there is a little bug in the Linux discovery code
-path, should it write FFFF,0 instead?
-
-In any event, I can respin this patch so it works, I have to drop the
-WARN_ON in that routine to accommodate the 0,0 write however.
-
-> window is never created and the pci_ioremap_io() function is never
-> called. Reverting this change makes your patch works fine for me.
-
-Great, the next version should be good to go then.
-
-Thanks,
-Jason
