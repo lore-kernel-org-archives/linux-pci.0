@@ -1,120 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f179.google.com ([209.85.215.179]:54215 "EHLO
-	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753947Ab3JCI1H convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 04:27:07 -0400
-Received: by mail-ea0-f179.google.com with SMTP id b10so909649eae.38
-        for <linux-pci@vger.kernel.org>; Thu, 03 Oct 2013 01:27:05 -0700 (PDT)
-Date: Thu, 3 Oct 2013 11:27:02 +0300
-From: Jack Morgenstein <jackm@dev.mellanox.co.il>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:12571 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750881Ab3JSGkM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:40:12 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org,
-	ogerlitz@mellanox.com, eli@mellanox.com
-Subject: Re: [PATCH RFC 46/77] mlx4: Update MSI/MSI-X interrupts enablement
- code
-Message-ID: <20131003112702.6f3210b0@jpm-OptiPlex-GX620>
-In-Reply-To: <b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 28/29] vmxnet3: Limit number of rx queues to 1 if per-queue MSI-Xs failed
+Date: Fri, 18 Oct 2013 19:12:28 +0200
+Message-Id: <48b60dd6eda8df93f1eb8e8356e3c80c673550e3.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed,  2 Oct 2013 12:49:02 +0200
-Alexander Gordeev <agordeev@redhat.com> wrote:
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/vmxnet3/vmxnet3_drv.c |   18 ++++++++----------
+ 1 files changed, 8 insertions(+), 10 deletions(-)
 
-UPDATING THIS REPLY.
-Your change log confused me. The change below is not from a "recent
-re-design", it is required due to an earlier patch in this patch set.
->From the log, I assumed that the change you are talking about is already
-upstream.
-
-I will re-review.
-
--Jack
-
-NACK.  This change does not do anything logically as far as I can tell.
-pci_enable_msix in the current upstream kernel itself calls
-pci_msix_table_size.  The current code yields the same resultswill
-as the code suggested below. (i.e., the suggested code has no effect on
-optimality).
-
-BTW, pci_msix_table_size never returns a value < 0 (if msix is not
-enabled, it returns 0 for the table size), so the (err < 0) check here
-is not correct. (I also do not like using "err" here anyway for the
-value returned by pci_msix_table_size().  There is no error here, and
-it is simply confusing.
-
--Jack
-
-> As result of recent re-design of the MSI/MSI-X interrupts enabling
-> pattern this driver has to be updated to use the new technique to
-> obtain a optimal number of MSI/MSI-X interrupts required.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/net/ethernet/mellanox/mlx4/main.c |   17 ++++++++---------
->  1 files changed, 8 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c
-> b/drivers/net/ethernet/mellanox/mlx4/main.c index 60c9f4f..377a5ea
-> 100644 --- a/drivers/net/ethernet/mellanox/mlx4/main.c
-> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-> @@ -1852,8 +1852,16 @@ static void mlx4_enable_msi_x(struct mlx4_dev
-> *dev) int i;
->  
->  	if (msi_x) {
-> +		err = pci_msix_table_size(dev->pdev);
-> +		if (err < 0)
-> +			goto no_msi;
-> +
-> +		/* Try if at least 2 vectors are available */
->  		nreq = min_t(int, dev->caps.num_eqs -
-> dev->caps.reserved_eqs, nreq);
-> +		nreq = min_t(int, nreq, err);
-> +		if (nreq < 2)
-> +			goto no_msi;
->  
->  		entries = kcalloc(nreq, sizeof *entries, GFP_KERNEL);
->  		if (!entries)
-> @@ -1862,17 +1870,8 @@ static void mlx4_enable_msi_x(struct mlx4_dev
-> *dev) for (i = 0; i < nreq; ++i)
->  			entries[i].entry = i;
->  
-> -	retry:
->  		err = pci_enable_msix(dev->pdev, entries, nreq);
->  		if (err) {
-> -			/* Try again if at least 2 vectors are
-> available */
-> -			if (err > 1) {
-> -				mlx4_info(dev, "Requested %d
-> vectors, "
-> -					  "but only %d MSI-X vectors
-> available, "
-> -					  "trying again\n", nreq,
-> err);
-> -				nreq = err;
-> -				goto retry;
-> -			}
->  			kfree(entries);
->  			goto no_msi;
->  		}
+diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
+index 3df7f32..d33802c 100644
+--- a/drivers/net/vmxnet3/vmxnet3_drv.c
++++ b/drivers/net/vmxnet3/vmxnet3_drv.c
+@@ -2814,23 +2814,21 @@ vmxnet3_alloc_intr_resources(struct vmxnet3_adapter *adapter)
+ 
+ 		err = vmxnet3_acquire_msix_vectors(adapter,
+ 						   adapter->intr.num_intrs);
+-		/* If we cannot allocate one MSIx vector per queue
+-		 * then limit the number of rx queues to 1
+-		 */
+-		if (err == VMXNET3_LINUX_MIN_MSIX_VECT) {
+-			if (adapter->share_intr != VMXNET3_INTR_BUDDYSHARE
+-			    || adapter->num_rx_queues != 1) {
++		if (!err) {
++			/* If we cannot allocate one MSIx vector per queue
++			 * then limit the number of rx queues to 1
++			 */
++			if ((adapter->intr.num_intrs ==
++			     VMXNET3_LINUX_MIN_MSIX_VECT) &&
++			    ((adapter->share_intr != VMXNET3_INTR_BUDDYSHARE) ||
++			     (adapter->num_rx_queues != 1))) {
+ 				adapter->share_intr = VMXNET3_INTR_TXSHARE;
+ 				netdev_err(adapter->netdev,
+ 					   "Number of rx queues : 1\n");
+ 				adapter->num_rx_queues = 1;
+-				adapter->intr.num_intrs =
+-						VMXNET3_LINUX_MIN_MSIX_VECT;
+ 			}
+ 			return;
+ 		}
+-		if (!err)
+-			return;
+ 
+ 		/* If we cannot allocate MSIx vectors use only one rx queue */
+ 		dev_info(&adapter->pdev->dev,
+-- 
+1.7.7.6
 
