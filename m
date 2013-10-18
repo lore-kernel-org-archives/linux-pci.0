@@ -1,108 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 1/2] frv/PCI: Remove pcibios_last_bus
-To: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-am33-list@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Tue, 22 Oct 2013 21:24:06 -0600
-Message-ID: <20131023032406.12410.77485.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20131023032140.12410.43295.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131023032140.12410.43295.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:14325 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751027Ab3JSGy7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:54:59 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 08/29] PCI/MSI: Make pci_enable_msix() 'nvec' argument unsigned int
+Date: Fri, 18 Oct 2013 19:12:08 +0200
+Message-Id: <93e145deeb238ad805196762cae696d3ae67f812.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcibios_last_bus was apparently copied from x86.  On FR-V, it is
-statically initialized to -1 and never changed unless the user boots
-with "pci=lastbus=<X>".  I doubt that option is used on FR-V, so this
-patch removes all the code related to pcibios_last_bus.
+Make pci_enable_msix() and pci_enable_msi_block() consistent
+with regard to the type of 'nvec' argument. Indeed, a number
+of vectors to allocate is a natural value, so make it unsigned.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- arch/frv/mb93090-mb00/pci-frv.h |    1 -
- arch/frv/mb93090-mb00/pci-vdk.c |   36 ------------------------------------
- 2 files changed, 37 deletions(-)
+ Documentation/PCI/MSI-HOWTO.txt |    3 ++-
+ drivers/pci/msi.c               |    3 ++-
+ include/linux/pci.h             |    5 +++--
+ 3 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
-index 76c4e73..a7e487fe 100644
---- a/arch/frv/mb93090-mb00/pci-frv.h
-+++ b/arch/frv/mb93090-mb00/pci-frv.h
-@@ -30,7 +30,6 @@ void pcibios_resource_survey(void);
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index a091780..845edb5 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -190,7 +190,8 @@ same number.
  
- /* pci-vdk.c */
+ 4.3.1 pci_enable_msix
  
--extern int __nongpreldata pcibios_last_bus;
- extern struct pci_ops *__nongpreldata pci_root_ops;
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
++int pci_enable_msix(struct pci_dev *dev,
++		    struct msix_entry *entries, unsigned int nvec)
  
- /* pci-irq.c */
-diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-index deb6784..efa5d65 100644
---- a/arch/frv/mb93090-mb00/pci-vdk.c
-+++ b/arch/frv/mb93090-mb00/pci-vdk.c
-@@ -25,7 +25,6 @@
- 
- unsigned int __nongpreldata pci_probe = 1;
- 
--int  __nongpreldata pcibios_last_bus = -1;
- struct pci_ops *__nongpreldata pci_root_ops;
- 
- /*
-@@ -220,37 +219,6 @@ static struct pci_ops * __init pci_check_direct(void)
+ Calling this function asks the PCI subsystem to allocate 'nvec' MSIs.
+ The 'entries' argument is a pointer to an array of msix_entry structs
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index bbe3d3d..fdae3a4 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -932,7 +932,8 @@ int pci_msix_table_size(struct pci_dev *dev)
+  * of irqs or MSI-X vectors available. Driver should use the returned value to
+  * re-send its request.
+  **/
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
++int pci_enable_msix(struct pci_dev *dev,
++		    struct msix_entry *entries, unsigned int nvec)
+ {
+ 	int status, nr_entries;
+ 	int i, j;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5cfe54c..d6832de 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1167,7 +1167,7 @@ static inline int pci_msix_table_size(struct pci_dev *dev)
+ 	return 0;
  }
- 
- /*
-- * Discover remaining PCI buses in case there are peer host bridges.
-- * We use the number of last PCI bus provided by the PCI BIOS.
-- */
--static void __init pcibios_fixup_peer_bridges(void)
--{
--	struct pci_bus bus;
--	struct pci_dev dev;
--	int n;
--	u16 l;
--
--	if (pcibios_last_bus <= 0 || pcibios_last_bus >= 0xff)
--		return;
--	printk("PCI: Peer bridge fixup\n");
--	for (n=0; n <= pcibios_last_bus; n++) {
--		if (pci_find_bus(0, n))
--			continue;
--		bus.number = n;
--		bus.ops = pci_root_ops;
--		dev.bus = &bus;
--		for(dev.devfn=0; dev.devfn<256; dev.devfn += 8)
--			if (!pci_read_config_word(&dev, PCI_VENDOR_ID, &l) &&
--			    l != 0x0000 && l != 0xffff) {
--				printk("Found device at %02x:%02x [%04x]\n", n, dev.devfn, l);
--				printk("PCI: Discovered peer bus %02x\n", n);
--				pci_scan_bus(n, pci_root_ops, NULL);
--				break;
--			}
--	}
--}
--
--/*
-  * Exceptions for specific devices. Usually work-arounds for fatal design flaws.
-  */
- 
-@@ -418,7 +386,6 @@ int __init pcibios_init(void)
- 	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
- 
- 	pcibios_irq_init();
--	pcibios_fixup_peer_bridges();
- 	pcibios_fixup_irqs();
- 	pcibios_resource_survey();
- 
-@@ -432,9 +399,6 @@ char * __init pcibios_setup(char *str)
- 	if (!strcmp(str, "off")) {
- 		pci_probe = 0;
- 		return NULL;
--	} else if (!strncmp(str, "lastbus=", 8)) {
--		pcibios_last_bus = simple_strtol(str+8, NULL, 0);
--		return NULL;
- 	}
- 	return str;
+ static inline int pci_enable_msix(struct pci_dev *dev,
+-				  struct msix_entry *entries, int nvec)
++				  struct msix_entry *entries, int unsigned nvec)
+ {
+ 	return -ENOSYS;
  }
+@@ -1192,7 +1192,8 @@ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_table_size(struct pci_dev *dev);
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
++int pci_enable_msix(struct pci_dev *dev,
++		    struct msix_entry *entries, unsigned int nvec);
+ void pci_msix_shutdown(struct pci_dev *dev);
+ void pci_disable_msix(struct pci_dev *dev);
+ void msi_remove_pci_irq_vectors(struct pci_dev *dev);
+-- 
+1.7.7.6
 
