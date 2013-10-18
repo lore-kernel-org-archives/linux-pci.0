@@ -1,39 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:50527 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752480Ab3JYOwO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 10:52:14 -0400
-Received: from dflxv15.itg.ti.com ([128.247.5.124])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id r9PEqDmU032633
-	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 09:52:13 -0500
-Received: from DLEE70.ent.ti.com (dlee70.ent.ti.com [157.170.170.113])
-	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id r9PEqDqI015102
-	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 09:52:13 -0500
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: intel e1000e pci driver issue on RT Linux kernel
-Date: Fri, 25 Oct 2013 14:52:12 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B704625855@DFLE11.ent.ti.com>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:14960 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750948Ab3JSHDI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 03:03:08 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC v2 09/29] PCI/MSI: Factor out pci_get_msi_cap() interface
+Date: Fri, 18 Oct 2013 19:12:09 +0200
+Message-Id: <85500e7239fcb104df091bbfa873eef8ae654772.1382103786.git.agordeev@redhat.com>
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
 References: <cover.1382103786.git.agordeev@redhat.com>
- <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
- <20131024105158.GB13159@mtj.dyndns.org>
- <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com>
- <20131024114133.GA26610@dhcp-26-207.brq.redhat.com>
- <5269D5D1.60103@start.ca>
- <AE90C24D6B3A694183C094C60CF0A2F6026B73B0@saturn3.aculab.com>
- <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-All,
+Device drivers can use this interface to obtain maximum number
+of MSI interrupts the device supports and use that number i.e.
+in a following call to pci_enable_msi_block() interface.
 
-I am a first timer for this mailing list. I have tried sending email to the list after subscribing successfully. I had sent an email before, but I can't see that in the mailing list as seen through the web browser. So I am re-sending. My apologies if multiple copies appear in the list.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ Documentation/PCI/MSI-HOWTO.txt |   15 +++++++++++++++
+ drivers/pci/msi.c               |   33 +++++++++++++++++++++------------
+ include/linux/pci.h             |    6 ++++++
+ 3 files changed, 42 insertions(+), 12 deletions(-)
 
-I am working on my SMP kernel on an ARM A15 with RT patch applied against v3.10.10. I have a setup to use the e1000e pci driver against the pcie root complex driver that I have on this platform. It works well with non RT version of the kernel. I am able to do iperf on UDP and TCP traffic. But against RT kernel, I am able to do only ping. If I run iperf, it seems there is a deadlock happening. When I did suspend the core, it seems to be in the idle loop. Some time I am able to do ctrl-c and get back to shell. When I try doing ping again, it times out. If anyone has seen this issue and know how to fix, please reply.
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 845edb5..e7e3b20 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -169,6 +169,21 @@ on any interrupt for which it previously called request_irq().
+ Failure to do so results in a BUG_ON(), leaving the device with
+ MSI enabled and thus leaking its vector.
+ 
++4.2.5 pci_get_msi_cap
++
++int pci_get_msi_cap(struct pci_dev *dev)
++
++This function could be used to retrieve the number of MSI vectors the
++device requested (via the Multiple Message Capable register). The MSI
++specification only allows the returned value to be a power of two,
++up to a maximum of 2^5 (32).
++
++If this function returns a negative number, it indicates the device is
++not capable of sending MSIs.
++
++If this function returns a positive number, it indicates the maximum
++number of MSI interrupt vectors that could be allocated.
++
+ 4.3 Using MSI-X
+ 
+ The MSI-X capability is much more flexible than the MSI capability.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index fdae3a4..14dc4d1 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -795,6 +795,21 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ 	return 0;
+ }
+ 
++int pci_get_msi_cap(struct pci_dev *dev)
++{
++	int ret;
++	u16 msgctl;
++
++	if (!dev->msi_cap)
++		return -EINVAL;
++
++	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
++	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
++
++	return ret;
++}
++EXPORT_SYMBOL(pci_get_msi_cap);
++
+ /**
+  * pci_enable_msi_block - configure device's MSI capability structure
+  * @dev: device to configure
+@@ -811,13 +826,10 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ {
+ 	int status, maxvec;
+-	u16 msgctl;
+ 
+-	if (!dev->msi_cap)
+-		return -EINVAL;
+-
+-	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+-	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
++	maxvec = pci_get_msi_cap(dev);
++	if (maxvec < 0)
++		return maxvec;
+ 	if (nvec > maxvec)
+ 		return maxvec;
+ 
+@@ -842,13 +854,10 @@ EXPORT_SYMBOL(pci_enable_msi_block);
+ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+ {
+ 	int ret, nvec;
+-	u16 msgctl;
+ 
+-	if (!dev->msi_cap)
+-		return -EINVAL;
+-
+-	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+-	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
++	ret = pci_get_msi_cap(dev);
++	if (ret < 0)
++		return ret;
+ 
+ 	if (maxvec)
+ 		*maxvec = ret;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d6832de..df72084 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1146,6 +1146,11 @@ struct msix_entry {
+ 
+ 
+ #ifndef CONFIG_PCI_MSI
++static inline int pci_get_msi_cap(struct pci_dev *dev)
++{
++	return -ENOSYS;
++}
++
+ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ {
+ 	return -ENOSYS;
+@@ -1187,6 +1192,7 @@ static inline int pci_msi_enabled(void)
+ 	return 0;
+ }
+ #else
++int pci_get_msi_cap(struct pci_dev *dev);
+ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
+ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+-- 
+1.7.7.6
 
-Thanks.
-
-Murali Karicheri
