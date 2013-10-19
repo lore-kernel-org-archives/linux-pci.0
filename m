@@ -1,40 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:48323 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754343Ab3JWDYC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Oct 2013 23:24:02 -0400
-Received: by mail-ie0-f175.google.com with SMTP id aq17so360839iec.6
-        for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2013 20:24:01 -0700 (PDT)
-Subject: [PATCH 0/2] Remove pcibios_last_bus stuff
-To: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-am33-list@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Tue, 22 Oct 2013 21:23:59 -0600
-Message-ID: <20131023032140.12410.43295.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:46053 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754602Ab3JSBeI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Oct 2013 21:34:08 -0400
+From: Marek Vasut <marex@denx.de>
+To: Tim Harvey <tharvey@gateworks.com>
+Subject: Re: [PATCH] PCI: imx6: fix imprecise abort handler
+Date: Sat, 19 Oct 2013 03:33:52 +0200
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>
+References: <1382056042-7299-1-git-send-email-tharvey@gateworks.com>
+In-Reply-To: <1382056042-7299-1-git-send-email-tharvey@gateworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310190333.52772.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcibios_last_bus is an x86 thing that has gotten copied into mn10300
-and FR-V.  On mn10300, it is clearly useless because it is set but
-never tested.
+Dear Tim Harvey,
 
-On FR-V, I suspect it is also useless, but it is possible that people
-boot with "pci=lastbus=<X>".  Please speak up if you think it should
-be kept for FR-V.
+> An imprecise abort is triggered when a port behind a switch is accessed
+> and no device is present.  At enumeration, imprecise aborts are not enabled
+> thus this ends up getting deferred until the kernel has completed init.  At
+> that point we must not adjust PC - the handler must do nothing, but a
+> handler must exist.
+> 
+> This fixes random crashes that occur right after freeing init.
+> This is against linux-pci/host-imx6.
+> 
+> Acked-by: Marek Vasut <marex@denx.de>
+> Tested-by: Marek Vasut <marex@denx.de>
+> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
 
----
+Expanding CC a bit, let's have more eyes on this.
 
-Bjorn Helgaas (2):
-      frv/PCI: Remove pcibios_last_bus
-      mn10300/PCI: Remove useless pcibios_last_bus
+> ---
+>  drivers/pci/host/pci-imx6.c |    6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 966bac6..90fce05 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -200,12 +200,6 @@ static int pcie_phy_write(void __iomem *dbi_base, int
+> addr, int data) static int imx6q_pcie_abort_handler(unsigned long addr,
+>  		unsigned int fsr, struct pt_regs *regs)
+>  {
+> -	/*
+> -	 * If it was an imprecise abort, then we need to correct the
+> -	 * return address to be _after_ the instruction.
+> -	 */
+> -	if (fsr & (1 << 10))
+> -		regs->ARM_pc += 4;
+>  	return 0;
+>  }
 
-
- arch/frv/mb93090-mb00/pci-frv.h         |    1 -
- arch/frv/mb93090-mb00/pci-vdk.c         |   36 -------------------------------
- arch/mn10300/unit-asb2305/pci-asb2305.h |    1 -
- arch/mn10300/unit-asb2305/pci.c         |    5 ----
- 4 files changed, 43 deletions(-)
+Best regards,
+Marek Vasut
