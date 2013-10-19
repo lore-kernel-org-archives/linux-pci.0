@@ -1,80 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:50777 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753839Ab3JBTbu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 15:31:50 -0400
-Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Wed, 2 Oct 2013 13:31:49 -0600
-Message-ID: <524C748D.8080803@linux.vnet.ibm.com>
-Date: Wed, 02 Oct 2013 14:31:25 -0500
-From: Brian King <brking@linux.vnet.ibm.com>
+Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:37086
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753027Ab3JSBHd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Oct 2013 21:07:33 -0400
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "ebiederm@xmission.com" <ebiederm@xmission.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	"tom.l.nguyen@intel.com" <tom.l.nguyen@intel.com>,
+	"kristen.c.accardi@intel.com" <kristen.c.accardi@intel.com>,
+	"rajesh.shah@intel.com" <rajesh.shah@intel.com>,
+	"rajatjain.linux@gmail.com" <rajatjain.linux@gmail.com>
+Subject: RE: Enhancing pciehp (was: pcielw An alternate pcie hotplug driver)
+Date: Sat, 19 Oct 2013 01:07:23 +0000
+Message-ID: <c713940b329e4c6584e173cb49aaa043@BLUPR05MB118.namprd05.prod.outlook.com>
+References: <b13ea983a4154c7d9567b171e8316ca9@BLUPR05MB118.namprd05.prod.outlook.com>
+ <CAErSpo4Yg-kUz3LHaWPVmzE1rGhdiqeJWuHwrM=-hxhP_zYH_g@mail.gmail.com>
+In-Reply-To: <CAErSpo4Yg-kUz3LHaWPVmzE1rGhdiqeJWuHwrM=-hxhP_zYH_g@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
-	"VMware, Inc." <pv-drivers@vmware.com>,
-	linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org,
-	stable@vger.kernel.org, linux-s390@vger.kernel.org,
-	Andy King <acking@vmware.com>, linux-scsi@vger.kernel.org,
-	linux-rdma@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, iss_storagedev@hp.com,
-	linux-driver@qlogic.com, Tejun Heo <tj@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Jon Mason <jon.mason@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	netdev@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	e1000-devel@lists.sourceforge.net,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	linux390@de.ibm.com, linuxppc-dev@lists.ozlabs.org,
-	Wendy Xiong <wenxiong@linux.vnet.ibm.com>
-Subject: Re: [PATCH RFC 36/77] ipr: Enable MSI-X when IPR_USE_MSIX type is
- set, not IPR_USE_MSI
-References: <cover.1380703262.git.agordeev@redhat.com> <2d4272136269f3cb3b1a5ac53b12aa45c7ea65c0.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <2d4272136269f3cb3b1a5ac53b12aa45c7ea65c0.1380703263.git.agordeev@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/02/2013 05:48 AM, Alexander Gordeev wrote:
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/scsi/ipr.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-> index fb57e21..762a93e 100644
-> --- a/drivers/scsi/ipr.c
-> +++ b/drivers/scsi/ipr.c
-> @@ -9527,7 +9527,7 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
->  		ipr_number_of_msix = IPR_MAX_MSIX_VECTORS;
->  	}
-> 
-> -	if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
-> +	if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSIX &&
->  			ipr_enable_msix(ioa_cfg) == 0)
->  		ioa_cfg->intr_flag = IPR_USE_MSIX;
->  	else if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
-> 
+Hello,
 
-Nack. ioa_cfg->ipr_chip->intr_type gets initialized from the ipr_chip table
-at the top of the driver which never sets intr_type to IPR_USE_MSIX, so this
-will break MSI-X support for ipr. 
+I'm working on enhancing the pciehp driver to allow link state changes to drive the hot-plug and un-plug. The idea was discussed here:
 
-We indicate at the chip level only whether we want to force LSI or whether
-we want to enable MSI / MSI-X and then try enabling MSI-X and fall back to
-MSI if MSI-X is not available or does not work. We then set intr_flag to indicate
-what we are actually using on the specific adapter.
+http://www.spinics.net/lists/linux-pci/msg25733.html
+
+However, this is to invite ideas on how to handle a particular corner case I see. Let's say a PCIe link comes up and the pciehp driver calls pciehp_enable_slot() to start scanning and adding the devices on the slot. However, what to do if before that completes, the link goes down due to some reason? Can the pciehp driver call pciehp_disable_slot() before the call to pciehp_enable_slot() returns (with or without error)?
+
+Essentially even without link state to driver the hot-plug, this problem can also be thought of as a problem that exists today. For e.g. for the slots that support surprise removal, the pciehp will initiate hot-plug and unplug based on the presence detection (as soon as card is inserted or removed). Now if a user puts in a card very momentarily, long enough for the hot-add process to get started (pciehp_enable_slot()) but removes it before it can be completed, the same problem can be envisioned. As the code exists today, I believe it would call pciehp_disable_slot() even before pciehp_enable_slot() returns. Is that the designed / correct behavior? 
+
+Should I be following the same for link state change driven hot-plug?
 
 Thanks,
 
-Brian
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
+Rajat
 
