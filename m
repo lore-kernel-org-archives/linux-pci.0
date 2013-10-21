@@ -1,51 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:56760 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750935Ab3JWFFB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 01:05:01 -0400
-From: Marek Vasut <marex@denx.de>
-To: Tim Harvey <tharvey@gateworks.com>
-Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
-Date: Wed, 23 Oct 2013 07:04:58 +0200
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com>
-In-Reply-To: <1382504143-27915-1-git-send-email-tharvey@gateworks.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:13642 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752912Ab3JULAs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Oct 2013 07:00:48 -0400
+Message-ID: <526507F4.4090706@huawei.com>
+Date: Mon, 21 Oct 2013 18:54:44 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201310230704.58605.marex@denx.de>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH v4 20/28] x86, irq: More strict checking about registering
+ ioapic
+References: <1376189294-32022-1-git-send-email-yinghai@kernel.org> <1376189294-32022-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1376189294-32022-21-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Tim Harvey,
+>  int mp_find_ioapic_pin(int ioapic, u32 gsi)
+>  {
+>  	struct mp_ioapic_gsi *gsi_cfg;
+> @@ -3888,6 +3894,11 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+>  	if (bad_ioapic(address))
+>  		return;
+>  
+> +	/* already registered ? */
+> +	idx = __mp_find_ioapic(gsi_base);
+> +	if (idx >= 0)
+> +		return;
 
-> The IMX6 iATU is used for address translation between the AXI bus
-> address space and PCI address space.  This is used for type0 and type1
-> config cycles but is not necessary for outbound io/mem regions.
-> 
-> This patch removes the calls that inappropriately re-configures the ATU
-> viewport for outbound memory and IO after config cycles and removes them
-> altogether as they are not necessary.
-> 
-> This resolves issues with PCI devices behind switches and has been tested
-> with a Gige device behind a PLX PEX860x switch.  More testing is needed
-> for other configurations.
-> 
-> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+Hi Yinghai,
+   If you add whether ioapic was already registered check here, so we will fail to add ioapic into global ioapic_list.
+Then we also can not hot remove this ioapic.
 
-This probably needs further fixes to the DT on exynos and omap. And it also 
-needs testing on those platforms as this was developed on freescale mx6.
 
-Best regards,
-Marek Vasut
+1. We will call mp_register_ioapic during analyze MADT first.
+2. We will try to add hotplug ioapic(which contain _GSB) to ioapic_list in acpi_pci_ioapic_add(), but will found this
+ioapic has been registered.
+
+Thanks!
+Yijing.
+
+
+> +
+>  	idx = find_first_zero_bit(ioapics_mask, MAX_IO_APICS);
+>  	if (idx >= MAX_IO_APICS) {
+>  		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded, skipping\n",
+> @@ -3914,6 +3925,13 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+>  	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
+>  	 */
+>  	entries = io_apic_get_redir_entries(idx);
+> +
+> +	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
+> +		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
+> +		memset(&ioapics[idx], 0, sizeof(struct ioapic));
+> +		return;
+> +	}
+> +
+>  	gsi_cfg = mp_ioapic_gsi_routing(idx);
+>  	gsi_cfg->gsi_base = gsi_base;
+>  	gsi_cfg->gsi_end = gsi_base + entries - 1;
+> 
+
+
+-- 
+Thanks!
+Yijing
+
