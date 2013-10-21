@@ -1,45 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:39343 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735Ab3JaRLE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Oct 2013 13:11:04 -0400
-Received: by mail-ie0-f170.google.com with SMTP id at1so5664178iec.29
-        for <linux-pci@vger.kernel.org>; Thu, 31 Oct 2013 10:11:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20131031164810.GA26426@obsidianresearch.com>
-References: <1381868182-8544-1-git-send-email-jgunthorpe@obsidianresearch.com>
- <20131031101357.5a56e2d0@skate> <20131031164810.GA26426@obsidianresearch.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 31 Oct 2013 11:10:42 -0600
-Message-ID: <CAErSpo7bUP63J5RkXr-DkQE8qmvKT7ri-vjkfq+TtGEaYWxSwA@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: mvebu - Support a bridge with no IO port window
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:58178 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754676Ab3JUJHw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Oct 2013 05:07:52 -0400
+Received: by mail-pa0-f54.google.com with SMTP id kx10so7733681pab.27
+        for <linux-pci@vger.kernel.org>; Mon, 21 Oct 2013 02:07:51 -0700 (PDT)
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, sachin.kamat@linaro.org,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH 3/3] PCI: exynos: Remove redundant of_match_ptr
+Date: Mon, 21 Oct 2013 14:36:43 +0530
+Message-Id: <1382346403-29576-3-git-send-email-sachin.kamat@linaro.org>
+In-Reply-To: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
+References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 31, 2013 at 10:48 AM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
+This driver is DT only. Hence of_match_ptr is not required.
 
-> Indeed.. I was having problems here because linux was writing 0,0
-> during discovery to the base,limit registers to 'disable' the IO
-> window, which triggered a window allocation. So I re-read the PCI
-> bridge spec (apparently too quickly) and decided 0,0 was OK, and it
-> should be <=.
->
-> However, looking again at the spec - it is very clear, < is the
-> correct test, and when the values is equal a 4k window should be
-> created.
->
-> So, I wonder if there is a little bug in the Linux discovery code
-> path, should it write FFFF,0 instead?
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/host/pci-exynos.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Sounds like a bug to me.  Do you want to fix it, or point me at it the
-place where we write 0,0 so I can fix it?
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index ee692c2..c4798fb 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -647,7 +647,7 @@ static struct platform_driver exynos_pcie_driver = {
+ 	.driver = {
+ 		.name	= "exynos-pcie",
+ 		.owner	= THIS_MODULE,
+-		.of_match_table = of_match_ptr(exynos_pcie_of_match),
++		.of_match_table = exynos_pcie_of_match,
+ 	},
+ };
+ 
+-- 
+1.7.9.5
 
-Bjorn
