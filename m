@@ -1,94 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:12754 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753342Ab3JCAjI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Oct 2013 20:39:08 -0400
-Date: Wed, 2 Oct 2013 17:39:05 -0700
-From: Jon Mason <jon.mason@intel.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 01/77] PCI/MSI: Fix return value when
- populate_msi_sysfs() failed
-Message-ID: <20131003003905.GK6768@jonmason-lab>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <3ff5236944aae69f2cd934b5b6da7c1c269df7c1.1380703262.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3ff5236944aae69f2cd934b5b6da7c1c269df7c1.1380703262.git.agordeev@redhat.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:46050 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752656Ab3JUK0E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Oct 2013 06:26:04 -0400
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MV000KOMKZ39VY0@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Mon, 21 Oct 2013 19:26:02 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Sachin Kamat' <sachin.kamat@linaro.org>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
+ <1382346403-29576-3-git-send-email-sachin.kamat@linaro.org>
+In-reply-to: <1382346403-29576-3-git-send-email-sachin.kamat@linaro.org>
+Subject: Re: [PATCH 3/3] PCI: exynos: Remove redundant of_match_ptr
+Date: Mon, 21 Oct 2013 19:26:01 +0900
+Message-id: <007501cece47$f0ae07a0$d20a16e0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 02, 2013 at 12:48:17PM +0200, Alexander Gordeev wrote:
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> This driver is DT only. Hence of_match_ptr is not required.
+> 
+> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+> Cc: Jingoo Han <jg1.han@samsung.com>
 
-Since you are changing the behavior of the msix_capability_init
-function on populate_msi_sysfs error, a comment describing why in this
-commit would be nice.
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+
+It looks good.
+Thank you for sending the patch. :)
+
+Best regards,
+Jingoo Han
 
 > ---
->  drivers/pci/msi.c |   11 +++++------
->  1 files changed, 5 insertions(+), 6 deletions(-)
+>  drivers/pci/host/pci-exynos.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d5f90d6..b43f391 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -719,7 +719,7 @@ static int msix_capability_init(struct pci_dev *dev,
->  
->  	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
->  	if (ret)
-> -		goto error;
-> +		goto out_avail;
->  
->  	/*
->  	 * Some devices require MSI-X to be enabled before we can touch the
-> @@ -732,10 +732,8 @@ static int msix_capability_init(struct pci_dev *dev,
->  	msix_program_entries(dev, entries);
->  
->  	ret = populate_msi_sysfs(dev);
-> -	if (ret) {
-> -		ret = 0;
-> -		goto error;
-> -	}
-> +	if (ret)
-> +		goto out_free;
->  
->  	/* Set MSI-X enabled bits and unmask the function */
->  	pci_intx_for_msi(dev, 0);
-> @@ -746,7 +744,7 @@ static int msix_capability_init(struct pci_dev *dev,
->  
->  	return 0;
->  
-> -error:
-> +out_avail:
->  	if (ret < 0) {
->  		/*
->  		 * If we had some success, report the number of irqs
-> @@ -763,6 +761,7 @@ error:
->  			ret = avail;
->  	}
->  
-> +out_free:
->  	free_msi_irqs(dev);
->  
->  	return ret;
-> -- 
-> 1.7.7.6
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index ee692c2..c4798fb 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -647,7 +647,7 @@ static struct platform_driver exynos_pcie_driver = {
+>  	.driver = {
+>  		.name	= "exynos-pcie",
+>  		.owner	= THIS_MODULE,
+> -		.of_match_table = of_match_ptr(exynos_pcie_of_match),
+> +		.of_match_table = exynos_pcie_of_match,
+>  	},
+>  };
 > 
+> --
+> 1.7.9.5
+
