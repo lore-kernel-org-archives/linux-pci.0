@@ -1,73 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp13.uk.ibm.com ([195.75.94.109]:51370 "EHLO
-	e06smtp13.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752905Ab3JDHlL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 03:41:11 -0400
-Received: from /spool/local
-	by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <schwidefsky@de.ibm.com>;
-	Fri, 4 Oct 2013 08:41:09 +0100
-Date: Fri, 4 Oct 2013 09:40:53 +0200
-From: Martin Schwidefsky <schwidefsky@de.ibm.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 04/77] PCI/MSI/s390: Remove superfluous check of MSI
- type
-Message-ID: <20131004094053.5e846a29@mschwide>
-In-Reply-To: <bae65aa3e30dfd23bd5ed47add7310cfbb96243a.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-	<bae65aa3e30dfd23bd5ed47add7310cfbb96243a.1380703262.git.agordeev@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from p01c11o145.mxlogic.net ([208.65.144.68]:58481 "EHLO
+	p01c11o145.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752626Ab3JUOcN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Oct 2013 10:32:13 -0400
+Date: Mon, 21 Oct 2013 10:24:38 -0400
+From: Joe Lawrence <joe.lawrence@stratus.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
+	"Desai, Kashyap" <Kashyap.Desai@lsi.com>,
+	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: mpt2sas,mpt3sas watchdog device removal
+Message-ID: <20131021102438.4b32b920@jlaw-desktop.mno.stratus.com>
+In-Reply-To: <CAErSpo4=6=3+VNgw9rKBoYO92DMnbPp0NZW5Z_j4WweKTymjmg@mail.gmail.com>
+References: <20130515132401.6a8ff7fb@jlaw-desktop.mno.stratus.com>
+	<20130515132948.7dc4c551@jlaw-desktop.mno.stratus.com>
+	<CAErSpo4OU2LRdmBLNBMbw79fYiR4yqYVJ++2ecju0qBNhAp-vA@mail.gmail.com>
+	<20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
+	<CAErSpo4=6=3+VNgw9rKBoYO92DMnbPp0NZW5Z_j4WweKTymjmg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed,  2 Oct 2013 12:48:20 +0200
-Alexander Gordeev <agordeev@redhat.com> wrote:
+On Thu, 10 Oct 2013 15:59:28 -0600
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-> arch_setup_msi_irqs() hook can only be called from the generic
-> MSI code which ensures correct MSI type parameter.
+> On Fri, May 17, 2013 at 3:42 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
+> > On Fri, 17 May 2013 09:29:06 -0600
+> > Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >
+> >> [+cc linux-pci]
+> >>
+> >> On Wed, May 15, 2013 at 11:29 AM, Joe Lawrence
+> >> <joe.lawrence@stratus.com> wrote:
+> >> > From 84ac7a35ebd61e84d4254eae78bb967de17254c2 Mon Sep 17 00:00:00
+> >> > 2001 From: Joe Lawrence <joe.lawrence@stratus.com>
+> >> > Date: Wed, 15 May 2013 12:52:31 -0400
+> >> > Subject: [PATCH] mpt2sas,mpt3sas: make watchdog instantiated device
+> >> > removal safe
+> >> >
+> >> > Calling pci_stop_and_remove_bus_device from a SCSI LLD may introduce
+> >> > device removal races with PCI callback functions.
+> >> >
+> >> > Simplify the mpt2sas watchdog mechanism by separating PCI device
+> >> > removal from SCSI midlayer detachment. When the watchdog wishes to
+> >> > remove a SCSI device from the topology, detach from the SCSI
+> >> > midlayer, leaving the PCI device alone. Adjust various pci_driver
+> >> > callbacks to account for a potentially SCSI detached PCI device.
+> >>
+> >> I don't know the details of the SCSI detachment, but this approach
+> >> looks much cleaner to me.
+> >
+> > Thanks for commenting, Bjorn.  I think this approach more closely
+> > represents what this watchdog is trying to accomplish.
+> >
+> > Off list, Sreekanth from LSI tested and noticed a few issues with this
+> > patch:
+> >
+> >  - mpt2sas_base_stop_watchdog is called twice: The call from
+> >    mpt2sas_base_detach is safe, but now unnecessary (as a call was
+> >    added earlier up in the PCI driver callbacks to ensure that the
+> >    watchdog was out of the way.) This second invocation can be removed.
+> >
+> >  - If the watchdog detects a bad IOC, the watchdog remains running:
+> >    The watchdog workqueue isn't cleaned up until
+> >    mpt2sas_base_stop_watchdog is called, so in the case that the
+> >    watchdog removes the device from SCSI topo, the workqueue will
+> >    remain unused until PCI .remove/.shutdown cleans it up. Perhaps a
+> >    single watchdog that iterates over all adapters would be simpler?
+> >
+> > Finally, if SCSI topo detachment is all that is interesting here, would
+> > it make more sense to move the watchdog into the MPT "scsi" code?  I
+> > haven't looked at the code yet, but this might make an MPT fusion patch
+> > easier (due to dependencies between its "scsi" and "base" modules).
 > 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  arch/s390/pci/pci.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
+> Hi Joe,
 > 
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> index c79c6e4..61a3c2c 100644
-> --- a/arch/s390/pci/pci.c
-> +++ b/arch/s390/pci/pci.c
-> @@ -425,8 +425,6 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
->  	int rc;
-> 
->  	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
-> -	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
-> -		return -EINVAL;
->  	if (type == PCI_CAP_ID_MSI && nvec > 1)
->  		return 1;
->  	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
+> I noticed this when looking through old email.  I can't remember if
+> anything happened with this.  It seems like nice work; did it go
+> anywhere?
 
-Acked-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Hello Bjorn,
 
--- 
-blue skies,
-   Martin.
+Sorry for the late reply, I was on vacation last week.
 
-"Reality continues to ruin my life." - Calvin.
+This patchset started as an attempt to push upstream some of the
+changes that Stratus makes to the fusion/mpt* drivers.  I had hoped to
+come up with a patchset that fixed hotplug vs. watchdog removal in each
+of the three LSI drivers.  Unfortunately this was more of a spare time
+project and other work took priority.
+
+There is a chance that Stratus maybe revisiting the fusion driver in
+the near future.  I will keep this patchset in mind if that happens.
+
+Regards,
+
+-- Joe
 
