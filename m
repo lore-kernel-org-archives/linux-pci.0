@@ -1,56 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:46151 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750942Ab3J2TZ4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 15:25:56 -0400
-Received: by mail-ie0-f173.google.com with SMTP id u16so555825iet.4
-        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 12:25:55 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAPgLHd-M6y2VkZv_TWkOqugXnu=NgFuxyBVskd-2fQjy79u61g@mail.gmail.com>
-References: <CAPgLHd-M6y2VkZv_TWkOqugXnu=NgFuxyBVskd-2fQjy79u61g@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 29 Oct 2013 13:25:35 -0600
-Message-ID: <CAErSpo4cvHuTg9Shty12-zp762LBtHpQZuN6qATfB8S24Hc_bQ@mail.gmail.com>
-Subject: Re: [PATCH -next] PCI: imx6: remove redundant dev_err call in imx6_pcie_probe()
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Sean Cross <xobs@kosagi.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	yongjun_wei@trendmicro.com.cn,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="Windows-1252"
+Subject: RE: [PATCH RFC v2 29/29] vmxnet3: Make use of pcim_enable_msix_range() interface
+Date: Mon, 21 Oct 2013 09:51:32 +0100
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B7398@saturn3.aculab.com>
+In-Reply-To: <75788c5da384b16633fdab43d37a277aa92f38fd.1382103786.git.agordeev@redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com> <75788c5da384b16633fdab43d37a277aa92f38fd.1382103786.git.agordeev@redhat.com>
+From: "David Laight" <David.Laight@ACULAB.COM>
+To: "Alexander Gordeev" <agordeev@redhat.com>,
+	<linux-kernel@vger.kernel.org>
+Cc: "Bjorn Helgaas" <bhelgaas@google.com>,
+	"Michael Ellerman" <michael@ellerman.id.au>,
+	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	"Tejun Heo" <tj@kernel.org>,
+	"Ben Hutchings" <bhutchings@solarflare.com>,
+	"Mark Lord" <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	<linux-pci@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 12, 2013 at 12:11 AM, Wei Yongjun <weiyj.lk@gmail.com> wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->
-> There is a error message within devm_ioremap_resource
-> already, so remove the dev_err call to avoid redundant
-> error message.
->
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> Subject: [PATCH RFC v2 29/29] vmxnet3: Make use of pcim_enable_msix_range() interface
+...
+> diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
+> index d33802c..e552d2b 100644
+> --- a/drivers/net/vmxnet3/vmxnet3_drv.c
+> +++ b/drivers/net/vmxnet3/vmxnet3_drv.c
+> @@ -2735,39 +2735,19 @@ vmxnet3_read_mac_addr(struct vmxnet3_adapter *adapter, u8 *mac)
+>   */
+> 
+>  static int
+> -vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
+> -			     int vectors)
+> +vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter, int vectors)
+>  {
+> -	int err = -EINVAL, vector_threshold;
+> -	vector_threshold = VMXNET3_LINUX_MIN_MSIX_VECT;
+> -
+> -	while (vectors >= vector_threshold) {
+> -		err = pci_enable_msix(adapter->pdev, adapter->intr.msix_entries,
+> -				      vectors);
+> -		if (!err) {
+> -			adapter->intr.num_intrs = vectors;
+> -			return 0;
+> -		} else if (err < 0) {
+> -			dev_err(&adapter->netdev->dev,
+> -				   "Failed to enable MSI-X, error: %d\n", err);
+> -			return err;
+> -		} else if (err < vector_threshold) {
+> -			dev_info(&adapter->pdev->dev,
+> -				 "Number of MSI-Xs which can be allocated "
+> -				 "is lower than min threshold required.\n");
+> -			return -ENOSPC;
+> -		} else {
+> -			/* If fails to enable required number of MSI-x vectors
+> -			 * try enabling minimum number of vectors required.
+> -			 */
+> -			dev_err(&adapter->netdev->dev,
+> -				"Failed to enable %d MSI-X, trying %d instead\n",
+> -				    vectors, vector_threshold);
+> -			vectors = vector_threshold;
+> -		}
+> +	vectors = pcim_enable_msix_range(adapter->pdev,
+> +					 adapter->intr.msix_entries, vectors,
+> +					 VMXNET3_LINUX_MIN_MSIX_VECT);
+> +	if (vectors < 0) {
+> +		dev_err(&adapter->netdev->dev,
+> +			"Failed to enable MSI-X, error: %d\n", vectors);
+> +		return vectors;
+>  	}
+> 
+> -	return err;
+> +	adapter->intr.num_intrs = vectors;
+> +	return 0;
+>  }
 
-Applied with ack and reviewed-by to my pci/host-imx6 branch for v3.13, thanks!
+AFAICT the old code either used the requested number or the minimum number.
+The new code seems to claim an intermediate number of interrupts - but probably
+only uses the minimum number.
+This wastes the last few MSI-X interrupts.
+The code (especially the calling code) would be easier to read if the 'vectors'
+value wasn't explicitly passed.
 
-Bjorn
+	David
 
-> ---
->  drivers/pci/host/pci-imx6.c | 1 -
->  1 file changed, 1 deletion(-)
->
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 5afa922..51338ac 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -439,7 +439,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->
->         pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
->         if (IS_ERR(pp->dbi_base)) {
-> -               dev_err(&pdev->dev, "unable to remap dbi_base\n");
->                 ret = PTR_ERR(pp->dbi_base);
->                 goto err;
->         }
->
+
+
