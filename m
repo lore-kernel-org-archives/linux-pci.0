@@ -1,60 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:62074 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754734Ab3JWCC6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Oct 2013 22:02:58 -0400
-Received: by mail-wg0-f43.google.com with SMTP id b13so140869wgh.10
-        for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2013 19:02:57 -0700 (PDT)
+Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:56057 "EHLO
+	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750786Ab3JVEhL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Oct 2013 00:37:11 -0400
+Date: Tue, 22 Oct 2013 10:06:53 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mohit KUMAR <mohit.kumar@st.com>,
+	Ajay KHANDELWAL <ajay.khandelwal@st.com>
+Subject: Re: [QUERY] Number of address translation regions in designware
+Message-ID: <20131022043653.GB2760@pratyush-vbox>
+References: <52652BF1.4040507@ti.com>
 MIME-Version: 1.0
-From: wubo <wuborush@gmail.com>
-Date: Wed, 23 Oct 2013 10:02:37 +0800
-Message-ID: <CAAV3jMxpNg2+ABE5AD8cOg5ZrYc1hL0-YbtHkVYFbPnSif9eeA@mail.gmail.com>
-Subject: A question of msix feature
-To: linux-pci@vger.kernel.org
-Cc: agordeev@redhat.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <52652BF1.4040507@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, all
+Hi,
 
-Sorry for troubling you.
-We are developing msix feature on our product, unfortunately it will
-lead kernel to crash
-on a server PC whose cpu is Intel(R) Xeon(R) CPU E5645, and we are
-sure that our driver is good
-on common personal PC.
+On Mon, Oct 21, 2013 at 09:28:17PM +0800, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> Currently I see in pcie-designware.c we use only 2 ATU regions. We re-use
+> INDEX0 for mem outbound and cfg0, and INDEX1 for cfg1 and io. So I'd like to
+> know if in your platform, do you have only 2 address translation regions? In
+> DRA7xx we have 16 outbound regions and 4 inbound regions.
 
-A piece code in our driver like that:
-for (i = 0; i < msix_num; i++) {
-msix = &pcie->msix_entries[i];
-msix->entry = i;
-}
-ret = pci_enable_msix(XX);
-for (i = 0; i < msix_num; i++) {
-msix = &pcie->msix_entries[i];
-ret = request_irq(msix->vector, XX);
-}
+I do not know about samsung, Jingoo can confirm. In SPEAr1340 there
+are only 2 inbound and outbound viewports, but in SPEAr1310 there are
+6. It would be good to modify the driver, to avoid re-use of viewport
+whereever possible.
 
-BTW, the kernel crash info is as follows:
-[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 32993
-[Hardware Error]: APEI generic hardware error status
-[Hardware Error]: severity: 1, fatal
-[Hardware Error]: section: 0, severity: 1, fatal
-[Hardware Error]: flags: 0x01
-[Hardware Error]: primary
-[Hardware Error]: section_type: PCIe error
-[Hardware Error]: port_type: 0, PCIe end point
-[Hardware Error]: version: 1.0
-[Hardware Error]: command: 0x0407, status: 0x0010
-[Hardware Error]: device_id: 0000:04:00.0
-[Hardware Error]: slot: 2
-[Hardware Error]: secondary_bus: 0x00
-[Hardware Error]: vendor_id: 0x1c5f, device_id: 0x0530
-[Hardware Error]: class_code: 008001
+> 
+> Also the same designware IP can be used as a EP also no? Shouldn't we move it
 
-Do I miss something important?? Can anybody give me some hints?
+Yes same IP can be configured as EP. But..
 
--- 
-Thanks,
-Wubo
+> out of drivers/pci/host and allow it to be configured as EP also?
+
+Same driver may not be used. (Few of these functions might be reused,
+but not whole). Moreover, in my experience  running Linux over an EP
+can have only importance of validation/demo. Practical use case will
+find a simple firmware more suitable.
+
+Regards
+Pratyush
+
+> 
+> Thanks
+> Kishon
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
