@@ -1,82 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:55574 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755671Ab3JHXKR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 19:10:17 -0400
-Received: by mail-ie0-f180.google.com with SMTP id u16so12817iet.25
-        for <linux-pci@vger.kernel.org>; Tue, 08 Oct 2013 16:10:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1381272382.7979.292.camel@snotra.buserror.net>
-References: <1380531175-14836-1-git-send-email-Minghuan.Lian@freescale.com>
- <CAErSpo7LXqXmrw1gPwKHsJkKaAcDr2W_+tcC8b9T_5Mab1Arnw@mail.gmail.com> <1381272382.7979.292.camel@snotra.buserror.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 8 Oct 2013 17:09:56 -0600
-Message-ID: <CAErSpo76_w+wK76m73kkdYS1PouhYcGfZus_FYF5E2FHJTA6gQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2][v2] pci: fsl: derive the common PCI driver to drivers/pci/host
-To: Scott Wood <scottwood@freescale.com>
-Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout2.samsung.com ([203.254.224.25]:13410 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842Ab3JVFQM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Oct 2013 01:16:12 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MV200H3I1AOOLN0@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Tue, 22 Oct 2013 14:16:01 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kishon Vijay Abraham I' <kishon@ti.com>, linux-pci@vger.kernel.org
+Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <mohit.kumar@st.com>,
+	'Ajay KHANDELWAL' <ajay.khandelwal@st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <52652BF1.4040507@ti.com>
+In-reply-to: <52652BF1.4040507@ti.com>
+Subject: Re: [QUERY] Number of address translation regions in designware
+Date: Tue, 22 Oct 2013 14:16:00 +0900
+Message-id: <000001cecee5$cbeafa10$63c0ee30$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 8, 2013 at 4:46 PM, Scott Wood <scottwood@freescale.com> wrote:
-> On Tue, 2013-10-08 at 13:13 -0600, Bjorn Helgaas wrote:
->> [+cc Ben, Paul, linuxppc-dev]
->>
->> On Mon, Sep 30, 2013 at 04:52:54PM +0800, Minghuan Lian wrote:
->> > The Freescale's Layerscape series processors will use ARM cores.
->> > The LS1's PCIe controllers is the same as T4240's. So it's better
->> > the PCIe controller driver can support PowerPC and ARM
->> > simultaneously. This patch is for this purpose. It derives
->> > the common functions from arch/powerpc/sysdev/fsl_pci.c to
->> > drivers/pci/host/pci-fsl-common.c and leaves the architecture
->> > specific functions which should be implemented in arch related files.
->> >
->> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
->>
->> I cc'd the powerpc maintainers so we can work out which tree this
->> should go through.
->>
->> > ---
->> > change log:
->> > v1-v2:
->> > 1. rename pci.h to pci-common.h
->> > 2. rename pci-fsl.c to pci-fsl-common.c
->> >
->> > Based on upstream master.
->> > Based on the discussion of RFC version here
->> > http://patchwork.ozlabs.org/patch/274487/
->> >
->> >  arch/powerpc/sysdev/fsl_pci.c                      | 521 +-----------------
->> >  arch/powerpc/sysdev/fsl_pci.h                      |  89 ----
->> >  .../fsl_pci.c => drivers/pci/host/pci-fsl-common.c | 591 +--------------------
->> >  .../fsl_pci.h => include/linux/fsl/pci-common.h    |  45 +-
->>
->> Is there any way to avoid putting this file in include/linux?  I know
->> you want to share it beyond PowerPC, and I know there are similar
->> examples there already, but this is all arch-specific or
->> chipset-specific stuff that seems like it should be in some
->> not-so-public place.  It doesn't seem scalable to add an include/linux
->> subdirectory for every chipset that might be shared across
->> architectures.
->
-> What specifically is the problem with it, as long as it's properly
-> namespaced?
+On Monday, October 21, 2013 10:28 PM, Kishon Vijay Abraham I wrote:
+> 
+> Currently I see in pcie-designware.c we use only 2 ATU regions. We re-use
+> INDEX0 for mem outbound and cfg0, and INDEX1 for cfg1 and io. So I'd like to
+> know if in your platform, do you have only 2 address translation regions? In
+> DRA7xx we have 16 outbound regions and 4 inbound regions.
 
-Well, as I said above, it doesn't seem scalable, and it doesn't seem
-to be the common existing practice.  Possibly this is just because
-sharing chipsets across arches isn't very common yet.
+In Exynos, there are only 2 inbound and 2 outbound viewpoints.
 
-I hadn't noticed that include/linux/fsl exists already; I thought you
-were adding it.  Given that it *does* exist already, I guess I'm OK
-with putting more stuff in it.
+> Also the same designware IP can be used as a EP also no? Shouldn't we move it
+> out of drivers/pci/host and allow it to be configured as EP also?
 
-So I'll apply these given an ack from the powerpc folks.
+Currently, Exynos PCIe IP does not support EP mode.
 
-Bjorn
+Best regards,
+Jingoo Han
+
