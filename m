@@ -1,99 +1,203 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:60106 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752366Ab3JYXB1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 19:01:27 -0400
-Received: by mail-ie0-f178.google.com with SMTP id x13so7509328ief.37
-        for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 16:01:26 -0700 (PDT)
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:4036 "EHLO
+	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753026Ab3JWKmO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 06:42:14 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linuxppc-dev@lists.ozlabs.org>
+CC: Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH 11/12][v3] pci: fsl: update PCI EDAC driver
+Date: Wed, 23 Oct 2013 18:41:33 +0800
+Message-ID: <1382524894-15164-11-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com>
-References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
- <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
- <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com>
- <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
- <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
- <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
- <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com> <CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 25 Oct 2013 17:01:06 -0600
-Message-ID: <CAErSpo4qv2x1MjB=cW6QNevcQcq7dYtk-wC-HRTq8XEz2Xac-g@mail.gmail.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 24, 2013 at 11:13 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Oct 24, 2013 at 8:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->>>>> Bisection points to 928bea964827d7824b548c1f8e06eccbbc4d0d7d .
->>>>
->>>> This is "PCI: Delay enabling bridges until they're needed" by Yinghai.
->>>
->>> that double disabling should be addressed by:
->>>
->>> https://lkml.org/lkml/2013/4/25/608
->>>
->>> [PATCH] PCI: Remove duplicate pci_disable_device for pcie port
->>
->> I'll look at that patch again.  I had some questions about it the
->> first time, but perhaps it makes more sense after 928bea9648 has been
->> applied.
->>
->> Andreas originally reported a GPF oops in pci_pme_list_scan().  I
->> posted a refcounting patch, which made the problem go away, but I
->> can't explain why, and I don't want to apply it without understanding
->> that.  Decoding his oops shows this:
->>
->>   24: 0f 1f 00             nopl   (%rax)
->>   27: 48 8b 50 10           mov    0x10(%rax),%rdx
->>   2b:* 48 8b 52 38           mov    0x38(%rdx),%rdx <-- trapping instruction
->>   2f: 48 85 d2             test   %rdx,%rdx
->>
->> %rax is the pci_dev pointer, so 0x10(%rax) is the dev->bus pointer,
->> which we put in %rdx.  The oops says %rdx = 6b6b6b6b6b6b6b6b, which is
->> POISON_FREE, so I think we loaded dev->bus out of a struct pci_dev
->> that has already been freed.
->>
->> pci_pme_list_scan() holds pci_pme_list_mutex while it traverses
->> pci_pme_list, and the pci_stop_and_remove_bus_device() path removes
->> the pci_dev by calling pci_pme_active(), which also holds
->> pci_pme_list_mutex, so I don't understand how pci_pme_list_scan() can
->> see a pci_dev that has already been freed.
->>
->> If I understand Andreas correctly, 928bea9648 also fixes the crash,
->> even without my refcounting change.  Can you explain why?
->
-> 928bea will make the dev->enable_cnt increase wrongly, as we have
-> pci_enable_device for child
->    pci_enable_bridge for parent
->      pci_enable_bridge for grandparent
->        pci_enable_device for grandparent
->    pci_enable_device for parent
->        pci_enable_brdige for grandparent
->          pci_enable_device for grandparent.
-> ...
->
-> in that case grandprent will be enabled two times, and will enable_cnt will have
-> extra increase.
->
-> so later pci_disable_device will not really call do_pci_disable_device
-> do the really work, as enable_cnt still big.
->
-> solution could be:
-> let pci_enable_bridge call __pci_enable_device.
-> and __pci_enable_device will not call pci_enable_bridge.
+1. The pci-fsl-common driver has set fsl_pci to device as drvdata,
+so EDAC driver can not call dev_set_drvdata() again. fsl_pci
+contains regs field to point PCI CCSR, so EDAC may directly use
+the pointer and not need to call devm_ioremap().
+2. Add mpc85xx_pci_err_remove() to disable PCI error interrupt
+and delete PCI EDAC from EDAC subsystem.
 
-Sorry, I didn't understand this.  Is this supposed to be an
-explanation of how 928bea fixes the oops that Andreas saw?  If so, can
-you be a little more explicit about when the pci_dev got freed and
-when pci_pme_list_scan() walked the list and accessed the freed area?
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+change log:
+v1-v3:
+Derived from http://patchwork.ozlabs.org/patch/278965/
+Added mpc85xx_pci_err_remove()
 
-Bjorn
+Based on upstream master.
+Based on the discussion of RFC version here
+http://patchwork.ozlabs.org/patch/274487/
+
+ arch/powerpc/sysdev/fsl_pci.c |  1 +
+ arch/powerpc/sysdev/fsl_pci.h |  6 ++++++
+ drivers/edac/mpc85xx_edac.c   | 46 +++++++++++++++----------------------------
+ drivers/edac/mpc85xx_edac.h   |  1 +
+ 4 files changed, 24 insertions(+), 30 deletions(-)
+
+diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+index 40d2e1d..4a03e1a 100644
+--- a/arch/powerpc/sysdev/fsl_pci.c
++++ b/arch/powerpc/sysdev/fsl_pci.c
+@@ -236,6 +236,7 @@ void fsl_arch_pci_sys_remove(struct fsl_pci *pci)
+ 	if (!hose)
+ 		return;
+ 
++	mpc85xx_pci_err_remove(to_platform_device(pci->dev));
+ 	pcibios_free_controller(hose);
+ }
+ 
+diff --git a/arch/powerpc/sysdev/fsl_pci.h b/arch/powerpc/sysdev/fsl_pci.h
+index ce77aad..ae4dbe2 100644
+--- a/arch/powerpc/sysdev/fsl_pci.h
++++ b/arch/powerpc/sysdev/fsl_pci.h
+@@ -35,11 +35,17 @@ static inline void fsl_pci_assign_primary(void) {}
+ 
+ #ifdef CONFIG_EDAC_MPC85XX
+ int mpc85xx_pci_err_probe(struct platform_device *op);
++int mpc85xx_pci_err_remove(struct platform_device *op);
+ #else
+ static inline int mpc85xx_pci_err_probe(struct platform_device *op)
+ {
+ 	return -ENOTSUPP;
+ }
++static inline int mpc85xx_pci_err_remove(struct platform_device *op)
++{
++	return -ENOTSUPP;
++}
++
+ #endif
+ 
+ #ifdef CONFIG_FSL_PCI
+diff --git a/drivers/edac/mpc85xx_edac.c b/drivers/edac/mpc85xx_edac.c
+index 3eb32f6..14a4116 100644
+--- a/drivers/edac/mpc85xx_edac.c
++++ b/drivers/edac/mpc85xx_edac.c
+@@ -21,6 +21,7 @@
+ 
+ #include <linux/of_platform.h>
+ #include <linux/of_device.h>
++#include <linux/fsl/pci-common.h>
+ #include "edac_module.h"
+ #include "edac_core.h"
+ #include "mpc85xx_edac.h"
+@@ -214,11 +215,13 @@ static irqreturn_t mpc85xx_pci_isr(int irq, void *dev_id)
+ 
+ int mpc85xx_pci_err_probe(struct platform_device *op)
+ {
++	struct fsl_pci *fslpci;
+ 	struct edac_pci_ctl_info *pci;
+ 	struct mpc85xx_pci_pdata *pdata;
+-	struct resource r;
+ 	int res = 0;
+ 
++	fslpci = platform_get_drvdata(op);
++
+ 	if (!devres_open_group(&op->dev, mpc85xx_pci_err_probe, GFP_KERNEL))
+ 		return -ENOMEM;
+ 
+@@ -239,7 +242,6 @@ int mpc85xx_pci_err_probe(struct platform_device *op)
+ 	pdata = pci->pvt_info;
+ 	pdata->name = "mpc85xx_pci_err";
+ 	pdata->irq = NO_IRQ;
+-	dev_set_drvdata(&op->dev, pci);
+ 	pci->dev = &op->dev;
+ 	pci->mod_name = EDAC_MOD_STR;
+ 	pci->ctl_name = pdata->name;
+@@ -250,30 +252,8 @@ int mpc85xx_pci_err_probe(struct platform_device *op)
+ 
+ 	pdata->edac_idx = edac_pci_idx++;
+ 
+-	res = of_address_to_resource(op->dev.of_node, 0, &r);
+-	if (res) {
+-		printk(KERN_ERR "%s: Unable to get resource for "
+-		       "PCI err regs\n", __func__);
+-		goto err;
+-	}
+-
+ 	/* we only need the error registers */
+-	r.start += 0xe00;
+-
+-	if (!devm_request_mem_region(&op->dev, r.start, resource_size(&r),
+-					pdata->name)) {
+-		printk(KERN_ERR "%s: Error while requesting mem region\n",
+-		       __func__);
+-		res = -EBUSY;
+-		goto err;
+-	}
+-
+-	pdata->pci_vbase = devm_ioremap(&op->dev, r.start, resource_size(&r));
+-	if (!pdata->pci_vbase) {
+-		printk(KERN_ERR "%s: Unable to setup PCI err regs\n", __func__);
+-		res = -ENOMEM;
+-		goto err;
+-	}
++	pdata->pci_vbase = (void *)fslpci->regs + MPC85XX_PCI_ERR_OFFSET;
+ 
+ 	orig_pci_err_cap_dr =
+ 	    in_be32(pdata->pci_vbase + MPC85XX_PCI_ERR_CAP_DR);
+@@ -327,20 +307,25 @@ err:
+ }
+ EXPORT_SYMBOL(mpc85xx_pci_err_probe);
+ 
+-static int mpc85xx_pci_err_remove(struct platform_device *op)
++int mpc85xx_pci_err_remove(struct platform_device *op)
+ {
+-	struct edac_pci_ctl_info *pci = dev_get_drvdata(&op->dev);
+-	struct mpc85xx_pci_pdata *pdata = pci->pvt_info;
++	struct edac_pci_ctl_info *pci;
++	struct mpc85xx_pci_pdata *pdata;
+ 
+ 	edac_dbg(0, "\n");
+ 
++	pci = edac_pci_del_device(&op->dev);
++
++	if (!pci)
++		return -EINVAL;
++
++	pdata = pci->pvt_info;
++
+ 	out_be32(pdata->pci_vbase + MPC85XX_PCI_ERR_CAP_DR,
+ 		 orig_pci_err_cap_dr);
+ 
+ 	out_be32(pdata->pci_vbase + MPC85XX_PCI_ERR_EN, orig_pci_err_en);
+ 
+-	edac_pci_del_device(pci->dev);
+-
+ 	if (edac_op_state == EDAC_OPSTATE_INT)
+ 		irq_dispose_mapping(pdata->irq);
+ 
+@@ -348,6 +333,7 @@ static int mpc85xx_pci_err_remove(struct platform_device *op)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(mpc85xx_pci_err_remove);
+ 
+ #endif				/* CONFIG_PCI */
+ 
+diff --git a/drivers/edac/mpc85xx_edac.h b/drivers/edac/mpc85xx_edac.h
+index 932016f..3ba235a 100644
+--- a/drivers/edac/mpc85xx_edac.h
++++ b/drivers/edac/mpc85xx_edac.h
+@@ -131,6 +131,7 @@
+ #define PCI_EDE_PERR_MASK	(PCI_EDE_TGT_PERR | PCI_EDE_MST_PERR | \
+ 				PCI_EDE_ADDR_PERR)
+ 
++#define MPC85XX_PCI_ERR_OFFSET		0x0e00
+ #define MPC85XX_PCI_ERR_DR		0x0000
+ #define MPC85XX_PCI_ERR_CAP_DR		0x0004
+ #define MPC85XX_PCI_ERR_EN		0x0008
+-- 
+1.8.1.2
+
+
