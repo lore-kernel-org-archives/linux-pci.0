@@ -1,120 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26081 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754542Ab3JBRZf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:25:35 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:60371 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820Ab3JWFM2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 01:12:28 -0400
+Received: by mail-pb0-f53.google.com with SMTP id up7so310716pbc.26
+        for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2013 22:12:28 -0700 (PDT)
+From: Tim Harvey <tharvey@gateworks.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 29/77] cxgb4vf: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:48:45 +0200
-Message-Id: <e4d21d117874dbbe4aac4618b3cc3e3d9d0cbeb6.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: imx6: increase link startup
+Date: Tue, 22 Oct 2013 22:12:18 -0700
+Message-Id: <1382505138-23286-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
+An increase link startup delay is required when certain PCI switches are
+attached to the root complex.  This was tested with a Pericom switch
+and a PLX switch.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+From: Marek Vasut <marex@denx.de>
+Signed-off-by: Marek Vasut <marex@denx.de>
+Acked-by: Tim Harvey <tharvey@gateworks.com>
 ---
- .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    |   49 ++++++++++++--------
- 1 files changed, 29 insertions(+), 20 deletions(-)
+ drivers/pci/host/pci-imx6.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-index 11cbce1..48bb33b 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-@@ -2437,13 +2437,10 @@ static void reduce_ethqs(struct adapter *adapter, int n)
-  */
- static int enable_msix(struct adapter *adapter)
- {
--	int i, err, want, need;
-+	int i, err, want, need, nqsets;
- 	struct msix_entry entries[MSIX_ENTRIES];
- 	struct sge *s = &adapter->sge;
- 
--	for (i = 0; i < MSIX_ENTRIES; ++i)
--		entries[i].entry = i;
--
- 	/*
- 	 * We _want_ enough MSI-X interrupts to cover all of our "Queue Sets"
- 	 * plus those needed for our "extras" (for example, the firmware
-@@ -2453,26 +2450,38 @@ static int enable_msix(struct adapter *adapter)
- 	 */
- 	want = s->max_ethqsets + MSIX_EXTRAS;
- 	need = adapter->params.nports + MSIX_EXTRAS;
--	while ((err = pci_enable_msix(adapter->pdev, entries, want)) >= need)
--		want = err;
- 
--	if (err == 0) {
--		int nqsets = want - MSIX_EXTRAS;
--		if (nqsets < s->max_ethqsets) {
--			dev_warn(adapter->pdev_dev, "only enough MSI-X vectors"
--				 " for %d Queue Sets\n", nqsets);
--			s->max_ethqsets = nqsets;
--			if (nqsets < s->ethqsets)
--				reduce_ethqs(adapter, nqsets);
--		}
--		for (i = 0; i < want; ++i)
--			adapter->msix_info[i].vec = entries[i].vector;
--	} else if (err > 0) {
-+	err = pci_msix_table_size(adapter->pdev);
-+	if (err < 0)
-+		return err;
-+
-+	want = min(want, err);
-+	if (want < need) {
- 		dev_info(adapter->pdev_dev, "only %d MSI-X vectors left,"
- 			 " not using MSI-X\n", err);
--		err = -ENOSPC;
-+		return -ENOSPC;
- 	}
--	return err;
-+
-+	BUG_ON(want > ARRAY_SIZE(entries));
-+	for (i = 0; i < want; ++i)
-+		entries[i].entry = i;
-+
-+	err = pci_enable_msix(adapter->pdev, entries, want);
-+	if (err)
-+		return err;
-+
-+	nqsets = want - MSIX_EXTRAS;
-+	if (nqsets < s->max_ethqsets) {
-+		dev_warn(adapter->pdev_dev, "only enough MSI-X vectors"
-+			 " for %d Queue Sets\n", nqsets);
-+		s->max_ethqsets = nqsets;
-+		if (nqsets < s->ethqsets)
-+			reduce_ethqs(adapter, nqsets);
-+	}
-+	for (i = 0; i < want; ++i)
-+		adapter->msix_info[i].vec = entries[i].vector;
-+
-+	return 0;
- }
- 
- static const struct net_device_ops cxgb4vf_netdev_ops	= {
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 90fce05..34c571a 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -318,7 +318,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 	while (!dw_pcie_link_up(pp)) {
+ 		usleep_range(100, 1000);
+ 		count++;
+-		if (count >= 10) {
++		if (count >= 200) {
+ 			dev_err(pp->dev, "phy link never came up\n");
+ 			dev_dbg(pp->dev,
+ 				"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
 -- 
-1.7.7.6
+1.7.9.5
 
