@@ -1,79 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:59487 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751423Ab3JAH0q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Oct 2013 03:26:46 -0400
-Date: Tue, 1 Oct 2013 17:26:43 +1000
-From: Michael Ellerman <michael@ellerman.id.au>
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20131001072642.GH17966@concordia>
-References: <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20130918142231.GA21650@mtj.dyndns.org>
- <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
- <20130920122603.GC7630@mtj.dyndns.org>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:33342 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755628Ab3JWDYO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Oct 2013 23:24:14 -0400
+Received: by mail-ie0-f178.google.com with SMTP id x13so384681ief.9
+        for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2013 20:24:14 -0700 (PDT)
+Subject: [PATCH 2/2] mn10300/PCI: Remove useless pcibios_last_bus
+To: David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-am33-list@redhat.com,
+	linux-kernel@vger.kernel.org
+Date: Tue, 22 Oct 2013 21:24:12 -0600
+Message-ID: <20131023032412.12410.9371.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20131023032140.12410.43295.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20131023032140.12410.43295.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130920122603.GC7630@mtj.dyndns.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 20, 2013 at 07:26:03AM -0500, Tejun Heo wrote:
-> Hello,
-> 
-> On Wed, Sep 18, 2013 at 06:50:45PM +0200, Alexander Gordeev wrote:
-> > Actually, I do not see much contradiction with what I proposed. The
-> > key words here "determine the number of MSIs the controller wants".
-> > 
-> > In general case it is not what pci_msix_table_size() returns (or at
-> > least we should not limit ourselves to it) - there could be non-
-> > standard means to report number of MSIs: hardcoded, version-dependant,
-> > device-specific registers etc.
-> > 
-> > Next, if we opt to determine the number of MSIs by non-MSI standard
-> > means then there is no reason not to call pci_get_msix_limit() (or
-> > whatever) at this step.
-> 
-> Yeah, that's all fine.  My point is that we shouldn't try to use
-> "degraded" multiple MSI mode where the number of MSIs allocated is
-> smaller than performing full multiple MSI operation.  How that number
-> is determined doesn't really matter but that number is a property
-> which is solely decided by the device driver, right?  If a device
-> needs full multiple MSI mode, given specific configuration, it needs
-> >= X number of MSIs and that's the number it should request.
+pcibios_last_bus was apparently copied from x86.  On mn10300, it is
+statically initialized to -1 and may be set with the "pci=lastbus=<X>"
+boot option, but it is never tested.  This patch removes everything
+related to pcibios_last_bus.
 
-Sure, the driver is in full control. If it can ONLY work with N MSIs
-then it should try for N, else fallback to 1.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/mn10300/unit-asb2305/pci-asb2305.h |    1 -
+ arch/mn10300/unit-asb2305/pci.c         |    5 -----
+ 2 files changed, 6 deletions(-)
 
-But some drivers are able to work with a range of values for N, and
-performance is improved vs using a single MSI.
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.h b/arch/mn10300/unit-asb2305/pci-asb2305.h
+index 7fa66a0..9e17aca 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.h
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.h
+@@ -35,7 +35,6 @@ extern void pcibios_resource_survey(void);
+ 
+ /* pci.c */
+ 
+-extern int pcibios_last_bus;
+ extern struct pci_ops *pci_root_ops;
+ 
+ extern struct irq_routing_table *pcibios_get_irq_routing_table(void);
+diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
+index e37fac0..6b4339f 100644
+--- a/arch/mn10300/unit-asb2305/pci.c
++++ b/arch/mn10300/unit-asb2305/pci.c
+@@ -24,7 +24,6 @@
+ 
+ unsigned int pci_probe = 1;
+ 
+-int pcibios_last_bus = -1;
+ struct pci_ops *pci_root_ops;
+ 
+ /*
+@@ -392,10 +391,6 @@ char *__init pcibios_setup(char *str)
+ 	if (!strcmp(str, "off")) {
+ 		pci_probe = 0;
+ 		return NULL;
+-
+-	} else if (!strncmp(str, "lastbus=", 8)) {
+-		pcibios_last_bus = simple_strtol(str+8, NULL, 0);
+-		return NULL;
+ 	}
+ 
+ 	return str;
 
-> > Being Captain Obvious here, but it is up to the device driver to handle
-> > a failure. There could be no such option as single MSI mode after all :)
-> 
-> I don't think there actually is a mainstream device which can't
-> fallback to single interrupt.  Anyways, the point is the same, let's
-> please not try to create an interface which encourages complex retry
-> logic in its users which are likely to involve less traveled and
-> tested paths in both the driver and firmware.
-
-Why support > 1 MSI at all? It just adds complex logic and less travelled
-paths in the driver and firmware.
-
-cheers
