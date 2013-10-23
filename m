@@ -1,102 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p01c11o145.mxlogic.net ([208.65.144.68]:58481 "EHLO
-	p01c11o145.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752626Ab3JUOcN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Oct 2013 10:32:13 -0400
-Date: Mon, 21 Oct 2013 10:24:38 -0400
-From: Joe Lawrence <joe.lawrence@stratus.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
-	"Desai, Kashyap" <Kashyap.Desai@lsi.com>,
-	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: mpt2sas,mpt3sas watchdog device removal
-Message-ID: <20131021102438.4b32b920@jlaw-desktop.mno.stratus.com>
-In-Reply-To: <CAErSpo4=6=3+VNgw9rKBoYO92DMnbPp0NZW5Z_j4WweKTymjmg@mail.gmail.com>
-References: <20130515132401.6a8ff7fb@jlaw-desktop.mno.stratus.com>
-	<20130515132948.7dc4c551@jlaw-desktop.mno.stratus.com>
-	<CAErSpo4OU2LRdmBLNBMbw79fYiR4yqYVJ++2ecju0qBNhAp-vA@mail.gmail.com>
-	<20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
-	<CAErSpo4=6=3+VNgw9rKBoYO92DMnbPp0NZW5Z_j4WweKTymjmg@mail.gmail.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:38839 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751412Ab3JWR2k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 13:28:40 -0400
+Received: by mail-ie0-f181.google.com with SMTP id ar20so1905972iec.12
+        for <linux-pci@vger.kernel.org>; Wed, 23 Oct 2013 10:28:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <CAAV3jMxpNg2+ABE5AD8cOg5ZrYc1hL0-YbtHkVYFbPnSif9eeA@mail.gmail.com>
+References: <CAAV3jMxpNg2+ABE5AD8cOg5ZrYc1hL0-YbtHkVYFbPnSif9eeA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 23 Oct 2013 11:28:19 -0600
+Message-ID: <CAErSpo7WhZu=tvEKvxUijDafv3Hbi0qXVEDoy5F4Lmwgd7B5=Q@mail.gmail.com>
+Subject: Re: A question of msix feature
+To: wubo <wuborush@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexander Gordeev <agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 10 Oct 2013 15:59:28 -0600
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Tue, Oct 22, 2013 at 8:02 PM, wubo <wuborush@gmail.com> wrote:
+> Hi, all
+>
+> Sorry for troubling you.
+> We are developing msix feature on our product, unfortunately it will
+> lead kernel to crash
+> on a server PC whose cpu is Intel(R) Xeon(R) CPU E5645, and we are
+> sure that our driver is good
+> on common personal PC.
+>
+> A piece code in our driver like that:
+> for (i = 0; i < msix_num; i++) {
+> msix = &pcie->msix_entries[i];
+> msix->entry = i;
+> }
+> ret = pci_enable_msix(XX);
+> for (i = 0; i < msix_num; i++) {
+> msix = &pcie->msix_entries[i];
+> ret = request_irq(msix->vector, XX);
+> }
+>
+> BTW, the kernel crash info is as follows:
+> [Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 32993
+> [Hardware Error]: APEI generic hardware error status
+> [Hardware Error]: severity: 1, fatal
+> [Hardware Error]: section: 0, severity: 1, fatal
+> [Hardware Error]: flags: 0x01
+> [Hardware Error]: primary
+> [Hardware Error]: section_type: PCIe error
+> [Hardware Error]: port_type: 0, PCIe end point
+> [Hardware Error]: version: 1.0
+> [Hardware Error]: command: 0x0407, status: 0x0010
+> [Hardware Error]: device_id: 0000:04:00.0
+> [Hardware Error]: slot: 2
+> [Hardware Error]: secondary_bus: 0x00
+> [Hardware Error]: vendor_id: 0x1c5f, device_id: 0x0530
+> [Hardware Error]: class_code: 008001
+>
+> Do I miss something important?? Can anybody give me some hints?
 
-> On Fri, May 17, 2013 at 3:42 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
-> > On Fri, 17 May 2013 09:29:06 -0600
-> > Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >
-> >> [+cc linux-pci]
-> >>
-> >> On Wed, May 15, 2013 at 11:29 AM, Joe Lawrence
-> >> <joe.lawrence@stratus.com> wrote:
-> >> > From 84ac7a35ebd61e84d4254eae78bb967de17254c2 Mon Sep 17 00:00:00
-> >> > 2001 From: Joe Lawrence <joe.lawrence@stratus.com>
-> >> > Date: Wed, 15 May 2013 12:52:31 -0400
-> >> > Subject: [PATCH] mpt2sas,mpt3sas: make watchdog instantiated device
-> >> > removal safe
-> >> >
-> >> > Calling pci_stop_and_remove_bus_device from a SCSI LLD may introduce
-> >> > device removal races with PCI callback functions.
-> >> >
-> >> > Simplify the mpt2sas watchdog mechanism by separating PCI device
-> >> > removal from SCSI midlayer detachment. When the watchdog wishes to
-> >> > remove a SCSI device from the topology, detach from the SCSI
-> >> > midlayer, leaving the PCI device alone. Adjust various pci_driver
-> >> > callbacks to account for a potentially SCSI detached PCI device.
-> >>
-> >> I don't know the details of the SCSI detachment, but this approach
-> >> looks much cleaner to me.
-> >
-> > Thanks for commenting, Bjorn.  I think this approach more closely
-> > represents what this watchdog is trying to accomplish.
-> >
-> > Off list, Sreekanth from LSI tested and noticed a few issues with this
-> > patch:
-> >
-> >  - mpt2sas_base_stop_watchdog is called twice: The call from
-> >    mpt2sas_base_detach is safe, but now unnecessary (as a call was
-> >    added earlier up in the PCI driver callbacks to ensure that the
-> >    watchdog was out of the way.) This second invocation can be removed.
-> >
-> >  - If the watchdog detects a bad IOC, the watchdog remains running:
-> >    The watchdog workqueue isn't cleaned up until
-> >    mpt2sas_base_stop_watchdog is called, so in the case that the
-> >    watchdog removes the device from SCSI topo, the workqueue will
-> >    remain unused until PCI .remove/.shutdown cleans it up. Perhaps a
-> >    single watchdog that iterates over all adapters would be simpler?
-> >
-> > Finally, if SCSI topo detachment is all that is interesting here, would
-> > it make more sense to move the watchdog into the MPT "scsi" code?  I
-> > haven't looked at the code yet, but this might make an MPT fusion patch
-> > easier (due to dependencies between its "scsi" and "base" modules).
-> 
-> Hi Joe,
-> 
-> I noticed this when looking through old email.  I can't remember if
-> anything happened with this.  It seems like nice work; did it go
-> anywhere?
+It's very difficult to give any hints based on so little information.
+The error looks like a PCIe hardware issue, which should not
+necessarily cause the kernel itself to crash (and if the kernel *did*
+crash, you didn't include any information about that).
 
-Hello Bjorn,
+I don't know how to interpret this APEI error info.  It's possible
+that your BIOS logged it and can give more details.  The most likely
+problem is that you programmed some incorrect MSI address/data info
+into the device, and when it attempted to signal an MSI, it caused the
+error.  Or it could be a regular device DMA gone awry.
 
-Sorry for the late reply, I was on vacation last week.
+You could compare your driver's MSI handling with other drivers in the
+tree.  You could try to figure out the difference between the "common
+personal PC" (where your driver apparently works) and the server PC
+(where it fails) -- boot the server with a reduced configuration
+(fewer CPUs, fewer other devices, etc.) to make it more like the
+personal PC.  You could try using fewer MSI-X IRQs.  You could try
+using MSI or line-based interrupts to make sure it's really an
+MSI-related problem.
 
-This patchset started as an attempt to push upstream some of the
-changes that Stratus makes to the fusion/mpt* drivers.  I had hoped to
-come up with a patchset that fixed hotplug vs. watchdog removal in each
-of the three LSI drivers.  Unfortunately this was more of a spare time
-project and other work took priority.
+Since most drivers do use MSI-X successfully, the problem is likely in
+your driver, not in the Linux PCI code.  I've given you some hints
+above, but in general, people don't have time to help debug
+proprietary, out-of-tree drivers.
 
-There is a chance that Stratus maybe revisiting the fusion driver in
-the near future.  I will keep this patchset in mind if that happens.
-
-Regards,
-
--- Joe
-
+Bjorn
