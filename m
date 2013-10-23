@@ -1,166 +1,286 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:49399 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750882Ab3JaJOA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Oct 2013 05:14:00 -0400
-Date: Thu, 31 Oct 2013 10:13:57 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: mvebu - Support a bridge with no IO port window
-Message-ID: <20131031101357.5a56e2d0@skate>
-In-Reply-To: <1381868182-8544-1-git-send-email-jgunthorpe@obsidianresearch.com>
-References: <1381868182-8544-1-git-send-email-jgunthorpe@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:26577
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753015Ab3JWKmK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 06:42:10 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linuxppc-dev@lists.ozlabs.org>
+CC: Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH 06/12][v3] pci: fsl: port PCI controller setup code
+Date: Wed, 23 Oct 2013 18:41:28 +0800
+Message-ID: <1382524894-15164-6-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+PCI controller setup code will initialize structure fsl_pci
+according to PCI dts node and initialize PCI command register
+and ATMU. The patch uses general API of_pci_parse_bus_range
+to parse PCI bus range, uses general of_address's API to parse
+PCI IO/MEM ranges.
 
-On Tue, 15 Oct 2013 14:16:22 -0600, Jason Gunthorpe wrote:
-> Make pcie-io-aperture and the IO port MBUS ID in ranges optional.
-> If not provided the bridge reports to Linux that IO space mapping is
-> not supported and refuses to configure an IO mbus window.
-> 
-> This allows both complete disable (do not specify pcie-io-aperture) and
-> per-port disable (do not specify a IO target ranges entry for the port)
-> 
-> Most PCIE devices these days do not require IO support to function,
-> so having an option to disable it in the driver is useful.
-> 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+change log:
+v1-v3:
+Derived from http://patchwork.ozlabs.org/patch/278965/
 
-Sorry for the delay in testing this, I was busy with kernel summit /
-ELCE. Unfortunately, this patch still causes problems here: it breaks
-usage of I/O region. I have a modified version of the e1000e driver
-that makes it access an I/O region, that I have used for testing that
-I/O handling is at least minimally working. Without your patch, it
-works fine:
+Based on upstream master.
+Based on the discussion of RFC version here
+http://patchwork.ozlabs.org/patch/274487/
 
-e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
-e1000e: Copyright(c) 1999 - 2013 Intel Corporation.
-PCI: enabling device 0000:00:01.0 (0140 -> 0143)
-PCI: enabling device 0000:01:00.0 (0146 -> 0147)
-e1000e 0000:01:00.0: ==> e1000e: I/O start 0x10000, len 0x20
-e1000e 0000:01:00.0: 1. 0x0 0x0 0xffffffff 0xffffffff
-e1000e 0000:01:00.0: 2. 0x38 0x8100 0xffffffff 0xffffffff
+ drivers/pci/host/pci-fsl-common.c | 179 +++++++++++++++++++++-----------------
+ 1 file changed, 97 insertions(+), 82 deletions(-)
 
-(the last three messages are the one indicating that the I/O region is
-working).
-
-With your patch, it completely blows up when accessing the region:
-
-e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
-e1000e: Copyright(c) 1999 - 2013 Intel Corporation.
-PCI: enabling device 0000:00:01.0 (0140 -> 0143)
-PCI: enabling device 0000:01:00.0 (0146 -> 0147)
-e1000e 0000:01:00.0: ==> e1000e: I/O start 0x10000, len 0x20
-Unable to handle kernel paging request at virtual address fee10000
-pgd = ee9a0000
-[fee10000] *pgd=00000000
-Internal error: Oops: 15 [#1] SMP ARM
-Modules linked in:
-CPU: 3 PID: 1 Comm: swapper/0 Not tainted 3.12.0-rc7-00005-g1fa02be #166
-task: ef049c40 ti: ef05c000 task.ti: ef05c000
-PC is at e1000_probe+0x108/0xd54
-LR is at e1000_probe+0xfc/0xd54
-pc : [<c0239f54>]    lr : [<c0239f48>]    psr: 60000013
-sp : ef05de30  ip : 00000000  fp : 00000000
-r10: 00010000  r9 : ef05c000  r8 : fee10000
-r7 : 00000001  r6 : c04037a8  r5 : ef2dac68  r4 : ef2dac00
-r3 : 000003cd  r2 : c07f6570  r1 : 20000093  r0 : 0000003c
-Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
-Control: 10c53c7d  Table: 2e9a006a  DAC: 00000015
-Process swapper/0 (pid: 1, stack limit = 0xef05c240)
-Stack: (0xef05de30 to 0xef05e000)
-de20:                                     ef049c40 00000000 eeb5ad08 ef2d7508
-de40: ef050000 c00f8890 ef2dac68 c003cae8 00000000 ef2dac68 c0809e0c ef2dac00
-de60: 00000000 c0809dd8 ef05c000 c0516458 00000000 c01821d4 c083c148 ef2dac68
-de80: 00000000 c0809e0c c052bf10 c01b8fc0 00000000 ef2dac68 c0809e0c ef2dac9c
-dea0: 00000000 c01b9168 00000000 c0809e0c c01b90dc c01b7620 ef09b11c ef2d59f4
-dec0: c0809e0c eeb587c0 c07fe8c8 c01b86c8 c0809e54 ef05deec c0809e0c 00000006
-dee0: c0538528 c0818700 c052bf10 c01b97a0 c0809dd8 c0540198 00000006 c0008878
-df00: 00000099 c2058488 c04961f4 00000081 00000000 c04f2f14 00000063 ef05df30
-df20: c0035e14 c0035e38 00000113 ffffffff c20584c8 c03e8428 00000099 c0036000
-df40: c04f2704 00000006 c20584f1 00000006 c07f5aa0 c0540198 00000006 c0538528
-df60: c0818700 00000099 c0538534 c0516458 00000000 c0516b90 00000006 00000006
-df80: c0516458 000000a2 00000000 c03ccc4c 00000000 00000000 00000000 00000000
-dfa0: 00000000 c03ccc54 00000000 c000e3f8 00000000 00000000 00000000 00000000
-dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-dfe0: 00000000 00000000 00000000 00000000 00000013 00000000 08d8a360 34d44910
-[<c0239f54>] (e1000_probe+0x108/0xd54) from [<c01821d4>] (pci_device_probe+0x64/0x88)
-[<c01821d4>] (pci_device_probe+0x64/0x88) from [<c01b8fc0>] (driver_probe_device+0xf4/0x210)
-[<c01b8fc0>] (driver_probe_device+0xf4/0x210) from [<c01b9168>] (__driver_attach+0x8c/0x90)
-[<c01b9168>] (__driver_attach+0x8c/0x90) from [<c01b7620>] (bus_for_each_dev+0x54/0x88)
-[<c01b7620>] (bus_for_each_dev+0x54/0x88) from [<c01b86c8>] (bus_add_driver+0xd4/0x258)
-[<c01b86c8>] (bus_add_driver+0xd4/0x258) from [<c01b97a0>] (driver_register+0x78/0xf4)
-[<c01b97a0>] (driver_register+0x78/0xf4) from [<c0008878>] (do_one_initcall+0xe4/0x140)
-[<c0008878>] (do_one_initcall+0xe4/0x140) from [<c0516b90>] (kernel_init_freeable+0xfc/0x1c8)
-[<c0516b90>] (kernel_init_freeable+0xfc/0x1c8) from [<c03ccc54>] (kernel_init+0x8/0xe4)
-[<c03ccc54>] (kernel_init+0x8/0xe4) from [<c000e3f8>] (ret_from_fork+0x14/0x3c)
-Code: ebfdef04 e594a198 e7f3805a e2488612 (e5982000) 
----[ end trace 0b6062d8d91eb05b ]---
-Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
-
-CPU2: stopping
-CPU: 2 PID: 0 Comm: swapper/2 Tainted: G      D      3.12.0-rc7-00005-g1fa02be #166
-[<c001580c>] (unwind_backtrace+0x0/0xf8) from [<c0011790>] (show_stack+0x10/0x14)
-[<c0011790>] (show_stack+0x10/0x14) from [<c03d082c>] (dump_stack+0x70/0x8c)
-[<c03d082c>] (dump_stack+0x70/0x8c) from [<c001418c>] (handle_IPI+0xfc/0x130)
-[<c001418c>] (handle_IPI+0xfc/0x130) from [<c0008584>] (armada_370_xp_handle_irq+0x84/0xac)
-[<c0008584>] (armada_370_xp_handle_irq+0x84/0xac) from [<c0012240>] (__irq_svc+0x40/0x50)
-Exception stack(0xef079fa0 to 0xef079fe8)
-9fa0: c206b7d8 00000000 000005ca 000005ca ef078000 c08185ec c07f0460 c08185ec
-9fc0: ef078000 c03d7764 00000001 ef078000 00000510 ef079fe8 c000f570 c00510b0
-9fe0: 60000113 ffffffff
-[<c0012240>] (__irq_svc+0x40/0x50) from [<c00510b0>] (cpu_startup_entry+0x54/0x128)
-[<c00510b0>] (cpu_startup_entry+0x54/0x128) from [<00008644>] (0x8644)
-CPU1: stopping
-CPU: 1 PID: 0 Comm: swapper/1 Tainted: G      D      3.12.0-rc7-00005-g1fa02be #166
-[<c001580c>] (unwind_backtrace+0x0/0xf8) from [<c0011790>] (show_stack+0x10/0x14)
-[<c0011790>] (show_stack+0x10/0x14) from [<c03d082c>] (dump_stack+0x70/0x8c)
-[<c03d082c>] (dump_stack+0x70/0x8c) from [<c001418c>] (handle_IPI+0xfc/0x130)
-[<c001418c>] (handle_IPI+0xfc/0x130) from [<c0008584>] (armada_370_xp_handle_irq+0x84/0xac)
-[<c0008584>] (armada_370_xp_handle_irq+0x84/0xac) from [<c0012240>] (__irq_svc+0x40/0x50)
-Exception stack(0xef077fa0 to 0xef077fe8)
-7fa0: c20637d8 00000000 000012ac 000012ac ef076000 c08185ec c07f0460 c08185ec
-7fc0: ef076000 c03d7764 00000001 ef076000 00000510 ef077fe8 c000f570 c00510b0
-7fe0: 60000113 ffffffff
-[<c0012240>] (__irq_svc+0x40/0x50) from [<c00510b0>] (cpu_startup_entry+0x54/0x128)
-[<c00510b0>] (cpu_startup_entry+0x54/0x128) from [<00008644>] (0x8644)
-CPU0: stopping
-CPU: 0 PID: 0 Comm: swapper/0 Tainted: G      D      3.12.0-rc7-00005-g1fa02be #166
-[<c001580c>] (unwind_backtrace+0x0/0xf8) from [<c0011790>] (show_stack+0x10/0x14)
-[<c0011790>] (show_stack+0x10/0x14) from [<c03d082c>] (dump_stack+0x70/0x8c)
-[<c03d082c>] (dump_stack+0x70/0x8c) from [<c001418c>] (handle_IPI+0xfc/0x130)
-[<c001418c>] (handle_IPI+0xfc/0x130) from [<c0008584>] (armada_370_xp_handle_irq+0x84/0xac)
-[<c0008584>] (armada_370_xp_handle_irq+0x84/0xac) from [<c0012240>] (__irq_svc+0x40/0x50)
-Exception stack(0xc07e9f70 to 0xc07e9fb8)
-9f60:                                     c205b7d8 00000000 00000d2c 00000d2c
-9f80: c07e8000 c08185ec c07f0460 c08185ec c07e8000 c03d7764 00000001 c07e8000
-9fa0: 00000510 c07e9fb8 c000f570 c00510b0 60000113 ffffffff
-[<c0012240>] (__irq_svc+0x40/0x50) from [<c00510b0>] (cpu_startup_entry+0x54/0x128)
-[<c00510b0>] (cpu_startup_entry+0x54/0x128) from [<c0516a40>] (start_kernel+0x2a0/0x2f4)
-[<c0516a40>] (start_kernel+0x2a0/0x2f4) from [<00008074>] (0x8074)
-
-After debugging, it turns out that the following change is the problem:
-
--	if (port->bridge.iolimit < port->bridge.iobase ||
-+	if (port->bridge.iolimit <= port->bridge.iobase ||
-
-
-with this change, the mvebu_pcie_handle_iobase_change() always
-considers the I/O region settings as "invalid", and therefore the I/O
-window is never created and the pci_ioremap_io() function is never
-called. Reverting this change makes your patch works fine for me.
-
-Best regards,
-
-Thomas
+diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
+index f15b605..e09a0ec 100644
+--- a/drivers/pci/host/pci-fsl-common.c
++++ b/drivers/pci/host/pci-fsl-common.c
+@@ -24,6 +24,8 @@
+ #include <linux/log2.h>
+ #include <linux/slab.h>
+ #include <linux/uaccess.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
+ 
+ #include <asm/io.h>
+ #include <asm/prom.h>
+@@ -505,131 +507,144 @@ static void setup_pci_atmu(struct fsl_pci *pci)
+ 	}
+ }
+ 
+-static void __init setup_pci_cmd(struct pci_controller *hose)
++static void __init setup_pci_cmd(struct fsl_pci *pci)
+ {
+ 	u16 cmd;
+ 	int cap_x;
+ 
+-	early_read_config_word(hose, 0, 0, PCI_COMMAND, &cmd);
++	early_fsl_read_config_word(pci, 0, 0, PCI_COMMAND, &cmd);
+ 	cmd |= PCI_COMMAND_SERR | PCI_COMMAND_MASTER | PCI_COMMAND_MEMORY
+ 		| PCI_COMMAND_IO;
+-	early_write_config_word(hose, 0, 0, PCI_COMMAND, cmd);
++	early_fsl_write_config_word(pci, 0, 0, PCI_COMMAND, cmd);
+ 
+-	cap_x = early_find_capability(hose, 0, 0, PCI_CAP_ID_PCIX);
++	cap_x = early_fsl_find_capability(pci, 0, 0, PCI_CAP_ID_PCIX);
+ 	if (cap_x) {
+ 		int pci_x_cmd = cap_x + PCI_X_CMD;
+ 		cmd = PCI_X_CMD_MAX_SPLIT | PCI_X_CMD_MAX_READ
+ 			| PCI_X_CMD_ERO | PCI_X_CMD_DPERR_E;
+-		early_write_config_word(hose, 0, 0, pci_x_cmd, cmd);
+-	} else {
+-		early_write_config_byte(hose, 0, 0, PCI_LATENCY_TIMER, 0x80);
+-	}
++		early_fsl_write_config_word(pci, 0, 0, pci_x_cmd, cmd);
++	} else
++		early_fsl_write_config_byte(pci, 0, 0, PCI_LATENCY_TIMER,
++					    0x80);
+ }
+ 
+-int __init fsl_add_bridge(struct platform_device *pdev, int is_primary)
++static int __init
++fsl_pci_setup(struct platform_device *pdev, struct fsl_pci *pci)
+ {
+-	int len;
+-	struct pci_controller *hose;
+-	struct resource rsrc;
+-	const int *bus_range;
++	struct resource *rsrc;
+ 	u8 hdr_type, progif;
+-	struct device_node *dev;
+-	struct ccsr_pci __iomem *pci;
+-
+-	dev = pdev->dev.of_node;
++	struct device_node *dn;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	int mem = 0;
+ 
+-	if (!of_device_is_available(dev)) {
+-		pr_warning("%s: disabled\n", dev->full_name);
+-		return -ENODEV;
+-	}
++	dn = pdev->dev.of_node;
++	pci->dn = dn;
++	pci->dev = &pdev->dev;
+ 
+-	pr_debug("Adding PCI host bridge %s\n", dev->full_name);
++	dev_info(&pdev->dev, "Find controller %s\n", dn->full_name);
+ 
+ 	/* Fetch host bridge registers address */
+-	if (of_address_to_resource(dev, 0, &rsrc)) {
+-		printk(KERN_WARNING "Can't get pci register base!");
+-		return -ENOMEM;
++	rsrc = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!rsrc) {
++		dev_err(&pdev->dev, "Can't get pci register base!");
++		return -EINVAL;
+ 	}
++	dev_info(&pdev->dev, "REG 0x%016llx..0x%016llx\n",
++		 (u64)rsrc->start, (u64)rsrc->end);
+ 
+-	/* Get bus range if any */
+-	bus_range = of_get_property(dev, "bus-range", &len);
+-	if (bus_range == NULL || len < 2 * sizeof(int))
+-		printk(KERN_WARNING "Can't get bus-range for %s, assume"
+-			" bus 0\n", dev->full_name);
+-
+-	pci_add_flags(PCI_REASSIGN_ALL_BUS);
+-	hose = pcibios_alloc_controller(dev);
+-	if (!hose)
+-		return -ENOMEM;
++	/* Parse pci range resources from device tree */
++	if (of_pci_range_parser_init(&parser, dn)) {
++		dev_err(&pdev->dev, "missing ranges property\n");
++		return -EINVAL;
++	}
+ 
+-	/* set platform device as the parent */
+-	hose->parent = &pdev->dev;
+-	hose->first_busno = bus_range ? bus_range[0] : 0x0;
+-	hose->last_busno = bus_range ? bus_range[1] : 0xff;
++	/* Get the I/O and memory ranges from device tree */
++	for_each_of_pci_range(&parser, &range) {
++		unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
++		if (restype == IORESOURCE_IO) {
++			of_pci_range_to_resource(&range, dn,
++						 &pci->io_resource);
++			pci->io_resource.name = "I/O";
++			pci->io_resource.start = range.pci_addr;
++			pci->io_resource.end = range.pci_addr + range.size - 1;
++			pci->pci_io_size = range.size;
++			pci->io_base_phys = range.cpu_addr - range.pci_addr;
++			dev_info(&pdev->dev,
++				 " IO 0x%016llx..0x%016llx -> 0x%016llx\n",
++				 range.cpu_addr,
++				 range.cpu_addr + range.size - 1,
++				 range.pci_addr);
++		}
++		if (restype == IORESOURCE_MEM) {
++			if (mem >= 3)
++				continue;
++			of_pci_range_to_resource(&range, dn,
++						 &pci->mem_resources[mem]);
++			pci->mem_resources[mem].name = "MEM";
++			pci->mem_offset[mem] = range.cpu_addr - range.pci_addr;
++			dev_info(&pdev->dev,
++				 "MEM 0x%016llx..0x%016llx -> 0x%016llx\n",
++				 (u64)pci->mem_resources[mem].start,
++				 (u64)pci->mem_resources[mem].end,
++				 range.pci_addr);
++		}
++	}
+ 
+-	pr_debug("PCI memory map start 0x%016llx, size 0x%016llx\n",
+-		 (u64)rsrc.start, (u64)resource_size(&rsrc));
++	/* Get bus range */
++	if (of_pci_parse_bus_range(dn, &pci->busn)) {
++		dev_err(&pdev->dev, "failed to parse bus-range property\n");
++		pci->first_busno = 0x0;
++		pci->last_busno = 0xff;
++	} else {
++		pci->first_busno = pci->busn.start;
++		pci->last_busno = pci->busn.end;
++	}
++	dev_info(&pdev->dev, "Firmware bus number %d->%d\n",
++		 pci->first_busno, pci->last_busno);
+ 
+-	pci = hose->private_data = ioremap(rsrc.start, resource_size(&rsrc));
+-	if (!hose->private_data)
+-		goto no_bridge;
++	pci->regs = devm_ioremap_resource(&pdev->dev, rsrc);
++	if (IS_ERR(pci->regs))
++		return PTR_ERR(pci->regs);
+ 
+-	setup_indirect_pci(hose, rsrc.start, rsrc.start + 0x4,
+-			   PPC_INDIRECT_TYPE_BIG_ENDIAN);
++	pci->ops = &fsl_indirect_pci_ops;
++	pci->indirect_type = INDIRECT_TYPE_BIG_ENDIAN;
+ 
+-	if (in_be32(&pci->block_rev1) < PCIE_IP_REV_3_0)
+-		hose->indirect_type |= PPC_INDIRECT_TYPE_FSL_CFG_REG_LINK;
++	if (in_be32(&pci->regs->block_rev1) < PCIE_IP_REV_3_0)
++		pci->indirect_type |= INDIRECT_TYPE_FSL_CFG_REG_LINK;
+ 
+-	if (early_find_capability(hose, 0, 0, PCI_CAP_ID_EXP)) {
+-		/* use fsl_indirect_read_config for PCIe */
+-		hose->ops = &fsl_indirect_pcie_ops;
+-		/* For PCIE read HEADER_TYPE to identify controler mode */
+-		early_read_config_byte(hose, 0, 0, PCI_HEADER_TYPE, &hdr_type);
+-		if ((hdr_type & 0x7f) != PCI_HEADER_TYPE_BRIDGE)
++	pci->is_pcie = !!early_fsl_find_capability(pci, 0, 0, PCI_CAP_ID_EXP);
++	if (pci->is_pcie) {
++		/* For PCIE read HEADER_TYPE to identify controller mode */
++		early_fsl_read_config_byte(pci, 0, 0, PCI_HEADER_TYPE,
++					   &hdr_type);
++		if ((hdr_type & 0x7f) == PCI_HEADER_TYPE_NORMAL)
+ 			goto no_bridge;
+-
+ 	} else {
+ 		/* For PCI read PROG to identify controller mode */
+-		early_read_config_byte(hose, 0, 0, PCI_CLASS_PROG, &progif);
++		early_fsl_read_config_byte(pci, 0, 0, PCI_CLASS_PROG, &progif);
+ 		if ((progif & 1) == 1)
+ 			goto no_bridge;
+ 	}
+ 
+-	setup_pci_cmd(hose);
++	setup_pci_cmd(pci);
+ 
+ 	/* check PCI express link status */
+-	if (early_find_capability(hose, 0, 0, PCI_CAP_ID_EXP)) {
+-		hose->indirect_type |= PPC_INDIRECT_TYPE_EXT_REG |
+-			PPC_INDIRECT_TYPE_SURPRESS_PRIMARY_BUS;
+-		if (fsl_pcie_check_link(hose))
+-			hose->indirect_type |= PPC_INDIRECT_TYPE_NO_PCIE_LINK;
++	if (pci->is_pcie) {
++		pci->indirect_type |= INDIRECT_TYPE_EXT_REG |
++				       INDIRECT_TYPE_SURPRESS_PRIMARY_BUS;
++		if (!fsl_pci_check_link(pci))
++			pci->indirect_type |= INDIRECT_TYPE_NO_PCIE_LINK;
+ 	}
+ 
+-	printk(KERN_INFO "Found FSL PCI host bridge at 0x%016llx. "
+-		"Firmware bus number: %d->%d\n",
+-		(unsigned long long)rsrc.start, hose->first_busno,
+-		hose->last_busno);
+-
+-	pr_debug(" ->Hose at 0x%p, cfg_addr=0x%p,cfg_data=0x%p\n",
+-		hose, hose->cfg_addr, hose->cfg_data);
+-
+-	/* Interpret the "ranges" property */
+-	/* This also maps the I/O region and sets isa_io/mem_base */
+-	pci_process_bridge_OF_ranges(hose, dev, is_primary);
+-
+ 	/* Setup PEX window registers */
+-	setup_pci_atmu(hose);
++	setup_pci_atmu(pci);
++
++	platform_set_drvdata(pdev, pci);
+ 
+ 	return 0;
+ 
+ no_bridge:
+-	iounmap(hose->private_data);
+-	/* unmap cfg_data & cfg_addr separately if not on same page */
+-	if (((unsigned long)hose->cfg_data & PAGE_MASK) !=
+-	    ((unsigned long)hose->cfg_addr & PAGE_MASK))
+-		iounmap(hose->cfg_data);
+-	iounmap(hose->cfg_addr);
+-	pcibios_free_controller(hose);
+ 	return -ENODEV;
+ }
+ 
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+1.8.1.2
+
+
