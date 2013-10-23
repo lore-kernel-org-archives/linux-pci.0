@@ -1,176 +1,253 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:25424 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759016Ab3JPD5A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 23:57:00 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MUQ00CBATMRI4F0@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 16 Oct 2013 12:56:58 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Tim Harvey' <tharvey@gateworks.com>, 'Marek Vasut' <marex@denx.de>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Frank Li' <lznuaa@gmail.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Sascha Hauer' <s.hauer@pengutronix.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
-	'Troy Kisky' <troy.kisky@boundarydevices.com>,
-	'Yinghai Lu' <yinghai@kernel.org>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
- <1381853200-5534-7-git-send-email-marex@denx.de>
- <CAJ+vNU0e1LDFuqt_PCaycrrrD=dYRPU6fKEQZxkskO4hcJFcRw@mail.gmail.com>
-In-reply-to: <CAJ+vNU0e1LDFuqt_PCaycrrrD=dYRPU6fKEQZxkskO4hcJFcRw@mail.gmail.com>
-Subject: Re: [PATCH 6/6] PCI: designware: Fix DT resource retrieval
-Date: Wed, 16 Oct 2013 12:56:57 +0900
-Message-id: <000701ceca23$c2bdd550$48397ff0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from am1ehsobe003.messaging.microsoft.com ([213.199.154.206]:48605
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752760Ab3JWKmH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 06:42:07 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linuxppc-dev@lists.ozlabs.org>
+CC: Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH 08/12][v3] pci: fsl: add PowerPC PCI driver
+Date: Wed, 23 Oct 2013 18:41:30 +0800
+Message-ID: <1382524894-15164-8-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 16, 2013 9:15 AM, Tim Harvey wrote:
-> On Tue, Oct 15, 2013 at 9:06 AM, Marek Vasut <marex@denx.de> wrote:
-> >
-> > The resource retrieval from the DT was not done right. This resulted
-> > in bogus values in the IO/MEM window configuration. I re-used the code
-> > implementation from pci-tegra.c to do the resource retrieval correctly.
-> >
-> > This in turn resulted in very strange behavior on two different kinds
-> > of setup:
-> >
-> > Setup #1:                             ,-------> Intel i210 (igb driver)
-> >            i.MX6 root port -----> PCIe switch
-> >                                       `-------> Empty slot
-> >
-> > Setup #2:                             ,-------> Marvell Yukon (sky2 driver)
-> >            i.MX6 root port -----> PCIe switch
-> >                                       `-------> Empty slot
-> >
-> > Both setups expressed the same behavior. The system booted and the
-> > ethernet controllers were properly detected. After the controllers
-> > were configured and just after they reported "Ethernet Link Up", the
-> > entire system froze. It is now clear this happened because the resources
-> > were incorrectly configured, which in turn means the iATU was also not
-> > configured correctly.
-> >
-> > Signed-off-by: Marek Vasut <marex@denx.de>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Frank Li <lznuaa@gmail.com>
-> > Cc: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> > Cc: Pratyush Anand <pratyush.anand@st.com>
-> > Cc: Richard Zhu <r65037@freescale.com>
-> > Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> > Cc: Sean Cross <xobs@kosagi.com>
-> > Cc: Shawn Guo <shawn.guo@linaro.org>
-> > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-> > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> > Cc: Tim Harvey <tharvey@gateworks.com>
-> > Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-> > Cc: Yinghai Lu <yinghai@kernel.org>
-> > ---
-> >  drivers/pci/host/pcie-designware.c | 17 ++++++-----------
-> >  1 file changed, 6 insertions(+), 11 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 5d183ae..97c5951 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -370,6 +370,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >         struct device_node *np = pp->dev->of_node;
-> >         struct of_pci_range range;
-> >         struct of_pci_range_parser parser;
-> > +       struct resource res;
-> >         u32 val;
-> >
-> >         struct irq_domain *irq_domain;
-> > @@ -381,28 +382,22 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >
-> >         /* Get the I/O and memory ranges from DT */
-> >         for_each_of_pci_range(&parser, &range) {
-> > -               unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
-> > +               of_pci_range_to_resource(&range, np, &res);
-> > +               unsigned long restype = res.flags & IORESOURCE_TYPE_BITS;
+1. Implement fsl_arch_pci64_dma_offset() to return PowerPC PCI64
+DMA offset
+2. Implement fsl_arch_sys_to_pci() to convert pci_controller
+to fsl_pci
+3. Implement fsl_arch_fake_pci_bus() to fake pci_controller
+and PCI bus.
+4. Implement fsl_arch_pci_exclude_device() to call
+ppc_md.pci_exclude_device()
+5. Implement fsl_arch_pci_sys_register() to initialize pci_controller
+according to fsl_pci, add register PCI controller to PowerPC PCI
+subsystem.
+6. Implement fsl_arch_pci_sys_remove() to remove PCI controller from
+PowerPC PCI subsystem.
+7. Add mpc83xx_pcie_check_link() because pci-fsl-common dose not
+support mpc83xx.
 
-This makes the following build warning.
-warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+change log:
+v1-v3:
+Derived from http://patchwork.ozlabs.org/patch/278965/
 
-Please modify it as below:
+Based on upstream master.
+Based on the discussion of RFC version here
+http://patchwork.ozlabs.org/patch/274487/
 
-		unsigned long restype;
+ arch/powerpc/sysdev/fsl_pci.c | 142 +++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 135 insertions(+), 7 deletions(-)
 
-		of_pci_range_to_resource(&range, np, &res);
-		restype = res.flags & IORESOURCE_TYPE_BITS;
+diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+index 26039e3..0a0c240 100644
+--- a/arch/powerpc/sysdev/fsl_pci.c
++++ b/arch/powerpc/sysdev/fsl_pci.c
+@@ -62,7 +62,11 @@ static void quirk_fsl_pcie_header(struct pci_dev *dev)
+ #if defined(CONFIG_FSL_SOC_BOOKE) || defined(CONFIG_PPC_86xx)
+ 
+ #define MAX_PHYS_ADDR_BITS	40
+-static u64 pci64_dma_offset = 1ull << MAX_PHYS_ADDR_BITS;
++
++u64 fsl_arch_pci64_dma_offset(void)
++{
++	return 1ull << MAX_PHYS_ADDR_BITS;
++}
+ 
+ static int fsl_pci_dma_set_mask(struct device *dev, u64 dma_mask)
+ {
+@@ -77,17 +81,44 @@ static int fsl_pci_dma_set_mask(struct device *dev, u64 dma_mask)
+ 	if ((dev->bus == &pci_bus_type) &&
+ 	    dma_mask >= DMA_BIT_MASK(MAX_PHYS_ADDR_BITS)) {
+ 		set_dma_ops(dev, &dma_direct_ops);
+-		set_dma_offset(dev, pci64_dma_offset);
++		set_dma_offset(dev, fsl_arch_pci64_dma_offset());
+ 	}
+ 
+ 	*dev->dma_mask = dma_mask;
+ 	return 0;
+ }
+ 
++struct fsl_pci *fsl_arch_sys_to_pci(void *sys)
++{
++	struct pci_controller *hose = sys;
++	struct fsl_pci *pci = hose->private_data;
++
++	/* Update the first bus number */
++	if (pci->first_busno != hose->first_busno)
++		pci->first_busno = hose->first_busno;
++
++	return pci;
++}
++
++struct pci_bus *fsl_arch_fake_pci_bus(struct fsl_pci *pci, int busnr)
++{
++	static struct pci_bus bus;
++	static struct pci_controller hose;
++
++	bus.number = busnr;
++	bus.sysdata = &hose;
++	hose.private_data = pci;
++	bus.ops = pci->ops;
++
++	return &bus;
++}
++
+ void fsl_pcibios_fixup_bus(struct pci_bus *bus)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(bus);
+-	int i, is_pcie = 0, no_link;
++	bool is_pcie, no_link;
++	int i;
++	struct fsl_pci *pci = fsl_arch_sys_to_pci(hose);
+ 
+ 	/* The root complex bridge comes up with bogus resources,
+ 	 * we copy the PHB ones in.
+@@ -97,9 +128,8 @@ void fsl_pcibios_fixup_bus(struct pci_bus *bus)
+ 	 * tricky.
+ 	 */
+ 
+-	if (fsl_pcie_bus_fixup)
+-		is_pcie = early_find_capability(hose, 0, 0, PCI_CAP_ID_EXP);
+-	no_link = !!(hose->indirect_type & PPC_INDIRECT_TYPE_NO_PCIE_LINK);
++	is_pcie = pci->is_pcie;
++	no_link = !fsl_pci_check_link(pci);
+ 
+ 	if (bus->parent == hose->bus && (is_pcie || no_link)) {
+ 		for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; ++i) {
+@@ -121,6 +151,94 @@ void fsl_pcibios_fixup_bus(struct pci_bus *bus)
+ 	}
+ }
+ 
++int fsl_arch_pci_exclude_device(struct fsl_pci *pci, u8 bus, u8 devfn)
++{
++	struct pci_controller *hose = pci->sys;
++
++	if (!hose)
++		return PCIBIOS_SUCCESSFUL;
++
++	if (ppc_md.pci_exclude_device)
++		if (ppc_md.pci_exclude_device(hose, bus, devfn))
++			return PCIBIOS_DEVICE_NOT_FOUND;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++int fsl_arch_pci_sys_register(struct fsl_pci *pci)
++{
++	struct pci_controller *hose;
++
++	pci_add_flags(PCI_REASSIGN_ALL_BUS);
++	hose = pcibios_alloc_controller(pci->dn);
++	if (!hose)
++		return -ENOMEM;
++
++	/* set platform device as the parent */
++	hose->private_data = pci;
++	hose->parent = pci->dev;
++	hose->first_busno = pci->first_busno;
++	hose->last_busno = pci->last_busno;
++	hose->ops = pci->ops;
++
++#ifdef CONFIG_PPC32
++	/* On 32 bits, limit I/O space to 16MB */
++	if (pci->pci_io_size > 0x01000000)
++		pci->pci_io_size = 0x01000000;
++
++	/* 32 bits needs to map IOs here */
++	hose->io_base_virt = ioremap(pci->io_base_phys + pci->io_resource.start,
++				     pci->pci_io_size);
++
++	/* Expect trouble if pci_addr is not 0 */
++	if (fsl_pci_primary == pci->dn)
++		isa_io_base = (unsigned long)hose->io_base_virt;
++#endif /* CONFIG_PPC32 */
++
++	hose->pci_io_size = pci->io_resource.start + pci->pci_io_size;
++	hose->io_base_phys = pci->io_base_phys;
++	hose->io_resource = pci->io_resource;
++
++	memcpy(hose->mem_offset, pci->mem_offset, sizeof(hose->mem_offset));
++	memcpy(hose->mem_resources, pci->mem_resources,
++		sizeof(hose->mem_resources));
++	hose->dma_window_base_cur = pci->dma_window_base_cur;
++	hose->dma_window_size = pci->dma_window_size;
++
++	pci->sys = hose;
++
++	/*
++	 * Install our own dma_set_mask handler to fixup dma_ops
++	 * and dma_offset when memory is more than dma window size
++	 */
++	if (pci->is_pcie && memblock_end_of_DRAM() > hose->dma_window_size)
++		ppc_md.dma_set_mask = fsl_pci_dma_set_mask;
++
++#ifdef CONFIG_SWIOTLB
++	/*
++	 * if we couldn't map all of DRAM via the dma windows
++	 * we need SWIOTLB to handle buffers located outside of
++	 * dma capable memory region
++	 */
++	if (memblock_end_of_DRAM() - 1 > hose->dma_window_base_cur +
++			hose->dma_window_size)
++		ppc_swiotlb_enable = 1;
++#endif
++
++	mpc85xx_pci_err_probe(to_platform_device(pci->dev));
++	return 0;
++}
++
++void fsl_arch_pci_sys_remove(struct fsl_pci *pci)
++{
++	struct pci_controller *hose = pci->sys;
++
++	if (!hose)
++		return;
++
++	pcibios_free_controller(hose);
++}
++
+ #endif /* CONFIG_FSL_SOC_BOOKE || CONFIG_PPC_86xx */
+ 
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, quirk_fsl_pcie_header);
+@@ -260,6 +378,16 @@ static struct pci_ops mpc83xx_pcie_ops = {
+ 	.write = mpc83xx_pcie_write_config,
+ };
+ 
++static int mpc83xx_pcie_check_link(struct pci_controller *hose)
++{
++	u32 val = 0;
++
++	early_read_config_dword(hose, 0, 0, PCIE_LTSSM, &val);
++	if (val < PCIE_LTSSM_L0)
++		return 1;
++	return 0;
++}
++
+ static int __init mpc83xx_pcie_setup(struct pci_controller *hose,
+ 				     struct resource *reg)
+ {
+@@ -294,7 +422,7 @@ static int __init mpc83xx_pcie_setup(struct pci_controller *hose,
+ 	out_le32(pcie->cfg_type0 + PEX_OUTWIN0_TAH, 0);
+ 	out_le32(pcie->cfg_type0 + PEX_OUTWIN0_TAL, 0);
+ 
+-	if (fsl_pcie_check_link(hose))
++	if (mpc83xx_pcie_check_link(hose))
+ 		hose->indirect_type |= PPC_INDIRECT_TYPE_NO_PCIE_LINK;
+ 
+ 	return 0;
+-- 
+1.8.1.2
 
-> >                 if (restype == IORESOURCE_IO) {
-> > -                       of_pci_range_to_resource(&range, np, &pp->io);
-> > +                       memcpy(&pp->io, &res, sizeof(res));
-> >                         pp->io.name = "I/O";
-> > -                       pp->io.start = max_t(resource_size_t,
-> > -                                            PCIBIOS_MIN_IO,
-> > -                                            range.pci_addr + global_io_offset);
-> > -                       pp->io.end = min_t(resource_size_t,
-> > -                                          IO_SPACE_LIMIT,
-> > -                                          range.pci_addr + range.size
-> > -                                          + global_io_offset);
-> 
-> Nak - removing the adjustment to io.start/io.end breaks the io space
-> mapping as the entire io-space allocation gets taken by the root
-> complex.  This causes any device that requests io space to fail to
-> obtain it (your igb driver from Setup1 apparently doesn't use io space
-> where my sky2 device from Setup2 above does).
-> 
-> If I put back the adjustment to io.start/io.end above my sky2 device
-> gets its io resource properly but still hangs the bus after a few
-> interrupts.  Are you sure you don't have other changes that you
-> haven't posted yet that could have addressed the hang you get when you
-> bring up your igb device?
-> 
-> I agree that the the 'hang' we are seeing is a bus-hang caused by an
-> improper iATU mapping, however I'm not convinced its a dts parsing
-> issue.
-> 
-> Tim
-
-+cc Kishon Vijay Abraham I, Arnd Bergmann
-
-I agree with Tim's opinion.
-
-Please, don't remove the adjustment to io.start/io.end mapping.
-It was already confirmed by Arnd Bergmann (ARM-SoC Maintainer).
-
-Best regards,
-Jingoo Han
-
-> 
-> >                         pp->config.io_size = resource_size(&pp->io);
-> >                         pp->config.io_bus_addr = range.pci_addr;
-> >                 }
-> >                 if (restype == IORESOURCE_MEM) {
-> > -                       of_pci_range_to_resource(&range, np, &pp->mem);
-> > +                       memcpy(&pp->mem, &res, sizeof(res));
-> >                         pp->mem.name = "MEM";
-> >                         pp->config.mem_size = resource_size(&pp->mem);
-> >                         pp->config.mem_bus_addr = range.pci_addr;
-> >                 }
-> >                 if (restype == 0) {
-> > -                       of_pci_range_to_resource(&range, np, &pp->cfg);
-> > +                       memcpy(&pp->cfg, &res, sizeof(res));
-> >                         pp->config.cfg0_size = resource_size(&pp->cfg)/2;
-> >                         pp->config.cfg1_size = resource_size(&pp->cfg)/2;
-> >                 }
-> > --
-> > 1.8.4.rc3
-> >
 
