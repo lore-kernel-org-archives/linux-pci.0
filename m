@@ -1,63 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27307 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753653Ab3JBSCE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 14:02:04 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 60/77] qlcnic: Return -ENOSPC when not enough MSI-X vectors available
-Date: Wed,  2 Oct 2013 12:49:16 +0200
-Message-Id: <530f1aac8bdfcd600abe1eab52657409269f8a4a.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 1/2] frv/PCI: Remove pcibios_last_bus
+To: David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-am33-list@redhat.com,
+	linux-kernel@vger.kernel.org
+Date: Tue, 22 Oct 2013 21:24:06 -0600
+Message-ID: <20131023032406.12410.77485.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20131023032140.12410.43295.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20131023032140.12410.43295.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+pcibios_last_bus was apparently copied from x86.  On FR-V, it is
+statically initialized to -1 and never changed unless the user boots
+with "pci=lastbus=<X>".  I doubt that option is used on FR-V, so this
+patch removes all the code related to pcibios_last_bus.
 
-diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-index c4c5023..c6018bb 100644
---- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-+++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-@@ -620,7 +620,7 @@ int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
- 				 num_msix);
- 			if (qlcnic_83xx_check(adapter)) {
- 				if (err < (QLC_83XX_MINIMUM_VECTOR - tx_vector))
--					return err;
-+					return -ENOSPC;
- 				err -= (max_tx_rings + 1);
- 				num_msix = rounddown_pow_of_two(err);
- 				num_msix += (max_tx_rings + 1);
-@@ -636,6 +636,7 @@ int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
- 					 num_msix);
- 				goto enable_msix;
- 			}
-+			err = -ENOSPC;
- 		} else {
- 			dev_info(&pdev->dev,
- 				 "Unable to allocate %d MSI-X interrupt vectors\n",
--- 
-1.7.7.6
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/frv/mb93090-mb00/pci-frv.h |    1 -
+ arch/frv/mb93090-mb00/pci-vdk.c |   36 ------------------------------------
+ 2 files changed, 37 deletions(-)
+
+diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
+index 76c4e73..a7e487fe 100644
+--- a/arch/frv/mb93090-mb00/pci-frv.h
++++ b/arch/frv/mb93090-mb00/pci-frv.h
+@@ -30,7 +30,6 @@ void pcibios_resource_survey(void);
+ 
+ /* pci-vdk.c */
+ 
+-extern int __nongpreldata pcibios_last_bus;
+ extern struct pci_ops *__nongpreldata pci_root_ops;
+ 
+ /* pci-irq.c */
+diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+index deb6784..efa5d65 100644
+--- a/arch/frv/mb93090-mb00/pci-vdk.c
++++ b/arch/frv/mb93090-mb00/pci-vdk.c
+@@ -25,7 +25,6 @@
+ 
+ unsigned int __nongpreldata pci_probe = 1;
+ 
+-int  __nongpreldata pcibios_last_bus = -1;
+ struct pci_ops *__nongpreldata pci_root_ops;
+ 
+ /*
+@@ -220,37 +219,6 @@ static struct pci_ops * __init pci_check_direct(void)
+ }
+ 
+ /*
+- * Discover remaining PCI buses in case there are peer host bridges.
+- * We use the number of last PCI bus provided by the PCI BIOS.
+- */
+-static void __init pcibios_fixup_peer_bridges(void)
+-{
+-	struct pci_bus bus;
+-	struct pci_dev dev;
+-	int n;
+-	u16 l;
+-
+-	if (pcibios_last_bus <= 0 || pcibios_last_bus >= 0xff)
+-		return;
+-	printk("PCI: Peer bridge fixup\n");
+-	for (n=0; n <= pcibios_last_bus; n++) {
+-		if (pci_find_bus(0, n))
+-			continue;
+-		bus.number = n;
+-		bus.ops = pci_root_ops;
+-		dev.bus = &bus;
+-		for(dev.devfn=0; dev.devfn<256; dev.devfn += 8)
+-			if (!pci_read_config_word(&dev, PCI_VENDOR_ID, &l) &&
+-			    l != 0x0000 && l != 0xffff) {
+-				printk("Found device at %02x:%02x [%04x]\n", n, dev.devfn, l);
+-				printk("PCI: Discovered peer bus %02x\n", n);
+-				pci_scan_bus(n, pci_root_ops, NULL);
+-				break;
+-			}
+-	}
+-}
+-
+-/*
+  * Exceptions for specific devices. Usually work-arounds for fatal design flaws.
+  */
+ 
+@@ -418,7 +386,6 @@ int __init pcibios_init(void)
+ 	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
+ 
+ 	pcibios_irq_init();
+-	pcibios_fixup_peer_bridges();
+ 	pcibios_fixup_irqs();
+ 	pcibios_resource_survey();
+ 
+@@ -432,9 +399,6 @@ char * __init pcibios_setup(char *str)
+ 	if (!strcmp(str, "off")) {
+ 		pci_probe = 0;
+ 		return NULL;
+-	} else if (!strncmp(str, "lastbus=", 8)) {
+-		pcibios_last_bus = simple_strtol(str+8, NULL, 0);
+-		return NULL;
+ 	}
+ 	return str;
+ }
 
