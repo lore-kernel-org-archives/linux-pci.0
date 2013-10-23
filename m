@@ -1,122 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:35688
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:23362
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751149Ab3JDKm2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 06:42:28 -0400
-From: Bhushan Bharat-R65777 <R65777@freescale.com>
-To: Bhushan Bharat-R65777 <R65777@freescale.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"galak@kernel.crashing.org" <galak@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Wood Scott-B07421 <B07421@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: RE: [PATCH 2/7] iommu: add api to get iommu_domain of a device
-Date: Fri, 4 Oct 2013 10:42:23 +0000
-Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D0718FDC3@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1379575763-2091-3-git-send-email-Bharat.Bhushan@freescale.com>
- <1380127533.3030.319.camel@ul30vt.home>
-Content-Type: text/plain; charset="utf-8"
+	by vger.kernel.org with ESMTP id S1753076Ab3JWKmQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 06:42:16 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linuxppc-dev@lists.ozlabs.org>
+CC: Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH 12/12][v3] pci: fsl: fix function check_pci_ctl_endpt_part
+Date: Wed, 23 Oct 2013 18:41:34 +0800
+Message-ID: <1382524894-15164-12-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmh1c2hhbiBCaGFyYXQt
-UjY1Nzc3DQo+IFNlbnQ6IEZyaWRheSwgT2N0b2JlciAwNCwgMjAxMyAzOjI0IFBNDQo+IFRvOiAn
-QWxleCBXaWxsaWFtc29uJw0KPiBDYzogam9yb0A4Ynl0ZXMub3JnOyBiZW5oQGtlcm5lbC5jcmFz
-aGluZy5vcmc7IGdhbGFrQGtlcm5lbC5jcmFzaGluZy5vcmc7IGxpbnV4LQ0KPiBrZXJuZWxAdmdl
-ci5rZXJuZWwub3JnOyBsaW51eHBwYy1kZXZAbGlzdHMub3psYWJzLm9yZzsgbGludXgtDQo+IHBj
-aUB2Z2VyLmtlcm5lbC5vcmc7IGFncmFmQHN1c2UuZGU7IFdvb2QgU2NvdHQtQjA3NDIxOyBpb21t
-dUBsaXN0cy5saW51eC0NCj4gZm91bmRhdGlvbi5vcmcNCj4gU3ViamVjdDogUkU6IFtQQVRDSCAy
-LzddIGlvbW11OiBhZGQgYXBpIHRvIGdldCBpb21tdV9kb21haW4gb2YgYSBkZXZpY2UNCj4gDQo+
-IA0KPiANCj4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+IEZyb206IGxpbnV4LXBj
-aS1vd25lckB2Z2VyLmtlcm5lbC5vcmcNCj4gPiBbbWFpbHRvOmxpbnV4LXBjaS1vd25lckB2Z2Vy
-Lmtlcm5lbC5vcmddDQo+ID4gT24gQmVoYWxmIE9mIEFsZXggV2lsbGlhbXNvbg0KPiA+IFNlbnQ6
-IFdlZG5lc2RheSwgU2VwdGVtYmVyIDI1LCAyMDEzIDEwOjE2IFBNDQo+ID4gVG86IEJodXNoYW4g
-QmhhcmF0LVI2NTc3Nw0KPiA+IENjOiBqb3JvQDhieXRlcy5vcmc7IGJlbmhAa2VybmVsLmNyYXNo
-aW5nLm9yZzsNCj4gPiBnYWxha0BrZXJuZWwuY3Jhc2hpbmcub3JnOyBsaW51eC0ga2VybmVsQHZn
-ZXIua2VybmVsLm9yZzsNCj4gPiBsaW51eHBwYy1kZXZAbGlzdHMub3psYWJzLm9yZzsgbGludXgt
-IHBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4gYWdyYWZAc3VzZS5kZTsgV29vZCBTY290dC1CMDc0
-MjE7IGlvbW11QGxpc3RzLmxpbnV4LSBmb3VuZGF0aW9uLm9yZzsNCj4gPiBCaHVzaGFuIEJoYXJh
-dC1SNjU3NzcNCj4gPiBTdWJqZWN0OiBSZTogW1BBVENIIDIvN10gaW9tbXU6IGFkZCBhcGkgdG8g
-Z2V0IGlvbW11X2RvbWFpbiBvZiBhDQo+ID4gZGV2aWNlDQo+ID4NCj4gPiBPbiBUaHUsIDIwMTMt
-MDktMTkgYXQgMTI6NTkgKzA1MzAsIEJoYXJhdCBCaHVzaGFuIHdyb3RlOg0KPiA+ID4gVGhpcyBh
-cGkgcmV0dXJuIHRoZSBpb21tdSBkb21haW4gdG8gd2hpY2ggdGhlIGRldmljZSBpcyBhdHRhY2hl
-ZC4NCj4gPiA+IFRoZSBpb21tdV9kb21haW4gaXMgcmVxdWlyZWQgZm9yIG1ha2luZyBBUEkgY2Fs
-bHMgcmVsYXRlZCB0byBpb21tdS4NCj4gPiA+IEZvbGxvdyB1cCBwYXRjaGVzIHdoaWNoIHVzZSB0
-aGlzIEFQSSB0byBrbm93IGlvbW11IG1hcGluZy4NCj4gPiA+DQo+ID4gPiBTaWduZWQtb2ZmLWJ5
-OiBCaGFyYXQgQmh1c2hhbiA8YmhhcmF0LmJodXNoYW5AZnJlZXNjYWxlLmNvbT4NCj4gPiA+IC0t
-LQ0KPiA+ID4gIGRyaXZlcnMvaW9tbXUvaW9tbXUuYyB8ICAgMTAgKysrKysrKysrKw0KPiA+ID4g
-IGluY2x1ZGUvbGludXgvaW9tbXUuaCB8ICAgIDcgKysrKysrKw0KPiA+ID4gIDIgZmlsZXMgY2hh
-bmdlZCwgMTcgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkNCj4gPiA+DQo+ID4gPiBkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9pb21tdS9pb21tdS5jIGIvZHJpdmVycy9pb21tdS9pb21tdS5jIGlu
-ZGV4DQo+ID4gPiBmYmU5Y2E3Li42YWM1ZjUwIDEwMDY0NA0KPiA+ID4gLS0tIGEvZHJpdmVycy9p
-b21tdS9pb21tdS5jDQo+ID4gPiArKysgYi9kcml2ZXJzL2lvbW11L2lvbW11LmMNCj4gPiA+IEBA
-IC02OTYsNiArNjk2LDE2IEBAIHZvaWQgaW9tbXVfZGV0YWNoX2RldmljZShzdHJ1Y3QgaW9tbXVf
-ZG9tYWluDQo+ID4gPiAqZG9tYWluLCBzdHJ1Y3QgZGV2aWNlICpkZXYpICB9DQo+ID4gPiBFWFBP
-UlRfU1lNQk9MX0dQTChpb21tdV9kZXRhY2hfZGV2aWNlKTsNCj4gPiA+DQo+ID4gPiArc3RydWN0
-IGlvbW11X2RvbWFpbiAqaW9tbXVfZ2V0X2Rldl9kb21haW4oc3RydWN0IGRldmljZSAqZGV2KSB7
-DQo+ID4gPiArCXN0cnVjdCBpb21tdV9vcHMgKm9wcyA9IGRldi0+YnVzLT5pb21tdV9vcHM7DQo+
-ID4gPiArDQo+ID4gPiArCWlmICh1bmxpa2VseShvcHMgPT0gTlVMTCB8fCBvcHMtPmdldF9kZXZf
-aW9tbXVfZG9tYWluID09IE5VTEwpKQ0KPiA+ID4gKwkJcmV0dXJuIE5VTEw7DQo+ID4gPiArDQo+
-ID4gPiArCXJldHVybiBvcHMtPmdldF9kZXZfaW9tbXVfZG9tYWluKGRldik7IH0NCj4gPiA+ICtF
-WFBPUlRfU1lNQk9MX0dQTChpb21tdV9nZXRfZGV2X2RvbWFpbik7DQo+ID4NCj4gPiBXaGF0IHBy
-ZXZlbnRzIHRoaXMgZnJvbSByYWNpbmcgaW9tbXVfZG9tYWluX2ZyZWUoKT8gIFRoZXJlJ3Mgbm8N
-Cj4gPiByZWZlcmVuY2VzIGFjcXVpcmVkLCBzbyB0aGVyZSdzIG5vIHJlYXNvbiBmb3IgdGhlIGNh
-bGxlciB0byBhc3N1bWUgdGhlIHBvaW50ZXINCj4gaXMgdmFsaWQuDQo+IA0KPiBTb3JyeSBmb3Ig
-bGF0ZSBxdWVyeSwgc29tZWhvdyB0aGlzIGVtYWlsIHdlbnQgaW50byBhIGZvbGRlciBhbmQgZXNj
-YXBlZDsNCj4gDQo+IEp1c3QgdG8gYmUgc3VyZSwgdGhlcmUgaXMgbm90IGxvY2sgYXQgZ2VuZXJp
-YyAic3RydWN0IGlvbW11X2RvbWFpbiIsIGJ1dCBJUA0KPiBzcGVjaWZpYyBzdHJ1Y3R1cmUgKGxp
-bmsgRlNMIGRvbWFpbikgbGlua2VkIGluIGlvbW11X2RvbWFpbi0+cHJpdiBoYXZlIGEgbG9jaywN
-Cj4gc28gd2UgbmVlZCB0byBlbnN1cmUgdGhpcyByYWNlIGluIEZTTCBpb21tdSBjb2RlIChzYXkN
-Cj4gZHJpdmVycy9pb21tdS9mc2xfcGFtdV9kb21haW4uYyksIHJpZ2h0Pw0KDQpGdXJ0aGVyIHRo
-aW5raW5nIG9mIHRoaXMsIHRoZXJlIGFyZSBtb3JlIHByb2JsZW1zIGhlcmU6DQogLSBMaWtlIE1T
-SSBzdWJzeXN0ZW0gd2lsbCBjYWxsIGlvbW11X2dldF9kZXZfZG9tYWluKCksIHdoaWNoIHdpbGwg
-dGFrZSBhIGxvY2ssIGZpbmQgdGhlIGRvbWFpbiBwb2ludGVyLCByZWxlYXNlIHRoZSBsb2NrLCBh
-bmQgcmV0dXJuIHRoZSBkb21haW4NCiAtIE5vdyBpZiBkb21haW4gaW4gZnJlZWQgdXANCiAtIFdo
-aWxlIE1TSSBzdWJzeXN0ZW0gdHJpZXMgdG8gZG8gd29yayBvbiBkb21haW4gKGxpa2UgZ2V0X2F0
-dHJpYnV0ZS9zZXRfYXR0cmlidXRlIGV0YykgPz8/DQoNClNvIGNhbiB3ZSBkbyBsaWtlIGlvbW11
-X2dldF9kZXZfZG9tYWluKCkgd2lsbCByZXR1cm4gZG9tYWluIHdpdGggdGhlIGxvY2sgaGVsZCwg
-YW5kIGlvbW11X3B1dF9kZXZfZG9tYWluKCkgd2lsbCByZWxlYXNlIHRoZSBsb2NrPyBBbmQgaW9t
-bXVfZ2V0X2Rldl9kb21haW4oKSBtdXN0IGFsd2F5cyBiZSBmb2xsb3dlZCBieSBpb21tdV9nZXRf
-ZGV2X2RvbWFpbigpDQoNClRoYW5rcw0KLUJoYXJhdA0KDQo+IA0KPiBUaGFua3MNCj4gLUJoYXJh
-dA0KPiANCj4gPg0KPiA+ID4gIC8qDQo+ID4gPiAgICogSU9NTVUgZ3JvdXBzIGFyZSByZWFsbHkg
-dGhlIG5hdHJ1YWwgd29ya2luZyB1bml0IG9mIHRoZSBJT01NVSwgYnV0DQo+ID4gPiAgICogdGhl
-IElPTU1VIEFQSSB3b3JrcyBvbiBkb21haW5zIGFuZCBkZXZpY2VzLiAgQnJpZGdlIHRoYXQgZ2Fw
-IGJ5DQo+ID4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9pb21tdS5oIGIvaW5jbHVkZS9s
-aW51eC9pb21tdS5oIGluZGV4DQo+ID4gPiA3ZWEzMTllLi5mYTA0NmJkIDEwMDY0NA0KPiA+ID4g
-LS0tIGEvaW5jbHVkZS9saW51eC9pb21tdS5oDQo+ID4gPiArKysgYi9pbmNsdWRlL2xpbnV4L2lv
-bW11LmgNCj4gPiA+IEBAIC0xMjcsNiArMTI3LDcgQEAgc3RydWN0IGlvbW11X29wcyB7DQo+ID4g
-PiAgCWludCAoKmRvbWFpbl9zZXRfd2luZG93cykoc3RydWN0IGlvbW11X2RvbWFpbiAqZG9tYWlu
-LCB1MzIgd19jb3VudCk7DQo+ID4gPiAgCS8qIEdldCB0aGUgbnVtZXIgb2Ygd2luZG93IHBlciBk
-b21haW4gKi8NCj4gPiA+ICAJdTMyICgqZG9tYWluX2dldF93aW5kb3dzKShzdHJ1Y3QgaW9tbXVf
-ZG9tYWluICpkb21haW4pOw0KPiA+ID4gKwlzdHJ1Y3QgaW9tbXVfZG9tYWluICooKmdldF9kZXZf
-aW9tbXVfZG9tYWluKShzdHJ1Y3QgZGV2aWNlICpkZXYpOw0KPiA+ID4NCj4gPiA+ICAJdW5zaWdu
-ZWQgbG9uZyBwZ3NpemVfYml0bWFwOw0KPiA+ID4gIH07DQo+ID4gPiBAQCAtMTkwLDYgKzE5MSw3
-IEBAIGV4dGVybiBpbnQgaW9tbXVfZG9tYWluX3dpbmRvd19lbmFibGUoc3RydWN0DQo+ID4gPiBp
-b21tdV9kb21haW4NCj4gPiAqZG9tYWluLCB1MzIgd25kX25yLA0KPiA+ID4gIAkJCQkgICAgICBw
-aHlzX2FkZHJfdCBvZmZzZXQsIHU2NCBzaXplLA0KPiA+ID4gIAkJCQkgICAgICBpbnQgcHJvdCk7
-DQo+ID4gPiAgZXh0ZXJuIHZvaWQgaW9tbXVfZG9tYWluX3dpbmRvd19kaXNhYmxlKHN0cnVjdCBp
-b21tdV9kb21haW4NCj4gPiA+ICpkb21haW4sDQo+ID4gPiB1MzIgd25kX25yKTsNCj4gPiA+ICtl
-eHRlcm4gc3RydWN0IGlvbW11X2RvbWFpbiAqaW9tbXVfZ2V0X2Rldl9kb21haW4oc3RydWN0IGRl
-dmljZQ0KPiA+ID4gKypkZXYpOw0KPiA+ID4gIC8qKg0KPiA+ID4gICAqIHJlcG9ydF9pb21tdV9m
-YXVsdCgpIC0gcmVwb3J0IGFib3V0IGFuIElPTU1VIGZhdWx0IHRvIHRoZSBJT01NVQ0KPiBmcmFt
-ZXdvcmsNCj4gPiA+ICAgKiBAZG9tYWluOiB0aGUgaW9tbXUgZG9tYWluIHdoZXJlIHRoZSBmYXVs
-dCBoYXMgaGFwcGVuZWQgQEAgLTI4NCw2DQo+ID4gPiArMjg2LDExIEBAIHN0YXRpYyBpbmxpbmUg
-dm9pZCBpb21tdV9kb21haW5fd2luZG93X2Rpc2FibGUoc3RydWN0DQo+ID4gPiBpb21tdV9kb21h
-aW4gKmRvbWFpbiwgIHsgIH0NCj4gPiA+DQo+ID4gPiArc3RhdGljIGlubGluZSBzdHJ1Y3QgaW9t
-bXVfZG9tYWluICppb21tdV9nZXRfZGV2X2RvbWFpbihzdHJ1Y3QNCj4gPiA+ICtkZXZpY2UNCj4g
-PiA+ICsqZGV2KSB7DQo+ID4gPiArCXJldHVybiBOVUxMOw0KPiA+ID4gK30NCj4gPiA+ICsNCj4g
-PiA+ICBzdGF0aWMgaW5saW5lIHBoeXNfYWRkcl90IGlvbW11X2lvdmFfdG9fcGh5cyhzdHJ1Y3Qg
-aW9tbXVfZG9tYWluDQo+ID4gPiAqZG9tYWluLCBkbWFfYWRkcl90IGlvdmEpICB7DQo+ID4gPiAg
-CXJldHVybiAwOw0KPiA+DQo+ID4NCj4gPg0KPiA+IC0tDQo+ID4gVG8gdW5zdWJzY3JpYmUgZnJv
-bSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSINCj4gPiBp
-biB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3Jl
-IG1ham9yZG9tbw0KPiA+IGluZm8gYXQgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8t
-aW5mby5odG1sDQoNCg==
+The new FSL PCI driver does not use cfg_addr of pci_controller,
+we may directly access PCI CCSR using fsl_pci->regs.
+
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+change log:
+v1-v3:
+The new patch to fix function check_pci_ctl_endpt_part
+
+Based on upstream master.
+Based on the discussion of RFC version here
+http://patchwork.ozlabs.org/patch/274487/
+
+ arch/powerpc/sysdev/fsl_pci.h   | 5 -----
+ drivers/iommu/fsl_pamu_domain.c | 6 ++++--
+ include/linux/fsl/pci-common.h  | 1 +
+ 3 files changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/arch/powerpc/sysdev/fsl_pci.h b/arch/powerpc/sysdev/fsl_pci.h
+index ae4dbe2..3176eb2 100644
+--- a/arch/powerpc/sysdev/fsl_pci.h
++++ b/arch/powerpc/sysdev/fsl_pci.h
+@@ -16,11 +16,6 @@
+ 
+ struct platform_device;
+ 
+-
+-/* FSL PCI controller BRR1 register */
+-#define PCI_FSL_BRR1      0xbf8
+-#define PCI_FSL_BRR1_VER 0xffff
+-
+ extern void fsl_pcibios_fixup_bus(struct pci_bus *bus);
+ extern int mpc83xx_add_bridge(struct device_node *dev);
+ u64 fsl_pci_immrbar_base(struct pci_controller *hose);
+diff --git a/drivers/iommu/fsl_pamu_domain.c b/drivers/iommu/fsl_pamu_domain.c
+index c857c30..dd7bc25 100644
+--- a/drivers/iommu/fsl_pamu_domain.c
++++ b/drivers/iommu/fsl_pamu_domain.c
+@@ -36,6 +36,7 @@
+ 
+ #include <asm/pci-bridge.h>
+ #include <sysdev/fsl_pci.h>
++#include <linux/fsl/pci-common.h>
+ 
+ #include "fsl_pamu_domain.h"
+ #include "pci.h"
+@@ -908,10 +909,11 @@ static struct iommu_group *get_device_iommu_group(struct device *dev)
+ static  bool check_pci_ctl_endpt_part(struct pci_controller *pci_ctl)
+ {
+ 	u32 version;
++	struct fsl_pci *pci = fsl_arch_sys_to_pci(pci_ctl);
+ 
+ 	/* Check the PCI controller version number by readding BRR1 register */
+-	version = in_be32(pci_ctl->cfg_addr + (PCI_FSL_BRR1 >> 2));
+-	version &= PCI_FSL_BRR1_VER;
++	version = in_be32(&pci->regs->block_rev1);
++	version &= PCIE_IP_REV_MASK;
+ 	/* If PCI controller version is >= 0x204 we can partition endpoints*/
+ 	if (version >= 0x204)
+ 		return 1;
+diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
+index 84b0801..6112adf 100644
+--- a/include/linux/fsl/pci-common.h
++++ b/include/linux/fsl/pci-common.h
+@@ -18,6 +18,7 @@
+ #define PCIE_LTSSM_L0	0x16		/* L0 state */
+ #define PCIE_IP_REV_2_2		0x02080202 /* PCIE IP block version Rev2.2 */
+ #define PCIE_IP_REV_3_0		0x02080300 /* PCIE IP block version Rev3.0 */
++#define PCIE_IP_REV_MASK	0xffff
+ #define PIWAR_EN		0x80000000	/* Enable */
+ #define PIWAR_PF		0x20000000	/* prefetch */
+ #define PIWAR_TGI_LOCAL		0x00f00000	/* target - local memory */
+-- 
+1.8.1.2
+
 
