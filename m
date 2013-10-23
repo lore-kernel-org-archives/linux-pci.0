@@ -1,89 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43503 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751732Ab3J2Qt7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Oct 2013 12:49:59 -0400
-Date: Tue, 29 Oct 2013 17:47:20 +0100
-From: Veaceslav Falico <vfalico@redhat.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:45630
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752863Ab3JWKmJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 06:42:09 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linuxppc-dev@lists.ozlabs.org>
+CC: Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Neil Horman <nhorman@tuxdriver.com>
-Subject: Re: [PATCH v3 1/3] msi: free msi_desc entry only after we've
- released the kobject
-Message-ID: <20131029164720.GO692@redhat.com>
-References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
- <1383042632-7102-2-git-send-email-vfalico@redhat.com>
- <CA+55aFxt9KnmZnK5QdkPcpHNR+Ath5WTzhRibu5Y=xOhiz3fzA@mail.gmail.com>
+	<linux-pci@vger.kernel.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH 10/12][v3] pci: fsl: support function fsl_pci_assign_primary
+Date: Wed, 23 Oct 2013 18:41:32 +0800
+Message-ID: <1382524894-15164-10-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <CA+55aFxt9KnmZnK5QdkPcpHNR+Ath5WTzhRibu5Y=xOhiz3fzA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 29, 2013 at 09:34:28AM -0700, Linus Torvalds wrote:
->On Tue, Oct 29, 2013 at 3:30 AM, Veaceslav Falico <vfalico@redhat.com> wrote:
->>                 /*
->>                  * Its possible that we get into this path
->>                  * When populate_msi_sysfs fails, which means the entries
->>                  * were not registered with sysfs.  In that case don't
->> -                * unregister them.
->> +                * unregister them, and just free. Otherwise the
->> +                * kobject->release will take care of freeing the entry via
->> +                * msi_kobj_release().
->>                  */
->>                 if (entry->kobj.parent) {
->>                         kobject_del(&entry->kobj);
->>                         kobject_put(&entry->kobj);
->> +               } else {
->> +                       kfree(entry);
->>                 }
->> -
->> -               list_del(&entry->list);
->> -               kfree(entry);
->
->So this code sequence still makes me very unhappy.
->
->Why does not just a simple unconditional
->
->        kobject_del(&entry->kobj);
->        kobject_put(&entry->kobj);
->
->work for the "not registered with sysfs" case? And if the sysfs code
->really gets confused, why not
->
->        if (entry->kobj.parent)
->                kobject_del(&entry->kobj);
->        kobject_put(&entry->kobj);
+Change pci_ids to fsl_pci_ids Freescale-specific name and change
+static to extern modifier for using in fsl_pci_assign_primary().
 
-It was fixed this way in 424eb39 ("PCI: msi: fix imbalanced refcount of msi
-irq sysfs objects"). kobject_put() still failed in case it wasn't
-registered with sysfs earlier. populate_msi_sysfs() creates an kobject for
-each entry in msi_list, and we have no idea (on fallback) up to which entry
-was it already registered, on which it failed and which entries are still
-not kobject_init_and_add()ed.
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+change log:
+v1-v3:
+Derived from http://patchwork.ozlabs.org/patch/278965/
 
->
->(btw, looking at the sysfs code, this looks *very* suspicious in
->sysfs_remove_dir():
->
->        struct sysfs_dirent *sd = kobj->sd;
->
->        spin_lock(&sysfs_assoc_lock);
->        kobj->sd = NULL;
->        spin_unlock(&sysfs_assoc_lock);
->
->and I would suggest that "sd = kobj->sd" should be done under the
->lock, because otherwise the lock is kind of pointless..)
->
->Greg?
->
->                Linus
+Based on upstream master.
+Based on the discussion of RFC version here
+http://patchwork.ozlabs.org/patch/274487/
+
+ arch/powerpc/sysdev/fsl_pci.c     | 5 +++--
+ drivers/pci/host/pci-fsl-common.c | 4 ++--
+ include/linux/fsl/pci-common.h    | 2 ++
+ 3 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+index 0a0c240..40d2e1d 100644
+--- a/arch/powerpc/sysdev/fsl_pci.c
++++ b/arch/powerpc/sysdev/fsl_pci.c
+@@ -735,7 +735,8 @@ void fsl_pci_assign_primary(void)
+ 		of_node_put(np);
+ 		np = fsl_pci_primary;
+ 
+-		if (of_match_node(pci_ids, np) && of_device_is_available(np))
++		if (of_match_node(fsl_pci_ids, np) &&
++		    of_device_is_available(np))
+ 			return;
+ 	}
+ 
+@@ -744,7 +745,7 @@ void fsl_pci_assign_primary(void)
+ 	 * designate one as primary.  This can go away once
+ 	 * various bugs with primary-less systems are fixed.
+ 	 */
+-	for_each_matching_node(np, pci_ids) {
++	for_each_matching_node(np, fsl_pci_ids) {
+ 		if (of_device_is_available(np)) {
+ 			fsl_pci_primary = np;
+ 			of_node_put(np);
+diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
+index 729a5f4..8b4f793 100644
+--- a/drivers/pci/host/pci-fsl-common.c
++++ b/drivers/pci/host/pci-fsl-common.c
+@@ -634,7 +634,7 @@ no_bridge:
+ 	return -ENODEV;
+ }
+ 
+-static const struct of_device_id pci_ids[] = {
++const struct of_device_id fsl_pci_ids[] = {
+ 	{ .compatible = "fsl,mpc8540-pci", },
+ 	{ .compatible = "fsl,mpc8548-pcie", },
+ 	{ .compatible = "fsl,mpc8610-pci", },
+@@ -725,7 +725,7 @@ static struct platform_driver fsl_pci_driver = {
+ 	.driver = {
+ 		.name = "fsl-pci",
+ 		.pm = PCI_PM_OPS,
+-		.of_match_table = pci_ids,
++		.of_match_table = fsl_pci_ids,
+ 	},
+ 	.probe = fsl_pci_probe,
+ 	.remove = fsl_pci_remove,
+diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
+index bfb1f03..84b0801 100644
+--- a/include/linux/fsl/pci-common.h
++++ b/include/linux/fsl/pci-common.h
+@@ -136,6 +136,8 @@ struct fsl_pci {
+ 	void *sys;
+ };
+ 
++extern const struct of_device_id fsl_pci_ids[];
++
+ /*
+  * Convert architecture specific pci controller structure to fsl_pci
+  * PowerPC uses structure pci_controller and ARM uses structure pci_sys_data
+-- 
+1.8.1.2
+
+
