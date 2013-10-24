@@ -1,108 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:44335 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751579Ab3J3Buy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 21:50:54 -0400
-Received: by mail-pd0-f175.google.com with SMTP id g10so249573pdj.34
-        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 18:50:53 -0700 (PDT)
-From: Chang Liu <cl91tp@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Chang Liu <cl91tp@gmail.com>
-Subject: [PATCH] PCI: Blacklist certain hardware from clearing Bus Master bit
-Date: Wed, 30 Oct 2013 09:50:37 +0000
-Message-Id: <1383126637-4641-1-git-send-email-cl91tp@gmail.com>
+Received: from mx0.aculab.com ([213.249.233.131]:55290 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754496Ab3JXK7m convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Oct 2013 06:59:42 -0400
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 24662-09 for <linux-pci@vger.kernel.org>;
+ Thu, 24 Oct 2013 11:59:39 +0100 (BST)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="Windows-1252"
+Subject: RE: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*() family helpers
+Date: Thu, 24 Oct 2013 11:57:40 +0100
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com>
+In-Reply-To: <20131024105158.GB13159@mtj.dyndns.org>
+References: <cover.1382103786.git.agordeev@redhat.com> <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com> <20131024105158.GB13159@mtj.dyndns.org>
+From: "David Laight" <David.Laight@ACULAB.COM>
+To: "Tejun Heo" <tj@kernel.org>,
+	"Alexander Gordeev" <agordeev@redhat.com>
+Cc: <linux-kernel@vger.kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"Michael Ellerman" <michael@ellerman.id.au>,
+	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	"Ben Hutchings" <bhutchings@solarflare.com>,
+	"Mark Lord" <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	<linux-pci@vger.kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a blacklist that prevents pci device shutdown code
-from clearing Bus Master bit on certain hardware that cannot tolerate it.
+> > ...would turn into a single helper call....
+> >
+> > 	rc = pcim_enable_msix_range(adapter->pdev,
+> > 				    adapter->msix_entries,
+> > 				    nvec,
+> > 				    FOO_DRIVER_MINIMUM_NVEC);
+> 
+> I haven't looked into any details but, if the above works for most use
+> cases, it looks really good to me.
 
-Clearing Bus Master bit was originally added in commit b566a22 to address
-the issue of some PCI device breaking kexec by continuing to do DMA
-after having been signaled to shutdown. However, this introduced a
-regression (https://bugzilla.kernel.org/show_bug.cgi?id=63861) that
-hangs the machine on kernel power off path.
+The one case it doesn't work is where the driver either
+wants the full number or the minimum number - but not
+a value in between.
 
-It has been pointed out previously (https://lkml.org/lkml/2012/6/6/545)
-that clearing Bus Master bit during PCI shutdown may have surprising
-consequences as some devices may not tolerate this, and may hang the
-system indefinitely. However, not doing so may break kexec. Since only
-one bug report has come up since the introduction of b566a22, therefore
-indicating that these misbehaving devices are in the minority, the
-logical way to fix the hang while not breaking kexec is to blacklist
-these devices from having their Bus Master bit cleared during the PCI
-shutdown routine.
----
-This fixes the above mentioned bug https://bugzilla.kernel.org/show_bug.cgi?id=63861
+Might be worth adding an extra parameter so that this
+(and maybe other) odd requirements can be met.
 
-As Alan Cox has warned in https://lkml.org/lkml/2012/6/6/545, some device
-will break if we clear bus master bit on shutdown. So sooner or later
-we will need to blacklist some device if we are to keep Bus Master being cleared
-as the default behavior. Now with the first (as I have been aware) device
-that breaks under this default behavior has surfaced, we might as well
-add the infrastructure code now in case some other devices break down
-in the future. These devices may not be many so a blacklist likely won't 
-add much maintainance overhead. And we should keep the blacklist here in
-the pci shutdown code instead of in individual device drivers since this
-is the most direct way and will likely aid future debug process.
+Some static inline functions could be used for the common cases.
 
- drivers/pci/pci-driver.c | 34 +++++++++++++++++++++++++++++++++-
- 1 file changed, 33 insertions(+), 1 deletion(-)
+	David
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 98f7b9b..1744ebf 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -376,6 +376,29 @@ static int pci_device_remove(struct device * dev)
- 	return 0;
- }
- 
-+/*
-+ * Blacklisting certain hardware from having their Bus Master bit cleared
-+ * during device shutdown. This is to workaround certain hardware's issue
-+ * with clearing Bus Master bit that hangs the entire system.
-+ */
-+struct {
-+	unsigned short vendor;
-+	unsigned short device;
-+} pci_bus_master_blacklist[] = {
-+	{ 0x8086, 0x9c03 },	/* Intel Corporation Lynx Point-LP SATA Controller */
-+};
-+
-+static bool pci_should_clear_master(struct pci_dev *pdev)
-+{
-+	int i;
-+	for (i = 0; i < ARRAY_SIZE(pci_bus_master_blacklist); i++) {
-+		if (pdev->vendor == pci_bus_master_blacklist[i].vendor
-+		    && pdev->device == pci_bus_master_blacklist[i].device)
-+			return false;
-+	}
-+	return true;
-+}
-+
- static void pci_device_shutdown(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
-@@ -391,9 +414,18 @@ static void pci_device_shutdown(struct device *dev)
- 	/*
- 	 * Turn off Bus Master bit on the device to tell it to not
- 	 * continue to do DMA. Don't touch devices in D3cold or unknown states.
-+	 * This is useful for proper kexec. However, a number of hardware
-+	 * aren't happy with this. At the slightest, some hardware simply
-+	 * ignore the bus master bit. For some other hardware, clearing
-+	 * the bit on shutdown path hangs the entire system.
-+	 * This is likely to be a firmware or hardware problem, but
-+	 * we can workaround it here by blacklisting these hardware
-+	 * from having their bus master bit cleared during device shutdown.
- 	 */
--	if (pci_dev->current_state <= PCI_D3hot)
-+	if (pci_should_clear_master(pci_dev)
-+	    && pci_dev->current_state <= PCI_D3hot) {
- 		pci_clear_master(pci_dev);
-+	}
- }
- 
- #ifdef CONFIG_PM
--- 
-1.8.4.1
+
 
