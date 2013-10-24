@@ -1,183 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:41267 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752238Ab3JCMGz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Oct 2013 08:06:55 -0400
-Date: Thu, 3 Oct 2013 14:06:48 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH RESEND] PCI: mvebu - Support a bridge with no IO port
- window
-Message-ID: <20131003140648.52734cfc@skate>
-In-Reply-To: <1380650281-16175-2-git-send-email-jgunthorpe@obsidianresearch.com>
-References: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
-	<1380650281-16175-2-git-send-email-jgunthorpe@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:58752 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506Ab3JXFxn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Oct 2013 01:53:43 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
+References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
+	<CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
+	<20131015024452.GA31951@srcf.ucam.org>
+	<20131016202123.GA17866@google.com>
+	<CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
+	<CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
+Date: Wed, 23 Oct 2013 22:53:42 -0700
+Message-ID: <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
+Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+On Tue, Oct 22, 2013 at 8:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Yinghai]
+>
+> On Thu, Oct 17, 2013 at 7:59 AM, Andreas Noever
+> <andreas.noever@gmail.com> wrote:
+>> On Wed, Oct 16, 2013 at 10:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Tue, Oct 15, 2013 at 03:44:52AM +0100, Matthew Garrett wrote:
+>>>> On Mon, Oct 14, 2013 at 05:50:38PM -0600, Bjorn Helgaas wrote:
+>>>> > [+cc Rafael, Mika, Kirill, linux-pci]
+>>>> >
+>>>> > On Mon, Oct 14, 2013 at 4:47 PM, Andreas Noever
+>>>> > <andreas.noever@gmail.com> wrote:
+>>>> > > When I unplug the Thunderbolt ethernet adapter on my MacBookPro Linux
+>>>> > > crashes a few seconds later. Using
+>>>> > > echo 1 > /sys/bus/pci/devices/0000:08:00.0/remove
+>>>> > > to remove a bridge two levels above the device triggers the fault immediately:
+>>>> >
+>>>> > There have been significant changes in acpiphp related to Thunderbolt
+>>>> > since v3.11.
+>>>>
+>>>> Apple don't expose Thunderbolt via ACPI, so it appears as native PCIe.
+>>>> I'd be surprised if acpiphp makes a difference here.
+>>>
+>>> Yeah, you're right; I wasn't paying attention.
+>>>
+>>> We save a pci_dev pointer in the pci_pme_list, which of course has a
+>>> longer lifetime than the pci_dev itself, but we don't acquire a reference
+>>> on it, so I suspect the pci_dev got released before we got around to
+>>> doing the pci_pme_list_scan().
+>>>
+>>> Andreas, can you try the patch below?  It's against v3.12-rc2, but it
+>>> should apply to v3.11, too.
+>>
+>> I have tested your patch against 3.11 where it solves the problem. Thanks!
+>>
+>> Unfortunately I could not reproduce the problem in 3.12-rc5. I only
+>> get the following warning (and no crash):
+>>
+>> tg3 0000:0a:00.0: PME# disabled
+>> pcieport 0000:09:00.0: PME# disabled
+>> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
+>> pci_bus 0000:0a: dev 00, dec refcount to 0
+>> pci_bus 0000:0a: dev 00, released physical slot 9
+>> ------------[ cut here ]------------
+>> WARNING: CPU: 0 PID: 122 at drivers/pci/pci.c:1430
+>> pci_disable_device+0x84/0x90()
+>> Device pcieport
+>> disabling already-disabled device
+>> Modules linked in:
+>>  btusb bluetooth joydev hid_apple bcm5974 nls_utf8 nls_cp437 hfsplus
+>> vfat fat snd_hda_codec_hdmi x86_pkg_temp_thermal intel_powerclamp
+>> coretemp kvm_intel kvm cfg80211 uvcvideo crc32_pclmul crc32c_intel
+>> videobuf2_vmalloc ghash_clmulni_intel aesni_intel videobuf2_memops
+>> aes_x86_64 glue_helper videobuf2_core tg3 videodev lrw gf128mul
+>> ablk_helper iTCO_wdt hid_generic iTCO_vendor_support cryptd media
+>> applesmc input_polldev usbhid ptp microcode snd_hda_codec_cirrus hid
+>> pps_core libphy rfkill i2c_i801 pcspkr snd_hda_intel apple_gmux
+>> lib80211 snd_hda_codec acpi_cpufreq snd_hwdep snd_pcm snd_page_alloc
+>> snd_timer mei_me snd mei processor soundcore lpc_ich evdev mfd_core
+>> apple_bl ac battery ext4 crc16 mbcache jbd2 sd_mod ahci libahci libata
+>> xhci_hcd ehci_pci sdhci_pci ehci_hcd sdhci scsi_mod mmc_core
+>>  usbcore usb_common nouveau mxm_wmi wmi ttm i915 video button
+>> i2c_algo_bit intel_agp intel_gtt drm_kms_helper drm i2c_core
+>> CPU: 0 PID: 122 Comm: kworker/u16:5 Not tainted 3.12.0-1-dirty #30
+>> Hardware name: Apple Inc. MacBookPro10,1/Mac-C3EC7CD22292981F, BIOS
+>> MBP101.88Z.00EE.B03.1212211437 12/21/2012
+>> Workqueue: sysfsd sysfs_schedule_callback_work
+>>  0000000000000009 ffff88044c021c00 ffffffff814c4288 ffff88044c021c48
+>>  ffff88044c021c38 ffffffff81061b7d ffff880458a5c000 ffffffff8187c5c0
+>>  ffff880458a5c000 ffff880458a5b098 0000000000000000 ffff88044c021c98
+>> Call Trace:
+>>  [<ffffffff814c4288>] dump_stack+0x54/0x8d
+>>  [<ffffffff81061b7d>] warn_slowpath_common+0x7d/0xa0
+>>  [<ffffffff81061bec>] warn_slowpath_fmt+0x4c/0x50
+>>  [<ffffffff812bdd92>] ? do_pci_disable_device+0x52/0x60
+>>  [<ffffffff813097f3>] ? acpi_pci_irq_disable+0x4c/0x8d
+>>  [<ffffffff812bde24>] pci_disable_device+0x84/0x90
+>>  [<ffffffff812cc62a>] pcie_portdrv_remove+0x1a/0x20
+>>  [<ffffffff812bfcdb>] pci_device_remove+0x3b/0xb0
+>>  [<ffffffff81381caf>] __device_release_driver+0x7f/0xf0
+>>  [<ffffffff81381d43>] device_release_driver+0x23/0x30
+>>  [<ffffffff813814d8>] bus_remove_device+0x108/0x180
+>>  [<ffffffff8137de75>] device_del+0x135/0x1d0
+>>  [<ffffffff812ba394>] pci_stop_bus_device+0x94/0xa0
+>>  [<ffffffff812ba33b>] pci_stop_bus_device+0x3b/0xa0
+>>  [<ffffffff812ba4a2>] pci_stop_and_remove_bus_device+0x12/0x20
+>>  [<ffffffff812c15c5>] remove_callback+0x25/0x40
+>>  [<ffffffff81212ad4>] sysfs_schedule_callback_work+0x14/0x80
+>>  [<ffffffff8107c9e8>] process_one_work+0x178/0x470
+>>  [<ffffffff8107d3b1>] worker_thread+0x121/0x3a0
+>>  [<ffffffff8107d290>] ? manage_workers.isra.21+0x2b0/0x2b0
+>>  [<ffffffff810840f0>] kthread+0xc0/0xd0
+>>  [<ffffffff81084030>] ? kthread_create_on_node+0x120/0x120
+>>  [<ffffffff814d2dfc>] ret_from_fork+0x7c/0xb0
+>>  [<ffffffff81084030>] ? kthread_create_on_node+0x120/0x120
+>> ---[ end trace b39a15fa94fbb2a2 ]---
+>>
+>>
+>> Bisection points to 928bea964827d7824b548c1f8e06eccbbc4d0d7d .
+>
+> This is "PCI: Delay enabling bridges until they're needed" by Yinghai.
 
-On Tue,  1 Oct 2013 11:58:01 -0600, Jason Gunthorpe wrote:
-> Make pcie-io-aperture and the IO port MBUS ID in ranges optional.
-> If not provided the bridge reports to Linux that IO space mapping is
-> not supported and refuses to configure an IO mbus window.
-> 
-> This allows both complete disable (do not specify pcie-io-aperture) and
-> per-port disable (do not specify a IO target ranges entry for the port)
-> 
-> Most PCIE devices these days do not require IO support to function,
-> so having an option to disable it in the driver is useful.
-> 
-> This depends on 'bus: mvebu-mbus: Fix optional pcie-mem/io-aperture properties'
-> to work properly.
-> 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+that double disabling should be addressed by:
 
-This doesn't work here, I get multiple warnings "Attempt to set IO when
-IO is disabled" :
+https://lkml.org/lkml/2013/4/25/608
 
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 1 at /home/thomas/projets/linux-2.6/drivers/pci/host/pci-mvebu.c:302 mvebu_pcie_wr_conf+0x2c0/0x44c()
-Device: mvebu-pcie
-Attempt to set IO when IO is disabled
-Modules linked in:
-CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.12.0-rc1-00003-ga85b362 #6
-[<c0015798>] (unwind_backtrace+0x0/0xf8) from [<c0011770>] (show_stack+0x10/0x14)
-[<c0011770>] (show_stack+0x10/0x14) from [<c0372c08>] (dump_stack+0x70/0x8c)
-[<c0372c08>] (dump_stack+0x70/0x8c) from [<c001d5bc>] (warn_slowpath_common+0x64/0x88)
-[<c001d5bc>] (warn_slowpath_common+0x64/0x88) from [<c001d674>] (warn_slowpath_fmt+0x30/0x40)
-[<c001d674>] (warn_slowpath_fmt+0x30/0x40) from [<c0187080>] (mvebu_pcie_wr_conf+0x2c0/0x44c)
-[<c0187080>] (mvebu_pcie_wr_conf+0x2c0/0x44c) from [<c01770fc>] (pci_bus_write_config_word+0x60/0x78)
-[<c01770fc>] (pci_bus_write_config_word+0x60/0x78) from [<c03708b4>] (__pci_bus_size_bridges+0x708/0x7c0)
-[<c03708b4>] (__pci_bus_size_bridges+0x708/0x7c0) from [<c03701e0>] (__pci_bus_size_bridges+0x34/0x7c0)
-[<c03701e0>] (__pci_bus_size_bridges+0x34/0x7c0) from [<c00134c4>] (pci_common_init_dev+0x1b0/0x2dc)
-[<c00134c4>] (pci_common_init_dev+0x1b0/0x2dc) from [<c04a3f68>] (mvebu_pcie_probe+0x444/0x48c)
-[<c04a3f68>] (mvebu_pcie_probe+0x444/0x48c) from [<c01b69dc>] (platform_drv_probe+0x18/0x1c)
-[<c01b69dc>] (platform_drv_probe+0x18/0x1c) from [<c01b5858>] (driver_probe_device+0xf4/0x210)
-[<c01b5858>] (driver_probe_device+0xf4/0x210) from [<c01b5a00>] (__driver_attach+0x8c/0x90)
-[<c01b5a00>] (__driver_attach+0x8c/0x90) from [<c01b3eb8>] (bus_for_each_dev+0x54/0x88)
-[<c01b3eb8>] (bus_for_each_dev+0x54/0x88) from [<c01b4f60>] (bus_add_driver+0xd4/0x258)
-[<c01b4f60>] (bus_add_driver+0xd4/0x258) from [<c01b6038>] (driver_register+0x78/0xf4)
-[<c01b6038>] (driver_register+0x78/0xf4) from [<c01b6bc0>] (platform_driver_probe+0x1c/0xa0)
-[<c01b6bc0>] (platform_driver_probe+0x1c/0xa0) from [<c0008878>] (do_one_initcall+0xe4/0x140)
-[<c0008878>] (do_one_initcall+0xe4/0x140) from [<c0492b60>] (kernel_init_freeable+0xfc/0x1c4)
-[<c0492b60>] (kernel_init_freeable+0xfc/0x1c4) from [<c036f0cc>] (kernel_init+0x8/0xe4)
-[<c036f0cc>] (kernel_init+0x8/0xe4) from [<c000e3d8>] (ret_from_fork+0x14/0x3c)
----[ end trace 70bc10e370e10347 ]---
+[PATCH] PCI: Remove duplicate pci_disable_device for pcie port
 
-> +static inline bool mvebu_has_ioport(struct mvebu_pcie_port *port)
-> +{
-> +	return port->io_target == -1 && port->io_attr == -1;
+Thanks
 
-Are you sure the logic is not reverted here? I.e, this shouldn't be !=
--1 in both cases?
-
-> +}
-> +
->  static bool mvebu_pcie_link_up(struct mvebu_pcie_port *port)
->  {
->  	return !(readl(port->base + PCIE_STAT_OFF) & PCIE_STAT_LINK_DOWN);
-> @@ -292,6 +297,12 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
->  		return;
->  	}
->  
-> +	if (!mvebu_has_ioport(port)) {
-> +		dev_WARN(&port->pcie->pdev->dev,
-> +			 "Attempt to set IO when IO is disabled\n");
-> +		return;
-> +	}
-> +
->  	/*
->  	 * We read the PCI-to-PCI bridge emulated registers, and
->  	 * calculate the base address and size of the address decoding
-> @@ -405,9 +416,12 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
->  		break;
->  
->  	case PCI_IO_BASE:
-> -		*value = (bridge->secondary_status << 16 |
-> -			  bridge->iolimit          <<  8 |
-> -			  bridge->iobase);
-> +		if (!mvebu_has_ioport(port))
-> +			*value = 0;
-> +		else
-> +			*value = (bridge->secondary_status << 16 |
-> +				  bridge->iolimit          <<  8 |
-> +				  bridge->iobase);
-
-While I do understand that you're returning 0 for iolimit and iobase,
-I'm not sure why the secondary status is affected by the value of
-mvebu_has_ioport().
-
->  static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
-> -			      unsigned long type, int *tgt, int *attr)
-> +			      unsigned long type,
-> +			      unsigned int *tgt,
-> +			      unsigned int *attr)
->  {
->  	const int na = 3, ns = 2;
->  	const __be32 *range;
->  	int rlen, nranges, rangesz, pna, i;
->  
-> +	*tgt = -1;
-> +	*attr = -1;
-> +
->  	range = of_get_property(np, "ranges", &rlen);
->  	if (!range)
->  		return -EINVAL;
-> @@ -798,16 +821,15 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
->  	}
->  
->  	mvebu_mbus_get_pcie_io_aperture(&pcie->io);
-> -	if (resource_size(&pcie->io) == 0) {
-> -		dev_err(&pdev->dev, "invalid I/O aperture size\n");
-> -		return -EINVAL;
-> -	}
->  
-> -	pcie->realio.flags = pcie->io.flags;
-> -	pcie->realio.start = PCIBIOS_MIN_IO;
-> -	pcie->realio.end = min_t(resource_size_t,
-> -				  IO_SPACE_LIMIT,
-> -				  resource_size(&pcie->io));
-> +	if (resource_size(&pcie->io) != 0) {
-> +		pcie->realio.flags = pcie->io.flags;
-> +		pcie->realio.start = PCIBIOS_MIN_IO;
-> +		pcie->realio.end = min_t(resource_size_t,
-> +					 IO_SPACE_LIMIT,
-> +					 resource_size(&pcie->io));
-> +	} else
-> +		pcie->realio = pcie->io;
->  
->  	/* Get the bus range */
->  	ret = of_pci_parse_bus_range(np, &pcie->busn);
-> @@ -864,12 +886,12 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
->  			continue;
->  		}
->  
-> -		ret = mvebu_get_tgt_attr(np, port->devfn, IORESOURCE_IO,
-> -					 &port->io_target, &port->io_attr);
-> -		if (ret < 0) {
-> -			dev_err(&pdev->dev, "PCIe%d.%d: cannot get tgt/attr for io window\n",
-> -				port->port, port->lane);
-> -			continue;
-> +		if (resource_size(&pcie->io) != 0)
-> +			mvebu_get_tgt_attr(np, port->devfn, IORESOURCE_IO,
-> +					   &port->io_target, &port->io_attr);
-> +		else {
-> +			port->io_target = -1;
-> +			port->io_attr = -1;
->  		}
->  
->  		port->base = mvebu_pcie_map_registers(pdev, child, port);
-
-Thanks!
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Yinghai
