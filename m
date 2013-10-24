@@ -1,56 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 9 Oct 2013 11:57:52 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Message-ID: <20131009155752.GE22495@htj.dyndns.org>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <20131007182117.GC27396@htj.dyndns.org>
- <20131008090716.GA10561@dhcp-26-207.brq.redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:61244 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753438Ab3JXBlu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Oct 2013 21:41:50 -0400
+Received: by mail-wg0-f48.google.com with SMTP id b13so1615295wgh.3
+        for <linux-pci@vger.kernel.org>; Wed, 23 Oct 2013 18:41:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131008090716.GA10561@dhcp-26-207.brq.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7WhZu=tvEKvxUijDafv3Hbi0qXVEDoy5F4Lmwgd7B5=Q@mail.gmail.com>
+References: <CAAV3jMxpNg2+ABE5AD8cOg5ZrYc1hL0-YbtHkVYFbPnSif9eeA@mail.gmail.com>
+ <CAErSpo7WhZu=tvEKvxUijDafv3Hbi0qXVEDoy5F4Lmwgd7B5=Q@mail.gmail.com>
+From: wubo <wuborush@gmail.com>
+Date: Thu, 24 Oct 2013 09:41:28 +0800
+Message-ID: <CAAV3jMxjdQYp68t0W7j317LmcLK0O2Jm9L6=ayrgcNHgNZOqFA@mail.gmail.com>
+Subject: Re: A question of msix feature
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexander Gordeev <agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+2013/10/24 Bjorn Helgaas <bhelgaas@google.com>:
+> On Tue, Oct 22, 2013 at 8:02 PM, wubo <wuborush@gmail.com> wrote:
+>> Hi, all
+>>
+>> Sorry for troubling you.
+>> We are developing msix feature on our product, unfortunately it will
+>> lead kernel to crash
+>> on a server PC whose cpu is Intel(R) Xeon(R) CPU E5645, and we are
+>> sure that our driver is good
+>> on common personal PC.
+>>
+>> A piece code in our driver like that:
+>> for (i = 0; i < msix_num; i++) {
+>> msix = &pcie->msix_entries[i];
+>> msix->entry = i;
+>> }
+>> ret = pci_enable_msix(XX);
+>> for (i = 0; i < msix_num; i++) {
+>> msix = &pcie->msix_entries[i];
+>> ret = request_irq(msix->vector, XX);
+>> }
+>>
+>> BTW, the kernel crash info is as follows:
+>> [Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 32993
+>> [Hardware Error]: APEI generic hardware error status
+>> [Hardware Error]: severity: 1, fatal
+>> [Hardware Error]: section: 0, severity: 1, fatal
+>> [Hardware Error]: flags: 0x01
+>> [Hardware Error]: primary
+>> [Hardware Error]: section_type: PCIe error
+>> [Hardware Error]: port_type: 0, PCIe end point
+>> [Hardware Error]: version: 1.0
+>> [Hardware Error]: command: 0x0407, status: 0x0010
+>> [Hardware Error]: device_id: 0000:04:00.0
+>> [Hardware Error]: slot: 2
+>> [Hardware Error]: secondary_bus: 0x00
+>> [Hardware Error]: vendor_id: 0x1c5f, device_id: 0x0530
+>> [Hardware Error]: class_code: 008001
+>>
+>> Do I miss something important?? Can anybody give me some hints?
+>
+> It's very difficult to give any hints based on so little information.
+> The error looks like a PCIe hardware issue, which should not
+> necessarily cause the kernel itself to crash (and if the kernel *did*
+> crash, you didn't include any information about that).
 
-On Tue, Oct 08, 2013 at 11:07:16AM +0200, Alexander Gordeev wrote:
-> Multipe MSIs is just a handful of drivers, really. MSI-X impact still
+Thank you very much for your replay.
+Truely the kernel crashed and the info above is from kdump.
 
-Yes, so it's pretty nice to try out things there before going full-on.
+>
+> I don't know how to interpret this APEI error info.  It's possible
+> that your BIOS logged it and can give more details.  The most likely
+> problem is that you programmed some incorrect MSI address/data info
+> into the device, and when it attempted to signal an MSI, it caused the
+> error.  Or it could be a regular device DMA gone awry.
 
-> will be huge. But if we opt a different name for the new pci_enable_msix()
-> then we could first update pci/msi, then drivers (in few stages possibly)
-> and finally remove the old implementation.
+Seemd the msi address/data info sent from hardware is right enough,
+I have keeping watch on the hardware sending message.
+things like that:
+Message address Read:fee20000 //send to cpu core 32 without irq route
+Message data Read:40c9 // fixed mode
 
-Yes, that probably should be the steps to follow eventually.  My point
-was that you don't have to submit patches for all 7x conversions for
-an RFC round.  Scanning them and seeing what would be necessary
-definitely is a good idea but just giving summary of the full
-conversion with several examples should be good enough before settling
-on the way forward, which should be easier for all involved.
+But after such as ACPI stuff transform, the irq become a illegal
+number, I guess.
 
-Thanks a lot for your effort!
+>
+> You could compare your driver's MSI handling with other drivers in the
+> tree.  You could try to figure out the difference between the "common
+> personal PC" (where your driver apparently works) and the server PC
+> (where it fails) -- boot the server with a reduced configuration
+> (fewer CPUs, fewer other devices, etc.) to make it more like the
+> personal PC.
+
+The biggest different is APCI mode, which will effect the msi
+address/data config
+in pci_enable_msix. But I have so little knowledge about that APCI.
+And I also sure the INT-x interrupt is good on server for my driver.
+
+ You could try using fewer MSI-X IRQs.  You could try
+> using MSI or line-based interrupts to make sure it's really an
+> MSI-related problem.
+>
+> Since most drivers do use MSI-X successfully, the problem is likely in
+> your driver, not in the Linux PCI code.  I've given you some hints
+> above, but in general, people don't have time to help debug
+> proprietary, out-of-tree drivers.
+
+yeh I know, I just hope somebody just have came across about it by lucky.
+Anyway thanks again for your kindness.
+
+>
+> Bjorn
 
 -- 
-tejun
+Thanks,
+Wubo
