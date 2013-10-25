@@ -1,114 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:36180 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752076Ab3JJMpt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 08:45:49 -0400
-Message-ID: <1381409146.2788.116.camel@deadeye.wl.decadent.org.uk>
-Subject: Re: [PATCH -v2] PCI: Avoid initialize MSI/MSIX if device power
- state != PCI_D0
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>
-Date: Thu, 10 Oct 2013 13:45:46 +0100
-In-Reply-To: <1381408907-11724-1-git-send-email-wangyijing@huawei.com>
-References: <1381408907-11724-1-git-send-email-wangyijing@huawei.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-4xwHkuiIyoieXllTkiVy"
-Mime-Version: 1.0
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:57186 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321Ab3JYTBW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 15:01:22 -0400
+Received: by mail-ea0-f179.google.com with SMTP id b10so900289eae.10
+        for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 12:01:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
+References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
+	<CAPcvp5Epf+6tOp+0=ZbBLusCzq4dF98aS+Ou0D7Nyko_VwM8KA@mail.gmail.com>
+	<3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
+Date: Fri, 25 Oct 2013 20:01:21 +0100
+Message-ID: <CAPcvp5EwTb7qm_aMzqJzLX0ScrD3A0VFog1qga76dqTT5cBW3g@mail.gmail.com>
+Subject: Re: AER driver on ARM platform
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 25 October 2013 19:18, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
+>
+> >> -----Original Message-----
+> >> From: Andrew Murray [mailto:amurray@embedded-bits.co.uk]
+> >> Sent: Friday, October 25, 2013 12:27 PM
+> >> To: Karicheri, Muralidharan
+> >> Cc: linux-pci@vger.kernel.org
+> >> Subject: Re: AER driver on ARM platform
+> >>
+> >> On 25 October 2013 16:56, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
+> >> > Did anyone successfully tested PCIe AER driver on an ARM platform? I saw this enabled in
+> >> a tegra platform. Could someone from nVidia respond?
+> >>
+> >> I've previously used this on a custom ARM platform - it works.
+> >>
+> >> You need to ensure that PCIe port services are enabled, I believe at one point this required
+> >> 'pcie_ports=native' to be set on the kernel command line.
+> >>
+> >> Andrew Murray
+> >>
+>
+> Yes. That was it. It probes the driver now. Did you try error inject feature?
 
---=-4xwHkuiIyoieXllTkiVy
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I did have a look at that, but it really depends on what exactly you
+want to test. There are many things this won't help you with, you
+ought to examine the aer inject driver to see what it does. For
+example if you are bringing up a new device and want to see it raise
+an AER interrupt then aer inject won't help. In this case you'll need
+to find a way to trigger real errors.
 
-On Thu, 2013-10-10 at 20:41 +0800, Yijing Wang wrote:
-> Currently, if device power state !=3D PCI_D0, we still initialize
-> device MSI/MSIX, but we won't write the MSI message to device
-> MSI/MSIX registers. It's weird, we don't configure MSI/MSIX
-> registers properly, but pci_enable_msi() or pci_enable_msix()
-> return success, and even these registers will never be updated later.
-> So I think it should return error if device power state !=3D PCI_D0.
->=20
-> ---
->=20
-> v1->v2: keep __write_msi_msg() function device power state statement,
-> 	    because Ben Hutchings point out this function may be called
-> 		during device in D3 state to set irq affinity. We should not
-> 		touch that.
->=20
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-
-S-o-b needs to be above the first '---' but perhaps Bjorn can fix that
-up before applying.
-
-Acked-by: Ben Hutchings <bhutchings@solarflare.com>
-
-> ---
->  drivers/pci/msi.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d5f90d6..604265c 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -831,7 +831,7 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigne=
-d int nvec)
->  	int status, maxvec;
->  	u16 msgctl;
-> =20
-> -	if (!dev->msi_cap)
-> +	if (!dev->msi_cap || dev->current_state !=3D PCI_D0)
->  		return -EINVAL;
-> =20
->  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-> @@ -862,7 +862,7 @@ int pci_enable_msi_block_auto(struct pci_dev *dev, un=
-signed int *maxvec)
->  	int ret, nvec;
->  	u16 msgctl;
-> =20
-> -	if (!dev->msi_cap)
-> +	if (!dev->msi_cap || dev->current_state !=3D PCI_D0)
->  		return -EINVAL;
-> =20
->  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-> @@ -955,7 +955,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_=
-entry *entries, int nvec)
->  	int status, nr_entries;
->  	int i, j;
-> =20
-> -	if (!entries || !dev->msix_cap)
-> +	if (!entries || !dev->msix_cap || dev->current_state !=3D PCI_D0)
->  		return -EINVAL;
-> =20
->  	status =3D pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
-
---=20
-Ben Hutchings
-A free society is one where it is safe to be unpopular. - Adlai Stevenson
-
---=-4xwHkuiIyoieXllTkiVy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIVAwUAUlaheue/yOyVhhEJAQpilw/9HUA4VwcfhiW+defMU/0RS26dRcmH7zAb
-WbPALvlUdmF08n61PZNK8q1AD/0trFEM/GHejUMMx9+pjaivenXcKxpnFNUyiFNK
-EfmMLbOr8yC1AXFqucNfTZj6guV9sgFuHgH8z4VVyVfBbvL7neuohjBBQMQjb6Sm
-/h5e+qmQ5ydCWffRWhRPpcUKFzp/Rs5npVH7BVeuPrurdEHCNJBVBIJXzGFeXpEW
-Lt+ydRmMaYvlF0rZQ0Zr/jXuhYcP5JvNjBEFrqVLrHBR3tDD5/MbnrOe+f2TAQPY
-xyEkIh0hZ+86u1FrRqzC1hggq8Da7ZQed7z0O0Aid79jBlNnIwk04nS5djMUe9ZT
-svWl9yqZrLqp3tkAIcKibtZej3DZJv3y5n/VfSkgOQ2vuo2TA4gsqamYcG79+f6L
-xC2n+XJsQX7O1KIbxUwgAYqWIEcIOq775Fy6CGq4jZCugaDpDZHmY/2bNPybKLsO
-QJnXlnjAIZ++BpfOH3yQRD0oYTeuOo8uzNyNmiBYqp/seHJY8gnkI/MkMQjMJALq
-6XX27RP9A2D+a0X4h7EvdMWVjf+DQgawVhXRGe1f1AiGWXRep6dAXG6eEANVppWX
-9wFWlXiZgGptvp+QaluSY0A2w8PLJomGQJt+7LTFaWH+XtY9TxRFch/6FC0wVdtg
-CudsUmO+NfY=
-=ZTU7
------END PGP SIGNATURE-----
-
---=-4xwHkuiIyoieXllTkiVy--
+Andrew Murray
