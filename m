@@ -1,64 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:33733 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751040Ab3J2TPA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 15:15:00 -0400
-Received: by mail-ie0-f176.google.com with SMTP id u16so517387iet.7
-        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 12:14:59 -0700 (PDT)
+Received: from mouse.start.ca ([64.140.120.56]:50269 "EHLO mouse.start.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753857Ab3JYCXe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Oct 2013 22:23:34 -0400
+Message-ID: <5269D61A.80602@start.ca>
+Date: Thu, 24 Oct 2013 22:23:22 -0400
+From: Mark Lord <kernel@start.ca>
 MIME-Version: 1.0
-In-Reply-To: <1381853200-5534-1-git-send-email-marex@denx.de>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 29 Oct 2013 13:14:39 -0600
-Message-ID: <CAErSpo6v4nvKQ4W9BhnUsNEjzsXoCiLxeFY-K=z=bMZ4AFOyGg@mail.gmail.com>
-Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
-To: Marek Vasut <marex@denx.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>
+CC: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	"H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*() family
+ helpers
+References: <cover.1382103786.git.agordeev@redhat.com> <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com> <20131024105158.GB13159@mtj.dyndns.org> <20131024143108.GB26610@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20131024143108.GB26610@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 15, 2013 at 10:06 AM, Marek Vasut <marex@denx.de> wrote:
-> Set of random fixes for the PCIe driver for i.MX6 . With these fixes, my
-> setup with MX6Q -> PCIe bridge -> i210 ethernet adapter works as expected.
->
-> NOTE: I'm sure this will start some discussion. There are quite a few patches
->       that are more of a hacks. Shawn, I didn't ignore your remark about the
->       clock patches, I will test it ASAP, I just want to have these fixes in
->       the public so others can comment/test.
->
-> Marek Vasut (6):
->   PCI: imx6: Make reset-gpio optional
->   PCI: imx6: Fix the clock for PCIe
->   ARM: dts: imx6qdl: Fix the clock for PCIe
->   PCI: imx6: Probe the PCIe in fs_initcall()
->   PCI: imx6: Force Gen1 operation
->   PCI: designware: Fix DT resource retrieval
->
->  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
->  arch/arm/boot/dts/imx6qdl.dtsi                     |  4 +-
->  drivers/pci/host/pci-imx6.c                        | 63 ++++++++++++++++------
->  drivers/pci/host/pcie-designware.c                 | 17 +++---
->  4 files changed, 55 insertions(+), 31 deletions(-)
+On 13-10-24 10:31 AM, Alexander Gordeev wrote:
+> On Thu, Oct 24, 2013 at 11:51:58AM +0100, Tejun Heo wrote:
+>> I haven't looked into any details but, if the above works for most use
+>> cases, it looks really good to me.
+> 
+> Well, if we reuse Michael's statistics:
+> 
+>  - 58 drivers call pci_enable_msix()
+>  - 24 try a single allocation and then fallback to MSI/LSI
+>  - 19 use the loop style allocation
+>  - 14 try an allocation, and if it fails retry once
+> 
+> ...then I expect most of 19/58 (loop style) could be converted to
+> pcim_enable_msix() and pcim_enable_msix_range() and all of 14/58
+> (single fallback) should be converted to pcim_enable_msix() users.
 
-I'm ignoring this series for now.  I assume you'll post an updated
-series as mentioned in your Oct 17 response to "[Patch 5/6] PCI: imx6:
-Force Gen1 operation."  Please mark that series as "v2" when you post
-it.  My assumption is still that Shawn Guo will ack the
-drivers/pci/host/ pieces before I apply them [1].
+Those are just the in-kernel drivers.
+There are many, many more out-of-kernel drivers for embedded platforms,
+hardware in-development, etc..
 
-Bjorn
+Let's not be overly presumptive about the size of the user base.
 
-[1] http://marc.info/?l=linux-pci&m=138030833011687&w=2
+Cheers
