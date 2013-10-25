@@ -1,71 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:62606 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753480Ab3JaMhK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Oct 2013 08:37:10 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [GIT PULL] Last-minute ACPI and power management fixes for v3.12
-Date: Thu, 31 Oct 2013 13:49:13 +0100
-Message-ID: <23460898.v0KnXzAEpz@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAG-2HqVex23K1Omck6rhBsW9dUZTvsORcZF9xFO9jpfhdPO0CQ@mail.gmail.com>
+References: <1378302428-19758-1-git-send-email-teg@jklm.no>
+ <mj+md-20130904.134928.12262.nikam@ucw.cz> <CAG-2HqWcnZ-z7EbDd0aAj6y_Ho6szfRZUiK0psEnmoz17Kw-xA@mail.gmail.com>
+ <CAG-2HqVex23K1Omck6rhBsW9dUZTvsORcZF9xFO9jpfhdPO0CQ@mail.gmail.com>
+From: Tom Gundersen <teg@jklm.no>
+Date: Fri, 25 Oct 2013 11:02:15 +0200
+Message-ID: <CAG-2HqXZvhVDQ-FuM_0EvBysT4UWbfAbfoGdVBPfkjXShgSCfQ@mail.gmail.com>
+Subject: Re: [PATCH RESEND][pciutils] libpci: pci_id_lookup - add udev/hwdb support
+To: Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Fri, Sep 13, 2013 at 1:08 PM, Tom Gundersen <teg@jklm.no> wrote:
+> On Wed, Sep 4, 2013 at 4:59 PM, Tom Gundersen <teg@jklm.no> wrote:
+>> On Wed, Sep 4, 2013 at 3:57 PM, Martin Mares <mj@ucw.cz> wrote:
+>>> Hello!
+>>>
+>>> First of all: Sorry for not replying to the first mail. I do not follow
+>>> linux-pci too much these days (or, I do that in big batches).
+>>
+>> No problem, I guessed as much.
+>>
+>>>> This lets you select hwdb support at compile time.
+>>>>
+>>>> hwdb is an efficient hardware database shipped with recent versions of udev.
+>>>> It contains among other sources pci.ids so querying hwdb rather than reading
+>>>> pci.ids directly should give the same result.
+>>>>
+>>>> Ideally Linux distros using udev could stop shipping pci.ids, but use hwdb
+>>>> as the only source of this information, which this patch allows.
+>>>
+>>> Generally, I will be glad to include hwdb support in libpci.
+>>
+>> Great.
+>>
+>>>> +     if [ -f /usr/include/libudev.h -o -f /usr/local/include/libudev.h ] ; then
+>>>> +             HWDB=yes
+>>>> +     else
+>>>> +             HWDB=no
+>>>> +     fi
+>>>
+>>> Does this make sense? Does every version of libudev support hwdb?
+>>
+>> Good point. I'll replace it with a pkg-config call, is that acceptable?
+>>
+>>>> @@ -86,8 +91,58 @@ char
+>>>>  *pci_id_lookup(struct pci_access *a, int flags, int cat, int id1, int id2, int id3, int id4)
+>>>>  {
+>>>>    struct id_entry *n, *best;
+>>>> -  u32 id12 = id_pair(id1, id2);
+>>>> -  u32 id34 = id_pair(id3, id4);
+>>>> +  u32 id12, id34;
+>>>> +
+>>>> +#ifdef PCI_HAVE_HWDB
+>>>> +  if (!(flags & PCI_LOOKUP_SKIP_LOCAL))
+>>>> +    {
+>>>
+>>> As you wrote it, hwdb has always priority over pci.ids (unless local lookup is
+>>> disabled). As a user, I would expect that pci.ids (being a part of the pciutils)
+>>> is the primary source of data and other sources (network lookups, hwdb) are
+>>> used only if pci.ids do not match or if explicitly requested.
+>>
+>> Hm, this was actually intentional. The reason being that I'd like to
+>> avoid reading in the pci.ids db in the common case, as using the hwdb
+>> should be much more efficient (it is most likely already in memory and
+>> lookup is constant time), and also we (at the distro level) want to
+>> move away from the {usb,pci}.ids and rather default to hwdb
+>> everywhere.
+>>
+>> My original intention was to make hwdb a replacement for pci.ids, but
+>> I ended up going the less invasive route, would making it a
+>> replacement be more acceptable?
+>>
+>> If not, I'll just swap around the priority, not a problem.
+>
+> Hi Martin,
+>
+> Any comments on the above before I resubmit?
 
-Please pull from the git repository at
+Ping?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm+acpi-3.12-late
-
-to receive last-minute ACPI and power management fixes for v3.12
-with top-most commit ab1225901da2d4cd2dcbae6840e93abbef417064
-
-  Revert "ACPI / hotplug / PCI: Avoid doing too much for spurious notifies"
-
-on top of commit 959f58544b7f20c92d5eb43d1232c96c15c01bfb
-
-  Linux 3.12-rc7
-
-These revert two troublesome freezer-related commits introduced during the
-3.11 cycle and a recent commit related to PCI hotplug that was applied to
-fix one machine, but causes problems to happen elsewhere and turns out
-to be unnecessary after another fix that went in later.
-
-Specifics:
-
- - Revert epoll and select commits related to the freezer, introduced
-   during the 3.11 cycle, that cause mysterious user space breakage
-   to occur during resume from suspend to RAM for multiple users of
-   32-bit x86 systems.  Material for 3.11.y stable kernels.
-
- - Revert a recent ACPI-based PCI hotplug (ACPIPHP) commit that was
-   part of boot problem fixes for one machine, but turns out to cause
-   issues with hotplug on Thunderbolt chains with multiple devices.
-   It also turns out to be unnecessary after another fix in the
-   same area that went in later.  From Mika Westerberg.
-
-Thanks!
-
-
----------------
-
-Mika Westerberg (1):
-      Revert "ACPI / hotplug / PCI: Avoid doing too much for spurious notifies"
-
-Rafael J. Wysocki (2):
-      Revert "epoll: use freezable blocking call"
-      Revert "select: use freezable blocking call"
-
----------------
-
- drivers/pci/hotplug/acpiphp_glue.c |    6 +-----
- fs/eventpoll.c                     |    4 +---
- fs/select.c                        |    3 +--
- 3 files changed, 3 insertions(+), 10 deletions(-)
-
+-t
