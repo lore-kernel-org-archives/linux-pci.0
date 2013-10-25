@@ -1,82 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:34636 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751598Ab3JHEdd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Oct 2013 00:33:33 -0400
-Date: Tue, 8 Oct 2013 15:33:30 +1100
-From: Michael Ellerman <michael@ellerman.id.au>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	VMware@dhcp-26-207.brq.redhat.com, "Inc." <pv-drivers@vmware.com>,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Message-ID: <20131008043330.GF31666@concordia>
-References: <cover.1380703262.git.agordeev@redhat.com>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:39494 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619Ab3JYUtS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 16:49:18 -0400
+Received: by mail-ee0-f46.google.com with SMTP id c1so2267846eek.19
+        for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 13:49:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+In-Reply-To: <CAErSpo4TOvYZsjxc3UhCbPUv1NPEy3m-DjtLh-v8q0geGvPhUg@mail.gmail.com>
+References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
+	<CAPcvp5Epf+6tOp+0=ZbBLusCzq4dF98aS+Ou0D7Nyko_VwM8KA@mail.gmail.com>
+	<3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
+	<CAErSpo4TOvYZsjxc3UhCbPUv1NPEy3m-DjtLh-v8q0geGvPhUg@mail.gmail.com>
+Date: Fri, 25 Oct 2013 21:49:17 +0100
+Message-ID: <CAPcvp5GzymFm9c4rirJ-i3a4HVPgJSMGD4bJF8a_ncYJ4GCF1g@mail.gmail.com>
+Subject: Re: AER driver on ARM platform
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 02, 2013 at 12:29:04PM +0200, Alexander Gordeev wrote:
-> This series is against "next" branch in Bjorn's repo:
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-> 
-> Currently pci_enable_msi_block() and pci_enable_msix() interfaces
-> return a error code in case of failure, 0 in case of success and a
-> positive value which indicates the number of MSI-X/MSI interrupts
-> that could have been allocated. The latter value should be passed
-> to a repeated call to the interfaces until a failure or success:
-> 
-> 
-> 	for (i = 0; i < FOO_DRIVER_MAXIMUM_NVEC; i++)
-> 		adapter->msix_entries[i].entry = i;
-> 
-> 	while (nvec >= FOO_DRIVER_MINIMUM_NVEC) {
-> 		rc = pci_enable_msix(adapter->pdev,
-> 				     adapter->msix_entries, nvec);
-> 		if (rc > 0)
-> 			nvec = rc;
-> 		else
-> 			return rc;
-> 	}
-> 
-> 	return -ENOSPC;
-> 
-> 
-> This technique proved to be confusing and error-prone. Vast share
-> of device drivers simply fail to follow the described guidelines.
+On 25 October 2013 20:48, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Oct 25, 2013 at 12:18 PM, Karicheri, Muralidharan
+> <m-karicheri2@ti.com> wrote:
+>>>> -----Original Message-----
+>>>> From: Andrew Murray [mailto:amurray@embedded-bits.co.uk]
+>>>> Sent: Friday, October 25, 2013 12:27 PM
+>>>> To: Karicheri, Muralidharan
+>>>> Cc: linux-pci@vger.kernel.org
+>>>> Subject: Re: AER driver on ARM platform
+>>>>
+>>>> On 25 October 2013 16:56, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
+>>>> > Did anyone successfully tested PCIe AER driver on an ARM platform? I saw this enabled in
+>>>> a tegra platform. Could someone from nVidia respond?
+>>>>
+>>>> I've previously used this on a custom ARM platform - it works.
+>>>>
+>>>> You need to ensure that PCIe port services are enabled, I believe at one point this required
+>>>> 'pcie_ports=native' to be set on the kernel command line.
+>>>>
+>>>> Andrew Murray
+>>>>
+>>
+>> Yes. That was it. It probes the driver now.
+>
+> You should not have to boot with "pcie_ports=native" unless you are
+> debugging or working around a firmware issue.
+>
+> It looks like get_port_device_capability() expects the arch to
+> implement a pcie_port_platform_notify() that sets a bitmask of PCIe
+> services that Linux should take control of.  But that's only
+> implemented for ACPI systems (x86 and ia64), so probably every other
+> arch is stuck with the "pcie_ports=native" hack.
+>
+> This is a bug, and somebody should fix it.  Consider yourself
+> empowered to implement whatever you need on ARM to negotiate for
+> control of these PCIe services.
 
-To clarify "Vast share of device drivers":
+I'll pick this up.
 
- - 58 drivers call pci_enable_msix()
- - 24 try a single allocation and then fallback to MSI/LSI
- - 19 use the loop style allocation as above
- - 14 try an allocation, and if it fails retry once
- - 1  incorrectly continues when pci_enable_msix() returns > 0
-
-So 33 drivers (> 50%) successfully make use of the "confusing and
-error-prone" return value.
-
-Another 24 happily ignore it, which is also entirely fine.
-
-And yes, one is buggy, so obviously the interface is too complex. Thanks
-drivers/ntb/ntb_hw.c
-
-cheers
+Andrew Murray
