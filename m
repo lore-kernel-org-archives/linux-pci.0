@@ -1,85 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:27329 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754358Ab3JBSDn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 14:03:43 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 41/77] lpfc: Do not call pci_disable_msix() if pci_enable_msix() failed
-Date: Wed,  2 Oct 2013 12:48:57 +0200
-Message-Id: <8e18482bc1c22d1764a743f053909c348d7acdec.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:50527 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752480Ab3JYOwO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 10:52:14 -0400
+Received: from dflxv15.itg.ti.com ([128.247.5.124])
+	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id r9PEqDmU032633
+	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 09:52:13 -0500
+Received: from DLEE70.ent.ti.com (dlee70.ent.ti.com [157.170.170.113])
+	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id r9PEqDqI015102
+	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 09:52:13 -0500
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: intel e1000e pci driver issue on RT Linux kernel
+Date: Fri, 25 Oct 2013 14:52:12 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B704625855@DFLE11.ent.ti.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
+ <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
+ <20131024105158.GB13159@mtj.dyndns.org>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com>
+ <20131024114133.GA26610@dhcp-26-207.brq.redhat.com>
+ <5269D5D1.60103@start.ca>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B73B0@saturn3.aculab.com>
+ <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/scsi/lpfc/lpfc_init.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+All,
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 647f5bf..0803b84 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8080,7 +8080,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 	if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
--		goto msi_fail_out;
-+		goto vec_fail_out;
- 	}
- 	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-@@ -8158,6 +8158,8 @@ irq_fail_out:
- msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
- 	pci_disable_msix(phba->pcidev);
-+
-+vec_fail_out:
- 	return rc;
- }
- 
-@@ -8646,7 +8648,7 @@ enable_msix_vectors:
- 	} else if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
--		goto msi_fail_out;
-+		goto vec_fail_out;
- 	}
- 
- 	/* Log MSI-X vector assignment */
-@@ -8698,9 +8700,10 @@ cfg_fail_out:
- 			 &phba->sli4_hba.fcp_eq_hdl[index]);
- 	}
- 
--msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
- 	pci_disable_msix(phba->pcidev);
-+
-+vec_fail_out:
- 	return rc;
- }
- 
--- 
-1.7.7.6
+I am a first timer for this mailing list. I have tried sending email to the list after subscribing successfully. I had sent an email before, but I can't see that in the mailing list as seen through the web browser. So I am re-sending. My apologies if multiple copies appear in the list.
 
+I am working on my SMP kernel on an ARM A15 with RT patch applied against v3.10.10. I have a setup to use the e1000e pci driver against the pcie root complex driver that I have on this platform. It works well with non RT version of the kernel. I am able to do iperf on UDP and TCP traffic. But against RT kernel, I am able to do only ping. If I run iperf, it seems there is a deadlock happening. When I did suspend the core, it seems to be in the idle loop. Some time I am able to do ctrl-c and get back to shell. When I try doing ping again, it times out. If anyone has seen this issue and know how to fix, please reply.
+
+Thanks.
+
+Murali Karicheri
