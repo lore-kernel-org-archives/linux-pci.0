@@ -1,31 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db9lp0253.outbound.messaging.microsoft.com ([213.199.154.253]:35761
-	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752103Ab3JINgg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Oct 2013 09:36:36 -0400
-From: Rajat Jain <rajatjain@juniper.net>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
-Subject: Difference between hot-plug on PCIe rootport vs downstream port
-Date: Wed, 9 Oct 2013 13:36:27 +0000
-Message-ID: <43e5eb8dd8c04af197a01dc974f52924@BLUPR05MB118.namprd05.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 25 Oct 2013 12:01:04 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: Mark Lord <kernel@start.ca>, Tejun Heo <tj@kernel.org>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*()
+ family helpers
+Message-ID: <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
+ <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
+ <20131024105158.GB13159@mtj.dyndns.org>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com>
+ <20131024114133.GA26610@dhcp-26-207.brq.redhat.com>
+ <5269D5D1.60103@start.ca>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B73B0@saturn3.aculab.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B73B0@saturn3.aculab.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Fri, Oct 25, 2013 at 10:10:02AM +0100, David Laight wrote:
+> What this doesn't resolve is a driver requesting a lot of interrupts
+> early on and leaving none for later drivers.
 
-1) Does the pciehp support hotplug on both rootport and downstream port?
+If this problem really exists anywhere besides pSeries?
 
-2) What is so different about these that downstream port hotplug was part of the kernel since very long, but root port hotplug was included releatively recently? Are there any added complexities? I couldn't find anything on the net on this. From my understanding it should be exactly similar?
+I can imagine x86 hitting lack of vectors in interrupt table when
+number of CPUs exceeds hundreds, but do we have this problem now?
 
-3) I understand the hotplug on downstream port is architecture independent. But is the root port hotplug architecture dependent (assuming that the CPU complies to the PCIe, spec, it shouldn't be, right)? 
+> Really the system needs to allocate the minimum number to all
+> drivers before giving out any extra ones - I've NFI how this
+> would be arranged!
 
-4) Can you point me to the code where the root port hotplug is implemented?
+Do not know. The pSeries quota approach seems more reasonable to me.
 
-Thanks,
+> 	David
 
-Rajat
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
