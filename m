@@ -1,116 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 38/77] ixgbe: Update MSI/MSI-X interrupts enablement code
-Date: Wed,  2 Oct 2013 12:48:54 +0200
-Message-Id: <5b809a723104ca6350f4aefaae1ca2a44f7e7116.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:38730 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861Ab3JYF2q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 01:28:46 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com>
+References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
+	<CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
+	<20131015024452.GA31951@srcf.ucam.org>
+	<20131016202123.GA17866@google.com>
+	<CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
+	<CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
+	<CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
+	<CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com>
+	<CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com>
+Date: Thu, 24 Oct 2013 22:28:43 -0700
+Message-ID: <CAE9FiQX2nobvu0Pm4KLo24QwOE7Ped91aQ905HkYyTAKj=ifKg@mail.gmail.com>
+Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of the MSI/MSI-X interrupts enabling
-pattern this driver has to be updated to use the new technique to
-obtain a optimal number of MSI/MSI-X interrupts required.
+On Thu, Oct 24, 2013 at 10:13 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Oct 24, 2013 at 8:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>>>>> Bisection points to 928bea964827d7824b548c1f8e06eccbbc4d0d7d .
+>>>>
+>>>> This is "PCI: Delay enabling bridges until they're needed" by Yinghai.
+>>>
+>>> that double disabling should be addressed by:
+>>>
+>>> https://lkml.org/lkml/2013/4/25/608
+>>>
+>>> [PATCH] PCI: Remove duplicate pci_disable_device for pcie port
+>>
+>> I'll look at that patch again.  I had some questions about it the
+>> first time, but perhaps it makes more sense after 928bea9648 has been
+>> applied.
+>>
+>> Andreas originally reported a GPF oops in pci_pme_list_scan().  I
+>> posted a refcounting patch, which made the problem go away, but I
+>> can't explain why, and I don't want to apply it without understanding
+>> that.  Decoding his oops shows this:
+>>
+>>   24: 0f 1f 00             nopl   (%rax)
+>>   27: 48 8b 50 10           mov    0x10(%rax),%rdx
+>>   2b:* 48 8b 52 38           mov    0x38(%rdx),%rdx <-- trapping instruction
+>>   2f: 48 85 d2             test   %rdx,%rdx
+>>
+>> %rax is the pci_dev pointer, so 0x10(%rax) is the dev->bus pointer,
+>> which we put in %rdx.  The oops says %rdx = 6b6b6b6b6b6b6b6b, which is
+>> POISON_FREE, so I think we loaded dev->bus out of a struct pci_dev
+>> that has already been freed.
+>>
+>> pci_pme_list_scan() holds pci_pme_list_mutex while it traverses
+>> pci_pme_list, and the pci_stop_and_remove_bus_device() path removes
+>> the pci_dev by calling pci_pme_active(), which also holds
+>> pci_pme_list_mutex, so I don't understand how pci_pme_list_scan() can
+>> see a pci_dev that has already been freed.
+>>
+>> If I understand Andreas correctly, 928bea9648 also fixes the crash,
+>> even without my refcounting change.  Can you explain why?
+>
+> 928bea will make the dev->enable_cnt increase wrongly, as we have
+> pci_enable_device for child
+>    pci_enable_bridge for parent
+>      pci_enable_bridge for grandparent
+>        pci_enable_device for grandparent
+>    pci_enable_device for parent
+>        pci_enable_brdige for grandparent
+>          pci_enable_device for grandparent.  ===> looks like i read the code wrongly. This one is skipped as we have pci_is_enabled checking.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c |   62 +++++++++++++------------
- 1 files changed, 32 insertions(+), 30 deletions(-)
+928bea delay bridge enabling, and it's pci_is_enabled checking will prevent
+pci bridge get enabled second time, so enable_cnt will be only 1. instead of
+2. if we enable bridge at first and then pcie port driver.
 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
-index 90b4e10..2444a4d 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
-@@ -711,37 +711,39 @@ static void ixgbe_acquire_msix_vectors(struct ixgbe_adapter *adapter,
- 	 * Right now, we simply care about how many we'll get; we'll
- 	 * set them up later while requesting irq's.
- 	 */
--	while (vectors >= vector_threshold) {
--		err = pci_enable_msix(adapter->pdev, adapter->msix_entries,
--				      vectors);
--		if (!err) /* Success in acquiring all requested vectors. */
--			break;
--		else if (err < 0)
--			vectors = 0; /* Nasty failure, quit now */
--		else /* err == number of vectors we should try again with */
--			vectors = err;
--	}
-+	err = pci_msix_table_size(adapter->pdev);
-+	if (err < 0)
-+		goto err_alloc_msix;
- 
--	if (vectors < vector_threshold) {
--		/* Can't allocate enough MSI-X interrupts?  Oh well.
--		 * This just means we'll go with either a single MSI
--		 * vector or fall back to legacy interrupts.
--		 */
--		netif_printk(adapter, hw, KERN_DEBUG, adapter->netdev,
--			     "Unable to allocate MSI-X interrupts\n");
--		adapter->flags &= ~IXGBE_FLAG_MSIX_ENABLED;
--		kfree(adapter->msix_entries);
--		adapter->msix_entries = NULL;
--	} else {
--		adapter->flags |= IXGBE_FLAG_MSIX_ENABLED; /* Woot! */
--		/*
--		 * Adjust for only the vectors we'll use, which is minimum
--		 * of max_msix_q_vectors + NON_Q_VECTORS, or the number of
--		 * vectors we were allocated.
--		 */
--		vectors -= NON_Q_VECTORS;
--		adapter->num_q_vectors = min(vectors, adapter->max_q_vectors);
--	}
-+	vectors = min(vectors, err);
-+	if (vectors < vector_threshold)
-+		goto err_alloc_msix;
-+
-+	err = pci_enable_msix(adapter->pdev, adapter->msix_entries, vectors);
-+	if (err)
-+		goto err_alloc_msix;
-+
-+	adapter->flags |= IXGBE_FLAG_MSIX_ENABLED; /* Woot! */
-+	/*
-+	 * Adjust for only the vectors we'll use, which is minimum
-+	 * of max_msix_q_vectors + NON_Q_VECTORS, or the number of
-+	 * vectors we were allocated.
-+	 */
-+	vectors -= NON_Q_VECTORS;
-+	adapter->num_q_vectors = min(vectors, adapter->max_q_vectors);
-+
-+	return;
-+
-+err_alloc_msix:
-+	/* Can't allocate enough MSI-X interrupts?  Oh well.
-+	 * This just means we'll go with either a single MSI
-+	 * vector or fall back to legacy interrupts.
-+	 */
-+	netif_printk(adapter, hw, KERN_DEBUG, adapter->netdev,
-+		     "Unable to allocate MSI-X interrupts\n");
-+	adapter->flags &= ~IXGBE_FLAG_MSIX_ENABLED;
-+	kfree(adapter->msix_entries);
-+	adapter->msix_entries = NULL;
- }
- 
- static void ixgbe_add_ring(struct ixgbe_ring *ring,
--- 
-1.7.7.6
-
+Yinghai
