@@ -1,83 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:41871 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755849Ab3JJV7u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 17:59:50 -0400
-Received: by mail-ie0-f169.google.com with SMTP id tp5so6558516ieb.14
-        for <linux-pci@vger.kernel.org>; Thu, 10 Oct 2013 14:59:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
-References: <20130515132401.6a8ff7fb@jlaw-desktop.mno.stratus.com>
- <20130515132948.7dc4c551@jlaw-desktop.mno.stratus.com> <CAErSpo4OU2LRdmBLNBMbw79fYiR4yqYVJ++2ecju0qBNhAp-vA@mail.gmail.com>
- <20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 10 Oct 2013 15:59:28 -0600
-Message-ID: <CAErSpo4=6=3+VNgw9rKBoYO92DMnbPp0NZW5Z_j4WweKTymjmg@mail.gmail.com>
-Subject: Re: mpt2sas,mpt3sas watchdog device removal
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
-	"Desai, Kashyap" <Kashyap.Desai@lsi.com>,
-	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+Received: from comal.ext.ti.com ([198.47.26.152]:41398 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752610Ab3JYRcH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 13:32:07 -0400
+Received: from dflxv15.itg.ti.com ([128.247.5.124])
+	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id r9PHW5oP027383
+	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 12:32:05 -0500
+Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
+	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id r9PHW5MR014539
+	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 12:32:05 -0500
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: RE: PCIE AER driver on ARM platform
+Date: Fri, 25 Oct 2013 17:32:04 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B704625A04@DFLE11.ent.ti.com>
+References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
+In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 17, 2013 at 3:42 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
-> On Fri, 17 May 2013 09:29:06 -0600
-> Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->> [+cc linux-pci]
->>
->> On Wed, May 15, 2013 at 11:29 AM, Joe Lawrence
->> <joe.lawrence@stratus.com> wrote:
->> > From 84ac7a35ebd61e84d4254eae78bb967de17254c2 Mon Sep 17 00:00:00
->> > 2001 From: Joe Lawrence <joe.lawrence@stratus.com>
->> > Date: Wed, 15 May 2013 12:52:31 -0400
->> > Subject: [PATCH] mpt2sas,mpt3sas: make watchdog instantiated device
->> > removal safe
->> >
->> > Calling pci_stop_and_remove_bus_device from a SCSI LLD may introduce
->> > device removal races with PCI callback functions.
->> >
->> > Simplify the mpt2sas watchdog mechanism by separating PCI device
->> > removal from SCSI midlayer detachment. When the watchdog wishes to
->> > remove a SCSI device from the topology, detach from the SCSI
->> > midlayer, leaving the PCI device alone. Adjust various pci_driver
->> > callbacks to account for a potentially SCSI detached PCI device.
->>
->> I don't know the details of the SCSI detachment, but this approach
->> looks much cleaner to me.
->
-> Thanks for commenting, Bjorn.  I think this approach more closely
-> represents what this watchdog is trying to accomplish.
->
-> Off list, Sreekanth from LSI tested and noticed a few issues with this
-> patch:
->
->  - mpt2sas_base_stop_watchdog is called twice: The call from
->    mpt2sas_base_detach is safe, but now unnecessary (as a call was
->    added earlier up in the PCI driver callbacks to ensure that the
->    watchdog was out of the way.) This second invocation can be removed.
->
->  - If the watchdog detects a bad IOC, the watchdog remains running:
->    The watchdog workqueue isn't cleaned up until
->    mpt2sas_base_stop_watchdog is called, so in the case that the
->    watchdog removes the device from SCSI topo, the workqueue will
->    remain unused until PCI .remove/.shutdown cleans it up. Perhaps a
->    single watchdog that iterates over all adapters would be simpler?
->
-> Finally, if SCSI topo detachment is all that is interesting here, would
-> it make more sense to move the watchdog into the MPT "scsi" code?  I
-> haven't looked at the code yet, but this might make an MPT fusion patch
-> easier (due to dependencies between its "scsi" and "base" modules).
+All,
 
-Hi Joe,
+rephrased the subject a bit
 
-I noticed this when looking through old email.  I can't remember if
-anything happened with this.  It seems like nice work; did it go
-anywhere?
+I am trying to use PCIE AER to support AER capability for the PCIe devices. Tried enabling the
+device driver. But the AER device is not getting probed. How does the AER device gets added
+and probed? Is there DT support available or I need to use tradition platform code to setup
+device or does it probed through pci bus probe mechanism. If latter, what could be the reason
+the device is not probed in this case? The AER driver in my case is initialized after the root
+complex driver. We don't have hot plug support. Is there any specific order of initializing this
+device driver?
 
-Bjorn
+Thanks for your time.
+
+Murali
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf
+>> Of Karicheri, Muralidharan
+>> Sent: Friday, October 25, 2013 11:57 AM
+>> To: linux-pci@vger.kernel.org
+>> Subject: AER driver on ARM platform
+>> 
+>> Did anyone successfully tested PCIe AER driver on an ARM platform? I saw this enabled in a
+>> tegra platform. Could someone from nVidia please respond?
+>> 
+>> Murali Karicheri
+>> 
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body of a message
+>> to majordomo@vger.kernel.org More majordomo info at
+>> http://vger.kernel.org/majordomo-info.html
