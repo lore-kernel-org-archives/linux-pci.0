@@ -1,99 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:47884 "EHLO
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:54281 "EHLO
 	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544Ab3JDVJw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 17:09:52 -0400
-Received: by mail-ie0-f173.google.com with SMTP id ar20so10634995iec.32
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 14:09:51 -0700 (PDT)
+	with ESMTP id S1753529Ab3JYTsb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 15:48:31 -0400
+Received: by mail-ie0-f173.google.com with SMTP id u16so7390917iet.32
+        for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 12:48:30 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1380524558-25188-1-git-send-email-wangyijing@huawei.com>
-References: <1380524558-25188-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
+References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
+ <CAPcvp5Epf+6tOp+0=ZbBLusCzq4dF98aS+Ou0D7Nyko_VwM8KA@mail.gmail.com> <3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Oct 2013 15:09:31 -0600
-Message-ID: <CAErSpo5K0sMtg6OnK+Ve_8LDe7axspDvTGxeKNVbgUYzdWNmsg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Introudce pci_dev_show_local_cpu() to simplify code
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
+Date: Fri, 25 Oct 2013 13:48:10 -0600
+Message-ID: <CAErSpo4TOvYZsjxc3UhCbPUv1NPEy3m-DjtLh-v8q0geGvPhUg@mail.gmail.com>
+Subject: Re: AER driver on ARM platform
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+Cc: Andrew Murray <amurray@embedded-bits.co.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 30, 2013 at 1:02 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Local_cpus_show() and local_cpulist_show() are almost the same,
-> introudce a new helper function pci_dev_show_local_cpu() to simplify
-> code.
+On Fri, Oct 25, 2013 at 12:18 PM, Karicheri, Muralidharan
+<m-karicheri2@ti.com> wrote:
+>>> -----Original Message-----
+>>> From: Andrew Murray [mailto:amurray@embedded-bits.co.uk]
+>>> Sent: Friday, October 25, 2013 12:27 PM
+>>> To: Karicheri, Muralidharan
+>>> Cc: linux-pci@vger.kernel.org
+>>> Subject: Re: AER driver on ARM platform
+>>>
+>>> On 25 October 2013 16:56, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
+>>> > Did anyone successfully tested PCIe AER driver on an ARM platform? I saw this enabled in
+>>> a tegra platform. Could someone from nVidia respond?
+>>>
+>>> I've previously used this on a custom ARM platform - it works.
+>>>
+>>> You need to ensure that PCIe port services are enabled, I believe at one point this required
+>>> 'pcie_ports=native' to be set on the kernel command line.
+>>>
+>>> Andrew Murray
+>>>
 >
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Yes. That was it. It probes the driver now.
 
-Applied to pci/misc, thanks!
+You should not have to boot with "pcie_ports=native" unless you are
+debugging or working around a firmware issue.
+
+It looks like get_port_device_capability() expects the arch to
+implement a pcie_port_platform_notify() that sets a bitmask of PCIe
+services that Linux should take control of.  But that's only
+implemented for ACPI systems (x86 and ia64), so probably every other
+arch is stuck with the "pcie_ports=native" hack.
+
+This is a bug, and somebody should fix it.  Consider yourself
+empowered to implement whatever you need on ARM to negotiate for
+control of these PCIe services.
 
 Bjorn
-
-> ---
->  drivers/pci/pci-sysfs.c |   32 +++++++++++++++-----------------
->  1 files changed, 15 insertions(+), 17 deletions(-)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 7128cfd..3b41405 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -74,9 +74,11 @@ static ssize_t broken_parity_status_store(struct device *dev,
->         return count;
->  }
->
-> -static ssize_t local_cpus_show(struct device *dev,
-> -                       struct device_attribute *attr, char *buf)
-> -{
-> +static ssize_t pci_dev_show_local_cpu(struct device *dev,
-> +               int type,
-> +               struct device_attribute *attr,
-> +               char *buf)
-> +{
->         const struct cpumask *mask;
->         int len;
->
-> @@ -86,29 +88,25 @@ static ssize_t local_cpus_show(struct device *dev,
->  #else
->         mask = cpumask_of_pcibus(to_pci_dev(dev)->bus);
->  #endif
-> -       len = cpumask_scnprintf(buf, PAGE_SIZE-2, mask);
-> +       len = type ?
-> +               cpumask_scnprintf(buf, PAGE_SIZE-2, mask) :
-> +               cpulist_scnprintf(buf, PAGE_SIZE-2, mask);
-> +
->         buf[len++] = '\n';
->         buf[len] = '\0';
->         return len;
->  }
->
-> +static ssize_t local_cpus_show(struct device *dev,
-> +                       struct device_attribute *attr, char *buf)
-> +{
-> +       return pci_dev_show_local_cpu(dev, 1, attr, buf);
-> +}
->
->  static ssize_t local_cpulist_show(struct device *dev,
->                         struct device_attribute *attr, char *buf)
->  {
-> -       const struct cpumask *mask;
-> -       int len;
-> -
-> -#ifdef CONFIG_NUMA
-> -       mask = (dev_to_node(dev) == -1) ? cpu_online_mask :
-> -                                         cpumask_of_node(dev_to_node(dev));
-> -#else
-> -       mask = cpumask_of_pcibus(to_pci_dev(dev)->bus);
-> -#endif
-> -       len = cpulist_scnprintf(buf, PAGE_SIZE-2, mask);
-> -       buf[len++] = '\n';
-> -       buf[len] = '\0';
-> -       return len;
-> +       return pci_dev_show_local_cpu(dev, 0, attr, buf);
->  }
->
->  /*
-> --
-> 1.7.1
->
->
