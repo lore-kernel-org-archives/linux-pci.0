@@ -1,50 +1,121 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Always rescan the slot for new devices
-Date: Wed, 30 Oct 2013 15:13:15 +0100
-Message-ID: <2238508.7Zxn6keMnr@vostro.rjw.lan>
-In-Reply-To: <1383141466.4097.163.camel@ul30vt.home>
-References: <1383136836-15306-1-git-send-email-mika.westerberg@linux.intel.com> <1383141466.4097.163.camel@ul30vt.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:10060
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751218Ab3JYF6T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 01:58:19 -0400
+Message-ID: <526A086E.305@freescale.com>
+Date: Fri, 25 Oct 2013 13:58:06 +0800
+From: Lian Minghuan-b31939 <B31939@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Kumar Gala <galak@kernel.crashing.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+CC: "linuxppc-dev@lists.ozlabs.org list" <linuxppc-dev@lists.ozlabs.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 02/12][v3] pci: fsl: add structure fsl_pci
+References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com> <1382524894-15164-2-git-send-email-Minghuan.Lian@freescale.com> <2B28E421-9B64-4CEC-9E00-8893502CE12F@kernel.crashing.org>
+In-Reply-To: <2B28E421-9B64-4CEC-9E00-8893502CE12F@kernel.crashing.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 30, 2013 07:57:46 AM Alex Williamson wrote:
-> On Wed, 2013-10-30 at 14:40 +0200, Mika Westerberg wrote:
-> > Commit 2dc4128 (ACPI / hotplug / PCI: Avoid doing too much for spurious
-> > notifies) changed the enable_slot() to check return value of pci_scan_slot()
-> > and if it is zero return early from the function. It means that there were
-> > no new devices in this particular slot.
-> > 
-> > However, if a device appeared deeper in the hierarchy the code now ignores
-> > it causing things like Thunderbolt chaining fail to recognize new devices.
-> > 
-> > The problem with Alex Williamson's machine was solved with commit
-> > a47d8c8 (ACPI / hotplug / PCI: Avoid parent bus rescans on spurious device
-> > checks) and hence we should be able to restore the original functionality
-> > that we always rescan on bus check notification.
-> > 
-> > On a device check notification we still check what acpiphp_rescan_slot()
-> > returns and on zero bail out early.
-> > 
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > ---
-> > Alex,
-> > 
-> > Are you able to check if your machine still works and doesn't slow down
-> > during boot after this patch is applied?
-> 
-> Looks ok to me, no new console output or boot delay.  Thanks,
+Hi Kumar,
 
-Great, thanks!
+please see my comment inline.
 
-May I add your Tested-by to it, then?
+On 10/24/2013 12:11 PM, Kumar Gala wrote:
+> On Oct 23, 2013, at 5:41 AM, Minghuan Lian wrote:
+>
+>> PowerPC uses structure pci_controller to describe PCI controller,
+>> but ARM uses structure pci_sys_data. In order to support PowerPC
+>> and ARM simultaneously, the patch adds a structure fsl_pci that
+>> contains most of the members of the pci_controller and pci_sys_data.
+>> Meanwhile, it defines a interface fsl_arch_sys_to_pci() which should
+>> be implemented in architecture-specific PCI controller driver to
+>> convert pci_controller or pci_sys_data to fsl_pci.
+>>
+>> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+>> ---
+>> change log:
+>> v1-v3:
+>> Derived from http://patchwork.ozlabs.org/patch/278965/
+>>
+>> Based on upstream master.
+>> Based on the discussion of RFC version here
+>> http://patchwork.ozlabs.org/patch/274487/
+>>
+>> include/linux/fsl/pci-common.h | 41 +++++++++++++++++++++++++++++++++++++++++
+>> 1 file changed, 41 insertions(+)
+> NAK.
+>
+> We discussed this some at the ARM Summit this week and the feeling is we need to move to a common interface between the various ARCHs.
+[Minghuan] Do you mean we will use the common interface instead of 
+arch/powerpc/kernel/pci-common.c...
+and arch/arm/kernel/bios32.c?  Who will do the code movement and when 
+will the work be completed? The patches just move the common functions 
+of FSL PCI controller operation which can be re-used by PowerPC and ARM. 
+LS1 is coming, I worry about not having enough time to wait for the move 
+is completed.
 
-Rafael
+> - k
+>
+>> diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
+>> index 5e4f683..e56a040 100644
+>> --- a/include/linux/fsl/pci-common.h
+>> +++ b/include/linux/fsl/pci-common.h
+>> @@ -102,5 +102,46 @@ struct ccsr_pci {
+>>
+>> };
+>>
+>> +/*
+>> + * Structure of a PCI controller (host bridge)
+>> + */
+>> +struct fsl_pci {
+>> +	struct list_head node;
+>> +	bool is_pcie;
+>> +	struct device_node *dn;
+>> +	struct device *dev;
+>> +
+>> +	int first_busno;
+>> +	int last_busno;
+>> +	int self_busno;
+>> +	struct resource busn;
+>> +
+>> +	struct pci_ops *ops;
+>> +	struct ccsr_pci __iomem *regs;
+>> +
+>> +	u32 indirect_type;
+>> +
+>> +	struct resource io_resource;
+>> +	resource_size_t io_base_phys;
+>> +	resource_size_t pci_io_size;
+>> +
+>> +	struct resource mem_resources[3];
+>> +	resource_size_t mem_offset[3];
+>> +
+>> +	int global_number;	/* PCI domain number */
+>> +
+>> +	resource_size_t dma_window_base_cur;
+>> +	resource_size_t dma_window_size;
+>> +
+>> +	void *sys;
+>> +};
+>> +
+>> +/*
+>> + * Convert architecture specific pci controller structure to fsl_pci
+>> + * PowerPC uses structure pci_controller and ARM uses structure pci_sys_data
+>> + * to describe pci controller.
+>> + */
+>> +extern struct fsl_pci *fsl_arch_sys_to_pci(void *sys);
+>> +
+>> #endif /* __PCI_COMMON_H */
+>> #endif /* __KERNEL__ */
+>> -- 
+>> 1.8.1.2
+>>
+>
+
 
