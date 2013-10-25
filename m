@@ -1,82 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:44684 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759903Ab3JPAIK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 20:08:10 -0400
-From: Marek Vasut <marex@denx.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
-Date: Wed, 16 Oct 2013 02:08:01 +0200
-Cc: "'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Frank Li'" <lznuaa@gmail.com>,
-	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Richard Zhu'" <r65037@freescale.com>,
-	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Shawn Guo'" <shawn.guo@linaro.org>,
-	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
-	"'Srikanth T Shivanand'" <ts.srikanth@samsung.com>,
-	"'Tim Harvey'" <tharvey@gateworks.com>,
-	"'Troy Kisky'" <troy.kisky@boundarydevices.com>,
-	"'Yinghai Lu'" <yinghai@kernel.org>,
-	"'Kishon Vijay Abraham I'" <kishon@ti.com>
-References: <1381853200-5534-1-git-send-email-marex@denx.de> <003b01ceca03$309b9ba0$91d2d2e0$%han@samsung.com>
-In-Reply-To: <003b01ceca03$309b9ba0$91d2d2e0$%han@samsung.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:38278 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754122Ab3JYO7r convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 10:59:47 -0400
+Received: from dflxv15.itg.ti.com ([128.247.5.124])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id r9PExl5f021818
+	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 09:59:47 -0500
+Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
+	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id r9PExlP3024631
+	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 09:59:47 -0500
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: intel e1000e pci driver issue on RT Linux kernel
+Date: Fri, 25 Oct 2013 14:59:46 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B7046258B0@DFLE11.ent.ti.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
+ <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
+ <20131024105158.GB13159@mtj.dyndns.org>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com>
+ <20131024114133.GA26610@dhcp-26-207.brq.redhat.com>
+ <5269D5D1.60103@start.ca>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B73B0@saturn3.aculab.com>
+ <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
+ <3E54258959B69E4282D79E01AB1F32B704625855@DFLE11.ent.ti.com>
+In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704625855@DFLE11.ent.ti.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201310160208.01233.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Han,
+Resending as there was a format issue
 
-> > -----Original Message-----
-> > From: Marek Vasut [mailto:marex@denx.de]
-> > Sent: Wednesday, October 16, 2013 1:07 AM
-> > To: linux-pci@vger.kernel.org
-> > Cc: linux-arm-kernel@lists.infradead.org; Marek Vasut; Bjorn Helgaas;
-> > Frank Li; Jingoo Han; Mohit KUMAR; Pratyush Anand; Richard Zhu; Sascha
-> > Hauer; Sean Cross; Shawn Guo; Siva Reddy Kallam; Srikanth T Shivanand;
-> > Tim Harvey; Troy Kisky; Yinghai Lu
-> > Subject: [PATCH 0/6] PCI: imx6: Random fixes
-> > 
-> > Set of random fixes for the PCIe driver for i.MX6 . With these fixes, my
-> > setup with MX6Q -> PCIe bridge -> i210 ethernet adapter works as
-> > expected.
-> > 
-> > NOTE: I'm sure this will start some discussion. There are quite a few
-> > patches
-> > 
-> >       that are more of a hacks. Shawn, I didn't ignore your remark about
-> >       the clock patches, I will test it ASAP, I just want to have these
-> >       fixes in the public so others can comment/test.
-> > 
-> > Marek Vasut (6):
-> >   PCI: imx6: Make reset-gpio optional
-> >   PCI: imx6: Fix the clock for PCIe
-> >   ARM: dts: imx6qdl: Fix the clock for PCIe
-> >   PCI: imx6: Probe the PCIe in fs_initcall()
-> >   PCI: imx6: Force Gen1 operation
-> >   PCI: designware: Fix DT resource retrieval
-> >  
-> >  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
-> >  arch/arm/boot/dts/imx6qdl.dtsi                     |  4 +-
-> >  drivers/pci/host/pci-imx6.c                        | 63
-> >  ++++++++++++++++------ drivers/pci/host/pcie-designware.c              
-> >    | 17 +++---
-> >  4 files changed, 55 insertions(+), 31 deletions(-)
-> 
-> Hi Marek,
-> 
-> Your patchset modifies Synopsys Designware part. (pcie-designware.c)
-> Thus, it would be better to share this patchset with Kishon Vijay Abraham
-> I. He is also developing OMAP PCIe driver using 'pcie-designware.c'.
+I am a first timer for this mailing list. I have tried sending email to the list after subscribing
+successfully. I had sent an email before, but I can't see that in the mailing list as seen
+through the web browser. So I am re-sending. My apologies if multiple copies appear in the
+list.
 
-Putting him on CC, thanks
+I am working on my SMP kernel on an ARM A15 with RT patch applied against v3.10.10. I
+have a setup to use the e1000e pci driver against the pcie root complex driver that I have
+on this platform. It works well with non RT version of the kernel. I am able to do iperf on
+UDP and TCP traffic. But against RT kernel, I am able to do only ping. If I run iperf, it seems
+there is a deadlock happening. When I did suspend the core, it seems to be in the idle loop.
+Some time I am able to do ctrl-c and get back to shell. When I try doing ping again, it times
+out. If anyone has seen this issue and know how to fix, please reply.
+ 
+ Thanks.
+ 
+ Murali Karicheri
 
-Best regards,
-Marek Vasut
