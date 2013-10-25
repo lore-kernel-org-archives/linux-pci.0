@@ -1,79 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:44458 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752748Ab3JGVdi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Oct 2013 17:33:38 -0400
-Received: by mail-ie0-f177.google.com with SMTP id qd12so16490378ieb.8
-        for <linux-pci@vger.kernel.org>; Mon, 07 Oct 2013 14:33:38 -0700 (PDT)
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:60106 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752366Ab3JYXB1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 19:01:27 -0400
+Received: by mail-ie0-f178.google.com with SMTP id x13so7509328ief.37
+        for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2013 16:01:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1378809966.26153.23.camel@cliu38-desktop-build>
-References: <1378809966.26153.23.camel@cliu38-desktop-build>
+In-Reply-To: <CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com>
+References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
+ <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
+ <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com>
+ <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
+ <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
+ <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
+ <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com> <CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 7 Oct 2013 15:33:17 -0600
-Message-ID: <CAErSpo7K9xfwnJW_=L=Oq9Dwe5sQc0879sEQuN2KeCMigPx5hw@mail.gmail.com>
-Subject: Re: [PATCH] PCI/PM: Removing the function pci_pm_complete()
-To: Chuansheng Liu <chuansheng.liu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
+Date: Fri, 25 Oct 2013 17:01:06 -0600
+Message-ID: <CAErSpo4qv2x1MjB=cW6QNevcQcq7dYtk-wC-HRTq8XEz2Xac-g@mail.gmail.com>
+Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"Rafael J. Wysocki" <rjw@sisk.pl>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	fei.li@intel.com
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 10, 2013 at 4:46 AM, Chuansheng Liu
-<chuansheng.liu@intel.com> wrote:
+On Thu, Oct 24, 2013 at 11:13 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Oct 24, 2013 at 8:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>>>>> Bisection points to 928bea964827d7824b548c1f8e06eccbbc4d0d7d .
+>>>>
+>>>> This is "PCI: Delay enabling bridges until they're needed" by Yinghai.
+>>>
+>>> that double disabling should be addressed by:
+>>>
+>>> https://lkml.org/lkml/2013/4/25/608
+>>>
+>>> [PATCH] PCI: Remove duplicate pci_disable_device for pcie port
+>>
+>> I'll look at that patch again.  I had some questions about it the
+>> first time, but perhaps it makes more sense after 928bea9648 has been
+>> applied.
+>>
+>> Andreas originally reported a GPF oops in pci_pme_list_scan().  I
+>> posted a refcounting patch, which made the problem go away, but I
+>> can't explain why, and I don't want to apply it without understanding
+>> that.  Decoding his oops shows this:
+>>
+>>   24: 0f 1f 00             nopl   (%rax)
+>>   27: 48 8b 50 10           mov    0x10(%rax),%rdx
+>>   2b:* 48 8b 52 38           mov    0x38(%rdx),%rdx <-- trapping instruction
+>>   2f: 48 85 d2             test   %rdx,%rdx
+>>
+>> %rax is the pci_dev pointer, so 0x10(%rax) is the dev->bus pointer,
+>> which we put in %rdx.  The oops says %rdx = 6b6b6b6b6b6b6b6b, which is
+>> POISON_FREE, so I think we loaded dev->bus out of a struct pci_dev
+>> that has already been freed.
+>>
+>> pci_pme_list_scan() holds pci_pme_list_mutex while it traverses
+>> pci_pme_list, and the pci_stop_and_remove_bus_device() path removes
+>> the pci_dev by calling pci_pme_active(), which also holds
+>> pci_pme_list_mutex, so I don't understand how pci_pme_list_scan() can
+>> see a pci_dev that has already been freed.
+>>
+>> If I understand Andreas correctly, 928bea9648 also fixes the crash,
+>> even without my refcounting change.  Can you explain why?
 >
-> Commit(88d2613) removed the pm_runtime_put_sync() from pci_pm_complete()
-> to PM core code device_complete().
+> 928bea will make the dev->enable_cnt increase wrongly, as we have
+> pci_enable_device for child
+>    pci_enable_bridge for parent
+>      pci_enable_bridge for grandparent
+>        pci_enable_device for grandparent
+>    pci_enable_device for parent
+>        pci_enable_brdige for grandparent
+>          pci_enable_device for grandparent.
+> ...
 >
-> Here the pci_pm_complete() is doing the same work which can be done in
-> device_complete(), so we can remove it directly.
+> in that case grandprent will be enabled two times, and will enable_cnt will have
+> extra increase.
 >
-> Signed-off-by: liu chuansheng <chuansheng.liu@intel.com>
+> so later pci_disable_device will not really call do_pci_disable_device
+> do the really work, as enable_cnt still big.
+>
+> solution could be:
+> let pci_enable_bridge call __pci_enable_device.
+> and __pci_enable_device will not call pci_enable_bridge.
 
-Applied to pci/misc with Rafaels' ack, for v3.13.  Thanks!
+Sorry, I didn't understand this.  Is this supposed to be an
+explanation of how 928bea fixes the oops that Andreas saw?  If so, can
+you be a little more explicit about when the pci_dev got freed and
+when pci_pme_list_scan() walked the list and accessed the freed area?
 
 Bjorn
-
-> ---
->  drivers/pci/pci-driver.c |    9 ---------
->  1 files changed, 0 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 98f7b9b..736ef3f 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -599,18 +599,10 @@ static int pci_pm_prepare(struct device *dev)
->         return error;
->  }
->
-> -static void pci_pm_complete(struct device *dev)
-> -{
-> -       struct device_driver *drv = dev->driver;
-> -
-> -       if (drv && drv->pm && drv->pm->complete)
-> -               drv->pm->complete(dev);
-> -}
->
->  #else /* !CONFIG_PM_SLEEP */
->
->  #define pci_pm_prepare NULL
-> -#define pci_pm_complete        NULL
->
->  #endif /* !CONFIG_PM_SLEEP */
->
-> @@ -1123,7 +1115,6 @@ static int pci_pm_runtime_idle(struct device *dev)
->
->  const struct dev_pm_ops pci_dev_pm_ops = {
->         .prepare = pci_pm_prepare,
-> -       .complete = pci_pm_complete,
->         .suspend = pci_pm_suspend,
->         .resume = pci_pm_resume,
->         .freeze = pci_pm_freeze,
-> --
-> 1.7.0.4
->
->
->
