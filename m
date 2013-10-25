@@ -1,79 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:48699 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756482Ab3JKHUT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 03:20:19 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MUH000ZFTPTBJG0@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 11 Oct 2013 16:20:17 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Marek Vasut' <marex@denx.de>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Frank Li' <lznuaa@gmail.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Sascha Hauer' <s.hauer@pengutronix.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	'Tim Harvey' <tharvey@gateworks.com>,
-	'Yinghai Lu' <yinghai@kernel.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
- <1381457552-6575-1-git-send-email-marex@denx.de>
- <1381457552-6575-2-git-send-email-marex@denx.de>
-In-reply-to: <1381457552-6575-2-git-send-email-marex@denx.de>
-Subject: Re: [PATCH 2/2] PCI: imx6: Fix the clock for PCIe
-Date: Fri, 11 Oct 2013 16:20:16 +0900
-Message-id: <000c01cec652$55adbb30$01093190$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:35236 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369Ab3JYFNU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 01:13:20 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com>
+References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
+	<CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
+	<20131015024452.GA31951@srcf.ucam.org>
+	<20131016202123.GA17866@google.com>
+	<CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
+	<CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
+	<CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
+	<CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com>
+Date: Thu, 24 Oct 2013 22:13:18 -0700
+Message-ID: <CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com>
+Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, October 11, 2013 11:13 AM, Marek Vasut wrote:
-> 
-> The clk #205 are lvds_sel, not lvds_gate , so fix this. Moreover,
-> the PCIe needs lvds_gate for successful operation, so make the PCIe
-> driver enable (set as output) the lvds_gate .
-> 
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Frank Li <lznuaa@gmail.com>
-> Cc: Richard Zhu <r65037@freescale.com>
-> Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> Cc: Sean Cross <xobs@kosagi.com>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
-> Cc: Tim Harvey <tharvey@gateworks.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> ---
->  arch/arm/boot/dts/imx6qdl.dtsi |  6 +++---
->  drivers/pci/host/pci-imx6.c    | 19 ++++++++++++++++++-
->  2 files changed, 21 insertions(+), 4 deletions(-)
+On Thu, Oct 24, 2013 at 8:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>>>> Bisection points to 928bea964827d7824b548c1f8e06eccbbc4d0d7d .
+>>>
+>>> This is "PCI: Delay enabling bridges until they're needed" by Yinghai.
+>>
+>> that double disabling should be addressed by:
+>>
+>> https://lkml.org/lkml/2013/4/25/608
+>>
+>> [PATCH] PCI: Remove duplicate pci_disable_device for pcie port
+>
+> I'll look at that patch again.  I had some questions about it the
+> first time, but perhaps it makes more sense after 928bea9648 has been
+> applied.
+>
+> Andreas originally reported a GPF oops in pci_pme_list_scan().  I
+> posted a refcounting patch, which made the problem go away, but I
+> can't explain why, and I don't want to apply it without understanding
+> that.  Decoding his oops shows this:
+>
+>   24: 0f 1f 00             nopl   (%rax)
+>   27: 48 8b 50 10           mov    0x10(%rax),%rdx
+>   2b:* 48 8b 52 38           mov    0x38(%rdx),%rdx <-- trapping instruction
+>   2f: 48 85 d2             test   %rdx,%rdx
+>
+> %rax is the pci_dev pointer, so 0x10(%rax) is the dev->bus pointer,
+> which we put in %rdx.  The oops says %rdx = 6b6b6b6b6b6b6b6b, which is
+> POISON_FREE, so I think we loaded dev->bus out of a struct pci_dev
+> that has already been freed.
+>
+> pci_pme_list_scan() holds pci_pme_list_mutex while it traverses
+> pci_pme_list, and the pci_stop_and_remove_bus_device() path removes
+> the pci_dev by calling pci_pme_active(), which also holds
+> pci_pme_list_mutex, so I don't understand how pci_pme_list_scan() can
+> see a pci_dev that has already been freed.
+>
+> If I understand Andreas correctly, 928bea9648 also fixes the crash,
+> even without my refcounting change.  Can you explain why?
 
-Hi Marek Vasut,
+928bea will make the dev->enable_cnt increase wrongly, as we have
+pci_enable_device for child
+   pci_enable_bridge for parent
+     pci_enable_bridge for grandparent
+       pci_enable_device for grandparent
+   pci_enable_device for parent
+       pci_enable_brdige for grandparent
+         pci_enable_device for grandparent.
+...
 
-How about splitting this patch into two patches such as
-arch part and driver part?
+in that case grandprent will be enabled two times, and will enable_cnt will have
+extra increase.
 
-It is because driver part was merged into PCI tree by Bjorn Helgaas,[1]
-and arch part was merged into i.MX tree by Shawn Guo.[2]
-Thus, your patch can make the conflict issue.
+so later pci_disable_device will not really call do_pci_disable_device
+do the really work, as enable_cnt still big.
 
-For example,
-  [PATCH 1/2] ARM: dts: imx6qdl: Fix the clock for PCIe
-  [PATCH 2/2] PCI: imx6: Fix the clock for PCIe
+solution could be:
+let pci_enable_bridge call __pci_enable_device.
+and __pci_enable_device will not call pci_enable_bridge.
 
-Then, 1st patch can be merged to i.MX tree, and 2nd patch can be merged
-to PCI tree.
+Thanks
 
-If I am wrong, please let me know kindly. :-)
-
-[1] http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=next&id=bb38919ec56e0758c3ae56dfc091dcde1391353e
-[2] https://git.linaro.org/gitweb?p=people/shawnguo/linux-2.6.git;a=commit;h=3a57291fa4ca7f7647d826f5b47082ef306d839f
-
-Best regards,
-Jingoo Han
-
+Yinghai
