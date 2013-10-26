@@ -1,69 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43401 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752672Ab3J0VWS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Oct 2013 17:22:18 -0400
-Date: Sun, 27 Oct 2013 14:24:07 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [BUG 3.12.rc4] Oops: unable to handle kernel paging request
- during shutdown
-Message-ID: <20131027212407.GA17439@kroah.com>
-References: <525BD08C.2080101@t-online.de>
- <CA+55aFwN++wO=rTFaH7m6YYQX+Fv3qDt6Hxs7UnPUJpFsrwSkA@mail.gmail.com>
- <CA+55aFy7TpvkVuPEOJ7Qqirwap1gXoD1_MrYLhgPAYuVpN8u=w@mail.gmail.com>
- <alpine.DEB.2.02.1310251221310.5266@ionos.tec.linutronix.de>
- <CA+55aFxw1Hm4QVeEigkByP5RppSL30oHnLoR16C=henf-a=uFQ@mail.gmail.com>
- <CA+55aFyb72qoZ1Tjpb+=q-6+GmwoOXjfntY_zZnf300gg3d1Hg@mail.gmail.com>
- <CA+55aFxuVpDo3LvmG9j-Hu7sENLTcsB6_CY2TA4mE-k+CuTeGg@mail.gmail.com>
- <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com>
+Received: from mail-we0-f176.google.com ([74.125.82.176]:63784 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751849Ab3JZRXV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 Oct 2013 13:23:21 -0400
+Received: by mail-we0-f176.google.com with SMTP id w62so4966292wes.7
+        for <linux-pci@vger.kernel.org>; Sat, 26 Oct 2013 10:23:20 -0700 (PDT)
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, m-karicheri2@ti.com,
+	Andrew Murray <amurray@embedded-bits.co.uk>
+Subject: [PATCH] pci: update pcie_ports 'auto' behavior for non-ACPI platforms
+Date: Sat, 26 Oct 2013 18:23:25 +0100
+Message-Id: <1382808205-843-1-git-send-email-amurray@embedded-bits.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 27, 2013 at 09:13:29PM +0000, Linus Torvalds wrote:
-> .. and one more case of freeing a delayed work object (likely a kobject again):
-> 
-> This time it looks like it's in the PCI layer, freeing the msi irq information.
-> 
-> It looks like that code simply does
-> 
->     kobject_del(&entry->kobj);
->     kobject_put(&entry->kobj);
->     list_del(&entry->list);
->     kfree(entry);
-> 
-> and the problem is that the "entry->kobj" may have *other* references
-> to it, thanks to people accessing it through /sys, so despite doing a
-> kojbect_del/kobject_put(), it's not at all ok to then do a "kfree()"
-> on it. The embedded kobj might still be in use.
-> 
-> Afaik, that code should do the kfree() on the kobject in the _release_
-> method, not synchronously like that.
-> 
-> We already have a msi_kobj_release(), I'm wondering why that doesn't
-> do the kfree().
-> 
-> Bjorn? Yinghai? Greg, comments about that msi kobj usage?
+The pcie_ports parameter, which defaults to 'auto', allows a user
+to specify if PCIe port services are disabled ('compat'), always
+enabled ('native'), or only used when allowed by the BIOS
+('auto').
 
-Ick, it really should be doing a kfree() in the release only.  Bjorn has
-had a bunch of changes in this area recently, perhaps they are in
-linux-next waiting for 3.13, and I've talked to him about getting rid of
-all of the kobjects for msi files, as I don't think it's needed at all.
+Where CONFIG_ACPI isn't enabled, as is often the case for non
+x86/ia64 platforms, the 'auto' behavior results in that of
+'compat'. Thus in order to use port services on these platforms
+'pcie_ports=native' must be added to the kernel command line.
 
-Bjorn, don't you have a fix for this problem already done somewhere?
+This patch results in the 'native' behavior being followed where
+'auto' is selected and ACPI is not enabled.
 
-thanks,
+Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
+---
+ drivers/pci/pcie/portdrv_core.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-greg k-h
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 31063ac..08d131f 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -260,13 +260,14 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	if (pcie_ports_disabled)
+ 		return 0;
+ 
+-	err = pcie_port_platform_notify(dev, &cap_mask);
+-	if (!pcie_ports_auto) {
+-		cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
+-				| PCIE_PORT_SERVICE_VC;
+-		if (pci_aer_available())
+-			cap_mask |= PCIE_PORT_SERVICE_AER;
+-	} else if (err) {
++	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
++			| PCIE_PORT_SERVICE_VC;
++	if (pci_aer_available())
++		cap_mask |= PCIE_PORT_SERVICE_AER;
++
++	if (pcie_ports_auto) {
++		err = pcie_port_platform_notify(dev, &cap_mask);
++		if (err)
+ 			return 0;
+ 	}
+ 
+-- 
+1.8.1.2
+
