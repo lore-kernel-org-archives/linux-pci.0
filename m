@@ -1,140 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:58752 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506Ab3JXFxn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Oct 2013 01:53:43 -0400
+Received: from mail-ve0-f170.google.com ([209.85.128.170]:36647 "EHLO
+	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754429Ab3J0VNa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Oct 2013 17:13:30 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
-References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
-	<CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
-	<20131015024452.GA31951@srcf.ucam.org>
-	<20131016202123.GA17866@google.com>
-	<CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
-	<CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
-Date: Wed, 23 Oct 2013 22:53:42 -0700
-Message-ID: <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CA+55aFxuVpDo3LvmG9j-Hu7sENLTcsB6_CY2TA4mE-k+CuTeGg@mail.gmail.com>
+References: <525BD08C.2080101@t-online.de>
+	<CA+55aFwN++wO=rTFaH7m6YYQX+Fv3qDt6Hxs7UnPUJpFsrwSkA@mail.gmail.com>
+	<CA+55aFy7TpvkVuPEOJ7Qqirwap1gXoD1_MrYLhgPAYuVpN8u=w@mail.gmail.com>
+	<alpine.DEB.2.02.1310251221310.5266@ionos.tec.linutronix.de>
+	<CA+55aFxw1Hm4QVeEigkByP5RppSL30oHnLoR16C=henf-a=uFQ@mail.gmail.com>
+	<CA+55aFyb72qoZ1Tjpb+=q-6+GmwoOXjfntY_zZnf300gg3d1Hg@mail.gmail.com>
+	<CA+55aFxuVpDo3LvmG9j-Hu7sENLTcsB6_CY2TA4mE-k+CuTeGg@mail.gmail.com>
+Date: Sun, 27 Oct 2013 21:13:29 +0000
+Message-ID: <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com>
+Subject: Re: [BUG 3.12.rc4] Oops: unable to handle kernel paging request
+ during shutdown
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?UTF-8?B?RnLDqWTDqXJpYyBXZWlzYmVja2Vy?= <fweisbec@gmail.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 22, 2013 at 8:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Yinghai]
->
-> On Thu, Oct 17, 2013 at 7:59 AM, Andreas Noever
-> <andreas.noever@gmail.com> wrote:
->> On Wed, Oct 16, 2013 at 10:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Tue, Oct 15, 2013 at 03:44:52AM +0100, Matthew Garrett wrote:
->>>> On Mon, Oct 14, 2013 at 05:50:38PM -0600, Bjorn Helgaas wrote:
->>>> > [+cc Rafael, Mika, Kirill, linux-pci]
->>>> >
->>>> > On Mon, Oct 14, 2013 at 4:47 PM, Andreas Noever
->>>> > <andreas.noever@gmail.com> wrote:
->>>> > > When I unplug the Thunderbolt ethernet adapter on my MacBookPro Linux
->>>> > > crashes a few seconds later. Using
->>>> > > echo 1 > /sys/bus/pci/devices/0000:08:00.0/remove
->>>> > > to remove a bridge two levels above the device triggers the fault immediately:
->>>> >
->>>> > There have been significant changes in acpiphp related to Thunderbolt
->>>> > since v3.11.
->>>>
->>>> Apple don't expose Thunderbolt via ACPI, so it appears as native PCIe.
->>>> I'd be surprised if acpiphp makes a difference here.
->>>
->>> Yeah, you're right; I wasn't paying attention.
->>>
->>> We save a pci_dev pointer in the pci_pme_list, which of course has a
->>> longer lifetime than the pci_dev itself, but we don't acquire a reference
->>> on it, so I suspect the pci_dev got released before we got around to
->>> doing the pci_pme_list_scan().
->>>
->>> Andreas, can you try the patch below?  It's against v3.12-rc2, but it
->>> should apply to v3.11, too.
->>
->> I have tested your patch against 3.11 where it solves the problem. Thanks!
->>
->> Unfortunately I could not reproduce the problem in 3.12-rc5. I only
->> get the following warning (and no crash):
->>
->> tg3 0000:0a:00.0: PME# disabled
->> pcieport 0000:09:00.0: PME# disabled
->> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
->> pci_bus 0000:0a: dev 00, dec refcount to 0
->> pci_bus 0000:0a: dev 00, released physical slot 9
->> ------------[ cut here ]------------
->> WARNING: CPU: 0 PID: 122 at drivers/pci/pci.c:1430
->> pci_disable_device+0x84/0x90()
->> Device pcieport
->> disabling already-disabled device
->> Modules linked in:
->>  btusb bluetooth joydev hid_apple bcm5974 nls_utf8 nls_cp437 hfsplus
->> vfat fat snd_hda_codec_hdmi x86_pkg_temp_thermal intel_powerclamp
->> coretemp kvm_intel kvm cfg80211 uvcvideo crc32_pclmul crc32c_intel
->> videobuf2_vmalloc ghash_clmulni_intel aesni_intel videobuf2_memops
->> aes_x86_64 glue_helper videobuf2_core tg3 videodev lrw gf128mul
->> ablk_helper iTCO_wdt hid_generic iTCO_vendor_support cryptd media
->> applesmc input_polldev usbhid ptp microcode snd_hda_codec_cirrus hid
->> pps_core libphy rfkill i2c_i801 pcspkr snd_hda_intel apple_gmux
->> lib80211 snd_hda_codec acpi_cpufreq snd_hwdep snd_pcm snd_page_alloc
->> snd_timer mei_me snd mei processor soundcore lpc_ich evdev mfd_core
->> apple_bl ac battery ext4 crc16 mbcache jbd2 sd_mod ahci libahci libata
->> xhci_hcd ehci_pci sdhci_pci ehci_hcd sdhci scsi_mod mmc_core
->>  usbcore usb_common nouveau mxm_wmi wmi ttm i915 video button
->> i2c_algo_bit intel_agp intel_gtt drm_kms_helper drm i2c_core
->> CPU: 0 PID: 122 Comm: kworker/u16:5 Not tainted 3.12.0-1-dirty #30
->> Hardware name: Apple Inc. MacBookPro10,1/Mac-C3EC7CD22292981F, BIOS
->> MBP101.88Z.00EE.B03.1212211437 12/21/2012
->> Workqueue: sysfsd sysfs_schedule_callback_work
->>  0000000000000009 ffff88044c021c00 ffffffff814c4288 ffff88044c021c48
->>  ffff88044c021c38 ffffffff81061b7d ffff880458a5c000 ffffffff8187c5c0
->>  ffff880458a5c000 ffff880458a5b098 0000000000000000 ffff88044c021c98
->> Call Trace:
->>  [<ffffffff814c4288>] dump_stack+0x54/0x8d
->>  [<ffffffff81061b7d>] warn_slowpath_common+0x7d/0xa0
->>  [<ffffffff81061bec>] warn_slowpath_fmt+0x4c/0x50
->>  [<ffffffff812bdd92>] ? do_pci_disable_device+0x52/0x60
->>  [<ffffffff813097f3>] ? acpi_pci_irq_disable+0x4c/0x8d
->>  [<ffffffff812bde24>] pci_disable_device+0x84/0x90
->>  [<ffffffff812cc62a>] pcie_portdrv_remove+0x1a/0x20
->>  [<ffffffff812bfcdb>] pci_device_remove+0x3b/0xb0
->>  [<ffffffff81381caf>] __device_release_driver+0x7f/0xf0
->>  [<ffffffff81381d43>] device_release_driver+0x23/0x30
->>  [<ffffffff813814d8>] bus_remove_device+0x108/0x180
->>  [<ffffffff8137de75>] device_del+0x135/0x1d0
->>  [<ffffffff812ba394>] pci_stop_bus_device+0x94/0xa0
->>  [<ffffffff812ba33b>] pci_stop_bus_device+0x3b/0xa0
->>  [<ffffffff812ba4a2>] pci_stop_and_remove_bus_device+0x12/0x20
->>  [<ffffffff812c15c5>] remove_callback+0x25/0x40
->>  [<ffffffff81212ad4>] sysfs_schedule_callback_work+0x14/0x80
->>  [<ffffffff8107c9e8>] process_one_work+0x178/0x470
->>  [<ffffffff8107d3b1>] worker_thread+0x121/0x3a0
->>  [<ffffffff8107d290>] ? manage_workers.isra.21+0x2b0/0x2b0
->>  [<ffffffff810840f0>] kthread+0xc0/0xd0
->>  [<ffffffff81084030>] ? kthread_create_on_node+0x120/0x120
->>  [<ffffffff814d2dfc>] ret_from_fork+0x7c/0xb0
->>  [<ffffffff81084030>] ? kthread_create_on_node+0x120/0x120
->> ---[ end trace b39a15fa94fbb2a2 ]---
->>
->>
->> Bisection points to 928bea964827d7824b548c1f8e06eccbbc4d0d7d .
->
-> This is "PCI: Delay enabling bridges until they're needed" by Yinghai.
+.. and one more case of freeing a delayed work object (likely a kobject again):
 
-that double disabling should be addressed by:
+This time it looks like it's in the PCI layer, freeing the msi irq information.
 
-https://lkml.org/lkml/2013/4/25/608
+It looks like that code simply does
 
-[PATCH] PCI: Remove duplicate pci_disable_device for pcie port
+    kobject_del(&entry->kobj);
+    kobject_put(&entry->kobj);
+    list_del(&entry->list);
+    kfree(entry);
 
-Thanks
+and the problem is that the "entry->kobj" may have *other* references
+to it, thanks to people accessing it through /sys, so despite doing a
+kojbect_del/kobject_put(), it's not at all ok to then do a "kfree()"
+on it. The embedded kobj might still be in use.
 
-Yinghai
+Afaik, that code should do the kfree() on the kobject in the _release_
+method, not synchronously like that.
+
+We already have a msi_kobj_release(), I'm wondering why that doesn't
+do the kfree().
+
+Bjorn? Yinghai? Greg, comments about that msi kobj usage?
+
+            Linus
+
+---
+
+  [ 2373.142964] mei_me 0000:00:16.0: stop
+  [ 2373.143023] kobject: 'pn544' (ffff88011808f810): kobject_release,
+parent           (null) (delayed)
+  [ 2373.143076] kobject: '59' (ffff8800d268f648): kobject_release,
+parent           (null) (delayed)
+  [ 2373.143080] ------------[ cut here ]------------
+  [ 2373.143087] WARNING: CPU: 3 PID: 2922 at lib/debugobjects.c:260
+debug_print_object+0x83/0xa0()
+  [ 2373.143094] ODEBUG: free active (active state 0) object type:
+timer_list hint: delayed_work_timer_fn+0x0/0x20
+  [ 2373.143096] Modules linked in: fuse ipt_MASQUERADE ip6t_REJECT
+xt_conntrack bnep bluetooth ip6table_nat nf_conntrack_ipv6
+nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6ta$
+  [ 2373.143159] CPU: 3 PID: 2922 Comm: rmmod Tainted: G        W
+3.12.0-rc6-00331-ga2ff82065b5b #2
+  [ 2373.143162] Hardware name: Sony Corporation SVP11213CXB/VAIO,
+BIOS R0270V7 05/17/2013
+  [ 2373.143164]  0000000000000009 ffff8800b74b5c20 ffffffff8160d4a2
+ffff8800b74b5c68
+  [ 2373.143170]  ffff8800b74b5c58 ffffffff810514e8 ffff8800b74a4f00
+ffffffff81c365e0
+  [ 2373.143174]  ffffffff819f9133 ffffffff81f4c1b0 0000000000000001
+ffff8800b74b5cb8
+  [ 2373.143179] Call Trace:
+  [ 2373.143189]  [<ffffffff8160d4a2>] dump_stack+0x45/0x56
+  [ 2373.143195]  [<ffffffff810514e8>] warn_slowpath_common+0x78/0xa0
+  [ 2373.143200]  [<ffffffff81051557>] warn_slowpath_fmt+0x47/0x50
+  [ 2373.143204]  [<ffffffff812f8883>] debug_print_object+0x83/0xa0
+  [ 2373.143209]  [<ffffffff8106aa90>] ? execute_in_process_context+0x90/0x90
+  [ 2373.143214]  [<ffffffff812f99fb>] debug_check_no_obj_freed+0x20b/0x250
+  [ 2373.143219]  [<ffffffff8132d213>] ? free_msi_irqs+0x103/0x150
+  [ 2373.143224]  [<ffffffff8115db59>] kfree+0x89/0x160
+  [ 2373.143227]  [<ffffffff8132d213>] free_msi_irqs+0x103/0x150
+  [ 2373.143232]  [<ffffffff8132dc8d>] pci_disable_msi+0x3d/0x60
+  [ 2373.143241]  [<ffffffffa01d2211>] mei_me_remove+0x61/0xb0 [mei_me]
+  [ 2373.143248]  [<ffffffff81317796>] pci_device_remove+0x36/0xb0
+  [ 2373.143254]  [<ffffffff813c6bea>] __device_release_driver+0x7a/0xe0
+  [ 2373.143260]  [<ffffffff813c7568>] driver_detach+0xc8/0xd0
+  [ 2373.143266]  [<ffffffff813c6816>] bus_remove_driver+0x96/0x120
+  [ 2373.143273]  [<ffffffff813c7b77>] driver_unregister+0x27/0x50
+  [ 2373.143278]  [<ffffffff813167ec>] pci_unregister_driver+0x1c/0x90
+  [ 2373.143286]  [<ffffffffa01d3098>] mei_me_driver_exit+0x10/0xf78 [mei_me]
+  [ 2373.143291]  [<ffffffff810b857d>] SyS_delete_module+0x15d/0x2c0
+  [ 2373.143299]  [<ffffffff81002929>] ? do_notify_resume+0x59/0x90
+  [ 2373.143305]  [<ffffffff8161b9a2>] system_call_fastpath+0x16/0x1b
+  [ 2373.143308] ---[ end trace 25f53c192da70827 ]---
+  [ 2373.143313] kobject: 'msi_irqs' (ffff880037327a18):
+kobject_release, parent ffff880119bb40a8 (delayed)
+  [ 2373.143458] kobject: 'misc' (ffff8800d6487500): kobject_release,
+parent ffff880119bb40a8 (delayed)
+  [ 2373.143463] kobject: 'mei' (ffff8800d35f3410): kobject_release,
+parent           (null) (delayed)
+  [ 2373.143607] kobject: 'mei_me' (ffff88003717ce00):
+kobject_release, parent ffff8801194b2818 (delayed)
+  [ 2373.143670] kobject: 'drivers' (ffff8800d6487600):
+kobject_release, parent ffffffffa01d5330 (delayed)
+  [ 2373.143678] kobject: 'holders' (ffff8800d6714700):
+kobject_release, parent ffffffffa01d5330 (delayed)
+  [ 2373.143682] kobject: 'notes' (ffff8800d6714600): kobject_release,
+parent ffffffffa01d5330 (delayed)
