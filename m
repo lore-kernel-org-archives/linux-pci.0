@@ -1,90 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43401 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752672Ab3J0VWS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Oct 2013 17:22:18 -0400
+Date: Sun, 27 Oct 2013 14:24:07 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Ralf Baechle" <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	<linux-pci@vger.kernel.org>, <linux-mips@linux-mips.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux390@de.ibm.com>,
-	<linux-s390@vger.kernel.org>, <x86@kernel.org>,
-	<linux-ide@vger.kernel.org>, <iss_storagedev@hp.com>,
-	<linux-nvme@lists.infradead.org>, <linux-rdma@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <e1000-devel@lists.sourceforge.net>,
-	<linux-driver@qlogic.com>,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>,
-	<linux-scsi@vger.kernel.org>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 3 Oct 2013 23:49:45 +0100
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [BUG 3.12.rc4] Oops: unable to handle kernel paging request
+ during shutdown
+Message-ID: <20131027212407.GA17439@kroah.com>
+References: <525BD08C.2080101@t-online.de>
+ <CA+55aFwN++wO=rTFaH7m6YYQX+Fv3qDt6Hxs7UnPUJpFsrwSkA@mail.gmail.com>
+ <CA+55aFy7TpvkVuPEOJ7Qqirwap1gXoD1_MrYLhgPAYuVpN8u=w@mail.gmail.com>
+ <alpine.DEB.2.02.1310251221310.5266@ionos.tec.linutronix.de>
+ <CA+55aFxw1Hm4QVeEigkByP5RppSL30oHnLoR16C=henf-a=uFQ@mail.gmail.com>
+ <CA+55aFyb72qoZ1Tjpb+=q-6+GmwoOXjfntY_zZnf300gg3d1Hg@mail.gmail.com>
+ <CA+55aFxuVpDo3LvmG9j-Hu7sENLTcsB6_CY2TA4mE-k+CuTeGg@mail.gmail.com>
+ <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-10-02 at 12:48 +0200, Alexander Gordeev wrote:
-> This series is against "next" branch in Bjorn's repo:
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+On Sun, Oct 27, 2013 at 09:13:29PM +0000, Linus Torvalds wrote:
+> .. and one more case of freeing a delayed work object (likely a kobject again):
 > 
-> Currently pci_enable_msi_block() and pci_enable_msix() interfaces
-> return a error code in case of failure, 0 in case of success and a
-> positive value which indicates the number of MSI-X/MSI interrupts
-> that could have been allocated. The latter value should be passed
-> to a repeated call to the interfaces until a failure or success:
->
+> This time it looks like it's in the PCI layer, freeing the msi irq information.
 > 
-> 	for (i = 0; i < FOO_DRIVER_MAXIMUM_NVEC; i++)
-> 		adapter->msix_entries[i].entry = i;
+> It looks like that code simply does
 > 
-> 	while (nvec >= FOO_DRIVER_MINIMUM_NVEC) {
-> 		rc = pci_enable_msix(adapter->pdev,
-> 				     adapter->msix_entries, nvec);
-> 		if (rc > 0)
-> 			nvec = rc;
-> 		else
-> 			return rc;
-> 	}
+>     kobject_del(&entry->kobj);
+>     kobject_put(&entry->kobj);
+>     list_del(&entry->list);
+>     kfree(entry);
 > 
-> 	return -ENOSPC;
+> and the problem is that the "entry->kobj" may have *other* references
+> to it, thanks to people accessing it through /sys, so despite doing a
+> kojbect_del/kobject_put(), it's not at all ok to then do a "kfree()"
+> on it. The embedded kobj might still be in use.
 > 
+> Afaik, that code should do the kfree() on the kobject in the _release_
+> method, not synchronously like that.
 > 
-> This technique proved to be confusing and error-prone. Vast share
-> of device drivers simply fail to follow the described guidelines.
+> We already have a msi_kobj_release(), I'm wondering why that doesn't
+> do the kfree().
 > 
-> This update converts pci_enable_msix() and pci_enable_msi_block()
-> interfaces to canonical kernel functions and makes them return a
-> error code in case of failure or 0 in case of success.
-[...]
+> Bjorn? Yinghai? Greg, comments about that msi kobj usage?
 
-I think this is fundamentally flawed: pci_msix_table_size() and
-pci_get_msi_cap() can only report the limits of the *device* (which the
-driver usually already knows), whereas MSI allocation can also be
-constrained due to *global* limits on the number of distinct IRQs.
+Ick, it really should be doing a kfree() in the release only.  Bjorn has
+had a bunch of changes in this area recently, perhaps they are in
+linux-next waiting for 3.13, and I've talked to him about getting rid of
+all of the kobjects for msi files, as I don't think it's needed at all.
 
-Currently pci_enable_msix() will report a positive value if it fails due
-to the global limit.  Your patch 7 removes that.  pci_enable_msi_block()
-unfortunately doesn't appear to do this.
+Bjorn, don't you have a fix for this problem already done somewhere?
 
-It seems to me that a more useful interface would take a minimum and
-maximum number of vectors from the driver.  This wouldn't allow the
-driver to specify that it could only accept, say, any even number within
-a certain range, but you could still leave the current functions
-available for any driver that needs that.
+thanks,
 
-Ben.
-
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
-
+greg k-h
