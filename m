@@ -1,68 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44580 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751339Ab3J2Kay (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Oct 2013 06:30:54 -0400
-From: Veaceslav Falico <vfalico@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: torvalds@linux-foundation.org, tglx@linutronix.de,
-	yinghai@kernel.org, Knut_Petersen@t-online.de, mingo@kernel.org,
-	paulmck@linux.vnet.ibm.com, fweisbec@gmail.com,
-	linux-kernel@vger.kernel.org,
-	Veaceslav Falico <vfalico@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v3 2/3] pci: remove redundant pci_dev_get/put() on kobject (un)register
-Date: Tue, 29 Oct 2013 11:30:31 +0100
-Message-Id: <1383042632-7102-3-git-send-email-vfalico@redhat.com>
-In-Reply-To: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
-References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1382912874.3371.9.camel@concordia>
+Subject: Re: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*()
+ family helpers
+From: Michael Ellerman <michael@ellerman.id.au>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, Tejun Heo <tj@kernel.org>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org
+Date: Mon, 28 Oct 2013 09:27:54 +1100
+In-Reply-To: <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
+	 <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
+	 <20131024105158.GB13159@mtj.dyndns.org>
+	 <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com>
+	 <20131024114133.GA26610@dhcp-26-207.brq.redhat.com>
+	 <5269D5D1.60103@start.ca>
+	 <AE90C24D6B3A694183C094C60CF0A2F6026B73B0@saturn3.aculab.com>
+	 <20131025100103.GA317@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we're pci_dev_get/put()-ing pci device on every kobject
-creation/removal. It's useless per se - the kobject is part of the device
-itself, so it should be removed when there are no users of the pdev, and is
-not a user of it.
+On Fri, 2013-10-25 at 12:01 +0200, Alexander Gordeev wrote:
+> On Fri, Oct 25, 2013 at 10:10:02AM +0100, David Laight wrote:
+> > What this doesn't resolve is a driver requesting a lot of interrupts
+> > early on and leaving none for later drivers.
+> 
+> If this problem really exists anywhere besides pSeries?
+> 
+> I can imagine x86 hitting lack of vectors in interrupt table when
+> number of CPUs exceeds hundreds, but do we have this problem now?
+> 
+> > Really the system needs to allocate the minimum number to all
+> > drivers before giving out any extra ones - I've NFI how this
+> > would be arranged!
+> 
+> Do not know. The pSeries quota approach seems more reasonable to me.
 
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Neil Horman <nhorman@tuxdriver.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: linux-pci@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
----
- drivers/pci/msi.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+When the system boots each driver should get a fair share of the
+available MSIs, the quota achieves this.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5d70f49..0771508 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -511,7 +511,6 @@ static void msi_kobj_release(struct kobject *kobj)
- {
- 	struct msi_desc *entry = to_msi_desc(kobj);
- 
--	pci_dev_put(entry->dev);
- 	kfree(entry);
- }
- 
-@@ -534,13 +533,10 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 	list_for_each_entry(entry, &pdev->msi_list, list) {
- 		kobj = &entry->kobj;
- 		kobj->kset = pdev->msi_kset;
--		pci_dev_get(pdev);
- 		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
- 				     "%u", entry->irq);
--		if (ret) {
--			pci_dev_put(pdev);
-+		if (ret)
- 			return ret;
--		}
- 	}
- 
- 	return 0;
--- 
-1.8.4
+But ideally the sysadmin would then be able to override that, and give
+more MSIs to one device, the quota doesn't allow that.
+
+Hopefully we'll see the number of available MSIs grow faster than the
+number required by devices (usually driven by NR_CPUs), and so this will
+become a non-problem.
+
+cheers
 
