@@ -1,226 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:51608 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751702Ab3JIM3K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 08:29:10 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Pratyush Anand' <pratyush.anand@st.com>
-Cc: 'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'SRIKANTH TUMKUR SHIVANAND' <ts.srikanth@samsung.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <000401cec4c6$dc415180$94c3f480$%han@samsung.com>
- <52551C6E.1040404@ti.com> <003901cec4d0$5d83e650$188bb2f0$%han@samsung.com>
- <5255266B.6040809@ti.com> <000501cec4d7$1233a3f0$369aebd0$%han@samsung.com>
- <52552F84.2020901@ti.com> <000c01cec4dd$32d92070$988b6150$%han@samsung.com>
- <20131009111333.GC14126@pratyush-vbox>
-In-reply-to: <20131009111333.GC14126@pratyush-vbox>
-Subject: Re: [PATCH] PCI: designware: Add irq_create_mapping()
-Date: Wed, 09 Oct 2013 21:29:07 +0900
-Message-id: <000901cec4eb$26377390$72a65ab0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:56428 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753344Ab3J0Ajw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 Oct 2013 20:39:52 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4qv2x1MjB=cW6QNevcQcq7dYtk-wC-HRTq8XEz2Xac-g@mail.gmail.com>
+References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
+ <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
+ <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com>
+ <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
+ <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
+ <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
+ <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com>
+ <CAE9FiQUPgHtQ-p6R3MR+j=gKiQPcW5F2nqB=FwJdEovFLsuXjA@mail.gmail.com> <CAErSpo4qv2x1MjB=cW6QNevcQcq7dYtk-wC-HRTq8XEz2Xac-g@mail.gmail.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Sun, 27 Oct 2013 02:39:30 +0200
+Message-ID: <CAMxnaaUdN7k7wjUKW53zELb9wRwBRU_arNXNwrJTSSMRH=rQZQ@mail.gmail.com>
+Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 09, 2013 8:14 PM, Pratyush Anand wrote:
-> On Wed, Oct 09, 2013 at 06:49:15PM +0800, Jingoo Han wrote:
-> > On Wednesday, October 09, 2013 7:27 PM, Kishon Vijay Abraham I wrote:
-> > > On Wednesday 09 October 2013 03:35 PM, Jingoo Han wrote:
-> > > > On Wednesday, October 09, 2013 6:48 PM, Kishon Vijay Abraham I wrote:
-> > > >> On Wednesday 09 October 2013 02:47 PM, Jingoo Han wrote:
-> > > >>> On Wednesday, October 09, 2013 6:06 PM, Kishon Vijay Abraham I wrote:
-> > > >>>> On Wednesday 09 October 2013 01:39 PM, Jingoo Han wrote:
-> > > >>>>> Without irq_create_mapping(), the correct irq number cannot be
-> > > >>>>> provided. In this case, it makes problem such as NULL deference.
-> > > >>>>> Thus, irq_create_mapping() should be added for MSI.
-> > > >>>>>
-> > > >>>>> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> > > >>>>> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> > > >>>>> ---
-> > > >>>>> Tested on Exynos5440.
-> > > >>>>>
-> > > >>>>>  drivers/pci/host/pcie-designware.c |   10 ++++------
-> > > >>>>>  drivers/pci/host/pcie-designware.h |    1 +
-> > > >>>>>  2 files changed, 5 insertions(+), 6 deletions(-)
-> > > >>>>>
-> > > >>>>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > > >>>>> index 8963017..e536bb6 100644
-> > > >>>>> --- a/drivers/pci/host/pcie-designware.c
-> > > >>>>> +++ b/drivers/pci/host/pcie-designware.c
-> > > >>>>> @@ -237,6 +237,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
-> > > >>>>>  		}
-> > > >>>>>  	}
-> > > >>>>>
-> > > >>>>> +	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, 0);
-> > > >>>>> +
-> > > >>>>
-> > > >>>> I think irq_create_mapping should be done for all the MSI irq lines instead of
-> > > >>>> only the first line. So you might have to do for MAX_MSI_IRQS lines.
-> > > >>
-> > > >> Maybe it should be only till MAX_MSI_IRQS-1?
-> > >
-> > > I meant something like this,
-> > >
-> > > 	for (i = 0; i < MAX_MSI_IRQS; i++)
-> > > 		irq_create_mapping(pp->irq_domain, i);
-> > >
-> > > That didn't give me any issues though.
-> >
-> > However, no driver calls irq_create_mapping() like this.
-> > For example, Tegra PCI driver gives 'hwirq' as single offset value
-> > to irq_create_mapping() without any loop.
-> >
-> > static int tegra_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
-> >                                struct msi_desc *desc)
-> > {
-> > 	hwirq = tegra_msi_alloc(msi);
-> > 	irq = irq_create_mapping(msi->domain, hwirq);
-> >
-> > Maybe, the following can be used, it uses 'pos0' as the offset value.
-> >
-> > 	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, pos0);
-> > 	irq = pp->msi_irq_start;
-> >
-> 
-> Documentation/IRQ-domain.txt says that "The irq_create_mapping()
-> function must be called *atleast once* before any call to
-> irq_find_mapping(), lest the descriptor will not be allocated."
-> 
-> So for sure current code need to be modified.
-> 
-> Now, you can create the mapping statically during initialization and
-> then use it dynamically whenever needed. In that case what Kishon
-> suggested is right,  something like following should work.
-> 
->  	for (i = 0; i < MAX_MSI_IRQS; i++)
->  		irq_create_mapping(pp->irq_domain, i);
->         pp->msi_irq_start = irq_find_mapping(pp->irq_domain, 0);
-> 
-> But, I am not sure that created mapping is continuous. I mean,
-> difference between irq returned by
-> irq_find_mapping(pp->irq_domain, 0)
-> &
-> irq_find_mapping(pp->irq_domain, 9)
-> is always 9. If that is not the case then, static assignment of
-> msi_irq_start will not work. May be you need something as follows:
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 8963017..e6749e8 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -157,7 +157,7 @@ static struct irq_chip dw_msi_irq_chip = {
->  void dw_handle_msi_irq(struct pcie_port *pp)
->  {
->         unsigned long val;
-> -       int i, pos;
-> +       int i, pos, irq;
-> 
->         for (i = 0; i < MAX_MSI_CTRLS; i++) {
->                 dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
-> @@ -165,8 +165,9 @@ void dw_handle_msi_irq(struct pcie_port *pp)
->                 if (val) {
->                         pos = 0;
->                         while ((pos = find_next_bit(&val, 32, pos)) != 32) {
-> -                               generic_handle_irq(pp->msi_irq_start
-> -                                       + (i * 32) + pos);
-> +                               irq = irq_find_mapping(pp->irq_domain,
-> +                                               i * 32 + pos);
-> +                               generic_handle_irq(irq);
->                                 pos++;
->                         }
->                 }
-> @@ -237,9 +238,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
->                 }
->         }
-> 
-> -       irq = (pp->msi_irq_start + pos0);
-> -
-> -       if ((irq + no_irqs) > (pp->msi_irq_start + MAX_MSI_IRQS-1))
-> +       irq = irq_find_mapping(pp->irq_domain, pos0);
-> +       if (!irq)
->                 goto no_valid_irq;
-> 
->         i = 0;
-> @@ -270,6 +270,7 @@ static void clear_irq(unsigned int irq)
->         struct irq_desc *desc;
->         struct msi_desc *msi;
->         struct pcie_port *pp;
-> +       struct irq_data *data = irq_get_irq_data(irq);
-> 
->         /* get the port structure */
->         desc = irq_to_desc(irq);
-> @@ -280,7 +281,7 @@ static void clear_irq(unsigned int irq)
->                 return;
->         }
-> 
-> -       pos = irq - pp->msi_irq_start;
-> +       pos = data->hwirq;
-> 
->         irq_free_desc(irq);
-> 
-> @@ -371,6 +372,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->         struct of_pci_range range;
->         struct of_pci_range_parser parser;
->         u32 val;
-> +       int i;
-> 
->         struct irq_domain *irq_domain;
-> 
-> @@ -449,7 +451,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->                         return -ENXIO;
->                 }
-> 
-> -               pp->msi_irq_start = irq_find_mapping(irq_domain, 0);
-> +               for (i = 0; i < MAX_MSI_IRQS; i++)
-> +                       irq_create_mapping(irq_domain, i);
->         }
-> 
->         if (pp->ops->host_init)
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index faccbbf..2ad56e4 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -47,7 +47,7 @@ struct pcie_port {
->         u32                     lanes;
->         struct pcie_host_ops    *ops;
->         int                     msi_irq;
-> -       int                     msi_irq_start;
-> +       struct irq_domain       *irq_domain;
->         unsigned long           msi_data;
->         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->  };
+> Sorry, I didn't understand this.  Is this supposed to be an
+> explanation of how 928bea fixes the oops that Andreas saw?  If so, can
+> you be a little more explicit about when the pci_dev got freed and
+> when pci_pme_list_scan() walked the list and accessed the freed area?
 
-Hi Pratyush Anand,
+I did some more debugging and it seems that 928bea is innocent after
+all. I added some debugging statements to pci_pme_active. The
+additional delay seems to make the oops easier to trigger and I can
+now replicate it up to
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=5137a2ee2007d9cbbbeebd14abe08357a079b607
+which makes much more sense.
 
-Ah, I see.
-Thank you for your kind and detailed comment.
+Here is what's going on (in 3.11). First of all pci_pme_activate is
+only ever called with false as the second paramter during boot. Now
+when I unplug the adapter, the first call is:
+ [<ffffffff814b1cc7>] dump_stack+0x54/0x8d
+ [<ffffffff812ae970>] pci_pme_active+0x30/0x210
+ [<ffffffff813bf2bc>] ? pci_read+0x2c/0x30 (this should be pci_stop_dev imho)
+ [<ffffffff812ac8ae>] pci_stop_bus_device+0x4e/0xa0
+ [<ffffffff812ac89b>] pci_stop_bus_device+0x3b/0xa0
+ [<ffffffff812ac89b>] pci_stop_bus_device+0x3b/0xa0
+ [<ffffffff812aca02>] pci_stop_and_remove_bus_device+0x12/0x20
+ [<ffffffff812c4698>] pciehp_unconfigure_device+0xa8/0x1b0
+ [<ffffffff812c3ff8>] pciehp_disable_slot+0x68/0x200
+ [<ffffffff812c4213>] pciehp_power_thread+0x83/0xf0
+ [<ffffffff8107b5b8>] process_one_work+0x178/0x470
+ [<ffffffff8107bf81>] worker_thread+0x121/0x3a0
+ [<ffffffff8107be60>] ? manage_workers.isra.21+0x2b0/0x2b0
+ [<ffffffff81082d80>] kthread+0xc0/0xd0
+ [<ffffffff81060000>] ? SyS_unshare+0x220/0x280
+ [<ffffffff81082cc0>] ? kthread_create_on_node+0x120/0x120
+ [<ffffffff814c07ec>] ret_from_fork+0x7c/0xb0
+ [<ffffffff81082cc0>] ? kthread_create_on_node+0x120/0x120
+tg3 0000:0a:00.0: PME# disabled
 
-Also I tested your patch on Exynos5440 with two Intel e1000e LAN cards.
-It works properly with some very trivial modification.
+This is still fine. But then it gets interesting. The next call is:
+ [<ffffffff814b1cc7>] dump_stack+0x54/0x8d
+ [<ffffffff812ae970>] pci_pme_active+0x30/0x210
+ [<ffffffff812aebb5>] __pci_enable_wake+0x65/0x160
+ [<ffffffff812aecd5>] pci_wake_from_d3+0x25/0x40
+ [<ffffffffa0511c29>] tg3_power_down+0x29/0x40 [tg3]
+ [<ffffffffa0511d4c>] tg3_close+0x10c/0x1d0 [tg3]
+ [<ffffffff813d67b5>] __dev_close_many+0x85/0xd0
+ [<ffffffff813d68cb>] dev_close_many+0x8b/0x100
+ [<ffffffff813d8dd8>] rollback_registered_many+0xd8/0x250
+ [<ffffffff813d8f7d>] rollback_registered+0x2d/0x40
+ [<ffffffff813da828>] unregister_netdevice_queue+0x58/0xb0
+ [<ffffffff813da89c>] unregister_netdev+0x1c/0x30
+ [<ffffffffa050104b>] tg3_remove_one+0x6b/0x120 [tg3]
+ [<ffffffff812b1b0b>] pci_device_remove+0x3b/0xb0
+ [<ffffffff81371c1f>] __device_release_driver+0x7f/0xf0
+ [<ffffffff81371cb3>] device_release_driver+0x23/0x30
+ [<ffffffff81371484>] bus_remove_device+0xf4/0x170
+ [<ffffffff8136df45>] device_del+0x135/0x1d0
+ [<ffffffff812ac8f4>] pci_stop_bus_device+0x94/0xa0
+ [<ffffffff812ac89b>] pci_stop_bus_device+0x3b/0xa0
+ [<ffffffff812ac89b>] pci_stop_bus_device+0x3b/0xa0
+ [<ffffffff812aca02>] pci_stop_and_remove_bus_device+0x12/0x20
+ [<ffffffff812c4698>] pciehp_unconfigure_device+0xa8/0x1b0
+ [<ffffffff812c3ff8>] pciehp_disable_slot+0x68/0x200
+ [<ffffffff812c4213>] pciehp_power_thread+0x83/0xf0
+ [<ffffffff8107b5b8>] process_one_work+0x178/0x470
+ [<ffffffff8107bf81>] worker_thread+0x121/0x3a0
+ [<ffffffff8107be60>] ? manage_workers.isra.21+0x2b0/0x2b0
+ [<ffffffff81082d80>] kthread+0xc0/0xd0
+ [<ffffffff81060000>] ? SyS_unshare+0x220/0x280
+ [<ffffffff81082cc0>] ? kthread_create_on_node+0x120/0x120
+ [<ffffffff814c07ec>] ret_from_fork+0x7c/0xb0
+ [<ffffffff81082cc0>] ? kthread_create_on_node+0x120/0x120
+tg3 0000:0a:00.0: PME# enabled
 
-I will send v2 patch as a committer.
-Of course, you will be the author of v2 patch.
-Thank you.
+On removal tg3 calls pci_wake_from_d3 to enable/disable wake-on-lan.
+This then calls pci_pme_activate(dev, true) for a device which is
+about to be deleted. The linked commit does no longer call
+pci_wake_from_d3, which "fixes" the problem.
 
-Kishon,
-I would appreciate the opportunity to discuss with you. :-)
-
-Best regards,
-Jingoo Han
-
-> 
-> Other could be what you are suggesting or Tegra is using. Do no create
-> static mapping. Whenever you need a mapping call irq_create_mapping rather
-> irq_find_mapping. That should also work, as multiple calling of irq_create_mapping
-> will not do anything more than that of irq_find_mapping.
-
+Andreas
