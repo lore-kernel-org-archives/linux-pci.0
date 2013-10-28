@@ -1,155 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26238 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754189Ab3JBRbT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:31:19 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:29034 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756983Ab3J1SWO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 14:22:14 -0400
+Message-ID: <1382984523.3410.23.camel@snotra.buserror.net>
+Subject: Re: [PATCH 02/12][v3] pci: fsl: add structure fsl_pci
+From: Scott Wood <scottwood@freescale.com>
+To: Lian Minghuan-b31939 <B31939@freescale.com>
+CC: Kumar Gala <galak@kernel.crashing.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	"linuxppc-dev@lists.ozlabs.org list" <linuxppc-dev@lists.ozlabs.org>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 08/77] PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
-Date: Wed,  2 Oct 2013 12:48:24 +0200
-Message-Id: <ea66a0ceb82b83b4fd78410a32bdbb1f5e54b4d0.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Date: Mon, 28 Oct 2013 13:22:03 -0500
+In-Reply-To: <526A086E.305@freescale.com>
+References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <1382524894-15164-2-git-send-email-Minghuan.Lian@freescale.com>
+	 <2B28E421-9B64-4CEC-9E00-8893502CE12F@kernel.crashing.org>
+	 <526A086E.305@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent re-design of MSI/MSI-X interrupts enabling
-pattern pci_enable_msi_block_auto() interface became obsolete.
+On Fri, 2013-10-25 at 13:58 +0800, Lian Minghuan-b31939 wrote:
+> Hi Kumar,
+> 
+> please see my comment inline.
+> 
+> On 10/24/2013 12:11 PM, Kumar Gala wrote:
+> > On Oct 23, 2013, at 5:41 AM, Minghuan Lian wrote:
+> >
+> >> PowerPC uses structure pci_controller to describe PCI controller,
+> >> but ARM uses structure pci_sys_data. In order to support PowerPC
+> >> and ARM simultaneously, the patch adds a structure fsl_pci that
+> >> contains most of the members of the pci_controller and pci_sys_data.
+> >> Meanwhile, it defines a interface fsl_arch_sys_to_pci() which should
+> >> be implemented in architecture-specific PCI controller driver to
+> >> convert pci_controller or pci_sys_data to fsl_pci.
+> >>
+> >> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> >> ---
+> >> change log:
+> >> v1-v3:
+> >> Derived from http://patchwork.ozlabs.org/patch/278965/
+> >>
+> >> Based on upstream master.
+> >> Based on the discussion of RFC version here
+> >> http://patchwork.ozlabs.org/patch/274487/
+> >>
+> >> include/linux/fsl/pci-common.h | 41 +++++++++++++++++++++++++++++++++++++++++
+> >> 1 file changed, 41 insertions(+)
+> > NAK.
+> >
+> > We discussed this some at the ARM Summit this week and the feeling is we need to move to a common interface between the various ARCHs.
+> [Minghuan] Do you mean we will use the common interface instead of 
+> arch/powerpc/kernel/pci-common.c...
+> and arch/arm/kernel/bios32.c?  Who will do the code movement and when 
+> will the work be completed? The patches just move the common functions 
+> of FSL PCI controller operation which can be re-used by PowerPC and ARM. 
+> LS1 is coming, I worry about not having enough time to wait for the move 
+> is completed.
 
-To enable maximum number of MSI interrupts for a device the
-driver will first obtain that number from pci_get_msi_cap()
-function and then call pci_enable_msi_block() interface.
+I agree -- it can take quite a while to get from "the feeling is we need
+to move to a common interface" to actually having something we can use.
+If and when this unification is achieved, we can drop this extra layer.
+It's a better interim solution than just duplicating the entire driver
+and letting them drift apart.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- Documentation/PCI/MSI-HOWTO.txt |   30 ++----------------------------
- drivers/pci/msi.c               |   20 --------------------
- include/linux/pci.h             |    7 -------
- 3 files changed, 2 insertions(+), 55 deletions(-)
+-Scott
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index 40abcfb..4d0525f 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -133,33 +133,7 @@ static int foo_driver_enable_msi(struct foo_adapter *adapter, int nvec)
- 	return rc;
- }
- 
--4.2.3 pci_enable_msi_block_auto
--
--int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
--
--This variation on pci_enable_msi() call allows a device driver to request
--the maximum possible number of MSIs.  The MSI specification only allows
--interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
--
--If this function returns a positive number, it indicates that it has
--succeeded and the returned value is the number of allocated interrupts. In
--this case, the function enables MSI on this device and updates dev->irq to
--be the lowest of the new interrupts assigned to it.  The other interrupts
--assigned to the device are in the range dev->irq to dev->irq + returned
--value - 1.
--
--If this function returns a negative number, it indicates an error and
--the driver should not attempt to request any more MSI interrupts for
--this device.
--
--If the device driver needs to know the number of interrupts the device
--supports it can pass the pointer count where that number is stored. The
--device driver must decide what action to take if pci_enable_msi_block_auto()
--succeeds, but returns a value less than the number of interrupts supported.
--If the device driver does not need to know the number of interrupts
--supported, it can set the pointer count to NULL.
--
--4.2.4 pci_disable_msi
-+4.2.3 pci_disable_msi
- 
- void pci_disable_msi(struct pci_dev *dev)
- 
-@@ -175,7 +149,7 @@ on any interrupt for which it previously called request_irq().
- Failure to do so results in a BUG_ON(), leaving the device with
- MSI enabled and thus leaking its vector.
- 
--4.2.5 pci_get_msi_cap
-+4.2.4 pci_get_msi_cap
- 
- int pci_get_msi_cap(struct pci_dev *dev)
- 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 583ace1..1934519 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -849,26 +849,6 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- }
- EXPORT_SYMBOL(pci_enable_msi_block);
- 
--int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
--{
--	int ret, nvec;
--
--	ret = pci_get_msi_cap(dev);
--	if (ret < 0)
--		return ret;
--
--	if (maxvec)
--		*maxvec = ret;
--
--	nvec = ret;
--	ret = pci_enable_msi_block(dev, nvec);
--	if (ret)
--		return ret;
--
--	return nvec;
--}
--EXPORT_SYMBOL(pci_enable_msi_block_auto);
--
- void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2fa92ef..13bf88d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1154,12 +1154,6 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- 	return -1;
- }
- 
--static inline int
--pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
--{
--	return -1;
--}
--
- static inline void pci_msi_shutdown(struct pci_dev *dev)
- { }
- static inline void pci_disable_msi(struct pci_dev *dev)
-@@ -1192,7 +1186,6 @@ static inline int pci_msi_enabled(void)
- #else
- int pci_get_msi_cap(struct pci_dev *dev);
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
--int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
- void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
- int pci_msix_table_size(struct pci_dev *dev);
--- 
-1.7.7.6
+
 
