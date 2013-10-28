@@ -1,61 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:37253 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752021Ab3JIJGK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Oct 2013 05:06:10 -0400
-Message-ID: <52551C6E.1040404@ti.com>
-Date: Wed, 9 Oct 2013 14:35:50 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:49072 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756643Ab3J1Rf3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 13:35:29 -0400
+Received: by mail-ie0-f170.google.com with SMTP id at1so12086244iec.15
+        for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2013 10:35:29 -0700 (PDT)
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>,
-	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
-	"'SRIKANTH TUMKUR SHIVANAND'" <ts.srikanth@samsung.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH] PCI: designware: Add irq_create_mapping()
-References: <000401cec4c6$dc415180$94c3f480$%han@samsung.com>
-In-Reply-To: <000401cec4c6$dc415180$94c3f480$%han@samsung.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <20131028173056.GF11209@redhat.com>
+References: <525BD08C.2080101@t-online.de> <CA+55aFwN++wO=rTFaH7m6YYQX+Fv3qDt6Hxs7UnPUJpFsrwSkA@mail.gmail.com>
+ <CA+55aFy7TpvkVuPEOJ7Qqirwap1gXoD1_MrYLhgPAYuVpN8u=w@mail.gmail.com>
+ <alpine.DEB.2.02.1310251221310.5266@ionos.tec.linutronix.de>
+ <CA+55aFxw1Hm4QVeEigkByP5RppSL30oHnLoR16C=henf-a=uFQ@mail.gmail.com>
+ <CA+55aFyb72qoZ1Tjpb+=q-6+GmwoOXjfntY_zZnf300gg3d1Hg@mail.gmail.com>
+ <CA+55aFxuVpDo3LvmG9j-Hu7sENLTcsB6_CY2TA4mE-k+CuTeGg@mail.gmail.com>
+ <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com>
+ <20131027212407.GA17439@kroah.com> <CAErSpo5NmBDqRA3URAQPmw4iC3xvpDdd9JFROuftLJE1YsbPhA@mail.gmail.com>
+ <20131028173056.GF11209@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Oct 2013 11:35:09 -0600
+Message-ID: <CAErSpo4YgTgapdUcMwMWZzQqDHn8AcGu-OPQfWbP4svUerr0Ow@mail.gmail.com>
+Subject: Re: [BUG 3.12.rc4] Oops: unable to handle kernel paging request
+ during shutdown
+To: Veaceslav Falico <vfalico@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo,
+On Mon, Oct 28, 2013 at 11:30 AM, Veaceslav Falico <vfalico@redhat.com> wrote:
+> On Mon, Oct 28, 2013 at 11:23:41AM -0600, Bjorn Helgaas wrote:
+>>
+>> [+cc Veaceslav]
+>>
+>> On Sun, Oct 27, 2013 at 3:24 PM, Greg Kroah-Hartman
+>> <gregkh@linuxfoundation.org> wrote:
+>>>
+>>> On Sun, Oct 27, 2013 at 09:13:29PM +0000, Linus Torvalds wrote:
+>>>>
+>>>> .. and one more case of freeing a delayed work object (likely a kobject
+>>>> again):
+>>>>
+>>>> This time it looks like it's in the PCI layer, freeing the msi irq
+>>>> information.
+>>>>
+>>>> It looks like that code simply does
+>>>>
+>>>>     kobject_del(&entry->kobj);
+>>>>     kobject_put(&entry->kobj);
+>>>>     list_del(&entry->list);
+>>>>     kfree(entry);
+>>>>
+>>>> and the problem is that the "entry->kobj" may have *other* references
+>>>> to it, thanks to people accessing it through /sys, so despite doing a
+>>>> kojbect_del/kobject_put(), it's not at all ok to then do a "kfree()"
+>>>> on it. The embedded kobj might still be in use.
+>>>>
+>>>> Afaik, that code should do the kfree() on the kobject in the _release_
+>>>> method, not synchronously like that.
+>>>>
+>>>> We already have a msi_kobj_release(), I'm wondering why that doesn't
+>>>> do the kfree().
+>>>>
+>>>> Bjorn? Yinghai? Greg, comments about that msi kobj usage?
+>>>
+>>>
+>>> Ick, it really should be doing a kfree() in the release only.  Bjorn has
+>>> had a bunch of changes in this area recently, perhaps they are in
+>>> linux-next waiting for 3.13, and I've talked to him about getting rid of
+>>> all of the kobjects for msi files, as I don't think it's needed at all.
+>>
+>>
+>> IIRC, you said you might take a look at converting this to attributes
+>> on the train back home, so I haven't looked into it myself :)
+>>
+>>> Bjorn, don't you have a fix for this problem already done somewhere?
+>>
+>>
+>> Yep, this is clearly wrong, and Veaceslav has a patch that moves the
+>> kfree() to the release function.  I've been waiting for a consolidated
+>> repost of all his MSI-related fixes, but maybe he's been waiting for
+>> *me*.
+>
+>
+> https://lkml.org/lkml/2013/10/9/170
+>
+> My patchset is ready to be applied, in its v2 state.
+>
+> Except that the bits with kobject_del() (theoretical race) - which are done
+> in your patch "kobject: remove kset from sysfs immediately in
+> kset_unregister()", though I didn't see it accepted.
+>
+> Should I re-send the patchset?
 
-On Wednesday 09 October 2013 01:39 PM, Jingoo Han wrote:
-> Without irq_create_mapping(), the correct irq number cannot be
-> provided. In this case, it makes problem such as NULL deference.
-> Thus, irq_create_mapping() should be added for MSI.
-> 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
-> Tested on Exynos5440.
-> 
->  drivers/pci/host/pcie-designware.c |   10 ++++------
->  drivers/pci/host/pcie-designware.h |    1 +
->  2 files changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 8963017..e536bb6 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -237,6 +237,8 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
->  		}
->  	}
->  
-> +	pp->msi_irq_start = irq_create_mapping(pp->irq_domain, 0);
-> +
+Can you please repost it?  That will be easier for me than digging
+individual messages out of the archives.  Thanks, and sorry for my
+confusion.
 
-I think irq_create_mapping should be done for all the MSI irq lines instead of
-only the first line. So you might have to do for MAX_MSI_IRQS lines.
-
-Thanks
-Kishon
+Bjorn
