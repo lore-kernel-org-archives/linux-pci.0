@@ -1,82 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21118 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755863Ab3JJSG5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Oct 2013 14:06:57 -0400
-Date: Thu, 10 Oct 2013 20:07:05 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Message-ID: <20131010180704.GA15719@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <5254D397.9030307@zytor.com>
- <1381292648.645.259.camel@pasglop>
- <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
- <5256D5AB.4050105@zytor.com>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:45999 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756848Ab3J1RYC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 13:24:02 -0400
+Received: by mail-ie0-f179.google.com with SMTP id aq17so11800299iec.38
+        for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2013 10:24:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5256D5AB.4050105@zytor.com>
+In-Reply-To: <20131027212407.GA17439@kroah.com>
+References: <525BD08C.2080101@t-online.de> <CA+55aFwN++wO=rTFaH7m6YYQX+Fv3qDt6Hxs7UnPUJpFsrwSkA@mail.gmail.com>
+ <CA+55aFy7TpvkVuPEOJ7Qqirwap1gXoD1_MrYLhgPAYuVpN8u=w@mail.gmail.com>
+ <alpine.DEB.2.02.1310251221310.5266@ionos.tec.linutronix.de>
+ <CA+55aFxw1Hm4QVeEigkByP5RppSL30oHnLoR16C=henf-a=uFQ@mail.gmail.com>
+ <CA+55aFyb72qoZ1Tjpb+=q-6+GmwoOXjfntY_zZnf300gg3d1Hg@mail.gmail.com>
+ <CA+55aFxuVpDo3LvmG9j-Hu7sENLTcsB6_CY2TA4mE-k+CuTeGg@mail.gmail.com>
+ <CA+55aFz9ewd7VhCKDxJUzY4PGH7E3N-xMr=pDGQxf1PyNd1W1w@mail.gmail.com> <20131027212407.GA17439@kroah.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Oct 2013 11:23:41 -0600
+Message-ID: <CAErSpo5NmBDqRA3URAQPmw4iC3xvpDdd9JFROuftLJE1YsbPhA@mail.gmail.com>
+Subject: Re: [BUG 3.12.rc4] Oops: unable to handle kernel paging request
+ during shutdown
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Veaceslav Falico <vfalico@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 10, 2013 at 09:28:27AM -0700, H. Peter Anvin wrote:
-> On 10/10/2013 03:17 AM, Alexander Gordeev wrote:
-> > On Wed, Oct 09, 2013 at 03:24:08PM +1100, Benjamin Herrenschmidt wrote:
-> > 
-> > Ok, this suggestion sounded in one or another form by several people.
-> > What about name it pcim_enable_msix_range() and wrap in couple more
-> > helpers to complete an API:
-> > 
-> > int pcim_enable_msix_range(pdev, msix_entries, nvec, minvec);
-> > 	<0 - error code
-> > 	>0 - number of MSIs allocated, where minvec >= result <= nvec
-> > 
-> > int pcim_enable_msix(pdev, msix_entries, nvec);
-> > 	<0 - error code
-> > 	>0 - number of MSIs allocated, where 1 >= result <= nvec 
-> > 
-> > int pcim_enable_msix_exact(pdev, msix_entries, nvec);
-> > 	<0 - error code
-> > 	>0 - number of MSIs allocated, where result == nvec
-> > 
-> > The latter's return value seems odd, but I can not help to make
-> > it consistent with the first two.
-> > 
-> 
-> Is there a reason for the wrappers, as opposed to just specifying either
-> 1 or nvec as the minimum?
+[+cc Veaceslav]
 
-The wrappers are more handy IMO.
+On Sun, Oct 27, 2013 at 3:24 PM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Sun, Oct 27, 2013 at 09:13:29PM +0000, Linus Torvalds wrote:
+>> .. and one more case of freeing a delayed work object (likely a kobject again):
+>>
+>> This time it looks like it's in the PCI layer, freeing the msi irq information.
+>>
+>> It looks like that code simply does
+>>
+>>     kobject_del(&entry->kobj);
+>>     kobject_put(&entry->kobj);
+>>     list_del(&entry->list);
+>>     kfree(entry);
+>>
+>> and the problem is that the "entry->kobj" may have *other* references
+>> to it, thanks to people accessing it through /sys, so despite doing a
+>> kojbect_del/kobject_put(), it's not at all ok to then do a "kfree()"
+>> on it. The embedded kobj might still be in use.
+>>
+>> Afaik, that code should do the kfree() on the kobject in the _release_
+>> method, not synchronously like that.
+>>
+>> We already have a msi_kobj_release(), I'm wondering why that doesn't
+>> do the kfree().
+>>
+>> Bjorn? Yinghai? Greg, comments about that msi kobj usage?
+>
+> Ick, it really should be doing a kfree() in the release only.  Bjorn has
+> had a bunch of changes in this area recently, perhaps they are in
+> linux-next waiting for 3.13, and I've talked to him about getting rid of
+> all of the kobjects for msi files, as I don't think it's needed at all.
 
-I.e. can imagine people start struggling to figure out what minvec to provide:
-1 or 0? Why 1? Oh.. okay.. Or should we tolerate 0 (as opposite to -ERANGE)?
+IIRC, you said you might take a look at converting this to attributes
+on the train back home, so I haven't looked into it myself :)
 
-Well, do not know.. pcim_enable_msix(pdev, msix_entries, nvec, nvec) is 
-less readable for me than just pcim_enable_msix_exact(pdev, msix_entries,
-nvec).
+> Bjorn, don't you have a fix for this problem already done somewhere?
 
-> 	-hpa
+Yep, this is clearly wrong, and Veaceslav has a patch that moves the
+kfree() to the release function.  I've been waiting for a consolidated
+repost of all his MSI-related fixes, but maybe he's been waiting for
+*me*.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Bjorn
