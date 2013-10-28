@@ -1,117 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:42394 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753894Ab3JXGwx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Oct 2013 02:52:53 -0400
-Received: by mail-la0-f41.google.com with SMTP id el20so1542995lab.28
-        for <linux-pci@vger.kernel.org>; Wed, 23 Oct 2013 23:52:52 -0700 (PDT)
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:46214 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456Ab3J1TBx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 15:01:53 -0400
+Received: by mail-vc0-f177.google.com with SMTP id ib11so2376979vcb.22
+        for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2013 12:01:52 -0700 (PDT)
 MIME-Version: 1.0
-From: Niilona <niilona@gmail.com>
-Date: Thu, 24 Oct 2013 09:52:31 +0300
-Message-ID: <CAE5WV7OXKGvOCTOyZyK5cOCA2nxpN1WcDdqj9h+pakyhgT2sTA@mail.gmail.com>
-Subject: PATCH: pci-subsystem: ixgbe: SR-IOV: kernel way to order driver's
- virtfn -entries is odd causing libvirt failures.
-To: linux-pci@vger.kernel.org, libvir-list <libvir-list@redhat.com>
+In-Reply-To: <3E54258959B69E4282D79E01AB1F32B7046265B4@DFLE11.ent.ti.com>
+References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
+	<CAPcvp5Epf+6tOp+0=ZbBLusCzq4dF98aS+Ou0D7Nyko_VwM8KA@mail.gmail.com>
+	<3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
+	<CAPcvp5EwTb7qm_aMzqJzLX0ScrD3A0VFog1qga76dqTT5cBW3g@mail.gmail.com>
+	<3E54258959B69E4282D79E01AB1F32B7046265B4@DFLE11.ent.ti.com>
+Date: Mon, 28 Oct 2013 19:01:52 +0000
+Message-ID: <CAPcvp5G1-0n-BSrpZ=QXigk9_TGP+vWN4GLLvgFb1+VwP4sjSg@mail.gmail.com>
+Subject: Re: AER driver on ARM platform
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi.
+On 28 October 2013 18:09, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
+>
+> Andrewl,
+>
+> Thanks. I got some questions on AER irq handling below.
+>
+> >> > Yes. That was it. It probes the driver now. Did you try error inject feature?
+> >>
+> >> I did have a look at that, but it really depends on what exactly you want to test. There are
+> >> many things this won't help you with, you ought to examine the aer inject driver to see
+> >> what it does. For example if you are bringing up a new device and want to see it raise an
+> >> AER interrupt then aer inject won't help. In this case you'll need to find a way to trigger real
+> >> errors.
+> >>
+>
+> What is the IRQ line tied to the AER driver?
 
-As Bjorn Helgaas recommend, this might be the item to discuss in the wider area.
------------------------------------
+This is well defined by the PCIe standard, and codeified in
+init_service_irqs (drivers/pci/pcie/portdrv_core.c) - the code
+references sections from the standard. I believe if MSI/MSI-X is not
+available then all port service interrupts (AER, PM, HP, etc) are
+expected to come in on whatever legacy interrupt is set up in the
+device config space (most probably IRQ0). Where MSI/MSI-X are used
+there are different rules. There is nothing special about port
+services, they come throughout whatever interrupt mechanism is turned
+on in the config space, i.e. if MSI's are enabled, then the kernel
+wouldn't expect a legacy interrupt...
 
-There is a behavior effecting virtfn -entries in sysfs, when amount of
-them increases over 10.
-Run VM's through LIBVIRT -> QEMU/KVM, this causes :
-- MAC address setting by LIBVIRT disordered ie. setting targeted to wrong VF.
-- VLAN setting by LIBVIRT overall failed
+>
+> Since this is handling the root port error irq as well as the upstream/downstream device irqs. Does this driver assumes that error interrupt is raised on Legacy IRQ0 or MSI IRQ 0 for all of the ports (root, downstream and upstream)?
 
-Basics of this are in "/libvirt-x.x.x/src/util/virpci.c" ; in function below,
-which don't order virtfn entries correctly.
+The AER driver will 'attach' to any config space that reports having
+an AER capability, and use the interrupt associated with that config
+space. I can't remember much about root ports I'm afraid... (but if
+the downstream/upstream ports don't have AER capability, perhaps the
+errors would propagate towards the RC and be captured by the AER there
+(?) and the source can be distinguished by the source ID register)
 
-/*
- * Returns virtual functions of a physical function
- */
-int
-virPCIGetVirtualFunctions(const char *sysfs_path,
-                          virPCIDeviceAddressPtr **virtual_functions,
-                          unsigned int *num_virtual_functions)
-{
+>
+> When I have dumped the irq number in the AER driver it shows Legacy irq0 (when nomsi boot parameter is used) or MSI irq0. Our PCIe IP acts as a RC and has a separate IRQ line (12) for root port irq as below
+>
+> 12 Error Interrupts
+>            [0] System error (OR of fatal, nonfatal, correctable errors) (RC mode only)
+>            [1] PCIe fatal error (RC mode only)
+>            [2] PCIe non-fatal error (RC mode only)
+>            [3] PCIe correctable error (RC mode only)
+>            [4] AXI Error due to fatal condition in AXI bridge (EP/RC modes)
+>            [5] PCIe advanced error (RC mode only)
+>
+> Does that mean, I need to modify the AER driver to support separate IRQ line for root port (port_type = PCI_EXP_TYPE_ROOT_PORT) for the hw I am working on. Any help?
 
-But I let you to decide which is best way to fix this, as if every
-application reads "virtfn" entries from PF's directory, they all need
-to sort entries in alphabet. order to avoid this
-influence.
-So personally I did get over this by adding pre-zeroes to names to
-have them in sorted order in PF's directory.
+The standard (and the AER driver) expect AER errors to be reported via
+PCIe interrupts, which are either legacy, MSI or MSI-X interrupts, in
+your case the hardware appears to use it's own standard CPU interrupt.
+The port service drivers, as far as I'm aware do not support this.
 
-----------------------------
+It may be possible that your hardware does the right thing, and that
+the AER interrupt above is provided in addition for convenience.
 
-Tested :
-- kernel 3.8.0-21
-- libvirt 1.0.2 & libvirt 1.1.3
-- ixgbe 3.11.33-k, ixgbe 3.17-3 & ixgbe 3.18.7
+Perhaps someone else here may have a different view...
 
-After applying this MAC/VLAN seen to work and VM's get contacted using
-MAC's & VLAN's, which been checked using tcpdump.
-
-P.S. Tested with 3.8.0-21, but patch constructed against
-"https://github.com/torvalds/linux.git", so there is possibilty this
-works in latest kernel, but haven't checked it.
-At least ordering scheme seen in "iov.c" in same form as before.
-
------------------------------
-
->From fac886b86099dca1937730026da24c34857c4077 Mon Sep 17 00:00:00 2001
-From: Niilo Minkkinen <niilo.minkkinen@tieto.com>
-Date: Wed, 23 Oct 2013 14:50:07 +0300
-Subject: [PATCH 1/1] Fixes ordering of virtfn -entries on drivers with more
- than 10 entries ( virtfn0...virtfn9 ).
-
-This effects on drivers like Intel 82599 "ixgbe", which have max 31
-VF's (Virtual Function) on
-one PF (Physical Function).
-Currently, ordering is "diffused", which in case causes MAC/VLAN
--settings on libvirt based
-to PCI -addressing failed.
-
-Signed-off-by: Niilo Minkkinen <niilo.minkkinen@tieto.com>
-Signed-off-by: Tommy Varre <tommy.varre@tieto.com>
----
- drivers/pci/iov.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 21a7182..fbd1209 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -106,7 +106,7 @@ static int virtfn_add(struct pci_dev *dev, int id,
-int reset)
-        mutex_unlock(&iov->dev->sriov->lock);
-
-        rc = pci_bus_add_device(virtfn);
--       sprintf(buf, "virtfn%u", id);
-+       sprintf(buf, "virtfn%02u", id);
-        rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
-        if (rc)
-                goto failed1;
-@@ -149,7 +149,7 @@ static void virtfn_remove(struct pci_dev *dev, int
-id, int reset)
-                __pci_reset_function(virtfn);
-        }
-
--       sprintf(buf, "virtfn%u", id);
-+       sprintf(buf, "virtfn%02u", id);
-        sysfs_remove_link(&dev->dev.kobj, buf);
-        /*
-         * pci_stop_dev() could have been called for this virtfn already,
--- 
-1.8.1.2
-
------------------------------
-
-What you think ?
-
-Niilo Minkkinen
-niilo.minkkinen@tieto.com
+Andrew Murray
