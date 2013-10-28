@@ -1,79 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:36953 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756863Ab3JKGtv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 02:49:51 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
-	"Hanjun Guo" <guohanjun@huawei.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"Paul Mackerras" <paulus@samba.org>
-Subject: [PATCH v3] powerpc/pci: use pci_is_pcie() to simplify code
-Date: Fri, 11 Oct 2013 14:49:31 +0800
-Message-ID: <1381474171-11072-1-git-send-email-wangyijing@huawei.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:54280 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757292Ab3J1SJ6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 14:09:58 -0400
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: AER driver on ARM platform
+Date: Mon, 28 Oct 2013 18:09:55 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B7046265B4@DFLE11.ent.ti.com>
+References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
+	<CAPcvp5Epf+6tOp+0=ZbBLusCzq4dF98aS+Ou0D7Nyko_VwM8KA@mail.gmail.com>
+	<3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
+ <CAPcvp5EwTb7qm_aMzqJzLX0ScrD3A0VFog1qga76dqTT5cBW3g@mail.gmail.com>
+In-Reply-To: <CAPcvp5EwTb7qm_aMzqJzLX0ScrD3A0VFog1qga76dqTT5cBW3g@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_is_pcie() to simplify code.
+Andrewl,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Kumar Gala <galak@kernel.crashing.org>
-Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
+Thanks. I got some questions on AER irq handling below. 
 
----
+>> > Yes. That was it. It probes the driver now. Did you try error inject feature?
+>> 
+>> I did have a look at that, but it really depends on what exactly you want to test. There are
+>> many things this won't help you with, you ought to examine the aer inject driver to see
+>> what it does. For example if you are bringing up a new device and want to see it raise an
+>> AER interrupt then aer inject won't help. In this case you'll need to find a way to trigger real
+>> errors.
+>> 
 
-v2->v3: use dev->pcie_cap instead of "cap" in eeh_ops->read_config()
-        "cap" is stale after remove PCIe Cap find code.
-        Point out by Benjamin Herrenschmidt.
+What is the IRQ line tied to the AER driver? Since this is handling the root port error irq as well as the upstream/downstream device irqs. Does this driver assumes that error interrupt is raised on Legacy IRQ0 or MSI IRQ 0 for all of the ports (root, downstream and upstream)? When I have dumped the irq number in the AER driver it shows Legacy irq0 (when nomsi boot parameter is used) or MSI irq0. Our PCIe IP acts as a RC and has a separate IRQ line (12) for root port irq as below
 
----
- arch/powerpc/kernel/eeh.c     |    5 ++---
- arch/powerpc/sysdev/fsl_pci.c |    2 +-
- 2 files changed, 3 insertions(+), 4 deletions(-)
+12 Error Interrupts
+           [0] System error (OR of fatal, nonfatal, correctable errors) (RC mode only)
+           [1] PCIe fatal error (RC mode only)
+           [2] PCIe non-fatal error (RC mode only)
+           [3] PCIe correctable error (RC mode only)
+           [4] AXI Error due to fatal condition in AXI bridge (EP/RC modes)
+           [5] PCIe advanced error (RC mode only)
 
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index 55593ee..db86f97 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -189,14 +189,13 @@ static size_t eeh_gather_pci_data(struct eeh_dev *edev, char * buf, size_t len)
- 	}
- 
- 	/* If PCI-E capable, dump PCI-E cap 10, and the AER */
--	cap = pci_find_capability(dev, PCI_CAP_ID_EXP);
--	if (cap) {
-+	if (pci_is_pcie(dev)) {
- 		n += scnprintf(buf+n, len-n, "pci-e cap10:\n");
- 		printk(KERN_WARNING
- 		       "EEH: PCI-E capabilities and status follow:\n");
- 
- 		for (i=0; i<=8; i++) {
--			eeh_ops->read_config(dn, cap+4*i, 4, &cfg);
-+			eeh_ops->read_config(dn, dev->pcie_cap+4*i, 4, &cfg);
- 			n += scnprintf(buf+n, len-n, "%02x:%x\n", 4*i, cfg);
- 			printk(KERN_WARNING "EEH: PCI-E %02x: %08x\n", i, cfg);
- 		}
-diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-index ccfb50d..92e7258 100644
---- a/arch/powerpc/sysdev/fsl_pci.c
-+++ b/arch/powerpc/sysdev/fsl_pci.c
-@@ -45,7 +45,7 @@ static void quirk_fsl_pcie_header(struct pci_dev *dev)
- 	u8 hdr_type;
- 
- 	/* if we aren't a PCIe don't bother */
--	if (!pci_find_capability(dev, PCI_CAP_ID_EXP))
-+	if (!pci_is_pcie(dev))
- 		return;
- 
- 	/* if we aren't in host mode don't bother */
--- 
-1.7.1
+Does that mean, I need to modify the AER driver to support separate IRQ line for root port (port_type = PCI_EXP_TYPE_ROOT_PORT) for the hw I am working on. Any help?
 
 
+Murali Karicheri
+Linux Kernel, Software Development
+>> Andrew Murray
