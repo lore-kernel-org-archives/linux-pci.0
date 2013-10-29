@@ -1,54 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:59883 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755033Ab3JHOmN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 10:42:13 -0400
-Date: Tue, 8 Oct 2013 15:42:11 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Michal Simek <monstr@monstr.eu>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: [RFC] Architecture independent pcibios?
-Message-ID: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:46405 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751707Ab3J2WP3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 18:15:29 -0400
+Received: by mail-ie0-f169.google.com with SMTP id ar20so891721iec.14
+        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 15:15:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1382346403-29576-3-git-send-email-sachin.kamat@linaro.org>
+References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org> <1382346403-29576-3-git-send-email-sachin.kamat@linaro.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 29 Oct 2013 16:15:07 -0600
+Message-ID: <CAErSpo4Ao2PjbTt-XTyG3kfspMEdw09cOUdh=Lne1jpPcGr8LA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI: exynos: Remove redundant of_match_ptr
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Mon, Oct 21, 2013 at 3:06 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+> This driver is DT only. Hence of_match_ptr is not required.
+>
+> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+> Cc: Jingoo Han <jg1.han@samsung.com>
 
-I am working on adding PCIe support for a new architecture and looking
-at various existing implementations of pcibios functions I've realised
-that some architectures share a lot of common code. As I don't like to
-repeat the pattern again without any good reasons, I am wondering if
-there is any appetite for carving out those common functions into
-a generic place under drivers/pci/pcibios.c where they can be reused.
+Applied with Jingoo's ack to my pci/host-exynos branch for v3.13, thanks!
 
-Things that I am specifically looking at are pcibios_{alloc,free}_controller,
-pci_process_bridge_OF_ranges and anything that will make adding support
-for PCI/PCIe in a new architecture easier. Candidates for promoting
-to a generic place are the functions found in both powerpc and microblaze
-as they seem to be mostly identical, they support DT bindings and are
-64bits ready.
-
-Any comments on why that is (possibly not) a great idea and on the chance
-that a patch will get reviewed/accepted?
-
-Best regards,
-Liviu Dudau
-
-ARM Ltd Linux Platforms engineer
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+> ---
+>  drivers/pci/host/pci-exynos.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index ee692c2..c4798fb 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -647,7 +647,7 @@ static struct platform_driver exynos_pcie_driver = {
+>         .driver = {
+>                 .name   = "exynos-pcie",
+>                 .owner  = THIS_MODULE,
+> -               .of_match_table = of_match_ptr(exynos_pcie_of_match),
+> +               .of_match_table = exynos_pcie_of_match,
+>         },
+>  };
+>
+> --
+> 1.7.9.5
+>
