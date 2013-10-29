@@ -1,61 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:59368 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751733Ab3JHHco (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 03:32:44 -0400
-Date: Tue, 8 Oct 2013 09:32:40 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Seungwon Jeon <tgih.jun@samsung.com>
-Subject: Re: [PATCH RESEND] PCI: mvebu: Dynamically detect if the PEX link
- is up to enable hot plug
-Message-ID: <20131008093240.15ec78ee@skate>
-In-Reply-To: <CAErSpo6pvAQ9exEUsB0p8nmoqs0s5yzfYsstx7wh-2bqDtzBOQ@mail.gmail.com>
-References: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
-	<CAErSpo6pvAQ9exEUsB0p8nmoqs0s5yzfYsstx7wh-2bqDtzBOQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36324 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751804Ab3J2Lcj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 07:32:39 -0400
+Date: Tue, 29 Oct 2013 07:32:35 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Veaceslav Falico <vfalico@redhat.com>
+Cc: linux-pci@vger.kernel.org, torvalds@linux-foundation.org,
+	tglx@linutronix.de, yinghai@kernel.org, Knut_Petersen@t-online.de,
+	mingo@kernel.org, paulmck@linux.vnet.ibm.com, fweisbec@gmail.com,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v3 1/3] msi: free msi_desc entry only after we've
+ released the kobject
+Message-ID: <20131029113235.GB24477@neilslaptop.think-freely.org>
+References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+ <1383042632-7102-2-git-send-email-vfalico@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1383042632-7102-2-git-send-email-vfalico@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn Helgaas,
-
-On Mon, 7 Oct 2013 16:28:52 -0600, Bjorn Helgaas wrote:
-
-> I see the following mvebu patches in patchwork:
+On Tue, Oct 29, 2013 at 11:30:30AM +0100, Veaceslav Falico wrote:
+> Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
+> however kobject_put() doesn't guarantee us that it was the last reference
+> and that the kobj isn't used currently by someone else, so after we
+> kfree(entry) with the struct kobject - other users will begin using the
+> freed memory, instead of the actual kobject.
 > 
->   PCI: mvebu: Dynamically detect if the PEX link is up to enable hot plug
+> Fix this by using the kobject->release callback, which is called last when
+> the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
+> which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
+> kobj itself after ->release() was called, so we're safe).
+> 
+> In case we've failed to create the sysfs directories - just kfree()
+> it - cause we don't have the kobjects attached.
+> 
+> Also, remove the same functionality from populate_msi_sysfs(), cause on
+> failure we anyway call free_msi_irqs(), which will take care of all the
+> kobjects properly.
+> 
+> And add the forgotten pci_dev_put(pdev) in case of failure to register the
+> kobject in populate_msi_sysfs().
+> 
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Neil Horman <nhorman@tuxdriver.com>
+> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> CC: linux-pci@vger.kernel.org
+> CC: linux-kernel@vger.kernel.org
+> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+Acked-by: Neil Horman <nhorman@tuxdriver.com>
 
-This one got my Acked-by, see <20131003144457.4131aea3@skate>.
-
->   PCI: mvebu - Support a bridge with no IO port window
-
-This one has issues, as I reported to Jason Gunthorpe.
-
->   PCI: mvebu: add I/O access wrappers
-
-I need to test this one.
-
-Jason Cooper will confirm, but my understanding is that for the 3.13,
-he wanted to merge all the pci-mvebu patches, because he already has
-MSI related changes (that span PCI and irqchip drivers). Of course, if
-you agree with this.
-
-But indeed, this means that Jason C. should also take care of all other
-pci-mvebu patches :)
-
-Jason C, do not hesitate to ping me if you need testing/confirmation on
-some pci-mvebu patches I might have overlooked.
-
-Thanks,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
