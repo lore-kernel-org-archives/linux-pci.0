@@ -1,99 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40584 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754091Ab3JDTBh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 15:01:37 -0400
-Message-ID: <524F111A.8080404@oracle.com>
-Date: Fri, 04 Oct 2013 15:03:54 -0400
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-MIME-Version: 1.0
-To: Aaron Opfer <me@aaronopfer.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Clemens Ladisch <clemens@ladisch.de>,
-	xen-devel@lists.xenproject.org
-Subject: Re: ASMedia ASM1083/1085 rev3 and Xen DMA Failure
-References: <CAOsGJpcuNuaEsBHk9mV2Lh_qiygzgfLYigSsbDoBke1GJ_XG-Q@mail.gmail.com> <20131004172958.GA18743@google.com> <20131004183409.GA21802@phenom.dumpdata.com>
-In-Reply-To: <20131004183409.GA21802@phenom.dumpdata.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:43594 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751761Ab3J2KjS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Oct 2013 06:39:18 -0400
+From: Veaceslav Falico <vfalico@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: torvalds@linux-foundation.org, tglx@linutronix.de,
+	yinghai@kernel.org, Knut_Petersen@t-online.de, mingo@kernel.org,
+	paulmck@linux.vnet.ibm.com, fweisbec@gmail.com,
+	linux-kernel@vger.kernel.org,
+	Veaceslav Falico <vfalico@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH v3 1/3] msi: free msi_desc entry only after we've released the kobject
+Date: Tue, 29 Oct 2013 11:30:30 +0100
+Message-Id: <1383042632-7102-2-git-send-email-vfalico@redhat.com>
+In-Reply-To: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/04/2013 02:34 PM, Konrad Rzeszutek Wilk wrote:
-> On Fri, Oct 04, 2013 at 11:29:58AM -0600, Bjorn Helgaas wrote:
->> [+cc Konrad, xen-devel]
-> Hey Bjorn, Thanks!
->> On Wed, Oct 02, 2013 at 04:43:46PM -0400, Aaron Opfer wrote:
->>> First time submitting the kernel dev list, so if I have demonstrated
->>> gross incompetence in some way, please cut me some slack. :)
->>>
->>> I discussed with Clemens Ladisch an issue I was having that I thought
->>> was related to the driver he authored for my soundcard, but on his
->>> suggestion I experimented with other PCI devices and we have narrowed
->>> the issue to the PCI Bridge.
->>>
->>> What hints me toward DMA handling being the fault is the following
->>> message I receive during kernel initialization after rebooting from an
->>> Xen hypervisor into a baremetal-kernel, without a power-cycle:
->>>
->>> [0.012815] dmar: DRHD: handling fault status reg 3
->>> [0.012868] dmar: DMAR:[DMA Read] Request device [07:00.0] fault addr 7e00000
->>> [0.012868] DMAR:[fault reason 02] Present bit in context entry is clear
+Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
+however kobject_put() doesn't guarantee us that it was the last reference
+and that the kobj isn't used currently by someone else, so after we
+kfree(entry) with the struct kobject - other users will begin using the
+freed memory, instead of the actual kobject.
 
-But if you powercycle the system you don't see this error?
+Fix this by using the kobject->release callback, which is called last when
+the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
+which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
+kobj itself after ->release() was called, so we're safe).
 
-Have you tried booting your kernel with "intel_iommu=off"?
+In case we've failed to create the sysfs directories - just kfree()
+it - cause we don't have the kobjects attached.
 
--boris
+Also, remove the same functionality from populate_msi_sysfs(), cause on
+failure we anyway call free_msi_irqs(), which will take care of all the
+kobjects properly.
 
->> Presumably 07:00.0 is your soundcard, and apparently it did a DMA
->> read to 0x7e00000, which wasn't mapped by the IOMMU.
->>
->>> In addition to other hints, such as simple IO like changing the active
->>> port on the soundcard worked (I could hear the relays clicking) but
->>> not the functions that DMA would be used (streaming audio).
->>>
->>> The PCI devices in my system are connected via this device, as listed by lspci:
->>>
->>> 06:00.0 PCI bridge: ASMedia Technology Inc. ASM1083/1085 PCIe to PCI
->>> Bridge (rev 03)
->>>
->>> This PCI bridge works under bare-metal Linux normally (w/ various
->>> debian kernels stable/unstable/testing/backports), but under Xen
->>> Hypervisor the PCI devices connected exhibit bad behavior.
->> So it fails with Xen but works otherwise?  I assume there are other
->> PCI devices, too?  Do they work?
->>
->> If you want to open a report at http://bugzilla.kernel.org, that would
->> be a handy place to attach a complete dmesg log and "lspci -vv" output
->> for more details.
->>
->>> For
->>> instance, aformentioned sound card outputs no sound and gets no
->>> microphone input at all, and an ethernet card causes a system lockup
->>> as soon as gnome's network manager attempts DHCP over it (presumably;
->>> I did not test this as thoroughly as the sound card).
->>>
->>> I've used Xen Hypervisors 4.1 and 4.2 and had the issues I described
->>> above with both of them. I was briefly running 4.3 but I did not test
->>> the device.
-> So lets seperate some of these issues. The sound-card issue might be
-> related to the Linux kernel Xen-SWIOTLB (fixed at some point)- so could
-> you tell me what the kernel version you have?
->
-> Xen 4.3 also has numerous fixes in the IOMMU path.
->
->>> Rev1 of the ASM1083 was apparently buggy to the point of being
->>> unusable, as Clemens pointed out. I would be disappointed if this
->>> device is similarly unsalvageable,but would be happier if this buggy
->>> hardware at the very least outputted warnings to users who attempt to
->>> use it (in Xen).
->>>
->>> All The Best,
->>>
->>> Aaron Opfer
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And add the forgotten pci_dev_put(pdev) in case of failure to register the
+kobject in populate_msi_sysfs().
+
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Neil Horman <nhorman@tuxdriver.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: linux-pci@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+---
+ drivers/pci/msi.c | 31 ++++++++++++-------------------
+ 1 file changed, 12 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..5d70f49 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -374,19 +374,22 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 				iounmap(entry->mask_base);
+ 		}
+ 
++		list_del(&entry->list);
++
+ 		/*
+ 		 * Its possible that we get into this path
+ 		 * When populate_msi_sysfs fails, which means the entries
+ 		 * were not registered with sysfs.  In that case don't
+-		 * unregister them.
++		 * unregister them, and just free. Otherwise the
++		 * kobject->release will take care of freeing the entry via
++		 * msi_kobj_release().
+ 		 */
+ 		if (entry->kobj.parent) {
+ 			kobject_del(&entry->kobj);
+ 			kobject_put(&entry->kobj);
++		} else {
++			kfree(entry);
+ 		}
+-
+-		list_del(&entry->list);
+-		kfree(entry);
+ 	}
+ }
+ 
+@@ -509,6 +512,7 @@ static void msi_kobj_release(struct kobject *kobj)
+ 	struct msi_desc *entry = to_msi_desc(kobj);
+ 
+ 	pci_dev_put(entry->dev);
++	kfree(entry);
+ }
+ 
+ static struct kobj_type msi_irq_ktype = {
+@@ -522,7 +526,6 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 	struct msi_desc *entry;
+ 	struct kobject *kobj;
+ 	int ret;
+-	int count = 0;
+ 
+ 	pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
+ 	if (!pdev->msi_kset)
+@@ -534,23 +537,13 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 		pci_dev_get(pdev);
+ 		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
+ 				     "%u", entry->irq);
+-		if (ret)
+-			goto out_unroll;
+-
+-		count++;
++		if (ret) {
++			pci_dev_put(pdev);
++			return ret;
++		}
+ 	}
+ 
+ 	return 0;
+-
+-out_unroll:
+-	list_for_each_entry(entry, &pdev->msi_list, list) {
+-		if (!count)
+-			break;
+-		kobject_del(&entry->kobj);
+-		kobject_put(&entry->kobj);
+-		count--;
+-	}
+-	return ret;
+ }
+ 
+ /**
+-- 
+1.8.4
 
