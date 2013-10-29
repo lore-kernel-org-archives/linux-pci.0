@@ -1,89 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:14325 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751027Ab3JSGy7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 02:54:59 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 08/29] PCI/MSI: Make pci_enable_msix() 'nvec' argument unsigned int
-Date: Fri, 18 Oct 2013 19:12:08 +0200
-Message-Id: <93e145deeb238ad805196762cae696d3ae67f812.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:51845 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751287Ab3J2XUl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 19:20:41 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH] PCI: Report pci_pme_active() kmalloc failure
+Date: Wed, 30 Oct 2013 00:32:50 +0100
+Message-ID: <2930311.2be2J0XGoi@vostro.rjw.lan>
+In-Reply-To: <20131029231437.19711.61623.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20131029231437.19711.61623.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make pci_enable_msix() and pci_enable_msi_block() consistent
-with regard to the type of 'nvec' argument. Indeed, a number
-of vectors to allocate is a natural value, so make it unsigned.
+On Tuesday, October 29, 2013 05:14:38 PM Bjorn Helgaas wrote:
+> Previously, if kmalloc() failed, we claimed "PME# enabled" in dmesg,
+> even though we didn't add the device to the pci_pme_list.  This prints
+> a more correct warning.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- Documentation/PCI/MSI-HOWTO.txt |    3 ++-
- drivers/pci/msi.c               |    3 ++-
- include/linux/pci.h             |    5 +++--
- 3 files changed, 7 insertions(+), 4 deletions(-)
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index a091780..845edb5 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -190,7 +190,8 @@ same number.
- 
- 4.3.1 pci_enable_msix
- 
--int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
-+int pci_enable_msix(struct pci_dev *dev,
-+		    struct msix_entry *entries, unsigned int nvec)
- 
- Calling this function asks the PCI subsystem to allocate 'nvec' MSIs.
- The 'entries' argument is a pointer to an array of msix_entry structs
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index bbe3d3d..fdae3a4 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -932,7 +932,8 @@ int pci_msix_table_size(struct pci_dev *dev)
-  * of irqs or MSI-X vectors available. Driver should use the returned value to
-  * re-send its request.
-  **/
--int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
-+int pci_enable_msix(struct pci_dev *dev,
-+		    struct msix_entry *entries, unsigned int nvec)
- {
- 	int status, nr_entries;
- 	int i, j;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5cfe54c..d6832de 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1167,7 +1167,7 @@ static inline int pci_msix_table_size(struct pci_dev *dev)
- 	return 0;
- }
- static inline int pci_enable_msix(struct pci_dev *dev,
--				  struct msix_entry *entries, int nvec)
-+				  struct msix_entry *entries, int unsigned nvec)
- {
- 	return -ENOSYS;
- }
-@@ -1192,7 +1192,8 @@ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
- void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
- int pci_msix_table_size(struct pci_dev *dev);
--int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
-+int pci_enable_msix(struct pci_dev *dev,
-+		    struct msix_entry *entries, unsigned int nvec);
- void pci_msix_shutdown(struct pci_dev *dev);
- void pci_disable_msix(struct pci_dev *dev);
- void msi_remove_pci_irq_vectors(struct pci_dev *dev);
+> ---
+>  drivers/pci/pci.c |    7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index ad7fc72..36cc8d5 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1638,8 +1638,10 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+>  		if (enable) {
+>  			pme_dev = kmalloc(sizeof(struct pci_pme_device),
+>  					  GFP_KERNEL);
+> -			if (!pme_dev)
+> -				goto out;
+> +			if (!pme_dev) {
+> +				dev_warn(&dev->dev, "can't enable PME#\n");
+> +				return;
+> +			}
+>  			pme_dev->dev = dev;
+>  			mutex_lock(&pci_pme_list_mutex);
+>  			list_add(&pme_dev->list, &pci_pme_list);
+> @@ -1660,7 +1662,6 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+>  		}
+>  	}
+>  
+> -out:
+>  	dev_dbg(&dev->dev, "PME# %s\n", enable ? "enabled" : "disabled");
+>  }
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 -- 
-1.7.7.6
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
