@@ -1,106 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44343 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753635Ab3JHVAy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 17:00:54 -0400
-Date: Tue, 8 Oct 2013 17:00:26 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Jean Delvare <jdelvare@suse.de>
-Cc: Greg KH <gregkh@linuxfoundation.org>, stable@vger.kernel.org,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: [stable PATCH] iommu/vt-d: add quirk for broken interrupt
- remapping on 55XX chipsets
-Message-ID: <20131008210026.GC13089@hmsreliant.think-freely.org>
-References: <20130708154111.GA27952@kroah.com>
- <1373303174-21977-1-git-send-email-nhorman@tuxdriver.com>
- <20130723170602.GA15090@kroah.com>
- <1381265132.4598.18.camel@chaos.site>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:41331 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719Ab3J2WLq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 18:11:46 -0400
+Received: by mail-ie0-f171.google.com with SMTP id tp5so904742ieb.30
+        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 15:11:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1381265132.4598.18.camel@chaos.site>
+In-Reply-To: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
+References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 29 Oct 2013 16:11:25 -0600
+Message-ID: <CAErSpo6zQ26BccSzmSqXcptQvDADrzPxBcRfoivTO2gd9ApP8g@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: imx6: Remove redeundant of_match_ptr
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 08, 2013 at 10:45:32PM +0200, Jean Delvare wrote:
-> Hi Greg, hi Neil,
-> 
-> Le Tuesday 23 July 2013 à 10:06 -0700, Greg KH a écrit :
-> > On Mon, Jul 08, 2013 at 01:06:14PM -0400, Neil Horman wrote:
-> > > A few years back intel published a spec update:
-> > > http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
-> > > 
-> > > For the 5520 and 5500 chipsets which contained an errata (specificially errata
-> > > 53), which noted that these chipsets can't properly do interrupt remapping, and
-> > > as a result the recommend that interrupt remapping be disabled in bios.  While
-> > > many vendors have a bios update to do exactly that, not all do, and of course
-> > > not all users update their bios to a level that corrects the problem.  As a
-> > > result, occasionally interrupts can arrive at a cpu even after affinity for that
-> > > interrupt has be moved, leading to lost or spurrious interrupts (usually
-> > > characterized by the message:
-> > > kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
-> > > 
-> > > There have been several incidents recently of people seeing this error, and
-> > > investigation has shown that they have system for which their BIOS level is such
-> > > that this feature was not properly turned off.  As such, it would be good to
-> > > give them a reminder that their systems are vulnurable to this problem.  For
-> > > details of those that reported the problem, please see:
-> > > https://bugzilla.redhat.com/show_bug.cgi?id=887006
-> > > 
-> > > [ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
-> > > 
-> > > Notes: Modified early-quirks.c to include linux/irq.h, to fix warnings.  This
-> > > isn't needed in the upstream tree
-> > > 
-> > > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> > > CC: Prarit Bhargava <prarit@redhat.com>
-> > > CC: Don Zickus <dzickus@redhat.com>
-> > > CC: Don Dutile <ddutile@redhat.com>
-> > > CC: Bjorn Helgaas <bhelgaas@google.com>
-> > > CC: Asit Mallick <asit.k.mallick@intel.com>
-> > > CC: David Woodhouse <dwmw2@infradead.org>
-> > > CC: linux-pci@vger.kernel.org
-> > > CC: Joerg Roedel <joro@8bytes.org>
-> > > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > > CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
-> > > CC: Jean Delvare <jdelvare@suse.de>
-> > > CC: Greg KH <gregkh@linuxfoundation.org>
-> > > Signed-off-by: Joerg Roedel <joro@8bytes.org>
-> > > (cherry picked from commit 03bbcb2e7e292838bb0244f5a7816d194c911d62)
-> > 
-> > As 3.9-stable is now dead, this one missed that window, sorry about
-> > that.
-> 
-> Sorry for jumping in a little late, but I am looking into this again
-> because one customer of ours requested this fix. I'm a bit confused now,
-> by two different things:
-> 
-> 1* Why did Greg claim that the fix missed the 3.9-stable window while I
-> can see Neil's backport of the fix made it into 3.9.9?
-> 
-> 2* Why was the backport only added to 3.9-stable and not also
-> 3.4-longterm and 3.0 longterm?
-> 
-These are questions that you should ask Greg I think.
+[+cc Shawn]
 
-> I need the fix for the SLE11 SP3 kernel which is based on 3.0. Neil, do
-> you have a backport of the fix for this kernel? The 3.9 doesn't apply :(
-> 
-I don't.  I've backported it to RHEL6.5 (which is 2.6.32 based), so it shouldn't
-be that hard to massage into place.
+On Mon, Oct 21, 2013 at 3:06 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+> imx6_pcie_of_match is always compiled in. Hence of_match_ptr is
+> not required.
+>
+> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+> Cc: Sean Cross <xobs@kosagi.com>
 
-Neil
+I'll apply this for v3.13 if Shawn acks it, per
+http://lkml.kernel.org/r/CAErSpo5tN==4nSv2u3SUBe_L4VsWn4P7TN+LtrC172Qj1vhtog@mail.gmail.com
 
-> Thanks,
-> -- 
-> Jean Delvare
-> Suse L3 Support
-> 
-> 
+> ---
+>  drivers/pci/host/pci-imx6.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 5afa922..64aaa8e 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -558,7 +558,7 @@ static struct platform_driver imx6_pcie_driver = {
+>         .driver = {
+>                 .name   = "imx6q-pcie",
+>                 .owner  = THIS_MODULE,
+> -               .of_match_table = of_match_ptr(imx6_pcie_of_match),
+> +               .of_match_table = imx6_pcie_of_match,
+>         },
+>  };
+>
+> --
+> 1.7.9.5
+>
