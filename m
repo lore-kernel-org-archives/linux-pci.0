@@ -1,58 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37717 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751043Ab3JDJTz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Oct 2013 05:19:55 -0400
-Date: Fri, 4 Oct 2013 11:21:09 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: Ben Hutchings <bhutchings@solarflare.com>,
-	linux-mips@linux-mips.org, "VMware, Inc." <pv-drivers@vmware.com>,
-	linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org,
-	linux-s390@vger.kernel.org, Andy King <acking@vmware.com>,
-	linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
-	x86@kernel.org, Ingo Molnar <mingo@redhat.com>,
-	linux-pci@vger.kernel.org, iss_storagedev@hp.com,
-	linux-driver@qlogic.com, Tejun Heo <tj@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Jon Mason <jon.mason@intel.com>,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Ralf Baechle <ralf@linux-mips.org>,
-	e1000-devel@lists.sourceforge.net,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	linux390@de.ibm.com, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Message-ID: <20131004092108.GB4536@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
- <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
- <AE90C24D6B3A694183C094C60CF0A2F6026B7371@saturn3.aculab.com>
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:15503 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752638Ab3J2Le1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 07:34:27 -0400
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<galak@kernel.crashing.org>, <scottwood@freescale.com>,
+	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
+	<stuart.yoder@freescale.com>
+CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
+	Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 3/5 RFC] powerpc: msi: Extend the msi region interface to get info from fsl_msi
+Date: Tue, 29 Oct 2013 16:57:39 +0530
+Message-ID: <1383046062-16520-3-git-send-email-Bharat.Bhushan@freescale.com>
+In-Reply-To: <1383046062-16520-1-git-send-email-Bharat.Bhushan@freescale.com>
+References: <1383046062-16520-1-git-send-email-Bharat.Bhushan@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B7371@saturn3.aculab.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 04, 2013 at 09:31:49AM +0100, David Laight wrote:
-> > Mmmm.. I am not sure I am getting it. Could you please rephrase?
-> 
-> One possibility is for drivers than can use a lot of interrupts to
-> request a minimum number initially and then request the additional
-> ones much later on.
-> That would make it less likely that none will be available for
-> devices/drivers that need them but are initialised later.
+The FSL MSI will provide the interface to get:
+  - Number of MSI regions (which is number of MSI banks for powerpc)
+  - Get the region address range: Physical page which have the
+    address/addresses used for generating MSI interrupt
+    and size of the page.
 
-It sounds as a whole new topic for me. Isn't it?
+These are required to create IOMMU (Freescale PAMU) mapping for
+devices which are directly assigned using VFIO.
 
-Anyway, what prevents the above from being done with pci_enable_msix(nvec1) -
-pci_disable_msix() - pci_enable_msix(nvec2) where nvec1 < nvec2?
+Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
+---
+ arch/powerpc/sysdev/fsl_msi.c |   42 +++++++++++++++++++++++++++++++++++-----
+ arch/powerpc/sysdev/fsl_msi.h |   11 ++++++++-
+ 2 files changed, 45 insertions(+), 8 deletions(-)
 
-> 	David
-
+diff --git a/arch/powerpc/sysdev/fsl_msi.c b/arch/powerpc/sysdev/fsl_msi.c
+index 77efbae..eeebbf0 100644
+--- a/arch/powerpc/sysdev/fsl_msi.c
++++ b/arch/powerpc/sysdev/fsl_msi.c
+@@ -109,6 +109,34 @@ static int fsl_msi_init_allocator(struct fsl_msi *msi_data)
+ 	return 0;
+ }
+ 
++static int fsl_msi_get_region_count(void)
++{
++	int count = 0;
++	struct fsl_msi *msi_data;
++
++	list_for_each_entry(msi_data, &msi_head, list)
++		count++;
++
++	return count;
++}
++
++static int fsl_msi_get_region(int region_num, struct msi_region *region)
++{
++	struct fsl_msi *msi_data;
++
++	list_for_each_entry(msi_data, &msi_head, list) {
++		if (msi_data->bank_index == region_num) {
++			region->region_num = msi_data->bank_index;
++			/* Setting PAGE_SIZE as MSIIR is a 4 byte register */
++			region->size = PAGE_SIZE;
++			region->addr = msi_data->msiir & ~(region->size - 1);
++			return 0;
++		}
++	}
++
++	return -ENODEV;
++}
++
+ static int fsl_msi_check_device(struct pci_dev *pdev, int nvec, int type)
+ {
+ 	if (type == PCI_CAP_ID_MSIX)
+@@ -150,7 +178,8 @@ static void fsl_compose_msi_msg(struct pci_dev *pdev, int hwirq,
+ 	if (reg && (len == sizeof(u64)))
+ 		address = be64_to_cpup(reg);
+ 	else
+-		address = fsl_pci_immrbar_base(hose) + msi_data->msiir_offset;
++		address = fsl_pci_immrbar_base(hose) +
++			   (msi_data->msiir & 0xfffff);
+ 
+ 	msg->address_lo = lower_32_bits(address);
+ 	msg->address_hi = upper_32_bits(address);
+@@ -393,6 +422,7 @@ static int fsl_of_msi_probe(struct platform_device *dev)
+ 	const struct fsl_msi_feature *features;
+ 	int len;
+ 	u32 offset;
++	static atomic_t bank_index = ATOMIC_INIT(-1);
+ 
+ 	match = of_match_device(fsl_of_msi_ids, &dev->dev);
+ 	if (!match)
+@@ -436,18 +466,15 @@ static int fsl_of_msi_probe(struct platform_device *dev)
+ 				dev->dev.of_node->full_name);
+ 			goto error_out;
+ 		}
+-		msi->msiir_offset =
+-			features->msiir_offset + (res.start & 0xfffff);
+ 
+ 		/*
+ 		 * First read the MSIIR/MSIIR1 offset from dts
+ 		 * On failure use the hardcode MSIIR offset
+ 		 */
+ 		if (of_address_to_resource(dev->dev.of_node, 1, &msiir))
+-			msi->msiir_offset = features->msiir_offset +
+-					    (res.start & MSIIR_OFFSET_MASK);
++			msi->msiir = res.start + features->msiir_offset;
+ 		else
+-			msi->msiir_offset = msiir.start & MSIIR_OFFSET_MASK;
++			msi->msiir = msiir.start;
+ 	}
+ 
+ 	msi->feature = features->fsl_pic_ip;
+@@ -521,6 +548,7 @@ static int fsl_of_msi_probe(struct platform_device *dev)
+ 		}
+ 	}
+ 
++	msi->bank_index = atomic_inc_return(&bank_index);
+ 	list_add_tail(&msi->list, &msi_head);
+ 
+ 	/* The multiple setting ppc_md.setup_msi_irqs will not harm things */
+@@ -528,6 +556,8 @@ static int fsl_of_msi_probe(struct platform_device *dev)
+ 		ppc_md.setup_msi_irqs = fsl_setup_msi_irqs;
+ 		ppc_md.teardown_msi_irqs = fsl_teardown_msi_irqs;
+ 		ppc_md.msi_check_device = fsl_msi_check_device;
++		ppc_md.msi_get_region_count = fsl_msi_get_region_count;
++		ppc_md.msi_get_region = fsl_msi_get_region;
+ 	} else if (ppc_md.setup_msi_irqs != fsl_setup_msi_irqs) {
+ 		dev_err(&dev->dev, "Different MSI driver already installed!\n");
+ 		err = -ENODEV;
+diff --git a/arch/powerpc/sysdev/fsl_msi.h b/arch/powerpc/sysdev/fsl_msi.h
+index df9aa9f..a2cc5a2 100644
+--- a/arch/powerpc/sysdev/fsl_msi.h
++++ b/arch/powerpc/sysdev/fsl_msi.h
+@@ -31,14 +31,21 @@ struct fsl_msi {
+ 	struct irq_domain *irqhost;
+ 
+ 	unsigned long cascade_irq;
+-
+-	u32 msiir_offset; /* Offset of MSIIR, relative to start of CCSR */
++	phys_addr_t msiir; /* MSIIR Address in CCSR */
+ 	u32 ibs_shift; /* Shift of interrupt bit select */
+ 	u32 srs_shift; /* Shift of the shared interrupt register select */
+ 	void __iomem *msi_regs;
+ 	u32 feature;
+ 	int msi_virqs[NR_MSI_REG_MAX];
+ 
++	/*
++	 * During probe each bank is assigned a index number.
++	 * index number start from 0.
++	 * Example  MSI bank 1 = 0
++	 * MSI bank 2 = 1, and so on.
++	 */
++	int bank_index;
++
+ 	struct msi_bitmap bitmap;
+ 
+ 	struct list_head list;          /* support multiple MSI banks */
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.0.4
+
+
