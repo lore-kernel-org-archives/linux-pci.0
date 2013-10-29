@@ -1,95 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46825 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753616Ab3J2Kax (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Oct 2013 06:30:53 -0400
+From: Veaceslav Falico <vfalico@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: torvalds@linux-foundation.org, tglx@linutronix.de,
+	yinghai@kernel.org, Knut_Petersen@t-online.de, mingo@kernel.org,
+	paulmck@linux.vnet.ibm.com, fweisbec@gmail.com,
+	linux-kernel@vger.kernel.org,
+	Veaceslav Falico <vfalico@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 19/29] ntb: Make use of pcim_enable_msix/msix_exact() interfaces
-Date: Fri, 18 Oct 2013 19:12:19 +0200
-Message-Id: <99464bf7495829672d97faa9beac3d456877b7b4.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Neil Horman <nhorman@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH v3 3/3] msi: always unregister ->msi_kset within free_msi_irqs()
+Date: Tue, 29 Oct 2013 11:30:32 +0100
+Message-Id: <1383042632-7102-4-git-send-email-vfalico@redhat.com>
+In-Reply-To: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/ntb/ntb_hw.c |   38 +++++++++++++-------------------------
- 1 files changed, 13 insertions(+), 25 deletions(-)
+Currently we create and populate ->msi_kset while allocating irqs in
+populate_msi_sysfs(), however if it fails and/or we want to free the
+entries - we don't always remove it, and we might have problems if we've
+failed to allocate irqs and try it again.
 
-diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
-index de2062c..b7d6eed 100644
---- a/drivers/ntb/ntb_hw.c
-+++ b/drivers/ntb/ntb_hw.c
-@@ -1032,22 +1032,15 @@ static int ntb_setup_msix(struct ntb_device *ndev)
- 	struct msix_entry *msix;
- 	int msix_entries;
- 	int rc, i;
--	u16 val;
- 
--	if (!pdev->msix_cap) {
--		rc = -EIO;
--		goto err;
--	}
--
--	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
--	if (rc)
-+	rc = pci_msix_table_size(pdev);
-+	if (rc < 0)
- 		goto err;
--
--	msix_entries = msix_table_size(val);
--	if (msix_entries > ndev->limits.msix_cnt) {
-+	else if (rc > ndev->limits.msix_cnt) {
- 		rc = -EINVAL;
- 		goto err;
--	}
-+	} else
-+		msix_entries = rc;
- 
- 	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
- 				     GFP_KERNEL);
-@@ -1059,26 +1052,21 @@ static int ntb_setup_msix(struct ntb_device *ndev)
- 	for (i = 0; i < msix_entries; i++)
- 		ndev->msix_entries[i].entry = i;
- 
--	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
--	if (rc < 0)
--		goto err1;
--	if (rc > 0) {
-+	if (ndev->hw_type != BWD_HW)
- 		/* On SNB, the link interrupt is always tied to 4th vector.  If
- 		 * we can't get all 4, then we can't use MSI-X.
- 		 */
--		if (ndev->hw_type != BWD_HW) {
--			rc = -EIO;
--			goto err1;
--		}
--
-+		rc = pcim_enable_msix_exact(pdev,
-+					    ndev->msix_entries, msix_entries);
-+	else
-+		rc = pcim_enable_msix(pdev, ndev->msix_entries, msix_entries);
-+	if (rc < 0)
-+		goto err1;
-+	else if (rc < msix_entries) {
- 		dev_warn(&pdev->dev,
- 			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
- 			 rc);
- 		msix_entries = rc;
--
--		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
--		if (rc)
--			goto err1;
+To fix that, move the unregister part to free_msi_irqs() and remove already
+existing ones. Also, verify if it was actually created - we don't always
+call free_msi_irqs() after populate_msi_sysfs().
+
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Neil Horman <nhorman@tuxdriver.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: linux-pci@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+---
+ drivers/pci/msi.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 0771508..dafda2b 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -391,6 +391,11 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 			kfree(entry);
+ 		}
  	}
++
++	if (dev->msi_kset) {
++		kset_unregister(dev->msi_kset);
++		dev->msi_kset = NULL;
++	}
+ }
  
- 	for (i = 0; i < msix_entries; i++) {
+ static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
+@@ -904,8 +909,6 @@ void pci_disable_msi(struct pci_dev *dev)
+ 
+ 	pci_msi_shutdown(dev);
+ 	free_msi_irqs(dev);
+-	kset_unregister(dev->msi_kset);
+-	dev->msi_kset = NULL;
+ }
+ EXPORT_SYMBOL(pci_disable_msi);
+ 
+@@ -1002,8 +1005,6 @@ void pci_disable_msix(struct pci_dev *dev)
+ 
+ 	pci_msix_shutdown(dev);
+ 	free_msi_irqs(dev);
+-	kset_unregister(dev->msi_kset);
+-	dev->msi_kset = NULL;
+ }
+ EXPORT_SYMBOL(pci_disable_msix);
+ 
 -- 
-1.7.7.6
+1.8.4
 
