@@ -1,62 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:38691 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757071Ab3JIJtw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 05:49:52 -0400
-Date: Wed, 9 Oct 2013 11:49:48 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'Jason Cooper' <jason@lakedaemon.net>,
-	'Andrew Lunn' <andrew@lunn.ch>,
-	'Gregory Clement' <gregory.clement@free-electrons.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	'Sean Cross' <xobs@kosagi.com>
-Subject: Re: [PATCH] PCI: designware: Make dw_pcie_rd_own_conf(), etc.,
- static
-Message-ID: <20131009114948.397578bf@skate>
-In-Reply-To: <001d01cec48f$8faf2270$af0d6750$%han@samsung.com>
-References: <20131008000435.12954.92136.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<CAErSpo6KauiOBXh3QOS9=6QC_bjQqTgiDtnCAo1eb0d=uKgo-A@mail.gmail.com>
-	<20131008060643.GA13048@pratyush-vbox>
-	<001d01cec48f$8faf2270$af0d6750$%han@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx1.redhat.com ([209.132.183.28]:43503 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751732Ab3J2Qt7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Oct 2013 12:49:59 -0400
+Date: Tue, 29 Oct 2013 17:47:20 +0100
+From: Veaceslav Falico <vfalico@redhat.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Neil Horman <nhorman@tuxdriver.com>
+Subject: Re: [PATCH v3 1/3] msi: free msi_desc entry only after we've
+ released the kobject
+Message-ID: <20131029164720.GO692@redhat.com>
+References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+ <1383042632-7102-2-git-send-email-vfalico@redhat.com>
+ <CA+55aFxt9KnmZnK5QdkPcpHNR+Ath5WTzhRibu5Y=xOhiz3fzA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <CA+55aFxt9KnmZnK5QdkPcpHNR+Ath5WTzhRibu5Y=xOhiz3fzA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jingoo Han,
+On Tue, Oct 29, 2013 at 09:34:28AM -0700, Linus Torvalds wrote:
+>On Tue, Oct 29, 2013 at 3:30 AM, Veaceslav Falico <vfalico@redhat.com> wrote:
+>>                 /*
+>>                  * Its possible that we get into this path
+>>                  * When populate_msi_sysfs fails, which means the entries
+>>                  * were not registered with sysfs.  In that case don't
+>> -                * unregister them.
+>> +                * unregister them, and just free. Otherwise the
+>> +                * kobject->release will take care of freeing the entry via
+>> +                * msi_kobj_release().
+>>                  */
+>>                 if (entry->kobj.parent) {
+>>                         kobject_del(&entry->kobj);
+>>                         kobject_put(&entry->kobj);
+>> +               } else {
+>> +                       kfree(entry);
+>>                 }
+>> -
+>> -               list_del(&entry->list);
+>> -               kfree(entry);
+>
+>So this code sequence still makes me very unhappy.
+>
+>Why does not just a simple unconditional
+>
+>        kobject_del(&entry->kobj);
+>        kobject_put(&entry->kobj);
+>
+>work for the "not registered with sysfs" case? And if the sysfs code
+>really gets confused, why not
+>
+>        if (entry->kobj.parent)
+>                kobject_del(&entry->kobj);
+>        kobject_put(&entry->kobj);
 
-On Wed, 09 Oct 2013 10:33:30 +0900, Jingoo Han wrote:
+It was fixed this way in 424eb39 ("PCI: msi: fix imbalanced refcount of msi
+irq sysfs objects"). kobject_put() still failed in case it wasn't
+registered with sysfs earlier. populate_msi_sysfs() creates an kobject for
+each entry in msi_list, and we have no idea (on fallback) up to which entry
+was it already registered, on which it failed and which entries are still
+not kobject_init_and_add()ed.
 
-> ./drivers/pci/host/pci-mvebu.c
-> @@ -243,14 +243,7 @@ static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
->         writel(PCIE_CONF_ADDR(bus->number, devfn, where),
->                port->base + PCIE_CONF_ADDR_OFF);
-> 
-> -       *val = readl(port->base + PCIE_CONF_DATA_OFF);
-> -
-> -       if (size == 1)
-> -               *val = (*val >> (8 * (where & 3))) & 0xff;
-> -       else if (size == 2)
-> -               *val = (*val >> (8 * (where & 3))) & 0xffff;
-> -
-> -       return PCIBIOS_SUCCESSFUL;
-> +       return cfg_read(port->base + PCIE_CONF_DATA_OFF, where, size, val);
->  }
-
-The cfg_read() name looks too generic to me to be globally exported in
-the kernel, but provided a more specific name is used, I'm fine with
-using that in the PCIe mvebu driver.
-
-Thanks!
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+>
+>(btw, looking at the sysfs code, this looks *very* suspicious in
+>sysfs_remove_dir():
+>
+>        struct sysfs_dirent *sd = kobj->sd;
+>
+>        spin_lock(&sysfs_assoc_lock);
+>        kobj->sd = NULL;
+>        spin_unlock(&sysfs_assoc_lock);
+>
+>and I would suggest that "sd = kobj->sd" should be done under the
+>lock, because otherwise the lock is kind of pointless..)
+>
+>Greg?
+>
+>                Linus
