@@ -1,114 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:42336 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755365Ab3JNAoy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Oct 2013 20:44:54 -0400
-From: Marek Vasut <marex@denx.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 1/2] PCI: imx6: Make reset-gpio optional
-Date: Mon, 14 Oct 2013 02:44:48 +0200
-Cc: "'Shawn Guo'" <shawn.guo@linaro.org>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Frank Li'" <lznuaa@gmail.com>,
-	"'Richard Zhu'" <r65037@freescale.com>,
-	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Tim Harvey'" <tharvey@gateworks.com>,
-	"'Yinghai Lu'" <yinghai@kernel.org>,
-	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>
-References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com> <201310121128.31801.marex@denx.de> <000501cec870$9aebcc80$d0c36580$%han@samsung.com>
-In-Reply-To: <000501cec870$9aebcc80$d0c36580$%han@samsung.com>
+Received: from mail-db8lp0187.outbound.messaging.microsoft.com ([213.199.154.187]:16023
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752167Ab3J2Lef (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 07:34:35 -0400
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<galak@kernel.crashing.org>, <scottwood@freescale.com>,
+	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
+	<stuart.yoder@freescale.com>
+CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
+	Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 2/5 RFC] powerpc: pci: Add arch specific msi region interface
+Date: Tue, 29 Oct 2013 16:57:40 +0530
+Message-ID: <1383046062-16520-4-git-send-email-Bharat.Bhushan@freescale.com>
+In-Reply-To: <1383046062-16520-1-git-send-email-Bharat.Bhushan@freescale.com>
+References: <1383046062-16520-1-git-send-email-Bharat.Bhushan@freescale.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201310140244.48433.marex@denx.de>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Han,
+This patch adds the interface to get the msi region information from arch
+specific code. The machine spicific code is not yet defined.
 
-> On Saturday, October 12, 2013 6:29 PM, Marek Vasut wrote:
-> > > On Fri, Oct 11, 2013 at 04:12:31AM +0200, Marek Vasut wrote:
-> > > > Some boards do not have a PCIe reset GPIO. To avoid probe
-> > > > failure on these boards, make the reset GPIO optional as
-> > > > well.
-> > > > 
-> > > > Signed-off-by: Marek Vasut <marex@denx.de>
-> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Cc: Frank Li <lznuaa@gmail.com>
-> > > > Cc: Richard Zhu <r65037@freescale.com>
-> > > > Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> > > > Cc: Sean Cross <xobs@kosagi.com>
-> > > > Cc: Shawn Guo <shawn.guo@linaro.org>
-> > > > Cc: Tim Harvey <tharvey@gateworks.com>
-> > > > Cc: Yinghai Lu <yinghai@kernel.org>
-> > > > ---
-> > > > 
-> > > >  drivers/pci/host/pci-imx6.c | 29 +++++++++++++++--------------
-> > > >  1 file changed, 15 insertions(+), 14 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/pci/host/pci-imx6.c
-> > > > b/drivers/pci/host/pci-imx6.c index d3639aa..8e7adce 100644
-> > > > --- a/drivers/pci/host/pci-imx6.c
-> > > > +++ b/drivers/pci/host/pci-imx6.c
-> > > > @@ -220,9 +220,12 @@ static int imx6_pcie_assert_core_reset(struct
-> > > > pcie_port *pp)
-> > > > 
-> > > >  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > > >  	
-> > > >  			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
-> > > > 
-> > > > -	gpio_set_value(imx6_pcie->reset_gpio, 0);
-> > > > -	msleep(100);
-> > > > -	gpio_set_value(imx6_pcie->reset_gpio, 1);
-> > > > +	/* Some boards don't have PCIe reset GPIO. */
-> > > > +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-> > > > +		gpio_set_value(imx6_pcie->reset_gpio, 0);
-> > > > +		msleep(100);
-> > > > +		gpio_set_value(imx6_pcie->reset_gpio, 1);
-> > > > +	}
-> > > > 
-> > > >  	return 0;
-> > > >  
-> > > >  }
-> > > > 
-> > > > @@ -447,17 +450,15 @@ static int __init imx6_pcie_probe(struct
-> > > > platform_device *pdev)
-> > > > 
-> > > >  	/* Fetch GPIOs */
-> > > >  	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-> > > > 
-> > > > -	if (!gpio_is_valid(imx6_pcie->reset_gpio)) {
-> > > > -		dev_err(&pdev->dev, "no reset-gpio defined\n");
-> > > > -		ret = -ENODEV;
-> > > > -	}
-> > > 
-> > > The 'reset-gpio' is documented as a required property in bindings doc
-> > > Documentation/devicetree/bindings/pci/designware-pcie.txt.  You need
-> > > to update bindings doc if you turn it into an optional property.
-> > 
-> > That's true, thanks for pointing it out!
-> 
-> +cc Kishon Vijay Abraham I, Pratyush Anand, Mohit KUMAR
-> 
-> Yes, right.
-> "reset-gpio" property can be moved to an optional property.
-> Also, the patch to fix 'Designware' part such as 'designware-pcie.txt'
-> can be shared with other related people as below.
-> 
->   - Samsung Exynos PCIe: Jingoo Han
->   - ST Spear PCIe: Pratyush Anand, Mohit KUMAR
->   - TI OMAP PCIe: Kishon Vijay Abraham I
+Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
+---
+ arch/powerpc/include/asm/machdep.h |    8 ++++++++
+ arch/powerpc/kernel/msi.c          |   18 ++++++++++++++++++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
-I'm in the process of rebasing the patches on top of next 2013-10-10. Right now 
-I'm getting a crash in __write_msi_msg() when my Intel "igb" reports "enabling 
-bus mastering" . Any quick idea? Seems like this MSI support is new in the pcie-
-designware.c .
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 8b48090..8d1b787 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -30,6 +30,7 @@ struct file;
+ struct pci_controller;
+ struct kimage;
+ struct pci_host_bridge;
++struct msi_region;
+ 
+ struct machdep_calls {
+ 	char		*name;
+@@ -124,6 +125,13 @@ struct machdep_calls {
+ 	int		(*setup_msi_irqs)(struct pci_dev *dev,
+ 					  int nvec, int type);
+ 	void		(*teardown_msi_irqs)(struct pci_dev *dev);
++
++	/* Returns the number of MSI regions (banks) */
++	int		(*msi_get_region_count)(void);
++
++	/* Returns the requested region's address and size */
++	int		(*msi_get_region)(int region_num,
++					  struct msi_region *region);
+ #endif
+ 
+ 	void		(*restart)(char *cmd);
+diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
+index 8bbc12d..1a67787 100644
+--- a/arch/powerpc/kernel/msi.c
++++ b/arch/powerpc/kernel/msi.c
+@@ -13,6 +13,24 @@
+ 
+ #include <asm/machdep.h>
+ 
++int arch_msi_get_region_count(void)
++{
++	if (ppc_md.msi_get_region_count) {
++		pr_debug("msi: Using platform get_region_count routine.\n");
++		return ppc_md.msi_get_region_count();
++	}
++	return 0;
++}
++
++int arch_msi_get_region(int region_num, struct msi_region *region)
++{
++	if (ppc_md.msi_get_region) {
++		pr_debug("msi: Using platform get_region routine.\n");
++		return ppc_md.msi_get_region(region_num, region);
++	}
++	return 0;
++}
++
+ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
+ {
+ 	if (!ppc_md.setup_msi_irqs || !ppc_md.teardown_msi_irqs) {
+-- 
+1.7.0.4
 
-I'll just start plumbing to see what it is.
 
-Best regards,
-Marek Vasut
