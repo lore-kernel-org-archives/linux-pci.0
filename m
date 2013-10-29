@@ -1,45 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:55360 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755122Ab3JOCo5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Oct 2013 22:44:57 -0400
-Date: Tue, 15 Oct 2013 03:44:52 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-Message-ID: <20131015024452.GA31951@srcf.ucam.org>
-References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
- <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:33733 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751040Ab3J2TPA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 15:15:00 -0400
+Received: by mail-ie0-f176.google.com with SMTP id u16so517387iet.7
+        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 12:14:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
+In-Reply-To: <1381853200-5534-1-git-send-email-marex@denx.de>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 29 Oct 2013 13:14:39 -0600
+Message-ID: <CAErSpo6v4nvKQ4W9BhnUsNEjzsXoCiLxeFY-K=z=bMZ4AFOyGg@mail.gmail.com>
+Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
+To: Marek Vasut <marex@denx.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 14, 2013 at 05:50:38PM -0600, Bjorn Helgaas wrote:
-> [+cc Rafael, Mika, Kirill, linux-pci]
-> 
-> On Mon, Oct 14, 2013 at 4:47 PM, Andreas Noever
-> <andreas.noever@gmail.com> wrote:
-> > When I unplug the Thunderbolt ethernet adapter on my MacBookPro Linux
-> > crashes a few seconds later. Using
-> > echo 1 > /sys/bus/pci/devices/0000:08:00.0/remove
-> > to remove a bridge two levels above the device triggers the fault immediately:
-> 
-> There have been significant changes in acpiphp related to Thunderbolt
-> since v3.11.
+On Tue, Oct 15, 2013 at 10:06 AM, Marek Vasut <marex@denx.de> wrote:
+> Set of random fixes for the PCIe driver for i.MX6 . With these fixes, my
+> setup with MX6Q -> PCIe bridge -> i210 ethernet adapter works as expected.
+>
+> NOTE: I'm sure this will start some discussion. There are quite a few patches
+>       that are more of a hacks. Shawn, I didn't ignore your remark about the
+>       clock patches, I will test it ASAP, I just want to have these fixes in
+>       the public so others can comment/test.
+>
+> Marek Vasut (6):
+>   PCI: imx6: Make reset-gpio optional
+>   PCI: imx6: Fix the clock for PCIe
+>   ARM: dts: imx6qdl: Fix the clock for PCIe
+>   PCI: imx6: Probe the PCIe in fs_initcall()
+>   PCI: imx6: Force Gen1 operation
+>   PCI: designware: Fix DT resource retrieval
+>
+>  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
+>  arch/arm/boot/dts/imx6qdl.dtsi                     |  4 +-
+>  drivers/pci/host/pci-imx6.c                        | 63 ++++++++++++++++------
+>  drivers/pci/host/pcie-designware.c                 | 17 +++---
+>  4 files changed, 55 insertions(+), 31 deletions(-)
 
-Apple don't expose Thunderbolt via ACPI, so it appears as native PCIe. 
-I'd be surprised if acpiphp makes a difference here.
+I'm ignoring this series for now.  I assume you'll post an updated
+series as mentioned in your Oct 17 response to "[Patch 5/6] PCI: imx6:
+Force Gen1 operation."  Please mark that series as "v2" when you post
+it.  My assumption is still that Shawn Guo will ack the
+drivers/pci/host/ pieces before I apply them [1].
 
-(Whine whine Intel continuing to refuse to provide documentation for a 
-widely shipped part whine whine)
+Bjorn
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+[1] http://marc.info/?l=linux-pci&m=138030833011687&w=2
