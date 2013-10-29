@@ -1,56 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12237 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752784Ab3JBHYi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Oct 2013 03:24:38 -0400
-Date: Wed, 2 Oct 2013 09:26:30 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Mark Lord <kernel@start.ca>
-Cc: Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:39155 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753705Ab3J2Vty (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 17:49:54 -0400
+Date: Tue, 29 Oct 2013 14:49:53 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Veaceslav Falico <vfalico@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20131002072629.GB29860@dhcp-26-207.brq.redhat.com>
-References: <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <52442975.9000603@start.ca>
- <20130926130328.GD16774@dhcp-26-207.brq.redhat.com>
- <524B8908.8080607@start.ca>
+	Neil Horman <nhorman@tuxdriver.com>
+Subject: Re: [PATCH v3 1/3] msi: free msi_desc entry only after we've
+ released the kobject
+Message-ID: <20131029214953.GB19354@kroah.com>
+References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+ <1383042632-7102-2-git-send-email-vfalico@redhat.com>
+ <CA+55aFxt9KnmZnK5QdkPcpHNR+Ath5WTzhRibu5Y=xOhiz3fzA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <524B8908.8080607@start.ca>
+In-Reply-To: <CA+55aFxt9KnmZnK5QdkPcpHNR+Ath5WTzhRibu5Y=xOhiz3fzA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 01, 2013 at 10:46:32PM -0400, Mark Lord wrote:
-> >>> The last pattern makes most of sense to me and could be updated with a more
-> >>> clear sequence - a call to (bit modified) pci_msix_table_size() followed
-> >>> by a call to pci_enable_msix(). I think this pattern can effectively
-> >>> supersede the currently recommended "loop" practice.
-> >>
-> >> The loop is still necessary, because there's a race between those two calls,
-> >> so that pci_enable_msix() can still fail due to lack of MSIX slots.
-> > 
-> > Moreover, the existing loop pattern is racy and could fail just as easily ;)
+On Tue, Oct 29, 2013 at 09:34:28AM -0700, Linus Torvalds wrote:
+> On Tue, Oct 29, 2013 at 3:30 AM, Veaceslav Falico <vfalico@redhat.com> wrote:
+> >                 /*
+> >                  * Its possible that we get into this path
+> >                  * When populate_msi_sysfs fails, which means the entries
+> >                  * were not registered with sysfs.  In that case don't
+> > -                * unregister them.
+> > +                * unregister them, and just free. Otherwise the
+> > +                * kobject->release will take care of freeing the entry via
+> > +                * msi_kobj_release().
+> >                  */
+> >                 if (entry->kobj.parent) {
+> >                         kobject_del(&entry->kobj);
+> >                         kobject_put(&entry->kobj);
+> > +               } else {
+> > +                       kfree(entry);
+> >                 }
+> > -
+> > -               list_del(&entry->list);
+> > -               kfree(entry);
 > 
-> Yes, but it then loops again to correct things.
+> So this code sequence still makes me very unhappy.
+> 
+> Why does not just a simple unconditional
+> 
+>         kobject_del(&entry->kobj);
+>         kobject_put(&entry->kobj);
+> 
+> work for the "not registered with sysfs" case? And if the sysfs code
+> really gets confused, why not
+> 
+>         if (entry->kobj.parent)
+>                 kobject_del(&entry->kobj);
+>         kobject_put(&entry->kobj);
+> 
+> (btw, looking at the sysfs code, this looks *very* suspicious in
+> sysfs_remove_dir():
+> 
+>         struct sysfs_dirent *sd = kobj->sd;
+> 
+>         spin_lock(&sysfs_assoc_lock);
+>         kobj->sd = NULL;
+>         spin_unlock(&sysfs_assoc_lock);
+> 
+> and I would suggest that "sd = kobj->sd" should be done under the
+> lock, because otherwise the lock is kind of pointless..)
+> 
+> Greg?
 
-No. If it failed it should exit the loop.
+That is really odd, but I guess it works as-is because no one ever calls
+that function on the same kobject at the same time.  I don't know what
+that is trying to do.  There has been some work by Tejun in this area
+for linux-next, but that lock and logic is still there, I'll look into
+fixing that up...
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+thanks,
+
+greg k-h
