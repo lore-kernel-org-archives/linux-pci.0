@@ -1,100 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db9lp0251.outbound.messaging.microsoft.com ([213.199.154.251]:50365
-	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753660Ab3JDJy2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 05:54:28 -0400
-From: Bhushan Bharat-R65777 <R65777@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"galak@kernel.crashing.org" <galak@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Wood Scott-B07421 <B07421@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: RE: [PATCH 2/7] iommu: add api to get iommu_domain of a device
-Date: Fri, 4 Oct 2013 09:54:22 +0000
-Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D0718FD1C@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1379575763-2091-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1379575763-2091-3-git-send-email-Bharat.Bhushan@freescale.com>
- <1380127533.3030.319.camel@ul30vt.home>
-In-Reply-To: <1380127533.3030.319.camel@ul30vt.home>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:55405 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752068Ab3J2Tqg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 15:46:36 -0400
+Received: by mail-ie0-f176.google.com with SMTP id u16so584010iet.7
+        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 12:46:36 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAHM4w1nyXCuTya+TR7Rxiw0ojmwZHwz9iUmz=cG8z_8h2wKhSw@mail.gmail.com>
+References: <1382056042-7299-1-git-send-email-tharvey@gateworks.com>
+ <201310190333.52772.marex@denx.de> <CAHM4w1nyXCuTya+TR7Rxiw0ojmwZHwz9iUmz=cG8z_8h2wKhSw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 29 Oct 2013 13:46:15 -0600
+Message-ID: <CAErSpo5NHXXZPm5wj05DSD94KkzEUkefceHPC_Zup+-APUYdKQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: imx6: fix imprecise abort handler
+To: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Marek Vasut <marex@denx.de>, Tim Harvey <tharvey@gateworks.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtcGNpLW93bmVy
-QHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5vcmdd
-DQo+IE9uIEJlaGFsZiBPZiBBbGV4IFdpbGxpYW1zb24NCj4gU2VudDogV2VkbmVzZGF5LCBTZXB0
-ZW1iZXIgMjUsIDIwMTMgMTA6MTYgUE0NCj4gVG86IEJodXNoYW4gQmhhcmF0LVI2NTc3Nw0KPiBD
-Yzogam9yb0A4Ynl0ZXMub3JnOyBiZW5oQGtlcm5lbC5jcmFzaGluZy5vcmc7IGdhbGFrQGtlcm5l
-bC5jcmFzaGluZy5vcmc7IGxpbnV4LQ0KPiBrZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eHBw
-Yy1kZXZAbGlzdHMub3psYWJzLm9yZzsgbGludXgtDQo+IHBjaUB2Z2VyLmtlcm5lbC5vcmc7IGFn
-cmFmQHN1c2UuZGU7IFdvb2QgU2NvdHQtQjA3NDIxOyBpb21tdUBsaXN0cy5saW51eC0NCj4gZm91
-bmRhdGlvbi5vcmc7IEJodXNoYW4gQmhhcmF0LVI2NTc3Nw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
-IDIvN10gaW9tbXU6IGFkZCBhcGkgdG8gZ2V0IGlvbW11X2RvbWFpbiBvZiBhIGRldmljZQ0KPiAN
-Cj4gT24gVGh1LCAyMDEzLTA5LTE5IGF0IDEyOjU5ICswNTMwLCBCaGFyYXQgQmh1c2hhbiB3cm90
-ZToNCj4gPiBUaGlzIGFwaSByZXR1cm4gdGhlIGlvbW11IGRvbWFpbiB0byB3aGljaCB0aGUgZGV2
-aWNlIGlzIGF0dGFjaGVkLg0KPiA+IFRoZSBpb21tdV9kb21haW4gaXMgcmVxdWlyZWQgZm9yIG1h
-a2luZyBBUEkgY2FsbHMgcmVsYXRlZCB0byBpb21tdS4NCj4gPiBGb2xsb3cgdXAgcGF0Y2hlcyB3
-aGljaCB1c2UgdGhpcyBBUEkgdG8ga25vdyBpb21tdSBtYXBpbmcuDQo+ID4NCj4gPiBTaWduZWQt
-b2ZmLWJ5OiBCaGFyYXQgQmh1c2hhbiA8YmhhcmF0LmJodXNoYW5AZnJlZXNjYWxlLmNvbT4NCj4g
-PiAtLS0NCj4gPiAgZHJpdmVycy9pb21tdS9pb21tdS5jIHwgICAxMCArKysrKysrKysrDQo+ID4g
-IGluY2x1ZGUvbGludXgvaW9tbXUuaCB8ICAgIDcgKysrKysrKw0KPiA+ICAyIGZpbGVzIGNoYW5n
-ZWQsIDE3IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9pb21tdS9pb21tdS5jIGIvZHJpdmVycy9pb21tdS9pb21tdS5jIGluZGV4DQo+
-ID4gZmJlOWNhNy4uNmFjNWY1MCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL2lvbW11L2lvbW11
-LmMNCj4gPiArKysgYi9kcml2ZXJzL2lvbW11L2lvbW11LmMNCj4gPiBAQCAtNjk2LDYgKzY5Niwx
-NiBAQCB2b2lkIGlvbW11X2RldGFjaF9kZXZpY2Uoc3RydWN0IGlvbW11X2RvbWFpbg0KPiA+ICpk
-b21haW4sIHN0cnVjdCBkZXZpY2UgKmRldikgIH0NCj4gPiBFWFBPUlRfU1lNQk9MX0dQTChpb21t
-dV9kZXRhY2hfZGV2aWNlKTsNCj4gPg0KPiA+ICtzdHJ1Y3QgaW9tbXVfZG9tYWluICppb21tdV9n
-ZXRfZGV2X2RvbWFpbihzdHJ1Y3QgZGV2aWNlICpkZXYpIHsNCj4gPiArCXN0cnVjdCBpb21tdV9v
-cHMgKm9wcyA9IGRldi0+YnVzLT5pb21tdV9vcHM7DQo+ID4gKw0KPiA+ICsJaWYgKHVubGlrZWx5
-KG9wcyA9PSBOVUxMIHx8IG9wcy0+Z2V0X2Rldl9pb21tdV9kb21haW4gPT0gTlVMTCkpDQo+ID4g
-KwkJcmV0dXJuIE5VTEw7DQo+ID4gKw0KPiA+ICsJcmV0dXJuIG9wcy0+Z2V0X2Rldl9pb21tdV9k
-b21haW4oZGV2KTsgfQ0KPiA+ICtFWFBPUlRfU1lNQk9MX0dQTChpb21tdV9nZXRfZGV2X2RvbWFp
-bik7DQo+IA0KPiBXaGF0IHByZXZlbnRzIHRoaXMgZnJvbSByYWNpbmcgaW9tbXVfZG9tYWluX2Zy
-ZWUoKT8gIFRoZXJlJ3Mgbm8gcmVmZXJlbmNlcw0KPiBhY3F1aXJlZCwgc28gdGhlcmUncyBubyBy
-ZWFzb24gZm9yIHRoZSBjYWxsZXIgdG8gYXNzdW1lIHRoZSBwb2ludGVyIGlzIHZhbGlkLg0KDQpT
-b3JyeSBmb3IgbGF0ZSBxdWVyeSwgc29tZWhvdyB0aGlzIGVtYWlsIHdlbnQgaW50byBhIGZvbGRl
-ciBhbmQgZXNjYXBlZDsNCg0KSnVzdCB0byBiZSBzdXJlLCB0aGVyZSBpcyBub3QgbG9jayBhdCBn
-ZW5lcmljICJzdHJ1Y3QgaW9tbXVfZG9tYWluIiwgYnV0IElQIHNwZWNpZmljIHN0cnVjdHVyZSAo
-bGluayBGU0wgZG9tYWluKSBsaW5rZWQgaW4gaW9tbXVfZG9tYWluLT5wcml2IGhhdmUgYSBsb2Nr
-LCBzbyB3ZSBuZWVkIHRvIGVuc3VyZSB0aGlzIHJhY2UgaW4gRlNMIGlvbW11IGNvZGUgKHNheSBk
-cml2ZXJzL2lvbW11L2ZzbF9wYW11X2RvbWFpbi5jKSwgcmlnaHQ/DQoNClRoYW5rcw0KLUJoYXJh
-dA0KDQo+IA0KPiA+ICAvKg0KPiA+ICAgKiBJT01NVSBncm91cHMgYXJlIHJlYWxseSB0aGUgbmF0
-cnVhbCB3b3JraW5nIHVuaXQgb2YgdGhlIElPTU1VLCBidXQNCj4gPiAgICogdGhlIElPTU1VIEFQ
-SSB3b3JrcyBvbiBkb21haW5zIGFuZCBkZXZpY2VzLiAgQnJpZGdlIHRoYXQgZ2FwIGJ5DQo+ID4g
-ZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvaW9tbXUuaCBiL2luY2x1ZGUvbGludXgvaW9tbXUu
-aCBpbmRleA0KPiA+IDdlYTMxOWUuLmZhMDQ2YmQgMTAwNjQ0DQo+ID4gLS0tIGEvaW5jbHVkZS9s
-aW51eC9pb21tdS5oDQo+ID4gKysrIGIvaW5jbHVkZS9saW51eC9pb21tdS5oDQo+ID4gQEAgLTEy
-Nyw2ICsxMjcsNyBAQCBzdHJ1Y3QgaW9tbXVfb3BzIHsNCj4gPiAgCWludCAoKmRvbWFpbl9zZXRf
-d2luZG93cykoc3RydWN0IGlvbW11X2RvbWFpbiAqZG9tYWluLCB1MzIgd19jb3VudCk7DQo+ID4g
-IAkvKiBHZXQgdGhlIG51bWVyIG9mIHdpbmRvdyBwZXIgZG9tYWluICovDQo+ID4gIAl1MzIgKCpk
-b21haW5fZ2V0X3dpbmRvd3MpKHN0cnVjdCBpb21tdV9kb21haW4gKmRvbWFpbik7DQo+ID4gKwlz
-dHJ1Y3QgaW9tbXVfZG9tYWluICooKmdldF9kZXZfaW9tbXVfZG9tYWluKShzdHJ1Y3QgZGV2aWNl
-ICpkZXYpOw0KPiA+DQo+ID4gIAl1bnNpZ25lZCBsb25nIHBnc2l6ZV9iaXRtYXA7DQo+ID4gIH07
-DQo+ID4gQEAgLTE5MCw2ICsxOTEsNyBAQCBleHRlcm4gaW50IGlvbW11X2RvbWFpbl93aW5kb3df
-ZW5hYmxlKHN0cnVjdCBpb21tdV9kb21haW4NCj4gKmRvbWFpbiwgdTMyIHduZF9uciwNCj4gPiAg
-CQkJCSAgICAgIHBoeXNfYWRkcl90IG9mZnNldCwgdTY0IHNpemUsDQo+ID4gIAkJCQkgICAgICBp
-bnQgcHJvdCk7DQo+ID4gIGV4dGVybiB2b2lkIGlvbW11X2RvbWFpbl93aW5kb3dfZGlzYWJsZShz
-dHJ1Y3QgaW9tbXVfZG9tYWluICpkb21haW4sDQo+ID4gdTMyIHduZF9ucik7DQo+ID4gK2V4dGVy
-biBzdHJ1Y3QgaW9tbXVfZG9tYWluICppb21tdV9nZXRfZGV2X2RvbWFpbihzdHJ1Y3QgZGV2aWNl
-ICpkZXYpOw0KPiA+ICAvKioNCj4gPiAgICogcmVwb3J0X2lvbW11X2ZhdWx0KCkgLSByZXBvcnQg
-YWJvdXQgYW4gSU9NTVUgZmF1bHQgdG8gdGhlIElPTU1VIGZyYW1ld29yaw0KPiA+ICAgKiBAZG9t
-YWluOiB0aGUgaW9tbXUgZG9tYWluIHdoZXJlIHRoZSBmYXVsdCBoYXMgaGFwcGVuZWQgQEAgLTI4
-NCw2DQo+ID4gKzI4NiwxMSBAQCBzdGF0aWMgaW5saW5lIHZvaWQgaW9tbXVfZG9tYWluX3dpbmRv
-d19kaXNhYmxlKHN0cnVjdA0KPiA+IGlvbW11X2RvbWFpbiAqZG9tYWluLCAgeyAgfQ0KPiA+DQo+
-ID4gK3N0YXRpYyBpbmxpbmUgc3RydWN0IGlvbW11X2RvbWFpbiAqaW9tbXVfZ2V0X2Rldl9kb21h
-aW4oc3RydWN0IGRldmljZQ0KPiA+ICsqZGV2KSB7DQo+ID4gKwlyZXR1cm4gTlVMTDsNCj4gPiAr
-fQ0KPiA+ICsNCj4gPiAgc3RhdGljIGlubGluZSBwaHlzX2FkZHJfdCBpb21tdV9pb3ZhX3RvX3Bo
-eXMoc3RydWN0IGlvbW11X2RvbWFpbg0KPiA+ICpkb21haW4sIGRtYV9hZGRyX3QgaW92YSkgIHsN
-Cj4gPiAgCXJldHVybiAwOw0KPiANCj4gDQo+IA0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9t
-IHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcGNpIiBpbiB0aGUg
-Ym9keQ0KPiBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlIG1h
-am9yZG9tbyBpbmZvIGF0DQo+IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8u
-aHRtbA0KDQo=
+On Mon, Oct 21, 2013 at 2:16 AM, Pratyush Anand
+<pratyush.anand@gmail.com> wrote:
+> Hi,
+>
+> On Sat, Oct 19, 2013 at 7:03 AM, Marek Vasut <marex@denx.de> wrote:
+>>
+>> Dear Tim Harvey,
+>>
+>> > An imprecise abort is triggered when a port behind a switch is accessed
+>> > and no device is present.  At enumeration, imprecise aborts are not
+>> > enabled
+>
+>
+>
+> I do not know the complete history. But I do not understand, why
+> imprecise aborts are not enabled during kernel enumeration.
+> What happens when PCIe switch is already connected before boot?
+> pci_common_init will try to read vendor/product ID for a non-existing
+> function during kernel enumeration itself, which should result in imprecise
+> external abort. In fact, I had observed with my system that if a switch is
+> connected to PCIe RC, then abort occurs during kernel initialization itself.
+> So a proper handling was needed. We called hook_fault_code from
+> a subsys_init pcie_init (or similar) function, which insured that abort
+> handler is called whenever, software tries to read vendor/product id of
+> a non-existing function
+>
+>>
+>> > thus this ends up getting deferred until the kernel has completed init.
+>> > At
+>> > that point we must not adjust PC - the handler must do nothing, but a
+>> > handler must exist.
+>> >
+>> > This fixes random crashes that occur right after freeing init.
+>> > This is against linux-pci/host-imx6.
+>> >
+>> > Acked-by: Marek Vasut <marex@denx.de>
+>> > Tested-by: Marek Vasut <marex@denx.de>
+>> > Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+>>
+>> Expanding CC a bit, let's have more eyes on this.
+>>
+>> > ---
+>> >  drivers/pci/host/pci-imx6.c |    6 ------
+>> >  1 file changed, 6 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+>> > index 966bac6..90fce05 100644
+>> > --- a/drivers/pci/host/pci-imx6.c
+>> > +++ b/drivers/pci/host/pci-imx6.c
+>> > @@ -200,12 +200,6 @@ static int pcie_phy_write(void __iomem *dbi_base,
+>> > int
+>> > addr, int data) static int imx6q_pcie_abort_handler(unsigned long addr,
+>> >               unsigned int fsr, struct pt_regs *regs)
+>> >  {
+>> > -     /*
+>> > -      * If it was an imprecise abort, then we need to correct the
+>> > -      * return address to be _after_ the instruction.
+>> > -      */
+>> > -     if (fsr & (1 << 10))
+>> > -             regs->ARM_pc += 4;
+>
+>
+> Just for knowledge, is there any case other than read of IDs which might
+> cause imprecise abort? If not, then this handler can be modified a bit to
+> insure
+> that it does not handle any unintended imprecise abort.
+>
+> Regards
+> Pratyush
+>
+>>
+>> >       return 0;
+>> >  }
 
+I'm sort of dubious about imx6q_pcie_abort_handler() to begin with --
+it seems like it assumes that imprecise aborts are either enabled or
+disabled.  Isn't there some way it can *check* whether that's the
+case, so it won't break if those aborts are enabled at a different
+point in the future?
+
+For now, I'll apply this to my pci/host-imx6 branch for v3.13, but let
+me know if you want to tweak it somehow.
+
+Bjorn
