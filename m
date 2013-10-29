@@ -1,66 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f170.google.com ([209.85.161.170]:48416 "EHLO
-	mail-gg0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751592Ab3JDXBX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Oct 2013 19:01:23 -0400
-Received: by mail-gg0-f170.google.com with SMTP id f4so672909ggn.1
-        for <linux-pci@vger.kernel.org>; Fri, 04 Oct 2013 16:01:23 -0700 (PDT)
-Date: Fri, 4 Oct 2013 17:01:18 -0600
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:46307 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182Ab3J2WUk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 18:20:40 -0400
+Received: by mail-ie0-f169.google.com with SMTP id ar20so900199iec.14
+        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 15:20:39 -0700 (PDT)
+Date: Tue, 29 Oct 2013 16:20:36 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rajat Jain <rajatjain.linux@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, tom.l.nguyen@intel.com,
-	yanmin.zhang@intel.com
-Subject: Re: pciehp & other hot-plug drivers (shpc etc..)
-Message-ID: <20131004230118.GB26108@google.com>
-References: <CADTPrLTuzvj3iSMdNVs2BjDFHsWqjRPM4qDkkpmv+P11LMP0JQ@mail.gmail.com>
- <20130930020500.GB28774@kroah.com>
- <CADTPrLSpfnY6Z1MgpR=C4SRH7yXJ2BKi3w5ChLpTuWL3zZWx_Q@mail.gmail.com>
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Marek Vasut <marex@denx.de>, Frank Li <lznuaa@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI: imx6: increase link startup
+Message-ID: <20131029222036.GB15159@google.com>
+References: <1382505138-23286-1-git-send-email-tharvey@gateworks.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CADTPrLSpfnY6Z1MgpR=C4SRH7yXJ2BKi3w5ChLpTuWL3zZWx_Q@mail.gmail.com>
+In-Reply-To: <1382505138-23286-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 03, 2013 at 06:08:15PM -0700, Rajat Jain wrote:
->  Hello,
+On Tue, Oct 22, 2013 at 10:12:18PM -0700, Tim Harvey wrote:
+> An increase link startup delay is required when certain PCI switches are
+> attached to the root complex.  This was tested with a Pericom switch
+> and a PLX switch.
 > 
-> On Sun, Sep 29, 2013 at 7:05 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> > On Sun, Sep 29, 2013 at 11:27:23AM -0700, Rajat Jain wrote:
-> >> Hello List,
-> >>
-> >> Today all the PCI Hot-plug drivers (shpc, acpihp, cpqhp, ibmhp etc
-> >> except pciedhp) directly claim the downstream port bridge device.
-> >> Where as in case of pciehp, the PCIe port bus driver claims the bridge
-> >> device, and service drivers (aer, pm, pciehp) simply register for the
-> >> service with it.
-> >>
-> >> 1) Does that mean that in a system where I am using a driver other
-> >> than pciehp for hot-plug (eg. shpc), I cannot use service drivers like
-> >> AER or PM on the same port (since the device would be claimed by
-> >> shpc, it would not be available to port bus driver)?
-> >
-> > It depends on your system, and you BIOS, which sets up all of this
-> > stuff.  It's up to the kernel to bind to the proper things it exposes.
+> From: Marek Vasut <marex@denx.de>
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Acked-by: Tim Harvey <tharvey@gateworks.com>
+
+I applied this with Shawn's ack to my pci/host-imx6 branch for v3.13,
+thanks!
+
+I assume the intent was that this patch was written by Marek, per the
+"From:" line you added above, so I fixed that in the patch so Marek
+appears as the author.  Let me know if this is incorrect.
+
+> ---
+>  drivers/pci/host/pci-imx6.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Actually, I just wanted to understand that on a machine where
-> shpchp.ko is to be used for hot-plug, can I still use the AER port bus
-> service driver? My understanding is NO, because shpc will claim the
-> downstream port bridge, and hence port bus driver will not be able to
-> claim it?
-
-I think you are correct, at least in principle.  Both pcie_portdriver
-and shpc_driver try to claim all PCI bridge devices.  pcie_portdrv_probe()
-succeeds only for PCIe Root Ports, Upstream Ports, and Downstream Ports.
-shpc_probe() succeeds only for bridges with the SHPC capability.  If
-one of them does claim the bridge, the driver core should not call the
-other probe method.
-
-So if you have a PCIe Root Port or switch port that has the SHPC
-capability, either pcie_portdrv_probe() or shpc_probe() will fail,
-depending on which was called first.
-
-I've never seen such a device, so I don't know whether this is a
-problem in practice.
-
-Bjorn
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 90fce05..34c571a 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -318,7 +318,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+>  	while (!dw_pcie_link_up(pp)) {
+>  		usleep_range(100, 1000);
+>  		count++;
+> -		if (count >= 10) {
+> +		if (count >= 200) {
+>  			dev_err(pp->dev, "phy link never came up\n");
+>  			dev_dbg(pp->dev,
+>  				"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+> -- 
+> 1.7.9.5
+> 
