@@ -1,58 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:26992 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755283Ab3JBRuG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Oct 2013 13:50:06 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 04/77] PCI/MSI/s390: Remove superfluous check of MSI type
-Date: Wed,  2 Oct 2013 12:48:20 +0200
-Message-Id: <bae65aa3e30dfd23bd5ed47add7310cfbb96243a.1380703262.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:41074 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830Ab3J2XOj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 19:14:39 -0400
+Received: by mail-ie0-f173.google.com with SMTP id u16so969213iet.4
+        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 16:14:39 -0700 (PDT)
+Subject: [PATCH] PCI: Report pci_pme_active() kmalloc failure
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Date: Tue, 29 Oct 2013 17:14:38 -0600
+Message-ID: <20131029231437.19711.61623.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-arch_setup_msi_irqs() hook can only be called from the generic
-MSI code which ensures correct MSI type parameter.
+Previously, if kmalloc() failed, we claimed "PME# enabled" in dmesg,
+even though we didn't add the device to the pci_pme_list.  This prints
+a more correct warning.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/s390/pci/pci.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/pci/pci.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index c79c6e4..61a3c2c 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -425,8 +425,6 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- 	int rc;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ad7fc72..36cc8d5 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1638,8 +1638,10 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+ 		if (enable) {
+ 			pme_dev = kmalloc(sizeof(struct pci_pme_device),
+ 					  GFP_KERNEL);
+-			if (!pme_dev)
+-				goto out;
++			if (!pme_dev) {
++				dev_warn(&dev->dev, "can't enable PME#\n");
++				return;
++			}
+ 			pme_dev->dev = dev;
+ 			mutex_lock(&pci_pme_list_mutex);
+ 			list_add(&pme_dev->list, &pci_pme_list);
+@@ -1660,7 +1662,6 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+ 		}
+ 	}
  
- 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
--	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
--		return -EINVAL;
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
- 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
--- 
-1.7.7.6
+-out:
+ 	dev_dbg(&dev->dev, "PME# %s\n", enable ? "enabled" : "disabled");
+ }
+ 
 
