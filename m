@@ -1,84 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:53897 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752021Ab3JIJJ2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 05:09:28 -0400
-Date: Wed, 9 Oct 2013 10:09:23 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Michal Simek <monstr@monstr.eu>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [RFC] Architecture independent pcibios?
-Message-ID: <20131009090923.GE25606@e102652-lin.cambridge.arm.com>
-References: <20131008144211.GA25231@e102652-lin.cambridge.arm.com>
- <CAErSpo5=sUJDZGm+zHw+b1h_a1YYbaGBshAutAoPBZYUCRbYkw@mail.gmail.com>
- <525438F6.3090600@gmail.com>
- <1381264135.645.230.camel@pasglop>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:43039 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758031Ab3J2Dat (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 23:30:49 -0400
+Received: by mail-ie0-f170.google.com with SMTP id at1so13325856iec.29
+        for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2013 20:30:48 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1381264135.645.230.camel@pasglop>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20131016202123.GA17866@google.com>
+References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com>
+ <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
+ <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Oct 2013 21:30:28 -0600
+Message-ID: <CAErSpo6g5vR0NMs18YZBz+6RGZd0zNeDu_=1Pk4c5a+OqHfS1g@mail.gmail.com>
+Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 08, 2013 at 09:28:55PM +0100, Benjamin Herrenschmidt wrote:
-> On Tue, 2013-10-08 at 11:55 -0500, Rob Herring wrote:
-> 
-> > > I wonder if pci_process_bridge_OF_ranges() would fit somewhere in
-> > > drivers/of?  The implementations I looked at are mostly concerned with
-> > > parsing OF resources, and they don't have much to do with PCI
-> > > directly.
-> > 
-> > This was being done until Ben weighed in:
-> > 
-> > https://lkml.org/lkml/2013/5/4/103
-> 
-> Well, I proposed an alternative (better) approach which I of course had
-> no time to actually implement yet :-)
+On Wed, Oct 16, 2013 at 2:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Oct 15, 2013 at 03:44:52AM +0100, Matthew Garrett wrote:
+>> On Mon, Oct 14, 2013 at 05:50:38PM -0600, Bjorn Helgaas wrote:
+>> > [+cc Rafael, Mika, Kirill, linux-pci]
+>> >
+>> > On Mon, Oct 14, 2013 at 4:47 PM, Andreas Noever
+>> > <andreas.noever@gmail.com> wrote:
+>> > > When I unplug the Thunderbolt ethernet adapter on my MacBookPro Linux
+>> > > crashes a few seconds later. Using
+>> > > echo 1 > /sys/bus/pci/devices/0000:08:00.0/remove
+>> > > to remove a bridge two levels above the device triggers the fault immediately:
+>> >
+>> > There have been significant changes in acpiphp related to Thunderbolt
+>> > since v3.11.
+>>
+>> Apple don't expose Thunderbolt via ACPI, so it appears as native PCIe.
+>> I'd be surprised if acpiphp makes a difference here.
+>
+> Yeah, you're right; I wasn't paying attention.
+>
+> We save a pci_dev pointer in the pci_pme_list, which of course has a
+> longer lifetime than the pci_dev itself, but we don't acquire a reference
+> on it, so I suspect the pci_dev got released before we got around to
+> doing the pci_pme_list_scan().
+>
+> Andreas, can you try the patch below?  It's against v3.12-rc2, but it
+> should apply to v3.11, too.
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index ad7fc72..8b0a2f3 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1580,6 +1580,7 @@ static void pci_pme_list_scan(struct work_struct *work)
+>                                 pci_pme_wakeup(pme_dev->dev, NULL);
+>                         } else {
+>                                 list_del(&pme_dev->list);
+> +                               pci_dev_put(pme_dev->dev);
+>                                 kfree(pme_dev);
+>                         }
+>                 }
+> @@ -1640,7 +1641,7 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+>                                           GFP_KERNEL);
+>                         if (!pme_dev)
+>                                 goto out;
+> -                       pme_dev->dev = dev;
+> +                       pme_dev->dev = pci_dev_get(dev);
+>                         mutex_lock(&pci_pme_list_mutex);
+>                         list_add(&pme_dev->list, &pci_pme_list);
+>                         if (list_is_singular(&pci_pme_list))
+> @@ -1652,6 +1653,7 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+>                         list_for_each_entry(pme_dev, &pci_pme_list, list) {
+>                                 if (pme_dev->dev == dev) {
+>                                         list_del(&pme_dev->list);
+> +                                       pci_dev_put(pme_dev->dev);
+>                                         kfree(pme_dev);
+>                                         break;
+>                                 }
 
-In order to avoid any confusion, could you please point me again to the
-relevant message(s) where you proposed your approach?
+The patch above covered up the problem, but is incorrect.  The topology is:
 
-> 
-> I have done the changes I needed to do to powerpc
-> pci_process_bridge_OF_ranges so it would be possible to move that now to
-> a generic place, but I still think it's not a great idea. It means the
-> pci_controller structure with its resources will have to become generic
-> which somewhat overlaps with the pci_host_bridge that Bjorn introduced,
-> so that's really not great.
-> 
-> I still think an arch with DT and simpler PCI code that powerpc could
-> start looking at the transition to a better model that I hinted at...
+  08:00.0 PCI bridge to [bus 09-0a] Thunderbolt Upstream Port
+  09:00.0 PCI bridge to [bus 0a]    Thunderbolt Downstream Port
+  0a:00.0 tg3 NIC
 
-As tempting as it is to start anew and with a cleaner code, I am wary
-that porting the existing platforms to the new code will take longer
-that way. My intentions are to make the (probably infrequent) task of
-adding a new architecture to the PCI infrastructure a simple and
-straighforward task. But adding code for my platform is no guarantee
-that new ones will have an easier job.
+and the sequence leading to the crash is (edited for brevity):
 
-Best regards,
-Liviu
+  remove_store(08:00.0)
+    pci_stop_and_remove_bus_device(08:00.0)     # Upstream Port
+      pci_stop_bus_device(08:00.0)
+        pci_stop_bus_device(09:00.0)            # Downstream Port
+          pci_stop_bus_device(0a:00.0)          # tg3 device
+            pci_stop_dev(0a:00.0)
+              pci_pme_active(0a:00.0, false)    # remove from pci_pme_list
+              device_del(0a:00.0)
+                device_release_driver
+                  tg3_remove_one
+                    unregister_netdev
+                      dev->netdev_ops->ndo_stop # tg3_close
+                      tg3_close
+                        pci_wake_from_d3
+                          pci_pme_active(dev, true)     # add to pci_pme_list
+      pci_remove_bus_device(08:00.0)
+        pci_remove_bus_device(09:00.0)
+          pci_remove_bus_device(0a:00.0)
+            pci_destroy_dev(0a:00.0)
+              put_device(0a:00.0)               # drop last tg3
+pci_dev reference
+              ...
+              pci_release_dev                   # pci_dev release function
+                kfree(0a:00.0)
+  ...
+  pci_pme_list_scan
+    0a:00.0 still on list => use-after-free
 
-> 
-> Cheers,
-> Ben.
-> 
-> 
-> 
+The patch above avoids the crash by acquiring a reference when adding
+to pci_pme_list, so when pci_destroy_dev() drops the reference, it's
+not the *last* reference, so the pci_dev is not released.
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+The problem is that the reference acquired when we add to pci_pme_list
+will *never* be dropped, so we leaked the pci_dev.
 
+Bjorn
