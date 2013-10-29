@@ -1,89 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:44623 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664Ab3JJM4R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Oct 2013 08:56:17 -0400
-Message-ID: <5256A349.3090804@huawei.com>
-Date: Thu, 10 Oct 2013 20:53:29 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from co1ehsobe001.messaging.microsoft.com ([216.32.180.184]:41679
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754795Ab3J2Lew (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 07:34:52 -0400
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<galak@kernel.crashing.org>, <scottwood@freescale.com>,
+	<linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-pci@vger.kernel.org>, <agraf@suse.de>,
+	<stuart.yoder@freescale.com>
+CC: Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 0/5 RFC] vfio/pci: add interface to for MSI support with FSL PAMU
+Date: Tue, 29 Oct 2013 16:57:42 +0530
+Message-ID: <1383046062-16520-6-git-send-email-Bharat.Bhushan@freescale.com>
+In-Reply-To: <1383046062-16520-1-git-send-email-Bharat.Bhushan@freescale.com>
+References: <1383046062-16520-1-git-send-email-Bharat.Bhushan@freescale.com>
 MIME-Version: 1.0
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	"Hanjun Guo" <guohanjun@huawei.com>
-Subject: Re: [PATCH -v2] PCI: Avoid initialize MSI/MSIX if device power state
- != PCI_D0
-References: <1381408907-11724-1-git-send-email-wangyijing@huawei.com> <1381409146.2788.116.camel@deadeye.wl.decadent.org.uk>
-In-Reply-To: <1381409146.2788.116.camel@deadeye.wl.decadent.org.uk>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/10/10 20:45, Ben Hutchings wrote:
-> On Thu, 2013-10-10 at 20:41 +0800, Yijing Wang wrote:
->> Currently, if device power state != PCI_D0, we still initialize
->> device MSI/MSIX, but we won't write the MSI message to device
->> MSI/MSIX registers. It's weird, we don't configure MSI/MSIX
->> registers properly, but pci_enable_msi() or pci_enable_msix()
->> return success, and even these registers will never be updated later.
->> So I think it should return error if device power state != PCI_D0.
->>
->> ---
->>
->> v1->v2: keep __write_msi_msg() function device power state statement,
->> 	    because Ben Hutchings point out this function may be called
->> 		during device in D3 state to set irq affinity. We should not
->> 		touch that.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> 
-> S-o-b needs to be above the first '---' but perhaps Bjorn can fix that
-> up before applying.
-> 
-> Acked-by: Ben Hutchings <bhutchings@solarflare.com>
+From: Bharat Bhushan <bharat.bhushan@freescale.com>
 
+PAMU (FSL IOMMU) has a concept of primary window and subwindows.
+Primary window corresponds to the complete guest iova address space
+(including MSI space), with respect to IOMMU_API this is termed as
+geometry. IOVA Base of subwindow is determined from the number of
+subwindows (configurable using iommu API).
+MSI I/O page must be within the geometry and maximum supported
+subwindows, so MSI IO-page is setup just after guest memory iova space.
 
-Thanks very much, I will update it, so Bjorn can apply it easily.
+So first four patches are for defining the interface to get:
+  - Number of MSI regions (which is number of MSI banks for powerpc)
+  - MSI-region address range: Physical page which have the
+    address/addresses used for generating MSI interrupt
+    and size of the page.
 
-> 
->> ---
->>  drivers/pci/msi.c |    6 +++---
->>  1 files changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index d5f90d6..604265c 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -831,7 +831,7 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
->>  	int status, maxvec;
->>  	u16 msgctl;
->>  
->> -	if (!dev->msi_cap)
->> +	if (!dev->msi_cap || dev->current_state != PCI_D0)
->>  		return -EINVAL;
->>  
->>  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
->> @@ -862,7 +862,7 @@ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
->>  	int ret, nvec;
->>  	u16 msgctl;
->>  
->> -	if (!dev->msi_cap)
->> +	if (!dev->msi_cap || dev->current_state != PCI_D0)
->>  		return -EINVAL;
->>  
->>  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
->> @@ -955,7 +955,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
->>  	int status, nr_entries;
->>  	int i, j;
->>  
->> -	if (!entries || !dev->msix_cap)
->> +	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
->>  		return -EINVAL;
->>  
->>  	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
-> 
+Last Patch is for setting up MSI iova-base for vfio devices assigned
+in msi subsystem, so that when msi-message will be composed then this
+configured iova will be used. Earlier we were using iommu interface
+for getting the configured iova which was not currect and
+Alex Williamson suggeested this type of interface.
 
+Bharat Bhushan (5):
+  pci:msi: add weak function for returning msi region info
+  powerpc: pci: Add arch specific msi region interface
+  powerpc: msi: Extend the msi region interface to get info from
+    fsl_msi
+  pci: msi: expose msi region information functions
+  vfio: setup iova-base for msi interrupts for vfio assigned device
 
--- 
-Thanks!
-Yijing
+ arch/powerpc/include/asm/machdep.h |   10 ++++
+ arch/powerpc/kernel/msi.c          |   28 ++++++++++
+ arch/powerpc/sysdev/fsl_msi.c      |  106 ++++++++++++++++++++++++++++++++++--
+ arch/powerpc/sysdev/fsl_msi.h      |   19 ++++++-
+ drivers/pci/msi.c                  |   34 ++++++++++++
+ include/linux/msi.h                |   14 +++++
+ include/linux/pci.h                |   21 +++++++
+ 7 files changed, 223 insertions(+), 9 deletions(-)
+
 
