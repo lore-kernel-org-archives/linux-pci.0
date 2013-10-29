@@ -1,239 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44580 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751339Ab3J2Kay (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Oct 2013 06:30:54 -0400
+From: Veaceslav Falico <vfalico@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: torvalds@linux-foundation.org, tglx@linutronix.de,
+	yinghai@kernel.org, Knut_Petersen@t-online.de, mingo@kernel.org,
+	paulmck@linux.vnet.ibm.com, fweisbec@gmail.com,
+	linux-kernel@vger.kernel.org,
+	Veaceslav Falico <vfalico@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH 01/11] pci: convert bus code to use dev_groups
-Date: Sun,  6 Oct 2013 23:55:40 -0700
-Message-Id: <1381128950-28125-2-git-send-email-gregkh@linuxfoundation.org>
-In-Reply-To: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
-References: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Neil Horman <nhorman@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH v3 2/3] pci: remove redundant pci_dev_get/put() on kobject (un)register
+Date: Tue, 29 Oct 2013 11:30:31 +0100
+Message-Id: <1383042632-7102-3-git-send-email-vfalico@redhat.com>
+In-Reply-To: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The dev_attrs field of struct bus_type is going away soon, dev_groups
-should be used instead.  This converts the PCI bus code to use the
-correct field.
+Currently we're pci_dev_get/put()-ing pci device on every kobject
+creation/removal. It's useless per se - the kobject is part of the device
+itself, so it should be removed when there are no users of the pdev, and is
+not a user of it.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: <linux-pci@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Neil Horman <nhorman@tuxdriver.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: linux-pci@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
 ---
+ drivers/pci/msi.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Bjorn, I can take this through my driver-core tree if you like, just let
-me know what would be the easiest for you.
-
- drivers/pci/pci-driver.c |  2 +-
- drivers/pci/pci-sysfs.c  | 73 ++++++++++++++++++++++++++++++------------------
- drivers/pci/pci.h        |  2 +-
- 3 files changed, 48 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 38f3c01..9f85960 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1319,7 +1319,7 @@ struct bus_type pci_bus_type = {
- 	.probe		= pci_device_probe,
- 	.remove		= pci_device_remove,
- 	.shutdown	= pci_device_shutdown,
--	.dev_attrs	= pci_dev_attrs,
-+	.dev_groups	= pci_dev_groups,
- 	.bus_groups	= pci_bus_groups,
- 	.drv_groups	= pci_drv_groups,
- 	.pm		= PCI_PM_OPS_PTR,
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index d8eb880..618c060 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -42,7 +42,8 @@ field##_show(struct device *dev, struct device_attribute *attr, char *buf)				\
- 									\
- 	pdev = to_pci_dev (dev);					\
- 	return sprintf (buf, format_string, pdev->field);		\
--}
-+}									\
-+static DEVICE_ATTR_RO(field)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 5d70f49..0771508 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -511,7 +511,6 @@ static void msi_kobj_release(struct kobject *kobj)
+ {
+ 	struct msi_desc *entry = to_msi_desc(kobj);
  
- pci_config_attr(vendor, "0x%04x\n");
- pci_config_attr(device, "0x%04x\n");
-@@ -73,6 +74,7 @@ static ssize_t broken_parity_status_store(struct device *dev,
- 
- 	return count;
+-	pci_dev_put(entry->dev);
+ 	kfree(entry);
  }
-+static DEVICE_ATTR_RW(broken_parity_status);
  
- static ssize_t local_cpus_show(struct device *dev,
- 			struct device_attribute *attr, char *buf)
-@@ -91,7 +93,7 @@ static ssize_t local_cpus_show(struct device *dev,
- 	buf[len] = '\0';
- 	return len;
- }
--
-+static DEVICE_ATTR_RO(local_cpus);
- 
- static ssize_t local_cpulist_show(struct device *dev,
- 			struct device_attribute *attr, char *buf)
-@@ -110,6 +112,7 @@ static ssize_t local_cpulist_show(struct device *dev,
- 	buf[len] = '\0';
- 	return len;
- }
-+static DEVICE_ATTR_RO(local_cpulist);
- 
- /*
-  * PCI Bus Class Devices
-@@ -170,6 +173,7 @@ resource_show(struct device * dev, struct device_attribute *attr, char * buf)
+@@ -534,13 +533,10 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 	list_for_each_entry(entry, &pdev->msi_list, list) {
+ 		kobj = &entry->kobj;
+ 		kobj->kset = pdev->msi_kset;
+-		pci_dev_get(pdev);
+ 		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
+ 				     "%u", entry->irq);
+-		if (ret) {
+-			pci_dev_put(pdev);
++		if (ret)
+ 			return ret;
+-		}
  	}
- 	return (str - buf);
- }
-+static DEVICE_ATTR_RO(resource);
  
- static ssize_t modalias_show(struct device *dev, struct device_attribute *attr, char *buf)
- {
-@@ -181,10 +185,11 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
- 		       (u8)(pci_dev->class >> 16), (u8)(pci_dev->class >> 8),
- 		       (u8)(pci_dev->class));
- }
-+static DEVICE_ATTR_RO(modalias);
- 
--static ssize_t is_enabled_store(struct device *dev,
--				struct device_attribute *attr, const char *buf,
--				size_t count)
-+static ssize_t enabled_store(struct device *dev,
-+			     struct device_attribute *attr, const char *buf,
-+			     size_t count)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	unsigned long val;
-@@ -208,14 +213,15 @@ static ssize_t is_enabled_store(struct device *dev,
- 	return result < 0 ? result : count;
- }
- 
--static ssize_t is_enabled_show(struct device *dev,
--			       struct device_attribute *attr, char *buf)
-+static ssize_t enabled_show(struct device *dev,
-+			    struct device_attribute *attr, char *buf)
- {
- 	struct pci_dev *pdev;
- 
- 	pdev = to_pci_dev (dev);
- 	return sprintf (buf, "%u\n", atomic_read(&pdev->enable_cnt));
- }
-+static DEVICE_ATTR_RW(enabled);
- 
- #ifdef CONFIG_NUMA
- static ssize_t
-@@ -223,6 +229,7 @@ numa_node_show(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	return sprintf (buf, "%d\n", dev->numa_node);
- }
-+static DEVICE_ATTR_RO(numa_node);
- #endif
- 
- static ssize_t
-@@ -232,6 +239,7 @@ dma_mask_bits_show(struct device *dev, struct device_attribute *attr, char *buf)
- 
- 	return sprintf (buf, "%d\n", fls64(pdev->dma_mask));
- }
-+static DEVICE_ATTR_RO(dma_mask_bits);
- 
- static ssize_t
- consistent_dma_mask_bits_show(struct device *dev, struct device_attribute *attr,
-@@ -239,6 +247,7 @@ consistent_dma_mask_bits_show(struct device *dev, struct device_attribute *attr,
- {
- 	return sprintf (buf, "%d\n", fls64(dev->coherent_dma_mask));
- }
-+static DEVICE_ATTR_RO(consistent_dma_mask_bits);
- 
- static ssize_t
- msi_bus_show(struct device *dev, struct device_attribute *attr, char *buf)
-@@ -283,6 +292,7 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
- 
- 	return count;
- }
-+static DEVICE_ATTR_RW(msi_bus);
- 
- static DEFINE_MUTEX(pci_remove_rescan_mutex);
- static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
-@@ -414,6 +424,7 @@ static ssize_t d3cold_allowed_show(struct device *dev,
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	return sprintf (buf, "%u\n", pdev->d3cold_allowed);
- }
-+static DEVICE_ATTR_RW(d3cold_allowed);
- #endif
- 
- #ifdef CONFIG_PCI_IOV
-@@ -499,30 +510,38 @@ static struct device_attribute sriov_numvfs_attr =
- 		       sriov_numvfs_show, sriov_numvfs_store);
- #endif /* CONFIG_PCI_IOV */
- 
--struct device_attribute pci_dev_attrs[] = {
--	__ATTR_RO(resource),
--	__ATTR_RO(vendor),
--	__ATTR_RO(device),
--	__ATTR_RO(subsystem_vendor),
--	__ATTR_RO(subsystem_device),
--	__ATTR_RO(class),
--	__ATTR_RO(irq),
--	__ATTR_RO(local_cpus),
--	__ATTR_RO(local_cpulist),
--	__ATTR_RO(modalias),
-+struct attribute *pci_dev_attrs[] = {
-+	&dev_attr_resource.attr,
-+	&dev_attr_vendor.attr,
-+	&dev_attr_device.attr,
-+	&dev_attr_subsystem_vendor.attr,
-+	&dev_attr_subsystem_device.attr,
-+	&dev_attr_class.attr,
-+	&dev_attr_irq.attr,
-+	&dev_attr_local_cpus.attr,
-+	&dev_attr_local_cpulist.attr,
-+	&dev_attr_modalias.attr,
- #ifdef CONFIG_NUMA
--	__ATTR_RO(numa_node),
-+	&dev_attr_numa_node.attr,
- #endif
--	__ATTR_RO(dma_mask_bits),
--	__ATTR_RO(consistent_dma_mask_bits),
--	__ATTR(enable, 0600, is_enabled_show, is_enabled_store),
--	__ATTR(broken_parity_status,(S_IRUGO|S_IWUSR),
--		broken_parity_status_show,broken_parity_status_store),
--	__ATTR(msi_bus, 0644, msi_bus_show, msi_bus_store),
-+	&dev_attr_dma_mask_bits.attr,
-+	&dev_attr_consistent_dma_mask_bits.attr,
-+	&dev_attr_enabled.attr,
-+	&dev_attr_broken_parity_status.attr,
-+	&dev_attr_msi_bus.attr,
- #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
--	__ATTR(d3cold_allowed, 0644, d3cold_allowed_show, d3cold_allowed_store),
-+	&dev_attr_d3cold_allowed.attr,
- #endif
--	__ATTR_NULL,
-+	NULL,
-+};
-+
-+static const struct attribute_group pci_dev_group = {
-+	.attrs = pci_dev_attrs,
-+};
-+
-+const struct attribute_group *pci_dev_groups[] = {
-+	&pci_dev_group,
-+	NULL,
- };
- 
- static struct attribute *pcibus_attrs[] = {
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 607be58..9c91ecc 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -153,7 +153,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
- 	return (dev->no_d1d2 || parent_dstates);
- 
- }
--extern struct device_attribute pci_dev_attrs[];
-+extern const struct attribute_group *pci_dev_groups[];
- extern const struct attribute_group *pcibus_groups[];
- extern struct device_type pci_dev_type;
- extern const struct attribute_group *pci_bus_groups[];
+ 	return 0;
 -- 
-1.8.4.6.g82e253f.dirty
+1.8.4
 
