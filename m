@@ -1,83 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:49477 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751509Ab3JAR6O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Oct 2013 13:58:14 -0400
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH RESEND] PCI: mvebu: Dynamically detect if the PEX link is up to enable hot plug
-Date: Tue,  1 Oct 2013 11:58:00 -0600
-Message-Id: <1380650281-16175-1-git-send-email-jgunthorpe@obsidianresearch.com>
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:43979 "EHLO
+	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349Ab3J2MRU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 08:17:20 -0400
+Date: Tue, 29 Oct 2013 13:09:09 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Zheng Huai Cheng <zhenghch@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] lspci: Skip scanning empty slot in sysfs_fill_slots
+Message-ID: <mj+md-20131029.120828.26872.nikam@ucw.cz>
+References: <526F4EB4.4090101@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <526F4EB4.4090101@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Otherwise hotplugging the PEX doesn't work at all since the driver
-detects the link state at probe time. Simply replacing the two tests
-of haslink with a register read is enough to fix it.
+Hello!
 
-Tested on kirkwood with repeated plug/unplug of the link partner.
+> When slot is empty, lspci will report "pcilib: sysfs_fill_slots:
+> Couldn't parse entry address 0000:01",this is because address entry will
+> only contain domain and bus number when the slot is empty.
+> 
+> [root@uselp6 ~]# cat /sys/bus/pci/slots/U5802.001.RCHB059-P1-C7/address
+> 0000:01
 
-Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
----
- drivers/pci/host/pci-mvebu.c | 16 ++--------------
- 1 file changed, 2 insertions(+), 14 deletions(-)
+Is this behavior intentional?  It does not make much sense to me.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 729d5a1..f2d61f5 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -115,7 +115,6 @@ struct mvebu_pcie_port {
- 	char *name;
- 	void __iomem *base;
- 	spinlock_t conf_lock;
--	int haslink;
- 	u32 port;
- 	u32 lane;
- 	int devfn;
-@@ -552,7 +551,7 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	if (bus->number == 0)
- 		return mvebu_sw_pci_bridge_write(port, where, size, val);
- 
--	if (!port->haslink)
-+	if (!mvebu_pcie_link_up(port))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
- 	/*
-@@ -594,7 +593,7 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 	if (bus->number == 0)
- 		return mvebu_sw_pci_bridge_read(port, where, size, val);
- 
--	if (!port->haslink) {
-+	if (!mvebu_pcie_link_up(port)) {
- 		*val = 0xffffffff;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
-@@ -883,22 +882,11 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 
- 		mvebu_pcie_set_local_dev_nr(port, 1);
- 
--		if (mvebu_pcie_link_up(port)) {
--			port->haslink = 1;
--			dev_info(&pdev->dev, "PCIe%d.%d: link up\n",
--				 port->port, port->lane);
--		} else {
--			port->haslink = 0;
--			dev_info(&pdev->dev, "PCIe%d.%d: link down\n",
--				 port->port, port->lane);
--		}
--
- 		port->clk = of_clk_get_by_name(child, NULL);
- 		if (IS_ERR(port->clk)) {
- 			dev_err(&pdev->dev, "PCIe%d.%d: cannot get clock\n",
- 			       port->port, port->lane);
- 			iounmap(port->base);
--			port->haslink = 0;
- 			continue;
- 		}
- 
+				Have a nice fortnight
 -- 
-1.8.1.2
-
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+This line is umop apisdn.
