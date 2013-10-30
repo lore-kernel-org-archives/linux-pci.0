@@ -1,121 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:10060
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751218Ab3JYF6T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2013 01:58:19 -0400
-Message-ID: <526A086E.305@freescale.com>
-Date: Fri, 25 Oct 2013 13:58:06 +0800
-From: Lian Minghuan-b31939 <B31939@freescale.com>
-MIME-Version: 1.0
-To: Kumar Gala <galak@kernel.crashing.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-CC: "linuxppc-dev@lists.ozlabs.org list" <linuxppc-dev@lists.ozlabs.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 02/12][v3] pci: fsl: add structure fsl_pci
-References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com> <1382524894-15164-2-git-send-email-Minghuan.Lian@freescale.com> <2B28E421-9B64-4CEC-9E00-8893502CE12F@kernel.crashing.org>
-In-Reply-To: <2B28E421-9B64-4CEC-9E00-8893502CE12F@kernel.crashing.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:54239 "EHLO e8.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751476Ab3J3DFe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Oct 2013 23:05:34 -0400
+Received: from /spool/local
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <zhenghch@linux.vnet.ibm.com>;
+	Tue, 29 Oct 2013 23:05:33 -0400
+Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id BB2C738C803B
+	for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2013 23:05:29 -0400 (EDT)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by b01cxnp22033.gho.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r9U35U7550462744
+	for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 03:05:30 GMT
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r9U35TKW031147
+	for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 01:05:30 -0200
+Message-ID: <1383102327.8618.0.camel@stefan-ThinkPad-T420>
+Subject: Re: [PATCH] lspci: Skip scanning empty slot in sysfs_fill_slots
+From: Zheng Huai Cheng <zhenghch@linux.vnet.ibm.com>
+To: Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 30 Oct 2013 11:05:27 +0800
+In-Reply-To: <mj+md-20131029.120828.26872.nikam@ucw.cz>
+References: <526F4EB4.4090101@linux.vnet.ibm.com>
+	 <mj+md-20131029.120828.26872.nikam@ucw.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kumar,
+On Tue, 2013-10-29 at 13:09 +0100, Martin Mares wrote:
+> Hello!
+> 
+> > When slot is empty, lspci will report "pcilib: sysfs_fill_slots:
+> > Couldn't parse entry address 0000:01",this is because address entry will
+> > only contain domain and bus number when the slot is empty.
+> > 
+> > [root@uselp6 ~]# cat /sys/bus/pci/slots/U5802.001.RCHB059-P1-C7/address
+> > 0000:01
 
-please see my comment inline.
+> Is this behavior intentional?  It does not make much sense to me.
+> 
+> 				Have a nice fortnight
+although I am not a expert in PCI, seems this related to PCI hotplug.
+And I also found a description in kernel source code
 
-On 10/24/2013 12:11 PM, Kumar Gala wrote:
-> On Oct 23, 2013, at 5:41 AM, Minghuan Lian wrote:
->
->> PowerPC uses structure pci_controller to describe PCI controller,
->> but ARM uses structure pci_sys_data. In order to support PowerPC
->> and ARM simultaneously, the patch adds a structure fsl_pci that
->> contains most of the members of the pci_controller and pci_sys_data.
->> Meanwhile, it defines a interface fsl_arch_sys_to_pci() which should
->> be implemented in architecture-specific PCI controller driver to
->> convert pci_controller or pci_sys_data to fsl_pci.
->>
->> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
->> ---
->> change log:
->> v1-v3:
->> Derived from http://patchwork.ozlabs.org/patch/278965/
->>
->> Based on upstream master.
->> Based on the discussion of RFC version here
->> http://patchwork.ozlabs.org/patch/274487/
->>
->> include/linux/fsl/pci-common.h | 41 +++++++++++++++++++++++++++++++++++++++++
->> 1 file changed, 41 insertions(+)
-> NAK.
->
-> We discussed this some at the ARM Summit this week and the feeling is we need to move to a common interface between the various ARCHs.
-[Minghuan] Do you mean we will use the common interface instead of 
-arch/powerpc/kernel/pci-common.c...
-and arch/arm/kernel/bios32.c?  Who will do the code movement and when 
-will the work be completed? The patches just move the common functions 
-of FSL PCI controller operation which can be re-used by PowerPC and ARM. 
-LS1 is coming, I worry about not having enough time to wait for the move 
-is completed.
+"
+Placeholder slots:
+In most cases, @pci_bus, @slot_nr will be sufficient to uniquely
+identify a slot. There is one notable exception - pSeries (rpaphp),
+where the @slot_nr cannot be determined until a device is actually
+inserted into the slot. In this scenario, the caller may pass -1 for
+@slot_nr.The following semantics are imposed when the caller passes
+@slot_nr == -1. First, we no longer check for an existing %struct
+pci_slot, as there may be many slots with @slot_nr of -1.  The other
+change in semantics is user-visible, which is the 'address' parameter
+presented in sysfs will consist solely of a dddd:bb tuple, where dddd is
+the PCI domain of the %struct pci_bus and bb is the bus number. In other
+words, the devfn of the 'placeholder' slot will not be
+displayed.                             
+"
 
-> - k
->
->> diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
->> index 5e4f683..e56a040 100644
->> --- a/include/linux/fsl/pci-common.h
->> +++ b/include/linux/fsl/pci-common.h
->> @@ -102,5 +102,46 @@ struct ccsr_pci {
->>
->> };
->>
->> +/*
->> + * Structure of a PCI controller (host bridge)
->> + */
->> +struct fsl_pci {
->> +	struct list_head node;
->> +	bool is_pcie;
->> +	struct device_node *dn;
->> +	struct device *dev;
->> +
->> +	int first_busno;
->> +	int last_busno;
->> +	int self_busno;
->> +	struct resource busn;
->> +
->> +	struct pci_ops *ops;
->> +	struct ccsr_pci __iomem *regs;
->> +
->> +	u32 indirect_type;
->> +
->> +	struct resource io_resource;
->> +	resource_size_t io_base_phys;
->> +	resource_size_t pci_io_size;
->> +
->> +	struct resource mem_resources[3];
->> +	resource_size_t mem_offset[3];
->> +
->> +	int global_number;	/* PCI domain number */
->> +
->> +	resource_size_t dma_window_base_cur;
->> +	resource_size_t dma_window_size;
->> +
->> +	void *sys;
->> +};
->> +
->> +/*
->> + * Convert architecture specific pci controller structure to fsl_pci
->> + * PowerPC uses structure pci_controller and ARM uses structure pci_sys_data
->> + * to describe pci controller.
->> + */
->> +extern struct fsl_pci *fsl_arch_sys_to_pci(void *sys);
->> +
->> #endif /* __PCI_COMMON_H */
->> #endif /* __KERNEL__ */
->> -- 
->> 1.8.1.2
->>
->
-
+so when slots are empty in some cases, "address" solely contain dddd:bb
+tuple. But lspci will originally assume address in dddd:dd:dd tuple. so
+we should skip dddd:bb case in sysfs_fill_slots
 
