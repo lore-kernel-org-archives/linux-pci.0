@@ -1,86 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f177.google.com ([209.85.220.177]:46214 "EHLO
-	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751456Ab3J1TBx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Oct 2013 15:01:53 -0400
-Received: by mail-vc0-f177.google.com with SMTP id ib11so2376979vcb.22
-        for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2013 12:01:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3E54258959B69E4282D79E01AB1F32B7046265B4@DFLE11.ent.ti.com>
-References: <3E54258959B69E4282D79E01AB1F32B704625941@DFLE11.ent.ti.com>
-	<CAPcvp5Epf+6tOp+0=ZbBLusCzq4dF98aS+Ou0D7Nyko_VwM8KA@mail.gmail.com>
-	<3E54258959B69E4282D79E01AB1F32B704625B1A@DFLE11.ent.ti.com>
-	<CAPcvp5EwTb7qm_aMzqJzLX0ScrD3A0VFog1qga76dqTT5cBW3g@mail.gmail.com>
-	<3E54258959B69E4282D79E01AB1F32B7046265B4@DFLE11.ent.ti.com>
-Date: Mon, 28 Oct 2013 19:01:52 +0000
-Message-ID: <CAPcvp5G1-0n-BSrpZ=QXigk9_TGP+vWN4GLLvgFb1+VwP4sjSg@mail.gmail.com>
-Subject: Re: AER driver on ARM platform
-From: Andrew Murray <amurray@embedded-bits.co.uk>
-To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout3.w2.samsung.com ([211.189.100.13]:44144 "EHLO
+	usmailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109Ab3J3RTn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 13:19:43 -0400
+Date: Wed, 30 Oct 2013 15:19:36 -0200
+From: Mauro Carvalho Chehab <m.chehab@samsung.com>
+To: Aristeu Rozanski <arozansk@redhat.com>
+Cc: Borislav Petkov <bp@alien8.de>, linux-edac@vger.kernel.org,
+	tony.luck@intel.com, Doug Thompson <dougthompson@xmission.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	open list <linux-kernel@vger.kernel.org>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/12] sb_edac: move PCI IDs to pci_ids.h
+Message-id: <20131030151936.48ba7af5@samsung.com>
+In-reply-to: <20131030164020.GF13290@pd.tnic>
+References: <1383150426-24730-1-git-send-email-arozansk@redhat.com>
+ <1383150426-24730-2-git-send-email-arozansk@redhat.com>
+ <20131030164020.GF13290@pd.tnic>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 28 October 2013 18:09, Karicheri, Muralidharan <m-karicheri2@ti.com> wrote:
->
-> Andrewl,
->
-> Thanks. I got some questions on AER irq handling below.
->
-> >> > Yes. That was it. It probes the driver now. Did you try error inject feature?
-> >>
-> >> I did have a look at that, but it really depends on what exactly you want to test. There are
-> >> many things this won't help you with, you ought to examine the aer inject driver to see
-> >> what it does. For example if you are bringing up a new device and want to see it raise an
-> >> AER interrupt then aer inject won't help. In this case you'll need to find a way to trigger real
-> >> errors.
-> >>
->
-> What is the IRQ line tied to the AER driver?
+Em Wed, 30 Oct 2013 17:40:20 +0100
+Borislav Petkov <bp@alien8.de> escreveu:
 
-This is well defined by the PCIe standard, and codeified in
-init_service_irqs (drivers/pci/pcie/portdrv_core.c) - the code
-references sections from the standard. I believe if MSI/MSI-X is not
-available then all port service interrupts (AER, PM, HP, etc) are
-expected to come in on whatever legacy interrupt is set up in the
-device config space (most probably IRQ0). Where MSI/MSI-X are used
-there are different rules. There is nothing special about port
-services, they come throughout whatever interrupt mechanism is turned
-on in the config space, i.e. if MSI's are enabled, then the kernel
-wouldn't expect a legacy interrupt...
+> On Wed, Oct 30, 2013 at 12:26:55PM -0400, Aristeu Rozanski wrote:
+> > According to the comment, it should be done before submitting upstream.
+> > 
+> > Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
+> > ---
+> >  drivers/edac/sb_edac.c  |   21 ++-------------------
+> >  include/linux/pci_ids.h |   11 +++++++++++
+> >  2 files changed, 13 insertions(+), 19 deletions(-)
+> > 
+> > diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
+> > index e04462b..4cdd948 100644
+> > --- a/drivers/edac/sb_edac.c
+> > +++ b/drivers/edac/sb_edac.c
+> > @@ -57,26 +57,9 @@ static int probed;
+> >   */
+> >  
+> >  /*
+> > - * FIXME: For now, let's order by device function, as it makes
+> > - * easier for driver's development process. This table should be
+> > - * moved to pci_id.h when submitted upstream
+> 
+> Why, is anything else besides sb_edac.c using those?
+> 
+I think that this patch makes sense, as the other Sandy Bridge registers
+are at pci_ids.h. So, it is a matter of consistency.
 
->
-> Since this is handling the root port error irq as well as the upstream/downstream device irqs. Does this driver assumes that error interrupt is raised on Legacy IRQ0 or MSI IRQ 0 for all of the ports (root, downstream and upstream)?
+Also, I won't doubt that other drivers could need to access those, as
+there are other things there on a few of those PCI IDs.
 
-The AER driver will 'attach' to any config space that reports having
-an AER capability, and use the interrupt associated with that config
-space. I can't remember much about root ports I'm afraid... (but if
-the downstream/upstream ports don't have AER capability, perhaps the
-errors would propagate towards the RC and be captured by the AER there
-(?) and the source can be distinguished by the source ID register)
+Yet, on patch 12/12, you're adding the Ivy Bridge specific PCI IDs
+inside the driver.
 
->
-> When I have dumped the irq number in the AER driver it shows Legacy irq0 (when nomsi boot parameter is used) or MSI irq0. Our PCIe IP acts as a RC and has a separate IRQ line (12) for root port irq as below
->
-> 12 Error Interrupts
->            [0] System error (OR of fatal, nonfatal, correctable errors) (RC mode only)
->            [1] PCIe fatal error (RC mode only)
->            [2] PCIe non-fatal error (RC mode only)
->            [3] PCIe correctable error (RC mode only)
->            [4] AXI Error due to fatal condition in AXI bridge (EP/RC modes)
->            [5] PCIe advanced error (RC mode only)
->
-> Does that mean, I need to modify the AER driver to support separate IRQ line for root port (port_type = PCI_EXP_TYPE_ROOT_PORT) for the hw I am working on. Any help?
+So, IMHO, you should either move all to pci_ids.h or to keep them inside
+the driver.
 
-The standard (and the AER driver) expect AER errors to be reported via
-PCIe interrupts, which are either legacy, MSI or MSI-X interrupts, in
-your case the hardware appears to use it's own standard CPU interrupt.
-The port service drivers, as far as I'm aware do not support this.
+My personal taste would be to move them all to pci_ids.h.
 
-It may be possible that your hardware does the right thing, and that
-the AER interrupt above is provided in addition for convenience.
-
-Perhaps someone else here may have a different view...
-
-Andrew Murray
+Regards,
+Mauro
