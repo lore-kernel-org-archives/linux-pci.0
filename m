@@ -1,232 +1,228 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:15265 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751326Ab3JSHGs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Oct 2013 03:06:48 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC v2 10/29] PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
-Date: Fri, 18 Oct 2013 19:12:10 +0200
-Message-Id: <246d1586c10fc8c787935e6d14c80f7fc268cd00.1382103786.git.agordeev@redhat.com>
-In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:51113 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751552Ab3J3RIL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 13:08:11 -0400
+Received: by mail-pa0-f49.google.com with SMTP id lj1so1238163pab.36
+        for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 10:08:10 -0700 (PDT)
+Date: Wed, 30 Oct 2013 11:08:05 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pci: fix invalid list entry warning for double pci
+ device removing via sysfs
+Message-ID: <20131030170805.GA25745@google.com>
+References: <5270DBFC.3050705@cn.fujitsu.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5270DBFC.3050705@cn.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of introduction of pci_get_msi_cap() interface
-pci_enable_msi_block_auto() function became superflous.
+On Wed, Oct 30, 2013 at 06:14:20PM +0800, Gu Zheng wrote:
+> When concurent removing pci devices which are in the same pci subtree
+> via sysfs, such as:
+> echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
+> /sys/bus/pci/devices/0000\:1a\:01.0/remove
+> (1a:01.0 device is downstream from the 10:00.0 bridge)
+> 
+> the following warning will show:
+> [ 1799.280918] ------------[ cut here ]------------
+> [ 1799.336199] WARNING: CPU: 7 PID: 126 at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
+> [ 1799.433093] list_del corruption, ffff8807b4a7c000->next is LIST_POISON1 (dead000000100100)
+> [ 1799.532110] Modules linked in: nf_conntrack_netbios_ns nf_conntrack_broadcast ipt_MASQUERADE ip6table_mangle ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 iptable_nat nf_nat_ipv4 nf_nat iptable_mangle ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter ip_tables sg dm_mirror dm_region_hash dm_log dm_mod vfat fat e1000e igb iTCO_wdt iTCO_vendor_support ioatdma ptp i7core_edac ipmi_si edac_core lpc_ich pps_core i2c_i801 pcspkr mfd_core dca ipmi_msghandler acpi_cpufreq xfs libcrc32c sd_mod crc_t10dif crct10dif_common i2c_algo_bit drm_kms_helper ttm drm mptsas scsi_transport_sas mptscsih i2c_core megaraid_sas mptbase
+> [ 1800.276623] CPU: 7 PID: 126 Comm: kworker/u512:1 Tainted: G        W    3.12.0-rc5+ #196
+> [ 1800.508918] Workqueue: sysfsd sysfs_schedule_callback_work
+> [ 1800.574703]  0000000000000009 ffff8807adbadbd8 ffffffff8168b26c ffff8807c27d08a8
+> [ 1800.663860]  ffff8807adbadc28 ffff8807adbadc18 ffffffff810711dc ffff8807adbadc68
+> [ 1800.753130]  ffff8807b4a7c000 ffff8807b4a7c000 ffff8807ad089c00 0000000000000000
+> [ 1800.842282] Call Trace:
+> [ 1800.871651]  [<ffffffff8168b26c>] dump_stack+0x55/0x76
+> [ 1800.933301]  [<ffffffff810711dc>] warn_slowpath_common+0x8c/0xc0
+> [ 1801.005283]  [<ffffffff810712c6>] warn_slowpath_fmt+0x46/0x50
+> [ 1801.074081]  [<ffffffff8135a343>] __list_del_entry+0x63/0xd0
+> [ 1801.141839]  [<ffffffff8135a3c1>] list_del+0x11/0x40
+> [ 1801.201320]  [<ffffffff813734da>] pci_remove_bus_device+0x6a/0xe0
+> [ 1801.274279]  [<ffffffff8137356e>] pci_stop_and_remove_bus_device+0x1e/0x30
+> [ 1801.356606]  [<ffffffff8137b20b>] remove_callback+0x2b/0x40
+> [ 1801.423412]  [<ffffffff81251848>] sysfs_schedule_callback_work+0x18/0x60
+> [ 1801.503744]  [<ffffffff8108eab5>] process_one_work+0x1f5/0x540
+> [ 1801.573640]  [<ffffffff8108ea53>] ? process_one_work+0x193/0x540
+> [ 1801.645616]  [<ffffffff8108f2ac>] worker_thread+0x11c/0x370
+> [ 1801.712337]  [<ffffffff8108f190>] ? rescuer_thread+0x350/0x350
+> [ 1801.782178]  [<ffffffff8109731d>] kthread+0xed/0x100
+> [ 1801.841661]  [<ffffffff81097230>] ? kthread_create_on_node+0x160/0x160
+> [ 1801.919919]  [<ffffffff8169cc3c>] ret_from_fork+0x7c/0xb0
+> [ 1801.984608]  [<ffffffff81097230>] ? kthread_create_on_node+0x160/0x160
+> [ 1802.062825] ---[ end trace d77f2054de000fb7 ]---
+> 
+> This issue is related to the bug 54411:
+> https://bugzilla.kernel.org/show_bug.cgi?id=54411
+> 
+> Since we added the pci_bus reference management, the bug becomes a
+> invalid list entry warning as descripted above. Beacuse it still
+> trys to delete an deleted pci device from device list.
+> 
+> So here we make stop device actually detach driver only, and remove
+> device will do device_del instead, and move bus_list change and pci device
+> resource free into pci_release_dev, so that it'll consistent with
+> bus reference managment, and the device only can be deleted from device
+> list in pci_release_dev just for one time.
 
-To enable maximum possible number of MSIs drivers will
-first obtain that number from pci_get_msi_cap() function
-and then call pci_enable_msi_block() interface.
+You have a good argument for moving the &dev->bus_list maintenance from
+pci_destroy_dev() to pci_release_dev(), because I think we can call
+pci_destroy_dev() twice for the same device, and we don't want to do the
+list_del() twice.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- Documentation/PCI/MSI-HOWTO.txt |   30 +-------------------
- drivers/ata/ahci.c              |   56 ++++++++++++++++++++++++--------------
- drivers/pci/msi.c               |   22 ---------------
- include/linux/pci.h             |    7 -----
- 4 files changed, 37 insertions(+), 78 deletions(-)
+I suspect we want to move other stuff, too, but you haven't explained
+why we need the device_del(), device_release_driver(), and
+pci_free_resources() changes.  Possibly similar arguments apply.  I'd
+rather see separate patches to move these pieces so we can think about
+them individually.
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index e7e3b20..47118f3 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -127,33 +127,7 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
- returns as soon as it finds any constraint that doesn't allow the
- call to succeed.
- 
--4.2.3 pci_enable_msi_block_auto
--
--int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
--
--This variation on pci_enable_msi() call allows a device driver to request
--the maximum possible number of MSIs.  The MSI specification only allows
--interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
--
--If this function returns a positive number, it indicates that it has
--succeeded and the returned value is the number of allocated interrupts. In
--this case, the function enables MSI on this device and updates dev->irq to
--be the lowest of the new interrupts assigned to it.  The other interrupts
--assigned to the device are in the range dev->irq to dev->irq + returned
--value - 1.
--
--If this function returns a negative number, it indicates an error and
--the driver should not attempt to request any more MSI interrupts for
--this device.
--
--If the device driver needs to know the number of interrupts the device
--supports it can pass the pointer count where that number is stored. The
--device driver must decide what action to take if pci_enable_msi_block_auto()
--succeeds, but returns a value less than the number of interrupts supported.
--If the device driver does not need to know the number of interrupts
--supported, it can set the pointer count to NULL.
--
--4.2.4 pci_disable_msi
-+4.2.3 pci_disable_msi
- 
- void pci_disable_msi(struct pci_dev *dev)
- 
-@@ -169,7 +143,7 @@ on any interrupt for which it previously called request_irq().
- Failure to do so results in a BUG_ON(), leaving the device with
- MSI enabled and thus leaking its vector.
- 
--4.2.5 pci_get_msi_cap
-+4.2.4 pci_get_msi_cap
- 
- int pci_get_msi_cap(struct pci_dev *dev)
- 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 9d715ae..f1c8838 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1091,26 +1091,40 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- {}
- #endif
- 
--int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
-+int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
-+			 struct ahci_host_priv *hpriv)
- {
--	int rc;
--	unsigned int maxvec;
-+	int rc, nvec;
- 
--	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
--		rc = pci_enable_msi_block_auto(pdev, &maxvec);
--		if (rc > 0) {
--			if ((rc == maxvec) || (rc == 1))
--				return rc;
--			/*
--			 * Assume that advantage of multipe MSIs is negated,
--			 * so fallback to single MSI mode to save resources
--			 */
--			pci_disable_msi(pdev);
--			if (!pci_enable_msi(pdev))
--				return 1;
--		}
--	}
-+	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
-+		goto intx;
-+
-+	rc = pci_get_msi_cap(pdev);
-+	if (rc < 0)
-+		goto intx;
-+
-+	/*
-+	 * If number of MSIs is less than number of ports then Sharing Last
-+	 * Message mode could be enforced. In this case assume that advantage
-+	 * of multipe MSIs is negated and use single MSI mode instead.
-+	 */
-+	if (rc < n_ports)
-+		goto single_msi;
-+
-+	nvec = rc;
-+	rc = pci_enable_msi_block(pdev, nvec);
-+	if (rc)
-+		goto intx;
- 
-+	return nvec;
-+
-+single_msi:
-+	rc = pci_enable_msi(pdev);
-+	if (rc)
-+		goto intx;
-+	return 1;
-+
-+intx:
- 	pci_intx(pdev, 1);
- 	return 0;
- }
-@@ -1277,10 +1291,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
- 
--	n_msis = ahci_init_interrupts(pdev, hpriv);
--	if (n_msis > 1)
--		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
--
- 	/* save initial config */
- 	ahci_pci_save_initial_config(pdev, hpriv);
- 
-@@ -1335,6 +1345,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 */
- 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
- 
-+	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
-+	if (n_msis > 1)
-+		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
-+
- 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
- 	if (!host)
- 		return -ENOMEM;
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 14dc4d1..13bd901 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -851,28 +851,6 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- }
- EXPORT_SYMBOL(pci_enable_msi_block);
- 
--int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
--{
--	int ret, nvec;
--
--	ret = pci_get_msi_cap(dev);
--	if (ret < 0)
--		return ret;
--
--	if (maxvec)
--		*maxvec = ret;
--
--	do {
--		nvec = ret;
--		ret = pci_enable_msi_block(dev, nvec);
--	} while (ret > 0);
--
--	if (ret < 0)
--		return ret;
--	return nvec;
--}
--EXPORT_SYMBOL(pci_enable_msi_block_auto);
--
- void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index df72084..a04f5da 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1156,12 +1156,6 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- 	return -ENOSYS;
- }
- 
--static inline int
--pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
--{
--	return -ENOSYS;
--}
--
- static inline void pci_msi_shutdown(struct pci_dev *dev)
- { }
- static inline void pci_disable_msi(struct pci_dev *dev)
-@@ -1194,7 +1188,6 @@ static inline int pci_msi_enabled(void)
- #else
- int pci_get_msi_cap(struct pci_dev *dev);
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
--int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
- void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
- int pci_msix_table_size(struct pci_dev *dev);
--- 
-1.7.7.6
+> Besides, it also makes hostbridge to use device_unregister to be pair
+> with device_register before.
 
+Please split the host bridge changes into a separate patch.  One logical
+change, one patch.  If they *can* be split up, please split them up.
+
+> This patch is based on Yinghai's privious similar patch:
+> http://lkml.org/lkml/2013/5/13/658
+
+There are seven patches in that series.  I don't know which one you're
+referring to.
+
+Please run a spell checker on your changelog.  There are many spelling
+errors.
+
+> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> ---
+>  drivers/pci/probe.c  | 23 +++++++++++++++++++++--
+>  drivers/pci/remove.c | 32 ++++++++------------------------
+>  2 files changed, 29 insertions(+), 26 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 7ef0f86..c639f44 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1156,6 +1156,21 @@ static void pci_release_capabilities(struct pci_dev *dev)
+>  	pci_free_cap_save_buffers(dev);
+>  }
+>  
+> +static void pci_free_resources(struct pci_dev *dev)
+> +{
+> +	int i;
+> +
+> +	msi_remove_pci_irq_vectors(dev);
+> +
+> +	pci_cleanup_rom(dev);
+> +	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> +		struct resource *res = dev->resource + i;
+> +
+> +		if (res->parent)
+> +			release_resource(res);
+> +	}
+> +}
+> +
+>  /**
+>   * pci_release_dev - free a pci device structure when all users of it are finished.
+>   * @dev: device that's been disconnected
+> @@ -1165,9 +1180,13 @@ static void pci_release_capabilities(struct pci_dev *dev)
+>   */
+>  static void pci_release_dev(struct device *dev)
+>  {
+> -	struct pci_dev *pci_dev;
+> +	struct pci_dev *pci_dev = to_pci_dev(dev);
+> +
+> +	down_write(&pci_bus_sem);
+> +	list_del(&pci_dev->bus_list);
+> +	up_write(&pci_bus_sem);
+> +	pci_free_resources(pci_dev);
+>  
+> -	pci_dev = to_pci_dev(dev);
+>  	pci_release_capabilities(pci_dev);
+>  	pci_release_of_node(pci_dev);
+>  	pcibios_release_device(pci_dev);
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 8fc54b7..5659283 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -3,20 +3,6 @@
+>  #include <linux/pci-aspm.h>
+>  #include "pci.h"
+>  
+> -static void pci_free_resources(struct pci_dev *dev)
+> -{
+> -	int i;
+> -
+> - 	msi_remove_pci_irq_vectors(dev);
+> -
+> -	pci_cleanup_rom(dev);
+> -	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> -		struct resource *res = dev->resource + i;
+> -		if (res->parent)
+> -			release_resource(res);
+> -	}
+> -}
+> -
+>  static void pci_stop_dev(struct pci_dev *dev)
+>  {
+>  	pci_pme_active(dev, false);
+> @@ -24,8 +10,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+>  	if (dev->is_added) {
+>  		pci_proc_detach_device(dev);
+>  		pci_remove_sysfs_dev_files(dev);
+> -		device_del(&dev->dev);
+> -		dev->is_added = 0;
+> +		device_release_driver(&dev->dev);
+>  	}
+>  
+>  	if (dev->bus->self)
+> @@ -34,12 +19,11 @@ static void pci_stop_dev(struct pci_dev *dev)
+>  
+>  static void pci_destroy_dev(struct pci_dev *dev)
+>  {
+> -	down_write(&pci_bus_sem);
+> -	list_del(&dev->bus_list);
+> -	up_write(&pci_bus_sem);
+> -
+> -	pci_free_resources(dev);
+> -	put_device(&dev->dev);
+> +	if (dev->is_added) {
+> +		device_del(&dev->dev);
+> +		put_device(&dev->dev);
+> +		dev->is_added = 0;
+
+This is wrong.  You can't reference dev->is_added after put_device()
+because you have to assume you are holding the only reference, and the
+pci_dev may be deallocated before put_device() returns.
+
+> +	}
+>  }
+>  
+>  void pci_remove_bus(struct pci_bus *bus)
+> @@ -126,7 +110,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
+>  		pci_stop_bus_device(child);
+>  
+>  	/* stop the host bridge */
+> -	device_del(&host_bridge->dev);
+> +	device_release_driver(&host_bridge->dev);
+>  }
+>  
+>  void pci_remove_root_bus(struct pci_bus *bus)
+> @@ -145,5 +129,5 @@ void pci_remove_root_bus(struct pci_bus *bus)
+>  	host_bridge->bus = NULL;
+>  
+>  	/* remove the host bridge */
+> -	put_device(&host_bridge->dev);
+> +	device_unregister(&host_bridge->dev);
+>  }
+> -- 
+> 1.8.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
