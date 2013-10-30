@@ -1,41 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:36917 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753963Ab3JHQIN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Oct 2013 12:08:13 -0400
-Received: by mail-ie0-f181.google.com with SMTP id tp5so19619961ieb.40
-        for <linux-pci@vger.kernel.org>; Tue, 08 Oct 2013 09:08:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20131008092137.0ed32a32@skate>
-References: <20131007233846.11805.50302.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20131008092137.0ed32a32@skate>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 8 Oct 2013 10:07:52 -0600
-Message-ID: <CAErSpo4bn_TVbquQrs_WzLnL8Q=2urk1VyrWPiqDBnh6OrQbtQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: mvebu: Make mvebu_pcie_align_resource() static
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:27740 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754496Ab3J3N5x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Oct 2013 09:57:53 -0400
+Message-ID: <1383141466.4097.163.camel@ul30vt.home>
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Always rescan the slot for new
+ devices
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-acpi@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 30 Oct 2013 07:57:46 -0600
+In-Reply-To: <1383136836-15306-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1383136836-15306-1-git-send-email-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 8, 2013 at 1:21 AM, Thomas Petazzoni
-<thomas.petazzoni@free-electrons.com> wrote:
-> Dear Bjorn Helgaas,
->
-> On Mon, 07 Oct 2013 17:38:46 -0600, Bjorn Helgaas wrote:
->> mvebu_pcie_align_resource() is only used inside pci-mvebu.c, so
->> make it static.
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> I'm obviously fine with that, but there is already a patch "[PATCH V2
-> 2/3] PCI: mvebu: make local functions static" hanging around to do the
-> same.
+On Wed, 2013-10-30 at 14:40 +0200, Mika Westerberg wrote:
+> Commit 2dc4128 (ACPI / hotplug / PCI: Avoid doing too much for spurious
+> notifies) changed the enable_slot() to check return value of pci_scan_slot()
+> and if it is zero return early from the function. It means that there were
+> no new devices in this particular slot.
+> 
+> However, if a device appeared deeper in the hierarchy the code now ignores
+> it causing things like Thunderbolt chaining fail to recognize new devices.
+> 
+> The problem with Alex Williamson's machine was solved with commit
+> a47d8c8 (ACPI / hotplug / PCI: Avoid parent bus rescans on spurious device
+> checks) and hence we should be able to restore the original functionality
+> that we always rescan on bus check notification.
+> 
+> On a device check notification we still check what acpiphp_rescan_slot()
+> returns and on zero bail out early.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+> Alex,
+> 
+> Are you able to check if your machine still works and doesn't slow down
+> during boot after this patch is applied?
 
-OK, sorry for the duplication.  I dropped Jingoo's patch from
-patchwork because Jason C. is merging mvebu stuff, and then it's "out
-of sight, out of mind."
+Looks ok to me, no new console output or boot delay.  Thanks,
 
-Bjorn
+Alex
+
+>  drivers/pci/hotplug/acpiphp_glue.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index be12fbf..1ea7523 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -552,9 +552,8 @@ static void __ref enable_slot(struct acpiphp_slot *slot)
+>  	struct acpiphp_func *func;
+>  	int max, pass;
+>  	LIST_HEAD(add_list);
+> -	int nr_found;
+>  
+> -	nr_found = acpiphp_rescan_slot(slot);
+> +	acpiphp_rescan_slot(slot);
+>  	max = acpiphp_max_busnr(bus);
+>  	for (pass = 0; pass < 2; pass++) {
+>  		list_for_each_entry(dev, &bus->devices, bus_list) {
+> @@ -574,9 +573,6 @@ static void __ref enable_slot(struct acpiphp_slot *slot)
+>  		}
+>  	}
+>  	__pci_bus_assign_resources(bus, &add_list, NULL);
+> -	/* Nothing more to do here if there are no new devices on this bus. */
+> -	if (!nr_found && (slot->flags & SLOT_ENABLED))
+> -		return;
+>  
+>  	acpiphp_sanitize_bus(bus);
+>  	acpiphp_set_hpp_values(bus);
+
+
+
