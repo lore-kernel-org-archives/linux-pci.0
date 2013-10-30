@@ -1,42 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:48395 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755341Ab3JHXbp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Oct 2013 19:31:45 -0400
-Message-ID: <1381275075.645.251.camel@pasglop>
-Subject: Re: [PATCH 1/2][v2] pci: fsl: derive the common PCI driver to
- drivers/pci/host
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Scott Wood <scottwood@freescale.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 30 Oct 2013 18:47:01 -0200
+From: Mauro Carvalho Chehab <m.chehab@samsung.com>
+To: Aristeu Rozanski <arozansk@redhat.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Paul Mackerras <paulus@samba.org>
-Date: Wed, 09 Oct 2013 10:31:15 +1100
-In-Reply-To: <1381274440.7979.309.camel@snotra.buserror.net>
-References: <1380531175-14836-1-git-send-email-Minghuan.Lian@freescale.com>
-	 <CAErSpo7LXqXmrw1gPwKHsJkKaAcDr2W_+tcC8b9T_5Mab1Arnw@mail.gmail.com>
-	 <1381272382.7979.292.camel@snotra.buserror.net>
-	 <CAErSpo76_w+wK76m73kkdYS1PouhYcGfZus_FYF5E2FHJTA6gQ@mail.gmail.com>
-	 <1381274440.7979.309.camel@snotra.buserror.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	Borislav Petkov <bp@alien8.de>, linux-edac@vger.kernel.org,
+	Tony Luck <tony.luck@intel.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	open list <linux-kernel@vger.kernel.org>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/12] sb_edac: move PCI IDs to pci_ids.h
+Message-id: <20131030184701.5a4f97b1@samsung.com>
+In-reply-to: <20131030203516.GE16166@redhat.com>
+References: <1383150426-24730-1-git-send-email-arozansk@redhat.com>
+ <1383150426-24730-2-git-send-email-arozansk@redhat.com>
+ <20131030164020.GF13290@pd.tnic> <20131030151936.48ba7af5@samsung.com>
+ <CAErSpo5rhsDqmROLRhagbQP=6Ydfun9ZD0PFP0FO_08j0FQ4vQ@mail.gmail.com>
+ <20131030203516.GE16166@redhat.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-10-08 at 18:20 -0500, Scott Wood wrote:
-> > So I'll apply these given an ack from the powerpc folks.
+Em Wed, 30 Oct 2013 16:35:17 -0400
+Aristeu Rozanski <arozansk@redhat.com> escreveu:
+
+> On Wed, Oct 30, 2013 at 11:21:49AM -0600, Bjorn Helgaas wrote:
+> > On Wed, Oct 30, 2013 at 11:19 AM, Mauro Carvalho Chehab
+> > <m.chehab@samsung.com> wrote:
+> > > Em Wed, 30 Oct 2013 17:40:20 +0100
+> > > Borislav Petkov <bp@alien8.de> escreveu:
+> > >
+> > >> On Wed, Oct 30, 2013 at 12:26:55PM -0400, Aristeu Rozanski wrote:
+> > >> > According to the comment, it should be done before submitting upstream.
+> > >> >
+> > >> > Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
+> > >> > ---
+> > >> >  drivers/edac/sb_edac.c  |   21 ++-------------------
+> > >> >  include/linux/pci_ids.h |   11 +++++++++++
+> > >> >  2 files changed, 13 insertions(+), 19 deletions(-)
+> > >> >
+> > >> > diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
+> > >> > index e04462b..4cdd948 100644
+> > >> > --- a/drivers/edac/sb_edac.c
+> > >> > +++ b/drivers/edac/sb_edac.c
+> > >> > @@ -57,26 +57,9 @@ static int probed;
+> > >> >   */
+> > >> >
+> > >> >  /*
+> > >> > - * FIXME: For now, let's order by device function, as it makes
+> > >> > - * easier for driver's development process. This table should be
+> > >> > - * moved to pci_id.h when submitted upstream
+> > >>
+> > >> Why, is anything else besides sb_edac.c using those?
+> > >>
+> > > I think that this patch makes sense, as the other Sandy Bridge registers
+> > > are at pci_ids.h. So, it is a matter of consistency.
+> > >
+> > > Also, I won't doubt that other drivers could need to access those, as
+> > > there are other things there on a few of those PCI IDs.
+> > >
+> > > Yet, on patch 12/12, you're adding the Ivy Bridge specific PCI IDs
+> > > inside the driver.
+> > >
+> > > So, IMHO, you should either move all to pci_ids.h or to keep them inside
+> > > the driver.
+> > >
+> > > My personal taste would be to move them all to pci_ids.h.
+> > 
+> > As long as it follows the guideline at the top of pci_ids.h (add them
+> > there only if they are shared between multiple drivers), I'm fine with
+> > putting them in pci_ids.h.
 > 
-> ACK this patch.  The second one I'd like to see broken up into
-> digestible chunks so I can better review it.
+> Fair enough, I think we can drop the first patch. I checked and all the
+> patches apply without the first one and it builds fine. Mauro, want me
+> to resubmit the patchset anyway?
 
-Bjorn, for such FSL-only stuff, Scott ack is enough, don't wait for
-mine :-)
+No need.
 
-Cheers,
-Ben.
-
-
+Thanks!
+Mauro
