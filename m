@@ -1,45 +1,23 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:43167 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758477Ab3K0CPd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 21:15:33 -0500
-MIME-Version: 1.0
-In-Reply-To: <5956447.Fj3sMXmCsu@vostro.rjw.lan>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
-	<1385429290-25397-4-git-send-email-yinghai@kernel.org>
-	<5956447.Fj3sMXmCsu@vostro.rjw.lan>
-Date: Tue, 26 Nov 2013 18:15:32 -0800
-Message-ID: <CAE9FiQXjGPB4uurUA8wYL73UcBzSJYVKx90px-KuEYit1-c_GQ@mail.gmail.com>
-Subject: Re: [PATCH v2 03/10] PCI: Move resources and bus_list releasing to pci_release_dev
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:35009 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751744Ab3KBQcz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 2 Nov 2013 12:32:55 -0400
+Received: by mail-pd0-f173.google.com with SMTP id r10so5073491pdi.32
+        for <linux-pci@vger.kernel.org>; Sat, 02 Nov 2013 09:32:54 -0700 (PDT)
+Message-ID: <52752936.64ab440a.5949.ffffa9e0@mx.google.com>
+From: Rajat Jain <rajatjain@juniper.net>
+To: linux-pci@vger.kernel.org
+Cc: rajatjain@juniper.net
+Date: Wed, 30 Oct 2013 13:45:09 -0700
+Subject: Test Mail 1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 26, 2013 at 5:15 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> @@ -36,11 +22,6 @@ static void pci_destroy_dev(struct pci_dev *dev)
->>  {
->>       device_del(&dev->dev);
->>
->> -     down_write(&pci_bus_sem);
->> -     list_del(&dev->bus_list);
->> -     up_write(&pci_bus_sem);
->> -
->> -     pci_free_resources(dev);
->>       put_device(&dev->dev);
->
-> And if the side effects are benign enough, why don't we do a device_unregister()
-> here?
 
-Yes, that is same, but we are using device_add in pci_device_add...
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+---
+Test Mail 1
+-- 
+1.7.9.5
 
-Thanks
-
-Yinghai
