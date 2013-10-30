@@ -1,58 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:51204 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754781Ab3JIOyJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 10:54:09 -0400
-Received: by mail-ie0-f178.google.com with SMTP id to1so2041215ieb.37
-        for <linux-pci@vger.kernel.org>; Wed, 09 Oct 2013 07:54:09 -0700 (PDT)
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:55673 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750754Ab3J3QHS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 12:07:18 -0400
+Received: by mail-ie0-f179.google.com with SMTP id aq17so2628234iec.38
+        for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 09:07:18 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <52552C8D.1050303@freescale.com>
-References: <1380531175-14836-1-git-send-email-Minghuan.Lian@freescale.com>
- <CAErSpo7LXqXmrw1gPwKHsJkKaAcDr2W_+tcC8b9T_5Mab1Arnw@mail.gmail.com> <52552C8D.1050303@freescale.com>
+In-Reply-To: <CAErSpo6n4F1zREyYXuwq9LCRLCD+yZ9o8j==ANamiAZesFz=EA@mail.gmail.com>
+References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
+ <1382346403-29576-2-git-send-email-sachin.kamat@linaro.org> <CAErSpo6n4F1zREyYXuwq9LCRLCD+yZ9o8j==ANamiAZesFz=EA@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Oct 2013 08:53:48 -0600
-Message-ID: <CAErSpo7K5CCqDvHiKwypWqNxiyZ8n1MXcsjK66d=NzGSV0nYOg@mail.gmail.com>
-Subject: Re: [PATCH 1/2][v2] pci: fsl: derive the common PCI driver to drivers/pci/host
-To: Lian Minghuan-b31939 <B31939@freescale.com>
-Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
+Date: Wed, 30 Oct 2013 10:06:58 -0600
+Message-ID: <CAErSpo4CFitR_CbG+TBYF-S-nKLdz9+CfV2mex76b=pnh24Vqw@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: mvebu: Remove redeundant of_match_ptr
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 9, 2013 at 4:14 AM, Lian Minghuan-b31939
-<B31939@freescale.com> wrote:
-
->  arch/powerpc/sysdev/fsl_pci.c                      | 521 +-----------------
->  arch/powerpc/sysdev/fsl_pci.h                      |  89 ----
->  .../fsl_pci.c => drivers/pci/host/pci-fsl-common.c | 591
-> +--------------------
->  .../fsl_pci.h => include/linux/fsl/pci-common.h    |  45 +-
+On Tue, Oct 29, 2013 at 4:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Jason]
 >
-> Is there any way to avoid putting this file in include/linux?  I know
-> you want to share it beyond PowerPC, and I know there are similar
-> examples there already, but this is all arch-specific or
-> chipset-specific stuff that seems like it should be in some
-> not-so-public place.  It doesn't seem scalable to add an include/linux
-> subdirectory for every chipset that might be shared across
-> architectures.
+> On Mon, Oct 21, 2013 at 3:06 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+>> mvebu_pcie_of_match_table is always compiled in. Hence of_match_ptr is
+>> not required.
+>>
+>> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+>> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 >
-> [Minghuan] I can move pci-common.h to drivers/pci/host/
-> But in arch/powerpc/sysdev/fsl_pci.c I must include the header file
-> like this:
-> #include "../../../drivers/pci/host/pci-fsl-common.h".
-> How about this modification?
+> Jason, I assume you'll merge this if you want it.
 
-Given the existence of include/linux/fsl/ even before this patch, I'm
-OK with it as-is.
+BTW, Jason, if you think of it, fix the typo in the subject
+(s/redeundant/redundant/).  It was correct for the exynos patch, but
+wrong for the mvebu and imx6 patches.
 
-After you work through Scott's comments on [2/2] and get his ack, I'll
-merge the whole bundle as a group.
-
-Bjorn
+>> ---
+>>  drivers/pci/host/pci-mvebu.c |    3 +--
+>>  1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+>> index 20c470c..7adae6e 100644
+>> --- a/drivers/pci/host/pci-mvebu.c
+>> +++ b/drivers/pci/host/pci-mvebu.c
+>> @@ -1016,8 +1016,7 @@ static struct platform_driver mvebu_pcie_driver = {
+>>         .driver = {
+>>                 .owner = THIS_MODULE,
+>>                 .name = "mvebu-pcie",
+>> -               .of_match_table =
+>> -                  of_match_ptr(mvebu_pcie_of_match_table),
+>> +               .of_match_table = mvebu_pcie_of_match_table,
+>>                 /* driver unloading/unbinding currently not supported */
+>>                 .suppress_bind_attrs = true,
+>>         },
+>> --
+>> 1.7.9.5
+>>
