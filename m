@@ -1,94 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:12179 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab3J3IAb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 04:00:31 -0400
-Message-ID: <5270BBD5.2080403@huawei.com>
-Date: Wed, 30 Oct 2013 15:57:09 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Andreas Noever <andreas.noever@gmail.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
+Received: from mail-out.m-online.net ([212.18.0.10]:45499 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784Ab3J3Pa5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 11:30:57 -0400
+From: Marek Vasut <marex@denx.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: imx6: fix imprecise abort handler
+Date: Wed, 30 Oct 2013 15:55:02 +0100
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+	Tim Harvey <tharvey@gateworks.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com> <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com> <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com> <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com> <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com> <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>
+References: <1382056042-7299-1-git-send-email-tharvey@gateworks.com> <CAHM4w1nyXCuTya+TR7Rxiw0ojmwZHwz9iUmz=cG8z_8h2wKhSw@mail.gmail.com> <CAErSpo5NHXXZPm5wj05DSD94KkzEUkefceHPC_Zup+-APUYdKQ@mail.gmail.com>
+In-Reply-To: <CAErSpo5NHXXZPm5wj05DSD94KkzEUkefceHPC_Zup+-APUYdKQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310301555.02807.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> Bisection points to 928bea964827d7824b548c1f8e06eccbbc4d0d7d .
->>
->> This is "PCI: Delay enabling bridges until they're needed" by Yinghai.
+Dear Bjorn Helgaas,
+
+> On Mon, Oct 21, 2013 at 2:16 AM, Pratyush Anand
 > 
-> that double disabling should be addressed by:
+> <pratyush.anand@gmail.com> wrote:
+> > Hi,
+> > 
+> > On Sat, Oct 19, 2013 at 7:03 AM, Marek Vasut <marex@denx.de> wrote:
+> >> Dear Tim Harvey,
+> >> 
+> >> > An imprecise abort is triggered when a port behind a switch is
+> >> > accessed and no device is present.  At enumeration, imprecise aborts
+> >> > are not enabled
+> > 
+> > I do not know the complete history. But I do not understand, why
+> > imprecise aborts are not enabled during kernel enumeration.
+> > What happens when PCIe switch is already connected before boot?
+> > pci_common_init will try to read vendor/product ID for a non-existing
+> > function during kernel enumeration itself, which should result in
+> > imprecise external abort. In fact, I had observed with my system that if
+> > a switch is connected to PCIe RC, then abort occurs during kernel
+> > initialization itself. So a proper handling was needed. We called
+> > hook_fault_code from
+> > a subsys_init pcie_init (or similar) function, which insured that abort
+> > handler is called whenever, software tries to read vendor/product id of
+> > a non-existing function
+> > 
+> >> > thus this ends up getting deferred until the kernel has completed
+> >> > init. At
+> >> > that point we must not adjust PC - the handler must do nothing, but a
+> >> > handler must exist.
+> >> > 
+> >> > This fixes random crashes that occur right after freeing init.
+> >> > This is against linux-pci/host-imx6.
+> >> > 
+> >> > Acked-by: Marek Vasut <marex@denx.de>
+> >> > Tested-by: Marek Vasut <marex@denx.de>
+> >> > Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> >> 
+> >> Expanding CC a bit, let's have more eyes on this.
+> >> 
+> >> > ---
+> >> > 
+> >> >  drivers/pci/host/pci-imx6.c |    6 ------
+> >> >  1 file changed, 6 deletions(-)
+> >> > 
+> >> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> >> > index 966bac6..90fce05 100644
+> >> > --- a/drivers/pci/host/pci-imx6.c
+> >> > +++ b/drivers/pci/host/pci-imx6.c
+> >> > @@ -200,12 +200,6 @@ static int pcie_phy_write(void __iomem *dbi_base,
+> >> > int
+> >> > addr, int data) static int imx6q_pcie_abort_handler(unsigned long
+> >> > addr,
+> >> > 
+> >> >               unsigned int fsr, struct pt_regs *regs)
+> >> >  
+> >> >  {
+> >> > 
+> >> > -     /*
+> >> > -      * If it was an imprecise abort, then we need to correct the
+> >> > -      * return address to be _after_ the instruction.
+> >> > -      */
+> >> > -     if (fsr & (1 << 10))
+> >> > -             regs->ARM_pc += 4;
+> > 
+> > Just for knowledge, is there any case other than read of IDs which might
+> > cause imprecise abort? If not, then this handler can be modified a bit to
+> > insure
+> > that it does not handle any unintended imprecise abort.
+> > 
+> > Regards
+> > Pratyush
+> > 
+> >> >       return 0;
+> >> >  
+> >> >  }
 > 
-> https://lkml.org/lkml/2013/4/25/608
+> I'm sort of dubious about imx6q_pcie_abort_handler() to begin with --
+> it seems like it assumes that imprecise aborts are either enabled or
+> disabled.  Isn't there some way it can *check* whether that's the
+> case, so it won't break if those aborts are enabled at a different
+> point in the future?
+
+The best way here would be to find a way to prevent the DWC controller from 
+generating data abort on missing device _at_all_ and just make the read from 
+that portion of config space be 0xffffffff or zeroes . I didn't find any 
+configuration bit that would be able to do it though :( Richard, can you maybe 
+check with FSL if such an option exists on the controller?
+
+> For now, I'll apply this to my pci/host-imx6 branch for v3.13, but let
+> me know if you want to tweak it somehow.
 > 
-> [PATCH] PCI: Remove duplicate pci_disable_device for pcie port
-
-Hi Yinghai and Bjorn,
-   I found a related issue in the latest Bjorn/pci-next branch.
-
-Now if we remove the pcie port device in the system, there is a warning occured.
-It seems introduced after commit 928bea9 "PCI: Delay enabling bridges until they're needed".
-
-[ 2124.129478] ------------[ cut here ]------------
-[ 2124.129490] WARNING: CPU: 3 PID: 7 at drivers/pci/pci.c:1424 pci_disable_device+0x90/0xa0()
-[ 2124.129492] Device pcieport
-[ 2124.129492] disabling already-disabled device
-[ 2124.129494] Modules linked in: binfmt_misc cpufreq_conservative cpufreq_userspace cpufreq_powersave loop bnx2 igb kvm_intel kvm dca i2c_algo_bit ptp pps_core i2c_i801 i7core_edac iTCO_wdt iTCO_vendor_support lpc_ich mfd_core edac_core acpi_cpufreq serio_raw sg button pcspkr microcode autofs4 processor thermal_sys scsi_dh_rdac scsi_dh_alua scsi_dh_emc scsi_dh_hp_sw scsi_dh ata_generic ata_piix megaraid_sas
-[ 2124.129530] CPU: 3 PID: 7 Comm: kworker/u49:0 Not tainted 3.12.0-rc2-2.10-desktop+ #22
-[ 2124.129533] Hardware name: Huawei Technologies Co., Ltd. Tecal RH2285          /BC11BTSA              , BIOS CTSAV036 04/27/2011
-[ 2124.129540] Workqueue: sysfsd sysfs_schedule_callback_work
-[ 2124.129543]  0000000000000009 ffff880532cd9bb8 ffffffff8162f51c 0000000000000007
-[ 2124.129547]  ffff880532cd9c08 ffff880532cd9bf8 ffffffff8105060c 0000000000000286
-[ 2124.129552]  ffff8805329f2000 ffffffff81c67bc0 ffff8805329f2000 0000000000000000
-[ 2124.129556] Call Trace:
-[ 2124.129564]  [<ffffffff8162f51c>] dump_stack+0x55/0x86
-[ 2124.129572]  [<ffffffff8105060c>] warn_slowpath_common+0x8c/0xc0
-[ 2124.129576]  [<ffffffff810506f6>] warn_slowpath_fmt+0x46/0x50
-[ 2124.129580]  [<ffffffff81345ef0>] pci_disable_device+0x90/0xa0
-[ 2124.129587]  [<ffffffff8135524e>] pcie_portdrv_remove+0x1e/0x30
-[ 2124.129592]  [<ffffffff813491d6>] pci_device_remove+0x46/0xc0
-[ 2124.129598]  [<ffffffff814139cf>] __device_release_driver+0x7f/0xf0
-[ 2124.129602]  [<ffffffff81413c5c>] device_release_driver+0x2c/0x40
-[ 2124.129606]  [<ffffffff81413368>] bus_remove_device+0x108/0x170
-[ 2124.129610]  [<ffffffff814102f0>] device_del+0x130/0x1c0
-[ 2124.129614]  [<ffffffff813427dc>] pci_stop_bus_device+0x9c/0xb0
-[ 2124.129618]  [<ffffffff81342986>] pci_stop_and_remove_bus_device+0x16/0x30
-[ 2124.129622]  [<ffffffff8134a599>] remove_callback+0x29/0x40
-[ 2124.129625]  [<ffffffff811fd7d8>] sysfs_schedule_callback_work+0x18/0x80
-[ 2124.129632]  [<ffffffff8106bbbd>] process_one_work+0x17d/0x470
-[ 2124.129635]  [<ffffffff8106c342>] worker_thread+0x122/0x380
-[ 2124.129639]  [<ffffffff8106c220>] ? rescuer_thread+0x330/0x330
-[ 2124.129643]  [<ffffffff81073330>] kthread+0xc0/0xd0
-[ 2124.129647]  [<ffffffff81073270>] ? kthread_create_on_node+0x130/0x130
-[ 2124.129653]  [<ffffffff8163dbec>] ret_from_fork+0x7c/0xb0
-[ 2124.129657]  [<ffffffff81073270>] ? kthread_create_on_node+0x130/0x130
-[ 2124.129660] ---[ end trace 5b020b35ec6adb4c ]---
-
-
-> 
-> Thanks
-> 
-> Yinghai
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+> Bjorn
