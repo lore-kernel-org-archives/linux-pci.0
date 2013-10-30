@@ -1,74 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 9 Oct 2013 11:54:13 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 07/77] PCI/MSI: Re-design MSI/MSI-X interrupts
- enablement pattern
-Message-ID: <20131009155413.GD22495@htj.dyndns.org>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <d8c36203ada6efbfa9f7ce92c2f713ee3b6d6b8d.1380703262.git.agordeev@redhat.com>
- <20131007181749.GB27396@htj.dyndns.org>
- <20131008074826.GD10669@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131008074826.GD10669@dhcp-26-207.brq.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:40387 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752895Ab3J3Q1d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Oct 2013 12:27:33 -0400
+From: Aristeu Rozanski <arozansk@redhat.com>
+To: linux-edac@vger.kernel.org
+Cc: tony.luck@intel.com, Aristeu Rozanski <arozansk@redhat.com>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com> (maintainer:EDAC-SBRIDGE),
+	Doug Thompson <dougthompson@xmission.com> (supporter:EDAC-CORE),
+	Bjorn Helgaas <bhelgaas@google.com> (supporter:PCI SUBSYSTEM),
+	linux-kernel@vger.kernel.org (open list),
+	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM)
+Subject: [PATCH 01/12] sb_edac: move PCI IDs to pci_ids.h
+Date: Wed, 30 Oct 2013 12:26:55 -0400
+Message-Id: <1383150426-24730-2-git-send-email-arozansk@redhat.com>
+In-Reply-To: <1383150426-24730-1-git-send-email-arozansk@redhat.com>
+References: <1383150426-24730-1-git-send-email-arozansk@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello, Alexander.
+According to the comment, it should be done before submitting upstream.
 
-On Tue, Oct 08, 2013 at 09:48:26AM +0200, Alexander Gordeev wrote:
-> > If there are many which duplicate the above pattern, it'd probably be
-> > worthwhile to provide a helper?  It's usually a good idea to reduce
-> > the amount of boilerplate code in drivers.
-> 
-> I wanted to limit discussion in v1 to as little changes as possible.
-> I 'planned' those helper(s) for a separate effort if/when the most
-> important change is accepted and soaked a bit.
+Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
+---
+ drivers/edac/sb_edac.c  |   21 ++-------------------
+ include/linux/pci_ids.h |   11 +++++++++++
+ 2 files changed, 13 insertions(+), 19 deletions(-)
 
-The thing is doing it this way generates more churns and noises.  Once
-the simpler ones live behind a wrapper which can be built on the
-existing interface, we can have both reduced cost and more latitude on
-the complex cases.
-
-> > If we do things this way, it breaks all drivers using this interface
-> > until they're converted, right?
-> 
-> Right. And the rest of the series does it.
-
-Which breaks bisection which we shouldn't do.
-
-> > Also, it probably isn't the best idea
-> > to flip the behavior like this as this can go completely unnoticed (no
-> > compiler warning or anything, the same function just behaves
-> > differently).  Maybe it'd be a better idea to introduce a simpler
-> > interface that most can be converted to?
-> 
-> Well, an *other* interface is a good idea. What do you mean with the
-> simpler here?
-
-I'm still talking about a simpler wrapper for common cases, which is
-the important part anyway.
-
-Thanks.
-
+diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
+index e04462b..4cdd948 100644
+--- a/drivers/edac/sb_edac.c
++++ b/drivers/edac/sb_edac.c
+@@ -57,26 +57,9 @@ static int probed;
+  */
+ 
+ /*
+- * FIXME: For now, let's order by device function, as it makes
+- * easier for driver's development process. This table should be
+- * moved to pci_id.h when submitted upstream
++ * Currently, unused, but will be needed in the future
++ * implementations, as they hold the error counters
+  */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD0	0x3cf4	/* 12.6 */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD1	0x3cf6	/* 12.7 */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_BR		0x3cf5	/* 13.6 */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0	0x3ca0	/* 14.0 */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA	0x3ca8	/* 15.0 */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_RAS	0x3c71	/* 15.1 */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD0	0x3caa	/* 15.2 */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD1	0x3cab	/* 15.3 */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD2	0x3cac	/* 15.4 */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD3	0x3cad	/* 15.5 */
+-#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_DDRIO	0x3cb8	/* 17.0 */
+-
+-	/*
+-	 * Currently, unused, but will be needed in the future
+-	 * implementations, as they hold the error counters
+-	 */
+ #define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR0	0x3c72	/* 16.2 */
+ #define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR1	0x3c73	/* 16.3 */
+ #define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR2	0x3c76	/* 16.6 */
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 97fbecd..d7d4757 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2812,7 +2812,18 @@
+ #define PCI_DEVICE_ID_INTEL_UNC_R2PCIE	0x3c43
+ #define PCI_DEVICE_ID_INTEL_UNC_R3QPI0	0x3c44
+ #define PCI_DEVICE_ID_INTEL_UNC_R3QPI1	0x3c45
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_RAS	0x3c71
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0	0x3ca0
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA	0x3ca8
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD0	0x3caa
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD1	0x3cab
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD2	0x3cac
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD3	0x3cad
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_DDRIO	0x3cb8
+ #define PCI_DEVICE_ID_INTEL_JAKETOWN_UBOX	0x3ce0
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD0	0x3cf4
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_BR		0x3cf5
++#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD1	0x3cf6
+ #define PCI_DEVICE_ID_INTEL_IOAT_SNB	0x402f
+ #define PCI_DEVICE_ID_INTEL_5100_16	0x65f0
+ #define PCI_DEVICE_ID_INTEL_5100_19	0x65f3
 -- 
-tejun
+1.7.1
+
