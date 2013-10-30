@@ -1,76 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:13642 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752912Ab3JULAs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Oct 2013 07:00:48 -0400
-Message-ID: <526507F4.4090706@huawei.com>
-Date: Mon, 21 Oct 2013 18:54:44 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mga02.intel.com ([134.134.136.20]:16174 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752927Ab3J3M6v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Oct 2013 08:58:51 -0400
+Date: Wed, 30 Oct 2013 15:04:16 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Always rescan the slot for new
+ devices
+Message-ID: <20131030130416.GF3521@intel.com>
+References: <1383136836-15306-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1406112.LRdFoqkugQ@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: [PATCH v4 20/28] x86, irq: More strict checking about registering
- ioapic
-References: <1376189294-32022-1-git-send-email-yinghai@kernel.org> <1376189294-32022-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1376189294-32022-21-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1406112.LRdFoqkugQ@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->  int mp_find_ioapic_pin(int ioapic, u32 gsi)
->  {
->  	struct mp_ioapic_gsi *gsi_cfg;
-> @@ -3888,6 +3894,11 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
->  	if (bad_ioapic(address))
->  		return;
->  
-> +	/* already registered ? */
-> +	idx = __mp_find_ioapic(gsi_base);
-> +	if (idx >= 0)
-> +		return;
-
-Hi Yinghai,
-   If you add whether ioapic was already registered check here, so we will fail to add ioapic into global ioapic_list.
-Then we also can not hot remove this ioapic.
-
-
-1. We will call mp_register_ioapic during analyze MADT first.
-2. We will try to add hotplug ioapic(which contain _GSB) to ioapic_list in acpi_pci_ioapic_add(), but will found this
-ioapic has been registered.
-
-Thanks!
-Yijing.
-
-
-> +
->  	idx = find_first_zero_bit(ioapics_mask, MAX_IO_APICS);
->  	if (idx >= MAX_IO_APICS) {
->  		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded, skipping\n",
-> @@ -3914,6 +3925,13 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
->  	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
->  	 */
->  	entries = io_apic_get_redir_entries(idx);
-> +
-> +	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
-> +		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-> +		memset(&ioapics[idx], 0, sizeof(struct ioapic));
-> +		return;
-> +	}
-> +
->  	gsi_cfg = mp_ioapic_gsi_routing(idx);
->  	gsi_cfg->gsi_base = gsi_base;
->  	gsi_cfg->gsi_end = gsi_base + entries - 1;
+On Wed, Oct 30, 2013 at 02:01:40PM +0100, Rafael J. Wysocki wrote:
+> On Wednesday, October 30, 2013 02:40:36 PM Mika Westerberg wrote:
+> > Commit 2dc4128 (ACPI / hotplug / PCI: Avoid doing too much for spurious
+> > notifies) changed the enable_slot() to check return value of pci_scan_slot()
+> > and if it is zero return early from the function. It means that there were
+> > no new devices in this particular slot.
+> > 
+> > However, if a device appeared deeper in the hierarchy the code now ignores
+> > it causing things like Thunderbolt chaining fail to recognize new devices.
+> > 
+> > The problem with Alex Williamson's machine was solved with commit
+> > a47d8c8 (ACPI / hotplug / PCI: Avoid parent bus rescans on spurious device
+> > checks) and hence we should be able to restore the original functionality
+> > that we always rescan on bus check notification.
+> > 
+> > On a device check notification we still check what acpiphp_rescan_slot()
+> > returns and on zero bail out early.
+> > 
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 > 
+> So, this is a revert of commit a47d8c8, correct?
 
+Correct.
 
--- 
-Thanks!
-Yijing
-
+Plain revert didn't work because the code has changed after that commit.
