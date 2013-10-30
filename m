@@ -1,59 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:33767 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214Ab3JKHJj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2013 03:09:39 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MUH0000AT7TF370@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 11 Oct 2013 16:09:31 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Marek Vasut' <marex@denx.de>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Frank Li' <lznuaa@gmail.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Sascha Hauer' <s.hauer@pengutronix.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	'Tim Harvey' <tharvey@gateworks.com>,
-	'Yinghai Lu' <yinghai@kernel.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
- <1381457552-6575-1-git-send-email-marex@denx.de>
-In-reply-to: <1381457552-6575-1-git-send-email-marex@denx.de>
-Subject: Re: [PATCH 1/2] PCI: imx6: Make reset-gpio optional
-Date: Fri, 11 Oct 2013 16:09:30 +0900
-Message-id: <000b01cec650$d4547070$7cfd5150$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from v094114.home.net.pl ([79.96.170.134]:55741 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752101Ab3J3NLV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 09:11:21 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Always rescan the slot for new devices
+Date: Wed, 30 Oct 2013 14:23:26 +0100
+Message-ID: <8539808.UlspWUkrvu@vostro.rjw.lan>
+In-Reply-To: <20131030130416.GF3521@intel.com>
+References: <1383136836-15306-1-git-send-email-mika.westerberg@linux.intel.com> <1406112.LRdFoqkugQ@vostro.rjw.lan> <20131030130416.GF3521@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, October 11, 2013 11:13 AM, Marek Vasut wrote:
+On Wednesday, October 30, 2013 03:04:16 PM Mika Westerberg wrote:
+> On Wed, Oct 30, 2013 at 02:01:40PM +0100, Rafael J. Wysocki wrote:
+> > On Wednesday, October 30, 2013 02:40:36 PM Mika Westerberg wrote:
+> > > Commit 2dc4128 (ACPI / hotplug / PCI: Avoid doing too much for spurious
+> > > notifies) changed the enable_slot() to check return value of pci_scan_slot()
+> > > and if it is zero return early from the function. It means that there were
+> > > no new devices in this particular slot.
+> > > 
+> > > However, if a device appeared deeper in the hierarchy the code now ignores
+> > > it causing things like Thunderbolt chaining fail to recognize new devices.
+> > > 
+> > > The problem with Alex Williamson's machine was solved with commit
+> > > a47d8c8 (ACPI / hotplug / PCI: Avoid parent bus rescans on spurious device
+> > > checks) and hence we should be able to restore the original functionality
+> > > that we always rescan on bus check notification.
+> > > 
+> > > On a device check notification we still check what acpiphp_rescan_slot()
+> > > returns and on zero bail out early.
+> > > 
+> > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > 
+> > So, this is a revert of commit a47d8c8, correct?
 > 
-> Some boards do not have a PCIe reset GPIO. To avoid probe
-> failure on these boards, make the reset GPIO optional as
-> well.
+> Correct.
 > 
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Frank Li <lznuaa@gmail.com>
-> Cc: Richard Zhu <r65037@freescale.com>
-> Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> Cc: Sean Cross <xobs@kosagi.com>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
-> Cc: Tim Harvey <tharvey@gateworks.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
+> Plain revert didn't work because the code has changed after that commit.
 
-Reviewed-by: Jingoo Han <jg1.han@samsung.com>
+Yeah.
 
-Best regards,
-Jingoo Han
+Well, it would be good to know if it affects the Alex' system, but anyway
+I added it to the 3.13 queue for now.  We may be able to get it into 3.12
+if Alex confirms that it works for him shortly, but if that doesn't happen
+we can just ask stable to pick it up later.
 
-> ---
->  drivers/pci/host/pci-imx6.c | 29 +++++++++++++++--------------
->  1 file changed, 15 insertions(+), 14 deletions(-)
+Thanks!
 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
