@@ -1,88 +1,257 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:58863 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752591Ab3JOJMK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2013 05:12:10 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MUP002PHDK8C080@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Tue, 15 Oct 2013 18:12:08 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Jason Cooper' <jason@lakedaemon.net>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Jason Cooper' <jason@lakedaemon.net>,
-	'Andrew Lunn' <andrew@lunn.ch>,
-	'Gregory Clement' <gregory.clement@free-electrons.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <000c01ceb816$19f0dd10$4dd29730$%han@samsung.com>
- <000101ceb826$8695b7f0$93c127d0$%han@samsung.com>
-In-reply-to: <000101ceb826$8695b7f0$93c127d0$%han@samsung.com>
-Subject: Re: [PATCH V3 3/3] PCI: mvebu: return NULL instead of ERR_PTR(ret)
-Date: Tue, 15 Oct 2013 18:12:07 +0900
-Message-id: <000001cec986$9f8ef570$deace050$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:55599 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753694Ab3J3RTy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 13:19:54 -0400
+Received: by mail-pb0-f48.google.com with SMTP id mc17so1694002pbc.21
+        for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 10:19:54 -0700 (PDT)
+Date: Wed, 30 Oct 2013 11:19:49 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pci-sysfs: fix a potential deadlock when concurrent
+ remove&rescan pci device via sysfs
+Message-ID: <20131030171949.GB25745@google.com>
+References: <5270DB8B.6070600@cn.fujitsu.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5270DB8B.6070600@cn.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, September 23, 2013 3:31 PM, Jingoo Han wrote:
+On Wed, Oct 30, 2013 at 06:12:27PM +0800, Gu Zheng wrote:
+> There is a potential deadlock situation when we manipulate pci device 
+> (remove&rescan) via the pci-sysfs user interfaces simultaneously. 
 > 
-> Return NULL instead of ERR_PTR(ret) in order to fix the following
-> sparse warning:
+> Privious patch:
+> https://lkml.org/lkml/2012/12/27/10
 > 
-> drivers/pci/host/pci-mvebu.c:744:31: warning: incorrect type in return expression (different address
-> spaces)
-> drivers/pci/host/pci-mvebu.c:744:31:    expected void [noderef] <asn:2>*
-> drivers/pci/host/pci-mvebu.c:744:31:    got void *
+> Related bug reports on bugzilla:
+> https://bugzilla.kernel.org/show_bug.cgi?id=60672
+> https://bugzilla.kernel.org/show_bug.cgi?id=60695
 > 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-
-(+cc Andrew Lunn, Gregory Clement)
-
-Hi Jason Cooper,
-
-Would you apply this patch into your 'linux-mvebu.git' tree?
-It was already Acked by Thomas Petazzoni.
-Also, it is a trivial change to fix sparse warning.
-Thank you.
-
-Best regards,
-Jingoo Han
-
+> deadlock info described as following:
+> 
+> *dmesg ifno*:
+> (snip)
+> 1000e 0000:1c:00.0: eth9: Intel(R) PRO/1000 Network Connection
+> sd 13:2:0:0: [sdb] Attached SCSI disk
+> e1000e 0000:1c:00.0: eth9: MAC: 0, PHY: 4, PBA No: D50228-005
+> e1000e 0000:1c:00.1: Disabling ASPM  L1
+> e1000e 0000:1c:00.1: Interrupt Throttling Rate (ints/sec) set to dynamic
+> conservative mode
+> e1000e 0000:1c:00.1: irq 143 for MSI/MSI-X
+> e1000e 0000:1c:00.1: eth10: (PCI Express:2.5GT/s:Width x4) 00:15:17:cd:96:bf
+> e1000e 0000:1c:00.1: eth10: Intel(R) PRO/1000 Network Connection
+> e1000e 0000:1c:00.1: eth10: MAC: 0, PHY: 4, PBA No: D50228-005
+> INFO: task bash:62982 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> bash            D 0000000000000000     0 62982  62978 0x00000080
+>  ffff88038b277db8 0000000000000082 ffff88038b277fd8 0000000000013940
+>  ffff88038b276010 0000000000013940 0000000000013940 0000000000013940
+>  ffff88038b277fd8 0000000000013940 ffff880377449e30 ffff8806e822c670
+> Call Trace:
+>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
+>  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
+>  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
+>  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
+>  [<ffffffff81341800>] dev_attr_store+0x20/0x30
+>  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
+>  [<ffffffff81173d08>] vfs_write+0xc8/0x190
+>  [<ffffffff81173ed1>] sys_write+0x51/0x90
+>  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
+> INFO: task bash:64141 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> bash            D ffffffff81610460     0 64141  64136 0x00000080
+>  ffff8803540e9db8 0000000000000086 ffff8803540e9fd8 0000000000013940
+>  ffff8803540e8010 0000000000013940 0000000000013940 0000000000013940
+>  ffff8803540e9fd8 0000000000013940 ffff8807db338a10 ffff8806f09abc60
+> Call Trace:
+>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
+>  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
+>  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
+>  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
+>  [<ffffffff81341800>] dev_attr_store+0x20/0x30
+>  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
+>  [<ffffffff81173d08>] vfs_write+0xc8/0x190
+>  [<ffffffff81173ed1>] sys_write+0x51/0x90
+>  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
+> INFO: task kworker/u:3:64451 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> kworker/u:3     D ffffffff81610460     0 64451      2 0x00000080
+>  ffff8807d51b7a30 0000000000000046 ffff8807d51b7fd8 0000000000013940
+>  ffff8807d51b6010 0000000000013940 0000000000013940 0000000000013940
+>  ffff8807d51b7fd8 0000000000013940 ffff8807db339420 ffff88037744b250
+> Call Trace:
+>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>  [<ffffffff81519ded>] schedule_timeout+0x19d/0x220
+>  [<ffffffff81165f92>] ? __slab_free+0x1f2/0x2f0
+>  [<ffffffff8151b8fe>] wait_for_common+0x11e/0x190
+>  [<ffffffff8108a6e0>] ? try_to_wake_up+0x2c0/0x2c0
+>  [<ffffffff8151ba4d>] wait_for_completion+0x1d/0x20
+>  [<ffffffff811e53e8>] sysfs_addrm_finish+0xb8/0xd0
+>  [<ffffffff811e4320>] ? sysfs_schedule_callback+0x1e0/0x1e0
+>  [<ffffffff811e33f0>] sysfs_hash_and_remove+0x60/0xb0
+>  [<ffffffff811e43c9>] sysfs_remove_file+0x39/0x50
+>  [<ffffffff81342cb7>] device_remove_file+0x17/0x20
+>  [<ffffffff8134505c>] bus_remove_device+0xdc/0x180
+>  [<ffffffff81342eb0>] device_del+0x120/0x1d0
+>  [<ffffffff81342f82>] device_unregister+0x22/0x60
+>  [<ffffffff8127ade4>] pci_stop_bus_device+0x94/0xa0
+>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>  [<ffffffff8127af66>] pci_stop_and_remove_bus_device+0x16/0x30
+>  [<ffffffff81282359>] remove_callback+0x29/0x40
+>  [<ffffffff811e4344>] sysfs_schedule_callback_work+0x24/0x70
+>  [<ffffffff81070009>] process_one_work+0x179/0x4b0
+>  [<ffffffff8107210e>] worker_thread+0x12e/0x330
+>  [<ffffffff81071fe0>] ? manage_workers+0x110/0x110
+>  [<ffffffff8107705e>] kthread+0x9e/0xb0
+>  [<ffffffff81525bc4>] kernel_thread_helper+0x4/0x10
+>  [<ffffffff81076fc0>] ? kthread_freezable_should_stop+0x70/0x70
+>  [<ffffffff81525bc0>] ? gs_change+0x13/0x13
+> 
+> path1: sysfs remove device:             | path2: sysfs rescan device:
+> sysfs_schedule_callback_work()          | sysfs_write_file()
+>   remove_callback()                     |   flush_write_buffer()
+> *1* mutex_lock(&pci_remove_rescan_mutex)|*2*  sysfs_get_active(attr_sd)
+>       ...                               |     dev_attr_store()
+>         device_remove_file()            |       dev_rescan_store()
+>           ...                           |*4*  mutex_lock(&pci_remove_rescan_mutex)
+> *3*       sysfs_deactivate(sd)          |     ...
+>             wait_for_completion()       |*5*  sysfs_put_active(attr_sd)
+> *6* mutex_unlock(&pci_remove_rescan_mutex)
+> 
+> If path1 first holds the pci_remove_rescan_mutex at *1*, then another path
+> called path2 actived and runs to *2* before path1 runs to *3*, we now runs
+> to a deadlock situation:
+> Path1 holds the mutex waiting path2 to decrease sysfs_dirent's s_active
+> counter at *5*, but path2 is blocked at *4* when trying to get the
+> pci_remove_rescan_mutex. The mutex won't be put by path1 until it reach
+> *6*, but it's now blocked at *3*.
+> 
+> So we use mutex_try_lock to avoid this deadlock, and additional wait/restart_syscall
+> steps are used to make the fail path of try_lock more friendly to user space task.
+> 
+> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
 > ---
->  drivers/pci/host/pci-mvebu.c |    5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
+>  drivers/pci/pci-sysfs.c |   48 +++++++++++++++++++++++++++++++++++++++-------
+>  1 files changed, 40 insertions(+), 8 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 0bd3ba8..fb2474f 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -741,7 +741,7 @@ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
-> 
->  	ret = of_address_to_resource(np, 0, &regs);
->  	if (ret)
-> -		return ERR_PTR(ret);
-> +		return NULL;
-> 
->  	return devm_ioremap_resource(&pdev->dev, &regs);
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 7128cfd..0dac6f4 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -29,6 +29,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/vgaarb.h>
+>  #include <linux/pm_runtime.h>
+> +#include <linux/delay.h>
+>  #include "pci.h"
+>  
+>  static int sysfs_initialized;	/* = 0 */
+> @@ -285,6 +286,25 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
 >  }
-> @@ -940,10 +940,9 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
->  			continue;
+>  
+>  static DEFINE_MUTEX(pci_remove_rescan_mutex);
+> +
+> +static void pci_remove_rescan_lock(void)
+> +{
+> +	mutex_lock(&pci_remove_rescan_mutex);
+> +}
+> +
+> +static int pci_remove_rescan_lock_sysfs(void)
+> +{
+> +	if (mutex_trylock(&pci_remove_rescan_mutex))
+> +		return 0;
+> +	/* Avoid busy looping (20 ms of sleep should do). */
+> +	msleep(20);
+> +	return restart_syscall();
+
+There are very few uses of restart_syscall().  I don't believe this
+situation is so unusual and special that we need to use it here.
+
+> +}
+> +
+> +static void pci_remove_rescan_unlock(void)
+> +{
+> +	mutex_unlock(&pci_remove_rescan_mutex);
+> +}
+>  static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+>  				size_t count)
+>  {
+> @@ -295,10 +315,14 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+>  		return -EINVAL;
+>  
+>  	if (val) {
+> -		mutex_lock(&pci_remove_rescan_mutex);
+> +		int ret;
+> +
+> +		ret = pci_remove_rescan_lock_sysfs();
+> +		if (ret)
+> +			return ret;
+>  		while ((b = pci_find_next_bus(b)) != NULL)
+>  			pci_rescan_bus(b);
+> -		mutex_unlock(&pci_remove_rescan_mutex);
+> +		pci_remove_rescan_unlock();
+>  	}
+>  	return count;
+>  }
+> @@ -319,9 +343,13 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>  		return -EINVAL;
+>  
+>  	if (val) {
+> -		mutex_lock(&pci_remove_rescan_mutex);
+> +		int ret;
+> +
+> +		ret = pci_remove_rescan_lock_sysfs();
+> +		if (ret)
+> +			return ret;
+>  		pci_rescan_bus(pdev->bus);
+> -		mutex_unlock(&pci_remove_rescan_mutex);
+> +		pci_remove_rescan_unlock();
+>  	}
+>  	return count;
+>  }
+> @@ -332,9 +360,9 @@ static void remove_callback(struct device *dev)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+>  
+> -	mutex_lock(&pci_remove_rescan_mutex);
+> +	pci_remove_rescan_lock();
+>  	pci_stop_and_remove_bus_device(pdev);
+> -	mutex_unlock(&pci_remove_rescan_mutex);
+> +	pci_remove_rescan_unlock();
+>  }
+>  
+>  static ssize_t
+> @@ -370,12 +398,16 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+>  		return -EINVAL;
+>  
+>  	if (val) {
+> -		mutex_lock(&pci_remove_rescan_mutex);
+> +		int ret;
+> +
+> +		ret = pci_remove_rescan_lock_sysfs();
+> +		if (ret)
+> +			return ret;
+>  		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+>  			pci_rescan_bus_bridge_resize(bus->self);
+>  		else
+>  			pci_rescan_bus(bus);
+> -		mutex_unlock(&pci_remove_rescan_mutex);
+> +		pci_remove_rescan_unlock();
+>  	}
+>  	return count;
+>  }
+> -- 
+> 1.7.7
 > 
->  		port->base = mvebu_pcie_map_registers(pdev, child, port);
-> -		if (IS_ERR(port->base)) {
-> +		if (!port->base) {
->  			dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
->  				port->port, port->lane);
-> -			port->base = NULL;
->  			clk_disable_unprepare(port->clk);
->  			continue;
->  		}
 > --
-> 1.7.10.4
-
-
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
