@@ -1,57 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:37926 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754106Ab3JXLBr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Oct 2013 07:01:47 -0400
-Date: Thu, 24 Oct 2013 12:01:35 +0100
-From: Tejun Heo <tj@kernel.org>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*()
- family helpers
-Message-ID: <20131024110135.GD13159@mtj.dyndns.org>
-References: <cover.1382103786.git.agordeev@redhat.com>
- <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
- <20131024105158.GB13159@mtj.dyndns.org>
- <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B73AA@saturn3.aculab.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1383143050.4097.164.camel@ul30vt.home>
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Always rescan the slot for new
+ devices
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 30 Oct 2013 08:24:10 -0600
+In-Reply-To: <2238508.7Zxn6keMnr@vostro.rjw.lan>
+References: <1383136836-15306-1-git-send-email-mika.westerberg@linux.intel.com>
+	 <1383141466.4097.163.camel@ul30vt.home> <2238508.7Zxn6keMnr@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-On Thu, Oct 24, 2013 at 11:57:40AM +0100, David Laight wrote:
-> > > ...would turn into a single helper call....
-> > >
-> > > 	rc = pcim_enable_msix_range(adapter->pdev,
-> > > 				    adapter->msix_entries,
-> > > 				    nvec,
-> > > 				    FOO_DRIVER_MINIMUM_NVEC);
+On Wed, 2013-10-30 at 15:13 +0100, Rafael J. Wysocki wrote:
+> On Wednesday, October 30, 2013 07:57:46 AM Alex Williamson wrote:
+> > On Wed, 2013-10-30 at 14:40 +0200, Mika Westerberg wrote:
+> > > Commit 2dc4128 (ACPI / hotplug / PCI: Avoid doing too much for spurious
+> > > notifies) changed the enable_slot() to check return value of pci_scan_slot()
+> > > and if it is zero return early from the function. It means that there were
+> > > no new devices in this particular slot.
+> > > 
+> > > However, if a device appeared deeper in the hierarchy the code now ignores
+> > > it causing things like Thunderbolt chaining fail to recognize new devices.
+> > > 
+> > > The problem with Alex Williamson's machine was solved with commit
+> > > a47d8c8 (ACPI / hotplug / PCI: Avoid parent bus rescans on spurious device
+> > > checks) and hence we should be able to restore the original functionality
+> > > that we always rescan on bus check notification.
+> > > 
+> > > On a device check notification we still check what acpiphp_rescan_slot()
+> > > returns and on zero bail out early.
+> > > 
+> > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > ---
+> > > Alex,
+> > > 
+> > > Are you able to check if your machine still works and doesn't slow down
+> > > during boot after this patch is applied?
 > > 
-> > I haven't looked into any details but, if the above works for most use
-> > cases, it looks really good to me.
+> > Looks ok to me, no new console output or boot delay.  Thanks,
 > 
-> The one case it doesn't work is where the driver either
-> wants the full number or the minimum number - but not
-> a value in between.
+> Great, thanks!
 > 
-> Might be worth adding an extra parameter so that this
-> (and maybe other) odd requirements can be met.
-> 
-> Some static inline functions could be used for the common cases.
+> May I add your Tested-by to it, then?
 
-If those are edge cases, I don't think it's a big deal no matter what
-we do.
+Sure
 
-Thanks.
+Tested-by: Alex Williamson <alex.williamson@redhat.com>
 
--- 
-tejun
