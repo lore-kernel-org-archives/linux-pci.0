@@ -1,50 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:47444 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755256Ab3JIPAi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2013 11:00:38 -0400
-Received: by mail-ie0-f175.google.com with SMTP id aq17so1605628iec.6
-        for <linux-pci@vger.kernel.org>; Wed, 09 Oct 2013 08:00:36 -0700 (PDT)
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:53093 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751215Ab3J3QZ5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 12:25:57 -0400
+Received: by mail-ie0-f172.google.com with SMTP id tp5so2776258ieb.3
+        for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 09:25:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <000301cec4c4$3dc751f0$b955f5d0$%han@samsung.com>
-References: <20131008000435.12954.92136.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <000301cec4c4$3dc751f0$b955f5d0$%han@samsung.com>
+In-Reply-To: <201310301552.28866.marex@denx.de>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
+ <CAErSpo6v4nvKQ4W9BhnUsNEjzsXoCiLxeFY-K=z=bMZ4AFOyGg@mail.gmail.com> <201310301552.28866.marex@denx.de>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Oct 2013 09:00:14 -0600
-Message-ID: <CAErSpo7za8Puks_1hfoX9j_6FDxsD=1UqarCp-y4MhwQKJtzvQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: designware: Make dw_pcie_rd_own_conf(), etc., static
-To: Jingoo Han <jg1.han@samsung.com>
+Date: Wed, 30 Oct 2013 10:25:37 -0600
+Message-ID: <CAErSpo5dcqA+OkORmPO41THd+QaG53jXgZPogw3U5-1GP-hyoA@mail.gmail.com>
+Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
+To: Marek Vasut <marex@denx.de>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@st.com>
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 9, 2013 at 1:50 AM, Jingoo Han <jg1.han@samsung.com> wrote:
-> On Tuesday, October 08, 2013 9:05 AM, Bjorn Helgaas wrote:
->>
->> The following variables and functions are used only in pcie-designware.c,
->> so make them static:
->>
->>   global_io_offset
->>   dw_pcie_rd_own_conf()
->>   dw_pcie_wr_own_conf()
->>   dw_pcie_setup()
->>   dw_pcie_scan_bus()
->>   dw_pcie_map_irq()
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Wed, Oct 30, 2013 at 8:52 AM, Marek Vasut <marex@denx.de> wrote:
+> Dear Bjorn Helgaas,
 >
-> Acked-by: Jingoo Han <jg1.han@samsung.com>
+>> On Tue, Oct 15, 2013 at 10:06 AM, Marek Vasut <marex@denx.de> wrote:
+>> > Set of random fixes for the PCIe driver for i.MX6 . With these fixes, my
+>> > setup with MX6Q -> PCIe bridge -> i210 ethernet adapter works as
+>> > expected.
+>> >
+>> > NOTE: I'm sure this will start some discussion. There are quite a few
+>> > patches
+>> >
+>> >       that are more of a hacks. Shawn, I didn't ignore your remark about
+>> >       the clock patches, I will test it ASAP, I just want to have these
+>> >       fixes in the public so others can comment/test.
+>> >
+>> > Marek Vasut (6):
+>> >   PCI: imx6: Make reset-gpio optional
+>> >   PCI: imx6: Fix the clock for PCIe
+>> >   ARM: dts: imx6qdl: Fix the clock for PCIe
+>> >   PCI: imx6: Probe the PCIe in fs_initcall()
+>> >   PCI: imx6: Force Gen1 operation
+>> >   PCI: designware: Fix DT resource retrieval
+>> >
+>> >  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
+>> >  arch/arm/boot/dts/imx6qdl.dtsi                     |  4 +-
+>> >  drivers/pci/host/pci-imx6.c                        | 63
+>> >  ++++++++++++++++------ drivers/pci/host/pcie-designware.c
+>> >    | 17 +++---
+>> >  4 files changed, 55 insertions(+), 31 deletions(-)
+>>
+>> I'm ignoring this series for now.  I assume you'll post an updated
+>> series as mentioned in your Oct 17 response to "[Patch 5/6] PCI: imx6:
+>> Force Gen1 operation."  Please mark that series as "v2" when you post
+>> it.  My assumption is still that Shawn Guo will ack the
+>> drivers/pci/host/ pieces before I apply them [1].
 >
-> It looks good.
-> Also I tested this patch on Exynos5440. It works properly.
-> Thank you for sending the patch.
+> Can you maybe pick at least these two:
+>
+> PCI: imx6: Make reset-gpio optional
+> PCI: imx6: Probe the PCIe in fs_initcall()
+>
+> I think they should be harmless and the later one fixes a problem on MX6. I'm
+> now digging in the PCIe MX6 again btw.
 
-I applied this to my pci/host-designware branch for v3.13.  Thanks!
+I'm fine with taking these as long as Shawn acks them.
 
->> ---
->>  drivers/pci/host/pcie-designware.c |   16 ++++++++--------
->>  drivers/pci/host/pcie-designware.h |    7 -------
->>  2 files changed, 8 insertions(+), 15 deletions(-)
->
+Bjorn
