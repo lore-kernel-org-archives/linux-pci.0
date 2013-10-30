@@ -1,114 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:13305 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755331Ab3JNACE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Oct 2013 20:02:04 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MUM00BNSTFCFN00@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Mon, 14 Oct 2013 09:02:00 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Marek Vasut' <marex@denx.de>, 'Shawn Guo' <shawn.guo@linaro.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Frank Li' <lznuaa@gmail.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Sascha Hauer' <s.hauer@pengutronix.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Tim Harvey' <tharvey@gateworks.com>,
-	'Yinghai Lu' <yinghai@kernel.org>,
-	'Jingoo Han' <jg1.han@samsung.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>
-References: <CAErSpo5e5ZyVqGOHR9p568k7_Qx4tBQCBjQvWvL+xGCqFLHHKQ@mail.gmail.com>
- <1381457552-6575-1-git-send-email-marex@denx.de>
- <20131012071959.GB21305@S2101-09.ap.freescale.net>
- <201310121128.31801.marex@denx.de>
-In-reply-to: <201310121128.31801.marex@denx.de>
-Subject: Re: [PATCH 1/2] PCI: imx6: Make reset-gpio optional
-Date: Mon, 14 Oct 2013 09:02:00 +0900
-Message-id: <000501cec870$9aebcc80$d0c36580$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-out.m-online.net ([212.18.0.10]:36932 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464Ab3J3Jy5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 05:54:57 -0400
+From: Marek Vasut <marex@denx.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: imx6: increase link startup
+Date: Wed, 30 Oct 2013 10:54:50 +0100
+Cc: Tim Harvey <tharvey@gateworks.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, Frank Li <lznuaa@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+References: <1382505138-23286-1-git-send-email-tharvey@gateworks.com> <20131029222036.GB15159@google.com>
+In-Reply-To: <20131029222036.GB15159@google.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201310301054.50502.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, October 12, 2013 6:29 PM, Marek Vasut wrote:
-> > On Fri, Oct 11, 2013 at 04:12:31AM +0200, Marek Vasut wrote:
-> > > Some boards do not have a PCIe reset GPIO. To avoid probe
-> > > failure on these boards, make the reset GPIO optional as
-> > > well.
-> > >
-> > > Signed-off-by: Marek Vasut <marex@denx.de>
-> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > Cc: Frank Li <lznuaa@gmail.com>
-> > > Cc: Richard Zhu <r65037@freescale.com>
-> > > Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> > > Cc: Sean Cross <xobs@kosagi.com>
-> > > Cc: Shawn Guo <shawn.guo@linaro.org>
-> > > Cc: Tim Harvey <tharvey@gateworks.com>
-> > > Cc: Yinghai Lu <yinghai@kernel.org>
-> > > ---
-> > >
-> > >  drivers/pci/host/pci-imx6.c | 29 +++++++++++++++--------------
-> > >  1 file changed, 15 insertions(+), 14 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> > > index d3639aa..8e7adce 100644
-> > > --- a/drivers/pci/host/pci-imx6.c
-> > > +++ b/drivers/pci/host/pci-imx6.c
-> > > @@ -220,9 +220,12 @@ static int imx6_pcie_assert_core_reset(struct
-> > > pcie_port *pp)
-> > >
-> > >  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > >
-> > >  			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
-> > >
-> > > -	gpio_set_value(imx6_pcie->reset_gpio, 0);
-> > > -	msleep(100);
-> > > -	gpio_set_value(imx6_pcie->reset_gpio, 1);
-> > > +	/* Some boards don't have PCIe reset GPIO. */
-> > > +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-> > > +		gpio_set_value(imx6_pcie->reset_gpio, 0);
-> > > +		msleep(100);
-> > > +		gpio_set_value(imx6_pcie->reset_gpio, 1);
-> > > +	}
-> > >
-> > >  	return 0;
-> > >
-> > >  }
-> > >
-> > > @@ -447,17 +450,15 @@ static int __init imx6_pcie_probe(struct
-> > > platform_device *pdev)
-> > >
-> > >  	/* Fetch GPIOs */
-> > >  	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-> > >
-> > > -	if (!gpio_is_valid(imx6_pcie->reset_gpio)) {
-> > > -		dev_err(&pdev->dev, "no reset-gpio defined\n");
-> > > -		ret = -ENODEV;
-> > > -	}
-> >
-> > The 'reset-gpio' is documented as a required property in bindings doc
-> > Documentation/devicetree/bindings/pci/designware-pcie.txt.  You need
-> > to update bindings doc if you turn it into an optional property.
+Dear Bjorn Helgaas,
+
+> On Tue, Oct 22, 2013 at 10:12:18PM -0700, Tim Harvey wrote:
+> > An increase link startup delay is required when certain PCI switches are
+> > attached to the root complex.  This was tested with a Pericom switch
+> > and a PLX switch.
+> > 
+> > From: Marek Vasut <marex@denx.de>
+> > Signed-off-by: Marek Vasut <marex@denx.de>
+> > Acked-by: Tim Harvey <tharvey@gateworks.com>
 > 
-> That's true, thanks for pointing it out!
+> I applied this with Shawn's ack to my pci/host-imx6 branch for v3.13,
+> thanks!
+> 
+> I assume the intent was that this patch was written by Marek, per the
+> "From:" line you added above, so I fixed that in the patch so Marek
+> appears as the author.  Let me know if this is incorrect.
 
-+cc Kishon Vijay Abraham I, Pratyush Anand, Mohit KUMAR
-
-Yes, right.
-"reset-gpio" property can be moved to an optional property.
-Also, the patch to fix 'Designware' part such as 'designware-pcie.txt'
-can be shared with other related people as below.
-
-  - Samsung Exynos PCIe: Jingoo Han
-  - ST Spear PCIe: Pratyush Anand, Mohit KUMAR
-  - TI OMAP PCIe: Kishon Vijay Abraham I
+I'm really glad Tim split this patch while I am being totally unhelpful here on 
+the PCIe front in last few days. Thank you!
 
 Best regards,
-Jingoo Han
-
+Marek Vasut
