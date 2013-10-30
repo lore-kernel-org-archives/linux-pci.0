@@ -1,80 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:53093 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751215Ab3J3QZ5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 12:25:57 -0400
-Received: by mail-ie0-f172.google.com with SMTP id tp5so2776258ieb.3
-        for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 09:25:57 -0700 (PDT)
+Received: from mail-db9lp0250.outbound.messaging.microsoft.com ([213.199.154.250]:14329
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752010Ab3J3D2N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2013 23:28:13 -0400
+Date: Wed, 30 Oct 2013 11:28:13 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Sachin Kamat <sachin.kamat@linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sean Cross <xobs@kosagi.com>
+Subject: Re: [PATCH 1/3] PCI: imx6: Remove redeundant of_match_ptr
+Message-ID: <20131030032811.GK2839@S2101-09.ap.freescale.net>
+References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
+ <CAErSpo6zQ26BccSzmSqXcptQvDADrzPxBcRfoivTO2gd9ApP8g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <201310301552.28866.marex@denx.de>
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
- <CAErSpo6v4nvKQ4W9BhnUsNEjzsXoCiLxeFY-K=z=bMZ4AFOyGg@mail.gmail.com> <201310301552.28866.marex@denx.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 30 Oct 2013 10:25:37 -0600
-Message-ID: <CAErSpo5dcqA+OkORmPO41THd+QaG53jXgZPogw3U5-1GP-hyoA@mail.gmail.com>
-Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
-To: Marek Vasut <marex@denx.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAErSpo6zQ26BccSzmSqXcptQvDADrzPxBcRfoivTO2gd9ApP8g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 30, 2013 at 8:52 AM, Marek Vasut <marex@denx.de> wrote:
-> Dear Bjorn Helgaas,
->
->> On Tue, Oct 15, 2013 at 10:06 AM, Marek Vasut <marex@denx.de> wrote:
->> > Set of random fixes for the PCIe driver for i.MX6 . With these fixes, my
->> > setup with MX6Q -> PCIe bridge -> i210 ethernet adapter works as
->> > expected.
->> >
->> > NOTE: I'm sure this will start some discussion. There are quite a few
->> > patches
->> >
->> >       that are more of a hacks. Shawn, I didn't ignore your remark about
->> >       the clock patches, I will test it ASAP, I just want to have these
->> >       fixes in the public so others can comment/test.
->> >
->> > Marek Vasut (6):
->> >   PCI: imx6: Make reset-gpio optional
->> >   PCI: imx6: Fix the clock for PCIe
->> >   ARM: dts: imx6qdl: Fix the clock for PCIe
->> >   PCI: imx6: Probe the PCIe in fs_initcall()
->> >   PCI: imx6: Force Gen1 operation
->> >   PCI: designware: Fix DT resource retrieval
->> >
->> >  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
->> >  arch/arm/boot/dts/imx6qdl.dtsi                     |  4 +-
->> >  drivers/pci/host/pci-imx6.c                        | 63
->> >  ++++++++++++++++------ drivers/pci/host/pcie-designware.c
->> >    | 17 +++---
->> >  4 files changed, 55 insertions(+), 31 deletions(-)
->>
->> I'm ignoring this series for now.  I assume you'll post an updated
->> series as mentioned in your Oct 17 response to "[Patch 5/6] PCI: imx6:
->> Force Gen1 operation."  Please mark that series as "v2" when you post
->> it.  My assumption is still that Shawn Guo will ack the
->> drivers/pci/host/ pieces before I apply them [1].
->
-> Can you maybe pick at least these two:
->
-> PCI: imx6: Make reset-gpio optional
-> PCI: imx6: Probe the PCIe in fs_initcall()
->
-> I think they should be harmless and the later one fixes a problem on MX6. I'm
-> now digging in the PCIe MX6 again btw.
+On Tue, Oct 29, 2013 at 04:11:25PM -0600, Bjorn Helgaas wrote:
+> [+cc Shawn]
+> 
+> On Mon, Oct 21, 2013 at 3:06 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+> > imx6_pcie_of_match is always compiled in. Hence of_match_ptr is
+> > not required.
+> >
+> > Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+> > Cc: Sean Cross <xobs@kosagi.com>
+> 
+> I'll apply this for v3.13 if Shawn acks it, per
+> http://lkml.kernel.org/r/CAErSpo5tN==4nSv2u3SUBe_L4VsWn4P7TN+LtrC172Qj1vhtog@mail.gmail.com
 
-I'm fine with taking these as long as Shawn acks them.
+Yea, since PCI_IMX6 depends on SOC_IMX6Q which only supports OF build,
+it makes sense to drop the of_match_ptr() wrapper, so
 
-Bjorn
+Acked-by: Shawn Guo <shawn.guo@linaro.org>
+
+> 
+> > ---
+> >  drivers/pci/host/pci-imx6.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > index 5afa922..64aaa8e 100644
+> > --- a/drivers/pci/host/pci-imx6.c
+> > +++ b/drivers/pci/host/pci-imx6.c
+> > @@ -558,7 +558,7 @@ static struct platform_driver imx6_pcie_driver = {
+> >         .driver = {
+> >                 .name   = "imx6q-pcie",
+> >                 .owner  = THIS_MODULE,
+> > -               .of_match_table = of_match_ptr(imx6_pcie_of_match),
+> > +               .of_match_table = imx6_pcie_of_match,
+> >         },
+> >  };
+> >
+> > --
+> > 1.7.9.5
+> >
+
