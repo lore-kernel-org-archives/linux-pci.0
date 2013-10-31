@@ -1,51 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH RFC 72/77] vmxnet3: Fixup a weird loop exit
-Date: Wed,  2 Oct 2013 12:49:28 +0200
-Message-Id: <93fde8941d272e952e796abbf6526f19dc2d265f.1380703263.git.agordeev@redhat.com>
-In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:36710 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768Ab3JaDZW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 23:25:22 -0400
+Received: by mail-ob0-f172.google.com with SMTP id gq1so2443396obb.17
+        for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 20:25:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4CFitR_CbG+TBYF-S-nKLdz9+CfV2mex76b=pnh24Vqw@mail.gmail.com>
+References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
+	<1382346403-29576-2-git-send-email-sachin.kamat@linaro.org>
+	<CAErSpo6n4F1zREyYXuwq9LCRLCD+yZ9o8j==ANamiAZesFz=EA@mail.gmail.com>
+	<CAErSpo4CFitR_CbG+TBYF-S-nKLdz9+CfV2mex76b=pnh24Vqw@mail.gmail.com>
+Date: Thu, 31 Oct 2013 08:55:22 +0530
+Message-ID: <CAK9yfHyTUdgS8-DUVn+1rUQ7aADRNJ+Y+n+qTkZ47=F2gVh2Ew@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: mvebu: Remove redeundant of_match_ptr
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/vmxnet3/vmxnet3_drv.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On 30 October 2013 21:36, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Oct 29, 2013 at 4:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc Jason]
+>>
+>> On Mon, Oct 21, 2013 at 3:06 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+>>> mvebu_pcie_of_match_table is always compiled in. Hence of_match_ptr is
+>>> not required.
+>>>
+>>> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+>>> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+>>
+>> Jason, I assume you'll merge this if you want it.
+>
+> BTW, Jason, if you think of it, fix the typo in the subject
+> (s/redeundant/redundant/).  It was correct for the exynos patch, but
+> wrong for the mvebu and imx6 patches.
 
-diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
-index 5b8ea71..3518173 100644
---- a/drivers/net/vmxnet3/vmxnet3_drv.c
-+++ b/drivers/net/vmxnet3/vmxnet3_drv.c
-@@ -2750,7 +2750,7 @@ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
- 		} else if (err < 0) {
- 			dev_err(&adapter->netdev->dev,
- 				   "Failed to enable MSI-X, error: %d\n", err);
--			vectors = 0;
-+			return err;
- 		} else if (err < vector_threshold) {
- 			break;
- 		} else {
+Sorry for the typo. Somehow I happened to overlook it.
+
 -- 
-1.7.7.6
-
+With warm regards,
+Sachin
