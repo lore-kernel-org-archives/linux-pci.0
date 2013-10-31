@@ -1,56 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65429 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751222Ab3JDFMQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Oct 2013 01:12:16 -0400
-Date: Fri, 4 Oct 2013 07:13:24 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-ide@vger.kernel.org, iss_storagedev@hp.com,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-driver@qlogic.com,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	"VMware, Inc." <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC 06/77] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20131004051322.GA3577@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <9c282c4ab92731c719d161d2db6fc54ce33891d9.1380703262.git.agordeev@redhat.com>
- <1380837174.3419.21.camel@bwh-desktop.uk.level5networks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380837174.3419.21.camel@bwh-desktop.uk.level5networks.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:55955 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730Ab3JaBip (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 21:38:45 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MVI002Q6F855TA0@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 31 Oct 2013 10:38:43 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Shawn Guo' <shawn.guo@linaro.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: 'Marek Vasut' <marex@denx.de>, linux-pci@vger.kernel.org,
+	'linux-arm' <linux-arm-kernel@lists.infradead.org>,
+	'Frank Li' <lznuaa@gmail.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Troy Kisky' <troy.kisky@boundarydevices.com>,
+	'Yinghai Lu' <yinghai@kernel.org>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
+ <CAErSpo6v4nvKQ4W9BhnUsNEjzsXoCiLxeFY-K=z=bMZ4AFOyGg@mail.gmail.com>
+ <201310301552.28866.marex@denx.de>
+ <CAErSpo5dcqA+OkORmPO41THd+QaG53jXgZPogw3U5-1GP-hyoA@mail.gmail.com>
+ <20131031012615.GA19362@S2101-09.ap.freescale.net>
+In-reply-to: <20131031012615.GA19362@S2101-09.ap.freescale.net>
+Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
+Date: Thu, 31 Oct 2013 10:38:42 +0900
+Message-id: <003101ced5d9$ee6f63a0$cb4e2ae0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 03, 2013 at 10:52:54PM +0100, Ben Hutchings wrote:
-> On Wed, 2013-10-02 at 12:48 +0200, Alexander Gordeev wrote:
-> >  #ifndef CONFIG_PCI_MSI
-> > +static inline int pci_get_msi_cap(struct pci_dev *dev)
-> > +{
-> > +	return -1;
-> [...]
+On Thursday, October 31, 2013 10:26 AM, Shawn Guo wrote:
+> On Wed, Oct 30, 2013 at 10:25:37AM -0600, Bjorn Helgaas wrote:
+> > > Can you maybe pick at least these two:
+> > >
+> > > PCI: imx6: Make reset-gpio optional
 > 
-> Shouldn't this also return -EINVAL?
+> Isn't there a comment from Jingoo on this patch unresolved?
 
-Yep, all inliners here are better to return -EINVAL.
-Will do unless someone speaks out against.
+(+cc Kishon Vijay Abraham I)
 
-> Ben.
+Oh, right.
+Please fix the Documentation part as below.
+: http://www.spinics.net/lists/linux-pci/msg25951.html
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+> 
+> > > PCI: imx6: Probe the PCIe in fs_initcall()
+> 
+> Acked-by: Shawn Guo <shawn.guo@linaro.org>
+> 
+> > >
+> > > I think they should be harmless and the later one fixes a problem on MX6. I'm
+> > > now digging in the PCIe MX6 again btw.
+> >
+> > I'm fine with taking these as long as Shawn acks them.
+> >
+> > Bjorn
+
