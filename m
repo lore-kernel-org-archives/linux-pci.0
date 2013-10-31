@@ -1,43 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56136 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881Ab3JAUHo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Oct 2013 16:07:44 -0400
-Date: Tue, 1 Oct 2013 13:07:55 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: David Cohen <david.a.cohen@linux.intel.com>
-Cc: cjb@laptop.org, bhelgaas@google.com, adrian.hunter@intel.com,
-	wfp5p@virginia.edu, g.liakhovetski@gmx.de,
-	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] pci_id: add Intel Merrifield mmc pci id
-Message-ID: <20131001200755.GA28165@kroah.com>
-References: <1380657633-19543-1-git-send-email-david.a.cohen@linux.intel.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:56753 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154Ab3JaRgo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Oct 2013 13:36:44 -0400
+Received: by mail-ie0-f180.google.com with SMTP id e14so5439123iej.39
+        for <linux-pci@vger.kernel.org>; Thu, 31 Oct 2013 10:36:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380657633-19543-1-git-send-email-david.a.cohen@linux.intel.com>
+In-Reply-To: <201310301552.28866.marex@denx.de>
+References: <1381853200-5534-1-git-send-email-marex@denx.de>
+ <CAErSpo6v4nvKQ4W9BhnUsNEjzsXoCiLxeFY-K=z=bMZ4AFOyGg@mail.gmail.com> <201310301552.28866.marex@denx.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 31 Oct 2013 11:36:23 -0600
+Message-ID: <CAErSpo7Bba=b_eH=TpxM7E8xqvSJQdfeCUuTSPsDKiOAkiSOrA@mail.gmail.com>
+Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
+To: Marek Vasut <marex@denx.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 01, 2013 at 01:00:32PM -0700, David Cohen wrote:
-> Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
-> ---
->  include/linux/pci_ids.h | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 97fbecd..2a89103 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2551,6 +2551,7 @@
->  #define PCI_DEVICE_ID_INTEL_MFD_EMMC0	0x0823
->  #define PCI_DEVICE_ID_INTEL_MFD_EMMC1	0x0824
->  #define PCI_DEVICE_ID_INTEL_MRST_SD2	0x084F
-> +#define PCI_DEVICE_ID_INTEL_MRFL_MMC	0x1190
+On Wed, Oct 30, 2013 at 8:52 AM, Marek Vasut <marex@denx.de> wrote:
+> Dear Bjorn Helgaas,
+>
+>> On Tue, Oct 15, 2013 at 10:06 AM, Marek Vasut <marex@denx.de> wrote:
+>> > Set of random fixes for the PCIe driver for i.MX6 . With these fixes, my
+>> > setup with MX6Q -> PCIe bridge -> i210 ethernet adapter works as
+>> > expected.
+>> >
+>> > NOTE: I'm sure this will start some discussion. There are quite a few
+>> > patches
+>> >
+>> >       that are more of a hacks. Shawn, I didn't ignore your remark about
+>> >       the clock patches, I will test it ASAP, I just want to have these
+>> >       fixes in the public so others can comment/test.
+>> >
+>> > Marek Vasut (6):
+>> >   PCI: imx6: Make reset-gpio optional
+>> >   PCI: imx6: Fix the clock for PCIe
+>> >   ARM: dts: imx6qdl: Fix the clock for PCIe
+>> >   PCI: imx6: Probe the PCIe in fs_initcall()
+>> >   PCI: imx6: Force Gen1 operation
+>> >   PCI: designware: Fix DT resource retrieval
+>> >
+>> >  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
+>> >  arch/arm/boot/dts/imx6qdl.dtsi                     |  4 +-
+>> >  drivers/pci/host/pci-imx6.c                        | 63
+>> >  ++++++++++++++++------ drivers/pci/host/pcie-designware.c
+>> >    | 17 +++---
+>> >  4 files changed, 55 insertions(+), 31 deletions(-)
+>>
+>> I'm ignoring this series for now.  I assume you'll post an updated
+>> series as mentioned in your Oct 17 response to "[Patch 5/6] PCI: imx6:
+>> Force Gen1 operation."  Please mark that series as "v2" when you post
+>> it.  My assumption is still that Shawn Guo will ack the
+>> drivers/pci/host/ pieces before I apply them [1].
+>
+> Can you maybe pick at least these two:
+>
+> PCI: imx6: Make reset-gpio optional
+> PCI: imx6: Probe the PCIe in fs_initcall()
 
-Please read the top of this file for why you shouldn't be adding new
-device ids to it.
+Applied "Probe the PCIe in fs_initcall()" with Shawn's ack to my
+pci/host-imx6 branch for v3.13, thanks.
 
-thanks,
-
-greg k-h
+Bjorn
