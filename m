@@ -1,53 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:37955 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932079Ab3KVShJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2013 13:37:09 -0500
-Date: Fri, 22 Nov 2013 13:37:08 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	<linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-	Kevin Hilman <khilman@linaro.org>
-Subject: Re: [PATCH] PM / Sleep: Add pm_generic functions to re-use runtime
- PM callbacks
-In-Reply-To: <1385124235-25484-1-git-send-email-ulf.hansson@linaro.org>
-Message-ID: <Pine.LNX.4.44L0.1311221334070.1407-100000@iolanthe.rowland.org>
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:8682 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086Ab3KATe5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Nov 2013 15:34:57 -0400
+Subject: [PATCH] PCI: warn on driver probe return value greater than zero
+To: bhelgaas@google.com
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: axboe@kernel.dk, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stephenmcameron@gmail.com,
+	thenzl@redhat.com, akpm@linux-foundation.org
+Date: Fri, 01 Nov 2013 14:34:55 -0500
+Message-ID: <20131101193455.18686.92302.stgit@beardog.cce.hp.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 22 Nov 2013, Ulf Hansson wrote:
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-> To put devices into low power state during sleep, it sometimes makes
-> sense at subsystem-level to re-use device's runtime PM callbacks.
-> 
-> The PM core will at device_suspend_late disable runtime PM, after that
-> we can safely operate on these callbacks. At suspend_late the device
-> will be put into low power state by invoking the device's
-> runtime_suspend callback, unless the runtime status is already
-> suspended. At resume_early the state is restored by invoking the
-> device's runtime_resume callback. Soon after the PM core will re-enable
-> runtime PM before returning from device_resume_early.
-> 
-> These are new pm_generic functions, which are supposed to be used in
-> pairs:
-> - pm_generic_suspend_late_runtime / pm_generic_resume_early_runtime
-> - pm_generic_freeze_late_runtime / pm_generic_thaw_early_runtime
-> - pm_generic_poweroff_late_runtime / pm_generic_restore_early_runtime
+Ages ago, drivers could return values greater than zero from
+their probe function and this would be regarded as success.
+Commit f3ec4f87d607f40497 "PCI: change device runtime PM
+settings for probe and remove" slightly altered this in 2010,
+and commit 967577b062417b4e4b8e27b "PCI/PM: Keep runtime PM
+enabled for unbound PCI devices" in late 2012 altered it more
+signficantly, setting pci_dev->driver to NULL if the driver's
+probe function returned a value greater than zero, which would
+for example prevent the driver's remove function from being
+called on rmmod.
 
-The last four aren't needed.  They do exactly the same things as the 
-first two.  If you insist on having those names available for drivers,
-just do:
+Neither of those changes would necessarily make the driver fail
+in an obvious way though, and so at least a couple drivers (cciss,
+hpsa) fell into this hole since they were returning 1, and this
+situation went unnoticed for quite some time.
 
-#define pm_generic_freeze_late_runtime	pm_generic_suspend_late_runtime
-... etc.
+If a driver's probe function returns a value greater than zero,
+issue a warning, but otherwise treat this as success.
 
-Aside from that, this looks okay.
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/pci/pci-driver.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
-Alan Stern
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 98f7b9b..7fbe343 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -264,11 +264,19 @@ static long local_pci_probe(void *_ddi)
+ 	pm_runtime_get_sync(dev);
+ 	pci_dev->driver = pci_drv;
+ 	rc = pci_drv->probe(pci_dev, ddi->id);
+-	if (rc) {
++	if (!rc)
++		return rc;
++	if (rc < 0) {
+ 		pci_dev->driver = NULL;
+ 		pm_runtime_put_sync(dev);
++		return rc;
+ 	}
+-	return rc;
++	/*
++	 * Probe function should return < 0 for failure, 0 for success
++	 * Treat values > 0 as success, but warn.
++	 */
++	dev_warn(dev, "Driver probe function unexpectedly returned %d\n", rc);
++	return 0;
+ }
+ 
+ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
 
