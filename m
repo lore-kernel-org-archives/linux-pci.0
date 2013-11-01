@@ -1,69 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH 2/4] PCI / ACPI: Use acpi_find_child_device() for child devices lookup
-Date: Mon, 25 Nov 2013 01:12:10 +0100
-Message-ID: <1827111.PaqOm34rfO@vostro.rjw.lan>
-In-Reply-To: <2610478.KxPMyuOMok@vostro.rjw.lan>
-References: <2610478.KxPMyuOMok@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.10]:36496 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196Ab3KAMhp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Nov 2013 08:37:45 -0400
+From: Marek Vasut <marex@denx.de>
+To: Pratyush Anand <pratyush.anand@st.com>
+Subject: Re: [QUERY] Number of address translation regions in designware
+Date: Fri, 1 Nov 2013 13:37:40 +0100
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Ajay KHANDELWAL <ajay.khandelwal@st.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>
+References: <52652BF1.4040507@ti.com> <5267EF1E.1010101@ti.com> <20131029071015.GB2297@pratyush-vbox>
+In-Reply-To: <20131029071015.GB2297@pratyush-vbox>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311011337.40181.marex@denx.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi,
 
-It is much more efficient to use acpi_find_child_device()
-for child devices lookup in acpi_pci_find_device() and pass
-ACPI_COMPANION(dev->parent) to it directly instead of obtaining
-ACPI_HANDLE() of ACPI_COMPANION(dev->parent) and passing it to
-acpi_find_child() which has to run acpi_bus_get_device() to
-obtain ACPI_COMPANION(dev->parent) from that again.
+> + Marek, Tim, arnd
+> 
+> Hi Kishon,
+> 
+> On Wed, Oct 23, 2013 at 11:45:34PM +0800, Kishon Vijay Abraham I wrote:
+> > Hi Pratyush,
+> > 
+> > On Wednesday 23 October 2013 10:06 AM, Pratyush Anand wrote:
+> > > Hi Kishon,
+> > > 
+> > > On Tue, Oct 22, 2013 at 10:20:01PM +0800, Kishon Vijay Abraham I wrote:
+> > >> Hi Pratyush, Jingoo,
+> > >> 
+> > >> On Tuesday 22 October 2013 10:46 AM, Jingoo Han wrote:
+> > >>> On Monday, October 21, 2013 10:28 PM, Kishon Vijay Abraham I wrote:
+> > >>>> Currently I see in pcie-designware.c we use only 2 ATU regions. We
+> > >>>> re-use INDEX0 for mem outbound and cfg0, and INDEX1 for cfg1 and
+> > >>>> io. So I'd like to know if in your platform, do you have only 2
+> > >>>> address translation regions? In DRA7xx we have 16 outbound regions
+> > >>>> and 4 inbound regions.
+> > >>> 
+> > >>> In Exynos, there are only 2 inbound and 2 outbound viewpoints.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci-acpi.c |   16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+Jumping in a tad late, MX6 has 4 inbound and 4 outbound according to MX6DQRM 
+Rev. 1, 04/2013 sections:
+- 48.3.9.1.1 (bullet 8)
+- 48.3.9.1.2 (bullet 7)
+- 48.10.42 (Region_Index description in the table PCIE_PL_iATUVR)
 
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -309,7 +309,8 @@ void acpi_pci_remove_bus(struct pci_bus
- static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
--	bool is_bridge;
-+	struct acpi_device *adev;
-+	bool check_children;
- 	u64 addr;
- 
- 	/*
-@@ -317,14 +318,17 @@ static int acpi_pci_find_device(struct d
- 	 * is set only after acpi_pci_find_device() has been called for the
- 	 * given device.
- 	 */
--	is_bridge = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
-+	check_children = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
- 			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
- 	/* Please ref to ACPI spec for the syntax of _ADR */
- 	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
--	*handle = acpi_find_child(ACPI_HANDLE(dev->parent), addr, is_bridge);
--	if (!*handle)
--		return -ENODEV;
--	return 0;
-+	adev = acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
-+				      check_children);
-+	if (adev) {
-+		*handle = adev->handle;
-+		return 0;
-+	}
-+	return -ENODEV;
- }
- 
- static void pci_acpi_setup(struct device *dev)
-
+Best regards,
+Marek Vasut
