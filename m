@@ -1,110 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31642 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355Ab3KTBwa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:52:30 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/6] PCI: move resources and bus_list releasing to pci_release_dev
-Date: Tue, 19 Nov 2013 17:51:53 -0800
-Message-Id: <1384912317-3721-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
-References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:64547 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811Ab3KAP1u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Nov 2013 11:27:50 -0400
+Received: by mail-ie0-f171.google.com with SMTP id tp5so7696897ieb.16
+        for <linux-pci@vger.kernel.org>; Fri, 01 Nov 2013 08:27:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1382808205-843-1-git-send-email-amurray@embedded-bits.co.uk>
+References: <1382808205-843-1-git-send-email-amurray@embedded-bits.co.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 1 Nov 2013 09:27:30 -0600
+Message-ID: <CAErSpo6+YD4TRYcgbcvAr5vmNgt5L8vrm2tAqHmoiF4qGDnqZw@mail.gmail.com>
+Subject: Re: [PATCH] pci: update pcie_ports 'auto' behavior for non-ACPI platforms
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Karicheri, Muralidharan" <m-karicheri2@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should not release resource in pci_destroy that is too early
-as there could be still other use hold reference.
+On Sat, Oct 26, 2013 at 11:23 AM, Andrew Murray
+<amurray@embedded-bits.co.uk> wrote:
+> The pcie_ports parameter, which defaults to 'auto', allows a user
+> to specify if PCIe port services are disabled ('compat'), always
+> enabled ('native'), or only used when allowed by the BIOS
+> ('auto').
+>
+> Where CONFIG_ACPI isn't enabled, as is often the case for non
+> x86/ia64 platforms, the 'auto' behavior results in that of
+> 'compat'. Thus in order to use port services on these platforms
+> 'pcie_ports=native' must be added to the kernel command line.
+>
+> This patch results in the 'native' behavior being followed where
+> 'auto' is selected and ACPI is not enabled.
+>
+> Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
 
-release them or remove it from bus devices list at last
-in pci_release_dev instead.
+Applied to pci/misc.  I'll probably include this in the v3.13 pull
+request.  Thanks!
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c  | 21 +++++++++++++++++++--
- drivers/pci/remove.c | 19 -------------------
- 2 files changed, 19 insertions(+), 21 deletions(-)
+Bjorn
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 173a9cf..12ec56c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1154,6 +1154,18 @@ static void pci_release_capabilities(struct pci_dev *dev)
- 	pci_free_cap_save_buffers(dev);
- }
- 
-+static void pci_free_resources(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	pci_cleanup_rom(dev);
-+	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+		struct resource *res = dev->resource + i;
-+		if (res->parent)
-+			release_resource(res);
-+	}
-+}
-+
- /**
-  * pci_release_dev - free a pci device structure when all users of it are finished.
-  * @dev: device that's been disconnected
-@@ -1163,9 +1175,14 @@ static void pci_release_capabilities(struct pci_dev *dev)
-  */
- static void pci_release_dev(struct device *dev)
- {
--	struct pci_dev *pci_dev;
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+
-+	down_write(&pci_bus_sem);
-+	list_del(&pci_dev->bus_list);
-+	up_write(&pci_bus_sem);
-+
-+	pci_free_resources(pci_dev);
- 
--	pci_dev = to_pci_dev(dev);
- 	pci_release_capabilities(pci_dev);
- 	pci_release_of_node(pci_dev);
- 	pcibios_release_device(pci_dev);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 1576851..0d2c36f 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -3,20 +3,6 @@
- #include <linux/pci-aspm.h>
- #include "pci.h"
- 
--static void pci_free_resources(struct pci_dev *dev)
--{
--	int i;
--
--	msi_remove_pci_irq_vectors(dev);
--
--	pci_cleanup_rom(dev);
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--		struct resource *res = dev->resource + i;
--		if (res->parent)
--			release_resource(res);
--	}
--}
--
- static void pci_stop_dev(struct pci_dev *dev)
- {
- 	pci_pme_active(dev, false);
-@@ -34,11 +20,6 @@ static void pci_stop_dev(struct pci_dev *dev)
- 
- static void pci_destroy_dev(struct pci_dev *dev)
- {
--	down_write(&pci_bus_sem);
--	list_del(&dev->bus_list);
--	up_write(&pci_bus_sem);
--
--	pci_free_resources(dev);
- 	put_device(&dev->dev);
- }
- 
--- 
-1.8.1.4
-
+> ---
+>  drivers/pci/pcie/portdrv_core.c | 15 ++++++++-------
+>  1 file changed, 8 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index 31063ac..08d131f 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -260,13 +260,14 @@ static int get_port_device_capability(struct pci_dev *dev)
+>         if (pcie_ports_disabled)
+>                 return 0;
+>
+> -       err = pcie_port_platform_notify(dev, &cap_mask);
+> -       if (!pcie_ports_auto) {
+> -               cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
+> -                               | PCIE_PORT_SERVICE_VC;
+> -               if (pci_aer_available())
+> -                       cap_mask |= PCIE_PORT_SERVICE_AER;
+> -       } else if (err) {
+> +       cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
+> +                       | PCIE_PORT_SERVICE_VC;
+> +       if (pci_aer_available())
+> +               cap_mask |= PCIE_PORT_SERVICE_AER;
+> +
+> +       if (pcie_ports_auto) {
+> +               err = pcie_port_platform_notify(dev, &cap_mask);
+> +               if (err)
+>                         return 0;
+>         }
+>
+> --
+> 1.8.1.2
+>
