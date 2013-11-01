@@ -1,56 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:54972 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754132Ab3KLThM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 14:37:12 -0500
-Message-ID: <52828364.6080103@gmail.com>
-Date: Tue, 12 Nov 2013 21:37:08 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:46246 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005Ab3KAMSs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Nov 2013 08:18:48 -0400
+From: Marek Vasut <marex@denx.de>
+To: Richard Zhu <r65037@freescale.com>
+Subject: Re: [PATCH] PCI: imx6: fix imprecise abort handler
+Date: Fri, 1 Nov 2013 13:18:44 +0100
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>
+References: <1382056042-7299-1-git-send-email-tharvey@gateworks.com> <201310301555.02807.marex@denx.de> <0E83723C55F66F43A6041464FE31119D418299@039-SN2MPN1-011.039d.mgd.msft.net>
+In-Reply-To: <0E83723C55F66F43A6041464FE31119D418299@039-SN2MPN1-011.039d.mgd.msft.net>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: wzyboy <wzyboy@wzyboy.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com> <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com> <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com> <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com> <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com> <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com> <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com> <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com> <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com> <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com> <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
-In-Reply-To: <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311011318.44453.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Richard,
 
+[...]
 
-On 11/12/2013 09:14 PM, Bjorn Helgaas wrote:
-> On Tue, Nov 12, 2013 at 11:25 AM, Grumbach, Emmanuel
-> <emmanuel.grumbach@intel.com> wrote:
+> > > I'm sort of dubious about imx6q_pcie_abort_handler() to begin with --
+> > > it seems like it assumes that imprecise aborts are either enabled or
+> > > disabled.  Isn't there some way it can *check* whether that's the
+> > > case, so it won't break if those aborts are enabled at a different
+> > > point in the future?
+> > 
+> > The best way here would be to find a way to prevent the DWC controller
+> > from generating data abort on missing device _at_all_ and just make the
+> > read from that portion of config space be 0xffffffff or zeroes . I
+> > didn't find any configuration bit that would be able to do it though :(
+> > Richard, can you maybe check with FSL if such an option exists on the
+> > controller?
 > 
->> Right - I remember the discussion we had on that.
->> On this device (7260 that has an issue with ASPM), we don't call pci_disable_link_state, because we know it is supposed to work...
-> 
-> If ASPM is supposed to work as far as the hardware is concerned, I
-> guess you're saying this must be an iwlwifi driver issue.  Right?
+> [Richard] Unfortunately, discussed with IC guys, there is no such kind of
+> mechanism.
 
-ASPM is supposed to work as far as the hardware is concerned.
-We might very well have an issue in iwlwifi - and I am checking this
-internally with our System guys.
-It can be a PCI core problem too, and it could also be a platform / BIOS
-/ Lenovo issue.
-Of course, I have no clue which of these is the culprit here.
-Our System folks seemed to say that this new device uses L1 substates
-which can be enabled in Haswell platform which the user owns.
-Now - L1 substates is a new feature and might introduce issues
-(apparently) - and this is why they (System folks) wanted the try
-without L1 substates. But disabling L1 substates doesn't seem trivial
-with the production BIOS of Lenovo. So I am pretty stuck here.
-Another possibility is to run a PCI analyser on the machine, but that
-requires to have the machine in the lab...
+Do you know or can you please check if there's at least some mechanism to detect 
+whether the data abort was generated by the DWC PCIe or something else ?
 
-> If you think it's a PCI core problem, we have to figure out what the
-> core needs to do differently.  If somebody can point to a difference
-> in the ASPM configuration between Windows and Linux, that would be a
-> good start.
-> 
-> Bjorn
-> 
+Best regards,
+Marek Vasut
