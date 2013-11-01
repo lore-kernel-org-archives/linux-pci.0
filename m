@@ -1,45 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f178.google.com ([209.85.220.178]:41110 "EHLO
-	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752587Ab3KUVF7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Nov 2013 16:05:59 -0500
-Received: by mail-vc0-f178.google.com with SMTP id lh4so233491vcb.23
-        for <linux-pci@vger.kernel.org>; Thu, 21 Nov 2013 13:05:59 -0800 (PST)
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:60134 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754112Ab3KANxu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Nov 2013 09:53:50 -0400
+Received: by mail-ie0-f172.google.com with SMTP id tp5so7606726ieb.17
+        for <linux-pci@vger.kernel.org>; Fri, 01 Nov 2013 06:53:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXgvaqErd1oiHmt6G8GwbW92C490+0sYyLUMcMFMMNRAg@mail.gmail.com>
-References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
-	<1384912317-3721-7-git-send-email-yinghai@kernel.org>
-	<20131121103021.GA29873@yanx>
-	<CAE9FiQXgvaqErd1oiHmt6G8GwbW92C490+0sYyLUMcMFMMNRAg@mail.gmail.com>
-Date: Thu, 21 Nov 2013 13:05:59 -0800
-Message-ID: <CA+55aFyM5o39pmFtPOc1VVE5y_SYp1WXtz773cBp3fHrvnzOLQ@mail.gmail.com>
-Subject: Re: [PATCH 6/6] PCI: Try to allocate mem64 above 4G at first
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAFiDJ59naSs9z_g3RRHnFEYkzp_tSfA0nvBrADvkv1iO018Ukw@mail.gmail.com>
+References: <CAFiDJ59naSs9z_g3RRHnFEYkzp_tSfA0nvBrADvkv1iO018Ukw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 1 Nov 2013 07:53:28 -0600
+Message-ID: <CAErSpo6EsVyvZ3Wm8n3zVMRpyzMowYBiAhPRe45b4xq_yOiFKA@mail.gmail.com>
+Subject: Re: BUG_ON(irq_has_action(entry->irq + i)) in free_msi_irqs()
+To: "LF.Tan" <lftan.linux@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 21, 2013 at 12:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+On Tue, Oct 29, 2013 at 8:44 PM, LF.Tan <lftan.linux@gmail.com> wrote:
+> Hi all
 >
-> 3. or more generic, treat all pci BAR 32bit prefetechable as normal
-> MMIO32 during allocation. aka mmio prefectechable will be used for pci
-> bridge that support 64bit mmio pref and leave bridge's 32bit only pref
-> bar register blank.
+> I am new in PCI and now working on MSI support on our PCIe host
+> driver. I have an endpoint driver requests for a MSI interrupt. When
+> the endpoint driver try to free the interrupt, it cause the kernel
+> BUG_ON() message is printed out.
 >
-> Bjorn, Linus,
-> Are you happy with No 3?
+> The software flow:
+> Endpoint driver --> pci_disable_msi -->free_msi_irqs -->
+> BUG_ON(irq_has_action(entry->irq + i));
+>
+> I have checked desc->action in irq_has_action(), it is non-zero.
+> It is running on ARM platform. CONFIG_GENERIC_HARDIRQS is turn on by default.
+>
+> Anyone how to fix this issue? Thanks.
 
-I don't think I understand your #3. If there's a 32-bit device behind
-the bridge, it will need to be in the low 4G, so you can't use the
-64-bit window because it will be out of range. So that wouldn't work.
-So you'd need to have a bridge window in the low 32-bit area too if
-there are any 32-bit devices behind the bridge.
+The easiest way is probably to compare your driver with some of the
+many drivers in the tree and see what's different in the way your
+driver manages MSI.
 
-Also, haven't we tried the "try to allocate 64-bit devices in high
-memory" and it has always failed because there are broken devices?
+Bjorn
 
-                Linus
+> static void free_msi_irqs(struct pci_dev *dev)
+> {
+>         struct msi_desc *entry, *tmp;
+>
+>         list_for_each_entry(entry, &dev->msi_list, list) {
+>                 int i, nvec;
+>
+>                 if (!entry->irq)
+>                         continue;
+>                 nvec = 1 << entry->msi_attrib.multiple;
+> #ifdef CONFIG_GENERIC_HARDIRQS
+>                 for (i = 0; i < nvec; i++)
+>                         BUG_ON(irq_has_action(entry->irq + i));
+> #endif
+>         }
+>         .....................
+> }
+>
+>
+> static inline int irq_has_action(unsigned int irq)
+> {
+>          struct irq_desc *desc = irq_to_desc(irq);
+>         return desc->action != NULL;
+> }
+>
+>
+>
+> Regards
+> LF Tan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
