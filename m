@@ -1,73 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:61528 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753625Ab3KEAEr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 19:04:47 -0500
-Received: by mail-ie0-f169.google.com with SMTP id ar20so14131902iec.0
-        for <linux-pci@vger.kernel.org>; Mon, 04 Nov 2013 16:04:47 -0800 (PST)
-Date: Mon, 4 Nov 2013 17:04:40 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Kumar Gala <galak@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Subject: Re: Changes for v3.13 merge window
-Message-ID: <20131105000440.GA16478@google.com>
-References: <20131101152102.GA27643@google.com>
- <5276FA23.3040402@huawei.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:39548 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753107Ab3KARLm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Nov 2013 13:11:42 -0400
+Date: Fri, 1 Nov 2013 10:56:09 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI: mvebu - Support a bridge with no IO port window
+Message-ID: <20131101165609.GA25978@obsidianresearch.com>
+References: <1381868182-8544-1-git-send-email-jgunthorpe@obsidianresearch.com>
+ <20131031101357.5a56e2d0@skate>
+ <20131031164810.GA26426@obsidianresearch.com>
+ <CAErSpo7bUP63J5RkXr-DkQE8qmvKT7ri-vjkfq+TtGEaYWxSwA@mail.gmail.com>
+ <20131031233245.GA9853@obsidianresearch.com>
+ <CAErSpo4NDuNJ4mj1n4V8UgsdAJxMrSRy43Qz=3JNvtsrv2rMjA@mail.gmail.com>
+ <20131101052848.GA20163@obsidianresearch.com>
+ <CAErSpo5Y5TH+iapqzhQAcLY6V0rvK=7QAEStcbzLv4mAuLKPDg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5276FA23.3040402@huawei.com>
+In-Reply-To: <CAErSpo5Y5TH+iapqzhQAcLY6V0rvK=7QAEStcbzLv4mAuLKPDg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Kumar, Gavin, Ben, Paul]
+> I don't know why 0xf0f0.  Anything that's non-zero in the upper four
+> bits of each byte should work to determine writability.  It seems like
+> it would be safer to write 0x00f0 so the window is disabled, because
+> even if we're enumerating the bridge at hot-plug time, nobody else
+> should be trying to access a device behind the bridge, and we wouldn't
+> inadvertently claim something destined for [io 0xf000-0xffff].
 
-On Mon, Nov 04, 2013 at 09:36:35AM +0800, Yijing Wang wrote:
-> > Yijing Wang (17):
-> >       PCI: Use pci_is_pcie() to simplify code
-> >       x86/pci: Use cached pci_dev->pcie_cap to simplify code
-> >       [SCSI] bfa: Use pcie_set()/get_readrq() to simplify code
-> >       [SCSI] csiostor: Use pcie_capability_clear_and_set_word() to simplify code
-> >       [SCSI] qla2xxx: Use pcie_is_pcie() to simplify code
-> >       powerpc/pci: Use pci_is_pcie() to simplify code
-> 
-> Hi Bjorn,
->    Can you help update the patch "powerpc/pci: Use pci_is_pcie() to simplify code" by using the latest version v3 ?
-> Because Benjamin Herrenschmidt found that "cap" in this patch is stale variable after applied this patch.
-> Here is the link, https://patchwork.kernel.org/patch/3021121/
+What do you think of this?
 
-I merged the following additional patch, which should get make this
-up-to-date.  Sorry I missed this.
+>From f1f0d6a5b192a46585c5fefdc7ec06808639be4d Mon Sep 17 00:00:00 2001
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Date: Fri, 1 Nov 2013 10:54:13 -0600
+Subject: [PATCH] PCI: Use a safer method to determine if a bridge has IO
+ support
 
+We want to avoid disturbing an active an enabled bus during IO detection,
+so first check if IO is enabled - if so then we know for sure that
+the bridge has IO.
 
-powerpc/pci: Use pci_is_pcie() to simplify code [fix]
+Otherwise we can safely fiddle with the IO window register to detect IO,
+as IO is disabled.
 
-From: Yijing Wang <wangyijing@huawei.com>
+This also changes the probe value to 0x00f0, which is intended to be
+clearer to the reader that this is just a probe.
 
-Fix f0308261b1 ("powerpc/pci: Use pci_is_pcie() to simplify code").  I
-accidentally merged v2 instead of v3, so this adds the difference.  Without
-this, "cap" is the left-over PCI-X capability offset, and we're using it as
-the PCIe capability offset.
-
-[bhelgaas: extracted v2->v3 diff]
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 ---
- arch/powerpc/kernel/eeh.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index 6ebbe54..db86f97 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -195,7 +195,7 @@ static size_t eeh_gather_pci_data(struct eeh_dev *edev, char * buf, size_t len)
- 		       "EEH: PCI-E capabilities and status follow:\n");
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index bc26d79..d63087f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -665,10 +665,16 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
  
- 		for (i=0; i<=8; i++) {
--			eeh_ops->read_config(dn, cap+4*i, 4, &cfg);
-+			eeh_ops->read_config(dn, dev->pcie_cap+4*i, 4, &cfg);
- 			n += scnprintf(buf+n, len-n, "%02x:%x\n", 4*i, cfg);
- 			printk(KERN_WARNING "EEH: PCI-E %02x: %08x\n", i, cfg);
- 		}
+ 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+ 	if (!io) {
+-		pci_write_config_word(bridge, PCI_IO_BASE, 0xf0f0);
+-		pci_read_config_word(bridge, PCI_IO_BASE, &io);
+- 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+- 	}
++		u16 command;
++		pci_read_config_word(bridge, PCI_COMMAND, &command);
++		if (command & PCI_COMMAND_IO)
++			b_res[0].flags |= IORESOURCE_IO;
++		else {
++			pci_write_config_word(bridge, PCI_IO_BASE, 0x00f0);
++			pci_read_config_word(bridge, PCI_IO_BASE, &io);
++			pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
++		}
++	}
+  	if (io)
+ 		b_res[0].flags |= IORESOURCE_IO;
+ 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
+-- 
+1.8.1.2
+
