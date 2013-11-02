@@ -1,40 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:52904 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753386Ab3KDN0E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 08:26:04 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [Update][PATCH 0/6] ACPI scan and hotplug fixes
-Date: Mon, 04 Nov 2013 14:29:56 +0100
-Message-ID: <2970389.SeMGM45Qln@vostro.rjw.lan>
-In-Reply-To: <5839747.7HXXGHmMBd@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60804 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750854Ab3KBPsr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 2 Nov 2013 11:48:47 -0400
+Date: Sat, 2 Nov 2013 08:50:54 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Veaceslav Falico <vfalico@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Neil Horman <nhorman@tuxdriver.com>
+Subject: Re: [RFC PATCH] PCI: export MSI mode using attributes, not kobjects
+Message-ID: <20131102155054.GD23938@kroah.com>
+References: <20131029214631.GA19354@kroah.com>
+ <CAErSpo5YpE-aoTbXd5=0xBDe+_aQPEO4PejrG=+JoEM=w2ZxQw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAErSpo5YpE-aoTbXd5=0xBDe+_aQPEO4PejrG=+JoEM=w2ZxQw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 04, 2013 01:17:12 AM Rafael J. Wysocki wrote:
-> Hi,
+On Fri, Nov 01, 2013 at 05:40:02PM -0600, Bjorn Helgaas wrote:
+> On Tue, Oct 29, 2013 at 3:46 PM, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >
+> > The PCI MSI sysfs code is a mess with kobjects for things that don't
+> > really need to be kobjects.  This patch creates attributes dynamically
+> > for the MSI interrupts instead of using kobjects.
+> >
+> > Note, this does not delete the existing sysfs MSI code, but puts the
+> > attributes under a "msi_irqs_2" directory for testing / example.
+> >
+> > Also note, this removes a directory from the current MSI interrupt sysfs
+> > code:
+> >
+> > old MSI kobjects:
+> > pci_device
+> >    └── msi_irqs
+> >        └── 40
+> >            └── mode
+> >
+> > new MSI attributes:
+> > pci_device
+> >    └── msi_irqs_2
+> >        └── 40
+> >
+> > As there was only one file "mode" with the kobject model, the interrupt
+> > number is now a file that returns the "mode" of the interrupt (msi vs.
+> > msix).
+> >
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > ---
+> >
+> > Bjorn, I can make up a patch that rips out the existing kobject code
+> > here, but I figured this patch would make things easier to follow
+> > instead of having to dig through the removed logic at the same time.
+> >
+> > I'll clean up the error handling path for the create attribute logic as
+> > well, this was just a proof of concept that this could be done.
+> >
+> > Do you think that anyone cares about the current mode files in sysfs to
+> > move things in this manner?
 > 
-> The following three patches fix some issues that we have in the common ACPI
-> hotplug infrastructure.
-> 
-> If anyone sees any problems with them, please let me know.
+> I like this a lot better than trying to fix all the holes in the
+> current kobject code.
 
-Well, the last patch from the last version didn't really do the right thing in
-my opinion, so new series follows.
+Great.
 
-I actually would like to squeeze it into 3.13 if there are no objections, since
-at least patch [3/6] is kind of urgent.
+> I have no idea who, if anybody, cares about the "mode" files.  I
+> assume there's a way to create the "mode" files with attributes, too?
+> If so, we could replicate the existing structure with one patch, and
+> simplify it with a second patch, so it would be easier to revert the
+> directory change while keeping the fix.
 
-Thanks!
+No, we can't create a 2-level deep attribute at the moment, only one
+level, like the patch does.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Based on Neil's comments, I think we should be fine with this as-is as
+no one is messing with these files directly (which implies that we could
+possibly just remove them entirely to save us the overall pain...)
+
+Want me to redo this in a way that is acceptable (i.e. remove the
+existing code at the same time?)
+
+thanks,
+
+greg k-h
