@@ -1,112 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21636 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455Ab3K3Wkq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Nov 2013 17:40:46 -0500
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:33721 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753381Ab3KCT7b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Nov 2013 14:59:31 -0500
+Date: Sun, 3 Nov 2013 14:59:28 -0500
+From: Jason Cooper <jason@lakedaemon.net>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 08/12] PCI: Try to allocate mem64 above 4G at first
-Date: Sat, 30 Nov 2013 14:40:34 -0800
-Message-Id: <1385851238-21085-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+Cc: Sachin Kamat <sachin.kamat@linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory CLEMENT <gregory.clement@free-electrons.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>
+Subject: Re: [PATCH 2/3] PCI: mvebu: Remove redeundant of_match_ptr
+Message-ID: <20131103195928.GB3060@titan.lakedaemon.net>
+References: <1382346403-29576-1-git-send-email-sachin.kamat@linaro.org>
+ <1382346403-29576-2-git-send-email-sachin.kamat@linaro.org>
+ <CAErSpo6n4F1zREyYXuwq9LCRLCD+yZ9o8j==ANamiAZesFz=EA@mail.gmail.com>
+ <CAErSpo4CFitR_CbG+TBYF-S-nKLdz9+CfV2mex76b=pnh24Vqw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4CFitR_CbG+TBYF-S-nKLdz9+CfV2mex76b=pnh24Vqw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On system with more pcie cards, we do not have enough range under 4G
-to allocate those pci devices.
+Bjorn,
 
-On 64bit system, we could try to allocate mem64 above 4G at first,
-and fall back to below 4g if it can not find any above 4g.
+Sorry for the delayed response.  Apparently, work doesn't stop when you
+go out of town for a week. :-)
 
-x86 32bit without X86_PAE support will have bottom set to 0, because
-resource_size_t is 32bit.
-For 32bit kernel that resource_size_t is 64bit when pae is support.
-we are safe because iomem_resource is limited to 32bit according to
-x86_phys_bits.
+On Wed, Oct 30, 2013 at 10:06:58AM -0600, Bjorn Helgaas wrote:
+> On Tue, Oct 29, 2013 at 4:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > [+cc Jason]
+> >
+> > On Mon, Oct 21, 2013 at 3:06 AM, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+> >> mvebu_pcie_of_match_table is always compiled in. Hence of_match_ptr is
+> >> not required.
+> >>
+> >> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+> >> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> >
+> > Jason, I assume you'll merge this if you want it.
 
--v2: update bottom assigning to make it clear for non-pae support machine.
--v3: Bjorn's change:
-        use MAX_RESOURCE instead of -1
-        use start/end instead of bottom/max
-        for all arch instead of just x86_64
--v4: updated after PCI_MAX_RESOURCE_32 change.
--v5: restore io handling to use PCI_MAX_RESOURCE_32 as limit.
--v6: checking pcibios_resource_to_bus return for every bus res, to decide it
-	if we need to try high at first.
-     It supports all arches instead of just x86_64.
--v7: split 4G limit change out to another patch according to Bjorn.
-     also use pci_clip_resource instead.
+Hmm, we seem to be at a good transition point.  The arm-soc tree tries
+not to take any more patches after -rc6, so we've been frozen since
+then.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+I have a few pci patches in my mvebu-next/drivers branch that didn't
+make it in in time.  Jason Gunthorpe has a hotplug patch that needs
+testing and a few other fixes floating around.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index e75bb17..82eb234 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -99,6 +99,8 @@ void pci_bus_remove_resources(struct pci_bus *bus)
- }
- 
- static struct pci_bus_region pci_mem_32 = {0, 0xffffffff};
-+static struct pci_bus_region pci_mem_64 = {(resource_size_t)(1ULL<<32),
-+					   (resource_size_t)(-1ULL)};
- 
- static void pci_clip_resource(struct resource *res, struct pci_bus *bus,
- 			      struct pci_bus_region *region)
-@@ -149,6 +151,7 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 
- 	pci_bus_for_each_resource(bus, r, i) {
- 		struct resource avail;
-+		int try_again = 0;
- 
- 		if (!r)
- 			continue;
-@@ -165,15 +168,23 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 
- 		/*
- 		 * don't allocate too high if the pref mem doesn't
--		 * support 64bit.
-+		 * support 64bit, also if this is a 64-bit mem
-+		 * resource, try above 4GB first
- 		 */
- 		avail = *r;
--		if (!(res->flags & IORESOURCE_MEM_64)) {
-+		if (res->flags & IORESOURCE_MEM_64) {
-+			pci_clip_resource(&avail, bus, &pci_mem_64);
-+			if (!resource_size(&avail))
-+				avail = *r;
-+			else
-+				try_again = 1;
-+		} else {
- 			pci_clip_resource(&avail, bus, &pci_mem_32);
- 			if (!resource_size(&avail))
- 				continue;
- 		}
- 
-+again:
- 		/* Ok, try it out.. */
- 		ret = allocate_resource(r, res, size,
- 					max(avail.start, r->start ? : min),
-@@ -181,6 +192,12 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 					alignf, alignf_data);
- 		if (ret == 0)
- 			break;
-+
-+		if (try_again) {
-+			avail = *r;
-+			try_again = 0;
-+			goto again;
-+		}
- 	}
- 	return ret;
- }
--- 
-1.8.1.4
+Perhaps we should just go ahead and transition back to the mvebu
+maintainers Ack'ing patches and then going through your tree (as it's
+supposed to be)?
 
+If we run into another complicated dependency mess, we'll hash it out
+then.  atm, I don't see anything on the horizon.
+
+Sound good?  If so, I'll drop the following from mvebu-next/drivers:
+
+  ca02ce7f863f PCI: mvebu - The bridge secondary status register should be 0
+  b09d7cdf75dc PCI: mvebu - Support a bridge with no IO port window
+  dbbe1efd61e3 PCI: mvebu: return NULL instead of ERR_PTR(ret)
+
+You can take them for v3.13 if you'd like, or hold them for v3.14 (which
+was the current plan due to the -rc6 cutoff).
+
+I've intentionally kept mvebu-next/* branches out of linux-next, so
+cherry picking the above shouldn't cause any conflicts.
+
+thx,
+
+Jason.
