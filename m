@@ -1,181 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:47507 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385Ab3KOVQm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 16:16:42 -0500
-Received: by mail-ie0-f172.google.com with SMTP id to1so5743835ieb.3
-        for <linux-pci@vger.kernel.org>; Fri, 15 Nov 2013 13:16:42 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/3] ACPI / hotplug: Refuse to hot-remove all objects with disabled hotplug
+Date: Mon, 04 Nov 2013 01:21:07 +0100
+Message-ID: <1637242.tvhoOdo7F4@vostro.rjw.lan>
+In-Reply-To: <5839747.7HXXGHmMBd@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <1384548866-13141-9-git-send-email-swarren@wwwdotorg.org>
-References: <1384548866-13141-1-git-send-email-swarren@wwwdotorg.org> <1384548866-13141-9-git-send-email-swarren@wwwdotorg.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 15 Nov 2013 14:16:21 -0700
-Message-ID: <CAErSpo7ZP-1qkBYjdNYRPz3Z3rHL_tUOY3fNi4nvTfFmcdEEOQ@mail.gmail.com>
-Subject: Re: [PATCH 08/31] pci: tegra: use reset framework
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Stephen Warren <swarren@nvidia.com>, treding@nvidia.com,
-	pdeschrijver@nvidia.com,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 15, 2013 at 1:54 PM, Stephen Warren <swarren@wwwdotorg.org> wrote:
-> From: Stephen Warren <swarren@nvidia.com>
->
-> Tegra's clock driver now provides an implementation of the common
-> reset API (include/linux/reset.h). Use this instead of the old Tegra-
-> specific API; that will soon be removed.
->
-> The old Tegra-specific API used a struct clock to represent the module
-> to reset. Some of the clocks retrieved during probe() were only used for
-> reset purposes, and indeed aren't even true clocks. So, there's no need
-> to get() them any more.
->
-> Cc: treding@nvidia.com
-> Cc: pdeschrijver@nvidia.com
-> Cc: linux-tegra@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Stephen Warren <swarren@nvidia.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+In theory, an ACPI device object may be the parent of another
+device object whose hotplug is disabled by user space thorugh its
+scan handler.  In that case, the eject operation targeting the
+parent should fail as though the parent's own hotplug was disabled,
+but currently this is not the case, because acpi_scan_hot_remove()
+doesn't check the disable/enable hotplug status of the children
+of the top-most object passed to it.
 
-Feel free to merge this through whatever tree is appropriate.  If I
-were applying this, I would be looking for an ack from Thierry in
-addition to mine.
+To fix this, modify acpi_bus_offline_companions() to return an
+error code if hotplug is disabled for the given device object.
+[Also change the name of the function to acpi_bus_offline(),
+because it is not only about companions any more, and change
+the name of acpi_bus_online_companions() accordingly.]  Make
+acpi_scan_hot_remove() propagate that error to its callers.
 
-> ---
-> This patch is part of a series with strong internal depdendencies. I'm
-> looking for an ack so that I can take the entire series through the Tegra
-> and arm-soc trees. The series will be part of a stable branch that can be
-> merged into other subsystems if needed to avoid/resolve dependencies.
-> ---
->  drivers/pci/host/pci-tegra.c | 49 ++++++++++++++++++++++++++++++++------------
->  1 file changed, 36 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 0afbbbc55c81..174a5bc2d993 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -39,6 +39,7 @@
->  #include <linux/of_platform.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
-> +#include <linux/reset.h>
->  #include <linux/sizes.h>
->  #include <linux/slab.h>
->  #include <linux/tegra-cpuidle.h>
-> @@ -259,10 +260,13 @@ struct tegra_pcie {
->
->         struct clk *pex_clk;
->         struct clk *afi_clk;
-> -       struct clk *pcie_xclk;
->         struct clk *pll_e;
->         struct clk *cml_clk;
->
-> +       struct reset_control *pex_rst;
-> +       struct reset_control *afi_rst;
-> +       struct reset_control *pcie_xrst;
-> +
->         struct tegra_msi msi;
->
->         struct list_head ports;
-> @@ -858,7 +862,7 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->         pads_writel(pcie, value, PADS_CTL);
->
->         /* take the PCIe interface module out of reset */
-> -       tegra_periph_reset_deassert(pcie->pcie_xclk);
-> +       reset_control_deassert(pcie->pcie_xrst);
->
->         /* finally enable PCIe */
->         value = afi_readl(pcie, AFI_CONFIGURATION);
-> @@ -891,9 +895,9 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
->
->         /* TODO: disable and unprepare clocks? */
->
-> -       tegra_periph_reset_assert(pcie->pcie_xclk);
-> -       tegra_periph_reset_assert(pcie->afi_clk);
-> -       tegra_periph_reset_assert(pcie->pex_clk);
-> +       reset_control_assert(pcie->pcie_xrst);
-> +       reset_control_assert(pcie->afi_rst);
-> +       reset_control_assert(pcie->pex_rst);
->
->         tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
->
-> @@ -921,9 +925,9 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
->         const struct tegra_pcie_soc_data *soc = pcie->soc_data;
->         int err;
->
-> -       tegra_periph_reset_assert(pcie->pcie_xclk);
-> -       tegra_periph_reset_assert(pcie->afi_clk);
-> -       tegra_periph_reset_assert(pcie->pex_clk);
-> +       reset_control_assert(pcie->pcie_xrst);
-> +       reset_control_assert(pcie->afi_rst);
-> +       reset_control_assert(pcie->pex_rst);
->
->         tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
->
-> @@ -958,7 +962,7 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
->                 return err;
->         }
->
-> -       tegra_periph_reset_deassert(pcie->afi_clk);
-> +       reset_control_deassert(pcie->afi_rst);
->
->         err = clk_prepare_enable(pcie->afi_clk);
->         if (err < 0) {
-> @@ -996,10 +1000,6 @@ static int tegra_pcie_clocks_get(struct tegra_pcie *pcie)
->         if (IS_ERR(pcie->afi_clk))
->                 return PTR_ERR(pcie->afi_clk);
->
-> -       pcie->pcie_xclk = devm_clk_get(pcie->dev, "pcie_xclk");
-> -       if (IS_ERR(pcie->pcie_xclk))
-> -               return PTR_ERR(pcie->pcie_xclk);
-> -
->         pcie->pll_e = devm_clk_get(pcie->dev, "pll_e");
->         if (IS_ERR(pcie->pll_e))
->                 return PTR_ERR(pcie->pll_e);
-> @@ -1013,6 +1013,23 @@ static int tegra_pcie_clocks_get(struct tegra_pcie *pcie)
->         return 0;
->  }
->
-> +static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
-> +{
-> +       pcie->pex_rst = devm_reset_control_get(pcie->dev, "pex");
-> +       if (IS_ERR(pcie->pex_rst))
-> +               return PTR_ERR(pcie->pex_rst);
-> +
-> +       pcie->afi_rst = devm_reset_control_get(pcie->dev, "afi");
-> +       if (IS_ERR(pcie->afi_rst))
-> +               return PTR_ERR(pcie->afi_rst);
-> +
-> +       pcie->pcie_xrst = devm_reset_control_get(pcie->dev, "pcie_x");
-> +       if (IS_ERR(pcie->pcie_xrst))
-> +               return PTR_ERR(pcie->pcie_xrst);
-> +
-> +       return 0;
-> +}
-> +
->  static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
->  {
->         struct platform_device *pdev = to_platform_device(pcie->dev);
-> @@ -1025,6 +1042,12 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
->                 return err;
->         }
->
-> +       err = tegra_pcie_resets_get(pcie);
-> +       if (err) {
-> +               dev_err(&pdev->dev, "failed to get resets: %d\n", err);
-> +               return err;
-> +       }
-> +
->         err = tegra_pcie_power_on(pcie);
->         if (err) {
->                 dev_err(&pdev->dev, "failed to power up: %d\n", err);
-> --
-> 1.8.1.5
->
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |   57 ++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 36 insertions(+), 21 deletions(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -125,8 +125,8 @@ acpi_device_modalias_show(struct device
+ }
+ static DEVICE_ATTR(modalias, 0444, acpi_device_modalias_show, NULL);
+ 
+-static acpi_status acpi_bus_offline_companions(acpi_handle handle, u32 lvl,
+-					       void *data, void **ret_p)
++static acpi_status acpi_bus_offline(acpi_handle handle, u32 lvl, void *data,
++				    void **ret_p)
+ {
+ 	struct acpi_device *device = NULL;
+ 	struct acpi_device_physical_node *pn;
+@@ -136,6 +136,11 @@ static acpi_status acpi_bus_offline_comp
+ 	if (acpi_bus_get_device(handle, &device))
+ 		return AE_OK;
+ 
++	if (device->handler && !device->handler->hotplug.enabled) {
++		*ret_p = &device->dev;
++		return AE_SUPPORT;
++	}
++
+ 	mutex_lock(&device->physical_node_lock);
+ 
+ 	list_for_each_entry(pn, &device->physical_node_list, node) {
+@@ -168,8 +173,8 @@ static acpi_status acpi_bus_offline_comp
+ 	return status;
+ }
+ 
+-static acpi_status acpi_bus_online_companions(acpi_handle handle, u32 lvl,
+-					      void *data, void **ret_p)
++static acpi_status acpi_bus_online(acpi_handle handle, u32 lvl, void *data,
++				   void **ret_p)
+ {
+ 	struct acpi_device *device = NULL;
+ 	struct acpi_device_physical_node *pn;
+@@ -214,26 +219,32 @@ static int acpi_scan_hot_remove(struct a
+ 	 * If the first pass is successful, the second one isn't needed, though.
+ 	 */
+ 	errdev = NULL;
+-	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+-			    NULL, acpi_bus_offline_companions,
+-			    (void *)false, (void **)&errdev);
+-	acpi_bus_offline_companions(handle, 0, (void *)false, (void **)&errdev);
++	status = acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
++				     NULL, acpi_bus_offline, (void *)false,
++				     (void **)&errdev);
++	if (status == AE_SUPPORT) {
++		dev_warn(errdev, "Offline disabled.\n");
++		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
++				    acpi_bus_online, NULL, NULL, NULL);
++		put_device(&device->dev);
++		return -EPERM;
++	}
++	acpi_bus_offline(handle, 0, (void *)false, (void **)&errdev);
+ 	if (errdev) {
+ 		errdev = NULL;
+ 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+-				    NULL, acpi_bus_offline_companions,
+-				    (void *)true , (void **)&errdev);
++				    NULL, acpi_bus_offline, (void *)true,
++				    (void **)&errdev);
+ 		if (!errdev || acpi_force_hot_remove)
+-			acpi_bus_offline_companions(handle, 0, (void *)true,
+-						    (void **)&errdev);
++			acpi_bus_offline(handle, 0, (void *)true,
++					 (void **)&errdev);
+ 
+ 		if (errdev && !acpi_force_hot_remove) {
+ 			dev_warn(errdev, "Offline failed.\n");
+-			acpi_bus_online_companions(handle, 0, NULL, NULL);
++			acpi_bus_online(handle, 0, NULL, NULL);
+ 			acpi_walk_namespace(ACPI_TYPE_ANY, handle,
+-					    ACPI_UINT32_MAX,
+-					    acpi_bus_online_companions, NULL,
+-					    NULL, NULL);
++					    ACPI_UINT32_MAX, acpi_bus_online,
++					    NULL, NULL, NULL);
+ 			put_device(&device->dev);
+ 			return -EBUSY;
+ 		}
+@@ -290,10 +301,9 @@ static void acpi_bus_device_eject(void *
+ 		goto err_out;
+ 
+ 	handler = device->handler;
+-	if (!handler || !handler->hotplug.enabled) {
+-		ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+-		goto err_out;
+-	}
++	if (!handler || !handler->hotplug.enabled)
++		goto err_support;
++
+ 	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+ 				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 	if (handler->hotplug.mode == AHM_CONTAINER)
+@@ -301,14 +311,19 @@ static void acpi_bus_device_eject(void *
+ 
+ 	get_device(&device->dev);
+ 	error = acpi_scan_hot_remove(device);
+-	if (error)
++	if (error == -EPERM) {
++		goto err_support;
++	} else if (error) {
+ 		goto err_out;
++	}
+ 
+  out:
+ 	mutex_unlock(&acpi_scan_lock);
+ 	unlock_device_hotplug();
+ 	return;
+ 
++ err_support:
++	ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+  err_out:
+ 	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST, ost_code,
+ 				  NULL);
+
