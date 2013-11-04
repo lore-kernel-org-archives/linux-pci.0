@@ -1,96 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:64168 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961Ab3KLLku (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 06:40:50 -0500
-Received: by mail-pb0-f54.google.com with SMTP id ro12so3700016pbb.41
-        for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 03:40:49 -0800 (PST)
-From: Chang Liu <cl91tp@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Chang Liu <cl91tp@gmail.com>
-Subject: [PATCH] PCI: add a quirk for keeping Bus Master bit on shutdown
-Date: Tue, 12 Nov 2013 19:40:03 +0000
-Message-Id: <1384285203-642-1-git-send-email-cl91tp@gmail.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:62053 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753316Ab3KDN0D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 08:26:03 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [Update][PATCH 1/6] ACPI / scan: Start matching drivers after trying scan handlers
+Date: Mon, 04 Nov 2013 14:30:58 +0100
+Message-ID: <2151922.M630KK6nC3@vostro.rjw.lan>
+In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=63861
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Commit b566a22c2 and 7897e60227 made pci_device_shutdown()
-unconditionally clear Bus Master bit for every pci devices.
-While this works for most hardware, certain devices are not
-compatible with this. Intel Lynx Point-LP SATA Controller,
-for example, will hang the system if its Bus Master bit is
-cleared during device shutdown. This patch adds a pci quirk
-so that device drivers can instruct pci_device_shutdown()
-to keep Bus Master from being cleared, and then implements
-this mechanism for the Intel Lynx Point-LP AHCI driver.
+ACPI scan handlers should always be attached to struct acpi_device
+objects before any ACPI drivers, but there is a window during which
+a driver may be attached to a struct acpi_device before checking if
+there is a matching scan handler.  Namely, that will happen if an
+ACPI driver module is loaded during acpi_bus_scan() right after
+the first namespace walk is complete and before the given device
+is processed by the second namespace walk.
 
-Signed-off-by: Chang Liu <cl91tp@gmail.com>
+To prevent that from happening, set the match_driver flags of
+struct acpi_device objects right before running device_attach()
+for them in acpi_bus_device_attach().
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
-As per Takao's suggestion, add a new member into struct pci_dev
-and add a quirk in the ahci driver. I tested this on my
-machine (Acer V5-573G) and it works fine.
+ drivers/acpi/scan.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
- drivers/ata/ahci.c       |  8 ++++++++
- drivers/pci/pci-driver.c | 11 ++++++++---
- include/linux/pci.h      |  1 +
- 3 files changed, 17 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 8e28f92..de6efcb 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1385,6 +1385,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -1676,7 +1676,6 @@ void acpi_init_device_object(struct acpi
  
- 	pci_set_master(pdev);
- 
-+	/* We normally clear Bus Master on pci device shutdown. However,
-+	 * doing so for Intel Lynx Point-LP SATA Controller [AHCI mode]
-+	 * hangs the system. Therefore keep it.
-+	 * See bug report: https://bugzilla.kernel.org/show_bug.cgi?id=63861
-+	 */
-+	if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x9c03)
-+		pdev->keep_busmaster_on_shutdown = 1;
-+
- 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
- 		return ahci_host_activate(host, pdev->irq, n_msis);
- 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 38f3c01..ff15b0c 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -392,10 +392,15 @@ static void pci_device_shutdown(struct device *dev)
- 	pci_msix_shutdown(pci_dev);
- 
- 	/*
--	 * Turn off Bus Master bit on the device to tell it to not
--	 * continue to do DMA. Don't touch devices in D3cold or unknown states.
-+	 * If the hardware is okay with it, turn off Bus Master bit
-+	 * on the device to tell it not to continue doing DMA.
-+	 * Don't touch devices in D3cold or unknown states.
-+	 * On certain hardware clearing Bus Master bit on shutdown
-+	 * may hang the entire system. In these cases the driver of
-+	 * these devices should set keep_busmaster_on_shutdown to 1.
- 	 */
--	if (pci_dev->current_state <= PCI_D3hot)
-+	if (!pci_dev->keep_busmaster_on_shutdown
-+	    && pci_dev->current_state <= PCI_D3hot)
- 		pci_clear_master(pci_dev);
+ void acpi_device_add_finalize(struct acpi_device *device)
+ {
+-	device->flags.match_driver = true;
+ 	dev_set_uevent_suppress(&device->dev, false);
+ 	kobject_uevent(&device->dev.kobj, KOBJ_ADD);
  }
+@@ -1915,8 +1914,12 @@ static acpi_status acpi_bus_device_attac
+ 		return AE_OK;
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index da172f9..63db735 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -322,6 +322,7 @@ struct pci_dev {
- 	/* keep track of device state */
- 	unsigned int	is_added:1;
- 	unsigned int	is_busmaster:1; /* device is busmaster */
-+	unsigned int	keep_busmaster_on_shutdown:1; /* do not clear busmaster on shutdown */
- 	unsigned int	no_msi:1;	/* device may not use msi */
- 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
- 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
--- 
-1.8.4.2
+ 	ret = acpi_scan_attach_handler(device);
+-	if (ret)
+-		return ret > 0 ? AE_OK : AE_CTRL_DEPTH;
++	if (ret < 0)
++		return AE_CTRL_DEPTH;
++
++	device->flags.match_driver = true;
++	if (ret > 0)
++		return AE_OK;
+ 
+ 	ret = device_attach(&device->dev);
+ 	return ret >= 0 ? AE_OK : AE_CTRL_DEPTH;
 
