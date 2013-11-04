@@ -1,68 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21631 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434Ab3K3Wkp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Nov 2013 17:40:45 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 00/12] PCI: Double removing fix and allocate 64bit mmio pref
-Date: Sat, 30 Nov 2013 14:40:26 -0800
-Message-Id: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [Update][PATCH 3/6] ACPI / hotplug: Fix handle_root_bridge_removal()
+Date: Mon, 04 Nov 2013 14:33:09 +0100
+Message-ID: <6808835.gmCqHn1NaE@vostro.rjw.lan>
+In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-First 4 are for Gu Zheng <guz.fnst@cn.fujitsu.com> to help double pci
-device removing via sysfs.
-For patch 4, rafael like to have use lock instead of atomic.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Patch 6 are for not enabling realloc auto when 64bit mmio is not there for
-root bus.
+It is required to do get_device() on the struct acpi_device in
+question before passing it to acpi_bus_hot_remove_device() through
+acpi_os_hotplug_execute(), because acpi_bus_hot_remove_device()
+calls acpi_scan_hot_remove() that does put_device() on that
+object.
 
-Others are about mmio 64 allocation that could help Guo Chao <yan@linux.vnet.ibm.com> on powerpc mmio allocation.
-It will try to assign 64 bit resource above 4g at first.
+The ACPI PCI root removal routine, handle_root_bridge_removal(),
+doesn't do that, which may lead to premature freeing of the
+device object or to executing put_device() on an object that
+has been freed already.
 
-Patch 1-4 and Patch 5-12 could be appliey seperatedly.
+Fix this problem by making handle_root_bridge_removal() use
+get_device() as appropriate.
 
-Could be found:
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-3.14
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/pci_root.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-And it is based on current pci/for-linus.
-
--v2: update after patch that move device_del down to pci_destroy_dev.
-     add "Try best to allocate pref mmio 64bit above 4G"
-
--v3: refresh and send out after pci_clip_resource() changes,
-     as Bjorn is not happy with attachments.
-
-Yinghai Lu (12):
-  PCI: Use device_release_driver in pci_stop_root_bus
-  PCI: Move back pci_proc_attach_devices calling
-  PCI: Move resources and bus_list releasing to pci_release_dev
-  PCI: Destroy pci dev only once
-  PCI: pcibus address to resource converting take bus instead of dev
-  PCI: Only enable realloc auto when root bus has 64bit mmio
-  PCI: Don't use 4G bus address directly in resource allocation
-  PCI: Try to allocate mem64 above 4G at first
-  PCI: Kill PCIBIOS_MAX_MEM_32
-  PCI: Try best to allocate pref mmio 64bit above 4g
-  PCI: Sort pci root bus resources list
-  intel-gtt: Read 64bit for gmar_bus_addr
-
- arch/x86/include/asm/pci.h   |   1 -
- drivers/char/agp/intel-gtt.c |  14 ++--
- drivers/pci/bus.c            |  74 ++++++++++++++++---
- drivers/pci/host-bridge.c    |  34 +++++----
- drivers/pci/probe.c          |  23 +++++-
- drivers/pci/remove.c         |  31 ++------
- drivers/pci/setup-bus.c      | 165 ++++++++++++++++++++++++++++++-------------
- drivers/pci/setup-res.c      |  14 +++-
- include/linux/pci.h          |  10 +--
- 9 files changed, 257 insertions(+), 109 deletions(-)
-
--- 
-1.8.1.4
+Index: linux-pm/drivers/acpi/pci_root.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_root.c
++++ linux-pm/drivers/acpi/pci_root.c
+@@ -608,9 +608,12 @@ static void handle_root_bridge_removal(s
+ 	ej_event->device = device;
+ 	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
+ 
++	get_device(&device->dev);
+ 	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
+-	if (ACPI_FAILURE(status))
++	if (ACPI_FAILURE(status)) {
++		put_device(&device->dev);
+ 		kfree(ej_event);
++	}
+ }
+ 
+ static void _handle_hotplug_event_root(struct work_struct *work)
 
