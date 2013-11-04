@@ -1,23 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:42362 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752924Ab3KBQeE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 2 Nov 2013 12:34:04 -0400
-Received: by mail-pa0-f50.google.com with SMTP id fb1so5315736pad.9
-        for <linux-pci@vger.kernel.org>; Sat, 02 Nov 2013 09:34:04 -0700 (PDT)
-Message-ID: <5275297b.c48e420a.4771.ffffcc36@mx.google.com>
-From: Rajat Jain <rajatjain.linux@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: rajatjain@juniper.net
-Date: Wed, 30 Oct 2013 13:45:09 -0700
-Subject: Test Mail 2
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 3/3] ACPI / hotplug: Merge device hot-removal routines
+Date: Mon, 04 Nov 2013 14:26:18 +0100
+Message-ID: <1495379.L9vZXsvTcv@vostro.rjw.lan>
+In-Reply-To: <5913958.7oJcoqqQ9l@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <5913958.7oJcoqqQ9l@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Monday, November 04, 2013 01:21:46 AM Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> The only substantial difference between acpi_bus_device_eject() and
+> acpi_bus_hot_remove_device() is the get_device() done by the former
+> which is supposed to be done by callers of the latter.  However,
+> at least one caller of acpi_bus_hot_remove_device(), which is
+> handle_root_bridge_removal(), doesn't do that and generally it
+> won't be necessary to do that at all if ACPI handles, rather than
+> struct acpi_device objects, are passed between ACPI hotplug routines,
+> because the correctness of those routines already depends on the
+> persistence of ACPI handles (that may not be an entirely correct
+> assumption in theory, but in practice it has been good enough for a
+> long time).
+> 
+> For this reason, modify acpi_bus_device_eject() to take two
+> arguments, an ACPI handle and event code, and make
+> acpi_bus_hot_remove_device() call it internally.  Moreover, rework
+> acpi_bus_hot_remove_device() so that it only takes one argument,
+> an ACPI handle, and make acpi_scan_bus_device_check() queue up
+> acpi_bus_hot_remove_device() instead of acpi_bus_device_eject()
+> itself.  After these changes, handle_root_bridge_removal() may
+> be replaced with async execution of acpi_bus_hot_remove_device()
+> with the ACPI handle of the root passed to it as the argument.
+> 
+> However, since acpi_eject_store() also needs to execute
+> acpi_bus_device_eject() asynchronously and it needs to pass a
+> special event code, ACPI_OST_EC_OSPM_EJECT, to that function,
+> introduce a separate wrapper around acpi_bus_device_eject(),
+> acpi_eject_store_work(), that will be queued up by
+> acpi_eject_store() instead of acpi_bus_hot_remove_device().
+> This allows acpi_eject_store() to be simplified and it allows
+> struct acpi_eject_event to be dropped entirely, as there's
+> no more users of that structure.
 
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
----
-Test Mail 2
--- 
-1.7.9.5
+Well, scratch this (and the follow-up), it didn't go in the right direction.
+
+I'll send a new series shortly.
+
+Rafael
 
