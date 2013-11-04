@@ -1,197 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:45708 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752870Ab3KSXBt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 18:01:49 -0500
-Message-ID: <528BEDD7.6000308@gmail.com>
-Date: Tue, 19 Nov 2013 15:01:43 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/3] ACPI / scan: Start matching drivers after trying scan handlers
+Date: Mon, 04 Nov 2013 01:18:50 +0100
+Message-ID: <3869743.TuXYQ2ebr5@vostro.rjw.lan>
+In-Reply-To: <5839747.7HXXGHmMBd@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Linux-PCI <linux-pci@vger.kernel.org>,
-	Linux-hotplug <linux-hotplug@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: [RFC PATCH 3/4] pciehp: Ensure very fast hotplug events are also
- processed.
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Today, this is how all the hotplug and unplug events work:
+ACPI scan handlers should always be attached to struct acpi_device
+objects before any ACPI drivers, but there is a window during which
+a driver may be attached to a struct acpi_device before checking if
+there is a matching scan handler.  Namely, that will happen if an
+ACPI driver module is loaded during acpi_bus_scan() right after
+the first namespace walk is complete and before the given device
+is processed by the second namespace walk.
 
-Hotplug / Removal needs to be done
-  => Set slot->state (protected by slot->lock) to either
-    POWERON_STATE (for enabling) or POWEROFF_STATE (for disabling).
-  => Submit the work item for pciehp_power_thread() to slot->wq.
+To prevent that from happening, set the match_driver flags of
+struct acpi_device objects right before running device_attach()
+for them in acpi_bus_device_attach().
 
-Problem:
-  There is a problem if the hotplug events can happen fast enough that
-  they do not give SW enough time to add or remove the new devices.
-
-  => Assume: Event for unplug comes (e.g. surprise removal). But
-     before the pciehp_power_thread() work item was executed, the
-     card was replaced by another card, causing surprise hotplug event.
-
-  => What goes wrong:
-    => The hot-removal event sets slot->state to POWEROFF_STATE, and
-       schedules the pciehp_power_thread().
-    => The hot-add event sets slot->state to POWERON_STATE, and
-       schedules the pciehp_power_thread().
-    => Now the pciehp_power_thread() is scheduled twice, and on both
-       occasions it will find POWERON_STATE and will try to add the
-       devices on the slot, and will fail complaining that the devices
-       already exist.
-
-  => Why this is a problem: If the device was replaced between the hot
-     removal and hot-add, then we should unload the old driver and
-     reload the new one. This does not happen today. The kernel or the
-     driver is not even aware that the device was replaced.
-
-     The problem is that the pciehp_power_thread() only looks at the
-     slot->state which would only contain the *latest* state - not
-     the actual event (add / remove) that was the intent of the IRQ
-     handler who submitted the work.
-
-What this patch does:
-
-  => Hotplug events pass on an actual request (for addition or removal)
-     to pciehp_power_thread() which is local to that work item
-     submission.
-
-  => pciehp_power_thread() does not need to look at slote->state and
-     hence no locks needed in that.
-
-  => Essentially this results in all the hotplug and unplug events
-     "replayed" by pciehp_power_thread().
-
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/hotplug/pciehp_ctrl.c |   32 +++++++++++++++++++++++---------
- 1 file changed, 23 insertions(+), 9 deletions(-)
+ drivers/acpi/scan.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 3899b52..83dbe08 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -299,6 +299,9 @@ static int remove_board(struct slot *p_slot)
- struct power_work_info {
- 	struct slot *p_slot;
- 	struct work_struct work;
-+	unsigned int req;
-+#define DISABLE_REQ 0
-+#define ENABLE_REQ  1
- };
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -1676,7 +1676,6 @@ void acpi_init_device_object(struct acpi
  
- /**
-@@ -314,10 +317,8 @@ static void pciehp_power_thread(struct work_struct *work)
- 		container_of(work, struct power_work_info, work);
- 	struct slot *p_slot = info->p_slot;
- 
--	mutex_lock(&p_slot->lock);
--	switch (p_slot->state) {
--	case POWEROFF_STATE:
--		mutex_unlock(&p_slot->lock);
-+	switch (info->req) {
-+	case DISABLE_REQ:
- 		ctrl_dbg(p_slot->ctrl,
- 			 "Disabling domain:bus:device=%04x:%02x:00\n",
- 			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
-@@ -325,18 +326,22 @@ static void pciehp_power_thread(struct work_struct *work)
- 		pciehp_disable_slot(p_slot);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
--		break;
--	case POWERON_STATE:
- 		mutex_unlock(&p_slot->lock);
-+		break;
-+	case ENABLE_REQ:
-+		ctrl_dbg(p_slot->ctrl,
-+			 "Enabling domain:bus:device=%04x:%02x:00\n",
-+			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
-+			 p_slot->ctrl->pcie->port->subordinate->number);
- 		if (pciehp_enable_slot(p_slot) && PWR_LED(p_slot->ctrl))
- 			pciehp_green_led_off(p_slot);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
-+		mutex_unlock(&p_slot->lock);
- 		break;
- 	default:
- 		break;
- 	}
--	mutex_unlock(&p_slot->lock);
- 
- 	kfree(info);
+ void acpi_device_add_finalize(struct acpi_device *device)
+ {
+-	device->flags.match_driver = true;
+ 	dev_set_uevent_suppress(&device->dev, false);
+ 	kobject_uevent(&device->dev.kobj, KOBJ_ADD);
  }
-@@ -359,9 +364,11 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
- 	switch (p_slot->state) {
- 	case BLINKINGOFF_STATE:
- 		p_slot->state = POWEROFF_STATE;
-+		info->req = DISABLE_REQ;
- 		break;
- 	case BLINKINGON_STATE:
- 		p_slot->state = POWERON_STATE;
-+		info->req = ENABLE_REQ;
- 		break;
- 	default:
- 		kfree(info);
-@@ -457,10 +464,13 @@ static void handle_surprise_event(struct slot *p_slot)
- 	INIT_WORK(&info->work, pciehp_power_thread);
+@@ -1915,8 +1914,12 @@ static acpi_status acpi_bus_device_attac
+ 		return AE_OK;
  
- 	pciehp_get_adapter_status(p_slot, &getstatus);
--	if (!getstatus)
-+	if (!getstatus) {
- 		p_slot->state = POWEROFF_STATE;
--	else
-+		info->req = DISABLE_REQ;
-+	} else {
- 		p_slot->state = POWERON_STATE;
-+		info->req = ENABLE_REQ;
-+	}
+ 	ret = acpi_scan_attach_handler(device);
+-	if (ret)
+-		return ret > 0 ? AE_OK : AE_CTRL_DEPTH;
++	if (ret < 0)
++		return AE_CTRL_DEPTH;
++
++	device->flags.match_driver = true;
++	if (ret > 0)
++		return AE_OK;
  
- 	queue_work(p_slot->wq, &info->work);
- }
-@@ -489,6 +499,7 @@ static void handle_link_up_event(struct slot *p_slot)
- 		/* Fall through */
- 	case STATIC_STATE:
- 		p_slot->state = POWERON_STATE;
-+		info->req = ENABLE_REQ;
- 		queue_work(p_slot->wq, &info->work);
- 		break;
- 	case POWERON_STATE:
-@@ -502,6 +513,7 @@ static void handle_link_up_event(struct slot *p_slot)
- 			  "Link Up event queued on slot(%s): currently getting powered off\n",
- 			  slot_name(p_slot));
- 		p_slot->state = POWERON_STATE;
-+		info->req = ENABLE_REQ;
- 		queue_work(p_slot->wq, &info->work);
- 		break;
- 	default:
-@@ -536,6 +548,7 @@ static void handle_link_down_event(struct slot *p_slot)
- 		/* Fall through */
- 	case STATIC_STATE:
- 		p_slot->state = POWEROFF_STATE;
-+		info->req = DISABLE_REQ;
- 		queue_work(p_slot->wq, &info->work);
- 		break;
- 	case POWEROFF_STATE:
-@@ -549,6 +562,7 @@ static void handle_link_down_event(struct slot *p_slot)
- 			  "Link Down event queued on slot(%s): currently getting powered on\n",
- 			  slot_name(p_slot));
- 		p_slot->state = POWEROFF_STATE;
-+		info->req = DISABLE_REQ;
- 		queue_work(p_slot->wq, &info->work);
- 		break;
- 	default:
--- 
-1.7.9.5
+ 	ret = device_attach(&device->dev);
+ 	return ret >= 0 ? AE_OK : AE_CTRL_DEPTH;
 
