@@ -1,67 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:34423 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755659Ab3KEWdc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 17:33:32 -0500
-Message-ID: <52797238.8070304@gmail.com>
-Date: Tue, 05 Nov 2013 14:33:28 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
-MIME-Version: 1.0
-To: linux-pci@vger.kernel.org, linux-hotplug@vger.kernel.org,
+Received: from v094114.home.net.pl ([79.96.170.134]:64423 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751807Ab3KDN0D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 08:26:03 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Tom Nguyen <tom.l.nguyen@intel.com>,
-	Kristen Accardi <kristen.c.accardi@intel.com>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
-Content-Type: text/plain; charset=ISO-8859-1
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [Update][PATCH 2/6] ACPI / hotplug: Refuse to hot-remove all objects with disabled hotplug
+Date: Mon, 04 Nov 2013 14:32 +0100
+Message-ID: <1842331.UHR0XPv1jo@vostro.rjw.lan>
+In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In case of a spurious "cmd completed", pcie_write_cmd() does not
-clear it, but yet expects more "cmd completed" events to be generated.
-This does not happen because the previous (spurious) event has not
-been acknowledged. Fix that.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
+In theory, an ACPI device object may be the parent of another
+device object whose hotplug is disabled by user space thorugh its
+scan handler.  In that case, the eject operation targeting the
+parent should fail as though the parent's own hotplug was disabled,
+but currently this is not the case, because acpi_scan_hot_remove()
+doesn't check the disable/enable hotplug status of the children
+of the top-most object passed to it.
+
+To fix this, modify acpi_bus_offline_companions() to return an
+error code if hotplug is disabled for the given device object.
+[Also change the name of the function to acpi_bus_offline(),
+because it is not only about companions any more, and change
+the name of acpi_bus_online_companions() accordingly.]  Make
+acpi_scan_hot_remove() propagate that error to its callers.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
-This is how I saw it in action: my controller does not implement any
-hot-plug elements (LED, power ctrl, EMI etc) but still supports Command
-completed bit.
- - During initialization,
-      pcie_disable_notification()
-      -> pcie_write_cmd()
-         -> writes to Slot control register
-            -> which causes PCI_EXP_SLTSTA_CC to get set, which is not
-               cleared, because IRQ is not generated (we just disabled
-               notifications).
- - After some time,
-      pcie_enable_notification()
-      -> pcie_write_cmd()
-          -> finds PCI_EXP_SLTSTA_CC is set, assumes it is spurious.
-          -> Does not clear it, yet expects more command completed
-             events to be generated (never happens).
+ drivers/acpi/scan.c |   57 ++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 36 insertions(+), 21 deletions(-)
 
- drivers/pci/hotplug/pciehp_hpc.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 5b8d749..ba8e06f 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -185,6 +185,7 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
- 	}
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -125,8 +125,8 @@ acpi_device_modalias_show(struct device
+ }
+ static DEVICE_ATTR(modalias, 0444, acpi_device_modalias_show, NULL);
  
- 	if (slot_status & PCI_EXP_SLTSTA_CC) {
-+		pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_CC);
- 		if (!ctrl->no_cmd_complete) {
- 			/*
- 			 * After 1 sec and CMD_COMPLETED still not set, just
--- 
-1.7.9.5
+-static acpi_status acpi_bus_offline_companions(acpi_handle handle, u32 lvl,
+-					       void *data, void **ret_p)
++static acpi_status acpi_bus_offline(acpi_handle handle, u32 lvl, void *data,
++				    void **ret_p)
+ {
+ 	struct acpi_device *device = NULL;
+ 	struct acpi_device_physical_node *pn;
+@@ -136,6 +136,11 @@ static acpi_status acpi_bus_offline_comp
+ 	if (acpi_bus_get_device(handle, &device))
+ 		return AE_OK;
+ 
++	if (device->handler && !device->handler->hotplug.enabled) {
++		*ret_p = &device->dev;
++		return AE_SUPPORT;
++	}
++
+ 	mutex_lock(&device->physical_node_lock);
+ 
+ 	list_for_each_entry(pn, &device->physical_node_list, node) {
+@@ -168,8 +173,8 @@ static acpi_status acpi_bus_offline_comp
+ 	return status;
+ }
+ 
+-static acpi_status acpi_bus_online_companions(acpi_handle handle, u32 lvl,
+-					      void *data, void **ret_p)
++static acpi_status acpi_bus_online(acpi_handle handle, u32 lvl, void *data,
++				   void **ret_p)
+ {
+ 	struct acpi_device *device = NULL;
+ 	struct acpi_device_physical_node *pn;
+@@ -214,26 +219,32 @@ static int acpi_scan_hot_remove(struct a
+ 	 * If the first pass is successful, the second one isn't needed, though.
+ 	 */
+ 	errdev = NULL;
+-	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+-			    NULL, acpi_bus_offline_companions,
+-			    (void *)false, (void **)&errdev);
+-	acpi_bus_offline_companions(handle, 0, (void *)false, (void **)&errdev);
++	status = acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
++				     NULL, acpi_bus_offline, (void *)false,
++				     (void **)&errdev);
++	if (status == AE_SUPPORT) {
++		dev_warn(errdev, "Offline disabled.\n");
++		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
++				    acpi_bus_online, NULL, NULL, NULL);
++		put_device(&device->dev);
++		return -EPERM;
++	}
++	acpi_bus_offline(handle, 0, (void *)false, (void **)&errdev);
+ 	if (errdev) {
+ 		errdev = NULL;
+ 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+-				    NULL, acpi_bus_offline_companions,
+-				    (void *)true , (void **)&errdev);
++				    NULL, acpi_bus_offline, (void *)true,
++				    (void **)&errdev);
+ 		if (!errdev || acpi_force_hot_remove)
+-			acpi_bus_offline_companions(handle, 0, (void *)true,
+-						    (void **)&errdev);
++			acpi_bus_offline(handle, 0, (void *)true,
++					 (void **)&errdev);
+ 
+ 		if (errdev && !acpi_force_hot_remove) {
+ 			dev_warn(errdev, "Offline failed.\n");
+-			acpi_bus_online_companions(handle, 0, NULL, NULL);
++			acpi_bus_online(handle, 0, NULL, NULL);
+ 			acpi_walk_namespace(ACPI_TYPE_ANY, handle,
+-					    ACPI_UINT32_MAX,
+-					    acpi_bus_online_companions, NULL,
+-					    NULL, NULL);
++					    ACPI_UINT32_MAX, acpi_bus_online,
++					    NULL, NULL, NULL);
+ 			put_device(&device->dev);
+ 			return -EBUSY;
+ 		}
+@@ -290,10 +301,9 @@ static void acpi_bus_device_eject(void *
+ 		goto err_out;
+ 
+ 	handler = device->handler;
+-	if (!handler || !handler->hotplug.enabled) {
+-		ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+-		goto err_out;
+-	}
++	if (!handler || !handler->hotplug.enabled)
++		goto err_support;
++
+ 	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+ 				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 	if (handler->hotplug.mode == AHM_CONTAINER)
+@@ -301,14 +311,19 @@ static void acpi_bus_device_eject(void *
+ 
+ 	get_device(&device->dev);
+ 	error = acpi_scan_hot_remove(device);
+-	if (error)
++	if (error == -EPERM) {
++		goto err_support;
++	} else if (error) {
+ 		goto err_out;
++	}
+ 
+  out:
+ 	mutex_unlock(&acpi_scan_lock);
+ 	unlock_device_hotplug();
+ 	return;
+ 
++ err_support:
++	ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+  err_out:
+ 	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST, ost_code,
+ 				  NULL);
 
