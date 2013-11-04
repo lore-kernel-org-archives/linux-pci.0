@@ -1,105 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:33974 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758494Ab3KHXQI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Nov 2013 18:16:08 -0500
-Received: by mail-ie0-f170.google.com with SMTP id at1so4489139iec.29
-        for <linux-pci@vger.kernel.org>; Fri, 08 Nov 2013 15:16:08 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [Update][PATCH 5/6] ACPI / hotplug: Make acpi_bus_hot_remove_device() internal
+Date: Mon, 04 Nov 2013 14:36:49 +0100
+Message-ID: <3547159.OBIzEY7xch@vostro.rjw.lan>
+In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CADTPrLTYOXsGovL8HJ7=+K30OWVeSdMKTma_UuMV8ZRFB6CkYA@mail.gmail.com>
-References: <52797238.8070304@gmail.com> <20131106002505.GC3359@google.com>
- <CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
- <CADTPrLQpaCDo_YCC2=MmT1iCrWRPqzDpnqQZrE8OMjRMc6WYmQ@mail.gmail.com>
- <20131108012352.GE2955@google.com> <CADTPrLTYOXsGovL8HJ7=+K30OWVeSdMKTma_UuMV8ZRFB6CkYA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 8 Nov 2013 16:15:46 -0700
-Message-ID: <CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
-Subject: Re: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
-To: Rajat Jain <rajatjain.linux@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Tom Nguyen <tom.l.nguyen@intel.com>,
-	Kristen Accardi <kristen.c.accardi@intel.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Rajat Jain <rajatjain@juniper.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 8, 2013 at 10:30 AM, Rajat Jain <rajatjain.linux@gmail.com> wrote:
-> On Thu, Nov 7, 2013 at 5:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
->> Where does this delay happen on your system?  I tried to work through
->> the path but I don't see it yet.  Here's what I expect to happen on your
->> system:
->>
->>     pciehp_probe
->>       pcie_init
->>         readl(SLTCAP)
->>         if (NO_CMD_CMPL || !(POWER_CTRL | ATTN_LED | PWR_LED | EMI))  # true
->>           ctrl->no_cmd_complete = 1     # set (condition above is true)
->>         writew(SLTSTA, 0x1f)            # clear ABP PFD MRLSC PDC CC
->>         pcie_disable_notification
->>           pcie_write_cmd(0, PDCE | ABPE | MRLSCE | PFDE | HPIE | CCIE | DLLSCE)
->>             readw(SLTSTA)               # CC == 0 (was cleared above)
->>             writew(SLTCTL)
->>             ...
->>             # no waiting here because no_cmd_complete == 1
->>             ...
->>             hardware sets SLTSTA.CC
->>             ...
->>       pcie_init_notification
->>         pcie_enable_notification
->>           pcie_write_cmd
->>             readw(SLTSTA)               # CC == 1 (was set by HW above)
->>             if (SLTSTA.CC)              # true
->>               if (!NO_CMD_CMPL))        # true
->>                 dbg("Unexpected CMD_COMPLETED. ...")
->>                 ctrl->no_cmd_complete = 0
->>             writew(SLTCTL)
->>             ...
->>             # this time we wait because no_cmd_complete == 0
->>             ...
->>             pcie_wait_cmd(..., poll == 1)       # now no_cmd_complete == 0
->
-> Actually pcie_wait_cmd() shall be called with poll=0. That is because
-> the following conditions are both false (we just enabled both the
-> interrupts while enabling notifications):
->
->                 if (!(slot_ctrl & PCI_EXP_SLTCTL_HPIE) ||
->                     !(slot_ctrl & PCI_EXP_SLTCTL_CCIE))
->                         poll = 1;
->
-> Thus it does not poll, but waits for interrupt. Which does not happen
-> because the CC bit in the slot status register was not cleared.
+Notice that handle_root_bridge_removal() is the only user of
+acpi_bus_hot_remove_device(), so it doesn't have to be exported
+any more and can be made internal to the ACPI core.
 
-Right, of course.  Thanks for pointing out my error.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/internal.h |    1 +
+ drivers/acpi/pci_root.c |    2 ++
+ drivers/acpi/scan.c     |    1 -
+ include/acpi/acpi_bus.h |    1 -
+ 4 files changed, 3 insertions(+), 2 deletions(-)
 
-> As a
-> result, we get the following messages on the console for each
-> controller (and 1 second delay):
-> ===========================
-> Unexpected CMD_COMPLETED. Need to wait for command completed event.
-> Command not completed in 1000 msec
-> ===========================
-> With my patch, we'd eliminate the 1 second delay and the second line
-> of output above. If we also want to get rid of the first line
-> "Unexpected CMD_COMPLETED..." also, that would probably have to be
-> solved by changing the behavior to assume that CC shall be generated
-> for every SLOTCTRL register write.
-
-I *do* want to get rid of the "Unexpected CMD_COMPLETED" complaint.
-We shouldn't complain about hardware that is working perfectly fine.
-I don't know the best way to do that yet.  I have found a box with the
-same hardware that was fixed by 5808639bfa98, so I hope to play with
-it and figure out something that will work nicely for both scenarios.
-
-BTW, can you open a report at bugzilla.kernel.org and attach your
-"lspci -vvxxx" and dmesg output?  When we eventually merge a fix, I'd
-like to have the details archived somewhere.
-
-Bjorn
+Index: linux-pm/drivers/acpi/internal.h
+===================================================================
+--- linux-pm.orig/drivers/acpi/internal.h
++++ linux-pm/drivers/acpi/internal.h
+@@ -92,6 +92,7 @@ void acpi_device_add_finalize(struct acp
+ void acpi_free_pnp_ids(struct acpi_device_pnp *pnp);
+ int acpi_bind_one(struct device *dev, acpi_handle handle);
+ int acpi_unbind_one(struct device *dev);
++void acpi_bus_hot_remove_device(void *context);
+ 
+ /* --------------------------------------------------------------------------
+                                   Power Resource
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -386,7 +386,6 @@ int acpi_scan_add_handler(struct acpi_sc
+ int acpi_bus_register_driver(struct acpi_driver *driver);
+ void acpi_bus_unregister_driver(struct acpi_driver *driver);
+ int acpi_bus_scan(acpi_handle handle);
+-void acpi_bus_hot_remove_device(void *context);
+ void acpi_bus_trim(struct acpi_device *start);
+ acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
+ int acpi_match_device_ids(struct acpi_device *device,
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -467,7 +467,6 @@ void acpi_bus_hot_remove_device(void *co
+ {
+ 	__acpi_bus_hot_remove_device(context, ACPI_NOTIFY_EJECT_REQUEST);
+ }
+-EXPORT_SYMBOL(acpi_bus_hot_remove_device);
+ 
+ static ssize_t real_power_state_show(struct device *dev,
+ 				     struct device_attribute *attr, char *buf)
+Index: linux-pm/drivers/acpi/pci_root.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_root.c
++++ linux-pm/drivers/acpi/pci_root.c
+@@ -39,6 +39,8 @@
+ #include <acpi/acpi_drivers.h>
+ #include <acpi/apei.h>
+ 
++#include "internal.h"
++
+ #define PREFIX "ACPI: "
+ 
+ #define _COMPONENT		ACPI_PCI_COMPONENT
