@@ -1,58 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:36496 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753196Ab3KAMhp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Nov 2013 08:37:45 -0400
-From: Marek Vasut <marex@denx.de>
-To: Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [QUERY] Number of address translation regions in designware
-Date: Fri, 1 Nov 2013 13:37:40 +0100
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Ajay KHANDELWAL <ajay.khandelwal@st.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>
-References: <52652BF1.4040507@ti.com> <5267EF1E.1010101@ti.com> <20131029071015.GB2297@pratyush-vbox>
-In-Reply-To: <20131029071015.GB2297@pratyush-vbox>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [Update][PATCH 6/6] ACPI / hotplug: Merge device hot-removal routines
+Date: Mon, 04 Nov 2013 14:36:58 +0100
+Message-ID: <7014358.W2jKmobrlg@vostro.rjw.lan>
+In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201311011337.40181.marex@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> + Marek, Tim, arnd
-> 
-> Hi Kishon,
-> 
-> On Wed, Oct 23, 2013 at 11:45:34PM +0800, Kishon Vijay Abraham I wrote:
-> > Hi Pratyush,
-> > 
-> > On Wednesday 23 October 2013 10:06 AM, Pratyush Anand wrote:
-> > > Hi Kishon,
-> > > 
-> > > On Tue, Oct 22, 2013 at 10:20:01PM +0800, Kishon Vijay Abraham I wrote:
-> > >> Hi Pratyush, Jingoo,
-> > >> 
-> > >> On Tuesday 22 October 2013 10:46 AM, Jingoo Han wrote:
-> > >>> On Monday, October 21, 2013 10:28 PM, Kishon Vijay Abraham I wrote:
-> > >>>> Currently I see in pcie-designware.c we use only 2 ATU regions. We
-> > >>>> re-use INDEX0 for mem outbound and cfg0, and INDEX1 for cfg1 and
-> > >>>> io. So I'd like to know if in your platform, do you have only 2
-> > >>>> address translation regions? In DRA7xx we have 16 outbound regions
-> > >>>> and 4 inbound regions.
-> > >>> 
-> > >>> In Exynos, there are only 2 inbound and 2 outbound viewpoints.
+There is no real reasn why acpi_bus_device_eject() and
+acpi_bus_hot_remove_device() should work differently, so rework
+acpi_bus_device_eject() so that it can be called internally by
+both acpi_bus_hot_remove_device() and acpi_eject_store_work().
+Accordingly, rework acpi_hotplug_notify_cb() to queue up the
+execution of acpi_bus_hot_remove_device() through
+acpi_os_hotplug_execute() on eject request notifications.
 
-Jumping in a tad late, MX6 has 4 inbound and 4 outbound according to MX6DQRM 
-Rev. 1, 04/2013 sections:
-- 48.3.9.1.1 (bullet 8)
-- 48.3.9.1.2 (bullet 7)
-- 48.10.42 (Region_Index description in the table PCIE_PL_iATUVR)
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |   84 +++++++++++++++++++++++-----------------------------
+ 1 file changed, 38 insertions(+), 46 deletions(-)
 
-Best regards,
-Marek Vasut
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -285,10 +285,9 @@ static int acpi_scan_hot_remove(struct a
+ 	return 0;
+ }
+ 
+-static void acpi_bus_device_eject(void *context)
++static void acpi_bus_device_eject(struct acpi_device *device, u32 ost_src)
+ {
+-	acpi_handle handle = context;
+-	struct acpi_device *device = NULL;
++	acpi_handle handle = device->handle;
+ 	struct acpi_scan_handler *handler;
+ 	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
+ 	int error;
+@@ -296,20 +295,19 @@ static void acpi_bus_device_eject(void *
+ 	lock_device_hotplug();
+ 	mutex_lock(&acpi_scan_lock);
+ 
+-	acpi_bus_get_device(handle, &device);
+-	if (!device)
+-		goto err_out;
+-
+ 	handler = device->handler;
+-	if (!handler || !handler->hotplug.enabled)
++	if (!handler || !handler->hotplug.enabled) {
++		put_device(&device->dev);
+ 		goto err_support;
++	}
++
++	if (ost_src == ACPI_NOTIFY_EJECT_REQUEST)
++		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
++					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 
+-	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+-				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 	if (handler->hotplug.mode == AHM_CONTAINER)
+ 		kobject_uevent(&device->dev.kobj, KOBJ_OFFLINE);
+ 
+-	get_device(&device->dev);
+ 	error = acpi_scan_hot_remove(device);
+ 	if (error == -EPERM) {
+ 		goto err_support;
+@@ -325,8 +323,7 @@ static void acpi_bus_device_eject(void *
+  err_support:
+ 	ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+  err_out:
+-	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST, ost_code,
+-				  NULL);
++	acpi_evaluate_hotplug_ost(handle, ost_src, ost_code, NULL);
+ 	goto out;
+ }
+ 
+@@ -408,10 +405,20 @@ static void acpi_hotplug_unsupported(acp
+ 	acpi_evaluate_hotplug_ost(handle, type, ost_status, NULL);
+ }
+ 
++/**
++ * acpi_bus_hot_remove_device: Hot-remove a device and its children.
++ * @context: Address of the ACPI device object to hot-remove.
++ */
++void acpi_bus_hot_remove_device(void *context)
++{
++	acpi_bus_device_eject(context, ACPI_NOTIFY_EJECT_REQUEST);
++}
++
+ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+ {
+ 	acpi_osd_exec_callback callback;
+ 	struct acpi_scan_handler *handler = data;
++	struct acpi_device *adev;
+ 	acpi_status status;
+ 
+ 	if (!handler->hotplug.enabled)
+@@ -428,44 +435,29 @@ static void acpi_hotplug_notify_cb(acpi_
+ 		break;
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
+-		callback = acpi_bus_device_eject;
+-		break;
++		status = acpi_bus_get_device(handle, &adev);
++		if (ACPI_FAILURE(status))
++			goto err_out;
++
++		get_device(&adev->dev);
++		callback = acpi_bus_hot_remove_device;
++		status = acpi_os_hotplug_execute(callback, adev);
++		if (ACPI_SUCCESS(status))
++			return;
++
++		put_device(&adev->dev);
++		goto err_out;
+ 	default:
+ 		/* non-hotplug event; possibly handled by other handler */
+ 		return;
+ 	}
+ 	status = acpi_os_hotplug_execute(callback, handle);
+-	if (ACPI_FAILURE(status))
+-		acpi_evaluate_hotplug_ost(handle, type,
+-					  ACPI_OST_SC_NON_SPECIFIC_FAILURE,
+-					  NULL);
+-}
+-
+-void __acpi_bus_hot_remove_device(struct acpi_device *device, u32 ost_src)
+-{
+-	acpi_handle handle = device->handle;
+-	int error;
+-
+-	lock_device_hotplug();
+-	mutex_lock(&acpi_scan_lock);
+-
+-	error = acpi_scan_hot_remove(device);
+-	if (error && handle)
+-		acpi_evaluate_hotplug_ost(handle, ost_src,
+-					  ACPI_OST_SC_NON_SPECIFIC_FAILURE,
+-					  NULL);
+-
+-	mutex_unlock(&acpi_scan_lock);
+-	unlock_device_hotplug();
+-}
++	if (ACPI_SUCCESS(status))
++		return;
+ 
+-/**
+- * acpi_bus_hot_remove_device: Hot-remove a device and its children.
+- * @context: Address of the ACPI device object to hot-remove.
+- */
+-void acpi_bus_hot_remove_device(void *context)
+-{
+-	__acpi_bus_hot_remove_device(context, ACPI_NOTIFY_EJECT_REQUEST);
++ err_out:
++	acpi_evaluate_hotplug_ost(handle, type,
++				  ACPI_OST_SC_NON_SPECIFIC_FAILURE, NULL);
+ }
+ 
+ static ssize_t real_power_state_show(struct device *dev,
+@@ -496,7 +488,7 @@ static DEVICE_ATTR(power_state, 0444, po
+ 
+ static void acpi_eject_store_work(void *context)
+ {
+-	__acpi_bus_hot_remove_device(context, ACPI_OST_EC_OSPM_EJECT);
++	acpi_bus_device_eject(context, ACPI_OST_EC_OSPM_EJECT);
+ }
+ 
+ static ssize_t
