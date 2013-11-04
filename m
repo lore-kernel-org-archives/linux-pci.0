@@ -1,99 +1,184 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:46664 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750807Ab3KES4S convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 13:56:18 -0500
-Received: by mail-ie0-f177.google.com with SMTP id e14so15697356iej.36
-        for <linux-pci@vger.kernel.org>; Tue, 05 Nov 2013 10:56:17 -0800 (PST)
+Received: from v094114.home.net.pl ([79.96.170.134]:50411 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753142Ab3KDN0B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 08:26:01 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [Update][PATCH 4/6] ACPI / hotplug: Simplify device ejection routines
+Date: Mon, 04 Nov 2013 14:36:44 +0100
+Message-ID: <1602442.26cFiMyQkW@vostro.rjw.lan>
+In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20131102155054.GD23938@kroah.com>
-References: <20131029214631.GA19354@kroah.com> <CAErSpo5YpE-aoTbXd5=0xBDe+_aQPEO4PejrG=+JoEM=w2ZxQw@mail.gmail.com>
- <20131102155054.GD23938@kroah.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 5 Nov 2013 11:55:57 -0700
-Message-ID: <CAErSpo5DD_H8_auWZ9QAVPLk85=Zcviv3RjeEWmHQkHPnFPCzA@mail.gmail.com>
-Subject: Re: [RFC PATCH] PCI: export MSI mode using attributes, not kobjects
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Veaceslav Falico <vfalico@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Neil Horman <nhorman@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Nov 2, 2013 at 9:50 AM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> On Fri, Nov 01, 2013 at 05:40:02PM -0600, Bjorn Helgaas wrote:
->> On Tue, Oct 29, 2013 at 3:46 PM, Greg Kroah-Hartman
->> <gregkh@linuxfoundation.org> wrote:
->> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->> >
->> > The PCI MSI sysfs code is a mess with kobjects for things that don't
->> > really need to be kobjects.  This patch creates attributes dynamically
->> > for the MSI interrupts instead of using kobjects.
->> >
->> > Note, this does not delete the existing sysfs MSI code, but puts the
->> > attributes under a "msi_irqs_2" directory for testing / example.
->> >
->> > Also note, this removes a directory from the current MSI interrupt sysfs
->> > code:
->> >
->> > old MSI kobjects:
->> > pci_device
->> >    └── msi_irqs
->> >        └── 40
->> >            └── mode
->> >
->> > new MSI attributes:
->> > pci_device
->> >    └── msi_irqs_2
->> >        └── 40
->> >
->> > As there was only one file "mode" with the kobject model, the interrupt
->> > number is now a file that returns the "mode" of the interrupt (msi vs.
->> > msix).
->> >
->> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->> > ---
->> >
->> > Bjorn, I can make up a patch that rips out the existing kobject code
->> > here, but I figured this patch would make things easier to follow
->> > instead of having to dig through the removed logic at the same time.
->> >
->> > I'll clean up the error handling path for the create attribute logic as
->> > well, this was just a proof of concept that this could be done.
->> >
->> > Do you think that anyone cares about the current mode files in sysfs to
->> > move things in this manner?
->>
->> I like this a lot better than trying to fix all the holes in the
->> current kobject code.
->
-> Great.
->
->> I have no idea who, if anybody, cares about the "mode" files.  I
->> assume there's a way to create the "mode" files with attributes, too?
->> If so, we could replicate the existing structure with one patch, and
->> simplify it with a second patch, so it would be easier to revert the
->> directory change while keeping the fix.
->
-> No, we can't create a 2-level deep attribute at the moment, only one
-> level, like the patch does.
->
-> Based on Neil's comments, I think we should be fine with this as-is as
-> no one is messing with these files directly (which implies that we could
-> possibly just remove them entirely to save us the overall pain...)
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Hmmm.  https://bugzilla.redhat.com/show_bug.cgi?id=744012 suggests
-that irqbalance might be reading these files.
+Simplify handle_root_bridge_removal() and acpi_eject_store() by
+getting rid of struct acpi_eject_event and passing device objects
+directly to async routines executed via acpi_os_hotplug_execute().
 
-> Want me to redo this in a way that is acceptable (i.e. remove the
-> existing code at the same time?)
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/pci_root.c |   20 ++------------------
+ drivers/acpi/scan.c     |   46 ++++++++++++++++++----------------------------
+ include/acpi/acpi_bus.h |    5 -----
+ 3 files changed, 20 insertions(+), 51 deletions(-)
+
+Index: linux-pm/drivers/acpi/pci_root.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_root.c
++++ linux-pm/drivers/acpi/pci_root.c
+@@ -593,27 +593,11 @@ static void handle_root_bridge_insertion
+ static void handle_root_bridge_removal(struct acpi_device *device)
+ {
+ 	acpi_status status;
+-	struct acpi_eject_event *ej_event;
+-
+-	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
+-	if (!ej_event) {
+-		/* Inform firmware the hot-remove operation has error */
+-		(void) acpi_evaluate_hotplug_ost(device->handle,
+-					ACPI_NOTIFY_EJECT_REQUEST,
+-					ACPI_OST_SC_NON_SPECIFIC_FAILURE,
+-					NULL);
+-		return;
+-	}
+-
+-	ej_event->device = device;
+-	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
+ 
+ 	get_device(&device->dev);
+-	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
+-	if (ACPI_FAILURE(status)) {
++	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, device);
++	if (ACPI_FAILURE(status))
+ 		put_device(&device->dev);
+-		kfree(ej_event);
+-	}
+ }
+ 
+ static void _handle_hotplug_event_root(struct work_struct *work)
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -441,18 +441,8 @@ static void acpi_hotplug_notify_cb(acpi_
+ 					  NULL);
+ }
+ 
+-/**
+- * acpi_bus_hot_remove_device: hot-remove a device and its children
+- * @context: struct acpi_eject_event pointer (freed in this func)
+- *
+- * Hot-remove a device and its children. This function frees up the
+- * memory space passed by arg context, so that the caller may call
+- * this function asynchronously through acpi_os_hotplug_execute().
+- */
+-void acpi_bus_hot_remove_device(void *context)
++void __acpi_bus_hot_remove_device(struct acpi_device *device, u32 ost_src)
+ {
+-	struct acpi_eject_event *ej_event = context;
+-	struct acpi_device *device = ej_event->device;
+ 	acpi_handle handle = device->handle;
+ 	int error;
+ 
+@@ -461,13 +451,21 @@ void acpi_bus_hot_remove_device(void *co
+ 
+ 	error = acpi_scan_hot_remove(device);
+ 	if (error && handle)
+-		acpi_evaluate_hotplug_ost(handle, ej_event->event,
++		acpi_evaluate_hotplug_ost(handle, ost_src,
+ 					  ACPI_OST_SC_NON_SPECIFIC_FAILURE,
+ 					  NULL);
+ 
+ 	mutex_unlock(&acpi_scan_lock);
+ 	unlock_device_hotplug();
+-	kfree(context);
++}
++
++/**
++ * acpi_bus_hot_remove_device: Hot-remove a device and its children.
++ * @context: Address of the ACPI device object to hot-remove.
++ */
++void acpi_bus_hot_remove_device(void *context)
++{
++	__acpi_bus_hot_remove_device(context, ACPI_NOTIFY_EJECT_REQUEST);
+ }
+ EXPORT_SYMBOL(acpi_bus_hot_remove_device);
+ 
+@@ -497,15 +495,18 @@ static ssize_t power_state_show(struct d
+ 
+ static DEVICE_ATTR(power_state, 0444, power_state_show, NULL);
+ 
++static void acpi_eject_store_work(void *context)
++{
++	__acpi_bus_hot_remove_device(context, ACPI_OST_EC_OSPM_EJECT);
++}
++
+ static ssize_t
+ acpi_eject_store(struct device *d, struct device_attribute *attr,
+ 		const char *buf, size_t count)
+ {
+ 	struct acpi_device *acpi_device = to_acpi_device(d);
+-	struct acpi_eject_event *ej_event;
+ 	acpi_object_type not_used;
+ 	acpi_status status;
+-	int ret;
+ 
+ 	if (!count || buf[0] != '1')
+ 		return -EINVAL;
+@@ -518,28 +519,17 @@ acpi_eject_store(struct device *d, struc
+ 	if (ACPI_FAILURE(status) || !acpi_device->flags.ejectable)
+ 		return -ENODEV;
+ 
+-	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
+-	if (!ej_event) {
+-		ret = -ENOMEM;
+-		goto err_out;
+-	}
+ 	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
+ 				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+-	ej_event->device = acpi_device;
+-	ej_event->event = ACPI_OST_EC_OSPM_EJECT;
+ 	get_device(&acpi_device->dev);
+-	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
++	status = acpi_os_hotplug_execute(acpi_eject_store_work, acpi_device);
+ 	if (ACPI_SUCCESS(status))
+ 		return count;
+ 
+ 	put_device(&acpi_device->dev);
+-	kfree(ej_event);
+-	ret = status == AE_NO_MEMORY ? -ENOMEM : -EAGAIN;
+-
+- err_out:
+ 	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
+ 				  ACPI_OST_SC_NON_SPECIFIC_FAILURE, NULL);
+-	return ret;
++	return -EAGAIN;
+ }
+ 
+ static DEVICE_ATTR(eject, 0200, NULL, acpi_eject_store);
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -339,11 +339,6 @@ struct acpi_bus_event {
+ 	u32 data;
+ };
+ 
+-struct acpi_eject_event {
+-	struct acpi_device	*device;
+-	u32		event;
+-};
+-
+ struct acpi_hp_work {
+ 	struct work_struct work;
+ 	acpi_handle handle;
