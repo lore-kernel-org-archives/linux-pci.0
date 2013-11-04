@@ -1,82 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:50776 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753538Ab3KZSDE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Nov 2013 13:03:04 -0500
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH RESEND v3 1/2] PCI: mvebu - The bridge should obey the MEM and IO command bits
-Date: Tue, 26 Nov 2013 11:02:54 -0700
-Message-Id: <1385488975-27694-3-git-send-email-jgunthorpe@obsidianresearch.com>
-In-Reply-To: <1385488975-27694-1-git-send-email-jgunthorpe@obsidianresearch.com>
-References: <1385488975-27694-1-git-send-email-jgunthorpe@obsidianresearch.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:52904 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753386Ab3KDN0E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 08:26:04 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [Update][PATCH 0/6] ACPI scan and hotplug fixes
+Date: Mon, 04 Nov 2013 14:29:56 +0100
+Message-ID: <2970389.SeMGM45Qln@vostro.rjw.lan>
+In-Reply-To: <5839747.7HXXGHmMBd@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When PCI_COMMAND_MEMORY/PCI_COMMAND_IO are cleared the bridge should not
-allocate windows or even look at the window limit/base registers.
+On Monday, November 04, 2013 01:17:12 AM Rafael J. Wysocki wrote:
+> Hi,
+> 
+> The following three patches fix some issues that we have in the common ACPI
+> hotplug infrastructure.
+> 
+> If anyone sees any problems with them, please let me know.
 
-Otherwise it can attempt to setup bogus windows that the PCI core code
-creates during discovery. The core will leave PCI_COMMAND_IO cleared if
-it doesn't need an IO window.
+Well, the last patch from the last version didn't really do the right thing in
+my opinion, so new series follows.
 
-Have mvebu_pcie_handle_*_change respect the bits, and call the change
-function whenever the bits changes.
+I actually would like to squeeze it into 3.13 if there are no objections, since
+at least patch [3/6] is kind of urgent.
 
-Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+Thanks!
 
-Bjorn, this is now ready to go for the next merge window.
-Can you take it through your tree? Thanks
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 327ee2f..6fde82b 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -300,7 +300,8 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
- 
- 	/* Are the new iobase/iolimit values invalid? */
- 	if (port->bridge.iolimit < port->bridge.iobase ||
--	    port->bridge.iolimitupper < port->bridge.iobaseupper) {
-+	    port->bridge.iolimitupper < port->bridge.iobaseupper ||
-+	    !(port->bridge.command & PCI_COMMAND_IO)) {
- 
- 		/* If a window was configured, remove it */
- 		if (port->iowin_base) {
-@@ -337,7 +338,8 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
- static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
- {
- 	/* Are the new membase/memlimit values invalid? */
--	if (port->bridge.memlimit < port->bridge.membase) {
-+	if (port->bridge.memlimit < port->bridge.membase ||
-+	    !(port->bridge.command & PCI_COMMAND_MEMORY)) {
- 
- 		/* If a window was configured, remove it */
- 		if (port->memwin_base) {
-@@ -490,8 +492,16 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
- 
- 	switch (where & ~3) {
- 	case PCI_COMMAND:
-+	{
-+		u32 old = bridge->command;
-+
- 		bridge->command = value & 0xffff;
-+		if ((old ^ bridge->command) & PCI_COMMAND_IO)
-+			mvebu_pcie_handle_iobase_change(port);
-+		if ((old ^ bridge->command) & PCI_COMMAND_MEMORY)
-+			mvebu_pcie_handle_membase_change(port);
- 		break;
-+	}
- 
- 	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_1:
- 		bridge->bar[((where & ~3) - PCI_BASE_ADDRESS_0) / 4] = value;
 -- 
-1.8.1.2
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
