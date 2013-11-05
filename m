@@ -1,51 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:59017 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755196Ab3KLTOo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 14:14:44 -0500
-Received: by mail-ie0-f182.google.com with SMTP id e14so240702iej.13
-        for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 11:14:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 12 Nov 2013 12:14:24 -0700
-Message-ID: <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: wzyboy <wzyboy@wzyboy.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:4307 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755550Ab3KEXcD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 18:32:03 -0500
+Message-ID: <1383694061.1847.13.camel@misato.fc.hp.com>
+Subject: Re: [Update][PATCH 1/6] ACPI / scan: Start matching drivers after
+ trying scan handlers
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 05 Nov 2013 16:27:41 -0700
+In-Reply-To: <2151922.M630KK6nC3@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
+	 <2970389.SeMGM45Qln@vostro.rjw.lan> <2151922.M630KK6nC3@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 12, 2013 at 11:25 AM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
+On Mon, 2013-11-04 at 14:30 +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> ACPI scan handlers should always be attached to struct acpi_device
+> objects before any ACPI drivers, but there is a window during which
+> a driver may be attached to a struct acpi_device before checking if
+> there is a matching scan handler.  Namely, that will happen if an
+> ACPI driver module is loaded during acpi_bus_scan() right after
+> the first namespace walk is complete and before the given device
+> is processed by the second namespace walk.
+> 
+> To prevent that from happening, set the match_driver flags of
+> struct acpi_device objects right before running device_attach()
+> for them in acpi_bus_device_attach().
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> Right - I remember the discussion we had on that.
-> On this device (7260 that has an issue with ASPM), we don't call pci_disable_link_state, because we know it is supposed to work...
+Acked-by: Toshi Kani <toshi.kani@hp.com>
 
-If ASPM is supposed to work as far as the hardware is concerned, I
-guess you're saying this must be an iwlwifi driver issue.  Right?
+Thanks,
+-Toshi
 
-If you think it's a PCI core problem, we have to figure out what the
-core needs to do differently.  If somebody can point to a difference
-in the ASPM configuration between Windows and Linux, that would be a
-good start.
-
-Bjorn
