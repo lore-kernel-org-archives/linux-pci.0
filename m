@@ -1,47 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:40168 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752200Ab3KZSDE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Nov 2013 13:03:04 -0500
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: mvebu - The bridge secondary status register should be 0
-Date: Tue, 26 Nov 2013 11:02:52 -0700
-Message-Id: <1385488975-27694-1-git-send-email-jgunthorpe@obsidianresearch.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:61528 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753625Ab3KEAEr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 19:04:47 -0500
+Received: by mail-ie0-f169.google.com with SMTP id ar20so14131902iec.0
+        for <linux-pci@vger.kernel.org>; Mon, 04 Nov 2013 16:04:47 -0800 (PST)
+Date: Mon, 4 Nov 2013 17:04:40 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, Kumar Gala <galak@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>
+Subject: Re: Changes for v3.13 merge window
+Message-ID: <20131105000440.GA16478@google.com>
+References: <20131101152102.GA27643@google.com>
+ <5276FA23.3040402@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5276FA23.3040402@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are no writable bits in the secondary status register, only
-write 1 to clear bits. The driver never sets any of the write 1 to
-clear bits so the status register should always be 0, just remove
-the set from the write path.
+[+cc Kumar, Gavin, Ben, Paul]
 
-Someday the write 1 to clear bits should be copied/cleared directly
-from registers in the HW.
+On Mon, Nov 04, 2013 at 09:36:35AM +0800, Yijing Wang wrote:
+> > Yijing Wang (17):
+> >       PCI: Use pci_is_pcie() to simplify code
+> >       x86/pci: Use cached pci_dev->pcie_cap to simplify code
+> >       [SCSI] bfa: Use pcie_set()/get_readrq() to simplify code
+> >       [SCSI] csiostor: Use pcie_capability_clear_and_set_word() to simplify code
+> >       [SCSI] qla2xxx: Use pcie_is_pcie() to simplify code
+> >       powerpc/pci: Use pci_is_pcie() to simplify code
+> 
+> Hi Bjorn,
+>    Can you help update the patch "powerpc/pci: Use pci_is_pcie() to simplify code" by using the latest version v3 ?
+> Because Benjamin Herrenschmidt found that "cap" in this patch is stale variable after applied this patch.
+> Here is the link, https://patchwork.kernel.org/patch/3021121/
 
-Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+I merged the following additional patch, which should get make this
+up-to-date.  Sorry I missed this.
+
+
+powerpc/pci: Use pci_is_pcie() to simplify code [fix]
+
+From: Yijing Wang <wangyijing@huawei.com>
+
+Fix f0308261b1 ("powerpc/pci: Use pci_is_pcie() to simplify code").  I
+accidentally merged v2 instead of v3, so this adds the difference.  Without
+this, "cap" is the left-over PCI-X capability offset, and we're using it as
+the PCIe capability offset.
+
+[bhelgaas: extracted v2->v3 diff]
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pci-mvebu.c | 1 -
- 1 file changed, 1 deletion(-)
+ arch/powerpc/kernel/eeh.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thomas: This was the last patch in my set that you haven't reviewed. Thanks
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index c269e43..6f5a20f 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -500,7 +500,6 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
- 		 */
- 		bridge->iobase = (value & 0xff) | PCI_IO_RANGE_TYPE_32;
- 		bridge->iolimit = ((value >> 8) & 0xff) | PCI_IO_RANGE_TYPE_32;
--		bridge->secondary_status = value >> 16;
- 		mvebu_pcie_handle_iobase_change(port);
- 		break;
+diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+index 6ebbe54..db86f97 100644
+--- a/arch/powerpc/kernel/eeh.c
++++ b/arch/powerpc/kernel/eeh.c
+@@ -195,7 +195,7 @@ static size_t eeh_gather_pci_data(struct eeh_dev *edev, char * buf, size_t len)
+ 		       "EEH: PCI-E capabilities and status follow:\n");
  
--- 
-1.8.1.2
-
+ 		for (i=0; i<=8; i++) {
+-			eeh_ops->read_config(dn, cap+4*i, 4, &cfg);
++			eeh_ops->read_config(dn, dev->pcie_cap+4*i, 4, &cfg);
+ 			n += scnprintf(buf+n, len-n, "%02x:%x\n", 4*i, cfg);
+ 			printk(KERN_WARNING "EEH: PCI-E %02x: %08x\n", i, cfg);
+ 		}
