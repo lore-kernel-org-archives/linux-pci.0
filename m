@@ -1,95 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:56280 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753847Ab3K0AYN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 19:24:13 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
-Subject: Re: [PATCH v2] PM / Sleep: Add pm_generic functions to re-use runtime PM callbacks
-Date: Wed, 27 Nov 2013 01:37:01 +0100
-Message-ID: <4869546.m4vL9vQAZm@vostro.rjw.lan>
-In-Reply-To: <Pine.LNX.4.44L0.1311261556480.1359-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1311261556480.1359-100000@iolanthe.rowland.org>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 0/3] More ACPI hotplug updates (was: [Update][PATCH 0/6] ACPI scan and hotplug fixes)
+Date: Wed, 06 Nov 2013 00:32:12 +0100
+Message-ID: <18462848.9zsetEL1Yy@vostro.rjw.lan>
+In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 26, 2013 04:09:44 PM Alan Stern wrote:
-> On Tue, 26 Nov 2013, Rafael J. Wysocki wrote:
-> 
-> > On Tuesday, November 26, 2013 10:48:56 AM Ulf Hansson wrote:
-> > > On 26 November 2013 00:10, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > > > On Monday, November 25, 2013 01:40:21 PM Ulf Hansson wrote:
-> > > >> To put devices into low power state during sleep, it sometimes makes
-> > > >> sense at subsystem-level to re-use device's runtime PM callbacks.
-> 
-> Ulf, please be more careful about the distinction between "device" and 
-> "driver".  Devices don't have callbacks; drivers do.  You made this 
-> mistake a few times in the patch description.
-> 
-> > > >> The PM core will at device_suspend_late disable runtime PM, after that
-> > > >> we can safely operate on these callbacks. At suspend_late the device
-> > > >> will be put into low power state by invoking the device's
-> > > >> runtime_suspend callback, unless the runtime status is already
-> > > >> suspended. At resume_early the state is restored by invoking the
-> > > >> device's runtime_resume callback. Soon after the PM core will re-enable
-> > > >> runtime PM before returning from device_resume_early.
-> > > >>
-> > > >> The new pm_generic functions are named pm_generic_suspend_late_runtime
-> > > >> and pm_generic_resume_early_runtime, they are supposed to be used in
-> > > >> pairs.
-> > > >
-> > > > What happens if the subsystem uses the new functions as its late suspend/
-> > > > early resume callbacks, but some of its drivers implement .suspend_late()
-> > > > and .resume_early()?
-> 
-> The same thing that happens whenever any PM-related callback is defined
-> by both the subsystem and the driver: The PM core uses the subsystem's
-> callback.  (Or the pm_domain's callback, or the type's callback, or the 
-> class's callback.)
-
-Precisely.  But my question was more about how we are going to indicate it
-to the driver writers (who may not be familiar with that subsystem to start
-with and may have experience with some other subsystems that don't use
-these new functions) that they are not supposed to populate .suspend_late
-and .resume_early.
-
-> Besides, Ulf specifically assumed at the top of this message that
-> re-using the runtime-suspend callback makes sense at the subsystem
-> level.  This must mean it is appropriate for all drivers in the
-> subsystem.  So why would a driver want to override the subsystem's 
-> behavior?
-
-By mistake?
-
-> > > Good point. Normally, I think the decision of using these callbacks
-> > > should be taken at the lowest level, in other words in the driver.
-> > > Otherwise the lowest layer of .suspend_late will be by-passed.
+On Monday, November 04, 2013 02:29:56 PM Rafael J. Wysocki wrote:
+> On Monday, November 04, 2013 01:17:12 AM Rafael J. Wysocki wrote:
+> > Hi,
 > > 
-> > I'm not sure what's the point to add them, then.  If the driver has to decide
-> > anyway, it may simply populate its .suspend_late and .resume_early pointers
-> > I think.
+> > The following three patches fix some issues that we have in the common ACPI
+> > hotplug infrastructure.
+> > 
+> > If anyone sees any problems with them, please let me know.
 > 
-> Another possibility is to have the pm_generic_suspend_late_runtime
-> routine check to see if the driver has defined a suspend_late callback.  
-> If the driver has its own callback, we could invoke it instead of
-> invoking the runtime_suspend callback.
+> Well, the last patch from the last version didn't really do the right thing in
+> my opinion, so new series follows.
 > 
-> However, I'm not sure that doing this would be worthwhile.  And it
-> would hang in an infinite loop if the driver set its suspend_late
-> pointer to pm_generic_suspend_late_runtime!
+> I actually would like to squeeze it into 3.13 if there are no objections, since
+> at least patch [3/6] is kind of urgent.
 
-Well, that's supposed to be a subsystem-level callback.
+Three more patches for 3.13 if people don't mind, on top of the previous series
+of six.  [2/3] actually is a fix, the other two are more like cleanups, but
+they are worth doing at this point if no one sees any problems with them.
 
-Anyway, my personal opinion is that we seem to be adding confusion instead of
-reducing it here ...
+This is the last batch for 3.13, I promise.
 
-Rafael
+Thanks!
 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
