@@ -1,81 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [fixup][PATCH 2/6] ACPI / hotplug: Refuse to hot-remove all objects with disabled hotplug
-Date: Wed, 06 Nov 2013 02:35:23 +0100
-Message-ID: <3139278.S6Gt6Dta9o@vostro.rjw.lan>
-In-Reply-To: <1383698367.1847.18.camel@misato.fc.hp.com>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <5195965.AgE9G8aXP3@vostro.rjw.lan> <1383698367.1847.18.camel@misato.fc.hp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout10.yourhostingaccount.com ([65.254.253.86]:56414 "EHLO
+	mailout10.yourhostingaccount.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755203Ab3KESKg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 13:10:36 -0500
+Message-ID: <52792C5E.6030008@writeme.com>
+Date: Tue, 05 Nov 2013 12:35:26 -0500
+From: Sinan Akman <sinan@writeme.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Tim Harvey <tharvey@gateworks.com>
+CC: Zhu Richard-R65037 <r65037@freescale.com>,
+	=?windows-1252?Q?Marek_V?= =?windows-1252?Q?a=9Aut?=
+	<marex@denx.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
+References: <1379319655-20210-1-git-send-email-xobs@kosagi.com> <1379319655-20210-4-git-send-email-xobs@kosagi.com> <CAJ+vNU36neHP77dVnqSP=+oMxaU=-6PxWQ8Afni-tTRjNTkM_A@mail.gmail.com> <0E83723C55F66F43A6041464FE31119D40FC99@039-SN2MPN1-011.039d.mgd.msft.net> <CAJ+vNU13FA5s7tt-yEnBYNSBV+FHmHqZNoykFq8aF=O=TvqTnA@mail.gmail.com> <0E83723C55F66F43A6041464FE31119D40FD55@039-SN2MPN1-011.039d.mgd.msft.net> <CAJ+vNU2ifxfprYsgcQs+Kkgu37+diXHJS6DEqs4d51+U3F4sLQ@mail.gmail.com>
+In-Reply-To: <CAJ+vNU2ifxfprYsgcQs+Kkgu37+diXHJS6DEqs4d51+U3F4sLQ@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 05, 2013 05:39:27 PM Toshi Kani wrote:
-> On Wed, 2013-11-06 at 00:27 +0100, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > In theory, an ACPI device object may be the parent of another
-> > device object whose hotplug is disabled by user space through its
-> > scan handler.  In that case, the eject operation targeting the
-> > parent should fail as though the parent's own hotplug was disabled,
-> > but currently this is not the case, because acpi_scan_hot_remove()
-> > doesn't check the disable/enable hotplug status of the children
-> > of the top-most object passed to it.
-> > 
-> > To fix this, modify acpi_bus_offline_companions() to return an
-> > error code if hotplug is disabled for the given device object.
-> > [Also change the name of the function to acpi_bus_offline(),
-> > because it is not only about companions any more, and change
-> > the name of acpi_bus_online_companions() accordingly.]  Make
-> > acpi_scan_hot_remove() propagate that error to its callers.
-> > 
->  :
-> > +static acpi_status acpi_bus_online(acpi_handle handle, u32 lvl, void *data,
-> > +				   void **ret_p)
-> >  {
-> >  	struct acpi_device *device = NULL;
-> >  	struct acpi_device_physical_node *pn;
-> > @@ -214,26 +220,32 @@ static int acpi_scan_hot_remove(struct a
-> >  	 * If the first pass is successful, the second one isn't needed, though.
-> >  	 */
-> >  	errdev = NULL;
-> > -	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-> > -			    NULL, acpi_bus_offline_companions,
-> > -			    (void *)false, (void **)&errdev);
-> > -	acpi_bus_offline_companions(handle, 0, (void *)false, (void **)&errdev);
-> > +	status = acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-> > +				     NULL, acpi_bus_offline, (void *)false,
-> > +				     (void **)&errdev);
-> > +	if (status == AE_SUPPORT) {
-> > +		dev_warn(errdev, "Offline disabled.\n");
-> > +		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-> > +				    acpi_bus_online, NULL, NULL, NULL);
-> > +		put_device(&device->dev);
-> > +		return -EPERM;
-> > +	}
-> > +	acpi_bus_offline(handle, 0, (void *)false, (void **)&errdev);
-> >  	if (errdev) {
-> 
-> If the target object failed with AE_SUPPORT, shouldn't we skip the 2nd
-> pass and return with -EPERM after rollback?
+On 10/18/2013 11:34 AM, Tim Harvey wrote:
+> On Fri, Oct 18, 2013 at 12:45 AM, Zhu Richard-R65037
+> [...]
+> How about with the upstream driver?  I have 'my own driver' as well
+> (based on Freescale's BSP) which works, but I'm very interested in
+> getting this upstream driver to work so we don't have to keep
+> maintaining our own drivers.  Can you please test with this upstream
+> driver?
 
-We've checked the target object already in acpi_hotplug_notify_cb() or in
-acpi_eject_store().
+   Tim, Sean what is the status of this patch ? Is it part of any tree 
+already ? I'd like to test few things.
 
-Which is telling me that the previous version of the patch was better after
-all, because the hotplug.enabled thing takes precedence over
-acpi_force_hot_remove in the other places.  So this:
+   Thanks
 
-https://patchwork.kernel.org/patch/3135841/
-
-is the right version.  Sorry for the confusion.
-
-Thanks,
-Rafael
-
+   Sinan Akman
