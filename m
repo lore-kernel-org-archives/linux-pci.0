@@ -1,161 +1,219 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:26547
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751580Ab3KWO43 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 23 Nov 2013 09:56:29 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Tom Nguyen <tom.l.nguyen@intel.com>,
-	Kristen Accardi <kristen.c.accardi@intel.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: RE: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
-Date: Sat, 23 Nov 2013 14:56:22 +0000
-Message-ID: <a3dc3d613f274e4d993d6a7612f1dde6@BLUPR05MB118.namprd05.prod.outlook.com>
-References: <52797238.8070304@gmail.com> <20131106002505.GC3359@google.com>
- <CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
- <CADTPrLQpaCDo_YCC2=MmT1iCrWRPqzDpnqQZrE8OMjRMc6WYmQ@mail.gmail.com>
- <20131108012352.GE2955@google.com>
- <CADTPrLTYOXsGovL8HJ7=+K30OWVeSdMKTma_UuMV8ZRFB6CkYA@mail.gmail.com>
- <CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
- <CADTPrLRJD0er1kijjm2SEE6wUA9eQaz+OOd67E3MpHLu6k-R6Q@mail.gmail.com>
- <20131123005102.GA14690@google.com>
-In-Reply-To: <20131123005102.GA14690@google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:49590 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756029Ab3KFVRH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 16:17:07 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
+	Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Subject: [PATCH] PCI: Introduce two new MSI infrastructure calls for masking/unmasking.
+Date: Wed,  6 Nov 2013 16:16:56 -0500
+Message-Id: <1383772616-23060-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+Certain platforms do not allow writes in the MSI-X bars
+to setup or tear down vector values. To combat against
+the generic code trying to write to that and either silently
+being ignored or crashing due to the pagetables being marked r/o
+this patch introduces a platform over-write.
 
-> >
-> > https://bugzilla.kernel.org/show_bug.cgi?id=64821
-> >
-> > Please let me know if you need any help in trying something out - I'd
-> > be more than keen to help - write code or test.
-> 
-> What do you think of the patch below?  I'm afraid we'll trip over a few
-> other old parts similar to the 82801H, but I'd rather do that than
-> penalize the parts that work correctly.
+Note that we keep two separate, non-weak, functions
+default_mask_msi_irqs() and default_mask_msix_irqs() for the
+behavior of the arch_mask_msi_irqs() and arch_mask_msix_irqs(),
+as the default behavior is needed by x86 PCI code.
 
-Tested and works fine. Looks good (on a side note, we are introducing device specific check in a common code, but I do not think there is any other cleaner way). I think this patch should be applied as it solves the problem of slow probing.
+For Xen, which does not allow the guest to write to MSI-X
+tables - as the hypervisor is solely responsible for setting
+the vector values - we implement two nops.
 
-On a different note, I feel there is still a need to apply my original patch. There is still an open problem in case of spurious interrupts (or in any case where the condition "if (slot_status & PCI_EXP_SLTSTA_CC)" becomes true in pcie_write_cmd()). That is because once that happens, we never clear that interrupt, and no further hotplug interrupts shall be received unless we do that.
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+CC: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
+ arch/x86/include/asm/x86_init.h |  3 +++
+ arch/x86/kernel/x86_init.c      | 10 ++++++++++
+ arch/x86/pci/xen.c              | 13 ++++++++++++-
+ drivers/pci/msi.c               | 22 ++++++++++++++++------
+ include/linux/msi.h             |  2 ++
+ 5 files changed, 43 insertions(+), 7 deletions(-)
 
-Thanks,
-
-Rajat
-
-> 
-> 
-> PCI: pciehp: Support command completion even with no hotplug hardware
-> 
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Commit 5808639bfa98 ("pciehp: fix slow probing") fixed a slow probing
-> problem on hardware that doesn't conform to the spec, but caused a
-> similar problem for hardware that *does* conform to the spec.
-> 
-> Per PCIe 3.0, sec 7.8.10 and 6.7.3.2, any write to Slot Control
-> generates a hot-plug command.  Ports that can accept new commands with
-> no delay can set the "No Command Completed Support" bit.  Otherwise the
-> port must indicate its completion of the command and readiness to accept
-> a new command with a "command completed event."
-> 
-> 5808639bfa98 assumes ports that lack a power controller, power
-> indicator, attention indicator, and interlock will not generate
-> completion events, even if they neglect to set "No Command Completed
-> Support." But on ports that lack those elements and *do* support command
-> completion notification, it causes:
-> 
->   Unexpected CMD_COMPLETED. Need to wait for command completed event.
->   Command not completed in 1000 msec
-> 
-> and forces us to wait for a 1 second timeout.
-> 
-> This patch makes the 5808639bfa98 workaround into a quirk that's applied
-> only to devices known to be broken, currently just Intel 82801H ports.
-> There are probably other similarly-broken devices that may now probe
-> slowly, but I don't know how to catch them all without penalizing the
-> ones that play by the rules.
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=64821
-> Reported-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |   39 +++++++++++++++++++++++++++++--
-> -------
->  1 file changed, 30 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c
-> b/drivers/pci/hotplug/pciehp_hpc.c
-> index 3eea3fdd4b0b..2fd2bd59e07f 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -881,6 +881,34 @@ static inline void dbg_ctrl(struct controller
-> *ctrl)
->  	ctrl_info(ctrl, "Slot Control           : 0x%04x\n", reg16);
->  }
-> 
-> +static int pciehp_no_command_complete(struct controller *ctrl) {
-> +	struct pcie_device *dev = ctrl->pcie;
-> +	struct pci_dev *pdev = dev->port;
-> +	u16 vendor, device;
-> +
-> +	if (NO_CMD_CMPL(ctrl))
-> +		return 1;
-> +
-> +	/*
-> +	 * Controller should notify on command completion unless the "No
-> +	 * Command Completed Support" bit is set.  But some hardware does
-> +	 * not.  See https://bugzilla.kernel.org/show_bug.cgi?id=10751
-> +	 */
-> +	if (!(POWER_CTRL(ctrl) | ATTN_LED(ctrl) | PWR_LED(ctrl) |
-> EMI(ctrl))) {
-> +		vendor = pdev->vendor;
-> +		device = pdev->device;
-> +		if (vendor == PCI_VENDOR_ID_INTEL &&
-> +		    device >= 0x283f && device <= 0x2849) {
-> +			dev_info(&dev->device, "device [%04x:%04x] does not
-> notify on hotplug command completion\n",
-> +				 vendor, device);
-> +			return 1;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  struct controller *pcie_init(struct pcie_device *dev)  {
->  	struct controller *ctrl;
-> @@ -902,15 +930,8 @@ struct controller *pcie_init(struct pcie_device
-> *dev)
->  	mutex_init(&ctrl->ctrl_lock);
->  	init_waitqueue_head(&ctrl->queue);
->  	dbg_ctrl(ctrl);
-> -	/*
-> -	 * Controller doesn't notify of command completion if the "No
-> -	 * Command Completed Support" bit is set in Slot Capability
-> -	 * register or the controller supports none of power
-> -	 * controller, attention led, power led and EMI.
-> -	 */
-> -	if (NO_CMD_CMPL(ctrl) ||
-> -	    !(POWER_CTRL(ctrl) | ATTN_LED(ctrl) | PWR_LED(ctrl) |
-> EMI(ctrl)))
-> -	    ctrl->no_cmd_complete = 1;
-> +
-> +	ctrl->no_cmd_complete = pciehp_no_command_complete(ctrl);
-> 
->          /* Check if Data Link Layer Link Active Reporting is
-> implemented */
->          if (pciehp_readl(ctrl, PCI_EXP_LNKCAP, &link_cap)) {
-> 
-
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 828a156..0f1be11 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -172,6 +172,7 @@ struct x86_platform_ops {
+ 
+ struct pci_dev;
+ struct msi_msg;
++struct msi_desc;
+ 
+ struct x86_msi_ops {
+ 	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
+@@ -182,6 +183,8 @@ struct x86_msi_ops {
+ 	void (*teardown_msi_irqs)(struct pci_dev *dev);
+ 	void (*restore_msi_irqs)(struct pci_dev *dev, int irq);
+ 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
++	u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
++	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
+ };
+ 
+ struct IO_APIC_route_entry;
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 8ce0072..021783b 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -116,6 +116,8 @@ struct x86_msi_ops x86_msi = {
+ 	.teardown_msi_irqs	= default_teardown_msi_irqs,
+ 	.restore_msi_irqs	= default_restore_msi_irqs,
+ 	.setup_hpet_msi		= default_setup_hpet_msi,
++	.msi_mask_irq		= default_msi_mask_irq,
++	.msix_mask_irq		= default_msix_mask_irq,
+ };
+ 
+ /* MSI arch specific hooks */
+@@ -138,6 +140,14 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
+ {
+ 	x86_msi.restore_msi_irqs(dev, irq);
+ }
++u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
++{
++	return x86_msi.msi_mask_irq(desc, mask, flag);
++}
++u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
++{
++	return x86_msi.msix_mask_irq(desc, flag);
++}
+ #endif
+ 
+ struct x86_io_apic_ops x86_io_apic_ops = {
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 48e8461..5eee495 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -382,7 +382,14 @@ static void xen_teardown_msi_irq(unsigned int irq)
+ {
+ 	xen_destroy_irq(irq);
+ }
+-
++static u32 xen_nop_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
++{
++	return 0;
++}
++static u32 xen_nop_msix_mask_irq(struct msi_desc *desc, u32 flag)
++{
++	return 0;
++}
+ #endif
+ 
+ int __init pci_xen_init(void)
+@@ -406,6 +413,8 @@ int __init pci_xen_init(void)
+ 	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+ 	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+ 	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
++	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
++	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+ #endif
+ 	return 0;
+ }
+@@ -485,6 +494,8 @@ int __init pci_xen_initial_domain(void)
+ 	x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
+ 	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+ 	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
++	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
++	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+ #endif
+ 	xen_setup_acpi_sci();
+ 	__acpi_register_gsi = acpi_register_gsi_xen;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..7916699 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -185,7 +185,7 @@ static inline __attribute_const__ u32 msi_enabled_mask(u16 control)
+  * reliably as devices without an INTx disable bit will then generate a
+  * level IRQ which will never be cleared.
+  */
+-static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
++u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+ {
+ 	u32 mask_bits = desc->masked;
+ 
+@@ -199,9 +199,14 @@ static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+ 	return mask_bits;
+ }
+ 
++__weak u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
++{
++	return default_msi_mask_irq(desc, mask, flag);
++}
++
+ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+ {
+-	desc->masked = __msi_mask_irq(desc, mask, flag);
++	desc->masked = arch_msi_mask_irq(desc, mask, flag);
+ }
+ 
+ /*
+@@ -211,7 +216,7 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+  * file.  This saves a few milliseconds when initialising devices with lots
+  * of MSI-X interrupts.
+  */
+-static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
++u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
+ {
+ 	u32 mask_bits = desc->masked;
+ 	unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+@@ -224,9 +229,14 @@ static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
+ 	return mask_bits;
+ }
+ 
++__weak u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
++{
++	return default_msix_mask_irq(desc, flag);
++}
++
+ static void msix_mask_irq(struct msi_desc *desc, u32 flag)
+ {
+-	desc->masked = __msix_mask_irq(desc, flag);
++	desc->masked = arch_msix_mask_irq(desc, flag);
+ }
+ 
+ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
+@@ -902,7 +912,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &ctrl);
+ 	mask = msi_capable_mask(ctrl);
+ 	/* Keep cached state to be restored */
+-	__msi_mask_irq(desc, mask, ~mask);
++	arch_msi_mask_irq(desc, mask, ~mask);
+ 
+ 	/* Restore dev->irq to its default pin-assertion irq */
+ 	dev->irq = desc->msi_attrib.default_irq;
+@@ -998,7 +1008,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+ 	/* Return the device with MSI-X masked as initial states */
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+ 		/* Keep cached states to be restored */
+-		__msix_mask_irq(entry, 1);
++		arch_msix_mask_irq(entry, 1);
+ 	}
+ 
+ 	msix_set_enable(dev, 0);
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index b17ead8..87cce50 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -64,6 +64,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
+ 
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+ void default_restore_msi_irqs(struct pci_dev *dev, int irq);
++u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
++u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag);
+ 
+ struct msi_chip {
+ 	struct module *owner;
+-- 
+1.8.3.1
 
