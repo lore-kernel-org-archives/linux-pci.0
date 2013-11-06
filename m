@@ -1,143 +1,289 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:49456 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752799Ab3KGWDx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Nov 2013 17:03:53 -0500
-Received: by mail-ie0-f173.google.com with SMTP id u16so1984493iet.32
-        for <linux-pci@vger.kernel.org>; Thu, 07 Nov 2013 14:03:53 -0800 (PST)
-Date: Thu, 7 Nov 2013 15:03:50 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Nishank Trivedi <nistrive@cisco.com>
-Subject: Re: [PATCH] PCI: Use pci_is_root_bus() to check for root bus
-Message-ID: <20131107220350.GD2955@google.com>
-References: <20131105232903.3790.8738.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAE9FiQX74B32iD2LAaWxwOAH62YAFWkt2=hK9pVDCDUnfrEaNw@mail.gmail.com>
- <20131106181558.GA14444@google.com>
- <CAE9FiQU4V0waWNvMFgEjKv90KuCCQ2CYJU2UsnDP0+WDS9zb1Q@mail.gmail.com>
- <20131106201239.GA8971@google.com>
- <CAE9FiQWxGdiRjZSt8OhVkJAGJ3p4zZ+Tza9HFiKtZZSa01kztA@mail.gmail.com>
- <20131106204603.GA17046@google.com>
- <CAE9FiQX8Let2TzMwq1qmDhV65RZ68triZZAhGEuAVzL2suzy1g@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:39756 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751050Ab3KFBzC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 20:55:02 -0500
+Message-ID: <5279A191.9030807@oracle.com>
+Date: Wed, 06 Nov 2013 09:55:29 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQX8Let2TzMwq1qmDhV65RZ68triZZAhGEuAVzL2suzy1g@mail.gmail.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	xen-devel <xen-devel@lists.xen.org>,
+	Feng Jin <joe.jin@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH 2/3] PCI: Refactor MSI/MSIX mask restore code to fix interrupt
+ lost issue
+References: <525E3320.5080700@oracle.com> <20131029215848.GA15159@google.com> <52706CF8.1090409@oracle.com> <20131105143223.GA3550@phenom.dumpdata.com>
+In-Reply-To: <20131105143223.GA3550@phenom.dumpdata.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 06, 2013 at 04:28:48PM -0800, Yinghai Lu wrote:
-> On Wed, Nov 6, 2013 at 12:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> 
-> > Oh, I see.  The problem is when VF is on a virtual bus and the
-> > corresponding PF is on a root bus.  Then we have:
-> >
-> >   pci_is_root_bus(VF) == false
-> >   pci_upstream_bridge(VF) == pci_upstream_bridge(PF)
-> >   pci_uptream_bridge(PF) == NULL
-> >
-> > I guess that's what your suggestion about "caching the return from
-> > pci_upstream_bridge()" was about.  Like this:
-> 
-> Yes.
-> 
-> For the two patches,
-> 
-> Acked-by: Yinghai Lu <yinghai@kernel.org>
 
-Thanks, I applied these two with your acks to my pci/misc branch for
-v3.13.
+On 2013-11-05 22:32, Konrad Rzeszutek Wilk wrote:
+> On Wed, Oct 30, 2013 at 10:20:40AM +0800, Zhenzhong Duan wrote:
+>> On 2013-10-30 05:58, Bjorn Helgaas wrote:
+>>> On Wed, Oct 16, 2013 at 02:33:04PM +0800, Zhenzhong Duan wrote:
+>>>> Driver init call graph under baremetal:
+>>>> driver_init->
+>>>>      msix_capability_init->
+>>>>          msix_program_entries->
+>>>>              msix_mask_irq->
+>>>>                  entry->masked = 1
+>>>>      request_irq->
+>>>>          __setup_irq->
+>>>>              irq_startup->
+>>>>                  unmask_msi_irq->
+>>>>                      msix_mask_irq->
+>>>>                          entry->masked = 0;
+>>>>
+>>>> So entry->masked is always updated with newest value and its value could be used
+>>>> to restore to mask register in device.
+>>>>
+>>>> But in initial domain (aka priviliged guest), it's different.
+>>>> Driver init call graph under initial domain:
+>>>> driver_init->
+>>>>      msix_capability_init->
+>>>>          msix_program_entries->
+>>>>              msix_mask_irq->
+>>>>                  entry->masked = 1
+>>>>      request_irq->
+>>>>          __setup_irq->
+>>>>              irq_startup->
+>>>>                  __startup_pirq->
+>>>>                      EVTCHNOP_bind_pirq hypercall    (trap into Xen)
+>>>> [Xen:]
+>>>> pirq_guest_bind->
+>>>>      startup_msi_irq->
+>>>>          unmask_msi_irq->
+>>>>              msi_set_mask_bit->
+>>>>                  entry->msi_attrib.masked = 0;
+>> The right mask value is saved in entry->msi_attrib.masked on Xen.
+>>>> So entry->msi_attrib.masked in xen side always has newest value. entry->masked
+>>>> in initial domain is untouched and is 1 after msix_capability_init.
+>>> If we run the following sequence:
+>>>
+>>>      pci_enable_msix()
+>>>      request_irq()
+>>>
+>>> don't we end up with the MSI IRQ unmasked if we're on bare metal but masked
+>>> if we're on Xen?  It seems like we'd want it unmasked in both cases, so I
+>>> expected your patch to do something to make it unmasked if we're on Xen.
+>>> But I don't think it does, does it?
+>>>
+>>> As far as I can tell, this patch only changes the pci_restore_state()
+>>> path.  I think that part makes sense.
+>>>
+>>> Bjorn
+>> It's unmasked on Xen too. This is just what this patch try to fix.
+>> In PHYSDEVOP_restore_msi hypercall, xen did the right thing that did
+>> by kernel in baremetal.
+> Part of this problem is that all of the interrupt vector setting (either
+> be it GSI, MSI or MSI-X) is handled by the hypervisor. That means the kernel
+> consults the hypervisor for the right 'vector' value for all of the different
+> types of interrupts. And that 'vector' value is not even used - the interrupts
+> first hit the hypervisor - which dispatches them to the guest via a software
+> event channel mechanism (a bitmap of 'active' events - and an event can be
+> tied to a physical interrupt or an IPI, etc).
+Yes, for below sequence, request_irq calls EVTCHNOP_bind_pirq hypercall 
+and Xen will
+get MSI IRQ unmasked.
 
-Bjorn
+       pci_enable_msix()
+       request_irq()
 
-> >
-> > commit 21ea57bf1311f7a8d1b755d355322a1f077fccb7
-> > Author: Bjorn Helgaas <bhelgaas@google.com>
-> > Date:   Wed Nov 6 10:11:48 2013 -0700
-> >
-> >     PCI: Add pci_upstream_bridge()
-> >
-> >     This adds a pci_upstream_bridge() interface to find the PCI-to-PCI bridge
-> >     upstream from a device.  This is typically just "dev->bus->self", but in
-> >     the case of a VF on a virtual bus, we have to start from the corresponding
-> >     PF.  Returns NULL if there is no upstream PCI bridge, i.e., if the device
-> >     is on a root bus.
-> >
-> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index d3a888a..835ec7b 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -480,6 +480,15 @@ static inline bool pci_is_root_bus(struct pci_bus *pbus)
-> >         return !(pbus->parent);
-> >  }
-> >
-> > +static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
-> > +{
-> > +       dev = pci_physfn(dev);
-> > +       if (pci_is_root_bus(dev->bus))
-> > +               return NULL;
-> > +
-> > +       return dev->bus->self;
-> > +}
-> > +
-> >  #ifdef CONFIG_PCI_MSI
-> >  static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev)
-> >  {
-> > commit bca690ab580d5c0c4a0c7201f3c42057288add8b
-> > Author: Bjorn Helgaas <bhelgaas@google.com>
-> > Date:   Wed Nov 6 10:00:51 2013 -0700
-> >
-> >     PCI: Enable upstream bridges even for VFs on virtual buses
-> >
-> >     Previously we enabled the upstream PCI-to-PCI bridge only when
-> >     "dev->bus->self != NULL".  In the case of a VF on a virtual bus, where
-> >     "bus->self == NULL", we didn't enable the upstream bridge.
-> >
-> >     This fixes that by enabling the upstream bridge of the PF corresponding to
-> >     the VF.
-> >
-> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index ac40f90..d3ed931 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -1148,12 +1148,12 @@ int pci_reenable_device(struct pci_dev *dev)
-> >
-> >  static void pci_enable_bridge(struct pci_dev *dev)
-> >  {
-> > +       struct pci_dev *bridge;
-> >         int retval;
-> >
-> > -       if (!dev)
-> > -               return;
-> > -
-> > -       pci_enable_bridge(dev->bus->self);
-> > +       bridge = pci_upstream_bridge(dev);
-> > +       if (bridge)
-> > +               pci_enable_bridge(bridge);
-> >
-> >         if (pci_is_enabled(dev)) {
-> >                 if (!dev->is_busmaster)
-> > @@ -1170,6 +1170,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
-> >
-> >  static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
-> >  {
-> > +       struct pci_dev *bridge;
-> >         int err;
-> >         int i, bars = 0;
-> >
-> > @@ -1188,7 +1189,9 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
-> >         if (atomic_inc_return(&dev->enable_cnt) > 1)
-> >                 return 0;               /* already enabled */
-> >
-> > -       pci_enable_bridge(dev->bus->self);
-> > +       bridge = pci_upstream_bridge(dev);
-> > +       if (bridge)
-> > +               pci_enable_bridge(bridge);
-> >
-> >         /* only skip sriov related */
-> >         for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+> Even more recently we have been clamping down - so that the kernel pagetables
+> for the MSI-X tables for example are R/O - so it can't write (or over-write)
+> with a different vector value (or the same one). The hypervisor is the one
+> that does this change.
+>
+> Perhaps a different way of fixing this is making the '__msi_mask_irq' and
+> '__msix_mask_irq' be part of the x86.msi function ops? And then the platform
+> can over-write it with its own mechanism for masking/unmasking? (and in case
+> of Xen it would be a nop as that has already been done by the hypervisor?)
+The idea looks good
+> The 'write_msi_msg' we don't have to worry about as it is only used by
+> default_restore_msi_irqs (which is part of the x86.msi and can be over-written).
+>
+> Perhaps something like this (Testing it right now):
+I'd suggest to test with qlogic card with which the bug only reproduce.
+
+zduan
+> diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+> index 828a156..0f1be11 100644
+> --- a/arch/x86/include/asm/x86_init.h
+> +++ b/arch/x86/include/asm/x86_init.h
+> @@ -172,6 +172,7 @@ struct x86_platform_ops {
+>   
+>   struct pci_dev;
+>   struct msi_msg;
+> +struct msi_desc;
+>   
+>   struct x86_msi_ops {
+>   	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
+> @@ -182,6 +183,8 @@ struct x86_msi_ops {
+>   	void (*teardown_msi_irqs)(struct pci_dev *dev);
+>   	void (*restore_msi_irqs)(struct pci_dev *dev, int irq);
+>   	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
+> +	u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
+> +	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
+>   };
+>   
+>   struct IO_APIC_route_entry;
+> diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+> index 8ce0072..021783b 100644
+> --- a/arch/x86/kernel/x86_init.c
+> +++ b/arch/x86/kernel/x86_init.c
+> @@ -116,6 +116,8 @@ struct x86_msi_ops x86_msi = {
+>   	.teardown_msi_irqs	= default_teardown_msi_irqs,
+>   	.restore_msi_irqs	= default_restore_msi_irqs,
+>   	.setup_hpet_msi		= default_setup_hpet_msi,
+> +	.msi_mask_irq		= default_msi_mask_irq,
+> +	.msix_mask_irq		= default_msix_mask_irq,
+>   };
+>   
+>   /* MSI arch specific hooks */
+> @@ -138,6 +140,14 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
+>   {
+>   	x86_msi.restore_msi_irqs(dev, irq);
+>   }
+> +u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+> +{
+> +	return x86_msi.msi_mask_irq(desc, mask, flag);
+> +}
+> +u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
+> +{
+> +	return x86_msi.msix_mask_irq(desc, flag);
+> +}
+>   #endif
+>   
+>   struct x86_io_apic_ops x86_io_apic_ops = {
+> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+> index 48e8461..5eee495 100644
+> --- a/arch/x86/pci/xen.c
+> +++ b/arch/x86/pci/xen.c
+> @@ -382,7 +382,14 @@ static void xen_teardown_msi_irq(unsigned int irq)
+>   {
+>   	xen_destroy_irq(irq);
+>   }
+> -
+> +static u32 xen_nop_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+> +{
+> +	return 0;
+> +}
+> +static u32 xen_nop_msix_mask_irq(struct msi_desc *desc, u32 flag)
+> +{
+> +	return 0;
+> +}
+>   #endif
+>   
+>   int __init pci_xen_init(void)
+> @@ -406,6 +413,8 @@ int __init pci_xen_init(void)
+>   	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+>   	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+>   	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
+> +	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+> +	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+>   #endif
+>   	return 0;
+>   }
+> @@ -485,6 +494,8 @@ int __init pci_xen_initial_domain(void)
+>   	x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
+>   	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+>   	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
+> +	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+> +	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+>   #endif
+>   	xen_setup_acpi_sci();
+>   	__acpi_register_gsi = acpi_register_gsi_xen;
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index d5f90d6..7916699 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -185,7 +185,7 @@ static inline __attribute_const__ u32 msi_enabled_mask(u16 control)
+>    * reliably as devices without an INTx disable bit will then generate a
+>    * level IRQ which will never be cleared.
+>    */
+> -static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+> +u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>   {
+>   	u32 mask_bits = desc->masked;
+>   
+> @@ -199,9 +199,14 @@ static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>   	return mask_bits;
+>   }
+>   
+> +__weak u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+> +{
+> +	return default_msi_mask_irq(desc, mask, flag);
+> +}
+> +
+>   static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>   {
+> -	desc->masked = __msi_mask_irq(desc, mask, flag);
+> +	desc->masked = arch_msi_mask_irq(desc, mask, flag);
+>   }
+>   
+>   /*
+> @@ -211,7 +216,7 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>    * file.  This saves a few milliseconds when initialising devices with lots
+>    * of MSI-X interrupts.
+>    */
+> -static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
+> +u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
+>   {
+>   	u32 mask_bits = desc->masked;
+>   	unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+> @@ -224,9 +229,14 @@ static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
+>   	return mask_bits;
+>   }
+>   
+> +__weak u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
+> +{
+> +	return default_msix_mask_irq(desc, flag);
+> +}
+> +
+>   static void msix_mask_irq(struct msi_desc *desc, u32 flag)
+>   {
+> -	desc->masked = __msix_mask_irq(desc, flag);
+> +	desc->masked = arch_msix_mask_irq(desc, flag);
+>   }
+>   
+>   static void msi_set_mask_bit(struct irq_data *data, u32 flag)
+> @@ -902,7 +912,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+>   	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &ctrl);
+>   	mask = msi_capable_mask(ctrl);
+>   	/* Keep cached state to be restored */
+> -	__msi_mask_irq(desc, mask, ~mask);
+> +	arch_msi_mask_irq(desc, mask, ~mask);
+>   
+>   	/* Restore dev->irq to its default pin-assertion irq */
+>   	dev->irq = desc->msi_attrib.default_irq;
+> @@ -998,7 +1008,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+>   	/* Return the device with MSI-X masked as initial states */
+>   	list_for_each_entry(entry, &dev->msi_list, list) {
+>   		/* Keep cached states to be restored */
+> -		__msix_mask_irq(entry, 1);
+> +		arch_msix_mask_irq(entry, 1);
+>   	}
+>   
+>   	msix_set_enable(dev, 0);
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index b17ead8..87cce50 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -64,6 +64,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
+>   
+>   void default_teardown_msi_irqs(struct pci_dev *dev);
+>   void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+> +u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
+> +u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag);
+>   
+>   struct msi_chip {
+>   	struct module *owner;
+
