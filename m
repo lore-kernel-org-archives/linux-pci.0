@@ -1,43 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 0/3] More ACPI hotplug updates (was: [Update][PATCH 0/6] ACPI scan and hotplug fixes)
-Date: Wed, 06 Nov 2013 00:32:12 +0100
-Message-ID: <18462848.9zsetEL1Yy@vostro.rjw.lan>
-In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:49558 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223Ab3KFSdR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 13:33:17 -0500
+Received: by mail-ie0-f181.google.com with SMTP id ar20so18529065iec.12
+        for <linux-pci@vger.kernel.org>; Wed, 06 Nov 2013 10:33:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <527A8166.6000701@gmail.com>
+References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com> <527A8166.6000701@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 6 Nov 2013 11:32:56 -0700
+Message-ID: <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: wzyboy <wzyboy@wzyboy.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 04, 2013 02:29:56 PM Rafael J. Wysocki wrote:
-> On Monday, November 04, 2013 01:17:12 AM Rafael J. Wysocki wrote:
-> > Hi,
-> > 
-> > The following three patches fix some issues that we have in the common ACPI
-> > hotplug infrastructure.
-> > 
-> > If anyone sees any problems with them, please let me know.
-> 
-> Well, the last patch from the last version didn't really do the right thing in
-> my opinion, so new series follows.
-> 
-> I actually would like to squeeze it into 3.13 if there are no objections, since
-> at least patch [3/6] is kind of urgent.
+On Wed, Nov 6, 2013 at 10:50 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> Hi,
+>
+> adding PCI folks.
+> Here is the story:
+>
+> * Wzyboy has a Lenovo laptop with _OSC control *not* granted
+> * L1 Active is enabled
+> * kernel: 3.12.0
+> * Nic is PCIe (Gen2 but not sure...)
+>
+> At some random point, the driver loses access to the NIC: all readl
+> operation return 0xff.
+> Even lspci returns 0xff:
+>
+> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev ff)
+> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>
+> here is the output of lspci *before* the issue hits:
+>
+> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 6b)
+> 00: 86 80 b2 08 06 04 10 00 6b 00 80 02 10 00 00 00
+> 10: 04 00 40 f0 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 62 c2
+> 30: 00 00 00 00 c8 00 00 00 00 00 00 00 09 01 00 00
+>
+> have you any idea of what we can do to understand what it going wrong here?
 
-Three more patches for 3.13 if people don't mind, on top of the previous series
-of six.  [2/3] actually is a fix, the other two are more like cleanups, but
-they are worth doing at this point if no one sees any problems with them.
+Do you have any more details?  Maybe open a bugzilla.kernel.org report
+and attach:
 
-This is the last batch for 3.13, I promise.
+  - complete dmesg log
+  - lspci -vvxxx output for entire system before issue occurs
+  - lspci -vvxxx output for entire system after issue occurs
 
-Thanks!
+Bjorn
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> On 11/06/2013 09:12 AM, wzyboy wrote:
+>> 2013/11/6 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
+>>> Wait - you mean that after the bug occurred before you rebooted, lspci -xxx show all 00?
+>>> I can see 0xff here.
+>>> Anyway - this is very bad... checking with HW guys...
+>>
+>>
+>> Sorry, that's my typo. They are all 0xff... (I don't know what do they
+>> mean but it look bad...)
+>>
+>> Thanks for your effort! I'm waiting for good news from you and HW guys. :-)
+>>
