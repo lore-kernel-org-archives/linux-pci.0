@@ -1,291 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46684 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752042Ab3K2JoW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Nov 2013 04:44:22 -0500
-Date: Fri, 29 Nov 2013 10:41:37 +0100
-From: Veaceslav Falico <vfalico@redhat.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Neil Horman <nhorman@tuxdriver.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: export MSI mode using attributes, not kobjects
-Message-ID: <20131129094137.GC3028@redhat.com>
-References: <20131127184652.GA1856@kroah.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:36490 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752017Ab3KFUMo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 15:12:44 -0500
+Received: by mail-ie0-f178.google.com with SMTP id x13so817ief.37
+        for <linux-pci@vger.kernel.org>; Wed, 06 Nov 2013 12:12:42 -0800 (PST)
+Date: Wed, 6 Nov 2013 13:12:39 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Nishank Trivedi <nistrive@cisco.com>
+Subject: Re: [PATCH] PCI: Use pci_is_root_bus() to check for root bus
+Message-ID: <20131106201239.GA8971@google.com>
+References: <20131105232903.3790.8738.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAE9FiQX74B32iD2LAaWxwOAH62YAFWkt2=hK9pVDCDUnfrEaNw@mail.gmail.com>
+ <20131106181558.GA14444@google.com>
+ <CAE9FiQU4V0waWNvMFgEjKv90KuCCQ2CYJU2UsnDP0+WDS9zb1Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-In-Reply-To: <20131127184652.GA1856@kroah.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQU4V0waWNvMFgEjKv90KuCCQ2CYJU2UsnDP0+WDS9zb1Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 27, 2013 at 10:46:52AM -0800, Greg Kroah-Hartman wrote:
->From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->
->The PCI MSI sysfs code is a mess with kobjects for things that don't
->really need to be kobjects.  This patch creates attributes dynamically
->for the MSI interrupts instead of using kobjects.
->
->Note, this removes a directory from the current MSI interrupt sysfs
->code:
->
->old MSI kobjects:
->pci_device
->   └── msi_irqs
->       └── 40
->           └── mode
->
->new MSI attributes:
->pci_device
->   └── msi_irqs
->       └── 40
->
->As there was only one file "mode" with the kobject model, the interrupt
->number is now a file that returns the "mode" of the interrupt (msi vs.
->msix).
->
->Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+On Wed, Nov 06, 2013 at 11:56:13AM -0800, Yinghai Lu wrote:
+> On Wed, Nov 6, 2013 at 10:15 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> 
+> > commit dfb66fee4715c747a94abd45c20fbe302b10e49c
+> > Author: Bjorn Helgaas <bhelgaas@google.com>
+> > Date:   Wed Nov 6 10:11:48 2013 -0700
+> >
+> >     PCI: Add pci_upstream_bridge()
+> >
+> >     This adds a pci_upstream_bridge() interface to find the PCI-to-PCI bridge
+> >     upstream from a device.  If the device is on a root bus, i.e., the upstream
+> >     bridge is a host bridge instead of a PCI bridge, this returns NULL.  If the
+> >     device is a VF, this returns the bridge upstream from the PF corresponding
+> >     to the VF.  This is important for VFs on virtual buses, where
+> >     "dev->bus->self == NULL".
+> >
+> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index d3a888a..e09d19a 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -480,6 +480,18 @@ static inline bool pci_is_root_bus(struct pci_bus *pbus)
+> >         return !(pbus->parent);
+> >  }
+> >
+> > +static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
+> > +{
+> > +       if (pci_is_root_bus(dev->bus))
+> > +               return NULL;
+> > +
+> > +       dev = pci_physfn(dev);
+> > +       if (pci_is_root_bus(dev->bus))
+> > +               return NULL;
+> 
+> Maybe we can drop the first pci_is_root_bus() checking.
+> for physfn, pci_physfn will return it's self.
 
-Works like a charm for me.
+Yep, that makes sense, thanks.  I incorporated that change.
 
-FWIW,
+> > +
+> > +       return dev->bus->self;
+> > +}
+> > +
+> >  #ifdef CONFIG_PCI_MSI
+> >  static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev)
+> >  {
+> > commit 4e5415f02e32c85e902cd9692eab18200e14b347
+> > Author: Bjorn Helgaas <bhelgaas@google.com>
+> > Date:   Wed Nov 6 10:00:51 2013 -0700
+> >
+> >     PCI: Enable upstream bridges even for VFs on virtual buses
+> >
+> >     Previously we enabled the upstream PCI-to-PCI bridge only when
+> >     "dev->bus->self != NULL".  In the case of a VF on a virtual bus, where
+> >     "bus->self == NULL", we didn't enable the upstream bridge.
+> >
+> >     This fixes that by enabling the upstream bridge of the PF corresponding to
+> >     the VF.
+> >
+> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index ac40f90..744dc26 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -1150,10 +1150,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
+> >  {
+> >         int retval;
+> >
+> > -       if (!dev)
+> > -               return;
+> > -
+> > -       pci_enable_bridge(dev->bus->self);
+> > +       if (!pci_is_root_bus(dev->bus))
+> > +               pci_enable_bridge(pci_upstream_bridge(dev));
+> >
+> >         if (pci_is_enabled(dev)) {
+> >                 if (!dev->is_busmaster)
+> > @@ -1188,7 +1186,8 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+> >         if (atomic_inc_return(&dev->enable_cnt) > 1)
+> >                 return 0;               /* already enabled */
+> >
+> > -       pci_enable_bridge(dev->bus->self);
+> > +       if (!pci_is_root_bus(dev->bus))
+> > +               pci_enable_bridge(pci_upstream_bridge(dev));
+> >
+> >         /* only skip sriov related */
+> >         for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+> 
+> still have problem.
+> 
+> pci_upstream_bridge() could return NULL. so later pci_enable_bridge()
+> referring dev->bus could panic, as you remove !dev checking.
 
-Reviewed-by: Veaceslav Falico <vfalico@redhat.com>
+pci_upstream_bridge(dev) can only return NULL if dev is on a root bus,
+and we never call pci_enable_bridge() in that case.  So I don't see
+the problem.
 
->
->---
->
->Neil, can you test this patch to see if irqbalance works as-is or not?
->
->thanks,
->
->greg k-h
->
-> drivers/pci/msi.c   |  152 +++++++++++++++++++++++++---------------------------
-> include/linux/pci.h |    2
-> 2 files changed, 76 insertions(+), 78 deletions(-)
->
->--- a/drivers/pci/msi.c
->+++ b/drivers/pci/msi.c
->@@ -363,6 +363,9 @@ void write_msi_msg(unsigned int irq, str
-> static void free_msi_irqs(struct pci_dev *dev)
-> {
-> 	struct msi_desc *entry, *tmp;
->+	struct attribute **msi_attrs;
->+	struct device_attribute *dev_attr;
->+	int count = 0;
->
-> 	list_for_each_entry(entry, &dev->msi_list, list) {
-> 		int i, nvec;
->@@ -398,6 +401,22 @@ static void free_msi_irqs(struct pci_dev
-> 		list_del(&entry->list);
-> 		kfree(entry);
-> 	}
->+
->+	if (dev->msi_irq_groups) {
->+		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
->+		msi_attrs = dev->msi_irq_groups[0]->attrs;
->+		list_for_each_entry(entry, &dev->msi_list, list) {
->+			dev_attr = container_of(msi_attrs[count],
->+						struct device_attribute, attr);
->+			kfree(dev_attr->attr.name);
->+			kfree(dev_attr);
->+			++count;
->+		}
->+		kfree(msi_attrs);
->+		kfree(dev->msi_irq_groups[0]);
->+		kfree(dev->msi_irq_groups);
->+		dev->msi_irq_groups = NULL;
->+	}
-> }
->
-> static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
->@@ -471,96 +490,79 @@ void pci_restore_msi_state(struct pci_de
-> }
-> EXPORT_SYMBOL_GPL(pci_restore_msi_state);
->
->-
->-#define to_msi_attr(obj) container_of(obj, struct msi_attribute, attr)
->-#define to_msi_desc(obj) container_of(obj, struct msi_desc, kobj)
->-
->-struct msi_attribute {
->-	struct attribute        attr;
->-	ssize_t (*show)(struct msi_desc *entry, struct msi_attribute *attr,
->-			char *buf);
->-	ssize_t (*store)(struct msi_desc *entry, struct msi_attribute *attr,
->-			 const char *buf, size_t count);
->-};
->-
->-static ssize_t show_msi_mode(struct msi_desc *entry, struct msi_attribute *atr,
->+static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
-> 			     char *buf)
-> {
->-	return sprintf(buf, "%s\n", entry->msi_attrib.is_msix ? "msix" : "msi");
->-}
->-
->-static ssize_t msi_irq_attr_show(struct kobject *kobj,
->-				 struct attribute *attr, char *buf)
->-{
->-	struct msi_attribute *attribute = to_msi_attr(attr);
->-	struct msi_desc *entry = to_msi_desc(kobj);
->-
->-	if (!attribute->show)
->-		return -EIO;
->-
->-	return attribute->show(entry, attribute, buf);
->-}
->-
->-static const struct sysfs_ops msi_irq_sysfs_ops = {
->-	.show = msi_irq_attr_show,
->-};
->-
->-static struct msi_attribute mode_attribute =
->-	__ATTR(mode, S_IRUGO, show_msi_mode, NULL);
->-
->+	struct pci_dev *pdev = to_pci_dev(dev);
->+	struct msi_desc *entry;
->+	unsigned long irq;
->+	int retval;
->
->-static struct attribute *msi_irq_default_attrs[] = {
->-	&mode_attribute.attr,
->-	NULL
->-};
->+	retval = kstrtoul(attr->attr.name, 10, &irq);
->+	if (retval)
->+		return retval;
->
->-static void msi_kobj_release(struct kobject *kobj)
->-{
->-	struct msi_desc *entry = to_msi_desc(kobj);
->-
->-	pci_dev_put(entry->dev);
->+	list_for_each_entry(entry, &pdev->msi_list, list) {
->+		if (entry->irq == irq) {
->+			return sprintf(buf, "%s\n",
->+				       entry->msi_attrib.is_msix ? "msix" : "msi");
->+		}
->+	}
->+	return -ENODEV;
-> }
->
->-static struct kobj_type msi_irq_ktype = {
->-	.release = msi_kobj_release,
->-	.sysfs_ops = &msi_irq_sysfs_ops,
->-	.default_attrs = msi_irq_default_attrs,
->-};
->-
-> static int populate_msi_sysfs(struct pci_dev *pdev)
-> {
->+	struct attribute **msi_attrs;
->+	struct device_attribute *msi_dev_attr;
->+	struct attribute_group *msi_irq_group;
->+	const struct attribute_group **msi_irq_groups;
-> 	struct msi_desc *entry;
->-	struct kobject *kobj;
-> 	int ret;
->+	int num_msi = 0;
-> 	int count = 0;
->
->-	pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
->-	if (!pdev->msi_kset)
->-		return -ENOMEM;
->-
->+	/* Determine how many msi entries we have */
-> 	list_for_each_entry(entry, &pdev->msi_list, list) {
->-		kobj = &entry->kobj;
->-		kobj->kset = pdev->msi_kset;
->-		pci_dev_get(pdev);
->-		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
->-				     "%u", entry->irq);
->-		if (ret)
->-			goto out_unroll;
->-
->-		count++;
->+		++num_msi;
-> 	}
->+	if (!num_msi)
->+		return 0;
->
->-	return 0;
->-
->-out_unroll:
->+	/* Dynamically create the MSI attributes for the PCI device */
->+	msi_attrs = kzalloc(sizeof(void *) * (num_msi + 1), GFP_KERNEL);
->+	if (!msi_attrs)
->+		return -ENOMEM;
-> 	list_for_each_entry(entry, &pdev->msi_list, list) {
->-		if (!count)
->-			break;
->-		kobject_del(&entry->kobj);
->-		kobject_put(&entry->kobj);
->-		count--;
->+		char *name = kmalloc(20, GFP_KERNEL);
->+		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
->+		if (!msi_dev_attr)
->+			return -ENOMEM;
->+		sprintf(name, "%d", entry->irq);
->+		msi_dev_attr->attr.name = name;
->+		msi_dev_attr->attr.mode = S_IRUGO;
->+		msi_dev_attr->show = msi_mode_show;
->+		msi_attrs[count] = &msi_dev_attr->attr;
->+		++count;
-> 	}
->-	return ret;
->+
->+	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
->+	if (!msi_irq_group)
->+		return -ENOMEM;
->+	msi_irq_group->name = "msi_irqs";
->+	msi_irq_group->attrs = msi_attrs;
->+
->+	msi_irq_groups = kzalloc(sizeof(void *) * 2, GFP_KERNEL);
->+	if (!msi_irq_groups)
->+		return -ENOMEM;
->+	msi_irq_groups[0] = msi_irq_group;
->+
->+	ret = sysfs_create_groups(&pdev->dev.kobj, msi_irq_groups);
->+	if (ret)
->+		return ret;
->+	pdev->msi_irq_groups = msi_irq_groups;
->+
->+	return 0;
-> }
->
-> /**
->@@ -925,8 +927,6 @@ void pci_disable_msi(struct pci_dev *dev
->
-> 	pci_msi_shutdown(dev);
-> 	free_msi_irqs(dev);
->-	kset_unregister(dev->msi_kset);
->-	dev->msi_kset = NULL;
-> }
-> EXPORT_SYMBOL(pci_disable_msi);
->
->@@ -1023,8 +1023,6 @@ void pci_disable_msix(struct pci_dev *de
->
-> 	pci_msix_shutdown(dev);
-> 	free_msi_irqs(dev);
->-	kset_unregister(dev->msi_kset);
->-	dev->msi_kset = NULL;
-> }
-> EXPORT_SYMBOL(pci_disable_msix);
->
->--- a/include/linux/pci.h
->+++ b/include/linux/pci.h
->@@ -351,7 +351,7 @@ struct pci_dev {
-> 	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
-> #ifdef CONFIG_PCI_MSI
-> 	struct list_head msi_list;
->-	struct kset *msi_kset;
->+	const struct attribute_group **msi_irq_groups;
-> #endif
-> 	struct pci_vpd *vpd;
-> #ifdef CONFIG_PCI_ATS
+Bjorn
