@@ -1,68 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:13271 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342Ab3KTBPI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:15:08 -0500
-Message-ID: <528C0CF9.3020906@huawei.com>
-Date: Wed, 20 Nov 2013 09:14:33 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	"Matthew Garrett" <mjg59@srcf.ucam.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-References: <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com> <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com> <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com> <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com> <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com> <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com> <20131115115235.GA2281@intel.com> <20131119013343.GA17294@google.com> <528AC4F2.40708@huawei.com> <20131119171850.GA4261@google.com>
-In-Reply-To: <20131119171850.GA4261@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:6282 "EHLO
+	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717Ab3KFXZc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 18:25:32 -0500
+Message-ID: <1383780070.1847.45.camel@misato.fc.hp.com>
+Subject: Re: [Update][PATCH 3/6] ACPI / hotplug: Fix
+ handle_root_bridge_removal()
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Wed, 06 Nov 2013 16:21:10 -0700
+In-Reply-To: <6808835.gmCqHn1NaE@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
+	 <2970389.SeMGM45Qln@vostro.rjw.lan> <6808835.gmCqHn1NaE@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> [bhelgaas: changelog, tag for stable]
->>> Reported-by: David Bulkow <David.Bulkow@stratus.com>
->>> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>> CC: stable@vger.kernel.org	# v2.6.32+
->>
->> Hi Bjorn,
->>    This issue in X86 seems to be introduced after commit 928bea9 "PCI: Delay enabling bridges until they're needed"
->> So this patch needs to back port to 2.6.32+ ?
+On Mon, 2013-11-04 at 14:33 +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> 928bea9 might have made it more visible, but the underlying problem is that
-> we enable the device once in the probe path, and disable it twice in the
-> remove path.  That problem exists in 2.6.32.61:
+> It is required to do get_device() on the struct acpi_device in
+> question before passing it to acpi_bus_hot_remove_device() through
+> acpi_os_hotplug_execute(), because acpi_bus_hot_remove_device()
+> calls acpi_scan_hot_remove() that does put_device() on that
+> object.
 > 
->   pcie_portdrv_probe                # .probe() method
->     pcie_port_device_register
->       pci_enable_device             <-- enable
+> The ACPI PCI root removal routine, handle_root_bridge_removal(),
+> doesn't do that, which may lead to premature freeing of the
+> device object or to executing put_device() on an object that
+> has been freed already.
 > 
->   pcie_portdrv_remove               # .remove() method
->     pcie_port_device_remove
->       pci_disable_device            <-- disable #1
->     pci_disable_device              <-- disable #2
+> Fix this problem by making handle_root_bridge_removal() use
+> get_device() as appropriate.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-During assign unassigned resources, we also enable the port device,
+Acked-by: Toshi Kani <toshi.kani@hp.com>
 
-fs_initcall(pcibios_assign_resources);
-  pci_assign_unassigned_resources;
-    pci_enable_bridges()
-      pci_enable_device()
-
-
-So I think before the commit 928bea9 , the pci bridge device enable and disable is symmetrical.
-After the commit 928bea9, we only enable bridge once, but still remove twice.
-
-Thanks!
-Yijing.
-
-
--- 
-Thanks!
-Yijing
+Thanks,
+-Toshi
 
