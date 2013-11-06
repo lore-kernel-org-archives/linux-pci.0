@@ -1,55 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34429 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751474Ab3KNIkC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Nov 2013 03:40:02 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bj?rn Mork <bjorn@mork.no>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Thu, 14 Nov 2013 08:39:57 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com>
- <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com>
- <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
-In-Reply-To: <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:37958 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754579Ab3KFUdb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 15:33:31 -0500
+Received: by mail-ie0-f175.google.com with SMTP id aq17so51315iec.20
+        for <linux-pci@vger.kernel.org>; Wed, 06 Nov 2013 12:33:31 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20131106201239.GA8971@google.com>
+References: <20131105232903.3790.8738.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	<CAE9FiQX74B32iD2LAaWxwOAH62YAFWkt2=hK9pVDCDUnfrEaNw@mail.gmail.com>
+	<20131106181558.GA14444@google.com>
+	<CAE9FiQU4V0waWNvMFgEjKv90KuCCQ2CYJU2UsnDP0+WDS9zb1Q@mail.gmail.com>
+	<20131106201239.GA8971@google.com>
+Date: Wed, 6 Nov 2013 12:33:31 -0800
+Message-ID: <CAE9FiQWxGdiRjZSt8OhVkJAGJ3p4zZ+Tza9HFiKtZZSa01kztA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Use pci_is_root_bus() to check for root bus
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Nishank Trivedi <nistrive@cisco.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiA+IEF3ZXNvbWUgLSB5b3UgaGF2ZSBMMSBlbmFibGVkOg0KPiANCj4gDQo+IFRob3VnaCBkbyBu
-b3QgdW5kZXJzdGFuZCBidXQgaXQgc2VlbXMgbGlrZSBhIGdvb2QgbmV3cyA6LSkNCj4gDQoNCllv
-dSBhcmUgc2F2aW5nIHBvd2VyIChhbmQgSSBrbm93IHRoYXQgYXQgbGVhc3QsIEwxIHdvcmtzKS4N
-CkwxIFBNIHN1YnN0YXRlcyBkb2Vzbid0IHdvcmsgKGJ1dCB0aGF0J3MgYSBicmFuZCBuZXcgZmVh
-dHVyZSkNCg0KPiBEb2VzIHRoYXQgbWVhbiB5b3UgZmluZCBhIHJlYWwgZml4IGluc3RlYWQgb2Yg
-YSB3b3JrYXJvdW5kPyBDb25ncmF0dWxhdGlvbnMhDQoNCk5vLiBUaGUgcmVhbCBmaXggc2hvdWxk
-IGNvbWUgZnJvbSB0aGUgZHJpdmVyICh1bmxpa2VseSBmcm9tIHdoYXQgSSBoZWFyIGZyb20gc3lz
-dGVtIHBlb3BsZSBoZXJlKSBvciBkaXNhYmxlIGluIEJJT1MuDQpTbyBJIGd1ZXNzIHlvdSdkIG5l
-ZWQgdG8gYXNrIExlbm92byBob3cgdG8gZGlzYWJsZSBMMSBQTSBTdWJzdGF0ZSBpbiBCSU9TLg0K
+>> > commit 4e5415f02e32c85e902cd9692eab18200e14b347
+>> > Author: Bjorn Helgaas <bhelgaas@google.com>
+>> > Date:   Wed Nov 6 10:00:51 2013 -0700
+>> >
+>> >     PCI: Enable upstream bridges even for VFs on virtual buses
+>> >
+>> >     Previously we enabled the upstream PCI-to-PCI bridge only when
+>> >     "dev->bus->self != NULL".  In the case of a VF on a virtual bus, where
+>> >     "bus->self == NULL", we didn't enable the upstream bridge.
+>> >
+>> >     This fixes that by enabling the upstream bridge of the PF corresponding to
+>> >     the VF.
+>> >
+>> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> >
+>> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> > index ac40f90..744dc26 100644
+>> > --- a/drivers/pci/pci.c
+>> > +++ b/drivers/pci/pci.c
+>> > @@ -1150,10 +1150,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>> >  {
+>> >         int retval;
+>> >
+>> > -       if (!dev)
+>> > -               return;
+>> > -
+>> > -       pci_enable_bridge(dev->bus->self);
+>> > +       if (!pci_is_root_bus(dev->bus))
+>> > +               pci_enable_bridge(pci_upstream_bridge(dev));
+>> >
+>> >         if (pci_is_enabled(dev)) {
+>> >                 if (!dev->is_busmaster)
+>> > @@ -1188,7 +1186,8 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>> >         if (atomic_inc_return(&dev->enable_cnt) > 1)
+>> >                 return 0;               /* already enabled */
+>> >
+>> > -       pci_enable_bridge(dev->bus->self);
+>> > +       if (!pci_is_root_bus(dev->bus))
+>> > +               pci_enable_bridge(pci_upstream_bridge(dev));
+>> >
+>> >         /* only skip sriov related */
+>> >         for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+>>
+>> still have problem.
+>>
+>> pci_upstream_bridge() could return NULL. so later pci_enable_bridge()
+>> referring dev->bus could panic, as you remove !dev checking.
+>
+> pci_upstream_bridge(dev) can only return NULL if dev is on a root bus,
+> and we never call pci_enable_bridge() in that case.  So I don't see
+> the problem.
+
+how about it is VF and it is on it's own virtual bus ?
+and it will pass !pci_is_root_bus(dev->bus) checking and get into
+pci_enable_bridge(pci_upstream_bridge(dev));
+
+
+Thanks
+
+Yinghai
