@@ -1,82 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:40232 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290Ab3KSLdf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 06:33:35 -0500
-From: Marek Vasut <marex@denx.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: Kernel oops from pci_disable_msi
-Date: Tue, 19 Nov 2013 12:24:57 +0100
-Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	" =?iso-8859-1?q?=27Bj=F8rn_Erik?= Nilsen'" <ben@datarespons.no>,
-	linux-pci@vger.kernel.org,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	"'Mohit KUMAR DCG'" <Mohit.KUMAR@st.com>,
-	"'Ajay KHANDELWAL'" <ajay.khandelwal@st.com>,
-	"'Tim Harvey'" <tharvey@gateworks.com>
-References: <528a1bb6.6a88700a.28c9.ffff824aSMTPIN_ADDED_MISSING@mx.google.com> <CAErSpo6Om_qa2AhXSfwYtMctohpVmqbvFHBqhaWk860+zPQdGA@mail.gmail.com> <001601cee4b3$7649f3c0$62dddb40$%han@samsung.com>
-In-Reply-To: <001601cee4b3$7649f3c0$62dddb40$%han@samsung.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:42456 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751730Ab3KFXaM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 18:30:12 -0500
+Received: by mail-ie0-f177.google.com with SMTP id e14so382979iej.8
+        for <linux-pci@vger.kernel.org>; Wed, 06 Nov 2013 15:30:12 -0800 (PST)
+Date: Wed, 6 Nov 2013 16:30:09 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: axboe@kernel.dk, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stephenmcameron@gmail.com,
+	thenzl@redhat.com, akpm@linux-foundation.org
+Subject: Re: [PATCH] PCI: warn on driver probe return value greater than zero
+Message-ID: <20131106233009.GA28117@google.com>
+References: <20131101193455.18686.92302.stgit@beardog.cce.hp.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201311191224.57918.marex@denx.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131101193455.18686.92302.stgit@beardog.cce.hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jingoo Han,
-
-> On Tuesday, November 19, 2013 6:03 AM, Bjorn Helgaas wrote:
-> > On Mon, Nov 18, 2013 at 2:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> On Mon, Nov 18, 2013 at 6:53 AM, Bjørn Erik Nilsen <ben@datarespons.no> 
-wrote:
-> >>> I just hit an kernel oops related to PCI (in
-> >>> dw_msi_teardown_irq()/clear_irq() (pcie-designware))
-> >>> 
-> >>> Linux version 3.12.0-next-20131105 (bnilsen@bnilsen) (gcc version 4.7.2
-> >>> (GCC) )
-> >>> 
-> >>> Problem seem to be dereferencing a null pointer returned from
-> >>> irq_desc_get_msi_desc(desc) (see attached backtrace).
-> >> 
-> >> Included oops inline for ease of viewing/searching.  Jingooo, I assume
-> >> you'll investigate this.  Let me know if otherwise.
+On Fri, Nov 01, 2013 at 02:34:55PM -0500, Stephen M. Cameron wrote:
+> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 > 
-> (+cc Marek Vasut, Pratyush Anand, Kishon Vijay Abraham I,
->        Mohit KUMAR DCG, Ajay KHANDELWAL, Tim Harvey)
+> Ages ago, drivers could return values greater than zero from
+> their probe function and this would be regarded as success.
+> Commit f3ec4f87d607f40497 "PCI: change device runtime PM
+> settings for probe and remove" slightly altered this in 2010,
+> and commit 967577b062417b4e4b8e27b "PCI/PM: Keep runtime PM
+> enabled for unbound PCI devices" in late 2012 altered it more
+> signficantly, setting pci_dev->driver to NULL if the driver's
+> probe function returned a value greater than zero, which would
+> for example prevent the driver's remove function from being
+> called on rmmod.
 > 
-> Sorry, I will not investigate this.
+> Neither of those changes would necessarily make the driver fail
+> in an obvious way though, and so at least a couple drivers (cciss,
+> hpsa) fell into this hole since they were returning 1, and this
+> situation went unnoticed for quite some time.
 > 
-> Bjørn Erik Nilsen,
+> If a driver's probe function returns a value greater than zero,
+> issue a warning, but otherwise treat this as success.
 > 
-> Would you let us know the ARM platform and LAN card?
-> If you let us know them, one of these pcie-designware related
-> people would reproduce and look at the issue.
+> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+
+Applied to my pci/misc branch for v3.13, thanks.
+
+Bjorn
+
+> ---
+>  drivers/pci/pci-driver.c |   12 ++++++++++--
+>  1 files changed, 10 insertions(+), 2 deletions(-)
 > 
-> Best regards,
-> Jingoo Han
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 98f7b9b..7fbe343 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -264,11 +264,19 @@ static long local_pci_probe(void *_ddi)
+>  	pm_runtime_get_sync(dev);
+>  	pci_dev->driver = pci_drv;
+>  	rc = pci_drv->probe(pci_dev, ddi->id);
+> -	if (rc) {
+> +	if (!rc)
+> +		return rc;
+> +	if (rc < 0) {
+>  		pci_dev->driver = NULL;
+>  		pm_runtime_put_sync(dev);
+> +		return rc;
+>  	}
+> -	return rc;
+> +	/*
+> +	 * Probe function should return < 0 for failure, 0 for success
+> +	 * Treat values > 0 as success, but warn.
+> +	 */
+> +	dev_warn(dev, "Driver probe function unexpectedly returned %d\n", rc);
+> +	return 0;
+>  }
+>  
+>  static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
 > 
-> >> Unable to handle kernel NULL pointer dereference at virtual address
-> >> 00000020 pgd = 80004000
-> >> [00000020] *pgd=00000000
-> >> Internal error: Oops: 17 [#1] SMP ARM
-> >> Modules linked in: sxdma(O)
-> >> CPU: 1 PID: 569 Comm: i2cipc.B3 Tainted: G           O
-> >> 3.12.0-next-20131105 #8 task: 9efcb600 ti: 9ec8c000 task.ti: 9ec8c000
-> >> PC is at dw_msi_teardown_irq+0x40/0x118
-
-see drivers/pci/host/pcie-designware.c :
-
-336 static void dw_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
-337 {
-338         clear_irq(irq);
-339 }
-
-So, add such a print before the clear_irq() call:
-
-pr_err("%i %i\n", chip != NULL, irq);
-
-And let us know the result please.
-
-Best regards,
-Marek Vasut
