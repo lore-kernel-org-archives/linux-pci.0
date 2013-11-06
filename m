@@ -1,145 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:37448 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759349Ab3KMRm7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 12:42:59 -0500
-Received: by mail-ie0-f175.google.com with SMTP id u16so969517iet.6
-        for <linux-pci@vger.kernel.org>; Wed, 13 Nov 2013 09:42:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 13 Nov 2013 10:42:37 -0700
-Message-ID: <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	=?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:17506 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755753Ab3KFBge (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 20:36:34 -0500
+Message-ID: <1383701533.1847.20.camel@misato.fc.hp.com>
+Subject: Re: [fixup][PATCH 2/6] ACPI / hotplug: Refuse to hot-remove all
+ objects with disabled hotplug
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 05 Nov 2013 18:32:13 -0700
+In-Reply-To: <3139278.S6Gt6Dta9o@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
+	 <5195965.AgE9G8aXP3@vostro.rjw.lan>
+	 <1383698367.1847.18.camel@misato.fc.hp.com>
+	 <3139278.S6Gt6Dta9o@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Bjørn]
+On Wed, 2013-11-06 at 02:35 +0100, Rafael J. Wysocki wrote:
+> On Tuesday, November 05, 2013 05:39:27 PM Toshi Kani wrote:
+> > On Wed, 2013-11-06 at 00:27 +0100, Rafael J. Wysocki wrote:
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > 
+> > > In theory, an ACPI device object may be the parent of another
+> > > device object whose hotplug is disabled by user space through its
+> > > scan handler.  In that case, the eject operation targeting the
+> > > parent should fail as though the parent's own hotplug was disabled,
+> > > but currently this is not the case, because acpi_scan_hot_remove()
+> > > doesn't check the disable/enable hotplug status of the children
+> > > of the top-most object passed to it.
+> > > 
+> > > To fix this, modify acpi_bus_offline_companions() to return an
+> > > error code if hotplug is disabled for the given device object.
+> > > [Also change the name of the function to acpi_bus_offline(),
+> > > because it is not only about companions any more, and change
+> > > the name of acpi_bus_online_companions() accordingly.]  Make
+> > > acpi_scan_hot_remove() propagate that error to its callers.
+> > > 
+> >  :
+> > > +static acpi_status acpi_bus_online(acpi_handle handle, u32 lvl, void *data,
+> > > +				   void **ret_p)
+> > >  {
+> > >  	struct acpi_device *device = NULL;
+> > >  	struct acpi_device_physical_node *pn;
+> > > @@ -214,26 +220,32 @@ static int acpi_scan_hot_remove(struct a
+> > >  	 * If the first pass is successful, the second one isn't needed, though.
+> > >  	 */
+> > >  	errdev = NULL;
+> > > -	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> > > -			    NULL, acpi_bus_offline_companions,
+> > > -			    (void *)false, (void **)&errdev);
+> > > -	acpi_bus_offline_companions(handle, 0, (void *)false, (void **)&errdev);
+> > > +	status = acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> > > +				     NULL, acpi_bus_offline, (void *)false,
+> > > +				     (void **)&errdev);
+> > > +	if (status == AE_SUPPORT) {
+> > > +		dev_warn(errdev, "Offline disabled.\n");
+> > > +		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> > > +				    acpi_bus_online, NULL, NULL, NULL);
+> > > +		put_device(&device->dev);
+> > > +		return -EPERM;
+> > > +	}
+> > > +	acpi_bus_offline(handle, 0, (void *)false, (void **)&errdev);
+> > >  	if (errdev) {
+> > 
+> > If the target object failed with AE_SUPPORT, shouldn't we skip the 2nd
+> > pass and return with -EPERM after rollback?
+> 
+> We've checked the target object already in acpi_hotplug_notify_cb() or in
+> acpi_eject_store().
 
-On Tue, Nov 12, 2013 at 10:39 PM, wzyboy <wzyboy@wzyboy.org> wrote:
-> 2013/11/13 Bjorn Helgaas <bhelgaas@google.com>:
->> wzyboy, can you run these commands before the bug occurs and before
->> using the "setpci" workaround:
->>
->>   lspci -vvxxxx -s00:1c.1
->>   lspci -vvxxxx -s03:00.0
->
-> After today's morning lessons I booted up my laptop with pci=earlydump
-> kernel perameter and here are the output of lspci (without setpci and
-> before bug hit) and dmesg.
+Oh, I see.  Thanks for the clarification.
 
-Thanks.  Are you 100% sure the lspci output is before the setpci
-workaround?  The dmesg earlydump shows this (the ASPM control bits are
-in the 16-bit Link Control register, which is at 0x50 for both
-devices):
+> 
+> Which is telling me that the previous version of the patch was better after
+> all, because the hotplug.enabled thing takes precedence over
+> acpi_force_hot_remove in the other places.  So this:
+> 
+> https://patchwork.kernel.org/patch/3135841/
+> 
+> is the right version.  Sorry for the confusion.
 
-    00:1c.1 Root Port config
-         50: 42 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
-    03:00.0 Intel 7260 config:
-         50: 42 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+Agreed.
 
-So at boot-time, ASPM was enabled.  But the lspci shows:
+Acked-by: Toshi Kani <toshi.kani@hp.com>
 
-    00:1c.1 Root Port config
-      Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
-        LnkCtl: ASPM Disabled
-         50: 40 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
-    03:00.0 Intel 7620 config
-      Capabilities: [40] Express (v2) Endpoint, MSI 00
-        LnkCtl: ASPM Disabled
-         50: 40 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+-Toshi
 
-And now ASPM is disabled.  I'm pretty sure the kernel did not disable
-ASPM, so I assume it was disabled by setpci.
-
-I manually decoded the L1 PM Substates registers for both the Root
-Port and the 7260 device (details appended below), and everything
-appears enabled there (though I think that since ASPM is disabled, L1
-PM substates is ignored).
-
-My conclusion is that the BIOS enabled both ASPM and L1 PM substates.
-Obviously the BIOS will do the same when booting Windows, and I assume
-the device works fine with the Windows driver.  Based on our previous
-experience with Windows, I don't think it will change the ASPM
-configuration because the ACPI FADT table and the PCI _OSC method do
-not grant control of ASPM to the OS.  Therefore, I think the problem
-is in the Linux iwlwifi driver.
-
-I don't think there's anything more I can do here because there's no
-evidence that the PCI core is doing anything wrong.  But if it turns
-out that we *should* be doing something differently, let me know.
-
-Bjorn
-
-
-    00:1c.1 Root Port config
-      Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
-        LnkCtl: ASPM Disabled
-         50: 40 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
-      Capabilities: [200 v1] #1e
-        200: 1e 00 01 00 1f 28 28 00 1f 28 a0 40 f0 00 00 00
-        210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-          Header                        0x0001001e
-            ID 0x001e (L1 Substates)
-            Version 1
-          Capabilities                  0x0028281f
-          Control 1                     0x40a0281f
-            0x40a0281f  Control 1
-            0x00000001    PCI-PM L1.2 Enable
-            0x00000002    PCI-PM L1.1 Enable
-            0x00000004    ASPM L1.2 Enable
-            0x00000008    ASPM L1.1 Enable
-            0x00000010    RsvdP
-            0x00002800    Common_Mode_Restore_Time
-            0x00a00000    LTR_L1.2_THRESHOLD_Value
-            0x40000000    LTR_L1.2_THRESHOLD_Scale
-          Control 2                     0x000000f0
-            0x000000f0  Control 2
-            0x000000f0    T_POWER_ON Value
-
-    03:00.0 Intel 7620 config
-      Capabilities: [40] Express (v2) Endpoint, MSI 00
-        LnkCtl: ASPM Disabled
-         50: 40 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
-      Capabilities: [154 v1] Vendor Specific Information: ID=cafe
-Rev=1 Len=014 <?>
-        150:             0b 00 01 00 fe ca 41 01 1f 1e f0 00
-        160: 0f 00 a0 40 f0 00 00 00 00 00 00 00 00 00 00 00
-          Header                        0x0001000b
-            ID 0x000b (Vendor-specific)
-            Version 1
-          Vendor-specific header        0x0141cafe
-            VSEC ID 0xcafe
-            VSEC Rev 1
-            Length 0x14
-          Capabilities                  0x00f01e1f
-          Control 1                     0x40a0000f
-            0x40a0000f  Control 1
-            0x00000001    PCI-PM L1.2 Enable
-            0x00000002    PCI-PM L1.1 Enable
-            0x00000004    ASPM L1.2 Enable
-            0x00000008    ASPM L1.1 Enable
-          Control 2                     0x000000f0
