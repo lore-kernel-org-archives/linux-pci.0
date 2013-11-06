@@ -1,150 +1,257 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:52692 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011Ab3KZEUn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 23:20:43 -0500
-Received: by mail-ie0-f178.google.com with SMTP id lx4so8194743iec.23
-        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 20:20:43 -0800 (PST)
+Received: from mail-vb0-f43.google.com ([209.85.212.43]:37908 "EHLO
+	mail-vb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160Ab3KFCiy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 21:38:54 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAMZVYU8-thd2Q2CuFVuhT35D7cmv46b600365j0Zo-bFaVvK2Q@mail.gmail.com>
-References: <1384285203-642-1-git-send-email-cl91tp@gmail.com>
- <CAErSpo5E4584zgTt4ySPSEFhtwdHDOyrrowirp=SmtmJjDyHgg@mail.gmail.com> <CAMZVYU8-thd2Q2CuFVuhT35D7cmv46b600365j0Zo-bFaVvK2Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 25 Nov 2013 21:20:23 -0700
-Message-ID: <CAErSpo4dwmpqC54wJ+qLPCyFS2zwJgzuOWNXT17hEg-tSE9VUw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add a quirk for keeping Bus Master bit on shutdown
-To: Chang Liu <cl91tp@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	Alan Cox <gnomes@lxorguk.ukuu.org.uk>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	Jility <jility09@gmail.com>, Florian Otti <f.otti@gmx.at>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20131106002505.GC3359@google.com>
+References: <52797238.8070304@gmail.com>
+	<20131106002505.GC3359@google.com>
+Date: Tue, 5 Nov 2013 18:38:51 -0800
+Message-ID: <CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
+From: Rajat Jain <rajatjain.linux@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-hotplug@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Tom Nguyen <tom.l.nguyen@intel.com>,
+	Kristen Accardi <kristen.c.accardi@intel.com>,
+	Rajat Jain <rajatxjain@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 9:11 PM, Chang Liu <cl91tp@gmail.com> wrote:
-> If this turns out to be a problem specific to Acer V573G, we can simply
-> wrap the if (pdev->...) line in ata/ahci.c with if
-> (dmi_check_system(acer_v573g))
-> so that only acer v573g laptops will be affected by this patch. The remaining
-> part of the patch won't need to be changed.
+Hello Bjorn,
 
-Well, sure.  But that doesn't change the fact that until we know *why*
-it hangs, this is voodoo programming.  And I don't like voodoo
-programming.
+On Tue, Nov 5, 2013 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Nov 05, 2013 at 02:33:28PM -0800, Rajat Jain wrote:
+>> In case of a spurious "cmd completed", pcie_write_cmd() does not
+>> clear it, but yet expects more "cmd completed" events to be generated.
+>> This does not happen because the previous (spurious) event has not
+>> been acknowledged. Fix that.
+>>
+>> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+>> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+>> ---
+>> This is how I saw it in action: my controller does not implement any
+>> hot-plug elements (LED, power ctrl, EMI etc) but still supports Command
+>> completed bit.
+>>  - During initialization,
+>>       pcie_disable_notification()
+>>       -> pcie_write_cmd()
+>>          -> writes to Slot control register
+>>             -> which causes PCI_EXP_SLTSTA_CC to get set, which is not
+>>                cleared, because IRQ is not generated (we just disabled
+>>                notifications).
+>>  - After some time,
+>>       pcie_enable_notification()
+>>       -> pcie_write_cmd()
+>>           -> finds PCI_EXP_SLTSTA_CC is set, assumes it is spurious.
+>>           -> Does not clear it, yet expects more command completed
+>>              events to be generated (never happens).
+>
+> I'm not sure this "cmd completed" is actually spurious.  Spec section
+> 7.8.10 is very clear that any write to Slot Control must cause a
+> hot-plug command to be generated (if the port is hot-plug capable).
 
-> 2013/11/26 Bjorn Helgaas <bhelgaas@google.com>:
->> [+cc Lan, Khalid, Konstantin, Alan, Takao, Jility, Florian, linux-kernel]
+I agree, and I think I am witnessing a "genuine" command completion
+(caused by disabling of notifications).
+
+>
+> Can you collect "lspci -vv" output for your controller?
+ >
+
+Sure:
+
+PCI bridge: Integrated Device Technology, Inc. Device 807a (rev 02)
+(prog-if 00 [Normal decode])
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+Stepping- SERR- FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+Latency: 0
+Bus: primary=02, secondary=50, subordinate=5f, sec-latency=0
+I/O behind bridge: 00003000-00003fff
+Memory behind bridge: 8c000000-8fffffff
+Prefetchable memory behind bridge: 00000000b0600000-00000000b07fffff
+Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- <SERR- <PERR-
+BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+        PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+Capabilities: [40] Express (v2) Downstream Port (Slot+), MSI 00
+        DevCap: MaxPayload 2048 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                ExtTag+ RBE+ FLReset-
+        DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                MaxPayload 128 bytes, MaxReadReq 128 bytes
+        DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
+        LnkCap: Port #3, Speed 5GT/s, Width x4, ASPM L0s L1, Latency
+L0 <4us, L1 <4us
+                ClockPM- Surprise+ LLActRep+ BwNot+
+        LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
+                ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+        LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk-
+DLActive- BWMgmt- ABWMgmt-
+        SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise-
+                Slot #3, PowerLimit 0.000W; Interlock- NoCompl-
+        SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet+ CmdCplt+ HPIrq+ LinkChg+
+                Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+        SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt+ PresDet- Interlock-
+                Changed: MRL- PresDet- LinkState-
+        DevCap2: Completion Timeout: Not Supported, TimeoutDis-, LTR-,
+OBFF Not Supported ARIFwd+
+        DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-,
+OBFF Disabled ARIFwd-
+        LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-,
+Selectable De-emphasis: -6dB
+                 Transmit Margin: Normal Operating Range,
+EnterModifiedCompliance- ComplianceSOS-
+                 Compliance De-emphasis: -6dB
+        LnkSta2: Current De-emphasis Level: -6dB,
+EqualizationComplete-, EqualizationPhase1-
+                 EqualizationPhase2-, EqualizationPhase3-,
+LinkEqualizationRequest-
+Capabilities: [c0] Power Management version 3
+        Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+PME(D0+,D1-,D2-,D3hot+,D3cold+)
+        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+        Address: 00000000ff041740  Data: 0003
+Capabilities: [100 v1] Advanced Error Reporting
+        UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+        UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+        UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
+RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+        CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+        CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+        AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+Capabilities: [200 v1] Virtual Channel
+        Caps:   LPEVC=0 RefClk=100ns PATEntryBits=4
+        Arb:    Fixed- WRR32- WRR64- WRR128-
+        Ctrl:   ArbSelect=Fixed
+        Status: InProgress-
+        VC0:    Caps:   PATOffset=04 MaxTimeSlots=1 RejSnoopTrans-
+                Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
+                Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                Status: NegoPending- InProgress-
+                Port Arbitration Table <?>
+Capabilities: [320 v1] Access Control Services
+        ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+
+EgressCtrl+ DirectTrans+
+        ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd-
+EgressCtrl- DirectTrans-
+Capabilities: [330 v1] #12
+Kernel driver in use: pcieport
+
+In addition, here is what the pciehp driver spews out:
+
+Hotplug Controller:
+  Seg/Bus/Dev/Func/IRQ : 0000:02:03.0 IRQ 21
+  Vendor ID            : 0x111d
+  Device ID            : 0x807a
+  Subsystem ID         : 0x0000
+  Subsystem Vendor ID  : 0x0000
+  PCIe Cap offset      : 0x40
+  PCI resource [7]     : [io  0x13000-0x13fff]
+  PCI resource [8]     : [mem 0xc0c000000-0xc0fffffff]
+  PCI resource [9]     : [mem 0xc30600000-0xc307fffff 64bit pref]
+Slot Capabilities      : 0x00180040
+  Physical Slot Number : 3
+  Attention Button     :  no
+  Power Controller     :  no
+  MRL Sensor           :  no
+  Attention Indicator  :  no
+  Power Indicator      :  no
+  Hot-Plug Surprise    :  no
+  EMI Present          :  no
+  Command Completed    : yes
+Slot Status            : 0x0010
+Slot Control           : 0x0000
+Link Active Reporting supported
+HPC vendor_id 111d device_id 807a ss_vid 0 ss_did 0
+Registering domain:bus:dev=0000:50:00 sun=3
+Unexpected CMD_COMPLETED. Need to wait for command completed event.
+Command not completed in 1000 msec
+
+The last two output lines are part of the problem. Each controller
+takes 1 second to initialized as the message shows.
+
+>  I assume
+> you're hitting this case in pcie_init() (added by 5808639bfa98
+> ("pciehp: fix slow probing")):
+>
+>         /*
+>          * Controller doesn't notify of command completion if the "No
+>          * Command Completed Support" bit is set in Slot Capability
+>          * register or the controller supports none of power
+>          * controller, attention led, power led and EMI.
+>          */
+>         if (NO_CMD_CMPL(ctrl) ||
+>             !(POWER_CTRL(ctrl) | ATTN_LED(ctrl) | PWR_LED(ctrl) | EMI(ctrl)))
+>             ctrl->no_cmd_complete = 1;
+>
+> and we're setting "no_cmd_complete = 1" for your controller, which
+> keeps us from waiting for completion in pcie_write_cmd().
+>
+> I'm dubious about the assertion that a controller without power
+> control, attention LED, power LED, or EMI can't support command
+> completion.  I don't see anything in the spec to that effect.
+
+I agree, specially since I am seeing this contrary behavior (to that
+assertion) in action :-)
+
+>
+> Since you're seeing PCI_EXP_SLTSTA_CC=1, your controller *should*
+> support Command Completion notification and PCI_EXP_SLTCAP_NCCS should
+> be 0 (per Table 7-20), so I wonder what happens on your system if you
+> change pcie_init() so it leaves "ctrl->no_cmd_complete = 0" instead?
+> Does it work correctly then?
+
+Yes, it work well after that (Both the error output lines go away as
+well). And the 1 second delay per controller is also gone.
+
+>
+> I know we can't just drop the "!(POWER_CTRL(ctrl) | ...)" tests
+> because we don't want to reintroduce the problem fixed by
+> 5808639bfa98, but I wonder if we can find a better fix that addresses
+> both problems.
+
+Please let me know if any one has any suggestions? IMHO, this patch
+should yet not cause the original problem to reappear because we are
+clearing the bit *only* when we know that it is already set (and no
+way to clear it because at least in my controller no subsequent
+interrupts can be generated). But I do not have enough understanding,
+and will be glad to get any pointers.
+
+Thanks,
+
+- Rajat
+
+>
+> Bjorn
+>
 >>
->> On Tue, Nov 12, 2013 at 07:40:03PM +0000, Chang Liu wrote:
->>> This fixes https://bugzilla.kernel.org/show_bug.cgi?id=63861
->>>
->>> Commit b566a22c2 and 7897e60227 made pci_device_shutdown()
->>> unconditionally clear Bus Master bit for every pci devices.
->>> While this works for most hardware, certain devices are not
->>> compatible with this. Intel Lynx Point-LP SATA Controller,
->>> for example, will hang the system if its Bus Master bit is
->>> cleared during device shutdown. This patch adds a pci quirk
->>> so that device drivers can instruct pci_device_shutdown()
->>> to keep Bus Master from being cleared, and then implements
->>> this mechanism for the Intel Lynx Point-LP AHCI driver.
->>>
->>> Signed-off-by: Chang Liu <cl91tp@gmail.com>
+>>  drivers/pci/hotplug/pciehp_hpc.c |    1 +
+>>  1 file changed, 1 insertion(+)
 >>
->> I'm not 100% comfortable with disabling bus mastering in general;
->> see [1] for more details.
+>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+>> index 5b8d749..ba8e06f 100644
+>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>> @@ -185,6 +185,7 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+>>       }
 >>
->> But given that we have been doing it for quite a while (b566a22c2 appeared
->> in v3.5 on Jul 21, 2012), and Lynx Point should be in lots of machines, I'm
->> surprised that we don't see more reports of this problem if it really
->> affects all Lynx Point parts.
+>>       if (slot_status & PCI_EXP_SLTSTA_CC) {
+>> +             pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_CC);
+>>               if (!ctrl->no_cmd_complete) {
+>>                       /*
+>>                        * After 1 sec and CMD_COMPLETED still not set, just
+>> --
+>> 1.7.9.5
 >>
->> Jility reported the same problem [2], and I did find one other similar
->> report [3] from Florian.  All three reports (Chang, Jility, Florian) are on
->> the same exact machine (Acer V5-573G), which seems sort of suspicious.
->>
->> Lan, do you have access to any Lynx Point boxes?  Can you test and see
->> whether they hang on power-off also?  I suspect this might be something
->> specific to the Acer box, not a generic Lynx Point issue.
->>
->> Bjorn
->>
->> [1] http://lkml.kernel.org/r/20120427190033.GA17588@ldl.usa.hp.com
->> [2] https://bugzilla.kernel.org/show_bug.cgi?id=63861#c21
->> [3] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1249329
->>
->>> ---
->>> As per Takao's suggestion, add a new member into struct pci_dev
->>> and add a quirk in the ahci driver. I tested this on my
->>> machine (Acer V5-573G) and it works fine.
->>>
->>>  drivers/ata/ahci.c       |  8 ++++++++
->>>  drivers/pci/pci-driver.c | 11 ++++++++---
->>>  include/linux/pci.h      |  1 +
->>>  3 files changed, 17 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->>> index 8e28f92..de6efcb 100644
->>> --- a/drivers/ata/ahci.c
->>> +++ b/drivers/ata/ahci.c
->>> @@ -1385,6 +1385,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->>>
->>>   pci_set_master(pdev);
->>>
->>> + /* We normally clear Bus Master on pci device shutdown. However,
->>> + * doing so for Intel Lynx Point-LP SATA Controller [AHCI mode]
->>> + * hangs the system. Therefore keep it.
->>> + * See bug report: https://bugzilla.kernel.org/show_bug.cgi?id=63861
->>> + */
->>> + if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x9c03)
->>> + pdev->keep_busmaster_on_shutdown = 1;
->>> +
->>>   if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
->>>   return ahci_host_activate(host, pdev->irq, n_msis);
->>>
->>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->>> index 38f3c01..ff15b0c 100644
->>> --- a/drivers/pci/pci-driver.c
->>> +++ b/drivers/pci/pci-driver.c
->>> @@ -392,10 +392,15 @@ static void pci_device_shutdown(struct device *dev)
->>>   pci_msix_shutdown(pci_dev);
->>>
->>>   /*
->>> - * Turn off Bus Master bit on the device to tell it to not
->>> - * continue to do DMA. Don't touch devices in D3cold or unknown states.
->>> + * If the hardware is okay with it, turn off Bus Master bit
->>> + * on the device to tell it not to continue doing DMA.
->>> + * Don't touch devices in D3cold or unknown states.
->>> + * On certain hardware clearing Bus Master bit on shutdown
->>> + * may hang the entire system. In these cases the driver of
->>> + * these devices should set keep_busmaster_on_shutdown to 1.
->>>   */
->>> - if (pci_dev->current_state <= PCI_D3hot)
->>> + if (!pci_dev->keep_busmaster_on_shutdown
->>> +    && pci_dev->current_state <= PCI_D3hot)
->>>   pci_clear_master(pci_dev);
->>>  }
->>>
->>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>> index da172f9..63db735 100644
->>> --- a/include/linux/pci.h
->>> +++ b/include/linux/pci.h
->>> @@ -322,6 +322,7 @@ struct pci_dev {
->>>   /* keep track of device state */
->>>   unsigned int is_added:1;
->>>   unsigned int is_busmaster:1; /* device is busmaster */
->>> + unsigned int keep_busmaster_on_shutdown:1; /* do not clear busmaster on shutdown */
->>>   unsigned int no_msi:1; /* device may not use msi */
->>>   unsigned int block_cfg_access:1; /* config space access is blocked */
->>>   unsigned int broken_parity_status:1; /* Device generates false positive parity */
->>> --
->>> 1.8.4.2
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
