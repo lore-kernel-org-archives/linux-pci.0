@@ -1,36 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1058 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751030Ab3KRIC2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Nov 2013 03:02:28 -0500
-From: "Yuval Mintz" <yuvalmin@broadcom.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Is there an API for adding/removing a single MSIX entry?
-Date: Mon, 18 Nov 2013 08:02:19 +0000
-Message-ID: <979A8436335E3744ADCD3A9F2A2B68A52AF091AB@SJEXCHMB10.corp.ad.broadcom.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [fixup][PATCH 2/6] ACPI / hotplug: Refuse to hot-remove all objects with disabled hotplug
+Date: Wed, 06 Nov 2013 02:35:23 +0100
+Message-ID: <3139278.S6Gt6Dta9o@vostro.rjw.lan>
+In-Reply-To: <1383698367.1847.18.camel@misato.fc.hp.com>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <5195965.AgE9G8aXP3@vostro.rjw.lan> <1383698367.1847.18.camel@misato.fc.hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tuesday, November 05, 2013 05:39:27 PM Toshi Kani wrote:
+> On Wed, 2013-11-06 at 00:27 +0100, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > In theory, an ACPI device object may be the parent of another
+> > device object whose hotplug is disabled by user space through its
+> > scan handler.  In that case, the eject operation targeting the
+> > parent should fail as though the parent's own hotplug was disabled,
+> > but currently this is not the case, because acpi_scan_hot_remove()
+> > doesn't check the disable/enable hotplug status of the children
+> > of the top-most object passed to it.
+> > 
+> > To fix this, modify acpi_bus_offline_companions() to return an
+> > error code if hotplug is disabled for the given device object.
+> > [Also change the name of the function to acpi_bus_offline(),
+> > because it is not only about companions any more, and change
+> > the name of acpi_bus_online_companions() accordingly.]  Make
+> > acpi_scan_hot_remove() propagate that error to its callers.
+> > 
+>  :
+> > +static acpi_status acpi_bus_online(acpi_handle handle, u32 lvl, void *data,
+> > +				   void **ret_p)
+> >  {
+> >  	struct acpi_device *device = NULL;
+> >  	struct acpi_device_physical_node *pn;
+> > @@ -214,26 +220,32 @@ static int acpi_scan_hot_remove(struct a
+> >  	 * If the first pass is successful, the second one isn't needed, though.
+> >  	 */
+> >  	errdev = NULL;
+> > -	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> > -			    NULL, acpi_bus_offline_companions,
+> > -			    (void *)false, (void **)&errdev);
+> > -	acpi_bus_offline_companions(handle, 0, (void *)false, (void **)&errdev);
+> > +	status = acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> > +				     NULL, acpi_bus_offline, (void *)false,
+> > +				     (void **)&errdev);
+> > +	if (status == AE_SUPPORT) {
+> > +		dev_warn(errdev, "Offline disabled.\n");
+> > +		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> > +				    acpi_bus_online, NULL, NULL, NULL);
+> > +		put_device(&device->dev);
+> > +		return -EPERM;
+> > +	}
+> > +	acpi_bus_offline(handle, 0, (void *)false, (void **)&errdev);
+> >  	if (errdev) {
+> 
+> If the target object failed with AE_SUPPORT, shouldn't we skip the 2nd
+> pass and return with -EPERM after rollback?
 
-There are scenarios in which we need to add/remove MSI-X entries -
-a good example for this is when a user configures a networking device for 
-additional channels; Current implementation forces us to:
-	1. Prevent HW from generating interrupts.
-	2. Call `pci_disable_msix()'
-	3. Call `pci_enable_msix()' with the new set of requested entries.
-	
-Now, is it feasible to add support for dynamically adding/removing of single 
-entries, or does this request poses some major difficulties (either by simply 
-being unfeasible due to the standard or because it will require a lot of code change)?
+We've checked the target object already in acpi_hotplug_notify_cb() or in
+acpi_eject_store().
 
-(If I'm mistaken and there IS a way of doing this today, I'd be grateful for a
-bit of instructions on how-to)
+Which is telling me that the previous version of the patch was better after
+all, because the hotplug.enabled thing takes precedence over
+acpi_force_hot_remove in the other places.  So this:
+
+https://patchwork.kernel.org/patch/3135841/
+
+is the right version.  Sorry for the confusion.
 
 Thanks,
-Yuval Mintz
-
+Rafael
 
