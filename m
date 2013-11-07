@@ -1,86 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f178.google.com ([209.85.128.178]:50196 "EHLO
-	mail-ve0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755349Ab3KUCBp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 21:01:45 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4ReYw5koMrwcuNQj7yfFXvDnuZGiRc70mekv6L40KjWw@mail.gmail.com>
-References: <1383749353-3510-1-git-send-email-ethan.kernel@gmail.com>
-	<CAErSpo5bYwgK618AOgvD=mgbfjcLLGE3CVw1SN3sP3PqRaCk5A@mail.gmail.com>
-	<CAErSpo4ReYw5koMrwcuNQj7yfFXvDnuZGiRc70mekv6L40KjWw@mail.gmail.com>
-Date: Thu, 21 Nov 2013 10:01:44 +0800
-Message-ID: <CABawtvNHbRKdCXcfa-fOcS-7kA1TqBey+h+8QFFUtfYWwVRW8w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Init NumVFs register to zero in sriov_init()
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yu Zhao <yu.zhao@intel.com>, Yinghai Lu <yinghai@kernel.org>,
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:60055 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752799Ab3KGVrx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Nov 2013 16:47:53 -0500
+Received: by mail-ie0-f182.google.com with SMTP id as1so1942342iec.13
+        for <linux-pci@vger.kernel.org>; Thu, 07 Nov 2013 13:47:53 -0800 (PST)
+Date: Thu, 7 Nov 2013 14:47:50 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Konrad Rzeszutek Wilk <konrad@darnok.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Zhenzhong Duan <zhenzhong.duan@oracle.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, xen-devel@lists.xenproject.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [Xen-devel] [PATCH] PCI: Introduce two new MSI infrastructure
+ calls for masking/unmasking.
+Message-ID: <20131107214750.GB2955@google.com>
+References: <1383772616-23060-1-git-send-email-konrad.wilk@oracle.com>
+ <CAErSpo4rdHwhuF=SM6WT3EP3TGoUFnwxVdx5919qxea3On7MRw@mail.gmail.com>
+ <20131107014215.GA27725@andromeda.dapyr.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131107014215.GA27725@andromeda.dapyr.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
-    I revised the description part with the original bug material as
-below, help to take a look, will send V2 back to home, SMTP blocked by
-company network.
+On Wed, Nov 06, 2013 at 09:42:15PM -0400, Konrad Rzeszutek Wilk wrote:
+> On Wed, Nov 06, 2013 at 04:51:52PM -0700, Bjorn Helgaas wrote:
+> > [+cc Thomas, Ingo, Peter, x86 list]
+> > 
+> > On Wed, Nov 6, 2013 at 2:16 PM, Konrad Rzeszutek Wilk
+> > <konrad.wilk@oracle.com> wrote:
+> > > Certain platforms do not allow writes in the MSI-X bars
+> > > to setup or tear down vector values. To combat against
+> > > the generic code trying to write to that and either silently
+> > > being ignored or crashing due to the pagetables being marked r/o
+> > > this patch introduces a platform over-write.
+> > >
+> > > Note that we keep two separate, non-weak, functions
+> > > default_mask_msi_irqs() and default_mask_msix_irqs() for the
+> > > behavior of the arch_mask_msi_irqs() and arch_mask_msix_irqs(),
+> > > as the default behavior is needed by x86 PCI code.
+> > >
+> > > For Xen, which does not allow the guest to write to MSI-X
+> > > tables - as the hypervisor is solely responsible for setting
+> > > the vector values - we implement two nops.
+> > >
+> > > CC: Bjorn Helgaas <bhelgaas@google.com>
+> > > CC: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+> > > CC: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+> > > Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > 
+> > I think this is safe, and I'd like to squeeze it into the v3.13 merge
+> > window next week, since it supersedes three patches Zhenzhong has been
+> > trying to get in since July [1], and this patch is much simpler to
+> > understand.
+> > 
+> > I *think* this also fixes an actual bug on Xen.  Konrad, is there a
+> > bugzilla or any kind of email problem description that we can include
+> > here as a reference?  I think there's a lost interrupt with qlcnic,
+> > but I don't know the details or what the failure looks like to a user.
+> 
+> It is pretty catastrophic. Here is the console log when I pass in
+> a PCI device (with MSI-X) to the guest:
 
-    PCI: Init NumVFs register to zero in sriov_init()
+Perfect, thanks!  I put the log info in
+https://bugzilla.kernel.org/show_bug.cgi?id=64581 and put this in
+my pci/misc branch for v3.13.  I added the following to the changelog:
 
-    Though no specification about NumVFs register initial value after
-POST, to void the confusion
-    lspci output as following before VF was enabled, we should clear
-the NumVFs value left by BIOS
-    to zero:
+    This fixes a Xen guest crash when passing a PCI device with MSI-X to the
+    guest.  See the bugzilla for more details.
 
-    #lspci -vvvxxx -s 13:00.0
-   13:00.0 Ethernet controller: Intel Corporation 82599EB 10-Gigabit SFI/SFP+
-    Network Connection (rev 01)  Subsystem: Oracle/SUN Ethernet Server
-Adapter X520-2
-    ~
-    Capabilities: [160 v1] Single Root I/O Virtualization (SR-IOV)
-            IOVCap: Migration-, Interrupt Message Number: 000
-            IOVCtl: Enable- Migration- Interrupt- MSE- ARIHierarchy+
-            IOVSta: Migration-
-            Initial VFs: 64, Total VFs: 64, Number of VFs: 64, Function
-            Dependency Link: 00
-                                                                     ^dazed !
-    140: 03 00 01 15 c4 24 c8 ff ff 21 1b 00 00 00 00 00
-    150: 0e 00 01 16 00 01 00 00 00 00 00 00 00 00 00 00
-    160: 10 00 01 00 00 00 00 00 10 00 00 00 40 00 40 00
+    [bhelgaas: add bugzilla info]
+    Reference: https://bugzilla.kernel.org/show_bug.cgi?id=64581
 
-          ^        ^Total VFs
+Let me know if this needs any tweaking.
 
-          Initial VFs
-    170: 40 00 00 00 80 00 02 00 00 00 ed 10 53 05 00 00
-             ^Number of VFs
-
-
-Thanks,
-Ethan
-
-
-On Wed, Nov 20, 2013 at 8:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Nov 19, 2013 at 3:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc linux-pci]
->>
->> On Wed, Nov 6, 2013 at 7:49 AM, ethan.zhao <ethan.kernel@gmail.com> wrote:
->>> Though no specification about NumVFs register initial value after POST, to void the confusion
->>> lspci output as following before VF was enabled, we should clear the NumVFs value left by BIOS
->>> to zero:
->>>
->>> $lspci -vvv -s 03:00.0
->>> Ethernet controller: Intel Corporation 82599EB 10-Gigabit SFI/SFP+ Network Connection (rev 01)
->>> ~
->>> Capabilities: [160 v1] Single Root I/O Virtualization (SR-IOV)
->>>                 IOVCap: Migration-, Interrupt Message Number: 000
->>>                 IOVCtl: Enable+ Migration- Interrupt- MSE+ ARIHierarchy+
->>>                 IOVSta: Migration-
->>>                 Initial VFs: 64, Total VFs: 64, Number of VFs: 64, Function Dependency Link: 00
->>>                                                               ^dazed !
->
-> Did you mean to show lspci output from before SR-IOV was enabled?  It
-> looks like SR-IOV is enabled here, so I don't think your patch would
-> change this output at all.
->
-> Bjorn
+Bjorn
