@@ -1,138 +1,82 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
+Message-ID: <1383783425.1847.52.camel@misato.fc.hp.com>
+Subject: Re: [Update][PATCH 4/6] ACPI / hotplug: Simplify device ejection
+ routines
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [Update][PATCH 1/3] ACPI / hotplug: Carry out PCI root eject directly
-Date: Wed, 06 Nov 2013 02:42:15 +0100
-Message-ID: <1621020.2qB4Krltq7@vostro.rjw.lan>
-In-Reply-To: <2420016.uapGc1R1go@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <18462848.9zsetEL1Yy@vostro.rjw.lan> <2420016.uapGc1R1go@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Yinghai Lu <yinghai@kernel.org>
+Date: Wed, 06 Nov 2013 17:17:05 -0700
+In-Reply-To: <1642586.5aH3MlB2GZ@vostro.rjw.lan>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
+	 <1602442.26cFiMyQkW@vostro.rjw.lan>
+	 <1383780421.1847.50.camel@misato.fc.hp.com>
+	 <1642586.5aH3MlB2GZ@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / hotplug: Carry out PCI root eject directly
+On Thu, 2013-11-07 at 01:14 +0100, Rafael J. Wysocki wrote:
+> On Wednesday, November 06, 2013 04:27:01 PM Toshi Kani wrote:
+> > On Mon, 2013-11-04 at 14:36 +0100, Rafael J. Wysocki wrote:
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > 
+> > > Simplify handle_root_bridge_removal() and acpi_eject_store() by
+> > > getting rid of struct acpi_eject_event and passing device objects
+> > > directly to async routines executed via acpi_os_hotplug_execute().
+> >  :
+> > >  static ssize_t
+> > >  acpi_eject_store(struct device *d, struct device_attribute *attr,
+> > >  		const char *buf, size_t count)
+> > >  {
+> > >  	struct acpi_device *acpi_device = to_acpi_device(d);
+> > > -	struct acpi_eject_event *ej_event;
+> > >  	acpi_object_type not_used;
+> > >  	acpi_status status;
+> > > -	int ret;
+> > >  
+> > >  	if (!count || buf[0] != '1')
+> > >  		return -EINVAL;
+> > > @@ -518,28 +519,17 @@ acpi_eject_store(struct device *d, struc
+> > >  	if (ACPI_FAILURE(status) || !acpi_device->flags.ejectable)
+> > >  		return -ENODEV;
+> > >  
+> > > -	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
+> > > -	if (!ej_event) {
+> > > -		ret = -ENOMEM;
+> > > -		goto err_out;
+> > > -	}
+> > >  	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
+> > >  				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+> > > -	ej_event->device = acpi_device;
+> > > -	ej_event->event = ACPI_OST_EC_OSPM_EJECT;
+> > >  	get_device(&acpi_device->dev);
+> > > -	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
+> > > +	status = acpi_os_hotplug_execute(acpi_eject_store_work, acpi_device);
+> > >  	if (ACPI_SUCCESS(status))
+> > >  		return count;
+> > >  
+> > >  	put_device(&acpi_device->dev);
+> > > -	kfree(ej_event);
+> > > -	ret = status == AE_NO_MEMORY ? -ENOMEM : -EAGAIN;
+> > 
+> > Why are you deleting the above line as part of this change?
+> 
+> Ah, because I forgot that acpi_os_hotplug_execute() can also return AE_NO_MEMORY. :-)
+> 
+> Good catch, updated pach follows.
 
-Since _handle_hotplug_event_root() is run from the ACPI hotplug
-workqueue, it doesn't need to queue up a work item to eject a PCI
-host bridge on the same workqueue.  Instead, it can just carry out
-the eject by calling acpi_bus_device_eject() directly, so make that
-happen.
+Looks good.  The rest of the patches also look good.  For patch 4-6:
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-
-It looks like I sent this too early. :-/
-
-Obviously, acpi_bus_device_eject() cannot be called under acpi_scan_lock,
-so that lock has to be dropped before calling that function.
-
-Patch [3/3] doesn't apply any more after this modification, so I'll send
-an update of it too.
+Acked-by: Toshi Kani <toshi.kani@hp.com>
 
 Thanks,
-Rafael
+-Toshi
 
----
- drivers/acpi/internal.h |    2 +-
- drivers/acpi/pci_root.c |   24 ++++++++++--------------
- drivers/acpi/scan.c     |    4 ++--
- 3 files changed, 13 insertions(+), 17 deletions(-)
 
-Index: linux-pm/drivers/acpi/internal.h
-===================================================================
---- linux-pm.orig/drivers/acpi/internal.h
-+++ linux-pm/drivers/acpi/internal.h
-@@ -92,7 +92,7 @@ void acpi_device_add_finalize(struct acp
- void acpi_free_pnp_ids(struct acpi_device_pnp *pnp);
- int acpi_bind_one(struct device *dev, acpi_handle handle);
- int acpi_unbind_one(struct device *dev);
--void acpi_bus_hot_remove_device(void *context);
-+void acpi_bus_device_eject(struct acpi_device *device, u32 ost_src);
- 
- /* --------------------------------------------------------------------------
-                                   Power Resource
-Index: linux-pm/drivers/acpi/pci_root.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_root.c
-+++ linux-pm/drivers/acpi/pci_root.c
-@@ -592,16 +592,6 @@ static void handle_root_bridge_insertion
- 		acpi_handle_err(handle, "cannot add bridge to acpi list\n");
- }
- 
--static void handle_root_bridge_removal(struct acpi_device *device)
--{
--	acpi_status status;
--
--	get_device(&device->dev);
--	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, device);
--	if (ACPI_FAILURE(status))
--		put_device(&device->dev);
--}
--
- static void _handle_hotplug_event_root(struct work_struct *work)
- {
- 	struct acpi_pci_root *root;
-@@ -612,6 +602,7 @@ static void _handle_hotplug_event_root(s
- 	hp_work = container_of(work, struct acpi_hp_work, work);
- 	handle = hp_work->handle;
- 	type = hp_work->type;
-+	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
- 
- 	acpi_scan_lock_acquire();
- 
-@@ -641,9 +632,15 @@ static void _handle_hotplug_event_root(s
- 		/* request device eject */
- 		acpi_handle_printk(KERN_DEBUG, handle,
- 				   "Device eject notify on %s\n", __func__);
--		if (root)
--			handle_root_bridge_removal(root->device);
--		break;
-+		if (!root)
-+			break;
-+
-+		get_device(&root->device->dev);
-+
-+		acpi_scan_lock_release();
-+
-+		acpi_bus_device_eject(root->device, ACPI_NOTIFY_EJECT_REQUEST);
-+		return;
- 	default:
- 		acpi_handle_warn(handle,
- 				 "notify_handler: unknown event type 0x%x\n",
-@@ -652,7 +649,6 @@ static void _handle_hotplug_event_root(s
- 	}
- 
- 	acpi_scan_lock_release();
--	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
- }
- 
- static void handle_hotplug_event_root(acpi_handle handle, u32 type,
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -285,7 +285,7 @@ static int acpi_scan_hot_remove(struct a
- 	return 0;
- }
- 
--static void acpi_bus_device_eject(struct acpi_device *device, u32 ost_src)
-+void acpi_bus_device_eject(struct acpi_device *device, u32 ost_src)
- {
- 	acpi_handle handle = device->handle;
- 	struct acpi_scan_handler *handler;
-@@ -409,7 +409,7 @@ static void acpi_hotplug_unsupported(acp
-  * acpi_bus_hot_remove_device: Hot-remove a device and its children.
-  * @context: Address of the ACPI device object to hot-remove.
-  */
--void acpi_bus_hot_remove_device(void *context)
-+static void acpi_bus_hot_remove_device(void *context)
- {
- 	acpi_bus_device_eject(context, ACPI_NOTIFY_EJECT_REQUEST);
- }
+
 
