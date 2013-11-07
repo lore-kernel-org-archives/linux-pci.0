@@ -1,163 +1,325 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:45109 "EHLO bear.ext.ti.com"
+Received: from mantis.wzyboy.im ([199.83.51.51]:37417 "EHLO mantis.wzyboy.im"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751401Ab3KFInU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Nov 2013 03:43:20 -0500
-Message-ID: <527A0112.60908@ti.com>
-Date: Wed, 6 Nov 2013 14:12:58 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+	id S1751874Ab3KGE4g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Nov 2013 23:56:36 -0500
 MIME-Version: 1.0
-To: Pratyush Anand <pratyush.anand@gmail.com>
-CC: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Ajay KHANDELWAL <ajay.khandelwal@st.com>,
-	Marek Vasut <marex@denx.de>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [QUERY] Number of address translation regions in designware
-References: <52652BF1.4040507@ti.com> <000001cecee5$cbeafa10$63c0ee30$%han@samsung.com> <52668991.1020208@ti.com> <20131023043610.GA5521@pratyush-vbox> <5267EF1E.1010101@ti.com> <20131029071015.GB2297@pratyush-vbox> <526F941B.8070300@ti.com> <CAHM4w1=YkiYv_N0qxQpbfqz3VHQrZ46j96x0tCvL6q-oOLXtKA@mail.gmail.com>
-In-Reply-To: <CAHM4w1=YkiYv_N0qxQpbfqz3VHQrZ46j96x0tCvL6q-oOLXtKA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Thu, 7 Nov 2013 12:49:15 +0800
+Message-ID: <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Tuesday 29 October 2013 09:44 PM, Pratyush Anand wrote:
-> On Tue, Oct 29, 2013 at 4:25 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
->> Hi Pratyush,
->>
->> On Tuesday 29 October 2013 12:40 PM, Pratyush Anand wrote:
->>> + Marek, Tim, arnd
->>>
->>> Hi Kishon,
->>>
->>> On Wed, Oct 23, 2013 at 11:45:34PM +0800, Kishon Vijay Abraham I wrote:
->>>> Hi Pratyush,
->>>>
->>>> On Wednesday 23 October 2013 10:06 AM, Pratyush Anand wrote:
->>>>> Hi Kishon,
->>>>>
->>>>> On Tue, Oct 22, 2013 at 10:20:01PM +0800, Kishon Vijay Abraham I wrote:
->>>>>> Hi Pratyush, Jingoo,
->>>>>>
->>>>>> On Tuesday 22 October 2013 10:46 AM, Jingoo Han wrote:
->>>>>>> On Monday, October 21, 2013 10:28 PM, Kishon Vijay Abraham I wrote:
->>>>>>>>
->>>>>>>> Currently I see in pcie-designware.c we use only 2 ATU regions. We re-use
->>>>>>>> INDEX0 for mem outbound and cfg0, and INDEX1 for cfg1 and io. So I'd like to
->>>>>>>> know if in your platform, do you have only 2 address translation regions? In
->>>>>>>> DRA7xx we have 16 outbound regions and 4 inbound regions.
->>>>>>>
->>>>>>> In Exynos, there are only 2 inbound and 2 outbound viewpoints.
->>>>>>>
->>>>>>>> Also the same designware IP can be used as a EP also no? Shouldn't we move it
->>>>>>>> out of drivers/pci/host and allow it to be configured as EP also?
->>>>>>>
->>>>>>> Currently, Exynos PCIe IP does not support EP mode.
->>>>>>
->>>>>> Thanks for the information. I think we can do some optimization w.r.t address
->>>>>> translation regions. Will post a RFC soon.
->>>>>>
->>>>>> One more query.
->>>>>> In dw_pcie_prog_viewport_cfg0/dw_pcie_prog_viewport_cfg1 functions, the *lower
->>>>>> target* is programmed to busdev. Is it for any specific reason?
->>>>>> I mean doing that will leave lot of holes in the PCIe address space.
->>>>>> IIUC, if we don't set that to busdev, consecutive pcie address space will be
->>>>>> used for each function no?
->>>>>
->>>>> Yes, I think even if CX_ATU_MIN_REGION_SIZE is 64KB in any controller,
->>>>> bus, dev and function number can be used to define target address.
->>>>
->>>> I meant for function 0 the configuration space will be from (0x0 t0 0xfff -
->>>> 4KB). If we use *busdev* for programming target, for function 1 the
->>>> configuration space will start at 0x10000 PCIe address which will leave a small
->>>> hole from (0x1000 to 0xffff). I'm not sure if it will have a big impact though.
->>>> Also till we haven't exhausted the 64KB space (minimum), we wouldn't be needing
->>>> to program a new viewport. That's good enough to accommodate 18 functions for
->>>> the number of devices.
->>>
->>> Yes, I agree with you that using *busdev* will create hole and we
->>> should avoid it. More on this at the end.
->>>
->>>>>
->>>>> So you are trying to allocate statically a separate viewport for each
->>>>> function's cfg0 transfer (whereever sufficient number of viewport is
->>>>> avilable)?
->>>>
->>>> Actually in DRA7xx, we face a different problem in that, we can't program the
->>>> translation region directly from the ranges. Because while programming the
->>>> address translation window, the most significant 4 bits are not used.
->>>>
->>>> For example if you see, the cpu address of memory window starts @ 0x20012000
->>>> but while programming the address translation window we have to give 0x00012000.
->>>>
->>>> My dt data looked like this.
->>>> ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00001000
->>>>         0x81000000 0 0          0x20002000 0 0x00010000
->>>>         0x82000000 0 0x20012000 0x20012000 0 0xffee000>;
->>>>
->>>> translation = <(OUTBOUND | INDEX0) CFG0 0x0 0x00001000 0x0000fff 0x0 0x00001000
->>>>              (OUTBOUND | INDEX1) IO   0x0 0x00002000 0x000ffff 0x0 0x00002000
->>>>              (OUTBOUND | INDEX2) MEM  0x0 0x00012000 0xffee000 0x0 0x20012000
->>>>> ;
->>>
->>> I too have some doubt here..not very clear.. may be someone more
->>> expert can correct (I keep arnd in cc).... How should be the
->>> translation?
->>> In my opinion, input address of translation should be in "bus address
->>> domain"  ie address what PCIe sees and translated output for memory
->>
->> It actually depends on whether we are configuring inbound or outbound. IIUC,
->> what you just mentioned will be for configuring inbound translation window.
->>
->> For the outbound translation window, it'll be the other way round. *base* will
->> be the CPU address and target will be the PCIe address.
+2013/11/7 Bjorn Helgaas <bhelgaas@google.com>:
+> Do you have any more details?  Maybe open a bugzilla.kernel.org report
+> and attach:
 >
-> Sure? At the the end you say base address is 0x000_0000 (bus address) and not
+>   - complete dmesg log
+>   - lspci -vvxxx output for entire system before issue occurs
+>   - lspci -vvxxx output for entire system after issue occurs
 
-This address is not actually a bus address (note it has only 28bits). 
-Rather it's used only to program the address translation unit of 
-desigware (for DRA7x).
-Both the cpu address and pcie address is the same.
-> 0x2000_0000 (parent bus address). It contradicts what you say above, no?
->>> transaction should be in "parent bus address domain" ie what CPUs
->>> see. If my understanding is correct, then pcie designware driver needs
->>> fixes at some places.
->>>
->>> I am not much used to DT, but if I understood correctly, in your case
->>> parent bus address and bus address are different.
->>>
->>> pp->mem_base = bus address  = range.pci_addr = 0x0000000000012000
->>> pp->config.mem_bus_addr = parent bus address = range.cpu_addr = 0x20012000
->>
->> Not like that. It's the same.
->> In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
->> address. So whenever the cpu issues a read/write request, the 4 most
->> significant bits are used by L3 to determine the target controller.
->> For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
->> the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
->> the outbound translation window the *base* should be programmed as 0x000_0000.
->> Whenever we try to write to say 0x2000_0000, it will be translated to whatever
->> we have programmed in the translation window with base as 0x000_0000.
->
-> What you say here is also my understanding.
-> Only question then remains, what should be translated address? All
-> translated address must lie in the address range programmed in EP's
-> BAR, then only EP will able to receive that mem transaction, no?
 
-right.
-> All EP's BAR address will lie in the range of pp->mem.start and
-> pp->mem.end, am I correct here?
+Hi, I have filed a bug on bugzilla:
+https://bugzilla.kernel.org/show_bug.cgi?id=64541
 
-I'm not sure how the PCI core code sets the BAR of the EP. I have to 
-check it.
-> And, pp->mem.start is range.cpu_addr, therefore I said that if target address
-> is programmed as cpu_address, it should work fine.
+Actually I have posted some more logs before, you could find them on
+the mailing lists archive:
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/115259
 
-Agreed.
+Here is the output of lspci -vxxxx just now. I'll run this command
+again when the bug occurs next time:
 
-Thanks
-Kishon
+03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 6b)
+ Subsystem: Intel Corporation Wireless-N 7260
+ Flags: bus master, fast devsel, latency 0, IRQ 62
+ Memory at f0400000 (64-bit, non-prefetchable) [size=8K]
+ Capabilities: [c8] Power Management version 3
+ Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+ Capabilities: [40] Express Endpoint, MSI 00
+ Capabilities: [100] Advanced Error Reporting
+ Capabilities: [140] Device Serial Number 5c-51-4f-ff-ff-0d-82-ac
+ Capabilities: [14c] Latency Tolerance Reporting
+ Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1 Len=014 <?>
+ Kernel driver in use: iwlwifi
+ Kernel modules: iwlwifi
+00: 86 80 b2 08 06 04 10 00 6b 00 80 02 10 00 00 00
+10: 04 00 40 f0 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 62 c2
+30: 00 00 00 00 c8 00 00 00 00 00 00 00 09 01 00 00
+40: 10 00 02 00 c0 8e 00 10 10 0c 19 00 11 ec 06 00
+50: 42 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 12 08 08 00 05 04 00 00 00 00 00 00
+70: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 01 d0 23 c8 00 00 00 0d
+d0: 05 40 81 00 0c f0 e0 fe 00 00 00 00 42 41 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+100: 01 00 01 14 00 00 00 00 00 00 00 00 31 20 46 00
+110: 00 20 00 00 00 20 00 00 00 00 00 00 00 00 00 00
+120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+140: 03 00 c1 14 ac 82 0d ff ff 4f 51 5c 18 00 41 15
+150: 03 10 03 10 0b 00 01 00 fe ca 41 01 1f 1e f0 00
+160: 0f 00 a0 40 f0 00 00 00 00 00 00 00 00 00 00 00
+170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+220: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+300: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+310: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+320: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+330: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+340: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+350: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+360: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+370: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+380: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+390: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+3a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+3b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+3c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+3d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+3e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+3f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+400: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+420: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+430: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+440: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+450: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+460: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+470: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+490: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+4a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+4b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+4c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+4d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+4e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+4f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+500: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+510: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+520: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+590: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+5a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+5b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+5c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+5d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+5e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+5f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+600: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+610: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+620: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+630: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+640: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+650: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+660: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+670: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+680: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+690: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+6a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+6b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+6c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+6d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+6e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+6f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+700: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+710: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+720: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+730: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+740: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+750: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+760: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+770: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+780: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+790: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+7a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+7b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+7c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+7d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+7e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+7f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+810: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+820: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+830: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+840: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+850: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+860: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+870: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+890: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+8a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+8b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+8c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+8d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+8e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+8f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+900: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+910: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+920: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+930: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+940: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+950: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+960: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+970: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+990: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+9a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+9b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+9c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+9d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+9e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+9f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+aa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ab0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ac0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ad0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ae0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+af0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ba0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+bb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+bc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+bd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+be0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+bf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ca0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+cc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ce0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+dc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+dd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ea0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+eb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+fa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+-- 
+wzyboy
