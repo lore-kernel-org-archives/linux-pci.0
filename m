@@ -1,123 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe001.messaging.microsoft.com ([207.46.163.24]:1853 "EHLO
-	co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754252Ab3K0QIx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 11:08:53 -0500
-From: Bharat Bhushan <Bharat.Bhushan@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Scott Wood <scottwood@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-Date: Wed, 27 Nov 2013 16:08:44 +0000
-Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D07233D0E@039-SN2MPN1-012.039d.mgd.msft.net>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1384973243.2879.361.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1385066603.2879.414.camel@ul30vt.home>
-	 <1385066835.1403.489.camel@snotra.buserror.net>
-	 <1385067648.2879.421.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
- <1385397493.2879.557.camel@ul30vt.home>
-In-Reply-To: <1385397493.2879.557.camel@ul30vt.home>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [Update][PATCH 4/6] ACPI / hotplug: Simplify device ejection routines
+Date: Thu, 07 Nov 2013 01:35:18 +0100
+Message-ID: <1857488.d8ScZB2yjC@vostro.rjw.lan>
+In-Reply-To: <1383783425.1847.52.camel@misato.fc.hp.com>
+References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <1642586.5aH3MlB2GZ@vostro.rjw.lan> <1383783425.1847.52.camel@misato.fc.hp.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
-IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IE1vbmRheSwgTm92
-ZW1iZXIgMjUsIDIwMTMgMTA6MDggUE0NCj4gVG86IEJodXNoYW4gQmhhcmF0LVI2NTc3Nw0KPiBD
-YzogV29vZCBTY290dC1CMDc0MjE7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGFncmFmQHN1
-c2UuZGU7IFlvZGVyIFN0dWFydC0NCj4gQjA4MjQ4OyBpb21tdUBsaXN0cy5saW51eC1mb3VuZGF0
-aW9uLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXhwcGMtDQo+IGRldkBsaXN0cy5vemxh
-YnMub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFU
-Q0ggMC85IHYyXSB2ZmlvLXBjaTogYWRkIHN1cHBvcnQgZm9yIEZyZWVzY2FsZSBJT01NVSAoUEFN
-VSkNCj4gDQo+IE9uIE1vbiwgMjAxMy0xMS0yNSBhdCAwNTozMyArMDAwMCwgQmhhcmF0IEJodXNo
-YW4gd3JvdGU6DQo+ID4NCj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBG
-cm9tOiBBbGV4IFdpbGxpYW1zb24gW21haWx0bzphbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbV0N
-Cj4gPiA+IFNlbnQ6IEZyaWRheSwgTm92ZW1iZXIgMjIsIDIwMTMgMjozMSBBTQ0KPiA+ID4gVG86
-IFdvb2QgU2NvdHQtQjA3NDIxDQo+ID4gPiBDYzogQmh1c2hhbiBCaGFyYXQtUjY1Nzc3OyBsaW51
-eC1wY2lAdmdlci5rZXJuZWwub3JnOyBhZ3JhZkBzdXNlLmRlOw0KPiA+ID4gWW9kZXIgU3R1YXJ0
-LUIwODI0ODsgaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmc7DQo+ID4gPiBiaGVsZ2Fh
-c0Bnb29nbGUuY29tOyBsaW51eHBwYy0gZGV2QGxpc3RzLm96bGFicy5vcmc7DQo+ID4gPiBsaW51
-eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIDAvOSB2
-Ml0gdmZpby1wY2k6IGFkZCBzdXBwb3J0IGZvciBGcmVlc2NhbGUNCj4gPiA+IElPTU1VIChQQU1V
-KQ0KPiA+ID4NCj4gPiA+IE9uIFRodSwgMjAxMy0xMS0yMSBhdCAxNDo0NyAtMDYwMCwgU2NvdHQg
-V29vZCB3cm90ZToNCj4gPiA+ID4gT24gVGh1LCAyMDEzLTExLTIxIGF0IDEzOjQzIC0wNzAwLCBB
-bGV4IFdpbGxpYW1zb24gd3JvdGU6DQo+ID4gPiA+ID4gT24gVGh1LCAyMDEzLTExLTIxIGF0IDEx
-OjIwICswMDAwLCBCaGFyYXQgQmh1c2hhbiB3cm90ZToNCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4g
-PiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiA+ID4gPiA+IEZyb206IEFsZXgg
-V2lsbGlhbXNvbiBbbWFpbHRvOmFsZXgud2lsbGlhbXNvbkByZWRoYXQuY29tXQ0KPiA+ID4gPiA+
-ID4gPiBTZW50OiBUaHVyc2RheSwgTm92ZW1iZXIgMjEsIDIwMTMgMTI6MTcgQU0NCj4gPiA+ID4g
-PiA+ID4gVG86IEJodXNoYW4gQmhhcmF0LVI2NTc3Nw0KPiA+ID4gPiA+ID4gPiBDYzogam9yb0A4
-Ynl0ZXMub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBhZ3JhZkBzdXNlLmRlOw0KPiA+ID4gPiA+
-ID4gPiBXb29kIFNjb3R0LUIwNzQyMTsgWW9kZXIgU3R1YXJ0LUIwODI0ODsNCj4gPiA+ID4gPiA+
-ID4gaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmc7IGxpbnV4LQ0KPiA+ID4gPiA+ID4g
-PiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eHBwYy1kZXZAbGlzdHMub3psYWJzLm9yZzsgbGlu
-dXgtDQo+ID4gPiA+ID4gPiA+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IEJodXNoYW4gQmhhcmF0
-LVI2NTc3Nw0KPiA+ID4gPiA+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIDAvOSB2Ml0gdmZpby1w
-Y2k6IGFkZCBzdXBwb3J0IGZvcg0KPiA+ID4gPiA+ID4gPiBGcmVlc2NhbGUgSU9NTVUgKFBBTVUp
-DQo+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+IElzIFZGSU9fSU9NTVVfUEFNVV9HRVRfTVNJ
-X0JBTktfQ09VTlQgcGVyIGFwZXJ0dXJlIChpZS4gZWFjaA0KPiA+ID4gPiA+ID4gPiB2ZmlvIHVz
-ZXIgaGFzICRDT1VOVCByZWdpb25zIGF0IHRoZWlyIGRpc3Bvc2FsIGV4Y2x1c2l2ZWx5KT8NCj4g
-PiA+ID4gPiA+DQo+ID4gPiA+ID4gPiBOdW1iZXIgb2YgbXNpLWJhbmsgY291bnQgaXMgc3lzdGVt
-IHdpZGUgYW5kIG5vdCBwZXIgYXBlcnR1cmUsDQo+ID4gPiA+ID4gPiBCdXQgd2lsbCBiZQ0KPiA+
-ID4gc2V0dGluZyB3aW5kb3dzIGZvciBiYW5rcyBpbiB0aGUgZGV2aWNlIGFwZXJ0dXJlLg0KPiA+
-ID4gPiA+ID4gU28gc2F5IGlmIHdlIGFyZSBkaXJlY3QgYXNzaWduaW5nIDIgcGNpIGRldmljZSAo
-Ym90aCBoYXZlDQo+ID4gPiA+ID4gPiBkaWZmZXJlbnQgaW9tbXUNCj4gPiA+IGdyb3VwLCBzbyAy
-IGFwZXJ0dXJlIGluIGlvbW11KSB0byBWTS4NCj4gPiA+ID4gPiA+IE5vdyBxZW11IGNhbiBtYWtl
-IG9ubHkgb25lIGNhbGwgdG8ga25vdyBob3cgbWFueSBtc2ktYmFua3MgYXJlDQo+ID4gPiA+ID4g
-PiB0aGVyZSBidXQNCj4gPiA+IGl0IG11c3Qgc2V0IHN1Yi13aW5kb3dzIGZvciBhbGwgYmFua3Mg
-Zm9yIGJvdGggcGNpIGRldmljZSBpbiBpdHMNCj4gPiA+IHJlc3BlY3RpdmUgYXBlcnR1cmUuDQo+
-ID4gPiA+ID4NCj4gPiA+ID4gPiBJJ20gc3RpbGwgY29uZnVzZWQuICBXaGF0IEkgd2FudCB0byBt
-YWtlIHN1cmUgb2YgaXMgdGhhdCB0aGUNCj4gPiA+ID4gPiBiYW5rcyBhcmUgaW5kZXBlbmRlbnQg
-cGVyIGFwZXJ0dXJlLiAgRm9yIGluc3RhbmNlLCBpZiB3ZSBoYXZlDQo+ID4gPiA+ID4gdHdvIHNl
-cGFyYXRlIHVzZXJzcGFjZSBwcm9jZXNzZXMgb3BlcmF0aW5nIGluZGVwZW5kZW50bHkgYW5kDQo+
-ID4gPiA+ID4gdGhleSBib3RoIGNob3NlIHRvIHVzZSBtc2kgYmFuayB6ZXJvIGZvciB0aGVpciBk
-ZXZpY2UsIHRoYXQncw0KPiA+ID4gPiA+IGJhbmsgemVybyB3aXRoaW4gZWFjaCBhcGVydHVyZSBh
-bmQgZG9lc24ndCBpbnRlcmZlcmUuICBPcg0KPiA+ID4gPiA+IGFub3RoZXIgd2F5IHRvIGFzayBp
-cyBjYW4gYSBtYWxpY2lvdXMgdXNlciBpbnRlcmZlcmUgd2l0aCBvdGhlciB1c2VycyBieQ0KPiB1
-c2luZyB0aGUgd3JvbmcgYmFuay4NCj4gPiA+ID4gPiBUaGFua3MsDQo+ID4gPiA+DQo+ID4gPiA+
-IFRoZXkgY2FuIGludGVyZmVyZS4NCj4gPg0KPiA+IFdhbnQgdG8gYmUgc3VyZSBvZiBob3cgdGhl
-eSBjYW4gaW50ZXJmZXJlPw0KPiANCj4gV2hhdCBoYXBwZW5zIGlmIG1vcmUgdGhhbiBvbmUgdXNl
-ciBzZWxlY3RzIHRoZSBzYW1lIE1TSSBiYW5rPw0KPiBNaW5pbWFsbHksIHdvdWxkbid0IHRoYXQg
-cmVzdWx0IGluIHRoZSBJT01NVSBibG9ja2luZyB0cmFuc2FjdGlvbnMgZnJvbSB0aGUNCj4gcHJl
-dmlvdXMgdXNlciBvbmNlIHRoZSBuZXcgdXNlciBhY3RpdmF0ZXMgdGhlaXIgbWFwcGluZz8NCg0K
-WWVzIGFuZCBubzsgV2l0aCBjdXJyZW50IGltcGxlbWVudGF0aW9uIHllcyBidXQgd2l0aCBhIG1p
-bm9yIGNoYW5nZSBuby4gTGF0ZXIgaW4gdGhpcyByZXNwb25zZSBJIHdpbGwgZXhwbGFpbiBob3cu
-DQoNCj4gDQo+ID4gPj4gIFdpdGggdGhpcyBoYXJkd2FyZSwgdGhlIG9ubHkgd2F5IHRvIHByZXZl
-bnQgdGhhdA0KPiA+ID4gPiBpcyB0byBtYWtlIHN1cmUgdGhhdCBhIGJhbmsgaXMgbm90IHNoYXJl
-ZCBieSBtdWx0aXBsZSBwcm90ZWN0aW9uIGNvbnRleHRzLg0KPiA+ID4gPiBGb3Igc29tZSBvZiBv
-dXIgdXNlcnMsIHRob3VnaCwgSSBiZWxpZXZlIHByZXZlbnRpbmcgdGhpcyBpcyBsZXNzDQo+ID4g
-PiA+IGltcG9ydGFudCB0aGFuIHRoZSBwZXJmb3JtYW5jZSBiZW5lZml0Lg0KPiA+DQo+ID4gU28g
-c2hvdWxkIHdlIGxldCB0aGlzIHBhdGNoIHNlcmllcyBpbiB3aXRob3V0IHByb3RlY3Rpb24/DQo+
-IA0KPiBOby4NCj4gDQo+ID4gPg0KPiA+ID4gSSB0aGluayB3ZSBuZWVkIHNvbWUgc29ydCBvZiBv
-d25lcnNoaXAgbW9kZWwgYXJvdW5kIHRoZSBtc2kgYmFua3MgdGhlbi4NCj4gPiA+IE90aGVyd2lz
-ZSB0aGVyZSdzIG5vdGhpbmcgcHJldmVudGluZyBhbm90aGVyIHVzZXJzcGFjZSBmcm9tDQo+ID4g
-PiBhdHRlbXB0aW5nIGFuIE1TSSBiYXNlZCBhdHRhY2sgb24gb3RoZXIgdXNlcnMsIG9yIHBlcmhh
-cHMgZXZlbiBvbg0KPiA+ID4gdGhlIGhvc3QuICBWRklPIGNhbid0IGFsbG93IHRoYXQuICBUaGFu
-a3MsDQo+ID4NCj4gPiBXZSBoYXZlIHZlcnkgZmV3ICgzIE1TSSBiYW5rIG9uIG1vc3Qgb2YgY2hp
-cHMpLCBzbyB3ZSBjYW4gbm90IGFzc2lnbg0KPiA+IG9uZSB0byBlYWNoIHVzZXJzcGFjZS4gV2hh
-dCB3ZSBjYW4gZG8gaXMgaG9zdCBhbmQgdXNlcnNwYWNlIGRvZXMgbm90DQo+ID4gc2hhcmUgYSBN
-U0kgYmFuayB3aGlsZSB1c2Vyc3BhY2Ugd2lsbCBzaGFyZSBhIE1TSSBiYW5rLg0KPiANCj4gVGhl
-biB5b3UgcHJvYmFibHkgbmVlZCBWRklPIHRvICJvd24iIHRoZSBNU0kgYmFuayBhbmQgcHJvZ3Jh
-bSBkZXZpY2VzIGludG8gaXQNCj4gcmF0aGVyIHRoYW4gZXhwb3NpbmcgdGhlIE1TSSBiYW5rcyB0
-byB1c2Vyc3BhY2UgdG8gbGV0IHRoZW0gaGF2ZSBkaXJlY3QgYWNjZXNzLg0KDQpPdmVyYWxsIGlk
-ZWEgb2YgZXhwb3NpbmcgdGhlIGRldGFpbHMgb2YgbXNpIHJlZ2lvbnMgdG8gdXNlcnNwYWNlIGFy
-ZQ0KIDEpIFVzZXIgc3BhY2UgY2FuIGRlZmluZSB0aGUgYXBlcnR1cmUgc2l6ZSB0byBmaXQgTVNJ
-IG1hcHBpbmcgaW4gSU9NTVUuDQogMikgc2V0dXAgaW92YSBmb3IgYSBNU0kgYmFua3M7IHdoaWNo
-IGlzIGp1c3QgYWZ0ZXIgZ3Vlc3QgbWVtb3J5LiANCg0KQnV0IGN1cnJlbnRseSB3ZSBleHBvc2Ug
-dGhlICJzaXplIiBhbmQgImFkZHJlc3MiIG9mIE1TSSBiYW5rcywgcGFzc2luZyBhZGRyZXNzIGlz
-IG9mIG5vIHVzZSBhbmQgY2FuIGJlIHByb2JsZW1hdGljLg0KSWYgd2UganVzdCBwcm92aWRlIHRo
-ZSBzaXplIG9mIE1TSSBiYW5rIHRvIHVzZXJzcGFjZSB0aGVuIHVzZXJzcGFjZSBjYW5ub3QgZG8g
-YW55dGhpbmcgd3JvbmcuDQoNCldoaWxlIGl0IGlzIHN0aWxsIHRoZSByZXNwb25zaWJpbGl0eSBv
-ZiBob3N0IChNU0krVkZJTykgdG8gY29tcG9zZSBNU0ktYWRkcmVzcyBhbmQgTVNJLWRhdGE7IHNv
-IEkgdGhpbmsgdGhpcyBzaG91bGQgbG9vayBmaW5lLg0KDQo+IFRoYW5rcywNCj4gDQo+IEFsZXgN
-Cj4gDQoNCg==
+On Wednesday, November 06, 2013 05:17:05 PM Toshi Kani wrote:
+> On Thu, 2013-11-07 at 01:14 +0100, Rafael J. Wysocki wrote:
+> > On Wednesday, November 06, 2013 04:27:01 PM Toshi Kani wrote:
+> > > On Mon, 2013-11-04 at 14:36 +0100, Rafael J. Wysocki wrote:
+> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > 
+> > > > Simplify handle_root_bridge_removal() and acpi_eject_store() by
+> > > > getting rid of struct acpi_eject_event and passing device objects
+> > > > directly to async routines executed via acpi_os_hotplug_execute().
+> > >  :
+> > > >  static ssize_t
+> > > >  acpi_eject_store(struct device *d, struct device_attribute *attr,
+> > > >  		const char *buf, size_t count)
+> > > >  {
+> > > >  	struct acpi_device *acpi_device = to_acpi_device(d);
+> > > > -	struct acpi_eject_event *ej_event;
+> > > >  	acpi_object_type not_used;
+> > > >  	acpi_status status;
+> > > > -	int ret;
+> > > >  
+> > > >  	if (!count || buf[0] != '1')
+> > > >  		return -EINVAL;
+> > > > @@ -518,28 +519,17 @@ acpi_eject_store(struct device *d, struc
+> > > >  	if (ACPI_FAILURE(status) || !acpi_device->flags.ejectable)
+> > > >  		return -ENODEV;
+> > > >  
+> > > > -	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
+> > > > -	if (!ej_event) {
+> > > > -		ret = -ENOMEM;
+> > > > -		goto err_out;
+> > > > -	}
+> > > >  	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
+> > > >  				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+> > > > -	ej_event->device = acpi_device;
+> > > > -	ej_event->event = ACPI_OST_EC_OSPM_EJECT;
+> > > >  	get_device(&acpi_device->dev);
+> > > > -	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
+> > > > +	status = acpi_os_hotplug_execute(acpi_eject_store_work, acpi_device);
+> > > >  	if (ACPI_SUCCESS(status))
+> > > >  		return count;
+> > > >  
+> > > >  	put_device(&acpi_device->dev);
+> > > > -	kfree(ej_event);
+> > > > -	ret = status == AE_NO_MEMORY ? -ENOMEM : -EAGAIN;
+> > > 
+> > > Why are you deleting the above line as part of this change?
+> > 
+> > Ah, because I forgot that acpi_os_hotplug_execute() can also return AE_NO_MEMORY. :-)
+> > 
+> > Good catch, updated pach follows.
+> 
+> Looks good.  The rest of the patches also look good.  For patch 4-6:
+> 
+> Acked-by: Toshi Kani <toshi.kani@hp.com>
 
+Awesome, thanks! :-)
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
