@@ -1,53 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:46875 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754591Ab3KYRKL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 12:10:11 -0500
-Date: Mon, 25 Nov 2013 18:10:08 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] PCI: mvebu - Support a bridge with no IO port
- window
-Message-ID: <20131125181008.158b5b09@skate>
-In-Reply-To: <1383262380-6984-2-git-send-email-jgunthorpe@obsidianresearch.com>
-References: <1383262380-6984-1-git-send-email-jgunthorpe@obsidianresearch.com>
-	<1383262380-6984-2-git-send-email-jgunthorpe@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59154 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751816Ab3KGJHj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Nov 2013 04:07:39 -0500
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <bhelgaas@google.com>, <thomas.petazzoni@free-electrons.com>,
+	<jason@lakedaemon.net>, <ezequiel.garcia@free-electrons.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Jisheng Zhang <jszhang@marvell.com>
+Subject: [PATCH] PCI: mvebu: staticize mvebu_pcie_align_resource
+Date: Thu, 7 Nov 2013 17:05:55 +0800
+Message-ID: <1383815155-5318-1-git-send-email-jszhang@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+This patch fixes the following sparse warning:
+drivers/pci/host/pci-mvebu.c:676:17: warning: symbol
+'mvebu_pcie_align_resource' was not declared. Should it be static?
 
-On Thu, 31 Oct 2013 17:33:00 -0600, Jason Gunthorpe wrote:
-> Make pcie-io-aperture and the IO port MBUS ID in ranges optional.
-> If not provided the bridge reports to Linux that IO space mapping is
-> not supported and refuses to configure an IO mbus window.
-> 
-> This allows both complete disable (do not specify pcie-io-aperture) and
-> per-port disable (do not specify a IO target ranges entry for the port)
-> 
-> Most PCIE devices these days do not require IO support to function,
-> so having an option to disable it in the driver is useful.
-> 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> ---
->  drivers/pci/host/pci-mvebu.c | 63 ++++++++++++++++++++++++++++++--------------
->  1 file changed, 43 insertions(+), 20 deletions(-)
+Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+---
+ drivers/pci/host/pci-mvebu.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-
-Thanks, and sorry again for the huge time it took me to test this
-version of your patches.
-
-Best regards,
-
-Thomas
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 729d5a1..bf4ff23 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -673,11 +673,11 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	return bus;
+ }
+ 
+-resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+-					  const struct resource *res,
+-					  resource_size_t start,
+-					  resource_size_t size,
+-					  resource_size_t align)
++static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
++						 const struct resource *res,
++						 resource_size_t start,
++						 resource_size_t size,
++						 resource_size_t align)
+ {
+ 	if (dev->bus->number != 0)
+ 		return start;
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+1.8.4.2
+
