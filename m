@@ -1,51 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:39287 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751132Ab3KNGUx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Nov 2013 01:20:53 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from userp1040.oracle.com ([156.151.31.81]:46550 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751516Ab3KHPfd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Nov 2013 10:35:33 -0500
+Date: Fri, 8 Nov 2013 10:35:07 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	xen-devel@lists.xenproject.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bj?rn Mork <bjorn@mork.no>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Thu, 14 Nov 2013 06:20:48 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com>
- <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com>
- <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
-In-Reply-To: <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, "x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH] PCI: Introduce two new MSI infrastructure calls for
+ masking/unmasking.
+Message-ID: <20131108153507.GA24755@phenom.dumpdata.com>
+References: <1383772616-23060-1-git-send-email-konrad.wilk@oracle.com>
+ <CAErSpo4rdHwhuF=SM6WT3EP3TGoUFnwxVdx5919qxea3On7MRw@mail.gmail.com>
+ <527C41E9.6040002@oracle.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <527C41E9.6040002@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiANCj4gMjAxMy8xMS8xNCBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjoNCj4g
-PiBUaGFua3MuICBBcmUgeW91IDEwMCUgc3VyZSB0aGUgbHNwY2kgb3V0cHV0IGlzIGJlZm9yZSB0
-aGUgc2V0cGNpDQo+ID4gd29ya2Fyb3VuZD8NCj4gDQo+IA0KPiBUbyBlbnN1cmUgdGhhdCwgSSBk
-aWQgaXQgYWdhaW46DQo+IA0KPiBib290IHVwIGxhcHRvcCAtPiBjb25uZWN0IHRvIGRvbWl0b3J5
-J3MgV2lGaSAtPiBydW4gbHNwY2kgLT4gcnVuIHNldHBjaSAtPiBydW4NCj4gZG1lc2cuDQo+IA0K
-PiBIZXJlIGFyZSB0aGUgb3V0cHV0cy4NCg0KQ2FuIHlvdSBwbGVhc2UgdHJ5IHRoZSBmb2xsb3dp
-bmc6DQoqIEJvb3Qgd2l0aG91dCBhbnkgY2hhbmdlcw0KKiBzZXRwY2kgLXMwMzowMC4wIDB4MTYw
-LkI9MHgwMA0KKiBzZXRwY2kgLXMwMDoxYy4xIDB4MjA0LkI9MHgxMA0KbHNwY2kgLXZ2DQoNCmFu
-ZCB0ZWxsIG1lIGlmIFdpRmkgd29ya3MgdGhlbi4NCih0aGlzIHJlcGxhY2VzIHRoZSBwcmV2aW91
-cyBzZXRwY2kgY29tbWFuZHMpDQoNCg0KVGhhbmsgeW91DQo=
+On Fri, Nov 08, 2013 at 09:44:09AM +0800, Zhenzhong Duan wrote:
+> 
+> On 2013-11-07 07:51, Bjorn Helgaas wrote:
+> >[+cc Thomas, Ingo, Peter, x86 list]
+> >
+> >On Wed, Nov 6, 2013 at 2:16 PM, Konrad Rzeszutek Wilk
+> ><konrad.wilk@oracle.com> wrote:
+> >>Certain platforms do not allow writes in the MSI-X bars
+> >>to setup or tear down vector values. To combat against
+> >>the generic code trying to write to that and either silently
+> >>being ignored or crashing due to the pagetables being marked r/o
+> >>this patch introduces a platform over-write.
+> >>
+> >>Note that we keep two separate, non-weak, functions
+> >>default_mask_msi_irqs() and default_mask_msix_irqs() for the
+> >>behavior of the arch_mask_msi_irqs() and arch_mask_msix_irqs(),
+> >>as the default behavior is needed by x86 PCI code.
+> >>
+> >>For Xen, which does not allow the guest to write to MSI-X
+> >>tables - as the hypervisor is solely responsible for setting
+> >>the vector values - we implement two nops.
+> >>
+> >>CC: Bjorn Helgaas <bhelgaas@google.com>
+> >>CC: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+> >>CC: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+> >>Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> >I think this is safe, and I'd like to squeeze it into the v3.13 merge
+> >window next week, since it supersedes three patches Zhenzhong has been
+> >trying to get in since July [1], and this patch is much simpler to
+> >understand.
+> This patch could replace the first two.
+> I think the third patch of mine is still needed as it does a
+> different thing.
+> It optimizes restore path in dom0.
+
+I tried to rebase it on top of this patch but it ended up that
+you still need the two arguments (for restore_... operation). 
+
+But perhaps there is a better way. If you can rebase on top
+of this patch - and send it out - that would be great!
