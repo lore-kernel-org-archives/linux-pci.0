@@ -1,132 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:40071 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752687Ab3KOJEn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Nov 2013 04:04:43 -0500
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:65034 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757925Ab3KHRi2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Nov 2013 12:38:28 -0500
+Received: by mail-ie0-f170.google.com with SMTP id at1so3783637iec.15
+        for <linux-pci@vger.kernel.org>; Fri, 08 Nov 2013 09:38:27 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <5285E028.20906@gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
- <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
- <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com> <5285E028.20906@gmail.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Fri, 15 Nov 2013 17:04:26 +0800
-Message-ID: <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+In-Reply-To: <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com> <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 8 Nov 2013 10:38:07 -0700
+Message-ID: <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
 Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
 	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
 	"ilw@linux.intel.com" <ilw@linux.intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=UTF-8
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks a lot for explaination, Emmanuel!
+On Fri, Nov 8, 2013 at 10:20 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> My only guess is that there's something wrong with the ASPM
+> configuration and the device just stops responding to config accesses
+> (and probably MMIO accesses, too, based on the errors in your dmesg
+> log).  Or maybe the device got powered off somehow.
 
-Now I finally know why this is a "catch-22" situation: Disabling those
-features with OS/drvier cannot be as neat as disabling them directly
-in BIOS. And there may be chance, that disabling them at a bad timing
-may cause G3...
+If you've figured out a way to reproduce this more reliably, it might
+be interesting to do "echo on >
+/sys/bus/pci/devices/0000:03:00.0/power/control" and see whether it
+makes a difference.  That should prevent us from using runtime power
+management for the iwlwifi device.
 
---
-wzyboy
-
-
-2013/11/15 Emmanuel Grumbach <egrumbach@gmail.com>:
->
->
-> On 11/15/2013 05:06 AM, wzyboy wrote:
->> 2013/11/15 Bjorn Helgaas <bhelgaas@google.com>:
->>> Why would it be unlikely to fix the driver?  Do people think the
->>> problem is not actually in the driver?
->>>
->>> Asking Lenovo how to disable L1 PM substates is really a non-answer.
->>> Only the extremely technical and extremely patient user (hi wzyboy :))
->>> will even bother to investigate why wifi works fine with Windows but
->>> not with Linux.  The only thing Lenovo *could* do is to release a new
->>> BIOS with a switch to control L1 PM Substates.  If I were Lenovo, I
->>> would never do that because then I would have to tell customers
->>> "disable this for Linux, enable this for Windows," and I'd have to
->>> deal with support calls about devices using more power than they
->>> should, battery life being shorter, etc.  Plus you'd have to ask every
->>> Linux user to upgrade their BIOS.  That's all just a terrible user
->>> experience.
->>
->>
->> I am a little confused. There are two sets of "setpci" commands, both
->> of which can make me use my NIC reliably. But you two say they are
->> just workarounds, not real fixes.
->>
->
-> Right - because they force a mode that the BIOS doesn't allow. The BIOS
-> doesn't allow the OS (the driver) to decide in what mode to work - so we
-> cannot reach the same effect as the setpci command from the OS / driver
-> level. setpci just directly accesses the HW without asking the
-> permissions of anyone.
->
->> I know the "side effect" of first two "setpci" commands is consuming
->> more power. (Actually by my experience of running on battery, I did
->> not notice ...)
->>
->> But Grumbach said after the second two "setpci" commands enables "L1".
->> Does it mean it saves power? So what's the "side effect" of second two
->> "setpci" commands?
->>
->
-> They are both the same in terms of side-effects. The first set of setpci
-> commands will disable L1 altogether - meaning you don't save any power.
-> The second set of setpci doesn't disable L1, but disable a more subtle
-> power state (actually several) which are defined as L1 PM substates. In
-> theses substates, you save less power than in L1 (I think) but you are
-> more likely to be able to reach them. After all, it is always the same
-> story - the deeper you sleep, you longer it takes to wake up. And if it
-> takes longer to wake up, it also means that in several cases you won't
-> chose to go to sleep. So the way PCI folks help to save power even in
-> case where you cannot go to a deep sleep is to define states in the
-> middle in which you save less power, but in which you are more likely to
-> be. Again - time spent in each state and power saved in each state trade
-> off.
-> Now:
-> L1 - deep sleep
-> L1 PM substate - something in the middle.
->
-> First setpci command - disable both features.
-> Second setpci command - disable only the second feature.
->
-> Regarding side effects... I don't think this is really "dangerous". But
-> this is not a fix in the way that I wouldn't like to deploy millions of
-> machines like that. The risk you have here is probably to have a bad
-> timing and have the setpci commands run exactly when the link is in a
-> state that setpci disables. That would be bad. How bad? Probably would
-> just require a reboot - or worst case G3 (take the battery off).
->
->> IMHO, if this could user use their NIC reliably, maybe Grumbach may
->> write these commands to iwlwifi driver and run them when 7260 is
->> detected...
->
-> I can't as exlained above.
->
->>
->> BTW, no replies from Lenovo, yet.
->>
->
->
->> Or maybe you could add an option, which enables this "workaround" if
->> user wants. A user could simply write a /etc/modprobe.d/iwlwifi.conf
->> and enable this "workaround", to use their NICs without having to
->> reboot from time to time...
->
-> same.
->
+Bjorn
