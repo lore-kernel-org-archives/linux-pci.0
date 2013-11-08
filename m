@@ -1,257 +1,249 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:55599 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753694Ab3J3RTy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2013 13:19:54 -0400
-Received: by mail-pb0-f48.google.com with SMTP id mc17so1694002pbc.21
-        for <linux-pci@vger.kernel.org>; Wed, 30 Oct 2013 10:19:54 -0700 (PDT)
-Date: Wed, 30 Oct 2013 11:19:49 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci-sysfs: fix a potential deadlock when concurrent
- remove&rescan pci device via sysfs
-Message-ID: <20131030171949.GB25745@google.com>
-References: <5270DB8B.6070600@cn.fujitsu.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <527C41E9.6040002@oracle.com>
+Date: Fri, 08 Nov 2013 09:44:09 +0800
+From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+Reply-To: zhenzhong.duan@oracle.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5270DB8B.6070600@cn.fujitsu.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: xen-devel@lists.xenproject.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, "x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH] PCI: Introduce two new MSI infrastructure calls for masking/unmasking.
+References: <1383772616-23060-1-git-send-email-konrad.wilk@oracle.com> <CAErSpo4rdHwhuF=SM6WT3EP3TGoUFnwxVdx5919qxea3On7MRw@mail.gmail.com>
+In-Reply-To: <CAErSpo4rdHwhuF=SM6WT3EP3TGoUFnwxVdx5919qxea3On7MRw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 30, 2013 at 06:12:27PM +0800, Gu Zheng wrote:
-> There is a potential deadlock situation when we manipulate pci device 
-> (remove&rescan) via the pci-sysfs user interfaces simultaneously. 
-> 
-> Privious patch:
-> https://lkml.org/lkml/2012/12/27/10
-> 
-> Related bug reports on bugzilla:
-> https://bugzilla.kernel.org/show_bug.cgi?id=60672
-> https://bugzilla.kernel.org/show_bug.cgi?id=60695
-> 
-> deadlock info described as following:
-> 
-> *dmesg ifno*:
-> (snip)
-> 1000e 0000:1c:00.0: eth9: Intel(R) PRO/1000 Network Connection
-> sd 13:2:0:0: [sdb] Attached SCSI disk
-> e1000e 0000:1c:00.0: eth9: MAC: 0, PHY: 4, PBA No: D50228-005
-> e1000e 0000:1c:00.1: Disabling ASPM  L1
-> e1000e 0000:1c:00.1: Interrupt Throttling Rate (ints/sec) set to dynamic
-> conservative mode
-> e1000e 0000:1c:00.1: irq 143 for MSI/MSI-X
-> e1000e 0000:1c:00.1: eth10: (PCI Express:2.5GT/s:Width x4) 00:15:17:cd:96:bf
-> e1000e 0000:1c:00.1: eth10: Intel(R) PRO/1000 Network Connection
-> e1000e 0000:1c:00.1: eth10: MAC: 0, PHY: 4, PBA No: D50228-005
-> INFO: task bash:62982 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> bash            D 0000000000000000     0 62982  62978 0x00000080
->  ffff88038b277db8 0000000000000082 ffff88038b277fd8 0000000000013940
->  ffff88038b276010 0000000000013940 0000000000013940 0000000000013940
->  ffff88038b277fd8 0000000000013940 ffff880377449e30 ffff8806e822c670
-> Call Trace:
->  [<ffffffff8151ba79>] schedule+0x29/0x70
->  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
->  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
->  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
->  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
->  [<ffffffff81341800>] dev_attr_store+0x20/0x30
->  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
->  [<ffffffff81173d08>] vfs_write+0xc8/0x190
->  [<ffffffff81173ed1>] sys_write+0x51/0x90
->  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
-> INFO: task bash:64141 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> bash            D ffffffff81610460     0 64141  64136 0x00000080
->  ffff8803540e9db8 0000000000000086 ffff8803540e9fd8 0000000000013940
->  ffff8803540e8010 0000000000013940 0000000000013940 0000000000013940
->  ffff8803540e9fd8 0000000000013940 ffff8807db338a10 ffff8806f09abc60
-> Call Trace:
->  [<ffffffff8151ba79>] schedule+0x29/0x70
->  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
->  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
->  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
->  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
->  [<ffffffff81341800>] dev_attr_store+0x20/0x30
->  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
->  [<ffffffff81173d08>] vfs_write+0xc8/0x190
->  [<ffffffff81173ed1>] sys_write+0x51/0x90
->  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
-> INFO: task kworker/u:3:64451 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> kworker/u:3     D ffffffff81610460     0 64451      2 0x00000080
->  ffff8807d51b7a30 0000000000000046 ffff8807d51b7fd8 0000000000013940
->  ffff8807d51b6010 0000000000013940 0000000000013940 0000000000013940
->  ffff8807d51b7fd8 0000000000013940 ffff8807db339420 ffff88037744b250
-> Call Trace:
->  [<ffffffff8151ba79>] schedule+0x29/0x70
->  [<ffffffff81519ded>] schedule_timeout+0x19d/0x220
->  [<ffffffff81165f92>] ? __slab_free+0x1f2/0x2f0
->  [<ffffffff8151b8fe>] wait_for_common+0x11e/0x190
->  [<ffffffff8108a6e0>] ? try_to_wake_up+0x2c0/0x2c0
->  [<ffffffff8151ba4d>] wait_for_completion+0x1d/0x20
->  [<ffffffff811e53e8>] sysfs_addrm_finish+0xb8/0xd0
->  [<ffffffff811e4320>] ? sysfs_schedule_callback+0x1e0/0x1e0
->  [<ffffffff811e33f0>] sysfs_hash_and_remove+0x60/0xb0
->  [<ffffffff811e43c9>] sysfs_remove_file+0x39/0x50
->  [<ffffffff81342cb7>] device_remove_file+0x17/0x20
->  [<ffffffff8134505c>] bus_remove_device+0xdc/0x180
->  [<ffffffff81342eb0>] device_del+0x120/0x1d0
->  [<ffffffff81342f82>] device_unregister+0x22/0x60
->  [<ffffffff8127ade4>] pci_stop_bus_device+0x94/0xa0
->  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
->  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
->  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
->  [<ffffffff8127af66>] pci_stop_and_remove_bus_device+0x16/0x30
->  [<ffffffff81282359>] remove_callback+0x29/0x40
->  [<ffffffff811e4344>] sysfs_schedule_callback_work+0x24/0x70
->  [<ffffffff81070009>] process_one_work+0x179/0x4b0
->  [<ffffffff8107210e>] worker_thread+0x12e/0x330
->  [<ffffffff81071fe0>] ? manage_workers+0x110/0x110
->  [<ffffffff8107705e>] kthread+0x9e/0xb0
->  [<ffffffff81525bc4>] kernel_thread_helper+0x4/0x10
->  [<ffffffff81076fc0>] ? kthread_freezable_should_stop+0x70/0x70
->  [<ffffffff81525bc0>] ? gs_change+0x13/0x13
-> 
-> path1: sysfs remove device:             | path2: sysfs rescan device:
-> sysfs_schedule_callback_work()          | sysfs_write_file()
->   remove_callback()                     |   flush_write_buffer()
-> *1* mutex_lock(&pci_remove_rescan_mutex)|*2*  sysfs_get_active(attr_sd)
->       ...                               |     dev_attr_store()
->         device_remove_file()            |       dev_rescan_store()
->           ...                           |*4*  mutex_lock(&pci_remove_rescan_mutex)
-> *3*       sysfs_deactivate(sd)          |     ...
->             wait_for_completion()       |*5*  sysfs_put_active(attr_sd)
-> *6* mutex_unlock(&pci_remove_rescan_mutex)
-> 
-> If path1 first holds the pci_remove_rescan_mutex at *1*, then another path
-> called path2 actived and runs to *2* before path1 runs to *3*, we now runs
-> to a deadlock situation:
-> Path1 holds the mutex waiting path2 to decrease sysfs_dirent's s_active
-> counter at *5*, but path2 is blocked at *4* when trying to get the
-> pci_remove_rescan_mutex. The mutex won't be put by path1 until it reach
-> *6*, but it's now blocked at *3*.
-> 
-> So we use mutex_try_lock to avoid this deadlock, and additional wait/restart_syscall
-> steps are used to make the fail path of try_lock more friendly to user space task.
-> 
-> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> ---
->  drivers/pci/pci-sysfs.c |   48 +++++++++++++++++++++++++++++++++++++++-------
->  1 files changed, 40 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 7128cfd..0dac6f4 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -29,6 +29,7 @@
->  #include <linux/slab.h>
->  #include <linux/vgaarb.h>
->  #include <linux/pm_runtime.h>
-> +#include <linux/delay.h>
->  #include "pci.h"
->  
->  static int sysfs_initialized;	/* = 0 */
-> @@ -285,6 +286,25 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
->  }
->  
->  static DEFINE_MUTEX(pci_remove_rescan_mutex);
-> +
-> +static void pci_remove_rescan_lock(void)
-> +{
-> +	mutex_lock(&pci_remove_rescan_mutex);
-> +}
-> +
-> +static int pci_remove_rescan_lock_sysfs(void)
-> +{
-> +	if (mutex_trylock(&pci_remove_rescan_mutex))
-> +		return 0;
-> +	/* Avoid busy looping (20 ms of sleep should do). */
-> +	msleep(20);
-> +	return restart_syscall();
 
-There are very few uses of restart_syscall().  I don't believe this
-situation is so unusual and special that we need to use it here.
+On 2013-11-07 07:51, Bjorn Helgaas wrote:
+> [+cc Thomas, Ingo, Peter, x86 list]
+>
+> On Wed, Nov 6, 2013 at 2:16 PM, Konrad Rzeszutek Wilk
+> <konrad.wilk@oracle.com> wrote:
+>> Certain platforms do not allow writes in the MSI-X bars
+>> to setup or tear down vector values. To combat against
+>> the generic code trying to write to that and either silently
+>> being ignored or crashing due to the pagetables being marked r/o
+>> this patch introduces a platform over-write.
+>>
+>> Note that we keep two separate, non-weak, functions
+>> default_mask_msi_irqs() and default_mask_msix_irqs() for the
+>> behavior of the arch_mask_msi_irqs() and arch_mask_msix_irqs(),
+>> as the default behavior is needed by x86 PCI code.
+>>
+>> For Xen, which does not allow the guest to write to MSI-X
+>> tables - as the hypervisor is solely responsible for setting
+>> the vector values - we implement two nops.
+>>
+>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
+>> CC: Zhenzhong Duan <zhenzhong.duan@oracle.com>
+>> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> I think this is safe, and I'd like to squeeze it into the v3.13 merge
+> window next week, since it supersedes three patches Zhenzhong has been
+> trying to get in since July [1], and this patch is much simpler to
+> understand.
+This patch could replace the first two.
+I think the third patch of mine is still needed as it does a different 
+thing.
+It optimizes restore path in dom0.
 
-> +}
-> +
-> +static void pci_remove_rescan_unlock(void)
-> +{
-> +	mutex_unlock(&pci_remove_rescan_mutex);
-> +}
->  static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
->  				size_t count)
->  {
-> @@ -295,10 +315,14 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
->  		return -EINVAL;
->  
->  	if (val) {
-> -		mutex_lock(&pci_remove_rescan_mutex);
-> +		int ret;
-> +
-> +		ret = pci_remove_rescan_lock_sysfs();
-> +		if (ret)
-> +			return ret;
->  		while ((b = pci_find_next_bus(b)) != NULL)
->  			pci_rescan_bus(b);
-> -		mutex_unlock(&pci_remove_rescan_mutex);
-> +		pci_remove_rescan_unlock();
->  	}
->  	return count;
->  }
-> @@ -319,9 +343,13 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
->  		return -EINVAL;
->  
->  	if (val) {
-> -		mutex_lock(&pci_remove_rescan_mutex);
-> +		int ret;
-> +
-> +		ret = pci_remove_rescan_lock_sysfs();
-> +		if (ret)
-> +			return ret;
->  		pci_rescan_bus(pdev->bus);
-> -		mutex_unlock(&pci_remove_rescan_mutex);
-> +		pci_remove_rescan_unlock();
->  	}
->  	return count;
->  }
-> @@ -332,9 +360,9 @@ static void remove_callback(struct device *dev)
->  {
->  	struct pci_dev *pdev = to_pci_dev(dev);
->  
-> -	mutex_lock(&pci_remove_rescan_mutex);
-> +	pci_remove_rescan_lock();
->  	pci_stop_and_remove_bus_device(pdev);
-> -	mutex_unlock(&pci_remove_rescan_mutex);
-> +	pci_remove_rescan_unlock();
->  }
->  
->  static ssize_t
-> @@ -370,12 +398,16 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
->  		return -EINVAL;
->  
->  	if (val) {
-> -		mutex_lock(&pci_remove_rescan_mutex);
-> +		int ret;
-> +
-> +		ret = pci_remove_rescan_lock_sysfs();
-> +		if (ret)
-> +			return ret;
->  		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
->  			pci_rescan_bus_bridge_resize(bus->self);
->  		else
->  			pci_rescan_bus(bus);
-> -		mutex_unlock(&pci_remove_rescan_mutex);
-> +		pci_remove_rescan_unlock();
->  	}
->  	return count;
->  }
-> -- 
-> 1.7.7
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+zduan
+>
+> I *think* this also fixes an actual bug on Xen.  Konrad, is there a
+> bugzilla or any kind of email problem description that we can include
+> here as a reference?  I think there's a lost interrupt with qlcnic,
+> but I don't know the details or what the failure looks like to a user.
+>
+> [1] http://lkml.kernel.org/r/51EF44FA.4020903@oracle.com
+>
+>> ---
+>>   arch/x86/include/asm/x86_init.h |  3 +++
+>>   arch/x86/kernel/x86_init.c      | 10 ++++++++++
+>>   arch/x86/pci/xen.c              | 13 ++++++++++++-
+>>   drivers/pci/msi.c               | 22 ++++++++++++++++------
+>>   include/linux/msi.h             |  2 ++
+>>   5 files changed, 43 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+>> index 828a156..0f1be11 100644
+>> --- a/arch/x86/include/asm/x86_init.h
+>> +++ b/arch/x86/include/asm/x86_init.h
+>> @@ -172,6 +172,7 @@ struct x86_platform_ops {
+>>
+>>   struct pci_dev;
+>>   struct msi_msg;
+>> +struct msi_desc;
+>>
+>>   struct x86_msi_ops {
+>>          int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
+>> @@ -182,6 +183,8 @@ struct x86_msi_ops {
+>>          void (*teardown_msi_irqs)(struct pci_dev *dev);
+>>          void (*restore_msi_irqs)(struct pci_dev *dev, int irq);
+>>          int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
+>> +       u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
+>> +       u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
+>>   };
+>>
+>>   struct IO_APIC_route_entry;
+>> diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+>> index 8ce0072..021783b 100644
+>> --- a/arch/x86/kernel/x86_init.c
+>> +++ b/arch/x86/kernel/x86_init.c
+>> @@ -116,6 +116,8 @@ struct x86_msi_ops x86_msi = {
+>>          .teardown_msi_irqs      = default_teardown_msi_irqs,
+>>          .restore_msi_irqs       = default_restore_msi_irqs,
+>>          .setup_hpet_msi         = default_setup_hpet_msi,
+>> +       .msi_mask_irq           = default_msi_mask_irq,
+>> +       .msix_mask_irq          = default_msix_mask_irq,
+>>   };
+>>
+>>   /* MSI arch specific hooks */
+>> @@ -138,6 +140,14 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
+>>   {
+>>          x86_msi.restore_msi_irqs(dev, irq);
+>>   }
+>> +u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>> +{
+>> +       return x86_msi.msi_mask_irq(desc, mask, flag);
+>> +}
+>> +u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
+>> +{
+>> +       return x86_msi.msix_mask_irq(desc, flag);
+>> +}
+>>   #endif
+>>
+>>   struct x86_io_apic_ops x86_io_apic_ops = {
+>> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+>> index 48e8461..5eee495 100644
+>> --- a/arch/x86/pci/xen.c
+>> +++ b/arch/x86/pci/xen.c
+>> @@ -382,7 +382,14 @@ static void xen_teardown_msi_irq(unsigned int irq)
+>>   {
+>>          xen_destroy_irq(irq);
+>>   }
+>> -
+>> +static u32 xen_nop_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>> +{
+>> +       return 0;
+>> +}
+>> +static u32 xen_nop_msix_mask_irq(struct msi_desc *desc, u32 flag)
+>> +{
+>> +       return 0;
+>> +}
+>>   #endif
+>>
+>>   int __init pci_xen_init(void)
+>> @@ -406,6 +413,8 @@ int __init pci_xen_init(void)
+>>          x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+>>          x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+>>          x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
+>> +       x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+>> +       x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+>>   #endif
+>>          return 0;
+>>   }
+>> @@ -485,6 +494,8 @@ int __init pci_xen_initial_domain(void)
+>>          x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
+>>          x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+>>          x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
+>> +       x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+>> +       x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+>>   #endif
+>>          xen_setup_acpi_sci();
+>>          __acpi_register_gsi = acpi_register_gsi_xen;
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index d5f90d6..7916699 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -185,7 +185,7 @@ static inline __attribute_const__ u32 msi_enabled_mask(u16 control)
+>>    * reliably as devices without an INTx disable bit will then generate a
+>>    * level IRQ which will never be cleared.
+>>    */
+>> -static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>> +u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>>   {
+>>          u32 mask_bits = desc->masked;
+>>
+>> @@ -199,9 +199,14 @@ static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>>          return mask_bits;
+>>   }
+>>
+>> +__weak u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>> +{
+>> +       return default_msi_mask_irq(desc, mask, flag);
+>> +}
+>> +
+>>   static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>>   {
+>> -       desc->masked = __msi_mask_irq(desc, mask, flag);
+>> +       desc->masked = arch_msi_mask_irq(desc, mask, flag);
+>>   }
+>>
+>>   /*
+>> @@ -211,7 +216,7 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>>    * file.  This saves a few milliseconds when initialising devices with lots
+>>    * of MSI-X interrupts.
+>>    */
+>> -static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
+>> +u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
+>>   {
+>>          u32 mask_bits = desc->masked;
+>>          unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+>> @@ -224,9 +229,14 @@ static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
+>>          return mask_bits;
+>>   }
+>>
+>> +__weak u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
+>> +{
+>> +       return default_msix_mask_irq(desc, flag);
+>> +}
+>> +
+>>   static void msix_mask_irq(struct msi_desc *desc, u32 flag)
+>>   {
+>> -       desc->masked = __msix_mask_irq(desc, flag);
+>> +       desc->masked = arch_msix_mask_irq(desc, flag);
+>>   }
+>>
+>>   static void msi_set_mask_bit(struct irq_data *data, u32 flag)
+>> @@ -902,7 +912,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+>>          pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &ctrl);
+>>          mask = msi_capable_mask(ctrl);
+>>          /* Keep cached state to be restored */
+>> -       __msi_mask_irq(desc, mask, ~mask);
+>> +       arch_msi_mask_irq(desc, mask, ~mask);
+>>
+>>          /* Restore dev->irq to its default pin-assertion irq */
+>>          dev->irq = desc->msi_attrib.default_irq;
+>> @@ -998,7 +1008,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+>>          /* Return the device with MSI-X masked as initial states */
+>>          list_for_each_entry(entry, &dev->msi_list, list) {
+>>                  /* Keep cached states to be restored */
+>> -               __msix_mask_irq(entry, 1);
+>> +               arch_msix_mask_irq(entry, 1);
+>>          }
+>>
+>>          msix_set_enable(dev, 0);
+>> diff --git a/include/linux/msi.h b/include/linux/msi.h
+>> index b17ead8..87cce50 100644
+>> --- a/include/linux/msi.h
+>> +++ b/include/linux/msi.h
+>> @@ -64,6 +64,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
+>>
+>>   void default_teardown_msi_irqs(struct pci_dev *dev);
+>>   void default_restore_msi_irqs(struct pci_dev *dev, int irq);
+>> +u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
+>> +u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag);
+>>
+>>   struct msi_chip {
+>>          struct module *owner;
+>> --
+>> 1.8.3.1
+>>
+
