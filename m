@@ -1,44 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7793 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753041Ab3KVSZZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Nov 2013 13:25:25 -0500
-Date: Fri, 22 Nov 2013 19:27:12 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 06/29] PCI/MSI: Get rid of useless count of
- msi_desc leftovers
-Message-ID: <20131122182711.GD8401@dhcp-26-207.brq.redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
- <79a2aeb6a06563c5f09463d53d2e0146e44c92be.1382103786.git.agordeev@redhat.com>
- <20131120160716.GF28946@htj.dyndns.org>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:38234 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298Ab3KJLmN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Nov 2013 06:42:13 -0500
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id B5AE51C00D2
+	for <linux-pci@vger.kernel.org>; Sun, 10 Nov 2013 12:33:42 +0100 (CET)
+Date: Sun, 10 Nov 2013 12:33:41 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/7] lspci: Label PCIe LnkCap "L0s Exit Latency" as
+ "L0s", not "L0"
+Message-ID: <mj+md-20131110.113322.9169.albireo@ucw.cz>
+References: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131120160716.GF28946@htj.dyndns.org>
+In-Reply-To: <20130909231345.30095.61638.stgit@bhelgaas-glaptop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 20, 2013 at 11:07:16AM -0500, Tejun Heo wrote:
-> Hmmm... so, before this, the function would have returned the partial
-> number of irqs that arch set up successfully.  Is it okay to lose that
-> information?  If so, can you please elaborate a bit more on why it's
-> okay in the description?
+Hi!
 
-Well, this is embarrassing. A quick check into x86 shows the partially
-initialized MSI-Xs are possible - something I should have noticed.
+> The PCIe Link Capabilities "L0s Exit Latency" is the latency to exit
+> L0s, not L0, so label it "L0s" instead of "L0".  This matches the
+> way we label the Device Capabilities "Endpoint L0s Acceptable Latency"
+> field as "Latency L0s".  This also adds "Exit" to the description to
+> help distinguish it from the "Acceptable Latency" fields in the
+> Device Capabilities register.
 
-Self-Nack.
+Applied the whole patch set.
 
-> tejun
-
+				Have a nice fortnight
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+To understand a program you must become both the machine and the program.
