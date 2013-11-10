@@ -1,40 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:50211 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752249Ab3KGJLV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Nov 2013 04:11:21 -0500
-Date: Thu, 7 Nov 2013 10:11:18 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: <bhelgaas@google.com>, <jason@lakedaemon.net>,
-	<ezequiel.garcia@free-electrons.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: mvebu: staticize mvebu_pcie_align_resource
-Message-ID: <20131107101118.72f2c0e3@skate>
-In-Reply-To: <1383815155-5318-1-git-send-email-jszhang@marvell.com>
-References: <1383815155-5318-1-git-send-email-jszhang@marvell.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from jabberwock.ucw.cz ([46.255.230.98]:38223 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751206Ab3KJLlK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Nov 2013 06:41:10 -0500
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id B10E01C00CB
+	for <linux-pci@vger.kernel.org>; Sun, 10 Nov 2013 12:41:07 +0100 (CET)
+Date: Sun, 10 Nov 2013 12:41:05 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Zheng Huai Cheng <zhenghch@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] lspci: Skip scanning empty slot in sysfs_fill_slots
+Message-ID: <mj+md-20131110.114005.9551.albireo@ucw.cz>
+References: <526F4EB4.4090101@linux.vnet.ibm.com>
+ <mj+md-20131029.120828.26872.nikam@ucw.cz>
+ <1383102327.8618.0.camel@stefan-ThinkPad-T420>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1383102327.8618.0.camel@stefan-ThinkPad-T420>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jisheng Zhang,
+Hello!
 
-On Thu, 7 Nov 2013 17:05:55 +0800, Jisheng Zhang wrote:
-> This patch fixes the following sparse warning:
-> drivers/pci/host/pci-mvebu.c:676:17: warning: symbol
-> 'mvebu_pcie_align_resource' was not declared. Should it be static?
+> although I am not a expert in PCI, seems this related to PCI hotplug.
+> And I also found a description in kernel source code
 > 
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> "
+> Placeholder slots:
+[...]
 
-Thanks, but a similar patch was already merged:
+Thanks for the explanation. I have just applied a fix similar to yours.
 
-https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/commit/drivers/pci/host/pci-mvebu.c?id=f5072dfbac053200c8865c4fb15e4f020b7b5d1d
-
-Thanks!
-
-Thomas
+				Have a nice fortnight
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+A LISP programmer knows value of everything, but cost of nothing.
