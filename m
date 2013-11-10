@@ -1,80 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18980 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753057Ab3KZXMX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Nov 2013 18:12:23 -0500
-Message-ID: <1385507535.25738.74.camel@ul30vt.home>
-Subject: Re: pciehp LinkState
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatjain@juniper.net>,
-	Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>
-Date: Tue, 26 Nov 2013 16:12:15 -0700
-In-Reply-To: <CAErSpo5BSzUJofyuNH5wKqYfcydOXEtrnJSq0xpssafomqHWrQ@mail.gmail.com>
-References: <528D4739.80700@fold.natur.cuni.cz>
-	 <CAErSpo7LcyL+K5rg+aNaaNzLXKyxvfAgeOPidb_3LqU3B2LXzA@mail.gmail.com>
-	 <01b89ce965ed454fb9f0e0cf52ba622e@BLUPR05MB118.namprd05.prod.outlook.com>
-	 <20131125194044.GA9710@google.com> <5293F3FB.6000401@fold.natur.cuni.cz>
-	 <20131126031317.GA6258@google.com>
-	 <cfeb9976fbb74028b600c9f86fcdd9ad@BLUPR05MB118.namprd05.prod.outlook.com>
-	 <CAErSpo41KYXbgz5q=U9gfDD_tZNp9qFr0LGqMvnem2rQTLTL1g@mail.gmail.com>
-	 <55dfa94fa7224bafa14d52c5835ea1ca@BLUPR05MB118.namprd05.prod.outlook.com>
-	 <CAErSpo5BSzUJofyuNH5wKqYfcydOXEtrnJSq0xpssafomqHWrQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 10 Nov 2013 07:16:40 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Luck, Tony" <tony.luck@intel.com>
+Subject: Re: [PATCH] ACPI / driver core: Store a device pointer in struct
+ acpi_dev_node
+Message-ID: <20131110151640.GC26793@kroah.com>
+References: <3268437.YsusHvklcv@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3268437.YsusHvklcv@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-11-26 at 15:26 -0700, Bjorn Helgaas wrote:
-> [+cc Alex]
+On Sun, Nov 10, 2013 at 01:58:42AM +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> On Tue, Nov 26, 2013 at 3:06 PM, Rajat Jain <rajatjain@juniper.net> wrote:
-> >> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> >> > Currently in my patch, the pciehp_use_link_events=1 is used to only
-> >> enable link state change notifications, but in case pcie_isr() finds
-> >> "DLL changed" bit set in "Slot status", it processes the link state
-> >> change. I'll make the single line change to pcie_isr() to process the
-> >> event only if pciehp_use_link_events=1. Let me know if this sounds
-> >> alright.
-> >>
-> >> If we can avoid it, I'd prefer not to add the "pciehp_use_link_events"
-> >> module parameter.  What would break if we just *always* used link
-> >> events?
-> >
-> > Not really "break", but I'd think some changes in behavior shall be visible:
-> >
-> > 1) When a card is pulled out (thus causing the link to go down), it shall always be disabled - whether or not it supports "surprise removal" (in the capabilities). I think this would be the right thing to do in this situation.
+> Modify struct acpi_dev_node to contain a pointer to struct device
+> ambedded in the struct acpi_device associated with the given device
+> object (that is, its ACPI companion device) instead of an ACPI handle
+> corresponding to that struct acpi_device.  Introduce two new macros
+> for manipulating that pointer in a CONFIG_ACPI-safe way,
+> ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
+> ACPI_HANDLE() macro to take the above changes into account.
+> Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
+> use ACPI_COMPANION_SET() instead.  For some of them who used to
+> pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
+> introduce a helper routine acpi_preset_companion() doing an
+> equivalent thing.
 > 
-> Yep, this sounds like it would be OK.
+> The rationale for using a struct device pointer instead of a
+> struct acpi_device one as the member of struct acpi_dev_node is
+> that it allows device.h to avoid including linux/acpi.h which would
+> introduce quite a bit of compilation overhead for stuff that doesn't
+> care about ACPI.  In turn, moving the macros to linux/acpi.h forces
+> the stuff that does care about ACPI to include that file as
+> appropriate anyway.
 > 
-> > 2) Even other scenarios where the link may go down - e.g. device reset using an external reset pin, or a firmware initiated reset etc, shall cause the device to be immediately removed and re-added again when the link comes back up). This may also be desired.
+> The main motivation for doing this is that there are things
+> represented by struct acpi_device objects that don't have valid
+> ACPI handles (so called fixed ACPI hardware features, such as
+> power and sleep buttons) and we would like to create platform
+> device objects for them and "glue" them to their ACPI companions
+> in the usual way (which currently is impossible due to the
+> lack of valid ACPI handles).  However, there are more reasons
+> why it may be useful.
 > 
-> This sounds OK, too.  There's already some fancy dancing for similar
-> scenarios in pciehp_reset_slot(); maybe that would have to be
-> extended.  Alex might have input here.
-
-So long as reset initiated through pci-core doesn't cause a hotplug I
-think I'm ok with it.  I saw code was already being added around slot
-reset to mask link changes, just like we do with presence detection.
-Thanks,
-
-Alex
-
-> > 3) If the link comes up automatically as soon as a card is plugged in (i.e. without the need to turn on power or do anything else from SW), the card shall be immediately added - even if surprise capability is not present. I'm not sure if this is desired. That's because the current behavior is that for slots that do not support surprise events, the user has to initiate the hot-add using the attention button. Even after that, he gets a 5 second time to cancel the operation in case he wishes. This will no longer be the case, if use of link events is always enabled.
+> First, struct device pointers allow of much better type checking
+> than void pointers which are ACPI handles, so it should be more
+> difficult to write buggy code using modified struct acpi_dev_node
+> and the new macros.  Second, it should help to reduce the number
+> of places in which the result of ACPI_HANDLE() is passed to
+> acpi_bus_get_device() in order to obtain a pointer to the
+> struct acpi_device associated with the given "physical" device,
+> because now that pointer can be obtained directly by applying
+> to_acpi_device() to the result of the ACPI_COMPANION() macro.
+> Finally, it should make it easier to write generic code that will
+> build both for CONFIG_ACPI set and unset without adding explicit
+> compiler directives to it.
 > 
-> This one sounds like a problem.  But I think we could manage this,
-> e.g., by noticing the link-up interrupt, but waiting for the 5-second
-> timeout if an attention button is present.
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
 > 
-> > I think it would be fair to say that if use of link events is always supported, it would be roughly equivalent to a slot supporting surprise events. (Surprise events work on "presence detect" pin, and this will work on the link state changes).
-> >
-> > Thanks,
-> >
-> > Rajat
-> >
+> Hi Everybody,
+> 
+> First of all, I haven't tested this yet, so caveat emptor.  I have compiled
+> it on x86-64 for CONFIG_ACPI set and unset and I'm going to feed it to the
+> auto build system shortly in case I overlooked something build-related.
+> 
+> Please have a look and let me know if you have any problems with this in
+> principle.  If not, I'd like to queue it up for inclusion by the end of
+> the merge window or in the -rc2 time frame (to avoid collisions with any
+> big merges), as I'd like to be able to work on top of it during the 3.14
+> cycle if possible.
 
+At first glance, this looks good to me, thanks for removing that void *,
+I like this a lot better now.
 
-
+greg k-h
