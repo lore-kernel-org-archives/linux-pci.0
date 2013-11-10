@@ -1,78 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [Update][PATCH 4/6] ACPI / hotplug: Simplify device ejection routines
-Date: Thu, 07 Nov 2013 01:35:18 +0100
-Message-ID: <1857488.d8ScZB2yjC@vostro.rjw.lan>
-In-Reply-To: <1383783425.1847.52.camel@misato.fc.hp.com>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <1642586.5aH3MlB2GZ@vostro.rjw.lan> <1383783425.1847.52.camel@misato.fc.hp.com>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:30453 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751206Ab3KJLlM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 10 Nov 2013 06:41:12 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>, Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Sun, 10 Nov 2013 11:41:07 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DEDB31@HASMSX103.ger.corp.intel.com>
+References: <5276134B.8070808@wzyboy.org>
+ <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
+ <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
+ <CANUX_P33UqkCsfHrJW+gx-ZbEQduJ1EZ59fpx6T6wQWOLufSqg@mail.gmail.com>
+ <CALkVjQYNPXpTjUpR9NZU6MTJhUmYeO1jXWvOOxk8-Pm=xdKZLg@mail.gmail.com>
+In-Reply-To: <CALkVjQYNPXpTjUpR9NZU6MTJhUmYeO1jXWvOOxk8-Pm=xdKZLg@mail.gmail.com>
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, November 06, 2013 05:17:05 PM Toshi Kani wrote:
-> On Thu, 2013-11-07 at 01:14 +0100, Rafael J. Wysocki wrote:
-> > On Wednesday, November 06, 2013 04:27:01 PM Toshi Kani wrote:
-> > > On Mon, 2013-11-04 at 14:36 +0100, Rafael J. Wysocki wrote:
-> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > 
-> > > > Simplify handle_root_bridge_removal() and acpi_eject_store() by
-> > > > getting rid of struct acpi_eject_event and passing device objects
-> > > > directly to async routines executed via acpi_os_hotplug_execute().
-> > >  :
-> > > >  static ssize_t
-> > > >  acpi_eject_store(struct device *d, struct device_attribute *attr,
-> > > >  		const char *buf, size_t count)
-> > > >  {
-> > > >  	struct acpi_device *acpi_device = to_acpi_device(d);
-> > > > -	struct acpi_eject_event *ej_event;
-> > > >  	acpi_object_type not_used;
-> > > >  	acpi_status status;
-> > > > -	int ret;
-> > > >  
-> > > >  	if (!count || buf[0] != '1')
-> > > >  		return -EINVAL;
-> > > > @@ -518,28 +519,17 @@ acpi_eject_store(struct device *d, struc
-> > > >  	if (ACPI_FAILURE(status) || !acpi_device->flags.ejectable)
-> > > >  		return -ENODEV;
-> > > >  
-> > > > -	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
-> > > > -	if (!ej_event) {
-> > > > -		ret = -ENOMEM;
-> > > > -		goto err_out;
-> > > > -	}
-> > > >  	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
-> > > >  				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
-> > > > -	ej_event->device = acpi_device;
-> > > > -	ej_event->event = ACPI_OST_EC_OSPM_EJECT;
-> > > >  	get_device(&acpi_device->dev);
-> > > > -	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
-> > > > +	status = acpi_os_hotplug_execute(acpi_eject_store_work, acpi_device);
-> > > >  	if (ACPI_SUCCESS(status))
-> > > >  		return count;
-> > > >  
-> > > >  	put_device(&acpi_device->dev);
-> > > > -	kfree(ej_event);
-> > > > -	ret = status == AE_NO_MEMORY ? -ENOMEM : -EAGAIN;
-> > > 
-> > > Why are you deleting the above line as part of this change?
-> > 
-> > Ah, because I forgot that acpi_os_hotplug_execute() can also return AE_NO_MEMORY. :-)
-> > 
-> > Good catch, updated pach follows.
-> 
-> Looks good.  The rest of the patches also look good.  For patch 4-6:
-> 
-> Acked-by: Toshi Kani <toshi.kani@hp.com>
-
-Awesome, thanks! :-)
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+PiANCj4gMjAxMy8xMS8xMCBFbW1hbnVlbCBHcnVtYmFjaCA8ZWdydW1iYWNoQGdtYWlsLmNvbT46
+DQo+ID4gSFcgcGVvcGxlIHNlZW0gdG8gd2FudCB0byBrbm93IHdoYXQgaGFwcGVucyBpbiB5b3Ug
+ZGlzYWJsZSBMMQ0KPiBzdWJzdGF0ZXMuDQo+ID4gQ2FuIHlvdSBlbnRlciB5b3UgQklPUyBhbmQg
+Y2hlY2sgaWYgeW91IGhhdmUgc3VjaCBhbiBvcHRpb24gaW4geW91ciBCSU9TPw0KPiANCj4gDQo+
+IENvdWxkIHlvdSBiZSBtb3JlIHNwZWNpZmljIHdoYXQgdGhlIG9wdGlvbiBuYW1lIGxvb2sgbGlr
+ZT8gT3IgSSBjb3VsZCB0YWtlDQo+IHBob3RvcyBmb3IgZWFjaCB0YWIgaW4gQklPUyBhbmQgYXR0
+YWNoIHRoZSBwaG90b3MgaGVyZS4NCj4gDQoNCkl0IGlzIHJlYWxseSBjYWxsZWQgTDEgUE0gU3Vi
+c3RhdGUuDQpJIGRvbid0IHJlYWxseSBrbm93IHRoZSBCSU9TIG9mIFRoaW5rUGFkLi4uIEJ1dCB3
+ZSBjYW4gdHJ5Li4uDQoNCg==
