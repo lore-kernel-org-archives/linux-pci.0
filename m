@@ -1,121 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:49248 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754947Ab3K0BCY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 20:02:24 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 03/10] PCI: Move resources and bus_list releasing to pci_release_dev
-Date: Wed, 27 Nov 2013 02:15:11 +0100
-Message-ID: <5956447.Fj3sMXmCsu@vostro.rjw.lan>
-In-Reply-To: <1385429290-25397-4-git-send-email-yinghai@kernel.org>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1385429290-25397-4-git-send-email-yinghai@kernel.org>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:38837 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239Ab3KJMoK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Nov 2013 07:44:10 -0500
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id 10B1D1C00D3
+	for <linux-pci@vger.kernel.org>; Sun, 10 Nov 2013 13:44:09 +0100 (CET)
+Date: Sun, 10 Nov 2013 13:44:08 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Linux-PCI Mailing List <linux-pci@vger.kernel.org>
+Subject: pciutils-3.2.1 released
+Message-ID: <mj+md-20131110.124302.12395.albireo@ucw.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 25, 2013 05:28:03 PM Yinghai Lu wrote:
-> We should not release resource in pci_destroy that is too early
-> as there could be still other use hold reference.
-> 
-> release them or remove it from bus devices list at last
-> in pci_release_dev instead.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/probe.c  | 21 +++++++++++++++++++--
->  drivers/pci/remove.c | 19 -------------------
->  2 files changed, 19 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 173a9cf..12ec56c 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1154,6 +1154,18 @@ static void pci_release_capabilities(struct pci_dev *dev)
->  	pci_free_cap_save_buffers(dev);
->  }
->  
-> +static void pci_free_resources(struct pci_dev *dev)
-> +{
-> +	int i;
-> +
-> +	pci_cleanup_rom(dev);
-> +	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> +		struct resource *res = dev->resource + i;
-> +		if (res->parent)
-> +			release_resource(res);
-> +	}
-> +}
-> +
->  /**
->   * pci_release_dev - free a pci device structure when all users of it are finished.
->   * @dev: device that's been disconnected
-> @@ -1163,9 +1175,14 @@ static void pci_release_capabilities(struct pci_dev *dev)
->   */
->  static void pci_release_dev(struct device *dev)
->  {
-> -	struct pci_dev *pci_dev;
-> +	struct pci_dev *pci_dev = to_pci_dev(dev);
-> +
-> +	down_write(&pci_bus_sem);
-> +	list_del(&pci_dev->bus_list);
-> +	up_write(&pci_bus_sem);
-> +
-> +	pci_free_resources(pci_dev);
+Hello, world!\n
 
-What are the possible side effects of this change?
+I have just released version 3.2.1 of the pciutils. It's purely
+a maintenance release with a couple of minor bug fixes and minor
+improvements. Thus quoth the changelog:
 
-> -	pci_dev = to_pci_dev(dev);
->  	pci_release_capabilities(pci_dev);
->  	pci_release_of_node(pci_dev);
->  	pcibios_release_device(pci_dev);
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 692f4c3..f452148 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -3,20 +3,6 @@
->  #include <linux/pci-aspm.h>
->  #include "pci.h"
->  
-> -static void pci_free_resources(struct pci_dev *dev)
-> -{
-> -	int i;
-> -
-> -	msi_remove_pci_irq_vectors(dev);
-> -
-> -	pci_cleanup_rom(dev);
-> -	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> -		struct resource *res = dev->resource + i;
-> -		if (res->parent)
-> -			release_resource(res);
-> -	}
-> -}
-> -
->  static void pci_stop_dev(struct pci_dev *dev)
->  {
->  	pci_pme_active(dev, false);
-> @@ -36,11 +22,6 @@ static void pci_destroy_dev(struct pci_dev *dev)
->  {
->  	device_del(&dev->dev);
->  
-> -	down_write(&pci_bus_sem);
-> -	list_del(&dev->bus_list);
-> -	up_write(&pci_bus_sem);
-> -
-> -	pci_free_resources(dev);
->  	put_device(&dev->dev);
+2013-11-10  Martin Mares <mj@ucw.cz>
 
-And if the side effects are benign enough, why don't we do a device_unregister()
-here?
+	* Released as 3.2.1.
 
->  }
->  
+	* CardBus bridge capabilities are displayed.
 
-Rafael
+	* PCIe L1 PM substates are decoded.
 
+	* Various bugs were fixed in decoding of PCIe capabilities.
+
+	* The sysfs back-end does not spit out unnecessary warnings when
+	  empty slots report only a partial device address. This actually
+	  happens on IBM pSeries.
+
+	* Updated pci.ids to the today's snapshot of the database.
+
+				Martin
