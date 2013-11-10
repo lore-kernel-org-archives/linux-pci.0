@@ -1,54 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 22 Nov 2013 19:38:54 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 11/29] PCI/MSI: Convert pci_msix_table_size() to a
- public interface
-Message-ID: <20131122183854.GF8401@dhcp-26-207.brq.redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
- <04a7098780907bd8848d4939b24a74e70e274866.1382103786.git.agordeev@redhat.com>
- <20131120162324.GK28946@htj.dyndns.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:34018 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751299Ab3KJMRu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 10 Nov 2013 07:17:50 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Sun, 10 Nov 2013 12:17:33 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DEDBCB@HASMSX103.ger.corp.intel.com>
+References: <5276134B.8070808@wzyboy.org>
+ <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
+ <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
+ <CANUX_P33UqkCsfHrJW+gx-ZbEQduJ1EZ59fpx6T6wQWOLufSqg@mail.gmail.com>
+ <CALkVjQYNPXpTjUpR9NZU6MTJhUmYeO1jXWvOOxk8-Pm=xdKZLg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEDB31@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbkZSvhbEAwEK-LQGjKX6kdvAMB1UUuFuW3GGO60r0wKQ@mail.gmail.com>
+In-Reply-To: <CALkVjQbkZSvhbEAwEK-LQGjKX6kdvAMB1UUuFuW3GGO60r0wKQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131120162324.GK28946@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 20, 2013 at 11:23:24AM -0500, Tejun Heo wrote:
-> On Fri, Oct 18, 2013 at 07:12:11PM +0200, Alexander Gordeev wrote:
-> > Make pci_msix_table_size() return error code if the device
-> > does not support MSI-X. This update is needed to create a
-> > consistent MSI-X counterpart for pci_get_msi_cap() MSI
-> > interface.
-> > 
-> > Device drivers can use this interface to obtain maximum number
-> > of MSI-X interrupts the device supports and i.e. use that number
-> > in a following call to pci_enable_msix() interface.
-> 
-> Please mention that the return value of the function has been changed
-> in the description.  Also, do we want to rename it to
-> pci_get_msix_cap() for consistency?
-
-I do not think so. The naming explicitly hints PCI registers and
-pci_get_msix_cap() is confusing at least. I would leave it as is.
-
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> 
-> Reviewed-by: Tejun Heo <tj@kernel.org>
-> 
-> Thanks.
-> 
-> -- 
-> tejun
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+PiANCj4gMjAxMy8xMS8xMCBHcnVtYmFjaCwgRW1tYW51ZWwgPGVtbWFudWVsLmdydW1iYWNoQGlu
+dGVsLmNvbT46DQo+ID4gSXQgaXMgcmVhbGx5IGNhbGxlZCBMMSBQTSBTdWJzdGF0ZS4NCj4gPiBJ
+IGRvbid0IHJlYWxseSBrbm93IHRoZSBCSU9TIG9mIFRoaW5rUGFkLi4uIEJ1dCB3ZSBjYW4gdHJ5
+Li4uDQo+IA0KPiANCj4gSSBoYXZlIGJvb3RlZCBpbnRvIEJJT1MgYW5kIHdyaXRlIGRvd24gYWxt
+b3N0IGFsbCB0aGUgb3B0aW9ucywgYXMgYXR0YWNoZWQuDQo+IA0KPiBCeSB0aGUgd2F5LCBJIGFs
+d2F5cyBhdHRhY2ggbXkgbGFwdG9wIHRvIGFuIEFDIGFkYXB0b3IuDQo+IA0KDQpDb29sLi4uLiB0
+aGV5IG1hc2sgYWxsIHRoZSBpbnRlcmVzdGluZyBvcHRpb25zLi4uIG9oIHdlbGwuLi4NCg==
