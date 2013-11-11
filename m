@@ -1,79 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47178 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755191Ab3KLMpU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Nov 2013 07:45:20 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Tue, 12 Nov 2013 12:45:11 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DF04A2@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com>
- <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CALkVjQb9H73yjYHUhr6Lrsirr_eTT9JDpCCr-6o6qutL=b3S6A@mail.gmail.com>
-In-Reply-To: <CALkVjQb9H73yjYHUhr6Lrsirr_eTT9JDpCCr-6o6qutL=b3S6A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from szxga02-in.huawei.com ([119.145.14.65]:43477 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884Ab3KKAzt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Nov 2013 19:55:49 -0500
+Message-ID: <52802AE8.6070803@huawei.com>
+Date: Mon, 11 Nov 2013 08:55:04 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Joerg Roedel <joro@8bytes.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"Vinod Koul" <vinod.koul@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	<dmaengine@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH 1/1] IOMMU: Save pci device id instead of pci_dev* pointer
+ for DMAR devices
+References: <1383639898-48776-1-git-send-email-wangyijing@huawei.com> <1383639898-48776-2-git-send-email-wangyijing@huawei.com> <20131107180713.GA2955@google.com> <527C5D36.7050206@huawei.com> <CAErSpo73N2Th-4D5G8-60tMuGwqthfu-VNHVf3LF9+s2mQp53w@mail.gmail.com>
+In-Reply-To: <CAErSpo73N2Th-4D5G8-60tMuGwqthfu-VNHVf3LF9+s2mQp53w@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiANCj4gMjAxMy8xMS8xMiBHcnVtYmFjaCwgRW1tYW51ZWwgPGVtbWFudWVsLmdydW1iYWNoQGlu
-dGVsLmNvbT46DQo+ID4gV2VsbC4uLiBJIGhhdmVuJ3QgZG9uZSBtdWNoLCBidXQgdGhlIHNldHBj
-aSBpc24ndCByZWFsbHkgYSBzb2x1dGlvbiAtIGl0IGlzIG1vcmUNCj4gYSB3b3JrIGFyb3VuZC4N
-Cj4gPiBCam9ybiBpcyBiYXNpY2FsbHkgZGlzYWJsaW5nIEwxIFBDSWUgZmVhdHVyZSB3aGljaCBh
-bGxvd3MgdG8gc2F2ZQ0KPiA+IHBvd2VyLiBXaGlsZSB5b3UgbWlnaHQgbm90IGNhcmUsIEkgZG8g
-OikgVGhlIEhXIGZvbGtzIGhlcmUgd291bGQgc3RpbGwgd2FudA0KPiB0byBrbm93IGlmIHlvdSBj
-YW4gZGlzYWJsZSBMMSBzdWJzdGF0ZXMgZmVhdHVyZSAobm90IHRoYXQgSSBrbm93IHdoYXQgaXQg
-aXMgLQ0KPiBidXQgSSBjYW4gZ3Vlc3MpLg0KPiA+IElmIHlvdSBjYW4gdHJ5IHRvOg0KPiA+ICAq
-IHVwZ3JhZGUgeW91ciBCSU9TIChpZiBuZWVkZWQpDQo+ID4gICogY2hlY2sgdGhlIGFkdmFuY2Vk
-IG9wdGlvbnMgSSBzZW50IHRvIHlvdSB0byBzZWUgaWYgeW91IGNhbiB1bmxvY2sNCj4gPiB0aGUg
-YWR2YW5jZWQgbWVudSBpbiB5b3VyIEJJT1MNCj4gPg0KPiA+IGl0J2QgaGVscCBtZSB0byB1bmRl
-cnN0YW5kIHRoZSBpc3N1ZS4NCj4gPiBJbiBhbnkgY2FzZSwgSSBhbSBoYXBweSB0aGF0IHlvdSBo
-YXZlIGEgd2F5IHRvIHJlbGlhYmx5IHVzZSB5b3VyIE5JQyBub3cuDQo+IA0KPiANCj4gT2gsIGFj
-dHVhbGx5IEkgdXBncmFkZWQgbXkgQklPUyB0byBuZXdlc3QgdmVyc2lvbiB0aGUgZGF5IEkgZ290
-IHRoaXMgbGFwdG9wDQo+ICgxMiBkYXlzIGFnbykuDQo+IA0KPiBUaGlua1BhZCByZWFsbHkgY2hh
-bmdlZCBhIGxvdCBhZnRlciBiZWluZyBhY3F1aXJlZCBieSBMZW5vdm8uLi4NCj4gDQoNCklmIHlv
-dSBzYXkgc28gOikgLSBJIGRvbid0a25vdyA6KQ0KDQo+IEFzIG9mIEFTVSwgSSd2ZSBkb3dubG9h
-ZGVkIGl0IGJ1dCBJIGRvIG5vdCBrbm93IGhvdyB0byBzaG93IGhpZGRlbiBCSU9TDQo+IG9wdGlv
-bnMgd2l0aCBpdCBzaW5jZSBJIGhhdmUgbGl0dGxlIGtub3dsZWRnZSBhYm91dCBoYXJkd2FyZS4u
-Lg0KPiANCj4gSGVyZSBpcyB3aGF0IEkgZ290IHdoZW4gcnVubmluZyAuL2FzdTY0IGR1bXA6DQo+
-IA0KPiB3enlib3lAeGVuaWVuOn4vRGVza3RvcC9hc3UkIHN1ZG8gLi9hc3U2NCBkdW1wIElCTSBB
-ZHZhbmNlZCBTZXR0aW5ncw0KPiBVdGlsaXR5IHZlcnNpb24gOS40MS44MUsgTGljZW5zZWQgTWF0
-ZXJpYWxzIC0gUHJvcGVydHkgb2YgSUJNDQo+IChDKSBDb3B5cmlnaHQgSUJNIENvcnAuIDIwMDct
-MjAxMyBBbGwgUmlnaHRzIFJlc2VydmVkDQo+ICAgICAgMCAgMSAgMiAgMyAgNCAgNSAgNiAgNyAg
-OCAgOSAgQSAgQiAgQyAgRCAgRSAgRg0KPiAwMDogMDA+MDAqMDAqMDAqMDAqMDAqNjcqOGIqNDUq
-MDYqNjcqZjYqNDUqZWMqMDEqNzUNCj4gMTA6IDAzKmI4KjAwKmYwKjhlKmQ4KjY3KjhlKjQ1KjA0
-KjY3KjhiKjdkKjAyKjMzKmMwDQo+IDIwOiAyNio4OSo0NSowNCphMSo2MSowOSoyNio4OSo0NSow
-MiphMCo2MyowOSoyNio4OA0KPiAzMDogNDUqMDEqMjYqYzYqMDUqMDEqYjgqMDAqMDAqYzMqYjgq
-ODIqMDAqYzMqYjgqODINCj4gNDA6IDAwKmMzKmI4KjgyKjAwKmMzKmI4KjgyKjAwKmMzKmI4KjAw
-KjEwKjI2Kjg5KjQ1DQo+IDUwOiAwZCpmOCpjMyo5Yyo2Nio2MCplNCo2MCplYiowMCplYiowMCo2
-Nio2MSo5ZCpjMw0KPiA2MDogMWUqYjgqNDAqMDAqOGUqZDgqZjYqMDYqMTAqMDQqMDQqNzQqMDMq
-MWYqZjgqYzMNCj4gNzA6IDFmKmY5KmMzKmY4KmMzKjI1KjAwKjAwKjQxKmQwKjAwKjAwKjA4KjAw
-KjAwKjAzDQo+IDgwOiAwMCoyMiowNCowMCo0NyowMSoyMCowMCoyMCowMCowMCowMio0NyowMSph
-MCowMA0KPiA5MDogYTAqMDAqMDAqMDIqNzkqMDAqNzkqMDAqNzkqMDAqNDUqMDAqMDAqNDEqZDAq
-MDINCj4gYTA6IDAwKjA4KjAxKjAwKjAzKjAwKjJhKjEwKjAwKjQ3KjAxKjAwKjAwKjAwKjAwKjAw
-DQo+IGIwOiAxMCo0NyowMSo4MSowMCo4MSowMCowMCowMyo0NyowMSo4NyowMCo4NyowMCowMA0K
-PiBjMDogMDEqNDcqMDEqODkqMDAqODkqMDAqMDAqMDMqNDcqMDEqOGYqMDAqOGYqMDAqMDANCj4g
-ZDA6IDAzKjQ3KjAxKmMwKjAwKmMwKjAwKjAwKjIwKjc5KjAwKjc5KjAwKjc5KjAwKjFkDQo+IGUw
-OiAwMCowMCo0MSpkMCowMSowMCowOCowMiowMSowMyowMCoyMiowMSowMCo0NyowMQ0KPiBmMDog
-NDAqMDAqNDAqMDAqMDAqMDQqNzkqMDAqNzkqMDAqNzkqMDAqMWQqMDAqMDAqNDENCj4gDQo+IA0K
-PiBDb3VsZCB5b3UgaGVscCBieSB0ZWxsaW5nIG1lIHdoYXQgY29tbWFuZCBzaG91bGQgSSBydW4g
-dG8gZW5hYmxlIHRob3NlDQo+IGhpZGRlbiBvcHRpb25zIGluIEJJT1M/DQoNCkkgaGF2ZSBubyBj
-bHVlIHVuZm9ydHVuYXRlbHkgLSBtYXliZSBjb250YWN0IExlbm92bz8NCg0K
+>> Hmmm, this is the thing I am most worried about. If we just only use
+>> (pci_dev *) poninter in drhd->devices array as a identification. Change
+>> (pci_dev *) pointer instead of pci device id segment:bus:devfn is safe.
+>> Or, this is a wrong way to fix this issue. I don't know IOMMU driver much now,
+>> so IOMMU guys any comments on this issue is welcome.
+>>
+>> If this is not safe, what about we both save pci device id and (pci_dev *) pointer
+>> in drhd. So we can put pci_dev ref and set pci_dev * = NULL during device removed by bus notify, and
+>> update (pci_dev *)pointer during device add.
+> 
+> I don't know the IOMMU drivers well either, but it seems like they
+> rely on notifications of device addition and removal (see
+> iommu_bus_notifier()).  It doesn't seem right for them to also use the
+> generic PCI interfaces like pci_get_domain_bus_and_slot() because the
+> IOMMU driver should already know what devices exist and their
+> lifetimes.  It seems like confusion to mix the two.  But I don't have
+> a concrete suggestion.
+
+Maybe you are right~, I will try to rework the patch and resend soon.
+
+Thanks!
+Yijing.
+
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
