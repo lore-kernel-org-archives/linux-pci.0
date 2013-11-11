@@ -1,94 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from am1ehsobe004.messaging.microsoft.com ([213.199.154.207]:24297
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751529Ab3KSFXo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 00:23:44 -0500
-From: Bharat Bhushan <r65777@freescale.com>
-To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<bhelgaas@google.com>, <agraf@suse.de>, <scottwood@freescale.com>,
-	<stuart.yoder@freescale.com>, <iommu@lists.linux-foundation.org>,
-	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
-	Bharat Bhushan <bharat.bhushan@freescale.com>
-Subject: [PATCH 3/9 v2] powerpc: pci: Add arch specific msi region interface
-Date: Tue, 19 Nov 2013 10:47:07 +0530
-Message-ID: <1384838233-24847-4-git-send-email-Bharat.Bhushan@freescale.com>
-In-Reply-To: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+Received: from mail-la0-f45.google.com ([209.85.215.45]:34861 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753155Ab3KKJn4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2013 04:43:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DEDBCB@HASMSX103.ger.corp.intel.com>
+References: <5276134B.8070808@wzyboy.org>
+	<CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+	<CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+	<CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+	<CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+	<CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+	<CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+	<CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+	<CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+	<527A8166.6000701@gmail.com>
+	<CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+	<CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+	<CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+	<CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
+	<CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
+	<CANUX_P33UqkCsfHrJW+gx-ZbEQduJ1EZ59fpx6T6wQWOLufSqg@mail.gmail.com>
+	<CALkVjQYNPXpTjUpR9NZU6MTJhUmYeO1jXWvOOxk8-Pm=xdKZLg@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DEDB31@HASMSX103.ger.corp.intel.com>
+	<CALkVjQbkZSvhbEAwEK-LQGjKX6kdvAMB1UUuFuW3GGO60r0wKQ@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DEDBCB@HASMSX103.ger.corp.intel.com>
+Date: Mon, 11 Nov 2013 11:43:55 +0200
+Message-ID: <CANUX_P1O_GOZB20m0-hcSgs8-pSDzXKJ=2_MVjVfsYLO9aSgBA@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: wzyboy <wzyboy@wzyboy.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the interface to get the msi region information from arch
-specific code. The machine spicific code is not yet defined.
+>>
+>> 2013/11/10 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
+>> > It is really called L1 PM Substate.
+>> > I don't really know the BIOS of ThinkPad... But we can try...
+>>
+>>
+>> I have booted into BIOS and write down almost all the options, as attached.
+>>
+>> By the way, I always attach my laptop to an AC adaptor.
+>>
+>
+> Cool.... they mask all the interesting options... oh well...
 
-Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
----
-v1->v2
- - None
+Can you please try this?
 
- arch/powerpc/include/asm/machdep.h |    8 ++++++++
- arch/powerpc/kernel/msi.c          |   18 ++++++++++++++++++
- 2 files changed, 26 insertions(+), 0 deletions(-)
-
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 8b48090..8d1b787 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -30,6 +30,7 @@ struct file;
- struct pci_controller;
- struct kimage;
- struct pci_host_bridge;
-+struct msi_region;
- 
- struct machdep_calls {
- 	char		*name;
-@@ -124,6 +125,13 @@ struct machdep_calls {
- 	int		(*setup_msi_irqs)(struct pci_dev *dev,
- 					  int nvec, int type);
- 	void		(*teardown_msi_irqs)(struct pci_dev *dev);
-+
-+	/* Returns the number of MSI regions (banks) */
-+	int		(*msi_get_region_count)(void);
-+
-+	/* Returns the requested region's address and size */
-+	int		(*msi_get_region)(int region_num,
-+					  struct msi_region *region);
- #endif
- 
- 	void		(*restart)(char *cmd);
-diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
-index 8bbc12d..1a67787 100644
---- a/arch/powerpc/kernel/msi.c
-+++ b/arch/powerpc/kernel/msi.c
-@@ -13,6 +13,24 @@
- 
- #include <asm/machdep.h>
- 
-+int arch_msi_get_region_count(void)
-+{
-+	if (ppc_md.msi_get_region_count) {
-+		pr_debug("msi: Using platform get_region_count routine.\n");
-+		return ppc_md.msi_get_region_count();
-+	}
-+	return 0;
-+}
-+
-+int arch_msi_get_region(int region_num, struct msi_region *region)
-+{
-+	if (ppc_md.msi_get_region) {
-+		pr_debug("msi: Using platform get_region routine.\n");
-+		return ppc_md.msi_get_region(region_num, region);
-+	}
-+	return 0;
-+}
-+
- int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
- {
- 	if (!ppc_md.setup_msi_irqs || !ppc_md.teardown_msi_irqs) {
--- 
-1.7.0.4
-
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c
+b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index ebe351d..f8fbe08 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -131,7 +131,7 @@ static void iwl_pcie_apm_config(struct iwl_trans *trans)
+         *    power savings, even without L1.
+         */
+        pcie_capability_read_word(trans_pcie->pci_dev, PCI_EXP_LNKCTL, &lctl);
+-       if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
++       if (0) {
+                /* L1-ASPM enabled; disable(!) L0S */
+                iwl_set_bit(trans, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
+                dev_info(trans->dev, "L1 Enabled; Disabling L0S\n");
