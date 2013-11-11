@@ -1,95 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:35350 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753061Ab3KTBkf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:40:35 -0500
-Message-ID: <528C12B9.60506@huawei.com>
-Date: Wed, 20 Nov 2013 09:39:05 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ve0-f171.google.com ([209.85.128.171]:38621 "EHLO
+	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256Ab3KKV0H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2013 16:26:07 -0500
 MIME-Version: 1.0
+In-Reply-To: <CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
+References: <52797238.8070304@gmail.com>
+	<20131106002505.GC3359@google.com>
+	<CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
+	<CADTPrLQpaCDo_YCC2=MmT1iCrWRPqzDpnqQZrE8OMjRMc6WYmQ@mail.gmail.com>
+	<20131108012352.GE2955@google.com>
+	<CADTPrLTYOXsGovL8HJ7=+K30OWVeSdMKTma_UuMV8ZRFB6CkYA@mail.gmail.com>
+	<CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
+Date: Mon, 11 Nov 2013 13:26:06 -0800
+Message-ID: <CADTPrLRJD0er1kijjm2SEE6wUA9eQaz+OOd67E3MpHLu6k-R6Q@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
+From: Rajat Jain <rajatjain.linux@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	"Matthew Garrett" <mjg59@srcf.ucam.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-References: <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com> <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com> <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com> <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com> <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com> <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com> <20131115115235.GA2281@intel.com> <20131119013343.GA17294@google.com> <528AC4F2.40708@huawei.com> <20131119171850.GA4261@google.com> <528C0CF9.3020906@huawei.com> <CAErSpo7nKXR9NBbjs8K__T2TCONW6N76ytevTH-bxcs-NH3+Zg@mail.gmail.com>
-In-Reply-To: <CAErSpo7nKXR9NBbjs8K__T2TCONW6N76ytevTH-bxcs-NH3+Zg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Tom Nguyen <tom.l.nguyen@intel.com>,
+	Kristen Accardi <kristen.c.accardi@intel.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/11/20 9:20, Bjorn Helgaas wrote:
-> On Tue, Nov 19, 2013 at 6:14 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>>> [bhelgaas: changelog, tag for stable]
->>>>> Reported-by: David Bulkow <David.Bulkow@stratus.com>
->>>>> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
->>>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>>> CC: stable@vger.kernel.org  # v2.6.32+
->>>>
->>>> Hi Bjorn,
->>>>    This issue in X86 seems to be introduced after commit 928bea9 "PCI: Delay enabling bridges until they're needed"
->>>> So this patch needs to back port to 2.6.32+ ?
->>>
->>> 928bea9 might have made it more visible, but the underlying problem is that
->>> we enable the device once in the probe path, and disable it twice in the
->>> remove path.  That problem exists in 2.6.32.61:
->>>
->>>   pcie_portdrv_probe                # .probe() method
->>>     pcie_port_device_register
->>>       pci_enable_device             <-- enable
->>>
->>>   pcie_portdrv_remove               # .remove() method
->>>     pcie_port_device_remove
->>>       pci_disable_device            <-- disable #1
->>>     pci_disable_device              <-- disable #2
->>
->> During assign unassigned resources, we also enable the port device,
->>
->> fs_initcall(pcibios_assign_resources);
->>   pci_assign_unassigned_resources;
->>     pci_enable_bridges()
->>       pci_enable_device()
->>
->>
->> So I think before the commit 928bea9 , the pci bridge device enable and disable is symmetrical.
->> After the commit 928bea9, we only enable bridge once, but still remove twice.
-> 
-> The port driver should be symmetrical, regardless of what happens
-> outside it.  We have to be able to bind/unbind/bind/unbind
-> indefinitely.
-> 
-> Do you think the patch is a problem for current upstream, or are you
-> just saying it doesn't need to be backported as far as 2.6.32?  I
-> frankly don't care that much if those old kernels pick it up or not.
-> All I'm saying is that the problem this fixes is present that far
-> back.
-> 
-> I'm not really interested in doing a lot more digging about ancient
-> kernels, unless you think it's going to break something if applied to
-> them.
+Hello,
 
-As you said, this is not a big problem, it's ok for current upstream,
-and for 3.4 3.5 3.10 stable tree, it seems just a enable and disable symmetry problem.
-I don't find anything unsafe about this even though when we unbind pcie port driver,
-the pcie port maybe still enable. I have no objection to backport it to ancient kernels. :)
+>> With my patch, we'd eliminate the 1 second delay and the second line
+>> of output above. If we also want to get rid of the first line
+>> "Unexpected CMD_COMPLETED..." also, that would probably have to be
+>> solved by changing the behavior to assume that CC shall be generated
+>> for every SLOTCTRL register write.
+>
+> I *do* want to get rid of the "Unexpected CMD_COMPLETED" complaint.
+> We shouldn't complain about hardware that is working perfectly fine.
+> I don't know the best way to do that yet.  I have found a box with the
+> same hardware that was fixed by 5808639bfa98, so I hope to play with
+> it and figure out something that will work nicely for both scenarios.
 
-Thanks!
-Yijing.
+Please keep posted :-)
+
+>
+> BTW, can you open a report at bugzilla.kernel.org and attach your
+> "lspci -vvxxx" and dmesg output?  When we eventually merge a fix, I'd
+> like to have the details archived somewhere.
+
+Done:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=64821
+
+Please let me know if you need any help in trying something out - I'd
+be more than keen to help - write code or test.
+
+BTW, I figured another way that solves the current problem at hand
+(for both kind of controllers). Today the events are cleared just
+before call to pcie_disable_notification, if we clear them afterwards
+also, the current problem is taken care of for all controllers. Of
+course this does not look the right way to solve the problem though
+(since the ctrl->no_cmd_completed shall still be 1, which is not
+right).
+
+@@ -948,6 +948,10 @@ struct controller *pcie_init(struct pcie_device *dev)
+
+        /* Clear all remaining event bits in Slot Status register */
+        if (pciehp_writew(ctrl, PCI_EXP_SLTSTA, 0x1f))
+                goto abort_ctrl;
+
+        /* Disable sotfware notification */
+        pcie_disable_notification(ctrl);
+
++       /* Clear all remaining event bits in Slot Status register */
++       if (pciehp_writew(ctrl, PCI_EXP_SLTSTA, 0x1f))
++               goto abort_ctrl;
++
+        ctrl_info(ctrl, "HPC vendor_id %x device_id %x ss_vid %x ss_did %x\n",
+                  pdev->vendor, pdev->device, pdev->subsystem_vendor,
+                  pdev->subsystem_device);
 
 
-> 
-> Bjorn
-> 
-> 
+Thanks,
 
-
--- 
-Thanks!
-Yijing
-
+Rajat
