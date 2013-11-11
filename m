@@ -1,49 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:37264 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752575Ab3KOJa1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 04:30:27 -0500
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	"linux-pm\@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:48982 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753312Ab3KKPAq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2013 10:00:46 -0500
+Date: Mon, 11 Nov 2013 07:03:18 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Lan Tianyu <tianyu.lan@intel.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
-Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during system suspend
-References: <CAPDyKFqYOnfWKH7BFRem5T5yGmJrOWBTDhZwoExuemMf0HQ7Ag@mail.gmail.com>
-	<Pine.LNX.4.44L0.1311141249580.1439-100000@iolanthe.rowland.org>
-	<CAPDyKFrQfwOQsOCB1QFo4GWeX303AEWnanE61svy9UUJpNBUiw@mail.gmail.com>
-Date: Fri, 15 Nov 2013 10:29:45 +0100
-In-Reply-To: <CAPDyKFrQfwOQsOCB1QFo4GWeX303AEWnanE61svy9UUJpNBUiw@mail.gmail.com>
-	(Ulf Hansson's message of "Fri, 15 Nov 2013 09:44:48 +0100")
-Message-ID: <87li0q9fna.fsf@nemi.mork.no>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Luck, Tony" <tony.luck@intel.com>
+Subject: Re: [PATCH] ACPI / driver core: Store a device pointer in struct
+ acpi_dev_node
+Message-ID: <20131111150318.GB16112@kroah.com>
+References: <3268437.YsusHvklcv@vostro.rjw.lan>
+ <52803124.7000304@intel.com>
+ <1683079.zjqzsOAjXB@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1683079.zjqzsOAjXB@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ulf Hansson <ulf.hansson@linaro.org> writes:
+On Mon, Nov 11, 2013 at 02:45:39PM +0100, Rafael J. Wysocki wrote:
+> On Monday, November 11, 2013 09:21:40 AM Lan Tianyu wrote:
+> > On 2013年11月10日 08:58, Rafael J. Wysocki wrote:
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > 
+> > > Modify struct acpi_dev_node to contain a pointer to struct device
+> > > ambedded in the struct acpi_device associated with the given device
+> > > object (that is, its ACPI companion device) instead of an ACPI handle
+> > > corresponding to that struct acpi_device.  Introduce two new macros
+> > > for manipulating that pointer in a CONFIG_ACPI-safe way,
+> > > ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
+> > > ACPI_HANDLE() macro to take the above changes into account.
+> > > Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
+> > > use ACPI_COMPANION_SET() instead.  For some of them who used to
+> > > pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
+> > > introduce a helper routine acpi_preset_companion() doing an
+> > > equivalent thing.
+> > > 
+> > > The rationale for using a struct device pointer instead of a
+> > > struct acpi_device one as the member of struct acpi_dev_node is
+> > > that it allows device.h to avoid including linux/acpi.h which would
+> > > introduce quite a bit of compilation overhead for stuff that doesn't
+> > > care about ACPI.
+> > > In turn, moving the macros to linux/acpi.h forces
+> > > the stuff that does care about ACPI to include that file as
+> > > appropriate anyway.
+> > 
+> > How about declaring "struct acpi_device" in the device.h? This can help
+> > to use struct acpi_device without including linux/acpi.h.
+> > 
+> > struct iommu_ops and struct iommu_group have been used by the same way
+> > in the device.h.
+> 
+> Yes, they are.  Well, that appears to work too.
+> 
+> Updated patch is appended.  It also contains some fixes for problems reported
+> by the auto build system and it's been tested on x86-64 now, so it should be
+> reasonably close to final.
+> 
+> Thanks,
+> Rafael
+> 
+> 
+> ---
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Subject: ACPI / driver core: Store an ACPI device pointer in struct acpi_dev_node
+> 
+> Modify struct acpi_dev_node to contain a pointer to struct acpi_device
+> associated with the given device object (that is, its ACPI companion
+> device) instead of an ACPI handle corresponding to it.  Introduce two
+> new macros for manipulating that pointer in a CONFIG_ACPI-safe way,
+> ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
+> ACPI_HANDLE() macro to take the above changes into account.
+> Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
+> use ACPI_COMPANION_SET() instead.  For some of them who used to
+> pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
+> introduce a helper routine acpi_preset_companion() doing an
+> equivalent thing.
+> 
+> The main motivation for doing this is that there are things
+> represented by struct acpi_device objects that don't have valid
+> ACPI handles (so called fixed ACPI hardware features, such as
+> power and sleep buttons) and we would like to create platform
+> device objects for them and "glue" them to their ACPI companions
+> in the usual way (which currently is impossible due to the
+> lack of valid ACPI handles).  However, there are more reasons
+> why it may be useful.
+> 
+> First, struct acpi_device pointers allow of much better type checking
+> than void pointers which are ACPI handles, so it should be more
+> difficult to write buggy code using modified struct acpi_dev_node
+> and the new macros.  Second, the change should help to reduce (over
+> time) the number of places in which the result of ACPI_HANDLE() is
+> passed to acpi_bus_get_device() in order to obtain a pointer to the
+> struct acpi_device associated with the given "physical" device,
+> because now that pointer is returned by ACPI_COMPANION() directly.
+> Finally, the change should make it easier to write generic code that
+> will build both for CONFIG_ACPI set and unset without adding explicit
+> compiler directives to it.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> I think it is kind of strange to give provision to userspace to
-> control a "request based" power management feature in the kernel. Me
-> personally can't think of any good use case, but I comes from the
-> embedded/ARM world so I might not have the full picture.
-
-Because resuming a device inevitably adds latency, and that only
-userspace can decide the latency vs power policy for any given device,
-system and user?
-
-There are also other reasons, mostly related to device bugs.  But the
-above is the most important in my view.  Without that control knob I
-don't think I would have enabled runtime PM in any network driver while
-the netif is running.  The additional latency is noticable.
-
-Anyway, this is a pointless discussion.  The power/control ABI is in use
-so many places that it cannot be changed.  I'd suggest googling "break
-userspace" before even suggesting anything like that again.
-
-
-Bjørn
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
