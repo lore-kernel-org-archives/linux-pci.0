@@ -1,211 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:40546 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758468Ab3K1HRZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 02:17:25 -0500
+Received: from mail-out.m-online.net ([212.18.0.10]:54817 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753422Ab3KKNsp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2013 08:48:45 -0500
+From: Marek Vasut <marex@denx.de>
+To: =?iso-8859-1?q?J=FCrgen_Beisert?= <jbe@pengutronix.de>
+Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
+Date: Mon, 11 Nov 2013 14:48:40 +0100
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+References: <1381853200-5534-1-git-send-email-marex@denx.de> <201311111432.59318.jbe@pengutronix.de>
+In-Reply-To: <201311111432.59318.jbe@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <52965493.8060208@canonical.com>
-References: <52965493.8060208@canonical.com>
-Date: Wed, 27 Nov 2013 23:17:24 -0800
-Message-ID: <CAE9FiQV104AgXC+EaSvBzuRg7WTLEDvQZETPeWHY4gdpg2eY_w@mail.gmail.com>
-Subject: Re: [REGRESSION][v3.4-rc1] PCI: add a PCI resource reallocation
- config option
-From: Yinghai Lu <yinghai@kernel.org>
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tim Gardner <tim.gardner@canonical.com>
-Content-Type: multipart/mixed; boundary=90e6ba5bc98b64a17a04ec378132
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201311111448.40922.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---90e6ba5bc98b64a17a04ec378132
-Content-Type: text/plain; charset=ISO-8859-1
+Dear Jürgen Beisert,
 
-On Wed, Nov 27, 2013 at 12:22 PM, Joseph Salisbury
-<joseph.salisbury@canonical.com> wrote:
-> Hi Yinghai,
->
-> A kernel bug was opened against Ubuntu [0].  After a kernel bisect, it
-> was found that the following commit introduced the bug:
->
-> commit b07f2ebc109b607789f648dedcff4b125f9afec6
-> Author: Yinghai Lu <yinghai@kernel.org>
-> Date:   Thu Feb 23 19:23:32 2012 -0800
->
->     PCI: add a PCI resource reallocation config option
->
->
->
-> The regression was introduced as of v3.4-rc1 and also exists in current
-> mainline.
->
-> The bug seems platform specific since we have not had allot of other
-> reports.  The bug is preventing ixgbe to probe Intel x520 NIC's.
->
-> It would be easy enough to disable the PCI_REALLOC_ENABLE_AUTO config
-> option, but I wanted to get your feedback since you are the author.  It
-> looks like the bug reporter may also be able to work around the problem
-> with the pci=realloc=.
+> Hi,
+> 
+> I'm also trying to get the PCIe to work on an i.MX6. But the attached
+> device cannot be enabled. The external device is an FPGA directly
+> connected to the i.MX6. I'm using the changes from linux-next to get the
+> machine working up to this point. But it seems I still miss something.
+> 
+> What I see is:
+> 
+> [...]
+> PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x1000-0x10000]
+> pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
+> pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+> pci_bus 0000:00: scanning bus
+> pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
+> pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
+> pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
+> pci 0000:00:00.0: calling pci_fixup_ide_bases+0x0/0x5c
+> pci 0000:00:00.0: supports D1
+> pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
+> pci 0000:00:00.0: PME# disabled
+> pci_bus 0000:00: fixups for bus
+> PCI: bus0: Fast back to back transfers disabled
+> pci 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 0
+> pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
+> pci_bus 0000:01: scanning bus
+> pci 0000:01:00.0: [1172:0004] type 00 class 0x000000
+> pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x0000ffff]
+> pci 0000:01:00.0: calling pci_fixup_ide_bases+0x0/0x5c
+> pci_bus 0000:01: fixups for bus
+> PCI: bus1: Fast back to back transfers disabled
+> pci_bus 0000:01: bus scan returning with max=01
+> pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+> pci_bus 0000:00: bus scan returning with max=01
+> pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to 01
+> pci 0000:00:00.0: fixup irq: got 155
+> pci 0000:00:00.0: assigning IRQ 155
+> pci 0000:01:00.0: fixup irq: got 155
+> pci 0000:01:00.0: assigning IRQ 155
+> pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
+> pci 0000:00:00.0: BAR 0: set to [mem 0x01000000-0x010fffff] (PCI address
+> [0x1000000-0x10fffff]) pci 0000:00:00.0: BAR 8: assigned [mem
+> 0x01100000-0x011fffff]
+> pci 0000:00:00.0: BAR 6: assigned [mem 0x01200000-0x0120ffff pref]
+> pci 0000:00:00.0: PCI bridge to [bus 01]
+> pci 0000:00:00.0:   bridge window [mem 0x01100000-0x011fffff]
+> pci_bus 0000:00: max bus depth: 1 pci_try_num: 2
+> pci 0000:00:00.0: PCI bridge to [bus 01]
+> pci 0000:00:00.0:   bridge window [mem 0x01100000-0x011fffff]
+> pci_bus 0000:00: resource 4 [io  0x1000-0x10000]
+> pci_bus 0000:00: resource 5 [mem 0x01000000-0x01efffff]
+> pci_bus 0000:01: resource 1 [mem 0x01100000-0x011fffff]
+> [...]
+> pcieport 0000:00:00.0: Resource 0: from 1000000 to 10FFFFF <- my message
+> from pcibios_enable_device()/arch/arm/kernel/bios32.c [...]
+> FPGA 0000:01:00.0: Dummy FPGA driver starts probing
+> FPGA 0000:01:00.0: Resource 0: from 0 to FFFF <- my message from
+> pcibios_enable_device()/arch/arm/kernel/bios32.c PCI: Device 0000:01:00.0
+> not available because of resource collisions FPGA 000:01:00.0: Cannot
+> enable PCIe device, aborting
+> FPGA: probe of 0000:01:00.0 failed with error -5
+> 
+> pcibios_enable_device() fails due to the start address of this device is
+> still 0.
 
-The bios has problem to have two functions rom bar to same place, and
-root bus does
-not enough mmio range and confuse realloc logic.
+Looks like your device isn't assigned it's memory windows for some reason. There 
+is a discussion going on about DWC PCIe and how the iATU configuration is wrong 
+and how to fix it in the PCI ML. I'd check that.
 
-Please try attached patches to top of linus's tree, or your internal tree.
-
-Thanks
-
-Yinghai
-
---90e6ba5bc98b64a17a04ec378132
-Content-Type: text/x-patch; charset=US-ASCII; name="pcibus_addr_converting_bus.patch"
-Content-Disposition: attachment; filename="pcibus_addr_converting_bus.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hojnyb7z0
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IHBjaWJ1cyBhZGRyZXNzIHRvIHJlc291cmNlIGNvbnZlcnRp
-bmcgdGFrZSBidXMgaW5zdGVhZCBvZiBkZXYKCkZvciBhbGxvY2F0aW5nIHJlc291cmNlIHVuZGVy
-IGJ1cyBwYXRoLCB3ZSBkbyBub3QgaGF2ZSBkZXYgdG8gcGFzcyBhbG9uZywKYW5kIHdlIG9ubHkg
-aGF2ZSBidXMgdG8gdXNlIGluc3RlYWQuCgotdjI6IGRyb3AgcGNpYmlvc19idXNfYWRkcl90b19y
-ZXNvdXJjZSgpLgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3Jn
-PgoKLS0tCiBkcml2ZXJzL3BjaS9ob3N0LWJyaWRnZS5jIHwgICAzNCArKysrKysrKysrKysrKysr
-KysrKystLS0tLS0tLS0tLS0tCiBpbmNsdWRlL2xpbnV4L3BjaS5oICAgICAgIHwgICAgNSArKysr
-KwogMiBmaWxlcyBjaGFuZ2VkLCAyNiBpbnNlcnRpb25zKCspLCAxMyBkZWxldGlvbnMoLSkKCklu
-ZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvaG9zdC1icmlkZ2UuYwo9PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBs
-aW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9ob3N0LWJyaWRnZS5jCisrKyBsaW51eC0yLjYvZHJp
-dmVycy9wY2kvaG9zdC1icmlkZ2UuYwpAQCAtOSwyMiArOSwxOSBAQAogCiAjaW5jbHVkZSAicGNp
-LmgiCiAKLXN0YXRpYyBzdHJ1Y3QgcGNpX2J1cyAqZmluZF9wY2lfcm9vdF9idXMoc3RydWN0IHBj
-aV9kZXYgKmRldikKK3N0YXRpYyBzdHJ1Y3QgcGNpX2J1cyAqZmluZF9wY2lfcm9vdF9idXMoc3Ry
-dWN0IHBjaV9idXMgKmJ1cykKIHsKLQlzdHJ1Y3QgcGNpX2J1cyAqYnVzOwotCi0JYnVzID0gZGV2
-LT5idXM7CiAJd2hpbGUgKGJ1cy0+cGFyZW50KQogCQlidXMgPSBidXMtPnBhcmVudDsKIAogCXJl
-dHVybiBidXM7CiB9CiAKLXN0YXRpYyBzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpmaW5kX3BjaV9o
-b3N0X2JyaWRnZShzdHJ1Y3QgcGNpX2RldiAqZGV2KQorc3RhdGljIHN0cnVjdCBwY2lfaG9zdF9i
-cmlkZ2UgKmZpbmRfcGNpX2hvc3RfYnJpZGdlKHN0cnVjdCBwY2lfYnVzICpidXMpCiB7Ci0Jc3Ry
-dWN0IHBjaV9idXMgKmJ1cyA9IGZpbmRfcGNpX3Jvb3RfYnVzKGRldik7CisJc3RydWN0IHBjaV9i
-dXMgKnJvb3RfYnVzID0gZmluZF9wY2lfcm9vdF9idXMoYnVzKTsKIAotCXJldHVybiB0b19wY2lf
-aG9zdF9icmlkZ2UoYnVzLT5icmlkZ2UpOworCXJldHVybiB0b19wY2lfaG9zdF9icmlkZ2Uocm9v
-dF9idXMtPmJyaWRnZSk7CiB9CiAKIHZvaWQgcGNpX3NldF9ob3N0X2JyaWRnZV9yZWxlYXNlKHN0
-cnVjdCBwY2lfaG9zdF9icmlkZ2UgKmJyaWRnZSwKQEAgLTQwLDEwICszNywxMSBAQCBzdGF0aWMg
-Ym9vbCByZXNvdXJjZV9jb250YWlucyhzdHJ1Y3QgcmVzCiAJcmV0dXJuIHJlczEtPnN0YXJ0IDw9
-IHJlczItPnN0YXJ0ICYmIHJlczEtPmVuZCA+PSByZXMyLT5lbmQ7CiB9CiAKLXZvaWQgcGNpYmlv
-c19yZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV9kZXYgKmRldiwgc3RydWN0IHBjaV9idXNfcmVn
-aW9uICpyZWdpb24sCi0JCQkgICAgIHN0cnVjdCByZXNvdXJjZSAqcmVzKQordm9pZCBfX3BjaWJp
-b3NfcmVzb3VyY2VfdG9fYnVzKHN0cnVjdCBwY2lfYnVzICpidXMsCisJCQkJICAgICAgc3RydWN0
-IHBjaV9idXNfcmVnaW9uICpyZWdpb24sCisJCQkJICAgICAgc3RydWN0IHJlc291cmNlICpyZXMp
-CiB7Ci0Jc3RydWN0IHBjaV9ob3N0X2JyaWRnZSAqYnJpZGdlID0gZmluZF9wY2lfaG9zdF9icmlk
-Z2UoZGV2KTsKKwlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpicmlkZ2UgPSBmaW5kX3BjaV9ob3N0
-X2JyaWRnZShidXMpOwogCXN0cnVjdCBwY2lfaG9zdF9icmlkZ2Vfd2luZG93ICp3aW5kb3c7CiAJ
-cmVzb3VyY2Vfc2l6ZV90IG9mZnNldCA9IDA7CiAKQEAgLTYwLDYgKzU4LDExIEBAIHZvaWQgcGNp
-Ymlvc19yZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV8KIAlyZWdpb24tPnN0YXJ0ID0gcmVzLT5z
-dGFydCAtIG9mZnNldDsKIAlyZWdpb24tPmVuZCA9IHJlcy0+ZW5kIC0gb2Zmc2V0OwogfQordm9p
-ZCBwY2liaW9zX3Jlc291cmNlX3RvX2J1cyhzdHJ1Y3QgcGNpX2RldiAqZGV2LCBzdHJ1Y3QgcGNp
-X2J1c19yZWdpb24gKnJlZ2lvbiwKKwkJCSAgICAgc3RydWN0IHJlc291cmNlICpyZXMpCit7CisJ
-X19wY2liaW9zX3Jlc291cmNlX3RvX2J1cyhkZXYtPmJ1cywgcmVnaW9uLCByZXMpOworfQogRVhQ
-T1JUX1NZTUJPTChwY2liaW9zX3Jlc291cmNlX3RvX2J1cyk7CiAKIHN0YXRpYyBib29sIHJlZ2lv
-bl9jb250YWlucyhzdHJ1Y3QgcGNpX2J1c19yZWdpb24gKnJlZ2lvbjEsCkBAIC02OCwxMCArNzEs
-MTAgQEAgc3RhdGljIGJvb2wgcmVnaW9uX2NvbnRhaW5zKHN0cnVjdCBwY2lfYgogCXJldHVybiBy
-ZWdpb24xLT5zdGFydCA8PSByZWdpb24yLT5zdGFydCAmJiByZWdpb24xLT5lbmQgPj0gcmVnaW9u
-Mi0+ZW5kOwogfQogCi12b2lkIHBjaWJpb3NfYnVzX3RvX3Jlc291cmNlKHN0cnVjdCBwY2lfZGV2
-ICpkZXYsIHN0cnVjdCByZXNvdXJjZSAqcmVzLAotCQkJICAgICBzdHJ1Y3QgcGNpX2J1c19yZWdp
-b24gKnJlZ2lvbikKK3ZvaWQgX19wY2liaW9zX2J1c190b19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1
-cyAqYnVzLCBzdHJ1Y3QgcmVzb3VyY2UgKnJlcywKKwkJCQkgICAgICBzdHJ1Y3QgcGNpX2J1c19y
-ZWdpb24gKnJlZ2lvbikKIHsKLQlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpicmlkZ2UgPSBmaW5k
-X3BjaV9ob3N0X2JyaWRnZShkZXYpOworCXN0cnVjdCBwY2lfaG9zdF9icmlkZ2UgKmJyaWRnZSA9
-IGZpbmRfcGNpX2hvc3RfYnJpZGdlKGJ1cyk7CiAJc3RydWN0IHBjaV9ob3N0X2JyaWRnZV93aW5k
-b3cgKndpbmRvdzsKIAlyZXNvdXJjZV9zaXplX3Qgb2Zmc2V0ID0gMDsKIApAQCAtOTMsNCArOTYs
-OSBAQCB2b2lkIHBjaWJpb3NfYnVzX3RvX3Jlc291cmNlKHN0cnVjdCBwY2lfCiAJcmVzLT5zdGFy
-dCA9IHJlZ2lvbi0+c3RhcnQgKyBvZmZzZXQ7CiAJcmVzLT5lbmQgPSByZWdpb24tPmVuZCArIG9m
-ZnNldDsKIH0KK3ZvaWQgcGNpYmlvc19idXNfdG9fcmVzb3VyY2Uoc3RydWN0IHBjaV9kZXYgKmRl
-diwgc3RydWN0IHJlc291cmNlICpyZXMsCisJCQkgICAgIHN0cnVjdCBwY2lfYnVzX3JlZ2lvbiAq
-cmVnaW9uKQoreworCV9fcGNpYmlvc19idXNfdG9fcmVzb3VyY2UoZGV2LT5idXMsIHJlcywgcmVn
-aW9uKTsKK30KIEVYUE9SVF9TWU1CT0wocGNpYmlvc19idXNfdG9fcmVzb3VyY2UpOwpJbmRleDog
-bGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9y
-aWcvaW5jbHVkZS9saW51eC9wY2kuaAorKysgbGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgK
-QEAgLTczOCw4ICs3MzgsMTMgQEAgdm9pZCBwY2lfZml4dXBfY2FyZGJ1cyhzdHJ1Y3QgcGNpX2J1
-cyAqKQogCiAvKiBHZW5lcmljIFBDSSBmdW5jdGlvbnMgdXNlZCBpbnRlcm5hbGx5ICovCiAKK3Zv
-aWQgX19wY2liaW9zX3Jlc291cmNlX3RvX2J1cyhzdHJ1Y3QgcGNpX2J1cyAqYnVzLAorCQkJICAg
-ICAgIHN0cnVjdCBwY2lfYnVzX3JlZ2lvbiAqcmVnaW9uLAorCQkJICAgICAgIHN0cnVjdCByZXNv
-dXJjZSAqcmVzKTsKIHZvaWQgcGNpYmlvc19yZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV9kZXYg
-KmRldiwgc3RydWN0IHBjaV9idXNfcmVnaW9uICpyZWdpb24sCiAJCQkgICAgIHN0cnVjdCByZXNv
-dXJjZSAqcmVzKTsKK3ZvaWQgX19wY2liaW9zX2J1c190b19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1
-cyAqYnVzLCBzdHJ1Y3QgcmVzb3VyY2UgKnJlcywKKwkJCQkgICAgICBzdHJ1Y3QgcGNpX2J1c19y
-ZWdpb24gKnJlZ2lvbik7CiB2b2lkIHBjaWJpb3NfYnVzX3RvX3Jlc291cmNlKHN0cnVjdCBwY2lf
-ZGV2ICpkZXYsIHN0cnVjdCByZXNvdXJjZSAqcmVzLAogCQkJICAgICBzdHJ1Y3QgcGNpX2J1c19y
-ZWdpb24gKnJlZ2lvbik7CiB2b2lkIHBjaWJpb3Nfc2Nhbl9zcGVjaWZpY19idXMoaW50IGJ1c24p
-Owo=
---90e6ba5bc98b64a17a04ec378132
-Content-Type: text/x-patch; charset=US-ASCII; name="auto_need_mmio64.patch"
-Content-Disposition: attachment; filename="auto_need_mmio64.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hojnymei1
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IE9ubHkgZW5hYmxlIHJlYWxsb2MgYXV0byB3aGVuIHJvb3Qg
-YnVzIGhhcyA2NGJpdCBtbWlvCgpKb3NlcGggZm91bmQKfCBjb21taXQgYjA3ZjJlYmMxMDliNjA3
-Nzg5ZjY0OGRlZGNmZjRiMTI1ZjlhZmVjNgp8IERhdGU6ICAgVGh1IEZlYiAyMyAxOToyMzozMiAy
-MDEyIC0wODAwCnwKfCAgICBQQ0k6IGFkZCBhIFBDSSByZXNvdXJjZSByZWFsbG9jYXRpb24gY29u
-ZmlnIG9wdGlvbgoKY2F1c2Ugb25lIHN5c3RlbSBjYW4gbm90IGxvYWQgZHJpdmVyIGZvciBJbnRl
-bCB4NTIwIE5JQydzLgoKVGhlIHJvb3QgcmVzb3VyY2U6ClsgICAgMS4yMTI0NzBdIFBDSSBob3N0
-IGJyaWRnZSB0byBidXMgMDAwMDoyMApbICAgIDEuMjEyNDc1XSBwY2lfYnVzIDAwMDA6MjA6IHJv
-b3QgYnVzIHJlc291cmNlIFtidXMgMjAtM2VdClsgICAgMS4yMTI0NzldIHBjaV9idXMgMDAwMDoy
-MDogcm9vdCBidXMgcmVzb3VyY2UgW2lvICAweGMwMDAtMHhkZmZmXQpbICAgIDEuMjEyNDgzXSBw
-Y2lfYnVzIDAwMDA6MjA6IHJvb3QgYnVzIHJlc291cmNlIFttZW0gMHhmZWNjMDAwMC0weGZlY2Zm
-ZmZmXQpbICAgIDEuMjEyNDg3XSBwY2lfYnVzIDAwMDA6MjA6IHJvb3QgYnVzIHJlc291cmNlIFtt
-ZW0gMHhlOTQwMDAwMC0weGU5N2ZmZmZmXQoKYW5kIGJpb3MgZG9lcyBub3QgYXNzaWduIHNyaW92
-LCBhbHNvIGhhdmUgdHdvIGZ1bmN0aW9uIFJPTSBiYXIgcG9pbnQgdG8gc2FtZQpwb3NpdGlvbi4K
-WyAgICAxLjIxMzE5N10gcGNpIDAwMDA6MjI6MDAuMDogWzgwODY6MTBmYl0gdHlwZSAwMCBjbGFz
-cyAweDAyMDAwMAouLi4KWyAgICAxLjIxMzI0MF0gcGNpIDAwMDA6MjI6MDAuMDogcmVnIDB4MzA6
-IFttZW0gMHhlOTUwMDAwMC0weGU5NTdmZmZmIHByZWZdClsgICAgMS4yMTMzMDNdIHBjaSAwMDAw
-OjIyOjAwLjA6IHJlZyAweDE4NDogW21lbSAweDAwMDAwMDAwLTB4MDAwMDNmZmYgNjRiaXRdClsg
-ICAgMS4yMTMzMTddIHBjaSAwMDAwOjIyOjAwLjA6IHJlZyAweDE5MDogW21lbSAweDAwMDAwMDAw
-LTB4MDAwMDNmZmYgNjRiaXRdClsgICAgMS4yMTMzNjZdIHBjaSAwMDAwOjIyOjAwLjE6IFs4MDg2
-OjEwZmJdIHR5cGUgMDAgY2xhc3MgMHgwMjAwMDAKLi4uClsgICAgMS4yMTM0MDhdIHBjaSAwMDAw
-OjIyOjAwLjE6IHJlZyAweDMwOiBbbWVtIDB4ZTk1MDAwMDAtMHhlOTU3ZmZmZiBwcmVmXQpbICAg
-IDEuMjEzNDY4XSBwY2kgMDAwMDoyMjowMC4xOiByZWcgMHgxODQ6IFttZW0gMHgwMDAwMDAwMC0w
-eDAwMDAzZmZmIDY0Yml0XQpbICAgIDEuMjEzNDgxXSBwY2kgMDAwMDoyMjowMC4xOiByZWcgMHgx
-OTA6IFttZW0gMHgwMDAwMDAwMC0weDAwMDAzZmZmIDY0Yml0XQpbICAgIDEuMjE4NTI3XSBwY2kg
-MDAwMDoyMDowMy4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgMjJdClsgICAgMS4yMTg1MzRdIHBjaSAw
-MDAwOjIwOjAzLjA6ICAgYnJpZGdlIHdpbmRvdyBbaW8gIDB4ZDAwMC0weGRmZmZdClsgICAgMS4y
-MTg1MzddIHBjaSAwMDAwOjIwOjAzLjA6ICAgYnJpZGdlIHdpbmRvdyBbbWVtIDB4ZTk0MDAwMDAt
-MHhlOTVmZmZmZl0KLi4uClsgICAgMS4yNTQxMDNdIHBjaSAwMDAwOjIyOjAwLjE6IGFkZHJlc3Mg
-c3BhY2UgY29sbGlzaW9uOiBbbWVtIDB4ZTk1MDAwMDAtMHhlOTU3ZmZmZiBwcmVmXSBjb25mbGlj
-dHMgd2l0aCAwMDAwOjIyOjAwLjAgW21lbSAweGU5NTAwMDAwLTB4ZTk1N2ZmZmYgcHJlZl0KWyAg
-ICAxLjI1NDExMV0gcGNpIDAwMDA6MjM6MDAuMTogYWRkcmVzcyBzcGFjZSBjb2xsaXNpb246IFtt
-ZW0gMHhlOTcwMDAwMC0weGU5NzdmZmZmIHByZWZdIGNvbmZsaWN0cyB3aXRoIDAwMDA6MjM6MDAu
-MCBbbWVtIDB4ZTk3MDAwMDAtMHhlOTc3ZmZmZiBwcmVmXQoKV2UgZG9uJ3QgbmVlZCB0byBlbmFi
-bGUgcmVhbGxvYyBmb3IgdGhpcyBjYXNlLCBhcyB3ZSBjYW4gbm90IGFsdGVyIHJvb3QgYnVzIG1t
-aW8KcmFuZ2UgdG8gZ2V0IGJpZyBvbmUgdG8gaG9sZCB0d28gcm9tIGJhciwgYW5kIHNyaW92IHVu
-ZGVyIDRHLgoKQWRkIGNoZWNraW5nIGlmIHBjaSByb290IGJ1cyBoYXZlIDRHIGFib3ZlIG1taW8g
-cmVzLCBhbmQgZG9uJ3QgZW5hYmxlCnJlYWxsb2MgYXV0byBhY2NvcmRpbmdseS4KCmJ1ZyByZXBv
-cnQgYXQ6IGh0dHBzOi8vYnVncy5sYXVuY2hwYWQubmV0L3VidW50dS8rc291cmNlL2xpbnV4Lyti
-dWcvMTI0NTkzOAoKUmVwb3J0ZWQtYnk6IEpvc2VwaCBTYWxpc2J1cnkgPGpvc2VwaC5zYWxpc2J1
-cnlAY2Fub25pY2FsLmNvbT4KU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJu
-ZWwub3JnPgoKCi0tLQogZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgfCAgIDMyICsrKysrKysrKysr
-KysrKysrKysrKysrKysrKy0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgMjcgaW5zZXJ0aW9ucygrKSwg
-NSBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMK
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKKysr
-IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtMTQzMiwxNyArMTQzMiwzOSBA
-QCBzdGF0aWMgaW50IGlvdl9yZXNvdXJjZXNfdW5hc3NpZ25lZChzdHJ1CiAJcmV0dXJuIDA7CiB9
-CiAKK3N0YXRpYyBib29sIHBjaV9idXNfbWVtX2Fib3ZlXzRnKHN0cnVjdCBwY2lfYnVzICpidXMp
-Cit7CisJaW50IGk7CisJc3RydWN0IHJlc291cmNlICpyZXM7CisKKwlwY2lfYnVzX2Zvcl9lYWNo
-X3Jlc291cmNlKGJ1cywgcmVzLCBpKSB7CisJCXN0cnVjdCBwY2lfYnVzX3JlZ2lvbiByZWdpb247
-CisKKwkJaWYgKCFyZXMgfHwgIShyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU0pKQorCQkJY29u
-dGludWU7CisKKwkJX19wY2liaW9zX3Jlc291cmNlX3RvX2J1cyhidXMsICZyZWdpb24sIHJlcyk7
-CisJCWlmIChyZWdpb24uZW5kID4gMHhmZmZmZmZmZikKKwkJCXJldHVybiB0cnVlOworCX0KKwor
-CXJldHVybiBmYWxzZTsKK30KKwogc3RhdGljIGVudW0gZW5hYmxlX3R5cGUgcGNpX3JlYWxsb2Nf
-ZGV0ZWN0KHN0cnVjdCBwY2lfYnVzICpidXMsCiAJCQkgZW51bSBlbmFibGVfdHlwZSBlbmFibGVf
-bG9jYWwpCiB7Ci0JYm9vbCB1bmFzc2lnbmVkID0gZmFsc2U7Ci0KIAlpZiAoZW5hYmxlX2xvY2Fs
-ICE9IHVuZGVmaW5lZCkKIAkJcmV0dXJuIGVuYWJsZV9sb2NhbDsKIAotCXBjaV93YWxrX2J1cyhi
-dXMsIGlvdl9yZXNvdXJjZXNfdW5hc3NpZ25lZCwgJnVuYXNzaWduZWQpOwotCWlmICh1bmFzc2ln
-bmVkKQotCQlyZXR1cm4gYXV0b19lbmFibGVkOworCS8qIG9ubHkgZW5hYmxlIGF1dG8gd2hlbiBy
-b290IGJ1cyBkb2VzIHN1cHBvcnQgNjRiaXQgbW1pbyAqLworCWlmIChwY2lfYnVzX21lbV9hYm92
-ZV80ZyhidXMpKSB7CisJCWJvb2wgdW5hc3NpZ25lZCA9IGZhbHNlOworCisJCXBjaV93YWxrX2J1
-cyhidXMsIGlvdl9yZXNvdXJjZXNfdW5hc3NpZ25lZCwgJnVuYXNzaWduZWQpOworCQlpZiAodW5h
-c3NpZ25lZCkKKwkJCXJldHVybiBhdXRvX2VuYWJsZWQ7CisJfQogCiAJcmV0dXJuIGVuYWJsZV9s
-b2NhbDsKIH0K
---90e6ba5bc98b64a17a04ec378132--
+btw. do you need to switch the bus to Gen1 to get it to probe your device?
