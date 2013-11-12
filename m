@@ -1,60 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:41038 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757927Ab3K0WHs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 17:07:48 -0500
-Date: Wed, 27 Nov 2013 22:07:04 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Khalid Aziz <khalid.aziz@oracle.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>, bhelgaas@google.com,
-	cl91tp@gmail.com, tianyu.lan@intel.com, khlebnikov@openvz.org,
-	gnomes@lxorguk.ukuu.org.uk, indou.takao@jp.fujitsu.com,
-	jility09@gmail.com, f.otti@gmx.at, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kexec@lists.infradead.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: Clear Bus Master bit only on kexec reboot
-Message-ID: <20131127220704.GA15609@srcf.ucam.org>
-References: <1385579908-24608-1-git-send-email-khalid.aziz@oracle.com>
- <87ob55my8z.fsf@xmission.com>
- <52964F2C.1020803@oracle.com>
- <20131127212227.GA31237@kroah.com>
- <20131127215309.GA15320@srcf.ucam.org>
- <20131127220106.GA21887@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131127220106.GA21887@kroah.com>
+Received: from gerard.telenet-ops.be ([195.130.132.48]:44244 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755530Ab3KLTHh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 14:07:37 -0500
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 04/12] PCI/portdrv: Remove superfluous name cast
+Date: Tue, 12 Nov 2013 20:07:17 +0100
+Message-Id: <1384283245-9419-5-git-send-email-geert@linux-m68k.org>
+In-Reply-To: <1384283245-9419-1-git-send-email-geert@linux-m68k.org>
+References: <1384283245-9419-1-git-send-email-geert@linux-m68k.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 27, 2013 at 02:01:06PM -0800, Greg KH wrote:
-> On Wed, Nov 27, 2013 at 09:53:09PM +0000, Matthew Garrett wrote:
-> > On Wed, Nov 27, 2013 at 01:22:27PM -0800, Greg KH wrote:
-> > 
-> > > Then fix the drivers please.  It's not as if you don't have access to
-> > > the source for them all...
-> > 
-> > Define "fix". It's clearly wrong to disable busmastering at shutdown on 
-> > some devices, otherwise we wouldn't be having this discussion at all.
-> 
-> I thought it was only "wrong" to disable this on multi-function devices,
-> which is why some drivers didn't do it.  Otherwise, how would it be any
-> different to have the global setting?
+device_driver.name is "const char *"
 
-kexec doesn't jump into the firmware, so firmware assumptions about the 
-state of the busmaster bit don't matter.
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/pcie/portdrv_core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Anyway, I really don't care either way, but this seems like something
-> that the drivers should be doing.  What suddenly changed that caused
-> this problem to occur that hasn't happened in the years prior to now
-> that drives this to be a stable-kernel issue?
-
-We started clearing the busmaster bit on all devices on shutdown in 
-3.something in order to ensure that DMA wasn't occuring while we were 
-in the process of performing a kexec. Some machines freeze on shutdown 
-as a result. This patch reverts back to the original behaviour on real 
-shutdown, while still avoiding the "This PCI device scribbled over my 
-new kernel" kexec case.
-
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 31063ac30992..833c18c3eb96 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -553,7 +553,7 @@ int pcie_port_service_register(struct pcie_port_service_driver *new)
+ 	if (pcie_ports_disabled)
+ 		return -ENODEV;
+ 
+-	new->driver.name = (char *)new->name;
++	new->driver.name = new->name;
+ 	new->driver.bus = &pcie_port_bus_type;
+ 	new->driver.probe = pcie_port_probe_service;
+ 	new->driver.remove = pcie_port_remove_service;
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.7.9.5
+
