@@ -1,153 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:59835 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932624Ab3KZVLX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 16:11:23 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org, Tim Harvey <tharvey@gateworks.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/7] [RFC] PCI: imx6: remove outbound io/mem ATU region mapping
-Date: Tue, 26 Nov 2013 22:10:43 +0100
-Message-Id: <1385500248-6551-2-git-send-email-marex@denx.de>
-In-Reply-To: <1385500248-6551-1-git-send-email-marex@denx.de>
-References: <1385500248-6551-1-git-send-email-marex@denx.de>
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:64168 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750961Ab3KLLku (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 06:40:50 -0500
+Received: by mail-pb0-f54.google.com with SMTP id ro12so3700016pbb.41
+        for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 03:40:49 -0800 (PST)
+From: Chang Liu <cl91tp@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Chang Liu <cl91tp@gmail.com>
+Subject: [PATCH] PCI: add a quirk for keeping Bus Master bit on shutdown
+Date: Tue, 12 Nov 2013 19:40:03 +0000
+Message-Id: <1384285203-642-1-git-send-email-cl91tp@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tim Harvey <tharvey@gateworks.com>
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=63861
 
-The IMX6 iATU is used for address translation between the AXI bus
-address space and PCI address space.  This is used for type0 and type1
-config cycles but is not necessary for outbound io/mem regions.
+Commit b566a22c2 and 7897e60227 made pci_device_shutdown()
+unconditionally clear Bus Master bit for every pci devices.
+While this works for most hardware, certain devices are not
+compatible with this. Intel Lynx Point-LP SATA Controller,
+for example, will hang the system if its Bus Master bit is
+cleared during device shutdown. This patch adds a pci quirk
+so that device drivers can instruct pci_device_shutdown()
+to keep Bus Master from being cleared, and then implements
+this mechanism for the Intel Lynx Point-LP AHCI driver.
 
-This patch removes the calls that inappropriately re-configures the ATU
-viewport for outbound memory and IO after config cycles and removes them
-altogether as they are not necessary.
-
-This resolves issues with PCI devices behind switches and has been tested with
-a Gige device behind a PLX PEX860x switch.  More testing is needed for other
-configurations.
-
-From: Tim Harvey <tharvey@gateworks.com>
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Chang Liu <cl91tp@gmail.com>
 ---
- drivers/pci/host/pcie-designware.c | 41 +++-----------------------------------
- 1 file changed, 3 insertions(+), 38 deletions(-)
+As per Takao's suggestion, add a new member into struct pci_dev
+and add a quirk in the ahci driver. I tested this on my
+machine (Acer V5-573G) and it works fine.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index ed9b11b..01d76ad 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -46,7 +46,6 @@
- #define PCIE_ATU_VIEWPORT		0x900
- #define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
- #define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
--#define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
- #define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
- #define PCIE_ATU_CR1			0x904
- #define PCIE_ATU_TYPE_MEM		(0x0 << 0)
-@@ -494,8 +493,8 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
+ drivers/ata/ahci.c       |  8 ++++++++
+ drivers/pci/pci-driver.c | 11 ++++++++---
+ include/linux/pci.h      |  1 +
+ 3 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 8e28f92..de6efcb 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1385,6 +1385,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  
- static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
- {
--	/* Program viewport 1 : OUTBOUND : CFG1 */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
-+	/* Program viewport 0 : OUTBOUND : CFG1 */
-+	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-@@ -505,38 +504,8 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
--}
--
--static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
--{
--	/* Program viewport 0 : OUTBOUND : MEM */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
--			  PCIE_ATU_UPPER_TARGET);
--}
--
--static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
--{
--	/* Program viewport 1 : OUTBOUND : IO */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
-+	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--	dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
--			  PCIE_ATU_UPPER_TARGET);
+ 	pci_set_master(pdev);
+ 
++	/* We normally clear Bus Master on pci device shutdown. However,
++	 * doing so for Intel Lynx Point-LP SATA Controller [AHCI mode]
++	 * hangs the system. Therefore keep it.
++	 * See bug report: https://bugzilla.kernel.org/show_bug.cgi?id=63861
++	 */
++	if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x9c03)
++		pdev->keep_busmaster_on_shutdown = 1;
++
+ 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
+ 		return ahci_host_activate(host, pdev->irq, n_msis);
+ 
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 38f3c01..ff15b0c 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -392,10 +392,15 @@ static void pci_device_shutdown(struct device *dev)
+ 	pci_msix_shutdown(pci_dev);
+ 
+ 	/*
+-	 * Turn off Bus Master bit on the device to tell it to not
+-	 * continue to do DMA. Don't touch devices in D3cold or unknown states.
++	 * If the hardware is okay with it, turn off Bus Master bit
++	 * on the device to tell it not to continue doing DMA.
++	 * Don't touch devices in D3cold or unknown states.
++	 * On certain hardware clearing Bus Master bit on shutdown
++	 * may hang the entire system. In these cases the driver of
++	 * these devices should set keep_busmaster_on_shutdown to 1.
+ 	 */
+-	if (pci_dev->current_state <= PCI_D3hot)
++	if (!pci_dev->keep_busmaster_on_shutdown
++	    && pci_dev->current_state <= PCI_D3hot)
+ 		pci_clear_master(pci_dev);
  }
  
- static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-@@ -552,11 +521,9 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		dw_pcie_prog_viewport_cfg0(pp, busdev);
- 		ret = cfg_read(pp->va_cfg0_base + address, where, size, val);
--		dw_pcie_prog_viewport_mem_outbound(pp);
- 	} else {
- 		dw_pcie_prog_viewport_cfg1(pp, busdev);
- 		ret = cfg_read(pp->va_cfg1_base + address, where, size, val);
--		dw_pcie_prog_viewport_io_outbound(pp);
- 	}
- 
- 	return ret;
-@@ -575,11 +542,9 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		dw_pcie_prog_viewport_cfg0(pp, busdev);
- 		ret = cfg_write(pp->va_cfg0_base + address, where, size, val);
--		dw_pcie_prog_viewport_mem_outbound(pp);
- 	} else {
- 		dw_pcie_prog_viewport_cfg1(pp, busdev);
- 		ret = cfg_write(pp->va_cfg1_base + address, where, size, val);
--		dw_pcie_prog_viewport_io_outbound(pp);
- 	}
- 
- 	return ret;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index da172f9..63db735 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -322,6 +322,7 @@ struct pci_dev {
+ 	/* keep track of device state */
+ 	unsigned int	is_added:1;
+ 	unsigned int	is_busmaster:1; /* device is busmaster */
++	unsigned int	keep_busmaster_on_shutdown:1; /* do not clear busmaster on shutdown */
+ 	unsigned int	no_msi:1;	/* device may not use msi */
+ 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
+ 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
 -- 
-1.8.4.3
+1.8.4.2
 
