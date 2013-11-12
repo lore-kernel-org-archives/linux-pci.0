@@ -1,173 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:38679 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524Ab3K2Chq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 21:37:46 -0500
-Message-ID: <5297FDC7.6000007@jp.fujitsu.com>
-Date: Fri, 29 Nov 2013 11:36:55 +0900
-From: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:27740 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752403Ab3KLJSx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Nov 2013 04:18:53 -0500
+Date: Tue, 12 Nov 2013 11:24:02 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Cc: Lan Tianyu <tianyu.lan@intel.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	"Moore, Robert" <robert.moore@intel.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
-Subject: Re: [PATCH 7/10] ACPI / hotplug: Move container-specific code out
- of the core
-References: <1421028.Rsfpmhnym3@vostro.rjw.lan> <2547688.l8Q1XKb3Ol@vostro.rjw.lan>
-In-Reply-To: <2547688.l8Q1XKb3Ol@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Aaron Lu <aaron.lu@intel.com>,
+	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+	"Luck, Tony" <tony.luck@intel.com>
+Subject: Re: [PATCH] ACPI / driver core: Store a device pointer in struct
+ acpi_dev_node
+Message-ID: <20131112092402.GO22916@intel.com>
+References: <3268437.YsusHvklcv@vostro.rjw.lan>
+ <52803124.7000304@intel.com>
+ <1683079.zjqzsOAjXB@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1683079.zjqzsOAjXB@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
-
-Replying to this mail may be wrong.
-
-Do you remember following your patch?
-http://lkml.org/lkml/2013/2/23/97
-
-I want to add autoeject variable in acpi_hotplug_profile structure and
-set autoecjet of container device "false".
-
-Currently, I have a problem on ejecting container device. Since linux-3.12,
-container device is removed by acpi_scan_hot_remove.
-
-I think this has two problems.
-
-   1. easily fail
-      My container device has CPU device and Memory device, and maximum size of
-      memory is 3Tbyte. In my environment, hot removing container device fails
-      on offlining memory if memory is used by application.
-      I think if offlininig memory, we must retly to offline memory several
-      times.
-   2. cannot work with userland's application
-      Hot removing CPU and memory on container device, we need take care of
-      userland application. Before linux-3.12, container device just notifies
-      KOBJ_OFFLINE to udev. So by using udev, if application binds to removed
-      CPU or node, applications can change them before hot removing container
-      device.
-      Currently, KOBJ_OFFLINE is notified to udev. But acpi_scan_hot_remove
-      also runs simultaneously for hot removing container device. So when
-      applications runs for corresponding to the deletion of the devices,
-      the devices may have been deleted.
-
-I don't know what devices are on hotpluggable conatainer device of other
-vendors. At least, my container device cannot be hot removed correctly.
-Then I want to add autoeject variable in acpi_hotplug_profile so that user
-can change the parameter to "true" or "false".
-
-Thanks,
-Yasuaki Ishimatsu
-
-(2013/11/18 1:36), Rafael J. Wysocki wrote:
+On Mon, Nov 11, 2013 at 02:45:39PM +0100, Rafael J. Wysocki wrote:
 > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Move container-specific uevents from the core hotplug code to the
-> container scan handler's .attach() and .detach() callbacks.
->
-> This way the core will not have to special-case containers and
-> the uevents will be guaranteed to happen every time a container
-> is either scanned or trimmed as appropriate.
->
+> Subject: ACPI / driver core: Store an ACPI device pointer in struct acpi_dev_node
+> 
+> Modify struct acpi_dev_node to contain a pointer to struct acpi_device
+> associated with the given device object (that is, its ACPI companion
+> device) instead of an ACPI handle corresponding to it.  Introduce two
+> new macros for manipulating that pointer in a CONFIG_ACPI-safe way,
+> ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
+> ACPI_HANDLE() macro to take the above changes into account.
+> Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
+> use ACPI_COMPANION_SET() instead.  For some of them who used to
+> pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
+> introduce a helper routine acpi_preset_companion() doing an
+> equivalent thing.
+> 
+> The main motivation for doing this is that there are things
+> represented by struct acpi_device objects that don't have valid
+> ACPI handles (so called fixed ACPI hardware features, such as
+> power and sleep buttons) and we would like to create platform
+> device objects for them and "glue" them to their ACPI companions
+> in the usual way (which currently is impossible due to the
+> lack of valid ACPI handles).  However, there are more reasons
+> why it may be useful.
+> 
+> First, struct acpi_device pointers allow of much better type checking
+> than void pointers which are ACPI handles, so it should be more
+> difficult to write buggy code using modified struct acpi_dev_node
+> and the new macros.  Second, the change should help to reduce (over
+> time) the number of places in which the result of ACPI_HANDLE() is
+> passed to acpi_bus_get_device() in order to obtain a pointer to the
+> struct acpi_device associated with the given "physical" device,
+> because now that pointer is returned by ACPI_COMPANION() directly.
+> Finally, the change should make it easier to write generic code that
+> will build both for CONFIG_ACPI set and unset without adding explicit
+> compiler directives to it.
+> 
 > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->   drivers/acpi/container.c |   11 ++++++++---
->   drivers/acpi/scan.c      |    8 +-------
->   include/acpi/acpi_bus.h  |    7 -------
->   3 files changed, 9 insertions(+), 17 deletions(-)
->
-> Index: linux-pm/drivers/acpi/container.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/container.c
-> +++ linux-pm/drivers/acpi/container.c
-> @@ -44,19 +44,24 @@ static const struct acpi_device_id conta
->   	{"", 0},
->   };
->
-> -static int container_device_attach(struct acpi_device *device,
-> +static int container_device_attach(struct acpi_device *adev,
->   				   const struct acpi_device_id *not_used)
->   {
-> -	/* This is necessary for container hotplug to work. */
-> +	kobject_uevent(&adev->dev.kobj, KOBJ_ONLINE);
->   	return 1;
->   }
->
-> +static void container_device_detach(struct acpi_device *adev)
-> +{
-> +	kobject_uevent(&adev->dev.kobj, KOBJ_OFFLINE);
-> +}
-> +
->   static struct acpi_scan_handler container_handler = {
->   	.ids = container_device_ids,
->   	.attach = container_device_attach,
-> +	.detach = container_device_detach,
->   	.hotplug = {
->   		.enabled = true,
-> -		.mode = AHM_CONTAINER,
->   	},
->   };
->
-> Index: linux-pm/drivers/acpi/scan.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/scan.c
-> +++ linux-pm/drivers/acpi/scan.c
-> @@ -206,9 +206,6 @@ static int acpi_scan_hot_remove(struct a
->   	acpi_status status;
->   	unsigned long long sta;
->
-> -	if (device->handler && device->handler->hotplug.mode == AHM_CONTAINER)
-> -		kobject_uevent(&device->dev.kobj, KOBJ_OFFLINE);
-> -
->   	/*
->   	 * Carry out two passes here and ignore errors in the first pass,
->   	 * because if the devices in question are memory blocks and
-> @@ -288,10 +285,7 @@ static int acpi_scan_device_check(struct
->   		dev_warn(&adev->dev, "Namespace scan failure\n");
->   		return error;
->   	}
-> -	if (adev->handler) {
-> -		if (adev->handler->hotplug.mode == AHM_CONTAINER)
-> -			kobject_uevent(&adev->dev.kobj, KOBJ_ONLINE);
-> -	} else {
-> +	if (!adev->handler) {
->   		dev_warn(&adev->dev, "Enumeration failure\n");
->   		return -ENODEV;
->   	}
-> Index: linux-pm/include/acpi/acpi_bus.h
-> ===================================================================
-> --- linux-pm.orig/include/acpi/acpi_bus.h
-> +++ linux-pm/include/acpi/acpi_bus.h
-> @@ -91,16 +91,9 @@ struct acpi_device;
->    * -----------------
->    */
->
-> -enum acpi_hotplug_mode {
-> -	AHM_GENERIC = 0,
-> -	AHM_CONTAINER,
-> -	AHM_COUNT
-> -};
-> -
->   struct acpi_hotplug_profile {
->   	struct kobject kobj;
->   	bool enabled:1;
-> -	enum acpi_hotplug_mode mode;
->   	int (*scan_dependent)(struct acpi_device *adev);
->   };
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
+I tested this on Haswell as well and it works fine with ACPI enumerated
+platform, I2C and SPI devices.
 
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com> (on Haswell)
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
