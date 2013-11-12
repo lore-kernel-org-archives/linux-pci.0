@@ -1,137 +1,147 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 2/3] ACPI / hotplug: Fix PCI host bridge hot removal
-Date: Tue, 19 Nov 2013 22:10:06 +0100
-Message-ID: <4037930.5v7ysfShLb@vostro.rjw.lan>
-In-Reply-To: <1384883331.1791.23.camel@misato.fc.hp.com>
-References: <2434673.zhjYZOTQ4A@vostro.rjw.lan> <1384816407.1791.19.camel@misato.fc.hp.com> <1384883331.1791.23.camel@misato.fc.hp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:47039 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751684Ab3KLHWM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 02:22:12 -0500
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 59B723EE0BD
+	for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 16:22:10 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 3D21145DEBE
+	for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 16:22:10 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.nic.fujitsu.com [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 258D845DEBB
+	for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 16:22:10 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id A0B19E08001
+	for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 16:22:09 +0900 (JST)
+Received: from m1001.s.css.fujitsu.com (m1001.s.css.fujitsu.com [10.240.81.139])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 42924E08008
+	for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 16:22:09 +0900 (JST)
+Message-ID: <5281D717.3090809@jp.fujitsu.com>
+Date: Tue, 12 Nov 2013 16:21:59 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: cl91tp@gmail.com, linux-pci@vger.kernel.org
+CC: khalid.aziz@hp.com
+Subject: Re: [PATCH] PCI: Blacklist certain hardware from clearing Bus Master
+ bit
+References: <1383132131-1096-1-git-send-email-cl91tp@gmail.com>
+In-Reply-To: <1383132131-1096-1-git-send-email-cl91tp@gmail.com>
+Content-Type: text/plain; charset=ISO-2022-JP
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Tuesday, November 19, 2013 10:48:51 AM Toshi Kani wrote:
-> > On Mon, 2013-11-18 at 22:39 +0100, Rafael J. Wysocki wrote:
-> > > On Monday, November 18, 2013 11:10:05 AM Toshi Kani wrote:
-> > > > On Thu, 2013-11-14 at 00:16 +0100, Rafael J. Wysocki wrote:
-> > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > > 
-> > > > > Since the PCI host bridge scan handler does not set hotplug.enabled,
-> > > > > the check of it in acpi_bus_device_eject() effectively prevents the
-> > > > > root bridge hot removal from working after commit a3b1b1ef78cd
-> > > > > (ACPI / hotplug: Merge device hot-removal routines).  However, that
-> > > > > check is not necessary, because the other acpi_bus_device_eject()
-> > > > > users, acpi_hotplug_notify_cb and acpi_eject_store(), do the same
-> > > > > check by themselves before executing that function.
-> > > > > 
-> > > > > For this reason, remove the scan handler check from
-> > > > > acpi_bus_device_eject() to make PCI hot bridge hot removal work
-> > > > > again.
-> > > > 
-> > > > I am curious why the PCI host bridge scan handler does not set
-> > > > hotplug.enabled.  Is this how it disables hotplug via sysfs eject but
-> > > > enables via ACPI notification?
-> > > 
-> > > It just doesn't register for hotplug at all.  I guess it could set that
-> > > bit alone, but then it would be quite confusing and the check is not
-> > > necessary anyway.
-> > 
-> > I see.  Given how the PCI host bridge scan handler is integrated today,
-> > the change looks reasonable to me.
-> 
-> Looking further, I noticed that there is one more issue to address.  The
-> patch below applies on top of your patchset.
->
-> From: Toshi Kani <toshi.kani@hp.com>
-> Subject: [PATCH] ACPI / hotplug: Fix conflicted PCI bridge notify
-> handlers
-> 
-> The PCI host bridge scan handler installs its own notify handler,
-> handle_hotplug_event_root(), by itself.  Nevertheless, the ACPI
-> hotplug framework also installs the common notify handler,
-> acpi_hotplug_notify_cb(), for PCI root bridges.  This causes
-> acpi_hotplug_notify_cb() to call _OST method with unsupported
-> error as hotplug.enabled is not set.
-> 
-> To address this issue, introduce hotplug.self_install flag, which
-> indicates that the scan handler installs its own notify handler by
-> itself.  The ACPI hotplug framework does not install the common
-> notify handler when this flag is set.
+Hi Chang,
 
-Good catch!
-
-Still, I don't think we need a new flag, because we know that that
-scan handler doesn't support hotplug, because its hotplug profile
-hasn't been registered (that actually applies to all scan handlers
-without hotplug support, not only the root host bridge).  Moreover,
-if it does support hotplug, but the hotplug profile hasn't been
-registered due to an error, we still should not install the notify
-handler I think.  So, I prefer the patch below.
-
-And this fix will remain useful after my recent series at
-http://marc.info/?l=linux-pci&m=138470560909690&w=4
+I'm working on DMA problem of kdump and interested in your patch. What
+happens when clearing Bus Master bit? The system hangs up immediately
+after calling pci_device_shutdown()?
 
 Thanks,
-Rafael
+Takao Indoh
 
-
----
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / hotplug: Ignore notifications for scan handlers without hotplug
-
-If a scan handler's hotplug profile has not been registered, do not
-install acpi_hotplug_notify_cb() as a notify handler for devices
-with the given scan handler attached.
-
-This fixes a problem with the PCI host bridge scan handler that
-installs its own notify handler, handle_hotplug_event_root(), by
-itself and doesn't register its hotplug profile.  Toshi says
-
-"Nevertheless, the ACPI hotplug framework also installs the common
- notify handler, acpi_hotplug_notify_cb(), for PCI root bridges.
- This causes acpi_hotplug_notify_cb() to call _OST method with
- unsupported error as hotplug.enabled is not set."
-
-Moreover, it is pointless to install acpi_hotplug_notify_cb() as
-a notify handler for device objects whose scan handlers don't
-support hotplug, because it will always fail for them.
-
-Reported-by: Toshi Kani <toshi.kani@hp.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: 3.9+ <stable@vger.kernel.org> # 3.9+
----
- drivers/acpi/scan.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -84,6 +84,11 @@ int acpi_scan_add_handler_with_hotplug(s
- 	return 0;
- }
- 
-+static bool acpi_scan_handler_with_hotplug(struct acpi_scan_handler *handler)
-+{
-+	return handler && handler->hotplug.kobj.state_in_sysfs;
-+}
-+
- /*
-  * Creates hid/cid(s) string needed for modalias and uevent
-  * e.g. on a device with hid:IBM0001 and cid:ACPI0001 you get:
-@@ -1841,7 +1846,7 @@ static void acpi_scan_init_hotplug(acpi_
- 	 */
- 	list_for_each_entry(hwid, &pnp.ids, list) {
- 		handler = acpi_scan_match_handler(hwid->id, NULL);
--		if (handler) {
-+		if (acpi_scan_handler_with_hotplug(handler)) {
- 			acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 					acpi_hotplug_notify_cb, handler);
- 			break;
+(2013/10/30 20:22), Chang Liu wrote:
+> This patch adds a blacklist that prevents pci device shutdown code
+> from clearing Bus Master bit on certain hardware that cannot tolerate it.
+> 
+> Clearing Bus Master bit was originally added in commit b566a22 to address
+> the issue of some PCI device breaking kexec by continuing to do DMA
+> after having been signaled to shutdown. However, this introduced a
+> regression (https://bugzilla.kernel.org/show_bug.cgi?id=63861) that
+> hangs the machine on kernel power off path.
+> 
+> It has been pointed out previously (https://lkml.org/lkml/2012/6/6/545)
+> that clearing Bus Master bit during PCI shutdown may have surprising
+> consequences as some devices may not tolerate this, and may hang the
+> system indefinitely. However, not doing so may break kexec. Since only
+> one bug report has come up since the introduction of b566a22, therefore
+> indicating that these misbehaving devices are in the minority, the
+> logical way to fix the hang while not breaking kexec is to blacklist
+> these devices from having their Bus Master bit cleared during the PCI
+> shutdown routine.
+> 
+> Signed-off-by: Chang Liu <cl91tp@gmail.com>
+> ---
+> This fixes the above mentioned bug https://bugzilla.kernel.org/show_bug.cgi?id=63861
+> 
+> As Alan Cox has warned in https://lkml.org/lkml/2012/6/6/545, some device
+> will break if we clear bus master bit on shutdown. So sooner or later
+> we will need to blacklist some device if we are to keep Bus Master being cleared
+> as the default behavior. Now with the first (as I have been aware) device
+> that breaks under this default behavior has surfaced, we might as well
+> add the infrastructure code now in case some other devices break down
+> in the future. These devices may not be many so a blacklist likely won't
+> add much maintainance overhead. And we should keep the blacklist here in
+> the pci shutdown code instead of in individual device drivers since this
+> is the most direct way and will likely aid future debug process.
+> 
+> Regarding the kexec issue which the original commit b566a22c was trying to address:
+> kexec doesn't work on this machine, even before the patch was applied (ie. in
+> earlier kernels, I tested 3.11.6 and 3.12-rc7). Possibly because some devices
+> won't reinitialize themselves properly. On 3.11.6, kexec -e triggers an immediate
+> reboot. On 3.12-rc7, both with and without this patch applied, kexec -e can get it
+> halfway into booting the new kernel but then a reboot is also triggered. I'm not sure
+> if this patch has helped the kexec situation in this machine or not, but since it
+> has no effects on machines without this defective SATA controller (and/or its firmware),
+> I would say it is unlikely to negatively affect kexec on other machines.
+> 
+>   drivers/pci/pci-driver.c | 34 +++++++++++++++++++++++++++++++++-
+>   1 file changed, 33 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 98f7b9b..1744ebf 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -376,6 +376,29 @@ static int pci_device_remove(struct device * dev)
+>   	return 0;
+>   }
+>   
+> +/*
+> + * Blacklisting certain hardware from having their Bus Master bit cleared
+> + * during device shutdown. This is to workaround certain hardware's issue
+> + * with clearing Bus Master bit that hangs the entire system.
+> + */
+> +struct {
+> +	unsigned short vendor;
+> +	unsigned short device;
+> +} pci_bus_master_blacklist[] = {
+> +	{ 0x8086, 0x9c03 },	/* Intel Corporation Lynx Point-LP SATA Controller */
+> +};
+> +
+> +static bool pci_should_clear_master(struct pci_dev *pdev)
+> +{
+> +	int i;
+> +	for (i = 0; i < ARRAY_SIZE(pci_bus_master_blacklist); i++) {
+> +		if (pdev->vendor == pci_bus_master_blacklist[i].vendor
+> +		    && pdev->device == pci_bus_master_blacklist[i].device)
+> +			return false;
+> +	}
+> +	return true;
+> +}
+> +
+>   static void pci_device_shutdown(struct device *dev)
+>   {
+>   	struct pci_dev *pci_dev = to_pci_dev(dev);
+> @@ -391,9 +414,18 @@ static void pci_device_shutdown(struct device *dev)
+>   	/*
+>   	 * Turn off Bus Master bit on the device to tell it to not
+>   	 * continue to do DMA. Don't touch devices in D3cold or unknown states.
+> +	 * This is useful for proper kexec. However, a number of hardware
+> +	 * aren't happy with this. At the slightest, some hardware simply
+> +	 * ignore the bus master bit. For some other hardware, clearing
+> +	 * the bit on shutdown path hangs the entire system.
+> +	 * This is likely to be a firmware or hardware problem, but
+> +	 * we can workaround it here by blacklisting these hardware
+> +	 * from having their bus master bit cleared during device shutdown.
+>   	 */
+> -	if (pci_dev->current_state <= PCI_D3hot)
+> +	if (pci_should_clear_master(pci_dev)
+> +	    && pci_dev->current_state <= PCI_D3hot) {
+>   		pci_clear_master(pci_dev);
+> +	}
+>   }
+>   
+>   #ifdef CONFIG_PM
+> 
 
