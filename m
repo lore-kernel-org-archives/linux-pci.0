@@ -1,404 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:52752 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932312Ab3KZVCt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 16:02:49 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 11/11] PCI/MSI: Introduce pcim_enable_msi*() family helpers
-Date: Tue, 26 Nov 2013 10:10:00 +0100
-Message-Id: <086bc30b22688c629911d02e230d1bc876fb946f.1385399393.git.agordeev@redhat.com>
-In-Reply-To: <cover.1385399393.git.agordeev@redhat.com>
-References: <cover.1385399393.git.agordeev@redhat.com>
+Received: from mail-la0-f49.google.com ([209.85.215.49]:63822 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753801Ab3KLHCx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 02:02:53 -0500
+MIME-Version: 1.0
+In-Reply-To: <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+	<CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+	<CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+	<CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+	<527A8166.6000701@gmail.com>
+	<CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+	<CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+	<CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+	<CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+	<20131111224439.GA30638@google.com>
+	<CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+Date: Tue, 12 Nov 2013 09:02:51 +0200
+Message-ID: <CANUX_P2O26WcBfPC41-m4NWMhzFD90h_qT8C-ntQ79y1a6Q4Qw@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently many device drivers need contiguously call functions
-pci_enable_msix() for MSI-X or pci_enable_msi_block() for MSI
-in a loop until success or failure. This update generalizes
-this usage pattern and introduces pcim_enable_msi*() family
-helpers.
+On Tue, Nov 12, 2013 at 7:42 AM, wzyboy <wzyboy@wzyboy.org> wrote:
+> Hi, I've got some good news. Here is what I did today:
+>
+> boot up laptop -> do the sysfs trick -> start downloading a big file
+> to benchmark it -> several minutes later the bug occurs -> reboot my
+> laptop to recover -> do the setpci trick -> start downloading a big
+> file to benchmark it -> more than 5 GiB downloaded (at ~ 2.3 MiB/s)
+> and everything works fine!
 
-As result, device drivers do not have to deal with tri-state
-return values from pci_enable_msix() and pci_enable_msi_block()
-functions directly and expected to have more clearer and straight
-code.
+encouraging. Thanks.
+I just wonder... the patch I sent was supposed to tell the HW not to
+use L1. So I would have hoped it would have helped in the same way?
+After all, L1 is a handshake between the device and the bridge, so
+that if the device doesn't initiate / refuses to go into L1, I'd
+expect it to have the same effect as disabling L1 in the ASPM register
+PCIe config space?
+Obviously I am wrong though.
 
-So i.e. the request loop described in the documentation...
+>
+> Here are the output of lspci -vv after running two "setpci" commands.
+>
+> There is also a screenshot of ThinkPad X240s HMM, showing how the
+> wireless card is connected to the motherboard. In this figure #10 is
+> the Wireless LAN card. It is connected to the motherboard with Intel's
+> NGFF connector.
+>
+> I will continue downloading big files to benchmark it.
+>
 
-	int foo_driver_enable_msix(struct foo_adapter *adapter,
-				   int nvec)
-	{
-		while (nvec >= FOO_DRIVER_MINIMUM_NVEC) {
-			rc = pci_enable_msix(adapter->pdev,
-					     adapter->msix_entries,
-					     nvec);
-			if (rc > 0)
-				nvec = rc;
-			else
-				return rc;
-		}
+Thanks
 
-		return -ENOSPC;
-	}
-
-...would turn into a single helper call....
-
-	rc = pcim_enable_msix_range(adapter->pdev,
-				    adapter->msix_entries,
-				    FOO_DRIVER_MINIMUM_NVEC,
-				    nvec);
-
-Device drivers with more specific requirements (i.e. a number of
-MSI-Xs which is a multiple of a certain number within a specified
-range) would still need to implement the loop using the two old
-functions.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Suggested-by: Ben Hutchings <bhutchings@solarflare.com>
-Reviewed-by: Tejun Heo <tj@kernel.org>
----
- Documentation/PCI/MSI-HOWTO.txt |  134 +++++++++++++++++++++++++++++++++++++--
- drivers/pci/msi.c               |   74 +++++++++++++++++++++
- include/linux/pci.h             |   55 ++++++++++++++++
- 3 files changed, 258 insertions(+), 5 deletions(-)
-
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index 5955389..044f9cd 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -127,7 +127,62 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
- returns as soon as it finds any constraint that doesn't allow the
- call to succeed.
- 
--4.2.3 pci_disable_msi
-+4.2.3 pcim_enable_msi_range
-+
-+int pcim_enable_msi_range(struct pci_dev *dev, struct msix_entry *entries,
-+			  int minvec, int maxvec)
-+
-+This variation on pci_enable_msi_block() call allows a device driver to
-+request any number of MSIs within specified range 'minvec' to 'maxvec'.
-+Whenever possible device drivers are encouraged to use this function
-+rather than explicit request loop calling pci_enable_msi_block().
-+
-+If this function returns a negative number, it indicates an error and
-+the driver should not attempt to request any more MSI interrupts for
-+this device.
-+
-+If this function returns a positive number it indicates at least the
-+returned number of MSI interrupts have been successfully allocated (it may
-+have allocated more in order to satisfy the power-of-two requirement).
-+Device drivers can use this number to further initialize devices.
-+
-+4.2.4 pcim_enable_msi
-+
-+int pcim_enable_msi(struct pci_dev *dev,
-+		    struct msix_entry *entries, int maxvec)
-+
-+This variation on pci_enable_msi_block() call allows a device driver to
-+request any number of MSIs up to 'maxvec'. Whenever possible device drivers
-+are encouraged to use this function rather than explicit request loop
-+calling pci_enable_msi_block().
-+
-+If this function returns a negative number, it indicates an error and
-+the driver should not attempt to request any more MSI interrupts for
-+this device.
-+
-+If this function returns a positive number it indicates at least the
-+returned number of MSI interrupts have been successfully allocated (it may
-+have allocated more in order to satisfy the power-of-two requirement).
-+Device drivers can use this number to further initialize devices.
-+
-+4.2.5 pcim_enable_msi_exact
-+
-+int pcim_enable_msi_exact(struct pci_dev *dev,
-+			  struct msix_entry *entries, int nvec)
-+
-+This variation on pci_enable_msi_block() call allows a device driver to
-+request exactly 'nvec' MSIs.
-+
-+If this function returns a negative number, it indicates an error and
-+the driver should not attempt to request any more MSI interrupts for
-+this device.
-+
-+If this function returns the value of 'nvec' it indicates MSI interrupts
-+have been successfully allocated. No other value in case of success could
-+be returned. Device drivers can use this value to further allocate and
-+initialize device resources.
-+
-+4.2.6 pci_disable_msi
- 
- void pci_disable_msi(struct pci_dev *dev)
- 
-@@ -142,7 +197,7 @@ on any interrupt for which it previously called request_irq().
- Failure to do so results in a BUG_ON(), leaving the device with
- MSI enabled and thus leaking its vector.
- 
--4.2.4 pci_get_msi_cap
-+4.2.7 pci_get_msi_cap
- 
- int pci_get_msi_cap(struct pci_dev *dev)
- 
-@@ -222,7 +277,76 @@ static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
- 	return -ENOSPC;
- }
- 
--4.3.2 pci_disable_msix
-+4.3.2 pcim_enable_msix_range
-+
-+int pcim_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
-+			   int minvec, int maxvec)
-+
-+This variation on pci_enable_msix() call allows a device driver to request
-+any number of MSI-Xs within specified range 'minvec' to 'maxvec'. Whenever
-+possible device drivers are encouraged to use this function rather than
-+explicit request loop calling pci_enable_msix().
-+
-+If this function returns a negative number, it indicates an error and
-+the driver should not attempt to allocate any more MSI-X interrupts for
-+this device.
-+
-+If this function returns a positive number it indicates the number of
-+MSI-X interrupts that have been successfully allocated. Device drivers
-+can use this number to further allocate and initialize device resources.
-+
-+A modified function calling pci_enable_msix() in a loop might look like:
-+
-+static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
-+{
-+	rc = pcim_enable_msix_range(adapter->pdev, adapter->msix_entries,
-+				    FOO_DRIVER_MINIMUM_NVEC, nvec);
-+	if (rc < 0)
-+		return rc;
-+
-+	rc = foo_driver_init_other(adapter, rc);
-+	if (rc < 0)
-+		pci_disable_msix(adapter->pdev);
-+
-+	return rc;
-+}
-+
-+4.3.3 pcim_enable_msix
-+
-+int pcim_enable_msix(struct pci_dev *dev,
-+		     struct msix_entry *entries, int maxvec)
-+
-+This variation on pci_enable_msix() call allows a device driver to request
-+any number of MSI-Xs up to 'maxvec'. Whenever possible device drivers are
-+encouraged to use this function rather than explicit request loop calling
-+pci_enable_msix().
-+
-+If this function returns a negative number, it indicates an error and
-+the driver should not attempt to allocate any more MSI-X interrupts for
-+this device.
-+
-+If this function returns a positive number it indicates the number of
-+MSI-X interrupts that have been successfully allocated. Device drivers
-+can use this number to further allocate and initialize device resources.
-+
-+4.3.4 pcim_enable_msix_exact
-+
-+int pcim_enable_msix_exact(struct pci_dev *dev,
-+			   struct msix_entry *entries, int nvec)
-+
-+This variation on pci_enable_msix() call allows a device driver to request
-+exactly 'nvec' MSI-Xs.
-+
-+If this function returns a negative number, it indicates an error and
-+the driver should not attempt to allocate any more MSI-X interrupts for
-+this device.
-+
-+If this function returns the value of 'nvec' it indicates MSI-X interrupts
-+have been successfully allocated. No other value in case of success could
-+be returned. Device drivers can use this value to further allocate and
-+initialize device resources.
-+
-+4.3.5 pci_disable_msix
- 
- void pci_disable_msix(struct pci_dev *dev)
- 
-@@ -236,14 +360,14 @@ on any interrupt for which it previously called request_irq().
- Failure to do so results in a BUG_ON(), leaving the device with
- MSI-X enabled and thus leaking its vector.
- 
--4.3.3 The MSI-X Table
-+4.3.6 The MSI-X Table
- 
- The MSI-X capability specifies a BAR and offset within that BAR for the
- MSI-X Table.  This address is mapped by the PCI subsystem, and should not
- be accessed directly by the device driver.  If the driver wishes to
- mask or unmask an interrupt, it should call disable_irq() / enable_irq().
- 
--4.3.4 pci_msix_table_size
-+4.3.7 pci_msix_table_size
- 
- int pci_msix_table_size(struct pci_dev *dev)
- 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 6fe0add..c5fb4fb 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1086,3 +1086,77 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
- 	if (dev->msix_cap)
- 		msix_set_enable(dev, 0);
- }
-+
-+/**
-+ * pcim_enable_msi_range - configure device's MSI capability structure
-+ * @dev: device to configure
-+ * @minvec: minimal number of interrupts to configure
-+ * @maxvec: maximum number of interrupts to configure
-+ *
-+ * This function tries to allocate a maximum possible number of interrupts in a
-+ * range between @minvec and @maxvec. It returns a negative errno if an error
-+ * occurs. If it succeeds, it returns the actual number of interrupts allocated
-+ * and updates the @dev's irq member to the lowest new interrupt number;
-+ * the other interrupt numbers allocated to this device are consecutive.
-+ **/
-+int pcim_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
-+{
-+	int nvec = maxvec;
-+	int rc;
-+
-+	if (maxvec < minvec)
-+		return -ERANGE;
-+
-+	do {
-+		rc = pci_enable_msi_block(dev, nvec);
-+		if (rc < 0) {
-+			return rc;
-+		} else if (rc > 0) {
-+			if (rc < minvec)
-+				return -ENOSPC;
-+			nvec = rc;
-+		}
-+	} while (rc);
-+
-+	return nvec;
-+}
-+EXPORT_SYMBOL(pcim_enable_msi_range);
-+
-+/**
-+ * pcim_enable_msix_range - configure device's MSI-X capability structure
-+ * @dev: pointer to the pci_dev data structure of MSI-X device function
-+ * @entries: pointer to an array of MSI-X entries
-+ * @minvec: minimum number of MSI-X irqs requested
-+ * @maxvec: maximum number of MSI-X irqs requested
-+ *
-+ * Setup the MSI-X capability structure of device function with a maximum
-+ * possible number of interrupts in the range between @minvec and @maxvec
-+ * upon its software driver call to request for MSI-X mode enabled on its
-+ * hardware device function. It returns a negative errno if an error occurs.
-+ * If it succeeds, it returns the actual number of interrupts allocated and
-+ * indicates the successful configuration of MSI-X capability structure
-+ * with new allocated MSI-X interrupts.
-+ **/
-+int pcim_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
-+			   int minvec, int maxvec)
-+{
-+	int nvec = maxvec;
-+	int rc;
-+
-+	if (maxvec < minvec)
-+		return -ERANGE;
-+
-+	do {
-+		rc = pci_enable_msix(dev, entries, nvec);
-+		if (rc < 0) {
-+			return rc;
-+		} else if (rc > 0) {
-+			if (rc < minvec)
-+				return -ENOSPC;
-+			nvec = rc;
-+		}
-+	} while (rc);
-+
-+	return nvec;
-+}
-+EXPORT_SYMBOL(pcim_enable_msix_range);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8af1217..4e02d88 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1194,6 +1194,37 @@ static inline int pci_msi_enabled(void)
- {
- 	return 0;
- }
-+
-+int pcim_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
-+{
-+	return -ENOSYS;
-+}
-+static inline int pcim_enable_msi(struct pci_dev *dev, int maxvec)
-+{
-+	return -ENOSYS;
-+}
-+static inline int pcim_enable_msi_exact(struct pci_dev *dev, int nvec)
-+{
-+	return -ENOSYS;
-+}
-+
-+static inline int
-+pcim_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
-+		       int minvec, int maxvec)
-+{
-+	return -ENOSYS;
-+}
-+static inline int
-+pcim_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int maxvec)
-+{
-+	return -ENOSYS;
-+}
-+static inline int
-+pcim_enable_msix_exact(struct pci_dev *dev,
-+		       struct msix_entry *entries, int nvec)
-+{
-+	return -ENOSYS;
-+}
- #else
- int pci_get_msi_cap(struct pci_dev *dev);
- int pci_enable_msi_block(struct pci_dev *dev, int nvec);
-@@ -1206,6 +1237,30 @@ void pci_disable_msix(struct pci_dev *dev);
- void msi_remove_pci_irq_vectors(struct pci_dev *dev);
- void pci_restore_msi_state(struct pci_dev *dev);
- int pci_msi_enabled(void);
-+
-+int pcim_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec);
-+static inline int pcim_enable_msi(struct pci_dev *dev, int maxvec)
-+{
-+	return pcim_enable_msi_range(dev, 1, maxvec);
-+}
-+static inline int pcim_enable_msi_exact(struct pci_dev *dev, int nvec)
-+{
-+	return pcim_enable_msi_range(dev, nvec, nvec);
-+}
-+
-+int pcim_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
-+			   int minvec, int maxvec);
-+static inline int
-+pcim_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int maxvec)
-+{
-+	return pcim_enable_msix_range(dev, entries, 1, maxvec);
-+}
-+static inline int
-+pcim_enable_msix_exact(struct pci_dev *dev,
-+		       struct msix_entry *entries, int nvec)
-+{
-+	return pcim_enable_msix_range(dev, entries, nvec, nvec);
-+}
- #endif
- 
- #ifdef CONFIG_PCIEPORTBUS
--- 
-1.7.7.6
-
+> --
+> wzyboy
