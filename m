@@ -1,96 +1,182 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:17506 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755753Ab3KFBge (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 20:36:34 -0500
-Message-ID: <1383701533.1847.20.camel@misato.fc.hp.com>
-Subject: Re: [fixup][PATCH 2/6] ACPI / hotplug: Refuse to hot-remove all
- objects with disabled hotplug
-From: Toshi Kani <toshi.kani@hp.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Tue, 05 Nov 2013 18:32:13 -0700
-In-Reply-To: <3139278.S6Gt6Dta9o@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
-	 <5195965.AgE9G8aXP3@vostro.rjw.lan>
-	 <1383698367.1847.18.camel@misato.fc.hp.com>
-	 <3139278.S6Gt6Dta9o@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:54151 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138Ab3KLLqs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 06:46:48 -0500
+Received: by mail-wg0-f48.google.com with SMTP id n12so2947646wgh.15
+        for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 03:46:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAMZVYU_1T3PtYuTABL0QHPau938HtJeMqWKscsgqEf3dMTdtMw@mail.gmail.com>
+References: <1383132131-1096-1-git-send-email-cl91tp@gmail.com>
+	<5281D717.3090809@jp.fujitsu.com>
+	<CAMZVYU9Vwarz=Fn6AHjbYPw1q4EDda7shp9ZXMsuQd+Zo_BsiQ@mail.gmail.com>
+	<5281E523.3090503@jp.fujitsu.com>
+	<CAMZVYU_1T3PtYuTABL0QHPau938HtJeMqWKscsgqEf3dMTdtMw@mail.gmail.com>
+Date: Tue, 12 Nov 2013 11:46:47 +0000
+Message-ID: <CAMZVYU_SreFi1ezDxUwq9oVG5Hoafc=0w=Nr=xSPDcWyG+hWSw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Blacklist certain hardware from clearing Bus Master bit
+From: Chang Liu <cl91tp@gmail.com>
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-11-06 at 02:35 +0100, Rafael J. Wysocki wrote:
-> On Tuesday, November 05, 2013 05:39:27 PM Toshi Kani wrote:
-> > On Wed, 2013-11-06 at 00:27 +0100, Rafael J. Wysocki wrote:
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > 
-> > > In theory, an ACPI device object may be the parent of another
-> > > device object whose hotplug is disabled by user space through its
-> > > scan handler.  In that case, the eject operation targeting the
-> > > parent should fail as though the parent's own hotplug was disabled,
-> > > but currently this is not the case, because acpi_scan_hot_remove()
-> > > doesn't check the disable/enable hotplug status of the children
-> > > of the top-most object passed to it.
-> > > 
-> > > To fix this, modify acpi_bus_offline_companions() to return an
-> > > error code if hotplug is disabled for the given device object.
-> > > [Also change the name of the function to acpi_bus_offline(),
-> > > because it is not only about companions any more, and change
-> > > the name of acpi_bus_online_companions() accordingly.]  Make
-> > > acpi_scan_hot_remove() propagate that error to its callers.
-> > > 
-> >  :
-> > > +static acpi_status acpi_bus_online(acpi_handle handle, u32 lvl, void *data,
-> > > +				   void **ret_p)
-> > >  {
-> > >  	struct acpi_device *device = NULL;
-> > >  	struct acpi_device_physical_node *pn;
-> > > @@ -214,26 +220,32 @@ static int acpi_scan_hot_remove(struct a
-> > >  	 * If the first pass is successful, the second one isn't needed, though.
-> > >  	 */
-> > >  	errdev = NULL;
-> > > -	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-> > > -			    NULL, acpi_bus_offline_companions,
-> > > -			    (void *)false, (void **)&errdev);
-> > > -	acpi_bus_offline_companions(handle, 0, (void *)false, (void **)&errdev);
-> > > +	status = acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-> > > +				     NULL, acpi_bus_offline, (void *)false,
-> > > +				     (void **)&errdev);
-> > > +	if (status == AE_SUPPORT) {
-> > > +		dev_warn(errdev, "Offline disabled.\n");
-> > > +		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-> > > +				    acpi_bus_online, NULL, NULL, NULL);
-> > > +		put_device(&device->dev);
-> > > +		return -EPERM;
-> > > +	}
-> > > +	acpi_bus_offline(handle, 0, (void *)false, (void **)&errdev);
-> > >  	if (errdev) {
-> > 
-> > If the target object failed with AE_SUPPORT, shouldn't we skip the 2nd
-> > pass and return with -EPERM after rollback?
-> 
-> We've checked the target object already in acpi_hotplug_notify_cb() or in
-> acpi_eject_store().
+Hi Takao,
 
-Oh, I see.  Thanks for the clarification.
+I've made a new patch and sent it to the mailing list. The title is:
+[PATCH] PCI: add a quirk for keeping Bus Master bit on shutdown
+Thanks for reviewing this!
 
-> 
-> Which is telling me that the previous version of the patch was better after
-> all, because the hotplug.enabled thing takes precedence over
-> acpi_force_hot_remove in the other places.  So this:
-> 
-> https://patchwork.kernel.org/patch/3135841/
-> 
-> is the right version.  Sorry for the confusion.
+Cheers,
+Chang
 
-Agreed.
-
-Acked-by: Toshi Kani <toshi.kani@hp.com>
-
--Toshi
-
+2013/11/12 Chang Liu <cl91tp@gmail.com>:
+> Yeah this is certainly a better idea than introducing a blacklist.
+> I'll do a new patch and send it to the mailing list as soon as possible.
+>
+> Cheers,
+> Chang
+>
+>
+> 2013/11/12 Takao Indoh <indou.takao@jp.fujitsu.com>:
+>> (2013/11/12 16:51), Chang Liu wrote:
+>>> Hi Takao,
+>>>
+>>> Thanks for your interest! From the log message during my testings, it appears that the system does not hang immediately after clearing the Bus Master bit, but continues to do the remaining shutdown routines (which aren't many though) until it hangs at the very last step (which I think is machine_power_off(), which in my machine calls acpi_power_off()).
+>>>
+>>> So the two events (clearing Bus Master bit and system hangup) don't necessarily happen simultaneously but do occur within microseconds.
+>>
+>> Understood, thanks for the information.
+>>
+>> Regarding your patch, how about adding pci quirk instead of introducing
+>> black list? Add new member into struct pci_dev like below and set this
+>> bit in the quirk. Just an idea.
+>>
+>>  unsigned int keep_busmaster_on_shutdown:1;
+>>
+>> Thanks,
+>> Takao Indoh
+>>
+>>
+>>>
+>>> Cheers,
+>>> Chang
+>>>
+>>> 在 2013年11月12日 下午3:22，"Takao Indoh" <indou.takao@jp.fujitsu.com <mailto:indou.takao@jp.fujitsu.com>>写道：
+>>>
+>>>     Hi Chang,
+>>>
+>>>     I'm working on DMA problem of kdump and interested in your patch. What
+>>>     happens when clearing Bus Master bit? The system hangs up immediately
+>>>     after calling pci_device_shutdown()?
+>>>
+>>>     Thanks,
+>>>     Takao Indoh
+>>>
+>>>     (2013/10/30 20:22), Chang Liu wrote:
+>>>      > This patch adds a blacklist that prevents pci device shutdown code
+>>>      > from clearing Bus Master bit on certain hardware that cannot tolerate it.
+>>>      >
+>>>      > Clearing Bus Master bit was originally added in commit b566a22 to address
+>>>      > the issue of some PCI device breaking kexec by continuing to do DMA
+>>>      > after having been signaled to shutdown. However, this introduced a
+>>>      > regression (https://bugzilla.kernel.org/show_bug.cgi?id=63861) that
+>>>      > hangs the machine on kernel power off path.
+>>>      >
+>>>      > It has been pointed out previously (https://lkml.org/lkml/2012/6/6/545)
+>>>      > that clearing Bus Master bit during PCI shutdown may have surprising
+>>>      > consequences as some devices may not tolerate this, and may hang the
+>>>      > system indefinitely. However, not doing so may break kexec. Since only
+>>>      > one bug report has come up since the introduction of b566a22, therefore
+>>>      > indicating that these misbehaving devices are in the minority, the
+>>>      > logical way to fix the hang while not breaking kexec is to blacklist
+>>>      > these devices from having their Bus Master bit cleared during the PCI
+>>>      > shutdown routine.
+>>>      >
+>>>      > Signed-off-by: Chang Liu <cl91tp@gmail.com <mailto:cl91tp@gmail.com>>
+>>>      > ---
+>>>      > This fixes the above mentioned bug https://bugzilla.kernel.org/show_bug.cgi?id=63861
+>>>      >
+>>>      > As Alan Cox has warned in https://lkml.org/lkml/2012/6/6/545, some device
+>>>      > will break if we clear bus master bit on shutdown. So sooner or later
+>>>      > we will need to blacklist some device if we are to keep Bus Master being cleared
+>>>      > as the default behavior. Now with the first (as I have been aware) device
+>>>      > that breaks under this default behavior has surfaced, we might as well
+>>>      > add the infrastructure code now in case some other devices break down
+>>>      > in the future. These devices may not be many so a blacklist likely won't
+>>>      > add much maintainance overhead. And we should keep the blacklist here in
+>>>      > the pci shutdown code instead of in individual device drivers since this
+>>>      > is the most direct way and will likely aid future debug process.
+>>>      >
+>>>      > Regarding the kexec issue which the original commit b566a22c was trying to address:
+>>>      > kexec doesn't work on this machine, even before the patch was applied (ie. in
+>>>      > earlier kernels, I tested 3.11.6 and 3.12-rc7). Possibly because some devices
+>>>      > won't reinitialize themselves properly. On 3.11.6, kexec -e triggers an immediate
+>>>      > reboot. On 3.12-rc7, both with and without this patch applied, kexec -e can get it
+>>>      > halfway into booting the new kernel but then a reboot is also triggered. I'm not sure
+>>>      > if this patch has helped the kexec situation in this machine or not, but since it
+>>>      > has no effects on machines without this defective SATA controller (and/or its firmware),
+>>>      > I would say it is unlikely to negatively affect kexec on other machines.
+>>>      >
+>>>      >   drivers/pci/pci-driver.c | 34 +++++++++++++++++++++++++++++++++-
+>>>      >   1 file changed, 33 insertions(+), 1 deletion(-)
+>>>      >
+>>>      > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>>>      > index 98f7b9b..1744ebf 100644
+>>>      > --- a/drivers/pci/pci-driver.c
+>>>      > +++ b/drivers/pci/pci-driver.c
+>>>      > @@ -376,6 +376,29 @@ static int pci_device_remove(struct device * dev)
+>>>      >       return 0;
+>>>      >   }
+>>>      >
+>>>      > +/*
+>>>      > + * Blacklisting certain hardware from having their Bus Master bit cleared
+>>>      > + * during device shutdown. This is to workaround certain hardware's issue
+>>>      > + * with clearing Bus Master bit that hangs the entire system.
+>>>      > + */
+>>>      > +struct {
+>>>      > +     unsigned short vendor;
+>>>      > +     unsigned short device;
+>>>      > +} pci_bus_master_blacklist[] = {
+>>>      > +     { 0x8086, 0x9c03 },     /* Intel Corporation Lynx Point-LP SATA Controller */
+>>>      > +};
+>>>      > +
+>>>      > +static bool pci_should_clear_master(struct pci_dev *pdev)
+>>>      > +{
+>>>      > +     int i;
+>>>      > +     for (i = 0; i < ARRAY_SIZE(pci_bus_master_blacklist); i++) {
+>>>      > +             if (pdev->vendor == pci_bus_master_blacklist[i].vendor
+>>>      > +                 && pdev->device == pci_bus_master_blacklist[i].device)
+>>>      > +                     return false;
+>>>      > +     }
+>>>      > +     return true;
+>>>      > +}
+>>>      > +
+>>>      >   static void pci_device_shutdown(struct device *dev)
+>>>      >   {
+>>>      >       struct pci_dev *pci_dev = to_pci_dev(dev);
+>>>      > @@ -391,9 +414,18 @@ static void pci_device_shutdown(struct device *dev)
+>>>      >       /*
+>>>      >        * Turn off Bus Master bit on the device to tell it to not
+>>>      >        * continue to do DMA. Don't touch devices in D3cold or unknown states.
+>>>      > +      * This is useful for proper kexec. However, a number of hardware
+>>>      > +      * aren't happy with this. At the slightest, some hardware simply
+>>>      > +      * ignore the bus master bit. For some other hardware, clearing
+>>>      > +      * the bit on shutdown path hangs the entire system.
+>>>      > +      * This is likely to be a firmware or hardware problem, but
+>>>      > +      * we can workaround it here by blacklisting these hardware
+>>>      > +      * from having their bus master bit cleared during device shutdown.
+>>>      >        */
+>>>      > -     if (pci_dev->current_state <= PCI_D3hot)
+>>>      > +     if (pci_should_clear_master(pci_dev)
+>>>      > +         && pci_dev->current_state <= PCI_D3hot) {
+>>>      >               pci_clear_master(pci_dev);
+>>>      > +     }
+>>>      >   }
+>>>      >
+>>>      >   #ifdef CONFIG_PM
+>>>      >
+>>>
+>>
+>>
