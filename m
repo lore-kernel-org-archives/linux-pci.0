@@ -1,113 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:63526 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751531Ab3KKVn4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2013 16:43:56 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Lan Tianyu <tianyu.lan@intel.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Luck, Tony" <tony.luck@intel.com>
-Subject: Re: [PATCH] ACPI / driver core: Store a device pointer in struct acpi_dev_node
-Date: Mon, 11 Nov 2013 22:56:22 +0100
-Message-ID: <2685417.pyXg99Yvkt@vostro.rjw.lan>
-In-Reply-To: <20131111150318.GB16112@kroah.com>
-References: <3268437.YsusHvklcv@vostro.rjw.lan> <1683079.zjqzsOAjXB@vostro.rjw.lan> <20131111150318.GB16112@kroah.com>
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:34204 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407Ab3KLIpY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 03:45:24 -0500
+Received: by mail-wi0-f175.google.com with SMTP id hm11so3277838wib.8
+        for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 00:45:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <5281E523.3090503@jp.fujitsu.com>
+References: <1383132131-1096-1-git-send-email-cl91tp@gmail.com>
+	<5281D717.3090809@jp.fujitsu.com>
+	<CAMZVYU9Vwarz=Fn6AHjbYPw1q4EDda7shp9ZXMsuQd+Zo_BsiQ@mail.gmail.com>
+	<5281E523.3090503@jp.fujitsu.com>
+Date: Tue, 12 Nov 2013 08:45:23 +0000
+Message-ID: <CAMZVYU_1T3PtYuTABL0QHPau938HtJeMqWKscsgqEf3dMTdtMw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Blacklist certain hardware from clearing Bus Master bit
+From: Chang Liu <cl91tp@gmail.com>
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 11, 2013 07:03:18 AM Greg Kroah-Hartman wrote:
-> On Mon, Nov 11, 2013 at 02:45:39PM +0100, Rafael J. Wysocki wrote:
-> > On Monday, November 11, 2013 09:21:40 AM Lan Tianyu wrote:
-> > > On 2013年11月10日 08:58, Rafael J. Wysocki wrote:
-> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > 
-> > > > Modify struct acpi_dev_node to contain a pointer to struct device
-> > > > ambedded in the struct acpi_device associated with the given device
-> > > > object (that is, its ACPI companion device) instead of an ACPI handle
-> > > > corresponding to that struct acpi_device.  Introduce two new macros
-> > > > for manipulating that pointer in a CONFIG_ACPI-safe way,
-> > > > ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
-> > > > ACPI_HANDLE() macro to take the above changes into account.
-> > > > Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
-> > > > use ACPI_COMPANION_SET() instead.  For some of them who used to
-> > > > pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
-> > > > introduce a helper routine acpi_preset_companion() doing an
-> > > > equivalent thing.
-> > > > 
-> > > > The rationale for using a struct device pointer instead of a
-> > > > struct acpi_device one as the member of struct acpi_dev_node is
-> > > > that it allows device.h to avoid including linux/acpi.h which would
-> > > > introduce quite a bit of compilation overhead for stuff that doesn't
-> > > > care about ACPI.
-> > > > In turn, moving the macros to linux/acpi.h forces
-> > > > the stuff that does care about ACPI to include that file as
-> > > > appropriate anyway.
-> > > 
-> > > How about declaring "struct acpi_device" in the device.h? This can help
-> > > to use struct acpi_device without including linux/acpi.h.
-> > > 
-> > > struct iommu_ops and struct iommu_group have been used by the same way
-> > > in the device.h.
-> > 
-> > Yes, they are.  Well, that appears to work too.
-> > 
-> > Updated patch is appended.  It also contains some fixes for problems reported
-> > by the auto build system and it's been tested on x86-64 now, so it should be
-> > reasonably close to final.
-> > 
-> > Thanks,
-> > Rafael
-> > 
-> > 
-> > ---
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Subject: ACPI / driver core: Store an ACPI device pointer in struct acpi_dev_node
-> > 
-> > Modify struct acpi_dev_node to contain a pointer to struct acpi_device
-> > associated with the given device object (that is, its ACPI companion
-> > device) instead of an ACPI handle corresponding to it.  Introduce two
-> > new macros for manipulating that pointer in a CONFIG_ACPI-safe way,
-> > ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
-> > ACPI_HANDLE() macro to take the above changes into account.
-> > Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
-> > use ACPI_COMPANION_SET() instead.  For some of them who used to
-> > pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
-> > introduce a helper routine acpi_preset_companion() doing an
-> > equivalent thing.
-> > 
-> > The main motivation for doing this is that there are things
-> > represented by struct acpi_device objects that don't have valid
-> > ACPI handles (so called fixed ACPI hardware features, such as
-> > power and sleep buttons) and we would like to create platform
-> > device objects for them and "glue" them to their ACPI companions
-> > in the usual way (which currently is impossible due to the
-> > lack of valid ACPI handles).  However, there are more reasons
-> > why it may be useful.
-> > 
-> > First, struct acpi_device pointers allow of much better type checking
-> > than void pointers which are ACPI handles, so it should be more
-> > difficult to write buggy code using modified struct acpi_dev_node
-> > and the new macros.  Second, the change should help to reduce (over
-> > time) the number of places in which the result of ACPI_HANDLE() is
-> > passed to acpi_bus_get_device() in order to obtain a pointer to the
-> > struct acpi_device associated with the given "physical" device,
-> > because now that pointer is returned by ACPI_COMPANION() directly.
-> > Finally, the change should make it easier to write generic code that
-> > will build both for CONFIG_ACPI set and unset without adding explicit
-> > compiler directives to it.
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Yeah this is certainly a better idea than introducing a blacklist.
+I'll do a new patch and send it to the mailing list as soon as possible.
 
-Thanks!
+Cheers,
+Chang
 
+
+2013/11/12 Takao Indoh <indou.takao@jp.fujitsu.com>:
+> (2013/11/12 16:51), Chang Liu wrote:
+>> Hi Takao,
+>>
+>> Thanks for your interest! From the log message during my testings, it appears that the system does not hang immediately after clearing the Bus Master bit, but continues to do the remaining shutdown routines (which aren't many though) until it hangs at the very last step (which I think is machine_power_off(), which in my machine calls acpi_power_off()).
+>>
+>> So the two events (clearing Bus Master bit and system hangup) don't necessarily happen simultaneously but do occur within microseconds.
+>
+> Understood, thanks for the information.
+>
+> Regarding your patch, how about adding pci quirk instead of introducing
+> black list? Add new member into struct pci_dev like below and set this
+> bit in the quirk. Just an idea.
+>
+>  unsigned int keep_busmaster_on_shutdown:1;
+>
+> Thanks,
+> Takao Indoh
+>
+>
+>>
+>> Cheers,
+>> Chang
+>>
+>> 在 2013年11月12日 下午3:22，"Takao Indoh" <indou.takao@jp.fujitsu.com <mailto:indou.takao@jp.fujitsu.com>>写道：
+>>
+>>     Hi Chang,
+>>
+>>     I'm working on DMA problem of kdump and interested in your patch. What
+>>     happens when clearing Bus Master bit? The system hangs up immediately
+>>     after calling pci_device_shutdown()?
+>>
+>>     Thanks,
+>>     Takao Indoh
+>>
+>>     (2013/10/30 20:22), Chang Liu wrote:
+>>      > This patch adds a blacklist that prevents pci device shutdown code
+>>      > from clearing Bus Master bit on certain hardware that cannot tolerate it.
+>>      >
+>>      > Clearing Bus Master bit was originally added in commit b566a22 to address
+>>      > the issue of some PCI device breaking kexec by continuing to do DMA
+>>      > after having been signaled to shutdown. However, this introduced a
+>>      > regression (https://bugzilla.kernel.org/show_bug.cgi?id=63861) that
+>>      > hangs the machine on kernel power off path.
+>>      >
+>>      > It has been pointed out previously (https://lkml.org/lkml/2012/6/6/545)
+>>      > that clearing Bus Master bit during PCI shutdown may have surprising
+>>      > consequences as some devices may not tolerate this, and may hang the
+>>      > system indefinitely. However, not doing so may break kexec. Since only
+>>      > one bug report has come up since the introduction of b566a22, therefore
+>>      > indicating that these misbehaving devices are in the minority, the
+>>      > logical way to fix the hang while not breaking kexec is to blacklist
+>>      > these devices from having their Bus Master bit cleared during the PCI
+>>      > shutdown routine.
+>>      >
+>>      > Signed-off-by: Chang Liu <cl91tp@gmail.com <mailto:cl91tp@gmail.com>>
+>>      > ---
+>>      > This fixes the above mentioned bug https://bugzilla.kernel.org/show_bug.cgi?id=63861
+>>      >
+>>      > As Alan Cox has warned in https://lkml.org/lkml/2012/6/6/545, some device
+>>      > will break if we clear bus master bit on shutdown. So sooner or later
+>>      > we will need to blacklist some device if we are to keep Bus Master being cleared
+>>      > as the default behavior. Now with the first (as I have been aware) device
+>>      > that breaks under this default behavior has surfaced, we might as well
+>>      > add the infrastructure code now in case some other devices break down
+>>      > in the future. These devices may not be many so a blacklist likely won't
+>>      > add much maintainance overhead. And we should keep the blacklist here in
+>>      > the pci shutdown code instead of in individual device drivers since this
+>>      > is the most direct way and will likely aid future debug process.
+>>      >
+>>      > Regarding the kexec issue which the original commit b566a22c was trying to address:
+>>      > kexec doesn't work on this machine, even before the patch was applied (ie. in
+>>      > earlier kernels, I tested 3.11.6 and 3.12-rc7). Possibly because some devices
+>>      > won't reinitialize themselves properly. On 3.11.6, kexec -e triggers an immediate
+>>      > reboot. On 3.12-rc7, both with and without this patch applied, kexec -e can get it
+>>      > halfway into booting the new kernel but then a reboot is also triggered. I'm not sure
+>>      > if this patch has helped the kexec situation in this machine or not, but since it
+>>      > has no effects on machines without this defective SATA controller (and/or its firmware),
+>>      > I would say it is unlikely to negatively affect kexec on other machines.
+>>      >
+>>      >   drivers/pci/pci-driver.c | 34 +++++++++++++++++++++++++++++++++-
+>>      >   1 file changed, 33 insertions(+), 1 deletion(-)
+>>      >
+>>      > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>>      > index 98f7b9b..1744ebf 100644
+>>      > --- a/drivers/pci/pci-driver.c
+>>      > +++ b/drivers/pci/pci-driver.c
+>>      > @@ -376,6 +376,29 @@ static int pci_device_remove(struct device * dev)
+>>      >       return 0;
+>>      >   }
+>>      >
+>>      > +/*
+>>      > + * Blacklisting certain hardware from having their Bus Master bit cleared
+>>      > + * during device shutdown. This is to workaround certain hardware's issue
+>>      > + * with clearing Bus Master bit that hangs the entire system.
+>>      > + */
+>>      > +struct {
+>>      > +     unsigned short vendor;
+>>      > +     unsigned short device;
+>>      > +} pci_bus_master_blacklist[] = {
+>>      > +     { 0x8086, 0x9c03 },     /* Intel Corporation Lynx Point-LP SATA Controller */
+>>      > +};
+>>      > +
+>>      > +static bool pci_should_clear_master(struct pci_dev *pdev)
+>>      > +{
+>>      > +     int i;
+>>      > +     for (i = 0; i < ARRAY_SIZE(pci_bus_master_blacklist); i++) {
+>>      > +             if (pdev->vendor == pci_bus_master_blacklist[i].vendor
+>>      > +                 && pdev->device == pci_bus_master_blacklist[i].device)
+>>      > +                     return false;
+>>      > +     }
+>>      > +     return true;
+>>      > +}
+>>      > +
+>>      >   static void pci_device_shutdown(struct device *dev)
+>>      >   {
+>>      >       struct pci_dev *pci_dev = to_pci_dev(dev);
+>>      > @@ -391,9 +414,18 @@ static void pci_device_shutdown(struct device *dev)
+>>      >       /*
+>>      >        * Turn off Bus Master bit on the device to tell it to not
+>>      >        * continue to do DMA. Don't touch devices in D3cold or unknown states.
+>>      > +      * This is useful for proper kexec. However, a number of hardware
+>>      > +      * aren't happy with this. At the slightest, some hardware simply
+>>      > +      * ignore the bus master bit. For some other hardware, clearing
+>>      > +      * the bit on shutdown path hangs the entire system.
+>>      > +      * This is likely to be a firmware or hardware problem, but
+>>      > +      * we can workaround it here by blacklisting these hardware
+>>      > +      * from having their bus master bit cleared during device shutdown.
+>>      >        */
+>>      > -     if (pci_dev->current_state <= PCI_D3hot)
+>>      > +     if (pci_should_clear_master(pci_dev)
+>>      > +         && pci_dev->current_state <= PCI_D3hot) {
+>>      >               pci_clear_master(pci_dev);
+>>      > +     }
+>>      >   }
+>>      >
+>>      >   #ifdef CONFIG_PM
+>>      >
+>>
+>
+>
