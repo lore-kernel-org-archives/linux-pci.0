@@ -1,98 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:34077 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752115Ab3KZETB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 23:19:01 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so8349692iec.27
-        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 20:19:01 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]:47178 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755191Ab3KLMpU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Nov 2013 07:45:20 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Tue, 12 Nov 2013 12:45:11 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DF04A2@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com>
+ <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb9H73yjYHUhr6Lrsirr_eTT9JDpCCr-6o6qutL=b3S6A@mail.gmail.com>
+In-Reply-To: <CALkVjQb9H73yjYHUhr6Lrsirr_eTT9JDpCCr-6o6qutL=b3S6A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1385429290-25397-10-git-send-email-yinghai@kernel.org>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1385429290-25397-10-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 25 Nov 2013 21:18:41 -0700
-Message-ID: <CAErSpo4r6eJhgmfpth7haKDiKzDB+ZnEq0p_qdfTPo+kqySGgg@mail.gmail.com>
-Subject: Re: [PATCH v2 09/10] PCI: Sort pci root bus resources list
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Some x86 systems expose above 4G 64bit mmio in _CRS as non-pref mmio range.
-> [   49.415281] PCI host bridge to bus 0000:00
-> [   49.419921] pci_bus 0000:00: root bus resource [bus 00-1e]
-> [   49.426107] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
-> [   49.433041] pci_bus 0000:00: root bus resource [io  0x1000-0x5fff]
-> [   49.440010] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
-> [   49.447768] pci_bus 0000:00: root bus resource [mem 0xfed8c000-0xfedfffff]
-> [   49.455532] pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffbfff]
-> [   49.463259] pci_bus 0000:00: root bus resource [mem 0x380000000000-0x381fffffffff]
->
-> During assign unassigned 64bit mmio resource, it will go through
-> every non-pref mmio for root bus in pci_bus_alloc_resource().
-> As the loop is with pci_bus_for_each_resource(), and could have chance
-> to use under 4G mmio range instead of above 4G mmio range if the requested
-> range is not big enough, even it could handle above 4G 64bit pref mmio.
->
-> For root bus, we can order list from high to low in pci_add_resource_offset(),
-> during creating root bus, it will still keep the same order in final bus
-> resource list.
->         pci_acpi_scan_root
->                 ==> add_resources
->                         ==> pci_add_resource_offset: # Add to temp resources
->                 ==> pci_create_root_bus
->                         ==> pci_bus_add_resource # add to final bus resources.
->
-> After that, we can make sure 64bit pref mmio for pci bridges will be allocated
-> higest of mmio non-pref, and in this case it is above 4G instead of under 4G.
-
-Sorry I'm so slow; I'd like to know what problem this solves, too.
-I'm trying to help people at distros figure out whether they will need
-to backport this change.
-
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/bus.c | 15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index f801f6a..adf17858 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -21,7 +21,8 @@
->  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
->                              resource_size_t offset)
->  {
-> -       struct pci_host_bridge_window *window;
-> +       struct pci_host_bridge_window *window, *tmp;
-> +       struct list_head *n;
->
->         window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
->         if (!window) {
-> @@ -31,7 +32,17 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
->
->         window->res = res;
->         window->offset = offset;
-> -       list_add_tail(&window->list, resources);
-> +
-> +       /* sorted it according to res end */
-> +       n = resources;
-> +       list_for_each_entry(tmp, resources, list)
-> +               if (window->res->end > tmp->res->end) {
-> +                       n = &tmp->list;
-> +                       break;
-> +               }
-> +
-> +       /* Insert it just before n */
-> +       list_add_tail(&window->list, n);
->  }
->  EXPORT_SYMBOL(pci_add_resource_offset);
->
-> --
-> 1.8.1.4
->
+PiANCj4gMjAxMy8xMS8xMiBHcnVtYmFjaCwgRW1tYW51ZWwgPGVtbWFudWVsLmdydW1iYWNoQGlu
+dGVsLmNvbT46DQo+ID4gV2VsbC4uLiBJIGhhdmVuJ3QgZG9uZSBtdWNoLCBidXQgdGhlIHNldHBj
+aSBpc24ndCByZWFsbHkgYSBzb2x1dGlvbiAtIGl0IGlzIG1vcmUNCj4gYSB3b3JrIGFyb3VuZC4N
+Cj4gPiBCam9ybiBpcyBiYXNpY2FsbHkgZGlzYWJsaW5nIEwxIFBDSWUgZmVhdHVyZSB3aGljaCBh
+bGxvd3MgdG8gc2F2ZQ0KPiA+IHBvd2VyLiBXaGlsZSB5b3UgbWlnaHQgbm90IGNhcmUsIEkgZG8g
+OikgVGhlIEhXIGZvbGtzIGhlcmUgd291bGQgc3RpbGwgd2FudA0KPiB0byBrbm93IGlmIHlvdSBj
+YW4gZGlzYWJsZSBMMSBzdWJzdGF0ZXMgZmVhdHVyZSAobm90IHRoYXQgSSBrbm93IHdoYXQgaXQg
+aXMgLQ0KPiBidXQgSSBjYW4gZ3Vlc3MpLg0KPiA+IElmIHlvdSBjYW4gdHJ5IHRvOg0KPiA+ICAq
+IHVwZ3JhZGUgeW91ciBCSU9TIChpZiBuZWVkZWQpDQo+ID4gICogY2hlY2sgdGhlIGFkdmFuY2Vk
+IG9wdGlvbnMgSSBzZW50IHRvIHlvdSB0byBzZWUgaWYgeW91IGNhbiB1bmxvY2sNCj4gPiB0aGUg
+YWR2YW5jZWQgbWVudSBpbiB5b3VyIEJJT1MNCj4gPg0KPiA+IGl0J2QgaGVscCBtZSB0byB1bmRl
+cnN0YW5kIHRoZSBpc3N1ZS4NCj4gPiBJbiBhbnkgY2FzZSwgSSBhbSBoYXBweSB0aGF0IHlvdSBo
+YXZlIGEgd2F5IHRvIHJlbGlhYmx5IHVzZSB5b3VyIE5JQyBub3cuDQo+IA0KPiANCj4gT2gsIGFj
+dHVhbGx5IEkgdXBncmFkZWQgbXkgQklPUyB0byBuZXdlc3QgdmVyc2lvbiB0aGUgZGF5IEkgZ290
+IHRoaXMgbGFwdG9wDQo+ICgxMiBkYXlzIGFnbykuDQo+IA0KPiBUaGlua1BhZCByZWFsbHkgY2hh
+bmdlZCBhIGxvdCBhZnRlciBiZWluZyBhY3F1aXJlZCBieSBMZW5vdm8uLi4NCj4gDQoNCklmIHlv
+dSBzYXkgc28gOikgLSBJIGRvbid0a25vdyA6KQ0KDQo+IEFzIG9mIEFTVSwgSSd2ZSBkb3dubG9h
+ZGVkIGl0IGJ1dCBJIGRvIG5vdCBrbm93IGhvdyB0byBzaG93IGhpZGRlbiBCSU9TDQo+IG9wdGlv
+bnMgd2l0aCBpdCBzaW5jZSBJIGhhdmUgbGl0dGxlIGtub3dsZWRnZSBhYm91dCBoYXJkd2FyZS4u
+Lg0KPiANCj4gSGVyZSBpcyB3aGF0IEkgZ290IHdoZW4gcnVubmluZyAuL2FzdTY0IGR1bXA6DQo+
+IA0KPiB3enlib3lAeGVuaWVuOn4vRGVza3RvcC9hc3UkIHN1ZG8gLi9hc3U2NCBkdW1wIElCTSBB
+ZHZhbmNlZCBTZXR0aW5ncw0KPiBVdGlsaXR5IHZlcnNpb24gOS40MS44MUsgTGljZW5zZWQgTWF0
+ZXJpYWxzIC0gUHJvcGVydHkgb2YgSUJNDQo+IChDKSBDb3B5cmlnaHQgSUJNIENvcnAuIDIwMDct
+MjAxMyBBbGwgUmlnaHRzIFJlc2VydmVkDQo+ICAgICAgMCAgMSAgMiAgMyAgNCAgNSAgNiAgNyAg
+OCAgOSAgQSAgQiAgQyAgRCAgRSAgRg0KPiAwMDogMDA+MDAqMDAqMDAqMDAqMDAqNjcqOGIqNDUq
+MDYqNjcqZjYqNDUqZWMqMDEqNzUNCj4gMTA6IDAzKmI4KjAwKmYwKjhlKmQ4KjY3KjhlKjQ1KjA0
+KjY3KjhiKjdkKjAyKjMzKmMwDQo+IDIwOiAyNio4OSo0NSowNCphMSo2MSowOSoyNio4OSo0NSow
+MiphMCo2MyowOSoyNio4OA0KPiAzMDogNDUqMDEqMjYqYzYqMDUqMDEqYjgqMDAqMDAqYzMqYjgq
+ODIqMDAqYzMqYjgqODINCj4gNDA6IDAwKmMzKmI4KjgyKjAwKmMzKmI4KjgyKjAwKmMzKmI4KjAw
+KjEwKjI2Kjg5KjQ1DQo+IDUwOiAwZCpmOCpjMyo5Yyo2Nio2MCplNCo2MCplYiowMCplYiowMCo2
+Nio2MSo5ZCpjMw0KPiA2MDogMWUqYjgqNDAqMDAqOGUqZDgqZjYqMDYqMTAqMDQqMDQqNzQqMDMq
+MWYqZjgqYzMNCj4gNzA6IDFmKmY5KmMzKmY4KmMzKjI1KjAwKjAwKjQxKmQwKjAwKjAwKjA4KjAw
+KjAwKjAzDQo+IDgwOiAwMCoyMiowNCowMCo0NyowMSoyMCowMCoyMCowMCowMCowMio0NyowMSph
+MCowMA0KPiA5MDogYTAqMDAqMDAqMDIqNzkqMDAqNzkqMDAqNzkqMDAqNDUqMDAqMDAqNDEqZDAq
+MDINCj4gYTA6IDAwKjA4KjAxKjAwKjAzKjAwKjJhKjEwKjAwKjQ3KjAxKjAwKjAwKjAwKjAwKjAw
+DQo+IGIwOiAxMCo0NyowMSo4MSowMCo4MSowMCowMCowMyo0NyowMSo4NyowMCo4NyowMCowMA0K
+PiBjMDogMDEqNDcqMDEqODkqMDAqODkqMDAqMDAqMDMqNDcqMDEqOGYqMDAqOGYqMDAqMDANCj4g
+ZDA6IDAzKjQ3KjAxKmMwKjAwKmMwKjAwKjAwKjIwKjc5KjAwKjc5KjAwKjc5KjAwKjFkDQo+IGUw
+OiAwMCowMCo0MSpkMCowMSowMCowOCowMiowMSowMyowMCoyMiowMSowMCo0NyowMQ0KPiBmMDog
+NDAqMDAqNDAqMDAqMDAqMDQqNzkqMDAqNzkqMDAqNzkqMDAqMWQqMDAqMDAqNDENCj4gDQo+IA0K
+PiBDb3VsZCB5b3UgaGVscCBieSB0ZWxsaW5nIG1lIHdoYXQgY29tbWFuZCBzaG91bGQgSSBydW4g
+dG8gZW5hYmxlIHRob3NlDQo+IGhpZGRlbiBvcHRpb25zIGluIEJJT1M/DQoNCkkgaGF2ZSBubyBj
+bHVlIHVuZm9ydHVuYXRlbHkgLSBtYXliZSBjb250YWN0IExlbm92bz8NCg0K
