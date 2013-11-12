@@ -1,66 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:53027 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754434Ab3K1Eia (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 23:38:30 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MWY0020VI7NSOA0@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 28 Nov 2013 13:38:11 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <002801ceebe7$a0293170$e07b9450$%han@samsung.com>
-In-reply-to: <002801ceebe7$a0293170$e07b9450$%han@samsung.com>
-Subject: Re: [PATCH] PCI: PCIe portdrv: use DEFINE_PCI_DEVICE_TABLE macro
-Date: Thu, 28 Nov 2013 13:38:10 +0900
-Message-id: <005501ceebf3$a4692ea0$ed3b8be0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Lan Tianyu <tianyu.lan@intel.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+	"Luck, Tony" <tony.luck@intel.com>
+Subject: Re: [PATCH] ACPI / driver core: Store a device pointer in struct acpi_dev_node
+Date: Tue, 12 Nov 2013 15:20:37 +0100
+Message-ID: <3448237.NUtWjlv2Mb@vostro.rjw.lan>
+In-Reply-To: <20131112092402.GO22916@intel.com>
+References: <3268437.YsusHvklcv@vostro.rjw.lan> <1683079.zjqzsOAjXB@vostro.rjw.lan> <20131112092402.GO22916@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, November 28, 2013 12:12 PM, Jingoo Han wrote:
+On Tuesday, November 12, 2013 11:24:02 AM Mika Westerberg wrote:
+> On Mon, Nov 11, 2013 at 02:45:39PM +0100, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Subject: ACPI / driver core: Store an ACPI device pointer in struct acpi_dev_node
+> > 
+> > Modify struct acpi_dev_node to contain a pointer to struct acpi_device
+> > associated with the given device object (that is, its ACPI companion
+> > device) instead of an ACPI handle corresponding to it.  Introduce two
+> > new macros for manipulating that pointer in a CONFIG_ACPI-safe way,
+> > ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
+> > ACPI_HANDLE() macro to take the above changes into account.
+> > Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
+> > use ACPI_COMPANION_SET() instead.  For some of them who used to
+> > pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
+> > introduce a helper routine acpi_preset_companion() doing an
+> > equivalent thing.
+> > 
+> > The main motivation for doing this is that there are things
+> > represented by struct acpi_device objects that don't have valid
+> > ACPI handles (so called fixed ACPI hardware features, such as
+> > power and sleep buttons) and we would like to create platform
+> > device objects for them and "glue" them to their ACPI companions
+> > in the usual way (which currently is impossible due to the
+> > lack of valid ACPI handles).  However, there are more reasons
+> > why it may be useful.
+> > 
+> > First, struct acpi_device pointers allow of much better type checking
+> > than void pointers which are ACPI handles, so it should be more
+> > difficult to write buggy code using modified struct acpi_dev_node
+> > and the new macros.  Second, the change should help to reduce (over
+> > time) the number of places in which the result of ACPI_HANDLE() is
+> > passed to acpi_bus_get_device() in order to obtain a pointer to the
+> > struct acpi_device associated with the given "physical" device,
+> > because now that pointer is returned by ACPI_COMPANION() directly.
+> > Finally, the change should make it easier to write generic code that
+> > will build both for CONFIG_ACPI set and unset without adding explicit
+> > compiler directives to it.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> This macro is used to create a struct pci_device_id array.
+> I tested this on Haswell as well and it works fine with ACPI enumerated
+> platform, I2C and SPI devices.
 > 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com> (on Haswell)
+> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Please, ignore this patch.
-According to the Greg Kroah-Hartman, 
+Thanks!
 
-"Yeah, and it's a horrid macro that deserves to be removed, please don't
-use it in more places.
-
-Actually, if you could just remove it, that would be best, sorry, I'm
-not going to take these patches."
-
-So, I will send the patch to remove 'DEFINE_PCI_DEVICE_TABLE' instead.
-Sorry for annoying. :-)
-
-Best regards,
-Jingoo Han
-
-> ---
->  drivers/pci/pcie/portdrv_pci.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index 0d8fdc4..5356902 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -368,7 +368,7 @@ static void pcie_portdrv_err_resume(struct pci_dev *dev)
->  /*
->   * LINUX Device Driver Model
->   */
-> -static const struct pci_device_id port_pci_ids[] = { {
-> +static DEFINE_PCI_DEVICE_TABLE(port_pci_ids) = { {
->  	/* handle any PCI-Express port */
->  	PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0),
->  	}, { /* end: all zeroes */ }
-> --
-> 1.7.10.4
-
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
