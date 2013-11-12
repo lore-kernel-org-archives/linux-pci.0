@@ -1,39 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f49.google.com ([209.85.213.49]:39446 "EHLO
-	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754116Ab3KTPzq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 10:55:46 -0500
-Date: Wed, 20 Nov 2013 10:50:35 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 05/29] PCI/MSI: Fix return value when
- populate_msi_sysfs() failed
-Message-ID: <20131120155035.GE28946@htj.dyndns.org>
-References: <cover.1382103786.git.agordeev@redhat.com>
- <0607a740e8df7971c8132ef68f8c8a7bbdd6a181.1382103786.git.agordeev@redhat.com>
+Received: from mga09.intel.com ([134.134.136.24]:23154 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751978Ab3KLMQQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Nov 2013 07:16:16 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Tue, 12 Nov 2013 12:16:06 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com>
+ <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+In-Reply-To: <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0607a740e8df7971c8132ef68f8c8a7bbdd6a181.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 18, 2013 at 07:12:05PM +0200, Alexander Gordeev wrote:
-> If populate_msi_sysfs() function failed msix_capability_init()
-> must return the error code, but it returns the success instead.
-> This update fixes the described misbehaviour.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-
-Reviewed-by: Tejun Heo <tj@kernel.org>
-
-Thanks.
-
--- 
-tejun
+PiANCj4gMjAxMy8xMS8xMiB3enlib3kgPHd6eWJveUB3enlib3kub3JnPjoNCj4gPiBJIHdpbGwg
+Y29udGludWUgZG93bmxvYWRpbmcgYmlnIGZpbGVzIHRvIGJlbmNobWFyayBpdC4NCj4gDQo+IEhp
+IGd1eXMsIGdvb2QgbmV3cyENCj4gDQo+IFNpeCBob3VycyBhZ28gSSByYW4gYSBzaW1wbGUgbG9v
+cCBzY3JpcHQgdG8gcmVwZWF0bHkgZG93bmxvYWQgYmlnIGZpbGVzIChhbmQNCj4gc2F2aW5nIHRv
+IC9kZXYvbnVsbCkgYW5kIHdlbnQgdG8gaGF2ZSBsZXNzb25zLiBTaXggaG91cnMgbGF0ZXIgaXQn
+cyBhZnRlciBzY2hvb2wuDQo+IEkgZm91bmQgdGhhdCB0aGUgd2lyZWxlc3Mgc3RpbGwgd29ya3Mh
+DQo+IA0KPiBTbyBJIGJlbGlldmUgdGhhdCB0aGUgdHdvICJzZXRwY2kiIGNvbW1hbmRzIHJlYWxs
+eSB3b3JrISBUaGFua3MgQmpvcm4gYW5kDQo+IEVtbWFudWVsIQ0KPiANCg0KV2VsbC4uLiBJIGhh
+dmVuJ3QgZG9uZSBtdWNoLCBidXQgdGhlIHNldHBjaSBpc24ndCByZWFsbHkgYSBzb2x1dGlvbiAt
+IGl0IGlzIG1vcmUgYSB3b3JrIGFyb3VuZC4NCkJqb3JuIGlzIGJhc2ljYWxseSBkaXNhYmxpbmcg
+TDEgUENJZSBmZWF0dXJlIHdoaWNoIGFsbG93cyB0byBzYXZlIHBvd2VyLiBXaGlsZSB5b3UgbWln
+aHQgbm90IGNhcmUsIEkgZG8gOikNClRoZSBIVyBmb2xrcyBoZXJlIHdvdWxkIHN0aWxsIHdhbnQg
+dG8ga25vdyBpZiB5b3UgY2FuIGRpc2FibGUgTDEgc3Vic3RhdGVzIGZlYXR1cmUgKG5vdCB0aGF0
+IEkga25vdyB3aGF0IGl0IGlzIC0gYnV0IEkgY2FuIGd1ZXNzKS4NCklmIHlvdSBjYW4gdHJ5IHRv
+Og0KICogdXBncmFkZSB5b3VyIEJJT1MgKGlmIG5lZWRlZCkNCiAqIGNoZWNrIHRoZSBhZHZhbmNl
+ZCBvcHRpb25zIEkgc2VudCB0byB5b3UgdG8gc2VlIGlmIHlvdSBjYW4gdW5sb2NrIHRoZSBhZHZh
+bmNlZCBtZW51IGluIHlvdXIgQklPUw0KDQppdCdkIGhlbHAgbWUgdG8gdW5kZXJzdGFuZCB0aGUg
+aXNzdWUuDQpJbiBhbnkgY2FzZSwgSSBhbSBoYXBweSB0aGF0IHlvdSBoYXZlIGEgd2F5IHRvIHJl
+bGlhYmx5IHVzZSB5b3VyIE5JQyBub3cuDQoNCg==
