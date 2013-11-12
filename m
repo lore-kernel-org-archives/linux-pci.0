@@ -1,63 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51688 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751715Ab3KMWAz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 17:00:55 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	linux-pm@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	Kevin Hilman <khilman@linaro.org>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during system suspend
-Date: Wed, 13 Nov 2013 23:13:24 +0100
-Message-ID: <2003753.HAeVh74cdL@vostro.rjw.lan>
-In-Reply-To: <1384360178-333-1-git-send-email-ulf.hansson@linaro.org>
-References: <1384360178-333-1-git-send-email-ulf.hansson@linaro.org>
+Received: from mantis.wzyboy.im ([199.83.51.51]:39227 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752085Ab3KLMLN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Nov 2013 07:11:13 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Tue, 12 Nov 2013 20:10:56 +0800
+Message-ID: <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, November 13, 2013 05:29:38 PM Ulf Hansson wrote:
-> The PM core was preventing devices from going inactive during system
-> suspend.
+2013/11/12 wzyboy <wzyboy@wzyboy.org>:
+> I will continue downloading big files to benchmark it.
 
-That's not even correct.  It prevents the runtime PM framework from being
-used to suspend devices during system suspend and that's on purpose.  The
-reason why is that we don't want asynchronous runtime suspends to happen
-during system suspend and race with the suspend process.
+Hi guys, good news!
 
-> Remove this constraint and moreover try to inactivate devices
-> by invoking pm_runtime_idle() before proceeding with device's
-> suspend_late callbacks.
-> 
-> A great amount of drivers that uses runtime PM will benefit from this.
+Six hours ago I ran a simple loop script to repeatly download big
+files (and saving to /dev/null) and went to have lessons. Six hours
+later it's after school. I found that the wireless still works!
 
-If the idea is to be able to do pm_runtime_suspend() from the system suspend
-code path, this is not the way to go and it kind of indicates the lack of
-understanding why things have been arranged this way.
-
-If you want a driver to do the same thing for runtime PM and system
-suspend/resume, point its .suspend_late() and .runtime_suspend() to the
-same routine and analogously for .runtime_resume() and .resume_early()
-(that may not work for PCI, though, because of the _noirq stuff, but that's
-the PCI bus type issue).
-
-Of course, the assumption behind .runtime_suspend() and .runtime_resume() is
-that they will be run when the device is not in use, while system suspend
-may actually happen when the device *is* in use and .suspend() should take
-care of that if necessary.  So you may need .suspend() anyway.
-
-One important property of system suspend is that it can happen at any time
-and that's why the .suspend() and .resume() callbacks are needed (and this
-also means that they can't be the same as .runtime_suspend() and
-.runtime_resume() in general).
-
-Thanks!
+So I believe that the two "setpci" commands really work! Thanks Bjorn
+and Emmanuel!
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+wzyboy
