@@ -1,140 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:44042 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757359Ab3K0B7U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 20:59:20 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Christopher Li' <sparse@chrisli.org>,
-	linux-sparse@vger.kernel.org, 'Joe Perches' <joe@perches.com>,
-	'Dan Carpenter' <dan.carpenter@oracle.com>
-Cc: 'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Jason Cooper' <jason@lakedaemon.net>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	'Ezequiel Garcia' <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	'Axel Lin' <axel.lin@ingics.com>,
-	'Julia Lawall' <julia.lawall@lip6.fr>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <001001ceb816$5d1aecc0$1750c640$%han@samsung.com>
- <20131125200256.GA7316@obsidianresearch.com>
- <001101ceea68$cb486220$61d92660$%han@samsung.com>
- <20131126180930.GC19852@obsidianresearch.com>
-In-reply-to: <20131126180930.GC19852@obsidianresearch.com>
-Subject: Re: PCI: mvebu: return NULL instead of ERR_PTR(ret)
-Date: Wed, 27 Nov 2013 10:59:18 +0900
-Message-id: <000101ceeb14$480fee80$d82fcb80$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:54972 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754132Ab3KLThM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 14:37:12 -0500
+Message-ID: <52828364.6080103@gmail.com>
+Date: Tue, 12 Nov 2013 21:37:08 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: wzyboy <wzyboy@wzyboy.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com> <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com> <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com> <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com> <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com> <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com> <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com> <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com> <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com> <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com> <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+In-Reply-To: <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, November 27, 2013 3:10 AM, Jason Gunthorpe wrote:
-> On Tue, Nov 26, 2013 at 02:31:44PM +0900, Jingoo Han wrote:
-> > Previously, I sent the patch in order to fix sparse warning as below:
-> > How about this?
-> >
-> > static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
-> > 			struct device_node *np, struct mvebu_pcie_port *port)
-> > {
-> > 	struct resource regs;
-> > 	int ret = 0;
-> >
-> > 	ret = of_address_to_resource(np, 0, &regs);
-> > 	if (ret)
-> > -		return ERR_PTR(ret);
-> > +		return (void __iomem *)ERR_PTR(ret);
+
+
+On 11/12/2013 09:14 PM, Bjorn Helgaas wrote:
+> On Tue, Nov 12, 2013 at 11:25 AM, Grumbach, Emmanuel
+> <emmanuel.grumbach@intel.com> wrote:
 > 
-> You should probably ask the sparse folks for guidance 'git grep
-> iomem.*ERR_PTR' returns nothing, so this isn't an established pattern.
+>> Right - I remember the discussion we had on that.
+>> On this device (7260 that has an issue with ASPM), we don't call pci_disable_link_state, because we know it is supposed to work...
 > 
-> It seems like sparse should know that ERR_PTR functions can work with
-> any pointer no matter the type? IS_ERR_PTR will have the same problem
-> with implicitly dropping the iomem tag.
+> If ASPM is supposed to work as far as the hardware is concerned, I
+> guess you're saying this must be an iwlwifi driver issue.  Right?
 
-+cc Christopher Li, sparse mailing-list, Joe Perches, Dan Carpenter,
-     Axel Lin, Julia Lawall,
+ASPM is supposed to work as far as the hardware is concerned.
+We might very well have an issue in iwlwifi - and I am checking this
+internally with our System guys.
+It can be a PCI core problem too, and it could also be a platform / BIOS
+/ Lenovo issue.
+Of course, I have no clue which of these is the culprit here.
+Our System folks seemed to say that this new device uses L1 substates
+which can be enabled in Haswell platform which the user owns.
+Now - L1 substates is a new feature and might introduce issues
+(apparently) - and this is why they (System folks) wanted the try
+without L1 substates. But disabling L1 substates doesn't seem trivial
+with the production BIOS of Lenovo. So I am pretty stuck here.
+Another possibility is to run a PCI analyser on the machine, but that
+requires to have the machine in the lab...
 
-Hi All,
-
-I have some questions about handling sparse warning.
-
-Currently, the following sparse warning happens
-at Marvell Armada PCIe driver.
-
-drivers/pci/host/pci-mvebu.c:743:31: warning: incorrect type in return expression (different address spaces)
-drivers/pci/host/pci-mvebu.c:743:31:    expected void [noderef] <asn:2>*
-drivers/pci/host/pci-mvebu.c:743:31:    got void *
-
-mvebu_pcie_map_registers() returns ERR_PTR(ret),
-however ERR_PTR() returns (void *), not (void __iomem *).
-
-./drivers/pci/host/pci-mvebu.c
-static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
-		struct device_node *np, struct mvebu_pcie_port *port)
-{
-	struct resource regs;
-	int ret = 0;
-
-	ret = of_address_to_resource(np, 0, &regs);
-	if (ret)
-		return ERR_PTR(ret);
-
-	return devm_ioremap_resource(&pdev->dev, &regs);
-}
-./include/linux/err.h
-static inline void * __must_check ERR_PTR(long error)
-{
-	return (void *) error;
-}
-
-
-Previously, I submitted the following patch, that adds
-(void __iomem *) cast.
-
-./drivers/pci/host/pci-mvebu.c
-static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
-		struct device_node *np, struct mvebu_pcie_port *port)
-{
-	.....
-
-	ret = of_address_to_resource(np, 0, &regs);
-	if (ret)
--		return ERR_PTR(ret);
-+		return (void __iomem *)ERR_PTR(ret);
-
-However, other engineers said that "(void __iomem *)ERR_PTR(ret)"
-is not a general pattern. I cannot find the proper method to resolve
-this sparse warning.
-
-In this case, how can I resolve this sparse warning?
-
-Then, how about the following?
-
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -740,7 +740,7 @@ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
-
-	ret = of_address_to_resource(np, 0, &regs);
-	if (ret)
--		return ERR_PTR(ret);
-+		return NULL;
-
-	return devm_ioremap_resource(&pdev->dev, &regs);
- }
-@@ -939,7 +939,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
-		continue;
-
-		port->base = mvebu_pcie_map_registers(pdev, child, port);
--		if (IS_ERR(port->base)) {
-+		if (IS_ERR_OR_NULL(port->base)) {
-			dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
-				port->port, port->lane);
-			port->base = NULL;
-
-Thank you for reading this. :-)
-
-Best regards,
-Jingoo Han
-
+> If you think it's a PCI core problem, we have to figure out what the
+> core needs to do differently.  If somebody can point to a difference
+> in the ASPM configuration between Windows and Linux, that would be a
+> good start.
+> 
+> Bjorn
+> 
