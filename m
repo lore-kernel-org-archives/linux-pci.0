@@ -1,49 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:53348 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752620Ab3KZV3z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 16:29:55 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
+Received: from cantor2.suse.de ([195.135.220.15]:45894 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750979Ab3KLIke (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Nov 2013 03:40:34 -0500
+Message-ID: <5281E97D.6090806@suse.cz>
+Date: Tue, 12 Nov 2013 09:40:29 +0100
+From: Michal Marek <mmarek@suse.cz>
+MIME-Version: 1.0
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 02/11] PCI/MSI/s390: Remove superfluous check of MSI type
-Date: Tue, 26 Nov 2013 10:09:51 +0100
-Message-Id: <2e6f05522d2c7e477c4fa3071e0915f9999615ad.1385399393.git.agordeev@redhat.com>
-In-Reply-To: <cover.1385399393.git.agordeev@redhat.com>
-References: <cover.1385399393.git.agordeev@redhat.com>
+Cc: linux-kbuild@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+	Joe Mario <jmario@redhat.com>
+Subject: Re: [PATCH 1/2] PCI: Do not use PCI ID macros in quirk names
+References: <1384177236-8371-1-git-send-email-mmarek@suse.cz>
+In-Reply-To: <1384177236-8371-1-git-send-email-mmarek@suse.cz>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-arch_setup_msi_irqs() hook can only be called from the generic
-MSI code which ensures correct MSI type parameter.
+On 11.11.2013 14:40, Michal Marek wrote:
+> Pasting the verbatim PCI_(VENDOR|DEVICE)_* macros in the __pci_fixup_*
+> symbol names results in insanely long names such as
+> 
+> __pci_fixup_resumePCI_VENDOR_ID_SERVERWORKSPCI_DEVICE_ID_SERVERWORKS_HT1000SBquirk_disable_broadcom_boot_interrupt
+> 
+> When LTO adds its numeric suffix to such symbol, it overflows the
+> namebuf[KSYM_NAME_LEN] array. Use the line number instead to create
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
----
- arch/s390/pci/pci.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+"... the namebuf[KSYM_NAME_LEN] array in kernel/kallsyms.c."
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index c79c6e4..61a3c2c 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -425,8 +425,6 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- 	int rc;
- 
- 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
--	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
--		return -EINVAL;
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
- 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
--- 
-1.7.7.6
+That way, the changelog is hopefully more clear.
 
+Michal
