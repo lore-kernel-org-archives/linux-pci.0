@@ -1,55 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:41531 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752190Ab3KXEAe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Nov 2013 23:00:34 -0500
-Date: Sat, 23 Nov 2013 23:00:26 -0500
-From: Jason Cooper <jason@lakedaemon.net>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: mvebu - The bridge should obey the MEM and IO
- command bits
-Message-ID: <20131124040026.GA29241@titan.lakedaemon.net>
-References: <1383262380-6984-1-git-send-email-jgunthorpe@obsidianresearch.com>
- <20131124030033.GR29241@titan.lakedaemon.net>
+Received: from mantis.wzyboy.im ([199.83.51.51]:39256 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752164Ab3KLM7h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Nov 2013 07:59:37 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131124030033.GR29241@titan.lakedaemon.net>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DF04A2@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb9H73yjYHUhr6Lrsirr_eTT9JDpCCr-6o6qutL=b3S6A@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF04A2@HASMSX103.ger.corp.intel.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Tue, 12 Nov 2013 20:59:21 +0800
+Message-ID: <CALkVjQZS2D61QB-X5Kwr7Cwd2roZyJxHKPLqgJHxE+g9do243w@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Nov 23, 2013 at 10:00:33PM -0500, Jason Cooper wrote:
-> On Thu, Oct 31, 2013 at 05:32:59PM -0600, Jason Gunthorpe wrote:
-> > When PCI_COMMAND_MEMORY/PCI_COMMAND_IO are cleared the bridge should not
-> > allocate windows or even look at the window limit/base registers.
-> > 
-> > Otherwise it can attempt to setup bogus windows that the PCI core code
-> > creates during discovery. The core will leave PCI_COMMAND_IO cleared if
-> > it doesn't need an IO window.
-> > 
-> > Have mvebu_pcie_handle_*_change respect the bits, and call the change
-> > function whenever the bits changes.
-> > 
-> > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> > ---
-> >  drivers/pci/host/pci-mvebu.c | 14 ++++++++++++--
-> >  1 file changed, 12 insertions(+), 2 deletions(-)
-> 
-> And a small addendum: I currently have the following in mvebu/drivers
+2013/11/12 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
+> If you say so :) - I don'tknow :)
+>
+I checked Lenovo's page again:
+http://support.lenovo.com/en_US/downloads/detail.page?DocID=DS035950
 
-Strike that, they are now in mvebu/pci.
+It says the latest BIOS version is 2.12, and this is the version I am using...
+>
+> I have no clue unfortunately - maybe contact Lenovo?
 
->   572bd682145f PCI: mvebu - The bridge secondary status register should be 0
->   9503c7fe4d9d PCI: mvebu - Support a bridge with no IO port window
->   058100a08be8 PCI: mvebu: return NULL instead of ERR_PTR(ret)
-> 
-> which means they didn't make it in for v3.13-rc1.  I'll hold them there
-> for reference until you resend.
+I sent an email to Lenovo support and am waiting for reply. I hope the
+consumer service is as good as in IBM-era...
 
-thx,
-
-Jason.
+-- 
+wzyboy
