@@ -1,124 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:64159 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756797Ab3KHPrS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Nov 2013 10:47:18 -0500
-Received: by mail-ie0-f172.google.com with SMTP id tp5so3527479ieb.31
-        for <linux-pci@vger.kernel.org>; Fri, 08 Nov 2013 07:47:16 -0800 (PST)
+Received: from mga02.intel.com ([134.134.136.20]:33115 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758414Ab3KMMNg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 07:13:36 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: wzyboy <wzyboy@wzyboy.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Wed, 13 Nov 2013 12:13:31 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301E00262@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com>
+ <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com>
+ <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>  
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <527C5D36.7050206@huawei.com>
-References: <1383639898-48776-1-git-send-email-wangyijing@huawei.com>
- <1383639898-48776-2-git-send-email-wangyijing@huawei.com> <20131107180713.GA2955@google.com>
- <527C5D36.7050206@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 8 Nov 2013 08:46:55 -0700
-Message-ID: <CAErSpo73N2Th-4D5G8-60tMuGwqthfu-VNHVf3LF9+s2mQp53w@mail.gmail.com>
-Subject: Re: [PATCH 1/1] IOMMU: Save pci device id instead of pci_dev* pointer
- for DMAR devices
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Joerg Roedel <joro@8bytes.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	dmaengine@vger.kernel.org,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 7, 2013 at 8:40 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> HI Bjorn,
->    Thanks for your review and comments very much!
->
->>> +            list_for_each_entry(dmar_dev, head, list)
->>> +                if (dmar_dev->segment == pci_domain_nr(dev->bus)
->>> +                        && dmar_dev->bus == dev->bus->number
->>> +                        && dmar_dev->devfn == dev->devfn)
->>> +                    return 1;
->>> +
->>>              /* Check our parent */
->>>              dev = dev->bus->self;
->>
->> You didn't change this, but it looks like this may have the same problem
->> we've been talking about here:
->>
->> http://lkml.kernel.org/r/20131105232903.3790.8738.stgit@bhelgaas-glaptop.roam.corp.google.com
->>
->> Namely, if "dev" is a VF on a virtual bus, "dev->bus->self == NULL", so
->> we won't search for any of the bridges leading to the VF.  I proposed a
->> pci_upstream_bridge() interface that could be used like this:
->>
->>       /* Check our parent */
->>       dev = pci_upstream_bridge(dev);
->>
->
-> It looks good to me, because pci_upstream_bridge() is still in your next branch, I think maybe
-> I can split this changes in a separate patch after 3.13-rc1.
+> > > On Tue, Nov 12, 2013 at 12:37 PM, Emmanuel Grumbach
+> > > <egrumbach@gmail.com> wrote:
+> > > > On 11/12/2013 09:14 PM, Bjorn Helgaas wrote:
+> > > >> On Tue, Nov 12, 2013 at 11:25 AM, Grumbach, Emmanuel
+> > > >> <emmanuel.grumbach@intel.com> wrote:
+> > > >>
+> > > >>> Right - I remember the discussion we had on that.
+> > > >>> On this device (7260 that has an issue with ASPM), we don't call
+> > > pci_disable_link_state, because we know it is supposed to work...
+> > > >>
+> > > >> If ASPM is supposed to work as far as the hardware is concerned,
+> > > >> I guess you're saying this must be an iwlwifi driver issue.  Right?
+> > > >
+> > > > ASPM is supposed to work as far as the hardware is concerned.
+> > > > We might very well have an issue in iwlwifi - and I am checking
+> > > > this internally with our System guys.
+> > > > It can be a PCI core problem too, and it could also be a platform
+> > > > / BIOS / Lenovo issue.
+> > > > Of course, I have no clue which of these is the culprit here.
+> > > > Our System folks seemed to say that this new device uses L1
+> > > > substates which can be enabled in Haswell platform which the user
+> owns.
+> > > > Now - L1 substates is a new feature and might introduce issues
+> > > > (apparently) - and this is why they (System folks) wanted the try
+> > > > without L1 substates. But disabling L1 substates doesn't seem
+> > > > trivial with the production BIOS of Lenovo. So I am pretty stuck here.
+> > >
+> > > For debugging purposes, we could configure L1 substates with setpci,
+> > > as we did for ASPM.  The Linux kernel knows nothing about L1
+> > > substates, so the PCI core isn't doing anything with them.  It's
+> > > possible the driver itself could muck with L1 substate
+> > > configuration, but that would be discouraged, and I don't see
+> > > anything in iwlwifi that is
+> > doing that.
+> > >
+> > > The lspci output in
+> > > https://bugzilla.kernel.org/attachment.cgi?id=114061 shows an L1 PM
+> > > Substates extended capability (capability ID 0x1e) for the Root Port
+> > > leading to the 7260 device, but not for the 7260 device itself:
+> > >
+> > >   00:1c.1 PCI bridge: Intel Corporation Lynx Point-LP PCI Express
+> > > Root Port 3 (rev e4) (prog-if 00 [Normal decode])
+> > >     Capabilities: [200 v1] #1e
+> > >
+> > > Per sec 5.5.4 of the ECN for L1 PM Substates (15 Aug 2012), I think
+> > > L1 substates must be configured on both ends of the link, and if the
+> > > 7260 device doesn't have that capability, I don't see how it could be
+> enabled.
+> >
+> > Makes sense.
+> >
+> > >
+> > > The lspci version wzyboy has doesn't decode the L1 PM Substates
+> > > capability, but there is a newer version at
+> > > git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git that should decode
+> it.
+> > > Also, "lspci -vvxxx" didn't hexdump this capability, which should be
+> > > at offset 0x200.  Using "lspci -xxxx" (four "x"s) should dump it,
+> > > and we can decode it manually.
+> > >
+> >
+> > You can find this in
+> > http://permalink.gmane.org/gmane.linux.kernel.wireless.general/115378.
+> >
+> > Somehow my System team says that it should be at offset 0x160?
+> > Is it possible that there is a "walk algorithm" with pointers just
+> > like for the ASPM register?
+> > I'll try to check the PCI spec when I'll find the time for that.
+> 
+> So I read a bit the lspci code, and it looks that there are plenty of pointers
+> inside the config space. Fun :) So basically, since:
+> #define PCI_EXT_CAP_ID_L1PM        0x1e
+> This means that I need to find an 0x1e in the output of wzyboy's lspci. I found
+> only one: at offset 0x15d.
+> Should that mean that my System team was right when they asked for offset
+> 0x160 which is 3 bytes afterwards (and matches more the less the code of
+> lspci)?
+> If so,
+> 160: 0f 00 a0 40 f0 00 00 00 00 00 00 00 00 00 00 00 seems to say that it is
+> enabled?
+> 
+> OTOH, 0x15d is 0x1e and not 0x001e as required by PCI-SIG ECN? Me scraping
+> my head.
 
-Yep, that would be a fix for a separate issue and should be a separate patch.
+Ok - so I have now the complete picture.
+This device was designed before PCI-SIG gave an ID to L1 PM Substates, so Intel had to use the L1 PM Substate as a Vendor Define whose ID is 0xCAFE. Layout is the same as defined now in PCI-SIG (page 21 in http://www.pcisig.com/specifications/pciexpress/specifications/ECN_L1_PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf).
 
->>>  static struct intel_iommu *device_to_iommu(int segment, u8 bus, u8 devfn)
->>>  {
->>>      struct dmar_drhd_unit *drhd = NULL;
->>> -    int i;
->>> +    struct dmar_device *dmar_dev;
->>> +    struct pci_dev *pdev;
->>>
->>>      for_each_drhd_unit(drhd) {
->>>              if (drhd->ignored)
->>> @@ -658,16 +659,22 @@ static struct intel_iommu *device_to_iommu(int segment, u8 bus, u8 devfn)
->>>              if (segment != drhd->segment)
->>>                      continue;
->>>
->>> -            for (i = 0; i < drhd->devices_cnt; i++) {
->>> -                    if (drhd->devices[i] &&
->>> -                        drhd->devices[i]->bus->number == bus &&
->>> -                        drhd->devices[i]->devfn == devfn)
->>> -                            return drhd->iommu;
->>> -                    if (drhd->devices[i] &&
->>> -                        drhd->devices[i]->subordinate &&
->>> -                        drhd->devices[i]->subordinate->number <= bus &&
->>> -                        drhd->devices[i]->subordinate->busn_res.end >= bus)
->>> -                            return drhd->iommu;
->>> +            list_for_each_entry(dmar_dev, &drhd->head, list) {
->>> +                if (dmar_dev->bus == bus &&
->>> +                        dmar_dev->devfn == devfn)
->>> +                    return drhd->iommu;
->>> +
->>> +                pdev = pci_get_domain_bus_and_slot(dmar_dev->segment,
->>> +                        dmar_dev->bus, dmar_dev->devfn);
->>> +                if (pdev->subordinate &&
->>> +                        pdev->subordinate->number <= bus &&
->>> +                        pdev->subordinate->busn_res.end >= bus) {
->>> +                    pci_dev_put(pdev);
->>> +                    return drhd->iommu;
->>
->> I don't know the details of how device_to_iommu() is used, but this
->> style (acquire ref to pci_dev, match it to some other object, drop
->> pci_dev ref, return object) makes me nervous.  How do we know the
->> caller isn't depending on pci_dev to remain attached to the object?
->> What happens if the pci_dev disappears when we do the pci_dev_put()
->> here?
->
-> Hmmm, this is the thing I am most worried about. If we just only use
-> (pci_dev *) poninter in drhd->devices array as a identification. Change
-> (pci_dev *) pointer instead of pci device id segment:bus:devfn is safe.
-> Or, this is a wrong way to fix this issue. I don't know IOMMU driver much now,
-> so IOMMU guys any comments on this issue is welcome.
->
-> If this is not safe, what about we both save pci device id and (pci_dev *) pointer
-> in drhd. So we can put pci_dev ref and set pci_dev * = NULL during device removed by bus notify, and
-> update (pci_dev *)pointer during device add.
+So:
+150: 03 10 03 10 0b 00 01 00 fe ca 41 01 1f 1e f0 00
+160: 0f 00 a0 40 f0 00 00 00 00 00 00 00 00 00 00 00
 
-I don't know the IOMMU drivers well either, but it seems like they
-rely on notifications of device addition and removal (see
-iommu_bus_notifier()).  It doesn't seem right for them to also use the
-generic PCI interfaces like pci_get_domain_bus_and_slot() because the
-IOMMU driver should already know what devices exist and their
-lifetimes.  It seems like confusion to mix the two.  But I don't have
-a concrete suggestion.
+We can see that L1 PM Substate *is* enabled:
+004h = 41 01 1f 1e
+008h = 0f 00 f0 00
+00Ch = a0 40 f0 00
 
-Bjorn
+I may have messed up things here...
+
+According to System / HW, it is unsafe to disable L1 PM Substate using setpci, even if we disable it from both sides (device and bridge). This kind of settings should be done by BIOS only.
+So we have 2 options here (assuming that we can't disable that in BIOS):
+* either we try to disable L1 PM Substate even my colleagues think it is not safe
+* either we just disable L1 altogether
