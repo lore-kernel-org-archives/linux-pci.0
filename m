@@ -1,39 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:36755 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754483Ab3KTQ6c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 11:58:32 -0500
-Date: Wed, 20 Nov 2013 11:58:31 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-cc: Pavel Machek <pavel@ucw.cz>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Received: from v094114.home.net.pl ([79.96.170.134]:57658 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751035Ab3KMXFi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 18:05:38 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, Kevin Hilman <khilman@linaro.org>
-Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
- system suspend
-In-Reply-To: <CAPDyKFocLDLLp0mJghP-+nwacxM58T3EengqW0vLka=WeRQxvw@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1311201156070.1826-100000@iolanthe.rowland.org>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/3] ACPI / hotplug: Fix PCI host bridge hot removal
+Date: Thu, 14 Nov 2013 00:16:58 +0100
+Message-ID: <3206422.AfXMUDqMXZ@vostro.rjw.lan>
+In-Reply-To: <2434673.zhjYZOTQ4A@vostro.rjw.lan>
+References: <2434673.zhjYZOTQ4A@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 20 Nov 2013, Ulf Hansson wrote:
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> Do note that, the intent with my RFC is also to simplify for drivers
-> in general using runtime PM. No matter how you put it, the
-> consequences of preventing runtime suspend during system suspend are
-> causing confusions.
+Since the PCI host bridge scan handler does not set hotplug.enabled,
+the check of it in acpi_bus_device_eject() effectively prevents the
+root bridge hot removal from working after commit a3b1b1ef78cd
+(ACPI / hotplug: Merge device hot-removal routines).  However, that
+check is not necessary, because the other acpi_bus_device_eject()
+users, acpi_hotplug_notify_cb and acpi_eject_store(), do the same
+check by themselves before executing that function.
 
-Then fix the confusion.  Explain peoples' mistakes to them.
+For this reason, remove the scan handler check from
+acpi_bus_device_eject() to make PCI hot bridge hot removal work
+again.
 
-Plenty of other parts of the kernel are difficult or confusing to use.  
-Sometimes there simply is no way to avoid it.  We deal with the 
-situation by teaching people how to use these facilities properly.
+Fixes: a3b1b1ef78cd (ACPI / hotplug: Merge device hot-removal routines)
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |    9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-Alan Stern
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -289,24 +289,17 @@ void acpi_bus_device_eject(void *data, u
+ {
+ 	struct acpi_device *device = data;
+ 	acpi_handle handle = device->handle;
+-	struct acpi_scan_handler *handler;
+ 	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
+ 	int error;
+ 
+ 	lock_device_hotplug();
+ 	mutex_lock(&acpi_scan_lock);
+ 
+-	handler = device->handler;
+-	if (!handler || !handler->hotplug.enabled) {
+-		put_device(&device->dev);
+-		goto err_support;
+-	}
+-
+ 	if (ost_src == ACPI_NOTIFY_EJECT_REQUEST)
+ 		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+ 					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 
+-	if (handler->hotplug.mode == AHM_CONTAINER)
++	if (device->handler && device->handler->hotplug.mode == AHM_CONTAINER)
+ 		kobject_uevent(&device->dev.kobj, KOBJ_OFFLINE);
+ 
+ 	error = acpi_scan_hot_remove(device);
 
