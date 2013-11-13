@@ -1,82 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:51688 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751715Ab3KMWAz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 17:00:55 -0500
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	linux-pm@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Luck, Tony" <tony.luck@intel.com>
-Subject: [PATCH 2/2] ACPI / bind: Use (put|get)_device() on ACPI device objects too
-Date: Thu, 14 Nov 2013 00:26:47 +0100
-Message-ID: <9712243.It8gvaRCs0@vostro.rjw.lan>
-In-Reply-To: <1803808.ghCmmaO2Cj@vostro.rjw.lan>
-References: <3268437.YsusHvklcv@vostro.rjw.lan> <1803808.ghCmmaO2Cj@vostro.rjw.lan>
+	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+	Kevin Hilman <khilman@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during system suspend
+Date: Wed, 13 Nov 2013 23:13:24 +0100
+Message-ID: <2003753.HAeVh74cdL@vostro.rjw.lan>
+In-Reply-To: <1384360178-333-1-git-send-email-ulf.hansson@linaro.org>
+References: <1384360178-333-1-git-send-email-ulf.hansson@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wednesday, November 13, 2013 05:29:38 PM Ulf Hansson wrote:
+> The PM core was preventing devices from going inactive during system
+> suspend.
 
-When associating a "physical" device with an ACPI device object
-acpi_bind_one() only uses get_device() to increment the reference
-counter of the former, but there is no reason not to do that with
-the latter too.  Among other things, that may help to avoid
-use-after-free when an ACPI device object is freed without calling
-acpi_unbind_one() for all "physical" devices associated with it
-(that only can happen in buggy code, but then it's better if the
-kernel doesn't crash as a result of a bug).
+That's not even correct.  It prevents the runtime PM framework from being
+used to suspend devices during system suspend and that's on purpose.  The
+reason why is that we don't want asynchronous runtime suspends to happen
+during system suspend and race with the suspend process.
 
-For this reason, modify acpi_bind_one() to apply get_device() to
-the ACPI device object too and update acpi_unbind_one() to drop
-that reference using put_device() as appropriate.
+> Remove this constraint and moreover try to inactivate devices
+> by invoking pm_runtime_idle() before proceeding with device's
+> suspend_late callbacks.
+> 
+> A great amount of drivers that uses runtime PM will benefit from this.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/glue.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+If the idea is to be able to do pm_runtime_suspend() from the system suspend
+code path, this is not the way to go and it kind of indicates the lack of
+understanding why things have been arranged this way.
 
-Index: linux-pm/drivers/acpi/glue.c
-===================================================================
---- linux-pm.orig/drivers/acpi/glue.c
-+++ linux-pm/drivers/acpi/glue.c
-@@ -217,6 +217,7 @@ int acpi_bind_one(struct device *dev, ac
- 	if (!acpi_dev)
- 		return -EINVAL;
- 
-+	get_device(&acpi_dev->dev);
- 	get_device(dev);
- 	physical_node = kzalloc(sizeof(*physical_node), GFP_KERNEL);
- 	if (!physical_node) {
-@@ -243,6 +244,7 @@ int acpi_bind_one(struct device *dev, ac
- 				goto err;
- 
- 			put_device(dev);
-+			put_device(&acpi_dev->dev);
- 			return 0;
- 		}
- 		if (pn->node_id == node_id) {
-@@ -282,6 +284,7 @@ int acpi_bind_one(struct device *dev, ac
-  err:
- 	ACPI_COMPANION_SET(dev, NULL);
- 	put_device(dev);
-+	put_device(&acpi_dev->dev);
- 	return retval;
- }
- EXPORT_SYMBOL_GPL(acpi_bind_one);
-@@ -307,8 +310,9 @@ int acpi_unbind_one(struct device *dev)
- 			sysfs_remove_link(&acpi_dev->dev.kobj, physnode_name);
- 			sysfs_remove_link(&dev->kobj, "firmware_node");
- 			ACPI_COMPANION_SET(dev, NULL);
--			/* acpi_bind_one() increase refcnt by one. */
-+			/* Drop references taken by acpi_bind_one(). */
- 			put_device(dev);
-+			put_device(&acpi_dev->dev);
- 			kfree(entry);
- 			break;
- 		}
+If you want a driver to do the same thing for runtime PM and system
+suspend/resume, point its .suspend_late() and .runtime_suspend() to the
+same routine and analogously for .runtime_resume() and .resume_early()
+(that may not work for PCI, though, because of the _noirq stuff, but that's
+the PCI bus type issue).
 
+Of course, the assumption behind .runtime_suspend() and .runtime_resume() is
+that they will be run when the device is not in use, while system suspend
+may actually happen when the device *is* in use and .suspend() should take
+care of that if necessary.  So you may need .suspend() anyway.
+
+One important property of system suspend is that it can happen at any time
+and that's why the .suspend() and .resume() callbacks are needed (and this
+also means that they can't be the same as .runtime_suspend() and
+.runtime_resume() in general).
+
+Thanks!
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
