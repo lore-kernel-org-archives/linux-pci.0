@@ -1,64 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f50.google.com ([209.85.128.50]:41540 "EHLO
-	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754279Ab3KTQSM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 11:18:12 -0500
-Date: Wed, 20 Nov 2013 11:18:08 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 09/29] PCI/MSI: Factor out pci_get_msi_cap()
- interface
-Message-ID: <20131120161808.GI28946@htj.dyndns.org>
-References: <cover.1382103786.git.agordeev@redhat.com>
- <85500e7239fcb104df091bbfa873eef8ae654772.1382103786.git.agordeev@redhat.com>
+Received: from mga09.intel.com ([134.134.136.24]:4608 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758789Ab3KMMVP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Nov 2013 07:21:15 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Wed, 13 Nov 2013 12:21:10 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301E002F0@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com>
+ <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com>
+ <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E00262@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZfc3SHv8j1Kp-N1_+nQ5_WUsk6mf1BBG9MikzkaHZECA@mail.gmail.com>
+In-Reply-To: <CALkVjQZfc3SHv8j1Kp-N1_+nQ5_WUsk6mf1BBG9MikzkaHZECA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <85500e7239fcb104df091bbfa873eef8ae654772.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-On Fri, Oct 18, 2013 at 07:12:09PM +0200, Alexander Gordeev wrote:
-> +If this function returns a negative number, it indicates the device is
-> +not capable of sending MSIs.
-
-Wouldn't "errno" better describe the error return rather than
-"negative number"?
-
-> @@ -795,6 +795,21 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
->  	return 0;
->  }
-
-We probably want a function comment here?
-
-> +int pci_get_msi_cap(struct pci_dev *dev)
-> +{
-> +	int ret;
-> +	u16 msgctl;
-> +
-> +	if (!dev->msi_cap)
-> +		return -EINVAL;
-> +
-> +	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-> +	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(pci_get_msi_cap);
-
-Other than that,
-
- Reviewed-by: Tejun Heo <tj@kernel.org>
-
-Thanks.
-
--- 
-tejun
+PiANCj4gMjAxMy8xMS8xMyBHcnVtYmFjaCwgRW1tYW51ZWwgPGVtbWFudWVsLmdydW1iYWNoQGlu
+dGVsLmNvbT46DQo+ID4gQWNjb3JkaW5nIHRvIFN5c3RlbSAvIEhXLCBpdCBpcyB1bnNhZmUgdG8g
+ZGlzYWJsZSBMMSBQTSBTdWJzdGF0ZSB1c2luZw0KPiBzZXRwY2ksIGV2ZW4gaWYgd2UgZGlzYWJs
+ZSBpdCBmcm9tIGJvdGggc2lkZXMgKGRldmljZSBhbmQgYnJpZGdlKS4gVGhpcyBraW5kIG9mDQo+
+IHNldHRpbmdzIHNob3VsZCBiZSBkb25lIGJ5IEJJT1Mgb25seS4NCj4gPiBTbyB3ZSBoYXZlIDIg
+b3B0aW9ucyBoZXJlIChhc3N1bWluZyB0aGF0IHdlIGNhbid0IGRpc2FibGUgdGhhdCBpbiBCSU9T
+KToNCj4gPiAqIGVpdGhlciB3ZSB0cnkgdG8gZGlzYWJsZSBMMSBQTSBTdWJzdGF0ZSBldmVuIG15
+IGNvbGxlYWd1ZXMgdGhpbmsgaXQNCj4gPiBpcyBub3Qgc2FmZQ0KPiA+ICogZWl0aGVyIHdlIGp1
+c3QgZGlzYWJsZSBMMSBhbHRvZ2V0aGVyDQo+IA0KPiANCj4gVW5zYWZlIG1lYW5zIGJhdHRlcnkg
+Ymxvd3MgdXAgbGlrZSBhIFNhbXN1bmc/IDotKQ0KPiANCg0KWW91IGFscmVhZHkgYmxldyB5b3Vy
+IHdhcnJhbnR5IHRoZSBtaW51dGUgeW91ciBpbnN0YWxsZWQgTGludXgsIGRpZG4ndCB5b3U/IDop
+DQoNCj4gTXkgbGFwdG9wIGlzIG5vdyBjb25uZWN0ZWQgdG8gY2xhc3Nyb29tJ3MgV2lGaSAod2l0
+aCBzZXRwY2kNCj4gd29ya2Fyb3VuZCkgYW5kIHJ1bm5pbmcgb24gYmF0dGVyeSwgaXQgc2VlbXMg
+dGhlIHBvd2VyIGNvbnN1bXB0aW9uIGlzDQo+IGFjY2VwdGFibGUgLi4uIGF0IGxlYXN0IG5vdCB0
+b28gbXVjaCBtb3JlIHRoYW4gYmVmb3JlLg0KDQpDb29sIC0gd2Ugd29yayBmb3Igbm90aGluZyAt
+IGVuY291cmFnaW5nIDopDQo=
