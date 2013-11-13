@@ -1,62 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36536 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355Ab3KTBwd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:52:33 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/6] PCI: Destroy pci dev only once
-Date: Tue, 19 Nov 2013 17:51:54 -0800
-Message-Id: <1384912317-3721-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
-References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:51385 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221Ab3KMNJq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 08:09:46 -0500
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <qiudayu@linux.vnet.ibm.com>;
+	Wed, 13 Nov 2013 18:39:42 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id D46FB125803F
+	for <linux-pci@vger.kernel.org>; Wed, 13 Nov 2013 18:40:27 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id rADD9YAa47841326
+	for <linux-pci@vger.kernel.org>; Wed, 13 Nov 2013 18:39:35 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id rADD9bWJ004634
+	for <linux-pci@vger.kernel.org>; Wed, 13 Nov 2013 18:39:38 +0530
+Message-ID: <52837A10.3040301@linux.vnet.ibm.com>
+Date: Wed, 13 Nov 2013 21:09:36 +0800
+From: mike <qiudayu@linux.vnet.ibm.com>
+MIME-Version: 1.0
+To: ying.huang@intel.com
+CC: bhelgaas@google.com, stern@rowland.harvard.edu,
+	linux-pci@vger.kernel.org
+Subject: A question about the patch: [PATCH] PCI/PM: Keep runtime PM enabled
+ for unbound PCI devices
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mutliple removing via /sys will call pci_destroy_dev two times.
+Hi Huang Ying,
 
-Add is_removed to record if pci_destroy_dev is called already.
+I see you are the author of this patch, commit id is:
+967577b062417b4e4b8e27b711220f4124f5153a
 
-During second calling, still have extra dev ref hold via
-device_schedule_call, so we are safe to check dev->is_removed.
+I have a question while I try to understand this patch,
+So I would very grateful if you or others can give me some reply.....
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/remove.c | 5 ++++-
- include/linux/pci.h  | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+............
+-       rc = ddi->drv->probe(ddi->dev, ddi->id);
++       pm_runtime_get_sync(dev);
++       pci_dev->driver = pci_drv;
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+I see here you make the driver to initialize before probe,
+But I have no idea of why you do this change.....
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 0d2c36f..cffe269 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -20,7 +20,10 @@ static void pci_stop_dev(struct pci_dev *dev)
- 
- static void pci_destroy_dev(struct pci_dev *dev)
- {
--	put_device(&dev->dev);
-+	if (!dev->is_removed) {
-+		dev->is_removed = 1;
-+		put_device(&dev->dev);
-+	}
- }
- 
- void pci_remove_bus(struct pci_bus *bus)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1084a15..ccb316d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -321,6 +321,7 @@ struct pci_dev {
- 	unsigned int	multifunction:1;/* Part of multi-function device */
- 	/* keep track of device state */
- 	unsigned int	is_added:1;
-+	unsigned int	is_removed:1;	/* pci_destroy_dev is called */
- 	unsigned int	is_busmaster:1; /* device is busmaster */
- 	unsigned int	no_msi:1;	/* device may not use msi */
- 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
--- 
-1.8.1.4
+and I look inside the code, it may be pm_runtime relate??
+
+Thanks
+Mike
++       rc = pci_drv->probe(pci_dev, ddi->id);
+         if (rc) {
+-               pm_runtime_disable(dev);
+-               pm_runtime_set_suspended(dev);
+-               pm_runtime_put_noidle(dev);
++               pci_dev->driver = NULL;
++               pm_runtime_put_sync(dev);
+         }
+-       if (parent)
+-               pm_runtime_put(parent);
+         return rc;
+  }
+
+@@ -330,10 +325,8 @@ __pci_device_probe(struct pci_driver *drv, struct 
+pci_dev *pci_dev)
+                 id = pci_match_device(drv, pci_dev);
+                 if (id)
+                         error = pci_call_probe(drv, pci_dev, id);
+-               if (error >= 0) {
+-                       pci_dev->driver = drv;
++               if (error >= 0)
+                         error = 0;
+-               }
+         }
+         return error;
+  }
+.......................
 
