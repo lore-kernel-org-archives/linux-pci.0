@@ -1,51 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:65034 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757925Ab3KHRi2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Nov 2013 12:38:28 -0500
-Received: by mail-ie0-f170.google.com with SMTP id at1so3783637iec.15
-        for <linux-pci@vger.kernel.org>; Fri, 08 Nov 2013 09:38:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
-References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
- <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com> <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 8 Nov 2013 10:38:07 -0700
-Message-ID: <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:42654 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757569Ab3KMQ3y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 11:29:54 -0500
+Received: by mail-wg0-f51.google.com with SMTP id m15so656671wgh.6
+        for <linux-pci@vger.kernel.org>; Wed, 13 Nov 2013 08:29:53 -0800 (PST)
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	linux-pm@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Kevin Hilman <khilman@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: [RFC PATCH] PM / Runtime: Allow to inactivate devices during system suspend
+Date: Wed, 13 Nov 2013 17:29:38 +0100
+Message-Id: <1384360178-333-1-git-send-email-ulf.hansson@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 8, 2013 at 10:20 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> My only guess is that there's something wrong with the ASPM
-> configuration and the device just stops responding to config accesses
-> (and probably MMIO accesses, too, based on the errors in your dmesg
-> log).  Or maybe the device got powered off somehow.
+The PM core was preventing devices from going inactive during system
+suspend. Remove this constraint and moreover try to inactivate devices
+by invoking pm_runtime_idle() before proceeding with device's
+suspend_late callbacks.
 
-If you've figured out a way to reproduce this more reliably, it might
-be interesting to do "echo on >
-/sys/bus/pci/devices/0000:03:00.0/power/control" and see whether it
-makes a difference.  That should prevent us from using runtime power
-management for the iwlwifi device.
+A great amount of drivers that uses runtime PM will benefit from this.
 
-Bjorn
+Drivers that implements some of the system ->suspend* callbacks for the
+only reason of making sure the runtime PM resourses gets inactive, can
+now solely instead rely on the PM core to handle this.
+
+In the case were drivers needs there runtime resourses to be activated
+to be able to handle their system suspend tasks, those can easily just
+restore the runtime PM usage count, pm_runtime_put_sync(), once done
+with it's suspend operations, which then will inactivate the device.
+
+Cc: Kevin Hilman <khilman@linaro.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+---
+
+There are a quite long history for how the PM core behaves around this
+topic. Changes has been iterated, back for forward, you might even
+think that it should have been settled at this point. So, forgive me
+for bringing this up, again.
+
+This patch shall obviously not be merged as is, it will cause
+regressions for several drivers and subsystems. The intent is instead
+to try to follow up on previous discussions to see if we might end up
+closer to the sequence, which my RFC PATCH suggests, or if I am just
+bothering you completely unnecessary.
+
+---
+ drivers/base/power/main.c |   11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
+index ee039af..670b1d5 100644
+--- a/drivers/base/power/main.c
++++ b/drivers/base/power/main.c
+@@ -832,7 +832,7 @@ static void device_complete(struct device *dev, pm_message_t state)
+ 
+ 	device_unlock(dev);
+ 
+-	pm_runtime_put(dev);
++	pm_request_idle(dev);
+ }
+ 
+ /**
+@@ -1004,6 +1004,7 @@ static int device_suspend_late(struct device *dev, pm_message_t state)
+ 	pm_callback_t callback = NULL;
+ 	char *info = NULL;
+ 
++	pm_runtime_idle(dev);
+ 	__pm_runtime_disable(dev, false);
+ 
+ 	if (dev->power.syscore)
+@@ -1312,14 +1313,6 @@ static int device_prepare(struct device *dev, pm_message_t state)
+ 	if (dev->power.syscore)
+ 		return 0;
+ 
+-	/*
+-	 * If a device's parent goes into runtime suspend at the wrong time,
+-	 * it won't be possible to resume the device.  To prevent this we
+-	 * block runtime suspend here, during the prepare phase, and allow
+-	 * it again during the complete phase.
+-	 */
+-	pm_runtime_get_noresume(dev);
+-
+ 	device_lock(dev);
+ 
+ 	dev->power.wakeup_path = device_may_wakeup(dev);
+-- 
+1.7.9.5
+
