@@ -1,48 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58771 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755578Ab3KVSwz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Nov 2013 13:52:55 -0500
-Date: Fri, 22 Nov 2013 19:54:45 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 12/29] PCI/MSI: Introduce pcim_enable_msi*()
- family helpers
-Message-ID: <20131122185445.GI8401@dhcp-26-207.brq.redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
- <6bc575621ef70f72b206e4aa944acd32f1a75718.1382103786.git.agordeev@redhat.com>
- <20131120171526.GL28946@htj.dyndns.org>
- <20131122184429.GG8401@dhcp-26-207.brq.redhat.com>
- <20131122184447.GB8981@mtj.dyndns.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:45488 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756278Ab3KMTQF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 14:16:05 -0500
+Date: Wed, 13 Nov 2013 14:16:03 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	<linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	Kevin Hilman <khilman@linaro.org>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
+ system suspend
+In-Reply-To: <1384360178-333-1-git-send-email-ulf.hansson@linaro.org>
+Message-ID: <Pine.LNX.4.44L0.1311131411120.1424-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131122184447.GB8981@mtj.dyndns.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 22, 2013 at 01:44:47PM -0500, Tejun Heo wrote:
-> +int pcim_enable_msi_range(struct pci_dev *dev, struct msix_entry *entries,
-> +                         unsigned int nvec, unsigned int minvec)
-> +
-> +This variation on pci_enable_msi_block() call allows a device driver to
-> +request any number of MSIs within specified range minvec to nvec. Whenever
-> +possible device drivers are encouraged to use this function rather than
-> +explicit request loop calling pci_enable_msi_block().
+On Wed, 13 Nov 2013, Ulf Hansson wrote:
+
+> The PM core was preventing devices from going inactive during system
+> suspend. Remove this constraint and moreover try to inactivate devices
+> by invoking pm_runtime_idle() before proceeding with device's
+> suspend_late callbacks.
 > 
-> e.g. shouldn't that @nvec be @maxvec?
+> A great amount of drivers that uses runtime PM will benefit from this.
 
-Right, it should. May be even in different order.
+It's not clear how drivers will benefit.
 
-> tejun
+> Drivers that implements some of the system ->suspend* callbacks for the
+> only reason of making sure the runtime PM resourses gets inactive, can
+> now solely instead rely on the PM core to handle this.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Drivers don't have to implement anything special if they want to use
+their runtime routines for system suspend.  All they have to do is set
+the .suspend and .resume method pointers to point to their
+runtime_suspend and runtime_resume routines.
+
+> In the case were drivers needs there runtime resourses to be activated
+> to be able to handle their system suspend tasks, those can easily just
+> restore the runtime PM usage count, pm_runtime_put_sync(), once done
+> with it's suspend operations, which then will inactivate the device.
+
+The reason for doing things the way they are is to avoid races between
+system PM callbacks and runtime PM callbacks.  We don't want to have a
+runtime_resume routine powering up a device at the same time as a
+suspend routine is powering it down.
+
+Alan Stern
+
