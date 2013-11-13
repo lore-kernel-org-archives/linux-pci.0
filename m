@@ -1,219 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49590 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756029Ab3KFVRH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 16:17:07 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
-	Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Subject: [PATCH] PCI: Introduce two new MSI infrastructure calls for masking/unmasking.
-Date: Wed,  6 Nov 2013 16:16:56 -0500
-Message-Id: <1383772616-23060-1-git-send-email-konrad.wilk@oracle.com>
+Received: from mga01.intel.com ([192.55.52.88]:52956 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758517Ab3KMIpv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 03:45:51 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: wzyboy <wzyboy@wzyboy.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Wed, 13 Nov 2013 08:45:48 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DFDDD7@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com>
+ <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com>
+ <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+In-Reply-To: <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Certain platforms do not allow writes in the MSI-X bars
-to setup or tear down vector values. To combat against
-the generic code trying to write to that and either silently
-being ignored or crashing due to the pagetables being marked r/o
-this patch introduces a platform over-write.
+> 
+> On Tue, Nov 12, 2013 at 12:37 PM, Emmanuel Grumbach
+> <egrumbach@gmail.com> wrote:
+> > On 11/12/2013 09:14 PM, Bjorn Helgaas wrote:
+> >> On Tue, Nov 12, 2013 at 11:25 AM, Grumbach, Emmanuel
+> >> <emmanuel.grumbach@intel.com> wrote:
+> >>
+> >>> Right - I remember the discussion we had on that.
+> >>> On this device (7260 that has an issue with ASPM), we don't call
+> pci_disable_link_state, because we know it is supposed to work...
+> >>
+> >> If ASPM is supposed to work as far as the hardware is concerned, I
+> >> guess you're saying this must be an iwlwifi driver issue.  Right?
+> >
+> > ASPM is supposed to work as far as the hardware is concerned.
+> > We might very well have an issue in iwlwifi - and I am checking this
+> > internally with our System guys.
+> > It can be a PCI core problem too, and it could also be a platform /
+> > BIOS / Lenovo issue.
+> > Of course, I have no clue which of these is the culprit here.
+> > Our System folks seemed to say that this new device uses L1 substates
+> > which can be enabled in Haswell platform which the user owns.
+> > Now - L1 substates is a new feature and might introduce issues
+> > (apparently) - and this is why they (System folks) wanted the try
+> > without L1 substates. But disabling L1 substates doesn't seem trivial
+> > with the production BIOS of Lenovo. So I am pretty stuck here.
+> 
+> For debugging purposes, we could configure L1 substates with setpci, as we
+> did for ASPM.  The Linux kernel knows nothing about L1 substates, so the PCI
+> core isn't doing anything with them.  It's possible the driver itself could muck
+> with L1 substate configuration, but that would be discouraged, and I don't
+> see anything in iwlwifi that is doing that.
+> 
+> The lspci output in
+> https://bugzilla.kernel.org/attachment.cgi?id=114061 shows an L1 PM
+> Substates extended capability (capability ID 0x1e) for the Root Port leading to
+> the 7260 device, but not for the 7260 device itself:
+> 
+>   00:1c.1 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root Port 3
+> (rev e4) (prog-if 00 [Normal decode])
+>     Capabilities: [200 v1] #1e
+> 
+> Per sec 5.5.4 of the ECN for L1 PM Substates (15 Aug 2012), I think L1
+> substates must be configured on both ends of the link, and if the 7260 device
+> doesn't have that capability, I don't see how it could be enabled.
 
-Note that we keep two separate, non-weak, functions
-default_mask_msi_irqs() and default_mask_msix_irqs() for the
-behavior of the arch_mask_msi_irqs() and arch_mask_msix_irqs(),
-as the default behavior is needed by x86 PCI code.
+Makes sense.
 
-For Xen, which does not allow the guest to write to MSI-X
-tables - as the hypervisor is solely responsible for setting
-the vector values - we implement two nops.
+> 
+> The lspci version wzyboy has doesn't decode the L1 PM Substates capability,
+> but there is a newer version at
+> git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git that should decode it.
+> Also, "lspci -vvxxx" didn't hexdump this capability, which should be at offset
+> 0x200.  Using "lspci -xxxx" (four "x"s) should dump it, and we can decode it
+> manually.
+> 
 
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-CC: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- arch/x86/include/asm/x86_init.h |  3 +++
- arch/x86/kernel/x86_init.c      | 10 ++++++++++
- arch/x86/pci/xen.c              | 13 ++++++++++++-
- drivers/pci/msi.c               | 22 ++++++++++++++++------
- include/linux/msi.h             |  2 ++
- 5 files changed, 43 insertions(+), 7 deletions(-)
+You can find this in http://permalink.gmane.org/gmane.linux.kernel.wireless.general/115378.
 
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 828a156..0f1be11 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -172,6 +172,7 @@ struct x86_platform_ops {
- 
- struct pci_dev;
- struct msi_msg;
-+struct msi_desc;
- 
- struct x86_msi_ops {
- 	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
-@@ -182,6 +183,8 @@ struct x86_msi_ops {
- 	void (*teardown_msi_irqs)(struct pci_dev *dev);
- 	void (*restore_msi_irqs)(struct pci_dev *dev, int irq);
- 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
-+	u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
-+	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
- };
- 
- struct IO_APIC_route_entry;
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 8ce0072..021783b 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -116,6 +116,8 @@ struct x86_msi_ops x86_msi = {
- 	.teardown_msi_irqs	= default_teardown_msi_irqs,
- 	.restore_msi_irqs	= default_restore_msi_irqs,
- 	.setup_hpet_msi		= default_setup_hpet_msi,
-+	.msi_mask_irq		= default_msi_mask_irq,
-+	.msix_mask_irq		= default_msix_mask_irq,
- };
- 
- /* MSI arch specific hooks */
-@@ -138,6 +140,14 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
- {
- 	x86_msi.restore_msi_irqs(dev, irq);
- }
-+u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-+{
-+	return x86_msi.msi_mask_irq(desc, mask, flag);
-+}
-+u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
-+{
-+	return x86_msi.msix_mask_irq(desc, flag);
-+}
- #endif
- 
- struct x86_io_apic_ops x86_io_apic_ops = {
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 48e8461..5eee495 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -382,7 +382,14 @@ static void xen_teardown_msi_irq(unsigned int irq)
- {
- 	xen_destroy_irq(irq);
- }
--
-+static u32 xen_nop_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-+{
-+	return 0;
-+}
-+static u32 xen_nop_msix_mask_irq(struct msi_desc *desc, u32 flag)
-+{
-+	return 0;
-+}
- #endif
- 
- int __init pci_xen_init(void)
-@@ -406,6 +413,8 @@ int __init pci_xen_init(void)
- 	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
- 	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
- 	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
-+	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
-+	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
- #endif
- 	return 0;
- }
-@@ -485,6 +494,8 @@ int __init pci_xen_initial_domain(void)
- 	x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
- 	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
- 	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
-+	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
-+	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
- #endif
- 	xen_setup_acpi_sci();
- 	__acpi_register_gsi = acpi_register_gsi_xen;
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d5f90d6..7916699 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -185,7 +185,7 @@ static inline __attribute_const__ u32 msi_enabled_mask(u16 control)
-  * reliably as devices without an INTx disable bit will then generate a
-  * level IRQ which will never be cleared.
-  */
--static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-+u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
- {
- 	u32 mask_bits = desc->masked;
- 
-@@ -199,9 +199,14 @@ static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
- 	return mask_bits;
- }
- 
-+__weak u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-+{
-+	return default_msi_mask_irq(desc, mask, flag);
-+}
-+
- static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
- {
--	desc->masked = __msi_mask_irq(desc, mask, flag);
-+	desc->masked = arch_msi_mask_irq(desc, mask, flag);
- }
- 
- /*
-@@ -211,7 +216,7 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-  * file.  This saves a few milliseconds when initialising devices with lots
-  * of MSI-X interrupts.
-  */
--static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
-+u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
- {
- 	u32 mask_bits = desc->masked;
- 	unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
-@@ -224,9 +229,14 @@ static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
- 	return mask_bits;
- }
- 
-+__weak u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
-+{
-+	return default_msix_mask_irq(desc, flag);
-+}
-+
- static void msix_mask_irq(struct msi_desc *desc, u32 flag)
- {
--	desc->masked = __msix_mask_irq(desc, flag);
-+	desc->masked = arch_msix_mask_irq(desc, flag);
- }
- 
- static void msi_set_mask_bit(struct irq_data *data, u32 flag)
-@@ -902,7 +912,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &ctrl);
- 	mask = msi_capable_mask(ctrl);
- 	/* Keep cached state to be restored */
--	__msi_mask_irq(desc, mask, ~mask);
-+	arch_msi_mask_irq(desc, mask, ~mask);
- 
- 	/* Restore dev->irq to its default pin-assertion irq */
- 	dev->irq = desc->msi_attrib.default_irq;
-@@ -998,7 +1008,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
- 	/* Return the device with MSI-X masked as initial states */
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		/* Keep cached states to be restored */
--		__msix_mask_irq(entry, 1);
-+		arch_msix_mask_irq(entry, 1);
- 	}
- 
- 	msix_set_enable(dev, 0);
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index b17ead8..87cce50 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -64,6 +64,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
- 
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev, int irq);
-+u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
-+u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag);
- 
- struct msi_chip {
- 	struct module *owner;
--- 
-1.8.3.1
+Somehow my System team says that it should be at offset 0x160?
+Is it possible that there is a "walk algorithm" with pointers just like for the ASPM register?
+I'll try to check the PCI spec when I'll find the time for that.
 
+In any case, here are the relevant offsets:
+
+03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 6b)
+[...]
+160: 0f 00 a0 40 f0 00 00 00 00 00 00 00 00 00 00 00
+[...]
+200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+> wzyboy, can you run these commands before the bug occurs and before
+> using the "setpci" workaround:
+> 
+>   lspci -vvxxxx -s00:1c.1
+>   lspci -vvxxxx -s03:00.0
