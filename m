@@ -1,96 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f48.google.com ([209.85.212.48]:39125 "EHLO
-	mail-vb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205Ab3KGVxp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Nov 2013 16:53:45 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Luck, Tony" <tony.luck@intel.com>
+Subject: [PATCH 2/2] ACPI / bind: Use (put|get)_device() on ACPI device objects too
+Date: Thu, 14 Nov 2013 00:26:47 +0100
+Message-ID: <9712243.It8gvaRCs0@vostro.rjw.lan>
+In-Reply-To: <1803808.ghCmmaO2Cj@vostro.rjw.lan>
+References: <3268437.YsusHvklcv@vostro.rjw.lan> <1803808.ghCmmaO2Cj@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
-References: <52797238.8070304@gmail.com>
-	<20131106002505.GC3359@google.com>
-	<CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
-Date: Thu, 7 Nov 2013 13:53:44 -0800
-Message-ID: <CADTPrLQpaCDo_YCC2=MmT1iCrWRPqzDpnqQZrE8OMjRMc6WYmQ@mail.gmail.com>
-Subject: Re: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
-From: Rajat Jain <rajatjain.linux@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-hotplug@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Tom Nguyen <tom.l.nguyen@intel.com>,
-	Kristen Accardi <kristen.c.accardi@intel.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Rajat Jain <rajatjain@juniper.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn / list,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I think there are two independent problems that need to be addressed.
+When associating a "physical" device with an ACPI device object
+acpi_bind_one() only uses get_device() to increment the reference
+counter of the former, but there is no reason not to do that with
+the latter too.  Among other things, that may help to avoid
+use-after-free when an ACPI device object is freed without calling
+acpi_unbind_one() for all "physical" devices associated with it
+(that only can happen in buggy code, but then it's better if the
+kernel doesn't crash as a result of a bug).
 
-Problem #1: In any condition where (e.g. spurious interrupt) once the
-execution reaches inside the if condition below, the PCI_EXP_SLTSTA_CC
-bit is already set, and needs to be cleared. This does not happen
-today and hence this patch was aimed at solving that. Please note that
-this will not cause any problems to the systems that were fixed by
-5808639bfa98, because this is equally applicable to any case.
+For this reason, modify acpi_bind_one() to apply get_device() to
+the ACPI device object too and update acpi_unbind_one() to drop
+that reference using put_device() as appropriate.
 
->>>
->>>  drivers/pci/hotplug/pciehp_hpc.c |    1 +
->>>  1 file changed, 1 insertion(+)
->>>
->>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
->>> index 5b8d749..ba8e06f 100644
->>> --- a/drivers/pci/hotplug/pciehp_hpc.c
->>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
->>> @@ -185,6 +185,7 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
->>>       }
->>>
->>>       if (slot_status & PCI_EXP_SLTSTA_CC) {
->>> +             pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_CC);
->>>               if (!ctrl->no_cmd_complete) {
->>>                       /*
->>>                        * After 1 sec and CMD_COMPLETED still not set, just
->>> --
->>> 1.7.9.5
->>>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/glue.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
- Problem #2: Looks like we have now 2 classes of systems:
+Index: linux-pm/drivers/acpi/glue.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -217,6 +217,7 @@ int acpi_bind_one(struct device *dev, ac
+ 	if (!acpi_dev)
+ 		return -EINVAL;
+ 
++	get_device(&acpi_dev->dev);
+ 	get_device(dev);
+ 	physical_node = kzalloc(sizeof(*physical_node), GFP_KERNEL);
+ 	if (!physical_node) {
+@@ -243,6 +244,7 @@ int acpi_bind_one(struct device *dev, ac
+ 				goto err;
+ 
+ 			put_device(dev);
++			put_device(&acpi_dev->dev);
+ 			return 0;
+ 		}
+ 		if (pn->node_id == node_id) {
+@@ -282,6 +284,7 @@ int acpi_bind_one(struct device *dev, ac
+  err:
+ 	ACPI_COMPANION_SET(dev, NULL);
+ 	put_device(dev);
++	put_device(&acpi_dev->dev);
+ 	return retval;
+ }
+ EXPORT_SYMBOL_GPL(acpi_bind_one);
+@@ -307,8 +310,9 @@ int acpi_unbind_one(struct device *dev)
+ 			sysfs_remove_link(&acpi_dev->dev.kobj, physnode_name);
+ 			sysfs_remove_link(&dev->kobj, "firmware_node");
+ 			ACPI_COMPANION_SET(dev, NULL);
+-			/* acpi_bind_one() increase refcnt by one. */
++			/* Drop references taken by acpi_bind_one(). */
+ 			put_device(dev);
++			put_device(&acpi_dev->dev);
+ 			kfree(entry);
+ 			break;
+ 		}
 
-a) The 5808639bfa98 was addressed towards systems that advertise the
-"Command completion notification" capability, but do not notify of
-command completion in case MRL, Power Ctrl, Attn LED and Pwr LED bits
-are not written in SLOT_CTRL register (not implemented in
-capabilities). Thus no command completion shall be generated for
-pcie_disable_notifications() for e.g.
-
-b) I have a system that where none of the above described HP elements
-are present implemented, but the controller supports command
-completion, and sends it out for every write of the slot control
-register. Thus notification for command complete is generated for
-pcie_disable_notifiction().
-
-I don't believe there is a way to differentiate between these 2
-classes of systems at init time, unless we try to generate a
-notification and do or do not get one.
-
-The PCIe specification section 7.8.10 seems to lean towards category
-(b) of systems, but today this class of systems shall get penalized by
-delay of 1 second (per controller) during probe. I can try and address
-that, but admittedly I could not think of a better solution than
-moving this code from pcie_init() to pcie_write_cmd().
-
->         if (NO_CMD_CMPL(ctrl) ||
->             !(POWER_CTRL(ctrl) | ATTN_LED(ctrl) | PWR_LED(ctrl) | EMI(ctrl)))
->             ctrl->no_cmd_complete = 1;
-
-Please advise.
-
-Also, I'd appreciate if you could please let me know if there are any
-comments on the patch for problem #1 above.
-
-Thanks,
-
-Rajat
