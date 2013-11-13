@@ -1,124 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:49227 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539Ab3KZTit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 14:38:49 -0500
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:37448 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759349Ab3KMRm7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 12:42:59 -0500
+Received: by mail-ie0-f175.google.com with SMTP id u16so969517iet.6
+        for <linux-pci@vger.kernel.org>; Wed, 13 Nov 2013 09:42:59 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20131126183750.GA29265@concerto>
-References: <1384285203-642-1-git-send-email-cl91tp@gmail.com>
-	<CAErSpo5E4584zgTt4ySPSEFhtwdHDOyrrowirp=SmtmJjDyHgg@mail.gmail.com>
-	<5294CF1A.6080707@oracle.com>
-	<CAErSpo6eAbVDfc8PFPP4b4HLzAjkFe23pJytu-TZq-V8-pfQMA@mail.gmail.com>
-	<20131126174806.GA14789@srcf.ucam.org>
-	<20131126183750.GA29265@concerto>
-Date: Tue, 26 Nov 2013 23:38:48 +0400
-Message-ID: <CALYGNiPQsrEBY5G_C-4doPmenivHHn=CzoC2+7JuSsQy+_H0nQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add a quirk for keeping Bus Master bit on shutdown
-From: Konstantin Khlebnikov <koct9i@gmail.com>
-To: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Chang Liu <cl91tp@gmail.com>,
+In-Reply-To: <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 13 Nov 2013 10:42:37 -0700
+Message-ID: <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Alan Cox <gnomes@lxorguk.ukuu.org.uk>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	Jility <jility09@gmail.com>, Florian Otti <f.otti@gmx.at>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Content-Type: text/plain; charset=UTF-8
+	=?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 26, 2013 at 10:37 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
-> On Tue, Nov 26, 2013 at 05:48:06PM +0000, Matthew Garrett wrote:
->> On Tue, Nov 26, 2013 at 10:35:26AM -0700, Bjorn Helgaas wrote:
->> > On Tue, Nov 26, 2013 at 9:40 AM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
->> > > Disabling Bus Master bit is effectively a brute force and not an elegant way
->> > > to stop unwanted DMA. It can have side effects as Alan and others pointed
->> > > out in the original discussion, and we are now seeing one with Lynx Point on
->> > > Acer.
->> >
->> > I'm getting more queasy all the time about disabling Bus Master.  I
->> > don't think RHEL does it, and that's probably where most kexec use is.
->> >  So I doubt we really have much experience with it yet.
->>
->> Does Windows disable the BM bit on shutdown? If not, it's likely that
->> there are platforms where the SMM code assumes it's still enabled. We
->> also know that there are devices that hang if BM is disabled while their
->> DMA engines are still running.
->>
->> Unless we verify that Windows does this, I think there's no way we can
->> guarantee that firmware won't make assumptions about the state of PCI.
->> The easiest compromise would probably be to set a flag that disables
->> busmastering purely when we're performing a kexec.
->>
->
-> This is the approach that is most appealing to me. If we confine
-> clearing Bus Master bit to just the kexec path, we can side step all
-> the land mines in normal shutdown path. Here is an informal patch
-> just for comments and discussion. It has been tested lightly. If
-> this approach is acceptable, I will create a more formal patch.
+[+cc Bjørn]
 
-ACK. This is perfect solution.
+On Tue, Nov 12, 2013 at 10:39 PM, wzyboy <wzyboy@wzyboy.org> wrote:
+> 2013/11/13 Bjorn Helgaas <bhelgaas@google.com>:
+>> wzyboy, can you run these commands before the bug occurs and before
+>> using the "setpci" workaround:
+>>
+>>   lspci -vvxxxx -s00:1c.1
+>>   lspci -vvxxxx -s03:00.0
+>
+> After today's morning lessons I booted up my laptop with pci=earlydump
+> kernel perameter and here are the output of lspci (without setpci and
+> before bug hit) and dmesg.
 
->
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 9042fdb..c605be0 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -400,10 +400,11 @@ static void pci_device_shutdown(struct device *dev)
->         pci_msix_shutdown(pci_dev);
->
->         /*
-> -        * Turn off Bus Master bit on the device to tell it to not
-> -        * continue to do DMA. Don't touch devices in D3cold or unknown states.
-> +        * If this is a kexec reboot, turn off Bus Master bit on the
-> +        * device to tell it to not continue to do DMA. Don't touch
-> +        * devices in D3cold or unknown states.
->          */
-> -       if (pci_dev->current_state <= PCI_D3hot)
-> +       if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
->                 pci_clear_master(pci_dev);
->  }
->
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 9c91ecc..7d85733 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -9,6 +9,9 @@
->  extern const unsigned char pcix_bus_speed[];
->  extern const unsigned char pcie_link_speed[];
->
-> +/* flag to track if kexec reboot is in progress */
-> +extern unsigned long kexec_in_progress;
-> +
->  /* Functions internal to the PCI core code */
->
->  int pci_create_sysfs_dev_files(struct pci_dev *pdev);
-> diff --git a/kernel/kexec.c b/kernel/kexec.c
-> index 490afc0..fd2d63e 100644
-> --- a/kernel/kexec.c
-> +++ b/kernel/kexec.c
-> @@ -47,6 +47,9 @@ u32 vmcoreinfo_note[VMCOREINFO_NOTE_SIZE/4];
->  size_t vmcoreinfo_size;
->  size_t vmcoreinfo_max_size = sizeof(vmcoreinfo_data);
->
-> +/* Flag to indicate we are going to kexec a new kernel */
-> +unsigned long kexec_in_progress = 0;
-> +
->  /* Location of the reserved area for the crash kernel */
->  struct resource crashk_res = {
->         .name  = "Crash kernel",
-> @@ -1675,6 +1678,7 @@ int kernel_kexec(void)
->         } else
->  #endif
->         {
-> +               kexec_in_progress = 1;
->                 kernel_restart_prepare(NULL);
->                 printk(KERN_EMERG "Starting new kernel\n");
->                 machine_shutdown();
->
->
-> --
-> Khalid
+Thanks.  Are you 100% sure the lspci output is before the setpci
+workaround?  The dmesg earlydump shows this (the ASPM control bits are
+in the 16-bit Link Control register, which is at 0x50 for both
+devices):
+
+    00:1c.1 Root Port config
+         50: 42 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
+    03:00.0 Intel 7260 config:
+         50: 42 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+
+So at boot-time, ASPM was enabled.  But the lspci shows:
+
+    00:1c.1 Root Port config
+      Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+        LnkCtl: ASPM Disabled
+         50: 40 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
+    03:00.0 Intel 7620 config
+      Capabilities: [40] Express (v2) Endpoint, MSI 00
+        LnkCtl: ASPM Disabled
+         50: 40 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+
+And now ASPM is disabled.  I'm pretty sure the kernel did not disable
+ASPM, so I assume it was disabled by setpci.
+
+I manually decoded the L1 PM Substates registers for both the Root
+Port and the 7260 device (details appended below), and everything
+appears enabled there (though I think that since ASPM is disabled, L1
+PM substates is ignored).
+
+My conclusion is that the BIOS enabled both ASPM and L1 PM substates.
+Obviously the BIOS will do the same when booting Windows, and I assume
+the device works fine with the Windows driver.  Based on our previous
+experience with Windows, I don't think it will change the ASPM
+configuration because the ACPI FADT table and the PCI _OSC method do
+not grant control of ASPM to the OS.  Therefore, I think the problem
+is in the Linux iwlwifi driver.
+
+I don't think there's anything more I can do here because there's no
+evidence that the PCI core is doing anything wrong.  But if it turns
+out that we *should* be doing something differently, let me know.
+
+Bjorn
+
+
+    00:1c.1 Root Port config
+      Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+        LnkCtl: ASPM Disabled
+         50: 40 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
+      Capabilities: [200 v1] #1e
+        200: 1e 00 01 00 1f 28 28 00 1f 28 a0 40 f0 00 00 00
+        210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+          Header                        0x0001001e
+            ID 0x001e (L1 Substates)
+            Version 1
+          Capabilities                  0x0028281f
+          Control 1                     0x40a0281f
+            0x40a0281f  Control 1
+            0x00000001    PCI-PM L1.2 Enable
+            0x00000002    PCI-PM L1.1 Enable
+            0x00000004    ASPM L1.2 Enable
+            0x00000008    ASPM L1.1 Enable
+            0x00000010    RsvdP
+            0x00002800    Common_Mode_Restore_Time
+            0x00a00000    LTR_L1.2_THRESHOLD_Value
+            0x40000000    LTR_L1.2_THRESHOLD_Scale
+          Control 2                     0x000000f0
+            0x000000f0  Control 2
+            0x000000f0    T_POWER_ON Value
+
+    03:00.0 Intel 7620 config
+      Capabilities: [40] Express (v2) Endpoint, MSI 00
+        LnkCtl: ASPM Disabled
+         50: 40 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+      Capabilities: [154 v1] Vendor Specific Information: ID=cafe
+Rev=1 Len=014 <?>
+        150:             0b 00 01 00 fe ca 41 01 1f 1e f0 00
+        160: 0f 00 a0 40 f0 00 00 00 00 00 00 00 00 00 00 00
+          Header                        0x0001000b
+            ID 0x000b (Vendor-specific)
+            Version 1
+          Vendor-specific header        0x0141cafe
+            VSEC ID 0xcafe
+            VSEC Rev 1
+            Length 0x14
+          Capabilities                  0x00f01e1f
+          Control 1                     0x40a0000f
+            0x40a0000f  Control 1
+            0x00000001    PCI-PM L1.2 Enable
+            0x00000002    PCI-PM L1.1 Enable
+            0x00000004    ASPM L1.2 Enable
+            0x00000008    ASPM L1.1 Enable
+          Control 2                     0x000000f0
