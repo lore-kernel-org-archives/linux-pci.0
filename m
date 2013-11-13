@@ -1,98 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:43776 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754603Ab3K1R4R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 12:56:17 -0500
-From: Marek Vasut <marex@denx.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 2/7] [RFC] PCI: imx6: remove outbound io/mem ATU region mapping
-Date: Thu, 28 Nov 2013 18:56:10 +0100
-Cc: "'Tim Harvey'" <tharvey@gateworks.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Frank Li'" <lznuaa@gmail.com>, "'Harro Haan'" <hrhaan@gmail.com>,
-	"'Mohit KUMAR DCG'" <Mohit.KUMAR@st.com>,
-	"'Richard Zhu'" <r65037@freescale.com>,
-	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Shawn Guo'" <shawn.guo@linaro.org>,
-	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
-	"'Srikanth T Shivanand'" <ts.srikanth@samsung.com>,
-	"'Troy Kisky'" <troy.kisky@boundarydevices.com>,
-	"'Yinghai Lu'" <yinghai@kernel.org>
-References: <1385500248-6551-1-git-send-email-marex@denx.de> <201311270944.09383.marex@denx.de> <006301ceebfd$8d4ba040$a7e2e0c0$%han@samsung.com>
-In-Reply-To: <006301ceebfd$8d4ba040$a7e2e0c0$%han@samsung.com>
+Received: from mga01.intel.com ([192.55.52.88]:37953 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753869Ab3KMG43 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Nov 2013 01:56:29 -0500
+Message-ID: <528322CC.2000508@intel.com>
+Date: Wed, 13 Nov 2013 14:57:16 +0800
+From: Aaron Lu <aaron.lu@intel.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201311281856.10139.marex@denx.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Lan Tianyu <tianyu.lan@intel.com>
+CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Luck, Tony" <tony.luck@intel.com>
+Subject: Re: [PATCH] ACPI / driver core: Store a device pointer in struct
+ acpi_dev_node
+References: <3268437.YsusHvklcv@vostro.rjw.lan> <52803124.7000304@intel.com> <1683079.zjqzsOAjXB@vostro.rjw.lan>
+In-Reply-To: <1683079.zjqzsOAjXB@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jingoo Han,
-
-> On Wednesday, November 27, 2013 5:44 PM, Marek Vasut wrote:
-> > Wednesday, November 27, 2013 1:30 PM, Pratyush Anand wrote:
-> > > On Wed, Nov 27, 2013 at 05:10:43AM +0800, Marek Vasut wrote:
-> > > > From: Tim Harvey <tharvey@gateworks.com>
-> > > > 
-> > > > The IMX6 iATU is used for address translation between the AXI bus
-> > > > address space and PCI address space.  This is used for type0 and
-> > > > type1 config cycles but is not necessary for outbound io/mem
-> > > > regions.
-> > > > 
-> > > > This patch removes the calls that inappropriately re-configures the
-> > > > ATU viewport for outbound memory and IO after config cycles and
-> > > > removes them altogether as they are not necessary.
-> > > 
-> > > Yes, they are not necessary for all the cases where translation is one
-> > > to one. So so for sure all the platform till now introduced should
-> > > work.
-> > > But, what about a platform where memory translation is not one to one?
-> > > 
-> > > Existing code should work with all sort of memory translation on a
-> > > platform having atleast two viewports capable of programming any type
-> > > of outbound transaction.
-> > 
-> > Full ACK, that's why it's called RFC.
-> > 
-> > > > This resolves issues with PCI devices behind switches and has been
-> > > > tested with a Gige device behind a PLX PEX860x switch.  More testing
-> > > > is needed for other configurations.
-> > > 
-> > > I do not understand if MX6 has 4 Outbound Viewport then how this patch
-> > > helps?
-> > > -- PCI devices behind switches would not have been working because
-> > > CFG1 transaction would not have been correct.
-> > > -- It works with this patch. This patch changes viewport for CFG1 from
-> > > 1 to 0.
-> > > -- Can it be possible that MX6 has some restriction on viewport
-> > > programming capability. I mean,like only viewport0 can be programmed
-> > > for CFG0/1?
-> > 
-> > Tim ?
-> > 
-> > Here is the MX6 datasheet [1], the section 48.3.9.1.1 and 48.3.9.1.2
-> > describe the iATU configuration on MX6. My understanding from this
-> > description is that the MX6 has 4 inbound and 4 outbound iATU regions.
-> > Am I wrong ?
+On 11/11/2013 09:45 PM, Rafael J. Wysocki wrote:
+> On Monday, November 11, 2013 09:21:40 AM Lan Tianyu wrote:
+>> On 2013年11月10日 08:58, Rafael J. Wysocki wrote:
+>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>
+>>> Modify struct acpi_dev_node to contain a pointer to struct device
+>>> ambedded in the struct acpi_device associated with the given device
+>>> object (that is, its ACPI companion device) instead of an ACPI handle
+>>> corresponding to that struct acpi_device.  Introduce two new macros
+>>> for manipulating that pointer in a CONFIG_ACPI-safe way,
+>>> ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
+>>> ACPI_HANDLE() macro to take the above changes into account.
+>>> Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
+>>> use ACPI_COMPANION_SET() instead.  For some of them who used to
+>>> pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
+>>> introduce a helper routine acpi_preset_companion() doing an
+>>> equivalent thing.
+>>>
+>>> The rationale for using a struct device pointer instead of a
+>>> struct acpi_device one as the member of struct acpi_dev_node is
+>>> that it allows device.h to avoid including linux/acpi.h which would
+>>> introduce quite a bit of compilation overhead for stuff that doesn't
+>>> care about ACPI.
+>>> In turn, moving the macros to linux/acpi.h forces
+>>> the stuff that does care about ACPI to include that file as
+>>> appropriate anyway.
+>>
+>> How about declaring "struct acpi_device" in the device.h? This can help
+>> to use struct acpi_device without including linux/acpi.h.
+>>
+>> struct iommu_ops and struct iommu_group have been used by the same way
+>> in the device.h.
 > 
-> The numbers of inbound and outbound are hardware-configurable features.
-> Thus, these numbers  can be confirmed by Freescale  hardware engineers.
-> How about asking Freescale hardware engineers, if possible?
-
-Richard is on the CC. Richard, can you please confirm those?
-
-Thanks!
-
-> Best regards,
-> Jingoo Han
+> Yes, they are.  Well, that appears to work too.
 > 
-> > [1] http://cache.freescale.com/files/32bit/doc/ref_manual/IMX6DQRM.pdf
-> > 
-> > > Otherwise I do not find any convincing reason that why this patch
-> > > helps in resolving issues with PCI devices behind switches.
+> Updated patch is appended.  It also contains some fixes for problems reported
+> by the auto build system and it's been tested on x86-64 now, so it should be
+> reasonably close to final.
+> 
+> Thanks,
+> Rafael
+> 
+> 
+> ---
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Subject: ACPI / driver core: Store an ACPI device pointer in struct acpi_dev_node
+> 
+> Modify struct acpi_dev_node to contain a pointer to struct acpi_device
+> associated with the given device object (that is, its ACPI companion
+> device) instead of an ACPI handle corresponding to it.  Introduce two
+> new macros for manipulating that pointer in a CONFIG_ACPI-safe way,
+> ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
+> ACPI_HANDLE() macro to take the above changes into account.
+> Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
+> use ACPI_COMPANION_SET() instead.  For some of them who used to
+> pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
+> introduce a helper routine acpi_preset_companion() doing an
+> equivalent thing.
+> 
+> The main motivation for doing this is that there are things
+> represented by struct acpi_device objects that don't have valid
+> ACPI handles (so called fixed ACPI hardware features, such as
+> power and sleep buttons) and we would like to create platform
+> device objects for them and "glue" them to their ACPI companions
+> in the usual way (which currently is impossible due to the
+> lack of valid ACPI handles).  However, there are more reasons
+> why it may be useful.
+> 
+> First, struct acpi_device pointers allow of much better type checking
+> than void pointers which are ACPI handles, so it should be more
+> difficult to write buggy code using modified struct acpi_dev_node
+> and the new macros.  Second, the change should help to reduce (over
+> time) the number of places in which the result of ACPI_HANDLE() is
+> passed to acpi_bus_get_device() in order to obtain a pointer to the
+> struct acpi_device associated with the given "physical" device,
+> because now that pointer is returned by ACPI_COMPANION() directly.
+> Finally, the change should make it easier to write generic code that
+> will build both for CONFIG_ACPI set and unset without adding explicit
+> compiler directives to it.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Best regards,
-Marek Vasut
+Reviewed-by: Aaron Lu <aaron.lu@intel.com> for ATA and SDIO part.
+
+Thanks,
+Aaron
