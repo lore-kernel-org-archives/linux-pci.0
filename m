@@ -1,111 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27663 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750940Ab3KZBdh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 20:33:37 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 03/10] PCI: Move resources and bus_list releasing to pci_release_dev
-Date: Mon, 25 Nov 2013 17:28:03 -0800
-Message-Id: <1385429290-25397-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+Received: from mail-qe0-f54.google.com ([209.85.128.54]:64585 "EHLO
+	mail-qe0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752942Ab3KNNVL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 08:21:11 -0500
+Received: by mail-qe0-f54.google.com with SMTP id 1so1214625qec.41
+        for <linux-pci@vger.kernel.org>; Thu, 14 Nov 2013 05:21:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <Pine.LNX.4.44L0.1311131411120.1424-100000@iolanthe.rowland.org>
+References: <1384360178-333-1-git-send-email-ulf.hansson@linaro.org>
+	<Pine.LNX.4.44L0.1311131411120.1424-100000@iolanthe.rowland.org>
+Date: Thu, 14 Nov 2013 14:21:10 +0100
+Message-ID: <CAPDyKFocx3L5d5_6TCx5fDy9RgD0MmmWEG0pL=77Hk7bA5EZfA@mail.gmail.com>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
+ system suspend
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should not release resource in pci_destroy that is too early
-as there could be still other use hold reference.
+>
+> Drivers don't have to implement anything special if they want to use
+> their runtime routines for system suspend.  All they have to do is set
+> the .suspend and .resume method pointers to point to their
+> runtime_suspend and runtime_resume routines.
+>
+>> In the case were drivers needs there runtime resourses to be activated
+>> to be able to handle their system suspend tasks, those can easily just
+>> restore the runtime PM usage count, pm_runtime_put_sync(), once done
+>> with it's suspend operations, which then will inactivate the device.
+>
+> The reason for doing things the way they are is to avoid races between
+> system PM callbacks and runtime PM callbacks.  We don't want to have a
+> runtime_resume routine powering up a device at the same time as a
+> suspend routine is powering it down.
 
-release them or remove it from bus devices list at last
-in pci_release_dev instead.
+I believe I understand why the PM core prevent this. Some subsystems
+and drivers depends on this behaviour, but I wonder if we should
+consider this as common cases or more like special cases?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c  | 21 +++++++++++++++++++--
- drivers/pci/remove.c | 19 -------------------
- 2 files changed, 19 insertions(+), 21 deletions(-)
+For those drivers that potentially could rely on runtime PM (and it's
+callbacks) to inactivate the device during system suspend, and thus
+don't have issues with races you describe above, the current behaviour
+in the PM core adds unnecessary complexity for these drivers to handle
+system suspend.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 173a9cf..12ec56c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1154,6 +1154,18 @@ static void pci_release_capabilities(struct pci_dev *dev)
- 	pci_free_cap_save_buffers(dev);
- }
- 
-+static void pci_free_resources(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	pci_cleanup_rom(dev);
-+	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+		struct resource *res = dev->resource + i;
-+		if (res->parent)
-+			release_resource(res);
-+	}
-+}
-+
- /**
-  * pci_release_dev - free a pci device structure when all users of it are finished.
-  * @dev: device that's been disconnected
-@@ -1163,9 +1175,14 @@ static void pci_release_capabilities(struct pci_dev *dev)
-  */
- static void pci_release_dev(struct device *dev)
- {
--	struct pci_dev *pci_dev;
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+
-+	down_write(&pci_bus_sem);
-+	list_del(&pci_dev->bus_list);
-+	up_write(&pci_bus_sem);
-+
-+	pci_free_resources(pci_dev);
- 
--	pci_dev = to_pci_dev(dev);
- 	pci_release_capabilities(pci_dev);
- 	pci_release_of_node(pci_dev);
- 	pcibios_release_device(pci_dev);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 692f4c3..f452148 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -3,20 +3,6 @@
- #include <linux/pci-aspm.h>
- #include "pci.h"
- 
--static void pci_free_resources(struct pci_dev *dev)
--{
--	int i;
--
--	msi_remove_pci_irq_vectors(dev);
--
--	pci_cleanup_rom(dev);
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--		struct resource *res = dev->resource + i;
--		if (res->parent)
--			release_resource(res);
--	}
--}
--
- static void pci_stop_dev(struct pci_dev *dev)
- {
- 	pci_pme_active(dev, false);
-@@ -36,11 +22,6 @@ static void pci_destroy_dev(struct pci_dev *dev)
- {
- 	device_del(&dev->dev);
- 
--	down_write(&pci_bus_sem);
--	list_del(&dev->bus_list);
--	up_write(&pci_bus_sem);
--
--	pci_free_resources(dev);
- 	put_device(&dev->dev);
- }
- 
--- 
-1.8.1.4
+Drivers/buses/power_domains that handles runtime PM enabled devices,
+will, as you also have pointed out earlier, need to implement the
+.suspend callback (suspend_late or suspend_noirq might work as well)
+and the corresponding .resume callback. This just for the sake of
+making sure all their runtime enabled devices gets fully inactivated
+during system suspend.
 
+I wonder if we somehow should move the responsibility of preventing
+"runtime suspend" as a part of the system suspend, down to the driver
+to decide instead of the PM core?
+
+Kind regards
+Ulf Hansson
