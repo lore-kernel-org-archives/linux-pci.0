@@ -1,60 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1385066835.1403.489.camel@snotra.buserror.net>
-Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-From: Scott Wood <scottwood@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Thu, 21 Nov 2013 14:47:15 -0600
-In-Reply-To: <1385066603.2879.414.camel@ul30vt.home>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1384973243.2879.361.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1385066603.2879.414.camel@ul30vt.home>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <528479A9.9020802@intel.com>
+Date: Thu, 14 Nov 2013 15:20:09 +0800
+From: Lan Tianyu <tianyu.lan@intel.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Luck, Tony" <tony.luck@intel.com>
+Subject: Re: [PATCH 2/2] ACPI / bind: Use (put|get)_device() on ACPI device
+ objects too
+References: <3268437.YsusHvklcv@vostro.rjw.lan> <1803808.ghCmmaO2Cj@vostro.rjw.lan> <9712243.It8gvaRCs0@vostro.rjw.lan>
+In-Reply-To: <9712243.It8gvaRCs0@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-11-21 at 13:43 -0700, Alex Williamson wrote:
-> On Thu, 2013-11-21 at 11:20 +0000, Bharat Bhushan wrote:
-> > 
-> > > -----Original Message-----
-> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > Sent: Thursday, November 21, 2013 12:17 AM
-> > > To: Bhushan Bharat-R65777
-> > > Cc: joro@8bytes.org; bhelgaas@google.com; agraf@suse.de; Wood Scott-B07421;
-> > > Yoder Stuart-B08248; iommu@lists.linux-foundation.org; linux-
-> > > pci@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; linux-
-> > > kernel@vger.kernel.org; Bhushan Bharat-R65777
-> > > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-> > > 
-> > > Is VFIO_IOMMU_PAMU_GET_MSI_BANK_COUNT per aperture (ie. each vfio user has
-> > > $COUNT regions at their disposal exclusively)?
-> > 
-> > Number of msi-bank count is system wide and not per aperture, But will be setting windows for banks in the device aperture.
-> > So say if we are direct assigning 2 pci device (both have different iommu group, so 2 aperture in iommu) to VM.
-> > Now qemu can make only one call to know how many msi-banks are there but it must set sub-windows for all banks for both pci device in its respective aperture.
+On 2013年11月14日 07:26, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> I'm still confused.  What I want to make sure of is that the banks are
-> independent per aperture.  For instance, if we have two separate
-> userspace processes operating independently and they both chose to use
-> msi bank zero for their device, that's bank zero within each aperture
-> and doesn't interfere.  Or another way to ask is can a malicious user
-> interfere with other users by using the wrong bank.  Thanks,
+> When associating a "physical" device with an ACPI device object
+> acpi_bind_one() only uses get_device() to increment the reference
+> counter of the former, but there is no reason not to do that with
+> the latter too.  Among other things, that may help to avoid
+> use-after-free when an ACPI device object is freed without calling
+> acpi_unbind_one() for all "physical" devices associated with it
+> (that only can happen in buggy code, but then it's better if the
+> kernel doesn't crash as a result of a bug).
+> 
+> For this reason, modify acpi_bind_one() to apply get_device() to
+> the ACPI device object too and update acpi_unbind_one() to drop
+> that reference using put_device() as appropriate.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/acpi/glue.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> Index: linux-pm/drivers/acpi/glue.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/glue.c
+> +++ linux-pm/drivers/acpi/glue.c
+> @@ -217,6 +217,7 @@ int acpi_bind_one(struct device *dev, ac
+>  	if (!acpi_dev)
+>  		return -EINVAL;
+>  
+> +	get_device(&acpi_dev->dev);
+>  	get_device(dev);
+>  	physical_node = kzalloc(sizeof(*physical_node), GFP_KERNEL);
+>  	if (!physical_node) {
+> @@ -243,6 +244,7 @@ int acpi_bind_one(struct device *dev, ac
+>  				goto err;
+>  
+>  			put_device(dev);
+> +			put_device(&acpi_dev->dev);
+>  			return 0;
+>  		}
+>  		if (pn->node_id == node_id) {
+> @@ -282,6 +284,7 @@ int acpi_bind_one(struct device *dev, ac
+>   err:
+>  	ACPI_COMPANION_SET(dev, NULL);
+>  	put_device(dev);
+> +	put_device(&acpi_dev->dev);
+>  	return retval;
+>  }
+>  EXPORT_SYMBOL_GPL(acpi_bind_one);
+> @@ -307,8 +310,9 @@ int acpi_unbind_one(struct device *dev)
+>  			sysfs_remove_link(&acpi_dev->dev.kobj, physnode_name);
+>  			sysfs_remove_link(&dev->kobj, "firmware_node");
+>  			ACPI_COMPANION_SET(dev, NULL);
+> -			/* acpi_bind_one() increase refcnt by one. */
+> +			/* Drop references taken by acpi_bind_one(). */
+>  			put_device(dev);
+> +			put_device(&acpi_dev->dev);
+>  			kfree(entry);
+>  			break;
+>  		}
+> 
 
-They can interfere.  With this hardware, the only way to prevent that is
-to make sure that a bank is not shared by multiple protection contexts.
-For some of our users, though, I believe preventing this is less
-important than the performance benefit.
+Reviewed-by: Lan Tianyu <tianyu.lan@intel.com>
 
--Scott
-
-
-
+-- 
+Best regards
+Tianyu Lan
