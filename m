@@ -1,83 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:52103 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553Ab3KTHJl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 02:09:41 -0500
-Received: by mail-pd0-f175.google.com with SMTP id w10so7119145pde.34
-        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 23:09:40 -0800 (PST)
-Date: Wed, 20 Nov 2013 15:09:30 +0800
-From: Adam Lee <adam.lee@canonical.com>
-To: Myron Stowe <myron.stowe@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	Amos Kong <kongjianjun@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [PATCH] pci: check PCI_EXP_FLAGS_SLOT before setting hotplug
- bridge
-Message-ID: <20131120070930.GD3821@adam-laptop>
-References: <1384767652-20567-1-git-send-email-adam.lee@canonical.com>
- <CAErSpo7bERHRbBNOzb6g+666jMmFXQvv2T2U6dv82fVh1dU5kA@mail.gmail.com>
- <20131119055714.GA3451@adam-laptop>
- <CAL-B5D2WtALi5RMX9JQQmVUShLEN947cdvr7jjnpfCXS3zmPVw@mail.gmail.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:54126 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755285Ab3KNTdc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 14:33:32 -0500
+Received: by mail-ie0-f177.google.com with SMTP id qd12so3219046ieb.8
+        for <linux-pci@vger.kernel.org>; Thu, 14 Nov 2013 11:33:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL-B5D2WtALi5RMX9JQQmVUShLEN947cdvr7jjnpfCXS3zmPVw@mail.gmail.com>
+In-Reply-To: <CAErSpo5DD_H8_auWZ9QAVPLk85=Zcviv3RjeEWmHQkHPnFPCzA@mail.gmail.com>
+References: <20131029214631.GA19354@kroah.com> <CAErSpo5YpE-aoTbXd5=0xBDe+_aQPEO4PejrG=+JoEM=w2ZxQw@mail.gmail.com>
+ <20131102155054.GD23938@kroah.com> <CAErSpo5DD_H8_auWZ9QAVPLk85=Zcviv3RjeEWmHQkHPnFPCzA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 14 Nov 2013 12:33:11 -0700
+Message-ID: <CAErSpo6Q3LvDN0QkOf4HnsDZf7neNgSE2nz2Z191Ajp62OLVrQ@mail.gmail.com>
+Subject: Re: [RFC PATCH] PCI: export MSI mode using attributes, not kobjects
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Veaceslav Falico <vfalico@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Neil Horman <nhorman@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 19, 2013 at 11:08:06AM -0700, Myron Stowe wrote:
-> On Mon, Nov 18, 2013 at 10:57 PM, Adam Lee <adam.lee@canonical.com> wrote:
-> > On Mon, Nov 18, 2013 at 10:38:17AM -0700, Bjorn Helgaas wrote:
-> >> [+cc Myron, Amos, Thomas, Ben]
-> >>
-> >> On Mon, Nov 18, 2013 at 2:40 AM, Adam Lee <adam.lee@canonical.com> wrote:
-> >> > This patch adds the PCI_EXP_FLAGS_SLOT check back before setting
-> >> > hotplug bridge, which is omitted by an API switching commit,
-> >> > 59875ae489609b2267548dc85160c5f0f0c6f9d4 "PCI/core: Use PCI Express
-> >> > Capability accessors".
-> >> >
-> >> > Some Lenovo laptops hang in booting without this fix.
-> >>
-> >> What kernel version hangs?  I suspect you might be missing 6d3a1741f1
-> >> ("PCI: Support PCIe Capability Slot registers only for ports with
-> >> slots"), because it *looks* like the current kernel should work
-> >> correctly even without your patch.
-> >
-> > No, patching 6d3a1741f1 and d3694d4fa3 doesn't fix the hang.
-> 
-> Did you actually try it?  This patch did solve a problem that I
-> encountered (see below).
-
-On Tue, Nov 19, 2013 at 10:40:09AM -0700, Bjorn Helgaas wrote:
-> >
-> > It hangs in acpi_evaluate_integer() from
-> > 59875ae489609b2267548dc85160c5f0f0c6f9d4 "PCI/core: Use PCI Express
-> > Capability accessors" and before
-> > ac212b6980d8d5eda705864fc5a8ecddc6d6eacc "ACPI / processor: Use common
-> > hotplug infrastructure", 3.4~3.11. (double confirmed)
-                             ^^^^^^^^ should be 3.7~3.10
-
-> I don't understand what you're saying here.  We're talking about this path:
+On Tue, Nov 5, 2013 at 11:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sat, Nov 2, 2013 at 9:50 AM, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+>> On Fri, Nov 01, 2013 at 05:40:02PM -0600, Bjorn Helgaas wrote:
+>>> On Tue, Oct 29, 2013 at 3:46 PM, Greg Kroah-Hartman
+>>> <gregkh@linuxfoundation.org> wrote:
+>>> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>>> >
+>>> > The PCI MSI sysfs code is a mess with kobjects for things that don't
+>>> > really need to be kobjects.  This patch creates attributes dynamically
+>>> > for the MSI interrupts instead of using kobjects.
+>>> >
+>>> > Note, this does not delete the existing sysfs MSI code, but puts the
+>>> > attributes under a "msi_irqs_2" directory for testing / example.
+>>> >
+>>> > Also note, this removes a directory from the current MSI interrupt sysfs
+>>> > code:
+>>> >
+>>> > old MSI kobjects:
+>>> > pci_device
+>>> >    └── msi_irqs
+>>> >        └── 40
+>>> >            └── mode
+>>> >
+>>> > new MSI attributes:
+>>> > pci_device
+>>> >    └── msi_irqs_2
+>>> >        └── 40
+>>> >
+>>> > As there was only one file "mode" with the kobject model, the interrupt
+>>> > number is now a file that returns the "mode" of the interrupt (msi vs.
+>>> > msix).
+>>> >
+>>> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>>> > ---
+>>> >
+>>> > Bjorn, I can make up a patch that rips out the existing kobject code
+>>> > here, but I figured this patch would make things easier to follow
+>>> > instead of having to dig through the removed logic at the same time.
+>>> >
+>>> > I'll clean up the error handling path for the create attribute logic as
+>>> > well, this was just a proof of concept that this could be done.
+>>> >
+>>> > Do you think that anyone cares about the current mode files in sysfs to
+>>> > move things in this manner?
+>>>
+>>> I like this a lot better than trying to fix all the holes in the
+>>> current kobject code.
+>>
+>> Great.
+>>
+>>> I have no idea who, if anybody, cares about the "mode" files.  I
+>>> assume there's a way to create the "mode" files with attributes, too?
+>>> If so, we could replicate the existing structure with one patch, and
+>>> simplify it with a second patch, so it would be easier to revert the
+>>> directory change while keeping the fix.
+>>
+>> No, we can't create a 2-level deep attribute at the moment, only one
+>> level, like the patch does.
+>>
+>> Based on Neil's comments, I think we should be fine with this as-is as
+>> no one is messing with these files directly (which implies that we could
+>> possibly just remove them entirely to save us the overall pain...)
 >
->     set_pcie_hotplug_bridge
->       pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, ...)
->         pcie_capability_reg_implemented(dev, PCI_EXP_SLTCAP)
->           pcie_cap_has_sltctl(dev)
->
-> This path doesn't invoke acpi_evaluate_integer().  How does a hang
-> there relate to the patch you posted?  Are you saying you bisected the
-> hang to one of the commits you mentioned?
+> Hmmm.  https://bugzilla.redhat.com/show_bug.cgi?id=744012 suggests
+> that irqbalance might be reading these files.
 
-Bjorn and Myron,
+I looked at the current irqbalance on github [1], and I *think* it
+never reads the "mode" files.  It reads the entries in the "msi_irqs"
+directory, which you're proposing to change from directories to files,
+but I think it only uses the names.
 
-Yes, I did try, and those two commits are both coming from bisect, it is weird.
-But good news, I tried the new series containing three patches, it fixed that
-hang.(backported to 3.8, pcie_flags_reg is fine)
+It looks like it should be safe at least for irqbalance to make this a
+one-level attribute.  It's possible we'll break somebody's scripts,
+but I'm willing to try making this change because it really makes the
+refcounting much simpler.
 
-Great thanks.
+Bjorn
 
--- 
-Adam Lee
+[1] https://github.com/Irqbalance/irqbalance/blob/master/classify.c#L357
