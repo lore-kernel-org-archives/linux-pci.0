@@ -1,78 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:29095
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751464Ab3KSFXb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 00:23:31 -0500
-From: Bharat Bhushan <r65777@freescale.com>
-To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<bhelgaas@google.com>, <agraf@suse.de>, <scottwood@freescale.com>,
-	<stuart.yoder@freescale.com>, <iommu@lists.linux-foundation.org>,
-	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
-	Bharat Bhushan <bharat.bhushan@freescale.com>
-Subject: [PATCH 2/9 v2] pci: msi: expose msi region information functions
-Date: Tue, 19 Nov 2013 10:47:06 +0530
-Message-ID: <1384838233-24847-3-git-send-email-Bharat.Bhushan@freescale.com>
-In-Reply-To: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 14 Nov 2013 11:43:48 +0900
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Luck, Tony" <tony.luck@intel.com>
+Subject: Re: [PATCH 2/2] ACPI / bind: Use (put|get)_device() on ACPI device
+ objects too
+Message-ID: <20131114024348.GA9899@kroah.com>
+References: <3268437.YsusHvklcv@vostro.rjw.lan>
+ <1803808.ghCmmaO2Cj@vostro.rjw.lan>
+ <9712243.It8gvaRCs0@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9712243.It8gvaRCs0@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So by now we have defined all the interfaces for getting the msi region,
-this patch expose the interface to linux subsystem. These will be used by
-vfio subsystem for setting up iommu for MSI interrupt of direct assignment
-devices.
+On Thu, Nov 14, 2013 at 12:26:47AM +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> When associating a "physical" device with an ACPI device object
+> acpi_bind_one() only uses get_device() to increment the reference
+> counter of the former, but there is no reason not to do that with
+> the latter too.  Among other things, that may help to avoid
+> use-after-free when an ACPI device object is freed without calling
+> acpi_unbind_one() for all "physical" devices associated with it
+> (that only can happen in buggy code, but then it's better if the
+> kernel doesn't crash as a result of a bug).
+> 
+> For this reason, modify acpi_bind_one() to apply get_device() to
+> the ACPI device object too and update acpi_unbind_one() to drop
+> that reference using put_device() as appropriate.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
----
-v1->v2
- - None
-
- include/linux/pci.h |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index da172f9..c587034 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1142,6 +1142,7 @@ struct msix_entry {
- 	u16	entry;	/* driver uses to specify entry, OS writes */
- };
- 
-+struct msi_region;
- 
- #ifndef CONFIG_PCI_MSI
- static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
-@@ -1184,6 +1185,16 @@ static inline int pci_msi_enabled(void)
- {
- 	return 0;
- }
-+
-+static inline int msi_get_region_count(void)
-+{
-+	return 0;
-+}
-+
-+static inline int msi_get_region(int region_num, struct msi_region *region)
-+{
-+	return 0;
-+}
- #else
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
-@@ -1196,6 +1207,8 @@ void pci_disable_msix(struct pci_dev *dev);
- void msi_remove_pci_irq_vectors(struct pci_dev *dev);
- void pci_restore_msi_state(struct pci_dev *dev);
- int pci_msi_enabled(void);
-+int msi_get_region_count(void);
-+int msi_get_region(int region_num, struct msi_region *region);
- #endif
- 
- #ifdef CONFIG_PCIEPORTBUS
--- 
-1.7.0.4
-
-
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
